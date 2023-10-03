@@ -21,7 +21,7 @@ class TestSpamDiscover(TestCase):
             groups=[]
         )
         # create a composite resource
-        self.copy0 = hydroshare.create_resource(
+        self.resource = hydroshare.create_resource(
             resource_type='CompositeResource',
             owner=self.owner,
             title='Test Composite Resource'
@@ -34,9 +34,10 @@ class TestSpamDiscover(TestCase):
         test_file2.close()
         self.test_file1 = open('test1.txt', 'rb')
         self.test_file2 = open('test2.txt', 'rb')
-        hydroshare.add_resource_files(self.copy0.short_id, self.test_file1, self.test_file2)
+        hydroshare.add_resource_files(self.resource.short_id, self.test_file1, self.test_file2)
 
-        self.copy0.raccess.discoverable = True
+        self.resource.raccess.discoverable = True
+        self.resource.raccess.save()
 
     def tearDown(self):
         super(TestSpamDiscover, self).tearDown()
@@ -46,47 +47,75 @@ class TestSpamDiscover(TestCase):
         os.remove(self.test_file2.name)
 
     def test_spam_title(self):
-        self.assertTrue(self.copy0.show_in_discover)
+        self.assertIsNone(self.resource.spam_patterns)
+        self.assertTrue(self.resource.show_in_discover)
 
-        self.copy0.metadata.title.value = "Escort spam"
-        self.copy0.save()
-        self.assertFalse(self.copy0.show_in_discover)
-        self.copy0.metadata.title.value = "Test Composite Resource"
-        self.copy0.save()
-        self.assertTrue(self.copy0.show_in_discover)
+        self.resource.metadata.title.value = "Escort"
+        self.resource.metadata.save()
+
+        self.assertIsNotNone(self.resource.spam_patterns)
+        self.assertFalse(self.resource.show_in_discover)
+
+        self.resource.metadata.title.value = "Test Composite Resource"
+        self.resource.metadata.save()
+
+        self.assertIsNone(self.resource.spam_patterns)
+        self.assertTrue(self.resource.show_in_discover)
 
     def test_spam_abstract(self):
-        metadata = self.copy0.metadata
+        self.assertIsNone(self.resource.spam_patterns)
+        self.assertTrue(self.resource.show_in_discover)
+
         # add Abstract (element name is description)
-        elem = metadata.create_element("description", abstract="Escore spam")
-        self.assertFalse(self.copy0.show_in_discover)
+        elem = self.resource.metadata.create_element("description", abstract="Escort")
 
-        metadata.delete_element("description", elem.id)
+        self.assertIsNotNone(self.resource.spam_patterns)
+        self.assertFalse(self.resource.show_in_discover)
 
-        self.assertTrue(self.copy0.show_in_discover)
+        self.resource.metadata.update_element("description", elem.id, value="Test Composite Resource")
+
+        self.assertIsNone(self.resource.spam_patterns)
+        self.assertTrue(self.resource.show_in_discover)
 
     def test_spam_subject(self):
-        metadata = self.copy0.metadata
+        self.assertIsNone(self.resource.spam_patterns)
+        self.assertTrue(self.resource.show_in_discover)
+
         # add keywords (element name is subject)
-        elem = metadata.create_element("subject", value="Escort spam")
-        self.assertFalse(self.copy0.show_in_discover)
+        elem = self.resource.metadata.create_element("subject", value="Escort")
 
-        metadata.delete_element("subject", elem.id)
+        self.assertIsNotNone(self.resource.spam_patterns)
+        self.assertFalse(self.resource.show_in_discover)
 
-        self.assertTrue(self.copy0.show_in_discover)
+        self.resource.metadata.update_element("subject", elem.id, value="Test subject")
+
+        self.assertIsNone(self.resource.spam_patterns)
+        self.assertTrue(self.resource.show_in_discover)
 
     def test_admin_allowlist(self):
-        self.copy0.metadata.title.value = "Escort spam"
-        self.copy0.save()
-        self.assertFalse(self.copy0.show_in_discover)
+        self.assertIsNone(self.resource.spam_patterns)
+        self.assertTrue(self.resource.show_in_discover)
 
-        self.copy0.spam_allowlist = True
-        self.copy0.save()
-        self.assertTrue(self.copy0.show_in_discover)
-        self.copy0.spam_allowlist = False
-        self.copy0.save()
-        self.assertFalse(self.copy0.show_in_discover)
+        self.resource.metadata.title.value = "Escort"
+        self.resource.metadata.save()
 
-        self.copy0.metadata.title.value = "Test Composite Resource"
-        self.copy0.save()
-        self.assertTrue(self.copy0.show_in_discover)
+        self.assertIsNotNone(self.resource.spam_patterns)
+        self.assertFalse(self.resource.show_in_discover)
+
+        self.resource.spam_allowlist = True
+        self.resource.save()
+
+        self.assertIsNotNone(self.resource.spam_patterns)
+        self.assertTrue(self.resource.show_in_discover)
+
+        self.resource.spam_allowlist = False
+        self.resource.save()
+
+        self.assertIsNotNone(self.resource.spam_patterns)
+        self.assertFalse(self.resource.show_in_discover)
+
+        self.resource.metadata.title.value = "Test Composite Resource"
+        self.resource.metadata.save()
+
+        self.assertIsNone(self.resource.spam_patterns)
+        self.assertTrue(self.resource.show_in_discover)
