@@ -111,6 +111,10 @@ def update_quota_usage(username):
         raise ValidationError(err_msg)
 
     used_val = get_quota_usage_from_irods(username, raise_on_error=False)
+    # TODO: subtract out published resources
+    # TODO: #5228
+    published_percent = qmsg.published_resource_percent
+    published_size = 
     uq.update_used_value(used_val)
 
 

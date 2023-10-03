@@ -12,6 +12,7 @@ from django.template import RequestContext, Template, TemplateSyntaxError
 from django.utils.translation import gettext_lazy as _
 from django.utils.html import strip_tags
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.postgres.fields import HStoreField
 
 from mezzanine.core.fields import FileField, RichTextField
@@ -231,6 +232,12 @@ class QuotaMessage(models.Model):
     soft_limit_percent = models.IntegerField(default=80)
     # quota hard limit percent value for hard quota enforcement. Default is 125%
     hard_limit_percent = models.IntegerField(default=125)
+    # TODO: #5228
+    # percent that published resources should count toward quota
+    # Default=0 -> published resources aren't counted toward quota
+    published_resource_percent = models.IntegerField(
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        default=0)
     # grace period, default is 7 days
     grace_period = models.IntegerField(default=7)
     # whether to enforce quota or not. Default is False, which can be changed to true from
