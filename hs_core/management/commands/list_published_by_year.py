@@ -9,6 +9,7 @@ from hs_core import hydroshare
 from django.db.models import F
 from datetime import timedelta
 from django.utils import timezone
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class Command(BaseCommand):
@@ -39,14 +40,22 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         days = options['days']
         resources = BaseResource.objects.filter(raccess__published=True)
+        owner = options['owned_by']
+        type = options['type']
 
-        if options['owned_by'] is not None:
-            owner = User.objects.get(username=options['owned_by'])
-            resources.filter(r2urp__user=owner,
-                             r2urp__privilege=PrivilegeCodes.OWNER)
+        if owner is not None:
+            try:
+                owner = User.objects.get(username=owner)
+                resources.filter(r2urp__user=owner,
+                                 r2urp__privilege=PrivilegeCodes.OWNER)
+            except ObjectDoesNotExist:
+                print(f"User matching {owner} not found")
 
-        if options['type'] is not None:
-            resources.filter(resource_type=options['type'])
+        if type is not None:
+            if type in ["CompositeResource", "CollectionResource"]:
+                resources.filter(resource_type=type)
+            else:
+                print(f"Type {type} is not supported. Must be 'CompositeResource' or 'CollectionResource'")
 
         resources = resources.order_by(F('updated').asc(nulls_first=True))
 
@@ -62,15 +71,10 @@ class Command(BaseCommand):
             self.print_resource(resource, pub_date)
 
     def get_publication_date(self, resource):
-        meta_dates = resource.metadata.dates.all()
-        published_date = [dt for dt in meta_dates if dt.type == "published"]
-        citation_date = None
-        if published_date:
-            citation_date = published_date[0]
-        else:
+        published_date = resource.metadata.dates.filter(type="published").first()
+        if not published_date:
             print(f"Publication date not found for {resource.short_id}")
-
-        return citation_date.start_date
+        return published_date
 
     def print_resource(self, res, pub_date):
         site_url = hydroshare.utils.current_site_url()
@@ -79,6 +83,7 @@ class Command(BaseCommand):
         print("*" * 100)
         print(f"{res_url}")
         print(res.metadata.title.value)
+        print(f"Resource type: {res.resource_type}")
         if pub_date:
             print(f"Published on {pub_date}")
         else:
