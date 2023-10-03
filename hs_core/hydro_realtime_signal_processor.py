@@ -21,11 +21,13 @@ class HydroRealtimeSignalProcessor(BaseSignalProcessor):
         if not getattr(settings, "DISABLE_HAYSTACK", False):
             models.signals.post_save.connect(self.handle_update, sender=Date)
             models.signals.post_save.connect(self.handle_access, sender=ResourceAccess)
+            models.signals.post_delete.connect(self.handle_delete, sender=BaseResource)
 
     def teardown(self):
         if not getattr(settings, "DISABLE_HAYSTACK", False):
             models.signals.post_save.disconnect(self.handle_update, sender=Date)
             models.signals.post_save.disconnect(self.handle_access, sender=ResourceAccess)
+            models.signals.post_delete.disconnect(self.handle_delete, sender=BaseResource)
 
     def handle_update(self, sender, instance, **kwargs):
         try:
