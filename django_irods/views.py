@@ -19,7 +19,7 @@ from hs_core.task_utils import (
     get_task_notification
 )
 
-from hs_core.signals import pre_download_file, pre_check_bag_flag
+from hs_core.signals import pre_download_file, pre_download_resource, pre_check_bag_flag
 from hs_core.tasks import create_bag_by_irods, create_temp_zip, delete_zip
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from drf_yasg.utils import swagger_auto_schema
@@ -287,14 +287,6 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
                 res.setAVU("bag_modified", True)  # ensure bag_modified is set when irods_output_path does not exist
                 create_bag_by_irods(res_id, create_zip=False)
 
-        # send signal for pre download file
-        # TODO: does not contain subdirectory information: duplicate refreshes possible
-        download_file_name = split_path_strs[-1]  # end of path
-        # this logs the download request in the tracking system
-        pre_download_file.send(sender=resource_cls, resource=res,
-                               download_file_name=download_file_name,
-                               request=request)
-
     # If we get this far,
     # * path and irods_path point to true input
     # * output_path and irods_output_path point to true output.
@@ -309,6 +301,17 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
     # TODO: standardize this to make it less brittle
     stdout = session.run("ils", None, "-l", irods_output_path)[0].split()
     flen = int(stdout[3])
+    # this logs the download request in the tracking system
+    if is_bag_download:
+        pre_download_resource.send(sender=resource_cls, resource=res, request=request)
+    else:
+        download_file_name = split_path_strs[-1]
+        # send signal for pre download file
+        # TODO: does not contain subdirectory information: duplicate refreshes possible
+        pre_download_file.send(sender=resource_cls, resource=res,
+                               download_file_name=download_file_name,
+                               file_size=flen,
+                               request=request)
 
     # Allow reverse proxy if request was forwarded by nginx (HTTP_X_DJANGO_REVERSE_PROXY='true')
     # and reverse proxy is possible according to configuration (SENDFILE_ON=True)

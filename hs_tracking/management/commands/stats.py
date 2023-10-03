@@ -155,7 +155,8 @@ class Command(BaseCommand):
             'size',
             'publication status',
             'user type',
-            'user id'
+            'user id',
+            'resource id'
         ]
         w.writerow(fields)
         failed_resource_ids = []
@@ -169,7 +170,8 @@ class Command(BaseCommand):
                     r.size,
                     r.raccess.sharing_status,
                     r.user.userprofile.user_type,
-                    r.user_id
+                    r.user_id,
+                    r.short_id
                 ]
                 w.writerow([str(v) for v in values])
 

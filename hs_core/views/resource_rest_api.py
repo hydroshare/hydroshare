@@ -771,8 +771,10 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
                 try:
                     resource_file_info_list.append(self.resourceFileToListItem(f))
                 except SessionException as err:
-                    # primarily this exception will be raised if the file is not found in iRODS
                     logger.error(f"Error for file {f.storage_path} from iRODS: {err.stderr}")
+                except CoreValidationError as err:
+                    # primarily this exception will be raised if the file is not found in iRODS
+                    logger.error(f"Error for file {f.storage_path} from iRODS: {str(err)}")
 
             serializer = self.get_serializer(resource_file_info_list, many=True)
             return self.get_paginated_response(serializer.data)
@@ -784,7 +786,8 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
         resource, _, _ = view_utils.authorize(self.request, self.kwargs['pk'],
                                               needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
 
-        return resource.files.all()
+        # exclude files with size 0 as they are missing from iRODS
+        return resource.files.exclude(_size=0).all()
 
     def get_serializer_class(self):
         return serializers.ResourceFileSerializer

@@ -7,7 +7,7 @@ import hs_core.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0072_remove_duplicate_res_files'),
+        ('hs_core', '0075_remove_duplicate_res_files'),
     ]
 
     operations = [
