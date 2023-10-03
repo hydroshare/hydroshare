@@ -9,7 +9,7 @@ from django.core.management.base import BaseCommand
 from django.db.models import Q
 from django.utils import timezone
 import zoneinfo
-from hs_core.models import BaseResource
+from hs_core.models import BaseResource, Date
 from theme.models import UserProfile
 
 from ... import models as hs_tracking
@@ -150,11 +150,16 @@ class Command(BaseCommand):
             'publication status',
             'user type',
             'user id',
-            'resource id'
+            'resource id',
+            'publication date'
         ]
         w.writerow(fields)
         failed_resource_ids = []
         for r in BaseResource.objects.all():
+            try:
+                pub_date = r.metadata.dates.get(type='published')
+            except Date.DoesNotExist:
+                pub_date = None
             try:
                 values = [
                     r.metadata.dates.get(type="created").
@@ -165,7 +170,8 @@ class Command(BaseCommand):
                     r.raccess.sharing_status,
                     r.user.userprofile.user_type,
                     r.user_id,
-                    r.short_id
+                    r.short_id,
+                    pub_date
                 ]
                 w.writerow([str(v) for v in values])
 
