@@ -1,5 +1,3 @@
-import os
-
 from django.test import TestCase
 from django.contrib.auth.models import Group
 
@@ -26,38 +24,23 @@ class TestSpamDiscover(TestCase):
             owner=self.owner,
             title='Test Composite Resource'
         )
-        test_file1 = open('test1.txt', 'w')
-        test_file1.write("Test text file in test1.txt")
-        test_file1.close()
-        test_file2 = open('test2.txt', 'w')
-        test_file2.write("Test text file in test2.txt")
-        test_file2.close()
-        self.test_file1 = open('test1.txt', 'rb')
-        self.test_file2 = open('test2.txt', 'rb')
-        hydroshare.add_resource_files(self.resource.short_id, self.test_file1, self.test_file2)
 
         self.resource.raccess.discoverable = True
         self.resource.raccess.save()
 
     def tearDown(self):
         super(TestSpamDiscover, self).tearDown()
-        self.test_file1.close()
-        os.remove(self.test_file1.name)
-        self.test_file2.close()
-        os.remove(self.test_file2.name)
 
     def test_spam_title(self):
         self.assertIsNone(self.resource.spam_patterns)
         self.assertTrue(self.resource.show_in_discover)
 
-        self.resource.metadata.title.value = "Escort"
-        self.resource.metadata.save()
+        self.resource.metadata.update_element('title', self.resource.metadata.title.id, value="Escort")
 
         self.assertIsNotNone(self.resource.spam_patterns)
         self.assertFalse(self.resource.show_in_discover)
 
-        self.resource.metadata.title.value = "Test Composite Resource"
-        self.resource.metadata.save()
+        self.resource.metadata.update_element('title', self.resource.metadata.title.id, value="Test Composite Resource")
 
         self.assertIsNone(self.resource.spam_patterns)
         self.assertTrue(self.resource.show_in_discover)
@@ -72,7 +55,7 @@ class TestSpamDiscover(TestCase):
         self.assertIsNotNone(self.resource.spam_patterns)
         self.assertFalse(self.resource.show_in_discover)
 
-        self.resource.metadata.update_element("description", elem.id, value="Test Composite Resource")
+        self.resource.metadata.update_element("description", elem.id, abstract="Test Composite Resource")
 
         self.assertIsNone(self.resource.spam_patterns)
         self.assertTrue(self.resource.show_in_discover)
@@ -96,26 +79,40 @@ class TestSpamDiscover(TestCase):
         self.assertIsNone(self.resource.spam_patterns)
         self.assertTrue(self.resource.show_in_discover)
 
-        self.resource.metadata.title.value = "Escort"
-        self.resource.metadata.save()
+        self.resource.metadata.update_element('title', self.resource.metadata.title.id, value="Escort")
 
         self.assertIsNotNone(self.resource.spam_patterns)
         self.assertFalse(self.resource.show_in_discover)
 
-        self.resource.spam_allowlist = True
+        self.resource.spam_allowlisted = True
         self.resource.save()
 
         self.assertIsNotNone(self.resource.spam_patterns)
         self.assertTrue(self.resource.show_in_discover)
 
-        self.resource.spam_allowlist = False
+        self.resource.spam_allowlisted = False
         self.resource.save()
 
         self.assertIsNotNone(self.resource.spam_patterns)
         self.assertFalse(self.resource.show_in_discover)
 
-        self.resource.metadata.title.value = "Test Composite Resource"
-        self.resource.metadata.save()
+        self.resource.metadata.update_element('title', self.resource.metadata.title.id, value="Test Composite Resource")
 
         self.assertIsNone(self.resource.spam_patterns)
+        self.assertTrue(self.resource.show_in_discover)
+
+    def test_published_with_spam(self):
+        """Published resources should always show in discover, even if they contain spam patterns
+        """
+        self.assertIsNone(self.resource.spam_patterns)
+        self.assertTrue(self.resource.show_in_discover)
+
+        self.resource.metadata.update_element('title', self.resource.metadata.title.id, value="Escort")
+
+        self.assertIsNotNone(self.resource.spam_patterns)
+        self.assertFalse(self.resource.show_in_discover)
+
+        self.resource.raccess.published = True
+
+        self.assertIsNotNone(self.resource.spam_patterns)
         self.assertTrue(self.resource.show_in_discover)
