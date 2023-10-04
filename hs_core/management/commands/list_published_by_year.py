@@ -90,11 +90,11 @@ class Command(BaseCommand):
             print("Resource has no publication date")
 
         if funding_agencies:
-            print("Funding agency/agencies:")
-            for f in funding_agencies:
-                print(f.agency_name)
+            print(f"{len(funding_agencies)}Funding info:")
+            for count, f in enumerate(funding_agencies, 1):
+                print(f"#{count}: {f.agency_name}; {f.award_title}; {f.award_number}")
         else:
-            print("Resource has no funding agency")
+            print("Resource has no funding information")
 
         if res.doi:
             print(res.doi)
