@@ -92,7 +92,15 @@ class Command(BaseCommand):
         if funding_agencies:
             print(f"{len(funding_agencies)}Funding info:")
             for count, f in enumerate(funding_agencies, 1):
-                print(f"#{count}: {f.agency_name}; {f.award_title}; {f.award_number}")
+                print(f"--- Funder #{count} ---")
+                if f.award_title:
+                    print(f"Award title:{f.award_title}")
+                else:
+                    print("No award title")
+                if f.award_number:
+                    print(f"Award number: {f.award_number}")
+                else:
+                    print("No award number")
         else:
             print("Resource has no funding information")
 
