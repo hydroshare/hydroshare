@@ -478,13 +478,13 @@ $(document).ready(function () {
 
     $('.ui-autocomplete-input').on('blur', function(e) {
       e.preventDefault();
-      $('.ui-autocomplete-input').trigger(jQuery.Event('keypress', { which: 13 }));
+      $(this).trigger(jQuery.Event('keypress', { which: $.ui.keyCode.ENTER }));
     });
 
     $('.ui-autocomplete-input').on('keydown', function(e) {
       if(e.keyCode === 9 && $(this).val() !== '') {
         e.preventDefault();
-        $(this).trigger(jQuery.Event('keypress', { which: 13 }));
+        $(this).trigger(jQuery.Event('keypress', { which: $.ui.keyCode.ENTER }));
       }
     });
 
