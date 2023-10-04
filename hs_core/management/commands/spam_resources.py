@@ -78,7 +78,7 @@ class Command(BaseCommand):
                     print("== THIS RESOURCE HAS BEEN ALLOWLISTED AND WILL SHOW UP IN DISCOVER ==")
                 else:
                     shadow_banned_resources.append(res_info)
-                print(f"Checked {current_resource}/{total_res_to_check}")
+                print(f"Checked {current_resource}/{total_res_to_check}: {resource.short_id}")
                 print(f"Resource has spam patterns: {res_info}")
                 print(f"Total thus far with spam patterns: {len(shadow_banned_resources)}")
                 print("*" * 100)
