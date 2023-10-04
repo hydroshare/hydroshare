@@ -41,7 +41,7 @@ class Command(BaseCommand):
         days = options['days']
         resources = BaseResource.objects.filter(raccess__published=True)
         owner = options['owned_by']
-        type = options['type']
+        res_type = options['type']
 
         if owner is not None:
             try:
@@ -51,11 +51,11 @@ class Command(BaseCommand):
             except ObjectDoesNotExist:
                 print(f"User matching {owner} not found")
 
-        if type is not None:
-            if type in ["CompositeResource", "CollectionResource"]:
-                resources.filter(resource_type=type)
+        if res_type is not None:
+            if res_type in ["CompositeResource", "CollectionResource"]:
+                resources.filter(resource_type=res_type)
             else:
-                print(f"Type {type} is not supported. Must be 'CompositeResource' or 'CollectionResource'")
+                print(f"Type {res_type} is not supported. Must be 'CompositeResource' or 'CollectionResource'")
 
         resources = resources.order_by(F('updated').asc(nulls_first=True))
 
@@ -74,7 +74,7 @@ class Command(BaseCommand):
         published_date = resource.metadata.dates.filter(type="published").first()
         if not published_date:
             print(f"Publication date not found for {resource.short_id}")
-        return published_date
+        return published_date.start_date
 
     def print_resource(self, res, pub_date):
         site_url = hydroshare.utils.current_site_url()
