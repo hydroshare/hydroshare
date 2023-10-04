@@ -41,7 +41,7 @@ class Command(BaseCommand):
         days = options['days']
         resources = BaseResource.objects.filter(raccess__published=True)
         owner = options['owned_by']
-        type = options['type']
+        res_type = options['type']
 
         if owner is not None:
             try:
@@ -51,11 +51,11 @@ class Command(BaseCommand):
             except ObjectDoesNotExist:
                 print(f"User matching {owner} not found")
 
-        if type is not None:
-            if type in ["CompositeResource", "CollectionResource"]:
-                resources.filter(resource_type=type)
+        if res_type is not None:
+            if res_type in ["CompositeResource", "CollectionResource"]:
+                resources.filter(resource_type=res_type)
             else:
-                print(f"Type {type} is not supported. Must be 'CompositeResource' or 'CollectionResource'")
+                print(f"Type {res_type} is not supported. Must be 'CompositeResource' or 'CollectionResource'")
 
         resources = resources.order_by(F('updated').asc(nulls_first=True))
 
@@ -74,14 +74,19 @@ class Command(BaseCommand):
         published_date = resource.metadata.dates.filter(type="published").first()
         if not published_date:
             print(f"Publication date not found for {resource.short_id}")
-        return published_date
+        return published_date.start_date
 
     def print_resource(self, res, pub_date):
         site_url = hydroshare.utils.current_site_url()
         res_url = site_url + res.absolute_url
         funding_agencies = res.metadata.funding_agencies.all()
+        print("\n")
         print("*" * 100)
         print(f"{res_url}")
+        if res.doi:
+            print(res.doi)
+        else:
+            print("Resource has no doi")
         print(res.metadata.title.value)
         print(f"Resource type: {res.resource_type}")
         if pub_date:
@@ -90,13 +95,24 @@ class Command(BaseCommand):
             print("Resource has no publication date")
 
         if funding_agencies:
-            print("Funding agency/agencies:")
-            for f in funding_agencies:
-                print(f.agency_name)
+            print(f"Found {len(funding_agencies)} funder(s):")
+            for count, f in enumerate(funding_agencies, 1):
+                print(f"--- Funder #{count} ---")
+                if f.agency_name:
+                    print(f"Agency name: {f.agency_name}")
+                else:
+                    print("No agency name")
+                if f.agency_url:
+                    print(f"Agency url: {f.agency_url}")
+                else:
+                    print("No agency url")
+                if f.award_title:
+                    print(f"Award title: {f.award_title}")
+                else:
+                    print("No award title")
+                if f.award_number:
+                    print(f"Award number: {f.award_number}")
+                else:
+                    print("No award number")
         else:
-            print("Resource has no funding agency")
-
-        if res.doi:
-            print(res.doi)
-        else:
-            print("Resource has no doi")
+            print("Resource has no funding information")
