@@ -2085,7 +2085,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     @property
     def last_updated(self):
         """Return the last updated date stored in metadata"""
-        return self.metadata.dates.all().filter(type='modified')[0].start_date
+        for dt in self.metadata.dates.all():
+            if dt.type == 'modified':
+                return dt.start_date
 
     @property
     def has_required_metadata(self):
@@ -2711,26 +2713,22 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         'readme.txt' or 'readme.md' (filename is case insensitive). If no such file then None
         is returned. If both files exist then resource file for readme.md is returned"""
 
-        res_files_at_root = self.files.filter(file_folder='')
-        readme_txt_file = None
-        readme_md_file = None
+        if self.files.filter(file_folder='').count() == 0:
+            # no files exist at the root of the resource path - no need to check for readme file
+            return None
 
-        def get_file_name(f):
-            return os.path.basename(f.get_storage_path(resource=self)).lower()
-
-        for res_file in res_files_at_root:
-            file_name = get_file_name(res_file)
-            if file_name == 'readme.md':
-                readme_md_file = res_file
-            elif file_name == 'readme.txt':
-                readme_txt_file = res_file
-            if readme_md_file is not None:
-                break
-
-        if readme_md_file is not None:
-            return readme_md_file
+        file_path_md = os.path.join(self.file_path, 'readme.md')
+        file_path_txt = os.path.join(self.file_path, 'readme.txt')
+        if self.is_federated:
+            readme_res_file = self.files.filter(fed_resource_file__iexact=file_path_md).first()
+            if readme_res_file is None:
+                readme_res_file = self.files.filter(fed_resource_file__iexact=file_path_txt).first()
         else:
-            return readme_txt_file
+            readme_res_file = self.files.filter(resource_file__iexact=file_path_md).first()
+            if readme_res_file is None:
+                readme_res_file = self.files.filter(resource_file__iexact=file_path_txt).first()
+
+        return readme_res_file
 
     def get_readme_file_content(self):
         """Gets the content of the readme file. If both a readme.md and a readme.txt file exist,
@@ -4245,7 +4243,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     @property
     def title(self):
         """Return the first title object from metadata."""
-        return self._title.all().first()
+        return self._title.all()[0]
 
     @property
     def description(self):

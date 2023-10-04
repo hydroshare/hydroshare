@@ -968,6 +968,8 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
             "An obsoleted resource in the middle of the obsolescence chain cannot be deleted.",
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+    res_title = res.metadata.title
     if request.is_ajax():
         task_id = get_resource_delete_task(shortkey)
         if not task_id:
@@ -989,7 +991,7 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
             user=user,
             resource_shortkey=shortkey,
             resource=res,
-            resource_title=res.metadata.title,
+            resource_title=res_title,
             resource_type=res.resource_type,
             **kwargs,
         )
@@ -1005,7 +1007,7 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
                 user=user,
                 resource_shortkey=shortkey,
                 resource=res,
-                resource_title=res.metadata.title,
+                resource_title=res_title,
                 resource_type=res.resource_type,
                 **kwargs,
             )
@@ -2743,7 +2745,7 @@ def my_resources(request, *args, **kwargs):
     """
     View for listing resources that belong to a given user.
 
-    Renders either a full my-resources page, or just a table of new resorces
+    Renders either a full my-resources page, or just a table of new resources
     """
 
     if not request.is_ajax():

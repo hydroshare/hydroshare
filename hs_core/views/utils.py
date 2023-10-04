@@ -666,10 +666,10 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
             is_favorite=Case(When(short_id__in=favorite_resources.values_list('short_id', flat=True),
                                   then=Value(True, BooleanField()))))
 
-        resource_collection = resource_collection.only('short_id', 'resource_type', 'created')
+        resource_collection = resource_collection.only('short_id', 'resource_type', 'created', 'content_type')
         # we won't hit the DB for each resource to know if it's status is public/private/discoverable
         # etc
-        resource_collection = resource_collection.select_related('raccess', 'rlabels')
+        resource_collection = resource_collection.select_related('raccess', 'rlabels', 'content_type')
         meta_contenttypes = get_metadata_contenttypes()
 
         for ct in meta_contenttypes:
@@ -677,7 +677,9 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
             # metadata class (e.g., CoreMetaData) - we have to prefetch by content_type as
             # prefetch works only for the same object type (type of 'content_object' in this case)
             res_list = [res for res in resource_collection if res.content_type == ct]
+
             # prefetch metadata items - creators, keywords(subjects), dates, and title
+            # this will generate 4 queries for the 4 Prefetch + 1 for each resource to retrieve 'content_object'
             if res_list:
                 prefetch_related_objects(res_list,
                                          Prefetch('content_object__creators'),
