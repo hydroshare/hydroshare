@@ -80,8 +80,13 @@ class Command(BaseCommand):
         site_url = hydroshare.utils.current_site_url()
         res_url = site_url + res.absolute_url
         funding_agencies = res.metadata.funding_agencies.all()
+        print("\n")
         print("*" * 100)
         print(f"{res_url}")
+        if res.doi:
+            print(res.doi)
+        else:
+            print("Resource has no doi")
         print(res.metadata.title.value)
         print(f"Resource type: {res.resource_type}")
         if pub_date:
@@ -90,11 +95,19 @@ class Command(BaseCommand):
             print("Resource has no publication date")
 
         if funding_agencies:
-            print(f"Found {len(funding_agencies)} funders:")
+            print(f"Found {len(funding_agencies)} funder(s):")
             for count, f in enumerate(funding_agencies, 1):
                 print(f"--- Funder #{count} ---")
+                if f.agency_name:
+                    print(f"Agency name: {f.agency_name}")
+                else:
+                    print("No agency name")
+                if f.agency_url:
+                    print(f"Agency url: {f.agency_url}")
+                else:
+                    print("No agency url")
                 if f.award_title:
-                    print(f"Award title:{f.award_title}")
+                    print(f"Award title: {f.award_title}")
                 else:
                     print("No award title")
                 if f.award_number:
@@ -103,8 +116,3 @@ class Command(BaseCommand):
                     print("No award number")
         else:
             print("Resource has no funding information")
-
-        if res.doi:
-            print(res.doi)
-        else:
-            print("Resource has no doi")
