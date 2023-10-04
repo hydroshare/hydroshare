@@ -73,7 +73,7 @@
     {% endif %}
     {% endfor %}
   </td>
-   {# QUERY COUNT: this generates (res|get_user_privilege:user) generates 3 queries per resource)  #}
+   {# QUERY COUNT: this (res|get_user_privilege:user) generates 3 queries per resource)  #}
   <td>{% if request.user.is_authenticated %}{{ res|get_user_privilege:user }}{% endif %}</td>
   <td class="col-labels">
     {# QUERY COUNT: this will generate 1 query only if the user has labels for the resource #}
