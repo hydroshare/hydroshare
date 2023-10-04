@@ -890,7 +890,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
         # src_name and tgt_name are folder names
         res_file_objs = ResourceFile.list_folder(resource=resource, folder=src_name)
         resource_is_federated = resource.is_federated
-        batch_size = 10_000
+        batch_size = settings.BULK_UPDATE_CREATE_BATCH_SIZE
         for fobj in res_file_objs:
             src_path = fobj.get_storage_path(resource=resource)
             # naively replace src_name with tgt_name

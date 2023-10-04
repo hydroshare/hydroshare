@@ -524,13 +524,14 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
 
         for res_file in res_files:
             if not res_file.has_logical_file:
-                self.add_resource_file(res_file)
+                self.add_resource_file(res_file, set_metadata_dirty=False)
             else:
                 logical_file = res_file.logical_file
                 if logical_file.is_fileset:
                     res_file.logical_file_content_object = None
-                    self.add_resource_file(res_file)
+                    self.add_resource_file(res_file, set_metadata_dirty=False)
         if res_files:
+            self.set_metadata_dirty()
             resource.cleanup_aggregations()
         return res_files
 
