@@ -3882,33 +3882,75 @@ class CompositeResourceTest(
                 self.assertIn(f, aggr_files)
             shutil.rmtree(os.path.dirname(temp_zip_file))
 
-    def test_composite_resource_my_resources_scales(self):
-        # test that db queries for "my_resources" remain constant when adding more resources
+    def test_composite_resource_my_resources_one(self):
+        # test that only a fixed number of db queries (based on the number of resources) are
+        # generated for "my_resources" page - this test is with one resource.
 
         # there should not be any resource at this point
         self.assertEqual(BaseResource.objects.count(), 0)
 
+        self.client.login(username='user1', password='mypassword1')
         # navigating to home page for initializing db queries
         response = self.client.get(reverse("home"), follow=True)
         self.assertTrue(response.status_code == 200)
-        my_resources_query_count = 7
-        self.create_composite_resource()
-        with self.assertNumQueries(my_resources_query_count):
-            response = self.client.get(reverse("my_resources"), follow=True)
-            self.assertTrue(response.status_code == 200)
 
+        # create 1 composite resource
+        self.create_composite_resource()
         # there should be one resource at this point
-        self.assertEqual(BaseResource.objects.count(), 1)
-        self.assertEqual(self.composite_resource.resource_type, "CompositeResource")
-
-        self.create_composite_resource()
-
-        with self.assertNumQueries(my_resources_query_count):
+        number_of_resources = BaseResource.objects.count()
+        self.assertEqual(number_of_resources, 1)
+        expected_query_count = self._get_expected_query_count(number_of_resources)
+        with self.assertNumQueries(expected_query_count):
             response = self.client.get(reverse("my_resources"), follow=True)
             self.assertTrue(response.status_code == 200)
 
-        # there should be two resources at this point
-        self.assertEqual(BaseResource.objects.count(), 2)
+    def test_composite_resource_my_resources_two(self):
+        # test that only a fixed number of db queries (based on the number of resources) are
+        # generated for "my_resources" page - this test is with two resources.
+
+        # there should not be any resource at this point
+        self.assertEqual(BaseResource.objects.count(), 0)
+
+        self.client.login(username='user1', password='mypassword1')
+        # navigating to home page for initializing db queries
+        response = self.client.get(reverse("home"), follow=True)
+        self.assertTrue(response.status_code == 200)
+
+        # create 2 composite resources
+        for _ in range(2):
+            self.create_composite_resource()
+
+        # there should be 2 resources at this point
+        number_of_resources = BaseResource.objects.count()
+        self.assertEqual(number_of_resources, 2)
+        expected_query_count = self._get_expected_query_count(number_of_resources)
+        with self.assertNumQueries(expected_query_count):
+            response = self.client.get(reverse("my_resources"), follow=True)
+            self.assertTrue(response.status_code == 200)
+
+    def test_composite_resource_my_resources_three(self):
+        # test that only a fixed number of db queries (based on the number of resources) are
+        # generated for "my_resources" page - this test is with three resources.
+
+        # there should not be any resource at this point
+        self.assertEqual(BaseResource.objects.count(), 0)
+
+        self.client.login(username='user1', password='mypassword1')
+        # navigating to home page for initializing db queries
+        response = self.client.get(reverse("home"), follow=True)
+        self.assertTrue(response.status_code == 200)
+
+        # create 3 composite resources
+        for _ in range(3):
+            self.create_composite_resource()
+
+        # there should be 3 resources at this point
+        number_of_resources = BaseResource.objects.count()
+        self.assertEqual(number_of_resources, 3)
+        expected_query_count = self._get_expected_query_count(number_of_resources)
+        with self.assertNumQueries(expected_query_count):
+            response = self.client.get(reverse("my_resources"), follow=True)
+            self.assertTrue(response.status_code == 200)
 
     def test_composite_resource_landing_scales(self):
         # test that db queries for landing page have constant time complexity
@@ -3969,3 +4011,19 @@ class CompositeResourceTest(
         # accessing the readme file should only be 3 db query
         with self.assertNumQueries(3):
             _ = self.composite_resource.readme_file
+
+    def _get_expected_query_count(self, number_of_resources):
+        # this is the expected number of queries for "my_resources" page with no resources
+        base_query_count = 15
+
+        # this is additional number of queries per resource
+        # 3 are mezzanine queries (can't do much about it)
+        # 3 queries are our code in template
+        per_resource_query_count = 6
+
+        # these are additional queries generated by get_my_resources_list() function
+        pre_template_query_count = 4 + number_of_resources
+
+        expected_query_count = base_query_count + pre_template_query_count
+        expected_query_count += per_resource_query_count * number_of_resources
+        return expected_query_count

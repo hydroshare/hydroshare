@@ -2085,7 +2085,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     @property
     def last_updated(self):
         """Return the last updated date stored in metadata"""
-        return self.metadata.dates.all().filter(type='modified')[0].start_date
+        for dt in self.metadata.dates.all():
+            if dt.type == 'modified':
+                return dt.start_date
 
     @property
     def has_required_metadata(self):
@@ -4241,7 +4243,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     @property
     def title(self):
         """Return the first title object from metadata."""
-        return self._title.all().first()
+        return self._title.all()[0]
 
     @property
     def description(self):
