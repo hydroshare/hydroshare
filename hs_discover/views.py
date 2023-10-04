@@ -115,10 +115,6 @@ class SearchAPI(APIView):
             if filters.get('geofilter'):
                 sqs = sqs.filter(north__range=[-90, 90])  # return resources with geographic data
 
-            # Possible to filter spam patterns here
-            # from spam_patterns.patterns_re import patterns
-            # for pattern in patterns:
-            #     sqs = sqs.exclude(content__iregex=pattern)
             if filters.get('date'):
                 try:
                     datefilter = DateRange(start=datetime.datetime.strptime(filters['date'][0], '%Y-%m-%d'),
