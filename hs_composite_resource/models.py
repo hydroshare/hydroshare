@@ -199,14 +199,8 @@ class CompositeResource(BaseResource):
          :param aggregations:   list of all aggregations in self (this resource)
         """
 
-        aggregation_path = dir_path
-        if dir_path.startswith(self.file_path):
-            aggregation_path = dir_path[len(self.file_path) + 1:]
-        if aggregations is None:
-            logical_files = list(self.logical_files)
-        else:
-            logical_files = aggregations
-
+        aggregation_path = self.get_relative_path(dir_path)
+        logical_files = self._cache_aggregations(aggregations=aggregations)
         for lf in logical_files:
             if hasattr(lf, 'folder'):
                 if lf.folder == aggregation_path:
@@ -217,15 +211,15 @@ class CompositeResource(BaseResource):
         """Gets any aggregation that is based on folder and exists in the specified path
         Searches for a folder based aggregation moving towards the root of the specified path
         :param  dir_path: directory path in which to search for a folder based aggregation
-        :param aggregations:   list of all aggregations in self (this resource)
+        :param aggregations: a list of all aggregations in self (this resource)
         :return a folder based aggregation if found otherwise, None
         """
 
-        # will be using aggregations more than once if dir_path consists of multiple folders
-        if aggregations is None:
-            aggregations = list(self.logical_files) if '/' in dir_path else None
-        if dir_path.startswith(self.file_path):
-            dir_path = dir_path[len(self.file_path) + 1:]
+        dir_path = self.get_relative_path(dir_path)
+        aggregations = self._cache_aggregations(aggregations=aggregations)
+        if not aggregations:
+            # no aggregations exist in this resource
+            return None
 
         def get_aggregation(path):
             try:
@@ -249,10 +243,7 @@ class CompositeResource(BaseResource):
          :param file_path: Resource file path (full file path starting with resource id)
          for which the aggregation object to be retrieved
         """
-        relative_file_path = file_path
-        if file_path.startswith(self.file_path):
-            relative_file_path = file_path[len(self.file_path) + 1:]
-
+        relative_file_path = self.get_relative_path(file_path)
         folder, base = os.path.split(relative_file_path)
         try:
             res_file = ResourceFile.get(self, file=base, folder=folder)
@@ -289,8 +280,7 @@ class CompositeResource(BaseResource):
             is_path_a_folder = self.is_path_folder(path=path)
             if is_path_a_folder:
                 # need to create xml files for all aggregations that exist under path
-                if path.startswith(self.file_path):
-                    path = path[len(self.file_path) + 1:]
+                path = self.get_relative_path(path)
                 for lf in self.logical_files:
                     if lf.aggregation_name.startswith(path) and lf.metadata.is_dirty:
                         lf.create_aggregation_xml_documents()
@@ -346,17 +336,19 @@ class CompositeResource(BaseResource):
     def get_fileset_aggregation_in_path(self, path, aggregations=None):
         """Get the first fileset aggregation in the path moving up (towards the root)in the path
         :param  path: directory path in which to search for a fileset aggregation
-        :param  aggregations:   a list of aggregations in the resource (self)
+        :param  aggregations: a list of aggregations in the resource (self)
         :return a fileset aggregation object if found, otherwise None
         """
 
-        if aggregations is None:
-            # will be using aggregations more than once if path consists of multiple folders
-            aggregations = list(self.logical_files) if '/' in path else None
+        path = self.get_relative_path(path)
+        aggregations = self._cache_aggregations(aggregations=aggregations)
+        if not aggregations:
+            # no aggregations exist in this resource
+            return None
 
-        def get_fileset(path):
+        def get_fileset(_path):
             try:
-                aggregation = self.get_aggregation_by_name(path, aggregations=aggregations)
+                aggregation = self.get_aggregation_by_name(_path, aggregations=aggregations)
                 if aggregation.is_fileset:
                     return aggregation
             except ObjectDoesNotExist:
@@ -373,17 +365,19 @@ class CompositeResource(BaseResource):
     def get_model_aggregation_in_path(self, path, aggregations=None):
         """Get the model program or model instance aggregation in the path moving up (towards the root)in the path
         :param  path: directory path in which to search for a model program or model instance aggregation
-        :param  aggregations:   a list of aggregations in the resource (self)
+        :param  aggregations: a list of aggregations in the resource (self)
         :return a model program or model instance aggregation object if found, otherwise None
         """
 
-        if aggregations is None:
-            # will be using aggregations more than once if path consists of multiple folders
-            aggregations = list(self.logical_files) if '/' in path else None
+        path = self.get_relative_path(path)
+        aggregations = self._cache_aggregations(aggregations=aggregations)
+        if not aggregations:
+            # no aggregations exist in this resource
+            return None
 
-        def get_aggregation(path):
+        def get_aggregation(_path):
             try:
-                aggregation = self.get_aggregation_by_name(path, aggregations=aggregations)
+                aggregation = self.get_aggregation_by_name(_path, aggregations=aggregations)
                 return aggregation
             except ObjectDoesNotExist:
                 return None
@@ -419,12 +413,8 @@ class CompositeResource(BaseResource):
                 except ObjectDoesNotExist:
                     pass
 
-        if new_path.startswith(self.file_path):
-            new_path = new_path[len(self.file_path) + 1:]
-
-        if orig_path.startswith(self.file_path):
-            orig_path = orig_path[len(self.file_path) + 1:]
-
+        new_path = self.get_relative_path(new_path)
+        orig_path = self.get_relative_path(orig_path)
         is_new_path_a_folder = self.is_path_folder(path=new_path)
         istorage = self.get_irods_storage()
 
@@ -601,10 +591,7 @@ class CompositeResource(BaseResource):
 
         if not path_to_check.endswith("data/contents"):
             # it is not the base directory - it must be a directory under base dir
-            if path_to_check.startswith(self.file_path):
-                aggregation_path = path_to_check[len(self.file_path) + 1:]
-            else:
-                aggregation_path = path_to_check
+            aggregation_path = self.get_relative_path(path_to_check)
             try:
                 aggregation = self.get_aggregation_by_name(aggregation_path)
                 return aggregation.supports_resource_file_add
@@ -778,6 +765,11 @@ class CompositeResource(BaseResource):
             path = os.path.join(self.file_path, path)
         return istorage.isDir(path)
 
+    def _cache_aggregations(self, aggregations):
+        if aggregations is None:
+            aggregations = list(self.logical_files)
+
+        return aggregations
 
 # this would allow us to pick up additional form elements for the template before the template
 # is displayed
