@@ -10,6 +10,7 @@ thread_pool download threads=32 max_queue=65536;
 
 events {
     worker_connections  1024;
+    worker_rlimit_nofile 2048;
 }
 
 http {
