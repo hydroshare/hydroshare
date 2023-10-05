@@ -170,13 +170,7 @@ class Session(object):
             stdin = StringIO(data)
         import logging
         logger = logging.getLogger(__name__)
-        logger.error(f"icommands_path = {self.icommands_path}")
-        logger.error(f"session_path = {self.session_path}")
-        logger.error(f"session_id = {self.session_id}")
-        logger.error(f"my_env = {print(myenv)}")
-        logger.error(f"my_env = {print(myenv)}")
         logger.error(f"Calling iCommand: {argList}")
-        logger.error(f"data: {data}")
         import time
         st = time.time()
 
@@ -190,7 +184,7 @@ class Session(object):
         stdout, stderr = proc.communicate(input=data) if stdin else proc.communicate()
         et = time.time()
         elapsed_time = et - st
-        logger.error(f"Elapsed time for icommand {argList} = {elapsed_time}")
+        # logger.error(f"Elapsed time for icommand {argList} = {elapsed_time}")
 
         if proc.returncode:
             raise SessionException(proc.returncode, stdout, stderr)
