@@ -58,7 +58,6 @@ server {
 
     sendfile off;
     proxy_request_buffering off; 
-    proxy_buffering off; 
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
 
