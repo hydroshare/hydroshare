@@ -290,6 +290,9 @@ def update_quota_usage(request, username):
         return HttpResponseBadRequest("user to update quota for is not valid")
 
     try:
+        logger.error("*" * 200)
+        logger.error(f"Update quota usage called. {request}")
+        logger.error("*" * 200)
         update_quota_usage_utility(username)
         return HttpResponse(
             "quota for user {} has been updated".format(username), status=200
