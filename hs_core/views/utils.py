@@ -936,6 +936,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
                     #  moved contains a large number of files
                     resource.add_file_to_aggregation(fobj, aggregations=aggregations)
 
+
 def remove_irods_folder_in_django(resource, folder_path, user):
     """
     Remove all files inside a folder in Django DB after the folder is removed from iRODS

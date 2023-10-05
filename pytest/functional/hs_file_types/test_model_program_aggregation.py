@@ -444,6 +444,7 @@ def test_move_single_file_aggr_into_model_prog_aggr_failure(composite_resource, 
 
     assert not res.dangling_aggregations_exist()
 
+
 @pytest.mark.django_db(transaction=True)
 def test_move_single_file_into_model_program_aggregation(composite_resource, mock_irods):
     """ test that we move a single file into a folder that represents a
@@ -487,6 +488,7 @@ def test_move_single_file_into_model_program_aggregation(composite_resource, moc
     assert mp_aggr.files.count() == 2
     assert mp_aggr.metadata.is_dirty
     assert not res.dangling_aggregations_exist()
+
 
 @pytest.mark.django_db(transaction=True)
 def test_move_single_file_out_of_model_program_aggregation(composite_resource, mock_irods):
@@ -536,6 +538,7 @@ def test_move_single_file_out_of_model_program_aggregation(composite_resource, m
     assert mp_aggr.metadata.is_dirty
     assert not res.dangling_aggregations_exist()
 
+
 @pytest.mark.django_db(transaction=True)
 def test_move_folder_into_model_program_aggregation(composite_resource, mock_irods):
     """ test that when we move a folder into a folder that represents a
@@ -583,6 +586,7 @@ def test_move_folder_into_model_program_aggregation(composite_resource, mock_iro
     assert mp_aggr.files.count() == 2
     assert mp_aggr.metadata.is_dirty
     assert not res.dangling_aggregations_exist()
+
 
 @pytest.mark.django_db(transaction=True)
 def test_move_folder_out_of_model_program_aggregation(composite_resource, mock_irods):
