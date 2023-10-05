@@ -771,6 +771,7 @@ class CompositeResource(BaseResource):
 
         return aggregations
 
+
 # this would allow us to pick up additional form elements for the template before the template
 # is displayed
 processor_for(CompositeResource)(resource_processor)
