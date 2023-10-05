@@ -766,6 +766,7 @@ class CompositeResource(BaseResource):
         return istorage.isDir(path)
 
     def _cache_aggregations(self, aggregations):
+        """A helper function to cache aggregations to avoid repeated database queries"""
         if aggregations is None:
             aggregations = list(self.logical_files)
 
