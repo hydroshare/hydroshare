@@ -45,6 +45,7 @@ def create_account(
     user_type=None,
     country=None,
     state=None,
+    subject_areas=[],
 ):
     """
     Create a new user within the HydroShare system.
@@ -136,6 +137,10 @@ def create_account(
 
     if state:
         user_profile.state = state
+        user_profile.save()
+
+    if subject_areas:
+        user_profile.subject_areas = subject_areas
         user_profile.save()
     # create default UserQuota object for the new user
     UserQuota.objects.create(user=u)

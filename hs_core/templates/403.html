@@ -19,7 +19,7 @@
                                 {% with request.path|res_uuid_from_res_path as next %}
                                     <span id="signin-menu"><a href="{% url 'login' %}?next=/resource/{{ next }}"><span class="glyphicon glyphicon-log-in"></span> Log in</a></span> or
                                 {% endwith %}
-                                <span id="signup-menu"><a href="/sign-up/"><span class="glyphicon glyphicon-user"></span> create an account</a></span>.
+                                <span id="signup-menu"><a href="{{ request|signup_url }}"><span class="glyphicon glyphicon-user"></span> create an account</a></span>.
                             </strong>
                         {% endif %}
                             {% if owners %}

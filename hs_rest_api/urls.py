@@ -206,6 +206,9 @@ urlpatterns = [
     url(r'^userDetails/(?P<user_identifier>.+)/$',
         core_views.hsapi_get_user, name='get_user_details'),
 
+    url(r'^userKeycloak/(?P<user_identifier>.+)$',
+        core_views.hsapi_get_user_for_keycloak, name='get_user_for_keycloak'),
+
     url(r'^dictionary/universities/$',
         dict_views.ListUniversities.as_view(), name="get_dictionary"),
 

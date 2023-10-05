@@ -2241,6 +2241,62 @@ def hsapi_get_user(request, user_identifier):
     return get_user_or_group_data(request, user_identifier, "false")
 
 
+@swagger_auto_schema(
+    method="post",
+    operation_description="Check user password for Keycloak Migration",
+    responses={200: "Password is valid", 400: "Password is invalid"},
+    manual_parameters=[uid],
+    request_body=openapi.Schema(type=openapi.TYPE_OBJECT,
+                                properties={'password': openapi.Schema(type=openapi.TYPE_STRING,
+                                                                       description="raw password to validate")}
+                                )
+)
+@swagger_auto_schema(
+    method="get",
+    operation_description="Get user data for Keycloak Migration",
+    responses={200: "Returns JsonResponse containing user data"},
+    manual_parameters=[uid],
+)
+@api_view(["GET", "POST"])
+def hsapi_get_user_for_keycloak(request, user_identifier):
+    """
+    Get user data
+
+    :param user_identifier: id of the user for which data is needed
+    :return: JsonResponse containing user data
+    """
+
+    if not request.user.is_superuser:
+        msg = {"message": "Unauthorized"}
+        return JsonResponse(msg, status=401)
+
+    if request.method == "POST":
+        return hsapi_post_user_for_keycloak(request, user_identifier)
+
+    user: User = hydroshare.utils.user_from_id(user_identifier)
+    keycloak_dict = {
+        "username": user.username,
+        "email": user.email,
+        "firstName": user.first_name,
+        "lastName": user.last_name,
+        "enabled": True,
+        "emailVerified": user.is_active,
+        "roles": [
+            "default-roles-hydroshare"
+        ],
+    }
+    return JsonResponse(keycloak_dict)
+
+
+def hsapi_post_user_for_keycloak(request, user_identifier):
+    """
+    Check the user password
+    """
+    password = json.loads(request.body.decode('utf-8'))['password']
+    user: User = hydroshare.utils.user_from_id(user_identifier)
+    return HttpResponse() if user.check_password(password) else HttpResponseBadRequest()
+
+
 @login_required
 def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs):
     """
