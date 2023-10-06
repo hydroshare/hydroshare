@@ -101,6 +101,7 @@ def update_quota_usage(username):
     """
     hs_internal_zone = "hydroshare"
     uq = UserQuota.objects.filter(user__username=username, zone=hs_internal_zone).first()
+    logger.error(f"PRE usage: {uq.used_value}")
     if uq is None:
         # the quota row does not exist in Django
         err_msg = 'quota row does not exist in Django for hydroshare zone for user {}'.format(username)
@@ -109,6 +110,7 @@ def update_quota_usage(username):
 
     used_val = get_quota_usage_from_irods(username)
     uq.update_used_value(used_val)
+    logger.error(f"POST usage: {uq.used_value}")
 
 
 def res_has_web_reference(res):
