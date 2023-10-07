@@ -1,5 +1,6 @@
 from django.conf.urls import url, include
 
+from hs_access_control.models.shortcut import get_user_resource_privilege_endpoint, get_user_resources
 from hs_dictionary import views as dict_views
 from hs_core import views as core_views
 from hs_file_types import views as file_type_views
@@ -252,4 +253,8 @@ urlpatterns = [
     url(r'^resource/(?P<resource_id>[0-9a-f]+)/modelinstance/meta/(?P<aggregation_path>.*)$',
         file_type_views.model_instance_metadata_in_json,
         name='model_instance_metadata_in_json'),
+
+    url(r'^resource/(?P<resource_id>[0-9a-f]+)/authorization/(?P<user_identifier>.+)/$', get_user_resource_privilege_endpoint),
+
+    url(r'^resources/authorization/(?P<user_identifier>.+)/$', get_user_resources),
 ]
