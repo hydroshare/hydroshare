@@ -4231,6 +4231,11 @@ class BaseResource(Page, AbstractResource):
         find_non_preferred_folder_paths(self.file_path)
         return not_preferred_paths
 
+    def get_relative_path(self, dir_path):
+        if dir_path.startswith(self.file_path):
+            dir_path = dir_path[len(self.file_path) + 1:]
+        return dir_path
+
 
 old_get_content_model = Page.get_content_model
 

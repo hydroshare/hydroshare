@@ -664,18 +664,26 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
 
     def add_resource_files_in_folder(self, resource, folder):
         """
-        A helper for creating aggregation. Makes all resource files in a given folder as part of
-        the aggregation/logical file type
+        A helper for creating aggregation. Makes all resource files in a given folder and its
+        sub folders as part of the aggregation/logical file type
         :param  resource:  an instance of CompositeResource
         :param  folder: folder from which all files need to be made part of this aggregation
         """
 
-        res_files = ResourceFile.list_folder(resource=resource, folder=folder,
-                                             sub_folders=True)
+        # get all resource files that in folder *folder* and all its sub folders
+        res_files = ResourceFile.list_folder(resource=resource, folder=folder, sub_folders=True)
 
         for res_file in res_files:
-            self.add_resource_file(res_file, set_metadata_dirty=False)
-        self.set_metadata_dirty()
+            if not res_file.has_logical_file:
+                self.add_resource_file(res_file, set_metadata_dirty=False)
+            else:
+                # if the file is already part of another aggregation, we need to remove it from that
+                # as nested aggregation is not allowed in a model program aggregation
+                res_file.logical_file_content_object = None
+                self.add_resource_file(res_file, set_metadata_dirty=False)
+        if res_files:
+            self.set_metadata_dirty()
+            resource.cleanup_aggregations()
         return res_files
 
     def get_copy(self, copied_resource):
