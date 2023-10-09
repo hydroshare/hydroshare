@@ -93,7 +93,7 @@ server {
         if (-f $document_root/maintenance_on.html) {
             rewrite ^(.*)$ /maintenance_on.html break;
         }
-        proxy_pass http://FQDN_OR_IP:8000;
+        proxy_pass http://keepalive-upstream;
         proxy_set_header X-Django-Reverse-Proxy true;
     }
 

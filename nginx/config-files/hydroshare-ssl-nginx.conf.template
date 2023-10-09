@@ -129,7 +129,7 @@ server {
         if (-f $document_root/maintenance_on.html) {
             rewrite ^(.*)$ /maintenance_on.html break;
         }
-        proxy_pass http://unix:/hs_tmp/gunicorn.sock;
+        proxy_pass http://keepalive-gunicorn;
         proxy_set_header X-Django-Reverse-Proxy true;
     }
 

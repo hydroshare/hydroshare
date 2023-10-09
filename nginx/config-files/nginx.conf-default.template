@@ -2,6 +2,7 @@
 user SENDFILE_IRODS_USER SENDFILE_IRODS_GROUP;
 
 worker_processes  4;
+worker_rlimit_nofile 2048;
 
 error_log  /var/log/nginx/error.log warn;
 pid        /var/run/nginx.pid;
@@ -10,7 +11,6 @@ thread_pool download threads=32 max_queue=65536;
 
 events {
     worker_connections  1024;
-    worker_rlimit_nofile 2048;
 }
 
 http {
