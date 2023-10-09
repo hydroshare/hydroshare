@@ -250,7 +250,7 @@ cp -rf $NGINX_CONFIG_DIRECTORY/nginx.conf-default.template ${NGINX_CONFIG_DIRECT
 cp -rf $NGINX_CONFIG_DIRECTORY/hydroshare-local-nginx.conf.template ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
 cp -fr nginx/Dockerfile-nginx.template nginx/Dockerfile-nginx
 
-sed -i $SED_EXT 's!FQDN_OR_IP!'`hostname`'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
+sed -i $SED_EXT 's!http://FQDN_OR_IP!'hydroshare'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
 
 sed -i $SED_EXT 's!IRODS_DATA_URI!'${IRODS_DATA_URI}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
 sed -i $SED_EXT 's!IRODS_USER_URI!'${IRODS_USER_URI}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
