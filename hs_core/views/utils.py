@@ -877,10 +877,10 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
         if composite_file_move:
             resource.remove_aggregation_from_file(res_file_obj, src_folder, tgt_folder)
 
-            # checks tgt_name as a side effect.
-            ResourceFile.resource_path_is_acceptable(resource, tgt_name, test_exists=True)
-            res_file_obj.set_storage_path(tgt_name)
-
+        # checks tgt_name as a side effect.
+        ResourceFile.resource_path_is_acceptable(resource, tgt_name, test_exists=True)
+        res_file_obj.set_storage_path(tgt_name)
+        if composite_file_move:
             # if the file is getting moved into a folder that represents a FileSet or to a folder
             # inside a fileset folder, then make the file part of that FileSet
             # if the file is moved into a model program aggregation folder or to a folder inside the model program
