@@ -869,17 +869,18 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
                                                                 test_exists=False)
     tgt_folder, _ = ResourceFile.resource_path_is_acceptable(resource, tgt_name, test_exists=False)
     file_or_folder_move = src_folder != tgt_folder
+    composite_file_move = file_or_folder_move and resource.resource_type == 'CompositeResource'
     try:
         res_file_obj = ResourceFile.get(resource=resource, file=base, folder=src_folder)
         # if the source file is part of a FileSet or Model Program/Instance aggregation (based on folder),
         # we need to remove it from that aggregation in the case the file is being moved out of that aggregation
-        if file_or_folder_move and resource.resource_type == 'CompositeResource':
+        if composite_file_move:
             resource.remove_aggregation_from_file(res_file_obj, src_folder, tgt_folder)
 
-        # checks tgt_name as a side effect.
-        ResourceFile.resource_path_is_acceptable(resource, tgt_name, test_exists=True)
-        res_file_obj.set_storage_path(tgt_name)
-        if file_or_folder_move and resource.resource_type == 'CompositeResource':
+            # checks tgt_name as a side effect.
+            ResourceFile.resource_path_is_acceptable(resource, tgt_name, test_exists=True)
+            res_file_obj.set_storage_path(tgt_name)
+
             # if the file is getting moved into a folder that represents a FileSet or to a folder
             # inside a fileset folder, then make the file part of that FileSet
             # if the file is moved into a model program aggregation folder or to a folder inside the model program
@@ -892,7 +893,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
         resource_is_federated = resource.is_federated
         batch_size = settings.BULK_UPDATE_CREATE_BATCH_SIZE
         is_target_folder_aggregation = False
-        if file_or_folder_move and resource.resource_type == 'CompositeResource':
+        if composite_file_move:
             try:
                 resource.get_aggregation_by_name(tgt_folder)
                 is_target_folder_aggregation = True
@@ -926,7 +927,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
             else:
                 ResourceFile.objects.bulk_update(res_file_objs, ['file_folder', 'resource_file'], batch_size=batch_size)
 
-            if is_target_folder_aggregation and file_or_folder_move and resource.resource_type == 'CompositeResource':
+            if is_target_folder_aggregation and composite_file_move:
                 res_file_objs = ResourceFile.list_folder(resource=resource, folder=tgt_name)
                 aggregations = list(resource.logical_files)
                 for fobj in res_file_objs:
