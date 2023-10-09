@@ -124,6 +124,8 @@ services:
       - "share_vol:/irods/cache"
       - "idata_vault_vol:/irods/data"
       - "iuser_vault_vol:/irods/user"
+    # networks:
+    #   - hs
   hydroshare:
     build:
       context: .
@@ -173,6 +175,8 @@ services:
     stdin_open: true
     tty: true
     command: /bin/bash init-hydroshare
+    # networks:
+    #   - hs
   defaultworker:
     build:
       context: .
@@ -225,3 +229,6 @@ volumes:
   temp_vol:
   share_vol:
   rabbitmq_data_vol:
+# networks:
+#   hs:
+#     driver: bridge
