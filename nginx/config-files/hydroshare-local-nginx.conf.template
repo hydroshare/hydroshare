@@ -12,6 +12,11 @@ geo $external {
   10.0.0.0/8 0;
 }
 
+upstream keepalive-upstream {
+  server http://FQDN_OR_IP:8000;
+  keepalive 65;
+}
+
 proxy_set_header Host $host;
 proxy_set_header X-Real-IP $remote_addr;
 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -100,7 +105,9 @@ server {
     } 
 
     location @proxy { 
-        proxy_pass http://FQDN_OR_IP:8000;
+        proxy_pass http://keepalive-upstream;
+        proxy_set_header Connection "";
+        proxy_http_version 1.1;
     }
 
     # return error 503 and custom error message
