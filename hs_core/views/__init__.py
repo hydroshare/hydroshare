@@ -2150,6 +2150,38 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
     return HttpResponseRedirect(f"/resource/{ res.short_id }/")
 
 
+def spam_allowlist(request, shortkey, action, **kwargs):
+    """
+    Allow a resource to be discoverable even if it matches spam patterns
+    """
+    user = request.user
+    if not user.is_superuser:
+        return HttpResponseForbidden(
+            "not authorized to perform this action"
+        )
+
+    res = hydroshare.utils.get_resource_by_shortkey(shortkey)
+    if action == "allow":
+        res.spam_allowlisted = True
+        res.save()
+        messages.success(
+            request,
+            "Resource has been allowlisted. "
+            "This means that it can show in Discover even if it contains spam patterns.",
+        )
+    else:
+        res.spam_allowlisted = False
+        res.save()
+        messages.warning(
+            request,
+            "Resource has been removed from allowlist. "
+            "It will not show in Discover if it contains spam patterns.",
+        )
+    # update the index
+    signals.post_spam_whitelist_change.send(sender=BaseResource, instance=res)
+    return HttpResponseRedirect(f"/resource/{ res.short_id }/")
+
+
 @login_required
 def act_on_group_membership_request(
     request, membership_request_id, action, *args, **kwargs
