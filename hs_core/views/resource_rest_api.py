@@ -261,6 +261,11 @@ class ResourceListCreate(generics.ListCreateAPIView):
             raise ValidationError(detail=resource_list_request_validator.errors)
 
         filter_parms = resource_list_request_validator.validated_data
+
+        if filter_parms['coverage_type']:
+            site_url = hydroshare.utils.current_site_url()
+            message = f"Spatial query is currently disabled in hsapi. Please use discover: {site_url}/search"
+            raise ValidationError(detail=message)
         filter_parms['user'] = (self.request.user if self.request.user.is_authenticated else None)
         if len(filter_parms['type']) == 0:
             filter_parms['type'] = None
