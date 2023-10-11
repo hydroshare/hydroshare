@@ -262,7 +262,7 @@ class ResourceListCreate(generics.ListCreateAPIView):
 
         filter_parms = resource_list_request_validator.validated_data
 
-        if filter_parms['coverage_type']:
+        if 'coverage_type' in filter_parms:
             site_url = hydroshare.utils.current_site_url()
             message = f"Spatial query is currently disabled in hsapi. Please use discover: {site_url}/search"
             raise ValidationError(detail=message)
