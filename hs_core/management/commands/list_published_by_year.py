@@ -158,7 +158,7 @@ class Command(BaseCommand):
         row.append(res.metadata.title.value)
         row.append(f"{res.resource_type}")
         if pub_date:
-            row.append(f"Published on {pub_date}")
+            row.append(pub_date)
         else:
             row.append("")
 
