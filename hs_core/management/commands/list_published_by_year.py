@@ -172,7 +172,7 @@ class Command(BaseCommand):
     def write_csv(self, writer):
         # write headers last since funders is variable number
         headers = ['url', 'doi', 'title', 'type', 'pub_date']
-        for i in range(1, self.max_funders):
+        for i in range(1, self.max_funders + 1):
             headers.append(f"agency_name_{i}")
             headers.append(f"agency_url_{i}")
             headers.append(f"award_title_{i}")
