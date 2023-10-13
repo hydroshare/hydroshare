@@ -147,7 +147,7 @@ class Command(BaseCommand):
 
     def write_csv(self, res, pub_date, site_url, csvfile):
         row = []
-        writer = csvfile.writer(csvfile)
+        writer = csv_module.writer(csvfile)
         res_url = site_url + res.absolute_url
         funding_agencies = res.metadata.funding_agencies.all()
         row.append(f"{res_url}")
