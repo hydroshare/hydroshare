@@ -15,6 +15,8 @@ import csv as csv_module
 
 class Command(BaseCommand):
     help = "Print resource information"
+    max_funders = 0
+    rows = []
 
     def add_arguments(self, parser):
         # Named (optional) arguments
@@ -80,10 +82,8 @@ class Command(BaseCommand):
         site_url = hydroshare.utils.current_site_url()
 
         if csv:
-            csvfile = open(f'published_resources{file_name}.csv', 'w')
-            writer = csv_module.writer(csvfile)
-            headers = ['Url', 'Doi', 'Title', 'Type', 'Publication Date', 'Funding Agencies -->']
-            writer.writerow(headers)
+            self.csvfile = open(f'published_resources{file_name}.csv', 'w')
+            self.writer = csv_module.writer(self.csvfile)
 
         for resource in resources:
             pub_date = self.get_publication_date(resource)
@@ -95,9 +95,11 @@ class Command(BaseCommand):
                 if not pub_date >= cuttoff_time:
                     continue
             if csv:
-                self.write_csv(resource, pub_date, site_url, csvfile)
+                self.build_csv(resource, pub_date, site_url)
             else:
                 self.print_resource(resource, pub_date, site_url)
+        if csv:
+            self.write_csv(self.writer)
 
     def get_publication_date(self, resource):
         published_date = resource.metadata.dates.filter(type="published").first()
@@ -145,39 +147,40 @@ class Command(BaseCommand):
         else:
             print("Resource has no funding information")
 
-    def write_csv(self, res, pub_date, site_url, csvfile):
+    def build_csv(self, res, pub_date, site_url):
         row = []
-        writer = csv_module.writer(csvfile)
         res_url = site_url + res.absolute_url
         funding_agencies = res.metadata.funding_agencies.all()
-        row.append(f"{res_url}")
-        if res.doi:
-            row.append(res.doi)
-        else:
-            row.append("")
-        row.append(res.metadata.title.value)
-        row.append(f"{res.resource_type}")
-        if pub_date:
-            row.append(pub_date)
-        else:
-            row.append("")
+        row.append(res_url if res_url else None)
+        row.append(res.doi if res.doi else None)
+        title = res.metadata.title.value
+        row.append(title if title else None)
+        row.append(res.resource_type if res.resource_type else None)
+        row.append(pub_date if pub_date else None)
 
         if funding_agencies:
+            num_funders = len(funding_agencies)
+            if num_funders > self.max_funders:
+                self.max_funders = num_funders
             for f in funding_agencies:
-                if f.agency_name:
-                    row.append(f.agency_name)
-                else:
-                    row.append("")
-                if f.agency_url:
-                    row.append(f.agency_url)
-                else:
-                    row.append("")
-                if f.award_title:
-                    row.append(f.award_title)
-                else:
-                    row.append("")
-                if f.award_number:
-                    row.append(f.award_number)
-                else:
-                    row.append("")
-        writer.writerow(row)
+                row.append(f.agency_name if f.agency_name else None)
+                row.append(f.agency_url if f.agency_url else None)
+                row.append(f.award_title if f.award_title else None)
+                row.append(f.award_number if f.award_number else None)
+        self.rows.append(row)
+
+    def write_csv(self, writer):
+        # write headers last since funders is variable number
+        headers = ['url', 'doi', 'title', 'type', 'pub_date']
+        for i in range(1, self.max_funders):
+            headers.append(f"agency_name_{i}")
+            headers.append(f"agency_url_{i}")
+            headers.append(f"award_title_{i}")
+            headers.append(f"award_number_{i}")
+
+        # insert the headers
+        writer.writerow(headers)
+
+        for row in self.rows:
+            writer.writerow(row)
+        self.csvfile.close()
