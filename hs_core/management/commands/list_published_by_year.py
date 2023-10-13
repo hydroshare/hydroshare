@@ -43,7 +43,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--csv',
             action='store_true',  # True for presence, False for absence
-            dest='csv',  # value is options['set_quota_holder']
+            dest='csv',
             help='export as csv'
         )
 
