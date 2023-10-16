@@ -470,13 +470,12 @@ def create_resource(
                 access_key=settings.MINIO_KEY,
                 secret_key=settings.MINIO_SECRET,
             )
-            client.make_bucket(resource.short_id)
             with tempfile.TemporaryDirectory() as tmpdirname:
                 filepath = os.path.join(tmpdirname, "metadata.json")
                 fp = open(filepath, "w")
                 fp.write(json.dumps({"hello": "world"}))
                 fp.close()
-                client.fput_object(resource.short_id, "metadata.json", filepath)
+                client.fput_object(owner.username, f"hydroshare/{resource.short_id}/metadata.json", filepath)
 
         # by default make resource private
         resource.slug = 'resource{0}{1}'.format('/', resource.short_id)

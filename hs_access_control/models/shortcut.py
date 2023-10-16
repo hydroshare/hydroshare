@@ -4,6 +4,7 @@ import tempfile
 
 from django.db.models import Q
 from django.http import JsonResponse
+from hs_access_control.models.resource import ResourceAccess
 from rest_framework import status
 from rest_framework.decorators import api_view
 
@@ -201,6 +202,11 @@ def edit_statement(resource):
     statement = base_statement(action, resource)
     return [statement]
 
+def bucket_path(resource):
+    raccess = ResourceAccess.objects.filter(resource__short_id=resource).first()
+    bucketname = raccess.first_owner.username
+    return f"{bucketname}/hydroshare/{resource}"
+
 def minio_policy(user):
     user_privileges = user_resource_privileges(user)
     policy = {
@@ -208,11 +214,11 @@ def minio_policy(user):
         "Statement": []
     }
     if user_privileges["view"]:
-        resource_list = [f"arn:aws:s3:::{resource}" for resource in user_privileges["view"]]
+        resource_list = [f"arn:aws:s3:::{bucket_path(resource)}" for resource in user_privileges["view"]]
         policy["Statement"].extend(view_statement(resource_list))
     if user_privileges["edit"] or user_privileges["owner"]:
-        resource_list = [f"arn:aws:s3:::{resource}" for resource in user_privileges["owner"]] + \
-                        [f"arn:aws:s3:::{resource}" for resource in user_privileges["edit"]]
+        resource_list = [f"arn:aws:s3:::{bucket_path(resource)}" for resource in user_privileges["owner"]] + \
+                        [f"arn:aws:s3:::{bucket_path(resource)}" for resource in user_privileges["edit"]]
         policy["Statement"].extend(edit_statement(resource_list))
     if policy["Statement"]:
         return policy
