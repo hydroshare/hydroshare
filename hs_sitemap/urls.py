@@ -1,13 +1,14 @@
 from django.conf.urls import url
 
 from django.contrib.sitemaps import views
-from mezzanine.core.sitemaps import DisplayableSitemap
 
-from .sitemaps import PagesSitemap
+from .sitemaps import PagesSitemap, ResourcesSitemap, CommunitiesSitemap, GroupsSitemap
 
 sitemaps = {
-    "resources": DisplayableSitemap,
-    "pages": PagesSitemap
+    "resources": ResourcesSitemap,
+    "pages": PagesSitemap,
+    "communities": CommunitiesSitemap,
+    "groups": GroupsSitemap
 }
 sitemap_view = 'django.contrib.sitemaps.views.sitemap'
 

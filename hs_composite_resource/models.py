@@ -141,45 +141,50 @@ class CompositeResource(BaseResource):
 
         return True
 
-    def remove_aggregation_from_file(self, moved_res_file, src_folder, tgt_folder):
+    def remove_aggregation_from_file(self, moved_res_file, src_folder, tgt_folder, aggregations=None, cleanup=True):
         """removes association with aggregation (fileset or model program) from a resource file that has been moved
         :param  moved_res_file: an instance of a ResourceFile which has been moved to a different folder
         :param  src_folder: folder from which the file got moved from
         :param  tgt_folder: folder to which the file got moved into
+        :param aggregations:   list of all aggregations in self (this resource)
+        :param cleanup: if True, cleanup aggregation if aggregation is empty after the file removal
         """
 
         if moved_res_file.file_folder:
-            try:
-                aggregation = self.get_aggregation_by_name(moved_res_file.file_folder)
-                # aggregation must be one of 'fileset', modelinstance' or 'modelprogram
-                if aggregation == moved_res_file.logical_file:
-                    # remove aggregation association with the file
-                    # the removed aggregation is a fileset aggregation or a model program or a model instance
-                    # aggregation based on folder (note: model program/instance aggregation can also be
-                    # created from a single file)
-                    moved_res_file.logical_file_content_object = None
-                    moved_res_file.save()
-                    # delete any instance of ModelProgramResourceFileType associated with this moved file
-                    if aggregation.is_model_program:
-                        # if the file is getting moved within a model program folder hierarchy then no need
-                        # to delete any associated ModelProgramResourceFileType object
-                        if not tgt_folder.startswith(src_folder) and not src_folder.startswith(tgt_folder):
-                            ModelProgramResourceFileType.objects.filter(res_file=moved_res_file).delete()
-                    self.cleanup_aggregations()
-            except ObjectDoesNotExist:
-                pass
+            aggregation = self.get_folder_aggregation_in_path(moved_res_file.file_folder, aggregations=aggregations)
+            if aggregation is None:
+                return
 
-    def add_file_to_aggregation(self, moved_res_file):
+            # aggregation must be one of 'fileset', 'model instance' or 'model program'
+            if aggregation == moved_res_file.logical_file:
+                # remove aggregation association with the file
+                # the removed aggregation is a fileset aggregation or a model program or a model instance
+                # aggregation based on folder (note: model program/instance aggregation can also be
+                # created from a single file)
+                moved_res_file.logical_file_content_object = None
+                moved_res_file.save()
+                # delete any instance of ModelProgramResourceFileType associated with this moved file
+                if aggregation.is_model_program:
+                    # if the file is getting moved within a model program folder hierarchy then no need
+                    # to delete any associated ModelProgramResourceFileType object
+                    if not tgt_folder.startswith(src_folder) and not src_folder.startswith(tgt_folder):
+                        ModelProgramResourceFileType.objects.filter(res_file=moved_res_file).delete()
+                if cleanup:
+                    self.cleanup_aggregations()
+
+    def add_file_to_aggregation(self, moved_res_file, aggregations=None):
         """adds the moved file to the aggregation (fileset or model program/instance) into which the file has been moved
         :param  moved_res_file: an instance of ResourceFile which has been moved into a folder that represents
         a fileset, a model program, or a model instance aggregation
+        :param aggregations:   list of all aggregations in self (this resource)
         """
         if moved_res_file.file_folder and not moved_res_file.has_logical_file:
             # first check for model program/instance aggregation
-            aggregation = self.get_model_aggregation_in_path(moved_res_file.file_folder)
+            aggregation = self.get_model_aggregation_in_path(moved_res_file.file_folder, aggregations=aggregations)
             if aggregation is None:
                 # then check for fileset aggregation
-                aggregation = self.get_fileset_aggregation_in_path(moved_res_file.file_folder)
+                aggregation = self.get_fileset_aggregation_in_path(moved_res_file.file_folder,
+                                                                   aggregations=aggregations)
             if aggregation is not None:
                 # make the moved file part of the fileset or model program aggregation unless the file is
                 # already part of another aggregation (single file aggregation)
@@ -194,32 +199,27 @@ class CompositeResource(BaseResource):
          :param aggregations:   list of all aggregations in self (this resource)
         """
 
-        aggregation_path = dir_path
-        if dir_path.startswith(self.file_path):
-            aggregation_path = dir_path[len(self.file_path) + 1:]
-        if aggregations is None:
-            logical_files = list(self.logical_files)
-        else:
-            logical_files = aggregations
-
+        aggregation_path = self.get_relative_path(dir_path)
+        logical_files = self._cache_aggregations(aggregations=aggregations)
         for lf in logical_files:
             if hasattr(lf, 'folder'):
                 if lf.folder == aggregation_path:
                     return lf
         return None
 
-    def get_folder_aggregation_in_path(self, dir_path):
+    def get_folder_aggregation_in_path(self, dir_path, aggregations=None):
         """Gets any aggregation that is based on folder and exists in the specified path
         Searches for a folder based aggregation moving towards the root of the specified path
         :param  dir_path: directory path in which to search for a folder based aggregation
-
+        :param aggregations: a list of all aggregations in self (this resource)
         :return a folder based aggregation if found otherwise, None
         """
 
-        # will be using aggregations more than once if dir_path consists of multiple folders
-        aggregations = list(self.logical_files) if '/' in dir_path else None
-        if dir_path.startswith(self.file_path):
-            dir_path = dir_path[len(self.file_path) + 1:]
+        dir_path = self.get_relative_path(dir_path)
+        aggregations = self._cache_aggregations(aggregations=aggregations)
+        if not aggregations:
+            # no aggregations exist in this resource
+            return None
 
         def get_aggregation(path):
             try:
@@ -243,10 +243,7 @@ class CompositeResource(BaseResource):
          :param file_path: Resource file path (full file path starting with resource id)
          for which the aggregation object to be retrieved
         """
-        relative_file_path = file_path
-        if file_path.startswith(self.file_path):
-            relative_file_path = file_path[len(self.file_path) + 1:]
-
+        relative_file_path = self.get_relative_path(file_path)
         folder, base = os.path.split(relative_file_path)
         try:
             res_file = ResourceFile.get(self, file=base, folder=folder)
@@ -283,8 +280,7 @@ class CompositeResource(BaseResource):
             is_path_a_folder = self.is_path_folder(path=path)
             if is_path_a_folder:
                 # need to create xml files for all aggregations that exist under path
-                if path.startswith(self.file_path):
-                    path = path[len(self.file_path) + 1:]
+                path = self.get_relative_path(path)
                 for lf in self.logical_files:
                     if lf.aggregation_name.startswith(path) and lf.metadata.is_dirty:
                         lf.create_aggregation_xml_documents()
@@ -337,18 +333,22 @@ class CompositeResource(BaseResource):
             raise ObjectDoesNotExist(
                 "No matching aggregation was found for name:{}".format(name))
 
-    def get_fileset_aggregation_in_path(self, path):
+    def get_fileset_aggregation_in_path(self, path, aggregations=None):
         """Get the first fileset aggregation in the path moving up (towards the root)in the path
         :param  path: directory path in which to search for a fileset aggregation
+        :param  aggregations: a list of aggregations in the resource (self)
         :return a fileset aggregation object if found, otherwise None
         """
 
-        # will be using aggregations more than once if path consists of multiple folders
-        aggregations = list(self.logical_files) if '/' in path else None
+        path = self.get_relative_path(path)
+        aggregations = self._cache_aggregations(aggregations=aggregations)
+        if not aggregations:
+            # no aggregations exist in this resource
+            return None
 
-        def get_fileset(path):
+        def get_fileset(_path):
             try:
-                aggregation = self.get_aggregation_by_name(path, aggregations=aggregations)
+                aggregation = self.get_aggregation_by_name(_path, aggregations=aggregations)
                 if aggregation.is_fileset:
                     return aggregation
             except ObjectDoesNotExist:
@@ -362,18 +362,22 @@ class CompositeResource(BaseResource):
         else:
             return get_fileset(path)
 
-    def get_model_aggregation_in_path(self, path):
+    def get_model_aggregation_in_path(self, path, aggregations=None):
         """Get the model program or model instance aggregation in the path moving up (towards the root)in the path
         :param  path: directory path in which to search for a model program or model instance aggregation
+        :param  aggregations: a list of aggregations in the resource (self)
         :return a model program or model instance aggregation object if found, otherwise None
         """
 
-        # will be using aggregations more than once if path consists of multiple folders
-        aggregations = list(self.logical_files) if '/' in path else None
+        path = self.get_relative_path(path)
+        aggregations = self._cache_aggregations(aggregations=aggregations)
+        if not aggregations:
+            # no aggregations exist in this resource
+            return None
 
-        def get_aggregation(path):
+        def get_aggregation(_path):
             try:
-                aggregation = self.get_aggregation_by_name(path, aggregations=aggregations)
+                aggregation = self.get_aggregation_by_name(_path, aggregations=aggregations)
                 return aggregation
             except ObjectDoesNotExist:
                 return None
@@ -409,12 +413,8 @@ class CompositeResource(BaseResource):
                 except ObjectDoesNotExist:
                     pass
 
-        if new_path.startswith(self.file_path):
-            new_path = new_path[len(self.file_path) + 1:]
-
-        if orig_path.startswith(self.file_path):
-            orig_path = orig_path[len(self.file_path) + 1:]
-
+        new_path = self.get_relative_path(new_path)
+        orig_path = self.get_relative_path(orig_path)
         is_new_path_a_folder = self.is_path_folder(path=new_path)
         istorage = self.get_irods_storage()
 
@@ -485,8 +485,7 @@ class CompositeResource(BaseResource):
 
         This is true if it is listed as metadata in any logical file.
         """
-        if not (file_path.endswith(METADATA_FILE_ENDSWITH)
-                or file_path.endswith(RESMAP_FILE_ENDSWITH)):
+        if not self.is_metadata_xml_file(file_path):
             return False
         for logical_file in self.logical_files:
             if logical_file.metadata_file_path == file_path or \
@@ -592,10 +591,7 @@ class CompositeResource(BaseResource):
 
         if not path_to_check.endswith("data/contents"):
             # it is not the base directory - it must be a directory under base dir
-            if path_to_check.startswith(self.file_path):
-                aggregation_path = path_to_check[len(self.file_path) + 1:]
-            else:
-                aggregation_path = path_to_check
+            aggregation_path = self.get_relative_path(path_to_check)
             try:
                 aggregation = self.get_aggregation_by_name(aggregation_path)
                 return aggregation.supports_resource_file_add
@@ -768,6 +764,13 @@ class CompositeResource(BaseResource):
         if not path.startswith(self.file_path):
             path = os.path.join(self.file_path, path)
         return istorage.isDir(path)
+
+    def _cache_aggregations(self, aggregations):
+        """A helper function to cache aggregations to avoid repeated database queries"""
+        if aggregations is None:
+            aggregations = list(self.logical_files)
+
+        return aggregations
 
 
 # this would allow us to pick up additional form elements for the template before the template

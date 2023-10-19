@@ -198,13 +198,13 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
 
         for res_file in res_files:
             if not res_file.has_logical_file:
-                self.add_resource_file(res_file)
+                self.add_resource_file(res_file, set_metadata_dirty=False)
             elif res_file.logical_file.is_fileset and not res_file.logical_file.aggregation_name.startswith(folder):
                 # resource file that is part of a fileset aggregation where the fileset aggregation
                 # is not a sub folder of *folder* needs to be made part of this new fileset
                 # aggregation
-                self.add_resource_file(res_file)
-
+                self.add_resource_file(res_file, set_metadata_dirty=False)
+        self.set_metadata_dirty()
         return res_files
 
     def update_folder(self, new_folder, old_folder):

@@ -4,10 +4,9 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 
-from hs_core.models import BaseResource
-
 
 def update_doi_none_to_empty(apps, schema_editor):
+    BaseResource = apps.get_model('hs_core', 'BaseResource')
     for resource in BaseResource.objects.filter(doi=None):
         resource.doi = ''
         resource.save()

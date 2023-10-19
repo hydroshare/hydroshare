@@ -873,6 +873,7 @@ function bindFileBrowserItemEvents() {
                 // when aggregation type of the aggregation matches with the aggregation type supported by the tool
                 // matches, this will be set to true
                 let aggrApp = false;
+
                 let toolExtensions = '';
                 let toolAppKey = '';
                 if (fileSelected) {
@@ -885,9 +886,37 @@ function bindFileBrowserItemEvents() {
                                 break;
                             }
                         }
+                        if (extensionApp) {
+                            // check for appkey match
+                            if ($(this).attr("data-tool-appkey")) {
+                                toolAppKey = $(this).attr("data-tool-appkey");
+                            }
+                            if (aggrAppKey && toolAppKey) {
+                                // selected file is part of an aggregation and the aggregation has an appkey
+                                // tool appkey and aggregation appkey must match for the tool to be available
+                                if (aggrAppKey !== toolAppKey) {
+                                    extensionApp = false;
+                                }
+                            }
+                            else if (toolAppKey) {
+                                // tool has appkey but there is no aggregation appkey for the selected file
+                                // tool is not applicable/viewable for the selected file
+                                extensionApp = false;
+                            }
+                            else if (fileAggType) {
+                                // check for aggregation type match
+                                if ($(this).attr("data-agg-types")) {
+                                    aggrApp = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
+                                    extensionApp = aggrApp;
+                                }
+                            }
+                            else if ($(this).attr("data-agg-types")) {
+                                // tool has restricted aggregation types but the selected file is not an aggregation
+                                // tool is not applicable/viewable for the selected file
+                                extensionApp = false;
+                            }
+                        }
                     }
-                }
-                if (fileSelected) {
                     if (!extensionApp) {
                         // file extension and tool supported extension didn't match - now check for appkey match
                         if (!aggrFolderBased) {
@@ -902,6 +931,8 @@ function bindFileBrowserItemEvents() {
                         }
 
                         if (aggrAppKey && toolAppKey) {
+                            // both the tool and aggregation have appkey restriction
+                            // both app keys must match for the tool to be available
                             if (aggrAppKey === toolAppKey) {
                                 appKeyApp = true;
                             }
@@ -916,7 +947,14 @@ function bindFileBrowserItemEvents() {
                              else if ($(this).attr("data-url-file")) {
                                 aggrApp = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
                             }
-                            if (toolAppKey && !appKeyApp) {
+                            if (toolAppKey && aggrAppKey) {
+                                // both the tool and aggregation have appkey restriction
+                                // both app keys must match for the tool to be available
+                                if (aggrAppKey !== toolAppKey) {
+                                    aggrApp = false;
+                                }
+                            }
+                            else if (toolAppKey) {
                                 aggrApp = false;
                             }
                             if (!aggrApp) {
@@ -931,6 +969,8 @@ function bindFileBrowserItemEvents() {
                         toolAppKey = $(this).attr("data-tool-appkey");
                     }
                     if (aggrAppKey && toolAppKey) {
+                        // both the tool and aggregation have appkey restriction
+                        // both app keys must match for the tool to be available
                         if (aggrAppKey === toolAppKey) {
                             appKeyApp = true;
                         }
@@ -944,6 +984,11 @@ function bindFileBrowserItemEvents() {
                         if (!aggrApp) {
                             appKeyApp = false;
                         }
+                    }
+                    if ($(this).attr("data-file-extensions")) {
+                        // tool has restricted file extensions - so tool is not available for folder based aggregation
+                        appKeyApp = false;
+                        aggrApp = false;
                     }
                 }
 
@@ -1778,7 +1823,7 @@ function warnExternalContent(shortId) {
 function onUploadSuccess(file, response) {
     // uploaded files can affect metadata in composite resource.
     // Use the json data returned from backend to update UI
-    if (RES_TYPE === 'Resource') {
+    if (RES_TYPE === 'Resource' && response.number_new_aggregations > 0) {
         updateResourceUI();
     }
     showCompletedMessage(response);

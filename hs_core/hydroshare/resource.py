@@ -120,10 +120,9 @@ def res_has_web_reference(res):
     if res.resource_type != "CompositeResource":
         return False
 
-    for f in ResourceFile.objects.filter(object_id=res.id):
-        if f.has_logical_file:
-            if 'url' in f.logical_file.extra_data:
-                return True
+    for lf in res.get_logical_files('GenericLogicalFile'):
+        if 'url' in lf.extra_data:
+            return True
     return False
 
 
@@ -672,10 +671,12 @@ def add_resource_files(pk, *files, **kwargs):
     This does **not** handle mutability; changes to immutable resources should be denied elsewhere.
 
     """
+    from hs_core.tasks import set_resource_files_system_metadata
+
     resource = kwargs.pop("resource", None)
     if resource is None:
         resource = utils.get_resource_by_shortkey(pk)
-    ret = []
+    uploaded_res_files = []
     source_names = kwargs.pop('source_names', [])
     full_paths = kwargs.pop('full_paths', {})
     auto_aggregate = kwargs.pop('auto_aggregate', True)
@@ -710,21 +711,45 @@ def add_resource_files(pk, *files, **kwargs):
             dir_name = os.path.dirname(full_path)
             # Only do join if dir_name is not empty, otherwise, it'd result in a trailing slash
             full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
-        ret.append(utils.add_file_to_resource(resource, f, folder=full_dir, user=user))
+        res_file = utils.add_file_to_resource(resource, f, folder=full_dir, user=user, add_to_aggregation=False,
+                                              save_file_system_metadata=False)
+        uploaded_res_files.append(res_file)
 
     for ifname in source_names:
-        ret.append(utils.add_file_to_resource(resource, None,
-                                              folder=folder,
-                                              source_name=ifname, user=user))
+        res_file = utils.add_file_to_resource(resource, None, folder=folder, source_name=ifname, user=user,
+                                              add_to_aggregation=False,
+                                              save_file_system_metadata=False)
+        uploaded_res_files.append(res_file)
 
-    if not ret:
+    if not uploaded_res_files:
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)
     else:
-        if resource.resource_type == "CompositeResource" and auto_aggregate:
-            utils.check_aggregations(resource, ret)
+        if resource.resource_type == "CompositeResource":
+            upload_to_folder = base_dir
+            if upload_to_folder:
+                aggregations = list(resource.logical_files)
+                # check if there is folder based model program or model instance aggregation in the upload path
+                aggregation = resource.get_model_aggregation_in_path(upload_to_folder, aggregations=aggregations)
+                if aggregation is None:
+                    # check if there is a fileset aggregation in the upload path
+                    aggregation = resource.get_fileset_aggregation_in_path(upload_to_folder, aggregations=aggregations)
+                if aggregation:
+                    # Note: we can't use bulk_update here because we need to update the logical_file_content_object
+                    # which is not a concrete field in the ResourceFile model
+                    for res_file in uploaded_res_files:
+                        aggregation.add_resource_file(res_file, set_metadata_dirty=False)
 
-    return ret
+                    aggregation.set_metadata_dirty()
+            if auto_aggregate:
+                utils.check_aggregations(resource, uploaded_res_files)
+
+        utils.resource_modified(resource, user, overwrite_bag=False)
+
+        # store file level system metadata in Django DB (async task)
+        set_resource_files_system_metadata.apply_async((resource.short_id,))
+
+    return uploaded_res_files
 
 
 def update_science_metadata(pk, metadata, user):
@@ -830,7 +855,7 @@ def delete_resource_file_only(resource, f):
         f: the ResourceFile object to be deleted
     Returns: unqualified relative path to file that has been deleted
     """
-    short_path = f.short_path
+    short_path = f.get_short_path(resource)
     f.delete()
     return short_path
 
@@ -847,12 +872,10 @@ def delete_format_metadata_after_delete_file(resource, file_name):
 
     # if there is no other resource file with the same extension as the
     # file just deleted then delete the matching format metadata element for the resource
-    resource_file_extensions = [os.path.splitext(get_resource_file_name(f))[1] for f in
-                                resource.files.all()]
+    resource_file_extensions = {os.path.splitext(f.get_short_path(resource))[1] for f in
+                                resource.files.all()}
     if delete_file_extension not in resource_file_extensions:
-        format_element = resource.metadata.formats.filter(value=delete_file_mime_type).first()
-        if format_element:
-            resource.metadata.delete_element(format_element.term, format_element.id)
+        resource.metadata.formats.filter(value=delete_file_mime_type).delete()
 
 
 # TODO: Remove option for file id, not needed since names are unique.
@@ -1051,6 +1074,10 @@ def submit_resource_for_review(request, pk):
     resource.raccess.review_pending = True
     resource.raccess.immutable = True
     resource.raccess.save()
+
+    # Repair resource and email support user if there are issues
+    from hs_core.tasks import repair_resource_before_publication
+    repair_resource_before_publication.apply_async((resource.short_id,))
 
 
 def publish_resource(user, pk):

@@ -107,6 +107,7 @@ class ViewTests(TestCase):
         self.assertTrue('res_type' in list(values.keys()))
         self.assertTrue('name' in list(values.keys()))
         self.assertTrue('user_email_domain' in list(values.keys()))
+        self.assertTrue('user_email_domain_full' in list(values.keys()))
         self.assertTrue('user_type' in list(values.keys()))
         self.assertTrue('user_ip' in list(values.keys()))
         self.assertTrue('res_id' in list(values.keys()))
@@ -114,6 +115,7 @@ class ViewTests(TestCase):
         self.assertTrue(values['res_type'] == res_type)
         self.assertTrue(values['name'] == app_name)
         self.assertTrue(values['user_email_domain'] == self.user.email[-3:])
+        self.assertTrue(values['user_email_domain_full'] == self.user.email.split('@')[-1])
         self.assertTrue(values['user_type'] == 'Unspecified')
         self.assertTrue(values['user_ip'] == '198.84.193.157')
         self.assertTrue(values['res_id'] == res_id)
@@ -321,11 +323,11 @@ class TrackingTests(TestCase):
 
         kvp = dict(tuple(pair.split('=')) for pair in var1.value.split('|'))
         self.assertEqual(var1.name, 'begin_session')
-        self.assertEqual(len(list(kvp.keys())), 3)
+        self.assertEqual(len(list(kvp.keys())), 6)
 
         kvp = dict(tuple(pair.split('=')) for pair in var2.value.split('|'))
         self.assertEqual(var2.name, 'login')
-        self.assertEqual(len(list(kvp.keys())), 3)
+        self.assertEqual(len(list(kvp.keys())), 6)
 
         client.logout()
 
@@ -333,7 +335,7 @@ class TrackingTests(TestCase):
         var = Variable.objects.latest('timestamp')
         kvp = dict(tuple(pair.split('=')) for pair in var.value.split('|'))
         self.assertEqual(var.name, 'logout')
-        self.assertEqual(len(list(kvp.keys())), 3)
+        self.assertEqual(len(list(kvp.keys())), 6)
 
     def test_activity_parsing(self):
 
@@ -345,7 +347,7 @@ class TrackingTests(TestCase):
 
         kvp = dict(tuple(pair.split('=')) for pair in var1.value.split('|'))
         self.assertEqual(var1.name, 'begin_session')
-        self.assertEqual(len(list(kvp.keys())), 3)
+        self.assertEqual(len(list(kvp.keys())), 6)
 
         client.logout()
 
@@ -375,10 +377,11 @@ class UtilsTests(TestCase):
     def test_std_log_fields(self):
 
         log_fields = utils.get_std_log_fields(self.request, self.session)
-        self.assertTrue(len(list(log_fields.keys())) == 3)
+        self.assertTrue(len(list(log_fields.keys())) == 6)
         self.assertTrue('user_ip' in log_fields)
         self.assertTrue('user_type' in log_fields)
         self.assertTrue('user_email_domain' in log_fields)
+        self.assertTrue('user_email_domain_full' in log_fields)
 
     def test_ishuman(self):
 
@@ -426,8 +429,8 @@ class UtilsTests(TestCase):
             visitor = Visitor.objects.create()
             visitor.user = user
             session = Session.objects.create(visitor=visitor)
-            emaildom = utils.get_user_email_domain(session)
-            self.assertTrue(emaildom == dom)
+            emailtld = utils.get_user_email_tld(session)
+            self.assertTrue(emailtld == dom)
             user.delete()
 
     def test_client_ip(self):

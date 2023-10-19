@@ -56,10 +56,10 @@ function showAddEditExtraMetaPopup(edit, row_id_str) {
         $("#old_extra_meta_name").val(oldname);
         $("#extra_meta_name_input").val(oldname);
         $("#extra_meta_value_input").val(oldvalue);
-        $("#extra_meta_title").text("Edit Extended Metadata");
+        $("#extra_meta_title").text("Edit Additional Metadata");
     }
     else {
-        $("#extra_meta_title").text("Add Extended Metadata");
+        $("#extra_meta_title").text("Add Additional Metadata");
     }
     $('#extraMetaDialog').modal('show');
 }
@@ -219,8 +219,8 @@ function foundDuplicatedName(table, newName, except_row_id) {
 }
 
 function saveExtraMetadata() {
-    var successMsg = "Extended metadata updated.";
-    var errorMsg = "Extended metadata failed to update.";
+    var successMsg = "Additional metadata updated.";
+    var errorMsg = "Additional metadata failed to update.";
 
     var json_obj = {};
     var t = $('#extraMetaTable').DataTable();
@@ -594,7 +594,7 @@ $(document).ready(function () {
         "info": false,
         "bFilter": false,
         "bInfo": false,
-        "language": {"emptyTable": "No Extended Metadata"}
+        "language": {"emptyTable": "No Additional Metadata"}
     });
 
     $("#btn-add-new-entry").click(function() {

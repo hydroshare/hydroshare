@@ -26,7 +26,7 @@ let relevantToolsApp = new Vue({
             }
             return null;    // default
         },
-        // Returns the Url needed to launch a file in this resource
+        // Returns the Url needed to launch an aggregation in this resource
         getAggregationAppUrl: function (tool) {
             if (tool.hasOwnProperty('agg_types') && tool.url_aggregation) {
                 return this.trackingAppLaunchUrl + '?url=' + tool.url_aggregation + '&name=' + tool.title +
@@ -70,6 +70,7 @@ let relevantToolsApp = new Vue({
                         if (aggregationUrl) {
                             let menuItem =
                             '<li class="btn-open-with" data-menu-name="web-app" ' +
+                                'data-file-extensions="' + tool['file_extensions'] + '" ' +
                                 'data-agg-types="' + tool['agg_types'] + '" data-url-aggregation="' +
                                 aggregationUrl + '" data-tool-appkey="' + tool['tool_appkey'] + '">' +
                                 '<img class="file-options-webapp-icon" src="' + tool['icon_url'] +
@@ -88,8 +89,9 @@ let relevantToolsApp = new Vue({
                         if (urlFile) {
                             let menuItem =
                             '<li class="btn-open-with" data-menu-name="web-app" ' +
+                                'data-agg-types="' + tool['agg_types'] + '" ' +
                                 'data-file-extensions="' + tool['file_extensions'] + '" data-url-file="' +
-                                urlFile + '">' +
+                                urlFile + '" data-tool-appkey="' + tool['tool_appkey'] + '">' +
                                 '<img class="file-options-webapp-icon" src="' + tool['icon_url'] +
                                     '" alt="' + tool['title'] + '"/>' + '<span>' + tool['title'] + '</span>' +
                             '</li>';

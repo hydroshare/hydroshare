@@ -9,44 +9,41 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.test import TransactionTestCase
+from django.urls import reverse
 from rest_framework import status
 
 from hs_composite_resource.models import CompositeResource
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import (
-    resource_file_add_process,
-    get_resource_by_shortkey,
     ResourceVersioningException,
-    add_file_to_resource,
-    get_file_from_irods,
+    add_file_to_resource, get_file_from_irods,
+    get_resource_by_shortkey, resource_file_add_process
 )
 from hs_core.models import BaseResource, ResourceFile
+from hs_core.tasks import FileOverrideException
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core.views.utils import (
-    create_folder,
+    add_reference_url_to_resource,
+    create_folder, delete_resource_file,
+    edit_reference_url_in_resource,
     move_or_rename_file_or_folder,
     remove_folder,
-    unzip_file,
-    add_reference_url_to_resource,
-    edit_reference_url_in_resource,
-    delete_resource_file,
-    zip_by_aggregation_file,
+    unzip_file, zip_by_aggregation_file
 )
 from hs_file_types.models import (
-    GenericLogicalFile,
-    GeoRasterLogicalFile,
-    GenericFileMetaData,
-    RefTimeseriesLogicalFile,
     FileSetLogicalFile,
-    NetCDFLogicalFile,
-    TimeSeriesLogicalFile,
+    GenericFileMetaData,
+    GenericLogicalFile,
     GeoFeatureLogicalFile,
+    GeoRasterLogicalFile,
     ModelInstanceLogicalFile,
     ModelProgramLogicalFile,
+    NetCDFLogicalFile,
+    RefTimeseriesLogicalFile,
+    TimeSeriesLogicalFile
 )
 from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
 from hs_file_types.tests.utils import CompositeResourceTestMixin
-from hs_core.tasks import FileOverrideException
 
 
 class CompositeResourceTest(
@@ -58,6 +55,7 @@ class CompositeResourceTest(
         self.user = hydroshare.create_account(
             "user1@nowhere.com",
             username="user1",
+            password='mypassword1',
             first_name="Creator_FirstName",
             last_name="Creator_LastName",
             superuser=False,
@@ -336,6 +334,22 @@ class CompositeResourceTest(
         self.assertEqual(res_file.has_logical_file, False)
         # there should be 0 GenericLogicalFile object at this point
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
+
+    def test_resource_file_system_metadata(self):
+        """Test when files are added/uploaded to a resource, system level metadata is retrieved from iRODS and saved in
+        the DB for each file.
+        """
+        self.create_composite_resource(self.generic_file)
+
+        # there should be one resource at this point
+        self.assertEqual(BaseResource.objects.count(), 1)
+        self.assertEqual(self.composite_resource.resource_type, "CompositeResource")
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        # check file level system metadata
+        self.assertGreater(res_file._size, 0)
+        self.assertGreater(len(res_file._checksum), 0)
+        self.assertNotEqual(res_file._modified_time, None)
 
     def test_aggregation_folder_delete(self):
         # here we are testing that when a folder is deleted containing
@@ -3499,10 +3513,14 @@ class CompositeResourceTest(
 
         # resource should have 3 files now
         self.assertEqual(self.composite_resource.files.count(), 3)
-        # there should not be any resource files ending with _meta.xml or _resmap.xml
         for res_file in self.composite_resource.files.all():
+            # there should not be any resource files ending with _meta.xml or _resmap.xml
             self.assertFalse(res_file.file_name.endswith(METADATA_FILE_ENDSWITH))
             self.assertFalse(res_file.file_name.endswith(RESMAP_FILE_ENDSWITH))
+            # check file level system metadata
+            self.assertGreater(res_file._size, 0)
+            self.assertGreater(len(res_file._checksum), 0)
+            self.assertNotEqual(res_file._modified_time, None)
 
     def test_unzip_rename(self):
         """Test that when a zip file gets unzipped at data/contents/ and the unzipped folder may be
@@ -3863,3 +3881,149 @@ class CompositeResourceTest(
                 f = os.path.basename(f)
                 self.assertIn(f, aggr_files)
             shutil.rmtree(os.path.dirname(temp_zip_file))
+
+    def test_composite_resource_my_resources_one(self):
+        # test that only a fixed number of db queries (based on the number of resources) are
+        # generated for "my_resources" page - this test is with one resource.
+
+        # there should not be any resource at this point
+        self.assertEqual(BaseResource.objects.count(), 0)
+
+        self.client.login(username='user1', password='mypassword1')
+        # navigating to home page for initializing db queries
+        response = self.client.get(reverse("home"), follow=True)
+        self.assertTrue(response.status_code == 200)
+
+        # create 1 composite resource
+        self.create_composite_resource()
+        # there should be one resource at this point
+        number_of_resources = BaseResource.objects.count()
+        self.assertEqual(number_of_resources, 1)
+        expected_query_count = self._get_expected_query_count(number_of_resources)
+        with self.assertNumQueries(expected_query_count):
+            response = self.client.get(reverse("my_resources"), follow=True)
+            self.assertTrue(response.status_code == 200)
+
+    def test_composite_resource_my_resources_two(self):
+        # test that only a fixed number of db queries (based on the number of resources) are
+        # generated for "my_resources" page - this test is with two resources.
+
+        # there should not be any resource at this point
+        self.assertEqual(BaseResource.objects.count(), 0)
+
+        self.client.login(username='user1', password='mypassword1')
+        # navigating to home page for initializing db queries
+        response = self.client.get(reverse("home"), follow=True)
+        self.assertTrue(response.status_code == 200)
+
+        # create 2 composite resources
+        for _ in range(2):
+            self.create_composite_resource()
+
+        # there should be 2 resources at this point
+        number_of_resources = BaseResource.objects.count()
+        self.assertEqual(number_of_resources, 2)
+        expected_query_count = self._get_expected_query_count(number_of_resources)
+        with self.assertNumQueries(expected_query_count):
+            response = self.client.get(reverse("my_resources"), follow=True)
+            self.assertTrue(response.status_code == 200)
+
+    def test_composite_resource_my_resources_three(self):
+        # test that only a fixed number of db queries (based on the number of resources) are
+        # generated for "my_resources" page - this test is with three resources.
+
+        # there should not be any resource at this point
+        self.assertEqual(BaseResource.objects.count(), 0)
+
+        self.client.login(username='user1', password='mypassword1')
+        # navigating to home page for initializing db queries
+        response = self.client.get(reverse("home"), follow=True)
+        self.assertTrue(response.status_code == 200)
+
+        # create 3 composite resources
+        for _ in range(3):
+            self.create_composite_resource()
+
+        # there should be 3 resources at this point
+        number_of_resources = BaseResource.objects.count()
+        self.assertEqual(number_of_resources, 3)
+        expected_query_count = self._get_expected_query_count(number_of_resources)
+        with self.assertNumQueries(expected_query_count):
+            response = self.client.get(reverse("my_resources"), follow=True)
+            self.assertTrue(response.status_code == 200)
+
+    def test_composite_resource_landing_scales(self):
+        # test that db queries for landing page have constant time complexity
+
+        # expected number of queries for landing page when the resource has no resource file
+        _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 161
+
+        # expected number of queries for landing page when the resource has resource file
+        _LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT = _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT + 16
+
+        # user 1 login
+        self.client.login(username='user1', password='mypassword1')
+        # navigating to home page for initializing db queries
+        response = self.client.get(reverse("home"), follow=True)
+        self.assertTrue(response.status_code == 200)
+
+        # there should not be any resource at this point
+        self.assertEqual(BaseResource.objects.count(), 0)
+
+        # create a composite resource
+        self.create_composite_resource()
+        # there should be one resource at this point
+        self.assertEqual(BaseResource.objects.count(), 1)
+        self.assertEqual(self.composite_resource.resource_type, "CompositeResource")
+
+        with self.assertNumQueries(_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT):
+            response = self.client.get(f'/resource/{self.composite_resource.short_id}', follow=True)
+            self.assertTrue(response.status_code == 200)
+
+        # create another resource
+        self.create_composite_resource()
+        # there should be two resources at this point
+        self.assertEqual(BaseResource.objects.count(), 2)
+
+        with self.assertNumQueries(_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT):
+            response = self.client.get(f'/resource/{self.composite_resource.short_id}', follow=True)
+            self.assertTrue(response.status_code == 200)
+
+        # test resource landing page with resource files
+        # add a file to the resource
+        self.add_file_to_resource(file_to_add=self.generic_file)
+        self.assertEqual(self.composite_resource.files.count(), 1)
+
+        with self.assertNumQueries(_LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT):
+            response = self.client.get(f'/resource/{self.composite_resource.short_id}', follow=True)
+            self.assertTrue(response.status_code == 200)
+
+        # add 3 more files to the resource
+        self.add_file_to_resource(file_to_add=self.netcdf_file)
+        self.add_file_to_resource(file_to_add=self.watershed_shp_file)
+        self.add_file_to_resource(file_to_add=self.watershed_dbf_file)
+        self.assertEqual(self.composite_resource.files.count(), 4)
+
+        with self.assertNumQueries(_LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT):
+            response = self.client.get(f'/resource/{self.composite_resource.short_id}', follow=True)
+            self.assertTrue(response.status_code == 200)
+
+        # accessing the readme file should only be 3 db query
+        with self.assertNumQueries(3):
+            _ = self.composite_resource.readme_file
+
+    def _get_expected_query_count(self, number_of_resources):
+        # this is the expected number of queries for "my_resources" page with no resources
+        base_query_count = 15
+
+        # this is additional number of queries per resource
+        # 3 are mezzanine queries (can't do much about it)
+        # 3 queries are our code in template
+        per_resource_query_count = 6
+
+        # these are additional queries generated by get_my_resources_list() function
+        pre_template_query_count = 4 + number_of_resources
+
+        expected_query_count = base_query_count + pre_template_query_count
+        expected_query_count += per_resource_query_count * number_of_resources
+        return expected_query_count

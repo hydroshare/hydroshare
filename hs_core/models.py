@@ -41,6 +41,7 @@ from mezzanine.pages.models import Page
 from pyld import jsonld
 from rdflib import Literal, BNode, URIRef
 from rdflib.namespace import DC, DCTERMS, RDF
+from spam_patterns.worst_patterns_re import patterns
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
@@ -228,7 +229,6 @@ def get_access_object(user, user_type, user_access):
             "email": user.email,
             "organization": user.userprofile.organization,
             "title": user.userprofile.title,
-            "contributions": len(user.uaccess.owned_resources) if user.is_active else None,
             "viewable_contributions": user.viewable_contributions if user.is_active else None,
             "subject_areas": user.userprofile.subject_areas,
             "identifiers": user.userprofile.identifiers,
@@ -346,7 +346,6 @@ def page_permissions_page_processor(request, page):
     else:
         lcb_access_level = 'none'
 
-    # last_changed_by.can_undo = False
     last_changed_by = json.dumps(get_access_object(last_changed_by, "user", lcb_access_level))
 
     users_json = json.dumps(users_json)
@@ -2050,6 +2049,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
     content_object = GenericForeignKey('content_type', 'object_id')
 
+    # key/value metadata (additional metadata)
     extra_metadata = HStoreField(default=dict)
 
     # this field is for resources to store extra key:value pairs as needed, e.g., bag checksum is stored as
@@ -2062,6 +2062,13 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     download_count = models.PositiveIntegerField(default=0)
     # for tracking number of times resource has been viewed
     view_count = models.PositiveIntegerField(default=0)
+
+    # for tracking when resourceFiles were last compared with irods
+    files_checked = models.DateTimeField(null=True)
+    repaired = models.DateTimeField(null=True)
+
+    # allow resource that contains spam_patterns to be discoverable/public
+    spam_allowlisted = models.BooleanField(default=False)
 
     def update_view_count(self):
         self.view_count += 1
@@ -2082,7 +2089,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     @property
     def last_updated(self):
         """Return the last updated date stored in metadata"""
-        return self.metadata.dates.all().filter(type='modified')[0].start_date
+        for dt in self.metadata.dates.all():
+            if dt.type == 'modified':
+                return dt.start_date
 
     @property
     def has_required_metadata(self):
@@ -2487,6 +2496,36 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         return self.metadata.get_xml(pretty_print=pretty_print,
                                      include_format_elements=include_format_elements)
 
+    def is_schema_json_file(self, file_path):
+        """Determine whether a given file is a schema.json file.
+        Note: this will return true for any file that ends with the schema.json ending
+        We are taking the risk that user might create a file with the same filename ending
+        """
+        from hs_file_types.models.base import SCHEMA_JSON_FILE_ENDSWITH
+        if file_path.endswith(SCHEMA_JSON_FILE_ENDSWITH):
+            return True
+        return False
+
+    def is_collection_list_csv(self, file_path):
+        """Determine if a given file is an internally-generated collection list
+        """
+        from hs_collection_resource.utils import CSV_FULL_NAME_TEMPLATE
+        collection_list_filename = CSV_FULL_NAME_TEMPLATE.format(self.short_id)
+        if collection_list_filename in file_path:
+            return True
+        return False
+
+    def is_metadata_xml_file(self, file_path):
+        """Determine whether a given file is metadata.
+        Note: this will return true for any file that ends with the metadata endings
+        We are taking the risk that user might create a file with the same filename ending
+        """
+        from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
+        if not (file_path.endswith(METADATA_FILE_ENDSWITH)
+                or file_path.endswith(RESMAP_FILE_ENDSWITH)):
+            return False
+        return True
+
     def is_aggregation_xml_file(self, file_path):
         """Checks if the file path *file_path* is one of the aggregation related xml file paths
 
@@ -2678,21 +2717,22 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         'readme.txt' or 'readme.md' (filename is case insensitive). If no such file then None
         is returned. If both files exist then resource file for readme.md is returned"""
 
-        res_files_at_root = self.files.filter(file_folder='')
-        readme_txt_file = None
-        readme_md_file = None
-        for res_file in res_files_at_root:
-            if res_file.file_name.lower() == 'readme.md':
-                readme_md_file = res_file
-            elif res_file.file_name.lower() == 'readme.txt':
-                readme_txt_file = res_file
-            if readme_md_file is not None:
-                break
+        if self.files.filter(file_folder='').count() == 0:
+            # no files exist at the root of the resource path - no need to check for readme file
+            return None
 
-        if readme_md_file is not None:
-            return readme_md_file
+        file_path_md = os.path.join(self.file_path, 'readme.md')
+        file_path_txt = os.path.join(self.file_path, 'readme.txt')
+        if self.is_federated:
+            readme_res_file = self.files.filter(fed_resource_file__iexact=file_path_md).first()
+            if readme_res_file is None:
+                readme_res_file = self.files.filter(fed_resource_file__iexact=file_path_txt).first()
         else:
-            return readme_txt_file
+            readme_res_file = self.files.filter(resource_file__iexact=file_path_md).first()
+            if readme_res_file is None:
+                readme_res_file = self.files.filter(resource_file__iexact=file_path_txt).first()
+
+        return readme_res_file
 
     def get_readme_file_content(self):
         """Gets the content of the readme file. If both a readme.md and a readme.txt file exist,
@@ -2936,8 +2976,10 @@ class ResourceFile(ResourceFileIRODSMixin):
     file_folder = models.CharField(max_length=4096, null=False, default="")
 
     # This pair of FileFields deals with the fact that there are two kinds of storage
-    resource_file = models.FileField(upload_to=get_path, max_length=4096,
-                                     null=True, blank=True, storage=IrodsStorage())
+    resource_file = models.FileField(upload_to=get_path, max_length=4096, unique=True,
+                                     storage=IrodsStorage())
+    # TODO: ideally we would like a unique constraint on fed_resource_file
+    # due to https://code.djangoproject.com/ticket/10244 we can't set null=True and unique=True
     fed_resource_file = models.FileField(upload_to=get_path, max_length=4096,
                                          null=True, blank=True, storage=FedStorage())
 
@@ -2954,7 +2996,12 @@ class ResourceFile(ResourceFileIRODSMixin):
                                                   related_name="files")
     logical_file_content_object = GenericForeignKey('logical_file_content_type',
                                                     'logical_file_object_id')
+
+    # these file metadata (size, modified_time, and checksum) values are retrieved from iRODS and stored in db
+    # for performance reason so that we don't have to query iRODS for these values every time we need them
     _size = models.BigIntegerField(default=-1)
+    _modified_time = models.DateTimeField(null=True, blank=True)
+    _checksum = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         """Return resource filename or federated resource filename for string representation."""
@@ -2967,6 +3014,11 @@ class ResourceFile(ResourceFileIRODSMixin):
     def banned_symbols(cls):
         """returns a list of banned characters for file/folder name"""
         return r'\/:*?"<>|'
+
+    @classmethod
+    def system_meta_fields(cls):
+        """returns a list of system metadata fields"""
+        return ['_size', '_modified_time', '_checksum']
 
     @classmethod
     def create(cls, resource, file, folder='', source=None):
@@ -3096,11 +3148,65 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     @property
     def modified_time(self):
-        return self.resource_file.storage.get_modified_time(self.resource_file.name)
+        """Return modified time of the file.
+        If the modified time is not already set, then it is first retrieved from iRODS and stored in db.
+        """
+        # self._size != 0 -> file exists, or we have not set the size yet
+        if not self._modified_time and self._size != 0:
+            self.calculate_modified_time()
+        return self._modified_time
+
+    def calculate_modified_time(self, resource=None, save=True):
+        """Updates modified time of the file in db.
+        Retrieves the modified time from iRODS and stores it in db.
+        """
+        if resource is None:
+            resource = self.resource
+
+        if resource.resource_federation_path:
+            file_path = self.fed_resource_file.name
+        else:
+            file_path = self.resource_file.name
+
+        try:
+            self._modified_time = self.resource_file.storage.get_modified_time(file_path)
+        except (SessionException, ValidationError):
+            logger = logging.getLogger(__name__)
+            logger.warning("file {} not found in iRODS".format(self.storage_path))
+            self._modified_time = None
+        if save:
+            self.save(update_fields=["_modified_time"])
 
     @property
     def checksum(self):
-        return self.resource_file.storage.checksum(self.resource_file.name, force_compute=False)
+        """Return checksum of the file.
+        If the checksum is not already set, then it is first retrieved from iRODS and stored in db.
+        """
+        # self._size != 0 -> file exists, or we have not set the size yet
+        if not self._checksum and self._size != 0:
+            self.calculate_checksum()
+        return self._checksum
+
+    def calculate_checksum(self, resource=None, save=True):
+        """Updates checksum of the file in db.
+        Retrieves the checksum from iRODS and stores it in db.
+        """
+        if resource is None:
+            resource = self.resource
+
+        if resource.resource_federation_path:
+            file_path = self.fed_resource_file.name
+        else:
+            file_path = self.resource_file.name
+
+        try:
+            self._checksum = self.resource_file.storage.checksum(file_path, force_compute=False)
+        except (SessionException, ValidationError):
+            logger = logging.getLogger(__name__)
+            logger.warning("file {} not found in iRODS".format(self.storage_path))
+            self._checksum = None
+        if save:
+            self.save(update_fields=["_checksum"])
 
     # TODO: write unit test
     @property
@@ -3137,6 +3243,13 @@ class ResourceFile(ResourceFileIRODSMixin):
         # instance.content_object can be stale after changes.
         # Re-fetch based upon key; bypass type system; it is not relevant
         resource = self.resource
+        return self.get_storage_path(resource)
+
+    def get_storage_path(self, resource):
+        """Return the qualified name for a file in the storage hierarchy.
+        Note: This is the preferred way to get the storage path for a file when we are trying to find
+        the storage path for more than one file in a resource.
+        """
         if resource.is_federated:  # false if None or empty
             if __debug__:
                 assert self.resource_file.name is None or \
@@ -3148,9 +3261,12 @@ class ResourceFile(ResourceFileIRODSMixin):
                     self.fed_resource_file.name == ''
             return self.resource_file.name
 
-    def calculate_size(self):
+    def calculate_size(self, resource=None, save=True):
         """Reads the file size and saves to the DB"""
-        if self.resource.resource_federation_path:
+        if resource is None:
+            resource = self.resource
+
+        if resource.resource_federation_path:
             if __debug__:
                 assert self.resource_file.name is None or \
                     self.resource_file.name == ''
@@ -3158,7 +3274,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                 self._size = self.fed_resource_file.size
             except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
-                logger.warning("file {} not found".format(self.storage_path))
+                logger.warning("file {} not found in iRODS".format(self.storage_path))
                 self._size = 0
         else:
             if __debug__:
@@ -3168,9 +3284,28 @@ class ResourceFile(ResourceFileIRODSMixin):
                 self._size = self.resource_file.size
             except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
-                logger.warning("file {} not found".format(self.storage_path))
+                logger.warning("file {} not found in iRODS".format(self.storage_path))
                 self._size = 0
-        self.save(update_fields=["_size"])
+        if save:
+            self.save(update_fields=["_size"])
+
+    def set_system_metadata(self, resource=None, save=True):
+        """Set system metadata (size, modified time, and checksum) for a file.
+        This method should be called after a file is uploaded to iRODS and registered with Django.
+        """
+
+        self.calculate_size(resource=resource, save=save)
+        if self._size > 0:
+            # file exists in iRODS - get modified time and checksum
+            self.calculate_modified_time(resource=resource, save=save)
+            self.calculate_checksum(resource=resource, save=save)
+        else:
+            # file was not found in iRODS
+            self._size = 0
+            self._modified_time = None
+            self._checksum = None
+        if save:
+            self.save(update_fields=self.system_meta_fields())
 
     # ResourceFile API handles file operations
     def set_storage_path(self, path, test_exists=True):
@@ -3199,7 +3334,6 @@ class ResourceFile(ResourceFileIRODSMixin):
         """
         folder, base = self.path_is_acceptable(path, test_exists=test_exists)
         self.file_folder = folder
-        self.save()
 
         # self.content_object can be stale after changes. Re-fetch based upon key
         # bypass type system; it is not relevant
@@ -3225,7 +3359,23 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         This is the path that should be used as a key to index things such as file type.
         """
-        if self.resource.is_federated:
+
+        # use of self.resource generates a query
+        return self.get_short_path(self.resource)
+
+    def get_short_path(self, resource):
+        """Return the unqualified path to the file object.
+
+        * This path is invariant of where the object is stored.
+
+        * Thus, it does not change if the resource is moved.
+
+        This is the path that should be used as a key to index things such as file type.
+        :param resource: the resource to which the file (self) belongs
+        Note: This is the preferred way to get the short path for a file when we are trying to find short path
+        for more than one file in a resource.
+        """
+        if resource.is_federated:
             folder, base = self.path_is_acceptable(self.fed_resource_file.name, test_exists=False)
         else:
             folder, base = self.path_is_acceptable(self.resource_file.name, test_exists=False)
@@ -3408,16 +3558,15 @@ class ResourceFile(ResourceFileIRODSMixin):
     @classmethod
     def get(cls, resource, file, folder=''):
         """Get a ResourceFile record via its short path."""
+        resource_file_path = get_resource_file_path(resource, file, folder)
         if resource.resource_federation_path:
-            return ResourceFile.objects.get(object_id=resource.id,
-                                            fed_resource_file=get_resource_file_path(resource,
-                                                                                     file,
-                                                                                     folder))
+            f = ResourceFile.objects.filter(object_id=resource.id, fed_resource_file=resource_file_path).first()
         else:
-            return ResourceFile.objects.get(object_id=resource.id,
-                                            resource_file=get_resource_file_path(resource,
-                                                                                 file,
-                                                                                 folder))
+            f = ResourceFile.objects.filter(object_id=resource.id, resource_file=resource_file_path).first()
+        if f:
+            return f
+        else:
+            raise ObjectDoesNotExist(f'ResourceFile {resource_file_path} does not exist.')
 
     # TODO: move to BaseResource as instance method
     @classmethod
@@ -3478,7 +3627,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     @property
     def has_logical_file(self):
         """Check existence of logical file."""
-        return self.logical_file is not None
+        return self.logical_file_object_id is not None
 
     @property
     def logical_file(self):
@@ -3503,7 +3652,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     @property
     def metadata(self):
         """Return logical file metadata."""
-        if self.logical_file is not None:
+        if self.has_logical_file:
             return self.logical_file.metadata
         return None
 
@@ -3952,6 +4101,42 @@ class BaseResource(Page, AbstractResource):
             return ''
 
     @property
+    def spam_patterns(self):
+        # Compile a single regular expression that will match any individual
+        # pattern from a given list of patterns, case-insensitive.
+        # ( '|' is a special character in regular expressions. An expression
+        # 'A|B' will match either 'A' or 'B' ).
+        full_pattern = re.compile("|".join(patterns), re.IGNORECASE)
+
+        if self.metadata:
+            try:
+                match = re.search(full_pattern, self.metadata.title.value)
+                if match is not None:
+                    return match
+            except AttributeError:
+                # no title
+                pass
+
+            try:
+                for sub in self.metadata.subjects.all():
+                    match = re.search(full_pattern, sub.value)
+                    if match is not None:
+                        return match
+            except AttributeError:
+                # no keywords
+                pass
+
+            try:
+                match = re.search(full_pattern, self.metadata.description.abstract)
+                if match is not None:
+                    return match
+            except AttributeError:
+                # no abstract
+                pass
+
+        return None
+
+    @property
     def show_in_discover(self):
         """
         return True if a resource should be exhibited
@@ -3965,6 +4150,11 @@ class BaseResource(Page, AbstractResource):
         if any([res.raccess.discoverable for res in replaced_by_resources]):
             # there is a newer discoverable resource - so this resource should not be shown in discover
             return False
+
+        if not self.spam_allowlisted and not self.raccess.published:
+            if self.spam_patterns:
+                return False
+
         return True
 
     def update_relation_meta(self):
@@ -4041,6 +4231,11 @@ class BaseResource(Page, AbstractResource):
         find_non_preferred_folder_paths(self.file_path)
         return not_preferred_paths
 
+    def get_relative_path(self, dir_path):
+        if dir_path.startswith(self.file_path):
+            dir_path = dir_path[len(self.file_path) + 1:]
+        return dir_path
+
 
 old_get_content_model = Page.get_content_model
 
@@ -4098,7 +4293,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     @property
     def title(self):
         """Return the first title object from metadata."""
-        return self._title.all().first()
+        return self._title.all()[0]
 
     @property
     def description(self):

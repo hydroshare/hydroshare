@@ -7,14 +7,15 @@ post_create_resource = django.dispatch.Signal(
 pre_add_files_to_resource = django.dispatch.Signal(providing_args=['files', 'resource'])
 pre_delete_file_from_resource = django.dispatch.Signal(providing_args=['file', 'resource'])
 post_delete_file_from_resource = django.dispatch.Signal(providing_args=['resource'])
-post_add_files_to_resource = django.dispatch.Signal(providing_args=['files', 'resource'])
 
 pre_metadata_element_create = django.dispatch.Signal(providing_args=['element_name', 'request'])
 pre_metadata_element_update = django.dispatch.Signal(providing_args=['element_name', 'element_id',
                                                                      'request'])
 post_metadata_element_update = django.dispatch.Signal(providing_args=['element_name', 'element_id'])
 
-pre_download_file = django.dispatch.Signal(providing_args=['sender', 'request', 'resource', 'download_file_name'])
+pre_download_file = django.dispatch.Signal(providing_args=['sender', 'request', 'resource',
+                                                           'download_file_name', 'file_size'])
+pre_download_resource = django.dispatch.Signal(providing_args=['sender', 'request', 'resource'])
 
 pre_check_bag_flag = django.dispatch.Signal(providing_args=['resource'])
 
@@ -32,3 +33,4 @@ post_add_raster_aggregation = django.dispatch.Signal(providing_args=['resource',
 post_add_reftimeseries_aggregation = django.dispatch.Signal(providing_args=['resource', 'file'])
 post_add_timeseries_aggregation = django.dispatch.Signal(providing_args=['resource', 'file'])
 post_raccess_change = django.dispatch.Signal(providing_args=['resource'])
+post_spam_whitelist_change = django.dispatch.Signal(providing_args=['instance'])

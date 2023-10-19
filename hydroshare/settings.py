@@ -138,6 +138,15 @@ DEBUG = False
 # Best set to ``True`` in local_settings.py
 DISABLE_TASK_EMAILS = False
 
+# Integer seconds that worker should allocate every night to repair_resource file discrepancies
+NIGHTLY_RESOURCE_REPAIR_DURATION = 60 * 60
+
+# Integer seconds that worker should allocate every night to generating filesystem metadata
+NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION = 60 * 60
+
+# Should resource owners be notified of automated resource repair?
+NOTIFY_OWNERS_AFTER_RESOURCE_REPAIR = False
+
 # Whether a user's session cookie expires when the Web browser is closed.
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
@@ -177,11 +186,6 @@ FILE_UPLOAD_PERMISSIONS = 0o644
 
 # Alternative tmp folder
 FILE_UPLOAD_TEMP_DIR = "/hs_tmp"
-
-# Sitemap for robots
-ROBOTS_SITEMAP_URLS = [
-    "http://localhost:8000/sitemap/",
-]
 
 #############
 # DATABASES #
@@ -447,6 +451,7 @@ MIDDLEWARE = (
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
     "hs_core.robots.RobotFilter",
     "hs_tracking.middleware.Tracking",
+    "hs_core.middleware.SunsetMiddleware",
 )
 
 # security settings
@@ -797,7 +802,6 @@ if 'test' in sys.argv:
     import logging
 
     logging.disable(logging.CRITICAL)
-    DISABLE_HAYSTACK = True
     PASSWORD_HASHERS = [
         'django.contrib.auth.hashers.MD5PasswordHasher',
     ]
@@ -829,3 +833,5 @@ else:
 MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
     "/hydroshare/hs_file_types/model_meta_schema_templates"
 )
+
+BULK_UPDATE_CREATE_BATCH_SIZE = 1000

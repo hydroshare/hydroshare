@@ -121,3 +121,16 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         except QuotaException as ex:
             self.fail("add resource file action should not raise QuotaException for "
                       "over quota cases if quota is not enforced - Quota Exception: " + str(ex))
+
+    def test_add_files_toggles_bag_flag(self):
+        # create a resource
+        self.res = create_resource(resource_type='CompositeResource',
+                                   owner=self.user,
+                                   title='Test Resource',
+                                   metadata=[], )
+        self.res.setAVU('bag_modified', 'false')
+        self.assertFalse(self.res.getAVU('bag_modified'))
+        # add files - this is the api we are testing
+        add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3)
+
+        self.assertTrue(self.res.getAVU('bag_modified'))

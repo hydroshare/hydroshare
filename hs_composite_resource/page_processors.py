@@ -1,6 +1,9 @@
 from django.contrib import messages
 from django.contrib.messages import get_messages
 from django.http import HttpResponseRedirect
+from django.utils import timezone
+from django.conf import settings
+from datetime import timedelta
 from mezzanine.pages.page_processors import processor_for
 
 from hs_core import page_processors
@@ -59,6 +62,16 @@ def landing_page(request, page):
     file_type_missing_metadata = {'file_type_missing_metadata':
                                   content_model.get_missing_file_type_metadata_info()}
     context.update(file_type_missing_metadata)
+    if content_model.repaired:
+        cuttoff_time = timezone.now() - timedelta(days=7)
+        repaired = content_model.repaired >= cuttoff_time,
+    else:
+        repaired = False
+    update = {
+        'recently_repaired': repaired,
+        'notify_on_repair': settings.NOTIFY_OWNERS_AFTER_RESOURCE_REPAIR
+    }
+    context.update(update)
     data_services_urls = {'data_services_urls':
                           content_model.get_data_services_urls()}
     context.update(data_services_urls)

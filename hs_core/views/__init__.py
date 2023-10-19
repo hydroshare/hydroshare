@@ -354,6 +354,9 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         msg = {"validation_error": str(ex)}
         return JsonResponse(msg, status=500)
 
+    aggregations_pre = [aggr for aggr in resource.logical_files]
+    aggr_count_pre = len(aggregations_pre)
+
     try:
         hydroshare.utils.resource_file_add_process(
             resource=resource,
@@ -368,6 +371,9 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
         msg = {"validation_error": str(ex)}
         return JsonResponse(msg, status=500)
+
+    aggregations_post = [aggr for aggr in resource.logical_files]
+    aggr_count_post = len(aggregations_post)
 
     res_public_status = "public" if resource.raccess.public else "not public"
     res_discoverable_status = (
@@ -397,6 +403,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     response_data = {
         "res_public_status": res_public_status,
         "res_discoverable_status": res_discoverable_status,
+        "number_new_aggregations": aggr_count_post - aggr_count_pre,
         "metadata_status": metadata_status,
         "show_meta_status": show_meta_status,
     }
@@ -662,6 +669,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
             else:
                 ajax_response_data = {
                     "status": "success",
+                    "element_type": getattr(element, 'type', None),
                     "element_name": element_name,
                     "spatial_coverage": get_coverage_data_dict(res),
                     "temporal_coverage": get_coverage_data_dict(res, "temporal"),
@@ -960,6 +968,8 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
             "An obsoleted resource in the middle of the obsolescence chain cannot be deleted.",
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+    res_title = res.metadata.title
     if request.is_ajax():
         task_id = get_resource_delete_task(shortkey)
         if not task_id:
@@ -981,7 +991,7 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
             user=user,
             resource_shortkey=shortkey,
             resource=res,
-            resource_title=res.metadata.title,
+            resource_title=res_title,
             resource_type=res.resource_type,
             **kwargs,
         )
@@ -997,7 +1007,7 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
                 user=user,
                 resource_shortkey=shortkey,
                 resource=res,
-                resource_title=res.metadata.title,
+                resource_title=res_title,
                 resource_type=res.resource_type,
                 **kwargs,
             )
@@ -2140,6 +2150,38 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
     return HttpResponseRedirect(f"/resource/{ res.short_id }/")
 
 
+def spam_allowlist(request, shortkey, action, **kwargs):
+    """
+    Allow a resource to be discoverable even if it matches spam patterns
+    """
+    user = request.user
+    if not user.is_superuser:
+        return HttpResponseForbidden(
+            "not authorized to perform this action"
+        )
+
+    res = hydroshare.utils.get_resource_by_shortkey(shortkey)
+    if action == "allow":
+        res.spam_allowlisted = True
+        res.save()
+        messages.success(
+            request,
+            "Resource has been allowlisted. "
+            "This means that it can show in Discover even if it contains spam patterns.",
+        )
+    else:
+        res.spam_allowlisted = False
+        res.save()
+        messages.warning(
+            request,
+            "Resource has been removed from allowlist. "
+            "It will not show in Discover if it contains spam patterns.",
+        )
+    # update the index
+    signals.post_spam_whitelist_change.send(sender=BaseResource, instance=res)
+    return HttpResponseRedirect(f"/resource/{ res.short_id }/")
+
+
 @login_required
 def act_on_group_membership_request(
     request, membership_request_id, action, *args, **kwargs
@@ -2735,7 +2777,7 @@ def my_resources(request, *args, **kwargs):
     """
     View for listing resources that belong to a given user.
 
-    Renders either a full my-resources page, or just a table of new resorces
+    Renders either a full my-resources page, or just a table of new resources
     """
 
     if not request.is_ajax():

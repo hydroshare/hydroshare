@@ -191,6 +191,21 @@
     </div>
 {% endif %}
 
+{# ======= ResourceFile Repair notification =======#}
+{% if resource_edit_mode and notify_on_repair and recently_repaired %}
+    <div class="col-sm-12">
+        <div id="missing-metadata-file-type" class="alert alert-danger alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                    aria-hidden="true">&times;</span></button>
+
+            <span>
+                Within the last week, the files contained in this resource were found to be corrupt and were repaired. 
+                For more information please contact <a href="mailto:help@cuahsi.org?subject=Corrupt Resource Files">help@cuahsi.org</a>
+            </span>
+        </div>
+    </div>
+{% endif %}
+
 {# ======= Title ======= #}
 <div class="col-xs-12">
     {% if not resource_edit_mode %}
