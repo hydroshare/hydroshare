@@ -1,6 +1,5 @@
 from autocomplete_light import shortcuts as autocomplete_light
 from django.conf.urls import include, url
-from django.urls import path
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from mezzanine.conf import settings
@@ -165,7 +164,7 @@ urlpatterns = i18n_patterns(
     url(r"^apps/$", hs_core_views.apps.AppsView.as_view(), name="apps"),
 )
 
-urlpatterns += [path('silk/', include('silk.urls', namespace='silk'))]
+urlpatterns += [url('^silk/', include('silk.urls', namespace='silk'))]
 
 # Filebrowser admin media library.
 if getattr(settings, "PACKAGE_NAME_FILEBROWSER") in settings.INSTALLED_APPS:
