@@ -456,6 +456,12 @@ MIDDLEWARE = (
     "hs_core.middleware.SunsetMiddleware",
 )
 
+SILKY_PYTHON_PROFILER = True
+SILKY_PYTHON_PROFILER_BINARY = True
+SILKY_PYTHON_PROFILER_EXTENDED_FILE_NAME = True
+SILKY_META = False
+SILKY_ANALYZE_QUERIES = True
+
 # security settings
 USE_SECURITY = False
 if USE_SECURITY:
