@@ -8,6 +8,8 @@ RUN pip install django-cachalot
 RUN pip install django-redis
 RUN pip install spam_patterns@git+https://github.com/CUAHSI/spam_patterns.git@0.0.4
 
+RUN pip install django-silk
+
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8

@@ -361,6 +361,7 @@ INSTALLED_APPS = (
     "health_check.contrib.celery_ping",
     "health_check.contrib.psutil",
     "health_check.contrib.rabbitmq",
+    "silk",
 )
 
 SWAGGER_SETTINGS = {
@@ -432,6 +433,7 @@ TEMPLATES = [
 # these middleware classes will be applied in the order given, and in the
 # response phase the middleware will be applied in reverse order.
 MIDDLEWARE = (
+    'silk.middleware.SilkyMiddleware',
     "mezzanine.core.middleware.UpdateCacheMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
