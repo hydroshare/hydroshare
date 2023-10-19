@@ -165,6 +165,8 @@ urlpatterns = i18n_patterns(
     url(r"^apps/$", hs_core_views.apps.AppsView.as_view(), name="apps"),
 )
 
+urlpatterns += [path('silk/', include('silk.urls', namespace='silk'))]
+
 # Filebrowser admin media library.
 if getattr(settings, "PACKAGE_NAME_FILEBROWSER") in settings.INSTALLED_APPS:
     urlpatterns += i18n_patterns(
@@ -272,5 +274,3 @@ urlpatterns += [
 # pages can use JS, CSS and images.
 handler404 = "mezzanine.core.views.page_not_found"
 handler500 = "mezzanine.core.views.server_error"
-
-urlpatterns += [path('silk/', include('silk.urls', namespace='silk'))]
