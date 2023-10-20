@@ -1,6 +1,7 @@
 """Lists all the resources published in a given year.
 """
-
+import csv as csv_module
+import os
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from hs_core.models import BaseResource
@@ -10,7 +11,6 @@ from django.db.models import F
 from datetime import timedelta
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
-import csv as csv_module
 
 
 class Command(BaseCommand):
@@ -41,10 +41,9 @@ class Command(BaseCommand):
         )
 
         parser.add_argument(
-            '--csv',
-            action='store_true',  # True for presence, False for absence
-            dest='csv',
-            help='export as csv'
+            '--csv_dir',
+            dest='csv_dir',
+            help='directory in which to export csv'
         )
 
     def handle(self, *args, **options):
@@ -52,7 +51,7 @@ class Command(BaseCommand):
         resources = BaseResource.objects.filter(raccess__published=True)
         owner = options['owned_by']
         res_type = options['type']
-        csv = options['csv']
+        csv = options['csv_dir']
         year = options['year']
         file_name = ''
 
@@ -82,11 +81,17 @@ class Command(BaseCommand):
         site_url = hydroshare.utils.current_site_url()
 
         if csv:
-            self.csvfile = open(f'published_resources{file_name}.csv', 'w')
+            full_file = f'{csv}/published_resources{file_name}.csv'
+            if os.path.exists(full_file):
+                raise OSError(f"File already exists at {full_file}")
+            os.makedirs(os.path.dirname(full_file), exist_ok=True)
+            self.csvfile = open(f'{csv}/published_resources{file_name}.csv', 'w+')
             self.writer = csv_module.writer(self.csvfile)
 
         for resource in resources:
             pub_date = self.get_publication_date(resource)
+            if not pub_date:
+                continue
             if year:
                 if pub_date.year != int(year):
                     continue
@@ -99,12 +104,13 @@ class Command(BaseCommand):
             else:
                 self.print_resource(resource, pub_date, site_url)
         if csv:
-            self.write_csv(self.writer)
+            self.write_csv()
 
     def get_publication_date(self, resource):
         published_date = resource.metadata.dates.filter(type="published").first()
         if not published_date:
             print(f"Publication date not found for {resource.short_id}")
+            return None
         return published_date.start_date
 
     def print_resource(self, res, pub_date, site_url):
@@ -169,7 +175,7 @@ class Command(BaseCommand):
                 row.append(f.award_number if f.award_number else None)
         self.rows.append(row)
 
-    def write_csv(self, writer):
+    def write_csv(self):
         # write headers last since funders is variable number
         headers = ['url', 'doi', 'title', 'type', 'pub_date']
         for i in range(1, self.max_funders + 1):
@@ -179,8 +185,8 @@ class Command(BaseCommand):
             headers.append(f"award_number_{i}")
 
         # insert the headers
-        writer.writerow(headers)
+        self.writer.writerow(headers)
 
         for row in self.rows:
-            writer.writerow(row)
+            self.writer.writerow(row)
         self.csvfile.close()
