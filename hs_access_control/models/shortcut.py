@@ -1,6 +1,7 @@
 import json
 import os
 import tempfile
+import copy
 
 from django.db.models import Q
 from django.http import JsonResponse
@@ -172,56 +173,86 @@ def admin_policy_create(target, name, file):
     logger.info(arguments)
     try:
         _output = subprocess.check_output(arguments, user='hydro-service')
+        logger.info(_output)
     except subprocess.CalledProcessError as e:
         logger.exception(e.output)
-    logger.info(_output)
 
 def admin_policy_remove(target, name):
     arguments = ['mc', '--json', 'admin', 'policy', 'remove', target, name]
     logger.info(arguments)
     try:
         _output = subprocess.check_output(arguments, user='hydro-service')
+        logger.info(_output)
     except subprocess.CalledProcessError as e:
         logger.exception(e.output)
-    logger.info(_output)
 
+def resource_owner(resource_id: str):
+    raccess = ResourceAccess.objects.filter(resource__short_id=resource_id).first()
+    return raccess.first_owner.username
 
-def base_statement(action = [], resource = []):
-    return {
-                "Effect": "Allow",
-                "Action": action,
-                "Resource": resource
+def create_view_statements(resource_ids: list[str]) -> list:
+    view_statement_template_get = \
+    {
+        "Effect": "Allow",
+        "Action": [
+            "s3:GetBucketLocation",
+            "s3:GetObject"
+        ],
+        "Resource": []
+    }
+    view_statement_template_listing = \
+    {
+        "Effect": "Allow",
+        "Action": [
+            "s3:ListBucket"
+        ],
+        "Resource": [],
+        "Condition": {
+            "StringLike": {
+                "s3.prefix": []
             }
-def view_statement(resource):
-    action = ["s3:GetBucketLocation", "s3:GetObject", "s3:ListBucket"]
-    statement = base_statement(action, resource)
-    return [statement]
+        }
+    }
+    get_resources = []
+    list_statements = []
+    for resource_id in resource_ids:
+        owner = resource_owner(resource_id)
+        get_resources.append(f"arn:aws:s3:::{owner}/hydroshare/{resource_id}/*")
+        view_statement = copy.deepcopy(view_statement_template_listing)
+        view_statement["Resource"] = [f"arn:aws:s3:::{owner}"]
+        view_statement["Condition"]["StringLike"]["s3.prefix"] = [f"hydroshare/{resource_id}/*"]
+        list_statements.append(view_statement)
+    view_statement_template_get["Resource"] = get_resources
+    return list_statements + [view_statement_template_get]
 
-def edit_statement(resource):
-    action = ["s3:*"]
-    statement = base_statement(action, resource)
-    return [statement]
 
-def bucket_path(resource):
-    raccess = ResourceAccess.objects.filter(resource__short_id=resource).first()
-    bucketname = raccess.first_owner.username
-    return f"{bucketname}/hydroshare/{resource}"
+def create_edit_owner_statements(resource_ids: list[str]) -> list:
+    edit_statement_template = \
+    {
+        "Effect": "Allow",
+        "Action": [
+            "s3:*"
+        ],
+        "Resource": []
+    }
+    edit_statement_template["Resource"] = [f"arn:aws:s3:::{resource_owner(resource_id)}/hydroshare/{resource_id}/*" for resource_id in resource_ids]
+
 
 def minio_policy(user):
     user_privileges = user_resource_privileges(user)
-    policy = {
-        "Version": "2012-10-17",
-        "Statement": []
-    }
     if user_privileges["view"]:
-        resource_list = [f"arn:aws:s3:::{bucket_path(resource)}" for resource in user_privileges["view"]]
-        policy["Statement"].extend(view_statement(resource_list))
+        view_statements = create_view_statements(user_privileges["view"])
+        for edit_privilege in user_privileges["edit"]:
+            pass
+        for edit_privilege in user_privileges["owner"]:
+            pass
+        policy["Statement"].extend(view_statement_object(user_privileges["view"]))
+        resource_list = [f"arn:aws:s3:::{bucket_name(resource)}" for resource in user_privileges["view"]]
+        policy["Statement"].extend(view_statement_object(resource_list))
     if user_privileges["edit"] or user_privileges["owner"]:
         resource_list = [f"arn:aws:s3:::{bucket_path(resource)}" for resource in user_privileges["owner"]] + \
                         [f"arn:aws:s3:::{bucket_path(resource)}" for resource in user_privileges["edit"]]
         policy["Statement"].extend(edit_statement(resource_list))
-    if policy["Statement"]:
-        return policy
     return None
 
 
@@ -234,6 +265,7 @@ def refresh_minio_policy(user):
             fp = open(filepath, "w")
             fp.write(json.dumps(policy))
             fp.close()
+            admin_policy_remove(target='cuahsi', name=user.username)
             admin_policy_create(target='cuahsi', name=user.username, file=filepath)
     else:
         admin_policy_remove(target='cuahsi', name=user.username)
