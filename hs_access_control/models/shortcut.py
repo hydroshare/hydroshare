@@ -169,7 +169,7 @@ def access_changed(sender, **kwargs):
 
 import subprocess
 def admin_policy_create(target, name, file):
-    arguments = ['mc', '--json', 'admin', 'policy', 'create', target, name, file]
+    arguments = ['mc', '--config-dir', '/hydroshare/', '--json', 'admin', 'policy', 'create', target, name, file]
     logger.info(arguments)
     try:
         _output = subprocess.check_output(arguments, user='hydro-service')
@@ -178,7 +178,7 @@ def admin_policy_create(target, name, file):
         logger.exception(e.output)
 
 def admin_policy_remove(target, name):
-    arguments = ['mc', '--json', 'admin', 'policy', 'remove', target, name]
+    arguments = ['mc', '--config-dir', '/hydroshare/', '--json', 'admin', 'policy', 'remove', target, name]
     logger.info(arguments)
     try:
         _output = subprocess.check_output(arguments, user='hydro-service')
@@ -236,24 +236,22 @@ def create_edit_owner_statements(resource_ids: list[str]) -> list:
         "Resource": []
     }
     edit_statement_template["Resource"] = [f"arn:aws:s3:::{resource_owner(resource_id)}/hydroshare/{resource_id}/*" for resource_id in resource_ids]
+    return [edit_statement_template]
 
 
 def minio_policy(user):
     user_privileges = user_resource_privileges(user)
+    view_statements = []
+    edit_statements = []
     if user_privileges["view"]:
         view_statements = create_view_statements(user_privileges["view"])
-        for edit_privilege in user_privileges["edit"]:
-            pass
-        for edit_privilege in user_privileges["owner"]:
-            pass
-        policy["Statement"].extend(view_statement_object(user_privileges["view"]))
-        resource_list = [f"arn:aws:s3:::{bucket_name(resource)}" for resource in user_privileges["view"]]
-        policy["Statement"].extend(view_statement_object(resource_list))
     if user_privileges["edit"] or user_privileges["owner"]:
-        resource_list = [f"arn:aws:s3:::{bucket_path(resource)}" for resource in user_privileges["owner"]] + \
-                        [f"arn:aws:s3:::{bucket_path(resource)}" for resource in user_privileges["edit"]]
-        policy["Statement"].extend(edit_statement(resource_list))
-    return None
+        edit_statements = create_edit_owner_statements(user_privileges["edit"] + user_privileges["owner"])
+    return \
+    {
+        "Version": "20212-10-17",
+        "Statement": view_statements + edit_statements
+    }
 
 
 def refresh_minio_policy(user):
