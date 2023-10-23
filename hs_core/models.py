@@ -41,6 +41,7 @@ from mezzanine.pages.models import Page
 from pyld import jsonld
 from rdflib import Literal, BNode, URIRef
 from rdflib.namespace import DC, DCTERMS, RDF
+from spam_patterns.worst_patterns_re import patterns
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
@@ -2066,6 +2067,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     files_checked = models.DateTimeField(null=True)
     repaired = models.DateTimeField(null=True)
 
+    # allow resource that contains spam_patterns to be discoverable/public
+    spam_allowlisted = models.BooleanField(default=False)
+
     def update_view_count(self):
         self.view_count += 1
         # using update query api to update instead of self.save() to avoid triggering solr realtime indexing
@@ -2085,7 +2089,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     @property
     def last_updated(self):
         """Return the last updated date stored in metadata"""
-        return self.metadata.dates.all().filter(type='modified')[0].start_date
+        for dt in self.metadata.dates.all():
+            if dt.type == 'modified':
+                return dt.start_date
 
     @property
     def has_required_metadata(self):
@@ -4095,6 +4101,42 @@ class BaseResource(Page, AbstractResource):
             return ''
 
     @property
+    def spam_patterns(self):
+        # Compile a single regular expression that will match any individual
+        # pattern from a given list of patterns, case-insensitive.
+        # ( '|' is a special character in regular expressions. An expression
+        # 'A|B' will match either 'A' or 'B' ).
+        full_pattern = re.compile("|".join(patterns), re.IGNORECASE)
+
+        if self.metadata:
+            try:
+                match = re.search(full_pattern, self.metadata.title.value)
+                if match is not None:
+                    return match
+            except AttributeError:
+                # no title
+                pass
+
+            try:
+                for sub in self.metadata.subjects.all():
+                    match = re.search(full_pattern, sub.value)
+                    if match is not None:
+                        return match
+            except AttributeError:
+                # no keywords
+                pass
+
+            try:
+                match = re.search(full_pattern, self.metadata.description.abstract)
+                if match is not None:
+                    return match
+            except AttributeError:
+                # no abstract
+                pass
+
+        return None
+
+    @property
     def show_in_discover(self):
         """
         return True if a resource should be exhibited
@@ -4108,6 +4150,11 @@ class BaseResource(Page, AbstractResource):
         if any([res.raccess.discoverable for res in replaced_by_resources]):
             # there is a newer discoverable resource - so this resource should not be shown in discover
             return False
+
+        if not self.spam_allowlisted and not self.raccess.published:
+            if self.spam_patterns:
+                return False
+
         return True
 
     def update_relation_meta(self):
@@ -4184,6 +4231,11 @@ class BaseResource(Page, AbstractResource):
         find_non_preferred_folder_paths(self.file_path)
         return not_preferred_paths
 
+    def get_relative_path(self, dir_path):
+        if dir_path.startswith(self.file_path):
+            dir_path = dir_path[len(self.file_path) + 1:]
+        return dir_path
+
 
 old_get_content_model = Page.get_content_model
 
@@ -4241,7 +4293,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     @property
     def title(self):
         """Return the first title object from metadata."""
-        return self._title.all().first()
+        return self._title.all()[0]
 
     @property
     def description(self):

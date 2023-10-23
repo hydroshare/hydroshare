@@ -666,10 +666,10 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
             is_favorite=Case(When(short_id__in=favorite_resources.values_list('short_id', flat=True),
                                   then=Value(True, BooleanField()))))
 
-        resource_collection = resource_collection.only('short_id', 'resource_type', 'created')
+        resource_collection = resource_collection.only('short_id', 'resource_type', 'created', 'content_type')
         # we won't hit the DB for each resource to know if it's status is public/private/discoverable
         # etc
-        resource_collection = resource_collection.select_related('raccess', 'rlabels')
+        resource_collection = resource_collection.select_related('raccess', 'rlabels', 'content_type')
         meta_contenttypes = get_metadata_contenttypes()
 
         for ct in meta_contenttypes:
@@ -677,7 +677,9 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
             # metadata class (e.g., CoreMetaData) - we have to prefetch by content_type as
             # prefetch works only for the same object type (type of 'content_object' in this case)
             res_list = [res for res in resource_collection if res.content_type == ct]
+
             # prefetch metadata items - creators, keywords(subjects), dates, and title
+            # this will generate 4 queries for the 4 Prefetch + 1 for each resource to retrieve 'content_object'
             if res_list:
                 prefetch_related_objects(res_list,
                                          Prefetch('content_object__creators'),
@@ -867,17 +869,18 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
                                                                 test_exists=False)
     tgt_folder, _ = ResourceFile.resource_path_is_acceptable(resource, tgt_name, test_exists=False)
     file_or_folder_move = src_folder != tgt_folder
+    composite_file_move = file_or_folder_move and resource.resource_type == 'CompositeResource'
     try:
         res_file_obj = ResourceFile.get(resource=resource, file=base, folder=src_folder)
         # if the source file is part of a FileSet or Model Program/Instance aggregation (based on folder),
         # we need to remove it from that aggregation in the case the file is being moved out of that aggregation
-        if file_or_folder_move and resource.resource_type == 'CompositeResource':
+        if composite_file_move:
             resource.remove_aggregation_from_file(res_file_obj, src_folder, tgt_folder)
 
         # checks tgt_name as a side effect.
         ResourceFile.resource_path_is_acceptable(resource, tgt_name, test_exists=True)
         res_file_obj.set_storage_path(tgt_name)
-        if file_or_folder_move and resource.resource_type == 'CompositeResource':
+        if composite_file_move:
             # if the file is getting moved into a folder that represents a FileSet or to a folder
             # inside a fileset folder, then make the file part of that FileSet
             # if the file is moved into a model program aggregation folder or to a folder inside the model program
@@ -888,7 +891,24 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
         # src_name and tgt_name are folder names
         res_file_objs = ResourceFile.list_folder(resource=resource, folder=src_name)
         resource_is_federated = resource.is_federated
-        batch_size = 10_000
+        batch_size = settings.BULK_UPDATE_CREATE_BATCH_SIZE
+        is_target_folder_aggregation = False
+        if composite_file_move:
+            try:
+                resource.get_aggregation_by_name(tgt_folder)
+                is_target_folder_aggregation = True
+            except ObjectDoesNotExist:
+                pass
+            aggregations = list(resource.logical_files)
+            # see the comments above (for the case of moving a single file) for why we need to remove the file from
+            # the aggregation
+            for fobj in res_file_objs:
+                # TODO: this is a case of n+1 query - which can be problematic if the folder being
+                #  moved contains a large number of files
+                resource.remove_aggregation_from_file(fobj, src_folder, tgt_folder, aggregations=aggregations,
+                                                      cleanup=False)
+            resource.cleanup_aggregations()
+
         for fobj in res_file_objs:
             src_path = fobj.get_storage_path(resource=resource)
             # naively replace src_name with tgt_name
@@ -906,6 +926,16 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
                                                  batch_size=batch_size)
             else:
                 ResourceFile.objects.bulk_update(res_file_objs, ['file_folder', 'resource_file'], batch_size=batch_size)
+
+            if is_target_folder_aggregation and composite_file_move:
+                res_file_objs = ResourceFile.list_folder(resource=resource, folder=tgt_name)
+                aggregations = list(resource.logical_files)
+                for fobj in res_file_objs:
+                    # see the comments above (for the case of moving a single file) for why we need to add the file to
+                    # the aggregation
+                    # TODO: this is a case of n+1 query - which can be problematic if the folder being
+                    #  moved contains a large number of files
+                    resource.add_file_to_aggregation(fobj, aggregations=aggregations)
 
 
 def remove_irods_folder_in_django(resource, folder_path, user):
@@ -1204,8 +1234,9 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
             res_files = link_irods_folder_to_django(resource, istorage, unzip_to_folder_path, auto_aggregate)
             if resource.resource_type == 'CompositeResource':
                 # make the newly added files part of an aggregation if needed
+                aggregations = list(resource.logical_files)
                 for res_file in res_files:
-                    resource.add_file_to_aggregation(res_file)
+                    resource.add_file_to_aggregation(res_file, aggregations=aggregations)
         else:
             dir_file_list = istorage.listdir(unzip_path_temp)
             unzip_subdir_list = dir_file_list[0]
@@ -1271,9 +1302,10 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                 added_resource_files.append(res_file)
 
             if resource.resource_type == "CompositeResource":
+                aggregations = list(resource.logical_files)
                 for res_file in added_resource_files:
                     # make the newly added files part of an aggregation if needed
-                    resource.add_file_to_aggregation(res_file)
+                    resource.add_file_to_aggregation(res_file, aggregations=aggregations)
                     # sets size, checksum, and modified time for the newly added file
                     res_file.set_system_metadata(resource=resource, save=False)
 
