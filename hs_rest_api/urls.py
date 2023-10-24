@@ -15,6 +15,7 @@ from rest_framework import permissions
 
 from .views.resource_share import ShareResourceGroup, ShareResourceUser
 from .discovery import DiscoverSearchView
+from hs_access_control.models.shortcut import refresh_minio_policy, user_resource_privileges
 
 
 hsapi_urlpatterns = [
@@ -257,4 +258,7 @@ urlpatterns = [
     url(r'^resource/(?P<resource_id>[0-9a-f]+)/authorization/(?P<user_identifier>.+)/$', get_user_resource_privilege_endpoint),
 
     url(r'^resources/authorization/(?P<user_identifier>.+)/$', get_user_resources),
+
+    url(r'^refresh/(?P<user>[\w.@+-]+)/$', refresh_minio_policy, name='refresh_user_minio'),
+    url(r'^useraccess/(?P<user>[\w.@+-]+)/$', user_resource_privileges, name='user_resource_access'),
 ]

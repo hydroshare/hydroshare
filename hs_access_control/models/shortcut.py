@@ -48,8 +48,9 @@ def get_user_resources_privileges(email):
     user = User.objects.get(email=email)
     return user_resource_privileges(user)
 
-
+from hs_core.hydroshare import utils as hs_core_utils
 def user_resource_privileges(user):
+    user = hs_core_utils.user_from_id(user)
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
     editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE, via_group=True)
     viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW, via_group=True)
