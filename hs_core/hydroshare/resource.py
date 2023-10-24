@@ -464,19 +464,6 @@ def create_resource(
 
         resource.resource_type = resource_type
 
-        if resource_type == "ExternalResource":
-            client = Minio(
-                "api.minio.cuahsi.io",
-                access_key=settings.MINIO_KEY,
-                secret_key=settings.MINIO_SECRET,
-            )
-            with tempfile.TemporaryDirectory() as tmpdirname:
-                filepath = os.path.join(tmpdirname, "metadata.json")
-                fp = open(filepath, "w")
-                fp.write(json.dumps({"hello": "world"}))
-                fp.close()
-                client.fput_object(owner.username, f"hydroshare/{resource.short_id}/metadata.json", filepath)
-
         # by default make resource private
         resource.slug = 'resource{0}{1}'.format('/', resource.short_id)
         resource.save(update_fields=["slug", "resource_type"])
@@ -540,6 +527,20 @@ def create_resource(
 
             resource.title = resource.metadata.title.value
             resource.save(update_fields=["title"])
+        
+        if resource_type == "ExternalResource":
+            client = Minio(
+                "api.minio.cuahsi.io",
+                access_key=settings.MINIO_KEY,
+                secret_key=settings.MINIO_SECRET,
+            )
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                filepath = os.path.join(tmpdirname, "metadata.json")
+                fp = open(filepath, "w")
+                json_ld = resource.metadata.get_rdf_graph().serialize(format='json-ld-pretty').decode()
+                fp.write(json_ld)
+                fp.close()
+                client.fput_object(owner.username, f"hydroshare/{resource.short_id}/metadata.json", filepath)
 
         if len(files) == 1 and unpack_file and zipfile.is_zipfile(files[0]):
             # Add contents of zipfile as resource files asynchronously

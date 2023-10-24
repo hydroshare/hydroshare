@@ -243,8 +243,8 @@ def minio_policy(user):
     user_privileges = user_resource_privileges(user)
     view_statements = []
     edit_statements = []
-    if user_privileges["view"]:
-        view_statements = create_view_statements(user_privileges["view"])
+    if user_privileges["view"] or user_privileges["edit"] or user_privileges["owner"]:
+        view_statements = create_view_statements(user_privileges["view"] + user_privileges["edit"] + user_privileges["owner"])
     if user_privileges["edit"] or user_privileges["owner"]:
         edit_statements = create_edit_owner_statements(user_privileges["edit"] + user_privileges["owner"])
     return \
