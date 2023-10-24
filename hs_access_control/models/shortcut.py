@@ -209,7 +209,7 @@ def create_view_statements(resource_ids: list[str]) -> list:
         "Resource": [],
         "Condition": {
             "StringLike": {
-                "s3.prefix": []
+                "s3:prefix": []
             }
         }
     }
@@ -249,7 +249,7 @@ def minio_policy(user):
         edit_statements = create_edit_owner_statements(user_privileges["edit"] + user_privileges["owner"])
     return \
     {
-        "Version": "20212-10-17",
+        "Version": "2012-10-17",
         "Statement": view_statements + edit_statements
     }
 
@@ -257,7 +257,7 @@ def minio_policy(user):
 def refresh_minio_policy(user):
     policy = minio_policy(user)
     logger.info(json.dumps(policy, indent=2))
-    if policy:
+    if policy["Statement"]:
         with tempfile.TemporaryDirectory(dir='/hs_tmp') as tmpdirname:
             filepath = os.path.join(tmpdirname, "metadata.json")
             fp = open(filepath, "w")
