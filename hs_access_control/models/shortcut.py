@@ -220,7 +220,7 @@ def create_view_statements(resource_ids: list[str]) -> list:
         get_resources.append(f"arn:aws:s3:::{owner}/hydroshare/{resource_id}/*")
         view_statement = copy.deepcopy(view_statement_template_listing)
         view_statement["Resource"] = [f"arn:aws:s3:::{owner}"]
-        view_statement["Condition"]["StringLike"]["s3.prefix"] = [f"hydroshare/{resource_id}/*"]
+        view_statement["Condition"]["StringLike"]["s3:prefix"] = [f"hydroshare/{resource_id}/*"]
         list_statements.append(view_statement)
     view_statement_template_get["Resource"] = get_resources
     return list_statements + [view_statement_template_get]
