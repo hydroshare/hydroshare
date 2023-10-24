@@ -164,8 +164,20 @@ def zone_of_publicity(send=True, **kwargs):
 def access_changed(sender, **kwargs):
     for username in kwargs['users']:
         user = User.objects.get(username=username)
-        refresh_minio_policy(user)
+        try:
+            refresh_minio_policy(user)
+        except:
+            logger.exception("failed")
     logger.info("access_changed: users: {} resources: {}".format(kwargs['users'], kwargs['resources']))
+
+def admin_policy_attach(target, name):
+    arguments = ['mc', '--config-dir', '/hydroshare/', 'admin', 'policy', 'attach', target, name, '--user', name]
+    logger.info(arguments)
+    try:
+        _output = subprocess.check_output(arguments, user='hydro-service')
+        logger.info(_output)
+    except subprocess.CalledProcessError as e:
+        logger.exception(e.output)
 
 import subprocess
 def admin_policy_create(target, name, file):
@@ -176,6 +188,7 @@ def admin_policy_create(target, name, file):
         logger.info(_output)
     except subprocess.CalledProcessError as e:
         logger.exception(e.output)
+    admin_policy_attach(target, name)
 
 def admin_policy_remove(target, name):
     arguments = ['mc', '--config-dir', '/hydroshare/', '--json', 'admin', 'policy', 'remove', target, name]
@@ -188,7 +201,7 @@ def admin_policy_remove(target, name):
 
 def resource_owner(resource_id: str):
     raccess = ResourceAccess.objects.filter(resource__short_id=resource_id).first()
-    return raccess.first_owner.username
+    return raccess.owners.first().username
 
 def create_view_statements(resource_ids: list[str]) -> list:
     view_statement_template_get = \
@@ -255,6 +268,7 @@ def minio_policy(user):
 
 
 def refresh_minio_policy(user):
+    user = User.objects.get(username=user)
     policy = minio_policy(user)
     logger.info(json.dumps(policy, indent=2))
     if policy["Statement"]:
