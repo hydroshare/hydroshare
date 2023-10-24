@@ -693,7 +693,7 @@ def add_resource_files(pk, *files, **kwargs):
     resource = kwargs.pop("resource", None)
     if resource is None:
         resource = utils.get_resource_by_shortkey(pk)
-    res_files = []
+    uploaded_res_files = []
     source_names = kwargs.pop('source_names', [])
     full_paths = kwargs.pop('full_paths', {})
     auto_aggregate = kwargs.pop('auto_aggregate', True)
@@ -728,28 +728,45 @@ def add_resource_files(pk, *files, **kwargs):
             dir_name = os.path.dirname(full_path)
             # Only do join if dir_name is not empty, otherwise, it'd result in a trailing slash
             full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
-        res_files.append(utils.add_file_to_resource(resource, f, folder=full_dir, user=user,
-                                                    save_file_system_metadata=False))
+        res_file = utils.add_file_to_resource(resource, f, folder=full_dir, user=user, add_to_aggregation=False,
+                                              save_file_system_metadata=False)
+        uploaded_res_files.append(res_file)
 
     for ifname in source_names:
-        res_files.append(utils.add_file_to_resource(resource, None,
-                                                    folder=folder,
-                                                    source_name=ifname,
-                                                    user=user,
-                                                    save_file_system_metadata=False))
+        res_file = utils.add_file_to_resource(resource, None, folder=folder, source_name=ifname, user=user,
+                                              add_to_aggregation=False,
+                                              save_file_system_metadata=False)
+        uploaded_res_files.append(res_file)
 
-    if not res_files:
+    if not uploaded_res_files:
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)
     else:
-        if resource.resource_type == "CompositeResource" and auto_aggregate:
-            utils.check_aggregations(resource, res_files)
+        if resource.resource_type == "CompositeResource":
+            upload_to_folder = base_dir
+            if upload_to_folder:
+                aggregations = list(resource.logical_files)
+                # check if there is folder based model program or model instance aggregation in the upload path
+                aggregation = resource.get_model_aggregation_in_path(upload_to_folder, aggregations=aggregations)
+                if aggregation is None:
+                    # check if there is a fileset aggregation in the upload path
+                    aggregation = resource.get_fileset_aggregation_in_path(upload_to_folder, aggregations=aggregations)
+                if aggregation:
+                    # Note: we can't use bulk_update here because we need to update the logical_file_content_object
+                    # which is not a concrete field in the ResourceFile model
+                    for res_file in uploaded_res_files:
+                        aggregation.add_resource_file(res_file, set_metadata_dirty=False)
+
+                    aggregation.set_metadata_dirty()
+            if auto_aggregate:
+                utils.check_aggregations(resource, uploaded_res_files)
+
         utils.resource_modified(resource, user, overwrite_bag=False)
 
         # store file level system metadata in Django DB (async task)
         set_resource_files_system_metadata.apply_async((resource.short_id,))
 
-    return res_files
+    return uploaded_res_files
 
 
 def update_science_metadata(pk, metadata, user):

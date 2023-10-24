@@ -139,8 +139,10 @@ class Command(BaseCommand):
                     else:
                         solr_replaced += 1
                 except BaseResource.DoesNotExist:
-                    print("SOLR resource {} NOT FOUND in Django; cannot remove from SOLR"
+                    print("SOLR resource {} NOT FOUND in Django; removing from SOLR"
                           .format(r.short_id))
+                    solr_key = f"hs_core.baseresource.{r.pk}"
+                    ind.remove_object(solr_key)
                     solr_deleted += 1
                     continue
 
