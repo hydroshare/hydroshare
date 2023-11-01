@@ -1113,7 +1113,7 @@ class AbstractLogicalFile(models.Model):
         """
         return False
 
-    def add_resource_file(self, res_file):
+    def add_resource_file(self, res_file, set_metadata_dirty=True):
         """Makes a ResourceFile (res_file) object part of this logical file object. If res_file
         is already associated with any other logical file object, this function does not do
         anything to that logical object. The caller needs to take necessary action for the
@@ -1121,14 +1121,12 @@ class AbstractLogicalFile(models.Model):
         logical file, it raises ValidationError.
 
         :param res_file an instance of ResourceFile
+        :param set_metadata_dirty: a boolean to indicate if metadata needs to be set dirty
         """
-
-        if res_file in self.files.all():
-            raise ValidationError("Resource file is already part of this logical file.")
-
         res_file.logical_file_content_object = self
         res_file.save()
-        self.set_metadata_dirty()
+        if set_metadata_dirty:
+            self.set_metadata_dirty()
 
     def add_files_to_resource(self, resource, files_to_add, upload_folder):
         """A helper for adding any new files to resource as part of creating an aggregation
@@ -1158,8 +1156,8 @@ class AbstractLogicalFile(models.Model):
                                              sub_folders=False)
 
         for res_file in res_files:
-            self.add_resource_file(res_file)
-
+            self.add_resource_file(res_file, set_metadata_dirty=False)
+        self.set_metadata_dirty()
         return res_files
 
     def copy_resource_files(self, resource, files_to_copy, tgt_folder):
