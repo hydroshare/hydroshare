@@ -26,6 +26,7 @@ from theme.utils import get_upload_path_group
 #   community privileges.
 # (Revised Sept 17, 2021)
 #############################################
+# TODO #5228
 class GroupMembershipRequest(models.Model):
     request_from = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ru2gmrequest')
 

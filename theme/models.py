@@ -184,6 +184,7 @@ class IconBox(Orderable):
 
 
 class QuotaMessage(models.Model):
+    # TODO: #5228
     # warning_content_prepend prepends the content to form a warning message to be emailed to the
     # user and displayed when the user is logged in; grace_period_cotent_prepend prepends the
     # content when over quota within grace period and less than 125% of hard limit quota;
@@ -246,6 +247,7 @@ class QuotaMessage(models.Model):
 
 
 class UserQuota(models.Model):
+    # TODO: #5228
     # ForeignKey relationship makes it possible to associate multiple UserQuota models to
     # a User with each UserQuota model defining quota for a set of iRODS zones. By default,
     # the UserQuota model instance defines quota in hydroshareZone and hydroshareuserZone,

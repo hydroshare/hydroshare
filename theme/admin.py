@@ -15,6 +15,7 @@ class IconBoxInline(TabularDynamicInlineAdmin):
 
 
 class UserQuotaForm(forms.ModelForm):
+    # TODO: #5228
     user = forms.ModelChoiceField(
         queryset=User.objects.exclude(is_superuser=True).exclude(is_active=False))
 
@@ -49,3 +50,4 @@ admin.site.register(HomePage)
 admin.site.register(SiteConfiguration, SingletonAdmin)
 admin.site.register(UserQuota, QuotaAdmin)
 admin.site.register(QuotaMessage, SingletonAdmin)
+# TODO: #5228

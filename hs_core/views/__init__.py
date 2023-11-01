@@ -2196,6 +2196,7 @@ def act_on_group_membership_request(
     :param action: need to have a value of either 'accept' or 'decline'
     :return:
     """
+    # TODO: #5228
 
     accept_request = action == "accept"
     user_acting = request.user
