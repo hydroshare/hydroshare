@@ -33,9 +33,10 @@ class QuotaAdmin(admin.ModelAdmin):
     model = UserQuota
 
     list_display = ('user', 'allocated_value', 'used_value', 'unit', 'zone')
-    list_filter = ('zone', 'user__username', )
+    list_filter = ('zone',)
 
     readonly_fields = ('user',)
+    search_fields = ('user__username',)
 
     def get_form(self, request, obj=None, **kwargs):
         # use a customized form class when adding a UserQuota object so that

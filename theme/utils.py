@@ -43,10 +43,16 @@ def get_quota_message(user):
     soft_limit = qmsg.soft_limit_percent
     hard_limit = qmsg.hard_limit_percent
     return_msg = ''
+    quota_data = []
     for uq in user.quotas.all():
-        percent = uq.used_value * 100.0 / uq.allocated_value
+        used = uq.used_value
+        allocated = uq.allocated_value
+        percent = used * 100.0 / allocated
+        unit = uq.unit
+        uq_data = {"used": used, "allocated": allocated, "unit": unit}
         rounded_percent = round(percent, 2)
-        rounded_used_val = round(uq.used_value, 4)
+        rounded_used_val = round(used, 4)
+        quota_data.append(uq_data)
 
         if percent >= hard_limit or (percent >= 100 and uq.remaining_grace_period == 0):
             # return quota enforcement message
@@ -81,4 +87,4 @@ def get_quota_message(user):
                                                               used=rounded_used_val,
                                                               zone=uq.zone,
                                                               percent=rounded_percent)
-        return return_msg
+    return return_msg, quota_data

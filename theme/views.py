@@ -111,10 +111,12 @@ class UserProfileView(TemplateView):
             Prefetch("content_object___description"),
             Prefetch("content_object___title"),
         )
+        message, quota_data = get_quota_message(u)
         return {
             "profile_user": u,
             "resources": resources,
-            "quota_message": get_quota_message(u),
+            "quota_message": message,
+            "quota_data": quota_data,
             "group_membership_requests": group_membership_requests,
             "data_upload_max": settings.DATA_UPLOAD_MAX_MEMORY_SIZE
         }
@@ -577,7 +579,7 @@ def login(
     if request.method == "POST" and form.is_valid():
         login_msg = "Successfully logged in"
         authenticated_user = form.save()
-        add_msg = get_quota_message(authenticated_user)
+        add_msg, __ = get_quota_message(authenticated_user)
         if add_msg:
             login_msg += " - " + add_msg
         info(request, _(login_msg))

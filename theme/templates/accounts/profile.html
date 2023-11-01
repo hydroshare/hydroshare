@@ -95,6 +95,8 @@
                                             <a data-toggle="modal" data-target="#create-irods-account-dialog">Create your iRODS user account</a>
                                         {% endif %}
                                     </div>
+                                    <hr>
+                                    <div><a data-toggle="modal" data-target="#manage-quota-dialog">Manage your Quota</a></div>
                                 </div>
                             </div>
                             {% endif %}
@@ -885,6 +887,51 @@
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                                 <button id="btn-create-irods-account" class="btn btn-primary" disabled>Confirm</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!-- Manage Quota Modal -->
+            <div class="modal fade" id="manage-quota-dialog" tabindex="-1" role="dialog"
+                aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                        <form role="form" method="post">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal"
+                                        aria-label="Close"><span aria-hidden="true">&times;</span>
+                                </button>
+                                <h4 class="modal-title" id="myModalLabel">Manage your HydroShare Quota</h4>
+                            </div>
+                            <div class="modal-body">
+                                {% csrf_token %}
+                                <div class="row">
+                                    <div class="col-sm-10 col-xs-12">
+                                        {% for qd in quota_data %}
+                                        <div>
+                                            You have used {{ qd.used }} of your {{ qd.allocated }}{{ qd.unit }} allocated.
+                                            More information on HydroShare Quota can be found <a href="https://help.hydroshare.org/about-hydroshare/policies/quota/">here</a>.
+                                        </div>
+                                        <br>
+                                        <div class="form-group">
+                                            <label for="id_irods_password">Enter justification for more quota</label>
+                                            <input class="form-control" autocomplete="off" id="id_irods_password" name="irods_password" placeholder="Justification">
+                                            <label for="id_irods_password">How much more storage to you require? (Please include units)</label>
+                                            <input class="form-control" autocomplete="off" id="id_irods_password" name="irods_password" placeholder="Storage Ammount">
+                                            {% if profile.organization %}
+                                                You listed your organization as <b>{{ profile.organization }}</b> in your profile.
+                                            {% endif %}
+                                            <label for="id_irods_password">If there is a specific organization associated with this request, please indicate it.</label>
+                                            <input class="form-control" autocomplete="off" id="id_irods_password" name="irods_password" placeholder="Organization">
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                <button id="btn-create-irods-account" class="btn btn-primary" disabled>Submit</button>
                             </div>
                         </form>
                     </div>
