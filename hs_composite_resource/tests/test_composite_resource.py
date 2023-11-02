@@ -11,7 +11,6 @@ from django.core.files.uploadedfile import UploadedFile
 from django.test import TransactionTestCase
 from django.urls import reverse
 from rest_framework import status
-from unittest import skip
 
 from hs_composite_resource.models import CompositeResource
 from hs_core import hydroshare
