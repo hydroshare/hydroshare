@@ -79,6 +79,7 @@ from hs_core.tasks import (
     replicate_resource_bag_to_user_zone_task,
 )
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
+from theme.models import UserProfile
 from . import apps
 from . import debug_resource_view
 from . import resource_access_api
@@ -2305,6 +2306,18 @@ def hsapi_get_user_for_keycloak(request, user_identifier):
         return hsapi_post_user_for_keycloak(request, user_identifier)
 
     user: User = hydroshare.utils.user_from_id(user_identifier)
+    user_profile = UserProfile.objects.filter(user=user).first()
+    user_attributes = {}
+    if user_profile.organization:
+        user_attributes['cuahsi-organizations'] = [org for org in user_profile.organization.split(";")]
+    if user_profile.state and user_profile.state.strip() and user_profile.state != 'Unspecified':
+        user_attributes['cuahsi-region'] = [user_profile.state.strip()]
+    if user_profile.country and user_profile.country != 'Unspecified':
+        user_attributes['cuahsi-country'] = [user_profile.country]
+    if user_profile.user_type and user_profile.user_type.strip() and user_profile.user_type != 'Unspecified':
+        user_attributes['cuahsi-user-type'] = [user_profile.user_type.strip()]
+    if user_profile.subject_areas:
+        user_attributes['subject_areas'] = [subject for subject in user_profile.subject_areas]
     keycloak_dict = {
         "username": user.username,
         "email": user.email,
@@ -2312,6 +2325,7 @@ def hsapi_get_user_for_keycloak(request, user_identifier):
         "lastName": user.last_name,
         "enabled": True,
         "emailVerified": user.is_active,
+        "attributes": user_attributes,
         "roles": [
             "default-roles-hydroshare"
         ],
