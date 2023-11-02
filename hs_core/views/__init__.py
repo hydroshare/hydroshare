@@ -2372,7 +2372,7 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
         user_data["identifiers"] = user.userprofile.identifiers
         user_data["type"] = user.userprofile.user_type
         user_data["date_joined"] = user.date_joined
-        user_data["subject_areas"] = [org for org in user.userprofile.subject_areas.split(";")]
+        user_data["subject_areas"] = [org for org in user.userprofile.subject_areas]
     else:
         group = hydroshare.utils.group_from_id(user_or_group_id)
         user_data["organization"] = [group.name]

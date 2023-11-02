@@ -61,7 +61,7 @@ class UserInfo(APIView):
         if "ORCID" in user_profile.identifiers:
             user_info['orcid'] = user_profile.identifiers["ORCID"]
         if user_profile.subject_areas:
-            user_info['subject_areas'] = [subject for subject in user_profile.subject_areas.split(";")]
+            user_info['subject_areas'] = [subject for subject in user_profile.subject_areas]
 
         return user_info
 
