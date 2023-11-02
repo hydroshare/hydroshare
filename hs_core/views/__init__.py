@@ -2376,7 +2376,7 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
         if user.userprofile.state:
             user_data["state"] = user.userprofile.state
         if user.userprofile.country:
-            user_data["country"] = address
+            user_data["country"] = user.userprofile.country
     else:
         group = hydroshare.utils.group_from_id(user_or_group_id)
         user_data["organization"] = [group.name]
