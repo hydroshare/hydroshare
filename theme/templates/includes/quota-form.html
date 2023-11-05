@@ -61,22 +61,7 @@
                     </div>
                     <div class="modal-body">
                         {% if quota_message %}<div class="alert alert-info">{{ quota_message }}</div>{% endif %}
-                        <div class="row">
-                            <div class="col-sm-10 col-xs-12">
-                                <div class="form-group">
-                                    <label for="id_justification">Enter justification for more quota</label>
-                                    <input class="form-control" autocomplete="off" id="id_justification" name="justification" placeholder="Justification">
-                                    <label for="id_storage">How much more storage to you require? (GB)</label>
-                                    <input class="form-control" autocomplete="off" id="id_storage" name="storage" placeholder="Storage">
-                                    {% if profile.organization %}
-                                        You listed your organization as <b>{{ profile.organization }}</b> in your profile.
-                                    {% endif %}
-                                    <label for="id_org_info">If there is a specific organization associated with this request, please indicate it.</label>
-                                    <input class="form-control" autocomplete="off" id="id_org_info" name="org_info" placeholder="Organizational info">
-                                </div>
-                                <!-- {{ quota_form.as_p }} -->
-                            </div>
-                        </div>
+                        {{ quota_form.as_p }}
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>

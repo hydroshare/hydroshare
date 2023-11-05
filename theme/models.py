@@ -317,7 +317,17 @@ class QuotaRequest(models.Model):
 class QuotaRequestForm(ModelForm):
     class Meta:
         model = QuotaRequest
-        fields = "__all__"
+        fields = ["justification", "storage", "org_info"]
+        labels = {
+            "justification": _("Enter justification for more quota"),
+            "storage": _("How much more storage to you require? (GB)"),
+            "org_info": _("If there is a specific organization associated with this request, please indicate it.")
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(QuotaRequestForm, self).__init__(*args, **kwargs)
+        for visible in self.visible_fields():
+            visible.field.widget.attrs['class'] = 'form-control'
 
 
 class UserProfile(models.Model):
