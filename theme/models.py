@@ -303,6 +303,16 @@ class UserQuota(models.Model):
         return self.used_value + convert_file_size_to_unit(size, self.unit)
 
 
+class QuotaRequest(models.Model):
+    request_from = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ru2qrequest')
+    quota = models.ForeignKey(UserQuota, on_delete=models.CASCADE, related_name='g2qrequest')
+    date_requested = models.DateTimeField(editable=False, auto_now_add=True)
+    justification = models.TextField(null=True, blank=True, max_length=300)
+    storage = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)], default=0)
+    org_info = models.TextField(null=True, blank=True, max_length=100)
+    redeemed = models.BooleanField(default=False)
+
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     picture = ThumbnailImageField(

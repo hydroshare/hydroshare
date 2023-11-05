@@ -49,7 +49,7 @@ from hs_dictionary.models import University, UncategorizedTerm
 from hs_tracking.models import Variable
 from theme.forms import RatingForm, UserProfileForm, UserForm
 from theme.forms import ThreadedCommentForm
-from theme.models import UserProfile
+from theme.models import UserProfile, QuotaRequest
 from theme.utils import get_quota_message
 from .forms import SignupForm
 
@@ -111,12 +111,17 @@ class UserProfileView(TemplateView):
             Prefetch("content_object___description"),
             Prefetch("content_object___title"),
         )
+        quota_requests = QuotaRequest.objects.filter(
+            request_from=u,
+            redeemed=False
+        ).all()
         message, quota_data = get_quota_message(u)
         return {
             "profile_user": u,
             "resources": resources,
             "quota_message": message,
             "quota_data": quota_data,
+            "quota_requests": quota_requests,
             "group_membership_requests": group_membership_requests,
             "data_upload_max": settings.DATA_UPLOAD_MAX_MEMORY_SIZE
         }

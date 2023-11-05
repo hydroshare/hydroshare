@@ -11,11 +11,11 @@
             {% for qd in quota_data %}
                 <div>
                     You have used {{ qd.used }} of your {{ qd.allocated }}{{ qd.unit }} allocated.
-                    <a href="https://help.hydroshare.org/about-hydroshare/policies/quota/">More information on HydroShare Quota.</a>
+                    <a href="https://help.hydroshare.org/about-hydroshare/policies/quota/" target="_blank">More information on HydroShare Quota.</a>
                 </div>
             {% endfor %}
             <br>
-            {% if not pending_quota_requests %}
+            {% if not quota_requests %}
                 <button type="button" data-toggle="modal" data-target="#manage-quota-dialog" class="btn btn-primary">
                     <i class="fa fa-plus" aria-hidden="true"></i> Request additional storage
                 </button>
@@ -24,81 +24,24 @@
                     <div class="has-space-top-2x">
                         <h4><span class="glyphicon glyphicon-send"></span>&nbsp;Pending Requests</h4>
                         <hr class="solid">
-                        {% if not my_pending_requests and not group_membership_requests %}
-                        <i>No pending requests.</i>
-                        {% endif %}
-                        {% if my_pending_requests %}
-                        {% for request in my_pending_requests %}
-                        <div class="request-block">
-                            {% if request.invitation_to %}
-                            <span>You invited </span><a>{{ request.invitation_to|contact }}</a>
-                            <span> to join </span><strong><a href="/group/{{ request.group_to_join.id }}">{{request.group_to_join.name}}</a></strong>
-                            {% else %}
-                            <span>You asked to join <strong><a href="/group/{{ request.group_to_join.id }}">{{request.group_to_join.name }}</a></strong>
-                                {% endif %}
+                        {% for request in quota_requests %}
+                            <div class="request-block">
+                                <span>You requested a quota increase of {{ request.storage }} on {{ request.date_requested }}
                                 <div class="text-muted">{{ request.date_requested }}</div>
-            
-                                {% if request.explanation %}
-                                <div class="text-muted explanation has-space-top" title="{{ request.explanation }}">Explanation:
-                                    {{ request.explanation }}</div>
-                                {% endif %}
-            
-                                <form id="act-on-request"
-                                    action="/hsapi/_internal/act-on-group-membership-request/{{ request.id }}/reject/"
-                                    method="POST">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-default has-space-top">Cancel Request</button>
-                                </form>
-                        </div>
-                        {% endfor %}
-                        {% endif %}
-            
-                        {% if group_membership_requests %}
-                        {% for request in group_membership_requests %}
-                        <div class="request-block">
-                            <form></form>
-                            <div class="activity-block height-fix">
-                                {% if request.request_from.userprofile.picture and request.request_from.userprofile.picture.url %}
-                                {% thumbnail request.request_from.userprofile.picture "x80" crop="center" as im %}
-                                <div style="background-image: url('{{ im.url }}');"
-                                    class="round-image profile-pic-thumbnail pull-left">
-                                </div>
-                                {% endthumbnail %}
-                                {% else %}
-                                <div class="profile-pic-thumbnail round-image user-icon"></div>
-                                {% endif %}
-                                <div class="metadata-wrapper">
-                                    <div class="shared-resource-info">
-                                        <a>{{ request.request_from|contact }}</a>
-            
-                                        <span class="text-muted"> invites you to join </span>
-                                        <strong><a href="/group/{{ request.group_to_join.id }}">{{ request.group_to_join.name }}</a></strong>
-                                        <div class="text-muted">{{ request.date_requested }}</div>
-                                    </div>
-                                </div>
-            
-                                <div class="flex gap-1 flex-sm-column">
-                                    <form class="act-on-request height-fix"
-                                        action="/hsapi/_internal/act-on-group-membership-request/{{ request.id }}/accept/"
-                                        method="POST">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-success btn-act-on-request"
-                                            data-user-action="Accept">Accept</button>
-                                    </form>
-            
-                                    <form class="act-on-request height-fix"
+                                    {% if request.explanation %}
+                                        <div class="text-muted explanation has-space-top" title="{{ request.justification }}">Justification:
+                                            {{ request.justification }}</div>
+                                    {% endif %}
+                
+                                    <form id="act-on-request"
                                         action="/hsapi/_internal/act-on-group-membership-request/{{ request.id }}/reject/"
                                         method="POST">
                                         {% csrf_token %}
-                                        <button type="submit" class="btn btn-default btn-act-on-request">
-                                            Decline
-                                        </button>
+                                        <button type="submit" class="btn btn-default has-space-top">Cancel Request</button>
                                     </form>
-                                </div>
                             </div>
-                        </div>
                         {% endfor %}
-                        {% endif %}
+
                     </div>
                 </div>
             {% endif %}
@@ -114,7 +57,7 @@
                         <button type="button" class="close" data-dismiss="modal"
                                 aria-label="Close"><span aria-hidden="true">&times;</span>
                         </button>
-                        <h4 class="modal-title" id="myModalLabel">Manage your HydroShare Quota</h4>
+                        <h4 class="modal-title" id="myModalLabel">Request Additional HydroShare Quota</h4>
                     </div>
                     <div class="modal-body">
                         {% if quota_message %}<div class="alert alert-info">{{ quota_message }}</div>{% endif %}
