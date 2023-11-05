@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.dispatch import receiver
 from django.contrib.auth.models import User
 from django.db import models
+from django.forms import ModelForm
 from django.contrib.postgres.fields import ArrayField
 from django.db.models.signals import pre_save
 from django.template import RequestContext, Template, TemplateSyntaxError
@@ -311,6 +312,12 @@ class QuotaRequest(models.Model):
     storage = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)], default=0)
     org_info = models.TextField(null=True, blank=True, max_length=100)
     redeemed = models.BooleanField(default=False)
+
+
+class QuotaRequestForm(ModelForm):
+    class Meta:
+        model = QuotaRequest
+        fields = "__all__"
 
 
 class UserProfile(models.Model):

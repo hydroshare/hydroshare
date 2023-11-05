@@ -66,14 +66,15 @@
                                 <div class="form-group">
                                     <label for="id_justification">Enter justification for more quota</label>
                                     <input class="form-control" autocomplete="off" id="id_justification" name="justification" placeholder="Justification">
-                                    <label for="id_storage_ammout">How much more storage to you require? (GB)</label>
-                                    <input class="form-control" autocomplete="off" id="id_storage_ammout" name="storage_ammout" placeholder="Storage Ammount">
+                                    <label for="id_storage">How much more storage to you require? (GB)</label>
+                                    <input class="form-control" autocomplete="off" id="id_storage" name="storage" placeholder="Storage">
                                     {% if profile.organization %}
                                         You listed your organization as <b>{{ profile.organization }}</b> in your profile.
                                     {% endif %}
-                                    <label for="id_quota_org">If there is a specific organization associated with this request, please indicate it.</label>
-                                    <input class="form-control" autocomplete="off" id="id_quota_org" name="quota_org" placeholder="Organization">
+                                    <label for="id_org_info">If there is a specific organization associated with this request, please indicate it.</label>
+                                    <input class="form-control" autocomplete="off" id="id_org_info" name="org_info" placeholder="Organizational info">
                                 </div>
+                                <!-- {{ quota_form.as_p }} -->
                             </div>
                         </div>
                     </div>

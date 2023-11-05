@@ -13,6 +13,7 @@ from django.core.exceptions import (
     ValidationError,
     ObjectDoesNotExist,
     MultipleObjectsReturned,
+    PermissionDenied,
 )
 from django.core.mail import send_mail
 from django.urls import reverse
@@ -49,7 +50,7 @@ from hs_dictionary.models import University, UncategorizedTerm
 from hs_tracking.models import Variable
 from theme.forms import RatingForm, UserProfileForm, UserForm
 from theme.forms import ThreadedCommentForm
-from theme.models import UserProfile, QuotaRequest
+from theme.models import UserProfile, QuotaRequest, QuotaRequestForm
 from theme.utils import get_quota_message
 from .forms import SignupForm
 
@@ -115,6 +116,28 @@ class UserProfileView(TemplateView):
             request_from=u,
             redeemed=False
         ).all()
+        if self.request.method == "POST":
+            quota_form = QuotaRequestForm(request.POST)
+            if quota_form.is_valid():
+                try:
+                    quota_form = quota_form.save(request)
+                    msg = "New quota request was successful."
+                    messages.success(request, msg)
+                    # send email to hydroshare support
+                    # CommunityRequestEmailNotification(request=request, community_request=new_quota_request,
+                    #                                   on_event=CommunityRequestEvents.CREATED).send()
+                    return HttpResponseRedirect(reverse('my_communities'))
+                except PermissionDenied:
+                    err_msg = "You don't have permission to request additional quota"
+                    messages.error(self.request, err_msg)
+                except Exception as ex:
+                    messages.error(self.request, f"Quota request errors:{str(ex)}.")
+
+            else:
+                messages.error(self.request, "Quota request errors:{}.".format(quota_form.errors.as_json))
+
+        else:
+            quota_form = QuotaRequestForm()
         message, quota_data = get_quota_message(u)
         return {
             "profile_user": u,
@@ -122,9 +145,40 @@ class UserProfileView(TemplateView):
             "quota_message": message,
             "quota_data": quota_data,
             "quota_requests": quota_requests,
+            "quota_form": quota_form,
             "group_membership_requests": group_membership_requests,
             "data_upload_max": settings.DATA_UPLOAD_MAX_MEMORY_SIZE
         }
+
+
+@login_required
+def quota_request(request, *args, **kwargs):
+    """ A view function for quota request """
+    if request.method == "POST":
+        quota_form = QuotaRequestForm(request.POST)
+        if quota_form.is_valid():
+            try:
+                quota_form = quota_form.save(request)
+                msg = "New quota request was successful."
+                messages.success(request, msg)
+                # send email to hydroshare support
+                # CommunityRequestEmailNotification(request=request, community_request=new_quota_request,
+                #                                   on_event=CommunityRequestEvents.CREATED).send()
+                return HttpResponseRedirect(reverse('profile'))
+            except PermissionDenied:
+                err_msg = "You don't have permission to request additional quota"
+                messages.error(request, err_msg)
+            except Exception as ex:
+                messages.error(request, f"Quota request errors:{str(ex)}.")
+
+        else:
+            messages.error(request, "Quota request errors:{}.".format(quota_form.errors.as_json))
+
+    else:
+        quota_form = QuotaRequestForm()
+
+    return render(request, "name.html", {"quota_form": quota_form})
+    # return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
 class UserPasswordResetView(TemplateView):
