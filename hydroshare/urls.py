@@ -62,7 +62,8 @@ urlpatterns = i18n_patterns(
         theme.update_user_profile,
         name="update_profile",
     ),
-    url(r'^_internal/quota-request/$', theme.quota_request, name='quota_request'),
+    # TODO: move this to _internal
+    url(r'^quota-request/$', theme.quota_request, name='quota_request'),
     url(r"^update_password/$", theme.update_user_password, name="update_password"),
     url(
         r"^resend_verification_email/(?P<email>.*)/",

@@ -155,6 +155,7 @@ class UserProfileView(TemplateView):
 def quota_request(request, *args, **kwargs):
     """ A view function for quota request """
     if request.method == "POST":
+        # TODO verify user
         quota_form = QuotaRequestForm(request.POST)
         if quota_form.is_valid():
             try:
@@ -177,8 +178,8 @@ def quota_request(request, *args, **kwargs):
     else:
         quota_form = QuotaRequestForm()
 
-    return render(request, "name.html", {"quota_form": quota_form})
-    # return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    # return render(request, "name.html", {"quota_form": quota_form})
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
 class UserPasswordResetView(TemplateView):
