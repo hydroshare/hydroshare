@@ -111,36 +111,29 @@
                                                         <a href="https://help.hydroshare.org/about-hydroshare/policies/quota/" target="_blank">More information on HydroShare Quota.</a>
                                                     </div>
                                                 {% endfor %}
-                                                <br>
                                                 {% if not quota_requests %}
                                                     <button type="button" data-toggle="modal" data-target="#manage-quota-dialog" class="btn btn-primary">
                                                         <i class="fa fa-plus" aria-hidden="true"></i> Request additional storage
                                                     </button>
                                                 {% else%}
-                                                    <div class="col-sm-3 has-space-bottom-2x">
-                                                        <div class="has-space-top-2x">
-                                                            <h4><span class="glyphicon glyphicon-send"></span>&nbsp;Pending Requests</h4>
-                                                            <hr class="solid">
-                                                            {% for request in quota_requests %}
-                                                                <div class="request-block">
-                                                                    <span>You requested a quota increase of {{ request.storage }} on {{ request.date_requested }}
-                                                                    <div class="text-muted">{{ request.date_requested }}</div>
-                                                                        {% if request.explanation %}
-                                                                            <div class="text-muted explanation has-space-top" title="{{ request.justification }}">Justification:
-                                                                                {{ request.justification }}</div>
-                                                                        {% endif %}
-                                                    
-                                                                        <form id="act-on-request"
-                                                                            action="/hsapi/_internal/act-on-group-membership-request/{{ request.id }}/reject/"
-                                                                            method="POST">
-                                                                            {% csrf_token %}
-                                                                            <button type="submit" class="btn btn-default has-space-top">Cancel Request</button>
-                                                                        </form>
-                                                                </div>
-                                                            {% endfor %}
-                                    
+                                                    <hr class="solid">
+                                                    {% for request in quota_requests %}
+                                                        <div class="request-block">
+                                                            <span class="glyphicon glyphicon-send"></span>&nbsp;
+                                                            <span>You requested a quota increase of {{ request.storage }} GB on {{ request.date_requested }}
+                                                                {% if request.explanation %}
+                                                                    <div class="text-muted explanation has-space-top" title="{{ request.justification }}">Justification:
+                                                                        {{ request.justification }}</div>
+                                                                {% endif %}
+                                            
+                                                                <form id="act-on-request"
+                                                                    action="/hsapi/_internal/act-on-group-membership-request/{{ request.id }}/reject/"
+                                                                    method="POST">
+                                                                    {% csrf_token %}
+                                                                    <button type="submit" class="btn btn-default has-space-top">Cancel Request</button>
+                                                                </form>
                                                         </div>
-                                                    </div>
+                                                    {% endfor %}
                                                 {% endif %}
                                             </div>
                                         </div>

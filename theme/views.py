@@ -155,25 +155,28 @@ class UserProfileView(TemplateView):
 def quota_request(request, *args, **kwargs):
     """ A view function for quota request """
     if request.method == "POST":
-        # TODO verify user
-        quota_form = QuotaRequestForm(request.POST)
-        if quota_form.is_valid():
-            try:
-                quota_form = quota_form.save(request)
+        try:
+            user = request.user
+            uq = UserQuota.objects.filter(user=user).first()
+            quota_form = QuotaRequestForm(request.POST)
+            if quota_form.is_valid():
+                quota_form = quota_form.save(commit=False)
+                quota_form.request_from = user
+                quota_form.quota = uq
+                quota_form.save()
                 msg = "New quota request was successful."
                 messages.success(request, msg)
-                # send email to hydroshare support
+                # TODO: #5228 send email to hydroshare support
                 # CommunityRequestEmailNotification(request=request, community_request=new_quota_request,
                 #                                   on_event=CommunityRequestEvents.CREATED).send()
-                return HttpResponseRedirect(reverse('profile'))
-            except PermissionDenied:
-                err_msg = "You don't have permission to request additional quota"
-                messages.error(request, err_msg)
-            except Exception as ex:
-                messages.error(request, f"Quota request errors:{str(ex)}.")
-
-        else:
-            messages.error(request, "Quota request errors:{}.".format(quota_form.errors.as_json))
+                # return HttpResponseRedirect(reverse('update_profile', kwargs={"profile_user_id": user.id}))
+            else:
+                messages.error(request, "Quota request errors:{}.".format(quota_form.errors.as_json))
+        except PermissionDenied:
+            err_msg = "You don't have permission to request additional quota"
+            messages.error(request, err_msg)
+        except Exception as ex:
+            messages.error(request, f"Quota request errors:{str(ex)}.")
 
     else:
         quota_form = QuotaRequestForm()
