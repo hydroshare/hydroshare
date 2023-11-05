@@ -96,7 +96,23 @@
                                         {% endif %}
                                     </div>
                                     <hr>
-                                    <div><a data-toggle="modal" data-target="#manage-quota-dialog">Manage your Quota</a></div>
+                                    <div>
+                                        {#        Quota      #}
+                                        {% if profile_user.id == user.id or user.is_superuser %}
+                                        <div class="panel panel-default"  data-page-mode="edit">
+                                            <div class="panel-heading">
+                                                <h3 class="panel-title"><span
+                                                        class="fa fa-database" style="width:32px;">&nbsp;</span>Quota</h3>
+                                            </div>
+        
+                                            <div class="panel-body">
+                                                <button type="button" data-toggle="modal" data-target="#manage-quota-dialog" class="btn btn-primary">
+                                                    <i class="fa fa-plus" aria-hidden="true"></i> Request additional storage
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                             {% endif %}
@@ -725,13 +741,13 @@
 
         {% if profile_user.id == user.id or user.is_superuser %}
             <div class="col-xs-12 col-sm-3 height-fix pull-right">
-            <button type="submit" class="btn btn-primary pull-right
-                btn-save-profile" data-page-mode="edit">
-                Save changes
-            </button>
-            <span data-page-mode="edit"
-                  class="btn btn-default pull-right btn-cancel-profile-edit">Cancel</span>
-        </div>
+                <button type="submit" class="btn btn-primary pull-right
+                    btn-save-profile" data-page-mode="edit">
+                    Save changes
+                </button>
+                <span data-page-mode="edit"
+                    class="btn btn-default pull-right btn-cancel-profile-edit">Cancel</span>
+            </div>
 
             <!-- Deactivate Account Modal -->
             <div class="modal fade" id="deactivate-account-dialog" tabindex="-1" role="dialog"
@@ -915,15 +931,15 @@
                                         </div>
                                         <br>
                                         <div class="form-group">
-                                            <label for="id_irods_password">Enter justification for more quota</label>
-                                            <input class="form-control" autocomplete="off" id="id_irods_password" name="irods_password" placeholder="Justification">
-                                            <label for="id_irods_password">How much more storage to you require? (Please include units)</label>
-                                            <input class="form-control" autocomplete="off" id="id_irods_password" name="irods_password" placeholder="Storage Ammount">
+                                            <label for="id_justification">Enter justification for more quota</label>
+                                            <input class="form-control" autocomplete="off" id="id_justification" name="justification" placeholder="Justification">
+                                            <label for="id_storage_ammout">How much more storage to you require? (GB)</label>
+                                            <input class="form-control" autocomplete="off" id="id_storage_ammout" name="storage_ammout" placeholder="Storage Ammount">
                                             {% if profile.organization %}
                                                 You listed your organization as <b>{{ profile.organization }}</b> in your profile.
                                             {% endif %}
-                                            <label for="id_irods_password">If there is a specific organization associated with this request, please indicate it.</label>
-                                            <input class="form-control" autocomplete="off" id="id_irods_password" name="irods_password" placeholder="Organization">
+                                            <label for="id_quota_org">If there is a specific organization associated with this request, please indicate it.</label>
+                                            <input class="form-control" autocomplete="off" id="id_quota_org" name="quota_org" placeholder="Organization">
                                         </div>
                                         {% endfor %}
                                     </div>
