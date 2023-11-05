@@ -96,23 +96,8 @@
                                         {% endif %}
                                     </div>
                                     <hr>
-                                    <div>
-                                        {#        Quota      #}
-                                        {% if profile_user.id == user.id or user.is_superuser %}
-                                        <div class="panel panel-default"  data-page-mode="edit">
-                                            <div class="panel-heading">
-                                                <h3 class="panel-title"><span
-                                                        class="fa fa-database" style="width:32px;">&nbsp;</span>Quota</h3>
-                                            </div>
-        
-                                            <div class="panel-body">
-                                                <button type="button" data-toggle="modal" data-target="#manage-quota-dialog" class="btn btn-primary">
-                                                    <i class="fa fa-plus" aria-hidden="true"></i> Request additional storage
-                                                </button>
-                                            </div>
-                                        </div>
-                                        {% endif %}
-                                    </div>
+                                    {% include "includes/quota-form.html" %}
+
                                 </div>
                             </div>
                             {% endif %}
@@ -903,51 +888,6 @@
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                                 <button id="btn-create-irods-account" class="btn btn-primary" disabled>Confirm</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            <!-- Manage Quota Modal -->
-            <div class="modal fade" id="manage-quota-dialog" tabindex="-1" role="dialog"
-                aria-labelledby="myModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-sm">
-                    <div class="modal-content">
-                        <form role="form" method="post">
-                            <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal"
-                                        aria-label="Close"><span aria-hidden="true">&times;</span>
-                                </button>
-                                <h4 class="modal-title" id="myModalLabel">Manage your HydroShare Quota</h4>
-                            </div>
-                            <div class="modal-body">
-                                {% csrf_token %}
-                                <div class="row">
-                                    <div class="col-sm-10 col-xs-12">
-                                        {% for qd in quota_data %}
-                                        <div>
-                                            You have used {{ qd.used }} of your {{ qd.allocated }}{{ qd.unit }} allocated.
-                                            More information on HydroShare Quota can be found <a href="https://help.hydroshare.org/about-hydroshare/policies/quota/">here</a>.
-                                        </div>
-                                        <br>
-                                        <div class="form-group">
-                                            <label for="id_justification">Enter justification for more quota</label>
-                                            <input class="form-control" autocomplete="off" id="id_justification" name="justification" placeholder="Justification">
-                                            <label for="id_storage_ammout">How much more storage to you require? (GB)</label>
-                                            <input class="form-control" autocomplete="off" id="id_storage_ammout" name="storage_ammout" placeholder="Storage Ammount">
-                                            {% if profile.organization %}
-                                                You listed your organization as <b>{{ profile.organization }}</b> in your profile.
-                                            {% endif %}
-                                            <label for="id_quota_org">If there is a specific organization associated with this request, please indicate it.</label>
-                                            <input class="form-control" autocomplete="off" id="id_quota_org" name="quota_org" placeholder="Organization">
-                                        </div>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <button id="btn-create-irods-account" class="btn btn-primary" disabled>Submit</button>
                             </div>
                         </form>
                     </div>
