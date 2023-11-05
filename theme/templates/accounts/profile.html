@@ -120,18 +120,12 @@
                                                     {% for request in quota_requests %}
                                                         <div class="request-block">
                                                             <span class="glyphicon glyphicon-send"></span>&nbsp;
-                                                            <span>You requested a quota increase of {{ request.storage }} GB on {{ request.date_requested }}
-                                                                {% if request.explanation %}
-                                                                    <div class="text-muted explanation has-space-top" title="{{ request.justification }}">Justification:
-                                                                        {{ request.justification }}</div>
-                                                                {% endif %}
-                                            
-                                                                <form id="act-on-request"
-                                                                    action="/hsapi/_internal/act-on-group-membership-request/{{ request.id }}/reject/"
-                                                                    method="POST">
-                                                                    {% csrf_token %}
-                                                                    <button type="submit" class="btn btn-default has-space-top">Cancel Request</button>
-                                                                </form>
+                                                            <span>You requested a quota increase of {{ request.storage }} GB on {{ request.date_requested }}</span>
+                                                            {% if request.explanation %}
+                                                                <div class="text-muted explanation has-space-top" title="{{ request.justification }}">Justification:
+                                                                    {{ request.justification }}</div>
+                                                            {% endif %}
+                                                            <button id="reject-quota-request" type="button" class="btn btn-default has-space-top" data-action="/act-on-quota-request/{{ request.id }}/reject/">Cancel Request</button>
                                                         </div>
                                                     {% endfor %}
                                                 {% endif %}

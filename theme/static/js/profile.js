@@ -509,4 +509,28 @@ $(document).ready(function () {
     resetPhoneValues();
     checkForInvalidPhones();
     checkForInvalidStates();
+
+    $('#reject-quota-request').click(function(e){
+        rejectQuota($(this).data("action"))
+    });
 });
+
+async function rejectQuota(url) {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      }
+    });
+
+    if (response.status === 200) {
+        // TODO #5228
+        alert("approve")
+    //   this.$set(this.request.community_to_approve, 'status', 'Approved');
+    //   this.$set(this.request, 'status', 'Approved');
+    }
+    else {
+      customAlert("Quota Request", 'Failed to submit request', "error", 6000, true);
+    }
+    this.isApproving = false
+}

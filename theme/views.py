@@ -50,7 +50,7 @@ from hs_dictionary.models import University, UncategorizedTerm
 from hs_tracking.models import Variable
 from theme.forms import RatingForm, UserProfileForm, UserForm
 from theme.forms import ThreadedCommentForm
-from theme.models import UserProfile, QuotaRequest, QuotaRequestForm
+from theme.models import UserProfile, QuotaRequest, QuotaRequestForm, UserQuota
 from theme.utils import get_quota_message
 from .forms import SignupForm
 
@@ -149,6 +149,58 @@ class UserProfileView(TemplateView):
             "group_membership_requests": group_membership_requests,
             "data_upload_max": settings.DATA_UPLOAD_MAX_MEMORY_SIZE
         }
+
+
+@login_required
+def act_on_quota_request(
+    request, quota_request_id, action, *args, **kwargs
+):
+    """
+    Take action (accept or decline) on group membership request
+
+    :param request: requesting user is either owner of the group taking action on a request from a user
+                    or a user taking action on a invitation to join a group from a group owner
+    :param membership_request_id: id of the membership request object (an instance of GroupMembershipRequest)
+                                  to act on
+    :param action: need to have a value of either 'accept' or 'decline'
+    :return:
+    """
+    # TODO: #5228!
+
+    accept_request = action == "accept"
+    user_acting = request.user
+
+    try:
+        quota_request = QuotaRequest.objects.get(
+            pk=quota_request_id
+        )
+    except ObjectDoesNotExist:
+        messages.error(request, "No matching group membership request was found")
+    else:
+        if not quota_request.redeemed:
+            try:
+                # TODO: #5228
+                # user_acting.uaccess.act_on_group_quota_request(
+                #     quota_request, accept_request
+                # )
+                if action == "reject":
+                    quota_request.delete()
+                    message = "Quota request canceled"
+                elif accept_request:
+                    message = "Membership request accepted"
+                    # send email to notify membership acceptance
+                    # TODO #5228
+                    # _send_email_on_group_membership_acceptance(quota_request)
+                else:
+                    message = "Membership request declined"
+                messages.success(request, message)
+
+            except PermissionDenied as ex:
+                messages.error(request, str(ex))
+        else:
+            messages.error(request, "Request already redeemed")
+
+    return HttpResponseRedirect(request.META["HTTP_REFERER"])
 
 
 @login_required
