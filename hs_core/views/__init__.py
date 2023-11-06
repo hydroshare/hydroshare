@@ -2327,7 +2327,7 @@ def hsapi_get_user_for_keycloak(request, user_identifier):
         "emailVerified": user.is_active,
         "attributes": user_attributes,
         "roles": [
-            "default-roles-hydroshare"
+            "hydroshare-imported"
         ],
     }
     return JsonResponse(keycloak_dict)
