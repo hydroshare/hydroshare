@@ -185,7 +185,6 @@ class IconBox(Orderable):
 
 
 class QuotaMessage(models.Model):
-    # TODO: #5228
     # warning_content_prepend prepends the content to form a warning message to be emailed to the
     # user and displayed when the user is logged in; grace_period_cotent_prepend prepends the
     # content when over quota within grace period and less than 125% of hard limit quota;
@@ -248,7 +247,6 @@ class QuotaMessage(models.Model):
 
 
 class UserQuota(models.Model):
-    # TODO: #5228
     # ForeignKey relationship makes it possible to associate multiple UserQuota models to
     # a User with each UserQuota model defining quota for a set of iRODS zones. By default,
     # the UserQuota model instance defines quota in hydroshareZone and hydroshareuserZone,
@@ -305,13 +303,19 @@ class UserQuota(models.Model):
 
 
 class QuotaRequest(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'pending'),
+        ('denied', 'denied'),
+        ('approved', 'approved'),
+        ('revoked', 'revoked'),
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     request_from = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ru2qrequest')
     quota = models.ForeignKey(UserQuota, on_delete=models.CASCADE, related_name='g2qrequest')
     date_requested = models.DateTimeField(editable=False, auto_now_add=True)
     justification = models.TextField(null=True, blank=True, max_length=300)
     storage = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)], default=0)
     org_info = models.TextField(null=True, blank=True, max_length=100)
-    redeemed = models.BooleanField(default=False)
 
 
 class QuotaRequestForm(ModelForm):

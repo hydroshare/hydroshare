@@ -114,7 +114,6 @@ def update_quota_usage(username):
     # TODO: subtract out published resources
     # TODO: #5228
     published_percent = qmsg.published_resource_percent
-    # TODO: #5228 published size
     # published_size = 
     uq.update_used_value(used_val)
 

@@ -125,7 +125,7 @@
                                                                 <div class="text-muted explanation has-space-top" title="{{ request.justification }}">Justification:
                                                                     {{ request.justification }}</div>
                                                             {% endif %}
-                                                            <button id="reject-quota-request" type="button" class="btn btn-default has-space-top" data-action="/act-on-quota-request/{{ request.id }}/reject/">Cancel Request</button>
+                                                            <button id="revoke-quota-request" type="button" class="btn btn-default has-space-top" data-action="/act-on-quota-request/{{ request.id }}/revoke/">Revoke Request</button>
                                                         </div>
                                                     {% endfor %}
                                                 {% endif %}

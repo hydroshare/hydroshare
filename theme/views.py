@@ -114,7 +114,7 @@ class UserProfileView(TemplateView):
         )
         quota_requests = QuotaRequest.objects.filter(
             request_from=u,
-            redeemed=False
+            status="pending"
         ).all()
         if self.request.method == "POST":
             quota_form = QuotaRequestForm(request.POST)
@@ -165,9 +165,6 @@ def act_on_quota_request(
     :param action: need to have a value of either 'accept' or 'decline'
     :return:
     """
-    # TODO: #5228!
-
-    accept_request = action == "accept"
     user_acting = request.user
 
     try:
@@ -177,22 +174,27 @@ def act_on_quota_request(
     except ObjectDoesNotExist:
         messages.error(request, "No matching group membership request was found")
     else:
-        if not quota_request.redeemed:
+        if quota_request.status == "pending":
             try:
                 # TODO: #5228
                 # user_acting.uaccess.act_on_group_quota_request(
                 #     quota_request, accept_request
                 # )
-                if action == "reject":
-                    quota_request.delete()
-                    message = "Quota request canceled"
-                elif accept_request:
-                    message = "Membership request accepted"
+                if action == "revoke":
+                    quota_request.status = "revoked"
+                    message = "Quota request revoked"
+                elif action == "approve":
+                    quota_request.status = "approved"
+                    message = "Quota request approved"
                     # send email to notify membership acceptance
                     # TODO #5228
                     # _send_email_on_group_membership_acceptance(quota_request)
+                elif action == "deny":
+                    quota_request.status = "denied"
+                    message = "Quota request approved"
                 else:
-                    message = "Membership request declined"
+                    message = "Quota request denied"
+                quota_request.save()
                 messages.success(request, message)
 
             except PermissionDenied as ex:
@@ -209,7 +211,11 @@ def quota_request(request, *args, **kwargs):
     if request.method == "POST":
         try:
             user = request.user
+            if user.is_superuser:
+                raise ObjectDoesNotExist("Admin users don't have quota")
             uq = UserQuota.objects.filter(user=user).first()
+            if not uq:
+                raise ObjectDoesNotExist(f"No quota found for {user.username}")
             quota_form = QuotaRequestForm(request.POST)
             if quota_form.is_valid():
                 quota_form = quota_form.save(commit=False)

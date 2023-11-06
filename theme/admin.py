@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from mezzanine.core.admin import TabularDynamicInlineAdmin
 from mezzanine.utils.admin import SingletonAdmin
 
-from .models import SiteConfiguration, HomePage, IconBox, UserQuota, QuotaMessage
+from .models import SiteConfiguration, HomePage, IconBox, UserQuota, QuotaMessage, QuotaRequest
 
 
 class IconBoxInline(TabularDynamicInlineAdmin):
@@ -15,7 +15,6 @@ class IconBoxInline(TabularDynamicInlineAdmin):
 
 
 class UserQuotaForm(forms.ModelForm):
-    # TODO: #5228
     user = forms.ModelChoiceField(
         queryset=User.objects.exclude(is_superuser=True).exclude(is_active=False))
 
@@ -27,6 +26,27 @@ class UserQuotaForm(forms.ModelForm):
         instance = super(UserQuotaForm, self).save(commit=False)
         instance.user = self.cleaned_data['user']
         return instance
+
+
+class QuotaRequestForm(forms.ModelForm):
+
+    class Meta:
+        model = QuotaRequest
+        fields = "__all__"
+
+
+class QuotaRequestAdmin(admin.ModelAdmin):
+    model = QuotaRequest
+    list_display = ('request_from', 'quota', 'date_requested', 'justification', 'storage', 'org_info', 'status')
+    list_filter = ('status',)
+    readonly_fields = ('request_from', 'date_requested', 'justification', 'storage', 'org_info')
+    search_fields = ('request_from__username', 'org_info', 'justification')
+
+    def get_form(self, request, obj=None, **kwargs):
+        if obj is None:
+            return QuotaRequestForm
+        else:
+            return super(QuotaRequestAdmin, self).get_form(request, obj, **kwargs)
 
 
 class QuotaAdmin(admin.ModelAdmin):
@@ -50,5 +70,5 @@ class QuotaAdmin(admin.ModelAdmin):
 admin.site.register(HomePage)
 admin.site.register(SiteConfiguration, SingletonAdmin)
 admin.site.register(UserQuota, QuotaAdmin)
+admin.site.register(QuotaRequest, QuotaRequestAdmin)
 admin.site.register(QuotaMessage, SingletonAdmin)
-# TODO: #5228

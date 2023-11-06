@@ -2046,7 +2046,6 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
 
 
 def group_membership(request, uidb36, token, membership_request_id, **kwargs):
-    # TODO: #5228
     """
     View for the link in the verification email that was sent to a user
     when they request/invite to join a group.
@@ -2105,6 +2104,7 @@ def group_membership(request, uidb36, token, membership_request_id, **kwargs):
 
 
 def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs):
+    # #5228
     """
     View for the link in the verification email that was sent to a user
     when they request publication/metadata review.
@@ -2197,7 +2197,6 @@ def act_on_group_membership_request(
     :param action: need to have a value of either 'accept' or 'decline'
     :return:
     """
-    # TODO: #5228!
 
     accept_request = action == "accept"
     user_acting = request.user

@@ -510,12 +510,12 @@ $(document).ready(function () {
     checkForInvalidPhones();
     checkForInvalidStates();
 
-    $('#reject-quota-request').click(function(e){
-        rejectQuota($(this).data("action"))
+    $('#revoke-quota-request').click(function(e){
+        revokeQuota($(this).data("action"))
     });
 });
 
-async function rejectQuota(url) {
+async function revokeQuota(url) {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -524,13 +524,10 @@ async function rejectQuota(url) {
     });
 
     if (response.status === 200) {
-        // TODO #5228
-        alert("approve")
-    //   this.$set(this.request.community_to_approve, 'status', 'Approved');
-    //   this.$set(this.request, 'status', 'Approved');
+        customAlert("Quota Request", 'Your quota request was revoked', "success", 6000, true);
     }
     else {
-      customAlert("Quota Request", 'Failed to submit request', "error", 6000, true);
+      customAlert("Quota Request", 'Failed to revoke request', "error", 6000, true);
     }
     this.isApproving = false
 }

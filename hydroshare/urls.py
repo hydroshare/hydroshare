@@ -50,8 +50,6 @@ urlpatterns = i18n_patterns(
     ),
     url(r"^user/$", theme.UserProfileView.as_view()),
     url(r"^user/(?P<user>.*)/", theme.UserProfileView.as_view()),
-    url(r'^act-on-quota-request/(?P<quota_request_id>[0-9]+)/(?P<action>[a-z]+)/$', 
-        theme.act_on_quota_request, name='act_on_quota_request'),
     url(r"^comment/$", theme.comment),
     url(
         r"^comment/delete/(?P<id>.*)/$",
@@ -65,6 +63,8 @@ urlpatterns = i18n_patterns(
         name="update_profile",
     ),
     # TODO: move this to _internal
+    url(r'^act-on-quota-request/(?P<quota_request_id>[0-9]+)/(?P<action>[a-z]+)/$', 
+        theme.act_on_quota_request, name='act_on_quota_request'),
     url(r'^quota-request/$', theme.quota_request, name='quota_request'),
     url(r"^update_password/$", theme.update_user_password, name="update_password"),
     url(
