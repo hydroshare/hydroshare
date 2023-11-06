@@ -39,7 +39,7 @@ class QuotaRequestAdmin(admin.ModelAdmin):
     model = QuotaRequest
     list_display = ('request_from', 'quota', 'date_requested', 'justification', 'storage', 'org_info', 'status')
     list_filter = ('status',)
-    readonly_fields = ('request_from', 'date_requested', 'justification', 'storage', 'org_info')
+    readonly_fields = ('request_from', 'quota', 'date_requested', 'justification', 'org_info')
     search_fields = ('request_from__username', 'org_info', 'justification')
 
     def get_form(self, request, obj=None, **kwargs):
