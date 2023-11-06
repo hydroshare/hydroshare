@@ -315,17 +315,15 @@ class QuotaRequest(models.Model):
     date_requested = models.DateTimeField(editable=False, auto_now_add=True)
     justification = models.TextField(null=True, blank=True, max_length=300)
     storage = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)], default=0)
-    org_info = models.TextField(null=True, blank=True, max_length=100)
 
 
 class QuotaRequestForm(ModelForm):
     class Meta:
         model = QuotaRequest
-        fields = ["justification", "storage", "org_info"]
+        fields = ["justification", "storage"]
         labels = {
             "justification": _("Enter justification for more quota"),
             "storage": _("How much more storage to you require? (GB)"),
-            "org_info": _("If there is a specific organization associated with this request, please indicate it.")
         }
 
     def __init__(self, *args, **kwargs):
