@@ -2387,7 +2387,8 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
         user_data["identifiers"] = user.userprofile.identifiers
         user_data["type"] = user.userprofile.user_type
         user_data["date_joined"] = user.date_joined
-        user_data["subject_areas"] = [org for org in user.userprofile.subject_areas]
+        if user.userprofile.subject_areas:
+            user_data["subject_areas"] = [org for org in user.userprofile.subject_areas]
         if user.userprofile.state:
             user_data["state"] = user.userprofile.state
         if user.userprofile.country:

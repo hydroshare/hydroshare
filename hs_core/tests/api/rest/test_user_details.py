@@ -32,7 +32,7 @@ class TestUserDetails(APITestCase):
         self.user.userprofile.phone_1 = '12345678'
         self.user.userprofile.state = 'Utah'
         self.user.userprofile.country = 'USA'
-        self.user.userprofile.organization = ['CUAHSI']
+        self.user.userprofile.organization = 'CUAHSI'
         self.user.userprofile.website = 'https://www.hydroshare.org'
         self.user.userprofile.identifiers = {'ORCID': '1234566', 'ResearchGate': 'someresearchgateid'}
         self.user.userprofile.user_type = 'Computer Programming'
@@ -49,7 +49,7 @@ class TestUserDetails(APITestCase):
         self.assertEqual(content['url'], '{domain}/user/{uid}/'.format(domain=utils.current_site_url(), uid=user.pk))
         self.assertEqual(content['phone'], '12345678')
         self.assertEqual(content['address'], 'Utah, USA')
-        self.assertEqual(content['organization'], 'CUAHSI')
+        self.assertEqual(content['organization'], ['CUAHSI'])
         self.assertEqual(content['website'], 'https://www.hydroshare.org')
         self.assertEqual(content['identifiers']['ORCID'], '1234566')
         self.assertEqual(content['identifiers']['ResearchGate'], 'someresearchgateid')
