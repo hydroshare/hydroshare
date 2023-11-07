@@ -513,9 +513,11 @@ $(document).ready(function () {
     $('#revoke-quota-request').click(function(e){
         revokeQuota($(this).data("action"))
     });
+    checkQuotaStatus();
 });
 
 async function revokeQuota(url) {
+    // workaround to handle embeded forms in profile.html template
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -523,11 +525,22 @@ async function revokeQuota(url) {
       }
     });
 
-    if (response.status === 200) {
-        customAlert("Quota Request", 'Your quota request was revoked', "success", 6000, true);
+    if (response.ok) {
+        if ( response?.url ) {
+            localStorage.setItem("quota-status", "revoked")
+            window.location.replace(response.url);
+        }
     }
     else {
       customAlert("Quota Request", 'Failed to revoke request', "error", 6000, true);
     }
     this.isApproving = false
+}
+
+function checkQuotaStatus() {
+    const status = localStorage.getItem("quota-status")
+    if(status !== null ) {
+        customAlert("Quota Request", `Your quota request was successfully ${status}.`, "success", 6000, true);
+        localStorage.removeItem("quota-status");
+    }
 }
