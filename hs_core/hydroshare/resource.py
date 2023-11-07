@@ -22,7 +22,7 @@ from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
-from theme.models import UserQuota
+from theme.models import UserQuota, QuotaMessage
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 
@@ -92,6 +92,34 @@ def get_quota_usage_from_irods(username, raise_on_error=True):
     return used_val
 
 
+def get_storage_usage(user, flag="published"):
+    """
+    Query resources by iRODS AVU quotaholder and resource state
+    :param user: the user to get quota usage for.
+    :param flag: resource state (private, discoverable, published)
+    :return: estimated storage used by published resources
+    """
+    resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
+    if flag == "published":
+        resources.filter(raccess__published=True)
+    elif flag == "discoverable":
+        resources.filter(raccess__discoverable=True)
+    elif flag == "public":
+        resources.filter(raccess__public=True)
+    elif flag == "private":
+        resources.filter(raccess__private=True)
+
+    # Iterate over resources and check the quotaholder
+    # if quotaholder is the user, get the resource size and aggregate
+    aggregate_size = 0
+    for res in resources:
+        uname = res.getAVU("quotaUserName")
+        if not uname == user.username:
+            continue
+        aggregate_size += res.size
+    return aggregate_size
+
+
 def update_quota_usage(username):
     """
     update quota usage by checking iRODS AVU to get the updated quota usage for the user. Note iRODS micro-service
@@ -111,10 +139,15 @@ def update_quota_usage(username):
         raise ValidationError(err_msg)
 
     used_val = get_quota_usage_from_irods(username, raise_on_error=False)
-    # TODO: subtract out published resources
-    # TODO: #5228
+
+    # subtract out published resources
+    if not QuotaMessage.objects.exists():
+        QuotaMessage.objects.create()
+    qmsg = QuotaMessage.objects.first()
     published_percent = qmsg.published_resource_percent
-    # published_size = 
+    user = User.objects.get(username=username)
+    published_size = get_storage_usage(user, flag="published")
+    used_val -= published_size * (1 - published_percent)
     uq.update_used_value(used_val)
 
 
