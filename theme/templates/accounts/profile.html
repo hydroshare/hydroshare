@@ -372,7 +372,7 @@
                                                 </div>
                                             {% endfor %}
                                             {% if not quota_requests %}
-                                                <button type="button" data-toggle="modal" data-target="#manage-quota-dialog" class="btn btn-primary has-space-top">
+                                                <button id="quota-request-storage" type="button" data-toggle="modal" data-target="#manage-quota-dialog" class="btn btn-primary has-space-top">
                                                     <i class="fa fa-plus" aria-hidden="true"></i> Request additional storage
                                                 </button>
                                             {% else%}
@@ -976,6 +976,9 @@
     .tagsinput .tag {
       background: #DDD;
       color: #111;
+    }
+    .disabled {
+        pointer-events: all !important;
     }
   </style>
 {%  endblock %}

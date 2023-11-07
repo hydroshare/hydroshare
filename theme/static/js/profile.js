@@ -513,6 +513,29 @@ $(document).ready(function () {
     $('#revoke-quota-request').click(function(e){
         revokeQuota($(this).data("action"))
     });
+    let profileMissing = localStorage.getItem('missing-profile-fields')
+    let profileUser = localStorage.getItem('profile-user')
+    if (!profileUser){
+        checkProfileComplete().then(([user, missing])=>{
+            profileMissing = missing.join(', ');
+            profileUser = user;
+            updateQuotaMessage(profileMissing);
+        });
+    }else{
+        profileMissing = profileMissing.split(',').join(', ')
+        updateQuotaMessage(profileMissing);
+    }
+    function updateQuotaMessage(profileMissing){
+        if (profileMissing){
+            const button = $('#quota-request-storage');
+            button.prop("disabled",true);
+            button.after(
+                "<br><div class='alert alert-warning' style='margin-top: 20px;'>" +
+                    "You can request additional quota once your profile is complete. " +
+                    `Your profile is missing: ${profileMissing}.` +
+                "</div>")
+        }
+    }
     checkQuotaStatus();
 });
 

@@ -213,6 +213,7 @@ def quota_request(request, *args, **kwargs):
             user = request.user
             if user.is_superuser:
                 raise ObjectDoesNotExist("Admin users don't have quota")
+            # TODO #5228: check if user profile is complete
             uq = UserQuota.objects.filter(user=user).first()
             if not uq:
                 raise ObjectDoesNotExist(f"No quota found for {user.username}")
