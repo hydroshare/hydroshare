@@ -3981,7 +3981,6 @@ class BaseResource(Page, AbstractResource):
 
         Raises SessionException if iRODS fails.
         """
-        # TODO: #5228
         # trigger file size read for files that haven't been set yet
         res_size = 0
         if self.files.count() > 0:

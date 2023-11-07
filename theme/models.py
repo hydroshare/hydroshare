@@ -233,7 +233,6 @@ class QuotaMessage(models.Model):
     soft_limit_percent = models.IntegerField(default=80)
     # quota hard limit percent value for hard quota enforcement. Default is 125%
     hard_limit_percent = models.IntegerField(default=125)
-    # TODO: #5228
     # percent that published resources should count toward quota
     # Default=0 -> published resources aren't counted toward quota
     published_resource_percent = models.IntegerField(
@@ -421,6 +420,17 @@ class UserProfile(models.Model):
     identifiers = HStoreField(default=dict, null=True, blank=True)
 
     email_opt_out = models.BooleanField(default=False)
+
+    @property
+    def profile_is_missing(self):
+        missing = []
+        if not self.country:
+            missing.append("Country")
+        if not self.organization:
+            missing.append("Organization")
+        if not self.user_type:
+            missing.append("User Type")
+        return missing
 
 
 def force_unique_emails(sender, instance, **kwargs):

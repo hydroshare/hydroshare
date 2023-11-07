@@ -213,7 +213,11 @@ def quota_request(request, *args, **kwargs):
             user = request.user
             if user.is_superuser:
                 raise ObjectDoesNotExist("Admin users don't have quota")
-            # TODO #5228: check if user profile is complete
+            up = UserProfile.objects.get(pk=user.pk)
+            missing = up.profile_is_missing
+            if missing:
+                raise ValidationError(f"Your profile must be complete before you can request more quota. \
+                                      Your profile is missing the following: {', '.join(missing)}")
             uq = UserQuota.objects.filter(user=user).first()
             if not uq:
                 raise ObjectDoesNotExist(f"No quota found for {user.username}")
