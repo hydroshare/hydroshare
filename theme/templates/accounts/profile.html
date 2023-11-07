@@ -95,43 +95,6 @@
                                             <a data-toggle="modal" data-target="#create-irods-account-dialog">Create your iRODS user account</a>
                                         {% endif %}
                                     </div>
-                                    <hr>
-                                    {#        Quota      #}
-                                    {% if profile_user.id == user.id or user.is_superuser %}
-                                        <div class="panel panel-default"  data-page-mode="edit">
-                                            <div class="panel-heading">
-                                                <h3 class="panel-title"><span
-                                                        class="fa fa-database" style="width:32px;">&nbsp;</span>Quota</h3>
-                                            </div>
-                                    
-                                            <div class="panel-body">
-                                                {% for qd in quota_data %}
-                                                    <div>
-                                                        You have used {{ qd.used }} of your {{ qd.allocated }}{{ qd.unit }} allocated.
-                                                        <a href="https://help.hydroshare.org/about-hydroshare/policies/quota/" target="_blank">More information on HydroShare Quota.</a>
-                                                    </div>
-                                                {% endfor %}
-                                                {% if not quota_requests %}
-                                                    <button type="button" data-toggle="modal" data-target="#manage-quota-dialog" class="btn btn-primary has-space-top">
-                                                        <i class="fa fa-plus" aria-hidden="true"></i> Request additional storage
-                                                    </button>
-                                                {% else%}
-                                                    <hr class="solid">
-                                                    {% for request in quota_requests %}
-                                                        <div class="request-block">
-                                                            <span class="glyphicon glyphicon-send"></span>&nbsp;
-                                                            <span>You requested a quota increase of {{ request.storage }} GB on {{ request.date_requested }}</span>
-                                                            {% if request.explanation %}
-                                                                <div class="text-muted explanation has-space-top" title="{{ request.justification }}">Justification:
-                                                                    {{ request.justification }}</div>
-                                                            {% endif %}
-                                                            <button id="revoke-quota-request" type="button" class="btn btn-default has-space-top" data-action="/act-on-quota-request/{{ request.id }}/revoke/">Revoke Request</button>
-                                                        </div>
-                                                    {% endfor %}
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    {% endif %}
                                 </div>
                             </div>
                             {% endif %}
@@ -392,6 +355,44 @@
                             </div>
 
                             <div class="col-md-5">
+                                {#        Quota      #}
+                                {% if profile_user.id == user.id or user.is_superuser %}
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            <h3 class="panel-title">
+                                                <span class="fa fa-database" style="margin-right: 1.2rem">&nbsp;</span>Quota
+                                            </h3>
+                                        </div>
+                                
+                                        <div class="panel-body">
+                                            {% for qd in quota_data %}
+                                                <div>
+                                                    You have used {{ qd.used }} of your {{ qd.allocated }}{{ qd.unit }} allocated.
+                                                    <a href="https://help.hydroshare.org/about-hydroshare/policies/quota/" target="_blank">More information on HydroShare Quota.</a>
+                                                </div>
+                                            {% endfor %}
+                                            {% if not quota_requests %}
+                                                <button type="button" data-toggle="modal" data-target="#manage-quota-dialog" class="btn btn-primary has-space-top">
+                                                    <i class="fa fa-plus" aria-hidden="true"></i> Request additional storage
+                                                </button>
+                                            {% else%}
+                                                <hr class="solid">
+                                                {% for request in quota_requests %}
+                                                    <div class="request-block">
+                                                        <span class="glyphicon glyphicon-send"></span>&nbsp;
+                                                        <span>You requested a quota increase of {{ request.storage }} GB on {{ request.date_requested }}</span>
+                                                        {% if request.explanation %}
+                                                            <div class="text-muted explanation has-space-top" title="{{ request.justification }}">Justification:
+                                                                {{ request.justification }}</div>
+                                                        {% endif %}
+                                                        <button id="revoke-quota-request" type="button" class="btn btn-default has-space-top" data-action="/act-on-quota-request/{{ request.id }}/revoke/">Revoke Request</button>
+                                                    </div>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+
                                 {#        DESCRIPTION       #}
                                 {% if not user.is_anonymous %}
                                 <div class="panel panel-default">
