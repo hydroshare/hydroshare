@@ -2244,6 +2244,22 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 if value and settings.RUN_HYRAX_UPDATE and is_netcdf_to_public:
                     run_script_to_update_hyrax_input_files(self.short_id)
 
+    def set_published(self, value):
+        """Set the published flag for a resource.
+
+        :param value: True or False
+
+        This sets the published flag (self.raccess.published)
+        """
+        from hs_core.signals import post_raccess_change
+
+        self.raccess.published = value
+        if value:  # can't be published without being public
+            self.raccess.public = value
+        self.raccess.save()
+        post_raccess_change.send(sender=self, resource=self)
+        self.update_index()
+
     def update_index(self):
         """updates previous versions of a resource (self) in index"""
         prev_version_resource_relation_meta = Relation.objects.filter(type='isReplacedBy',

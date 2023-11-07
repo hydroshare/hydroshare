@@ -1110,6 +1110,8 @@ def publish_resource(user, pk):
     Note:  This is different than just giving public access to a resource via access control rule
     """
     resource = utils.get_resource_by_shortkey(pk)
+    if user is not None and not user.uaccess.can_change_resource_flags(resource):
+        raise ValidationError("You don't have permission to change resource sharing status")
     if resource.raccess.published:
         raise ValidationError("This resource is already published")
 
@@ -1136,8 +1138,7 @@ def publish_resource(user, pk):
             resource.save()
 
     resource.set_public(True)  # also sets discoverable to True
-    resource.raccess.published = True
-    resource.raccess.save()
+    resource.set_published(True)
 
     # change "Publisher" element of science metadata to CUAHSI
     md_args = {'name': 'Consortium of Universities for the Advancement of Hydrologic Science, '
