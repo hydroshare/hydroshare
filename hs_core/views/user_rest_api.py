@@ -50,8 +50,8 @@ class UserInfo(APIView):
         user_profile = UserProfile.objects.filter(user=user).first()
         if user_profile.title:
             user_info['title'] = user_profile.title
-        user_info['organization'] = user_profile.organization
         if user_profile.organization:
+            user_info['organization'] = user_profile.organization
             user_info['organizations'] = [org for org in user_profile.organization.split(";")]
         if user_profile.state and user_profile.state.strip() and user_profile.state != 'Unspecified':
             user_info['state'] = user_profile.state.strip()
