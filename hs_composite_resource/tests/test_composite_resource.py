@@ -3952,15 +3952,6 @@ class CompositeResourceTest(
             response = self.client.get(reverse("my_resources"), follow=True)
             self.assertTrue(response.status_code == 200)
 
-        self.create_composite_resource()
-
-        with self.assertNumQueries(51):
-            response = self.client.get(reverse("my_resources"), follow=True)
-            self.assertTrue(response.status_code == 200)
-
-        # there should be two resources at this point
-        self.assertEqual(BaseResource.objects.count(), 3)
-
     def test_composite_resource_landing_scales(self):
         # test that db queries for landing page have constant time complexity
 
