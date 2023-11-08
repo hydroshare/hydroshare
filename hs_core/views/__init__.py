@@ -2379,8 +2379,7 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
                 address = user.userprofile.country
 
         user_data["address"] = address
-        if user.userprofile.organization:
-            user_data["organization"] = [org for org in user.userprofile.organization.split(";")]
+        user_data["organization"] = [org for org in user.userprofile.organization.split(";")]
         user_data["website"] = (
             user.userprofile.website if user.userprofile.website else ""
         )
