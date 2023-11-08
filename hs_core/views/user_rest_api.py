@@ -13,7 +13,8 @@ from theme.views import check_organization_terms
 class UserSerializerIn(serializers.Serializer):
     first_name = serializers.CharField(max_length=150, required=False)
     last_name = serializers.CharField(max_length=150, required=False)
-    organization = serializers.ListField(required=False)
+    organization = serializers.CharField(required=False)
+    organizations = serializers.ListField(required=False)
     state = serializers.CharField(max_length=150, required=False)
     country = serializers.CharField(max_length=150, required=False)
     user_type = serializers.CharField(max_length=150, required=False)
