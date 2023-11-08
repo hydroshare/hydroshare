@@ -167,6 +167,7 @@ class TestGetUserData(TestCase):
         self.assertEqual(resp_json['address'], 'Utah, USA')
         self.assertEqual(resp_json['phone'], '678-890-7890')
         self.assertEqual(resp_json['organization'], 'USU')
+        self.assertEqual(resp_json['organizations'], ['USU'])
         self.assertEqual(resp_json['website'], '')
 
         # test website
@@ -181,6 +182,7 @@ class TestGetUserData(TestCase):
         self.assertEqual(resp_json['address'], 'Utah, USA')
         self.assertEqual(resp_json['phone'], '678-890-7890')
         self.assertEqual(resp_json['organization'], 'USU')
+        self.assertEqual(resp_json['organizations'], ['USU'])
         self.assertEqual(resp_json['website'], 'www.usu.edu.org')
 
     def test_get_user_data_failure(self):
