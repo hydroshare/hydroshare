@@ -13,7 +13,7 @@ from theme.views import check_organization_terms
 class UserSerializerIn(serializers.Serializer):
     first_name = serializers.CharField(max_length=150, required=False)
     last_name = serializers.CharField(max_length=150, required=False)
-    organization = serializers.ListField(required=False)
+    organization = serializers.CharField(max_length=150, required=False)
     state = serializers.CharField(max_length=150, required=False)
     country = serializers.CharField(max_length=150, required=False)
     user_type = serializers.CharField(max_length=150, required=False)
@@ -26,7 +26,7 @@ class UserSerializer(serializers.Serializer):
     email = serializers.EmailField()
     first_name = serializers.CharField(max_length=150)
     last_name = serializers.CharField(max_length=150)
-    organization = serializers.ListField()
+    organization = serializers.CharField(max_length=150)
     state = serializers.CharField(max_length=150)
     country = serializers.CharField(max_length=150)
     user_type = serializers.CharField(max_length=150)
@@ -51,7 +51,7 @@ class UserInfo(APIView):
         if user_profile.title:
             user_info['title'] = user_profile.title
         if user_profile.organization:
-            user_info['organization'] = [org for org in user_profile.organization.split(";")]
+            user_info['organization'] = user_profile.organization
         if user_profile.state and user_profile.state.strip() and user_profile.state != 'Unspecified':
             user_info['state'] = user_profile.state.strip()
         if user_profile.country and user_profile.country != 'Unspecified':

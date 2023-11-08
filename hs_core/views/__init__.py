@@ -2379,21 +2379,23 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
                 address = user.userprofile.country
 
         user_data["address"] = address
-        user_data["organization"] = [org for org in user.userprofile.organization.split(";")]
+        user_data["organization"] = (
+            user.userprofile.organization if user.userprofile.organization else ""
+        )
         user_data["website"] = (
             user.userprofile.website if user.userprofile.website else ""
         )
         user_data["identifiers"] = user.userprofile.identifiers
         user_data["type"] = user.userprofile.user_type
         user_data["date_joined"] = user.date_joined
-        user_data["subject_areas"] = [org for org in user.userprofile.subject_areas]
+        user_data["subject_areas"] = user.userprofile.subject_areas
         if user.userprofile.state:
             user_data["state"] = user.userprofile.state
         if user.userprofile.country:
             user_data["country"] = user.userprofile.country
     else:
         group = hydroshare.utils.group_from_id(user_or_group_id)
-        user_data["organization"] = [group.name]
+        user_data["organization"] = group.name
         user_data["url"] = "{domain}/user/{uid}/".format(
             domain=hydroshare.utils.current_site_url(), uid=group.pk
         )
