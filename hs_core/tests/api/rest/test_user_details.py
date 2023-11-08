@@ -32,7 +32,7 @@ class TestUserDetails(APITestCase):
         self.user.userprofile.phone_1 = '12345678'
         self.user.userprofile.state = 'Utah'
         self.user.userprofile.country = 'USA'
-        self.user.userprofile.organization = ['CUAHSI']
+        self.user.userprofile.organization = 'CUAHSI'
         self.user.userprofile.website = 'https://www.hydroshare.org'
         self.user.userprofile.identifiers = {'ORCID': '1234566', 'ResearchGate': 'someresearchgateid'}
         self.user.userprofile.user_type = 'Computer Programming'
