@@ -67,6 +67,7 @@ class TestGetUserData(TestCase):
         self.assertIn('/user/{}/'.format(self.john.id), resp_json['url'])
         self.assertEqual(resp_json['address'], '')
         self.assertEqual(resp_json['phone'], '')
+        self.assertEqual(resp_json['organization'], '')
         self.assertEqual(resp_json['website'], '')
 
         # test address
@@ -80,6 +81,7 @@ class TestGetUserData(TestCase):
         self.assertIn('/user/{}/'.format(self.john.id), resp_json['url'])
         self.assertEqual(resp_json['address'], 'Utah')
         self.assertEqual(resp_json['phone'], '')
+        self.assertEqual(resp_json['organization'], '')
         self.assertEqual(resp_json['website'], '')
 
         self.john.userprofile.state = ''
@@ -93,6 +95,7 @@ class TestGetUserData(TestCase):
         self.assertIn('/user/{}/'.format(self.john.id), resp_json['url'])
         self.assertEqual(resp_json['address'], 'USA')
         self.assertEqual(resp_json['phone'], '')
+        self.assertEqual(resp_json['organization'], '')
         self.assertEqual(resp_json['website'], '')
 
         self.john.userprofile.state = 'Utah'
@@ -106,6 +109,7 @@ class TestGetUserData(TestCase):
         self.assertIn('/user/{}/'.format(self.john.id), resp_json['url'])
         self.assertEqual(resp_json['address'], 'Utah, USA')
         self.assertEqual(resp_json['phone'], '')
+        self.assertEqual(resp_json['organization'], '')
         self.assertEqual(resp_json['website'], '')
 
         # test phone
@@ -119,6 +123,7 @@ class TestGetUserData(TestCase):
         self.assertIn('/user/{}/'.format(self.john.id), resp_json['url'])
         self.assertEqual(resp_json['address'], 'Utah, USA')
         self.assertEqual(resp_json['phone'], '678-890-7890')
+        self.assertEqual(resp_json['organization'], '')
         self.assertEqual(resp_json['website'], '')
 
         self.john.userprofile.phone_1 = ''
@@ -132,6 +137,7 @@ class TestGetUserData(TestCase):
         self.assertIn('/user/{}/'.format(self.john.id), resp_json['url'])
         self.assertEqual(resp_json['address'], 'Utah, USA')
         self.assertEqual(resp_json['phone'], '555-333-9999')
+        self.assertEqual(resp_json['organization'], '')
         self.assertEqual(resp_json['website'], '')
 
         self.john.userprofile.phone_1 = '678-890-7890'
@@ -145,6 +151,7 @@ class TestGetUserData(TestCase):
         self.assertIn('/user/{}/'.format(self.john.id), resp_json['url'])
         self.assertEqual(resp_json['address'], 'Utah, USA')
         self.assertEqual(resp_json['phone'], '678-890-7890')
+        self.assertEqual(resp_json['organization'], '')
         self.assertEqual(resp_json['website'], '')
 
         # test organization
@@ -158,7 +165,7 @@ class TestGetUserData(TestCase):
         self.assertIn('/user/{}/'.format(self.john.id), resp_json['url'])
         self.assertEqual(resp_json['address'], 'Utah, USA')
         self.assertEqual(resp_json['phone'], '678-890-7890')
-        self.assertEqual(resp_json['organization'], ['USU'])
+        self.assertEqual(resp_json['organization'], 'USU')
         self.assertEqual(resp_json['website'], '')
 
         # test website
@@ -172,7 +179,7 @@ class TestGetUserData(TestCase):
         self.assertIn('/user/{}/'.format(self.john.id), resp_json['url'])
         self.assertEqual(resp_json['address'], 'Utah, USA')
         self.assertEqual(resp_json['phone'], '678-890-7890')
-        self.assertEqual(resp_json['organization'], ['USU'])
+        self.assertEqual(resp_json['organization'], 'USU')
         self.assertEqual(resp_json['website'], 'www.usu.edu.org')
 
     def test_get_user_data_failure(self):
