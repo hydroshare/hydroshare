@@ -4023,7 +4023,7 @@ class CompositeResourceTest(
 
     def _get_expected_query_count(self, number_of_resources):
         # this is the expected number of queries for "my_resources" page with no resources
-        base_query_count = 15
+        base_query_count = 10
 
         # this is additional number of queries per resource
         # 3 are mezzanine queries (can't do much about it)
