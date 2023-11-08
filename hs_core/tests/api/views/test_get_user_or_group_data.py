@@ -52,6 +52,7 @@ class TestGetUserData(TestCase):
         self.assertIn('/user/{}/'.format(self.john.id), resp_json['url'])
         self.assertEqual(resp_json['address'], '')
         self.assertEqual(resp_json['phone'], '')
+        self.assertEqual(resp_json['organization'], '')
         self.assertEqual(resp_json['website'], '')
 
         # add some profile data for john
