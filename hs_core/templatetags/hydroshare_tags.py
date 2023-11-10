@@ -10,6 +10,7 @@ from django.core.exceptions import ValidationError
 from mezzanine import template
 
 from hs_core.hydroshare.utils import get_resource_by_shortkey
+from hs_core.authentication import build_oidc_url
 from hs_core.search_indexes import normalize_name
 from hs_access_control.models.privilege import PrivilegeCodes, UserResourcePrivilege
 
@@ -373,6 +374,13 @@ def discoverable(item):
     if item is None or item == 'Unknown':
         return ""
     return item
+
+
+@register.filter
+def signup_url(request):
+    if settings.ENABLE_OIDC_AUTHENTICATION:
+        return build_oidc_url(request).replace('/auth?', '/registrations?')
+    return "/sign-up/"
 
 
 @register.simple_tag(takes_context=True)
