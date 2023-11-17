@@ -34,7 +34,7 @@ IRODS_LOCAL_MOUNT: /irods
 ### All ROOTs must be children of DOCKER_MAP ###
 IRODS_DOCKER_MAP: /irods
 IRODS_DATA_ROOT: /irods/data/iRODS/Vault/home/wwwHydroProxy
-IRODS_USER_ROOT: /irods/user/iRODS/Vault/home/localHydroProxy
+# IRODS_USER_ROOT: /irods/user/iRODS/Vault/home/localHydroProxy
 # IRODS_CACHE_ROOT: /irods/cache
 
 ### Nginx worker process must be able to read iRODS files.
@@ -47,7 +47,7 @@ SENDFILE_IRODS_GROUP_ID: 998
 ### URIs in Nginx that activate reverse proxy service
 ### These must agree with URIs in local_settings.py
 IRODS_DATA_URI: irods-data
-IRODS_USER_URI: irods-user
+# IRODS_USER_URI: irods-user
 # IRODS_CACHE_URI: irods-cache
 
 # sets the concurrency of the celery worker
