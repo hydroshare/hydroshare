@@ -253,11 +253,11 @@ cp -fr nginx/Dockerfile-nginx.template nginx/Dockerfile-nginx
 sed -i $SED_EXT 's!FQDN_OR_IP!'`hostname`'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
 
 sed -i $SED_EXT 's!IRODS_DATA_URI!'${IRODS_DATA_URI}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
-sed -i $SED_EXT 's!IRODS_USER_URI!'${IRODS_USER_URI}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
+# sed -i $SED_EXT 's!IRODS_USER_URI!'${IRODS_USER_URI}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
 # sed -i $SED_EXT 's!IRODS_CACHE_URI!'${IRODS_CACHE_URI}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
 
 sed -i $SED_EXT 's!IRODS_DATA_ROOT!'${IRODS_DATA_ROOT}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
-sed -i $SED_EXT 's!IRODS_USER_ROOT!'${IRODS_USER_ROOT}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
+# sed -i $SED_EXT 's!IRODS_USER_ROOT!'${IRODS_USER_ROOT}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
 # sed -i $SED_EXT 's!IRODS_CACHE_ROOT!'${IRODS_CACHE_ROOT}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
 
 sed -i $SED_EXT 's!SENDFILE_IRODS_USER!'${SENDFILE_IRODS_USER}'!g' ${NGINX_CONFIG_DIRECTORY}/nginx.conf-default
