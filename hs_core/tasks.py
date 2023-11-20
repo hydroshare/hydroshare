@@ -150,8 +150,7 @@ def nightly_zips_cleanup():
     istorage = IrodsStorage()
     if istorage.exists(zips_daily_date):
         istorage.delete(zips_daily_date)
-    federated_prefixes = BaseResource.objects.all().values_list('resource_federation_path')\
-        .distinct()
+    federated_prefixes = BaseResource.objects.order_by().values_list('resource_federation_path').distinct()
 
     for p in federated_prefixes:
         prefix = p[0]  # strip tuple
