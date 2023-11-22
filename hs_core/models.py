@@ -38,6 +38,7 @@ from mezzanine.core.models import Ownable
 from mezzanine.generic.fields import CommentsField, RatingField
 from mezzanine.pages.managers import PageManager
 from mezzanine.pages.models import Page
+from nameparser import HumanName
 from pyld import jsonld
 from rdflib import Literal, BNode, URIRef
 from rdflib.namespace import DC, DCTERMS, RDF
@@ -3919,56 +3920,144 @@ class BaseResource(Page, AbstractResource):
     #     return os.path.join(self.root_uri, 'files')
 
     # create crossref deposit xml for resource publication
-    def get_crossref_deposit_xml(self, pretty_print=True):
-        """Return XML structure describing crossref deposit."""
+    def get_crossref_deposit_xml(self, pretty_print=True, testing=False):
+        """Return XML structure describing crossref deposit.
+        The mapping of hydroshare resource metadata to crossref metadata has been implemented here as per
+        the specification in this repo: https://github.com/hydroshare/hs_doi_deposit_metadata
+        """
         # importing here to avoid circular import problem
-        from .hydroshare.resource import get_activated_doi
+        from .hydroshare.resource import get_activated_doi, get_resource_doi
+        if testing:
+            from .hydroshare.resource import get_resource_doi
+
+        def parse_creator_name(_creator):
+            name = HumanName(_creator.name.strip())
+            return name.first, name.last
+
+        def create_contributor_node(_creator, sequence="additional"):
+            if _creator.name:
+                first_name, last_name = parse_creator_name(_creator)
+                creator_node = etree.SubElement(contributors_node, 'person_name', contributor_role="author",
+                                           sequence=sequence)
+                etree.SubElement(creator_node, 'given_name').text = first_name
+                if last_name:
+                    etree.SubElement(creator_node, 'surname').text = last_name
+                orcid = _creator.identifiers.get('ORCID', "")
+                if orcid:
+                    etree.SubElement(creator_node, 'ORCID').text = orcid
+            else:
+                org = etree.SubElement(contributors_node, 'organization', contributor_role="author",
+                                       sequence=sequence)
+                org.text = _creator.organization
+
+        def create_date_node(date, date_type):
+            date_node = etree.SubElement(database_dates_node, date_type)
+            etree.SubElement(date_node, 'day').text = str(date.day)
+            etree.SubElement(date_node, 'month').text = str(date.month)
+            etree.SubElement(date_node, 'year').text = str(date.year)
 
         xsi = "http://www.w3.org/2001/XMLSchema-instance"
-        schemaLocation = 'http://www.crossref.org/schema/4.3.6 ' \
-                         'http://www.crossref.org/schemas/crossref4.3.6.xsd'
-        ns = "http://www.crossref.org/schema/4.3.6"
-        ROOT = etree.Element('{%s}doi_batch' % ns, version="4.3.6", nsmap={None: ns},
+        schemaLocation = 'http://www.crossref.org/schema/5.3.1 ' \
+                         'http://www.crossref.org/schemas/crossref5.3.1.xsd'
+        ns = "http://www.crossref.org/schema/5.3.1"
+        fr = "http://www.crossref.org/fundref.xsd"
+        ai = "http://www.crossref.org/AccessIndicators.xsd"
+        ROOT = etree.Element('{%s}doi_batch' % ns, version="5.3.1", nsmap={None: ns, "xsi": xsi, "fr": fr, "ai": ai},
                              attrib={"{%s}schemaLocation" % xsi: schemaLocation})
 
         # get the resource object associated with this metadata container object - needed
         # to get the verbose_name
 
         # create the head sub element
-        head = etree.SubElement(ROOT, 'head')
-        etree.SubElement(head, 'doi_batch_id').text = self.short_id
-        etree.SubElement(head, 'timestamp').text = arrow.get(self.updated)\
+        head_node = etree.SubElement(ROOT, 'head')
+        etree.SubElement(head_node, 'doi_batch_id').text = self.short_id
+        etree.SubElement(head_node, 'timestamp').text = arrow.get(self.updated)\
             .format("YYYYMMDDHHmmss")
-        depositor = etree.SubElement(head, 'depositor')
-        etree.SubElement(depositor, 'depositor_name').text = 'HydroShare'
-        etree.SubElement(depositor, 'email_address').text = settings.DEFAULT_SUPPORT_EMAIL
+        depositor_node = etree.SubElement(head_node, 'depositor')
+        etree.SubElement(depositor_node, 'depositor_name').text = 'HydroShare'
+        etree.SubElement(depositor_node, 'email_address').text = settings.DEFAULT_SUPPORT_EMAIL
         # The organization that owns the information being registered.
-        etree.SubElement(head, 'registrant').text = 'Consortium of Universities for the ' \
+        etree.SubElement(head_node, 'registrant').text = 'Consortium of Universities for the ' \
                                                     'Advancement of Hydrologic Science, Inc. ' \
                                                     '(CUAHSI)'
 
         # create the body sub element
-        body = etree.SubElement(ROOT, 'body')
+        body_node = etree.SubElement(ROOT, 'body')
         # create the database sub element
-        db = etree.SubElement(body, 'database')
+        db_node = etree.SubElement(body_node, 'database')
         # create the database_metadata sub element
-        db_md = etree.SubElement(db, 'database_metadata', language="en")
+        db_md_node = etree.SubElement(db_node, 'database_metadata', language="en")
         # titles is required element for database_metadata
-        titles = etree.SubElement(db_md, 'titles')
-        etree.SubElement(titles, 'title').text = "HydroShare Resources"
+        titles_node = etree.SubElement(db_md_node, 'titles')
+        etree.SubElement(titles_node, 'title').text = "HydroShare Resources"
         # create the dataset sub element, dataset_type can be record or collection, set it to
         # collection for HydroShare resources
-        dataset = etree.SubElement(db, 'dataset', dataset_type="collection")
-        ds_titles = etree.SubElement(dataset, 'titles')
-        etree.SubElement(ds_titles, 'title').text = self.metadata.title.value
+        dataset_node = etree.SubElement(db_node, 'dataset', dataset_type="record")
+        # create contributors sub element
+        contributors_node = etree.SubElement(dataset_node, 'contributors')
+        # creators are required element for contributors
+        creators = self.metadata.creators.all()
+        first_author = [cr for cr in creators if cr.order == 1][0]
+        create_contributor_node(first_author, sequence="first")
+        other_authors = [cr for cr in creators if cr.order > 1]
+        for auth in other_authors:
+            create_contributor_node(auth, sequence="additional")
+
+        # create dataset title
+        dataset_titles_node = etree.SubElement(dataset_node, 'titles')
+        etree.SubElement(dataset_titles_node, 'title').text = self.metadata.title.value
+        # create dataset date sub element
+        database_dates_node = etree.SubElement(dataset_node, 'database_date')
+        # create creation_date sub element
+        create_date_node(date=self.created, date_type="creation_date")
+        # create a publication_date sub element
+        if testing:
+            pub_date = self.updated
+        else:
+            pub_date = self.metadata.dates.all().filter(type='published').first().start_date
+
+        create_date_node(date=pub_date, date_type="publication_date")
+        # create update_date sub element
+        create_date_node(date=self.updated, date_type="update_date")
+        # create dataset description sub element
+        etree.SubElement(dataset_node, 'description').text = self.metadata.description.abstract
+        # funder related elements
+        funders = self.metadata.funding_agencies.all()
+        if funders:
+            funding_references = etree.SubElement(dataset_node, '{%s}program' % fr, name="fundref")
+            for funder in funders:
+                funder_group_node = etree.SubElement(funding_references, '{%s}assertion' % fr, name="fundgroup")
+                funder_name_node = etree.SubElement(funder_group_node, '{%s}assertion' % fr, name="funder_name")
+                funder_name_node.text = funder.agency_name
+                if funder.agency_url:
+                    id_node = etree.SubElement(funder_name_node, '{%s}assertion' % fr, name="funder_identifier")
+                    id_node.text = funder.agency_url
+                if funder.award_number:
+                    award_node = etree.SubElement(funder_group_node, '{%s}assertion' % fr, name='award_number')
+                    award_node.text = funder.award_number
+
+        # create dataset license sub element
+        dataset_licenses_node = etree.SubElement(dataset_node, '{%s}program' % ai, name="AccessIndicators")
+        pub_date_str = pub_date.strftime("%Y-%m-%d")
+        rights = self.metadata.rights
+        license_node = etree.SubElement(dataset_licenses_node, '{%s}license_ref' % ai, applies_to="vor",
+                         start_date=pub_date_str)
+        if rights.url:
+            license_node.text = rights.url
+        else:
+            license_node.text = rights.statement
+
         # doi_data is required element for dataset
-        doi_data = etree.SubElement(dataset, 'doi_data')
+        doi_data_node = etree.SubElement(dataset_node, 'doi_data')
+        if testing:
+            self.doi = get_resource_doi(self.short_id)
+
         res_doi = get_activated_doi(self.doi)
         idx = res_doi.find('10.4211')
         if idx >= 0:
             res_doi = res_doi[idx:]
-        etree.SubElement(doi_data, 'doi').text = res_doi
-        etree.SubElement(doi_data, 'resource').text = self.metadata.identifiers.all().filter(
+        etree.SubElement(doi_data_node, 'doi').text = res_doi
+        etree.SubElement(doi_data_node, 'resource').text = self.metadata.identifiers.all().filter(
             name='hydroShareIdentifier')[0].url
 
         return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(
