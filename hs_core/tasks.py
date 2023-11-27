@@ -1164,3 +1164,21 @@ def task_notification_cleanup():
     """
     week_ago = datetime.today() - timedelta(days=7)
     TaskNotification.objects.filter(created__lte=week_ago).delete()
+
+@shared_task
+def update_crossref_meta_deposit(res_id):
+    """
+    Update the metadata deposit for a published resource with Crossref
+    """
+    resource = utils.get_resource_by_shortkey(res_id)
+    if not resource.raccess.published:
+        raise ValidationError("Resource {} is not a published resource".format(res_id))
+    response = deposit_res_metadata_with_crossref(resource)
+    if not response.status_code == status.HTTP_200_OK:
+        # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
+        # crontab celery task
+        err_msg = (f"Received a {response.status_code} from Crossref while depositing "
+                   f"metadata for res id {resource.short_id}")
+        logger.error(err_msg)
+        resource.doi = get_resource_doi(resource.short_id, 'failure')
+        resource.save()
