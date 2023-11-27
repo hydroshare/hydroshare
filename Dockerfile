@@ -4,6 +4,7 @@ FROM hydroshare/hs_docker_base:2.2.10
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen
 
+RUN pip install mozilla-django-oidc
 RUN pip install spam_patterns@git+https://github.com/CUAHSI/spam_patterns.git@0.0.4
 
 ENV LANG en_US.UTF-8

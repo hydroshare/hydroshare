@@ -170,7 +170,35 @@ INTERNAL_IPS = ("127.0.0.1",)
 FILE_UPLOAD_MAX_MEMORY_SIZE = 0
 
 # TODO remove MezzanineBackend after conflicting users have been removed
-AUTHENTICATION_BACKENDS = ("theme.backends.CaseInsensitiveMezzanineBackend",)
+AUTHENTICATION_BACKENDS = [
+    "theme.backends.CaseInsensitiveMezzanineBackend",
+]
+
+# Wether to enable OIDC auth via mozilla_django_oidc
+# Default false to enable local development
+# Set to true in local_settings if desired for specific deployment
+ENABLE_OIDC_AUTHENTICATION = False
+
+# If OIDC is enabled, the following additional settings should be defined in local_settings
+# OIDC_OP_AUTHORIZATION_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/auth"
+# OIDC_OP_TOKEN_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/token"
+# OIDC_OP_USER_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/userinfo"
+# OIDC_RP_SIGN_ALGO = "RS256"
+# OIDC_OP_JWKS_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/certs"
+# OIDC_RP_CLIENT_ID = 'hydroshare'
+# OIDC_RP_CLIENT_SECRET = 'Ya4GzskPjEmvkX6cL8w3X0sQPNW6CwkM'
+# LOGIN_REDIRECT_URL = '/home/'
+# LOGIN_URL = '/oidc/authenticate/'
+# OIDC_CHANGE_PASSWORD_URL = "https://auth.cuahsi.io/realms/CUAHSI/account?#/security/signingin"
+# ALLOW_LOGOUT_GET_METHOD = True
+# LOGOUT_REDIRECT_URL = '/'
+# OIDC_OP_LOGOUT_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/logout"
+
+# The following two settings will logout of OIDC during signout
+# If these two settings are not enabled,
+# the user will be redirected to auth.cuahsi.io to choose if they want to logout of SSO
+# OIDC_OP_LOGOUT_URL_METHOD = 'hs_core.authentication.provider_logout'
+# OIDC_STORE_ID_TOKEN = True
 
 # List of finder classes that know how to find static files in
 # various locations.
@@ -349,6 +377,7 @@ INSTALLED_APPS = (
     "health_check.contrib.celery_ping",
     "health_check.contrib.psutil",
     "health_check.contrib.rabbitmq",
+    "mozilla_django_oidc",
 )
 
 SWAGGER_SETTINGS = {
@@ -508,16 +537,19 @@ DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
 
 ACCOUNTS_PROFILE_MODEL = "theme.UserProfile"
 CRISPY_TEMPLATE_PACK = "bootstrap"
+
+DEFAULT_AUTHENTICATION_CLASSES = (
+    "rest_framework.authentication.BasicAuthentication",
+    "rest_framework.authentication.SessionAuthentication",
+    "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
+)
+
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 100,
     "PAGE_SIZE_QUERY_PARAM": "PAGE_SIZE",
     "EXCEPTION_HANDLER": "rest_framework.views.exception_handler",
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework.authentication.BasicAuthentication",
-        "rest_framework.authentication.SessionAuthentication",
-        "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
-    ),
+    "DEFAULT_AUTHENTICATION_CLASSES": DEFAULT_AUTHENTICATION_CLASSES,
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.NamespaceVersioning",
 }
 
@@ -820,3 +852,7 @@ MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
 )
 
 BULK_UPDATE_CREATE_BATCH_SIZE = 1000
+
+if ENABLE_OIDC_AUTHENTICATION:
+    DEFAULT_AUTHENTICATION_CLASSES += ("mozilla_django_oidc.contrib.drf.OIDCAuthentication",)
+    AUTHENTICATION_BACKENDS.append("hs_core.authentication.HydroShareOIDCAuthenticationBackend")

@@ -97,6 +97,4 @@ $(document).ready(function () {
             }
         });
     });
-
-    customAlert("Attention:", 'HydroShare login will soon enable CUAHSI single sign on. Click <a href="https://help.hydroshare.org/about-hydroshare/cuahsi-single-sign-on/" target="_blank">here</a> to learn more.', "success", 5000, true);
 });

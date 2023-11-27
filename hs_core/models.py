@@ -1327,6 +1327,8 @@ class Publisher(AbstractMetaDataElement):
         metadata_obj = kwargs['content_object']
         # get matching resource
         resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
+        if not resource:
+            raise ValidationError("Resource not found")
         if not resource.raccess.published:
             raise ValidationError("Publisher element can't be created for a resource that "
                                   "is not yet published.")
@@ -1348,13 +1350,14 @@ class Publisher(AbstractMetaDataElement):
             kwargs['url'] = 'https://www.cuahsi.org'
         else:
             # make sure we are not setting CUAHSI as publisher for a resource
-            # that has no content files
-            if 'name' in kwargs:
-                if kwargs['name'].lower() == publisher_CUAHSI.lower():
-                    raise ValidationError("Invalid publisher name")
-            if 'url' in kwargs:
-                if kwargs['url'].lower() == 'https://www.cuahsi.org':
-                    raise ValidationError("Invalid publisher URL")
+            # that has no content files, unless it is a Collection
+            if resource.resource_type.lower() != "collectionresource":
+                if 'name' in kwargs:
+                    if kwargs['name'].lower() == publisher_CUAHSI.lower():
+                        raise ValidationError("Invalid publisher name")
+                if 'url' in kwargs:
+                    if kwargs['url'].lower() == 'https://www.cuahsi.org':
+                        raise ValidationError("Invalid publisher URL")
 
         return super(Publisher, cls).create(**kwargs)
 

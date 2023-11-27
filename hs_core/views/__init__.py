@@ -79,6 +79,7 @@ from hs_core.tasks import (
     replicate_resource_bag_to_user_zone_task,
 )
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
+from theme.models import UserProfile
 from . import apps
 from . import debug_resource_view
 from . import resource_access_api
@@ -2272,6 +2273,75 @@ def hsapi_get_user(request, user_identifier):
     return get_user_or_group_data(request, user_identifier, "false")
 
 
+@swagger_auto_schema(
+    method="post",
+    operation_description="Check user password for Keycloak Migration",
+    responses={200: "Password is valid", 400: "Password is invalid"},
+    manual_parameters=[uid],
+    request_body=openapi.Schema(type=openapi.TYPE_OBJECT,
+                                properties={'password': openapi.Schema(type=openapi.TYPE_STRING,
+                                                                       description="raw password to validate")}
+                                )
+)
+@swagger_auto_schema(
+    method="get",
+    operation_description="Get user data for Keycloak Migration",
+    responses={200: "Returns JsonResponse containing user data"},
+    manual_parameters=[uid],
+)
+@api_view(["GET", "POST"])
+def hsapi_get_user_for_keycloak(request, user_identifier):
+    """
+    Get user data
+
+    :param user_identifier: id of the user for which data is needed
+    :return: JsonResponse containing user data
+    """
+
+    if not request.user.is_superuser:
+        msg = {"message": "Unauthorized"}
+        return JsonResponse(msg, status=401)
+
+    if request.method == "POST":
+        return hsapi_post_user_for_keycloak(request, user_identifier)
+
+    user: User = hydroshare.utils.user_from_id(user_identifier)
+    user_profile = UserProfile.objects.filter(user=user).first()
+    user_attributes = {}
+    if user_profile.organization:
+        user_attributes['cuahsi-organizations'] = [org for org in user_profile.organization.split(";")]
+    if user_profile.state and user_profile.state.strip() and user_profile.state != 'Unspecified':
+        user_attributes['cuahsi-region'] = [user_profile.state.strip()]
+    if user_profile.country and user_profile.country != 'Unspecified':
+        user_attributes['cuahsi-country'] = [user_profile.country]
+    if user_profile.user_type and user_profile.user_type.strip() and user_profile.user_type != 'Unspecified':
+        user_attributes['cuahsi-user-type'] = [user_profile.user_type.strip()]
+    if user_profile.subject_areas:
+        user_attributes['cuahsi-subject-areas'] = [subject for subject in user_profile.subject_areas]
+    keycloak_dict = {
+        "username": user.username,
+        "email": user.email,
+        "firstName": user.first_name,
+        "lastName": user.last_name,
+        "enabled": True,
+        "emailVerified": user.is_active,
+        "attributes": user_attributes,
+        "roles": [
+            "hydroshare-imported"
+        ],
+    }
+    return JsonResponse(keycloak_dict)
+
+
+def hsapi_post_user_for_keycloak(request, user_identifier):
+    """
+    Check the user password
+    """
+    password = json.loads(request.body.decode('utf-8'))['password']
+    user: User = hydroshare.utils.user_from_id(user_identifier)
+    return HttpResponse() if user.check_password(password) else HttpResponseBadRequest()
+
+
 @login_required
 def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs):
     """
@@ -2319,6 +2389,10 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
         user_data["type"] = user.userprofile.user_type
         user_data["date_joined"] = user.date_joined
         user_data["subject_areas"] = user.userprofile.subject_areas
+        if user.userprofile.state:
+            user_data["state"] = user.userprofile.state
+        if user.userprofile.country:
+            user_data["country"] = user.userprofile.country
     else:
         group = hydroshare.utils.group_from_id(user_or_group_id)
         user_data["organization"] = group.name
