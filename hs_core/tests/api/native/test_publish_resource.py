@@ -100,6 +100,10 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
         # add a funder
         self.res.metadata.create_element('fundingagency', agency_name='National Science Foundation',
                                          award_title='NSF Award', award_number='12345', agency_url='https://nsf.gov')
+
+        if not hasattr(settings, 'DEFAULT_SUPPORT_EMAIL'):
+            settings.DEFAULT_SUPPORT_EMAIL = "help@cuahsi.org"
+
         # generate crossref deposit xml in debug mode
         settings.DEBUG = True
         crossref_xml = self.res.get_crossref_deposit_xml()
