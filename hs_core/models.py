@@ -4894,6 +4894,10 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 if date_type and date_type != 'modified':
                     raise ValidationError("{} date can't be updated for a published resource".format(date_type))
         model_type.model_class().update(element_id, **kwargs)
+        if self.resource.raccess.published:
+            if element_model_name in ('description', 'fundingagency' ):
+                from hs_core.tasks import update_crossref_meta_deposit
+                update_crossref_meta_deposit.apply_async(self.resource.short_id)
 
     def delete_element(self, element_model_name, element_id):
         """Delete Metadata element."""
