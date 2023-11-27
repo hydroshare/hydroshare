@@ -157,7 +157,7 @@ services:
       - "share_vol:/shared_tmp"
     ports:
       - "1338:2022"
-      - "8000:8000"
+      - "8999:8000"
     links:
       - postgis:postgis
       - solr:solr
