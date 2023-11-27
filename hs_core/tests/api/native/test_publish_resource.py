@@ -100,7 +100,7 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
         self.res.metadata.create_element('fundingagency', agency_name='National Science Foundation',
                                          award_title='NSF Award', award_number='12345', agency_url='https://nsf.gov')
         # generate crossref deposit xml
-        crossref_xml = self.res.get_crossref_deposit_xml(testing=True)
+        crossref_xml = self.res.get_crossref_deposit_xml()
         crossref_xml = crossref_xml.strip()
         timestamp = arrow.get(self.res.updated).format("YYYYMMDDHHmmss")
         res_id = self.res.short_id

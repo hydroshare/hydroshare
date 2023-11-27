@@ -3920,14 +3920,14 @@ class BaseResource(Page, AbstractResource):
     #     return os.path.join(self.root_uri, 'files')
 
     # create crossref deposit xml for resource publication
-    def get_crossref_deposit_xml(self, pretty_print=True, testing=False):
+    def get_crossref_deposit_xml(self, pretty_print=True):
         """Return XML structure describing crossref deposit.
         The mapping of hydroshare resource metadata to crossref metadata has been implemented here as per
         the specification in this repo: https://github.com/hydroshare/hs_doi_deposit_metadata
         """
         # importing here to avoid circular import problem
         from .hydroshare.resource import get_activated_doi, get_resource_doi
-        if testing:
+        if settings.DEBUG:
             from .hydroshare.resource import get_resource_doi
 
         def parse_creator_name(_creator):
@@ -4011,7 +4011,9 @@ class BaseResource(Page, AbstractResource):
         # create creation_date sub element
         create_date_node(date=self.created, date_type="creation_date")
         # create a publication_date sub element
-        if testing:
+        if settings.DEBUG:
+            # in debug mode, we use the resource updated date as the publication date as there is no actual resource
+            # publication in this mode so that we can unit test the generated crossref xml
             pub_date = self.updated
         else:
             pub_date = self.metadata.dates.all().filter(type='published').first().start_date
@@ -4049,7 +4051,9 @@ class BaseResource(Page, AbstractResource):
 
         # doi_data is required element for dataset
         doi_data_node = etree.SubElement(dataset_node, 'doi_data')
-        if testing:
+        if settings.DEBUG:
+            # in debug mode, we are setting the resource doi attribute as there is no actual resource publication
+            # in this mode so that we can unit test the generated crossref xml
             self.doi = get_resource_doi(self.short_id)
 
         res_doi = get_activated_doi(self.doi)
