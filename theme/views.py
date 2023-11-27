@@ -106,6 +106,10 @@ class UserProfileView(TemplateView):
                     Q(raccess__public=True) | Q(raccess__discoverable=True)
                 )
 
+        oidc_change_password_url = None
+        if 'OIDC_CHANGE_PASSWORD_URL' in settings:
+            oidc_change_password_url = settings.OIDC_CHANGE_PASSWORD_URL
+
         # get resource attributes used in profile page
         resources = resources.only("title", "resource_type", "created")
         prefetch_related_objects(
@@ -120,7 +124,7 @@ class UserProfileView(TemplateView):
             "quota_message": get_quota_message(u),
             "group_membership_requests": group_membership_requests,
             "data_upload_max": settings.DATA_UPLOAD_MAX_MEMORY_SIZE,
-            "oidc_change_password_url": settings.OIDC_CHANGE_PASSWORD_URL
+            "oidc_change_password_url": oidc_change_password_url
         }
 
 
