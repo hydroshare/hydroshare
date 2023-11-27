@@ -2,6 +2,7 @@ import difflib
 import unittest
 
 import arrow
+from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.test import TestCase
 
@@ -99,8 +100,11 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
         # add a funder
         self.res.metadata.create_element('fundingagency', agency_name='National Science Foundation',
                                          award_title='NSF Award', award_number='12345', agency_url='https://nsf.gov')
-        # generate crossref deposit xml
+        # generate crossref deposit xml in debug mode
+        settings.DEBUG = True
         crossref_xml = self.res.get_crossref_deposit_xml()
+        # turn off debug mode - the default mode is False by Django during testing
+        settings.DEBUG = False
         crossref_xml = crossref_xml.strip()
         timestamp = arrow.get(self.res.updated).format("YYYYMMDDHHmmss")
         res_id = self.res.short_id
@@ -156,18 +160,18 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
         </titles>
         <database_date>
           <creation_date>
-            <day>{created_date.day}</day>
             <month>{created_date.month}</month>
+            <day>{created_date.day}</day>
             <year>{created_date.year}</year>
           </creation_date>
           <publication_date>
-            <day>{published_date.day}</day>
             <month>{published_date.month}</month>
+            <day>{published_date.day}</day>
             <year>{published_date.year}</year>
           </publication_date>
           <update_date>
-            <day>{updated_date.day}</day>
             <month>{updated_date.month}</month>
+            <day>{updated_date.day}</day>
             <year>{updated_date.year}</year>
           </update_date>
         </database_date>

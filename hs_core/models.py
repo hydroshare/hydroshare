@@ -3952,8 +3952,8 @@ class BaseResource(Page, AbstractResource):
 
         def create_date_node(date, date_type):
             date_node = etree.SubElement(database_dates_node, date_type)
-            etree.SubElement(date_node, 'day').text = str(date.day)
             etree.SubElement(date_node, 'month').text = str(date.month)
+            etree.SubElement(date_node, 'day').text = str(date.day)
             etree.SubElement(date_node, 'year').text = str(date.year)
 
         xsi = "http://www.w3.org/2001/XMLSchema-instance"
