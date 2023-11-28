@@ -196,5 +196,5 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
       </dataset>
     </database>
   </body>
-</doi_batch>"""
+</doi_batch>""" # noqa
         return expected_xml
