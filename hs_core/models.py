@@ -3927,8 +3927,6 @@ class BaseResource(Page, AbstractResource):
         """
         # importing here to avoid circular import problem
         from .hydroshare.resource import get_activated_doi, get_resource_doi
-        if settings.DEBUG:
-            from .hydroshare.resource import get_resource_doi
 
         def parse_creator_name(_creator):
             name = HumanName(_creator.name.strip())
@@ -3938,7 +3936,7 @@ class BaseResource(Page, AbstractResource):
             if _creator.name:
                 first_name, last_name = parse_creator_name(_creator)
                 creator_node = etree.SubElement(contributors_node, 'person_name', contributor_role="author",
-                                           sequence=sequence)
+                                                sequence=sequence)
                 etree.SubElement(creator_node, 'given_name').text = first_name
                 if last_name:
                     etree.SubElement(creator_node, 'surname').text = last_name
@@ -3977,9 +3975,8 @@ class BaseResource(Page, AbstractResource):
         etree.SubElement(depositor_node, 'depositor_name').text = 'HydroShare'
         etree.SubElement(depositor_node, 'email_address').text = settings.DEFAULT_SUPPORT_EMAIL
         # The organization that owns the information being registered.
-        etree.SubElement(head_node, 'registrant').text = 'Consortium of Universities for the ' \
-                                                    'Advancement of Hydrologic Science, Inc. ' \
-                                                    '(CUAHSI)'
+        organization = 'Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)'
+        etree.SubElement(head_node, 'registrant').text = organization
 
         # create the body sub element
         body_node = etree.SubElement(ROOT, 'body')
@@ -4043,7 +4040,7 @@ class BaseResource(Page, AbstractResource):
         pub_date_str = pub_date.strftime("%Y-%m-%d")
         rights = self.metadata.rights
         license_node = etree.SubElement(dataset_licenses_node, '{%s}license_ref' % ai, applies_to="vor",
-                         start_date=pub_date_str)
+                                        start_date=pub_date_str)
         if rights.url:
             license_node.text = rights.url
         else:
@@ -4061,8 +4058,8 @@ class BaseResource(Page, AbstractResource):
         if idx >= 0:
             res_doi = res_doi[idx:]
         etree.SubElement(doi_data_node, 'doi').text = res_doi
-        etree.SubElement(doi_data_node, 'resource').text = self.metadata.identifiers.all().filter(
-            name='hydroShareIdentifier')[0].url
+        res_url = self.metadata.identifiers.all().filter(name='hydroShareIdentifier')[0].url
+        etree.SubElement(doi_data_node, 'resource').text = res_url
 
         return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(
             ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
@@ -4895,7 +4892,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                     raise ValidationError("{} date can't be updated for a published resource".format(date_type))
         model_type.model_class().update(element_id, **kwargs)
         if self.resource.raccess.published:
-            if element_model_name in ('description', 'fundingagency' ):
+            if element_model_name in ('description', 'fundingagency',):
                 from hs_core.tasks import update_crossref_meta_deposit
                 update_crossref_meta_deposit.apply_async(self.resource.short_id)
 
