@@ -107,7 +107,7 @@ class UserProfileView(TemplateView):
                 )
 
         oidc_change_password_url = None
-        if 'OIDC_CHANGE_PASSWORD_URL' in settings:
+        if hasattr(settings, 'OIDC_CHANGE_PASSWORD_URL'):
             oidc_change_password_url = settings.OIDC_CHANGE_PASSWORD_URL
 
         # get resource attributes used in profile page
