@@ -118,16 +118,19 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
         # also when we do real publication the publication date is the same as updated date at the time of publication
         published_date = updated_date
         site_url = hydroshare.utils.current_site_url()
+        support_email = settings.DEFAULT_SUPPORT_EMAIL
         expected_xml = self._get_expected_crossref_xml(res_id=res_id, timestamp=timestamp,
                                                        created_date=created_date, updated_date=updated_date,
-                                                       published_date=published_date, site_url=site_url)
+                                                       published_date=published_date, site_url=site_url,
+                                                       support_email=support_email)
         expected_xml = expected_xml.strip()
         self.assertTrue(len(crossref_xml) == len(expected_xml))
         match_ratio = difflib.SequenceMatcher(None, crossref_xml.splitlines(), expected_xml.splitlines()).ratio()
         self.assertTrue(match_ratio == 1.0, msg="crossref xml is not as expected")
 
     @staticmethod
-    def _get_expected_crossref_xml(res_id, timestamp, created_date, updated_date, published_date, site_url):
+    def _get_expected_crossref_xml(res_id, timestamp, created_date, updated_date, published_date, site_url,
+                                   support_email):
         expected_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <doi_batch xmlns="http://www.crossref.org/schema/5.3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:fr="http://www.crossref.org/fundref.xsd" xmlns:ai="http://www.crossref.org/AccessIndicators.xsd" version="5.3.1" xsi:schemaLocation="http://www.crossref.org/schema/5.3.1 http://www.crossref.org/schemas/crossref5.3.1.xsd">
   <head>
@@ -135,7 +138,7 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
     <timestamp>{timestamp}</timestamp>
     <depositor>
       <depositor_name>HydroShare</depositor_name>
-      <email_address>help@cuahsi.org</email_address>
+      <email_address>{support_email}</email_address>
     </depositor>
     <registrant>Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)</registrant>
   </head>
