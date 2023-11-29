@@ -4008,12 +4008,13 @@ class BaseResource(Page, AbstractResource):
         # create creation_date sub element
         create_date_node(date=self.created, date_type="creation_date")
         # create a publication_date sub element
-        if settings.DEBUG:
-            # in debug mode, we use the resource updated date as the publication date as there is no actual resource
-            # publication in this mode so that we can unit test the generated crossref xml
-            pub_date = self.updated
+        pub_date_meta = self.metadata.dates.all().filter(type='published').first()
+        if pub_date_meta:
+            # this is a published resource - generating crossref xml for updating crossref deposit
+            pub_date = pub_date_meta.start_date
         else:
-            pub_date = self.metadata.dates.all().filter(type='published').first().start_date
+            # generating crossref xml for registering a new resource in crossref
+            pub_date = self.updated
 
         create_date_node(date=pub_date, date_type="publication_date")
         # create update_date sub element
