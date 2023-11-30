@@ -123,6 +123,10 @@ def get_user(request):
         return request.user
 
 
+class UserValidationError(ValidationError):
+    pass
+
+
 def validate_hydroshare_user_id(value):
     """Validate that a hydroshare_user_id is valid for a hydroshare user."""
     err_message = '%s is not a valid id for hydroshare user' % value
@@ -130,11 +134,11 @@ def validate_hydroshare_user_id(value):
         try:
             value = int(value)
         except ValueError:
-            raise ValidationError(err_message)
+            raise UserValidationError(err_message)
 
         # check the user exists for the provided user id
         if not User.objects.filter(pk=value).exists():
-            raise ValidationError(err_message)
+            raise UserValidationError(err_message)
 
 
 def validate_user_url(value):
