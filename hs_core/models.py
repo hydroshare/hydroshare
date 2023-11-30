@@ -4330,6 +4330,25 @@ class BaseResource(Page, AbstractResource):
             dir_path = dir_path[len(self.file_path) + 1:]
         return dir_path
 
+    def update_crossref_deposit(self):
+        """Update crossref deposit xml file for this published resource
+        Used when metadata for a published resource is updated
+        """
+        res = self
+        from hs_core.tasks import update_crossref_meta_deposit
+        if not res.raccess.published:
+            err_msg = "Crossref deposit can be updated only for a published resource. "
+            err_msg += f"Resource {res.short_id} is not a published resource."
+            raise ValidationError(err_msg)
+        if 'pending' not in res.doi:
+            res.extra_data['CROSSREF_UPDATE'] = 'False'
+            update_crossref_meta_deposit.apply_async((self.short_id,))
+        else:
+            # setting this flag will update the crossref deposit when the hourly celery task runs
+            res.extra_data['CROSSREF_UPDATE'] = 'True'
+
+        res.save()
+
 
 old_get_content_model = Page.get_content_model
 
@@ -4864,7 +4883,8 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         element_model_name = element_model_name.lower()
-        if self.resource.raccess.published:
+        resource = self.resource
+        if resource.raccess.published:
             if element_model_name == 'creator':
                 raise ValidationError("{} can't be created for a published resource".format(element_model_name))
             elif element_model_name == 'identifier':
@@ -4877,6 +4897,9 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 if date_type and date_type not in ('modified', 'published'):
                     raise ValidationError("{} date can't be created for a published resource".format(date_type))
         element = model_type.model_class().create(**kwargs)
+        if resource.raccess.published:
+            if element_model_name in ('fundingagency',):
+                resource.update_crossref_deposit()
         return element
 
     def update_element(self, element_model_name, element_id, **kwargs):
@@ -4884,7 +4907,8 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         element_model_name = element_model_name.lower()
-        if self.resource.raccess.published:
+        resource = self.resource
+        if resource.raccess.published:
             if element_model_name in ('title', 'creator', 'rights', 'identifier', 'format', 'publisher'):
                 raise ValidationError("{} can't be updated for a published resource".format(element_model_name))
             elif element_model_name == 'date':
@@ -4892,19 +4916,23 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 if date_type and date_type != 'modified':
                     raise ValidationError("{} date can't be updated for a published resource".format(date_type))
         model_type.model_class().update(element_id, **kwargs)
-        if self.resource.raccess.published:
+        if resource.raccess.published:
             if element_model_name in ('description', 'fundingagency',):
-                from hs_core.tasks import update_crossref_meta_deposit
-                update_crossref_meta_deposit.apply_async(self.resource.short_id)
+                resource.update_crossref_deposit()
+
 
     def delete_element(self, element_model_name, element_id):
         """Delete Metadata element."""
         model_type = self._get_metadata_element_model_type(element_model_name)
         element_model_name = element_model_name.lower()
-        if self.resource.raccess.published:
+        resource = self.resource
+        if resource.raccess.published:
             if element_model_name not in ('subject', 'contributor', 'source', 'relation', 'fundingagency', 'format'):
                 raise ValidationError("{} can't be deleted for a published resource".format(element_model_name))
         model_type.model_class().remove(element_id)
+        if resource.raccess.published:
+            if element_model_name in ('fundingagency',):
+                resource.update_crossref_deposit()
 
     def _get_metadata_element_model_type(self, element_model_name):
         """Get type of metadata element based on model type."""
