@@ -772,8 +772,6 @@ def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
 
         utils.set_dirty_bag_flag(new_res)
         return new_res.absolute_url
-    except UserValidationError as uve:
-        logger.error(f"Error updating web services: {str(uve)}")
     except Exception as ex:
         if new_res:
             new_res.delete()
@@ -833,8 +831,6 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
         ori_res.save()
         utils.set_dirty_bag_flag(new_res)
         return new_res.absolute_url
-    except UserValidationError as uve:
-        logger.error(f"Error updating web services: {str(uve)}")
     except Exception as ex:
         if new_res:
             new_res.delete()

@@ -4625,6 +4625,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
     def copy_all_elements_from(self, src_md, exclude_elements=None):
         """Copy all metadata elements from another resource."""
+        logger = logging.getLogger(__name__)
         md_type = ContentType.objects.get_for_model(src_md)
         supported_element_names = src_md.get_supported_element_names()
         for element_name in supported_element_names:
@@ -4636,11 +4637,15 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 element_args.pop('content_type')
                 element_args.pop('id')
                 element_args.pop('object_id')
-                if exclude_elements:
-                    if not element_name.lower() in exclude_elements:
+                try:
+                    if exclude_elements:
+                        if not element_name.lower() in exclude_elements:
+                            self.create_element(element_name, **element_args)
+                    else:
                         self.create_element(element_name, **element_args)
-                else:
-                    self.create_element(element_name, **element_args)
+                except UserValidationError as uve:
+                    logger.error(f"Error copying {element}: {str(uve)}")
+                    continue
 
     # this method needs to be overriden by any subclass of this class
     # to allow updating of extended (resource specific) metadata
