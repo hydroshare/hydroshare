@@ -3444,6 +3444,99 @@ class CompositeResourceTest(
         )
         self.assertFalse(ori_res.raccess.immutable)
 
+    def test_version_resource_published_deleted_user(self):
+        """Here we are testing versioning a published resource
+        when a creator's user account has been deleted.
+        """
+        self.create_composite_resource()
+        # add a file to the resource
+        self.add_file_to_resource(file_to_add=self.generic_file)
+
+        # add another creator
+        metadata = self.composite_resource.metadata
+        author_account = hydroshare.create_account(
+            "author@nowhere.com",
+            username="author",
+            password='mypassword1',
+            first_name="Creator_FirstName",
+            last_name="Creator_LastName",
+            superuser=False,
+            groups=[self.group],
+        )
+        creator = metadata.create_element("creator",
+                                          name=f"{author_account.last_name}, {author_account.first_name}",
+                                          email=author_account.email,
+                                          hydroshare_user_id=author_account.id)
+
+        # make the original resource published before versioning
+        self.composite_resource.raccess.immutable = True
+        self.composite_resource.raccess.published = True
+        self.composite_resource.raccess.save()
+
+        # Delete the creator's user account
+        author_account.delete()
+
+        # Version the resource
+        new_composite_resource = hydroshare.create_empty_resource(
+            self.composite_resource.short_id, self.user
+        )
+        new_composite_resource = hydroshare.create_new_version_resource(
+            self.composite_resource, new_composite_resource, self.user
+        )
+        # there should be 2 creators now
+        self.assertEqual(new_composite_resource.metadata.creators.count(), 2)
+
+        creator_to_check = new_composite_resource.metadata.creators.all().filter(email=author_account.email).first()
+        self.assertNotEqual(creator_to_check, None)
+        self.assertEqual(creator_to_check.name, creator.name)
+        self.assertEqual(creator_to_check.email, creator.email)
+        self.assertIsNone(creator_to_check.hydroshare_user_id)
+        self.assertFalse(creator_to_check.is_active_user)
+
+    def test_version_resource_unpublished_deleted_user(self):
+        """Here we are testing versioning an unpublished resource
+        when a creator's user account has been deleted.
+        """
+        self.create_composite_resource()
+        # add a file to the resource
+        self.add_file_to_resource(file_to_add=self.generic_file)
+
+        # add another creator
+        metadata = self.composite_resource.metadata
+        author_account = hydroshare.create_account(
+            "author@nowhere.com",
+            username="author",
+            password='mypassword1',
+            first_name="Creator_FirstName",
+            last_name="Creator_LastName",
+            superuser=False,
+            groups=[self.group],
+        )
+        creator = metadata.create_element("creator",
+                                          name=f"{author_account.last_name}, {author_account.first_name}",
+                                          email=author_account.email,
+                                          hydroshare_user_id=author_account.id)
+
+        # Delete the creator's user account
+        author_account.delete()
+
+        # Version the resource
+        new_composite_resource = hydroshare.create_empty_resource(
+            self.composite_resource.short_id, self.user
+        )
+        new_composite_resource = hydroshare.create_new_version_resource(
+            self.composite_resource, new_composite_resource, self.user
+        )
+        # there should be 2 creators now
+        self.assertEqual(new_composite_resource.metadata.creators.count(), 2)
+
+        creator_to_check = new_composite_resource.metadata.creators.all().filter(email=author_account.email).first()
+        self.assertNotEqual(creator_to_check, None)
+        self.assertEqual(creator_to_check.name, creator.name)
+        self.assertEqual(creator_to_check.email, creator.email)
+        self.assertIsNone(creator_to_check.hydroshare_user_id)
+        self.assertFalse(creator_to_check.is_active_user)
+
     def test_version_resource_immunity_published(self):
         self.create_composite_resource()
         # add a file to the resource
