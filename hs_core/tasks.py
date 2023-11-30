@@ -293,6 +293,8 @@ def manage_task_hourly():
             act_doi = get_activated_doi(res.doi)
             response = deposit_res_metadata_with_crossref(res)
             if response.status_code == status.HTTP_200_OK:
+                # TODO: Pabitra - we are not setting the doi to pending here - the comment below is not correct
+                #  should we set it to pending?
                 # retry of metadata deposition succeeds, change resource flag from failure
                 # to pending
                 res.doi = act_doi
@@ -301,17 +303,22 @@ def manage_task_hourly():
                 create_bag_by_irods(res.short_id)
             else:
                 # retry of metadata deposition failed again, notify admin
-                msg_lst.append("Metadata deposition with CrossRef for the published resource "
-                               "DOI {res_doi} failed again after retry with first metadata "
-                               "deposition requested since {pub_date}.".format(res_doi=act_doi,
-                                                                               pub_date=pub_date))
+                if 'CROSSREF_UPDATE' not in res.extra_data:
+                    msg = f"Metadata deposition with CrossRef for the published resource " \
+                          f"DOI {act_doi} failed again after retry with first metadata " \
+                          f"deposition requested since {pub_date}."
+                else:
+                    # this is the case of updating crossref metadata deposit
+                    msg = f"Metadata UPDATE deposition with CrossRef for the published resource " \
+                          f"DOI {act_doi} failed again after retry."
+
+                msg_lst.append(msg)
                 logger.debug(response.content)
         else:
             msg_lst.append("{res_id} does not have published date in its metadata.".format(
                 res_id=res.short_id))
 
-    pending_resources = BaseResource.objects.filter(raccess__published=True,
-                                                    doi__contains='pending')
+    pending_resources = BaseResource.objects.filter(raccess__published=True, doi__contains='pending')
     for res in pending_resources:
         meta_published_date = res.metadata.dates.all().filter(type='published').first()
         if meta_published_date:
@@ -341,9 +348,14 @@ def manage_task_hourly():
                     # create bag and compute checksum for published resource to meet DataONE requirement
                     create_bag_by_irods(res.short_id)
             if not success:
-                msg_lst.append("Published resource DOI {res_doi} is not yet activated with request "
-                               "data deposited since {pub_date}.".format(res_doi=act_doi,
-                                                                         pub_date=pub_date))
+                if 'CROSSREF_UPDATE' not in res.extra_data:
+                    msg = f"Published resource DOI {act_doi} is not yet activated with request " \
+                          f"data deposited since {pub_date}."
+                else:
+                    # this is the case of updating crossref metadata deposit
+                    msg = f"Published resource DOI {act_doi} update CrossRef deposit request is still in pending state."
+
+                msg_lst.append(msg)
                 logger.debug(response.content)
             else:
                 notify_owners_of_publication_success(res)
@@ -351,10 +363,9 @@ def manage_task_hourly():
             msg_lst.append("{res_id} does not have published date in its metadata.".format(
                 res_id=res.short_id))
 
-    pending_unpublished_resources = BaseResource.objects.filter(raccess__published=False,
-                                                                doi__contains='pending')
+    pending_unpublished_resources = BaseResource.objects.filter(raccess__published=False, doi__contains='pending')
     for res in pending_unpublished_resources:
-        msg_lst.append(f"{res.short_id} has pending in DOI but resource_acceess shows unpublished. "
+        msg_lst.append(f"{res.short_id} has pending in DOI but resource_access shows unpublished. "
                        "This indicates an issue with the resource, please notify a developer")
 
     if msg_lst and not settings.DISABLE_TASK_EMAILS:
@@ -362,6 +373,16 @@ def manage_task_hourly():
         subject = 'Notification of pending DOI deposition/activation of published resources'
         # send email for people monitoring and follow-up as needed
         send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
+
+    # update crossref deposit for published resource for which relevant metadata has been updated
+    update_deposit_resources = (BaseResource.objects
+                                .filter(raccess__published=True, extra_data__contains={'CROSSREF_UPDATE': 'True'})
+                                .exclude(doi__contains='pending')
+                                )
+    for res in update_deposit_resources:
+        _update_crossref_deposit(res)
+        res.extra_data['CROSSREF_UPDATE'] = 'False'
+        res.save()
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
@@ -1174,8 +1195,13 @@ def update_crossref_meta_deposit(res_id):
     resource = utils.get_resource_by_shortkey(res_id)
     if not resource.raccess.published:
         raise ValidationError("Resource {} is not a published resource".format(res_id))
+    _update_crossref_deposit(resource)
 
-    logger.info("Updating crossref metadata deposit for resource {}".format(res_id))
+
+def _update_crossref_deposit(resource):
+    logger.info(f"Updating crossref metadata deposit for resource {resource.short_id}")
+    resource.doi = get_resource_doi(resource.short_id, 'pending')
+    resource.save()
     response = deposit_res_metadata_with_crossref(resource)
     if not response.status_code == status.HTTP_200_OK:
         # resource metadata deposition failed from CrossRef - set failure flag to be retried in a

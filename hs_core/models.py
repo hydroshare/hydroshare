@@ -4920,7 +4920,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
             if element_model_name in ('description', 'fundingagency',):
                 resource.update_crossref_deposit()
 
-
     def delete_element(self, element_model_name, element_id):
         """Delete Metadata element."""
         model_type = self._get_metadata_element_model_type(element_model_name)
