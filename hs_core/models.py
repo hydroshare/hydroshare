@@ -134,7 +134,7 @@ def validate_hydroshare_user_id(value):
         try:
             value = int(value)
         except ValueError:
-            raise UserValidationError(err_message)
+            raise ValidationError(err_message)
 
         # check the user exists for the provided user id
         if not User.objects.filter(pk=value).exists():
@@ -4645,7 +4645,9 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                         self.create_element(element_name, **element_args)
                 except UserValidationError as uve:
                     logger.error(f"Error copying {element}: {str(uve)}")
-                    continue
+                    element_args["hydroshare_user_id"] = None
+                    del element_args["is_active_user"]
+                    self.create_element(element_name, **element_args)
 
     # this method needs to be overriden by any subclass of this class
     # to allow updating of extended (resource specific) metadata

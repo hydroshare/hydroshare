@@ -22,7 +22,6 @@ from celery import Task
 
 from django.conf import settings
 from django.core.mail import send_mail
-from hs_core.models import UserValidationError
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db.models import F, Q
 from rest_framework import status
