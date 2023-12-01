@@ -1,6 +1,5 @@
 from django import forms
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
-from django.contrib.admin.actions import delete_selected as django_delete_selected
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.gis import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
@@ -20,9 +19,9 @@ class UserAdmin(DjangoUserAdmin):
             message = f"Can't delete user. They are a creator for published resource(s): {published_resources}"
             self.message_user(request, message)
         else:
-            obj.delete()
+            super(UserAdmin, self).delete_model(request, obj)
 
-    def delete_selected(self, request, queryset):
+    def delete_queryset(self, request, queryset):
         # prevent user delete if user is an owner/author on a published resource
         user_no_del = []
         for user in queryset:
@@ -33,8 +32,8 @@ class UserAdmin(DjangoUserAdmin):
                 queryset = queryset.exclude(id=user.id)
         message = f"Can't delete creator(s):{user_no_del} of published resources"
         self.message_user(request, message)
-        return django_delete_selected(self, request, queryset)
-    delete_selected.short_description = django_delete_selected.short_description
+        if queryset.count():
+            return super(UserAdmin, self).delete_queryset(request, queryset)
 
 
 class UserCreationFormExtended(UserCreationForm):
