@@ -30,7 +30,7 @@ class UserAdmin(DjangoUserAdmin):
             published_resources = BaseResource.objects.filter(object_id=c.content_object.id, raccess__published=True)
             if published_resources:
                 user_no_del.append(user)
-                queryset.exclude(id=user.id)
+                queryset = queryset.exclude(id=user.id)
         message = f"Can't delete creator(s):{user_no_del} of published resources"
         self.message_user(request, message)
         return django_delete_selected(self, request, queryset)
