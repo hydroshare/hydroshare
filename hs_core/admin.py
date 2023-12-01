@@ -1,5 +1,7 @@
 from django import forms
+from django.contrib import messages
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
+from django.contrib.admin.actions import delete_selected as django_delete_selected
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.gis import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
@@ -16,13 +18,16 @@ class UserAdmin(DjangoUserAdmin):
         try:
             c = Creator.objects.get(hydroshare_user_id=obj.id)
             published_resources = BaseResource.objects.filter(object_id=c.content_object.id, raccess__published=True)
-            if published_resources:
-                message = f"Can't delete user. They are a creator for published resource(s): {published_resources}"
-                self.message_user(request, message)
-            return
         except Creator.DoesNotExist:
-            pass
-        super(UserAdmin, self).delete_model(request, obj)
+            published_resources = None
+        if published_resources:
+            res_ids = ", ".join(str(res.short_id) for res in published_resources)
+            message = f"Can't delete user. They are a creator of published resource(s): {res_ids}"
+            self.message_user(request, message, messages.ERROR)
+            # https://github.com/django/django/blob/3.2/django/contrib/admin/actions.py#L46-L48C27
+            return False
+        else:
+            return super(UserAdmin, self).delete_model(request, obj)
 
     def delete_selected(self, request, queryset):
         # prevent user delete if user is an owner/author on a published resource
@@ -30,17 +35,20 @@ class UserAdmin(DjangoUserAdmin):
         for user in queryset:
             try:
                 c = Creator.objects.get(hydroshare_user_id=user.id)
-                published_resources = BaseResource.objects.filter(object_id=c.content_object.id, raccess__published=True)
+                published_resources = BaseResource.objects.filter(
+                    object_id=c.content_object.id, raccess__published=True)
                 if published_resources:
                     user_no_del.append(user)
                     queryset = queryset.exclude(id=user.id)
             except Creator.DoesNotExist:
                 continue
         if user_no_del:
-            message = f"Can't delete creator(s):{user_no_del} of published resources"
-            self.message_user(request, message)
+            usernames = ", ".join(str(u.username) for u in user_no_del)
+            message = f"Can't delete user(s):{usernames}. They are creator(s) of published resources."
+            self.message_user(request, message, messages.ERROR)
         if queryset.count():
-            return super(UserAdmin, self).delete_selected(request, queryset)
+            return django_delete_selected(self, request, queryset)
+    delete_selected.short_description = django_delete_selected.short_description
 
 
 class UserCreationFormExtended(UserCreationForm):
