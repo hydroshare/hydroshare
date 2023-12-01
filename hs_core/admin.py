@@ -6,7 +6,7 @@ from django.contrib.gis import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
 from django.utils.translation import gettext_lazy as _
 
-from .models import ResourceFile, User, BaseResource, Party
+from .models import ResourceFile, User, BaseResource, Creator
 
 
 class UserAdmin(DjangoUserAdmin):
@@ -14,8 +14,8 @@ class UserAdmin(DjangoUserAdmin):
 
     def delete_model(self, request, obj):
         # prevent user delete if user is an owner/author on a published resource
-        p = Party.objects.get(hydroshare_user_id=obj.id)
-        published_resources = BaseResource.objects.filter(object_id=p.content_object.id, raccess__published=True)
+        c = Creator.objects.get(hydroshare_user_id=obj.id)
+        published_resources = BaseResource.objects.filter(object_id=c.content_object.id, raccess__published=True)
         if published_resources:
             message = f"Can't delete user. They are a creator for published resource(s): {published_resources}"
             self.message_user(request, message)
@@ -26,8 +26,8 @@ class UserAdmin(DjangoUserAdmin):
         # prevent user delete if user is an owner/author on a published resource
         user_no_del = []
         for user in queryset:
-            p = Party.objects.get(hydroshare_user_id=user.id)
-            published_resources = BaseResource.objects.filter(object_id=p.content_object.id, raccess__published=True)
+            c = Creator.objects.get(hydroshare_user_id=user.id)
+            published_resources = BaseResource.objects.filter(object_id=c.content_object.id, raccess__published=True)
             if published_resources:
                 user_no_del.append(user)
                 queryset.exclude(id=user.id)
