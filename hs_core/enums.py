@@ -24,3 +24,11 @@ class RelationTypes(str, enum.Enum):
 
     # A "generic" related resource, http://purl.org/dc/terms/relation
     relation = 'relation'
+
+
+class CrossRefSubmissionStatus(str, enum.Enum):
+    """CrossRef metadata deposit submission status"""
+
+    FAILURE = 'failure'
+    PENDING = 'pending'
+    UPDATE = 'CROSSREF_UPDATE'

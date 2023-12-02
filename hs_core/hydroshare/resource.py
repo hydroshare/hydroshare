@@ -20,6 +20,7 @@ from hs_core.hydroshare import hs_bagit
 from hs_core.models import ResourceFile
 from hs_core import signals
 from hs_core.hydroshare import utils
+from hs_core.enums import CrossRefSubmissionStatus
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
 from theme.models import UserQuota
@@ -965,6 +966,8 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
 def get_resource_doi(res_id, flag=''):
     doi_str = "https://doi.org/10.4211/hs.{shortkey}".format(shortkey=res_id)
     if flag:
+        if flag not in CrossRefSubmissionStatus:
+            raise ValidationError("Invalid flag value: {}".format(flag))
         return "{doi}{append_flag}".format(doi=doi_str, append_flag=flag)
     else:
         return doi_str
@@ -985,8 +988,8 @@ def get_activated_doi(doi):
     Returns:
         the activated DOI with all flags removed if any
     """
-    idx1 = doi.find('pending')
-    idx2 = doi.find('failure')
+    idx1 = doi.find(CrossRefSubmissionStatus.PENDING)
+    idx2 = doi.find(CrossRefSubmissionStatus.FAILURE)
     if idx1 >= 0:
         return doi[:idx1]
     elif idx2 >= 0:
@@ -1115,9 +1118,9 @@ def publish_resource(user, pk):
 
     # append pending to the doi field to indicate DOI is not activated yet. Upon successful
     # activation, "pending" will be removed from DOI field
-    resource.doi = get_resource_doi(pk, 'pending')
+    resource.doi = get_resource_doi(pk, CrossRefSubmissionStatus.PENDING)
     resource.save()
-
+    settings.DEBUG = False
     if not settings.DEBUG:
         # only in production environment submit doi request to crossref
         response = deposit_res_metadata_with_crossref(resource)
@@ -1125,7 +1128,7 @@ def publish_resource(user, pk):
             # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
             # crontab celery task
             logger.error(f"Received a {response.status_code} from Crossref while depositing metadata for res id {pk}")
-            resource.doi = get_resource_doi(pk, 'failure')
+            resource.doi = get_resource_doi(pk, CrossRefSubmissionStatus.FAILURE)
             resource.save()
 
     resource.set_public(True)  # also sets discoverable to True

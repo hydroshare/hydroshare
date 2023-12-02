@@ -9,6 +9,7 @@ import urllib.parse
 from uuid import uuid4
 import arrow
 from dateutil import parser
+import requests
 
 from django.conf import settings
 from django.contrib.auth.models import User, Group
@@ -46,7 +47,7 @@ from spam_patterns.worst_patterns_re import patterns
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
-from hs_core.enums import RelationTypes
+from hs_core.enums import RelationTypes, CrossRefSubmissionStatus
 from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
 from .hs_rdf import HSTERMS, RDF_Term_MixIn, RDF_MetaData_Mixin, rdf_terms, RDFS1
 from .languages_iso import languages as iso_languages
@@ -2645,7 +2646,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         if doi and not forceHydroshareURI:
             hs_identifier = doi[0]
-            if self.doi.find('pending') >= 0 or self.doi.find('failure') >= 0:
+            if (self.doi.find(CrossRefSubmissionStatus.PENDING) >= 0 or
+                    self.doi.find(CrossRefSubmissionStatus.FAILURE) >= 0):
                 isPendingActivation = True
         else:
             hs_identifier = [idn for idn in identifiers if idn.name == "hydroShareIdentifier"]
@@ -3927,6 +3929,36 @@ class BaseResource(Page, AbstractResource):
         """
         # importing here to avoid circular import problem
         from .hydroshare.resource import get_activated_doi, get_resource_doi
+        logger = logging.getLogger(__name__)
+
+        def get_funder_id(funder_name):
+            """Return funder_id for a given funder_name from Crossref funders registry.
+            Crossref API Documentation: https://api.crossref.org/swagger-ui/index.html#/Funders/get_funders
+            """
+            query = "+".join(funder_name.split())
+            # if we can't find a match in first 50 search records then we are not going to find a match
+            max_record_count = 50
+            url = f"https://api.crossref.org/funders?query={query}&rows={max_record_count}"
+            funder_name = funder_name.lower()
+            response = requests.get(url, verify=False)
+            if response.status_code == 200:
+                response_json = response.json()
+                if response_json['status'] == 'ok':
+                    items = response_json['message']['items']
+                    for item in items:
+                        if item['name'].lower() == funder_name:
+                            return item['uri']
+                        # TODO: matching funder name with alt-names may result in wrong funder_id
+                        for alt_name in item['alt-names']:
+                            if alt_name.lower() == funder_name:
+                                return item['uri']
+                    return ''
+                return ''
+            else:
+                msg = "Failed to get funder_id for funder_name: {} from Crossref funders registry. " \
+                        "Status code: {}".format(funder_name, response.status_code)
+                logger.error(msg)
+                return ''
 
         def parse_creator_name(_creator):
             name = HumanName(_creator.name.strip())
@@ -4029,9 +4061,17 @@ class BaseResource(Page, AbstractResource):
                 funder_group_node = etree.SubElement(funding_references, '{%s}assertion' % fr, name="fundgroup")
                 funder_name_node = etree.SubElement(funder_group_node, '{%s}assertion' % fr, name="funder_name")
                 funder_name_node.text = funder.agency_name
-                if funder.agency_url:
+                # get funder_id from Crossref funders registry
+                funder_id = get_funder_id(funder.agency_name)
+                if not funder_id:
+                    logger.warning(f"Funder id was not found in Crossref funder registry "
+                                   f"for funder name: {funder.agency_name}")
+                if funder_id or funder.agency_url:
                     id_node = etree.SubElement(funder_name_node, '{%s}assertion' % fr, name="funder_identifier")
-                    id_node.text = funder.agency_url
+                    if funder_id:
+                        id_node.text = funder_id
+                    else:
+                        id_node.text = funder.agency_url
                 if funder.award_number:
                     award_node = etree.SubElement(funder_group_node, '{%s}assertion' % fr, name='award_number')
                     award_node.text = funder.award_number
@@ -4334,20 +4374,19 @@ class BaseResource(Page, AbstractResource):
         """Update crossref deposit xml file for this published resource
         Used when metadata for a published resource is updated
         """
-        res = self
         from hs_core.tasks import update_crossref_meta_deposit
-        if not res.raccess.published:
+
+        if not self.raccess.published:
             err_msg = "Crossref deposit can be updated only for a published resource. "
-            err_msg += f"Resource {res.short_id} is not a published resource."
+            err_msg += f"Resource {self.short_id} is not a published resource."
             raise ValidationError(err_msg)
-        if 'pending' not in res.doi:
-            res.extra_data['CROSSREF_UPDATE'] = 'False'
+        if CrossRefSubmissionStatus.PENDING not in self.doi:
+            self.extra_data[CrossRefSubmissionStatus.UPDATE] = 'False'
             update_crossref_meta_deposit.apply_async((self.short_id,))
         else:
             # setting this flag will update the crossref deposit when the hourly celery task runs
-            res.extra_data['CROSSREF_UPDATE'] = 'True'
-
-        res.save()
+            self.extra_data[CrossRefSubmissionStatus.UPDATE] = 'True'
+        self.save()
 
 
 old_get_content_model = Page.get_content_model
