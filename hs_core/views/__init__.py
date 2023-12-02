@@ -627,6 +627,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                             element = res.metadata.create_element(
                                 element_name, **element_data_dict
                             )
+                            res.refresh_from_db()
                             is_add_success = True
                         except ValidationError as exp:
                             err_msg = err_msg.format(element_name, str(exp))
@@ -753,6 +754,7 @@ def update_metadata_element(
                     res.metadata.update_element(
                         element_name, element_id, **element_data_dict
                     )
+                    res.refresh_from_db()
                     post_handler_response = signals.post_metadata_element_update.send(
                         sender=sender_resource,
                         element_name=element_name,
@@ -877,6 +879,7 @@ def delete_metadata_element(
     )
 
     res.metadata.delete_element(element_name, element_id)
+    res.refresh_from_db()
     res.update_public_and_discoverable()
     resource_modified(res, request.user, overwrite_bag=False)
     request.session["resource-mode"] = "edit"
