@@ -97,9 +97,11 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
         # add a person with ORCID identifier as an author
         identifiers = {"ORCID": 'https://orcid.org/0000-0002-1825-0097'}
         self.res.metadata.create_element('creator', name='John Smith', identifiers=identifiers)
-        # add a funder
+        # add a funder that can be found in crossref funders registry
         self.res.metadata.create_element('fundingagency', agency_name='National Science Foundation',
                                          award_title='NSF Award', award_number='12345', agency_url='https://nsf.gov')
+        # add a funder that can't be found in crossref funders registry
+        self.res.metadata.create_element('fundingagency', agency_name='Utah Water Research Laboratory')
 
         if not hasattr(settings, 'DEFAULT_SUPPORT_EMAIL'):
             settings.DEFAULT_SUPPORT_EMAIL = "help@cuahsi.org"
@@ -185,8 +187,11 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
         <description>This is a test abstract</description>
         <fr:program name="fundref">
           <fr:assertion name="fundgroup">
-            <fr:assertion name="funder_name">National Science Foundation<fr:assertion name="funder_identifier">https://nsf.gov</fr:assertion></fr:assertion>
+            <fr:assertion name="funder_name">National Science Foundation<fr:assertion name="funder_identifier">http://dx.doi.org/10.13039/100000001</fr:assertion></fr:assertion>
             <fr:assertion name="award_number">12345</fr:assertion>
+          </fr:assertion>
+          <fr:assertion name="fundgroup">
+            <fr:assertion name="funder_name">Utah Water Research Laboratory</fr:assertion>
           </fr:assertion>
         </fr:program>
         <ai:program name="AccessIndicators">
