@@ -2646,8 +2646,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         if doi and not forceHydroshareURI:
             hs_identifier = doi[0]
-            if (self.doi.find(CrossRefSubmissionStatus.PENDING) >= 0 or
-                    self.doi.find(CrossRefSubmissionStatus.FAILURE) >= 0):
+            if (self.doi.find(CrossRefSubmissionStatus.PENDING) >= 0
+                    or self.doi.find(CrossRefSubmissionStatus.FAILURE) >= 0):
                 isPendingActivation = True
         else:
             hs_identifier = [idn for idn in identifiers if idn.name == "hydroShareIdentifier"]
@@ -3956,7 +3956,7 @@ class BaseResource(Page, AbstractResource):
                 return ''
             else:
                 msg = "Failed to get funder_id for funder_name: {} from Crossref funders registry. " \
-                        "Status code: {}".format(funder_name, response.status_code)
+                      "Status code: {}".format(funder_name, response.status_code)
                 logger.error(msg)
                 return ''
 

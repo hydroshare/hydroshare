@@ -5,6 +5,7 @@ from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.hydroshare import deposit_res_metadata_with_crossref, get_resource_doi
 from hs_core.enums import CrossRefSubmissionStatus
 
+
 class Command(BaseCommand):
     help = "Update crossref metadata deposit for a published resource"
 
