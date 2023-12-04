@@ -17,66 +17,40 @@
                                     {% csrf_token %}
                                 {% endif %}
                                 <div class="tags">
-                                    {% if resource_edit_mode %}
-                                        {% if czo_user %}
-                                            <div id="add-agency-wrapper" class="input-group"
-                                                    @keyup.enter="addKeyword('{{ cm.short_id }}')">
-                                                {# https://github.com/alexurquhart/vue-bootstrap-typeahead #}
-                                                <vue-bootstrap-typeahead
-                                                        :data="{{ odm2_terms }}"
-                                                        v-model="newKeyword"
-                                                        {# Undocumented https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19 #}
-                                                        ref="newKeyword"
-                                                        input-class="typeahead-search-input"
-                                                        @hit=addKeyword('{{ cm.short_id }}')
-                                                        placeholder="Example: National Science Foundation">
-                                                </vue-bootstrap-typeahead>
-                                                <span class="input-group-btn">
-                                                    <button @click="addKeyword('{{ cm.short_id }}')"
-                                                            class="btn btn-success cv-add-button" type="button">Add</button>
-                                                </span>
-                                            </div>
-                                        {% else %}
-                                            <div id="cv-add-keyword-wrapper" class="input-group">
-                                                <input v-model="newKeyword" id="txt-keyword" type="text" class="form-control"
-                                                        ref="newKeyword"
-                                                        @keyup.enter="addKeyword('{{ cm.short_id }}')"
-                                                        placeholder="Examples: Hydrologic_modeling, USU, land use">
-                                                <span class="input-group-btn">
-                                                    <button @click="addKeyword('{{ cm.short_id }}')"
-                                                            class="btn btn-success" type="button">Add</button>
-                                                </span>
-                                            </div>
-                                        {% endif %}
-                                    {% endif %}
-                                    <div id="subj-inline-error" style="display:none">
-                                        <p class="text-danger small" v-if="showIsDuplicate"> Duplicate. Keyword not added.</p>
+                                    <div id="add-agency-wrapper" class="input-group"
+                                            @keyup.enter="addAgency('{{ cm.short_id }}')">
+                                        {# https://github.com/alexurquhart/vue-bootstrap-typeahead #}
+                                        <vue-bootstrap-typeahead
+                                                :data="['Canada', 'USA', 'Mexico']"
+                                                v-model="newAgency"
+                                                {# Undocumented https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19 #}
+                                                ref="newAgency"
+                                                input-class="typeahead-search-input form-control"
+                                                @hit=addAgency('{{ cm.short_id }}')
+                                                placeholder="Example: National Science Foundation">
+                                        </vue-bootstrap-typeahead>
+                                        <span class="input-group-btn">
+                                            <button @click="addAgency('{{ cm.short_id }}')"
+                                                    class="btn btn-success add-button" type="button">Add</button>
+                                        </span>
+                                    </div>
+                                    <div id="agency-inline-error" style="display:none">
+                                        <p class="text-danger small" v-if="showIsDuplicate"> Duplicate. Funder not added.</p>
                                         <div v-if="error" class='alert alert-danger has-space-top small'>
                                             <strong>Error: </strong>
                                             <span v-html="error"></span>
                                         </div>
                                     </div>
-                                    <ul id="lst-tags" class="custom-well tag-list" style="display:none">
-                                        <li class="small text-muted" v-if="!resKeywords.length">No subject keywords have been added.</li>
-                                        <li v-else v-for="k in resKeywords">
-                                            {% if resource_edit_mode %}
-                                                {% if cm.raccess.published %}
-                                                    <span v-if="resKeywords.length" class="tag">
-                                                        ${ k }<span v-if="resKeywords.length > 1"
-                                                            @click="removeKeyword('{{ cm.short_id }}', k )"
-                                                            class="glyphicon glyphicon-remove-circle icon-remove"></span>
-                                                    </span>
-                                                {% else %}
-                                                    <span v-if="resKeywords.length" class="tag">
-                                                        ${ k }<span
-                                                            @click="removeKeyword('{{ cm.short_id }}', k )"
-                                                            class="glyphicon glyphicon-remove-circle icon-remove"></span>
-                                                    </span>
-                                                {% endif %}
-                                            {% else %}
-                                                <a class='tag' target="_blank"
-                                                    :href="'/search/?subject=' + safeJS(k)">${ k }</a>
-                                            {% endif %}
+                                    <ul id="agency-tags" class="custom-well tag-list" style="display:none">
+                                        <li class="small text-muted" v-if="!fundingAgencies.length">No funders have been added.</li>
+                                        <li v-else v-for="f in fundingAgencies">
+                                            <span class="tag">
+                                                ${ f.name }
+                                                <span
+                                                    @click="removeAgency('{{ cm.short_id }}', f )"
+                                                    class="glyphicon glyphicon-remove-circle icon-remove">
+                                                </span>
+                                            </span>
                                         </li>
                                     </ul>
                                 </div>
@@ -139,6 +113,10 @@
     <link href="{% static 'css/vue-bootstrap-typeahead.0.2.6.css' %}" rel="stylesheet">
     <style>
         #add-agency-app {
+            width: 100%;
+        }
+
+        #add-agency-wrapper {
             width: 100%;
         }
 

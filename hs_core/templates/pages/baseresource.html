@@ -1023,6 +1023,16 @@
       });
       const CITATION_ID = "{{ citation_id }}";
       const RES_KEYWORDS = {{ keywords|safe }};
+      const RES_FUNDING_AGENCIES = [
+        {% for agency in fundingagencies %}
+            {
+                "award_number": "{{ agency.award_number }}",
+                "award_title": "{{ agency.award_title | escapejs }}",
+                "agency_name": "{{ agency.agency_name | escapejs }}",
+                "identifier": "{{ agency.agency_url }}"
+            }
+        {% endfor %}
+      ];
       const SELF_ACCESS_LEVEL = "{{ self_access_level }}";
       const CAN_CHANGE = "{{ page.perms.change }}" === "True";
       const RES_TYPE = "{{ cm|resource_type }}";
