@@ -922,74 +922,9 @@
             </div>
         </div>
     </div>
-
+    
     <!-- Add credit source Modal -->
-    <div class="modal fade" id="add-funding-agency" tabindex="-1" role="dialog" aria-labelledby="add-funding-label" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form action="/hsapi/_internal/{{ cm.short_id }}/fundingagency/add-metadata/" method="POST"
-                      enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <input name="resource-mode" type="hidden" value="edit">
-
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                        <h4 class="modal-title" id="add-funding-label"> Add Funding Agency</h4></div>
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <fieldset>
-                                {# Agency Name (Required) #}
-                                <div id="div_id_agency_name" class="control-group">
-                                    <label for="agency_name" class="control-label requiredField">
-                                        Agency Name<span class="asteriskField">*</span>
-                                    </label>
-
-                                    <div class="controls">
-                                        <input class="form-control input-sm textInput"
-                                               maxlength="250" name="agency_name" required="required" type="text">
-                                    </div>
-                                </div>
-
-                                {# Award Title #}
-                                <div id="div_id_award_title" class="control-group">
-                                    <label for="award_title" class="control-label">Award Title</label>
-                                    <div class="controls">
-                                        <input class="form-control input-sm" maxlength="250"
-                                               name="award_title">
-                                    </div>
-                                </div>
-
-                                {# Award Number #}
-                                <div id="div_id_award_number" class="control-group">
-                                    <label for="award_number" class="control-label">Award Number</label>
-                                    <div class="controls">
-                                        <input class="form-control input-sm textinput textInput" maxlength="100"
-                                               name="award_number" type="text">
-                                    </div>
-                                </div>
-
-                                {# Agency URL #}
-                                <div id="div_id_agency_url" class="control-group">
-                                    <label for="agency_url" class="control-label">Agency URL</label>
-
-                                    <div class="controls">
-                                        <input class="form-control input-sm urlinput" maxlength="200"
-                                               name="agency_url" type="url">
-                                    </div>
-                                </div>
-
-                            </fieldset>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary btn-save-funding-agency btn-disable-after-valid">Save changes</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    {% include "resource-landing-page/funding-agency.html" %}
 
     <!-- Edit credit source Modal -->
     {% for agency in fundingagencies %}
