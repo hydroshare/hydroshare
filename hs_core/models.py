@@ -4065,7 +4065,7 @@ class BaseResource(Page, AbstractResource):
                 funder_id = get_funder_id(funder.agency_name)
                 if not funder_id:
                     logger.warning(f"Funder id was not found in Crossref funder registry "
-                                   f"for funder name: {funder.agency_name}")
+                                   f"for funder name: {funder.agency_name} for resource: {self.short_id}")
                 if funder_id or funder.agency_url:
                     id_node = etree.SubElement(funder_name_node, '{%s}assertion' % fr, name="funder_identifier")
                     if funder_id:
