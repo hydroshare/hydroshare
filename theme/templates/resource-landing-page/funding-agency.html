@@ -30,8 +30,6 @@
                                         input-class="typeahead-search-input form-control input-sm textInput"
                                         @hit=checkAgency()
                                         placeholder="Example: National Science Foundation"
-                                        name="agency_name"
-                                        required="required"
                                     >
                                     </vue-bootstrap-typeahead>
                                 </div>
@@ -41,6 +39,7 @@
                                     </p>
                                 </div>
                             </div>
+                            <input v-model="newAgency" maxlength="250" name="agency_name" type="hidden">
 
                             {# Award Title #}
                             <div id="div_id_award_title" class="control-group">
