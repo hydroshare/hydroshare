@@ -13,7 +13,6 @@ from django.urls import reverse
 from rest_framework import status
 
 from hs_composite_resource.models import CompositeResource
-from django.contrib.auth.models import User
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import (
     ResourceVersioningException,
@@ -3475,7 +3474,7 @@ class CompositeResourceTest(
         self.composite_resource.raccess.save()
 
         # Delete the creator's user account
-        User.objects.filter(pk=author_account.id).first().delete()
+        author_account.delete()
 
         # Version the resource
         new_composite_resource = hydroshare.create_empty_resource(
