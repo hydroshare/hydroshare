@@ -15,11 +15,14 @@ class UserAdmin(DjangoUserAdmin):
 
     def delete_model(self, request, obj):
         # prevent user delete if user is an owner/author on a published resource
+        published_resources = None
         try:
-            c = Creator.objects.get(hydroshare_user_id=obj.id)
-            published_resources = BaseResource.objects.filter(object_id=c.content_object.id, raccess__published=True)
+            creators = Creator.objects.filter(hydroshare_user_id=obj.id)
+            for c in creators:
+                published_resources = BaseResource.objects.filter(
+                    object_id=c.content_object.id, raccess__published=True)
         except Creator.DoesNotExist:
-            published_resources = None
+            pass
         if published_resources:
             res_ids = ", ".join(str(res.short_id) for res in published_resources)
             message = f"Can't delete user. They are a creator of published resource(s): {res_ids}"
@@ -34,17 +37,18 @@ class UserAdmin(DjangoUserAdmin):
         user_no_del = []
         for user in queryset:
             try:
-                c = Creator.objects.get(hydroshare_user_id=user.id)
-                published_resources = BaseResource.objects.filter(
-                    object_id=c.content_object.id, raccess__published=True)
-                if published_resources:
-                    user_no_del.append(user)
-                    queryset = queryset.exclude(id=user.id)
+                creators = Creator.objects.filter(hydroshare_user_id=user.id)
+                for c in creators:
+                    published_resources = BaseResource.objects.filter(
+                        object_id=c.content_object.id, raccess__published=True)
+                    if published_resources:
+                        user_no_del.append(user)
+                        queryset = queryset.exclude(id=user.id)
             except Creator.DoesNotExist:
                 continue
         if user_no_del:
             usernames = ", ".join(str(u.username) for u in user_no_del)
-            message = f"Can't delete user(s):{usernames}. They are creator(s) of published resources."
+            message = f"Can't delete user(s): {usernames}. They are creator(s) of published resources."
             self.message_user(request, message, messages.ERROR)
         if queryset.count():
             return django_delete_selected(self, request, queryset)
