@@ -12,58 +12,33 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <fieldset>
-                            <div id="add-agency-app">
-                                {% if resource_edit_mode %}
-                                    {% csrf_token %}
-                                {% endif %}
-                                <div class="tags">
-                                    <div id="add-agency-wrapper" class="input-group"
-                                            @keyup.enter="addAgency('{{ cm.short_id }}')">
-                                        {# https://github.com/alexurquhart/vue-bootstrap-typeahead #}
-                                        <vue-bootstrap-typeahead
-                                                :data="['Canada', 'USA', 'Mexico']"
-                                                v-model="newAgency"
-                                                {# Undocumented https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19 #}
-                                                ref="newAgency"
-                                                input-class="typeahead-search-input form-control"
-                                                @hit=addAgency('{{ cm.short_id }}')
-                                                placeholder="Example: National Science Foundation">
-                                        </vue-bootstrap-typeahead>
-                                        <span class="input-group-btn">
-                                            <button @click="addAgency('{{ cm.short_id }}')"
-                                                    class="btn btn-success add-button" type="button">Add</button>
-                                        </span>
-                                    </div>
-                                    <div id="agency-inline-error" style="display:none">
-                                        <p class="text-danger small" v-if="showIsDuplicate"> Duplicate. Funder not added.</p>
-                                        <div v-if="error" class='alert alert-danger has-space-top small'>
-                                            <strong>Error: </strong>
-                                            <span v-html="error"></span>
-                                        </div>
-                                    </div>
-                                    <ul id="agency-tags" class="custom-well tag-list" style="display:none">
-                                        <li class="small text-muted" v-if="!fundingAgencies.length">No funders have been added.</li>
-                                        <li v-else v-for="f in fundingAgencies">
-                                            <span class="tag">
-                                                ${ f.name }
-                                                <span
-                                                    @click="removeAgency('{{ cm.short_id }}', f )"
-                                                    class="glyphicon glyphicon-remove-circle icon-remove">
-                                                </span>
-                                            </span>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
                             {# Agency Name (Required) #}
-                            <div id="div_id_agency_name" class="control-group">
+                            <div id="div_id_agency_name" class="agency-full-width control-group">
                                 <label for="agency_name" class="control-label requiredField">
                                     Agency Name<span class="asteriskField">*</span>
                                 </label>
-
-                                <div class="controls">
-                                    <input class="form-control input-sm textInput"
-                                           maxlength="250" name="agency_name" required="required" type="text">
+                                <div id="add-agency-wrapper"
+                                    class="input-group"
+                                    @focusout="checkAgency"
+                                >
+                                    {# https://github.com/alexurquhart/vue-bootstrap-typeahead #}
+                                    <vue-bootstrap-typeahead
+                                        :data="crossrefFunders"
+                                        :serializer="s => s.name"
+                                        v-model="newAgency"
+                                        ref="newAgency"
+                                        input-class="typeahead-search-input form-control input-sm textInput"
+                                        @hit=checkAgency()
+                                        placeholder="Example: National Science Foundation"
+                                        name="agency_name"
+                                        required="required"
+                                    >
+                                    </vue-bootstrap-typeahead>
+                                </div>
+                                <div id="agency-inline-error">
+                                    <p class="text-danger small" v-if="showIsDuplicate"> 
+                                        You already added this funder for this resource.
+                                    </p>
                                 </div>
                             </div>
 
@@ -101,7 +76,7 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary btn-save-funding-agency btn-disable-after-valid">Save changes</button>
+                    <button :disabled="error || showIsDuplicate" type="submit" class="btn btn-primary btn-save-funding-agency btn-disable-after-valid">Save changes</button>
                 </div>
             </form>
         </div>
@@ -112,15 +87,11 @@
     <!-- <link href="https://unpkg.com/vue-bootstrap-typeahead/dist/VueBootstrapTypeahead.css" rel="stylesheet"> -->
     <link href="{% static 'css/vue-bootstrap-typeahead.0.2.6.css' %}" rel="stylesheet">
     <style>
-        #add-agency-app {
+        .agency-full-width {
             width: 100%;
         }
 
-        #add-agency-wrapper {
-            width: 100%;
-        }
-
-        #add-agency-app .input-group {
+        .agency-full-width .input-group {
             width: 100%;
         }
 
