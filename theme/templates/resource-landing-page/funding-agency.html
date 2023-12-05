@@ -19,7 +19,7 @@
                                 </label>
                                 <div id="add-agency-wrapper"
                                     class="input-group"
-                                    @focusout="checkAgency"
+                                    @blur.prevent="checkAgency"
                                 >
                                     {# https://github.com/alexurquhart/vue-bootstrap-typeahead #}
                                     <vue-bootstrap-typeahead
@@ -42,7 +42,7 @@
                                     </p>
                                 </div>
                             </div>
-                            <input v-model="newAgency" maxlength="250" name="agency_name" type="hidden">
+                            <input v-model="newAgency" maxlength="250" name="agency_name" type="hidden" required>
 
                             {# Award Title #}
                             <div id="div_id_award_title" class="control-group">

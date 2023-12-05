@@ -29,6 +29,7 @@ let fundingAgenciesApp = new Vue({
         selectedAgency: null,
         crossrefFunders: [],
         CROSSREF_API_URL: 'https://api.crossref.org/funders?query=:query',
+        MIN_SEARCH_LEN: 3,
         showIsDuplicate: false,
         error: '',
         isPending: false
@@ -74,14 +75,24 @@ let fundingAgenciesApp = new Vue({
         },
         updateUri: function() {
             this.recommendedUrl = this.selectedAgency.uri
+        },
+        formSubmit: function(){
+            alert("sub")
         }
     },
     watch: {
-        newAgency: debounce(function(funder) { 
-            this.getCrossrefFunders(funder) }, 500),
-        selectedAgency: function(newer, old){ 
-            if (newer !== null)
-            this.updateUri() 
+        // newAgency: debounce(function(funder) {
+        //     this.getCrossrefFunders(funder) }, 500),
+        newAgency: function(funder){
+            if (funder.length >= this.MIN_SEARCH_LEN){
+                this.getCrossrefFunders(funder)
+            }
+        },
+        selectedAgency: function(newer, _){ 
+            this.isPending = false
+            if (newer !== null){
+                this.updateUri() 
+            }
         }
       }
 });
