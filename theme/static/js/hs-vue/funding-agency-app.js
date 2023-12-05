@@ -36,7 +36,9 @@ let fundingAgenciesApp = new Vue({
         error: '',
         isPending: false,
         mode: null, //add or edit
-        currentlyEditing: {}
+        currentlyEditing: {},
+        deleteUrl: "",
+        currentlyDeleting: {}
     },
     mounted(){
         this.fundingAgencyNames = this.fundingAgencies.map(a => a.agency_name);
@@ -97,7 +99,11 @@ let fundingAgenciesApp = new Vue({
             this.currentlyEditing.key = key;
             this.agencyName = this.currentlyEditing.agency_name;
             console.log(this.currentlyEditing)
-            // TODO: edit doesnt populate name
+            // TODO: edit doesnt populate name!
+        },
+        openDeleteModal(key){
+            this.currentlyDeleting = this.fundingAgencies[key];
+            this.deleteUrl = `/hsapi/_internal/${ this.resourceId }/fundingagency/${ key }/delete-metadata/`
         }
     },
     watch: {
@@ -126,7 +132,6 @@ let fundingAgenciesApp = new Vue({
             return true
         },
         actionUri: function() {
-            // TODO: have to get agency.id and cm.short_id
             if (this.mode === 'Edit'){
                 return `/hsapi/_internal/${ this.resourceId }/fundingagency/${ this.currentlyEditing.key }/update-metadata/`
             }else{
