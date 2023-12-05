@@ -103,10 +103,10 @@
 
                 <div class="modal-body">
                     <strong>Are you sure you want to delete this funder?</strong>
-                    <div><a v-if="currentlyDeleting.agency_url" :href="currentlyDeleting.agency_url">Name: ${currentlyDeleting.agency_name}</a></div>
+                    <div v-if="currentlyDeleting.agency_url">Name: <a :href="currentlyDeleting.agency_url">${currentlyDeleting.agency_name}</a></div>
                     <div v-else>Name: ${currentlyDeleting.agency_name}</div>
-                    <div>Number: ${currentlyDeleting.award_number}</div>
-                    <div>Title: ${currentlyDeleting.award_title}</div>
+                    <div v-show="currentlyDeleting.award_number">Number: ${currentlyDeleting.award_number}</div>
+                    <div v-show="currentlyDeleting.award_title">Title: ${currentlyDeleting.award_title}</div>
                 </div>
 
                 <div class="modal-footer">
@@ -169,8 +169,7 @@
                             <th>Award Number</th>
                             <th></th>
                         </tr>
-                        <!-- TODO if there are deletions, the key will be off for delete and edit -->
-                        <tr v-for="(agency, key) in fundingAgencies">
+                        <tr v-for="agency in fundingAgencies">
                             <td>
                                 <strong>
                                     <a v-if="agency.agency_url" href="{{ agency.agency_url }}" target="_blank">${ agency.agency_name }</a>
@@ -182,10 +181,10 @@
                             <td>
                                 <span data-toggle="modal" data-placement="auto" title="Edit"
                                     class="glyphicon glyphicon-pencil icon-button icon-blue table-icon"
-                                    data-target="#funding-agency-modal" @click="openEditModal(key)"></span>
+                                    data-target="#funding-agency-modal" @click="openEditModal(agency.agency_id)"></span>
                                 <span data-toggle="modal" data-placement="auto" title="Remove"
                                     class="glyphicon glyphicon-trash icon-button btn-remove table-icon"
-                                    data-target="#delete-funding-agency-modal" @click="openDeleteModal(key)"></span>
+                                    data-target="#delete-funding-agency-modal" @click="openDeleteModal(agency.agency_id)"></span>
                             </td>
                         </tr>
                     </tbody>

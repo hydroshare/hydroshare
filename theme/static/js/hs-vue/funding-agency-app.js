@@ -93,17 +93,19 @@ let fundingAgenciesApp = new Vue({
         clearSelectedAgency: function(){
             this.selectedAgency = null;
         },
-        openEditModal(key){
+        openEditModal(id){
             this.mode = 'Edit';
-            this.currentlyEditing = this.fundingAgencies[key];
-            this.currentlyEditing.key = key;
+            this.currentlyEditing = this.fundingAgencies.filter((agency)=>{
+                return agency.agency_id == id;
+            })[0]
             this.agencyName = this.currentlyEditing.agency_name;
-            console.log(this.currentlyEditing)
             // TODO: edit doesnt populate name!
         },
-        openDeleteModal(key){
-            this.currentlyDeleting = this.fundingAgencies[key];
-            this.deleteUrl = `/hsapi/_internal/${ this.resourceId }/fundingagency/${ key }/delete-metadata/`
+        openDeleteModal(id){
+            this.currentlyDeleting = this.fundingAgencies.filter((agency)=>{
+                return agency.agency_id == id;
+            })[0]
+            this.deleteUrl = `/hsapi/_internal/${ this.resourceId }/fundingagency/${ id }/delete-metadata/`
         }
     },
     watch: {
@@ -133,7 +135,7 @@ let fundingAgenciesApp = new Vue({
         },
         actionUri: function() {
             if (this.mode === 'Edit'){
-                return `/hsapi/_internal/${ this.resourceId }/fundingagency/${ this.currentlyEditing.key }/update-metadata/`
+                return `/hsapi/_internal/${ this.resourceId }/fundingagency/${ this.currentlyEditing.agency_id }/update-metadata/`
             }else{
                 return `/hsapi/_internal/${ this.resourceId }/fundingagency/add-metadata/`
             }

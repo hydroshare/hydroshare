@@ -1025,7 +1025,8 @@
       const RES_KEYWORDS = {{ keywords|safe }};
       const RES_FUNDING_AGENCIES = [
         {% for agency in fundingagencies %}
-            {
+            {   
+                "agency_id": "{{ agency.id }}",
                 "award_number": "{{ agency.award_number }}",
                 "award_title": "{{ agency.award_title | escapejs }}",
                 "agency_name": "{{ agency.agency_name | escapejs }}",
