@@ -15,7 +15,8 @@ class Command(BaseCommand):
         parser.add_argument('resource_ids', nargs='*', type=str)
 
     def handle(self, *args, **options):
-        requests.packages.urllib3.disable_warnings() # turn off SSL warnings
+        requests.packages.urllib3.disable_warnings()    # turn off SSL warnings
+
         def check_funder_name(funder_name):
             """Checks if the funder name exits in Crossref funders registry.
             Crossref API Documentation: https://api.crossref.org/swagger-ui/index.html#/Funders/get_funders
