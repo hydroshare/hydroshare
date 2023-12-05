@@ -24,25 +24,34 @@ let fundingAgenciesApp = new Vue({
         newAgency: '',
         fundingAgencies: RES_FUNDING_AGENCIES,
         fundingAgencyNames: [],
+        fundingAgencyUrls: [],
+        recommendedUrl: "",
+        selectedAgency: null,
         crossrefFunders: [],
         CROSSREF_API_URL: 'https://api.crossref.org/funders?query=:query',
         showIsDuplicate: false,
         error: '',
+        isPending: false
     },
     mounted(){
         this.fundingAgencyNames = this.fundingAgencies.map(a => a.agency_name);
-        this.fundingAgencyUrls = this.fundingAgencies.map(a => a.agency_url);
-        console.log(this.fundingAgencyUrls)
+        this.fundingAgencyUrls = this.fundingAgencies.map(a => a.identifier);
     },
     methods: {
         getCrossrefFunders: async function(query) {
+            if (query === "" || this.selectedAgency !== null){
+                return
+            }
+            this.isPending = true
             query = `${query}&mailto=help@cuahsi.org`
             const res = await fetch(this.CROSSREF_API_URL.replace(':query', query))
             const result = await res.json()
             this.crossrefFunders = result.message.items
+            this.isPending = false
         },
         checkAgency: function () {
             this.showIsDuplicate = false;  // Reset
+            this.selectedAgency = null
 
             if (this.newAgency.trim() === "") {
                 return; // Empty string detected
@@ -59,9 +68,20 @@ let fundingAgenciesApp = new Vue({
             else {
                 this.fundingAgencies.push(this.newAgency);
             }
+            if(this.selectedAgency){
+                this.updateUri()
+            }
         },
+        updateUri: function() {
+            this.recommendedUrl = this.selectedAgency.uri
+        }
     },
     watch: {
-        newAgency: debounce(function(funder) { this.getCrossrefFunders(funder) }, 500)
+        newAgency: debounce(function(funder) { 
+            this.getCrossrefFunders(funder) }, 500),
+        selectedAgency: function(newer, old){ 
+            if (newer !== null)
+            this.updateUri() 
+        }
       }
 });

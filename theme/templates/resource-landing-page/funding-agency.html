@@ -26,12 +26,15 @@
                                         :data="crossrefFunders"
                                         :serializer="s => s.name"
                                         v-model="newAgency"
-                                        ref="newAgency"
                                         input-class="typeahead-search-input form-control input-sm textInput"
-                                        @hit=checkAgency()
+                                        @hit="selectedAgency = $event"
                                         placeholder="Example: National Science Foundation"
                                     >
                                     </vue-bootstrap-typeahead>
+                                    <span v-show="isPending">
+                                        <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue">
+                                        </i>Searching known funders
+                                    </span>
                                 </div>
                                 <div id="agency-inline-error">
                                     <p class="text-danger small" v-if="showIsDuplicate"> 
@@ -65,7 +68,7 @@
 
                                 <div class="controls">
                                     <input class="form-control input-sm urlinput" maxlength="200"
-                                           name="agency_url" type="url">
+                                           name="agency_url" type="url" v-model="recommendedUrl">
                                 </div>
                             </div>
 
