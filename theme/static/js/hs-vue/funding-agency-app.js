@@ -36,9 +36,7 @@ let fundingAgenciesApp = new Vue({
     },
     methods: {
         getCrossrefFunders: async function(query) {
-            // TODO:
-            // https://api.crossref.org/swagger-ui/index.html#/Funders/get_funders
-            // avoid rate limits
+            query = `${query}&mailto=help@cuahsi.org`
             const res = await fetch(this.CROSSREF_API_URL.replace(':query', query))
             const result = await res.json()
             this.crossrefFunders = result.message.items
