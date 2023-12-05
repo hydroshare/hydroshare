@@ -46,6 +46,8 @@ let fundingAgenciesApp = new Vue({
                 return
             }
             this.isPending = true
+            // https://api.crossref.org/swagger-ui/index.html#/Funders/get_funders
+            query = query.replace(" ", "+")
             query = `${query}&mailto=help@cuahsi.org`
             const res = await fetch(this.CROSSREF_API_URL.replace(':query', query))
             const result = await res.json()
@@ -82,21 +84,24 @@ let fundingAgenciesApp = new Vue({
         selectAgency: function(event) {
             this.isPending=false
             this.selectedAgency = event;
+            this.checkAgency();
+        },
+        clearSelectedAgency: function(){
+            this.selectedAgency = null;
         }
     },
     watch: {
         newAgency: function(funder){
-            if(!this.checkAgency() || funder.length < this.MIN_SEARCH_LEN){
+            if(funder.length < this.MIN_SEARCH_LEN || this.selectedAgency){
                 return
             }
+            this.checkAgency()
             if (this.timeout) clearTimeout(this.timeout); 
             this.timeout = setTimeout(() => {
                 this.getCrossrefFunders(funder);
             }, this.DEBOUNCE_API_MS);
         },
         selectedAgency: function(newer, _){ 
-            // TODO: pending is shown after select
-            // 
             this.isPending = false
             if (newer !== null){
                 this.updateUri()
