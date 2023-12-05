@@ -1,4 +1,5 @@
 import requests
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.management.base import BaseCommand
 
@@ -21,10 +22,13 @@ class Command(BaseCommand):
             """Checks if the funder name exits in Crossref funders registry.
             Crossref API Documentation: https://api.crossref.org/swagger-ui/index.html#/Funders/get_funders
             """
+
+            # match all words in the funder name
             query = "+".join(funder_name.split())
             # if we can't find a match in first 50 search records then we are not going to find a match
             max_record_count = 50
-            url = f"https://api.crossref.org/funders?query={query}&rows={max_record_count}"
+            email = settings.DEFAULT_SUPPORT_EMAIL
+            url = f"https://api.crossref.org/funders?query={query}&rows={max_record_count}&mailto={email}"
             funder_name = funder_name.lower()
             response = requests.get(url, verify=False)
             found_match = False

@@ -3935,10 +3935,13 @@ class BaseResource(Page, AbstractResource):
             """Return funder_id for a given funder_name from Crossref funders registry.
             Crossref API Documentation: https://api.crossref.org/swagger-ui/index.html#/Funders/get_funders
             """
+
+            # match all words in the funder name
             query = "+".join(funder_name.split())
             # if we can't find a match in first 50 search records then we are not going to find a match
             max_record_count = 50
-            url = f"https://api.crossref.org/funders?query={query}&rows={max_record_count}"
+            email = settings.DEFAULT_SUPPORT_EMAIL
+            url = f"https://api.crossref.org/funders?query={query}&rows={max_record_count}&mailto={email}"
             funder_name = funder_name.lower()
             response = requests.get(url, verify=False)
             if response.status_code == 200:
@@ -3948,7 +3951,6 @@ class BaseResource(Page, AbstractResource):
                     for item in items:
                         if item['name'].lower() == funder_name:
                             return item['uri']
-                        # TODO: matching funder name with alt-names may result in wrong funder_id
                         for alt_name in item['alt-names']:
                             if alt_name.lower() == funder_name:
                                 return item['uri']
