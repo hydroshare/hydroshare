@@ -69,7 +69,7 @@ let fundingAgenciesApp = new Vue({
             }
 
             this.error = "";
-            if ($.inArray(this.agencyName, this.fundingAgencyNames) >= 0) {
+            if (this.mode == "Add" && $.inArray(this.agencyName, this.fundingAgencyNames) >= 0) {
                 this.showIsDuplicate = true;
                 this.error = "Duplicate";
                 return false
@@ -99,7 +99,7 @@ let fundingAgenciesApp = new Vue({
                 return agency.agency_id == id;
             })[0]
             this.agencyName = this.currentlyEditing.agency_name;
-            // TODO: edit doesnt populate name!
+            this.$refs.agencyName.inputValue = this.currentlyEditing.agency_name;
         },
         openDeleteModal(id){
             this.currentlyDeleting = this.fundingAgencies.filter((agency)=>{
@@ -123,7 +123,7 @@ let fundingAgenciesApp = new Vue({
             this.isPending = false
             if (newer !== null){
                 this.updateUri()
-                this.fundingAgencies.push(this.agencyName);
+                // this.fundingAgencies.push(this.agencyName);
             }
         }
       },

@@ -28,6 +28,7 @@
                                             :data="crossrefFunders"
                                             :serializer="s => s.name"
                                             v-model="agencyName"
+                                            ref="agencyName"
                                             input-class="typeahead-search-input form-control input-sm textInput"
                                             @hit="selectAgency($event)"
                                             placeholder="Example: National Science Foundation"
