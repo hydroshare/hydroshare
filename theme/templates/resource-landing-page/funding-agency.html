@@ -26,7 +26,7 @@
                                         <vue-bootstrap-typeahead
                                             :data="crossrefFunders"
                                             :serializer="s => s.name"
-                                            v-model="newAgency"
+                                            v-model="agencyName"
                                             input-class="typeahead-search-input form-control input-sm textInput"
                                             @hit="selectAgency($event)"
                                             placeholder="Example: National Science Foundation"
@@ -47,14 +47,14 @@
                                         </p>
                                     </div>
                                 </div>
-                                <input v-model="newAgency" maxlength="250" name="agency_name" type="hidden" required>
+                                <input v-model="agencyName" maxlength="250" name="agency_name" type="hidden" required>
 
                                 {# Award Title #}
                                 <div id="div_id_award_title" class="control-group">
                                     <label for="award_title" class="control-label">Award Title</label>
                                     <div class="controls">
                                         <input class="form-control input-sm" maxlength="250"
-                                            name="award_title">
+                                            name="award_title" v-model="currentlyEditing.award_title">
                                     </div>
                                 </div>
 
@@ -63,7 +63,7 @@
                                     <label for="award_number" class="control-label">Award Number</label>
                                     <div class="controls">
                                         <input class="form-control input-sm textinput textInput" maxlength="100"
-                                            name="award_number" type="text">
+                                            name="award_number" type="text" v-model="currentlyEditing.award_number">
                                     </div>
                                 </div>
 
@@ -73,7 +73,7 @@
 
                                     <div class="controls">
                                         <input class="form-control input-sm urlinput" maxlength="200"
-                                            name="agency_url" type="url" v-model="recommendedUrl">
+                                            name="agency_url" type="url" v-model="currentlyEditing.agency_url">
                                     </div>
                                 </div>
 
@@ -157,36 +157,31 @@
             {% if fundingagencies %}
                 <table class="table hs-table table-striped funding-agencies-table">
                     <tbody>
-                    <tr class="header-row">
-                        <th>Agency Name</th>
-                        <th>Award Title</th>
-                        <th>Award Number</th>
-                        <th></th>
-                    </tr>
-
-                    {% for agency in fundingagencies %}
-                        <tr data-index="{{ forloop.counter0 }}">
+                        <tr class="header-row">
+                            <th>Agency Name</th>
+                            <th>Award Title</th>
+                            <th>Award Number</th>
+                            <th></th>
+                        </tr>
+                        <tr v-for="(agency, key) in fundingAgencies">
                             <td>
-                                {% if agency.agency_url %}
-                                    <strong>
-                                        <a href="{{ agency.agency_url }}" target="_blank">{{ agency.agency_name }}</a>
-                                    </strong>
-                                {% else %}
-                                    <strong><span>{{ agency.agency_name }}</span></strong>
-                                {% endif %}
+                                <strong>
+                                    <a v-if="agency.agency_url" href="{{ agency.agency_url }}" target="_blank">${ agency.agency_name }</a>
+                                    <span v-else >${ agency.agency_name }</span>
+                                </strong>
                             </td>
-                            <td>{{ agency.award_title }}</td>
-                            <td>{{ agency.award_number }}</td>
+                            <td>${ agency.award_title }</td>
+                            <td>${ agency.award_number }</td>
                             <td>
                                 <span data-toggle="modal" data-placement="auto" title="Edit"
                                     class="glyphicon glyphicon-pencil icon-button icon-blue table-icon"
-                                    data-target="#funding-agency-modal" @click="openEditModal"></span>
+                                    data-target="#funding-agency-modal" @click="openEditModal(key)"></span>
+                                    <!-- TODO: handle delete -->
                                 <span data-toggle="modal" data-placement="auto" title="Remove"
                                     class="glyphicon glyphicon-trash icon-button btn-remove table-icon"
-                                    data-target="#delete-funding-agency-{{ agency.id }}"></span>
+                                    :data-target="`#delete-funding-agency-${ key }`"></span>
                             </td>
                         </tr>
-                    {% endfor %}
                     </tbody>
                 </table>
             {% else %}

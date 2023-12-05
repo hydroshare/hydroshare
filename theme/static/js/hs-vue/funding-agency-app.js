@@ -21,11 +21,11 @@ let fundingAgenciesApp = new Vue({
         VueBootstrapTypeahead
     },
     data: {
-        newAgency: '',
+        agencyName: '',
         fundingAgencies: RES_FUNDING_AGENCIES,
+        resourceId: SHORT_ID,
         fundingAgencyNames: [],
         fundingAgencyUrls: [],
-        recommendedUrl: "",
         selectedAgency: null,
         crossrefFunders: [],
         CROSSREF_API_URL: 'https://api.crossref.org/funders?query=:query',
@@ -35,11 +35,12 @@ let fundingAgenciesApp = new Vue({
         showIsDuplicate: false,
         error: '',
         isPending: false,
-        mode: null //add or edit
+        mode: null, //add or edit
+        currentlyEditing: {}
     },
     mounted(){
         this.fundingAgencyNames = this.fundingAgencies.map(a => a.agency_name);
-        this.fundingAgencyUrls = this.fundingAgencies.map(a => a.identifier);
+        this.fundingAgencyUrls = this.fundingAgencies.map(a => a.agency_url);
     },
     methods: {
         getCrossrefFunders: async function(query) {
@@ -58,15 +59,15 @@ let fundingAgenciesApp = new Vue({
         checkAgency: function () {
             this.showIsDuplicate = false;  // Reset
 
-            if (this.newAgency.trim() === "") {
+            if (this.agencyName.trim() === "") {
                 return false; // Empty string detected
-            }else if (this.newAgency.length > 250) {
+            }else if (this.agencyName.length > 250) {
                 this.error = "Your funder is too long. Ensure it has at most 100 characters.";
                 return false;
             }
 
             this.error = "";
-            if ($.inArray(this.newAgency, this.fundingAgencyNames) >= 0) {
+            if ($.inArray(this.agencyName, this.fundingAgencyNames) >= 0) {
                 this.showIsDuplicate = true;
                 this.error = "Duplicate";
                 return false
@@ -77,7 +78,7 @@ let fundingAgenciesApp = new Vue({
             return true
         },
         updateUri: function() {
-            this.recommendedUrl = this.selectedAgency.uri
+            this.currentlyEditing.agency_url = this.selectedAgency.uri
         },
         formSubmit: function(){
             alert("sub")
@@ -90,12 +91,17 @@ let fundingAgenciesApp = new Vue({
         clearSelectedAgency: function(){
             this.selectedAgency = null;
         },
-        openEditModal(){
+        openEditModal(key){
             this.mode = 'Edit';
+            this.currentlyEditing = this.fundingAgencies[key];
+            this.currentlyEditing.key = key;
+            this.agencyName = this.currentlyEditing.agency_name;
+            console.log(this.currentlyEditing)
+            // TODO: edit doesnt populate name
         }
     },
     watch: {
-        newAgency: function(funder){
+        agencyName: function(funder){
             if(funder.length < this.MIN_SEARCH_LEN || this.selectedAgency){
                 return
             }
@@ -109,22 +115,22 @@ let fundingAgenciesApp = new Vue({
             this.isPending = false
             if (newer !== null){
                 this.updateUri()
-                this.fundingAgencies.push(this.newAgency);
+                this.fundingAgencies.push(this.agencyName);
             }
         }
       },
       computed: {
         allowSubmit: function () {
-            if (this.newAgency.trim() === "") return false
+            if (this.agencyName.trim() === "") return false
             if (this.error || this.showIsDuplicate) return false
             return true
         },
         actionUri: function() {
             // TODO: have to get agency.id and cm.short_id
             if (this.mode === 'Edit'){
-                return "/hsapi/_internal/{{ cm.short_id }}/fundingagency/{{ agency.id }}/update-metadata/"
+                return `/hsapi/_internal/${ this.resourceId }/fundingagency/${ this.currentlyEditing.key }/update-metadata/`
             }else{
-                return "/hsapi/_internal/{{ cm.short_id }}/fundingagency/add-metadata/"
+                return `/hsapi/_internal/${ this.resourceId }/fundingagency/add-metadata/`
             }
         }
       }
