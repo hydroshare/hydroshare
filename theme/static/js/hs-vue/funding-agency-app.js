@@ -15,7 +15,7 @@ let debounce = function(func, wait, immediate) {
 }
 
 let fundingAgenciesApp = new Vue({
-    el: '#add-funding-agency',
+    el: '#funding-agency-app',
     delimiters: ['${', '}'],
     components: {
         VueBootstrapTypeahead
@@ -34,7 +34,8 @@ let fundingAgenciesApp = new Vue({
         timeout: null,
         showIsDuplicate: false,
         error: '',
-        isPending: false
+        isPending: false,
+        mode: null //add or edit
     },
     mounted(){
         this.fundingAgencyNames = this.fundingAgencies.map(a => a.agency_name);
@@ -88,6 +89,9 @@ let fundingAgenciesApp = new Vue({
         },
         clearSelectedAgency: function(){
             this.selectedAgency = null;
+        },
+        openEditModal(){
+            this.mode = 'Edit';
         }
     },
     watch: {
@@ -114,6 +118,14 @@ let fundingAgenciesApp = new Vue({
             if (this.newAgency.trim() === "") return false
             if (this.error || this.showIsDuplicate) return false
             return true
+        },
+        actionUri: function() {
+            // TODO: have to get agency.id and cm.short_id
+            if (this.mode === 'Edit'){
+                return "/hsapi/_internal/{{ cm.short_id }}/fundingagency/{{ agency.id }}/update-metadata/"
+            }else{
+                return "/hsapi/_internal/{{ cm.short_id }}/fundingagency/add-metadata/"
+            }
         }
       }
 });
