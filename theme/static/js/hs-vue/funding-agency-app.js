@@ -30,6 +30,8 @@ let fundingAgenciesApp = new Vue({
         crossrefFunders: [],
         CROSSREF_API_URL: 'https://api.crossref.org/funders?query=:query',
         MIN_SEARCH_LEN: 3,
+        DEBOUNCE_API_MS: 500,
+        timeout: null,
         showIsDuplicate: false,
         error: '',
         isPending: false
@@ -40,7 +42,7 @@ let fundingAgenciesApp = new Vue({
     },
     methods: {
         getCrossrefFunders: async function(query) {
-            if (query === "" || this.selectedAgency !== null){
+            if (query === "" || this.showIsDuplicate){
                 return
             }
             this.isPending = true
@@ -52,47 +54,61 @@ let fundingAgenciesApp = new Vue({
         },
         checkAgency: function () {
             this.showIsDuplicate = false;  // Reset
-            this.selectedAgency = null
 
             if (this.newAgency.trim() === "") {
-                return; // Empty string detected
+                return false; // Empty string detected
             }else if (this.newAgency.length > 250) {
                 this.error = "Your funder is too long. Ensure it has at most 100 characters.";
-                return;
+                return false;
             }
 
             this.error = "";
             if ($.inArray(this.newAgency, this.fundingAgencyNames) >= 0) {
                 this.showIsDuplicate = true;
                 this.error = "Duplicate";
-            }
-            else {
-                this.fundingAgencies.push(this.newAgency);
+                return false
             }
             if(this.selectedAgency){
                 this.updateUri()
             }
+            return true
         },
         updateUri: function() {
             this.recommendedUrl = this.selectedAgency.uri
         },
         formSubmit: function(){
             alert("sub")
+        },
+        selectAgency: function(event) {
+            this.isPending=false
+            this.selectedAgency = event;
         }
     },
     watch: {
-        // newAgency: debounce(function(funder) {
-        //     this.getCrossrefFunders(funder) }, 500),
         newAgency: function(funder){
-            if (funder.length >= this.MIN_SEARCH_LEN){
-                this.getCrossrefFunders(funder)
+            if(!this.checkAgency() || funder.length < this.MIN_SEARCH_LEN){
+                return
             }
+            if (this.timeout) clearTimeout(this.timeout); 
+            this.timeout = setTimeout(() => {
+                this.getCrossrefFunders(funder);
+            }, this.DEBOUNCE_API_MS);
         },
         selectedAgency: function(newer, _){ 
+            // TODO: pending is shown after select
+            // 
             this.isPending = false
             if (newer !== null){
-                this.updateUri() 
+                this.updateUri()
+                this.fundingAgencies.push(this.newAgency);
             }
+        }
+      },
+      computed: {
+        allowSubmit: function () {
+            if (this.newAgency.trim() === "") return false
+            if (this.error || this.showIsDuplicate) return false
+            return true
         }
       }
 });

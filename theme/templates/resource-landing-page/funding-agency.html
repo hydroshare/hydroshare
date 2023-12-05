@@ -19,7 +19,8 @@
                                 </label>
                                 <div id="add-agency-wrapper"
                                     class="input-group"
-                                    @blur.prevent="checkAgency"
+                                    @focusout="checkAgency()"
+                                    tabindex="0"
                                 >
                                     {# https://github.com/alexurquhart/vue-bootstrap-typeahead #}
                                     <vue-bootstrap-typeahead
@@ -27,14 +28,18 @@
                                         :serializer="s => s.name"
                                         v-model="newAgency"
                                         input-class="typeahead-search-input form-control input-sm textInput"
-                                        @hit="selectedAgency = $event"
+                                        @hit="selectAgency($event)"
                                         placeholder="Example: National Science Foundation"
+                                        minMatchingChars="MIN_SEARCH_LEN"
+                                        maxMatches="15"
                                     >
+                                    <template slot="append">
+                                        <div v-if="isPending">
+                                            <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
+                                            Searching known funders
+                                        </div>
+                                    </template>
                                     </vue-bootstrap-typeahead>
-                                    <span v-show="isPending">
-                                        <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue">
-                                        </i>Searching known funders
-                                    </span>
                                 </div>
                                 <div id="agency-inline-error">
                                     <p class="text-danger small" v-if="showIsDuplicate"> 
@@ -78,7 +83,7 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button :disabled="error || showIsDuplicate" type="submit" class="btn btn-primary btn-save-funding-agency btn-disable-after-valid">Save changes</button>
+                    <button :disabled="!allowSubmit" type="submit" class="btn btn-primary btn-save-funding-agency btn-disable-after-valid">Save changes</button>
                 </div>
             </form>
         </div>
