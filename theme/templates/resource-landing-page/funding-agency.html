@@ -90,6 +90,182 @@
     </div>
 </div>
 
+<!-- Edit credit source Modal -->
+{% for agency in fundingagencies %}
+    <div class="modal fade" id="edit-funding-agency-{{ agency.id }}" tabindex="-1" role="dialog"
+         aria-labelledby="add-funding-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form data-index="{{ forloop.counter0 }}" action="/hsapi/_internal/{{ cm.short_id }}/fundingagency/{{ agency.id }}/update-metadata/"
+                      method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input name="resource-mode" type="hidden" value="edit">
+
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="add-funding-label"> Edit Funding Agency</h4>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <fieldset>
+                                {# Agency Name (Required) #}
+                                <div id="div_id_agency_name" class="control-group">
+                                    <label for="agency_name" class="control-label requiredField">Agency Name<span
+                                            class="asteriskField">*</span></label>
+
+                                    <div class="controls"><input class="form-control input-sm textInput" maxlength="250" name="agency_name"
+                                                                 required="required" type="text"
+                                                                 value="{{ agency.agency_name }}"></div>
+                                </div>
+
+                                {# Award Title #}
+                                <div id="div_id_award_title" class="control-group">
+                                    <label for="award_title" class="control-label">Award Title</label>
+
+                                    <div class="controls"><input class="form-control input-sm" maxlength="250"
+                                                                 name="award_title" value="{{ agency.award_title }}">
+                                    </div>
+                                </div>
+
+                                {# Award Number #}
+                                <div id="div_id_award_number" class="control-group">
+                                    <label for="award_number" class="control-label">Award Number</label>
+
+                                    <div class="controls"><input class="form-control input-sm textinput textInput" maxlength="100"
+                                                                 name="award_number" type="text"
+                                                                 value="{{ agency.award_number }}"></div>
+                                </div>
+
+                                {# Agency URL #}
+                                <div id="div_id_agency_url" class="control-group">
+                                    <label for="agency_url" class="control-label">Agency URL</label>
+
+                                    <div class="controls">
+                                        <input class="form-control input-sm urlinput" maxlength="200"
+                                               name="agency_url" type="url" value="{{ agency.agency_url }}">
+                                    </div>
+                                </div>
+
+                            </fieldset>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary btn-save-funding-agency btn-disable-after-valid"
+                                data-index="{{ forloop.counter0 }}">Save changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade in" id="delete-funding-agency-{{ agency.id }}" tabindex="-1" role="dialog"
+         aria-labelledby="delete-source" aria-hidden="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="delete-funding-agency">Delete Funding Agency</h4>
+                </div>
+
+                <div class="modal-body"><strong>Are you sure you want to delete this entry?</strong></div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a type="button" class="btn btn-danger btn-disable-after"
+                       href="/hsapi/_internal/{{ cm.short_id }}/fundingagency/{{ agency.id }}/delete-metadata/">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
+{% if not resource_edit_mode %}
+    {% if fundingagencies %}
+        <div class="col-sm-12 content-block">
+            <h4>Funding Agencies</h4>
+            <h5>This resource was created using funding from the following sources:</h5>
+            <table class="table hs-table funding-agencies-table">
+                <thead>
+                <tr class="header-row">
+                    <th>Agency Name</th>
+                    <th>Award Title</th>
+                    <th>Award Number</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for agency in fundingagencies %}
+                    <tr data-index="{{ forloop.counter0 }}">
+                        <td>
+                            <strong>
+                            {% if agency.agency_url %}
+                                <a href="{{ agency.agency_url }}" target="_blank">{{ agency.agency_name }}</a>
+                            {% else %}
+                                <span>{{ agency.agency_name }}</span>
+                            {% endif %}
+                            </strong>
+                        </td>
+                        <td>{{ agency.award_title }}</td>
+                        <td>{{ agency.award_number }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+{% else %}
+    <div class="col-sm-12 content-block">
+        <h4>Funding Agencies
+            <a id="btn-add-funding-agency" type="button" class="btn btn-success btn-xs" data-toggle="modal"
+            title="Add Funding Agency" data-target="#add-funding-agency">
+                <span class="glyphicon glyphicon-plus"></span>
+            </a>
+        </h4>
+        <p><i>This resource was created using funding from the following sources:</i></p>
+        {% if fundingagencies %}
+            <table class="table hs-table table-striped funding-agencies-table">
+                <tbody>
+                <tr class="header-row">
+                    <th>Agency Name</th>
+                    <th>Award Title</th>
+                    <th>Award Number</th>
+                    <th></th>
+                </tr>
+
+                {% for agency in fundingagencies %}
+                    <tr data-index="{{ forloop.counter0 }}">
+                        <td>
+                            {% if agency.agency_url %}
+                                <strong>
+                                    <a href="{{ agency.agency_url }}" target="_blank">{{ agency.agency_name }}</a>
+                                </strong>
+                            {% else %}
+                                <strong><span>{{ agency.agency_name }}</span></strong>
+                            {% endif %}
+                        </td>
+                        <td>{{ agency.award_title }}</td>
+                        <td>{{ agency.award_number }}</td>
+                        <td>
+                            <span data-toggle="modal" data-placement="auto" title="Edit"
+                                class="glyphicon glyphicon-pencil icon-button icon-blue table-icon"
+                                data-target="#edit-funding-agency-{{ agency.id }}"></span>
+                            <span data-toggle="modal" data-placement="auto" title="Remove"
+                                class="glyphicon glyphicon-trash icon-button btn-remove table-icon"
+                                data-target="#delete-funding-agency-{{ agency.id }}"></span>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="small text-muted">No funding agencies have been added.</p>
+        {% endif %}
+    </div>
+{% endif %}
+
 {% block extra_css %}
     <!-- <link href="https://unpkg.com/vue-bootstrap-typeahead/dist/VueBootstrapTypeahead.css" rel="stylesheet"> -->
     <link href="{% static 'css/vue-bootstrap-typeahead.0.2.6.css' %}" rel="stylesheet">
