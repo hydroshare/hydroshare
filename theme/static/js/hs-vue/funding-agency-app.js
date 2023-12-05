@@ -1,19 +1,3 @@
-let debounce = function(func, wait, immediate) {
-    let timeout, result;
-    return function() {
-      let context = this, args = arguments;
-      let later = function() {
-        timeout = null;
-        if (!immediate) result = func.apply(context, args);
-      };
-      let callNow = immediate && !timeout;
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
-      if (callNow) result = func.apply(context, args);
-      return result;
-    };
-}
-
 let fundingAgenciesApp = new Vue({
     el: '#funding-agency-app',
     delimiters: ['${', '}'],
@@ -22,27 +6,25 @@ let fundingAgenciesApp = new Vue({
     },
     data: {
         agencyName: '',
-        fundingAgencies: RES_FUNDING_AGENCIES,
+        fundingAgencies: RES_FUNDING_AGENCIES, // funding agencies from the backend/Django
         resourceId: SHORT_ID,
         fundingAgencyNames: [],
-        fundingAgencyUrls: [],
-        selectedAgency: null,
-        crossrefFunders: [],
+        selectedAgency: null, // keep track of the selected agency from the dropdown
+        crossrefFunders: [], // array of funders to be filled from crossref api
         CROSSREF_API_URL: 'https://api.crossref.org/funders?query=:query',
-        MIN_SEARCH_LEN: 3,
-        DEBOUNCE_API_MS: 500,
-        timeout: null,
-        showIsDuplicate: false,
+        MIN_SEARCH_LEN: 3, // min # of chars before running a query
+        DEBOUNCE_API_MS: 500, // debounce api requests
+        timeout: null, // used for debouncing
+        showIsDuplicate: false, // error for duplicate funders
         error: '',
-        isPending: false,
-        mode: null, //add or edit
-        currentlyEditing: {},
-        deleteUrl: "",
-        currentlyDeleting: {}
+        isPending: false, // is api fetch pending
+        mode: null, // mode for the modals -- Add or Edit
+        currentlyEditing: {}, // store the funder that we are editing
+        deleteUrl: "", // Django endpoint to call for deleting a funder
+        currentlyDeleting: {} // store the funder that we are deleting
     },
     mounted(){
         this.fundingAgencyNames = this.fundingAgencies.map(a => a.agency_name);
-        this.fundingAgencyUrls = this.fundingAgencies.map(a => a.agency_url);
     },
     methods: {
         getCrossrefFunders: async function(query) {
@@ -60,6 +42,7 @@ let fundingAgenciesApp = new Vue({
         },
         checkAgency: function () {
             this.showIsDuplicate = false;  // Reset
+            this.error = "";
 
             if (this.agencyName.trim() === "") {
                 return false; // Empty string detected
@@ -68,7 +51,6 @@ let fundingAgenciesApp = new Vue({
                 return false;
             }
 
-            this.error = "";
             if (this.mode == "Add" && $.inArray(this.agencyName, this.fundingAgencyNames) >= 0) {
                 this.showIsDuplicate = true;
                 this.error = "Duplicate";
@@ -80,10 +62,8 @@ let fundingAgenciesApp = new Vue({
             return true
         },
         updateUri: function() {
+            // Auto-populated the URL input field when we select an agency from the dropdown
             this.currentlyEditing.agency_url = this.selectedAgency.uri
-        },
-        formSubmit: function(){
-            alert("sub")
         },
         selectAgency: function(event) {
             this.isPending=false
@@ -99,6 +79,7 @@ let fundingAgenciesApp = new Vue({
                 return agency.agency_id == id;
             })[0]
             this.agencyName = this.currentlyEditing.agency_name;
+            // open source bug https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19
             this.$refs.agencyName.inputValue = this.currentlyEditing.agency_name;
         },
         openDeleteModal(id){
@@ -134,6 +115,7 @@ let fundingAgenciesApp = new Vue({
             return true
         },
         actionUri: function() {
+            // Get the appropriate form action endpoint for either editing or adding funding agencies
             if (this.mode === 'Edit'){
                 return `/hsapi/_internal/${ this.resourceId }/fundingagency/${ this.currentlyEditing.agency_id }/update-metadata/`
             }else{
