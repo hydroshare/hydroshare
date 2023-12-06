@@ -15,8 +15,7 @@ let fundingAgenciesApp = new Vue({
         MIN_SEARCH_LEN: 3, // min # of chars before running a query
         DEBOUNCE_API_MS: 500, // debounce api requests
         timeout: null, // used for debouncing
-        showIsDuplicate: false, // error for duplicate funders
-        error: '',
+        notification: {},
         isPending: false, // is api fetch pending
         mode: null, // mode for the modals -- Add or Edit
         currentlyEditing: {}, // store the funder that we are editing
@@ -28,7 +27,7 @@ let fundingAgenciesApp = new Vue({
     },
     methods: {
         getCrossrefFunders: async function(query) {
-            if (query === "" || this.showIsDuplicate){
+            if (query === "" || this.notification.error){
                 return
             }
             this.isPending = true
@@ -41,23 +40,25 @@ let fundingAgenciesApp = new Vue({
             this.isPending = false
         },
         checkAgency: function () {
-            this.showIsDuplicate = false;  // Reset
-            this.error = "";
+            this.notification = {};
 
             if (this.agencyName.trim() === "") {
                 return false; // Empty string detected
             }else if (this.agencyName.length > 250) {
-                this.error = "Your funder is too long. Ensure it has at most 100 characters.";
+                this.notification = { error: "Your funder is too long. Ensure it has at most 250 characters." }
                 return false;
             }
 
             if (this.mode == "Add" && $.inArray(this.agencyName, this.fundingAgencyNames) >= 0) {
-                this.showIsDuplicate = true;
-                this.error = "Duplicate";
+                this.notification = { error: "You already added this funder for this resource" };
                 return false
             }
+
             if(this.selectedAgency){
                 this.updateUri()
+            }else{
+                this.notification = { info: "We recommend that you select from the list of known funding agencies."}
+                return false
             }
             return true
         },
@@ -92,6 +93,7 @@ let fundingAgenciesApp = new Vue({
     watch: {
         agencyName: function(funder){
             if(funder.length < this.MIN_SEARCH_LEN || this.selectedAgency){
+                this.notification = {}
                 return
             }
             this.checkAgency()
@@ -110,8 +112,8 @@ let fundingAgenciesApp = new Vue({
       },
       computed: {
         allowSubmit: function () {
-            if (this.agencyName.trim() === "") return false
-            if (this.error || this.showIsDuplicate) return false
+            if ( this.agencyName.trim() === "" ) return false
+            if ( this.notification.error ) return false
             return true
         },
         actionUri: function() {

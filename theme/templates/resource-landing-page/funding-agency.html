@@ -44,8 +44,11 @@
                                         </vue-bootstrap-typeahead>
                                     </div>
                                     <div id="agency-inline-error">
-                                        <p class="text-danger small" v-if="showIsDuplicate"> 
-                                            You already added this funder for this resource.
+                                        <p class="text-danger small" v-if="notification.error"> 
+                                            ${ notification.error }
+                                        </p>
+                                        <p class="text-info small" v-if="notification.info"> 
+                                            ${ notification.info }
                                         </p>
                                     </div>
                                 </div>
