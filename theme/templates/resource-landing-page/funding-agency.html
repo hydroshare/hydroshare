@@ -43,12 +43,12 @@
                                         </template>
                                         </vue-bootstrap-typeahead>
                                     </div>
-                                    <div id="agency-inline-error">
-                                        <p class="text-danger small" v-if="notification.error"> 
-                                            ${ notification.error }
+                                    <div id="agency-inline-notification">
+                                        <p class="text-danger small" v-for="error in errorNotifications"> 
+                                            ${ error.error }
                                         </p>
-                                        <p class="text-info small" v-if="notification.info"> 
-                                            ${ notification.info }
+                                        <p class="text-info small" v-for="info in infoNotifications"> 
+                                            ${ info.info }
                                         </p>
                                     </div>
                                 </div>

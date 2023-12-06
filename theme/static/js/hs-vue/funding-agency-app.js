@@ -15,7 +15,7 @@ let fundingAgenciesApp = new Vue({
     MIN_SEARCH_LEN: 3, // min # of chars before running a query
     DEBOUNCE_API_MS: 500, // debounce api requests
     timeout: null, // used for debouncing
-    notification: {},
+    notifications: [],
     isPending: false, // is api fetch pending
     mode: null, // mode for the modals -- Add or Edit
     currentlyEditing: {}, // store the funder that we are editing
@@ -27,7 +27,7 @@ let fundingAgenciesApp = new Vue({
   },
   methods: {
     getCrossrefFunders: async function (query) {
-      if (query === "" || this.notification.error) {
+      if (query === "" || this.notifications.error) {
         return;
       }
       this.isPending = true;
@@ -40,37 +40,37 @@ let fundingAgenciesApp = new Vue({
       this.isPending = false;
     },
     checkAgency: function () {
-      this.notification = {};
+      this.notifications = [];
+      
+      if (this.agencyName.trim() !== this.agencyName){
+        this.notifications.push({
+            error: "You have leading or trailing whitespace in your funder name.",
+          })
+      }
 
-      if (this.agencyName.trim() === "") {
-        return false; // Empty string detected
-      } else if (this.agencyName.length > 250) {
-        this.notification = {
+      if (this.agencyName.length > 250) {
+        this.notifications.push({
           error:
             "Your funder is too long. Ensure it has at most 250 characters.",
-        };
-        return false;
+        })
       }
 
       if (
         this.mode == "Add" &&
         $.inArray(this.agencyName, this.fundingAgencyNames) >= 0
       ) {
-        this.notification = {
-          error: "You already added this funder for this resource",
-        };
-        return false;
+        this.notifications.push({
+          error: "You already added this funder for this resource.",
+        })
       }
 
       if (this.selectedAgency) {
         this.updateUri();
       } else {
-        this.notification = {
+        this.notifications.push({
           info: "We recommend that you select from the list of known funding agencies.",
-        };
-        return false;
+        })
       }
-      return true;
     },
     updateUri: function () {
       // Auto-populated the URL input field when we select an agency from the dropdown
@@ -87,12 +87,14 @@ let fundingAgenciesApp = new Vue({
     openAddModal() {
       this.mode = "Add";
       this.currentlyEditing = {};
+      this.notifications = [];
       this.agencyName = "";
       // open source bug https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19
       this.$refs.agencyName.inputValue = "";
     },
     openEditModal(id) {
       this.mode = "Edit";
+      this.notifications = [];
       this.currentlyEditing = this.fundingAgencies.filter((agency) => {
         return agency.agency_id == id;
       })[0];
@@ -110,7 +112,7 @@ let fundingAgenciesApp = new Vue({
   watch: {
     agencyName: function (funder) {
       if (funder.length < this.MIN_SEARCH_LEN || this.selectedAgency) {
-        this.notification = {};
+        this.notifications = [];
         return;
       }
       this.checkAgency();
@@ -130,7 +132,7 @@ let fundingAgenciesApp = new Vue({
   computed: {
     allowSubmit: function () {
       if (this.agencyName.trim() === "") return false;
-      if (this.notification.error) return false;
+      if (this.errorNotifications.length) return false;
       return true;
     },
     actionUri: function () {
@@ -141,5 +143,15 @@ let fundingAgenciesApp = new Vue({
         return `/hsapi/_internal/${this.resourceId}/fundingagency/add-metadata/`;
       }
     },
+    errorNotifications: function() {
+        return this.notifications.filter((notification)=>{
+            return "error" in notification
+        })
+    },
+    infoNotifications: function() {
+        return this.notifications.filter((notification)=>{
+            return "info" in notification
+        })
+    }
   },
 });
