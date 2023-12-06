@@ -41,18 +41,18 @@ let fundingAgenciesApp = new Vue({
     },
     checkAgency: function () {
       this.notifications = [];
-      
-      if (this.agencyName.trim() !== this.agencyName){
+
+      if (this.agencyName.trim() !== this.agencyName) {
         this.notifications.push({
-            error: "You have leading or trailing whitespace in your funder name.",
-          })
+          error: "You have leading or trailing whitespace in your funder name.",
+        });
       }
 
       if (this.agencyName.length > 250) {
         this.notifications.push({
           error:
             "Your funder is too long. Ensure it has at most 250 characters.",
-        })
+        });
       }
 
       if (
@@ -61,7 +61,7 @@ let fundingAgenciesApp = new Vue({
       ) {
         this.notifications.push({
           error: "You already added this funder for this resource.",
-        })
+        });
       }
 
       if (this.selectedAgency) {
@@ -69,7 +69,7 @@ let fundingAgenciesApp = new Vue({
       } else {
         this.notifications.push({
           info: "We recommend that you select from the list of known funding agencies.",
-        })
+        });
       }
     },
     updateUri: function () {
@@ -143,15 +143,15 @@ let fundingAgenciesApp = new Vue({
         return `/hsapi/_internal/${this.resourceId}/fundingagency/add-metadata/`;
       }
     },
-    errorNotifications: function() {
-        return this.notifications.filter((notification)=>{
-            return "error" in notification
-        })
+    errorNotifications: function () {
+      return this.notifications.filter((notification) => {
+        return "error" in notification;
+      });
     },
-    infoNotifications: function() {
-        return this.notifications.filter((notification)=>{
-            return "info" in notification
-        })
-    }
+    infoNotifications: function () {
+      return this.notifications.filter((notification) => {
+        return "info" in notification;
+      });
+    },
   },
 });
