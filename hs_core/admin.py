@@ -16,13 +16,10 @@ class UserAdmin(DjangoUserAdmin):
     def delete_model(self, request, obj):
         # prevent user delete if user is an owner/author on a published resource
         published_resources = None
-        try:
-            creators = Creator.objects.filter(hydroshare_user_id=obj.id)
-            for c in creators:
-                published_resources = BaseResource.objects.filter(
-                    object_id=c.content_object.id, raccess__published=True)
-        except Creator.DoesNotExist:
-            pass
+        creators = Creator.objects.filter(hydroshare_user_id=obj.id)
+        for c in creators:
+            published_resources = BaseResource.objects.filter(
+                object_id=c.content_object.id, raccess__published=True)
         if published_resources:
             res_ids = ", ".join(str(res.short_id) for res in published_resources)
             message = f"Can't delete user. They are a creator of published resource(s): {res_ids}"
