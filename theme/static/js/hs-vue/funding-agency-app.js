@@ -74,6 +74,13 @@ let fundingAgenciesApp = new Vue({
         clearSelectedAgency: function(){
             this.selectedAgency = null;
         },
+        openAddModal(){
+            this.mode = 'Add';
+            this.currentlyEditing = {}
+            this.agencyName = ""
+            // open source bug https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19
+            this.$refs.agencyName.inputValue = "";
+        },
         openEditModal(id){
             this.mode = 'Edit';
             this.currentlyEditing = this.fundingAgencies.filter((agency)=>{
