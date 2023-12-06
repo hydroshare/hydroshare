@@ -1,32 +1,30 @@
-import os
-import zipfile
-import shutil
-import logging
-import requests
 import datetime
-from dateutil import tz
+import logging
+import os
+import shutil
+import zipfile
 
+import requests
+from dateutil import tz
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.models import User
+from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
+                                    ValidationError)
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
-from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
-from django.contrib.auth.models import User
-
 from rest_framework import status
 
-from hs_core.hydroshare import hs_bagit
-from hs_core.models import ResourceFile
-from hs_core import signals
-from hs_core.hydroshare import utils
-from hs_core.enums import CrossRefSubmissionStatus
-from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
-from hs_labels.models import ResourceLabels
-from theme.models import UserQuota
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
-
+from hs_access_control.models import (PrivilegeCodes, ResourceAccess,
+                                      UserResourcePrivilege)
+from hs_core import signals
+from hs_core.enums import CrossRefSubmissionStatus
+from hs_core.hydroshare import hs_bagit, utils
+from hs_core.models import ResourceFile
+from hs_labels.models import ResourceLabels
+from theme.models import UserQuota
 
 FILE_SIZE_LIMIT = 1 * (1024 ** 3)
 FILE_SIZE_LIMIT_FOR_DISPLAY = '1G'
@@ -1121,15 +1119,17 @@ def publish_resource(user, pk):
     resource.doi = get_resource_doi(pk, CrossRefSubmissionStatus.PENDING)
     resource.save()
     settings.DEBUG = False
-    if not settings.DEBUG:
-        # only in production environment submit doi request to crossref
-        response = deposit_res_metadata_with_crossref(resource)
-        if not response.status_code == status.HTTP_200_OK:
-            # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
-            # crontab celery task
-            logger.error(f"Received a {response.status_code} from Crossref while depositing metadata for res id {pk}")
-            resource.doi = get_resource_doi(pk, CrossRefSubmissionStatus.FAILURE)
-            resource.save()
+    if settings.DEBUG:
+        # in debug mode, making sure we are using the test CrossRef service
+        assert settings.USE_CROSSREF_TEST is True
+
+    response = deposit_res_metadata_with_crossref(resource)
+    if not response.status_code == status.HTTP_200_OK:
+        # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
+        # crontab celery task
+        logger.error(f"Received a {response.status_code} from Crossref while depositing metadata for res id {pk}")
+        resource.doi = get_resource_doi(pk, CrossRefSubmissionStatus.FAILURE)
+        resource.save()
 
     resource.set_public(True)  # also sets discoverable to True
     resource.raccess.published = True
