@@ -174,7 +174,7 @@
                         <tr v-for="agency in fundingAgencies">
                             <td>
                                 <strong>
-                                    <a v-if="agency.agency_url" href="{{ agency.agency_url }}" target="_blank">${ agency.agency_name }</a>
+                                    <a v-if="agency.agency_url" :href="agency.agency_url" target="_blank">${ agency.agency_name }</a>
                                     <span v-else >${ agency.agency_name }</span>
                                 </strong>
                             </td>
