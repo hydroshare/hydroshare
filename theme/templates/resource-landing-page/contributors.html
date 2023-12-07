@@ -1,0 +1,113 @@
+{% load hydroshare_tags %}
+
+{% if not resource_edit_mode %}
+    {% if contributors %}
+        <div class="col-xs-12 content-block">
+            <h4>Contributors</h4>
+            <p><i>People or Organizations that contributed technically, materially, financially, or provided general support for the
+                creation of the resource's content but are not considered authors.
+            </i></p>
+            <table class="table hs-table contact-table contact-table-view">
+                <thead>
+                <tr class="header-row">
+                    <th>Name</th>
+                    <th>Organization</th>
+                    <th>Address</th>
+                    <th>Phone</th>
+                    <th>Author Identifiers</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for cont in contributors %}
+                    <tr>
+                        <td>
+                            {% if cont.relative_uri and cont.is_active_user %}
+                                <a href="{{ cont.relative_uri }}">{{ cont.name|name_without_commas }}</a>
+                            {% else %}
+                                {{ cont.name|name_without_commas }}
+                            {% endif %}
+                        </td>
+                        <td>{% if cont.organization %}
+                            {{ cont.organization }}{% endif %}</td>
+                        <td>{% if cont.address %} {{ cont.address }}{% endif %}</td>
+                        <td>{% if cont.phone %} {{ cont.phone }}{% endif %}</td>
+                        <td>
+                            {% for name, link in cont.identifiers.items %}
+                                {{ identif.name }}
+                                <a href="{{ link }}"
+                                   target="_blank">{{ name }}</a>
+                                {% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+{% else %}
+    <div class="col-xs-12 content-block">
+        <br>
+        <h4>Contributors
+            <a type="button" class="btn btn-success btn-xs" data-toggle="modal" title="Add Contributor"
+               data-target="#add-contributor-dialog" multiple="multiple">
+                <span class="glyphicon glyphicon-plus"></span>
+            </a>
+        </h4>
+        <p><i>People or Organizations that contributed technically, materially, financially, or provided general support for the creation
+            of the resource's content but are not considered authors.
+        </i></p>
+
+        {% if contributors %}
+            <table class="hs-table contact-table table d-block">
+                <thead>
+                <tr class="header-row">
+                    <th>Name</th>
+                    <th>Organization</th>
+                    <th>Address</th>
+                    <th>Phone</th>
+                    <th>Author Identifiers</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for contributor in contributors %}
+                    <tr>
+                        <td>
+                            {% if contributor.relative_uri and contributor.is_active_user %}
+                                <a href="{{ contributor.relative_uri }}">{{ contributor.name|name_without_commas }}</a>
+                            {% else %}
+                                {{ contributor.name|name_without_commas }}
+                            {% endif %}
+                        </td>
+                        <td>{% if  contributor.organization %}{{ contributor.organization }}{% endif %}</td>
+                        <td>{% if  contributor.address %}{{ contributor.address }}{% endif %}</td>
+                        <td>{% if  contributor.phone %}{{ contributor.phone }}{% endif %}</td>
+                        <td>
+                            {% for name, link in contributor.identifiers.items %}
+                                {{ identif.name }}
+                                <a href="{{ link }}"
+                                   target="_blank">{{ name }}</a>
+                                {% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td style="min-width: 120px;">
+                            <span data-toggle="modal" data-placement="auto" title="Edit"
+                                  class="glyphicon glyphicon-pencil table-icon icon-button icon-blue"
+                                  data-target="#edit-contributor-dialog{{ contributor.id }}">
+                            </span>
+                            <span data-toggle="modal" data-placement="auto" title="Remove"
+                                  class="glyphicon glyphicon-trash table-icon icon-button btn-remove"
+                                  data-target="#delete-contributor-dialog{{ contributor.id }}">
+                            </span>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="small text-muted">No contributors have been added.</p>
+        {% endif %}
+    </div>
+
+{% endif %}
