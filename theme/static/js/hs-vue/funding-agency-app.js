@@ -55,13 +55,12 @@ let fundingAgenciesApp = new Vue({
         });
       }
 
-      if (
-        this.mode == "Add" &&
-        $.inArray(this.agencyName, this.fundingAgencyNames) >= 0
-      ) {
-        this.notifications.push({
-          error: "You already added this funder for this resource.",
-        });
+      if ($.inArray(this.agencyName, this.fundingAgencyNames) >= 0) {
+        if (this.agencyName !== this.currentlyEditing.agency_name) {
+          this.notifications.push({
+            error: "You already added this funder for this resource.",
+          });
+        }
       }
 
       if (this.selectedAgency) {
@@ -98,7 +97,7 @@ let fundingAgenciesApp = new Vue({
       const editingFundingAgency = this.fundingAgencies.filter((agency) => {
         return agency.agency_id == id;
       })[0];
-      this.currentlyEditing = {...editingFundingAgency}
+      this.currentlyEditing = { ...editingFundingAgency };
       this.agencyName = this.currentlyEditing.agency_name;
       // open source bug https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19
       this.$refs.agencyName.inputValue = this.currentlyEditing.agency_name;
@@ -112,11 +111,10 @@ let fundingAgenciesApp = new Vue({
   },
   watch: {
     agencyName: function (funder) {
+      this.checkAgency();
       if (funder.length < this.MIN_SEARCH_LEN || this.selectedAgency) {
-        this.notifications = [];
         return;
       }
-      this.checkAgency();
       if (this.timeout) clearTimeout(this.timeout);
       this.timeout = setTimeout(() => {
         this.getCrossrefFunders(funder);
