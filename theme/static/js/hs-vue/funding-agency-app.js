@@ -95,9 +95,10 @@ let fundingAgenciesApp = new Vue({
     openEditModal(id) {
       this.mode = "Edit";
       this.notifications = [];
-      this.currentlyEditing = this.fundingAgencies.filter((agency) => {
+      const editingFundingAgency = this.fundingAgencies.filter((agency) => {
         return agency.agency_id == id;
       })[0];
+      this.currentlyEditing = {...editingFundingAgency}
       this.agencyName = this.currentlyEditing.agency_name;
       // open source bug https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19
       this.$refs.agencyName.inputValue = this.currentlyEditing.agency_name;
