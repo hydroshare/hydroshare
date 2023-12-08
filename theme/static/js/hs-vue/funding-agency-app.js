@@ -8,9 +8,9 @@ let fundingAgenciesApp = new Vue({
     agencyName: "",
     fundingAgencies: RES_FUNDING_AGENCIES, // funding agencies from the backend/Django
     resourceId: SHORT_ID,
-    fundingAgencyNames: [],
-    selectedAgency: null, // keep track of the selected agency from the dropdown
     crossrefFunders: [], // array of funders to be filled from crossref api
+    crossrefFundersNames: [],
+    crossrefSelected: false,
     CROSSREF_API_URL: "https://api.crossref.org/funders?query=:query",
     MIN_SEARCH_LEN: 3, // min # of chars before running a query
     DEBOUNCE_API_MS: 500, // debounce api requests
@@ -21,9 +21,6 @@ let fundingAgenciesApp = new Vue({
     currentlyEditing: {}, // store the funder that we are editing
     deleteUrl: "", // Django endpoint to call for deleting a funder
     currentlyDeleting: {}, // store the funder that we are deleting
-  },
-  mounted() {
-    this.fundingAgencyNames = this.fundingAgencies.map((a) => a.agency_name);
   },
   methods: {
     getCrossrefFunders: async function (query) {
@@ -37,6 +34,7 @@ let fundingAgenciesApp = new Vue({
       const res = await fetch(this.CROSSREF_API_URL.replace(":query", query));
       const result = await res.json();
       this.crossrefFunders = result.message.items;
+      this.crossrefFundersNames = this.crossrefFundersNames.concat(this.crossrefFunders.map((f) => f.name))
       this.isPending = false;
     },
     checkAgency: function () {
@@ -44,44 +42,57 @@ let fundingAgenciesApp = new Vue({
 
       if (this.agencyName.trim() !== this.agencyName) {
         this.notifications.push({
-          error: "You have leading or trailing whitespace in your funder name.",
+          error: "Agency name has leading or trailing whitespace.",
         });
       }
 
       if (this.agencyName.length > 250) {
         this.notifications.push({
           error:
-            "Your funder is too long. Ensure it has at most 250 characters.",
+            "Agency name is too long. Ensure it has at most 250 characters.",
         });
       }
 
-      if ($.inArray(this.agencyName, this.fundingAgencyNames) >= 0) {
-        if (this.agencyName !== this.currentlyEditing.agency_name) {
-          this.notifications.push({
-            error: "You already added this funder for this resource.",
-          });
-        }
+      if (this.isDuplicateFunder(this.currentlyEditing)){
+        this.notifications.push({
+          error: "A funding agency matching these values already exists",
+        });
       }
 
-      if (this.selectedAgency) {
-        this.updateUri();
-      } else {
+      if (!this.isNameFromCrossref(this.agencyName)) {
         this.notifications.push({
-          info: "We recommend that you select from the list of known funding agencies.",
+          info: "We recommend that you select from the list of known funding agency names.",
         });
       }
     },
-    updateUri: function () {
-      // Auto-populated the URL input field when we select an agency from the dropdown
-      this.currentlyEditing.agency_url = this.selectedAgency.uri;
+    isNameFromCrossref: function (name) {
+      return this.crossrefFundersNames.includes(name)
+    },
+    isDuplicateFunder: function(funderToCheck) {
+      funderToCheck.agency_name = funderToCheck.agency_name || ""
+      funderToCheck.agency_url = funderToCheck.agency_url || ""
+      funderToCheck.award_number = funderToCheck.award_number || ""
+      funderToCheck.award_title = funderToCheck.award_title || ""
+      for (funder of this.fundingAgencies){
+        if (
+          funder.agency_name == funderToCheck.agency_name &&
+          funder.agency_url == funderToCheck.agency_url &&
+          funder.award_number == funderToCheck.award_number &&
+          funder.award_title == funderToCheck.award_title
+        ) {
+          return true
+        }
+      }
+      return false
     },
     selectAgency: function (event) {
       this.isPending = false;
-      this.selectedAgency = event;
+      this.crossrefSelected = true;
+      this.currentlyEditing.agency_url = event.uri
       this.checkAgency();
     },
     clearSelectedAgency: function () {
-      this.selectedAgency = null;
+      this.crossrefSelected = false;
     },
     openAddModal() {
       this.mode = "Add";
@@ -111,21 +122,16 @@ let fundingAgenciesApp = new Vue({
   },
   watch: {
     agencyName: function (funder) {
+      this.currentlyEditing.agency_name = funder
       this.checkAgency();
-      if (funder.length < this.MIN_SEARCH_LEN || this.selectedAgency) {
+      if (funder.length < this.MIN_SEARCH_LEN || this.crossrefSelected) {
+        this.crossrefSelected = false // reset
         return;
       }
       if (this.timeout) clearTimeout(this.timeout);
       this.timeout = setTimeout(() => {
         this.getCrossrefFunders(funder);
       }, this.DEBOUNCE_API_MS);
-    },
-    selectedAgency: function (newer, _) {
-      this.isPending = false;
-      if (newer !== null) {
-        this.updateUri();
-        // this.fundingAgencies.push(this.agencyName)
-      }
     },
   },
   computed: {
