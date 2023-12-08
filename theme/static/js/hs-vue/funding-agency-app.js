@@ -34,7 +34,9 @@ let fundingAgenciesApp = new Vue({
       const res = await fetch(this.CROSSREF_API_URL.replace(":query", query));
       const result = await res.json();
       this.crossrefFunders = result.message.items;
-      this.crossrefFundersNames = this.crossrefFundersNames.concat(this.crossrefFunders.map((f) => f.name))
+      this.crossrefFundersNames = this.crossrefFundersNames.concat(
+        this.crossrefFunders.map((f) => f.name)
+      );
       this.isPending = false;
     },
     checkAgency: function () {
@@ -53,7 +55,7 @@ let fundingAgenciesApp = new Vue({
         });
       }
 
-      if (this.isDuplicateFunder(this.currentlyEditing)){
+      if (this.isDuplicateFunder(this.currentlyEditing)) {
         this.notifications.push({
           error: "A funding agency matching these values already exists",
         });
@@ -66,29 +68,29 @@ let fundingAgenciesApp = new Vue({
       }
     },
     isNameFromCrossref: function (name) {
-      return this.crossrefFundersNames.includes(name)
+      return this.crossrefFundersNames.includes(name);
     },
-    isDuplicateFunder: function(funderToCheck) {
-      funderToCheck.agency_name = funderToCheck.agency_name || ""
-      funderToCheck.agency_url = funderToCheck.agency_url || ""
-      funderToCheck.award_number = funderToCheck.award_number || ""
-      funderToCheck.award_title = funderToCheck.award_title || ""
-      for (funder of this.fundingAgencies){
+    isDuplicateFunder: function (funderToCheck) {
+      funderToCheck.agency_name = funderToCheck.agency_name || "";
+      funderToCheck.agency_url = funderToCheck.agency_url || "";
+      funderToCheck.award_number = funderToCheck.award_number || "";
+      funderToCheck.award_title = funderToCheck.award_title || "";
+      for (funder of this.fundingAgencies) {
         if (
           funder.agency_name == funderToCheck.agency_name &&
           funder.agency_url == funderToCheck.agency_url &&
           funder.award_number == funderToCheck.award_number &&
           funder.award_title == funderToCheck.award_title
         ) {
-          return true
+          return true;
         }
       }
-      return false
+      return false;
     },
     selectAgency: function (event) {
       this.isPending = false;
       this.crossrefSelected = true;
-      this.currentlyEditing.agency_url = event.uri
+      this.currentlyEditing.agency_url = event.uri;
       this.checkAgency();
     },
     clearSelectedAgency: function () {
@@ -122,10 +124,10 @@ let fundingAgenciesApp = new Vue({
   },
   watch: {
     agencyName: function (funder) {
-      this.currentlyEditing.agency_name = funder
+      this.currentlyEditing.agency_name = funder;
       this.checkAgency();
       if (funder.length < this.MIN_SEARCH_LEN || this.crossrefSelected) {
-        this.crossrefSelected = false // reset
+        this.crossrefSelected = false; // reset
         return;
       }
       if (this.timeout) clearTimeout(this.timeout);
