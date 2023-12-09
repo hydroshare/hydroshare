@@ -973,12 +973,16 @@ def get_resource_doi(res_id, flag=''):
 
 def get_activated_doi(doi):
     """
-    Get activated DOI with flags removed. The following two flags are appended
+    Get activated DOI with flags removed. The following four flags are appended
     to the DOI string to indicate publication status for internal use:
-    'pending' flag indicates the metadata deposition with CrossRef succeeds, but
+    'pending' flag indicates the metadata deposition with CrossRef succeeds when the resource is published, but
      pending activation with CrossRef for DOI to take effect.
     'failure' flag indicates the metadata deposition failed with CrossRef due to
-    network or system issues with CrossRef
+    network or system issues with CrossRef when the resource is published.
+    'update_pending' flag indicates the metadata update with CrossRef succeeds when the resource metadata is updated,
+    but pending to take effect.
+    'update_failure' flag indicates the metadata update failed with CrossRef due to
+    network or system issues with CrossRef when the resource metadata is updated.
 
     Args:
         doi: the DOI string with possible status flags appended
@@ -986,14 +990,16 @@ def get_activated_doi(doi):
     Returns:
         the activated DOI with all flags removed if any
     """
-    idx1 = doi.find(CrossRefSubmissionStatus.PENDING)
-    idx2 = doi.find(CrossRefSubmissionStatus.FAILURE)
-    if idx1 >= 0:
-        return doi[:idx1]
-    elif idx2 >= 0:
-        return doi[:idx2]
-    else:
-        return doi
+
+    if doi.endswith(CrossRefSubmissionStatus.UPDATE_PENDING):
+        return doi[:-len(CrossRefSubmissionStatus.UPDATE_PENDING)]
+    if doi.endswith(CrossRefSubmissionStatus.UPDATE_FAILURE):
+        return doi[:-len(CrossRefSubmissionStatus.UPDATE_FAILURE)]
+    if doi.endswith(CrossRefSubmissionStatus.PENDING):
+        return doi[:-len(CrossRefSubmissionStatus.PENDING)]
+    if doi.endswith(CrossRefSubmissionStatus.FAILURE):
+        return doi[:-len(CrossRefSubmissionStatus.FAILURE)]
+    return doi
 
 
 def get_crossref_url():
