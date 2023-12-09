@@ -1,61 +1,55 @@
 """Define celery tasks for hs_core app."""
 
+import asyncio
+import json
+import logging
 import os
 import sys
 import time
 import traceback
 import zipfile
-import logging
-import json
-import asyncio
-
-from celery.signals import task_postrun
-from datetime import datetime, timedelta, date
-from django.utils import timezone
+from datetime import date, datetime, timedelta
 from xml.etree import ElementTree
 
 import requests
-from celery import shared_task
+from celery.exceptions import TaskError
+from celery.result import states
 from celery.schedules import crontab
+from celery.signals import task_postrun
 from celery.worker.request import Request
-from celery import Task
-
 from django.conf import settings
-from django.core.mail import send_mail
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.mail import send_mail
 from django.db.models import F, Q
+from django.utils import timezone
 from rest_framework import status
 
-from hs_access_control.models import GroupMembershipRequest
-from hs_core.hydroshare import utils, create_empty_resource, set_dirty_bag_flag, current_site_url
-from hydroshare.hydrocelery import app as celery_app
-from hs_core.hydroshare.hs_bagit import create_bag_metadata_files, create_bagit_files_by_irods
-from hs_core.hydroshare.resource import get_activated_doi, get_crossref_url, deposit_res_metadata_with_crossref, \
-    get_resource_doi
-from hs_core.task_utils import get_or_create_task_notification
-from hs_core.enums import CrossRefSubmissionStatus
-from hs_odm2.models import ODM2Variable
-from django_irods.storage import IrodsStorage
-from theme.models import UserQuota, QuotaMessage, User
+from celery import Task, shared_task
 from django_irods.icommands import SessionException
-from celery.result import states
-from celery.exceptions import TaskError
-
-from hs_core.models import BaseResource, ResourceFile, TaskNotification
-from hs_core.enums import RelationTypes
-from theme.utils import get_quota_message
+from django_irods.storage import IrodsStorage
+from hs_access_control.models import GroupMembershipRequest
 from hs_collection_resource.models import CollectionDeletedResource
-from hs_file_types.models import (
-    FileSetLogicalFile,
-    GenericLogicalFile,
-    GeoFeatureLogicalFile,
-    GeoRasterLogicalFile,
-    ModelProgramLogicalFile,
-    ModelInstanceLogicalFile,
-    NetCDFLogicalFile,
-    RefTimeseriesLogicalFile,
-    TimeSeriesLogicalFile
-)
+from hs_core.enums import (CrossRefSubmissionStatus, CrossRefUpdate,
+                           RelationTypes)
+from hs_core.hydroshare import (create_empty_resource, current_site_url,
+                                set_dirty_bag_flag, utils)
+from hs_core.hydroshare.hs_bagit import (create_bag_metadata_files,
+                                         create_bagit_files_by_irods)
+from hs_core.hydroshare.resource import (deposit_res_metadata_with_crossref,
+                                         get_activated_doi, get_crossref_url,
+                                         get_resource_doi)
+from hs_core.models import BaseResource, ResourceFile, TaskNotification
+from hs_core.task_utils import get_or_create_task_notification
+from hs_file_types.models import (FileSetLogicalFile, GenericLogicalFile,
+                                  GeoFeatureLogicalFile, GeoRasterLogicalFile,
+                                  ModelInstanceLogicalFile,
+                                  ModelProgramLogicalFile, NetCDFLogicalFile,
+                                  RefTimeseriesLogicalFile,
+                                  TimeSeriesLogicalFile)
+from hs_odm2.models import ODM2Variable
+from hydroshare.hydrocelery import app as celery_app
+from theme.models import QuotaMessage, User, UserQuota
+from theme.utils import get_quota_message
 
 FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
                  "FileSetLogicalFile": FileSetLogicalFile,
@@ -284,9 +278,9 @@ def manage_task_hourly():
     # Check DOI activation on failed and pending resources and send email.
     msg_lst = []
     # retrieve all published resources with failed metadata deposition with CrossRef if any and
-    # retry metadata deposition
+    # retry metadata deposition - this should check both 'failure' and 'update_failure' flags
     failed_resources = BaseResource.objects.filter(raccess__published=True,
-                                                   doi__contains=CrossRefSubmissionStatus.FAILURE)
+                                                   doi__endswith=CrossRefSubmissionStatus.FAILURE.value)
     for res in failed_resources:
         meta_published_date = res.metadata.dates.all().filter(type='published').first()
         if meta_published_date:
@@ -305,12 +299,14 @@ def manage_task_hourly():
                 create_bag_by_irods(res.short_id)
             else:
                 # retry of metadata deposition failed again, notify admin
-                if CrossRefSubmissionStatus.UPDATE not in res.extra_data:
+                if CrossRefSubmissionStatus.UPDATE_FAILURE not in res.doi:
+                    # this is the case of retry of initial deposit (deposit when publishing the resource)
                     msg = f"Metadata deposition with CrossRef for the published resource " \
                           f"DOI {act_doi} failed again after retry with first metadata " \
                           f"deposition requested since {pub_date}."
                 else:
-                    # this is the case of updating crossref metadata deposit
+                    # this is the case of updating crossref metadata deposit as a result of resource metadata change
+                    # subsequent to the initial deposit
                     msg = f"Metadata UPDATE deposition with CrossRef for the published resource " \
                           f"DOI {act_doi} failed again after retry."
 
@@ -320,8 +316,9 @@ def manage_task_hourly():
             msg_lst.append("{res_id} does not have published date in its metadata.".format(
                 res_id=res.short_id))
 
+    # get all published resources with doi ending with 'pending' or 'update_pending'
     pending_resources = BaseResource.objects.filter(raccess__published=True,
-                                                    doi__contains=CrossRefSubmissionStatus.PENDING)
+                                                    doi__endswith=CrossRefSubmissionStatus.PENDING.value)
     for res in pending_resources:
         meta_published_date = res.metadata.dates.all().filter(type='published').first()
         if meta_published_date:
@@ -351,12 +348,14 @@ def manage_task_hourly():
                     # create bag and compute checksum for published resource to meet DataONE requirement
                     create_bag_by_irods(res.short_id)
             if not success:
-                if CrossRefSubmissionStatus.UPDATE not in res.extra_data:
+                if CrossRefSubmissionStatus.UPDATE_PENDING not in res.doi:
+                    # this is the case of initial deposit when publishing the resource
                     msg = f"Published resource DOI {act_doi} is not yet activated with request " \
                           f"data deposited since {pub_date}."
                 else:
                     # this is the case of updating crossref metadata deposit
-                    msg = f"Published resource DOI {act_doi} update CrossRef deposit request is still in pending state."
+                    msg = (f"Request to update CrossRef deposit for published resource DOI {act_doi} "
+                           f"is still in a pending state.")
 
                 msg_lst.append(msg)
                 logger.debug(response.content)
@@ -366,8 +365,9 @@ def manage_task_hourly():
             msg_lst.append("{res_id} does not have published date in its metadata.".format(
                 res_id=res.short_id))
 
+    # get all un-published resources with doi ending in 'pending or 'update_pending'
     pending_unpublished_resources = BaseResource.objects.filter(raccess__published=False,
-                                                                doi__contains=CrossRefSubmissionStatus.PENDING)
+                                                                doi__endswith=CrossRefSubmissionStatus.PENDING.value)
     for res in pending_unpublished_resources:
         msg_lst.append(f"{res.short_id} has pending in DOI but resource_access shows unpublished. "
                        "This indicates an issue with the resource, please notify a developer")
@@ -379,14 +379,15 @@ def manage_task_hourly():
         send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
 
     # update crossref deposit for published resource for which relevant metadata has been updated
-    update_deposit_resources = (BaseResource.objects
-                                .filter(raccess__published=True,
-                                        extra_data__contains={CrossRefSubmissionStatus.UPDATE: 'True'})
-                                .exclude(doi__contains=CrossRefSubmissionStatus.PENDING)
-                                )
+    # excludes published resources that have either 'pending' or 'update_pending' in doi
+    update_deposit_resources = BaseResource.objects \
+        .filter(raccess__published=True,
+                extra_data__contains={CrossRefUpdate.UPDATE.value: 'True'}) \
+        .exclude(doi__endswith=CrossRefSubmissionStatus.PENDING.value)
+
     for res in update_deposit_resources:
         _update_crossref_deposit(res)
-        res.extra_data[CrossRefSubmissionStatus.UPDATE] = 'False'
+        res.extra_data[CrossRefUpdate.UPDATE.value] = 'False'
         res.save()
 
 
@@ -1204,15 +1205,15 @@ def update_crossref_meta_deposit(res_id):
 
 
 def _update_crossref_deposit(resource):
-    logger.info(f"Updating crossref metadata deposit for resource {resource.short_id}")
-    resource.doi = get_resource_doi(resource.short_id, CrossRefSubmissionStatus.PENDING)
+    logger.info(f"Updating Crossref metadata deposit for published resource: {resource.short_id}")
+    resource.doi = get_resource_doi(resource.short_id, CrossRefSubmissionStatus.UPDATE_PENDING)
     resource.save()
     response = deposit_res_metadata_with_crossref(resource)
     if not response.status_code == status.HTTP_200_OK:
         # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
         # crontab celery task
-        err_msg = (f"Received a {response.status_code} from Crossref while depositing "
-                   f"metadata for res id {resource.short_id}")
+        err_msg = (f"Received a {response.status_code} from Crossref while updating "
+                   f"metadata for published resource: {resource.short_id}")
         logger.error(err_msg)
-        resource.doi = get_resource_doi(resource.short_id, CrossRefSubmissionStatus.FAILURE)
+        resource.doi = get_resource_doi(resource.short_id, CrossRefSubmissionStatus.UPDATE_FAILURE)
         resource.save()
