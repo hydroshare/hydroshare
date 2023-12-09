@@ -1124,7 +1124,6 @@ def publish_resource(user, pk):
     # activation, "pending" will be removed from DOI field
     resource.doi = get_resource_doi(pk, CrossRefSubmissionStatus.PENDING)
     resource.save()
-    settings.DEBUG = False
     if settings.DEBUG:
         # in debug mode, making sure we are using the test CrossRef service
         assert settings.USE_CROSSREF_TEST is True
