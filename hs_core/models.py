@@ -7,30 +7,28 @@ import re
 import unicodedata
 import urllib.parse
 from uuid import uuid4
-import arrow
-from dateutil import parser
-import requests
 
+import arrow
+import requests
+from dateutil import parser
 from django.conf import settings
-from django.contrib.auth.models import User, Group
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.auth.models import Group, User
+from django.contrib.contenttypes.fields import (GenericForeignKey,
+                                                GenericRelation)
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import HStoreField
-from django.core.exceptions import ObjectDoesNotExist, ValidationError, \
-    SuspiciousFileOperation, PermissionDenied
+from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
+                                    SuspiciousFileOperation, ValidationError)
 from django.core.files import File
-from django.urls import reverse
 from django.core.validators import URLValidator
-from django.db import models
-from django.db import transaction
+from django.db import models, transaction
 from django.db.models import Q, Sum
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
+from django.urls import reverse
 from django.utils.timezone import now
-
-from dominate.tags import div, legend, table, tbody, tr, th, td, h4
+from dominate.tags import div, h4, legend, table, tbody, td, th, tr
 from lxml import etree
 from markdown import markdown
 from mezzanine.conf import settings as s
@@ -41,15 +39,18 @@ from mezzanine.pages.managers import PageManager
 from mezzanine.pages.models import Page
 from nameparser import HumanName
 from pyld import jsonld
-from rdflib import Literal, BNode, URIRef
+from rdflib import BNode, Literal, URIRef
 from rdflib.namespace import DC, DCTERMS, RDF
 from spam_patterns.worst_patterns_re import patterns
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
-from hs_core.enums import RelationTypes, CrossRefSubmissionStatus
-from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
-from .hs_rdf import HSTERMS, RDF_Term_MixIn, RDF_MetaData_Mixin, rdf_terms, RDFS1
+from hs_core.enums import (CrossRefSubmissionStatus, CrossRefUpdate,
+                           RelationTypes)
+from hs_core.irods import ResourceFileIRODSMixin, ResourceIRODSMixin
+
+from .hs_rdf import (HSTERMS, RDFS1, RDF_MetaData_Mixin, RDF_Term_MixIn,
+                     rdf_terms)
 from .languages_iso import languages as iso_languages
 
 
@@ -184,7 +185,7 @@ class ResourcePermissionsMixin(Ownable):
     def can_delete(self, request):
         """Use utils.authorize method to determine if user can delete a resource."""
         # have to do import locally to avoid circular import
-        from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
+        from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
         return authorize(request, self,
                          needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE,
                          raises_exception=False)[1]
@@ -192,7 +193,7 @@ class ResourcePermissionsMixin(Ownable):
     def can_change(self, request):
         """Use utils.authorize method to determine if user can change a resource."""
         # have to do import locally to avoid circular import
-        from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
+        from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
         return authorize(request, self,
                          needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                          raises_exception=False)[1]
@@ -200,7 +201,7 @@ class ResourcePermissionsMixin(Ownable):
     def can_view(self, request):
         """Use utils.authorize method to determine if user can view a resource."""
         # have to do import locally to avoid circular import
-        from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
+        from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
         return authorize(request, self,
                          needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA,
                          raises_exception=False)[1]
@@ -2193,8 +2194,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         invalidated outside of the control of a specific user. In this case, user can be None
         """
         # avoid import loop
-        from hs_core.views.utils import run_script_to_update_hyrax_input_files
         from hs_core.signals import post_raccess_change
+        from hs_core.views.utils import run_script_to_update_hyrax_input_files
 
         # access control is separate from validation logic
         if user is not None and not user.uaccess.can_change_resource_flags(self):
@@ -2525,7 +2526,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         Note: this will return true for any file that ends with the metadata endings
         We are taking the risk that user might create a file with the same filename ending
         """
-        from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
+        from hs_file_types.models.base import (METADATA_FILE_ENDSWITH,
+                                               RESMAP_FILE_ENDSWITH)
         if not (file_path.endswith(METADATA_FILE_ENDSWITH)
                 or file_path.endswith(RESMAP_FILE_ENDSWITH)):
             return False
@@ -3928,7 +3930,8 @@ class BaseResource(Page, AbstractResource):
         the specification in this repo: https://github.com/hydroshare/hs_doi_deposit_metadata
         """
         # importing here to avoid circular import problem
-        from .hydroshare.resource import get_activated_doi, get_resource_doi
+        from .hydroshare.resource import get_activated_doi
+
         logger = logging.getLogger(__name__)
 
         def get_funder_id(funder_name):
@@ -4091,11 +4094,6 @@ class BaseResource(Page, AbstractResource):
 
         # doi_data is required element for dataset
         doi_data_node = etree.SubElement(dataset_node, 'doi_data')
-        if settings.DEBUG:
-            # in debug mode, we are setting the resource doi attribute as there is no actual resource publication
-            # in this mode so that we can unit test the generated crossref xml
-            self.doi = get_resource_doi(self.short_id)
-
         res_doi = get_activated_doi(self.doi)
         idx = res_doi.find('10.4211')
         if idx >= 0:
@@ -4373,8 +4371,9 @@ class BaseResource(Page, AbstractResource):
         return dir_path
 
     def update_crossref_deposit(self):
-        """Update crossref deposit xml file for this published resource
-        Used when metadata for a published resource is updated
+        """
+        Update crossref deposit xml file for this published resource
+        Used when metadata (abstract or funding agency) for a published resource is updated
         """
         from hs_core.tasks import update_crossref_meta_deposit
 
@@ -4382,12 +4381,19 @@ class BaseResource(Page, AbstractResource):
             err_msg = "Crossref deposit can be updated only for a published resource. "
             err_msg += f"Resource {self.short_id} is not a published resource."
             raise ValidationError(err_msg)
-        if CrossRefSubmissionStatus.PENDING not in self.doi:
-            self.extra_data[CrossRefSubmissionStatus.UPDATE] = 'False'
+
+        if self.doi.endswith(self.short_id):
+            # doi has no crossref status
+            self.extra_data[CrossRefUpdate.UPDATE.value] = 'False'
             update_crossref_meta_deposit.apply_async((self.short_id,))
-        else:
+
+        # check for both 'pending' and 'update_pending' status in doi
+        if CrossRefSubmissionStatus.PENDING in self.doi:
             # setting this flag will update the crossref deposit when the hourly celery task runs
-            self.extra_data[CrossRefSubmissionStatus.UPDATE] = 'True'
+            self.extra_data[CrossRefUpdate.UPDATE.value] = 'True'
+
+        # if the resource crossref deposit is in a 'failure' or 'update_failure' state, then update of the
+        # crossref deposit will be attempted when the hourly celery task runs
         self.save()
 
 
@@ -4801,9 +4807,11 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         :param  user: user who is updating metadata
         :return:
         """
-        from .forms import TitleValidationForm, AbstractValidationForm, LanguageValidationForm, \
-            RightsValidationForm, CreatorValidationForm, ContributorValidationForm, \
-            RelationValidationForm, GeospatialRelationValidationForm, FundingAgencyValidationForm
+        from .forms import (AbstractValidationForm, ContributorValidationForm,
+                            CreatorValidationForm, FundingAgencyValidationForm,
+                            GeospatialRelationValidationForm,
+                            LanguageValidationForm, RelationValidationForm,
+                            RightsValidationForm, TitleValidationForm)
 
         validation_forms_mapping = {'title': TitleValidationForm,
                                     'description': AbstractValidationForm,
