@@ -7,6 +7,7 @@ from django.contrib.auth.models import Group, User
 from django.test import TestCase
 
 from hs_core import hydroshare
+from hs_core.hydroshare import get_resource_doi
 from hs_core.models import BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
@@ -106,11 +107,10 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
         if not hasattr(settings, 'DEFAULT_SUPPORT_EMAIL'):
             settings.DEFAULT_SUPPORT_EMAIL = "help@cuahsi.org"
 
-        # generate crossref deposit xml in debug mode
-        settings.DEBUG = True
+        # set doi - simulating published resource
+        self.res.doi = get_resource_doi(self.res.short_id)
+        self.res.save()
         crossref_xml = self.res.get_crossref_deposit_xml()
-        # turn off debug mode - the default mode is False by Django during testing
-        settings.DEBUG = False
         crossref_xml = crossref_xml.strip()
         timestamp = arrow.get(self.res.updated).format("YYYYMMDDHHmmss")
         res_id = self.res.short_id
