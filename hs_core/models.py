@@ -3939,8 +3939,11 @@ class BaseResource(Page, AbstractResource):
             Crossref API Documentation: https://api.crossref.org/swagger-ui/index.html#/Funders/get_funders
             """
 
+            # url encode the funder name for the query parameter
+            words = funder_name.split()
+            encoded_words = [urllib.parse.quote(word) for word in words]
             # match all words in the funder name
-            query = "+".join(funder_name.split())
+            query = "+".join(encoded_words)
             # if we can't find a match in first 50 search records then we are not going to find a match
             max_record_count = 50
             email = settings.DEFAULT_SUPPORT_EMAIL
@@ -3960,8 +3963,9 @@ class BaseResource(Page, AbstractResource):
                     return ''
                 return ''
             else:
-                msg = "Failed to get funder_id for funder_name: {} from Crossref funders registry. " \
-                      "Status code: {}".format(funder_name, response.status_code)
+                msg = "Failed to get funder_id for funder_name: '{}' from Crossref funders registry. " \
+                      "Status code: {} for resource id: {}"
+                msg = msg.format(funder_name, response.status_code, self.short_id)
                 logger.error(msg)
                 return ''
 
