@@ -10,6 +10,7 @@ let fundingAgenciesApp = new Vue({
     unmatchedFunders: [], // funders not found in Crossref
     resourceId: SHORT_ID,
     resourceMode: RESOURCE_MODE, // edit/view
+    resPublished: RESOURCE_PUBLISHED_OR_UNDER_REVIEW,
     crossrefFunders: [], // array of funders to be filled from crossref api
     crossrefFundersNames: [],
     crossrefSelected: false,
@@ -25,7 +26,7 @@ let fundingAgenciesApp = new Vue({
     currentlyDeleting: {}, // store the funder that we are deleting
   },
   mounted() {
-    if (this.resourceMode === "Edit") {
+    if (this.resourceMode === "Edit" && this.resPublished) {
       this.checkFunderNamesExistInCrossref(this.fundingAgencies);
     }
   },
