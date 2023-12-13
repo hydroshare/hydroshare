@@ -21,7 +21,8 @@ let fundingAgenciesApp = new Vue({
     notifications: [],
     isPending: false, // is api fetch pending
     mode: null, // mode for the modals -- Add or Edit
-    currentlyEditing: {}, // store the funder that we are editing
+    currentlyEditing: {}, // track the funder that we are editing
+    startedEditing: {}, // store the funder that we started editing
     deleteUrl: "", // Django endpoint to call for deleting a funder
     currentlyDeleting: {}, // store the funder that we are deleting
   },
@@ -102,10 +103,26 @@ let fundingAgenciesApp = new Vue({
       }
 
       if (this.isDuplicateFunder(this.currentlyEditing)) {
-        // TODO: in edit mode, this message can be confusing
-        this.notifications.push({
-          error: "A funding agency matching these values already exists",
-        });
+        if (this.mode == "Add") {
+          this.notifications.push({
+            error: "A funding agency matching these values already exists.",
+          });
+        }
+
+        if (
+          this.mode == "Edit" &&
+          JSON.stringify(this.startedEditing) ===
+            JSON.stringify(this.currentlyEditing)
+        ) {
+          this.notifications.push({
+            error: "You haven't made any modifications yet.",
+          });
+        } else {
+          this.notifications.push({
+            error:
+              "A funding agency other than the one you're editing already has these values.",
+          });
+        }
       }
 
       if (!this.isNameFromCrossref(this.agencyName)) {
@@ -158,6 +175,7 @@ let fundingAgenciesApp = new Vue({
         return agency.agency_id == id;
       })[0];
       this.currentlyEditing = { ...editingFundingAgency };
+      this.startedEditing = { ...editingFundingAgency };
       this.agencyName = this.currentlyEditing.agency_name;
       // open source bug https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19
       this.$refs.agencyName.inputValue = this.currentlyEditing.agency_name;
@@ -176,6 +194,7 @@ let fundingAgenciesApp = new Vue({
         this.crossrefSelected = false; // reset
         return;
       }
+      this.checkAgency();
       if (this.timeout) clearTimeout(this.timeout);
       this.timeout = setTimeout(() => {
         this.getCrossrefFunders(funder).then(() => {
@@ -188,6 +207,7 @@ let fundingAgenciesApp = new Vue({
     allowSubmit: function () {
       if (this.agencyName.trim() === "") return false;
       if (this.errorNotifications.length) return false;
+      if (this.isPending) return false;
       return true;
     },
     actionUri: function () {
