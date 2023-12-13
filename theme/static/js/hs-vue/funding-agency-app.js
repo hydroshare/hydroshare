@@ -43,7 +43,7 @@ let fundingAgenciesApp = new Vue({
       try {
         const lowerFunderName = funderName.toLowerCase();
         const funders = await this.queryCrossrefFunderList(funderName);
-        if (funders == null) return false
+        if (funders == null) return false;
         for (let funder of funders) {
           if (funder.name.toLowerCase() == lowerFunderName) return true;
           for (let alt in funder["alt-names"]) {
@@ -77,8 +77,8 @@ let fundingAgenciesApp = new Vue({
         return;
       }
       this.isPending = true;
-      this.crossrefFunders = await this.queryCrossrefFunderList(funderName)
-      if (this.crossrefFunders !== null){
+      this.crossrefFunders = await this.queryCrossrefFunderList(funderName);
+      if (this.crossrefFunders !== null) {
         this.crossrefFundersNames = this.crossrefFundersNames.concat(
           this.crossrefFunders.map((f) => f.name)
         );
@@ -178,9 +178,9 @@ let fundingAgenciesApp = new Vue({
       }
       if (this.timeout) clearTimeout(this.timeout);
       this.timeout = setTimeout(() => {
-        this.getCrossrefFunders(funder).then(()=>{
+        this.getCrossrefFunders(funder).then(() => {
           this.checkAgency();
-        })
+        });
       }, this.DEBOUNCE_API_MS);
     },
   },
