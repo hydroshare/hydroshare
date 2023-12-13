@@ -164,6 +164,21 @@
                     <span class="glyphicon glyphicon-plus"></span>
                 </a>
             </h4>
+            <div v-if="unmatchedFunders.length > 0" class="alert alert-info alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <div class="flex">
+                    <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                    <em style="padding-right:20px;">
+                        This resource has the following funders that do not exist in our list of funding agencies: 
+                        <ul>
+                            <li v-for="funder in unmatchedFunders">${funder}</li>
+                        </ul>
+                        We recommend that you update the names for consistency where possible.
+                    </em>
+                </div>
+            </div>
             <p><i>This resource was created using funding from the following sources:</i></p>
             {% if fundingagencies %}
                 <table class="table hs-table table-striped funding-agencies-table">
@@ -179,6 +194,7 @@
                                 <strong>
                                     <a v-if="agency.agency_url" :href="agency.agency_url" target="_blank">${ agency.agency_name }</a>
                                     <span v-else >${ agency.agency_name }</span>
+                                    <span v-if="unmatchedFunders.includes(agency.agency_name)" style="color:red">*</span>
                                 </strong>
                             </td>
                             <td>${ agency.award_title }</td>

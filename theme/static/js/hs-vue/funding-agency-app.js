@@ -7,7 +7,9 @@ let fundingAgenciesApp = new Vue({
   data: {
     agencyName: "",
     fundingAgencies: RES_FUNDING_AGENCIES, // funding agencies from the backend/Django
+    unmatchedFunders: [], // funders not found in Crossref
     resourceId: SHORT_ID,
+    resourceMode: RESOURCE_MODE, // edit/view
     crossrefFunders: [], // array of funders to be filled from crossref api
     crossrefFundersNames: [],
     crossrefSelected: false,
@@ -22,21 +24,64 @@ let fundingAgenciesApp = new Vue({
     deleteUrl: "", // Django endpoint to call for deleting a funder
     currentlyDeleting: {}, // store the funder that we are deleting
   },
+  mounted() {
+    if (this.resourceMode === "Edit") {
+      this.checkFunderNamesExistInCrossref(this.fundingAgencies);
+    }
+  },
   methods: {
-    getCrossrefFunders: async function (query) {
-      if (query === "" || this.notifications.error) {
+    checkFunderNamesExistInCrossref: async function (funders) {
+      for (let funder of funders) {
+        const match = await this.funderNameExistsInCrossref(funder.agency_name);
+        if (!match) {
+          this.unmatchedFunders.push(funder.agency_name);
+        }
+      }
+    },
+    funderNameExistsInCrossref: async function (funderName) {
+      try {
+        const lowerFunderName = funderName.toLowerCase();
+        const funders = await this.queryCrossrefFunderList(funderName);
+        if (funders == null) return false
+        for (let funder of funders) {
+          if (funder.name.toLowerCase() == lowerFunderName) return true;
+          for (let alt in funder["alt-names"]) {
+            if (alt == lowerFunderName) return true;
+          }
+        }
+        return false;
+      } catch (e) {
+        console.error(`Error checking funding name in Crossref: ${e}`);
+        return true; // default to success to avoid false positive messages if crossreff api is unresponsive
+      }
+    },
+    queryCrossrefFunderList: async function (funderName) {
+      try {
+        let words = funderName.split(" ");
+        words = words.map((w) => encodeURIComponent(w));
+        let query = words.join("+");
+        query = `${query}&mailto=help@cuahsi.org`;
+        // https://api.crossref.org/swagger-ui/index.html#/Funders/get_funders
+        const res = await fetch(this.CROSSREF_API_URL.replace(":query", query));
+        const result = await res.json();
+        const funders = result.message.items;
+        return funders;
+      } catch (e) {
+        console.error(`Error querying Crossref API: ${e}`);
+      }
+      return null;
+    },
+    getCrossrefFunders: async function (funderName) {
+      if (funderName === "" || this.notifications.error) {
         return;
       }
       this.isPending = true;
-      // https://api.crossref.org/swagger-ui/index.html#/Funders/get_funders
-      query = query.replace(" ", "+");
-      query = `${query}&mailto=help@cuahsi.org`;
-      const res = await fetch(this.CROSSREF_API_URL.replace(":query", query));
-      const result = await res.json();
-      this.crossrefFunders = result.message.items;
-      this.crossrefFundersNames = this.crossrefFundersNames.concat(
-        this.crossrefFunders.map((f) => f.name)
-      );
+      this.crossrefFunders = await this.queryCrossrefFunderList(funderName)
+      if (this.crossrefFunders !== null){
+        this.crossrefFundersNames = this.crossrefFundersNames.concat(
+          this.crossrefFunders.map((f) => f.name)
+        );
+      }
       this.isPending = false;
     },
     checkAgency: function () {
