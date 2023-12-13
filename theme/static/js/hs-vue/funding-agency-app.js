@@ -101,6 +101,7 @@ let fundingAgenciesApp = new Vue({
       }
 
       if (this.isDuplicateFunder(this.currentlyEditing)) {
+        // TODO: in edit mode, this message can be confusing
         this.notifications.push({
           error: "A funding agency matching these values already exists",
         });
@@ -170,14 +171,15 @@ let fundingAgenciesApp = new Vue({
   watch: {
     agencyName: function (funder) {
       this.currentlyEditing.agency_name = funder;
-      this.checkAgency();
       if (funder.length < this.MIN_SEARCH_LEN || this.crossrefSelected) {
         this.crossrefSelected = false; // reset
         return;
       }
       if (this.timeout) clearTimeout(this.timeout);
       this.timeout = setTimeout(() => {
-        this.getCrossrefFunders(funder);
+        this.getCrossrefFunders(funder).then(()=>{
+          this.checkAgency();
+        })
       }, this.DEBOUNCE_API_MS);
     },
   },
