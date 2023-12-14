@@ -33,30 +33,33 @@ let fundingAgenciesApp = new Vue({
   },
   methods: {
     checkFunderNamesExistInCrossref: async function (funders) {
-      for (let funder of funders) {
-        // TODO: don't await one response before checking the next one
-        const match = await this.singleFunderNameExistsInCrossref(funder.agency_name);
-        if (!match) {
-          this.unmatchedFunders.push(funder.agency_name);
+      try {
+        const promises = [];
+        for (const funder of funders) {
+          promises.push(
+            this.singleFunderNameExistsInCrossref(funder.agency_name)
+          );
         }
+        const results = await Promise.all(promises);
+        const unmatched = results.filter((r)=>!r.match);
+        for (let umatch of unmatched) {
+          this.unmatchedFunders.push(umatch.funderName);
+        }
+      } catch (e) {
+        console.error("Error while checking funder names in Crossref", e)
       }
     },
     singleFunderNameExistsInCrossref: async function (funderName) {
-      try {
-        const lowerFunderName = funderName.toLowerCase();
-        const funders = await this.fetchFromCrossrefAPIFunderList(funderName);
-        if (funders == null) return false;
-        for (let funder of funders) {
-          if (funder.name.toLowerCase() == lowerFunderName) return true;
-          for (let alt in funder["alt-names"]) {
-            if (alt == lowerFunderName) return true;
-          }
+      let match = false
+      const lowerFunderName = funderName.toLowerCase();
+      const funders = await this.fetchFromCrossrefAPIFunderList(funderName);
+      for (let funder of funders) {
+        if (funder.name.toLowerCase() == lowerFunderName) match = true;
+        for (let alt in funder["alt-names"]) {
+          if (alt == lowerFunderName) match = true;
         }
-        return false;
-      } catch (e) {
-        console.error(`Error checking funding name in Crossref: ${e}`);
-        return true; // default to success to avoid false positive messages if crossreff api is unresponsive
       }
+      return {funderName, match: match}
     },
     fetchFromCrossrefAPIFunderList: async function (funderName) {
       try {
