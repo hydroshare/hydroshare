@@ -10,6 +10,7 @@ let fundingAgenciesApp = new Vue({
     unmatchedFunders: [], // funders not found in Crossref
     resourceId: SHORT_ID,
     resourceMode: RESOURCE_MODE, // edit/view
+    selfAccessLevel: SELF_ACCESS_LEVEL, // user's access level on resource
     resPublished: RESOURCE_PUBLISHED_OR_UNDER_REVIEW,
     crossrefFunders: [], // array of funders to be filled from crossref api
     crossrefFundersNames: [],
@@ -27,7 +28,7 @@ let fundingAgenciesApp = new Vue({
     currentlyDeleting: {}, // store the funder that we are deleting
   },
   mounted() {
-    if (this.resourceMode === "Edit" && this.resPublished) {
+    if (this.selfAccessLevel === "owner") {
       this.checkFunderNamesExistInCrossref(this.fundingAgencies);
     }
   },
@@ -45,9 +46,21 @@ let fundingAgenciesApp = new Vue({
         for (let umatch of unmatched) {
           this.unmatchedFunders.push(umatch.funderName);
         }
+        if (unmatched.length > 0){
+          // In addition to a static warning in the Funding Agencies section for edit mode, also alert for resource owners regardles of view/edit mode
+          this.showFundersAlert()
+        }
       } catch (e) {
         console.error("Error while checking funder names in Crossref", e)
       }
+    },
+    showFundersAlert: function () {
+      const message = 
+        `The resource has the following funders listed that do not exist in the <a href="https://www.crossref.org/services/funder-registry" target="_blank">Open Funder Registry</a>:
+        <br><strong>${this.unmatchedFunders.join("<br>")}</strong><br>
+        We recommend updating the funders to conform to the <a href="https://www.crossref.org/services/funder-registry" target="_blank">Open Funder Registry</a> to ensure consistency and ease of reporting.
+      `
+      customAlert("Nonconforming Funders", message, "info", 10000, true);
     },
     singleFunderNameExistsInCrossref: async function (funderName) {
       let match = false
