@@ -27,8 +27,8 @@
                                         <vue-bootstrap-typeahead
                                             :data="crossrefFunders"
                                             :serializer="s => s.name"
-                                            v-model="agencyName"
-                                            ref="agencyName"
+                                            v-model="agencyNameInput"
+                                            ref="agencyNameInput"
                                             input-class="typeahead-search-input form-control input-sm textInput"
                                             @hit="selectAgency($event)"
                                             placeholder="Example: National Science Foundation"
@@ -44,14 +44,14 @@
                                         </vue-bootstrap-typeahead>
                                     </div>
                                 </div>
-                                <input v-model="agencyName" maxlength="250" name="agency_name" type="hidden" required>
+                                <input v-model="agencyNameInput" maxlength="250" name="agency_name" type="hidden" required>
 
                                 {# Award Title #}
                                 <div id="div_id_award_title" class="control-group">
                                     <label for="award_title" class="control-label">Award Title</label>
                                     <div class="controls">
                                         <input class="form-control input-sm" maxlength="250"
-                                            name="award_title" v-model="currentlyEditing.award_title" @keyup="checkAgency">
+                                            name="award_title" v-model="currentlyEditing.award_title" @keyup="checkAgencyName">
                                     </div>
                                 </div>
 
@@ -60,7 +60,7 @@
                                     <label for="award_number" class="control-label">Award Number</label>
                                     <div class="controls">
                                         <input class="form-control input-sm textinput textInput" maxlength="100"
-                                            name="award_number" type="text" v-model="currentlyEditing.award_number" @keyup="checkAgency">
+                                            name="award_number" type="text" v-model="currentlyEditing.award_number" @keyup="checkAgencyName">
                                     </div>
                                 </div>
 
@@ -70,7 +70,7 @@
 
                                     <div class="controls">
                                         <input class="form-control input-sm urlinput" maxlength="200"
-                                            name="agency_url" type="url" v-model="currentlyEditing.agency_url" @keyup="checkAgency">
+                                            name="agency_url" type="url" v-model="currentlyEditing.agency_url" @keyup="checkAgencyName">
                                     </div>
                                 </div>
 

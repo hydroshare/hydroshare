@@ -5,7 +5,7 @@ let fundingAgenciesApp = new Vue({
     VueBootstrapTypeahead,
   },
   data: {
-    agencyName: "",
+    agencyNameInput: "", // current input for agency name search
     fundingAgencies: RES_FUNDING_AGENCIES, // funding agencies from the backend/Django
     unmatchedFunders: [], // funders not found in Crossref
     resourceId: SHORT_ID,
@@ -34,16 +34,17 @@ let fundingAgenciesApp = new Vue({
   methods: {
     checkFunderNamesExistInCrossref: async function (funders) {
       for (let funder of funders) {
-        const match = await this.funderNameExistsInCrossref(funder.agency_name);
+        // TODO: don't await one response before checking the next one
+        const match = await this.singleFunderNameExistsInCrossref(funder.agency_name);
         if (!match) {
           this.unmatchedFunders.push(funder.agency_name);
         }
       }
     },
-    funderNameExistsInCrossref: async function (funderName) {
+    singleFunderNameExistsInCrossref: async function (funderName) {
       try {
         const lowerFunderName = funderName.toLowerCase();
-        const funders = await this.queryCrossrefFunderList(funderName);
+        const funders = await this.fetchFromCrossrefAPIFunderList(funderName);
         if (funders == null) return false;
         for (let funder of funders) {
           if (funder.name.toLowerCase() == lowerFunderName) return true;
@@ -57,7 +58,7 @@ let fundingAgenciesApp = new Vue({
         return true; // default to success to avoid false positive messages if crossreff api is unresponsive
       }
     },
-    queryCrossrefFunderList: async function (funderName) {
+    fetchFromCrossrefAPIFunderList: async function (funderName) {
       try {
         let words = funderName.split(" ");
         words = words.map((w) => encodeURIComponent(w));
@@ -73,12 +74,14 @@ let fundingAgenciesApp = new Vue({
       }
       return null;
     },
-    getCrossrefFunders: async function (funderName) {
+    initCrossrefFundersSearch: async function (funderName) {
       if (funderName === "" || this.notifications.error) {
         return;
       }
       this.isPending = true;
-      this.crossrefFunders = await this.queryCrossrefFunderList(funderName);
+      this.crossrefFunders = await this.fetchFromCrossrefAPIFunderList(
+        funderName
+      );
       if (this.crossrefFunders !== null) {
         this.crossrefFundersNames = this.crossrefFundersNames.concat(
           this.crossrefFunders.map((f) => f.name)
@@ -86,16 +89,16 @@ let fundingAgenciesApp = new Vue({
       }
       this.isPending = false;
     },
-    checkAgency: function () {
+    checkAgencyName: function () {
       this.notifications = [];
 
-      if (this.agencyName.trim() !== this.agencyName) {
+      if (this.agencyNameInput.trim() !== this.agencyNameInput) {
         this.notifications.push({
           error: "Agency name has leading or trailing whitespace.",
         });
       }
 
-      if (this.agencyName.length > 250) {
+      if (this.agencyNameInput.length > 250) {
         this.notifications.push({
           error:
             "Agency name is too long. Ensure it has at most 250 characters.",
@@ -125,7 +128,7 @@ let fundingAgenciesApp = new Vue({
         }
       }
 
-      if (!this.isNameFromCrossref(this.agencyName)) {
+      if (!this.isNameFromCrossref(this.agencyNameInput)) {
         this.notifications.push({
           info: "We recommend that you select from the list of known funding agency names.",
         });
@@ -155,7 +158,7 @@ let fundingAgenciesApp = new Vue({
       this.isPending = false;
       this.crossrefSelected = true;
       this.currentlyEditing.agency_url = event.uri;
-      this.checkAgency();
+      this.checkAgencyName();
     },
     clearSelectedAgency: function () {
       this.crossrefSelected = false;
@@ -164,9 +167,9 @@ let fundingAgenciesApp = new Vue({
       this.mode = "Add";
       this.currentlyEditing = {};
       this.notifications = [];
-      this.agencyName = "";
+      this.agencyNameInput = "";
       // open source bug https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19
-      this.$refs.agencyName.inputValue = "";
+      this.$refs.agencyNameInput.inputValue = "";
     },
     openEditModal(id) {
       this.mode = "Edit";
@@ -176,9 +179,9 @@ let fundingAgenciesApp = new Vue({
       })[0];
       this.currentlyEditing = { ...editingFundingAgency };
       this.startedEditing = { ...editingFundingAgency };
-      this.agencyName = this.currentlyEditing.agency_name;
+      this.agencyNameInput = this.currentlyEditing.agency_name;
       // open source bug https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19
-      this.$refs.agencyName.inputValue = this.currentlyEditing.agency_name;
+      this.$refs.agencyNameInput.inputValue = this.currentlyEditing.agency_name;
     },
     openDeleteModal(id) {
       this.currentlyDeleting = this.fundingAgencies.filter((agency) => {
@@ -188,24 +191,24 @@ let fundingAgenciesApp = new Vue({
     },
   },
   watch: {
-    agencyName: function (funder) {
+    agencyNameInput: function (funder) {
       this.currentlyEditing.agency_name = funder;
       if (funder.length < this.MIN_SEARCH_LEN || this.crossrefSelected) {
         this.crossrefSelected = false; // reset
         return;
       }
-      this.checkAgency();
+      this.checkAgencyName();
       if (this.timeout) clearTimeout(this.timeout);
       this.timeout = setTimeout(() => {
-        this.getCrossrefFunders(funder).then(() => {
-          this.checkAgency();
+        this.initCrossrefFundersSearch(funder).then(() => {
+          this.checkAgencyName();
         });
       }, this.DEBOUNCE_API_MS);
     },
   },
   computed: {
     allowSubmit: function () {
-      if (this.agencyName.trim() === "") return false;
+      if (this.agencyNameInput.trim() === "") return false;
       if (this.errorNotifications.length) return false;
       if (this.isPending) return false;
       return true;
