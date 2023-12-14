@@ -28,7 +28,7 @@ let fundingAgenciesApp = new Vue({
     currentlyDeleting: {}, // store the funder that we are deleting
   },
   mounted() {
-    if (this.selfAccessLevel === "owner") {
+    if (this.selfAccessLevel === "owner" && this.resPublished) {
       this.checkFunderNamesExistInCrossref(this.fundingAgencies);
     }
   },
@@ -57,7 +57,7 @@ let fundingAgenciesApp = new Vue({
     showFundersAlert: function () {
       const message = 
         `The resource has the following funders listed that do not exist in the <a href="https://www.crossref.org/services/funder-registry" target="_blank">Open Funder Registry</a>:
-        <br><strong>${this.unmatchedFunders.join("<br>")}</strong><br>
+        <br><ul><strong><li>${this.unmatchedFunders.join("</li><li>")}</strong></ul><br>
         We recommend updating the funders to conform to the <a href="https://www.crossref.org/services/funder-registry" target="_blank">Open Funder Registry</a> to ensure consistency and ease of reporting.
       `
       customAlert("Nonconforming Funders", message, "info", 10000, true);
