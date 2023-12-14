@@ -42,28 +42,29 @@ let fundingAgenciesApp = new Vue({
           );
         }
         const results = await Promise.all(promises);
-        const unmatched = results.filter((r)=>!r.match);
+        const unmatched = results.filter((r) => !r.match);
         for (let umatch of unmatched) {
           this.unmatchedFunders.push(umatch.funderName);
         }
-        if (unmatched.length > 0){
+        if (unmatched.length > 0) {
           // In addition to a static warning in the Funding Agencies section for edit mode, also alert for resource owners regardles of view/edit mode
-          this.showFundersAlert()
+          this.showFundersAlert();
         }
       } catch (e) {
-        console.error("Error while checking funder names in Crossref", e)
+        console.error("Error while checking funder names in Crossref", e);
       }
     },
     showFundersAlert: function () {
-      const message = 
-        `The resource has the following funders listed that do not exist in the <a href="https://www.crossref.org/services/funder-registry" target="_blank">Open Funder Registry</a>:
-        <br><ul><strong><li>${this.unmatchedFunders.join("</li><li>")}</strong></ul><br>
+      const message = `The resource has the following funders listed that do not exist in the <a href="https://www.crossref.org/services/funder-registry" target="_blank">Open Funder Registry</a>:
+        <br><ul><strong><li>${this.unmatchedFunders.join(
+          "</li><li>"
+        )}</strong></ul><br>
         We recommend updating the funders to conform to the <a href="https://www.crossref.org/services/funder-registry" target="_blank">Open Funder Registry</a> to ensure consistency and ease of reporting.
-      `
+      `;
       customAlert("Nonconforming Funders", message, "info", 10000, true);
     },
     singleFunderNameExistsInCrossref: async function (funderName) {
-      let match = false
+      let match = false;
       const lowerFunderName = funderName.toLowerCase();
       const funders = await this.fetchFromCrossrefAPIFunderList(funderName);
       for (let funder of funders) {
@@ -72,7 +73,7 @@ let fundingAgenciesApp = new Vue({
           if (alt == lowerFunderName) match = true;
         }
       }
-      return {funderName, match: match}
+      return { funderName, match: match };
     },
     fetchFromCrossrefAPIFunderList: async function (funderName) {
       try {
