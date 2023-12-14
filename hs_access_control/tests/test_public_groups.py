@@ -38,7 +38,7 @@ class T01PublicGroups(MockIRODSTestCaseMixin, TestCase):
             title='cats', description="We are the cats")
 
         self.posts = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.cat,
             title='all about scratching posts',
             metadata=[],
@@ -59,7 +59,7 @@ class T01PublicGroups(MockIRODSTestCaseMixin, TestCase):
             title='dogs', description="We are the dogs")
 
         self.bones = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.dog,
             title='all about bones',
             metadata=[],
@@ -68,8 +68,11 @@ class T01PublicGroups(MockIRODSTestCaseMixin, TestCase):
         self.dog.uaccess.share_resource_with_group(self.bones, self.dogs, PrivilegeCodes.VIEW)
 
         self.pets = self.dog.uaccess.create_community(
-                'all kinds of pets',
-                'collaboration on how to be a better pet.')
+            'all kinds of pets',
+            'collaboration on how to be a better pet.')
+
+        self.pets.active = True
+        self.pets.save()
 
         # Make cats and dogs part of community pets
         self.dog.uaccess.share_community_with_group(self.pets, self.dogs, PrivilegeCodes.VIEW)

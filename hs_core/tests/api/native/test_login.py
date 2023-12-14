@@ -21,7 +21,7 @@ class CreateAccountTest(TestCase):
             superuser=False,
             password=password,
             active=True
-            )
+        )
 
         user = authenticate(username="SHaUn@gmail.com", password="mypass")
         self.assertNotEqual(None, user)
@@ -38,7 +38,7 @@ class CreateAccountTest(TestCase):
             superuser=False,
             password=password,
             active=True
-            )
+        )
 
         user = authenticate(username="ShAuNjl", password="mypass")
         self.assertNotEqual(None, user)

@@ -1,9 +1,10 @@
 from django.test import TestCase
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 
 from hs_access_control.models import PrivilegeCodes
 
 from hs_core import hydroshare
+from hs_core.models import BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
 from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
@@ -34,14 +35,14 @@ class T09GroupPublic(MockIRODSTestCaseMixin, TestCase):
         )
 
         self.squirrels = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.dog,
             title='all about chasing squirrels',
             metadata=[],
         )
 
         self.holes = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.dog,
             title='all about storing bones in holes',
             metadata=[],
@@ -50,6 +51,14 @@ class T09GroupPublic(MockIRODSTestCaseMixin, TestCase):
         # dog owns canines group
         self.canines = self.dog.uaccess.create_group(
             title='canines', description="We are the canines")
+
+    def tearDown(self):
+        super(T09GroupPublic, self).tearDown()
+        User.objects.all().delete()
+        Group.objects.all().delete()
+        self.squirrels.delete()
+        self.holes.delete()
+        BaseResource.objects.all().delete()
 
     def test_public_resources(self):
         """ public resources contain those resources that are public and discoverable """

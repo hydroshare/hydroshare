@@ -1,11 +1,11 @@
 import requests
 import base64
 import imghdr
+from hs_core.hydroshare.utils import get_file_mime_type
 
 from django.db import models, transaction
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
-from django.http import HttpResponse
 
 from mezzanine.pages.page_processors import processor_for
 
@@ -19,7 +19,8 @@ from hs_file_types.utils import get_SupportedAggTypes_choices
 class ToolResource(BaseResource):
     objects = ResourceManager('ToolResource')
 
-    discovery_content_type = 'Web App'  # used during discovery
+    # used during discovery as well as in all other places in UI where resource type is displayed
+    display_name = 'App Connector'
 
     class Meta:
         proxy = True
@@ -56,7 +57,7 @@ class ToolResource(BaseResource):
         return ToolMetaData
 
     @property
-    def can_be_published(self):
+    def can_be_submitted_for_metadata_review(self):
         return False
 
 
@@ -224,8 +225,8 @@ class SupportedResTypes(AbstractMetaDataElement):
                 # "copy res" or "create a new version"
                 qs = SupportedResTypeChoices.objects.filter(id=res_type)
                 if not qs.exists():
-                    raise ObjectDoesNotExist('Resource type object {0} is not supported').format(
-                        res_type)
+                    raise ObjectDoesNotExist('Resource type object {0} is not supported'.format(
+                        res_type))
                 meta_instance.supported_res_types.add(qs[0])
 
             elif isinstance(res_type, str):
@@ -314,8 +315,8 @@ class SupportedAggTypes(AbstractMetaDataElement):
                 # "copy agg" or "create a new version"
                 qs = SupportedAggTypeChoices.objects.filter(id=agg_type)
                 if not qs.exists():
-                    raise ObjectDoesNotExist('Aggregation type object {0} is not supported').format(
-                        agg_type)
+                    raise ObjectDoesNotExist('Aggregation type object {0} is not supported'.format(
+                        agg_type))
                 meta_instance.supported_agg_types.add(qs[0])
 
             elif isinstance(agg_type, str):
@@ -402,8 +403,8 @@ class SupportedSharingStatus(AbstractMetaDataElement):
                 # "copy res" or "create a new version"
                 qs = SupportedSharingStatusChoices.objects.filter(id=sharing_status)
                 if not qs.exists():
-                    raise ObjectDoesNotExist('Sharing status {0} is not supported').format(
-                        sharing_status)
+                    raise ObjectDoesNotExist('Sharing status {0} is not supported'.format(
+                        sharing_status))
                 meta_instance.sharing_status.add(qs[0])
             elif isinstance(sharing_status, str):
                 # create or update res
@@ -470,14 +471,18 @@ class ToolIcon(AbstractMetaDataElement):
         except Exception as ex:
             raise ValidationError("Failed to read data from given url: {0}".format(str(ex)))
         if response.status_code != 200:
-            raise HttpResponse("Failed to read data from given url. HTTP_code {0}".
-                               format(response.status_code))
-        image_size_mb = float(response.headers["content-length"])
+            raise ValidationError("Failed to read data from given url. HTTP_code {0}".format(response.status_code))
+        if 'Transfer-Encoding' in response.headers and response.headers["Transfer-Encoding"] == "chunked":
+            image_size_mb = len(response.content)
+        else:
+            image_size_mb = float(response.headers["content-length"])
         if image_size_mb > 1000000:  # 1mb
             raise ValidationError("Icon image size should be less than 1MB.")
         image_type = imghdr.what(None, h=response.content)
-        if image_type not in ["png", "gif", "jpeg"]:
-            raise ValidationError("Supported icon image types are png, gif and jpeg")
+        if not image_type:
+            image_type = get_file_mime_type(url).rsplit('/', 1)[1]
+        if image_type not in ["png", "gif", "jpeg", "svg+xml", "vnd.microsoft.icon", "svg", "ico"]:
+            raise ValidationError("Supported icon image types are png, gif, jpeg, ico, and svg")
         base64_string = base64.b64encode(response.content)
         data_url = "data:image/{image_type};base64,{base64_string}". \
             format(image_type=image_type, base64_string=base64_string.decode())
@@ -485,10 +490,9 @@ class ToolIcon(AbstractMetaDataElement):
 
     @classmethod
     def create(cls, **kwargs):
-        if 'value' in kwargs and "data_url" not in kwargs:
+        if "value" in kwargs:
             url = kwargs["value"]
-            data_url = cls._validate_tool_icon(url)
-
+            data_url = cls._validate_tool_icon(url) if url else ""
             metadata_obj = kwargs['content_object']
             new_meta_instance = ToolIcon.objects.create(content_object=metadata_obj)
             new_meta_instance.value = url
@@ -498,24 +502,33 @@ class ToolIcon(AbstractMetaDataElement):
         elif "data_url" in kwargs:
             metadata_obj = kwargs['content_object']
             new_meta_instance = ToolIcon.objects.create(content_object=metadata_obj)
-            new_meta_instance.value = kwargs["value"] if "value" in kwargs else ""
+            new_meta_instance.value = ""
             new_meta_instance.data_url = kwargs["data_url"]
             new_meta_instance.save()
             return new_meta_instance
         else:
-            raise ValidationError("No value parameter was found in the **kwargs list")
+            raise ValidationError("Value and data_url parameter were empty")
 
     @classmethod
     def update(cls, element_id, **kwargs):
         meta_instance = ToolIcon.objects.get(id=element_id)
-        if 'value' in kwargs:
-            url = kwargs["value"]
-            data_url = cls._validate_tool_icon(url)
-            meta_instance.value = url
-            meta_instance.data_url = data_url
-            meta_instance.save()
+        if "value" in kwargs or "data_url" in kwargs:
+            if kwargs["value"]:
+                url = kwargs["value"]
+                data_url = cls._validate_tool_icon(url) if url else ""
+                meta_instance.value = url
+                meta_instance.data_url = data_url
+                meta_instance.save()
+            elif kwargs["data_url"]:
+                data_url = kwargs["data_url"]
+                meta_instance.data_url = data_url
+                meta_instance.save()
+            else:
+                meta_instance.value = ""
+                meta_instance.data_url = ""
+                meta_instance.save()
         else:
-            raise ValidationError("No value parameter was found in the **kwargs list")
+            raise ValidationError("No value/data_url parameter was found in the **kwargs list")
 
     class Meta:
         # ToolIcon element is not repeatable
@@ -712,7 +725,9 @@ class ToolMetaData(CoreMetaData):
             return False
         return True
 
-    def get_required_missing_elements(self):  # show missing required meta
+    def get_required_missing_elements(self, desired_state='discoverable'):  # show missing required meta
+        if desired_state == 'published':
+            return []
         missing_required_elements = super(ToolMetaData, self).get_required_missing_elements()
 
         # At least one of the two metadata must exist: Home Page URL or App-launching URL Pattern
@@ -722,16 +737,16 @@ class ToolMetaData(CoreMetaData):
                                              'Pattern')
         else:
             # If Supported Res Type is selected, app-launching URL pattern must be present
-            if self.supported_resource_types \
-                    and self.supported_resource_types.supported_res_types.count() > 0:
+            supported_resource_types = self.supported_resource_types
+            if supported_resource_types \
+                    and supported_resource_types.supported_res_types.count() > 0:
                 if not self._launching_pattern_exists():
                     missing_required_elements.append('An App-launching URL Pattern')
 
-            # if Supported Res Type presents, Supported Sharing Status must present, not vice versa
-            if self.supported_resource_types \
-                    and self.supported_resource_types.supported_res_types.count() > 0:
-                if not self.supported_sharing_status \
-                        or not self.supported_sharing_status.sharing_status.count() > 0:
+                # if Supported Res Type presents, Supported Sharing Status must present, not vice versa
+                supported_sharing_status = self.supported_sharing_status
+                if not supported_sharing_status \
+                        or not supported_sharing_status.sharing_status.count() > 0:
                     missing_required_elements.append('Supported Sharing Status')
 
         return missing_required_elements

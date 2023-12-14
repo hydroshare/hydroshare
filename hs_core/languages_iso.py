@@ -490,4 +490,3 @@ languages = [
     ('zxx', 'No linguistic content; Not applicable'),
     ('zza', 'Zaza; Dimili; Dimli; Kirdki; Kirmanjki; Zazaki'),
 ]
-

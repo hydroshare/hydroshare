@@ -1,0 +1,90 @@
+{% load hydroshare_tags %}
+<div class="modal fade" id="collection-candidate" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="width:65%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Collectable Resources</h4>
+            </div>
+            <div class="modal-body">
+                <table id="collection-table-candidate" class="table-hover table-striped resource-custom-table" width="100%">
+                    <thead>
+                    <tr>
+                        <th>Add</th>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Owner</th>
+                        <th>Sharing Status</th>
+                        <th>Remove</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        {% for urp in user_resource_privileges %}
+                            <tr id="{{ urp.resource.short_id }}">
+                                <td>
+                                    <input class="row-selector" type="checkbox" id="{{ urp.resource.short_id }}">
+                                </td>
+                                <td>
+                                    <strong><a href="/resource/{{ urp.resource.short_id }}" target="_blank">{{ urp.resource.title }}</a></strong></td>
+                                <td>
+                                    {% if urp.resource.resource_type == "CompositeResource" %}
+                                        Resource
+                                    {% elif urp.resource.resource_type == "CollectionResource" %}
+                                        Collection
+                                    {% elif urp.resource.resource_type == "ToolResource" %}
+                                        App Connector
+                                    {% else %}
+                                        {{ urp.resource.resource_type }}
+                                    {% endif %}
+                                </td>
+                                {% with urp.resource.raccess as raccess %}
+                                    <td>
+                                        {% with urp.user as owner %}
+
+                                            {% if owner.first_name %}
+                                                <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{owner.first_name}} {{owner.last_name }}</a></strong>
+                                            {% else %}
+                                                <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{ owner.username }}</a></strong>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        {% if raccess.published %}
+                                            Published
+                                        {% elif raccess.public %}
+                                            Public
+                                        {% elif raccess.discoverable %}
+                                            Discoverable
+                                        {% else %}
+                                            Private
+                                        {% endif %}
+
+                                        {% if raccess.shareable %}
+                                            & Shareable
+                                        {% endif %}
+                                    </td>
+                                {% endwith %}
+                                <td>
+                                    <span data-res-id="{{ urp.resource.short_id }}"
+                                          data-form-id="form-favorite-{{ urp.resource.short_id }}"
+                                          data-form-type="toggle-favorite"
+                                          class="glyphicon glyphicon-remove btn-inline-favorite btn-remove-collection-item">
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div id="save-collection-btn-warning" class="collection-div-popup-warning">Updating collection...Please wait...</div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" id="save-collection-btn-cancel">
+                       Cancel
+                    </button>
+                    <button type="button" class="btn btn-success" id="save-collection-btn-ok">
+                        Add to collection
+                    </button>
+                </div>
+        </div>
+    </div>
+</div>

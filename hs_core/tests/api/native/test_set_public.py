@@ -8,7 +8,7 @@ from django.contrib.auth.models import Group, User
 from django.core.exceptions import ValidationError
 
 from hs_core.hydroshare import resource
-from hs_core.models import GenericResource
+from hs_core.models import BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 
@@ -39,11 +39,11 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.file_one = open(file_one, "rb")
 
         self.res = resource.create_resource(
-            'GenericResource',
+            'CompositeResource',
             self.user,
             'My Test Resource',
             files=(self.file_one,)
-            )
+        )
 
     def tearDown(self):
         super(TestCreateResource, self).tearDown()
@@ -58,7 +58,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         User.objects.all().delete()
         Group.objects.all().delete()
-        GenericResource.objects.all().delete()
+        BaseResource.objects.all().delete()
 
     def test_resource_setAVU_and_getAVU(self):
         """ test that setAVU and getAVU work predictably """

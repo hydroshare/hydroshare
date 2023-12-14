@@ -2,62 +2,60 @@
 
 <div class="col-sm-12 content-block">
     <span id="citation" class="page-anchor"></span>
-    <h3>How to Cite
-
+    <h3>
+      <span>How to Cite</span>
+      {% if resource_edit_mode and not cm.raccess.published_or_review_pending %}
+      <a data-toggle="tooltip" data-placement="auto"
+          href="https://www.youtube.com/watch?v=A1q1MKhO6CE" target="_blank"
+          title='How to: Publishing'
+          class="fa fa-youtube-play icon-red no-decoration has-space-left icon-guide">
+      {% endif %}
+      </a>
     </h3>
     <div class="row">
         <div class="col-xs-12">
-            <div class="flex">
-                <div id="citation-text">
-                    <table>
-                        <tbody>
-                        <tr><td style="width:100%">
-                            {% if custom_citation %}
-                                {{ custom_citation|urlize }}
-                            {% else %}
-                                {{ citation|urlize }}
-                            {% endif %}
-                        </td><td style="min-width:25px;">
-                            <span id="edit-citation-control" style="display: none" data-toggle="modal"
-                                  data-placement="auto" class="glyphicon glyphicon-pencil icon-blue icon-button table-icon"
-                                    title="Edit citation" data-target="#customize-citation-dialog">
-                            </span>
-                        </td></tr>
-                        </tbody>
-                    </table>
+            <div id="citation-text-wrapper" class="flex">
+                <div class="flex">
+                    <div id="citation-text">{% if custom_citation %}{{ custom_citation|urlize }}{% else %}{{ citation|urlize }}{% endif %}</div>
+                    <span id="edit-citation-control" style="display: none" data-toggle="modal"
+                          data-placement="auto" class="glyphicon glyphicon-pencil icon-blue icon-button table-icon"
+                            title="Edit citation" data-target="#customize-citation-dialog">
+                    </span>
                 </div>
                 <button class="btn btn-default clipboard-copy" data-target="citation-text" type="button">
                     <i class="fa fa-clipboard" aria-hidden="true"></i>&nbsp;Copy
                 </button>
-                <script language="JavaScript">
-                  $.ajax({
-                    type: "GET",
-                    url: '/hsapi/_internal/' + SHORT_ID + '/list-referenced-content/',
-                  }).complete(function(res) {
-                    if (res.responseText) {
-                      const fn = JSON.parse(res.responseText).filenames.length
-                      if (fn > 0 && RESOURCE_MODE === 'Edit') {
-                        document.getElementById('edit-citation-control').style.display = "block"
-                      }
-                    }
-                  });
-                </script>
             </div>
-            {% if self_access_level == 'owner' and not cm.raccess.published and cm.can_be_published %}
+
+            <script language="JavaScript">
+              $.ajax({
+                type: "GET",
+                url: '/hsapi/_internal/' + SHORT_ID + '/list-referenced-content/',
+              }).complete(function(res) {
+                if (res.responseText) {
+                  const fn = JSON.parse(res.responseText).filenames.length
+                  if (fn > 0 && RESOURCE_MODE === 'Edit' && !RESOURCE_PUBLISHED_OR_UNDER_REVIEW) {
+                    document.getElementById('edit-citation-control').style.display = "block"
+                  }
+                }
+              });
+            </script>
+            {% if self_access_level == 'owner' and not cm.raccess.published and cm.can_be_submitted_for_metadata_review %}
             <br />
             <div class="citation-description">
                 <em>
                     When permanently published, this resource will have a formal Digital Object Identifier (DOI) and will be
                     accessible at the following URL: https://doi.org/10.4211/hs.{{ cm.short_id }}. When you are
                     ready to permanently publish, click the Publish button at the top of the page to request your DOI.
-                    Reminder: You may no longer edit your resource, once you have permanently published it.
+                    Reminder: Once you have published your resource, modifications to Title, Authors, or Content files 
+                    will require a new version of the resource.
                 </em>
             </div>
             {% endif %}
             <br />
 
             {# ======= Sharing ======= #}
-            {% if not resource_edit_mode or cm.raccess.published %}
+            {% if not resource_edit_mode or cm.raccess.published_or_review_pending %}
                 {% if rights.statement or rights.url %}
                     <div id="rights">
                         {% if rights.statement %}
@@ -71,21 +69,21 @@
                         {% endif %}
 
                         {% if rights.url %}
-                            <span class="rights-url"><a href="{{ rights.url }}">&nbsp;{{ rights.url }}</a></span>
+                            <span class="rights-url"><a href="{{ rights.url }}" target="_blank">{{ rights.url }}</a></span>
                         {% endif %}
                     </div>
                         {% if rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
-                            <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"/>
+                            <img class="cc-image" src="{% static 'img/cc-badges/CC-BY.png' %}" alt="CC-BY"/>
                         {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
-                            <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"/>
+                            <img class="cc-image" src="{% static 'img/cc-badges/CC-BY-SA.png' %}" alt="CC-BY-SA"/>
                         {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
-                            <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"/>
+                            <img class="cc-image" src="{% static 'img/cc-badges/CC-BY-ND.png' %}" alt="CC-BY-ND"/>
                         {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
-                            <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"/>
+                            <img class="cc-image" src="{% static 'img/cc-badges/CC-BY-NC-SA.png' %}" alt="CC-BY-NC-SA"/>
                         {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
-                            <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"/>
+                            <img class="cc-image" src="{% static 'img/cc-badges/CC-BY-NC.png' %}" alt="CC-BY-NC"/>
                         {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
-                            <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"/>
+                            <img class="cc-image" src="{% static 'img/cc-badges/CC-BY-NC-ND.png' %}" alt="CC-BY-NC-ND"/>
                         {% endif %}
                 {% endif %}
             {% else %}
@@ -110,17 +108,17 @@
                                 </select>
                                 <img id="img-badge" class="cc-image"
                                         {% if cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
-                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"
+                                     src="{% static 'img/cc-badges/CC-BY.png' %}" alt="CC-BY"
                                         {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
-                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"
+                                     src="{% static 'img/cc-badges/CC-BY-SA.png' %}" alt="CC-BY-SA"
                                         {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
-                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"
+                                     src="{% static 'img/cc-badges/CC-BY-ND.png' %}" alt="CC-BY-ND"
                                         {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
-                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"
+                                     src="{% static 'img/cc-badges/CC-BY-NC-SA.png' %}" alt="CC-BY-NC-SA"
                                         {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
-                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"
+                                     src="{% static 'img/cc-badges/CC-BY-NC.png' %}" alt="CC-BY-NC"
                                         {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
-                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"
+                                     src="{% static 'img/cc-badges/CC-BY-NC-ND.png' %}" alt="CC-BY-NC-ND"
                                         {% endif %}/>
                             </div>
                             <div class="col-md-6">
@@ -152,7 +150,7 @@
             {% endif %}
         </div>
 
-        {% if resource_edit_mode and not cm.raccess.published %}
+        {% if resource_edit_mode and not cm.raccess.published_or_review_pending %}
         <div class="col-xs-12">
             {# Require license agreement for file download #}
             {% if self_access_level == 'owner' %}

@@ -1,5 +1,6 @@
 """Signal receivers for the hs_core app."""
-
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update, \
     pre_delete_resource, post_add_geofeature_aggregation, post_add_generic_aggregation, \
@@ -7,15 +8,35 @@ from hs_core.signals import pre_metadata_element_create, pre_metadata_element_up
     post_add_reftimeseries_aggregation, post_remove_file_aggregation, post_raccess_change, \
     post_delete_file_from_resource
 from hs_core.tasks import update_web_services
-from hs_core.models import GenericResource, Party
+from hs_core.models import BaseResource, Creator, Contributor, Party
 from django.conf import settings
 from .forms import SubjectsForm, AbstractValidationForm, CreatorValidationForm, \
-    ContributorValidationForm, RelationValidationForm, SourceValidationForm, RightsValidationForm, \
+    ContributorValidationForm, RelationValidationForm, RightsValidationForm, \
     LanguageValidationForm, ValidDateValidationForm, FundingAgencyValidationForm, \
-    CoverageSpatialForm, CoverageTemporalForm, IdentifierForm, TitleValidationForm
+    CoverageSpatialForm, CoverageTemporalForm, IdentifierForm, TitleValidationForm, \
+    GeospatialRelationValidationForm
 
 
-@receiver(pre_metadata_element_create, sender=GenericResource)
+@receiver(post_save, sender=User)
+def update_party_instance(sender, instance, created, **kwargs):
+    """Updates party (creator/contributor) db record when an associated user record gets updated"""
+
+    user = instance
+
+    def update_active_user_flag(party):
+        if party.is_active_user != user.is_active:
+            party.is_active_user = user.is_active
+            party.save()
+
+    if not created:
+        for creator in Creator.objects.filter(hydroshare_user_id=user.id).all():
+            update_active_user_flag(creator)
+
+        for contributor in Contributor.objects.filter(hydroshare_user_id=user.id).all():
+            update_active_user_flag(contributor)
+
+
+@receiver(pre_metadata_element_create, sender=BaseResource)
 def metadata_element_pre_create_handler(sender, **kwargs):
     """Select proper form class based on element_name.
 
@@ -49,8 +70,8 @@ def metadata_element_pre_create_handler(sender, **kwargs):
 
     elif element_name == 'relation':
         element_form = RelationValidationForm(request.POST)
-    elif element_name == 'source':
-        element_form = SourceValidationForm(request.POST)
+    elif element_name == 'geospatialrelation':
+        element_form = GeospatialRelationValidationForm(request.POST)
     elif element_name == 'rights':
         element_form = RightsValidationForm(request.POST)
     elif element_name == 'language':
@@ -78,7 +99,7 @@ def metadata_element_pre_create_handler(sender, **kwargs):
         return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
 
-@receiver(pre_metadata_element_update, sender=GenericResource)
+@receiver(pre_metadata_element_update, sender=BaseResource)
 def metadata_element_pre_update_handler(sender, **kwargs):
     """Select proper form class based on element_name.
 
@@ -89,9 +110,8 @@ def metadata_element_pre_update_handler(sender, **kwargs):
     repeatable_elements = {'creator': CreatorValidationForm,
                            'contributor': ContributorValidationForm,
                            'relation': RelationValidationForm,
-                           'source': SourceValidationForm
+                           'geospatialrelation': GeospatialRelationValidationForm
                            }
-
     if element_name == 'title':
         element_form = TitleValidationForm(request.POST)
     elif element_name == "description":   # abstract
@@ -114,10 +134,10 @@ def metadata_element_pre_update_handler(sender, **kwargs):
                     return {'is_valid': False, 'element_data_dict': None,
                             "errors": {"identifiers": [str(ex)]}}
 
-                # for creator or contributor who is not a hydroshare user the 'description'
+                # for creator or contributor who is not a hydroshare user the 'hydroshare_user_id'
                 # key might be missing in the POST form data
-                if field_name == 'description':
-                    matching_key = [key for key in request.POST if '-'+field_name in key]
+                if field_name == 'hydroshare_user_id':
+                    matching_key = [key for key in request.POST if '-' + field_name in key]
                     if matching_key:
                         matching_key = matching_key[0]
                     else:
@@ -125,11 +145,11 @@ def metadata_element_pre_update_handler(sender, **kwargs):
                 elif field_name == 'identifiers':
                     matching_key = 'identifiers'
                 else:
-                    matching_key = [key for key in request.POST if '-'+field_name in key][0]
+                    matching_key = [key for key in request.POST if '-' + field_name in key][0]
 
                 form_data[field_name] = post_data_dict[matching_key]
             else:
-                matching_key = [key for key in request.POST if '-'+field_name in key][0]
+                matching_key = [key for key in request.POST if '-' + field_name in key][0]
                 form_data[field_name] = request.POST[matching_key]
 
         element_form = element_validation_form(form_data)

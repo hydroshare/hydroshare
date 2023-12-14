@@ -374,6 +374,126 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(
             self.modeling_group.gaccess.group_membership_requests.count(), 0)
 
+    def test_user_sending_request_with_explanation(self):
+        # require explanation on the group
+        self.modeling_group.gaccess.requires_explanation = True
+
+        # lisa should should not be one of the members
+        self.assertNotIn(
+            self.lisa_group_member,
+            self.modeling_group.gaccess.members)
+
+        # let lisa send a membership request to join modeling group without any explanation
+        with self.assertRaises(PermissionDenied):
+            membership_request = self.lisa_group_member.uaccess.create_group_membership_request(
+                self.modeling_group, explanation=None)
+
+        # modeling group should have zero pending membership requests
+        self.assertEqual(
+            self.modeling_group.gaccess.group_membership_requests.count(), 0)
+
+        # user lisa should have zero requests to join group
+        self.assertEqual(
+            self.lisa_group_member.uaccess.group_membership_requests.count(), 0)
+
+        # let lisa send a membership request with an explanation
+        membership_request = self.lisa_group_member.uaccess.create_group_membership_request(
+            self.modeling_group, explanation="I always have to explain myself")
+
+        # modeling group should have one pending membership request
+        self.assertEqual(
+            self.modeling_group.gaccess.group_membership_requests.count(), 1)
+
+        # user lisa should have 1 pending request to join group
+        self.assertEqual(
+            self.lisa_group_member.uaccess.group_membership_requests.count(), 1)
+
+        # let john (group owner) accept lisa's request
+        self.john_group_owner.uaccess.act_on_group_membership_request(
+            membership_request, accept_request=True)
+
+        # user lisa should have no pending request to join group
+        self.assertEqual(
+            self.lisa_group_member.uaccess.group_membership_requests.count(), 0)
+
+        # modeling group should have no pending membership requests
+        self.assertEqual(
+            self.modeling_group.gaccess.group_membership_requests.count(), 0)
+
+        # let kelly send a membership request to join modeling group that is too long
+        long_string = "Sometimes I just start writing and I can not stop. " * 6
+        print(long_string)
+        with self.assertRaises(PermissionDenied):
+            membership_request = self.kelly_group_member.uaccess.create_group_membership_request(
+                self.modeling_group, explanation=long_string)
+
+        # let kelly send a membership request to join modeling group that is appropriate length
+        membership_request = self.kelly_group_member.uaccess.create_group_membership_request(
+            self.modeling_group, explanation="Sometimes I start writing and I am able to stop.")
+        # let john (group owner) decline kelly's request
+        self.john_group_owner.uaccess.act_on_group_membership_request(
+            membership_request, accept_request=False)
+        # there should be 5 members in the group
+        self.assertEqual(self.modeling_group.gaccess.members.count(), 5)
+        # kelly should not be one of the members
+        self.assertNotIn(
+            self.kelly_group_member,
+            self.modeling_group.gaccess.members)
+        # user kelly should have no pending request to join group
+        self.assertEqual(
+            self.kelly_group_member.uaccess.group_membership_requests.count(), 0)
+        # modeling group should have no pending membership requests
+        self.assertEqual(
+            self.modeling_group.gaccess.group_membership_requests.count(), 0)
+
+    def test_user_sending_invitation_without_explanation(self):
+        # require explanation on the group
+        self.modeling_group.gaccess.requires_explanation = True
+        self.modeling_group.gaccess.save()
+
+        # lisa should should not be one of the members
+        self.assertNotIn(
+            self.lisa_group_member,
+            self.modeling_group.gaccess.members)
+
+        # user lisa should have no pending request to join group
+        self.assertEqual(
+            self.lisa_group_member.uaccess.group_membership_requests.count(), 0)
+
+        # modeling group should have no pending membership requests
+        self.assertEqual(
+            self.modeling_group.gaccess.group_membership_requests.count(), 0)
+
+        # there should be 4 members in the group
+        self.assertEqual(self.modeling_group.gaccess.members.count(), 4)
+
+        # let john (group owner) invite lisa to join group without explanation
+        membership_request = self.john_group_owner.uaccess.create_group_membership_request(
+            self.modeling_group, self.lisa_group_member)
+
+        # modeling group should have 1 pending membership request
+        self.assertEqual(
+            self.modeling_group.gaccess.group_membership_requests.count(), 1)
+
+        # user lisa should have 1 request to join group
+        self.assertEqual(
+            self.lisa_group_member.uaccess.group_membership_requests.count(), 1)
+
+        # let lisa accept john's invitation
+        self.lisa_group_member.uaccess.act_on_group_membership_request(
+            membership_request, accept_request=True)
+
+        # user lisa should have no pending request to join group
+        self.assertEqual(
+            self.lisa_group_member.uaccess.group_membership_requests.count(), 0)
+
+        # modeling group should have no pending membership requests
+        self.assertEqual(
+            self.modeling_group.gaccess.group_membership_requests.count(), 0)
+
+        # there should be 5 members in the group
+        self.assertEqual(self.modeling_group.gaccess.members.count(), 5)
+
     def test_user_sending_request_auto_approval(self):
         # here we are testing auto approval of group membership request
 
@@ -619,6 +739,34 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
         with self.assertRaises(PermissionDenied):
             self.mike_group_owner.uaccess.act_on_group_membership_request(
                 membership_request, accept_request=False)
+
+        # previously existing requests are redeemed if a user is deactivated
+        # kelly has no open requests
+        self.assertEqual(
+            self.kelly_group_member.uaccess.group_membership_requests.count(), 0)
+
+        kelly_membership_request = self.kelly_group_member.uaccess.create_group_membership_request(
+            self.modeling_group)
+        # user kelly should have pending request to join group
+        self.assertIn(kelly_membership_request,
+                      self.modeling_group.gaccess.group_membership_requests)
+        self.kelly_group_member.is_active = False
+        self.kelly_group_member.save()
+
+        # john acts on the existing request
+        with self.assertRaises(PermissionDenied):
+            self.john_group_owner.uaccess.act_on_group_membership_request(
+                kelly_membership_request, accept_request=False)
+
+        # reactivate kelly
+        self.kelly_group_member.is_active = True
+        self.kelly_group_member.save()
+
+        # Kelly has no active membership requests
+        self.assertEqual(
+            self.kelly_group_member.uaccess.group_membership_requests.count(), 0)
+        self.assertNotIn(kelly_membership_request,
+                         self.modeling_group.gaccess.group_membership_requests)
 
     def test_super_user(self):
         # super user/ admin can send invitation, accept/decline request to join

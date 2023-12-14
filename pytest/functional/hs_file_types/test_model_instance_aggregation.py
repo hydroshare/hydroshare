@@ -51,6 +51,7 @@ def test_link_model_aggregations_same_resource(composite_resource_with_mi_aggreg
     mi_aggr = ModelInstanceLogicalFile.objects.first()
     # check that mi_aggr is related to model program aggregation
     assert mi_aggr.metadata.executed_by is not None
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -95,6 +96,7 @@ def test_model_instance_on_model_program_delete(composite_resource_with_mi_aggre
     assert mi_aggr.metadata.executed_by is None
     # check that mi_aggr metadata is set to dirty
     assert mi_aggr.metadata.is_dirty is True
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -139,6 +141,7 @@ def test_model_instance_on_model_program_rename_1(composite_resource_with_mi_agg
     mi_aggr = ModelInstanceLogicalFile.objects.first()
     # check that mi_aggr metadata is set to dirty
     assert mi_aggr.metadata.is_dirty is True
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -184,12 +187,14 @@ def test_model_instance_on_model_program_rename_2(composite_resource_with_mi_agg
     mi_aggr = ModelInstanceLogicalFile.objects.first()
     # check that mi_aggr metadata is set to dirty
     assert mi_aggr.metadata.is_dirty is True
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
 def test_set_metadata(composite_resource_with_mi_aggregation, mock_irods):
     """Test that we can store all metadata items for a model instance aggregation"""
 
+    res, _ = composite_resource_with_mi_aggregation
     mi_aggr = ModelInstanceLogicalFile.objects.first()
 
     # test extra metadata
@@ -237,6 +242,7 @@ def test_set_metadata(composite_resource_with_mi_aggregation, mock_irods):
     mi_aggr.metadata.save()
     mi_aggr = ModelInstanceLogicalFile.objects.first()
     assert mi_aggr.metadata.metadata_json
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -261,6 +267,7 @@ def test_auto_netcdf_aggregation_creation(composite_resource_with_mi_aggregation
     assert nc_res_file.has_logical_file
     # the netcdf aggregation should contain 2 files - nc and the txt files
     assert NetCDFLogicalFile.objects.first().files.count() == 2
+    assert not resource.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -289,6 +296,7 @@ def test_auto_raster_aggregation_creation(composite_resource_with_mi_aggregation
 
     # the raster aggregation should contain 2 files (tif and vrt)
     assert GeoRasterLogicalFile.objects.first().files.count() == 2
+    assert not resource.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -320,6 +328,9 @@ def test_auto_geofeature_aggregation_creation(composite_resource_with_mi_aggrega
 
     # the geo feature aggregation should contain 4 files that we uploaded
     assert GeoFeatureLogicalFile.objects.first().files.count() == 4
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    assert mi_aggr.metadata.is_dirty
+    assert not resource.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -345,6 +356,9 @@ def test_auto_timeseries_aggregation_creation(composite_resource_with_mi_aggrega
     assert ModelInstanceLogicalFile.objects.first().files.count() == 1
     # the timeseries aggregation should contain 1 file
     assert TimeSeriesLogicalFile.objects.first().files.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    assert mi_aggr.metadata.is_dirty
+    assert not resource.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -372,6 +386,9 @@ def test_auto_ref_timeseries_aggregation_creation(composite_resource_with_mi_agg
     assert ModelInstanceLogicalFile.objects.first().files.count() == 1
     # ref timeseries aggregation should contain 1 file
     assert RefTimeseriesLogicalFile.objects.first().files.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    assert mi_aggr.metadata.is_dirty
+    assert not resource.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -391,6 +408,7 @@ def test_canot_create_fileset_within_mi_aggregation(composite_resource_with_mi_a
         FileSetLogicalFile.set_file_type(resource, user, folder_path=fs_folder_path)
 
     assert FileSetLogicalFile.objects.count() == 0
+    assert not resource.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -412,6 +430,7 @@ def test_canot_create_mi_aggregation_within_mi_aggregation(composite_resource_wi
         ModelInstanceLogicalFile.set_file_type(resource, user, folder_path=mi_sub_folder_path)
 
     assert ModelInstanceLogicalFile.objects.count() == 1
+    assert not resource.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -452,6 +471,201 @@ def test_move_single_file_aggr_into_model_instance_aggregation(composite_resourc
     tgt_path = 'data/contents/{}/{}'.format(mi_folder, single_file_name)
 
     move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    assert mi_aggr.metadata.is_dirty
+    assert not res.dangling_aggregations_exist()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_move_single_file_into_model_instance_aggregation(composite_resource, mock_irods):
+    """ test that we move a single file into a folder that represents a
+    model instance aggregation the moved file becomes part of the model instance aggregation"""
+
+    res, user = composite_resource
+    file_path = 'pytest/assets/generic_file.txt'
+    mi_folder = 'mi_folder'
+    ResourceFile.create_folder(res, mi_folder)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=mi_folder, check_target_folder=True)
+    assert res.files.count() == 1
+    # at this point there should not be any model instance aggregation
+    assert ModelInstanceLogicalFile.objects.count() == 0
+    # set folder to model instance aggregation type
+    ModelInstanceLogicalFile.set_file_type(resource=res, user=user, folder_path=mi_folder)
+    res_file = res.files.first()
+    assert res_file.has_logical_file
+    # file has folder
+    assert res_file.file_folder == mi_folder
+    assert ModelInstanceLogicalFile.objects.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    assert mi_aggr.files.count() == 1
+    # upload another file to the resource
+    single_file_name = 'logan.vrt'
+    file_path = 'pytest/assets/{}'.format(single_file_name)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, check_target_folder=True)
+    assert res.files.count() == 2
+    # moving the logan.vrt file into mi_folder
+    src_path = 'data/contents/{}'.format(single_file_name)
+    tgt_path = 'data/contents/{}/{}'.format(mi_folder, single_file_name)
+
+    move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
+    assert res.files.count() == 2
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    assert mi_aggr.files.count() == 2
+    assert mi_aggr.metadata.is_dirty
+    assert not res.dangling_aggregations_exist()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_move_single_file_out_of_model_instance_aggregation(composite_resource, mock_irods):
+    """ test that when we move a file out of a folder that represents a
+    model instance aggregation the moved file is no more part of the model instance aggregation"""
+
+    res, user = composite_resource
+    file_path = 'pytest/assets/generic_file.txt'
+    mi_folder = 'mi_folder'
+    ResourceFile.create_folder(res, mi_folder)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=mi_folder, check_target_folder=True)
+    assert res.files.count() == 1
+    # upload another file to the resource
+    single_file_name = 'logan.vrt'
+    file_path = 'pytest/assets/{}'.format(single_file_name)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=mi_folder, check_target_folder=True)
+    assert res.files.count() == 2
+
+    # at this point there should not be any model instance aggregation
+    assert ModelInstanceLogicalFile.objects.count() == 0
+    # set folder to model instance aggregation type
+    ModelInstanceLogicalFile.set_file_type(resource=res, user=user, folder_path=mi_folder)
+    for res_file in res.files.all():
+        assert res_file.has_logical_file
+        # file has folder
+        assert res_file.file_folder == mi_folder
+    assert ModelInstanceLogicalFile.objects.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    # aggregation should have two files
+    assert mi_aggr.files.count() == 2
+
+    # moving the logan.vrt file out from mi_folder to the root of the resource
+    src_path = 'data/contents/{}/{}'.format(mi_folder, single_file_name)
+    tgt_path = 'data/contents/{}'.format(single_file_name)
+
+    move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
+    assert res.files.count() == 2
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    # aggregation should have only one file
+    assert mi_aggr.files.count() == 1
+    assert mi_aggr.metadata.is_dirty
+    assert not res.dangling_aggregations_exist()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_move_folder_into_model_instance_aggregation(composite_resource, mock_irods):
+    """ test that when we move a folder into a folder that represents a
+    model instance aggregation the files in the moved folder become part of the model instance aggregation"""
+
+    res, user = composite_resource
+    file_path = 'pytest/assets/generic_file.txt'
+    mi_folder = 'mi_folder'
+    ResourceFile.create_folder(res, mi_folder)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=mi_folder, check_target_folder=True)
+    assert res.files.count() == 1
+    # at this point there should not be any model instance aggregation
+    assert ModelInstanceLogicalFile.objects.count() == 0
+    # set folder to model instance aggregation type
+    ModelInstanceLogicalFile.set_file_type(resource=res, user=user, folder_path=mi_folder)
+    res_file = res.files.first()
+    assert res_file.has_logical_file
+    # file has folder
+    assert res_file.file_folder == mi_folder
+    assert ModelInstanceLogicalFile.objects.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    assert mi_aggr.files.count() == 1
+    # upload another file to the resource to a different folder
+    normal_folder = 'normal_folder'
+    ResourceFile.create_folder(res, normal_folder)
+    single_file_name = 'logan.vrt'
+    file_path = 'pytest/assets/{}'.format(single_file_name)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=normal_folder, check_target_folder=True)
+    assert res.files.count() == 2
+    # moving normal_folder into mi_folder
+    src_path = 'data/contents/{}'.format(normal_folder)
+    tgt_path = 'data/contents/{}/{}'.format(mi_folder, normal_folder)
+
+    move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
+    assert res.files.count() == 2
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    assert mi_aggr.files.count() == 2
+    assert mi_aggr.metadata.is_dirty
+    assert not res.dangling_aggregations_exist()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_move_folder_out_of_model_instance_aggregation(composite_resource, mock_irods):
+    """ test that when we move a folder out of a folder that represents a
+    model instance aggregation the files in the moved folder are no mare part of the model instance aggregation"""
+
+    res, user = composite_resource
+    file_path = 'pytest/assets/generic_file.txt'
+    mi_folder = 'mi_folder'
+    ResourceFile.create_folder(res, mi_folder)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=mi_folder, check_target_folder=True)
+    # upload another file to the resource to a different folder
+    normal_folder = 'normal_folder'
+    sub_folder_path = os.path.join(mi_folder, normal_folder)
+    ResourceFile.create_folder(res, sub_folder_path)
+    single_file_name = 'logan.vrt'
+    file_path = 'pytest/assets/{}'.format(single_file_name)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=sub_folder_path, check_target_folder=True)
+    assert res.files.count() == 2
+    # at this point there should not be any model instance aggregation
+    assert ModelInstanceLogicalFile.objects.count() == 0
+    # set folder to model instance aggregation type
+    ModelInstanceLogicalFile.set_file_type(resource=res, user=user, folder_path=mi_folder)
+    for res_file in res.files.all():
+        assert res_file.has_logical_file
+        # file has folder
+        assert res_file.file_folder != ""
+
+    assert ModelInstanceLogicalFile.objects.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    # aggregation should have two files
+    assert mi_aggr.files.count() == 2
+
+    # moving normal_folder out of mi_folder
+    src_path = 'data/contents/{}/{}'.format(mi_folder, normal_folder)
+    tgt_path = 'data/contents/{}'.format(normal_folder)
+
+    move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
+    assert res.files.count() == 2
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    # check that the aggregation has only one file
+    assert mi_aggr.files.count() == 1
+    assert mi_aggr.metadata.is_dirty
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -479,10 +693,10 @@ def test_update_spatial_coverage_from_children(composite_resource_with_mi_aggreg
     mi_aggr = ModelInstanceLogicalFile.objects.first()
     # model aggr should now have spatial coverage
     assert mi_aggr.metadata.spatial_coverage is not None
-    assert mi_aggr.metadata.spatial_coverage.value['northlimit'] == 42.0500269597691
-    assert mi_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.57773718106195
-    assert mi_aggr.metadata.spatial_coverage.value['southlimit'] == 41.98722286029891
-    assert mi_aggr.metadata.spatial_coverage.value['westlimit'] == -111.69756293084055
+    assert mi_aggr.metadata.spatial_coverage.value['northlimit'] == 42.05002695977342
+    assert mi_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.57773718106199
+    assert mi_aggr.metadata.spatial_coverage.value['southlimit'] == 41.98722286030317
+    assert mi_aggr.metadata.spatial_coverage.value['westlimit'] == -111.6975629308406
 
     # auto create a netcdf aggregation inside the model instance aggregation
     assert NetCDFLogicalFile.objects.count() == 0
@@ -498,10 +712,11 @@ def test_update_spatial_coverage_from_children(composite_resource_with_mi_aggreg
     # update model instance aggregation spatial coverage from the contained 2 aggregations
     mi_aggr.update_spatial_coverage()
     # test model instance aggregation spatial coverage data
-    assert mi_aggr.metadata.spatial_coverage.value['northlimit'] == 42.0500269597691
-    assert mi_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.50594036845686
-    assert mi_aggr.metadata.spatial_coverage.value['southlimit'] == 41.8639080745171
-    assert mi_aggr.metadata.spatial_coverage.value['westlimit'] == -111.69756293084055
+    assert mi_aggr.metadata.spatial_coverage.value['northlimit'] == 42.05002695977342
+    assert mi_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.5059403684569
+    assert mi_aggr.metadata.spatial_coverage.value['southlimit'] == 41.86390807452128
+    assert mi_aggr.metadata.spatial_coverage.value['westlimit'] == -111.6975629308406
+    assert not resource.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -538,13 +753,14 @@ def test_no_auto_update_spatial_coverage_from_children(composite_resource_with_m
     gr_aggr = GeoRasterLogicalFile.objects.first()
     # raster aggr should have spatial coverage
     assert gr_aggr.metadata.spatial_coverage is not None
-    assert gr_aggr.metadata.spatial_coverage.value['northlimit'] == 42.0500269597691
-    assert gr_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.57773718106195
-    assert gr_aggr.metadata.spatial_coverage.value['southlimit'] == 41.98722286029891
-    assert gr_aggr.metadata.spatial_coverage.value['westlimit'] == -111.69756293084055
+    assert gr_aggr.metadata.spatial_coverage.value['northlimit'] == 42.05002695977342
+    assert gr_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.57773718106199
+    assert gr_aggr.metadata.spatial_coverage.value['southlimit'] == 41.98722286030317
+    assert gr_aggr.metadata.spatial_coverage.value['westlimit'] == -111.6975629308406
     # check model instance spatial coverage has not been updated
     assert mi_aggr.metadata.spatial_coverage.value['east'] == value_dict['east']
     assert mi_aggr.metadata.spatial_coverage.value['north'] == value_dict['north']
+    assert not resource.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -576,7 +792,9 @@ def test_auto_update_temporal_coverage_from_children(composite_resource_with_mi_
     # netcdf aggregation
     for temp_date in ('start', 'end'):
         assert mi_aggr.metadata.temporal_coverage.value[temp_date] == \
-               nc_aggr.metadata.temporal_coverage.value[temp_date]
+            nc_aggr.metadata.temporal_coverage.value[temp_date]
+
+    assert not resource.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -612,7 +830,9 @@ def test_no_auto_update_temporal_coverage_from_children(composite_resource_with_
     # netcdf aggregation
     for temp_date in ('start', 'end'):
         assert mi_aggr.metadata.temporal_coverage.value[temp_date] != \
-               nc_aggr.metadata.temporal_coverage.value[temp_date]
+            nc_aggr.metadata.temporal_coverage.value[temp_date]
+
+    assert not resource.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -646,7 +866,7 @@ def test_update_temporal_coverage_from_children(composite_resource_with_mi_aggre
     # netcdf aggregation
     for temp_date in ('start', 'end'):
         assert mi_aggr.metadata.temporal_coverage.value[temp_date] != \
-               nc_aggr.metadata.temporal_coverage.value[temp_date]
+            nc_aggr.metadata.temporal_coverage.value[temp_date]
 
     # update temporal coverage for model instance from contained aggregations
     mi_aggr.update_temporal_coverage()
@@ -654,7 +874,9 @@ def test_update_temporal_coverage_from_children(composite_resource_with_mi_aggre
     # netcdf aggregation
     for temp_date in ('start', 'end'):
         assert mi_aggr.metadata.temporal_coverage.value[temp_date] == \
-               nc_aggr.metadata.temporal_coverage.value[temp_date]
+            nc_aggr.metadata.temporal_coverage.value[temp_date]
+
+    assert not resource.dangling_aggregations_exist()
 
 
 def _add_files_to_resource(resource, files_to_add, upload_folder=None):

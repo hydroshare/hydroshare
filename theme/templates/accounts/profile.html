@@ -4,7 +4,7 @@
 {% block meta_title %}User profile for {{ profile_user|best_name }}{% endblock %}
 
 {% block extra_head %}
-    <link href="{{ STATIC_URL }}css/profile.css" rel="stylesheet"/>
+    <link href="{% static 'css/profile.css' %}" rel="stylesheet"/>
 {% endblock %}
 
 {% block main %}
@@ -60,7 +60,7 @@
                                     <div class="btn-file btn-update-picture">
                                         <span class="glyphicon glyphicon-camera"></span>
                                         <span>&nbsp;&nbsp;Update profile picture</span>
-                                        <input class="upload-picture" type="file" name="picture"></div>
+                                        <input class="upload-picture" type="file" name="picture"  accept=".png, .jpg, .jpeg, .gif"></div>
                                     <button id="btn-delete-profile-pic" class="no-style icon-button btn-remove" data-toggle="modal"
                                             data-target="#delete-picture" title="Delete profile picture"><span
                                             class="glyphicon glyphicon-trash"></span>
@@ -69,7 +69,7 @@
                                     <fieldset>
                                         <div class="btn-file btn-update-picture upload-picture"><span class="glyphicon glyphicon-camera"></span>
                                             <span>&nbsp;&nbsp;Add a photo</span>
-                                            <input class="upload-picture" type="file" name="picture"></div>
+                                            <input class="upload-picture" type="file" name="picture" accept=".png, .jpg, .jpeg, .gif"></div>
                                     </fieldset>
                                 {% endif %}
                                 </div>
@@ -80,11 +80,14 @@
                             <div data-page-mode="edit">
                                 <hr>
                                 <div class="profile-picture-controls text-center">
-                                    <div><a href="/accounts/update">Change password</a></div>
+                                    {% if oidc_change_password_url %}
+                                        <div><a href="{{ oidc_change_password_url }}">Change CUAHSI SSO password</a></div>
+                                    {% endif %}
 
                                     {#        Account deactivation       #}
-                                    <div><a data-toggle="modal" data-target="#deactivate-account-dialog">Deactivate account</a></div>
-
+                                    <div><a data-toggle="modal" data-target="#deactivate-account-dialog">Deactivate HydroShare account</a></div>
+                                    <div><a href="/accounts/update">Change HydroShare API password</a></div>
+                                    <hr>
                                     {# Account creation/deletion in iRODS user zone #}
                                     <div id="irods-account-container">
                                         {% if profile.create_irods_user_account %}
@@ -111,7 +114,7 @@
 
                                 {#        Organization and Title       #}
                                 {% if profile.organization or profile.title %}
-                                    <h4 class="text-muted">
+                                    <h4 id="organization" class="text-muted">
                                         {% if profile.organization %}{{ profile.organization }}{% endif %}
                                         {% if profile.organization and profile.title %} | {% endif %}
                                         {% if profile.title %}{{ profile.title }}{% endif %}
@@ -125,7 +128,15 @@
                                         {% if profile.subject_areas %}
                                             <tr>
                                                 <td><span class="text-muted">Subject Areas: </span></td>
-                                                <td>{{ profile.subject_areas }}</td>
+                                                <td>
+                                                    {% for subject_area in profile.subject_areas %}
+                                                        {% if not forloop.last %}
+                                                            {{subject_area}},
+                                                        {% else %}
+                                                            {{subject_area}}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </td>
                                             </tr>
                                         {% endif %}
                                         </tbody>
@@ -155,74 +166,83 @@
                                     <fieldset class="col-sm-12">
                                         <small class="text-muted">If this user account is for an Organization, First name, Middle name, and Last name may be left blank. Any resources created by an Organization user will list the Organization as the resource author/creator.</small>
                                     </fieldset>
+                                    <br>
                                 </div>
 
                                 <div class="row">
-                                    {# Organization #}
-                                    <fieldset class="col-sm-6">
-                                        <label>Organization *</label>
-                                        <input class="form-control form-required tagsinput" {% if profile.organization %}value="{{ profile.organization }}"{% endif %} name="organization">
-                                        <br /><small class="text-muted">The names of the organizations you are associated with.</small><br />
-                                    </fieldset>
+                                    <div class="col-xs-12 col-sm-6">
+                                      <div class="row">
+                                        
+                                        {# Organization #}
+                                        <fieldset class="col-xs-12">
+                                            <label>Organization *</label>
+                                            <input id="organization_input" class="form-control form-required tagsinput" {% if profile.organization %}value="{{ profile.organization }}"{% endif %} name="organization">
+                                            <small class="text-muted">The names of the organizations you are associated with.</small><br />
+                                        </fieldset>
+                                        <br>
 
-                                    {#        User Type       #}
-                                    <fieldset>
-                                        <label for="selectUserType">User type *</label>
-                                        <select name="user_type" class="form-control form-required" id="selectUserType">
-                                            <option disabled selected value>Select a user type</option>
-                                            <option value="University Faculty">University Faculty</option>
-                                            <option value="University Professional or Research Staff">University Professional or Research Staff</option>
-                                            <option value="Post-Doctoral Fellow">Post-Doctoral Fellow</option>
-                                            <option value="University Graduate Student">University Graduate Student</option>
-                                            <option value="University Undergraduate Student">University Undergraduate Student</option>
-                                            <option value="Commercial/Professional">Commercial/Professional</option>
-                                            <option value="Government Official">Government Official</option>
-                                            <option value="School Student Kindergarten to 12th Grade">School Student Kindergarten to 12th Grade</option>
-                                            <option value="School Teacher Kindergarten to 12th Grade">School Teacher Kindergarten to 12th Grade</option>
-                                            <option value="Organization">Organization</option>
-                                            <option value="Other">Other</option>
-                                        </select>
-                                    </fieldset>
+                                        {#        User Type       #}
+                                        <fieldset class="col-xs-12">
+                                            <label for="selectUserType">User type *</label>
+                                            <select name="user_type" class="form-control form-required" id="selectUserType">
+                                                <option disabled selected value>Select a user type</option>
+                                                <option value="University Faculty">University Faculty</option>
+                                                <option value="University Professional or Research Staff">University Professional or Research Staff</option>
+                                                <option value="Post-Doctoral Fellow">Post-Doctoral Fellow</option>
+                                                <option value="University Graduate Student">University Graduate Student</option>
+                                                <option value="University Undergraduate Student">University Undergraduate Student</option>
+                                                <option value="Commercial/Professional">Commercial/Professional</option>
+                                                <option value="Government Official">Government Official</option>
+                                                <option value="School Student Kindergarten to 12th Grade">School Student Kindergarten to 12th Grade</option>
+                                                <option value="School Teacher Kindergarten to 12th Grade">School Teacher Kindergarten to 12th Grade</option>
+                                                <option value="Organization">Organization</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </fieldset>
 
-                                    {#        User Type - Other       #}
-                                    <fieldset id="user-type-other">
-                                        <label>Specify: *</label>
-                                        <input name="user_type" class="form-control">
-                                    </fieldset>
+                                        {#        User Type - Other       #}
+                                        <fieldset id="user-type-other" class="col-sm-6">
+                                            <label>Specify: *</label>
+                                            <input name="user_type" class="form-control">
+                                        </fieldset>
+                                      </div>
+                                    </div>
 
-                                    {#        Country       #}
-                                    <fieldset>
-                                        <label>Country *</label>
-                                        <select name="country" class="form-control form-required input-medium bfh-countries" data-country="{{ profile.country }}"></select>
-                                    </fieldset>
+                                    <div class="col-xs-12 col-sm-6">
+                                      <div class="row">
+                                        {#        Country       #}
+                                        <fieldset class="col-xs-12">
+                                            <label>Country *</label>
+                                            <select id="country" name="country" class="form-control form-required input-medium bfh-countries" data-country="{{ profile.country }}"></select>
+                                        </fieldset>
 
-                                    {#        State       #}
-                                    <fieldset>
-                                        <label>State/Province *</label>
-                                        <input name="state" class="form-control form-required" {% if  profile.state and profile.state != 'None' %} value="{{ profile.state }}" {% endif %}>
-                                    </fieldset>
+                                        {#        State       #}
+                                        <fieldset class="col-xs-12">
+                                            <label>State/Region</label>
+                                            <select id="state" name="state" class="form-control input-medium bfh-states" data-country="country" data-state="{{ profile.state }}"></select>
+                                        </fieldset>
+                                      </div>
+                                    </div>
                                 </div>
 
-                                <div class="row">
-                                    {# Subject areas #}
-                                    <fieldset class="col-sm-12">
-                                        <label>Subject areas</label>
-                                        <input class="form-control" {% if profile.subject_areas %}value="{{ profile.subject_areas }}"{% endif %} name="subject_areas">
-                                        <small class="text-muted">A comma-separated list of subject areas you are interested
-                                            in researching. e.g. "Computer Science, Hydrology, Water Management"
-                                        </small>
-                                    </fieldset>
-                                </div>
+                                {# Subject areas #}
+                                <fieldset>
+                                    <label>Subject areas</label>
+                                    <input id="subject_areas" class="form-control tagsinput" {% if profile.subject_areas %}value="{{ profile.subject_areas|join:',' }}"{% endif %} name="subject_areas">
+                                    <small class="text-muted">A list of subject areas you are interested in researching. e.g. "Water Management." Free text entry or select from the suggestions.
+                                    </small>
+                                </fieldset>
 
-                                <div class="row">
-                                    {# email subscription #}
-                                    <fieldset class="col-sm-12">
-                                        <input type="checkbox" name="email_opt_out" id="id_email_opt_out"
-                                                {% if profile.email_opt_out %} checked {% endif %}>
-                                        <label class="form-check" for="id_email_opt_out">Opt out of receiving system
-                                            announcement emails such as announcements of planned downtime for system upgrades.</label>
-                                    </fieldset>
-                                </div>
+                                <br>
+
+                                {# email subscription #}
+                                <fieldset>
+                                    <div class="checkbox">
+                                        <label class="form-check" for="id_email_opt_out">
+                                            <input type="checkbox" name="email_opt_out" id="id_email_opt_out" {% if profile.email_opt_out %} checked {% endif %}>
+                                            Opt out of receiving system announcement emails such as announcements of planned downtime for system upgrades.</label>
+                                    </div>
+                                </fieldset>
                             </div>
                             {% endif %}
 
@@ -234,7 +254,7 @@
                                             <hr>
                                             <span><a href="{{ profile.cv.url }}" class="btn btn-default"
                                                     target="_blank"><span
-                                                    class="glyphicon glyphicon-file"></span>&nbsp;View CV</a></span>
+                                                    class="glyphicon glyphicon-file"></span>&nbsp;Download CV</a></span>
                                             <button id="btn-delete-cv" class="no-style icon-button btn-remove"
                                                         data-toggle="modal"
                                                         data-target="#delete-cv" title="Delete CV"><span
@@ -264,15 +284,6 @@
                                             </fieldset>
                                         {% endif %}
                                     </div>
-                                </div>
-                            {% endif %}
-
-                            {% if profile.cv and profile.cv.url %}
-                                <div data-page-mode="view">
-                                    <hr>
-                                    <div><a href="{{ profile.cv.url }}" class="btn btn-default"
-                                                                target="_blank"><span
-                                            class="glyphicon glyphicon-file"></span>&nbsp;View CV</a></div>
                                 </div>
                             {% endif %}
                         </div>
@@ -315,29 +326,30 @@
                                                 {% else %}
                                                     <div class="profile-pic-thumbnail round-image user-icon"></div>
                                                 {% endif %}
-
-                                                <div class="metadata-wrapper">
-                                                    <div class="shared-resource-info">
-                                                        <strong>{{ profile_user|contact }}</strong>
-                                                        <span class="text-muted"> shared </span>
-                                                        <span><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
+                                                {% with metadata=res.metadata %}
+                                                    <div class="metadata-wrapper">
+                                                        <div class="shared-resource-info">
+                                                            <strong>{{ profile_user|contact }}</strong>
+                                                            <span class="text-muted"> shared </span>
+                                                            <span><a href="{{ res.get_absolute_url }}">{{ metadata.title }}</a></span>
+                                                        </div>
+                                                        <h5><span class="text-muted">Type: </span>{{ res|resource_type }}</h5>
+                                                        <h5><span class="text-muted">Date: </span>{{ res.created }}</h5>
                                                     </div>
-                                                    <h5><span class="text-muted">Resource type: </span>{{ res|resource_type }}</h5>
-                                                    <h5><span class="text-muted">Date: </span>{{ res.created }}</h5>
-                                                </div>
-
-                                                {% if res.metadata.description %}
-                                                    <div class="activity-description col-sm-12">
-                                                        <p class="description">
-                                                            <strong>ABSTRACT: </strong>{{ res.metadata.description|linebreaks }}
-                                                        </p>
+                                                    {% with abstract=metadata.description %}
+                                                        {% if abstract %}
+                                                            <div class="activity-description col-sm-12">
+                                                                <p class="description">
+                                                                    <strong>ABSTRACT: </strong>{{ abstract|linebreaks }}
+                                                                </p>
+                                                            </div>
+                                                            <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
+                                                        {% endif %}
+                                                    {% endwith %}
                                                     </div>
-                                                    <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
-                                                {% endif %}
-                                            </div>
+                                                {% endwith %}
                                             {% endif %}
                                         {% endfor %}
-
                                         {% else %}
                                             <span class="text-muted">This user has no recent activity.</span>
                                         {% endif %}
@@ -377,8 +389,8 @@
                                                 {% endif %}
                                                 {% if profile.state and profile.state != "Unspecified"%}
                                                     <tr>
-                                                        <td><span class="text-muted">State/Province</span></td>
-                                                        <td>{{ profile.state }}</td>
+                                                        <td><span class="text-muted">State/Region:</span></td>
+                                                        <td><span id="db-state" class="bfh-states" data-state="{{ profile.state }}" data-country="{{ profile.country }}"></span></td>
                                                     </tr>
                                                 {% endif %}
                                                 <tr>
@@ -391,6 +403,19 @@
                                                 </tr>
                                                 </tbody>
                                             </table>
+                                            {% if profile.cv and profile.cv.url %}
+                                                <div data-page-mode="view">
+                                                    <hr>
+                                                    <div>
+                                                        <a href="{{ profile.cv.url }}"
+                                                            class="btn btn-default"
+                                                            target="_blank">
+                                                            <span class="glyphicon glyphicon-file"></span>
+                                                            Download CV
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
                                             {% if profile_user.id == user.id or user.is_superuser %}
                                                 <br>
                                                 {% if profile.create_irods_user_account %}
@@ -477,7 +502,7 @@
                                                 {% else %}
                                                     <tr>
                                                         <td><span class="text-muted">Email</span></td>
-                                                        <td>(<a href="/accounts/login/">Log in to send email</a>)</td>
+                                                        <td>(<a href="{% url 'login' %}">Log in to send email</a>)</td>
                                                     </tr>
                                                 {% endif %}
                                             {% endif %}
@@ -511,7 +536,8 @@
                                                     </select>
                                                 </div>
                                                 <div class="col-sm-6">
-                                                    <input id="phone1" name="phone_1" class="form-control phone" {% if profile.phone_1 %}value="{{ profile.phone_1 }}"{% endif %}>
+                                                    {# this assumes that the phone will be in the same country as the profile #}
+                                                    <input id="phone1" name="phone_1" class="form-control bfh-phone phone" data-country="country" type="tel" {% if profile.phone_1 %}value="{{ profile.phone_1 }}"{% endif %}>
                                                 </div>
                                             </fieldset>
 
@@ -532,7 +558,8 @@
                                                     </select>
                                                 </div>
                                                 <div class="col-sm-6">
-                                                    <input id="phone2" name="phone_2" class="form-control phone" {% if profile.phone_2 %}value="{{ profile.phone_2 }}"{% endif %}>
+                                                    {# this assumes that the phone will be in the same country as the profile #}
+                                                    <input id="phone2" name="phone_2" class="form-control bfh-phone phone" data-country="country" type="tel" {% if profile.phone_2 %}value="{{ profile.phone_2 }}"{% endif %}>
                                                 </div>
                                             </fieldset>
                                             <fieldset class="col-sm-12">
@@ -576,7 +603,7 @@
                                                     <i class="identifier-icon ai ai-researchgate-square"></i>
                                                     {% elif name == "ResearcherID" %}
                                                     <img class="identifier-icon"
-                                                         src="{{ STATIC_URL }}img/researcherID.png"
+                                                         src="{% static 'img/researcherID.png' %}"
                                                          alt="ResearcherID icon"/>
                                                     {% else %}
                                                     <i class="identifier-icon fa fa-address-card"></i>
@@ -618,60 +645,16 @@
                                             <td><span>All</span></td>
                                             <td><span class="badge">0</span></td>
                                         </tr>
-                                        <tr id="badge-collection" data-type="type-Collection Resource">
+                                        <tr id="badge-collection" data-type="type-Collection">
                                             <td><span>Collection</span></td>
                                             <td><span class="badge">0</span></td>
                                         </tr>
-                                        <tr id="badge-composite" data-type="type-Composite Resource">
-                                            <td><span>Composite Resource</span></td>
+                                        <tr id="badge-composite" data-type="type-Resource">
+                                            <td><span>Resource</span></td>
                                             <td><span class="badge">0</span></td>
                                         </tr>
-                                        <tr id="badge-generic" data-type="type-Generic">
-                                            <td><span>Generic</span></td>
-                                            <td><span class="badge">0</span></td>
-                                        </tr>
-                                         <tr id="badge-geographic-feature" data-type="type-Geographic Feature (ESRI Shapefiles)">
-                                            <td><span>Geographic Feature</span></td>
-                                            <td><span class="badge">0</span></td>
-                                        </tr>
-                                        <tr id="badge-geographic" data-type="type-Geographic Raster">
-                                            <td><span>Geographic Raster</span></td>
-                                            <td><span class="badge">0</span></td>
-                                        </tr>
-                                        <tr id="badge-his" data-type="type-HIS Referenced Time Series">
-                                            <td><span>HIS Referenced Time Series</span></td>
-                                            <td><span class="badge">0</span></td>
-                                        </tr>
-                                        <tr id="badge-model-instance" data-type="type-Model Instance Resource">
-                                            <td><span>Model Instance</span></td>
-                                            <td><span class="badge">0</span></td>
-                                        </tr>
-                                        <tr id="badge-model-program" data-type="type-Model Program Resource">
-                                            <td><span>Model Program</span></td>
-                                            <td><span class="badge">0</span></td>
-                                        </tr>
-                                        <tr id="badge-modflow" data-type="type-MODFLOW Model Instance Resource">
-                                            <td><span>MODFLOW Model Instance Resource</span></td>
-                                            <td><span class="badge">0</span></td>
-                                        </tr>
-                                        <tr id="badge-multidimensional" data-type="type-Multidimensional (NetCDF)">
-                                            <td><span>Multidimensional (NetCDF)</span></td>
-                                            <td><span class="badge">0</span></td>
-                                        </tr>
-                                        <tr id="badge-script" data-type="type-Script Resource">
-                                            <td><span>Script Resource</span></td>
-                                            <td><span class="badge">0</span></td>
-                                        </tr>
-                                        <tr id="badge-swat" data-type="type-SWAT Model Instance Resource">
-                                            <td><span>SWAT Model Instance</span></td>
-                                            <td><span class="badge">0</span></td>
-                                        </tr>
-                                        <tr id="badge-time-series" data-type="type-Time Series">
-                                            <td><span>Time Series</span></td>
-                                            <td><span class="badge">0</span></td>
-                                        </tr>
-                                        <tr id="badge-web-app" data-type="type-Web App Resource">
-                                            <td><span>Web App</span></td>
+                                        <tr id="badge-web-app" data-type="type-App Connector">
+                                            <td><span>App Connector</span></td>
                                             <td><span class="badge">0</span></td>
                                         </tr>
                                     </tbody>
@@ -686,59 +669,15 @@
                                         <span class="icon-resource-type">
                                             <span><strong>{{ resource_type }}</strong></span>
                                             {% if res.resource_type == "CompositeResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
-                                                     alt="{{ resource_type }}"
-                                                     title="{{ resource_type }}"/>
-                                            {% elif res.resource_type == "RasterResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
-                                                     alt="{{ resource_type }}"
-                                                     title="{{ resource_type }}"/>
-                                            {% elif res.resource_type == "RefTimeSeriesResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
-                                                     alt="{{ resource_type }}"
-                                                     title="{{ resource_type }}"/>
-                                            {% elif res.resource_type == "ScriptResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
-                                                     alt="{{ resource_type }}"
-                                                     title="{{ resource_type }}"/>
-                                            {% elif res.resource_type == "ModelProgramResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
-                                                     alt="{{ resource_type }}"
-                                                     title="{{ resource_type }}"/>
-                                            {% elif res.resource_type == "ModelInstanceResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
-                                                     alt="{{ resource_type }}"
-                                                     title="{{ resource_type }}"/>
-                                            {% elif res.resource_type == "SWATModelInstanceResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
-                                                     alt="{{ resource_type }}"
-                                                     title="{{ resource_type }}"/>
-                                            {% elif res.resource_type == "NetcdfResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
-                                                     alt="{{ resource_type }}"
-                                                     title="{{ resource_type }}"/>
-                                            {% elif res.resource_type == "TimeSeriesResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
-                                                     alt="{{ resource_type }}"
-                                                     title="{{ resource_type }}"/>
-                                            {% elif res.resource_type == "GeographicFeatureResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
+                                                <img src="{% static 'img/resource-icons/composite48x48.png' %}"
                                                      alt="{{ resource_type }}"
                                                      title="{{ resource_type }}"/>
                                             {% elif res.resource_type == "ToolResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
+                                                <img src="{% static 'img/resource-icons/webapp48x48.png' %}"
                                                      alt="{{ resource_type }}"
                                                      title="{{ resource_type }}"/>
                                             {% elif res.resource_type == "CollectionResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
-                                                     alt="{{ resource_type }}"
-                                                     title="{{ resource_type }}"/>
-                                            {% elif res.resource_type == "MODFLOWModelInstanceResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
-                                                     alt="{{ resource_type }}"
-                                                     title="{{ resource_type }}"/>
-                                            {% elif res.resource_type == "GenericResource" %}
-                                                <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+                                                <img src="{% static 'img/resource-icons/collection48x48.png' %}"
                                                      alt="{{ resource_type }}"
                                                      title="{{ resource_type }}"/>
                                             {% endif %}
@@ -746,30 +685,32 @@
                                         </span>
                                         </div>
                                         <div class="activity-block row">
-                                            <div class="activity-info col-sm-12">
-                                                <span class="title"><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
-                                                <h5><span class="text-muted">Created: </span>{{ res.created }}</h5>
-                                                <h5><span class="text-muted">Authors: </span>
-                                                    {% for creator in res.metadata.creators.all %}
-                                                        {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
-                                                        {% if creator.description %}
-                                                            <a href="{{ creator.description }}">{{ creator.name }}</a>
-                                                        {% else %}
-                                                            <span>{{ creator.name }}</span>
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </h5>
-                                            </div>
-
-                                            {% if res.metadata.description %}
-                                                <div class="activity-description col-sm-12">
-                                                    <p>
-                                                        <strong>ABSTRACT: </strong>{{ res.metadata.description|linebreaks }}
-                                                    </p>
+                                            {% with metadata=res.metadata %}
+                                                <div class="activity-info col-sm-12">
+                                                    <span class="title"><a href="{{ res.get_absolute_url }}">{{ metadata.title }}</a></span>
+                                                    <h5><span class="text-muted">Created: </span>{{ res.created }}</h5>
+                                                    <h5><span class="text-muted">Authors: </span>
+                                                        {% for creator in metadata.creators.all %}
+                                                            {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
+                                                            {% if creator.relative_uri and creator.is_active_user %}
+                                                                <a href="{{ creator.relative_uri }}">{{ creator.name }}</a>
+                                                            {% else %}
+                                                                <span>{{ creator.name }}</span>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </h5>
                                                 </div>
-                                                <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
-                                            {% endif %}
-
+                                                {%  with abstract=metadata.description %}
+                                                    {% if abstract %}
+                                                        <div class="activity-description col-sm-12">
+                                                            <p>
+                                                                <strong>ABSTRACT: </strong>{{ abstract|linebreaks }}
+                                                            </p>
+                                                        </div>
+                                                        <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
+                                                    {% endif %}
+                                               {% endwith %}
+                                           {% endwith %}
                                         </div>
                                     </div>
                                     {% endwith %}
@@ -845,7 +786,7 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">
-                                Close
+                                Cancel
                             </button>
                             <button class="btn btn-primary" id="picture-clear_id" name="picture-clear"
                                     title="Delete profile picture"
@@ -959,7 +900,7 @@
 {% endblock %}
 
 {% block extra_css %}
-  <link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.tagsinput-revisited.min.css" />
+  <link rel="stylesheet" href="{% static 'css/jquery.tagsinput-revisited.min.css' %}" />
   <style>
     .tagsinput {
       border: 1px solid #ccc;
@@ -978,8 +919,13 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/profile.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tagsinput-revisited.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/identifiers-form.js"></script>
+    <script>
+        var PHONES = {'phone_1': "{{profile_user.userprofile.phone_1}}", 'phone_2': "{{profile_user.userprofile.phone_2}}" };
+        var OLD_STATE = "{{ profile_user.userprofile.state }}";
+        const DATA_UPLOAD_MAX_MEMORY_SIZE = "{{ data_upload_max }}";
+    </script>
+    <script type="text/javascript" src="{% static 'js/bootstrap-formhelpers.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/profile.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/jquery.tagsinput-revisited.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/identifiers-form.js' %}"></script>
 {% endblock %}

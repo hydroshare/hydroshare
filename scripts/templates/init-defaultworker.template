@@ -8,7 +8,7 @@ userdel hydro-service \
  && chown -R hydro-service:storage-hydro /hydroshare /hs_tmp /shared_tmp /tmp \
  && chmod -R 3777 /hs_tmp /shared_tmp /tmp 
 
-celery beat -A hydroshare -s /hydroshare/celery/celerybeat-schedule &
-celery worker -A hydroshare -E -Q default --concurrency=CELERY_CONCURRENCY &
-celery flower --address=0.0.0.0 --broker=amqp://guest:guest@rabbitmq:5672//
+celery -A hydroshare beat  -s /hydroshare/celery/celerybeat-schedule &
+celery -A hydroshare worker -E -Q default --concurrency=CELERY_CONCURRENCY &
+celery -A hydroshare flower --address=0.0.0.0 --broker=amqp://guest:guest@rabbitmq:5672//
 

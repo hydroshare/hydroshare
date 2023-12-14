@@ -2,33 +2,32 @@
   "name": "hs_discover",
   "version": "1.0.0",
   "description": "Discover",
-  "main": "vue.config.js",
+  "author": "",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "webpack-defaults": "webpack-defaults"
   },
-  "author": "",
-  "license": "ISC",
+  "main": "vue.config.js",
   "dependencies": {
-    "axios": "^0.21.1",
+    "axios": "^1.6.0",
     "bootstrap": "^4.4.1",
     "bootstrap-vue": "^2.14.0",
-    "core-js": "2.6.5",
+    "core-js": "^3.8.3",
     "vue": "^2.6.11",
     "vue-date-pick": "^1.4.1",
     "vue-router": "^3.1.6",
-    "webpack": "^4.43.0"
+    "webpack": "^5.76.0"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "^3.12.1",
-    "@vue/cli-plugin-eslint": "^3.12.1",
-    "@vue/cli-service": "^3.12.1",
+    "@vue/cli-plugin-babel": "~5.0.8",
+    "@vue/cli-plugin-eslint": "~5.0.8",
+    "@vue/cli-service": "~5.0.8",
     "@vue/eslint-config-airbnb": "^4.0.1",
-    "babel-eslint": "^10.1.0",
-    "eslint": "^5.16.0",
-    "eslint-plugin-vue": "^5.2.3",
+    "@babel/eslint-parser": "^7.19.1",
+    "eslint": "^7.5.0",
+    "eslint-plugin-vue": "^7.5.0",
     "vue-template-compiler": "^2.6.11"
   },
   "eslintConfig": {
@@ -49,11 +48,12 @@
       ]
     },
     "parserOptions": {
-      "parser": "babel-eslint"
+      "parser": "@babel/eslint-parser"
     }
   },
   "browserslist": [
     "> 1%",
     "last 2 versions"
-  ]
+  ],
+  "license": "ISC"
 }

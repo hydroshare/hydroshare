@@ -1,9 +1,8 @@
 import json
-import requests
-from dateutil import parser
 import time
 from unittest import skip
 
+from dateutil import parser
 from django.test import override_settings
 from rest_framework import status
 
@@ -56,7 +55,7 @@ class TestCreateResource(HSRESTTestCase):
             self.assertGreater(int(response['Content-Length']), 0)
 
     def test_post_resource_get_sysmeta(self):
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         params = {'resource_type': rtype,
                   'title': title,
@@ -109,11 +108,12 @@ class TestCreateResource(HSRESTTestCase):
         contributor
         source,
         relation,
+        geospatialrelation,
         identifier,
         fundingagency
 
         """
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         metadata = []
         metadata.append({'coverage': {'type': 'period', 'value': {'start': '01/01/2000',
@@ -155,8 +155,11 @@ class TestCreateResource(HSRESTTestCase):
         # relation
         metadata.append({'relation': {'type': 'isPartOf',
                                       'value': 'http://hydroshare.org/resource/001'}})
-        # source
-        metadata.append({'source': {'derived_from': 'http://hydroshare.org/resource/0001'}})
+
+        # geospatialrelation
+        metadata.append({'geospatialrelation': {'type': 'relation',
+                                                'value': 'https://geoconnex.us/ref/dams/1083460',
+                                                'text': 'Bonnie Meade [dams/1083460]'}})
 
         # identifier
         metadata.append({'identifier': {'name': 'someIdentifier', 'url': 'http://some.org/001'}})
@@ -219,10 +222,12 @@ class TestCreateResource(HSRESTTestCase):
         self.assertEqual(relation.type, 'isPartOf')
         self.assertEqual(relation.value, 'http://hydroshare.org/resource/001')
 
-        # there should be 1 source element
-        self.assertEqual(resource.metadata.sources.all().count(), 1)
-        source = resource.metadata.sources.all().first()
-        self.assertEqual(source.derived_from, 'http://hydroshare.org/resource/0001')
+        # there should be 1 geospatialrelation element
+        self.assertEqual(resource.metadata.geospatialrelations.all().count(), 1)
+        geospatialrelation = resource.metadata.geospatialrelations.all().first()
+        self.assertEqual(geospatialrelation.type, 'relation')
+        self.assertEqual(geospatialrelation.value, 'https://geoconnex.us/ref/dams/1083460')
+        self.assertEqual(geospatialrelation.text, 'Bonnie Meade [dams/1083460]')
 
         # there should be 2 identifiers
         self.assertEqual(resource.metadata.identifiers.all().count(), 2)
@@ -239,77 +244,9 @@ class TestCreateResource(HSRESTTestCase):
 
         self.resources_to_delete.append(res_id)
 
-    @skip("TODO: was not running before python3 upgrade")
-    def test_resource_create_with_extended_metadata(self):
-        """
-        The followings are the extended metadata elements for the NetCDF resource that can be
-        passed as part of the 'metadata' parameter when creating a resource:
-
-        originalcoverage
-        variable
-
-        """
-        rtype = 'NetcdfResource'
-        title = 'My Test resource'
-        metadata = []
-        # originalcover
-        value = {"northlimit": 12, "projection": "transverse_mercator", "units": "meter",
-                 "southlimit": 10, "eastlimit": 23, "westlimit": 2}
-
-        metadata.append({'originalcoverage': {'value': value,
-                                              'projection_string_text': '+proj=tmerc +lon_0=-111.0 '
-                                                                        '+lat_0=0.0 +x_0=500000.0 '
-                                                                        '+y_0=0.0 +k_0=0.9996',
-                                              'projection_string_type': 'Proj4 String'}})
-
-        # variable (this element is defined in multiple resource types including
-        # NetcdfResource type)
-        var_name = 'SWE'
-        var_type = 'Float'
-        var_shape = 'y,x,time'
-        var_unit = 'm'
-        var_missing_value = '-9999'
-        var_des_name = 'Snow water equivalent'
-        var_method = 'model simulation of UEB'
-        metadata.append({'variable': {'name': var_name, 'type': var_type, 'shape': var_shape,
-                                      'unit': var_unit, 'missing_value': var_missing_value,
-                                      'descriptive_name': var_des_name, 'method': var_method}})
-        params = {'resource_type': rtype,
-                  'title': title,
-                  'metadata': json.dumps(metadata),
-                  }
-        rest_url = '/hsapi/resource/'
-        response = self.client.post(rest_url, params)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        content = json.loads(response.content.decode())
-        res_id = content['resource_id']
-        resource = get_resource_by_shortkey(res_id)
-
-        # there should be 1 originalcoverage element
-        self.assertEqual(resource.metadata.ori_coverage.all().count(), 1)
-        ori_coverage = resource.metadata.ori_coverage.all().first()
-        self.assertEqual(ori_coverage.value, value)
-        self.assertEqual(ori_coverage.projection_string_text, '+proj=tmerc +lon_0=-111.0 '
-                                                               '+lat_0=0.0 +x_0=500000.0 '
-                                                               '+y_0=0.0 +k_0=0.9996')
-        self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
-
-        # there should be 1 variable element
-        self.assertEqual(resource.metadata.variables.all().count(), 1)
-        variable = resource.metadata.variables.all().first()
-        self.assertEqual(variable.name, var_name)
-        self.assertEqual(variable.type, var_type)
-        self.assertEqual(variable.shape, var_shape)
-        self.assertEqual(variable.unit, var_unit)
-        self.assertEqual(variable.missing_value, var_missing_value)
-        self.assertEqual(variable.descriptive_name, var_des_name)
-        self.assertEqual(variable.method, var_method)
-
-        self.resources_to_delete.append(res_id)
-
     def test_resource_create_with_core_and_extra_metadata(self):
 
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         metadata = []
         metadata.append({'coverage': {'type': 'period', 'value': {'start': '01/01/2000',
@@ -344,7 +281,7 @@ class TestCreateResource(HSRESTTestCase):
         self.resources_to_delete.append(res_id)
 
     def test_resource_create_with_extra_metadata(self):
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         extra_metadata = {'latitude': '40', 'longitude': '-110'}
 
@@ -381,11 +318,11 @@ class TestCreateResource(HSRESTTestCase):
         :return:
         """
 
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         # test title
         metadata = []
-        metadata.append({'title': {'value': "This is a generic resource"}})
+        metadata.append({'title': {'value': "This is a resource"}})
         params = self._get_params(rtype, title, metadata)
         self._test_not_allowed_element(params)
 
@@ -426,7 +363,7 @@ class TestCreateResource(HSRESTTestCase):
 
         # test type
         metadata = []
-        metadata.append({'type': {'url': "http://hydroshare.org/generic"}})
+        metadata.append({'type': {'url': "http://hydroshare.org/composite"}})
         params = self._get_params(rtype, title, metadata)
         self._test_not_allowed_element(params)
 
@@ -443,63 +380,3 @@ class TestCreateResource(HSRESTTestCase):
         rest_url = '/hsapi/resource/'
         response = self.client.post(rest_url, params)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    @skip("skip this test until we find out how to mock it up")
-    def test_refts_creation_via_rest_api(self):
-
-        rtype = 'RefTimeSeriesResource'
-        title = 'My Test RefTS res'
-
-        ref_url = "http://data.iutahepscor.org/LoganRiverWOF/REST/waterml_1_1.svc/datavalues?" \
-                  "location=iutah:LR_WaterLab_AA&variable=iutah:WaterTemp_EXO&" \
-                  "startDate=2014-12-02T19:45:00Z&endDate=2014-12-05T19:45:00Z"
-        ref_type = "rest"
-
-        # test the "ref_url" rest endpoint is up
-        response = requests.get(ref_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        metadata = []
-        # add core metadata
-        metadata.append({'relation': {'type': 'isPartOf',
-                                      'value': 'http://hydroshare.org/resource/001'}})
-        # add refts-specific metadata
-        metadata.append({"referenceurl":
-                        {"value": ref_url,
-                         "type": ref_type}})
-
-        # post to rest api
-        params = {'resource_type': rtype,
-                  'title': title,
-                  'metadata': json.dumps(metadata),
-                  }
-        rest_url = '/hsapi/resource/'
-        response = self.client.post(rest_url, params)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        content = json.loads(response.content.decode())
-        res_id = content['resource_id']
-        resource = get_resource_by_shortkey(res_id)
-
-        # test core metadata
-        self.assertEqual(resource.metadata.relations.all().count(), 1)
-        relation = resource.metadata.relations.all().first()
-        self.assertEqual(relation.type, 'isPartOf')
-        self.assertEqual(relation.value, 'http://hydroshare.org/resource/001')
-
-        # test resource-specific metadata
-        self.assertEqual(resource.resource_type.lower(), "reftimeseriesresource")
-
-        self.assertEqual(resource.metadata.referenceURLs.all().count(), 1)
-        referenceURLs = resource.metadata.referenceURLs.all().first()
-        self.assertEqual(referenceURLs.value, ref_url)
-        self.assertEqual(referenceURLs.type, ref_type)
-
-        self.assertEqual(resource.metadata.sites.all().count(), 1)
-        sites = resource.metadata.sites.all().first()
-        self.assertEqual(sites.code, "LR_WaterLab_AA")
-
-        self.assertEqual(resource.metadata.variables.all().count(), 1)
-        variables = resource.metadata.variables.all().first()
-        self.assertEqual(variables.code, "WaterTemp_EXO")
-
-        self.resources_to_delete.append(res_id)

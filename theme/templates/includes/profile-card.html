@@ -1,9 +1,10 @@
+{% load hydroshare_tags %}
 <script id="profile-card-template" type="text/x-template">
     <ul class="dropdown-menu arrow_box profile-card" @click.stop=""
         :style="{top: position.top + 'px', left: position.left + 'px'}">
         <li>
             <div class="flex">
-                <div>
+                <div class="has-background-light-gray">
                     <div :class="{'dropdown-user-icon': !user.pictureUrl}"
                          :style="{backgroundImage: user.pictureUrl ? 'url(' + user.pictureUrl + ')' : 'none'}"
                         class="dropdown-profile-pic-thumbnail round-image">
@@ -11,7 +12,7 @@
 
                     <div>
                         <small>Contributions</small>
-                        <div class="label label-default space-top">${user.contributions}</div>
+                        <div class="label label-default has-space-top">${user.viewable_contributions}</div>
                     </div>
 
                     <div class="space-top">
@@ -35,8 +36,8 @@
                                 <i class="fa fa-map-marker text-muted" aria-hidden="true"></i>
                             </td>
                             <td>
-                                <span v-if="user.state && user.state !== 'Unspecified'">${user.state}</span>
-                                <span v-if="user.state && user.country">, </span>
+                                <span v-if="user.state && user.state !== 'Unspecified'">
+                                  ${user.state + (user.country && user.country !== 'Unspecified' ? ',' : '')}</span>
                                 <span v-if="user.country && user.country !== 'Unspecified'">${user.country}</span>
                             </td>
                         </tr>
@@ -49,7 +50,7 @@
 
                     <div v-if="user.subject_areas" class="space-top">
                         <small class="text-muted">Subject Areas:</small>
-                        <div>${user.subject_areas}</div>
+                        <div>${user.subject_areas.join(", ")}</div>
                     </div>
 
                     <div v-if="hasIdentifiers" class="space-top">
@@ -62,7 +63,7 @@
                                    data-toggle="tooltip" data-placement="top">
 
                                     <img v-if="key === 'ResearcherID'" class="hover-shadow"
-                                         src="{{ STATIC_URL }}img/researcherID.png"
+                                         src="{% static 'img/researcherID.png' %}"
                                          alt="ResearcherID icon"/>
 
                                     <i v-else :class="identifierAttributes[key].classes"></i>
@@ -82,9 +83,23 @@
     </ul>
 </script>
 
-<script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/profile-link-cmp.js"></script>
+<script type="text/javascript" src="{% static 'js/hs-vue/profile-link-cmp.js' %}"></script>
 
 <script id="profile-link-template" type="text/x-template">
-    <a v-on:click="$emit('load-card', {user: user, event: $event})"
-       data-toggle="dropdown" style="cursor: pointer;">${user.best_name}</a>
+    <div v-if="showDetails" class="profile-link flex align-center"
+        v-on:click="$emit('load-card', { user: user, event: $event })"
+        data-toggle="dropdown">
+        <div v-if="user.pictureUrl" :style="{backgroundImage: 'url(' + user.pictureUrl + ')'}"
+            class="profile-pic-thumbnail round-image">
+        </div>
+        <div v-else class="dropdown-user-icon"
+            class="profile-pic-thumbnail-small details-profile-pic round-image">
+        </div>
+        <div>
+            <a class="has-cursor-pointer">${ user.best_name }</a>
+            <div class="text-muted">${ user.title }</div>
+        </div>
+    </div>
+    <a v-else v-on:click="$emit('load-card', { user: user, event: $event })"
+        data-toggle="dropdown" class="profile-link has-cursor-pointer">${ user.best_name }</a>
 </script>

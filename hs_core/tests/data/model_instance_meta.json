@@ -1,0 +1,47 @@
+{
+  "title": "Testing MI aggr metadata update",
+  "keywords": [
+    "mi aggregation", "rest api"
+  ],
+  "additional_metadata": {
+     "key-1": "value-1",
+     "key-2": "value-2"
+  },
+  "temporal_coverage": {
+    "start": "2010-06-01",
+    "end": "2022-01-01"
+  },
+  "spatial_coverage": {
+    "type": "point",
+    "units": "degree decimal",
+    "north": 42.101,
+    "east": -98.123
+  },
+  "has_model_output": true,
+  "executed_by": "",
+  "metadata_json": {
+    "modelInput": {
+        "rainFallTimeStepType": "Sub-hourly",
+        "rainFallTimeStepValue": 200
+    },
+    "modelMethod": {
+        "petEstimationMethod": "Test PET estimation method",
+        "runoffCalculationMethod": "Test runoff calculation method"
+    },
+    "modelObjective": {
+        "BMPs": false,
+        "hydrology": true,
+        "waterQuality": true,
+        "OtherObjectives": "Model other objectives-1",
+        "climateLanduseChange": false
+    },
+    "modelParameter": {
+        "fertilizer": true,
+        "pointSource": false,
+        "cropRotation": false,
+        "tileDrainage": true,
+        "irrigationOperation": false
+    },
+    "simulationType": "Auto Calibration"
+}
+}

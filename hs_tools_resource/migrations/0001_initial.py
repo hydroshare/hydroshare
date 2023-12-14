@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
                 ('object_id', models.PositiveIntegerField()),
                 ('description', models.TextField()),
                 ('value', models.DecimalField(max_digits=10, decimal_places=2)),
-                ('content_type', models.ForeignKey(related_name='hs_tools_resource_fee_related', to='contenttypes.ContentType')),
+                ('content_type', models.ForeignKey(related_name='hs_tools_resource_fee_related', on_delete=models.CASCADE, to='contenttypes.ContentType')),
             ],
             options={
                 'abstract': False,
@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
                 ('value', models.CharField(max_length='500', null=True)),
-                ('content_type', models.ForeignKey(related_name='hs_tools_resource_requesturlbase_related', to='contenttypes.ContentType')),
+                ('content_type', models.ForeignKey(related_name='hs_tools_resource_requesturlbase_related', on_delete=models.CASCADE, to='contenttypes.ContentType')),
             ],
             options={
                 'abstract': False,
@@ -47,7 +47,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ToolMetaData',
             fields=[
-                ('coremetadata_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='hs_core.CoreMetaData')),
+                ('coremetadata_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, on_delete=models.CASCADE, to='hs_core.CoreMetaData')),
             ],
             options={
             },
@@ -56,7 +56,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ToolResource',
             fields=[
-                ('page_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='pages.Page')),
+                ('page_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, on_delete=models.CASCADE, to='pages.Page')),
                 ('comments_count', models.IntegerField(default=0, editable=False)),
                 ('rating_count', models.IntegerField(default=0, editable=False)),
                 ('rating_sum', models.IntegerField(default=0, editable=False)),
@@ -70,13 +70,13 @@ class Migration(migrations.Migration):
                 ('short_id', models.CharField(default=hs_core.models.short_id, max_length=32, db_index=True)),
                 ('doi', models.CharField(help_text=b"Permanent identifier. Never changes once it's been set.", max_length=1024, null=True, db_index=True, blank=True)),
                 ('object_id', models.PositiveIntegerField(null=True, blank=True)),
-                ('content_type', models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True)),
-                ('creator', models.ForeignKey(related_name='creator_of_hs_tools_resource_toolresource', to=settings.AUTH_USER_MODEL, help_text='This is the person who first uploaded the resource')),
+                ('content_type', models.ForeignKey(blank=True, on_delete=models.CASCADE, to='contenttypes.ContentType', null=True)),
+                ('creator', models.ForeignKey(related_name='creator_of_hs_tools_resource_toolresource', on_delete=models.SET_NULL, to=settings.AUTH_USER_MODEL, help_text='This is the person who first uploaded the resource')),
                 ('edit_groups', models.ManyToManyField(help_text='This is the set of Hydroshare Groups who can edit the resource', related_name='group_editable_hs_tools_resource_toolresource', null=True, to='auth.Group', blank=True)),
                 ('edit_users', models.ManyToManyField(help_text='This is the set of Hydroshare Users who can edit the resource', related_name='user_editable_hs_tools_resource_toolresource', null=True, to=settings.AUTH_USER_MODEL, blank=True)),
-                ('last_changed_by', models.ForeignKey(related_name='last_changed_hs_tools_resource_toolresource', to=settings.AUTH_USER_MODEL, help_text='The person who last changed the resource', null=True)),
+                ('last_changed_by', models.ForeignKey(related_name='last_changed_hs_tools_resource_toolresource', on_delete=models.SET_NULL, to=settings.AUTH_USER_MODEL, help_text='The person who last changed the resource', null=True)),
                 ('owners', models.ManyToManyField(help_text='The person who has total ownership of the resource', related_name='owns_hs_tools_resource_toolresource', to=settings.AUTH_USER_MODEL)),
-                ('user', models.ForeignKey(related_name='toolresources', verbose_name='Author', to=settings.AUTH_USER_MODEL)),
+                ('user', models.ForeignKey(related_name='toolresources', verbose_name='Author', on_delete=models.SET_NULL, to=settings.AUTH_USER_MODEL)),
                 ('view_groups', models.ManyToManyField(help_text='This is the set of Hydroshare Groups who can view the resource', related_name='group_viewable_hs_tools_resource_toolresource', null=True, to='auth.Group', blank=True)),
                 ('view_users', models.ManyToManyField(help_text='This is the set of Hydroshare Users who can view the resource', related_name='user_viewable_hs_tools_resource_toolresource', null=True, to=settings.AUTH_USER_MODEL, blank=True)),
             ],
@@ -92,7 +92,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
                 ('tool_res_type', models.CharField(max_length='500', null=True)),
-                ('content_type', models.ForeignKey(related_name='hs_tools_resource_toolresourcetype_related', to='contenttypes.ContentType')),
+                ('content_type', models.ForeignKey(related_name='hs_tools_resource_toolresourcetype_related', on_delete=models.CASCADE, to='contenttypes.ContentType')),
             ],
             options={
                 'abstract': False,
@@ -105,7 +105,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('object_id', models.PositiveIntegerField()),
                 ('value', models.CharField(max_length='500', null=True)),
-                ('content_type', models.ForeignKey(related_name='hs_tools_resource_toolversion_related', to='contenttypes.ContentType')),
+                ('content_type', models.ForeignKey(related_name='hs_tools_resource_toolversion_related', on_delete=models.CASCADE, to='contenttypes.ContentType')),
             ],
             options={
                 'abstract': False,

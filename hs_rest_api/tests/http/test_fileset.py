@@ -1,6 +1,6 @@
 import tempfile
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from hs_file_types.tests.utils import CompositeResourceTestMixin
 
 from hs_core.models import ResourceFile

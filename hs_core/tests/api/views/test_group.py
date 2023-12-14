@@ -4,7 +4,7 @@ import json
 from mock import patch
 
 from django.test import Client
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.contrib.auth.models import Group
 from django.db import transaction
 from django.utils.http import int_to_base36
@@ -50,7 +50,7 @@ class TestGroup(MockIRODSTestCaseMixin, ViewTestCase):
         )
 
         # create a resource for sharing with group
-        self.resource = hydroshare.create_resource(resource_type='GenericResource',
+        self.resource = hydroshare.create_resource(resource_type='CompositeResource',
                                                    owner=self.john,
                                                    title='Test Resource',
                                                    metadata=[]
@@ -589,15 +589,15 @@ class TestGroup(MockIRODSTestCaseMixin, ViewTestCase):
         request.META['HTTP_REFERER'] = "/some_url/"
         request.user = self.mike
         response = make_group_membership_request(request, group_id=new_group.id)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        response_content = json.loads(response.content)
+        self.assertEqual(response_content["status"], 'success')
         # now there should be one GroupMembershipRequest associated with Mike
         self.assertEqual(self.mike.uaccess.group_membership_requests.count(), 1)
 
         # test user making request more than once for the same group should fail
         response = make_group_membership_request(request, group_id=new_group.id)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        response_content = json.loads(response.content)
+        self.assertEqual(response_content["status"], 'error')
         # there should be still one GroupMembershipRequest associated with Mike
         self.assertEqual(self.mike.uaccess.group_membership_requests.count(), 1)
 
@@ -617,15 +617,15 @@ class TestGroup(MockIRODSTestCaseMixin, ViewTestCase):
         request.META['HTTP_REFERER'] = "/some_url/"
         request.user = self.john
         response = make_group_membership_request(request, group_id=new_group.id, user_id=self.mike.id)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        response_content = json.loads(response.content)
+        self.assertEqual(response_content["status"], 'success')
         # now there should be one GroupMembershipRequest associated with John
         self.assertEqual(self.john.uaccess.group_membership_requests.count(), 1)
 
         # test group owner inviting same user to the same group more than once should fail
         response = make_group_membership_request(request, group_id=new_group.id, user_id=self.mike.id)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        response_content = json.loads(response.content)
+        self.assertEqual(response_content["status"], 'error')
         # there should be still one GroupMembershipRequest associated with John
         self.assertEqual(self.john.uaccess.group_membership_requests.count(), 1)
 

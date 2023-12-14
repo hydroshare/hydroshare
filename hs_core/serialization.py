@@ -1,6 +1,7 @@
 import os
 import heapq
 import xml.sax
+# TODO: should we use defusedxml.sax?
 import urllib.parse
 import logging
 
@@ -19,7 +20,7 @@ from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetim
 from hs_core.hydroshare.utils import resource_pre_create_actions
 from hs_core.hydroshare.utils import ResourceFileSizeException, ResourceFileValidationException
 from hs_core.hydroshare import create_resource
-from hs_core.models import BaseResource, validate_user_url, clean_for_xml
+from hs_core.models import BaseResource, validate_hydroshare_user_id, clean_for_xml, Relation
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 
 
@@ -168,7 +169,7 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
         raise HsDeserializationException(str(ex))
 
     # Add additional metadata
-    assert(resource is not None)
+    assert (resource is not None)
 
     try:
         rm.write_metadata_to_resource(resource, update_creators=True,
@@ -200,6 +201,7 @@ class GenericResourceMeta(object):
     resource-specific GenericResourceMeta implementations after I get your
     comments and suggestions on this approach.
     """
+
     def __init__(self):
         self.root_uri = None
         # From resource map
@@ -291,13 +293,13 @@ class GenericResourceMeta(object):
                     mod_ser = __import__(mod_ser_name, globals(), locals(), [rt_meta])
                     metadata_class = getattr(mod_ser, rt_meta)
                     instance = metadata_class()
-                except AttributeError as ae:
+                except AttributeError:
                     msg = "Unable to instantiate metadata deserializer for resource type {0}, "
                     msg += "based on resource bag {1}"
                     msg = msg.format(res_meta['type'], bag_content_path)
                     raise GenericResourceMeta.ResourceMetaException(msg)
 
-                assert(instance is not None)
+                assert (instance is not None)
 
                 # Populate core metadata
                 instance.id = res_meta['id']
@@ -357,19 +359,22 @@ class GenericResourceMeta(object):
         # Get resource type
         type_lit = g.value(res_agg, rdflib.namespace.DCTERMS.type)
         if type_lit is None:
-            raise GenericResourceMeta.ResourceMetaException("No resource type found in resource map {0}".format(rmap_path))
+            raise GenericResourceMeta.ResourceMetaException(
+                "No resource type found in resource map {0}".format(rmap_path))
         # Type literal is represented as 'http://example.com/terms/GenericResource', we want the part after
         # the final '/', or 'GenericResource'
         res_type_part = str(type_lit).rpartition('/')
         if res_type_part[1] == '':
-            raise GenericResourceMeta.ResourceMetaException("No resource type found in resource map {0}".format(rmap_path))
+            raise GenericResourceMeta.ResourceMetaException(
+                "No resource type found in resource map {0}".format(rmap_path))
         res_meta['type'] = res_type_part[-1]
         logger.debug("\tType is {0}".format(res_meta['type']))
 
         # Get resource title
         title_lit = g.value(res_agg, rdflib.namespace.DC.title)
         if title_lit is None:
-            raise GenericResourceMeta.ResourceMetaException("No resource title found in resource map {0}".format(rmap_path))
+            raise GenericResourceMeta.ResourceMetaException(
+                "No resource title found in resource map {0}".format(rmap_path))
         res_meta['title'] = str(title_lit)
         logger.debug("\tTitle is {0}".format(res_meta['title']))
 
@@ -391,7 +396,8 @@ class GenericResourceMeta(object):
             res_meta['files'].append(o.split(res_root_uri_withslash)[1])
 
         if res_meta_path is None:
-            raise GenericResourceMeta.ResourceMetaException("No resource metadata found in resource map {0}".format(rmap_path))
+            raise GenericResourceMeta.ResourceMetaException(
+                "No resource metadata found in resource map {0}".format(rmap_path))
 
         logger.debug("\tResource metadata path {0}".format(res_meta_path))
 
@@ -408,9 +414,11 @@ class GenericResourceMeta(object):
         """
         self.rmeta_path = os.path.join(self.bag_content_path, self.res_meta_path)
         if not os.path.exists(self.rmeta_path):
-            raise GenericResourceMeta.ResourceMetaException("Resource metadata {0} does not exist".format(self.rmeta_path))
+            raise GenericResourceMeta.ResourceMetaException(
+                "Resource metadata {0} does not exist".format(self.rmeta_path))
         if not os.access(self.rmeta_path, os.R_OK):
-            raise GenericResourceMeta.ResourceMetaException("Unable to read resource metadata {0}".format(self.rmeta_path))
+            raise GenericResourceMeta.ResourceMetaException(
+                "Unable to read resource metadata {0}".format(self.rmeta_path))
 
         # Parse metadata using RDFLib
         self._rmeta_graph = Graph()
@@ -459,7 +467,7 @@ class GenericResourceMeta(object):
                 msg += "(this may be okay if the resource metadata is being updated)."
                 msg = msg.format(title, self.title, title)
                 self.title = title
-                logger.warn(msg)
+                logger.warning(msg)
 
         # Get abstract
         for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DCTERMS.abstract, None)):
@@ -680,16 +688,6 @@ class GenericResourceMeta(object):
         for r in self.relations:
             logger.debug("\t\t\t{0}".format(str(r)))
 
-        # Get sources
-        for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.source, None)):
-            for pred, obj in self._rmeta_graph.predicate_objects(o):
-                source = GenericResourceMeta.ResourceSource(obj, pred)
-                self.sources.append(source)
-
-        logger.debug("\t\tSources: ")
-        for r in self.sources:
-            logger.debug("\t\t\t{0}".format(str(r)))
-
     def get_owner(self):
         """
         Return the creator with the lowest order.
@@ -748,9 +746,9 @@ class GenericResourceMeta(object):
                               'researchGateID': c.researchGateID}
                     if c.rel_uri:
                         # HydroShare user URIs are stored as relative not absolute URIs
-                        kwargs['description'] = c.rel_uri
+                        kwargs['hydroshare_user_id'] = c.id
                     else:
-                        kwargs['description'] = None
+                        kwargs['hydroshare_user_id'] = None
 
                     if self.owner_is_hs_user and c.order == 1:
                         # Use metadata from bag for owner if the owner is a HydroShare user
@@ -776,7 +774,7 @@ class GenericResourceMeta(object):
                 # Add contributors
                 if isinstance(c, GenericResourceMeta.ResourceContributor):
                     kwargs = {'name': c.name, 'organization': c.organization,
-                              'description': c.uri,
+                              'hydroshare_user_id': c.id,
                               'email': c.email, 'address': c.address,
                               'phone': c.phone, 'homepage': c.homepage,
                               'researcherID': c.researcherID,
@@ -874,16 +872,6 @@ class GenericResourceMeta(object):
                 msg = "Relations with type {0} are not supported"
                 msg = msg.format(r.__class__.__name__)
                 raise TypeError(msg)
-        if len(self.sources) > 0:
-            resource.metadata.sources.all().delete()
-        for s in self.sources:
-            if isinstance(s, GenericResourceMeta.ResourceSource):
-                kwargs = {'derived_from': s.uri}
-                resource.metadata.create_element('source', **kwargs)
-            else:
-                msg = "Sources with type {0} are not supported"
-                msg = msg.format(s.__class__.__name__)
-                raise TypeError(msg)
 
         if update_modification_date:
             # Update modification date last
@@ -926,22 +914,21 @@ class GenericResourceMeta(object):
 
             :raise: GenericResourceMeta.ResourceMetaException if the user URI is malformed.
             """
+            # Parse URI
+            parsed_uri = urllib.parse.urlparse(uri)
+            # Separate out the user ID for HydroShare users
+            contributor_pk = os.path.basename(parsed_uri.path.strip('/'))
             # Make sure this is a HydroShare user URI
             is_hs_user_uri = False
             try:
-                validate_user_url(uri)
+                validate_hydroshare_user_id(contributor_pk)
                 is_hs_user_uri = True
             except ValidationError:
                 pass
 
             if is_hs_user_uri:
-                # Parse URI
-                parsed_uri = urllib.parse.urlparse(uri)
                 # Set rel_uri
                 self.rel_uri = parsed_uri.path
-
-                # Separate out the user ID for HydroShare users
-                contributor_pk = os.path.basename(self.rel_uri.strip('/'))
                 pk = None
                 try:
                     pk = int(contributor_pk)
@@ -949,7 +936,7 @@ class GenericResourceMeta(object):
                     msg = "User ID {0} is not an integer. User URI was {1}."
                     raise GenericResourceMeta.ResourceMetaException(msg)
 
-                assert(pk is not None)
+                assert (pk is not None)
                 self.id = pk
 
             self.uri = uri
@@ -1023,7 +1010,7 @@ class GenericResourceMeta(object):
                 if key == 'start':
                     try:
                         self.start_date = hs_date_to_datetime_iso(value)
-                    except Exception as e:
+                    except Exception:
                         try:
                             self.start_date = hs_date_to_datetime_notz(value)
                         except Exception as e:
@@ -1033,7 +1020,7 @@ class GenericResourceMeta(object):
                 elif key == 'end':
                     try:
                         self.end_date = hs_date_to_datetime_iso(value)
-                    except Exception as e:
+                    except Exception:
                         try:
                             self.end_date = hs_date_to_datetime_notz(value)
                         except Exception as e:
@@ -1216,8 +1203,7 @@ class GenericResourceMeta(object):
                 raise GenericResourceMeta.ResourceMetaException(msg)
 
     class ResourceRelation(object):
-        KNOWN_TYPES = {'isParentOf', 'isExecutedBy', 'isHostedBy', 'isCopiedFrom', 'isCreatedBy',
-                       'isPartOf', 'isVersionOf', 'isReplacedBy', 'isDataFor', 'cites'}
+        KNOWN_TYPES = Relation.get_supported_types()
 
         def __str__(self):
             msg = "{classname} {relationship_type}: {uri}"

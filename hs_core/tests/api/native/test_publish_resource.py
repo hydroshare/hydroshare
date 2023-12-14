@@ -24,7 +24,7 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
 
         # create a resource
         self.res = hydroshare.create_resource(
-            'GenericResource',
+            'CompositeResource',
             self.user,
             'Test Resource'
         )

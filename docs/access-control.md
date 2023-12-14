@@ -11,8 +11,8 @@ Users: `Admin, Test`
 Future users:
 - `FakeAdmin` is a normal user whose username is 'admin'
 
-Resources Types: `GENERIC`
-- we use only generic resources for now to limit the manual labor
+Resources Types: `COMPOSITE`
+- we use only composite resources for now to limit the manual labor
 
 Permissions: `NONE, VIEW, EDIT, OWN`
 - `VIEW` allows another user READONLY access

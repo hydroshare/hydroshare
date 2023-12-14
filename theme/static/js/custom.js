@@ -75,7 +75,7 @@ $(document).ready(function () {
     // Smooth scrolling for UI elements page
     // =====================================
 
-    $('a[href*=#buttons],a[href*=#panels], a[href*=#info-boards], a[href*=#navs], a[href*=#alerts], a[href*=#thumbnails], a[href*=#social], a[href*=#section-header],a[href*=#page-tip], a[href*=#block-header]').bind("click", function (e) {
+    $('a[href*="#buttons"],a[href*="#panels"], a[href*="#info-boards"], a[href*="#navs"], a[href*="#alerts"], a[href*="#thumbnails"], a[href*="#social"], a[href*="#section-header"],a[href*="#page-tip"], a[href*="#block-header"]').bind("click", function (e) {
         var anchor = $(this);
         $('html, body').stop().animate({
             scrollTop: $(anchor.attr('href')).offset().top
@@ -141,9 +141,6 @@ $(document).ready(function () {
         e.stopPropagation();
     });
 
-    // Make apps link open in new tab
-    $('a[href^="https://appsdev.hydroshare.org/apps"]').attr('target', '_blank');
-
 	// Close buttons for notification messages
 	$(".btn-close-message").click(function() {
 		$(this).parent().parent().parent().parent().hide(400);
@@ -170,7 +167,7 @@ $(document).ready(function () {
                 + '<strong>' + missing_field_str + '</strong> fields'
                 + ' on the <a href="/user/' + uid + '/">User Profile</a> page';
 
-            customAlert("Profile", message, "info", 10000);
+            customAlert("Profile", message, "info", 10000, true);
     }
 
     $.ajax({
@@ -179,8 +176,6 @@ $(document).ready(function () {
             var missing_profile_fields = [];
             if(!user.organization)
                 missing_profile_fields.push('Organization')
-            if(!user.state)
-                missing_profile_fields.push('State')
             if(!user.country)
                 missing_profile_fields.push('Country')
             if(!user.user_type)
@@ -191,7 +186,7 @@ $(document).ready(function () {
             }
         },
         error: function(response) {
-            console.log(response);
+            console.log(response.responseText);
         }
     });
 
@@ -295,11 +290,21 @@ $(document).ready(function () {
     jQuery.fn.outerHTML = function () {
         return jQuery('<div />').append(this.eq(0).clone()).html();
     };
+
+    jQuery.fn.splitAndWrapWithClass = function (delimiter, className) {
+        return this.each(function () {
+            let substrings = this.innerHTML.split(delimiter);
+            substrings = substrings.map((string) => {
+                return "<div class=\"" + className + "\">" + string + "</div>";
+            });
+            this.innerHTML = substrings.join("");
+        })
+    };
 });
 
 // Alert Types: "error", "success", "info"
 // pass a duration value of -1 for persistent alerts
-function customAlert(alertTitle, alertMessage, alertType, duration) {
+function customAlert(alertTitle, alertMessage, alertType, duration, dismissable=false) {
     alertType = alertType || "success";
     var el = document.createElement("div");
     var top = 200;
@@ -313,6 +318,10 @@ function customAlert(alertTitle, alertMessage, alertType, duration) {
     el.setAttribute("class", "custom-alert shadow-md " + alertTypes[alertType].class);
     alertMessage = '<i class="' + alertTypes[alertType].icon + '" aria-hidden="true"></i><strong> '
         + alertTitle + '</strong><br>' + alertMessage;
+    if(dismissable){
+        alertMessage = '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button> ' + alertMessage;
+        el.classList.add("alert-dissmissable");
+    }
     el.innerHTML = alertMessage;
     if (duration !== -1) {
         setTimeout(function () {

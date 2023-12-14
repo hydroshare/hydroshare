@@ -56,10 +56,10 @@ function showAddEditExtraMetaPopup(edit, row_id_str) {
         $("#old_extra_meta_name").val(oldname);
         $("#extra_meta_name_input").val(oldname);
         $("#extra_meta_value_input").val(oldvalue);
-        $("#extra_meta_title").text("Edit Extended Metadata");
+        $("#extra_meta_title").text("Edit Additional Metadata");
     }
     else {
-        $("#extra_meta_title").text("Add Extended Metadata");
+        $("#extra_meta_title").text("Add Additional Metadata");
     }
     $('#extraMetaDialog').modal('show');
 }
@@ -87,14 +87,38 @@ function showRemoveExtraMetaPopup(row_id_str) {
     $('#deleteExtraMetaDialog').modal('show');
 }
 
+// removes html tags from the userInput
+function sanitizeUserInput(userInput) {
+    return $("<div/>").html(userInput.trim()).text();
+}
+
 function addEditExtraMeta2Table() {
     // Restore validation UI state
     $("#extra_meta_msg").hide();
     $("#extra_meta_name_input").removeClass("form-invalid");
+    $("#extra_meta_value_input").removeClass("form-invalid");
     var t = $('#extraMetaTable').DataTable();
+
     var extra_meta_name = $("#extra_meta_name_input").val().trim();
     var extra_meta_value = $("#extra_meta_value_input").val().trim();
     var edit_extra_meta_row_id = $("#edit_extra_meta_row_id").val().trim();
+
+    var sanitized_extra_meta_name = sanitizeUserInput(extra_meta_name)
+    if (extra_meta_name !== sanitized_extra_meta_name) {
+        $("#extra_meta_name_input").addClass("form-invalid");
+        $("#extra_meta_msg").html("<div class='alert alert-danger'>" +
+            "The Name text contains html code and cannot be saved.</div>");
+        $("#extra_meta_msg").show();
+        return;
+    }
+    var sanitized_extra_meta_value = $("<div/>").html(extra_meta_value.trim()).text();
+    if (extra_meta_value !== sanitized_extra_meta_value) {
+        $("#extra_meta_value_input").addClass("form-invalid");
+        $("#extra_meta_msg").html("<div class='alert alert-danger'>" +
+            "The Value text contains html code and cannot be saved.</div>");
+        $("#extra_meta_msg").show();
+        return;
+    }
 
     if (foundDuplicatedName(t, extra_meta_name, edit_extra_meta_row_id)) {
         $("#extra_meta_name_input").addClass("form-invalid");
@@ -195,8 +219,8 @@ function foundDuplicatedName(table, newName, except_row_id) {
 }
 
 function saveExtraMetadata() {
-    var successMsg = "Extended metadata updated.";
-    var errorMsg = "Extended metadata failed to update.";
+    var successMsg = "Additional metadata updated.";
+    var errorMsg = "Additional metadata failed to update.";
 
     var json_obj = {};
     var t = $('#extraMetaTable').DataTable();
@@ -249,34 +273,47 @@ $(document).ready(function () {
 
     $("#agree-chk").on('click', function(e) {
         e.stopImmediatePropagation();
-        if (e.currentTarget.checked)
-            $('#publish-btn').removeAttr('disabled');
-        else
-            $('#publish-btn').attr('disabled', 'disabled');
+        if (e.currentTarget.checked) {
+            $('#publish-btn-2').removeAttr('disabled');
+        }
+        else {
+            $('#publish-btn-2').attr('disabled', 'disabled');
+        }
     });
 
     $("#agree-chk-copy").on('click', function(e) {
         e.stopImmediatePropagation();
-        if (e.currentTarget.checked)
+        if (e.currentTarget.checked) {
             $('#copy-btn').removeAttr('disabled');
-        else
+        }
+        else {
             $('#copy-btn').attr('disabled', 'disabled');
+        }
     });
 
     $("#agree-chk-download-bag").on('click', function(e) {
         e.stopImmediatePropagation();
-        if (e.currentTarget.checked)
-            $('#download-bag-btn').removeAttr('disabled');
-        else
-            $('#download-bag-btn').attr('disabled', 'disabled');
+        if (e.currentTarget.checked) {
+            $('#download-bag-btn').removeClass("disabled");
+        }
+        else {
+            $('#download-bag-btn').toggleClass("disabled", true);
+        }
+    });
+
+    $("#download-bag-cancel").on('click', function(e) {
+        $("#agree-chk-download-bag").prop( "checked", false );
+        $("#download-bag-btn").addClass('disabled');
     });
 
     $("#agree-chk-download-file").on('click', function(e) {
         e.stopImmediatePropagation();
-        if (e.currentTarget.checked)
+        if (e.currentTarget.checked) {
             $('#download-file-btn').removeAttr('disabled');
-        else
+        }
+        else {
             $('#download-file-btn').attr('disabled', 'disabled');
+        }
     });
 
     $("#copy-btn").on('click', function(e) {
@@ -346,6 +383,8 @@ $(document).ready(function () {
                 $('#delete-resource-dialog').modal('hide');
                 notificationsApp.registerTask(task);
                 notificationsApp.show();
+                // redirect to my resources page after async task is started to address issue #4321
+                window.location.href = "/my-resources/";
             },
             error: function (xhr, errmsg, err) {
                 display_error_message('Failed to delete the resource', xhr.responseText);
@@ -396,7 +435,7 @@ $(document).ready(function () {
         });
     }
 
-    $("#citation-text").on("click", function (e) {
+    $("#citation-text-wrapper").on("click", function (e) {
         // document.selection logic is added in for IE 8 and lower
         if (document.selection) {
             document.selection.empty();
@@ -465,19 +504,21 @@ $(document).ready(function () {
     $("#select_license").on('change', function () {
         var value = this.value;
         if (value === "other") {
-            $(this).closest("form").find("#id_statement").first().text("");
+            $(this).closest("form").find("#id_statement").first().val("");
             $(this).closest("form").find("#id_url").first().attr('value', "");
             $(this).closest("form").find("#id_statement").first().attr('readonly', false);
             $(this).closest("form").find("#id_url").first().attr('readonly', false);
+            $(this).closest("form").find("#div_id_statement").find("span").first().text("Statement*");
             $("#img-badge").first().hide();
         }
         else {
             var text = $(this).find('option:selected').text();
             text = "This resource is shared under the " + text + ".";
-            $(this).closest("form").find("#id_statement").first().text(text);
+            $(this).closest("form").find("#id_statement").first().val(text);
             $(this).closest("form").find("#id_url").first().attr('value', value);
             $(this).closest("form").find("#id_statement").first().attr('readonly', true);
             $(this).closest("form").find("#id_url").first().attr('readonly', true);
+            $(this).closest("form").find("#div_id_statement").find("span").first().text("Statement");
             $("#img-badge").first().show();
             if (text == "This resource is shared under the Creative Commons Attribution CC BY.") {
                 $(this).closest("form").find("#img-badge").first().attr('src', STATIC_URL + "img/cc-badges/CC-BY.png");
@@ -496,7 +537,7 @@ $(document).ready(function () {
                 $(this).closest("form").find("#img-badge").first().attr('alt', "CC-BY-NC-SA");
             }
             else if (text == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC.") {
-                $(this).closest("form").find("#img-badge").first().attr('src', staticURL + "img/cc-badges/CC-BY-NC.png");
+                $(this).closest("form").find("#img-badge").first().attr('src', STATIC_URL + "img/cc-badges/CC-BY-NC.png");
                 $(this).closest("form").find("#img-badge").first().attr('alt', "CC-BY-NC");
             }
             else if (text == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND.") {
@@ -530,7 +571,15 @@ $(document).ready(function () {
             $("#select_license").closest("form").find("#id_url").first().attr('readonly', true);
         }
     }
-
+    if (RESOURCE_MODE.toLowerCase() === 'edit') {
+        let selectedLicense = $("#select_license option:selected").val();
+        if (selectedLicense === "other") {
+            $("#select_license").closest("form").find("#div_id_statement").find("span").first().text("Statement*");
+        }
+        else {
+            $("#select_license").closest("form").find("#div_id_statement").find("span").first().text("Statement");
+        }
+    }
     // show "Save changes" button when form editing starts
     showMetadataFormSaveChangesButton();
 
@@ -545,7 +594,7 @@ $(document).ready(function () {
         "info": false,
         "bFilter": false,
         "bInfo": false,
-        "language": {"emptyTable": "No Extended Metadata"}
+        "language": {"emptyTable": "No Additional Metadata"}
     });
 
     $("#btn-add-new-entry").click(function() {

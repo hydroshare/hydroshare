@@ -7,7 +7,7 @@ from unittest import skip
 class TestTickets(HSRESTTestCase):
 
     def test_folder_ticket(self):
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         params = {'resource_type': rtype,
                   'title': title,
@@ -52,7 +52,7 @@ class TestTickets(HSRESTTestCase):
 
     @skip("TODO: was not running before python3 upgrade")
     def test_file_ticket(self):
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         params = {'resource_type': rtype,
                   'title': title,
@@ -97,7 +97,7 @@ class TestTickets(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_bag_ticket(self):
-        rtype = 'GenericResource'
+        rtype = 'CompositeResource'
         title = 'My Test resource'
         params = {'resource_type': rtype,
                   'title': title,

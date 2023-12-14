@@ -11,7 +11,7 @@ from hs_access_control.tests.utilities import global_reset
 
 
 class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
-    "Test for effects of group flags"
+    """Test for effects of group flags"""
 
     def setUp(self):
         super(T10GroupFlags, self).setUp()
@@ -63,7 +63,7 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
         )
 
         self.scratching = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.dog,
             title='all about sofas as scrathing posts',
             metadata=[],

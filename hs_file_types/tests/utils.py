@@ -18,7 +18,8 @@ class CompositeResourceTestMixin(object):
                                       name=os.path.basename(file_to_add))
 
         new_res_file = add_file_to_resource(
-            self.composite_resource, file_to_upload, folder=upload_folder, check_target_folder=True
+            self.composite_resource, file_to_upload, folder=upload_folder, check_target_folder=True,
+            save_file_system_metadata=True
         )
         return new_res_file
 
@@ -111,23 +112,39 @@ def assert_raster_file_type_metadata(self, aggr_folder_path):
     box_coverage = logical_file.metadata.spatial_coverage
     self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
     self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    self.assertEqual(float(box_coverage.value['northlimit']), 42.0500269597691)
-    self.assertEqual(float(box_coverage.value['eastlimit']), -111.57773718106195)
-    self.assertEqual(float(box_coverage.value['southlimit']), 41.98722286029891)
-    self.assertEqual(float(box_coverage.value['westlimit']), -111.69756293084055)
+    expected_nlimit = 42.05002695977342
+    self.assertAlmostEqual(float(box_coverage.value['northlimit']), expected_nlimit,
+                           places=get_number_of_decimal_places(expected_nlimit))
+    expected_elimit = -111.57773718106199
+    self.assertAlmostEqual(float(box_coverage.value['eastlimit']), expected_elimit,
+                           places=get_number_of_decimal_places(expected_elimit))
+    expected_slimit = 41.98722286030317
+    self.assertAlmostEqual(float(box_coverage.value['southlimit']), expected_slimit,
+                           places=get_number_of_decimal_places(expected_slimit))
+    expected_wlimit = -111.6975629308406
+    self.assertAlmostEqual(float(box_coverage.value['westlimit']), expected_wlimit,
+                           places=get_number_of_decimal_places(expected_wlimit))
 
-    # testing extended metadata element: original coverage
+    # testing additional metadata element: original coverage
     ori_coverage = logical_file.metadata.originalCoverage
     self.assertNotEqual(ori_coverage, None)
-    self.assertEqual(float(ori_coverage.value['northlimit']), 4655492.446916306)
-    self.assertEqual(float(ori_coverage.value['eastlimit']), 452144.01909127034)
-    self.assertEqual(float(ori_coverage.value['southlimit']), 4648592.446916306)
-    self.assertEqual(float(ori_coverage.value['westlimit']), 442274.01909127034)
+    expected_nlimit = 4655492.446916306
+    self.assertAlmostEqual(float(ori_coverage.value['northlimit']), expected_nlimit,
+                           places=get_number_of_decimal_places(expected_nlimit))
+    expected_elimit = 452144.01909127034
+    self.assertAlmostEqual(float(ori_coverage.value['eastlimit']), expected_elimit,
+                           places=get_number_of_decimal_places(expected_elimit))
+    expected_slimit = 4648592.446916306
+    self.assertAlmostEqual(float(ori_coverage.value['southlimit']), expected_slimit,
+                           places=get_number_of_decimal_places(expected_slimit))
+    expected_wlimit = 442274.01909127034
+    self.assertAlmostEqual(float(ori_coverage.value['westlimit']), expected_wlimit,
+                           places=get_number_of_decimal_places(expected_wlimit))
     self.assertEqual(ori_coverage.value['units'], 'meter')
     self.assertEqual(ori_coverage.value['projection'],
                      'NAD83 / UTM zone 12N')
 
-    # testing extended metadata element: cell information
+    # testing additional metadata element: cell information
     cell_info = logical_file.metadata.cellInformation
     self.assertEqual(cell_info.rows, 230)
     self.assertEqual(cell_info.columns, 329)
@@ -135,7 +152,7 @@ def assert_raster_file_type_metadata(self, aggr_folder_path):
     self.assertEqual(cell_info.cellSizeYValue, 30.0)
     self.assertEqual(cell_info.cellDataType, 'Float32')
 
-    # testing extended metadata element: band information
+    # testing additional metadata element: band information
     self.assertEqual(logical_file.metadata.bandInformations.count(), 1)
     band_info = logical_file.metadata.bandInformations.first()
     self.assertEqual(band_info.noDataValue, '-3.4028234663852886e+38')
@@ -187,9 +204,6 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
                          "Oct. 2009 to June 2010 for TWDEF site in Utah."
     self.assertEqual(self.composite_resource.metadata.description.abstract, extracted_abstract)
 
-    # there should be no source element
-    self.assertEqual(self.composite_resource.metadata.sources.all().count(), 0)
-
     # there should be one license element:
     self.assertNotEqual(self.composite_resource.metadata.rights.statement, 1)
 
@@ -212,10 +226,18 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     box_coverage = self.composite_resource.metadata.coverages.all().filter(type='box').first()
     self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
     self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    self.assertEqual(float(box_coverage.value['northlimit']), 41.86712640899591)
-    self.assertEqual(float(box_coverage.value['eastlimit']), -111.50594036845686)
-    self.assertEqual(float(box_coverage.value['southlimit']), 41.8639080745171)
-    self.assertEqual(float(box_coverage.value['westlimit']), -111.51138807956221)
+    expected_nlimit = 41.867126409000086
+    self.assertAlmostEqual(float(box_coverage.value['northlimit']), expected_nlimit,
+                           places=get_number_of_decimal_places(expected_nlimit))
+    expected_elimit = -111.5059403684569
+    self.assertAlmostEqual(float(box_coverage.value['eastlimit']), expected_elimit,
+                           places=get_number_of_decimal_places(expected_elimit))
+    expected_slimit = 41.86390807452128
+    self.assertAlmostEqual(float(box_coverage.value['southlimit']), expected_slimit,
+                           places=get_number_of_decimal_places(expected_slimit))
+    expected_wlimit = -111.51138807956225
+    self.assertAlmostEqual(float(box_coverage.value['westlimit']), expected_wlimit,
+                           places=get_number_of_decimal_places(expected_wlimit))
 
     temporal_coverage = self.composite_resource.metadata.coverages.all().filter(
         type='period').first()
@@ -238,11 +260,11 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     self.assertEqual(len(logical_file.metadata.keywords), 1)
     self.assertIn('Snow water equivalent', logical_file.metadata.keywords)
 
-    # test dataset_name attribute of the logical file which shoould have the extracted value
+    # test dataset_name attribute of the logical file which should have the extracted value
     dataset_title = "Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010"
     self.assertEqual(logical_file.dataset_name, dataset_title)
 
-    # testing extended metadata element: original coverage
+    # testing additional metadata element: original coverage
     ori_coverage = logical_file.metadata.originalCoverage
     self.assertNotEqual(ori_coverage, None)
     self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
@@ -255,7 +277,29 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     self.assertEqual(ori_coverage.value['units'], 'Meter')
     self.assertEqual(ori_coverage.value['projection'], 'transverse_mercator')
 
-    # testing extended metadata element: variables
+    # testing additional metadata element: spatial coverage (computed from original coverage as part of
+    # metadata extraction)
+    spatial_coverage = logical_file.metadata.coverages.filter(type='box').first()
+    self.assertIsNotNone(spatial_coverage)
+    expected_nlimit = 41.867126409000086
+    self.assertAlmostEqual(float(spatial_coverage.value['northlimit']), expected_nlimit,
+                           places=get_number_of_decimal_places(expected_nlimit))
+
+    expected_slimit = 41.86390807452128
+    self.assertAlmostEqual(float(spatial_coverage.value['southlimit']), expected_slimit,
+                           places=get_number_of_decimal_places(expected_slimit))
+
+    expected_elimit = -111.5059403684569
+    self.assertAlmostEqual(float(spatial_coverage.value['eastlimit']), expected_elimit,
+                           places=get_number_of_decimal_places(expected_elimit))
+
+    expected_wlimit = -111.51138807956225
+    self.assertAlmostEqual(float(spatial_coverage.value['westlimit']), expected_wlimit,
+                           places=get_number_of_decimal_places(expected_wlimit))
+    self.assertEqual(spatial_coverage.value['units'], "Decimal degrees")
+    self.assertEqual(spatial_coverage.value['projection'], "WGS 84 EPSG:4326")
+
+    # testing additional metadata element: variables
     self.assertEqual(logical_file.metadata.variables.all().count(), 5)
 
     # test time variable
@@ -336,10 +380,18 @@ def assert_geofeature_file_type_metadata(self, expected_folder_name):
                      'unknown')
     self.assertGreater(len(logical_file.metadata.originalcoverage.projection_string), 0)
     self.assertEqual(logical_file.metadata.originalcoverage.unit, 'unknown')
-    self.assertEqual(float(logical_file.metadata.originalcoverage.eastlimit), -66.9692712587578)
-    self.assertEqual(float(logical_file.metadata.originalcoverage.northlimit), 71.406235393967)
-    self.assertEqual(float(logical_file.metadata.originalcoverage.southlimit), 18.921786345087)
-    self.assertEqual(float(logical_file.metadata.originalcoverage.westlimit), -178.217598362366)
+    expected_elimit = -66.9692712587578
+    self.assertAlmostEqual(float(logical_file.metadata.originalcoverage.eastlimit), expected_elimit,
+                           places=get_number_of_decimal_places(expected_elimit))
+    expected_nlimit = 71.406235393967
+    self.assertAlmostEqual(float(logical_file.metadata.originalcoverage.northlimit), expected_nlimit,
+                           places=get_number_of_decimal_places(expected_nlimit))
+    expected_slimit = 18.921786345087
+    self.assertAlmostEqual(float(logical_file.metadata.originalcoverage.southlimit), expected_slimit,
+                           places=get_number_of_decimal_places(expected_slimit))
+    expected_wlimit = -178.217598362366
+    self.assertAlmostEqual(float(logical_file.metadata.originalcoverage.westlimit), expected_wlimit,
+                           places=get_number_of_decimal_places(expected_wlimit))
 
 
 def assert_ref_time_series_file_type_metadata(self):
@@ -436,7 +488,7 @@ def assert_ref_time_series_file_type_metadata(self):
     # there should be 2 web services
     self.assertEqual(len(logical_file.metadata.web_services), 2)
     web_urls = [web.url for web in logical_file.metadata.web_services]
-    self.assertIn("http://hydroportal.cuahsi.org/nwisdv/cuahsi_1_1.asmx?WSDL", web_urls)
+    self.assertIn("http://www.bing.com/", web_urls)
     self.assertIn("http://www.google.com", web_urls)
     web_service_types = [web.service_type for web in logical_file.metadata.web_services]
     self.assertIn("SOAP", web_service_types)
@@ -459,6 +511,10 @@ def assert_time_series_file_type_metadata(self, expected_file_folder):
     res_file = self.composite_resource.files.first()
     logical_file = res_file.logical_file
     self.assertTrue(isinstance(logical_file.metadata, TimeSeriesFileMetaData))
+    # test the metadata for the aggregation is in dirty state
+    self.assertTrue(logical_file.metadata.is_dirty)
+    # test that the update file (.sqlite file) state is false
+    self.assertFalse(logical_file.metadata.is_update_file)
 
     # test extracted metadata that updates resource level metadata
 
@@ -530,7 +586,7 @@ def assert_time_series_file_type_metadata(self, expected_file_folder):
     # there should be a total of 7 timeseries
     self.assertEqual(logical_file.metadata.time_series_results.all().count(), 7)
 
-    # testing extended metadata elements
+    # testing additional metadata elements
 
     # test title/dataset name
     self.assertEqual(logical_file.dataset_name, extracted_title)
@@ -660,3 +716,10 @@ def assert_time_series_file_type_metadata(self, expected_file_folder):
 def get_path_with_no_file_extension(path):
     path_no_ext, _ = os.path.splitext(path)
     return path_no_ext
+
+
+def get_number_of_decimal_places(number):
+    """A helper to find the number of decimal places in the specified number that's used for rounding the number
+    """
+    _, decimal_str = str(number).split('.')
+    return len(decimal_str)

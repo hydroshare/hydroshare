@@ -1,7 +1,7 @@
 {% load hydroshare_tags %}
 
 <tr v-for="(user, index) in this.users" v-bind:key="user.id"
-    :class="{ 'hide-actions': selfAccessLevel !== 'owner' && (user.access === 'owner' && hasOnlyOneOwner || user.user_type === 'user' && user.id === quotaHolder.id), loading: user.loading}">
+    :class="{ 'hide-actions': selfAccessLevel !== 'owner' && (user.access === 'owner' && hasOnlyOneOwner || user.user_type === 'user' && user.id === quotaHolder.id), 'loading': user.loading, 'is-group': user.user_type === 'group'}">
     <td>
         <table class="user-scope">
             <tr v-if="user.user_type === 'user'">
@@ -72,7 +72,7 @@
 
     <td class="user-actions">
         <i @click="undoAccess(user, index)"
-           v-if="user.can_undo && quotaHolder.id !== user.id"
+           v-if="user.can_undo && (user.user_type==='group' || (user.user_type === 'user' && quotaHolder.id !== user.id))"
             {# TODO: manually initialize tooltips of dynamically created items #}
            class="fa fa-undo" aria-hidden="true" data-toggle="tooltip"
            title="Undo Share"></i>
@@ -80,7 +80,7 @@
 
     <td class="user-actions">
         <span @click="user.id === currentUser ? showDeleteSelfDialog(user, index) : removeAccess(user, index)"
-              v-if="!(user.access === 'owner' && hasOnlyOneOwner) && user.id !== quotaHolder.id && (selfAccessLevel === 'owner' || user.id === currentUser)"
+              v-if="!(user.access === 'owner' && hasOnlyOneOwner) && !(user.user_type === 'user' && user.id == quotaHolder.id) && (selfAccessLevel === 'owner' || user.id === currentUser)"
               :id="'form-remove-' + user.user_type + '-' + user.id"
               class="glyphicon glyphicon-remove btn-remove-row"
               data-toggle="tooltip" title="Remove">

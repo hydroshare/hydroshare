@@ -1,4 +1,4 @@
-from celery.task.control import inspect
+from hydroshare.hydrocelery import app as celery_app
 from celery.result import AsyncResult
 from django.db import transaction
 
@@ -8,7 +8,7 @@ import logging
 
 logger = logging.getLogger('django')
 
-celery_inspector = inspect()
+celery_inspector = celery_app.control.inspect()
 
 
 def _retrieve_task_id(job_name, res_id, job_dict):
@@ -56,7 +56,7 @@ def _retrieve_job_id(job_name, res_id):
 
 
 def get_task_user_id(request):
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         return request.user.username
     return ""
 
@@ -87,6 +87,20 @@ def get_or_create_task_notification(task_id, status='progress', name='', payload
             'status': obj.status,
             'payload': obj.payload
         }
+
+
+def get_task_notification(task_id):
+    try:
+        obj = TaskNotification.objects.get(task_id=task_id)
+
+        return {
+            'id': task_id,
+            'name': obj.name,
+            'status': obj.status,
+            'payload': obj.payload
+        }
+    except TaskNotification.DoesNotExist:
+        return None
 
 
 def get_resource_bag_task(res_id):
@@ -154,7 +168,7 @@ def dismiss_task_by_id(task_id):
 
 def set_task_delivered_by_id(task_id):
     """
-    Set task to delivered status from TaskNotificatoin model by task id
+    Set task to delivered status from TaskNotification model by task id
     :param task_id: task id
     :return: dict of the task that has been set to the delivered status
     """

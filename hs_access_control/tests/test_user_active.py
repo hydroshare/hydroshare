@@ -45,7 +45,7 @@ class T12UserActive(MockIRODSTestCaseMixin, TestCase):
         )
 
         self.scratching = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.cat,
             title='all about sofas as scrathing posts',
             metadata=[],

@@ -6,7 +6,7 @@ from hs_core import hydroshare
 from hs_tools_resource.models import RequestUrlBase, RequestUrlBaseFile, \
     RequestUrlBaseAggregation, SupportedFileExtensions
 from hs_core.testing import TestCaseCommonUtilities
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from hs_core.views import add_metadata_element, update_metadata_element
 from rest_framework import status
@@ -57,7 +57,7 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
 
     def test_file_level_keys_add_custom(self):
         custom_url = 'https://www.google.com?' \
-                  'file_id=${custom_KEY}'
+            'file_id=${custom_KEY}'
 
         post_data = {'value': custom_url}
         url_params = {'element_name': "requesturlbasefile", 'shortkey': self.resWebApp.short_id}
@@ -151,7 +151,7 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
 
     def test_aggregation_level_keys_add_custom(self):
         custom_url = 'https://www.google.com?' \
-                  'file_id=${HS_CUSTOM}'
+            'file_id=${HS_CUSTOM}'
 
         post_data = {'value': custom_url}
         url_params = {'element_name': "requesturlbaseaggregation",
@@ -245,7 +245,7 @@ class TestWebAppValidationFeature(TestCaseCommonUtilities, TransactionTestCase):
 
     def test_resource_level_keys_add_custom(self):
         custom_url = 'https://www.google.com?' \
-                  'file_id=${CUSTOM_KEY}'
+            'file_id=${CUSTOM_KEY}'
 
         post_data = {'value': custom_url}
         url_params = {'element_name': "requesturlbase", 'shortkey': self.resWebApp.short_id}

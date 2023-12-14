@@ -7,15 +7,15 @@ import os
 from django.conf import settings
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.contrib.messages.storage.fallback import FallbackStorage
+from django.core.files.uploadedfile import UploadedFile
 from django.test import TestCase, RequestFactory
 
-from hs_core.models import ResourceFile
-from hs_core.hydroshare import add_resource_files
+from hs_core.hydroshare import add_file_to_resource, add_resource_files
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, zip_folder, \
     unzip_file, remove_folder
 from hs_core.views.utils import run_ssh_command
+from hs_core.tasks import FileOverrideException
 from theme.models import UserProfile
-from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 
 
@@ -48,11 +48,12 @@ class MockIRODSTestCaseMixin(object):
 
 class TestCaseCommonUtilities(object):
     """Enable common utilities for iRODS testing."""
+
     def assert_federated_irods_available(self):
         """assert federated iRODS is available before proceeding with federation-related tests."""
-        self.assertTrue(settings.REMOTE_USE_IRODS and
-                        settings.HS_USER_ZONE_HOST == 'users.local.org' and
-                        settings.IRODS_HOST == 'data.local.org',
+        self.assertTrue(settings.REMOTE_USE_IRODS
+                        and settings.HS_USER_ZONE_HOST == 'users.local.org'
+                        and settings.IRODS_HOST == 'data.local.org',
                         "irods docker containers are not set up properly for federation testing")
         self.irods_fed_storage = IrodsStorage('federated')
         self.irods_storage = IrodsStorage()
@@ -69,13 +70,13 @@ class TestCaseCommonUtilities(object):
             for out_str in output:
                 if 'ERROR:' in out_str.upper():
                     # irods account failed to create
-                    self.assertRaises(SessionException(-1, out_str, out_str))
+                    self.fail(out_str)
 
             user_profile = UserProfile.objects.filter(user=self.user).first()
             user_profile.create_irods_user_account = True
             user_profile.save()
         except Exception as ex:
-            self.assertRaises(SessionException(-1, str(ex), str(ex)))
+            self.fail(str(ex))
 
     def delete_irods_user_in_user_zone(self):
         """Delete irods test user in user zone."""
@@ -90,14 +91,14 @@ class TestCaseCommonUtilities(object):
                 for out_str in output:
                     if 'ERROR:' in out_str.upper():
                         # there is an error from icommand run, report the error
-                        self.assertRaises(SessionException(-1, out_str, out_str))
+                        self.fail(out_str)
 
             user_profile = UserProfile.objects.filter(user=self.user).first()
             user_profile.create_irods_user_account = False
             user_profile.save()
         except Exception as ex:
             # there is an error from icommand run, report the error
-            self.assertRaises(SessionException(-1, str(ex), str(ex)))
+            self.fail(str(ex))
 
     def save_files_to_user_zone(self, file_name_to_target_name_dict):
         """Save a list of files to iRODS user zone.
@@ -183,130 +184,152 @@ class TestCaseCommonUtilities(object):
         move_or_rename_file_or_folder(user, res.short_id,
                                       'data/contents/' + file_name_list[2],
                                       'data/contents/new_' + file_name_list[2])
-        # move the first two files in file_name_list to the new folder
+
+        # move the first two files in file_name_list to the new folder that we will be zipping
         move_or_rename_file_or_folder(user, res.short_id,
                                       'data/contents/' + file_name_list[0],
                                       'data/contents/sub_test_dir/' + file_name_list[0])
         move_or_rename_file_or_folder(user, res.short_id,
                                       'data/contents/' + file_name_list[1],
                                       'data/contents/sub_test_dir/' + file_name_list[1])
+
         updated_res_file_names = []
-        for rf in ResourceFile.objects.filter(object_id=res.id):
+        for rf in res.files.all():
             updated_res_file_names.append(rf.short_path)
 
         self.assertIn('new_' + file_name_list[2], updated_res_file_names,
                       msg="resource does not contain the updated file new_" + file_name_list[2])
         self.assertNotIn(file_name_list[2], updated_res_file_names,
-                         msg='resource still contains the old file ' + file_name_list[2] +
-                             ' after renaming')
+                         msg='resource still contains the old file ' + file_name_list[2] + ' after renaming')
         self.assertIn('sub_test_dir/' + file_name_list[0], updated_res_file_names,
                       msg='resource does not contain ' + file_name_list[0] + ' moved to a folder')
         self.assertNotIn(file_name_list[0], updated_res_file_names,
-                         msg='resource still contains the old ' + file_name_list[0] +
-                             'after moving to a folder')
+                         msg='resource still contains the old ' + file_name_list[0] + 'after moving to a folder')
         self.assertIn('sub_test_dir/' + file_name_list[1], updated_res_file_names,
-                      msg='resource does not contain ' + file_name_list[1] +
-                          'moved to a new folder')
+                      msg='resource does not contain ' + file_name_list[1] + 'moved to a new folder')
         self.assertNotIn(file_name_list[1], updated_res_file_names,
-                         msg='resource still contains the old ' + file_name_list[1] +
-                             ' after moving to a folder')
+                         msg='resource still contains the old ' + file_name_list[1] + ' after moving to a folder')
 
-        # zip the folder
+        # zip the folder 'sub_test_dir'
         output_zip_fname, size = \
-            zip_folder(user, res.short_id, 'data/contents/sub_test_dir',
-                       'sub_test_dir.zip', True)
+            zip_folder(user, res.short_id, 'data/contents/sub_test_dir', 'sub_test_dir.zip', True)
+
         self.assertGreater(size, 0, msg='zipped file has a size of 0')
         # Now resource should contain only two files: new_file3.txt and sub_test_dir.zip
         # since the folder is zipped into sub_test_dir.zip with the folder deleted
-        self.assertEqual(res.files.all().count(), 2,
-                         msg="resource file count didn't match-")
+        self.assertEqual(res.files.all().count(), 2, msg="resource file count didn't match-")
 
-        # test unzip does not allow override of existing files
-        # add an existing file in the zip to the resource
-        if res.resource_federation_path:
-            fed_test_file1_full_path = '/{zone}/home/{uname}/{fname}'.format(
-                zone=settings.HS_USER_IRODS_ZONE, uname=user.username, fname=file_name_list[0])
-            # TODO: why isn't this a method of resource?
-            # TODO: Why do we repeat the resource_federation_path?
-            add_resource_files(res.short_id, source_names=[fed_test_file1_full_path],
-                               move=False)
+        # >> testing folder name collision upon unzip
+        # create a folder 'sub_test_dir' same as the folder we expect the unzip to create
+        create_folder(res.short_id, 'data/contents/sub_test_dir')
+        # unzip should fail due to folder name (sub_test_dir) collision
+        with self.assertRaises(FileOverrideException):
+            unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', bool_remove_original=False)
 
-        else:
-            # TODO: Why isn't this a method of resource?
-            add_resource_files(res.short_id, self.test_file_1)
+        # remove the conflicting folder (sub_test_dir) to test that unzip should work after that
+        remove_folder(user, res.short_id, 'data/contents/sub_test_dir')
+        # unzip should work now
+        unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', bool_remove_original=False)
 
-        # TODO: use ResourceFile.create_folder, which doesn't require data/contents prefix
+        remove_folder(user, res.short_id, 'data/contents/sub_test_dir')
+        for rf in res.files.all():
+            rf.delete()
+
+        # >> test filename collision upon unzip
+        # add the file 'test.txt'
+        res_file_txt = _add_file_to_resource(resource=res, file_to_add=self.test_data_file_path)
+        # add 'test.zip' file which contains one file 'test.txt'
+        _add_file_to_resource(resource=res, file_to_add=self.test_data_zip_file_path)
+        self.assertEqual(res.files.all().count(), 2)
+
+        # unzipping of the above added zip file should fail due to filename (text.txt) collision
+        with self.assertRaises(FileOverrideException):
+            unzip_file(user, res.short_id, f'data/contents/{self.test_data_zip_file_name}', bool_remove_original=False)
+
+        # delete the conflicting file (test.txt) - then unzip should work
+        res_file_txt.delete()
+        unzip_file(user, res.short_id, f'data/contents/{self.test_data_zip_file_name}', bool_remove_original=False)
+
+        # the resource should have 2 files (test.zip and test.txt)
+        self.assertEqual(res.files.all().count(), 2)
+        # test unzip with original zip file being removed
+        for rf in res.files.all():
+            if rf.short_path == self.test_data_file_name:
+                rf.delete()
+                break
+        # resource should have 1 file (test.zip)
+        self.assertEqual(res.files.all().count(), 1)
+        unzip_file(user, res.short_id, f'data/contents/{self.test_data_zip_file_name}', bool_remove_original=True)
+        # resource should have 1 file (test.txt)
+        self.assertEqual(res.files.all().count(), 1)
+        res_file_txt = res.files.all().first()
+        self.assertEqual(res_file_txt.short_path, self.test_data_file_name)
+        zip_storage_file_path = os.path.join(res.file_path, self.test_data_zip_file_name)
+        self.assertFalse(istorage.exists(zip_storage_file_path))
+
+        # remove all files in sub_test_dir created by unzip, and then create an empty sub_test_dir
+        for rf in res.files.all():
+            rf.delete()
         create_folder(res.short_id, 'data/contents/sub_test_dir')
 
+        # add 2 files to the root folder
+        add_resource_files(res.short_id, self.test_file_1, self.test_file_3)
+        # resource should have 2 files
+        self.assertEqual(res.files.all().count(), 2)
+        # check that the files were added to the root folder
+        for rf in res.files.all():
+            self.assertEqual(rf.file_folder, "")
+
         # TODO: use ResourceFile.rename, which doesn't require data/contents prefix
+        # >> test moving files to a different directory
+        # move the 2 files to the new directory - 'sub_test_dir'
         move_or_rename_file_or_folder(user, res.short_id,
                                       'data/contents/' + file_name_list[0],
                                       'data/contents/sub_test_dir/' + file_name_list[0])
-        # Now resource should contain three files: file3_new.txt, sub_test_dir.zip, and file1.txt
-        self.assertEqual(res.files.all().count(), 3, msg="resource file count didn't match")
-        unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', False)
-
-        # Resource should still contain 5 files: file3_new.txt (2), sub_test_dir.zip,
-        # and file1.txt (2)
-        file_cnt = res.files.all().count()
-        self.assertEqual(file_cnt, 5, msg="resource file count didn't match - " +
-                                          str(file_cnt) + " != 5")
-
-        # remove all files except the zippped file
-        remove_folder(user, res.short_id, 'data/contents/sub_test_dir')
-        remove_folder(user, res.short_id, 'data/contents/sub_test_dir-1')
-
-        # Now resource should contain two files: file3_new.txt sub_test_dir.zip
-        file_cnt = res.files.all().count()
-        self.assertEqual(file_cnt, 2, msg="resource file count didn't match - " +
-                                          str(file_cnt) + " != 2")
-        unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', True)
-        # Now resource should contain three files: file1.txt, file2.txt, and file3_new.txt
-        self.assertEqual(res.files.all().count(), 3, msg="resource file count didn't match")
-        updated_res_file_names = []
-        for rf in ResourceFile.objects.filter(object_id=res.id):
-            updated_res_file_names.append(rf.short_path)
-        self.assertNotIn('sub_test_dir.zip', updated_res_file_names,
-                         msg="resource still contains the zip file after unzipping")
-        self.assertIn('sub_test_dir/sub_test_dir/' + file_name_list[0], updated_res_file_names,
-                      msg='resource does not contain unzipped file ' + file_name_list[0])
-        self.assertIn('sub_test_dir/sub_test_dir/' + file_name_list[1], updated_res_file_names,
-                      msg='resource does not contain unzipped file ' + file_name_list[1])
-        self.assertIn('new_' + file_name_list[2], updated_res_file_names,
-                      msg='resource does not contain unzipped file new_' + file_name_list[2])
-
-        # rename a folder
         move_or_rename_file_or_folder(user, res.short_id,
-                                      'data/contents/sub_test_dir/sub_test_dir',
+                                      'data/contents/' + file_name_list[2],
+                                      'data/contents/sub_test_dir/' + file_name_list[2])
+        # resource should have 2 files
+        self.assertEqual(res.files.all().count(), 2)
+        # check the files got moved to a different directory
+        for rf in res.files.all():
+            self.assertEqual(rf.file_folder, "sub_test_dir")
+
+        # >> test renaming files
+        # rename one of the files
+        move_or_rename_file_or_folder(user, res.short_id,
+                                      'data/contents/sub_test_dir/' + file_name_list[0],
+                                      'data/contents/sub_test_dir/new_' + file_name_list[0])
+        file_renamed = False
+        for rf in res.files.all():
+            if rf.short_path == f"sub_test_dir/new_{file_name_list[0]}":
+                file_renamed = True
+                break
+        self.assertTrue(file_renamed)
+        file_storage_path_old = os.path.join(res.file_path, 'sub_test_dir', file_name_list[0])
+        file_storage_path_new = os.path.join(res.file_path, 'sub_test_dir', f"new_{file_name_list[0]}")
+        self.assertFalse(istorage.exists(file_storage_path_old))
+        self.assertTrue(istorage.exists(file_storage_path_new))
+
+        # >> test renaming a folder
+        move_or_rename_file_or_folder(user, res.short_id,
+                                      'data/contents/sub_test_dir',
                                       'data/contents/sub_dir')
-        updated_res_file_names = []
-        for rf in ResourceFile.objects.filter(object_id=res.id):
-            updated_res_file_names.append(rf.short_path)
 
-        self.assertNotIn('sub_test_dir/sub_test_dir/' + file_name_list[0], updated_res_file_names,
-                         msg='resource still contains ' + file_name_list[0] +
-                             ' in the old folder after renaming')
-        self.assertIn('sub_dir/' + file_name_list[0], updated_res_file_names,
-                      msg='resource does not contain ' + file_name_list[0] +
-                          ' in the new folder after renaming')
-        self.assertNotIn('sub_test_dir/sub_test_dir/' + file_name_list[1], updated_res_file_names,
-                         msg='resource still contains ' + file_name_list[1] +
-                             ' in the old folder after renaming')
-        self.assertIn('sub_dir/' + file_name_list[1], updated_res_file_names,
-                      msg='resource does not contain ' + file_name_list[1] +
-                          ' in the new folder after renaming')
+        dir_storage_path_old = os.path.join(res.file_path, "sub_test_dir")
+        dir_storage_path_new = os.path.join(res.file_path, "sub_dir")
+        self.assertFalse(istorage.exists(dir_storage_path_old))
+        self.assertTrue(istorage.exists(dir_storage_path_new))
 
-        # remove a folder
-        # TODO: utilize ResourceFile.remove_folder instead. Takes a short path.
+        for rf in res.files.all():
+            self.assertEqual(rf.file_folder, "sub_dir")
+
         remove_folder(user, res.short_id, 'data/contents/sub_dir')
-        # Now resource only contains one file
-        self.assertEqual(res.files.all().count(), 1, msg="resource file count didn't match")
-        updated_res_file_names = []
-        for rf in ResourceFile.objects.filter(object_id=res.id):
-            updated_res_file_names.append(rf.short_path)
+        dir_storage_path_deleted = os.path.join(res.file_path, "sub_dir")
+        self.assertFalse(istorage.exists(dir_storage_path_deleted))
 
-        self.assertEqual(len(updated_res_file_names), 1)
-        self.assertEqual(updated_res_file_names[0], 'new_' + file_name_list[2])
+        # resource should have no files after the folder containing the folder is deleted
+        self.assertEqual(res.files.all().count(), 0)
 
     def raster_metadata_extraction(self):
         """Test raster metadata extraction.
@@ -346,7 +369,7 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(self.resRaster.metadata.formats.all().filter(
             value='image/tiff').count(), 1)
 
-        # testing extended metadata element: original coverage
+        # testing additional metadata element: original coverage
         ori_coverage = self.resRaster.metadata.originalCoverage
         self.assertNotEqual(ori_coverage, None)
         self.assertEqual(float(ori_coverage.value['northlimit']), 4662392.446916306)
@@ -373,7 +396,7 @@ class TestCaseCommonUtilities(object):
                             'NORTH],AUTHORITY["EPSG","26912"]]'
         self.assertEqual(ori_coverage.value['projection_string'], projection_string)
 
-        # testing extended metadata element: cell information
+        # testing additional metadata element: cell information
         cell_info = self.resRaster.metadata.cellInformation
         self.assertEqual(cell_info.rows, 1660)
         self.assertEqual(cell_info.columns, 985)
@@ -381,7 +404,7 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(cell_info.cellSizeYValue, 30.0)
         self.assertEqual(cell_info.cellDataType, 'Float32')
 
-        # testing extended metadata element: band information
+        # testing additional metadata element: band information
         self.assertEqual(self.resRaster.metadata.bandInformations.count(), 1)
         band_info = self.resRaster.metadata.bandInformations.first()
         self.assertEqual(band_info.noDataValue, '-3.4028234663852886e+38')
@@ -413,14 +436,14 @@ class TestCaseCommonUtilities(object):
                              "Oct. 2009 to June 2010 for TWDEF site in Utah."
         self.assertEqual(self.resNetcdf.metadata.description.abstract, extracted_abstract)
 
-        # there should be one source element
-        self.assertEqual(self.resNetcdf.metadata.sources.all().count(), 1)
+        # there should be one relation element of type 'source'
+        self.assertEqual(self.resNetcdf.metadata.relations.filter(type='source').count(), 1)
 
         # there should be one license element:
         self.assertNotEqual(self.resNetcdf.metadata.rights.statement, 1)
 
         # there should be one relation element
-        self.assertEqual(self.resNetcdf.metadata.relations.all().filter(type='cites').count(), 1)
+        self.assertEqual(self.resNetcdf.metadata.relations.all().filter(type='references').count(), 1)
 
         # there should be creators equal to expected_creators_count
         self.assertEqual(self.resNetcdf.metadata.creators.all().count(), expected_creators_count)
@@ -459,7 +482,7 @@ class TestCaseCommonUtilities(object):
         subj_element = self.resNetcdf.metadata.subjects.all().first()
         self.assertEqual(subj_element.value, 'Snow water equivalent')
 
-        # testing extended metadata element: original coverage
+        # testing additional metadata element: original coverage
         ori_coverage = self.resNetcdf.metadata.ori_coverage.all().first()
         self.assertNotEqual(ori_coverage, None)
         self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
@@ -472,7 +495,7 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(ori_coverage.value['units'], 'Meter')
         self.assertEqual(ori_coverage.value['projection'], 'transverse_mercator')
 
-        # testing extended metadata element: variables
+        # testing additional metadata element: variables
         self.assertEqual(self.resNetcdf.metadata.variables.all().count(), 5)
 
         # test time variable
@@ -581,7 +604,7 @@ class TestCaseCommonUtilities(object):
         # there should be a total of 7 timeseries
         self.assertEqual(self.resTimeSeries.metadata.time_series_results.all().count(), 7)
 
-        # testing extended metadata elements
+        # testing additional metadata elements
 
         # test 'site' - there should be 7 sites
         self.assertEqual(self.resTimeSeries.metadata.sites.all().count(), 7)
@@ -678,6 +701,14 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(self.resTimeSeries.metadata.cv_aggregation_statistics.all().count(), 17)
         # there should not be any UTCOffset element
         self.assertEqual(self.resTimeSeries.metadata.utc_offset, None)
+
+
+def _add_file_to_resource(resource, file_to_add, upload_folder=''):
+    file_to_upload = UploadedFile(file=open(file_to_add, 'rb'),
+                                  name=os.path.basename(file_to_add))
+
+    new_res_file = add_file_to_resource(resource, file_to_upload, folder=upload_folder, check_target_folder=True)
+    return new_res_file
 
 
 class ViewTestCase(TestCase):

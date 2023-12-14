@@ -1,27 +1,25 @@
 """Page processors for hs_core app."""
 
+import json
+
 from dateutil import parser
 from django.conf import settings
-from django.contrib.auth.models import Group
-from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
 from django.utils.html import mark_safe, escapejs
 from mezzanine.pages.page_processors import processor_for
 
-from .forms import ExtendedMetadataForm
 from hs_communities.models import Topic
 from hs_core import languages_iso
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     res_has_web_reference
-from hs_core.models import GenericResource, Relation
+from hs_core.models import BaseResource, Relation
 from hs_core.views.utils import show_relations_section, \
     rights_allows_copy
-import json
-
 from hs_odm2.models import ODM2Variable
+from .forms import ExtendedMetadataForm
 
 
-@processor_for(GenericResource)
+@processor_for(BaseResource)
 def landing_page(request, page):
     """Return resource landing page context."""
     edit_resource = check_resource_mode(request)
@@ -30,7 +28,7 @@ def landing_page(request, page):
 
 
 def get_page_context(page, user, resource_edit=False, extended_metadata_layout=None, request=None):
-    """Inject a crispy_form layout into the page to display extended metadata.
+    """Inject a crispy_form layout into the page to display additional metadata.
 
     :param page: which page to get the template context for
     :param user: the user who is viewing the page
@@ -41,7 +39,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     should be extended by page/resource-specific page_processors
 
     Resource type specific app needs to call this method to inject a crispy_form layout
-    object for displaying metadata UI for the extended metadata for their resource
+    object for displaying metadata UI for the additional metadata for their resource
 
     TODO: refactor to make it clear that there are two different modes = EDITABLE | READONLY
                 - split into two functions: get_readonly_page_context(...) and
@@ -54,22 +52,24 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             del request.session["file_type_error"]
 
     content_model = page.get_content_model()
-    # whether the user has permission to view this resource
+
+    show_content_files = content_model.raccess.public or content_model.raccess.allow_private_sharing
+    if not show_content_files and user.is_authenticated:
+        show_content_files = user.uaccess.can_view_resource(content_model)
+
     can_view = content_model.can_view(request)
-    if not can_view:
-        if user.is_authenticated():
-            raise PermissionDenied()
-        return redirect_to_login(request.path)
+    if not can_view and not show_content_files:
+        raise PermissionDenied()
 
     discoverable = content_model.raccess.discoverable
     validation_error = None
     resource_is_mine = False
-    if user.is_authenticated():
+    if user.is_authenticated:
         resource_is_mine = content_model.rlabels.is_mine(user)
 
     metadata_status = _get_metadata_status(content_model)
 
-    belongs_to_collections = content_model.collections.all()
+    belongs_to_collections = content_model.collections.all().select_related('raccess')
 
     tool_homepage_url = None
     if not resource_edit:  # In view mode
@@ -82,7 +82,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     just_created = False
     just_copied = False
     create_resource_error = None
-    just_published = False
     if request:
         validation_error = check_for_validation(request)
 
@@ -98,18 +97,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         if 'resource_creation_error' in request.session:
             del request.session['resource_creation_error']
 
-        just_published = request.session.get('just_published', False)
-        if 'just_published' in request.session:
-            del request.session['just_published']
-
     bag_url = content_model.bag_url
-
-    if user.is_authenticated():
-        show_content_files = user.uaccess.can_view_resource(content_model)
-    else:
-        # if anonymous user getting access to a private resource (since resource is discoverable),
-        # then don't show content files
-        show_content_files = content_model.raccess.public
 
     rights_allow_copy = rights_allows_copy(content_model, user)
 
@@ -123,10 +111,15 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     keywords = json.dumps([sub.value for sub in content_model.metadata.subjects.all()])
     topics = Topic.objects.all().values_list('name', flat=True).order_by('name')
     topics = list(topics)  # force QuerySet evaluation
+    content_model.update_relation_meta()
+    creators = content_model.metadata.creators.all()
+
+    # whether the user has permission to change the model
+    can_change = content_model.can_change(request)
 
     # user requested the resource in READONLY mode
     if not resource_edit:
-        content_model.update_view_count(request)
+        content_model.update_view_count()
         temporal_coverage = content_model.metadata.temporal_coverage
         temporal_coverage_data_dict = {}
         if temporal_coverage:
@@ -171,48 +164,51 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         abstract = content_model.metadata.description.abstract if \
             content_model.metadata.description else None
 
-        missing_metadata_elements = content_model.metadata.get_required_missing_elements()
+        missing_metadata_elements_for_publication = content_model.metadata.get_required_missing_elements('published')
+        missing_metadata_elements_for_discoverable = content_model.metadata.get_required_missing_elements()
+        recommended_missing_elements = content_model.metadata.get_recommended_missing_elements()
         maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
 
         context = {
-                   'cm': content_model,
-                   'resource_edit_mode': resource_edit,
-                   'metadata_form': None,
-                   'citation': content_model.get_citation(),
-                   'custom_citation': content_model.get_custom_citation(),
-                   'title': title,
-                   'readme': readme,
-                   'abstract': abstract,
-                   'creators': content_model.metadata.creators.all(),
-                   'contributors': content_model.metadata.contributors.all(),
-                   'temporal_coverage': temporal_coverage_data_dict,
-                   'spatial_coverage': spatial_coverage_data_dict,
-                   'keywords': keywords,
-                   'language': language,
-                   'rights': content_model.metadata.rights,
-                   'sources': content_model.metadata.sources.all(),
-                   'relations': content_model.metadata.relations.all(),
-                   'show_relations_section': show_relations_section(content_model),
-                   'fundingagencies': content_model.metadata.funding_agencies.all(),
-                   'metadata_status': metadata_status,
-                   'missing_metadata_elements': missing_metadata_elements,
-                   'validation_error': validation_error if validation_error else None,
-                   'resource_creation_error': create_resource_error,
-                   'tool_homepage_url': tool_homepage_url,
-                   'file_type_error': file_type_error,
-                   'just_created': just_created,
-                   'just_copied': just_copied,
-                   'just_published': just_published,
-                   'bag_url': bag_url,
-                   'show_content_files': show_content_files,
-                   'discoverable': discoverable,
-                   'resource_is_mine': resource_is_mine,
-                   'rights_allow_copy': rights_allow_copy,
-                   'quota_holder': qholder,
-                   'belongs_to_collections': belongs_to_collections,
-                   'show_web_reference_note': has_web_ref,
-                   'current_user': user,
-                   'maps_key': maps_key
+            'cm': content_model,
+            'resource_edit_mode': resource_edit,
+            'metadata_form': None,
+            'citation': content_model.get_citation(forceHydroshareURI=False),
+            'custom_citation': content_model.get_custom_citation(),
+            'title': title,
+            'readme': readme,
+            'abstract': abstract,
+            'creators': creators,
+            'contributors': content_model.metadata.contributors.all(),
+            'temporal_coverage': temporal_coverage_data_dict,
+            'spatial_coverage': spatial_coverage_data_dict,
+            'keywords': keywords,
+            'language': language,
+            'rights': content_model.metadata.rights,
+            'relations': content_model.metadata.relations.all(),
+            'geospatial_relations': content_model.metadata.geospatialrelations.all(),
+            'show_relations_section': show_relations_section(content_model),
+            'fundingagencies': content_model.metadata.funding_agencies.all(),
+            'metadata_status': metadata_status,
+            'missing_metadata_elements_for_discoverable': missing_metadata_elements_for_discoverable,
+            'missing_metadata_elements_for_publication': missing_metadata_elements_for_publication,
+            'recommended_missing_elements': recommended_missing_elements,
+            'validation_error': validation_error if validation_error else None,
+            'resource_creation_error': create_resource_error,
+            'tool_homepage_url': tool_homepage_url,
+            'file_type_error': file_type_error,
+            'just_created': just_created,
+            'just_copied': just_copied,
+            'bag_url': bag_url,
+            'show_content_files': show_content_files,
+            'discoverable': discoverable,
+            'resource_is_mine': resource_is_mine,
+            'rights_allow_copy': rights_allow_copy,
+            'quota_holder': qholder,
+            'belongs_to_collections': belongs_to_collections,
+            'show_web_reference_note': has_web_ref,
+            'current_user': user,
+            'maps_key': maps_key
         }
 
         return context
@@ -220,7 +216,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     # user requested the resource in EDIT MODE
 
     # whether the user has permission to change the model
-    can_change = content_model.can_change(request)
     if not can_change:
         raise PermissionDenied()
 
@@ -269,57 +264,49 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     maps_key = settings.MAPS_KEY if hasattr(settings, 'MAPS_KEY') else ''
 
-    grps_member_of = []
-    groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
-    # for each group set group dynamic attributes
-    for g in groups:
-        g.is_user_member = user in g.gaccess.members
-        if g.is_user_member:
-            grps_member_of.append(g)
     try:
         citation_id = content_model.metadata.citation.first().id
-    except:
+    except: # noqa
         citation_id = None
 
     context = {
-               'cm': content_model,
-               'resource_edit_mode': resource_edit,
-               'metadata_form': metadata_form,
-               'creators': content_model.metadata.creators.all(),
-               'title': content_model.metadata.title,
-               'readme': readme,
-               'contributors': content_model.metadata.contributors.all(),
-               'relations': content_model.metadata.relations.all(),
-               'sources': content_model.metadata.sources.all(),
-               'fundingagencies': content_model.metadata.funding_agencies.all(),
-               'temporal_coverage': temporal_coverage_data_dict,
-               'spatial_coverage': spatial_coverage_data_dict,
-               'keywords': keywords,
-               'metadata_status': metadata_status,
-               'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
-               'citation': content_model.get_citation(),
-               'custom_citation': content_model.get_custom_citation(),
-               'citation_id': citation_id,
-               'rights': content_model.metadata.rights,
-               'bag_url': bag_url,
-               'current_user': user,
-               'show_content_files': show_content_files,
-               'validation_error': validation_error if validation_error else None,
-               'discoverable': discoverable,
-               'resource_is_mine': resource_is_mine,
-               'quota_holder': qholder,
-               'just_created': just_created,
-               'relation_source_types': tuple((type_value, type_display)
-                                              for type_value, type_display in Relation.SOURCE_TYPES
-                                              if type_value != 'isReplacedBy' and
-                                              type_value != 'isVersionOf' and
-                                              type_value != 'hasPart'),
-               'show_web_reference_note': has_web_ref,
-               'belongs_to_collections': belongs_to_collections,
-               'maps_key': maps_key,
-               'topics_json': mark_safe(escapejs(json.dumps(topics))),
-               'czo_user': any("CZO National" in x.name for x in user.uaccess.communities),
-               'odm2_terms': list(ODM2Variable.all()),
+        'cm': content_model,
+        'resource_edit_mode': resource_edit,
+        'metadata_form': metadata_form,
+        'creators': creators,
+        'title': content_model.metadata.title,
+        'readme': readme,
+        'contributors': content_model.metadata.contributors.all(),
+        'relations': content_model.metadata.relations.all(),
+        'geospatial_relations': content_model.metadata.geospatialrelations.all(),
+        'fundingagencies': content_model.metadata.funding_agencies.all(),
+        'temporal_coverage': temporal_coverage_data_dict,
+        'spatial_coverage': spatial_coverage_data_dict,
+        'keywords': keywords,
+        'metadata_status': metadata_status,
+        'missing_metadata_elements_for_discoverable': content_model.metadata.get_required_missing_elements(),
+        'recommended_missing_elements': content_model.metadata.get_recommended_missing_elements(),
+        'citation': content_model.get_citation(forceHydroshareURI=False),
+        'custom_citation': content_model.get_custom_citation(),
+        'citation_id': citation_id,
+        'rights': content_model.metadata.rights,
+        'bag_url': bag_url,
+        'current_user': user,
+        'show_content_files': show_content_files,
+        'validation_error': validation_error if validation_error else None,
+        'discoverable': discoverable,
+        'resource_is_mine': resource_is_mine,
+        'quota_holder': qholder,
+        'just_created': just_created,
+        'relation_source_types': tuple((type_value, type_display)
+                                       for type_value, type_display in Relation.SOURCE_TYPES
+                                       if type_value not in Relation.NOT_USER_EDITABLE),
+        'show_web_reference_note': has_web_ref,
+        'belongs_to_collections': belongs_to_collections,
+        'maps_key': maps_key,
+        'topics_json': mark_safe(escapejs(json.dumps(topics))),
+        'czo_user': any("CZO National" in x.name for x in user.uaccess.communities),
+        'odm2_terms': list(ODM2Variable.all()),
     }
 
     return context

@@ -3,7 +3,6 @@ from urllib.parse import urlparse, parse_qs
 from django.test import TransactionTestCase, RequestFactory
 from django.contrib.auth.models import Group
 from django.http import HttpRequest
-from django.conf import settings
 
 from hs_core.hydroshare import resource
 from hs_core import hydroshare
@@ -15,10 +14,10 @@ from hs_tools_resource.models import RequestUrlBase, ToolVersion, SupportedResTy
 from hs_tools_resource.receivers import metadata_element_pre_create_handler, \
     metadata_element_pre_update_handler
 from hs_core.hydroshare import create_empty_resource, copy_resource
-from hs_tools_resource.utils import parse_app_url_template, do_work_when_launching_app_as_needed
+from hs_tools_resource.utils import parse_app_url_template
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 from hs_core.testing import TestCaseCommonUtilities
-from hs_tools_resource.app_keys import tool_app_key, irods_path_key, irods_resc_key
+from hs_tools_resource.app_keys import tool_app_key
 from hs_core.hydroshare.utils import resource_file_add_process
 
 
@@ -115,20 +114,20 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
         # create 1 SupportedResTypes obj with required params
         resource.create_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
-                                         supported_res_types=['NetcdfResource'])
+                                         supported_res_types=['CompositeResource'])
         self.assertEqual(SupportedResTypes.objects.all().count(), 1)
         # Try creating the 2nd SupportedResTypes obj with required params
         with self.assertRaises(Exception):
             resource.create_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
-                                             supported_res_types=['NetcdfResource'])
+                                             supported_res_types=['CompositeResource'])
         self.assertEqual(SupportedResTypes.objects.all().count(), 1)
 
         # update existing meta
         resource.update_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
                                          element_id=SupportedResTypes.objects.first().id,
-                                         supported_res_types=['TimeSeriesResource'])
+                                         supported_res_types=['CollectionResource'])
         self.assertEqual(SupportedResTypes.objects.first().supported_res_types.all()[0].description,
-                         'TimeSeriesResource')
+                         'CollectionResource')
 
         # try to delete 1st SupportedResTypes obj
         with self.assertRaises(Exception):
@@ -146,7 +145,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         # create 1 ToolIcon obj with required params
         resource.create_metadata_element(self.resWebApp.short_id,
                                          'ToolIcon',
-                                         value='https://www.hydroshare.org/static/img/logo-sm.png')
+                                         value='https://www.hydroshare.org/static/static/img/logo-sm.png')
         self.assertEqual(ToolIcon.objects.all().count(), 1)
 
         # may not create additional instance of ToolIcon
@@ -154,16 +153,16 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
             resource. \
                 create_metadata_element(self.resWebApp.short_id,
                                         'ToolIcon',
-                                        value='https://www.hydroshare.org/static/img/logo-sm.png')
+                                        value='https://www.hydroshare.org/static/static/img/logo-sm.png')
         self.assertEqual(ToolIcon.objects.all().count(), 1)
 
         # update existing meta
         resource. \
             update_metadata_element(self.resWebApp.short_id, 'ToolIcon',
                                     element_id=ToolIcon.objects.first().id,
-                                    value='https://www.hydroshare.org/static/img/logo-sm.png')
+                                    value='https://www.hydroshare.org/static/static/img/logo-sm.png')
         self.assertEqual(ToolIcon.objects.first().value,
-                         'https://www.hydroshare.org/static/img/logo-sm.png')
+                         'https://www.hydroshare.org/static/static/img/logo-sm.png')
 
         # delete ToolIcon obj
         resource.delete_metadata_element(self.resWebApp.short_id, 'ToolIcon',
@@ -227,7 +226,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertTrue(data["is_valid"])
 
         # SupportedResTypes
-        request.POST = {'supportedResTypes': ['NetCDF Resource']}
+        request.POST = {'supportedResTypes': ['Composite Resource']}
         data = metadata_element_pre_create_handler(sender=ToolResource,
                                                    element_name="SupportedResTypes",
                                                    request=request)
@@ -271,7 +270,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
         # create SupportedResTypes obj with required params
         metadata.append({'supportedrestypes': {
-            'supported_res_types': ['NetcdfResource', 'TimeSeriesResource']}})
+            'supported_res_types': ['CollectionResource', 'CompositeResource']}})
 
         # update tool version
         metadata.append({'toolversion': {'value': '2.0'}})
@@ -280,7 +279,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(SupportedResTypes.objects.all().count(), 1)
         supported_res_type = SupportedResTypes.objects.first()
         for res_type in supported_res_type.supported_res_types.all():
-            self.assertIn(res_type.description, ['NetcdfResource', 'TimeSeriesResource'])
+            self.assertIn(res_type.description, ['CollectionResource', 'CompositeResource'])
         self.assertEqual(supported_res_type.supported_res_types.count(), 2)
         self.assertEqual(ToolVersion.objects.first().value, '2.0')
 
@@ -301,12 +300,12 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
         # create 1 ToolIcon obj with required params
         metadata.append(
-            {'toolicon': {'value': 'https://www.hydroshare.org/static/img/logo-sm.png'}})
+            {'toolicon': {'value': 'https://www.hydroshare.org/static/static/img/logo-sm.png'}})
         # do the bulk metadata update
         self.resWebApp.metadata.update(metadata, self.user)
         self.assertEqual(ToolIcon.objects.all().count(), 1)
         self.assertEqual(ToolIcon.objects.first().value,
-                         'https://www.hydroshare.org/static/img/logo-sm.png')
+                         'https://www.hydroshare.org/static/static/img/logo-sm.png')
 
         # test creating AppHomePageURL element
         del metadata[:]
@@ -323,7 +322,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
     def test_web_app_extended_metadata_appkey_association(self):
         # testing a resource can be associated with a web app tool resource via
-        # appkey name-value extended metadata matching
+        # appkey name-value additional metadata matching
         self.assertEqual(ToolResource.objects.count(), 1)
         metadata = []
         metadata.append({'requesturlbase': {'value': 'https://www.google.com'}})
@@ -425,66 +424,6 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
                                                  'web app key')
         tl = relevant_tools['tool_list'][0]
         self.assertEqual(tl['url'], "{'value': 'https://www.google.com?s=overridden'}")
-
-    def test_web_app_do_needed_work_when_being_launched(self):
-        # testing a web app does needed work when being launched. Currently, the needed work when
-        # launching a web app includes checking 'irods_federation_target_path' and
-        # 'irods_federation_target_resource' keys in web app tool resource extended metadata and
-        # if they exist, the web app tool will push the resource to the specified iRODS path and
-        # iRODS resource for the app being launched to consume in the federated iRODS server that
-        # is used as backend data storage and management server for the app being launched.
-        # This is the only use case we support for launching mygeohub GABBs tool from HydroShare.
-        # When other use cases we need to support in the future requires additional work when
-        # launching the app, more functionalities can be added following similar design and
-        # implementation for this mygeohub GABBs web app tool launch from HydroShare.
-
-        super(TestWebAppFeature, self).assert_federated_irods_available()
-
-        self.assertEqual(ToolResource.objects.count(), 1)
-        metadata = []
-        metadata.append({'requesturlbase': {'value': 'https://www.google.com'}})
-        self.resWebApp.metadata.update(metadata, self.user)
-        self.assertEqual(RequestUrlBase.objects.all().count(), 1)
-
-        self.assertEqual(self.resWebApp.extra_metadata, {})
-
-        res_id = self.resComposite.short_id
-        tool_res_id = self.resWebApp.short_id
-        ipath = '/' + settings.HS_USER_IRODS_ZONE + '/home/' + \
-                settings.HS_IRODS_PROXY_USER_IN_USER_ZONE
-        target_res_path = ipath + '/' + self.user.username + '/' + res_id
-        if super(TestWebAppFeature, self).check_file_exist(target_res_path):
-            super(TestWebAppFeature, self).delete_directory(target_res_path)
-
-        # assert no resource copying will take place without required iRODS extra_metadata keys
-        ret_status = do_work_when_launching_app_as_needed(tool_res_id, res_id, self.user)
-        self.assertIsNone(ret_status, msg='do_work_when_launching_app_as_needed() did not return '
-                                          'None')
-        self.assertFalse(super(TestWebAppFeature, self).check_file_exist(target_res_path))
-
-        self.resWebApp.extra_metadata = {
-            irods_path_key: ipath,
-            irods_resc_key: settings.HS_IRODS_USER_ZONE_DEF_RES
-        }
-        self.resWebApp.save()
-
-        self.assertNotEqual(self.resWebApp.extra_metadata, {})
-        self.assertEqual(self.resWebApp.extra_metadata[irods_path_key], ipath)
-        self.assertEqual(self.resWebApp.extra_metadata[irods_resc_key],
-                         settings.HS_IRODS_USER_ZONE_DEF_RES)
-
-        # assert resource copying will take place now that extra_metadata keys for irods federation
-        # target path and resource keys exist
-        ret_status = do_work_when_launching_app_as_needed(tool_res_id, res_id, self.user)
-        self.assertIsNone(ret_status, msg='do_work_when_launching_app_as_needed() did not return '
-                                          'None')
-        self.assertTrue(super(TestWebAppFeature, self).check_file_exist(target_res_path))
-
-        # delete all extra metadata and copied resource
-        self.resWebApp.extra_metadata = {}
-        self.resWebApp.save()
-        self.assertEqual(self.resWebApp.extra_metadata, {})
-        super(TestWebAppFeature, self).delete_directory(target_res_path)
 
     def test_utils(self):
         url_template_string = "http://www.google.com/?" \
@@ -641,7 +580,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
         # create 1 SupportedResTypes obj with required params
         resource.create_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
-                                         supported_res_types=['NetcdfResource'])
+                                         supported_res_types=['CompositeResource'])
         self.assertEqual(SupportedResTypes.objects.all().count(), 1)
 
         # set url launching pattern for aggregations
@@ -655,7 +594,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
         # make a new copy of web app
         new_web_app = create_empty_resource(self.resWebApp.short_id, self.user,
-                                               action='copy')
+                                            action='copy')
 
         new_web_app = copy_resource(self.resWebApp, new_web_app)
 

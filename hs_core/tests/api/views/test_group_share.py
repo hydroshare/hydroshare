@@ -1,9 +1,10 @@
+import json
 import os
 import shutil
 
 from django.contrib.auth.models import Group
 from django.contrib.messages import get_messages
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from rest_framework import status
 
@@ -203,11 +204,9 @@ class TestShareGroup(ViewTestCase):
 
         response = make_group_membership_request(request, group_id=self.test_group.id,
                                                  user_id=self.mike.id)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
-        flag_messages = get_messages(request)
-        err_messages = [m for m in flag_messages if m.tags == 'error']
-        self.assertNotEqual(len(err_messages), 0)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_content = json.loads(response.content)
+        self.assertEqual(response_content['status'], "error")
         self.test_group.gaccess.refresh_from_db()
         # there should not be any pending request at this point
         self.assertEqual(len(self.test_group.gaccess.group_membership_requests), 0)
@@ -244,11 +243,9 @@ class TestShareGroup(ViewTestCase):
         self.add_session_to_request(request)
         response = make_group_membership_request(request, group_id=self.test_group.id)
 
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
-        flag_messages = get_messages(request)
-        err_messages = [m for m in flag_messages if m.tags == 'error']
-        self.assertNotEqual(len(err_messages), 0)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_content = json.loads(response.content)
+        self.assertEqual(response_content["status"], "error")
         self.test_group.gaccess.refresh_from_db()
         # there should 1 pending request at this point
         self.assertEqual(len(self.test_group.gaccess.group_membership_requests), 1)
@@ -412,11 +409,7 @@ class TestShareGroup(ViewTestCase):
         else:
             response = make_group_membership_request(request, group_id=self.test_group.id)
 
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
-        flag_messages = get_messages(request)
-        success_messages = [m for m in flag_messages if m.tags == 'success']
-        self.assertNotEqual(len(success_messages), 0)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.test_group.gaccess.refresh_from_db()
 
     def _check_act_on_membership_request(self, acting_user, membership_request, action,

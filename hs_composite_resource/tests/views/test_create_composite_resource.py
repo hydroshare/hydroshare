@@ -3,7 +3,7 @@ import shutil
 import json
 
 from django.contrib.auth.models import Group
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from rest_framework import status
 

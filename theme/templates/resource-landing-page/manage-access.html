@@ -63,7 +63,7 @@
                     </div>
 
                     <div id="div-invite-people" class="panel-body">
-                        <div id="invite-flag" class="btn-group space-bottom" role="group"
+                        <div id="invite-flag" class="btn-group has-space-bottom" role="group"
                              aria-label="Share with users or groups">
                             <button type="button"
                                     :class="{btn: true, 'btn-primary': isInviteUsers, 'btn-default': !isInviteUsers}"
@@ -71,7 +71,7 @@
                                     data-value="users">Users</button>
                             <button type="button"
                                     :class="{btn: true, 'btn-primary': !isInviteUsers, 'btn-default': isInviteUsers}"
-                                    @click="isInviteUsers = false; if (selectedAccess === 'owner') {selectedAccess = 'view'}"
+                                    @click="onBtnGroupsClick"
                                     data-value="groups">Groups</button>
                         </div>
 
@@ -125,7 +125,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div v-if="error" class='alert alert-danger space-top small'>
+                        <div v-if="error" class='alert alert-danger has-space-top small'>
                             <strong>Error: </strong>${ error }
                         </div>
                     </div>
@@ -151,49 +151,44 @@
                             </div>
 
                             <template v-if="canChangeResourceFlags || '{{ cm.raccess.published }}'">
-                                {% if not cm.raccess.published %}
+                                {% if not cm.raccess.published_or_review_pending %}
                                     <div class="btn-group" role="group">
                                         {# -------- PUBLIC -------- #}
                                         <button
-                                            :disabled="!canBePublicDiscoverable || resAccess.isPublic || isProcessingAccess"
+                                            :disabled="!canBePublicDiscoverable || !canChangeResourceFlags || isProcessingAccess"
                                             @click="setResourceAccess('make_public')"
                                             :class="{active: resAccess.isPublic}"
                                             class="btn btn-default"
-                                            id="btn-public" data-toggle="tooltip" data-placement="auto"
-                                            title='Can be viewed and downloaded by anyone.' type="button">
+                                            id="btn-public" data-toggle="tooltip" data-placement="auto" 
+                                            :title="!canChangeResourceFlags ? this.accessDeniedTitle : 'Can be viewed and downloaded by anyone.'" 
+                                            type="button">
                                             Public
                                         </button>
 
                                         {# -------- DISCOVERABLE -------- #}
-                                        <button :disabled="!canBePublicDiscoverable || isProcessingAccess"
+                                        <button :disabled="!canBePublicDiscoverable || !canChangeResourceFlags || isProcessingAccess"
                                                 @click="setResourceAccess('make_discoverable')"
                                                 :class="{active: resAccess.isDiscoverable && !resAccess.isPublic}"
                                                 class="btn btn-default"
-                                                id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
-                                                type="button" title='Metadata is public but data are protected.'>
+                                                id="btn-discoverable" data-toggle="tooltip" data-placement="auto" 
+                                                :title="!canChangeResourceFlags ? this.accessDeniedTitle : 'Metadata is public but data are protected.'"
+                                                type="button">
                                             Discoverable
                                         </button>
 
                                         {# -------- PRIVATE -------- #}
                                         <button
-                                            :disabled="!resAccess.isPublic && !resAccess.isDiscoverable || isProcessingAccess"
+                                            :disabled="!resAccess.isPublic && !resAccess.isDiscoverable || !canChangeResourceFlags || isProcessingAccess"
                                             @click="setResourceAccess('make_private')"
                                             :class="{active: !resAccess.isPublic && !resAccess.isDiscoverable}"
                                             class="btn btn-default"
                                             id="btn-private" data-toggle="tooltip" data-placement="auto"
-                                            title='Can be viewed and downloaded only by designated users or research groups.'
+                                            :title="!canChangeResourceFlags ? this.accessDeniedTitle : 'Can be viewed and downloaded only by designated users or research groups.'"
                                             type="button">
                                             Private
                                         </button>
                                     </div>
                                 {% endif %}
-
-                                <div
-                                    v-if="selfAccessLevel === 'owner' && resType === 'NetcdfResource' && !resAccess.isPublic"
-                                    class="alert alert-warning small space-top">
-                                    Note that making the resource public may take a little extra time to update
-                                    Hyrax server in order to provide OPeNDAP service for this resource.
-                                </div>
 
                                 <div v-if="selfAccessLevel === 'owner'">
                                     <div class="checkbox">
@@ -225,10 +220,31 @@
                                         Check this box to allow others to share the resource without the
                                         owner's permission.
                                     </p>
+                                    <div v-if="!resAccess.isPublic">
+                                        <div class="checkbox">
+                                            <label>
+                                                <input type="checkbox" v-model="resAccess.isPrivateLinkSharing" :disabled="isProcessingPrivateLinkSharing"
+                                                       @change="setPrivateLinkSharing(resAccess.isPrivateLinkSharing ? 'enable_private_sharing_link' : 'remove_private_sharing_link')">
+                                                Enable private link sharing
+                                            </label>
+                                        </div>
+                                        <div class="text-muted small">
+                                            <ul>
+                                                <li>
+                                                   <p>
+                                                   Check the box to let any user (including anonymous not logged in) with the link access the resource.
+                                                   This capability is to enable resources still private to be shared with journal paper reviewers while a
+                                                   paper citing the resource is under review.
+                                                   </p>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </div>
+
                             </template>
 
-                            <div v-if="sharingError" class='alert alert-danger space-top small'>
+                            <div v-if="sharingError" class='alert alert-danger has-space-top small'>
                                 <strong>Error: </strong>${ sharingError }
                             </div>
                          </div>
@@ -246,4 +262,4 @@
     </div>
 </div>
 
-<script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/manage-access-app.js"></script>
+<script type="text/javascript" src="{% static 'js/hs-vue/manage-access-app.js' %}"></script>

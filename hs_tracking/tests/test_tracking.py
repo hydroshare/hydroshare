@@ -56,8 +56,8 @@ class ViewTests(TestCase):
 
         # sample request with mocked ip address
         self.request.META = {
-            'HTTP_X_FORWARDED_FOR': '192.168.255.182, 10.0.0.0,' +
-                                    '127.0.0.1, 198.84.193.157, '
+            'HTTP_X_FORWARDED_FOR': '192.168.255.182, 10.0.0.0,'
+                                    + '127.0.0.1, 198.84.193.157, '
             '177.139.233.139',
             'HTTP_X_REAL_IP': '177.139.233.132',
             'REMOTE_ADDR': '177.139.233.133',
@@ -81,13 +81,13 @@ class ViewTests(TestCase):
 
         # build request 'GET'
         res_id = 'D7a7de92941a044049a7b8ad09f4c75bb'
-        res_type = 'GenericResource'
+        res_type = 'CompositeResource'
         app_name = 'test'
         request_url = 'https://apps.hydroshare.org/apps/hydroshare-gis/' \
                       '?res_id=%s&res_type=%s' % (res_id, res_type)
 
         app_url = urllib.parse.quote(request_url)
-        href = 'url=%s;name=%s' % (app_url, app_name)
+        href = 'url=%s&name=%s' % (app_url, app_name)
         r.GET = QueryDict(href)
 
         # invoke the app logging endpoint
@@ -107,6 +107,7 @@ class ViewTests(TestCase):
         self.assertTrue('res_type' in list(values.keys()))
         self.assertTrue('name' in list(values.keys()))
         self.assertTrue('user_email_domain' in list(values.keys()))
+        self.assertTrue('user_email_domain_full' in list(values.keys()))
         self.assertTrue('user_type' in list(values.keys()))
         self.assertTrue('user_ip' in list(values.keys()))
         self.assertTrue('res_id' in list(values.keys()))
@@ -114,6 +115,7 @@ class ViewTests(TestCase):
         self.assertTrue(values['res_type'] == res_type)
         self.assertTrue(values['name'] == app_name)
         self.assertTrue(values['user_email_domain'] == self.user.email[-3:])
+        self.assertTrue(values['user_email_domain_full'] == self.user.email.split('@')[-1])
         self.assertTrue(values['user_type'] == 'Unspecified')
         self.assertTrue(values['user_ip'] == '198.84.193.157')
         self.assertTrue(values['res_id'] == res_id)
@@ -134,7 +136,7 @@ class ViewTests(TestCase):
 
         # build request 'GET'
         res_id = 'D7a7de92941a044049a7b8ad09f4c75bb'
-        res_type = 'GenericResource'
+        res_type = 'CompositeResource'
         app_name = 'test'
         request_url = 'https://www.youtube.com/' \
                       '?res_id=%s&res_type=%s' % (res_id, res_type)
@@ -179,8 +181,8 @@ class TrackingTests(TestCase):
 
         # sample request with mocked ip address
         request.META = {
-            'HTTP_X_FORWARDED_FOR': '192.168.255.182, 10.0.0.0, ' +
-                                    '127.0.0.1, 198.84.193.157, '
+            'HTTP_X_FORWARDED_FOR': '192.168.255.182, 10.0.0.0, '
+                                    + '127.0.0.1, 198.84.193.157, '
             '177.139.233.139',
             'HTTP_X_REAL_IP': '177.139.233.132',
             'REMOTE_ADDR': '177.139.233.133',
@@ -321,11 +323,11 @@ class TrackingTests(TestCase):
 
         kvp = dict(tuple(pair.split('=')) for pair in var1.value.split('|'))
         self.assertEqual(var1.name, 'begin_session')
-        self.assertEqual(len(list(kvp.keys())),  3)
+        self.assertEqual(len(list(kvp.keys())), 6)
 
         kvp = dict(tuple(pair.split('=')) for pair in var2.value.split('|'))
         self.assertEqual(var2.name, 'login')
-        self.assertEqual(len(list(kvp.keys())), 3)
+        self.assertEqual(len(list(kvp.keys())), 6)
 
         client.logout()
 
@@ -333,7 +335,7 @@ class TrackingTests(TestCase):
         var = Variable.objects.latest('timestamp')
         kvp = dict(tuple(pair.split('=')) for pair in var.value.split('|'))
         self.assertEqual(var.name, 'logout')
-        self.assertEqual(len(list(kvp.keys())), 3)
+        self.assertEqual(len(list(kvp.keys())), 6)
 
     def test_activity_parsing(self):
 
@@ -345,7 +347,7 @@ class TrackingTests(TestCase):
 
         kvp = dict(tuple(pair.split('=')) for pair in var1.value.split('|'))
         self.assertEqual(var1.name, 'begin_session')
-        self.assertEqual(len(list(kvp.keys())),  3)
+        self.assertEqual(len(list(kvp.keys())), 6)
 
         client.logout()
 
@@ -375,10 +377,11 @@ class UtilsTests(TestCase):
     def test_std_log_fields(self):
 
         log_fields = utils.get_std_log_fields(self.request, self.session)
-        self.assertTrue(len(list(log_fields.keys())) == 3)
+        self.assertTrue(len(list(log_fields.keys())) == 6)
         self.assertTrue('user_ip' in log_fields)
         self.assertTrue('user_type' in log_fields)
         self.assertTrue('user_email_domain' in log_fields)
+        self.assertTrue('user_email_domain_full' in log_fields)
 
     def test_ishuman(self):
 
@@ -406,19 +409,19 @@ class UtilsTests(TestCase):
 
         # list of common and unusual valid email address formats
         valid_emails = [
-                ('email@example.com', 'com'),
-                ('firstname.lastname@example.com', 'com'),
-                ('firstname+lastname@example.com', 'com'),
-                ('"email"@example.com', 'com'),
-                ('1234567890@example.com', 'com'),
-                ('email@example-one.com', 'com'),
-                ('_______@example.com', 'com'),
-                ('email@example.co.uk', 'co.uk'),
-                ('firstname-lastname@example.com', 'com'),
-                ('much."more\ unusual"@example.com', 'com'),
-                ('very.unusual."@".unusual.com@example.com', 'com'),
-                ('very."(),:;<>[]".VERY."very@\\ "very".unusual@strange.example.com', 'example.com')
-                ]
+            ('email@example.com', 'com'),
+            ('firstname.lastname@example.com', 'com'),
+            ('firstname+lastname@example.com', 'com'),
+            ('"email"@example.com', 'com'),
+            ('1234567890@example.com', 'com'),
+            ('email@example-one.com', 'com'),
+            ('_______@example.com', 'com'),
+            ('email@example.co.uk', 'co.uk'),
+            ('firstname-lastname@example.com', 'com'),
+            ('much."more\ unusual"@example.com', 'com'), # noqa
+            ('very.unusual."@".unusual.com@example.com', 'com'),
+            ('very."(),:;<>[]".VERY."very@\\ "very".unusual@strange.example.com', 'example.com')
+        ]
 
         # create session for each email and test email domain parsing
         for email, dom in valid_emails:
@@ -426,8 +429,8 @@ class UtilsTests(TestCase):
             visitor = Visitor.objects.create()
             visitor.user = user
             session = Session.objects.create(visitor=visitor)
-            emaildom = utils.get_user_email_domain(session)
-            self.assertTrue(emaildom == dom)
+            emailtld = utils.get_user_email_tld(session)
+            self.assertTrue(emailtld == dom)
             user.delete()
 
     def test_client_ip(self):

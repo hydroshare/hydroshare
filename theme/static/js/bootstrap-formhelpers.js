@@ -1,5 +1,9 @@
 /**
 * bootstrap-formhelpers.js v2.3.0 by @vincentlamanna
+* modified very slightly by Devin Cowan
+* because bootstrap-formhelpers appears to no longer be accepting PRs
+* a bug is patched directly in this copy
+* https://github.com/winmarkltd/BootstrapFormHelpers
 * Copyright 2013 Vincent Lamanna
 * http://www.apache.org/licenses/LICENSE-2.0
 */
@@ -16342,6 +16346,10 @@ var BFHTimezonesList = {
       if (cursorPosition === $this.$element.val().length) {
         cursorEnd = true;
       }
+
+      // Account for bug in bootstrap-form-helper
+      // format can be null when "bfh-phone" field is used with a "data-country" attribute
+      if ( typeof $this.options.format == 'undefined' ) return;
       
       if (e.which === 8 && $this.options.format.charAt($this.$element.val().length) !== 'd') {
         $this.$element.val(String($this.$element.val()).substring(0, $this.$element.val().length - 1));
@@ -16367,6 +16375,11 @@ var BFHTimezonesList = {
   };
 
   function formatNumber(format, number) {
+
+    // Account for bug in bootstrap-form-helper
+    // format can be null when "bfh-phone" field is used with a "data-country" attribute
+    if (!format) return;
+
     var formattedNumber,
         indexFormat,
         indexNumber,

@@ -2,9 +2,6 @@
     "type": "object",
     "title": "SWAT Model Instance Metadata Schema",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "required": [
-        "modelObjective"
-    ],
     "properties": {
         "modelInput": {
             "type": "object",
@@ -275,7 +272,7 @@
                     "propertyOrder": 6
                 }
             },
-            "description": "Various model paramters used in this model instance.",
+            "description": "Various model parameters used in this model instance.",
             "propertyOrder": 1,
             "additionalProperties": false
         },

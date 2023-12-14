@@ -1,0 +1,106 @@
+{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
+{% for res in collection %}
+<tr class="data-row" v-show="isVisible('{{ res.short_id }}')">
+  {# Selection controls #}
+  <td data-col="actions">
+    <input class="row-selector" type="checkbox">
+    {# Delete resource forms #}
+    <form class="hidden-form" data-id="form-delete-{{ res.short_id }}" data-form-type="delete-resource" method="POST"
+      action="/hsapi/_internal/{{ res.short_id }}/delete-resource/">
+      {% csrf_token %}
+    </form>
+    {% if res.is_favorite %}
+    <span data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
+      class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>
+
+    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
+      action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/" method="POST">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="DELETE">
+      <input type="hidden" name="label_type" value="FAVORITE">
+    </form>
+    {% else %}
+    <span data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
+      class="glyphicon glyphicon-star btn-inline-favorite"></span>
+
+    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
+      action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/" method="POST">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="CREATE">
+      <input type="hidden" name="label_type" value="FAVORITE">
+    </form>
+    {% endif %}
+
+    <span class="glyphicon glyphicon-tag btn-inline-label" data-toggle="dropdown" aria-expanded="false"></span>
+
+    <div class="dropdown-menu inline-dropdown" role="menu">
+      <div class="panel-body" role="form">
+        <ul data-resource-id="{{ res.short_id }}" class="list-group list-labels">
+        </ul>
+      </div>
+    </div>
+  </td>
+  {# Type #}
+  <td data-col="resource-type">
+    {% include "includes/res_type_col.html" with resource=res %}
+  </td>
+  {# Title #}
+  {% with metadata=res.metadata %}
+  <td>
+    <strong><a href="{{ res.absolute_url }}">{{ metadata.title|escape }}</a>
+    </strong>
+  </td>
+  {# First Author #}
+  <td>{{ res|resource_first_author }}</td>
+
+  {# Date Created #}
+  <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>
+  {# Last Modified #}
+  {% with updated=res.last_updated %}
+  <td>{{ updated|date:"M d, Y" }} at {{ updated|time }}</td>
+  <td>
+    {% for kw in metadata.subjects.all %}
+    {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
+    {% endfor %}
+  </td>
+  <td>
+    {% for creator in metadata.creators.all %}
+    {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
+    {% if creator.relative_uri and creator.is_active_user %}
+    <a href="{{ creator.relative_uri }}">{{ creator.name }}</a>
+    {% else %}
+    <span>{{ creator.name }}</span>
+    {% endif %}
+    {% endfor %}
+  </td>
+   {# QUERY COUNT: this (res|get_user_privilege:user) generates 3 queries per resource)  #}
+  <td>{% if request.user.is_authenticated %}{{ res|get_user_privilege:user }}{% endif %}</td>
+  <td class="col-labels">
+    {# QUERY COUNT: this will generate 1 query only if the user has labels for the resource #}
+    {% for label in res|user_resource_labels:user %}
+    {% if forloop.counter0 > 0 %},{% endif %}{{ label }}
+    {% endfor %}
+  </td>
+  <td class="col-is-favorite">
+    {% if res.is_favorite %}
+    Favorite
+    {% endif %}
+  </td>
+  <td>{{ updated|date:"U" }}</td>
+  {% endwith %}
+  {% endwith %}
+  <td>
+    {% if res.raccess.published %}
+    Published
+    {% elif res.raccess.public %}
+    Public
+    {% elif res.raccess.discoverable %}
+    Discoverable
+    {% else %}
+    Private
+    {% endif %}
+  </td>
+  <td>{{ res.created|date:"U" }}</td>
+  <td>{{ res.grantor.id }}</td>
+</tr>
+{% endfor %}

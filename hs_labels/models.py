@@ -51,6 +51,7 @@ from django.db.models import Q
 
 from hs_core.models import BaseResource
 
+
 class FlagCodes(object):
     """
     Flag codes describe the meanings of per-user flags for a resource.
@@ -89,7 +90,7 @@ class UserResourceLabels(models.Model):
                                  help_text='resource to which a label applies',
                                  on_delete=models.CASCADE)
 
-    label = models.TextField(null=False)
+    label = models.TextField(null=False, max_length=75)
 
     class Meta:
         unique_together = ('user', 'resource', 'label')
@@ -127,11 +128,12 @@ class UserStoredLabels(models.Model):
     """
     Storage class for persistent labels that are reusable across different kinds of objects
     """
-    user  = models.ForeignKey(User, null=False,
-                              help_text='user who stored the label',
-                              related_name='ul2usl',
-                              on_delete=models.CASCADE)
+    user = models.ForeignKey(User, null=False,
+                             help_text='user who stored the label',
+                             related_name='ul2usl',
+                             on_delete=models.CASCADE)
     label = models.TextField(help_text='label to be stored by user')
+
     class Meta:
         unique_together = ('user', 'label')
 
@@ -171,7 +173,6 @@ class UserLabels(models.Model):
             assert this_flagcode == FlagCodes.FAVORITE or this_flagcode == FlagCodes.MINE or \
                 this_flagcode == FlagCodes.OPEN_WITH_APP
 
-
         return BaseResource.objects.filter(r2urf__user=self.user,
                                            r2urf__kind=this_flagcode)
 
@@ -209,8 +210,8 @@ class UserLabels(models.Model):
         label_string = UserLabels.clean_label(this_label)  # remove leading and trailing spaces
         return BaseResource.objects.filter(r2url__user=self.user,
                                            r2url__label__exact=label_string)\
-                                    .distinct()\
-                                    .order_by('r2url__label')
+            .distinct()\
+            .order_by('r2url__label')
 
     @property
     def user_labels(self):
@@ -305,8 +306,8 @@ class UserLabels(models.Model):
 
         with transaction.atomic():  # empirically, get_or_create is not atomic.
             UserResourceFlags.objects.get_or_create(resource=this_resource,
-                                                     kind=this_flagcode,
-                                                     user=self.user)
+                                                    kind=this_flagcode,
+                                                    user=self.user)
 
     def unflag_resource(self, this_resource, this_flagcode):
         """
@@ -321,16 +322,16 @@ class UserLabels(models.Model):
                 this_flagcode == FlagCodes.OPEN_WITH_APP
 
         UserResourceFlags.objects.filter(user=self.user,
-                                          resource=this_resource,
-                                          kind=this_flagcode).delete()
+                                         resource=this_resource,
+                                         kind=this_flagcode).delete()
 
     def clear_all_flags(self, this_flagcode):
         """
         remove all flags of a specific kind for a user
         """
         UserResourceFlags.objects.filter(user=self.user,
-                                          kind=this_flagcode)\
-                                  .delete()
+                                         kind=this_flagcode)\
+            .delete()
 
     ##########################################
     # favorite resources
@@ -400,7 +401,6 @@ class UserLabels(models.Model):
         The calling function should make sure resource is a webapp resource
         """
         self.unflag_resource(this_resource, FlagCodes.OPEN_WITH_APP)
-
 
     ##########################################
     # routines that apply to all kinds of annotations
@@ -502,8 +502,8 @@ class ResourceLabels(models.Model):
                 this_flagcode == FlagCodes.OPEN_WITH_APP
 
         return UserResourceFlags.objects.filter(user=this_user,
-                                                 resource=self.resource,
-                                                 kind=this_flagcode).exists()
+                                                resource=self.resource,
+                                                kind=this_flagcode).exists()
 
     def is_favorite(self, this_user):
         """
@@ -522,4 +522,3 @@ class ResourceLabels(models.Model):
         Return True if this resource has been set as open-with-app by a given user
         """
         return self.is_flagged(this_user, FlagCodes.OPEN_WITH_APP)
-

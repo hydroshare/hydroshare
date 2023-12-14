@@ -1,10 +1,10 @@
 import logging
 
 from django.db import migrations
-from hs_composite_resource.models import CompositeResource
 
 
 def set_aggregation_resource(apps, schema_editor):
+    CompositeResource = apps.get_model('hs_composite_resource', 'CompositeResource')
     """Sets the new resource attribute of the aggregation object
     for each of the aggregations in each of the existing composite resources
     """

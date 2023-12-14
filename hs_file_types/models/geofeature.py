@@ -1,35 +1,275 @@
-import os
 import logging
+import os
 import shutil
 import zipfile
+
 import xmltodict
-
-from osgeo import ogr, osr
-
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
-from django.utils.html import strip_tags
 from django.template import Template, Context
+from django.utils.html import strip_tags
+from dominate import tags as html_tags
+from osgeo import ogr, osr
+from rdflib import RDF, BNode, Literal
 
-from dominate.tags import legend, table, tbody, tr, th, div
-
-from hs_core.models import Title
-from hs_core.hydroshare import utils
 from hs_core.forms import CoverageTemporalForm
+from hs_core.hs_rdf import HSTERMS, rdf_terms
+from hs_core.hydroshare import utils
+from hs_core.models import Title, AbstractMetaDataElement
 from hs_core.signals import post_add_geofeature_aggregation
-
-
-from hs_geographic_feature_resource.models import GeographicFeatureMetaDataMixin, \
-    OriginalCoverage, GeometryInformation, FieldInformation
-
 from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
 UNKNOWN_STR = "unknown"
 
 
+@rdf_terms(HSTERMS.spatialReference)
+class OriginalCoverageGeofeature(AbstractMetaDataElement):
+    term = 'OriginalCoverage'
+
+    northlimit = models.FloatField(null=False, blank=False)
+    southlimit = models.FloatField(null=False, blank=False)
+    westlimit = models.FloatField(null=False, blank=False)
+    eastlimit = models.FloatField(null=False, blank=False)
+    projection_string = models.TextField(null=True, blank=True)
+    projection_name = models.TextField(max_length=256, null=True, blank=True)
+    datum = models.TextField(max_length=256, null=True, blank=True)
+    unit = models.TextField(max_length=256, null=True, blank=True)
+
+    class Meta:
+        # this meta element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        for _, _, cov in graph.triples((subject, cls.get_class_term(), None)):
+            value = graph.value(subject=cov, predicate=RDF.value)
+            value_dict = {}
+            for key_value in value.split(";"):
+                key_value = key_value.strip()
+                k, v = key_value.split("=")
+                if k == 'units':
+                    value_dict['unit'] = v
+                else:
+                    value_dict[k] = v
+            OriginalCoverageGeofeature.create(**value_dict, content_object=content_object)
+
+    def rdf_triples(self, subject, graph):
+        coverage = BNode()
+        graph.add((subject, self.get_class_term(), coverage))
+        graph.add((coverage, RDF.type, HSTERMS.box))
+        value_dict = {}
+        value_dict['northlimit'] = self.northlimit
+        value_dict['southlimit'] = self.southlimit
+        value_dict['westlimit'] = self.westlimit
+        value_dict['eastlimit'] = self.eastlimit
+        value_dict['projection_string'] = self.projection_string
+        value_dict['projection_name'] = self.projection_name
+        value_dict['datum'] = self.datum
+        value_dict['units'] = self.unit
+        value_string = "; ".join(["=".join([key, str(val)]) for key, val in value_dict.items()])
+        graph.add((coverage, RDF.value, Literal(value_string)))
+
+    def get_html(self, pretty=True):
+        """Generates html code for displaying data for this metadata element"""
+
+        root_div = html_tags.div(cls="content-block")
+
+        def get_th(heading_name):
+            return html_tags.th(heading_name, cls="text-muted")
+
+        with root_div:
+            html_tags.legend('Spatial Reference')
+            html_tags.div('Coordinate Reference System', cls='text-muted')
+            html_tags.div(self.projection_name)
+            html_tags.div('Datum', cls='text-muted has-space-top')
+            html_tags.div(self.datum)
+            html_tags.div('Coordinate String Text', cls='text-muted has-space-top')
+            html_tags.div(self.projection_string)
+            html_tags.h4('Extent', cls='space-top')
+            with html_tags.table(cls='custom-table'):
+                with html_tags.tbody():
+                    with html_tags.tr():
+                        get_th('North')
+                        html_tags.td(self.northlimit)
+                    with html_tags.tr():
+                        get_th('West')
+                        html_tags.td(self.westlimit)
+                    with html_tags.tr():
+                        get_th('South')
+                        html_tags.td(self.southlimit)
+                    with html_tags.tr():
+                        get_th('East')
+                        html_tags.td(self.eastlimit)
+                    with html_tags.tr():
+                        get_th('Unit')
+                        html_tags.td(self.unit)
+
+        return root_div.render(pretty=pretty)
+
+    @classmethod
+    def get_html_form(cls, resource, element=None, allow_edit=True, file_type=False):
+        """Generates html form code for an instance of this metadata element so
+        that this element can be edited"""
+
+        from ..forms import OriginalCoverageGeofeatureForm
+
+        ori_cov_dict = {}
+        if element is not None:
+            ori_cov_dict['northlimit'] = element.northlimit
+            ori_cov_dict['eastlimit'] = element.eastlimit
+            ori_cov_dict['southlimit'] = element.southlimit
+            ori_cov_dict['westlimit'] = element.westlimit
+            ori_cov_dict['projection_string'] = element.projection_string
+            ori_cov_dict['projection_name'] = element.projection_name
+            ori_cov_dict['datum'] = element.datum
+            ori_cov_dict['unit'] = element.unit
+
+        orig_coverage_form = OriginalCoverageGeofeatureForm(initial=ori_cov_dict,
+                                                            res_short_id=resource.short_id if
+                                                            resource else None,
+                                                            allow_edit=allow_edit,
+                                                            element_id=element.id if element else None,
+                                                            file_type=file_type)
+        return orig_coverage_form
+
+
+class FieldInformation(AbstractMetaDataElement):
+    term = 'FieldInformation'
+
+    fieldName = models.CharField(max_length=128, null=False, blank=False)
+    fieldType = models.CharField(max_length=128, null=False, blank=False)
+    fieldTypeCode = models.CharField(max_length=50, null=True, blank=True)
+    fieldWidth = models.IntegerField(null=True, blank=True)
+    fieldPrecision = models.IntegerField(null=True, blank=True)
+
+    def get_html(self, pretty=True):
+        """Generates html code for displaying data for this metadata element"""
+
+        field_infor_tr = html_tags.tr(cls='row')
+        with field_infor_tr:
+            html_tags.td(self.fieldName)
+            html_tags.td(self.fieldType)
+            html_tags.td(self.fieldWidth)
+            html_tags.td(self.fieldPrecision)
+        if pretty:
+            return field_infor_tr.render(pretty=pretty)
+        return field_infor_tr
+
+
+class GeometryInformation(AbstractMetaDataElement):
+    term = 'GeometryInformation'
+
+    featureCount = models.IntegerField(null=False, blank=False, default=0)
+    geometryType = models.CharField(max_length=128, null=False, blank=False)
+
+    class Meta:
+        # GeometryInformation element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+    def get_html(self, pretty=True):
+        """Generates html code for displaying data for this metadata element"""
+
+        root_div = html_tags.div(cls="content-block", style="margin-bottom:40px;")
+
+        def get_th(heading_name):
+            return html_tags.th(heading_name, cls="text-muted")
+
+        with root_div:
+            html_tags.legend('Geometry Information')
+            with html_tags.table(cls='custom-table'):
+                with html_tags.tbody():
+                    with html_tags.tr():
+                        get_th('Geometry Type')
+                        html_tags.td(self.geometryType)
+                    with html_tags.tr():
+                        get_th('Feature Count')
+                        html_tags.td(self.featureCount)
+        return root_div.render(pretty=pretty)
+
+    @classmethod
+    def get_html_form(cls, resource, element=None, allow_edit=True, file_type=False):
+        """Generates html form code for an instance of this metadata element so
+        that this element can be edited"""
+
+        from ..forms import GeometryInformationForm
+
+        geom_info_data_dict = {}
+        if element is not None:
+            geom_info_data_dict['geometryType'] = element.geometryType
+            geom_info_data_dict['featureCount'] = element.featureCount
+
+        geom_information_form = GeometryInformationForm(initial=geom_info_data_dict,
+                                                        res_short_id=resource.short_id if
+                                                        resource else None,
+                                                        allow_edit=allow_edit,
+                                                        element_id=element.id if element else None,
+                                                        file_type=file_type)
+        return geom_information_form
+
+
+class GeographicFeatureMetaDataMixin(models.Model):
+    """This class must be the first class in the multi-inheritance list of classes"""
+    geometryinformations = GenericRelation(GeometryInformation)
+    fieldinformations = GenericRelation(FieldInformation)
+    originalcoverages = GenericRelation(OriginalCoverageGeofeature)
+
+    class Meta:
+        abstract = True
+
+    @property
+    def geometryinformation(self):
+        return self.geometryinformations.all().first()
+
+    @property
+    def originalcoverage(self):
+        return self.originalcoverages.all().first()
+
+    @classmethod
+    def get_supported_element_names(cls):
+        # get the names of all core metadata elements
+        elements = super(GeographicFeatureMetaDataMixin, cls).get_supported_element_names()
+        # add the name of any additional element to the list
+        elements.append('FieldInformation')
+        elements.append('OriginalCoverageGeofeature')
+        elements.append('GeometryInformation')
+        return elements
+
+    def has_all_required_elements(self):
+        if self.get_required_missing_elements():
+            return False
+        return True
+
+    def get_required_missing_elements(self):  # show missing required meta
+        missing_required_elements = super(GeographicFeatureMetaDataMixin, self). \
+            get_required_missing_elements()
+        if not (self.coverages.all().filter(type='box').first()
+                or self.coverages.all().filter(type='point').first()):
+            missing_required_elements.append('Spatial Coverage')
+        if not self.originalcoverage:
+            missing_required_elements.append('Spatial Reference')
+        if not self.geometryinformation:
+            missing_required_elements.append('Geometry Information')
+
+        return missing_required_elements
+
+    def delete_all_elements(self):
+        super(GeographicFeatureMetaDataMixin, self).delete_all_elements()
+        self.reset()
+
+    def reset(self):
+        """
+        This helper method should be used to reset metadata when essential files are removed
+        from the resource
+        :return:
+        """
+        self.geometryinformations.all().delete()
+        self.fieldinformations.all().delete()
+        self.originalcoverages.all().delete()
+
+
 class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaData):
-    # the metadata element models are from the geographic feature resource type app
-    model_app_label = 'hs_geographic_feature_resource'
+    model_app_label = 'hs_file_types'
 
     def get_metadata_elements(self):
         elements = super(GeoFeatureFileMetaData, self).get_metadata_elements()
@@ -40,7 +280,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
     @classmethod
     def get_metadata_model_classes(cls):
         metadata_model_classes = super(GeoFeatureFileMetaData, cls).get_metadata_model_classes()
-        metadata_model_classes['originalcoverage'] = OriginalCoverage
+        metadata_model_classes['originalcoverage'] = OriginalCoverageGeofeature
         metadata_model_classes['geometryinformation'] = GeometryInformation
         metadata_model_classes['fieldinformation'] = FieldInformation
         return metadata_model_classes
@@ -63,16 +303,16 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         return template.render(context)
 
     def _get_field_informations_html(self):
-        root_div = div(cls="content-block")
+        root_div = html_tags.div(cls="content-block")
         with root_div:
-            legend('Field Information')
-            with table(style="width: 100%;"):
-                with tbody():
-                    with tr(cls='row'):
-                        th('Name')
-                        th('Type')
-                        th('Width')
-                        th('Precision')
+            html_tags.legend('Field Information')
+            with html_tags.table(style="width: 100%;"):
+                with html_tags.tbody():
+                    with html_tags.tr(cls='row'):
+                        html_tags.th('Name')
+                        html_tags.th('Type')
+                        html_tags.th('Width')
+                        html_tags.th('Precision')
 
                     for field_info in self.fieldinformations.all():
                         field_info.get_html(pretty=False)
@@ -82,15 +322,15 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
     def get_html_forms(self, datatset_name_form=True, **kwargs):
         """overrides the base class function to generate html needed for metadata editing"""
 
-        root_div = div("{% load crispy_forms_tags %}")
+        root_div = html_tags.div("{% load crispy_forms_tags %}")
         with root_div:
             super(GeoFeatureFileMetaData, self).get_html_forms()
-            with div(cls="content-block"):
-                div("{% crispy geometry_information_form %}")
-            with div(cls="content-block"):
-                div("{% crispy spatial_coverage_form %}")
-            with div(cls="content-block"):
-                div("{% crispy original_coverage_form %}")
+            with html_tags.div(cls="content-block"):
+                html_tags.div("{% crispy geometry_information_form %}")
+            with html_tags.div(cls="content-block"):
+                html_tags.div("{% crispy spatial_coverage_form %}")
+            with html_tags.div(cls="content-block"):
+                html_tags.div("{% crispy original_coverage_form %}")
 
         template = Template(root_div.render())
         context_dict = dict()
@@ -121,8 +361,8 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
                                                  file_type=True, allow_edit=False)
 
     def get_original_coverage_form(self):
-        return OriginalCoverage.get_html_form(resource=None, element=self.originalcoverage,
-                                              file_type=True, allow_edit=False)
+        return OriginalCoverageGeofeature.get_html_form(resource=None, element=self.originalcoverage,
+                                                        file_type=True, allow_edit=False)
 
     @classmethod
     def validate_element_data(cls, request, element_name):
@@ -157,7 +397,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
 
 
 class GeoFeatureLogicalFile(AbstractLogicalFile):
-    metadata = models.OneToOneField(GeoFeatureFileMetaData, related_name="logical_file")
+    metadata = models.OneToOneField(GeoFeatureFileMetaData, on_delete=models.CASCADE, related_name="logical_file")
     data_type = "GeographicFeature"
 
     @classmethod
@@ -187,7 +427,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
     @classmethod
     def create(cls, resource):
         """this custom method MUST be used to create an instance of this class"""
-        feature_metadata = GeoFeatureFileMetaData.objects.create(keywords=[])
+        feature_metadata = GeoFeatureFileMetaData.objects.create(keywords=[], extra_metadata={})
         # Note we are not creating the logical file record in DB at this point
         # the caller must save this to DB
         return cls(metadata=feature_metadata, resource=resource)
@@ -259,8 +499,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
 
             res_file = ft_ctx.res_file
             try:
-                meta_dict, shape_files, shp_res_files = extract_metadata_and_files(resource,
-                                                                                   res_file)
+                meta_dict, shape_files, shp_res_files = extract_metadata_and_files(resource, res_file)
             except ValidationError as ex:
                 log.exception(str(ex))
                 raise ex
@@ -276,9 +515,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
 
             file_folder = res_file.file_folder
             upload_folder = file_folder
-            file_type_success = False
             res_files_to_delete = []
-
             msg = "GeoFeature aggregation. Error when creating aggregation. Error:{}"
             with transaction.atomic():
                 try:
@@ -297,19 +534,17 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                                                           new_files_to_upload=files_to_upload,
                                                           folder_path=upload_folder)
 
+                    ft_ctx.res_files_to_delete = res_files_to_delete
                     log.info("GeoFeature aggregation - files were added to the aggregation.")
                     add_metadata(resource, meta_dict, xml_file, logical_file)
                     log.info("GeoFeature aggregation and resource level metadata updated.")
-
-                    file_type_success = True
                     ft_ctx.logical_file = logical_file
-                    ft_ctx.res_files_to_delete = res_files_to_delete
                 except Exception as ex:
+                    logical_file.remove_aggregation()
                     msg = msg.format(str(ex))
                     log.exception(msg)
+                    raise ValidationError(msg)
 
-            if not file_type_success:
-                raise ValidationError(msg)
             return logical_file
 
     @classmethod
@@ -323,7 +558,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         return res_file, folder_path
 
     @classmethod
-    def get_primary_resouce_file(cls, resource_files):
+    def get_primary_resource_file(cls, resource_files):
         """Gets a resource file that has extension .shp from the list of files *resource_files* """
 
         res_files = [f for f in resource_files if f.extension.lower() == '.shp']
@@ -407,7 +642,7 @@ def add_metadata(resource, metadata_dict, xml_file, logical_file=None):
     originalcoverage_dict = metadata_dict["originalcoverage"]['originalcoverage']
     if target_obj.metadata.originalcoverage is not None:
         target_obj.metadata.originalcoverage.delete()
-    target_obj.metadata.create_element('originalcoverage', **originalcoverage_dict)
+    target_obj.metadata.create_element('originalcoveragegeofeature', **originalcoverage_dict)
     field_info_array = metadata_dict["field_info_array"]
     target_obj.metadata.fieldinformations.all().delete()
     for field_info in field_info_array:
@@ -481,7 +716,7 @@ def get_all_related_shp_files(resource, selected_resource_file, file_type):
                     collect_shape_resource_files(f)
 
         for f in shape_res_files:
-            temp_file = utils.get_file_from_irods(f)
+            temp_file = utils.get_file_from_irods(resource=resource, file_path=f.storage_path)
             if not temp_dir:
                 temp_dir = os.path.dirname(temp_file)
             else:
@@ -493,7 +728,7 @@ def get_all_related_shp_files(resource, selected_resource_file, file_type):
             shape_temp_files.append(temp_file)
 
     elif selected_resource_file.extension.lower() == '.zip':
-        temp_file = utils.get_file_from_irods(selected_resource_file)
+        temp_file = utils.get_file_from_irods(resource=resource, file_path=selected_resource_file.storage_path)
         temp_dir = os.path.dirname(temp_file)
         if not zipfile.is_zipfile(temp_file):
             if os.path.isdir(temp_dir):
@@ -524,8 +759,6 @@ def _check_if_shape_files(files, temp_files=True):
     :param  temp_files: a flag to treat list of files *files* as temp files or not
     :return: True/False
     """
-    # Note: this is the original function (check_fn_for_shp) in geo feature resource receivers.py
-    # used by is_shapefiles
 
     # at least needs to have 3 mandatory files: shp, shx, dbf
     if len(files) >= 3:
@@ -668,7 +901,7 @@ def extract_metadata(shp_file_full_path):
 
         metadata_dict["geometryinformation"] = geometryinformation
         return metadata_dict
-    except:
+    except: # noqa
         raise ValidationError("Parsing of shapefiles failed!")
 
 
@@ -835,7 +1068,7 @@ def parse_shp_xml(shp_xml_full_path):
 
                         title_max_length = Title._meta.get_field('value').max_length
                         if len(title_value) > title_max_length:
-                            title_value = title_value[:title_max_length-1]
+                            title_value = title_value[:title_max_length - 1]
                         title = {'title': {'value': title_value}}
                         metadata.append(title)
 

@@ -1,0 +1,118 @@
+<!-- Create Group Modal -->
+<div class="modal fade" data-backdrop="static" id="create-group-modal" tabindex="-1" role="dialog" aria-labelledby="Creage Group">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form action="/hsapi/_internal/create-user-group/" method="POST" enctype="multipart/form-data">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+              aria-hidden="true">&times;</span>
+          </button>
+          <h4 class="modal-title" id="myModalLabel">Create New Group</h4>
+        </div>
+        <div class="modal-body">
+          {% csrf_token %}
+          <div class="row">
+            {# Group Name #}
+            <fieldset class="col-sm-12">
+              <label>Group Name *</label>
+              <small class="text-muted">150 characters or less</small>
+              <textarea class="form-control" required="required" name="name" rows="1" maxlength="150"></textarea>
+            </fieldset>
+
+            {# Group Contact Email #}
+            <fieldset class="col-sm-12">
+              <label>Group contact email</label>
+              <input class="form-control" type="email" name="email" value="{{ profile_user.email }}"></input>
+            </fieldset>
+
+            {# Group Url #}
+            <fieldset class="col-sm-12">
+              <label>Group URL</label>
+              <input class="form-control" type="url" name="url"></input>
+            </fieldset>
+
+            {# Purpose #}
+            <fieldset class="col-sm-12">
+              <label>Purpose</label>
+              <small class="text-muted">300 characters or less</small>
+              <textarea class="form-control" name="purpose" maxlength="300"></textarea>
+            </fieldset>
+
+            {# Group Description #}
+            <fieldset class="col-sm-12">
+              <label>About this group *</label>
+              <textarea class="form-control" required="required" name="description"></textarea>
+            </fieldset>
+
+            {# auto approve #}
+            <fieldset class="col-sm-12">
+              <input id="auto-approve" type="checkbox" name="auto_approve">
+              <label class="checkbox-label" for="auto-approve">Auto approve membership</label>
+            </fieldset>
+
+            {# explanation #}
+            <fieldset class="col-sm-12">
+              <input id="requires_explanation" type="checkbox" name="requires_explanation">
+              <label class="checkbox-label" for="requires_explanation">Require explanation when requesting
+                membership</label>
+            </fieldset>
+
+            {# Picture #}
+            <div class="col-sm-12">
+              <fieldset>
+                <label>Add a photo</label>
+
+                <div class="input-group">
+                  <span class="input-group-btn">
+                    <span id="cv-custom-upload" class="btn btn-default btn-file">
+                      Browse&hellip; <input class="upload-picture" type="file" name="picture">
+                    </span>
+                  </span>
+                  <input type="text" class="form-control" readonly>
+                </div>
+              </fieldset>
+            </div>
+
+            <br>
+
+            {# Privacy #}
+            <fieldset class="col-sm-12">
+              <label>Privacy *</label>
+
+              <div class="radio">
+                <label>
+                  <input type="radio" name="privacy_level" value="public" checked>Public
+                  <div class="text-muted">Other users can find the group and see who has membership.</div>
+                </label>
+              </div>
+
+              <div class="radio">
+                <label>
+                  <input type="radio" name="privacy_level" value="discoverable">Discoverable
+                  <div class="text-muted">Other users can find this group, but membership information is hidden.</div>
+                </label>
+              </div>
+
+              <div class="radio">
+                <label>
+                  <input type="radio" name="privacy_level" value="private">Private
+                  <div class="text-muted">Other users can not find this group.</div>
+                </label>
+              </div>
+            </fieldset>
+
+            <br>
+            <fieldset class="col-sm-12">
+              <small class="text-muted">( * ) Required fields</small>
+            </fieldset>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

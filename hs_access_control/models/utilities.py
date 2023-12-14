@@ -1,5 +1,5 @@
 from hs_access_control.models.privilege import UserResourcePrivilege, GroupResourcePrivilege, \
-        UserGroupPrivilege, GroupCommunityPrivilege
+    UserGroupPrivilege, GroupCommunityPrivilege
 
 
 def coarse_permissions(u, r):
@@ -62,7 +62,7 @@ def access_permissions(u, r):
                     community=q2.community,
                     community__c2gcp__group__g2grp__resource=r):
                 for q4 in GroupResourcePrivilege.objects\
-                          .filter(group=q3.group, resource=r):
+                        .filter(group=q3.group, resource=r):
                     results.append((q, q2, q3, q4,))
     return results
 

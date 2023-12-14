@@ -1,17 +1,35 @@
 {% load i18n %}
 {% block main %}
     {% if group_owner %}
-        <p>{% trans "Dear " %}{{ group_owner.first_name }}</p>
-        <p>{% trans "User " %}{{ user.first_name }} has requested to join your HydroShare group ({{ group.name }}).</p>
-        <p>Click<a href="{{ request.scheme }}://{{ request.get_host }}/user/{{ user.id }}"> here </a>to find information about the requesting user.</p>
+        <p>{% trans "Dear " %}{{ group_owner.first_name }} {{ group_owner.last_name }},</p>
+        <p>{% trans "User " %}{{ user.first_name }} {{ user.last_name }} 
+            (<a href="{{ request.scheme }}://{{ request.get_host }}/user/{{ user.id }}">{{ request.scheme }}://{{ request.get_host }}/user/{{ user.id }}</a>), 
+            has requested to join your HydroShare group ({{ group.name }}).</p>
+        
+        User Type: {{ user.userprofile.user_type }}<br>
+        Organization: {{ user.userprofile.organization }}<br>
+        Country: {{ user.userprofile.country }}<br>
+        State/Region: {{ user.userprofile.state }}<br>
+        Email: {{ user.email }}<br>
+        {% if user.userprofile.title %}User Title: {{ user.userprofile.title }}<br>{% endif %}
+        {% if explanation %}Explanation: {{ explanation }}<br>{% endif %}
+        
         <p>Click on the link below to accept this request.</p>
     {% else %}
         <p>{% trans "Dear " %}{{ user.first_name }}</p>
+        {% if request.user %}
+        <p>{{ request.user.first_name }} {{ request.user.last_name }} (<a href="{{ request.scheme }}://{{ request.get_host }}/user/{{ request.user.id }}">{{ request.scheme }}://{{ request.get_host }}/user/{{ request.user.id }}</a>),{% trans " invited you to join HydroShare user group ("%}{{ group.name }} ).</p>
+        {% else %}
         <p>{% trans "You have been invited to join HydroShare user group ("%}{{ group.name }} ).</p>
+        {% endif %}
+
+        <p>{% trans "You can learn more about the group by following the link below:" %}</p>
+        <p><a href="{{ request.scheme }}://{{ request.get_host }}/group/{{ group.id }}">{{ request.scheme }}://{{ request.get_host }}/group/{{ group.id }}</a></p>
+        
         <p>Click on the link below to join this group.</p>
     {%  endif %}
 
-    <p><a href="{{ request.scheme }}://{{ request.get_host }}{{ action_url }}">{{ request.scheme }}://{{ request.get_host }}{{ action_url}}</a></p>
+        <p><a href="{{ request.scheme }}://{{ request.get_host }}{{ action_url }}">{{ request.scheme }}://{{ request.get_host }}{{ action_url}}</a></p>
 
-    <p>{% trans "The HydroShare Team" %}</p>
+        <p>{% trans "Thanks, The HydroShare Team" %}</p>
 {% endblock %}

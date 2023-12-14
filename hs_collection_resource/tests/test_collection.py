@@ -1,19 +1,19 @@
 import json
+
 from dateutil import parser
-
-from django.test import TransactionTestCase, Client
 from django.contrib.auth.models import Group
+from django.test import TransactionTestCase, Client
+from django.db import reset_queries, connection
 
-from hs_core.hydroshare import create_resource, create_account, \
-     create_empty_resource, create_new_version_resource, \
-     update_science_metadata, copy_resource
-from hs_core.testing import MockIRODSTestCaseMixin
 from hs_access_control.models import PrivilegeCodes
-from hs_core.hydroshare.resource import ResourceFile
-
 from hs_collection_resource.models import CollectionResource, CollectionDeletedResource
+from hs_collection_resource.utils import update_collection_list_csv
 from hs_collection_resource.views import _update_collection_coverages
-from hs_collection_resource.utils import RES_LANDING_PAGE_URL_TEMPLATE, update_collection_list_csv
+from hs_core.hydroshare import create_resource, create_account, \
+    create_empty_resource, create_new_version_resource, \
+    update_science_metadata, copy_resource, delete_resource
+from hs_core.hydroshare.resource import ResourceFile
+from hs_core.testing import MockIRODSTestCaseMixin
 
 
 class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
@@ -50,51 +50,28 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         )
 
         self.resGen1 = create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user1,
             title='Gen 1'
         )
 
         self.resGen2 = create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user1,
             title='Gen 2'
         )
 
         self.resGen3 = create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user1,
             title='Gen 3'
         )
 
         self.resGen4 = create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user1,
             title='Gen 4'
         )
-
-        self.resTimeSeries = create_resource(
-            resource_type='TimeSeriesResource',
-            owner=self.user1,
-            title='Test Time Series Resource'
-        )
-
-        self.resNetCDF = create_resource(
-                    resource_type='NetcdfResource',
-                    owner=self.user1,
-                    title='Test NetCDF Resource'
-                )
-
-        self.resGeoFeature = create_resource(
-                    resource_type='GeographicFeatureResource',
-                    owner=self.user1,
-                    title='Test Geographic Feature (shapefiles)'
-                )
-
-        self.resModelInstance = create_resource(
-                    resource_type='ModelInstanceResource',
-                    owner=self.user1,
-                    title='Test Model Instance Resource')
 
         self.user2 = create_account(
             'byu2@byu.edu',
@@ -107,7 +84,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         )
 
         self.resGen5 = create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user2,
             title='Gen 4'
         )
@@ -128,24 +105,15 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.resources.count(), 0)
         # add res to collection.resources
         self.resCollection.resources.add(self.resGen1)
-        self.resCollection.resources.add(self.resGeoFeature)
-        self.resModelInstance.collections.add(self.resCollection)
-        self.resTimeSeries.collections.add(self.resCollection)
 
         # test count
-        self.assertEqual(self.resCollection.resources.count(), 4)
+        self.assertEqual(self.resCollection.resources.count(), 1)
 
         # test res in collection.resources
         self.assertIn(self.resGen1, self.resCollection.resources.all())
-        self.assertIn(self.resGeoFeature, self.resCollection.resources.all())
-        self.assertIn(self.resModelInstance, self.resCollection.resources.all())
-        self.assertIn(self.resTimeSeries, self.resCollection.resources.all())
 
         # test collection in res.collections
         self.assertIn(self.resCollection, self.resGen1.collections.all())
-        self.assertIn(self.resCollection, self.resGeoFeature.collections.all())
-        self.assertIn(self.resCollection, self.resModelInstance.collections.all())
-        self.assertIn(self.resCollection, self.resTimeSeries.collections.all())
 
         # test remove all res from collection.resources
         self.resCollection.resources.clear()
@@ -153,21 +121,14 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # test collection NOT in res.collections
         self.assertNotIn(self.resCollection, self.resGen1.collections.all())
-        self.assertNotIn(self.resCollection, self.resGeoFeature.collections.all())
-        self.assertNotIn(self.resCollection, self.resModelInstance.collections.all())
-        self.assertNotIn(self.resCollection, self.resTimeSeries.collections.all())
 
         # test adding same resources to multiple collection resources
         self.resCollection.resources.add(self.resGen1)
-        self.resCollection.resources.add(self.resGeoFeature)
         self.resCollection_with_missing_metadata.resources.add(self.resGen1)
-        self.resCollection_with_missing_metadata.resources.add(self.resGeoFeature)
 
         # test resources are in both collection resource
         self.assertIn(self.resGen1, self.resCollection.resources.all())
-        self.assertIn(self.resGeoFeature, self.resCollection.resources.all())
         self.assertIn(self.resGen1, self.resCollection_with_missing_metadata.resources.all())
-        self.assertIn(self.resGeoFeature, self.resCollection_with_missing_metadata.resources.all())
 
     def test_collection_deleted_resource(self):
         # test CollectionDeletedResource
@@ -175,12 +136,10 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.deleted_resources.count(), 0)
         self.assertEqual(CollectionDeletedResource.objects.count(), 0)
         # create 2 CollectionDeletedResource obj and associate with collection
-        CollectionDeletedResource.objects.create(resource_title=self.resGen1.
-                                                 metadata.title,
+        CollectionDeletedResource.objects.create(resource_title=self.resGen1.metadata.title,
                                                  deleted_by=self.user1,
                                                  collection=self.resCollection)
-        CollectionDeletedResource.objects.create(resource_title=self.
-                                                 resModelInstance.metadata.title,
+        CollectionDeletedResource.objects.create(resource_title=self.resGen2.metadata.title,
                                                  deleted_by=self.user1,
                                                  collection=self.resCollection)
 
@@ -188,12 +147,10 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.deleted_resources.count(), 2)
         self.assertEqual(self.resCollection.
                          deleted_resources.
-                         filter(resource_title=self.
-                                resGen1.metadata.title).count(), 1)
+                         filter(resource_title=self.resGen1.metadata.title).count(), 1)
         self.assertEqual(self.resCollection.
                          deleted_resources.
-                         filter(resource_title=self.
-                                resModelInstance.metadata.title).count(), 1)
+                         filter(resource_title=self.resGen2.metadata.title).count(), 1)
 
         # remove CollectionDeletedResource objs
         self.resCollection.deleted_resources.all().delete()
@@ -615,7 +572,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         # collection should have 1 resource
         self.assertEqual(self.resCollection.resources.count(), 1)
         self.assertEqual(self.resCollection.resources.all()[0].resource_type.lower(),
-                          "collectionresource")
+                         "collectionresource")
 
     def test_update_collection_for_deleted_resources(self):
         self.assertEqual(self.resCollection.resources.count(), 0)
@@ -669,7 +626,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         # test clear deleted_resources through view
         url_to_update_collection_for_deleted_resources = \
             self.url_to_update_collection_for_deleted_resources.format(
-             self.resCollection.short_id)
+                self.resCollection.short_id)
 
         # log out User 1
         self.api_client.logout()
@@ -701,11 +658,11 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.are_all_contained_resources_published, False)
 
         self.assertEqual(self.resGen1.raccess.published, False)
-        self.assertEqual(self.resGeoFeature.raccess.published, False)
+        self.assertEqual(self.resGen2.raccess.published, False)
 
         # add 2 unpublished resources to collection
         self.resCollection.resources.add(self.resGen1)
-        self.resCollection.resources.add(self.resGeoFeature)
+        self.resCollection.resources.add(self.resGen2)
         self.assertEqual(self.resCollection.resources.count(), 2)
         # not all contained res are published
         self.assertEqual(self.resCollection.are_all_contained_resources_published, False)
@@ -714,15 +671,14 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.resGen1.raccess.published = True
         self.resGen1.raccess.save()
         self.assertEqual(self.resGen1.raccess.published, True)
-        self.assertEqual(self.resGeoFeature.raccess.published, False)
         # not all contained res are published
         self.assertEqual(self.resCollection.are_all_contained_resources_published, False)
 
-        # manually set the second contained res (self.resGeoFeature) to published as well
-        self.resGeoFeature.raccess.published = True
-        self.resGeoFeature.raccess.save()
+        # manually set the second contained res (self.resGen2) to published as well
+        self.resGen2.raccess.published = True
+        self.resGen2.raccess.save()
         self.assertEqual(self.resGen1.raccess.published, True)
-        self.assertEqual(self.resGeoFeature.raccess.published, True)
+        self.assertEqual(self.resGen2.raccess.published, True)
         # all contained res are published now
         self.assertEqual(self.resCollection.are_all_contained_resources_published, True)
 
@@ -732,7 +688,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # add 3 resources to collection
         self.resCollection.resources.add(self.resGen1)
-        self.resCollection.resources.add(self.resGeoFeature)
+        self.resCollection.resources.add(self.resGen2)
         self.resCollection.resources.add(self.resCollection_with_missing_metadata)
         self.assertEqual(self.resCollection.resources.count(), 3)
 
@@ -760,7 +716,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # add 3 resources to collection
         self.resCollection.resources.add(self.resGen1)
-        self.resCollection.resources.add(self.resGeoFeature)
+        self.resCollection.resources.add(self.resGen2)
         self.resCollection.resources.add(self.resCollection_with_missing_metadata)
         self.assertEqual(self.resCollection.resources.count(), 3)
 
@@ -788,7 +744,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.metadata.coverages.count(), 0)
         # add 2 resources without coverage metadata to collection
         self.resCollection.resources.add(self.resGen1)
-        self.resCollection.resources.add(self.resGeoFeature)
+        self.resCollection.resources.add(self.resGen2)
         self.assertEqual(self.resCollection.resources.count(), 2)
         # calculate overall coverages
         _update_collection_coverages(self.resCollection)
@@ -811,13 +767,13 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(parser.parse(period_coverage_obj.value['end'].lower()),
                          parser.parse('12/31/2016'))
 
-        # update resGeoFeature coverage
+        # update resGen2 coverage
         metadata_dict = [{'coverage': {'type': 'point', 'value':
                          {'name': 'Name for point coverage', 'east': '-20',
                           'north': '10', 'units': 'decimal deg'}}}, ]
-        update_science_metadata(pk=self.resGeoFeature.short_id, metadata=metadata_dict,
+        update_science_metadata(pk=self.resGen2.short_id, metadata=metadata_dict,
                                 user=self.user1)
-        self.assertEqual(self.resGeoFeature.metadata.coverages.count(), 1)
+        self.assertEqual(self.resGen2.metadata.coverages.count(), 1)
         # calculate overall coverages
         _update_collection_coverages(self.resCollection)
 
@@ -843,9 +799,9 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
                          {'coverage': {'type': 'point', 'value':
                           {'name': 'Name for point coverage', 'east': '25',
                            'north': '-35', 'units': 'decimal deg'}}}]
-        update_science_metadata(pk=self.resGen2.short_id, metadata=metadata_dict, user=self.user1)
-        self.assertEqual(self.resGen2.metadata.coverages.count(), 2)
-        self.resCollection.resources.add(self.resGen2)
+        update_science_metadata(pk=self.resGen3.short_id, metadata=metadata_dict, user=self.user1)
+        self.assertEqual(self.resGen3.metadata.coverages.count(), 2)
+        self.resCollection.resources.add(self.resGen3)
         self.assertEqual(self.resCollection.resources.count(), 3)
         # calculate overall coverages
         _update_collection_coverages(self.resCollection)
@@ -928,15 +884,15 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         hasPart = "hasPart"
 
         # check self.resGen1.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen1.short_id)
+        value = self.resGen1.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
         # check self.resGen2.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen2.short_id)
+        value = self.resGen2.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
         # check self.resGen3.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen3.short_id)
+        value = self.resGen2.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
 
@@ -952,15 +908,15 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.metadata.relations.count(), 2)
 
         # check self.resGen1.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen1.short_id)
+        value = self.resGen1.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
         # check self.resGen2.short_id -- should be 0
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen2.short_id)
+        value = self.resGen2.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 0)
         # check self.resGen3.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen3.short_id)
+        value = self.resGen3.get_citation()
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
 
@@ -1004,3 +960,88 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertIn(self.resGen1.short_id, res_id_list)
         self.assertIn(self.resGen2.short_id, res_id_list)
         self.assertIn(self.resGen3.short_id, res_id_list)
+
+    def test_collection_resource_delete(self):
+        """Here we are testing when a collection resource is deleted, the resources that were part of the
+        collection resource won't have the 'isPartOf' relation metadata"""
+
+        # no contained res in collection resource
+        self.assertEqual(self.resCollection.resources.count(), 0)
+        url_to_update_collection = self.url_to_update_collection.format(self.resCollection.short_id)
+        # user 1 login
+        self.api_client.login(username='user1', password='mypassword1')
+        # add 2 private member resources to collection
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id]}, )
+        resp_json = json.loads(response.content.decode())
+        self.assertEqual(resp_json["status"], "success")
+        self.assertEqual(self.resCollection.resources.count(), 2)
+        # check of the resources that are part of the collection resource has 'isPartOf' relation metadata
+        self.assertEqual(self.resGen1.metadata.relations.filter(type='isPartOf').count(), 1)
+        self.assertEqual(self.resGen2.metadata.relations.filter(type='isPartOf').count(), 1)
+        # now delete the collection resource
+        delete_resource(self.resCollection.short_id, request_username=self.user1)
+        # check of the resources that were part of the deleted collection resource has no 'isPartOf' relation metadata
+        self.assertEqual(self.resGen1.metadata.relations.filter(type='isPartOf').count(), 0)
+        self.assertEqual(self.resGen2.metadata.relations.filter(type='isPartOf').count(), 0)
+
+    def test_delete_resource_in_collection(self):
+        """Here we are testing when a resource that is part of a collection resource is deleted, the collection
+        resources won't have the 'hasPart' relation metadata for the deleted resource"""
+
+        # no contained res in collection
+        self.assertEqual(self.resCollection.resources.count(), 0)
+        url_to_update_collection = self.url_to_update_collection.format(self.resCollection.short_id)
+        # user 1 login
+        self.api_client.login(username='user1', password='mypassword1')
+        # add 2 private member resources to collection
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id]}, )
+        resp_json = json.loads(response.content.decode())
+        self.assertEqual(resp_json["status"], "success")
+        self.assertEqual(self.resCollection.resources.count(), 2)
+        # collection should have 2 hasPart relation metadata
+        self.assertEqual(self.resCollection.metadata.relations.filter(type='hasPart').count(), 2)
+        # check of the resources that are part of the collection resource has 'isPartOf' relation metadata
+        self.assertEqual(self.resGen1.metadata.relations.filter(type='isPartOf').count(), 1)
+        self.assertEqual(self.resGen2.metadata.relations.filter(type='isPartOf').count(), 1)
+        # now delete resGen1
+        delete_resource(self.resGen1.short_id, request_username=self.user1)
+        self.assertEqual(self.resCollection.resources.count(), 1)
+        # check of the resource that is still part of the collection resource has the isPartOf relation metadata
+        self.assertEqual(self.resGen2.metadata.relations.filter(type='isPartOf').count(), 1)
+        # collection should have 1 hasPart relation metadata
+        self.assertEqual(self.resCollection.metadata.relations.filter(type='hasPart').count(), 1)
+
+    def test_collection_res_landing_scales(self):
+        # test basic collection queries have constant time complexity
+
+        # user 1 login
+        self.api_client.login(username='user1', password='mypassword1')
+
+        self.assertEqual(self.resCollection.resources.count(), 0)
+        reset_queries()
+        response = self.api_client.get(f'/resource/{self.resCollection.short_id}', follow=True)
+        self.assertTrue(response.status_code == 200)
+
+        # add res to collection.resources
+        self.resCollection.resources.add(self.resGen1)
+
+        # test count
+        self.assertEqual(self.resCollection.resources.count(), 1)
+        reset_queries()
+        response = self.api_client.get(f'/resource/{self.resCollection.short_id}', follow=True)
+        self.assertTrue(response.status_code == 200)
+        single_queries = len(connection.queries)
+
+        # add res to collection.resources
+        self.resCollection.resources.add(self.resGen2)
+
+        # test count
+        self.assertEqual(self.resCollection.resources.count(), 2)
+        reset_queries()
+        response = self.api_client.get(f'/resource/{self.resCollection.short_id}', follow=True)
+        self.assertTrue(response.status_code == 200)
+        final_queries = len(connection.queries)
+
+        self.assertLessEqual(final_queries, single_queries)

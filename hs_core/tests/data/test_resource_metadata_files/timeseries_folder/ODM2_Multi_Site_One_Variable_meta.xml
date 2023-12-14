@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:hsterms="https://www.hydroshare.org/terms/"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+>
+  <hsterms:TimeSeriesAggregation rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/timeseries_folder/ODM2_Multi_Site_One_Variable_resmap.xml#aggregation">
+    <dc:title>changed from the Little Bear River, UT</dc:title>
+    <dc:type rdf:resource="https://www.hydroshare.org/terms/TimeSeriesAggregation"/>
+    <dc:description>
+      <rdf:Description>
+        <dcterms:abstract>a timseries abstract</dcterms:abstract>
+      </rdf:Description>
+    </dc:description>
+    <hsterms:timeSeriesResult>
+      <rdf:Description>
+        <hsterms:site>
+          <rdf:Description>
+            <hsterms:SiteType>Stream changed</hsterms:SiteType>
+            <hsterms:Elevation_m rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1445.0</hsterms:Elevation_m>
+            <hsterms:SiteName>Little Bear River at McMurdy Hollow near Paradise, Utah</hsterms:SiteName>
+            <hsterms:SiteCode>USU-LBR-Paradise</hsterms:SiteCode>
+            <hsterms:Longitude rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-111.855217</hsterms:Longitude>
+            <hsterms:Latitude rdf:datatype="http://www.w3.org/2001/XMLSchema#double">41.575552</hsterms:Latitude>
+            <hsterms:ElevationDatum>NGVD29</hsterms:ElevationDatum>
+          </rdf:Description>
+        </hsterms:site>
+        <hsterms:processingLevel>
+          <rdf:Description>
+            <hsterms:ProcessingLevelCode>2</hsterms:ProcessingLevelCode>
+            <hsterms:Explanation>Quality changed controlled data that have passed quality assurance procedures such as routine estimation of timing and sensor calibration or visual inspection and removal of obvious errors. An example is USGS published streamflow records following parsing through USGS quality control procedures.</hsterms:Explanation>
+            <hsterms:Definition>Quality changed controlled data</hsterms:Definition>
+          </rdf:Description>
+        </hsterms:processingLevel>
+        <hsterms:Status>Unknown</hsterms:Status>
+        <hsterms:SampleMedium>changed Surface Water</hsterms:SampleMedium>
+        <hsterms:ValueCount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1334</hsterms:ValueCount>
+        <hsterms:method>
+          <rdf:Description>
+            <hsterms:MethodType>Instrument deployment</hsterms:MethodType>
+            <hsterms:MethodDescription>Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.</hsterms:MethodDescription>
+            <hsterms:MethodCode>28</hsterms:MethodCode>
+            <hsterms:MethodName>Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.</hsterms:MethodName>
+          </rdf:Description>
+        </hsterms:method>
+        <hsterms:unit>
+          <rdf:Description>
+            <hsterms:UnitsAbbreviation>degC</hsterms:UnitsAbbreviation>
+            <hsterms:UnitsName>degree celsius</hsterms:UnitsName>
+            <hsterms:UnitsType>Temperature</hsterms:UnitsType>
+          </rdf:Description>
+        </hsterms:unit>
+        <hsterms:timeSeriesResultUUID>2837b7d9-1ebc-11e6-a16e-f45c8999816f</hsterms:timeSeriesResultUUID>
+        <hsterms:AggregationStatistic>Average</hsterms:AggregationStatistic>
+        <hsterms:variable>
+          <rdf:Description>
+            <hsterms:VariableCode>USU36</hsterms:VariableCode>
+            <hsterms:NoDataValue rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-9999</hsterms:NoDataValue>
+            <hsterms:VariableName>Temperature</hsterms:VariableName>
+            <hsterms:VariableType>Water Quality</hsterms:VariableType>
+            <hsterms:Speciation>Not Applicable</hsterms:Speciation>
+          </rdf:Description>
+        </hsterms:variable>
+      </rdf:Description>
+    </hsterms:timeSeriesResult>
+    <dc:language>eng</dc:language>
+    <hsterms:timeSeriesResult>
+      <rdf:Description>
+        <hsterms:ValueCount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1441</hsterms:ValueCount>
+        <hsterms:Status>Unknown</hsterms:Status>
+        <hsterms:site>
+          <rdf:Description>
+            <hsterms:ElevationDatum>NGVD29</hsterms:ElevationDatum>
+            <hsterms:SiteCode>USU-LBR-Wellsville</hsterms:SiteCode>
+            <hsterms:Latitude rdf:datatype="http://www.w3.org/2001/XMLSchema#double">41.643457</hsterms:Latitude>
+            <hsterms:Elevation_m rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1365.0</hsterms:Elevation_m>
+            <hsterms:Longitude rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-111.917649</hsterms:Longitude>
+            <hsterms:SiteType>Stream</hsterms:SiteType>
+            <hsterms:SiteName>Little Bear River near Wellsville, Utah</hsterms:SiteName>
+          </rdf:Description>
+        </hsterms:site>
+        <hsterms:unit>
+          <rdf:Description>
+            <hsterms:UnitsAbbreviation>degC</hsterms:UnitsAbbreviation>
+            <hsterms:UnitsType>Temperature</hsterms:UnitsType>
+            <hsterms:UnitsName>degree celsius</hsterms:UnitsName>
+          </rdf:Description>
+        </hsterms:unit>
+        <hsterms:method>
+          <rdf:Description>
+            <hsterms:MethodType>Instrument deployment</hsterms:MethodType>
+            <hsterms:MethodDescription>Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.</hsterms:MethodDescription>
+            <hsterms:MethodCode>28</hsterms:MethodCode>
+            <hsterms:MethodName>Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.</hsterms:MethodName>
+          </rdf:Description>
+        </hsterms:method>
+        <hsterms:variable>
+          <rdf:Description>
+            <hsterms:VariableCode>USU36</hsterms:VariableCode>
+            <hsterms:NoDataValue rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-9999</hsterms:NoDataValue>
+            <hsterms:VariableName>Temperature</hsterms:VariableName>
+            <hsterms:VariableType>Water Quality</hsterms:VariableType>
+            <hsterms:Speciation>Not Applicable</hsterms:Speciation>
+          </rdf:Description>
+        </hsterms:variable>
+        <hsterms:AggregationStatistic>Average</hsterms:AggregationStatistic>
+        <hsterms:timeSeriesResultUUID>33d63705-1ebc-11e6-b8cd-f45c8999816f</hsterms:timeSeriesResultUUID>
+        <hsterms:processingLevel>
+          <rdf:Description>
+            <hsterms:ProcessingLevelCode>1</hsterms:ProcessingLevelCode>
+            <hsterms:Definition>Quality controlled data</hsterms:Definition>
+            <hsterms:Explanation>Quality controlled data that have passed quality assurance procedures such as routine estimation of timing and sensor calibration or visual inspection and removal of obvious errors. An example is USGS published streamflow records following parsing through USGS quality control procedures.</hsterms:Explanation>
+          </rdf:Description>
+        </hsterms:processingLevel>
+        <hsterms:SampleMedium>Surface Water</hsterms:SampleMedium>
+      </rdf:Description>
+    </hsterms:timeSeriesResult>
+    <hsterms:timeSeriesResult>
+      <rdf:Description>
+        <hsterms:AggregationStatistic>Average</hsterms:AggregationStatistic>
+        <hsterms:timeSeriesResultUUID>4a6f095c-1ebc-11e6-8a10-f45c8999816f</hsterms:timeSeriesResultUUID>
+        <hsterms:site>
+          <rdf:Description>
+            <hsterms:Longitude rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-111.815079</hsterms:Longitude>
+            <hsterms:SiteName>South Fork Little Bear River below Davenport Creek near Avon, Utah</hsterms:SiteName>
+            <hsterms:ElevationDatum>NGVD29</hsterms:ElevationDatum>
+            <hsterms:Elevation_m rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1564.0</hsterms:Elevation_m>
+            <hsterms:SiteCode>USU-LBR-SFLower</hsterms:SiteCode>
+            <hsterms:SiteType>Stream</hsterms:SiteType>
+            <hsterms:Latitude rdf:datatype="http://www.w3.org/2001/XMLSchema#double">41.506518</hsterms:Latitude>
+          </rdf:Description>
+        </hsterms:site>
+        <hsterms:processingLevel>
+          <rdf:Description>
+            <hsterms:Explanation>Quality controlled data that have passed quality assurance procedures such as routine estimation of timing and sensor calibration or visual inspection and removal of obvious errors. An example is USGS published streamflow records following parsing through USGS quality control procedures.</hsterms:Explanation>
+            <hsterms:Definition>Quality controlled data</hsterms:Definition>
+            <hsterms:ProcessingLevelCode>1</hsterms:ProcessingLevelCode>
+          </rdf:Description>
+        </hsterms:processingLevel>
+        <hsterms:Status>Unknown</hsterms:Status>
+        <hsterms:variable>
+          <rdf:Description>
+            <hsterms:Speciation>Not Applicable</hsterms:Speciation>
+            <hsterms:VariableType>Water Quality</hsterms:VariableType>
+            <hsterms:VariableName>Temperature</hsterms:VariableName>
+            <hsterms:VariableCode>USU36</hsterms:VariableCode>
+            <hsterms:NoDataValue rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-9999</hsterms:NoDataValue>
+          </rdf:Description>
+        </hsterms:variable>
+        <hsterms:SampleMedium>Surface Water</hsterms:SampleMedium>
+        <hsterms:method>
+          <rdf:Description>
+            <hsterms:MethodName>Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.</hsterms:MethodName>
+            <hsterms:MethodCode>28</hsterms:MethodCode>
+            <hsterms:MethodDescription>Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.</hsterms:MethodDescription>
+            <hsterms:MethodType>Instrument deployment</hsterms:MethodType>
+          </rdf:Description>
+        </hsterms:method>
+        <hsterms:unit>
+          <rdf:Description>
+            <hsterms:UnitsAbbreviation>degC</hsterms:UnitsAbbreviation>
+            <hsterms:UnitsType>Temperature</hsterms:UnitsType>
+            <hsterms:UnitsName>degree celsius</hsterms:UnitsName>
+          </rdf:Description>
+        </hsterms:unit>
+        <hsterms:ValueCount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1441</hsterms:ValueCount>
+      </rdf:Description>
+    </hsterms:timeSeriesResult>
+    <hsterms:timeSeriesResult>
+      <rdf:Description>
+        <hsterms:AggregationStatistic>Average</hsterms:AggregationStatistic>
+        <hsterms:Status>Unknown</hsterms:Status>
+        <hsterms:SampleMedium>Surface Water</hsterms:SampleMedium>
+        <hsterms:variable>
+          <rdf:Description>
+            <hsterms:VariableType>Water Quality</hsterms:VariableType>
+            <hsterms:Speciation>Not Applicable</hsterms:Speciation>
+            <hsterms:VariableCode>USU36</hsterms:VariableCode>
+            <hsterms:NoDataValue rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-9999</hsterms:NoDataValue>
+            <hsterms:VariableName>Temperature</hsterms:VariableName>
+          </rdf:Description>
+        </hsterms:variable>
+        <hsterms:timeSeriesResultUUID>3b9037f8-1ebc-11e6-a304-f45c8999816f</hsterms:timeSeriesResultUUID>
+        <hsterms:unit>
+          <rdf:Description>
+            <hsterms:UnitsAbbreviation>degC</hsterms:UnitsAbbreviation>
+            <hsterms:UnitsName>degree celsius</hsterms:UnitsName>
+            <hsterms:UnitsType>Temperature</hsterms:UnitsType>
+          </rdf:Description>
+        </hsterms:unit>
+        <hsterms:processingLevel>
+          <rdf:Description>
+            <hsterms:Explanation>Quality controlled data that have passed quality assurance procedures such as routine estimation of timing and sensor calibration or visual inspection and removal of obvious errors. An example is USGS published streamflow records following parsing through USGS quality control procedures.</hsterms:Explanation>
+            <hsterms:Definition>Quality controlled data</hsterms:Definition>
+            <hsterms:ProcessingLevelCode>1</hsterms:ProcessingLevelCode>
+          </rdf:Description>
+        </hsterms:processingLevel>
+        <hsterms:ValueCount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1441</hsterms:ValueCount>
+        <hsterms:method>
+          <rdf:Description>
+            <hsterms:MethodType>Instrument deployment</hsterms:MethodType>
+            <hsterms:MethodDescription>Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.</hsterms:MethodDescription>
+            <hsterms:MethodCode>28</hsterms:MethodCode>
+            <hsterms:MethodName>Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.</hsterms:MethodName>
+          </rdf:Description>
+        </hsterms:method>
+        <hsterms:site>
+          <rdf:Description>
+            <hsterms:ElevationDatum>NGVD29</hsterms:ElevationDatum>
+            <hsterms:SiteCode>USU-LBR-Confluence</hsterms:SiteCode>
+            <hsterms:Latitude rdf:datatype="http://www.w3.org/2001/XMLSchema#double">41.536088</hsterms:Latitude>
+            <hsterms:Longitude rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-111.830455</hsterms:Longitude>
+            <hsterms:SiteName>Little Bear River below Confluence of South and East Forks near Avon, Utah</hsterms:SiteName>
+            <hsterms:SiteType>Stream</hsterms:SiteType>
+            <hsterms:Elevation_m rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1493.0</hsterms:Elevation_m>
+          </rdf:Description>
+        </hsterms:site>
+      </rdf:Description>
+    </hsterms:timeSeriesResult>
+    <dc:coverage>
+      <dcterms:period>
+        <rdf:value>start=2008-01-01T00:00:00; end=2008-01-30T23:30:00</rdf:value>
+      </dcterms:period>
+    </dc:coverage>
+    <dc:rights>
+      <rdf:Description>
+        <hsterms:URL rdf:resource="http://creativecommons.org/licenses/by/4.0/"/>
+        <hsterms:rightsStatement>This resource is shared under the Creative Commons Attribution CC BY.</hsterms:rightsStatement>
+      </rdf:Description>
+    </dc:rights>
+    <dc:coverage>
+      <dcterms:box>
+        <rdf:value>northlimit=41.718473; southlimit=41.495409; eastlimit=-111.799324; westlimit=-111.946402; projection=WGS 84 EPSG:4326; units=Decimal degrees</rdf:value>
+      </dcterms:box>
+    </dc:coverage>
+    <hsterms:timeSeriesResult>
+      <rdf:Description>
+        <hsterms:SampleMedium>Surface Water</hsterms:SampleMedium>
+        <hsterms:unit>
+          <rdf:Description>
+            <hsterms:UnitsType>Temperature</hsterms:UnitsType>
+            <hsterms:UnitsAbbreviation>degC</hsterms:UnitsAbbreviation>
+            <hsterms:UnitsName>degree celsius</hsterms:UnitsName>
+          </rdf:Description>
+        </hsterms:unit>
+        <hsterms:variable>
+          <rdf:Description>
+            <hsterms:Speciation>Not Applicable</hsterms:Speciation>
+            <hsterms:VariableType>Water Quality</hsterms:VariableType>
+            <hsterms:VariableCode>USU36</hsterms:VariableCode>
+            <hsterms:NoDataValue rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-9999</hsterms:NoDataValue>
+            <hsterms:VariableName>Temperature</hsterms:VariableName>
+          </rdf:Description>
+        </hsterms:variable>
+        <hsterms:timeSeriesResultUUID>51e31687-1ebc-11e6-aa6c-f45c8999816f</hsterms:timeSeriesResultUUID>
+        <hsterms:site>
+          <rdf:Description>
+            <hsterms:ElevationDatum>NGVD29</hsterms:ElevationDatum>
+            <hsterms:SiteType>Stream</hsterms:SiteType>
+            <hsterms:Longitude rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-111.817993</hsterms:Longitude>
+            <hsterms:Latitude rdf:datatype="http://www.w3.org/2001/XMLSchema#double">41.495409</hsterms:Latitude>
+            <hsterms:SiteCode>USU-LBR-SFUpper</hsterms:SiteCode>
+            <hsterms:SiteName>South Fork Little Bear River above Davenport Creek near Avon, Utah</hsterms:SiteName>
+            <hsterms:Elevation_m rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1573.0</hsterms:Elevation_m>
+          </rdf:Description>
+        </hsterms:site>
+        <hsterms:method>
+          <rdf:Description>
+            <hsterms:MethodName>Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.</hsterms:MethodName>
+            <hsterms:MethodCode>28</hsterms:MethodCode>
+            <hsterms:MethodDescription>Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.</hsterms:MethodDescription>
+            <hsterms:MethodType>Instrument deployment</hsterms:MethodType>
+          </rdf:Description>
+        </hsterms:method>
+        <hsterms:processingLevel>
+          <rdf:Description>
+            <hsterms:ProcessingLevelCode>1</hsterms:ProcessingLevelCode>
+            <hsterms:Explanation>Quality controlled data that have passed quality assurance procedures such as routine estimation of timing and sensor calibration or visual inspection and removal of obvious errors. An example is USGS published streamflow records following parsing through USGS quality control procedures.</hsterms:Explanation>
+            <hsterms:Definition>Quality controlled data</hsterms:Definition>
+          </rdf:Description>
+        </hsterms:processingLevel>
+        <hsterms:AggregationStatistic>Average</hsterms:AggregationStatistic>
+        <hsterms:ValueCount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1441</hsterms:ValueCount>
+        <hsterms:Status>Unknown</hsterms:Status>
+      </rdf:Description>
+    </hsterms:timeSeriesResult>
+    <dc:subject>Temperature</dc:subject>
+    <hsterms:timeSeriesResult>
+      <rdf:Description>
+        <hsterms:Status>Unknown</hsterms:Status>
+        <hsterms:SampleMedium>Surface Water</hsterms:SampleMedium>
+        <hsterms:ValueCount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1441</hsterms:ValueCount>
+        <hsterms:AggregationStatistic>Average</hsterms:AggregationStatistic>
+        <hsterms:method>
+          <rdf:Description>
+            <hsterms:MethodName>Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.</hsterms:MethodName>
+            <hsterms:MethodCode>28</hsterms:MethodCode>
+            <hsterms:MethodDescription>Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.</hsterms:MethodDescription>
+            <hsterms:MethodType>Instrument deployment</hsterms:MethodType>
+          </rdf:Description>
+        </hsterms:method>
+        <hsterms:processingLevel>
+          <rdf:Description>
+            <hsterms:ProcessingLevelCode>1</hsterms:ProcessingLevelCode>
+            <hsterms:Definition>Quality controlled data</hsterms:Definition>
+            <hsterms:Explanation>Quality controlled data that have passed quality assurance procedures such as routine estimation of timing and sensor calibration or visual inspection and removal of obvious errors. An example is USGS published streamflow records following parsing through USGS quality control procedures.</hsterms:Explanation>
+          </rdf:Description>
+        </hsterms:processingLevel>
+        <hsterms:timeSeriesResultUUID>42fbff7a-1ebc-11e6-ae3e-f45c8999816f</hsterms:timeSeriesResultUUID>
+        <hsterms:unit>
+          <rdf:Description>
+            <hsterms:UnitsAbbreviation>degC</hsterms:UnitsAbbreviation>
+            <hsterms:UnitsType>Temperature</hsterms:UnitsType>
+            <hsterms:UnitsName>degree celsius</hsterms:UnitsName>
+          </rdf:Description>
+        </hsterms:unit>
+        <hsterms:site>
+          <rdf:Description>
+            <hsterms:SiteType>Stream</hsterms:SiteType>
+            <hsterms:Latitude rdf:datatype="http://www.w3.org/2001/XMLSchema#double">41.529212</hsterms:Latitude>
+            <hsterms:ElevationDatum>NGVD29</hsterms:ElevationDatum>
+            <hsterms:Elevation_m rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1528.0</hsterms:Elevation_m>
+            <hsterms:SiteName>East Fork Little Bear River at Paradise Canal Diversion near Avon, Utah</hsterms:SiteName>
+            <hsterms:SiteCode>USU-LBR-EFLower</hsterms:SiteCode>
+            <hsterms:Longitude rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-111.799324</hsterms:Longitude>
+          </rdf:Description>
+        </hsterms:site>
+        <hsterms:variable>
+          <rdf:Description>
+            <hsterms:VariableCode>USU36</hsterms:VariableCode>
+            <hsterms:NoDataValue rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-9999</hsterms:NoDataValue>
+            <hsterms:VariableName>Temperature</hsterms:VariableName>
+            <hsterms:VariableType>Water Quality</hsterms:VariableType>
+            <hsterms:Speciation>Not Applicable</hsterms:Speciation>
+          </rdf:Description>
+        </hsterms:variable>
+      </rdf:Description>
+    </hsterms:timeSeriesResult>
+    <hsterms:timeSeriesResult>
+      <rdf:Description>
+        <hsterms:ValueCount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1441</hsterms:ValueCount>
+        <hsterms:site>
+          <rdf:Description>
+            <hsterms:SiteType>Stream</hsterms:SiteType>
+            <hsterms:SiteCode>USU-LBR-Mendon</hsterms:SiteCode>
+            <hsterms:Longitude rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-111.946402</hsterms:Longitude>
+            <hsterms:ElevationDatum>NGVD29</hsterms:ElevationDatum>
+            <hsterms:Elevation_m rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1345.0</hsterms:Elevation_m>
+            <hsterms:Latitude rdf:datatype="http://www.w3.org/2001/XMLSchema#double">41.718473</hsterms:Latitude>
+            <hsterms:SiteName>Little Bear River at Mendon Road near Mendon, Utah</hsterms:SiteName>
+          </rdf:Description>
+        </hsterms:site>
+        <hsterms:method>
+          <rdf:Description>
+            <hsterms:MethodType>Instrument deployment</hsterms:MethodType>
+            <hsterms:MethodDescription>Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.</hsterms:MethodDescription>
+            <hsterms:MethodCode>28</hsterms:MethodCode>
+            <hsterms:MethodName>Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.</hsterms:MethodName>
+          </rdf:Description>
+        </hsterms:method>
+        <hsterms:processingLevel>
+          <rdf:Description>
+            <hsterms:Explanation>Quality controlled data that have passed quality assurance procedures such as routine estimation of timing and sensor calibration or visual inspection and removal of obvious errors. An example is USGS published streamflow records following parsing through USGS quality control procedures.</hsterms:Explanation>
+            <hsterms:Definition>Quality controlled data</hsterms:Definition>
+            <hsterms:ProcessingLevelCode>1</hsterms:ProcessingLevelCode>
+          </rdf:Description>
+        </hsterms:processingLevel>
+        <hsterms:AggregationStatistic>Average</hsterms:AggregationStatistic>
+        <hsterms:unit>
+          <rdf:Description>
+            <hsterms:UnitsAbbreviation>degC</hsterms:UnitsAbbreviation>
+            <hsterms:UnitsType>Temperature</hsterms:UnitsType>
+            <hsterms:UnitsName>degree celsius</hsterms:UnitsName>
+          </rdf:Description>
+        </hsterms:unit>
+        <hsterms:Status>Unknown</hsterms:Status>
+        <hsterms:SampleMedium>Surface Water</hsterms:SampleMedium>
+        <hsterms:timeSeriesResultUUID>182d8fa3-1ebc-11e6-ad49-f45c8999816f</hsterms:timeSeriesResultUUID>
+        <hsterms:variable>
+          <rdf:Description>
+            <hsterms:Speciation>Not Applicable</hsterms:Speciation>
+            <hsterms:VariableType>Water Quality</hsterms:VariableType>
+            <hsterms:VariableCode>USU36</hsterms:VariableCode>
+            <hsterms:NoDataValue rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-9999</hsterms:NoDataValue>
+            <hsterms:VariableName>Temperature</hsterms:VariableName>
+          </rdf:Description>
+        </hsterms:variable>
+      </rdf:Description>
+    </hsterms:timeSeriesResult>
+  </hsterms:TimeSeriesAggregation>
+  <rdf:Description rdf:about="http://www.hydroshare.org/terms/TimeSeriesAggregation">
+    <rdfs:label>Time Series Content: One or more time series held in an ODM2 format SQLite file and optional source comma separated (.csv) files</rdfs:label>
+    <rdfs:isDefinedBy rdf:resource="https://www.hydroshare.org/terms/"/>
+  </rdf:Description>
+</rdf:RDF>

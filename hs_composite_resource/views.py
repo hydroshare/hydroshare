@@ -42,7 +42,7 @@ def _process_resource_coverage_action(request, resource_id, coverage_type, actio
         return JsonResponse(response_data, status=status.HTTP_401_UNAUTHORIZED)
 
     if res.resource_type != "CompositeResource":
-        err_msg = "Coverage can be {}d only for composite resource.".format(action)
+        err_msg = "Coverage can be {}d only for resource.".format(action)
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 

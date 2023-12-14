@@ -41,7 +41,7 @@ class TestExplicitResourceAccess(MockIRODSTestCaseMixin, TestCase):
 
         # user_A owns resource
         self.resource = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user_A,
             title='Test Resource',
             metadata=[],

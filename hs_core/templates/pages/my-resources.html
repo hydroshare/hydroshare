@@ -5,436 +5,223 @@
 {% block main %}
 
 <div class="container" id="main">
-    <div class="row">
-        <div class="col-sm-12">
-            <h2 class="page-title">My Resources
-                <small class="text-muted"><i>Interact with your HydroShare Content.</i></small>
-            </h2>
-        </div>
-        <div class="col-lg-2" id="facets">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h4 class="panel-title">
-                        <span class="glyphicon glyphicon glyphicon-search"></span>
-                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#filter">
-                            &nbsp;Filter</a></h4>
-                </div>
-                <div id="filter" class="facet-list panel-collapse collapse in">
-                    <div class="panel-body">
-                        <div class="list-group">
-                            <ul class="list-group inputs-group">
-                                <li class="list-group-item">
-                                    <span data-facet="owned" class="badge">0</span>
-                                    <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="owned" value="Owned" checked>Owned
-                                        by me</label>
-                                </li>
-                                <li class="list-group-item">
-                                    <span data-facet="shared" class="badge">0</span>
-                                    <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="shared" value="Shared">Shared with me</label>
-                                </li>
-                                <li class="list-group-item">
-                                    <span data-facet="discovered" class="badge">0</span>
-                                    <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="discovered" value="Discovered"
-                                               checked>Added by me</label>
-                                </li>
-                                <li class="list-group-item">
-                                    <span data-facet="favorites" class="badge">0</span>
-                                    <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="favorites"
-                                               value="Favorites" checked>Favorites</label>
-                                </li>
-                                <li class="list-group-item">
-                                    <span data-facet="recent" class="badge">0</span>
-                                    <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="recent" value="Recent">Recently
-                                        Updated</label>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h4 class="panel-title">
-                        <span class="glyphicon glyphicon-tags"></span>
-                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#labels">
-                            &nbsp;&nbsp;Labels</a></h4>
-                </div>
-                <div id="labels" class="facet-list panel-collapse collapse in">
-                    <div class="panel-body">
-                        <div class="list-group">
-                            <ul id="user-labels-left" class="list-group inputs-group">
-
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-10" id="items">
-            <div class="row">
-                <div class="col-sm-8 col-xs-12 pull-right">
-                    <div id="search-container" class="input-group">
-                        <span class="glyphicon glyphicon-search search-icon"></span>
-                        <input id="resource-search-input" type="text" class="form-control" placeholder="Search"/>
-
-                        <div class="input-group-btn">
-                            <div class="btn-group" role="group">
-                                <div class="dropdown dropdown-lg">
-                                    <span id="btn-clear-search-input"
-                                          class="glyphicon glyphicon-remove-sign btn-clear-search c-pointer">
-                                    </span>
-
-                                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
-                                            aria-expanded="false"><span class="caret"></span></button>
-
-                                    <div class="dropdown-menu dropdown-menu-left shadow-md" role="menu">
-                                        <form class="form-horizontal" role="form">
-                                            <div class="form-group">
-                                                <label for="filter">Resource Type</label>
-                                                <select id="input-resource-type" class="form-control pull-left">
-                                                    <option value="" selected>All</option>
-                                                    <option value="collection resource">Collection</option>
-                                                    <option value="composite resource">Composite Resource</option>
-                                                    <option value="generic">Generic</option>
-                                                    <option value="geographic feature">Geographic Feature (ESRI Shapefiles)</option>
-                                                    <option value="geographic raster">Geographic Raster</option>
-                                                    <option value="his referenced time series">HIS Referenced Time Series</option>
-                                                    <option value="model instance resource">Model Instance</option>
-                                                    <option value="model program">Model Program</option>
-                                                    <option value="modflow model instance resource">MODFLOW Model Instance</option>
-                                                    <option value="multidimensional">Multidimensional (NetCDF)</option>
-                                                    <option value="script resource">Script Resource</option>
-                                                    <option value="swat model instance resource">Swat Model Instance</option>
-                                                    <option value="time series">Time Series</option>
-                                                    <option value="web app resource">Web App</option>
-                                                </select>
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="contain">Author</label>
-                                                <input id="input-author" class="form-control" type="text"/>
-                                                <span id="btn-clear-author-input" class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="contain">Subject</label>
-                                                <input id="input-subject" class="form-control" type="text"/>
-                                                <span id="btn-clear-subject-input" class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                 </div>
-
-                <div class="col-sm-4 col-xs-12 pull-left">
-                    <div id="resource-actions-container" class="noselect">
-                        <span data-toggle="tooltip" data-placement="bottom" title="Label">
-                            <span id="btn-label" class="glyphicon glyphicon-tags dropdown-toggle"
-                                  data-toggle="dropdown" aria-expanded="false"></span>
-
-                            <div id="toolbar-labels-dropdown" class="dropdown-menu" role="menu">
-                                <div class="panel-body" role="form">
-                                    <strong>Label as:</strong>
-                                    <ul class="list-group list-labels">
-                                        <li class="divider persist"></li>
-                                        <li class="list-group-item persist" data-toggle="modal"
-                                            data-target="#modalCreateLabel">
-                                            <span style="color:#5cb85c" class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;&nbsp;&nbsp;Create New Label</li>
-                                        <li class="list-group-item persist" data-toggle="modal"
-                                            data-target="#modalManageLabels">
-                                            <span style="color:#0A91AB" class="glyphicon glyphicon-folder-open"></span>&nbsp;&nbsp;&nbsp;&nbsp;Manage Labels</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </span>
-
-                        <span id="btn-favorite" class="glyphicon  glyphicon-star" data-toggle="tooltip"
-                              data-placement="bottom" title="Favorite"></span>
-
-                        <span data-toggle="tooltip"
-                              data-placement="bottom" title="Delete">
-                            <span id="btn-confirm-delete-resources" class="glyphicon glyphicon-trash btn-remove"
-                                  data-toggle="modal" data-target="#delete-multiple-resources-dialog"></span>
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- /input-group -->
-            <table id="item-selectors" class="table-hover table-striped resource-custom-table">
-                <thead>
-                <tr>
-                    <th><input class="all-rows-selector" type="checkbox"></th>
-                    <th>Type</th>
-                    <th>Title</th>
-                    <th>First Author</th>
-                    <th>Date Created</th>
-                    <th>Last Modified</th>
-                    <th>Subject</th>            {# Used in table processing #}
-                    <th>Authors</th>            {# Used in table processing #}
-                    <th>Permission Level</th>   {# Used in table processing #}
-                    <th>Labels</th>             {# Used in table processing #}
-                    <th>Favorite</th>           {# Used in table processing #}
-                    <th>Last Modified</th>      {# Used in table processing #}
-                    <th>Sharing Status</th>     {# Used in table processing #}
-                    <th>Date Created</th>       {# Used in table processing #}
-                </tr>
-                </thead>
-                <tbody>
-                    {% for res in collection %}
-                        <tr class="data-row">
-                            {# Selection controls #}
-                            <td  data-col="actions">
-                                <input class="row-selector" type="checkbox">
-                                {# Delete resource forms #}
-                                <form class="hidden-form" data-id="form-delete-{{ res.short_id }}"
-                                      data-form-type="delete-resource" method="POST"
-                                      action="/hsapi/_internal/{{ res.short_id }}/delete-resource/">
-                                    {% csrf_token %}
-                                </form>
-                                {% if res.is_favorite %}
-                                    <span data-form-id="form-favorite-{{ res.short_id }}"
-                                          data-form-type="toggle-favorite"
-                                          class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>
-
-                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
-                                          action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
-                                          method="POST">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="DELETE">
-                                        <input type="hidden" name="label_type" value="FAVORITE">
-                                    </form>
-                                {% else %}
-                                    <span data-form-id="form-favorite-{{ res.short_id }}"
-                                          data-form-type="toggle-favorite"
-                                          class="glyphicon glyphicon-star btn-inline-favorite"></span>
-
-                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
-                                          action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
-                                          method="POST">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="CREATE">
-                                        <input type="hidden" name="label_type" value="FAVORITE">
-                                    </form>
-                                {% endif %}
-
-                                <span class="glyphicon glyphicon-tag btn-inline-label" data-toggle="dropdown"
-                                      aria-expanded="false"></span>
-
-                                <div class="dropdown-menu inline-dropdown" role="menu">
-                                    <div class="panel-body" role="form">
-                                        <ul data-resource-id="{{ res.short_id }}" class="list-group list-labels">
-                                        </ul>
-                                    </div>
-                                </div>
-                            </td>
-                            {# Type #}
-                            <td data-col="resource-type">
-                                {% include "includes/res_type_col.html" with resource=res %}
-                            </td>
-                            {# Title #}
-                            <td>
-                                <strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a>
-                                </strong>
-                            </td>
-                            {# First Author #}
-                            <td>{{ res|resource_first_author }}</td>
-
-                            {# Date Created #}
-                            <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>
-                            {# Last Modified #}
-                            <td>{{ res.last_updated|date:"M d, Y" }} at {{ res.last_updated|time }}</td>
-                            <td>
-                                {% for kw in res.metadata.subjects.all %}
-                                   {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
-                                {% endfor %}
-                            </td>
-                            <td>
-                                {% for creator in res.metadata.creators.all %}
-                                    {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
-                                    {% if creator.description %}
-                                        <a href="{{ creator.description }}">{{ creator.name }}</a>
-                                    {% else %}
-                                        <span>{{ creator.name }}</span>
-                                    {% endif %}
-                                {% endfor %}
-                            </td>
-                            {% if res.owned %}
-                                <td>Owned</td>
-                            {% elif res.discovered %}
-                                <td>Discovered</td>
-                            {% else %}
-                                <td></td>
-                            {% endif %}
-                            <td class="col-labels">
-                                {% for label in res|user_resource_labels:user %}
-                                    {% if forloop.counter0 > 0 %},{% endif %}{{ label }}
-                                {% endfor %}
-                            </td>
-                            <td class="col-is-favorite">
-                                {% if res.is_favorite %}
-                                    Favorite
-                                {% endif %}
-                            </td>
-                            <td>{{ res.last_updated|date:"U" }}</td>
-                            <td>
-                                {% if res.raccess.published %}
-                                    Published
-                                {% elif res.raccess.public %}
-                                    Public
-                                {% elif res.raccess.discoverable %}
-                                    Discoverable
-                                {% else %}
-                                    Private
-                                {% endif %}
-                            </td>
-                            <td>{{ res.created|date:"U" }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            <br>
-            <div class="alert alert-info">
-                <strong>
-                    <i class="glyphicon glyphicon-question-sign"></i> Not finding what you are looking for?
-                </strong>
-                <p class="space-top">
-                    Search for public resources not owned by you on the <a href="/search"><strong>Discover</strong></a> page.
-                </p>
-            </div>
-            {% include "includes/legend.html" %}
-        </div>
+  <div class="row">
+    <div class="col-sm-12">
+      <h2 class="page-title">My Resources
+        <small class="text-muted"><i>Interact with your HydroShare Content.</i></small>
+      </h2>
     </div>
+  </div>
+  <div class="row">
+    {% include 'includes/my-resources-facets.html' %}
+    {% include "includes/resource-table.html" with rows_template='includes/my-resources-trows.html' show_help=True has_selection_control_actions=True %}
+  </div>
 </div>
 
 <!-- Create Label Modal -->
 <div class="modal fade" id="modalCreateLabel" tabindex="-1" role="dialog" aria-labelledby="Create New Label">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                        aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="myModalLabel">Create New Label</h4>
-            </div>
-            <div class="modal-body">
-                <form data-id="form-create-label" action="/hsapi/_internal/label-resource-action/"
-                      method="post">
-                    {% csrf_token %}
-                    <div class="form-group">
-                        <label for="txtLabelName">New Label Name:</label>
-                        <input id="txtLabelName" name="label" type="text" class="form-control">
-                        <input type="hidden" name="label_type" value="SAVEDLABEL">
-                        <input type="hidden" name="action" value="CREATE">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <button data-form-id="form-create-label" data-form-type="create-label" id="btn-create-label"
-                        class="btn btn-primary">Create
-                </button>
-            </div>
-        </div>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+            aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Create New Label</h4>
+      </div>
+      <div class="modal-body">
+        <form data-id="form-create-label" action="/hsapi/_internal/label-resource-action/" method="post">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="txtLabelName">New Label Name:</label>
+            <input id="txtLabelName" name="label" type="text" class="form-control">
+            <input type="hidden" name="label_type" value="SAVEDLABEL">
+            <input type="hidden" name="action" value="CREATE">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button data-form-id="form-create-label" data-form-type="create-label" id="btn-create-label"
+          class="btn btn-primary">Create
+        </button>
+      </div>
     </div>
+  </div>
 </div>
 
 {% block modal %}
-    <!-- Manage Labels Modal -->
-    <div class="modal fade" id="modalManageLabels" tabindex="-1" role="dialog" aria-labelledby="Manage Labels">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                            aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="myModalLabel">Manage Labels</h4>
-                </div>
-                <div class="modal-body">
-                    <table id="table-user-labels" class="table">
-                        <thead>
-                        <tr>
-                            <th>Label</th>
-                            <th></th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% if user.ulabels.saved_labels %}
-                            {% for label in user.ulabels.saved_labels %}
-                                <tr>
-                                    <td class="user-label" data-label="{{ label }}">{{ label }}</td>
-                                    <td>
-                                        <form class="hidden-form" data-id="form-delete-label-{{ label }}"
-                                              action="/hsapi/_internal/label-resource-action/"
-                                              method="post">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="label" value="{{ label }}">
-                                            <input type="hidden" name="label_type" value="SAVEDLABEL">
-                                            <input type="hidden" name="action" value="DELETE">
-                                        </form>
-                                        <span data-label="{{ label }}" data-form-type="delete-label"
-                                              class="btn-label-remove glyphicon glyphicon-remove"
-                                              data-form-id="form-delete-label-{{ label }}"></span>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        {% else %}
-                            <tr class="no-items-found">
-                                <td>No labels found.</td>
-                            </tr>
-                        {% endif %}
-                        </tbody>
-                    </table>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
+<!-- Manage Labels Modal -->
+<div class="modal fade" id="modalManageLabels" tabindex="-1" role="dialog" aria-labelledby="Manage Labels">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+            aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Manage Labels</h4>
+      </div>
+      <div class="modal-body">
+        <table id="table-user-labels" class="table">
+          <thead>
+            <tr>
+              <th>Label</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {# QUERY COUNT: this generates 2 queries - not dependent of the number of resources #}
+            {%  with saved_labels=user.ulabels.saved_labels %}
+                {% if saved_labels %}
+                {% for label in saved_labels %}
+                <tr>
+                  <td class="user-label" data-label="{{ label }}">{{ label }}</td>
+                  <td>
+                    <form class="hidden-form" data-id="form-delete-label-{{ label }}"
+                      action="/hsapi/_internal/label-resource-action/" method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="label" value="{{ label }}">
+                      <input type="hidden" name="label_type" value="SAVEDLABEL">
+                      <input type="hidden" name="action" value="DELETE">
+                    </form>
+                    <span data-label="{{ label }}" data-form-type="delete-label"
+                      class="btn-label-remove glyphicon glyphicon-remove"
+                      data-form-id="form-delete-label-{{ label }}"></span>
+                  </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr class="no-items-found">
+                  <td>No labels found.</td>
+                </tr>
+                {% endif %}
+          {% endwith %}
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
     </div>
+  </div>
+</div>
 
-    <!-- Delete Resource Modal -->
-    <div class="modal fade" id="delete-multiple-resources-dialog" tabindex="-1" role="dialog"
-         aria-labelledby="myModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title" id="delete-resource-title">Delete Resources</h4>
-                </div>
-                <div class="modal-body">
-                    <div id="delete-resource-messaging">Select resources to delete</div>
-                    <input type="text" id="confirm-res-id-text" />
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <button id="btn-delete-multiple-resources" disabled="true" class="btn btn-danger" data-dismiss="modal">Delete</button>
-                </div>
-            </div>
-        </div>
+<!-- Delete Resource Modal -->
+<div class="modal fade" id="delete-multiple-resources-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="delete-resource-title">Delete Resources</h4>
+      </div>
+      <div class="modal-body">
+        <div id="delete-resource-messaging">Select resources to delete</div>
+        <input type="text" id="confirm-res-id-text" />
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button id="btn-delete-multiple-resources" disabled="true" class="btn btn-danger"
+          data-dismiss="modal">Delete</button>
+      </div>
     </div>
+  </div>
+</div>
 {% endblock %}
 
-{#    To be used for querying the table in javascrip    t#}
+{# To be used for querying the table in javascrip t#}
+{# QUERY COUNT: this generates 1 query - not dependent on the number of resources #}
 <input id="currentUserName" value="{{ user|best_name }}" style="display:none">
 <span id="csrf">{% csrf_token %}</span>
 
 {% endblock %}
 
 {% block extra_css %}
-    {{ block.super }}
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static 'css/jquery.dataTables.min.css' %}">
 {% endblock %}
 
 {% block extra_js %}
-    {{ block.super }}
-    <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/my-resources.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table.js"></script>
+{{ block.super }}
+<script type="text/javascript">
+  var resourceTable;
+
+  var ACTIONS_COL = 0;
+  var RESOURCE_TYPE_COL = 1;
+  var TITLE_COL = 2;
+  var OWNER_COL = 3;
+  var DATE_CREATED_COL = 4;
+  var LAST_MODIFIED_COL = 5;
+  var SUBJECT_COL = 6;
+  var AUTHORS_COL = 7;
+  var PERM_LEVEL_COL = 8;
+  var LABELS_COL = 9;
+  var FAVORITE_COL = 10;
+  var LAST_MODIF_SORT_COL = 11;
+  var SHARING_STATUS_COL = 12;
+  var DATE_CREATED_SORT_COL = 13;
+  var ACCESS_GRANTOR_COL = 14;
+
+  var colDefs = [
+    {
+      "targets": [RESOURCE_TYPE_COL],     // Resource type
+      "width": "135px"
+    },
+    {
+      "targets": [ACTIONS_COL],           // Actions
+      "orderable": false,
+      "searchable": false,
+    },
+    {
+      "targets": [LAST_MODIFIED_COL],     // Last modified
+      "iDataSort": LAST_MODIF_SORT_COL
+    },
+    {
+      "targets": [DATE_CREATED_COL],      // Created
+      "iDataSort": DATE_CREATED_SORT_COL
+    },
+    {
+      "targets": [SUBJECT_COL],           // Subject
+      "visible": false,
+      "searchable": true
+    },
+    {
+      "targets": [AUTHORS_COL],           // Authors
+      "visible": false,
+      "searchable": true
+    },
+    {
+      "targets": [PERM_LEVEL_COL],        // Permission level
+      "visible": false,
+      "searchable": true
+    },
+    {
+      "targets": [LABELS_COL],            // Labels
+      "visible": false,
+      "searchable": true
+    },
+    {
+      "targets": [FAVORITE_COL],          // Favorite
+      "visible": false,
+      "searchable": true
+    },
+    {
+      "targets": [LAST_MODIF_SORT_COL],   // Last modified (for sorting)
+      "visible": false,
+      "searchable": true
+    },
+    {
+      "targets": [DATE_CREATED_SORT_COL], // Date Created (for sorting)
+      "visible": false,
+      "searchable": true
+    },
+    {
+      "targets": [SHARING_STATUS_COL],    // Sharing status
+      "visible": false,
+      "searchable": false
+    },
+    {
+      targets: [ACCESS_GRANTOR_COL], // Access Grantor
+      visible: false,
+      searchable: false,
+    },
+  ];
+</script>
 {% endblock %}

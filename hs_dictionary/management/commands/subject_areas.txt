@@ -1,0 +1,149 @@
+Aerosol-cloud interaction
+Aerosol instrumentation development
+Atmospheric chemistry and aerosols
+Chemical transport modeling
+Climate and global change
+Data assimilation
+Drought science and applications
+Frozen solution chemistry
+Global and regional climate modeling
+Hurricanes and tropical meteorology
+Land-atmosphere-ocean interaction
+Lightning and atmospheric electricity
+Lightning and detection systems (land- and space-based)
+Marine atmospheric boundary in climate models
+North American Monsoon system
+Numerical weather modeling and ensemble forecasting
+Precipitation
+Radiation and remote sensing
+Role of land and ocean surface processes in seasonal precipitation
+Urban air quality
+Weather analysis and predictability of large-scale systems
+Aqueous geochemistry
+Biogeochemistry
+Characterization of contaminated sites
+Contaminant transport
+Critical Zone Processes
+Ecohydrology
+Ground-water chemistry
+Hydrochemical modeling
+Hydrogeochemistry
+Integrated physical-chemical modeling
+Isotopic analysis
+Paleoclimate reconstruction
+Paleohydrology
+Soil and groundwater remediation
+Snow and ice
+Water quality and quantity
+Watershed ecohydrology
+Watershed studies
+Earth hydrogeologic analogs of Mars and other worlds
+Exoplanet atmospheres
+Jovian atmospheric dynamics
+Large-scale dynamics
+Mars glacial geomorphology
+Mars paleohydrology
+Computational methods
+Conjunctive use
+Decision making and uncertainty
+Extreme value statistics
+Fractured rock hydrology
+Geological CO2 storage
+Geostatistical analysis
+Ground-water chemistry
+Ground-water modeling
+Hydraulics, tracer tomography, and data fusion
+Hydrobiogeochemistry
+Hydrogeology
+Hydrogeophysics
+Integrated physical-chemical modeling
+Integrated physical-economic modeling
+Isotopic tracers
+Mathematical programming and simulation
+Microbial carbon cycle
+Multiphase flow and transport in porous media
+Natural and anthropogenic tracers
+Network design
+Numerical modeling
+Pumping test design and analysis
+Residence time tracers
+Scaling of geophysical variables
+Stochastic subsurface hydrology
+Subsurface contamination
+Subsurface flow and transport
+Unconventional oil/gas production
+Unsaturated media
+Vadose zone hydrology
+Water-rock-microbial reactions
+Catchment hydrobiogeochemistry
+Catchment hydrology
+Cold region hydrology
+Computational hydraulics
+Computational river mechanics and sediment transport
+Evapotranspiration of riparian systems
+Extreme value statistics
+Drought monitoring and prediction
+Flood forecasting
+Fluvial geomorphology
+Hydraulics and river engineering
+Hydroclimatology
+Hydrogeochemistry
+Hydrologic extremes
+Hydrometeorology
+Mesoscale coupled modeling
+Mountain hydrology
+Natural and anthropogenic tracers
+Paleoflood hydrology
+Paleohydrology
+Parameter estimation
+Precipitation-runoff modeling
+Probabilistic precipitation forecasting
+Remote sensing applications
+Scaling of geophysical variables
+Stochastic surface hydrology
+Transit time tracers
+Water quality
+Climate and global change
+Climate data record
+Cold region remote sensing and modeling
+Coupled modeling
+Data assimilation
+Flash flood forecasting
+Hydrologic extremes
+Land-atmosphere feedbacks and coupling
+Mesoscale water, energy, and carbon balances
+Monsoon predictability
+Ocean-atmosphere-continent teleconnections
+Polar region hydrometeorology
+Predictability of precipitation and convective parameters and indices
+Remote sensing and in situ snowfall measurement
+Remote sensing by weather radar
+Role of ecosystem dynamics
+Topographic influences
+Weather and climate extremes
+Advanced methods for model sensitivity analysis
+Applications of remotely-sensed data
+Artificial neural networks
+Computational methods
+Decision making and uncertainty
+Diagnostic analysis of hydrologic models
+Hazards relationship to climate change
+Hydrologic impacts of projected climate change
+Information theory approach to learning
+International water development
+Legal and institutional issues
+Mathematical and goal programming
+Maximum entropy approach to modeling
+Merging models with data
+Model calibration
+Model structural improvement
+Parameter and state estimation
+Risk analysis and uncertainty
+Stochastic physically-based modeling
+Stochastic data-based- and hybrid data-physics-based modeling
+Surface-subsurface water quality modeling
+Systems approach to hydrologic modeling
+Transdisciplinary analysis of water issues
+Water conflict analysis
+Water resources systems
+Water quality

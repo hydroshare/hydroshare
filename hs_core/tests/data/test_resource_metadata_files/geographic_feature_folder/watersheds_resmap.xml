@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF
+   xmlns:citoterms="http://purl.org/spar/cito/"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:dcterms="http://purl.org/dc/terms/"
+   xmlns:foaf="http://xmlns.com/foaf/0.1/"
+   xmlns:ore="http://www.openarchives.org/ore/terms/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:rdfs1="http://www.w3.org/2001/01/rdf-schema#"
+>
+  <rdf:Description rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds_resmap.xml">
+    <rdf:type rdf:resource="http://www.openarchives.org/ore/terms/ResourceMap"/>
+    <dcterms:created>2020-07-15T20:15:21Z</dcterms:created>
+    <dc:format>application/rdf+xml</dc:format>
+    <dcterms:creator rdf:resource="http://foresite-toolkit.googlecode.com/#pythonAgent"/>
+    <dcterms:modified>2020-07-15T20:15:21Z</dcterms:modified>
+    <ore:describes rdf:resource="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds_resmap.xml#aggregation"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds_resmap.xml#aggregation">
+    <ore:aggregates rdf:resource="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds.sbn"/>
+    <dc:title>watersheds</dc:title>
+        <ore:aggregates rdf:resource="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds.sbx"/>
+    <rdf:type rdf:resource="http://www.openarchives.org/ore/terms/Aggregation"/>
+    <ore:aggregates rdf:resource="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds_meta.xml"/>
+    <ore:aggregates rdf:resource="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds.shp"/>
+    <dcterms:type rdf:resource="http://www.hydroshare.org/terms/GeographicFeatureAggregation"/>
+    <ore:aggregates rdf:resource="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds.dbf"/>
+    <ore:aggregates rdf:resource="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds.shx"/>
+    <citoterms:isDocumentedBy>http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds_meta.xml</citoterms:isDocumentedBy>
+    <ore:isDescribedBy>http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds_resmap.xml</ore:isDescribedBy>
+    <ore:aggregates rdf:resource="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds.prj"/>
+    <ore:aggregates rdf:resource="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds.cpg"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://www.hydroshare.org/terms/GeographicFeatureAggregation">
+    <rdfs1:isDefinedBy>http://www.hydroshare.org/terms</rdfs1:isDefinedBy>
+    <rdfs1:label>Geographic Feature Content: The multiple files that are part of a geographic shapefile</rdfs1:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds_meta.xml">
+    <dc:format>application/rdf+xml</dc:format>
+    <citoterms:documents>http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds_resmap.xml#aggregation</citoterms:documents>
+    <ore:isAggregatedBy>http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds_resmap.xml#aggregation</ore:isAggregatedBy>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds.cpg">
+    <ore:isAggregatedBy>http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds_resmap.xml#aggregation</ore:isAggregatedBy>
+    <dc:format>application/cpg</dc:format>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds.dbf">
+    <ore:isAggregatedBy>http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds_resmap.xml#aggregation</ore:isAggregatedBy>
+    <dc:format>application/dbf</dc:format>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds.prj">
+    <ore:isAggregatedBy>http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds_resmap.xml#aggregation</ore:isAggregatedBy>
+    <dc:format>application/prj</dc:format>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds.sbn">
+    <dc:format>application/sbn</dc:format>
+    <ore:isAggregatedBy>http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds_resmap.xml#aggregation</ore:isAggregatedBy>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds.sbx">
+    <dc:format>application/sbx</dc:format>
+    <ore:isAggregatedBy>http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds_resmap.xml#aggregation</ore:isAggregatedBy>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds.shp">
+    <ore:isAggregatedBy>http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds_resmap.xml#aggregation</ore:isAggregatedBy>
+    <dc:format>application/x-qgis</dc:format>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds.shx">
+    <dc:format>application/x-qgis</dc:format>
+    <ore:isAggregatedBy>http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/geographic_feature_folder/watersheds_resmap.xml#aggregation</ore:isAggregatedBy>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://www.openarchives.org/ore/terms/ResourceMap">
+    <rdfs1:label>ResourceMap</rdfs1:label>
+    <rdfs1:isDefinedBy>http://www.openarchives.org/ore/terms/</rdfs1:isDefinedBy>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://foresite-toolkit.googlecode.com/#pythonAgent">
+    <foaf:name>Foresite Toolkit (Python)</foaf:name>
+    <foaf:mbox>foresite@googlegroups.com</foaf:mbox>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://www.openarchives.org/ore/terms/Aggregation">
+    <rdfs1:isDefinedBy>http://www.openarchives.org/ore/terms/</rdfs1:isDefinedBy>
+    <rdfs1:label>Aggregation</rdfs1:label>
+  </rdf:Description>
+</rdf:RDF>

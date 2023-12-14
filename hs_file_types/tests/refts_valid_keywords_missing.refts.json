@@ -8,7 +8,7 @@
 				"refType": "WOF",
 				"returnType": "WaterML 1.1",
 				"serviceType": "SOAP",
-				"url": "http://hydroportal.cuahsi.org/nwisdv/cuahsi_1_1.asmx?WSDL"
+				"url": "http://www.google.com"
 			},
 			"site": {
 				"siteName": "HOBBLE CREEK AT 1650 WEST AT SPRINGVILLE, UTAH",
@@ -22,7 +22,7 @@
 			},
 			"method": {
 				"methodDescription": "Estimated by NASA National Snow and Ice Data Center",
-				"methodLink": "https://nsidc.org/"
+				"methodLink": "http://www.google.com"
 			},
 			"valueCount": 1000,
 			"sampleMedium": "unknown"
@@ -49,7 +49,7 @@
 			},
 			"method": {
 				"methodDescription": "Estimated by NASA National Snow and Ice Data Center",
-				"methodLink": "https://nsidc.org/"
+				"methodLink": "http://www.google.com"
 			},
 			"valueCount": 500,
 			"sampleMedium": "unknown"

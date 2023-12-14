@@ -10,7 +10,7 @@ from rest_framework import serializers
 
 from hs_core import hydroshare
 from hs_core.models import Contributor, CoreMetaData, Coverage, Creator, Date, \
-    Format, FundingAgency, Identifier, Subject, Source, Relation
+    Format, FundingAgency, Identifier, Subject, Relation, GeospatialRelation
 from hs_core.views import utils as view_utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE
 
@@ -23,7 +23,7 @@ class Identifiers(serializers.DictField):
 
 class PartySerializer(serializers.Serializer):
     name = serializers.CharField()
-    description = serializers.URLField(required=False)
+    hydroshare_user_id = serializers.IntegerField(required=False)
     organization = serializers.CharField(required=False)
     email = serializers.EmailField(required=False)
     address = serializers.CharField(required=False)
@@ -33,7 +33,7 @@ class PartySerializer(serializers.Serializer):
 
     class Meta:
         model = Creator
-        fields = {'name', 'description', 'organization', 'email',
+        fields = {'name', 'hydroshare_user_id', 'organization', 'email',
                   'address', 'phone', 'homepage', 'identifiers'}
 
 
@@ -97,19 +97,21 @@ class SubjectSerializer(serializers.Serializer):
         model = Subject
 
 
-class SourceSerializer(serializers.Serializer):
-    derived_from = serializers.CharField(required=False)
-
-    class Meta:
-        model = Source
-
-
 class RelationSerializer(serializers.Serializer):
     type = serializers.CharField(required=False)
     value = serializers.CharField(required=False)
 
     class Meta:
         model = Relation
+
+
+class GeospatialRelationSerializer(RelationSerializer):
+    type = serializers.CharField(required=False)
+    value = serializers.CharField(required=False)
+    text = serializers.CharField(required=False)
+
+    class Meta:
+        model = GeospatialRelation
 
 
 class CoreMetaDataSerializer(serializers.Serializer):
@@ -126,9 +128,9 @@ class CoreMetaDataSerializer(serializers.Serializer):
     rights = serializers.CharField(required=False)
     type = serializers.CharField(required=False)
     publisher = serializers.CharField(required=False)
-    sources = SourceSerializer(required=False, many=True)
     subjects = SubjectSerializer(required=False, many=True)
     relations = RelationSerializer(required=False, many=True)
+    geospatialrelations = GeospatialRelationSerializer(required=False, many=True)
 
     class Meta:
         model = CoreMetaData
@@ -170,14 +172,13 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
 
     allowed_methods = ('GET', 'PUT')
 
-    # Overwritten by resource types with extended metadata
+    # Overwritten by resource types with additional metadata
     serializer_class = CoreMetaDataSerializer
 
     def get(self, request, pk):
         view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
         resource = hydroshare.get_resource_by_shortkey(shortkey=pk)
         serializer = resource.metadata.serializer
-        self.serializer_class = resource.metadata.serializer
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, pk):
@@ -198,11 +199,10 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
         except Exception as ex:
             error_msg = {
                 'resource': "Resource metadata update failed: %s, %s"
-                            % (ex.__class__, ex.message)
+                            % (ex.__class__, str(ex))
             }
             raise ValidationError(detail=error_msg)
 
         resource = hydroshare.get_resource_by_shortkey(shortkey=pk)
         serializer = resource.metadata.serializer
-        self.serializer_class = serializer
         return Response(data=serializer.data, status=status.HTTP_202_ACCEPTED)

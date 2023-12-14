@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='resourcefile',
             name='logical_file_content_type',
-            field=models.ForeignKey(related_name='files', blank=True, to='contenttypes.ContentType', null=True),
+            field=models.ForeignKey(related_name='files', blank=True, on_delete=models.SET_NULL, to='contenttypes.ContentType', null=True),
         ),
         migrations.AddField(
             model_name='resourcefile',

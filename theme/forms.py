@@ -1,7 +1,7 @@
 import requests
 
 from django import forms
-from django.utils.translation import ugettext, ugettext_lazy as _
+from django.utils.translation import gettext, gettext_lazy as _
 from django_comments.signals import comment_was_posted
 from django_comments.forms import CommentSecurityForm
 from django_comments.models import Comment
@@ -138,7 +138,7 @@ class ThreadedCommentForm(CommentForm, Html5Mixin):
         """
         comment = self.get_comment_object()
         obj = comment.content_object
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
             comment.user = request.user
             comment.user_name = best_name(comment.user)
 
@@ -190,8 +190,8 @@ class RatingForm(CommentSecurityForm):
         request = self.request
         self.previous = request.COOKIES.get("mezzanine-rating", "").split(",")
         already_rated = self.current in self.previous
-        if already_rated and not self.request.user.is_authenticated():
-            raise forms.ValidationError(ugettext("Already rated."))
+        if already_rated and not self.request.user.is_authenticated:
+            raise forms.ValidationError(gettext("Already rated."))
         return 1
 
     def save(self):
@@ -203,7 +203,7 @@ class RatingForm(CommentSecurityForm):
         rating_value = 1
         rating_name = self.target_object.get_ratingfield_name()
         rating_manager = getattr(self.target_object, rating_name)
-        if user.is_authenticated():
+        if user.is_authenticated:
             try:
                 rating_instance = rating_manager.get(user=user)
             except Rating.DoesNotExist:
@@ -233,7 +233,7 @@ class SignupForm(forms.ModelForm):
     organization = forms.CharField(required=True)
     user_type = forms.CharField(required=True)
     country = forms.CharField(label='Country', required=True)
-    state = forms.CharField(label='State/Province', required=True)
+    state = forms.CharField(label='State/Region', required=True)
 
     def __init__(self, request, *args, **kwargs):
         self.request = request
@@ -247,7 +247,7 @@ class SignupForm(forms.ModelForm):
         }
         response = requests.post(url, values)
         result = response.json()
-        if(result["success"]):
+        if (result["success"]):
             return (True, [])
 
         return (False, result["error-codes"])
@@ -280,8 +280,6 @@ class SignupForm(forms.ModelForm):
 
     def clean_state(self):
         data = self.cleaned_data['state']
-        if len(data.strip()) == 0:
-            raise forms.ValidationError("State is a required field.")
         return data
 
     def save(self, *args, **kwargs):
@@ -332,20 +330,18 @@ class UserProfileForm(forms.ModelForm):
 
     def clean_organization(self):
         data = self.cleaned_data['organization']
-        if len(data.strip()) == 0:
+        if data is None or len(data.strip()) == 0:
             raise forms.ValidationError("Organization is a required field.")
         return data
 
     def clean_country(self):
         data = self.cleaned_data['country']
-        if len(data.strip()) == 0:
+        if data is None or len(data.strip()) == 0:
             raise forms.ValidationError("Country is a required field.")
         return data
 
     def clean_state(self):
         data = self.cleaned_data['state']
-        if len(data.strip()) == 0:
-            raise forms.ValidationError("State is a required field.")
         return data
 
     def clean_identifiers(self):

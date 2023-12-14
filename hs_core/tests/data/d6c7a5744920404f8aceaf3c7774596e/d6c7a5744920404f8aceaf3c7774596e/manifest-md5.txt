@@ -1,0 +1,3 @@
+sha2:NnfqY7OmiJzZYit45561IRFyyaa35kSMJtU216G8D8E=    data/resourcemap.xml
+sha2:Xvc9RzIorHIh6ThwqW9Z2CGiw5nbyJI+lQTI9ZwOGrM=    data/resourcemetadata.xml
+sha2:/7xB346JvWda87+75MPkJ0771NKMV6KjKjmQT4fVVDk=    data/contents/README.md

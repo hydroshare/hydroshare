@@ -122,6 +122,12 @@ Vue.component('add-author-modal', {
             },
         }
     },
+    mounted(){
+        let that = this;
+        $("#add-author-modal #user-wrapper").on("click", ".remove", function() {
+            that.addAuthorError = "";
+        })
+    },
     methods: {
         addAuthorExistingUser: function () {
             let vue = this;
@@ -133,6 +139,15 @@ Vue.component('add-author-modal', {
             if (!userId) {
                 vue.addAuthorError = "Select a user to add as an author";
                 return;
+            } else {
+                const alreadyExists = leftHeaderApp.$data.authors.some(function (author) {
+                    return author.profileUrl === "/user/" + userId + "/"; 
+                });
+
+                if (alreadyExists) {
+                    vue.addAuthorError = "This author has already been added to this resource";
+                    return;
+                }
             }
 
             let url = '/hsapi/_internal/get-user-or-group-data/' + userId + "/false";
@@ -149,7 +164,7 @@ Vue.component('add-author-modal', {
                     formData.append("resource-mode", RESOURCE_MODE.toLowerCase());
                     formData.append("organization", author.organization !== null ? author.organization : "");
                     formData.append("email", author.email !== null ? author.email : "");
-                    formData.append("description", "/user/" + userId + "/");    // TODO: clean up url field to match this
+                    formData.append("hydroshare_user_id", userId);
                     formData.append("address", author.address !== null ? author.address : "");
                     formData.append("phone", author.phone !== null ? author.phone : "");
                     formData.append("homepage", author.website !== null ? author.website : "");
@@ -272,7 +287,7 @@ Vue.component('add-author-modal', {
                         // Person specific fields
                         if (vue.authorType === vue.authorTypes.OTHER_PERSON) {
                             newAuthor.name = author.name;
-                            newAuthor.identifiers = author.identifiers,
+                            newAuthor.identifiers = author.identifiers;
                             newAuthor.profileUrl = null;
                         }
 
@@ -428,9 +443,9 @@ let leftHeaderApp = new Vue({
         },
     },
     methods: {
-        onLoadOwnerCard: function(data) {
-            let el = $(data.event.target);
-            let cardWidth = 350;
+        loadOwnerCard: function(data) {
+            const el = $(data.event.target);
+            const cardWidth = 350;
 
             this.userCardSelected = data.user;
             this.cardPosition.left = el.position().left - (cardWidth / 2) + (el.width() / 2);
@@ -603,12 +618,12 @@ function getAuthorFormData(author, isPerson) {
     // Person-exclusive fields
     if (isPerson) {
         formData.append("creator-" + (author.order - 1) + "-name", author.name);
-        formData.append("creator-" + (author.order - 1) + "-description", author.profileUrl !== null ? author.profileUrl : "");
+        formData.append("creator-" + (author.order - 1) + "-hydroshare_user_id", author.profileUrl !== null ? author.profileUrl.replace(/\D/g,'') : "");
     }
     else {
         // Empty values still needed for valid request
         formData.append("creator-" + (author.order - 1) + "-name", "");
-        formData.append("creator-" + (author.order - 1) + "-description", "");
+        formData.append("creator-" + (author.order - 1) + "-hydroshare_user_id", "");
     }
 
     return formData;

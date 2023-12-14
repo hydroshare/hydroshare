@@ -62,7 +62,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
 
         # george creates a entity 'bikes', so george is the quota holder initially
         self.bikes = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.george,
             title='Bikes',
             metadata=[],
@@ -73,7 +73,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
 
         # george creates a entity 'harps'
         self.harps = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.george,
             title='Harps',
             metadata=[],

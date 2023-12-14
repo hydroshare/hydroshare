@@ -4,7 +4,7 @@ import shutil
 import logging
 import requests
 import datetime
-import pytz
+from dateutil import tz
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -27,7 +27,7 @@ from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 
 
-FILE_SIZE_LIMIT = 1*(1024 ** 3)
+FILE_SIZE_LIMIT = 1 * (1024 ** 3)
 FILE_SIZE_LIMIT_FOR_DISPLAY = '1G'
 METADATA_STATUS_SUFFICIENT = 'Sufficient to publish or make public'
 METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
@@ -120,10 +120,9 @@ def res_has_web_reference(res):
     if res.resource_type != "CompositeResource":
         return False
 
-    for f in ResourceFile.objects.filter(object_id=res.id):
-        if f.has_logical_file:
-            if 'url' in f.logical_file.extra_data:
-                return True
+    for lf in res.get_logical_files('GenericLogicalFile'):
+        if 'url' in lf.extra_data:
+            return True
     return False
 
 
@@ -261,7 +260,7 @@ def get_related(pk):
 
 
     """
-    raise NotImplemented()
+    raise NotImplementedError()
 
 
 def get_checksum(pk):
@@ -381,7 +380,7 @@ def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
         keywords=(), metadata=None, extra_metadata=None,
-        files=(), create_metadata=True, create_bag=True, unpack_file=False, full_paths={},
+        files=(), create_metadata=True, create_bag=False, unpack_file=False, full_paths={},
         auto_aggregate=True, **kwargs):
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to
@@ -409,7 +408,7 @@ def create_resource(
 
     3. resource_type is a string: see parameter list
 
-    :param resource_type: string. the type of the resource such as GenericResource
+    :param resource_type: string. the type of the resource such as CompositeResource
     :param owner: email address, username, or User instance. The owner of the resource
     :param title: string. the title of the resource
     :param edit_users: list of email addresses, usernames, or User instances who will be given edit
@@ -436,10 +435,6 @@ def create_resource(
 
     :return: a new resource which is an instance of BaseResource with specified resource_type.
     """
-    if not __debug__:
-        if resource_type in ("ModelInstanceResource", "ModelProgramResource", "MODFLOWModelInstanceResource",
-                             "SWATModelInstanceResource"):
-            raise ValidationError("Resource type '{}' is no more supported for resource creation".format(resource_type))
 
     with transaction.atomic():
         cls = check_resource_type(resource_type)
@@ -467,7 +462,7 @@ def create_resource(
 
         # by default make resource private
         resource.slug = 'resource{0}{1}'.format('/', resource.short_id)
-        resource.save()
+        resource.save(update_fields=["slug", "resource_type"])
 
         if not metadata:
             metadata = []
@@ -479,6 +474,7 @@ def create_resource(
         # by default resource is private
         resource_access = ResourceAccess(resource=resource)
         resource_access.save()
+        resource.raccess = resource_access
         # use the built-in share routine to set initial provenance.
         UserResourcePrivilege.share(resource=resource, grantor=owner, user=owner,
                                     privilege=PrivilegeCodes.OWNER)
@@ -526,21 +522,23 @@ def create_resource(
                 resource.metadata.create_element('subject', value=keyword)
 
             resource.title = resource.metadata.title.value
-            resource.save()
+            resource.save(update_fields=["title"])
 
         if len(files) == 1 and unpack_file and zipfile.is_zipfile(files[0]):
             # Add contents of zipfile as resource files asynchronously
             # Note: this is done asynchronously as unzipping may take
             # a long time (~15 seconds to many minutes).
             add_zip_file_contents_to_resource_async(resource, files[0])
-        else:
+        elif len(files) > 0:
             # Add resource file(s) now
             # Note: this is done synchronously as it should only take a
             # few seconds.  We may want to add the option to do this
             # asynchronously if the file size is large and would take
             # more than ~15 seconds to complete.
             add_resource_files(resource.short_id, *files, full_paths=full_paths,
-                               auto_aggregate=auto_aggregate)
+                               auto_aggregate=auto_aggregate, resource=resource)
+        else:
+            utils.create_empty_contents_directory(resource)
 
         if create_bag:
             hs_bagit.create_bag(resource)
@@ -642,7 +640,7 @@ def create_new_version_resource(ori_res, new_res, user):
                                                 'this resource synchronously.')
     # lock the resource to prevent concurrent new version creation since only one new version for an
     # obsoleted resource is allowed
-    ori_res.locked_time = datetime.datetime.now(pytz.utc)
+    ori_res.locked_time = datetime.datetime.now(tz.UTC)
     ori_res.save()
     create_new_version_resource_task(ori_res.short_id, user.username, new_res_id=new_res.short_id)
     # cannot directly return the new_res object being passed in, but rather return the new versioned resource object
@@ -673,14 +671,18 @@ def add_resource_files(pk, *files, **kwargs):
     This does **not** handle mutability; changes to immutable resources should be denied elsewhere.
 
     """
-    resource = utils.get_resource_by_shortkey(pk)
-    ret = []
+    from hs_core.tasks import set_resource_files_system_metadata
+
+    resource = kwargs.pop("resource", None)
+    if resource is None:
+        resource = utils.get_resource_by_shortkey(pk)
+    uploaded_res_files = []
     source_names = kwargs.pop('source_names', [])
     full_paths = kwargs.pop('full_paths', {})
     auto_aggregate = kwargs.pop('auto_aggregate', True)
 
     if __debug__:
-        assert(isinstance(source_names, list))
+        assert (isinstance(source_names, list))
 
     folder = kwargs.pop('folder', '')
     user = kwargs.pop('user', None)
@@ -709,21 +711,45 @@ def add_resource_files(pk, *files, **kwargs):
             dir_name = os.path.dirname(full_path)
             # Only do join if dir_name is not empty, otherwise, it'd result in a trailing slash
             full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
-        ret.append(utils.add_file_to_resource(resource, f, folder=full_dir, user=user))
+        res_file = utils.add_file_to_resource(resource, f, folder=full_dir, user=user, add_to_aggregation=False,
+                                              save_file_system_metadata=False)
+        uploaded_res_files.append(res_file)
 
     for ifname in source_names:
-        ret.append(utils.add_file_to_resource(resource, None,
-                                              folder=folder,
-                                              source_name=ifname, user=user))
+        res_file = utils.add_file_to_resource(resource, None, folder=folder, source_name=ifname, user=user,
+                                              add_to_aggregation=False,
+                                              save_file_system_metadata=False)
+        uploaded_res_files.append(res_file)
 
-    if not ret:
+    if not uploaded_res_files:
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)
     else:
-        if resource.resource_type == "CompositeResource" and auto_aggregate:
-            utils.check_aggregations(resource, ret)
+        if resource.resource_type == "CompositeResource":
+            upload_to_folder = base_dir
+            if upload_to_folder:
+                aggregations = list(resource.logical_files)
+                # check if there is folder based model program or model instance aggregation in the upload path
+                aggregation = resource.get_model_aggregation_in_path(upload_to_folder, aggregations=aggregations)
+                if aggregation is None:
+                    # check if there is a fileset aggregation in the upload path
+                    aggregation = resource.get_fileset_aggregation_in_path(upload_to_folder, aggregations=aggregations)
+                if aggregation:
+                    # Note: we can't use bulk_update here because we need to update the logical_file_content_object
+                    # which is not a concrete field in the ResourceFile model
+                    for res_file in uploaded_res_files:
+                        aggregation.add_resource_file(res_file, set_metadata_dirty=False)
 
-    return ret
+                    aggregation.set_metadata_dirty()
+            if auto_aggregate:
+                utils.check_aggregations(resource, uploaded_res_files)
+
+        utils.resource_modified(resource, user, overwrite_bag=False)
+
+        # store file level system metadata in Django DB (async task)
+        set_resource_files_system_metadata.apply_async((resource.short_id,))
+
+    return uploaded_res_files
 
 
 def update_science_metadata(pk, metadata, user):
@@ -758,7 +784,6 @@ def update_science_metadata(pk, metadata, user):
             {'relation': {'type': 'isPartOf', 'value': 'http://hydroshare.org/resource/001'}},
             {'rights': {'statement': 'This is the rights statement for this resource',
                         'url': 'http://rights.ord/001'}},
-            {'source': {'derived_from': 'http://hydroshare.org/resource/0001'}},
             {'subject': {'value': 'sub-1'}},
             {'subject': {'value': 'sub-2'}},
         ]
@@ -800,6 +825,8 @@ def delete_resource(pk, request_username=None):
     Note:  Only HydroShare administrators will be able to delete formally published resource
     """
     from hs_core.tasks import delete_resource_task
+    resource = utils.get_resource_by_shortkey(pk)
+    resource.set_discoverable(False)
     delete_resource_task(pk, request_username)
 
     return pk
@@ -828,7 +855,7 @@ def delete_resource_file_only(resource, f):
         f: the ResourceFile object to be deleted
     Returns: unqualified relative path to file that has been deleted
     """
-    short_path = f.short_path
+    short_path = f.get_short_path(resource)
     f.delete()
     return short_path
 
@@ -845,12 +872,10 @@ def delete_format_metadata_after_delete_file(resource, file_name):
 
     # if there is no other resource file with the same extension as the
     # file just deleted then delete the matching format metadata element for the resource
-    resource_file_extensions = [os.path.splitext(get_resource_file_name(f))[1] for f in
-                                resource.files.all()]
+    resource_file_extensions = {os.path.splitext(f.get_short_path(resource))[1] for f in
+                                resource.files.all()}
     if delete_file_extension not in resource_file_extensions:
-        format_element = resource.metadata.formats.filter(value=delete_file_mime_type).first()
-        if format_element:
-            resource.metadata.delete_element(format_element.term, format_element.id)
+        resource.metadata.formats.filter(value=delete_file_mime_type).delete()
 
 
 # TODO: Remove option for file id, not needed since names are unique.
@@ -915,6 +940,8 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
             # to delete each of its contained ResourceFile objects
             logical_file.logical_delete(user)
             return filename_or_id
+        else:
+            logical_file.set_metadata_dirty()
 
     signals.pre_delete_file_from_resource.send(sender=res_cls, file=f,
                                                resource=resource, user=user)
@@ -996,8 +1023,61 @@ def deposit_res_metadata_with_crossref(res):
     # exceptions will be raised if POST request fails
     main_url = get_crossref_url()
     post_url = '{MAIN_URL}servlet/deposit'.format(MAIN_URL=main_url)
-    response = requests.post(post_url, data=post_data, files=files)
+    # TODO turning off verify for crossref until our ssl dependencies are updated
+    response = requests.post(post_url, data=post_data, files=files, verify=False)
     return response
+
+
+def submit_resource_for_review(request, pk):
+    """
+    Submits a resource for minimum metadata review, prior to publishing.
+    The user must be an owner of a resource or an administrator to perform this action.
+
+    Parameters:
+        user - requesting user to publish the resource who must be one of the owners of the resource
+        pk - Unique HydroShare identifier for the resource to be formally published.
+
+    Returns:    The id of the resource that was published
+
+    Return Type:    string
+
+    Raises:
+    Exceptions.NotAuthorized - The user is not authorized
+    Exceptions.NotFound - The resource identified by pid does not exist
+    Exception.ServiceFailure - The service is unable to process the request
+    and other general exceptions
+
+    """
+    from hs_core.views.utils import get_default_support_user
+
+    resource = utils.get_resource_by_shortkey(pk)
+    if resource.raccess.published:
+        raise ValidationError("This resource is already published")
+
+    if resource.raccess.review_pending:
+        raise ValidationError("Metadata review has already been initiated")
+
+    if not resource.can_be_submitted_for_metadata_review:
+        raise ValidationError("This resource cannot be submitted for metadata review since "
+                              "it does not have required metadata or content files, or it contains "
+                              "reference content, or this resource type is not allowed for publication.")
+
+    user_to = get_default_support_user()
+    from hs_core.views.utils import send_action_to_take_email
+    send_action_to_take_email(request, user=user_to, user_from=request.user,
+                              action_type='metadata_review', resource=resource)
+
+    # create review date -- must be before review_pending = True
+    resource.metadata.dates.all().filter(type='reviewStarted').delete()
+    resource.metadata.create_element('date', type='reviewStarted', start_date=datetime.datetime.now(tz.UTC))
+
+    resource.raccess.review_pending = True
+    resource.raccess.immutable = True
+    resource.raccess.save()
+
+    # Repair resource and email support user if there are issues
+    from hs_core.tasks import repair_resource_before_publication
+    repair_resource_before_publication.apply_async((resource.short_id,))
 
 
 def publish_resource(user, pk):
@@ -1026,12 +1106,12 @@ def publish_resource(user, pk):
     if resource.raccess.published:
         raise ValidationError("This resource is already published")
 
-    # TODO: whether a resource can be published is not considered in can_be_published
-    # TODO: can_be_published is currently an alias for can_be_public_or_discoverable
-    if not resource.can_be_published:
-        raise ValidationError("This resource cannot be published since it does not have required "
-                              "metadata or content files, or this resource contains referenced "
-                              "content, or this resource type is not allowed for publication.")
+    # TODO: whether a resource can be published is not considered in can_be_submitted_for_metadata_review
+    # TODO: can_be_submitted_for_metadata_review is currently an alias for can_be_public_or_discoverable
+    if not resource.can_be_submitted_for_metadata_review:
+        raise ValidationError("This resource cannot be submitted for metadata review since "
+                              "it does not have required metadata or content files, or it contains "
+                              "reference content, or this resource type is not allowed for publication.")
 
     # append pending to the doi field to indicate DOI is not activated yet. Upon successful
     # activation, "pending" will be removed from DOI field
@@ -1044,6 +1124,7 @@ def publish_resource(user, pk):
         if not response.status_code == status.HTTP_200_OK:
             # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
             # crontab celery task
+            logger.error(f"Received a {response.status_code} from Crossref while depositing metadata for res id {pk}")
             resource.doi = get_resource_doi(pk, 'failure')
             resource.save()
 

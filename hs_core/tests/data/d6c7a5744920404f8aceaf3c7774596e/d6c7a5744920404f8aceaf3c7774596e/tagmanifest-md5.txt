@@ -1,0 +1,3 @@
+sha2:Ez3OHK73/FVE2BV5EmVWmpM+xliGCCH9/4wVe1YdDTk=    bagit.txt
+sha2:zDJG55+TUcX5w6/Wzbufs9735SCfVTBHG8qCpnhO9IM=    manifest-md5.txt
+sha2:z9H1ZrOjgIcfMDYEdq7cK7SRFKZwBDHPxRsopOOHt1I=    readme.txt

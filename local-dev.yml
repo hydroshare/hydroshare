@@ -1,7 +1,7 @@
 version: '3'
 services:
   data.local.org:
-    image: hydroshare/hs-irods:latest
+    image: hydroshare/hs-irods:4.2.6-buster
     container_name: data.local.org
     hostname: data.local.org
     links:
@@ -33,7 +33,6 @@ services:
       LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD: '/home/hsuserproxy/delete_user.sh'
       HS_IRODS_PROXY_USER_IN_USER_ZONE: 'localHydroProxy'
       HS_IRODS_USER_ZONE_DEF_RES: 'hydroshareLocalResc'
-      IRODS_ZONE: 'hydroshareZone'
       HS_USER_IRODS_ZONE: 'hydroshareuserZone'
       IRODS_ZONE_NAME: 'hydroshareZone'
       IRODS_SERVER_ZONE_KEY: 'hydroshareZone_KEY'
@@ -43,7 +42,7 @@ services:
     stdin_open: true
     tty: true
   users.local.org:
-    image: hydroshare/hs-irods:latest
+    image: hydroshare/hs-irods:4.2.6-buster
     container_name: users.local.org
     hostname: users.local.org
     volumes:
@@ -80,7 +79,9 @@ services:
     stdin_open: true
     tty: true
   postgis:
-    image: hydroshare/hs_postgres:9.4.7
+    image: postgis/postgis:15-3.3
+    environment:
+      POSTGRES_PASSWORD: 'postgres'
     container_name: postgis
     hostname: postgis
     volumes:
@@ -192,6 +193,7 @@ services:
       HS_PATH: ${PWD}
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
+      COLUMNS: 80
     ports:
       - "5555:5555"
     volumes:

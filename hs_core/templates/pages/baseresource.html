@@ -1,0 +1,1102 @@
+{% extends 'pages/page.html' %}
+
+{% load ratings_tags pages_tags keyword_tags hydroshare_tags crispy_forms_tags %}
+
+{% block extra_head %}
+    <link href="{% static 'css/site_base_irods.css' %}" rel="stylesheet"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/jquery.dataTables.min.css' %}">
+    <link href="{% static 'css/toolresource.css' %}" rel="stylesheet"/>
+    <link href="{% static 'css/modal-vue.css' %}" rel="stylesheet"/>
+    <link href="{% static 'css/hs-file-icons.css' %}" rel="stylesheet"/>
+    <link rel='stylesheet' type='text/css' href="{% static 'css/vuetify.2.64.min.css' %}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css"
+    integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14="
+    crossorigin=""/>
+    <link rel="stylesheet" href="{% static 'css/Leaflet.fullscreen.min.css' %}" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+
+{# ======= JSON-LD Structure ======= #}
+<script id="schemaorg" type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    {% if cm.raccess.published %}
+    "@id": "https://doi.org/10.4211/hs.{{ cm.short_id }}#schemaorg",
+    "sameAs": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+    "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
+    {% else %}
+    "@id": "https://www.hydroshare.org/resource/{{ cm.short_id }}#schemaorg",
+    "url": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+    {% endif %}
+    "@type": "Dataset",
+    "additionalType": "{{ cm.metadata.type.url }}",
+    "name": "{{ title }}",
+    "description": "{{ cm.metadata.description | escapejs }}",
+    "keywords": {{ keywords|safe }},
+    {% if cm.raccess.published %}
+    "creativeWorkStatus": "Published",
+    {% elif cm.raccess.public %}
+    "creativeWorkStatus": "Public",
+    {% elif cm.raccess.discoverable %}
+    "creativeWorkStatus": "Discoverable",
+    {% elif is_replaced_by %}
+    "creativeWorkStatus": "Obsolete",
+    {% else %}
+    "creativeWorkStatus": "Private",
+    {% endif %}
+    "inLanguage": "en-US",
+    {% if cm.raccess.published %}
+    "identifier": [
+      {
+        "@id": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
+        "@type": "PropertyValue",
+        "propertyID": "https://registry.identifiers.org/registry/doi",
+        "url": "https://doi.org/10.4211/hs.{{ cm.short_id }}",
+        "value": "doi:10.4211/hs.{{ cm.short_id }}"
+      },
+      "https://www.hydroshare.org/resource/{{ cm.short_id }}"
+    ],
+    {% else %}
+    "identifier": [
+      "https://www.hydroshare.org/resource/{{ cm.short_id }}"
+    ],
+    {% endif %}
+    "creator": {{ creators | creator_json_ld_element | safe }},
+    {# There is discussion about adding more linked data fields for referenced items #} 
+    {# https://github.com/hydroshare/hydroshare/issues/4566#issuecomment-1124283370 #}
+    {% if geospatial_relations %}
+    "about": [
+    {% for geospatial_relation in geospatial_relations %}{% if geospatial_relation.value|is_url %}
+      {
+        "@id": "{{ geospatial_relation.value | escapejs }}",
+        {# We might eventually want to encode related features with more specificity than generic https://schema.org/Place #}
+        {# Examples include https://schema.org/Landform and https://schema.org/BodyOfWater #}
+        "@type": "Place",
+        "url": "{{ geospatial_relation.value | escapejs }}"
+      }{%if not forloop.last%},{%endif%}
+    {% endif %}{% endfor %}
+    ],
+    {% endif %}
+    {% if temporal_coverage %}
+    "temporalCoverage": "{{ temporal_coverage.start_date }}/{{ temporal_coverage.end_date }}",
+    {% endif %}
+    {% if spatial_coverage.exists %}
+    {# Could include specific properties https://schema.org/GeospatialGeometry for related features #}
+    "spatialCoverage": {
+        "@type": "Place",
+        {% if spatial_coverage.name %}
+        "name": "{{ spatial_coverage.name }}",
+        {% endif %}
+        "geo": {
+            {% if spatial_coverage.type == 'point' %}
+            "@type": "GeoCoordinates",
+            "latitude": {{ spatial_coverage.north|floatformat:"4" }},
+            "longitude": {{ spatial_coverage.east|floatformat:"4" }}
+            {% else %}
+            "@type": "GeoShape",
+            "box": "{{ spatial_coverage.southlimit|floatformat:"4" }} {{ spatial_coverage.westlimit|floatformat:"4" }} {{ spatial_coverage.northlimit|floatformat:"4" }} {{ spatial_coverage.eastlimit|floatformat:"4" }}"
+            {% endif %}
+        }
+    },
+    {% endif %}
+    {% if cm.raccess.published %}
+    "publisher": {
+        "@id": "https://www.hydroshare.org"
+    },
+    {% endif %}
+    "provider": {
+        "@id": "https://www.hydroshare.org",
+        "@type": "Organization",
+        "name": "HydroShare",
+        "url": "https://www.hydroshare.org"
+    },
+    "includedInDataCatalog": {
+		"@type": "DataCatalog",
+		"name": "HydroShare",
+    	"url": "https://www.hydroshare.org/search/"
+	},
+	 {% if cm.metadata.rights.statement or cm.metadata.rights.url %}
+	"license": {
+	    "@type": "CreativeWork",
+	    {% if cm.metadata.rights.statement and cm.metadata.rights.url %}
+        "text": "{{ cm.metadata.rights.statement | escapejs }}",
+        "url": "{{ cm.metadata.rights.url }}"
+        {% elif cm.metadata.rights.statement %}
+        "text": "{{ cm.metadata.rights.statement | escapejs }}",
+        "name": "Customized license"
+        {% else %}
+        "url": "{{ cm.metadata.rights.url }}"
+        {% endif %}
+	},
+	{% endif %}
+    {% if cm.raccess.public %} "isAccessibleForFree": true, {% endif %}
+    {% if relations %}
+    "citation": [
+    {% for relation in relations %}
+        "{{ relation.value | escapejs }}"{%if not forloop.last%},{%endif%}
+    {% endfor %}
+    ],
+    {% endif %}
+    {% if fundingagencies %}
+    "funding": [
+    {% for agency in fundingagencies %}
+        {
+            "@type": "Grant",
+            "identifier": "{{ agency.award_number }}",
+            "name": "{{ agency.award_title | escapejs }}",
+            "funder": {
+                "@type": "Organization",
+                "name": "{{ agency.agency_name | escapejs }}",
+                "identifier": "{{ agency.agency_url }}"
+            }
+        }{%if not forloop.last%},{%endif%}
+        {% endfor %}
+    ],
+    {% endif %}
+    "dateCreated": "{{ cm.created | date:"c" }}",
+    "dateModified": "{{ cm.last_updated | date:"c"}}",
+    {% if cm.raccess.published %}"datePublished": "{{ cm|published_date | date:"c"}}", {% endif %}
+    "subjectOf": {
+        "@type": "DataDownload",
+        "name": "resourcemetadata.xml",
+        "description": "Dublin Core Metadata Document Describing the Dataset",
+        "url": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/scimeta/",
+        "encodingFormat": "application/rdf+xml"
+    },
+    "distribution": {
+        "@type": "DataDownload",
+        "contentSize": "{{ cm.size|filesizeformat }}",
+        "encodingFormat": "application/zip",
+        "contentUrl": "https://www.hydroshare.org/hsapi/resource/{{ cm.short_id }}/",
+        "description": "Zipped BagIt Bag containing the HydroShare Resource",
+        "dateModified": "{{ cm.last_updated | date:"c" }}",
+        {% if cm.raccess.published %}
+        "identifier": [
+          "https://www.hydroshare.org/resource/{{ cm.short_id }}",
+          {
+            "@type": "PropertyValue",
+            "additionalType": [
+                "http://www.wikidata.org/entity/Q185235",
+                "http://id.loc.gov/vocabulary/preservation/cryptographicHashFunctions/md5"
+            ],
+            "identifier": "md5:{{ cm.bag_checksum }}",
+            "propertyID": "MD5",
+            "value": "{{ cm.bag_checksum }}"
+          }
+        ]
+        {% else %}
+        "identifier": [
+          "https://www.hydroshare.org/resource/{{ cm.short_id }}"
+        ]
+        {% endif %}
+    }
+}
+</script>
+{% endblock %}
+
+{% block main %}
+    {% keywords_for page as kws %}
+    {% set_page_permissions page %}
+    {% if page.perms.change and resource_edit_mode and not cm.raccess.published_or_review_pending %}
+    {% csrf_token %}
+    {% endif %}
+
+    <div class="container" onload="loadScroll()" onunload="saveScroll()">
+        {% block error %}
+            {%  if validation_error %}
+                <div class="alert alert-danger alert-dismissible" role="alert">
+                      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                      <strong>Validation Error: {{ validation_error }}</strong>
+                 </div>
+            {%  endif %}
+            {% if resource_creation_error %}
+                <div class="alert alert-danger alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <strong>{{ resource_creation_error }}</strong>
+                </div>
+            {% endif %}
+        {% endblock %}
+
+        {# Needs to be included first so it's available before other instances initialize #}
+        {% include "includes/profile-card.html" %}
+
+        {%  block modal %}
+            {% include "resource-landing-page/modals.html" %}
+            {% include "includes/author-preview.html" %}
+            {% include "resource-landing-page/coordinates_picker.html" %}
+        {%  endblock %}
+
+        {# ======= Title ======= #}
+        {% include "resource-landing-page/title-section.html" %}
+
+        {# ======= Top-right buttons ======= #}
+        {% include "resource-landing-page/top-right-buttons.html" with resource_is_mine=resource_is_mine show_manage_access=show_manage_access %}
+
+        {# ======= Title and header content ======= #}
+        {% include "resource-landing-page/resource-header.html" %}
+
+        {# ======= Abstract ======= #}
+        {% include "resource-landing-page/abstract.html" %}
+
+        {# ======= Subject ======= #}
+        {% include "resource-landing-page/subject.html" %}
+
+        {# ======= Coverage ======= #}
+        {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or resource_edit_mode %}
+            {% include "resource-landing-page/coverage.html" %}
+        {% endif %}
+
+        {% block content_block %}
+        {# ======= Content (code moved here because django does not render blocks inside included templates) ======= #}
+        {% if cm.resource_type != "ToolResource" %}
+            {# POPUP MENU - Right clicking items #}
+            <ul id="right-click-menu" class="dropdown-menu fb-dropdown selection-menu">
+                {% if cm.resource_type == "CompositeResource" %}
+                    <li id="btn-open" data-menu-name="open" data-fb-action="open">
+                        <span class="fa fa-folder-open icon-blue"></span>
+                        <span>Open</span>
+                    </li>
+
+                    <li id="open-separator" role="separator" class="divider"></li>
+                {% endif %}
+
+                {% if page.perms.change and resource_edit_mode and not cm.raccess.published_or_review_pending %}
+                    {% if cm.resource_type == "CompositeResource" %}
+                        <li id="btn-cut" data-menu-name="cut" data-fb-action="cut">
+                            <span class="fa fa-scissors icon-blue"></span>
+                            <span>Cut</span>
+                        </li>
+                        <li data-menu-name="paste" data-fb-action="paste">
+                            <span class="fa fa-clipboard icon-blue"></span>
+                            <span>Paste</span>
+                        </li>
+                    {% endif %}
+
+                    {% if cm.resource_type == "CompositeResource" %}
+                        <li data-menu-name="rename" data-toggle="modal" data-fb-action="rename" data-target="#rename-dialog">
+                            <span class="glyphicon glyphicon-pencil icon-blue"></span>
+                            <span>Rename</span>
+                        </li>
+                    {% endif %}
+
+                    <li data-menu-name="delete" class="fb-files-remove"
+                        data-fb-action="delete" data-toggle="modal"
+                        data-target="#confirm-delete-dialog">
+                        <span class="glyphicon glyphicon-trash icon-button btn-remove"></span>
+                        <span>Delete</span>
+                    </li>
+
+                    <li id="zip-separator" role="separator" class="divider"></li>
+
+                    <li id="btn-zip" data-menu-name="zip" data-toggle="modal" data-fb-action="zip"
+                        data-target="#zip-folder-dialog">
+                        <span class="glyphicon glyphicon-compressed icon-blue"></span>
+                        <span>Zip folder...</span>
+                    </li>
+
+                    <li id="btn-unzip" data-menu-name="unzip" data-fb-action="unzip">
+                        <span class="fa fa-file-archive-o icon-blue"></span>
+                        <span>Unzip here</span>
+                    </li>
+
+                    <li id="btn-unzip-to-folder" data-menu-name="unzip-to-folder" data-fb-action="unzipToFolder">
+                        <span class="fa fa-file-archive-o icon-blue"></span>
+                        <span>Unzip to folder</span>
+                    </li>
+
+                    <li role="separator" class="divider"></li>
+                {% endif %}
+
+                <li id="btn-preview" data-menu-name="preview" data-fb-action="preview">
+                    <span class="glyphicon glyphicon-eye-open icon-blue"></span>
+                    <span>Preview</span>
+                </li>
+                <li id="btn-download" data-menu-name="download" data-fb-action="download">
+                    <span class="glyphicon glyphicon-download icon-blue"></span>
+                    <span>Download</span>
+                </li>
+                <li data-menu-name="download" data-fb-action="downloadZipped" data-zipped="true">
+                    <span class="fa fa-download icon-blue"></span>
+                    <span>Download zipped</span>
+                </li>
+                <li id="btn-get-link" data-menu-name="get-link"
+                    data-fb-action="getLink" data-toggle="modal"
+                    data-target="#get-file-url-dialog">
+                    <span class="fa fa-link icon-blue"></span>
+                    <span>Get file URL</span>
+                </li>
+                <li data-fb-action="getRefUrl"
+                    data-toggle="modal" data-target="#redirect-referenced-url-dialog">
+                    <span class="fa fa-external-link icon-blue"></span>
+                    <span>Open referenced URL</span>
+                </li>
+                {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource" %}
+                    <li data-fb-action="updateRefUrl"
+                        data-toggle="modal" data-target="#edit-referenced-url-dialog">
+                        <span class="glyphicon glyphicon-pencil icon-blue"></span>
+                        <span>Edit referenced URL</span>
+                    </li>
+                {% endif %}
+                <li id="content-type-separator" role="separator" class="divider"></li>
+                {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource" and not cm.raccess.published_or_review_pending %}
+                    {# ADD METADATA TO A FILE #}
+                    <li id="btn-set-generic-file-type" data-fb-action="setGenericFileType">
+                        <i class="fa fa-plus icon-green" aria-hidden="true"></i>
+                        <span>Add metadata</span>
+                    </li>
+                    {# ADD METADATA TO A FOLDER #}
+                    <li data-fb-action="setFileSetFileType">
+                        <i class="fa fa-plus icon-green" aria-hidden="true"></i>
+                        <span>Add metadata</span>
+                    </li>
+                    <li data-fb-action="subMenuSetContentType"
+                        class="dropdown-submenu submenu-trigger">
+                        <span tabindex="-1" class="">
+                            <i class="fa fa-exchange icon-blue" aria-hidden="true"></i>
+                            Set content type
+                            <span class="caret"></span>
+                        </span>
+                        <ul class="dropdown-menu">
+                            <li id="btn-set-geo-file-type" data-menu-name="setgeorasterfiletype"
+                                data-toggle="tooltip" data-placement="right" data-fb-action="setGeoRasterFileType"
+                                title="Convert GeoTiff files to a geographic raster dataset to which you can add metadata">
+                                <img src="{% static 'img/resource-icons/geographicraster48x48.png' %}"
+                                 alt="Geographic Raster Resource Icon" class="resource-type-icon"/>
+                                <span>Geographic Raster</span>
+                            </li>
+                            <li id="btn-set-netcdf-file-type" data-menu-name="setnetcdffiletype"
+                                data-toggle="tooltip" data-placement="right" data-fb-action="setNetCDFFileType"
+                                title="Convert NetCDF files to a multidimensional dataset to which you can add metadata">
+                                <img src="{% static 'img/resource-icons/multidimensional48x48.png' %}"
+                                 alt="Multidimensional Resource Icon" class="resource-type-icon"/>
+                                <span>Multidimensional</span>
+                            </li>
+                            <li id="btn-set-geofeature-file-type" data-menu-name="setgeofeaturefiletype"
+                                data-toggle="tooltip" data-placement="right" data-fb-action="setGeoFeatureFileType"
+                                title="Convert a shapefile to a geographic feature dataset to which you can add metadata">
+                                <img src="{% static 'img/resource-icons/geographicfeature48x48.png' %}"
+                                 alt="Geographic Feature Resource Icon" class="resource-type-icon"/>
+                                <span>Geographic Feature</span>
+                            </li>
+                            <li id="btn-set-refts-file-type" data-menu-name="setreftsfiletype" data-toggle="tooltip"
+                                data-placement="right" data-fb-action="setRefTimeseriesFileType"
+                                title="Convert to a referenced time series dataset with metadata">
+                                <img src="{% static 'img/resource-icons/timeseries48x48.png' %}"
+                                 alt="Time Series Resource Icon" class="resource-type-icon"/>
+                                <span>Referenced Time Series</span>
+                            </li>
+                            <li id="btn-set-timeseris-file-type" data-menu-name="settimeseriesfiletype"
+                                data-toggle="tooltip" data-placement="right" data-fb-action="setTimeseriesFileType"
+                                title="Convert to a time series dataset to which you can add metadata">
+                                <img src="{% static 'img/resource-icons/timeseries48x48.png' %}"
+                                 alt="Time Series Resource Icon" class="resource-type-icon"/>
+                                <span>Time Series</span>
+                            </li>
+                            <li id="btn-set-model-program-file-type" data-menu-name="setmodelprogramfiletype"
+                                data-toggle="tooltip" data-placement="right" data-fb-action="setModelProgramFileType"
+                                title="Convert to a model program dataset to which you can add metadata">
+                                <img src="{% static 'img/resource-icons/modelprogram48x48.png' %}"
+                                 alt="Model Program Aggregation Icon" class="resource-type-icon"/>
+                                <span>Model Program</span>
+                            </li>
+                            <li id="btn-set-model-instance-file-type" data-menu-name="setmodelinstancefiletype"
+                                data-toggle="tooltip" data-placement="right" data-fb-action="setModelInstanceFileType"
+                                title="Convert to a model instance dataset to which you can add metadata">
+                                <img src="{% static 'img/resource-icons/modelinstance48x48.png' %}"
+                                 alt="Model Instance Aggregation Icon" class="resource-type-icon"/>
+                                <span>Model Instance</span>
+                            </li>
+                        </ul>
+                    </li>
+                    <li data-fb-action="removeAggregation"
+                        data-toggle="modal"
+                        data-target="#remove-aggregation-dialog"
+                        data-placement="right">
+                        <span data-toggle="tooltip" data-placement="right"
+                              title="Remove the content type association and delete content-level metadata">
+                            <i class="fa fa-minus-circle btn-remove" aria-hidden="true"></i>
+                            <span>Remove content type</span>
+                        </span>
+                    </li>
+                {%  endif %}
+            </ul>
+
+            {# POPUP MENU - Right clicking empty space in file browser #}
+            <ul id="right-click-container-menu" class="dropdown-menu fb-dropdown selection-menu">
+                {% if page.perms.change and resource_edit_mode and not cm.raccess.published_or_review_pending %}
+                    {% if cm.resource_type == "CompositeResource" %}
+                        <li id="btn-new-folder" data-menu-name="new-folder" data-toggle="modal"
+                            data-fb-action="createFolder"
+                            data-target="#create-folder-dialog">
+                            <span class="fa fa-folder icon-blue"></span>
+                            <span>New folder</span>
+                        </li>
+                        <li id="menu-add-reference" data-menu-name="add-reference" data-toggle="modal"
+                            data-fb-action="createFolder"
+                            data-target="#add-reference-url-dialog">
+                            <span class="fa fa-external-link icon-blue"></span>
+                            <span>Add content from the web</span>
+                        </li>
+                        <li data-menu-name="paste" data-fb-action="paste">
+                            <span class="fa fa-clipboard icon-blue"></span>
+                            <span>Paste</span>
+                        </li>
+                        <li role="separator" class="divider"></li>
+                    {% endif %}
+                {% endif %}
+
+                <li data-menu-name="refresh">
+                    <span class="fa fa-refresh icon-blue"></span>
+                    <span>Refresh</span>
+                </li>
+
+                <li data-menu-name="select-all">
+                    <span class="fa fa-th-large icon-blue"></span>
+                    <span>Select all</span>
+                </li>
+            </ul>
+
+            <div class="col-xs-12 content-block">
+                <h3>
+                  <span>Content</span> 
+                  {% if resource_edit_mode %}
+                  <a data-toggle="tooltip" data-placement="auto"
+                      href="https://www.youtube.com/watch?v=wTPGJY9-k18" target="_blank"
+                      title='How to: Upload Files to a HydroShare Resource'
+                      class="fa fa-youtube-play icon-red no-decoration has-space-left icon-guide">
+                  </a>
+                  {% endif %}
+                </h3>
+                {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
+                    {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
+                        <div class="alert alert-info alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            <div class="flex">
+                                <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                                <em>
+                                    If you upload a readme.txt or readme.md file at the root level in your
+                                    resource, it will be rendered automatically on the page. Markdown
+                                    formatting is allowed in readme.md.<br><strong><a
+                                        href="https://daringfireball.net/projects/markdown/basics"
+                                        target="_blank">Learn more about Markdown</a></strong>
+                                </em>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endif %}
+
+                <div id="ref_file_note" class="alert alert-warning has-space-top" role="alert"
+                        {% if not show_web_reference_note %} hidden {% endif %}>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                    <div class="flex">
+                        <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                        <em>
+                            This resource contains links to external content. Linked content is
+                            NOT stored in HydroShare, and we can't guarantee its availability, quality, or
+                            security.
+                        </em>
+                    </div>
+                </div>
+
+                {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
+                    {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
+                        <div id="fb-alerts">
+                            <div class="alert alert-warning alert-dismissible" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+
+                                <div class="flex">
+                                    <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                                    <em>
+                                        <strong>Uploading</strong>
+                                        <ul>
+                                            <li><span id="file-types"></span></li>
+                                            <li><span id="file-multiple"></span></li>
+                                            {% block upload_message %}{% endblock %}
+                                        </ul>
+                                    </em>
+                                </div>
+                            </div>
+                        </div>
+                   {% endif %}
+                {% endif %}
+
+                {% if page.perms.change and resource_edit_mode %}
+                    {% if file_type_error %}
+                        <div class="alert alert-danger alert-dismissible" role="alert">
+                            <button id="validation-error-close" type="button" class="close"
+                                    data-dismiss="alert"
+                                    aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <strong>Uploaded File Type Validation Error: {{ file_type_error }}</strong>
+                        </div>
+                    {% endif %}
+                {% endif %}
+                {% if show_content_files %}
+                    {# ======= Modal window begins =======#}
+                    <div class="modal fade" id="confirm-delete-dialog" tabindex="-1" role="dialog"
+                         aria-labelledby="myModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal"
+                                            aria-hidden="true">&times;</button>
+                                    <h4 class="modal-title">Confirm files deletion</h4>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="warnings-list">
+                                        <div>This file will be permanently deleted. Consider saving a copy if it is
+                                            important to you.<strong> If this is the last file in the resource and it is public,
+                                            the sharing status will revert to private.</strong> If you are not the owner of
+                                            this resource, then an owner will need to reset this to public after a new
+                                            file has been added. If you want to replace this file, add the new file
+                                            first then delete the old one, so that sharing status does not change.
+                                            <br /><br />
+                                            <p id="additional-citation-warning"></p>
+                                        </div>
+                                        <br>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel
+                                    </button>
+                                    <button id="btn-confirm-delete" type="button" class="btn btn-danger"
+                                            data-dismiss="modal">Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {# ======= Modal window ends =======#}
+
+                    <div id="hs-file-browser" data-current-path=""
+                         {% if page.perms.change and resource_edit_mode and not cm.raccess.published_or_review_pending %}
+                             data-mode="edit"
+                         {% else %}
+                            data-mode="view"
+                         {% endif %}
+                         data-supported-files="{{ cm.get_supported_upload_file_types }}"
+                         data-allow-multiple-files="{{ cm.allow_multiple_file_upload }}"
+                         {% if cm.raccess.require_download_agreement %}
+                             data-agreement="true"
+                         {% endif %}
+                         data-initial-file-count="{{ cm.files.all.count }}"
+                         class="file-browser">
+
+                        <div class="file-browser-container">
+                            <div id="fb-inner-controls">
+                                <div id="fb-inner-buttons">
+                                    <div class="flex">
+                                        {# FOLDER NAVIGATION #}
+                                        {% if cm.resource_type == "CompositeResource" %}
+                                            <div>
+                                                <button id="fb-move-back"
+                                                        class="btn btn-default fb-control-round disabled"
+                                                        title="Click to go back"><span
+                                                        class="glyphicon glyphicon-arrow-left"></span>
+                                                </button>
+
+                                                <button id="fb-move-forward"
+                                                        class="btn btn-default fb-control-round disabled"
+                                                        title="Click to go forward"><span
+                                                        class="glyphicon glyphicon-arrow-right"></span>
+                                                </button>
+
+                                                <button id="fb-move-up"
+                                                        class="btn btn-default fb-control-squared disabled"
+                                                        title="Click to go to parent directory"><span
+                                                        class="fa fa-level-up"></span></button>
+                                            </div>
+                                        {% endif %}
+
+                                        {# SORT AND VIEW CONTROLS #}
+                                        <div>
+                                            <div id="btn-group-view" class="btn-group" role="group">
+                                                <button data-view="list" data-toggle="tooltip"
+                                                        data-placement="auto"
+                                                        title='List'
+                                                        type="button"
+                                                        class="btn btn-default"><i class='fa fa-list'
+                                                                                   aria-hidden='true'></i>
+                                                </button>
+
+                                                <button data-view="grid" data-toggle="tooltip"
+                                                        data-placement="auto" type="button"
+                                                        title='Grid'
+                                                        class="btn btn-default active"><i
+                                                        class='fa fa-th' aria-hidden='true'></i>
+                                                </button>
+                                            </div>
+
+                                            <div id="fb-sort" class="btn-group">
+                                                <button type="button"
+                                                        class="btn btn-default dropdown-toggle"
+                                                        data-toggle="dropdown" aria-haspopup="true"
+                                                        aria-expanded="false">
+                                                    <span class="glyphicon glyphicon-sort"></span>&nbsp;<span>Sort by</span>&nbsp;<span
+                                                        class="caret"></span>
+                                                </button>
+
+                                                <ul class="dropdown-menu text-left">
+                                                    <li data-method="type" class="active"><a>Type</a></li>
+                                                    <li data-method="name"><a>Name</a></li>
+                                                    <li data-method="size"><a>Size</a></li>
+                                                    <li role="separator" class="divider"></li>
+                                                    <li data-order="asc" class="active"><a><i
+                                                            class="fa fa-sort-amount-asc"></i>&nbsp;&nbsp;Ascending</a>
+                                                    </li>
+                                                    <li data-order="desc"><a><i
+                                                            class="fa fa-sort-amount-desc"></i>&nbsp;&nbsp;Descending</a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+
+                                        {# SEARCH FOR CURRENT DIRECTORY #}
+                                        <div class="text-center fb-search-directory">
+                                            <div class="input-group file-browser-search">
+                                                <span class="glyphicon glyphicon-search search-icon"></span>
+                                                <span id="btn-clear-search-input"
+                                                      class="glyphicon glyphicon-remove-sign btn-clear-search"
+                                                      data-toggle="tooltip"
+                                                      data-placement="auto"
+                                                      title="Clear search"></span>
+                                                <input type="text" id="txtDirSearch"
+                                                       class="form-control fb-input-search"
+                                                       placeholder="Search current directory">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12">
+                                            {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
+                                                {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
+                                                    <a type="button" data-fb-action="uploadFiles"
+                                                       class="btn btn-success btn-xs dz-clickable upload-toggle">
+                                                        <i class="fa fa-plus"></i> Add files
+                                                    </a>
+
+                                                    <div id="irods-group" class="btn-group">
+                                                        <button type="button"
+                                                                class="btn btn-default btn-xs dropdown-toggle fb-space-right"
+                                                                data-toggle="dropdown" aria-haspopup="true"
+                                                                title="Add files from an iRODS server"
+                                                                aria-expanded="false">
+                                                            <span>iRODS</span>&nbsp;<span class="caret"></span>
+                                                        </button>
+
+                                                        <ul class="dropdown-menu text-left">
+                                                            <li id="btn-signin-irods" data-toggle="modal"
+                                                                data-target="#irodsSignin">
+                                                                <a>
+                                                                    <span class="glyphicon glyphicon-log-in icon-blue"></span>&nbsp;&nbsp;Log
+                                                                    in to iRODS
+                                                                </a>
+                                                            </li>
+
+                                                            <li id="btn-select-irods-file" class="dz-clickable hidden"
+                                                                data-fb-action="uploadFiles"
+                                                                data-toggle="modal" data-target="#irodsContent">
+                                                                <a>
+                                                                    <i class="fa fa-plus icon-green"></i>&nbsp;&nbsp;Add
+                                                                    files from iRODS...
+                                                                </a>
+                                                            </li>
+
+                                                            <li role="separator" class="divider hidden"></li>
+                                                            <li id="btn-signout-irods" class="hidden">
+                                                                <a>
+                                                                    <span class="glyphicon glyphicon-log-out btn-remove"></span>&nbsp;&nbsp;Log
+                                                                    out of iRODS
+                                                                </a>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                {% endif %}
+                                            {% endif %}
+
+                                            {% if page.perms.change and resource_edit_mode and not cm.raccess.published_or_review_pending or current_user.is_superuser %}
+                                                {% if cm.resource_type == "CompositeResource" %}
+                                                    <button id="fb-create-folder" class="disabled"
+                                                            data-fb-action="createFolder" data-toggle="modal"
+                                                            data-target="#create-folder-dialog"
+                                                            title="Create new folder">
+                                                        <span class="fa fa-folder icon-blue"></span>
+                                                    </button>
+                                                    <button id="fb-add-reference" class="fb-space-right"
+                                                            data-fb-action="createFolder"
+                                                            data-toggle="modal"
+                                                            data-target="#add-reference-url-dialog"
+                                                        title="Add content from the web">
+                                                    <span class="fa fa-external-link icon-blue"></span>
+                                                    </button>
+                                                    <button id="fb-cut" data-fb-action="cut"
+                                                            class="disabled"
+                                                            title="Cut">
+                                                        <span class="fa fa-scissors icon-blue"></span>
+                                                    </button>
+                                                    <button id="fb-paste" data-fb-action="paste"
+                                                            class="disabled fb-space-right"
+                                                            title="Paste">
+                                                        <span class="fa fa-clipboard icon-blue"></span>
+                                                    </button>
+                                                {% endif %}
+
+                                                {% if cm.resource_type != "ToolResource" %}
+                                                    <button id="fb-rename" data-fb-action="rename"
+                                                            class="disabled fb-space-right"
+                                                            title="Rename" data-toggle="modal"
+                                                            data-target="#rename-dialog">
+                                                        <span class="glyphicon glyphicon-pencil icon-blue"></span>
+                                                    </button>
+                                                {% endif %}
+
+                                                {% if cm.resource_type == "CompositeResource" %}
+                                                    <button id="fb-zip" data-fb-action="zip"
+                                                            class="disabled"
+                                                            title="Zip folder" data-toggle="modal"
+                                                            data-target="#zip-folder-dialog">
+                                                        <span class="glyphicon glyphicon-compressed icon-blue"></span>
+                                                    </button>
+
+                                                    <button id="fb-unzip" data-fb-action="unzip"
+                                                            class="disabled fb-space-right"
+                                                            title="Unzip here">
+                                                        <span class="fa fa-file-archive-o icon-blue"></span>
+                                                    </button>
+                                                    <button id="fb-unzip-to-folder" data-fb-action="unzipToFolder"
+                                                            class="disabled fb-space-right"
+                                                            title="Unzip to folder">
+                                                        <span class="fa fa-file-archive-o icon-blue"></span>
+                                                    </button>
+                                                {% endif %}
+                                            {% endif %}
+
+                                            {% if page.perms.change and resource_edit_mode %}
+                                                {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
+                                                    <button id="fb-delete" data-fb-action="delete"
+                                                            class="disabled fb-space-right"
+                                                            title="Delete" data-toggle="modal"
+                                                            data-target="#confirm-delete-dialog" onclick="warnExternalContent('{{ cm.short_id }}')">
+                                                        <span class="glyphicon glyphicon-trash btn-remove"></span>
+                                                    </button>
+                                                {% endif %}
+                                            {% endif %}
+
+                                            <button id="fb-select-all"
+                                                    title="Select all">
+                                                <span class="fa fa-th-large icon-blue"></span>
+                                            </button>
+
+                                            <button id="fb-refresh" class="fb-space-right"
+                                                    title="Refresh">
+                                                <span class="fa fa-refresh icon-blue"></span>
+                                            </button>
+
+                                            <button id="fb-get-link" data-toggle="modal" data-fb-action="getLink"
+                                                    class="disabled" data-target="#get-file-url-dialog"
+                                                    title="Get file URL">
+                                                <span class="fa fa-link icon-blue"></span>
+                                            </button>
+
+                                            <button id="fb-download"
+                                                    class="disabled" data-fb-action="download"
+                                                    title="Download">
+
+                                                <span class="glyphicon glyphicon-download icon-blue"></span>
+                                            </button>
+
+                                            <button class="disabled" data-fb-action="downloadZipped"
+                                                    title="Download zipped">
+                                                <span class="fa fa-download icon-blue"></span>
+                                            </button>
+
+                                            {% if user_zone_account_exist %}
+                                                <a id="rep-res-bag" type="button"
+                                                   title="Copy Resource Bag to iRODS User Zone"
+                                                   data-target="#rep-resource-to-irods-dialog"
+                                                   data-toggle="modal"
+                                                   data-placement="auto">
+                                                    <span class="hs-icon-irods icon-blue"></span>
+                                                </a>
+                                            {% endif %}
+
+                                            <button id="btn-download-all"
+                                                title="Download all content as Zipped BagIt Archive"
+                                                {% if cm.raccess.require_download_agreement %}
+                                                data-target="#license-agree-dialog-bag" data-toggle="modal"
+                                                data-placement="auto"
+                                                {% endif %}
+                                                data-bag-url="{{ cm.bag_url }}">
+                                                <span class="fa fa-briefcase icon-blue"></span>
+                                            </button>
+                                            <a class="small" target="_blank"
+                                               href="https://help.hydroshare.org/creating-and-managing-resources/view-and-download-a-resource">Learn more about the BagIt download</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="file-browser-breadcrumb height-fix">
+                                    <ol id="fb-bread-crumbs" class="breadcrumb">
+
+                                    </ol>
+                                </div>
+                            </div>
+                            <div class="fb-content-wrapper">
+                                <div class="fb-dropzone-wrapper{% if cm.resource_type == "CompositeResource" %} ui-resizable{% endif %}">
+                                    <form id="hsDropzone"
+                                        class="files-container h-100 ui-widget-content {% if page.perms.change and resource_edit_mode and not cm.raccess.published_or_review_pending or current_user.is_superuser %}dropzone{% endif %}"
+                                        action="/hsapi/_internal/{{ cm.short_id }}/add-files-to-resource/"
+                                        method="POST">
+                                        {% csrf_token %}
+
+                                        <div id="flag-uploading" class="hidden">
+                                            <i class="fa fa-circle-o-notch fa-spin fa-fw"></i>
+                                            <small class="uploading-message">
+                                                <strong>Uploading files to:</strong>&nbsp;
+                                                <span id="root-path">contents</span>
+                                                <strong>&nbsp;&nbsp;Progress:&nbsp;</strong>
+                                                <span id="upload-progress"></span>
+                                            </small>
+                                        </div>
+
+                                        <div class="fb-drag-flag">
+                                            <span class="fa fa-plus-square fa-5x"></span>
+                                        </div>
+
+                                        <ul id="fb-files-container" class="selectable fb-view-grid height-fix">
+                                            <li class="fb-loading-spinner">
+                                                <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
+                                            </li>
+                                        </ul>
+                                    </form>
+
+                                    {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
+                                        {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
+                                            <div class="fb-upload-caption ">
+                                                <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload files
+                                                smaller than 1GB in size by dragging & dropping, or click <a
+                                                    class="dz-clickable upload-toggle">here</a> to select them.
+                                            </div>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                                {% if cm.resource_type == "CompositeResource" %}
+                                <div id="fb-metadata-helper" class="has-background-light-gray">
+                                    <i class="fa fa-caret-square-o-right fb-metadata-collapse" aria-hidden="true"
+                                       data-fb-action="hide"
+                                       data-toggle="tooltip" data-placement="left" title="Hide"></i>
+                                    <i class="fa fa-caret-square-o-left fb-metadata-collapse hidden" aria-hidden="true"
+                                       data-fb-action="show"
+                                       data-toggle="tooltip" data-placement="left" title="Show"></i>
+
+                                    <span class="ui-icon ui-icon-grip-dotted-vertical"></span>
+                                </div>
+                                <div id="fb-metadata" class="fb-metadata h-100">
+                                    {% if cm.resource_type == "CompositeResource" %}
+                                        <div id="fileTypeMetaData">
+                                            <div id="#fb-metadata-default" class="text-center text-muted"
+                                                 role="alert">
+                                                <div>Select a file to see file type metadata.</div>
+                                                <hr>
+                                                <span class="fa-stack fa-lg text-center">
+                                                    <i class="fa fa-file-o fa-stack-2x" aria-hidden="true"></i>
+                                                    <i class="fa fa-mouse-pointer fa-stack-1x" aria-hidden="true"
+                                                       style="top: 14px;"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            {% if page.perms.change and resource_edit_mode %}
+                                {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
+                                    <form id="fb-delete-files-form" class="hidden" enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="file_ids" value=""/>
+                                    </form>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="files" id="previews"></div>
+                    {% block download_bag %}
+                        {% if user_zone_account_exist %}
+                            <div>
+                                <div id='rep-alert-success' class="alert alert-success alert-dismissible"
+                                     role="alert" style="display:none">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span></button>
+                                    <span id="rep-status-success"></span>
+                                </div>
+                                <div id='rep-alert-error' class="alert alert-danger alert-dismissible" role="alert"
+                                     style="display:none">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span></button>
+                                    <span id="rep-status-error"></span>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endblock %} {#  download_bag #}
+
+                    {# ======= Readme ======= #}
+                    {% if readme %}
+                        {% include "resource-landing-page/readme-file.html" %}
+                    {% endif %}
+                {% else %}
+                    <i class="glyphicon glyphicon-eye-close text-danger no-access-icon"></i>&nbsp;
+                    <span>You do not have permission to see these content files. Please contact an Owner if you wish to obtain access.</span>
+                {% endif %}
+            </div>
+        {% endif %}
+        {% endblock %} {# content_block #}
+
+        {# ======= Data Services ======= #}
+        {% if data_services_urls.wms_url or data_services_urls.wfs_url or data_services_urls.wcs_url or data_services_urls.thredds_url %}
+            {% include "resource-landing-page/data-services.html" %}
+        {% endif %}
+
+        {# ======= Resource Specific ======= #}
+
+        {% if site or extended_metadata_exists or res_add_metadata or resource_edit_mode %}
+            {% if cm.resource_type == "ToolResource" %}
+                <div class="col-xs-12 content-block">
+                    <h3>Configuration</h3>
+                    <div id="resourceSpecificTab">
+                        <div class="row">
+                            {% if not resource_edit_mode or cm.raccess.published_or_review_pending %}
+                                {% block extended_metadata %}{% endblock %}
+                            {% else %}
+                                {% crispy metadata_form %}
+                            {% endif %}
+
+                            {# add extra section for resource landing page #}
+                            {% block extra_section %}{% endblock %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endif %}
+
+        {# ======= Additional Metadata ======= #}
+        {% include "resource-landing-page/additional-metadata.html" %}
+
+        {# ======= Geoconnex ======= #}
+        {% include "resource-landing-page/geoconnex.html" %}
+
+        {# ======= References ======= #}
+        {% include "resource-landing-page/references.html" %}
+
+        {# ======= Credits ======= #}
+        {% include "resource-landing-page/credits.html" %}
+
+        {# ======= Citation ======= #}
+        {% include "resource-landing-page/citation.html" %}
+
+        {# ======= Comments ======= #}
+        {% include "resource-landing-page/comments.html" %}
+        </div>
+{% endblock %}
+
+{% block extra_js %}
+    {% set_page_permissions page %}
+    {{ block.super }}
+    <script>
+      {# GLOBAL DECLARATIONS FOR RESOURCE LANDING PAGE SCRIPTS #}
+      const SHORT_ID = "{{ cm.short_id }}";
+      var global_num_ext_refs = 0;
+      var global_custom_citation = "{{ custom_citation }}";
+
+      $.ajax({
+        type: "GET",
+        url: '/hsapi/_internal/' + SHORT_ID + '/list-referenced-content/',
+      }).complete(function(res) {
+        if (res.responseText) {
+          global_num_ext_refs = JSON.parse(res.responseText).filenames.length
+        }
+      });
+      const CITATION_ID = "{{ citation_id }}";
+      const RES_KEYWORDS = {{ keywords|safe }};
+      const SELF_ACCESS_LEVEL = "{{ self_access_level }}";
+      const CAN_CHANGE = "{{ page.perms.change }}" === "True";
+      const RES_TYPE = "{{ cm|resource_type }}";
+      const FILE_COUNT = {{ cm.files.all.count }};
+      const SUPPORTE_FILE_TYPES = "{{ cm.get_supported_upload_file_types }}";
+      const ALLLOW_MULTIPLE_FILE_UPLOAD = "{{ cm.allow_multiple_file_upload }}";
+      const RESOURCE_MODE = "{% if resource_edit_mode %}Edit{% else %}View{% endif %}";
+      const RESOURCE_PUBLISHED_OR_UNDER_REVIEW = "{{ cm.raccess.published_or_review_pending }}" === "True";
+      const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
+      const STATIC_URL = "{{ STATIC_URL }}";
+      const USERS_JSON = {{ users_json|safe }};
+      const LAST_CHANGED_BY = {{ last_changed_by|safe }};
+      const AUTHORS = [
+          {% for author in creators %}
+            {
+                "id": "{{ author.id }}",
+                "name": "{{ author.name|default:""|escapejs }}",
+                "email": "{{ author.email|default:"" }}",
+                "organization": "{{ author.organization|default:""|escapejs }}",
+                "identifiers": {
+                    {% for name, link in author.identifiers.items %}
+                        "{{ name }}": "{{ link }}",
+                    {% endfor %}
+                },
+                "address": "{{ author.address|default:""|escapejs }}",
+                "phone": "{{ author.phone|default:"" }}",
+                "homepage": "{{ author.homepage|default:"" }}",
+                "profileUrl": "{{ author.relative_uri|default:'' }}",
+                "order": "{{ author.order }}",
+                "is_active": "{{ author.is_active_user|default:"" }}",
+            },
+          {% endfor %}
+      ];
+      const GEOSPATIAL_RELATIONS = [
+        {% for relation in geospatial_relations %}
+            {
+                "value": "{{ relation.value| escapejs}}",
+                "text": "{{ relation.text }}",
+                "id": "{{ relation.id }}"
+            },
+        {% endfor %}
+      ];
+      const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";
+
+      {% if show_manage_access %}
+          const QUOTA_HOLDER_PK = {{ quota_holder.pk  }};
+          const GROUP_IMAGE_DEFAULT_URL = "{% static 'img/home-page/step4.png' %}";
+          const CAN_CHANGE_RESOURCE_FLAGS = "{{ can_change_resource_flags }}" === "True";
+          const CAN_BE_PUBLIC_OR_DISCOVERABLE = "{{ cm.can_be_public_or_discoverable }}" === "True";
+          const RESOURCE_ACCESS = {
+              isPublic: "{{ cm.raccess.public }}" === "True",
+              isDiscoverable: "{{ cm.raccess.discoverable }}" === "True",
+              isShareable: "{{ cm.raccess.shareable }}" === "True",
+              isPrivateLinkSharing : "{{ cm.raccess.allow_private_sharing }}" === "True",
+          };
+      {% endif %}
+      var spatial_coverage_type = "{{ spatial_coverage.type }}";
+
+    </script>
+
+    <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js"
+        integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg="
+        crossorigin="">
+    </script>
+    <script src="{% static 'js/hs-vue/Leaflet.fullscreen.min.js' %}"></script>
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    <script type="text/javascript" src="{% static 'js/coverageMap.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/dropzone.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/hs-file-icons.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/hs_file_browser.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/resourceLandingAjax.js' %}"></script>
+    <script type="text/javascript" charset="utf8" src="{% static 'js/jquery.dataTables.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/copyToClipboard.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/generic-resource.js' %}"></script>
+
+{% endblock %}
+

@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('dataset_name', models.CharField(max_length=255, null=True, blank=True)),
-                ('metadata', models.OneToOneField(related_name='logical_file', to='hs_file_types.GenericFileMetaData')),
+                ('metadata', models.OneToOneField(related_name='logical_file', on_delete=models.CASCADE, to='hs_file_types.GenericFileMetaData')),
             ],
             options={
                 'abstract': False,
@@ -47,7 +47,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('dataset_name', models.CharField(max_length=255, null=True, blank=True)),
-                ('metadata', models.OneToOneField(related_name='logical_file', to='hs_file_types.GeoRasterFileMetaData')),
+                ('metadata', models.OneToOneField(related_name='logical_file', on_delete=models.CASCADE, to='hs_file_types.GeoRasterFileMetaData')),
             ],
             options={
                 'abstract': False,

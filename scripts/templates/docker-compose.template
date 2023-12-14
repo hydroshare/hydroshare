@@ -1,5 +1,7 @@
 postgis:
-  image: hydroshare/hs_postgres:9.4.7
+  image: postgis/postgis:15-3.3
+  environment:
+      POSTGRES_PASSWORD: 'postgres'
   container_name: postgis
   volumes:
     - "/var/lib/postgresql/data"
@@ -44,7 +46,7 @@ hydroshare:
     # temp directory shared with celery workers
     - "/shared_tmp"
     - "/irods/hydroshare:/irods/hydroshare"
-    - "/irods/hydroshare_vault:/irods/hydroshare_vault"
+    # - "/irods/hydroshare_vault:/irods/hydroshare_vault"
   ports:
     - "1338:2022"
     - "8000:8000"
@@ -64,6 +66,7 @@ defaultworker:
     POSTGIS_DB: postgres
     PGPASSWORD: postgres
     C_FORCE_ROOT: 1
+    COLUMNS: 80
   ports:
     - "5555:5555"
   volumes_from:

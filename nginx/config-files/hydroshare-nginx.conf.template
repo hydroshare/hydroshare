@@ -79,19 +79,19 @@ server {
         alias IRODS_DATA_ROOT/;
     }
 
-    location /IRODS_USER_URI/ {
-        internal; 
-        alias IRODS_USER_ROOT/;
-    }
+    # location /IRODS_USER_URI/ {
+    #     internal; 
+    #     alias IRODS_USER_ROOT/;
+    # }
 
-    location /IRODS_CACHE_URI/ {
-        internal; 
-        alias IRODS_CACHE_ROOT/;
-    }
+    # location /IRODS_CACHE_URI/ {
+    #     internal; 
+    #     alias IRODS_CACHE_ROOT/;
+    # }
 
     location /django_irods/download/ {
         if (-f $document_root/maintenance_on.html) {
-            return 503;
+            rewrite ^(.*)$ /maintenance_on.html break;
         }
         proxy_pass http://unix:/hs_tmp/gunicorn.sock;
         proxy_set_header X-Django-Reverse-Proxy true;
@@ -99,7 +99,7 @@ server {
 
     location / { 
         if (-f $document_root/maintenance_on.html) {
-            return 503;
+            rewrite ^(.*)$ /maintenance_on.html break;
         }
         try_files $uri @proxy;
     } 
@@ -108,8 +108,9 @@ server {
         proxy_pass http://unix:/hs_tmp/gunicorn.sock;
     } 
 
-    error_page 503 @maintenance;
-    location @maintenance {
-        rewrite ^(.*)$ /maintenance_on.html break;
+    # return error 503 and custom error message
+    error_page 503 @503_error;
+    location @503_error {
+        rewrite ^(.*)$ /server_error_on.html break;
     }
 }

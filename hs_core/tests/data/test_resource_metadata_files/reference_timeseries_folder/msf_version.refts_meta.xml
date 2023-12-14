@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+  xmlns:hsterms="https://www.hydroshare.org/terms/"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+>
+  <hsterms:ReferencedTimeSeriesAggregation rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/reference_timeseries_folder/msf_version.refts_resmap.xml#aggregation">
+    <dc:language>eng</dc:language>
+    <dc:coverage>
+      <dcterms:box>
+        <rdf:value>northlimit=40.48498; southlimit=40.1788719; eastlimit=-111.46245; westlimit=-111.639338; projection=Unknown; units=Decimal degrees</rdf:value>
+      </dcterms:box>
+    </dc:coverage>
+    <dc:rights>
+      <rdf:Description>
+        <hsterms:URL rdf:resource="http://studio.bakajo.com"/>
+        <hsterms:rightsStatement>my statement</hsterms:rightsStatement>
+      </rdf:Description>
+    </dc:rights>
+    <dc:coverage>
+      <dcterms:period>
+        <rdf:value>start=2016-04-06T00:00:00; end=2017-02-09T00:00:00</rdf:value>
+      </dcterms:period>
+    </dc:coverage>
+    <dc:subject>CUAHSI</dc:subject>
+    <dc:subject>Time Series</dc:subject>
+    <dc:title>Sites, Variable</dc:title>
+    <hsterms:extendedMetadata>
+      <rdf:Description>
+        <hsterms:value>value2</hsterms:value>
+        <hsterms:key>key2</hsterms:key>
+      </rdf:Description>
+    </hsterms:extendedMetadata>
+    <hsterms:extendedMetadata>
+      <rdf:Description>
+        <hsterms:value>value</hsterms:value>
+        <hsterms:key>key</hsterms:key>
+      </rdf:Description>
+    </hsterms:extendedMetadata>
+    <dc:type rdf:resource="https://www.hydroshare.org/terms/ReferencedTimeSeriesAggregation"/>
+  </hsterms:ReferencedTimeSeriesAggregation>
+  <rdf:Description rdf:about="http://www.hydroshare.org/terms/ReferencedTimeSeriesAggregation">
+    <rdfs:label>Referenced Time Series Content: A reference to one or more time series served from HydroServers outside of HydroShare in WaterML format</rdfs:label>
+    <rdfs:isDefinedBy rdf:resource="https://www.hydroshare.org/terms/"/>
+  </rdf:Description>
+</rdf:RDF>

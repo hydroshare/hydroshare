@@ -6,7 +6,7 @@ import shutil
 import logging
 import json
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousFileOperation
 from django.core.exceptions import ValidationError as CoreValidationError
 from django.http import HttpResponseRedirect
@@ -20,6 +20,7 @@ from rest_framework import generics, status
 from rest_framework.request import Request
 from rest_framework.exceptions import ValidationError, NotAuthenticated, PermissionDenied, NotFound
 
+from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.models import AbstractResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_types, \
@@ -32,6 +33,7 @@ from hs_core.serialization import GenericResourceMeta, HsDeserializationDependen
     HsDeserializationException
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 from rest_framework.parsers import MultiPartParser
 
 
@@ -40,11 +42,12 @@ logger = logging.getLogger(__name__)
 
 # Mixins
 class ResourceFileToListItemMixin(object):
+    # URLs in metadata should be fully qualified.
+    # ALWAYS qualify them with www.hydroshare.org, rather than the local server name.
+    site_url = hydroshare.utils.current_site_url()
+
     def resourceFileToListItem(self, f):
-        # URLs in metadata should be fully qualified.
-        # ALWAYS qualify them with www.hydroshare.org, rather than the local server name.
-        site_url = hydroshare.utils.current_site_url()
-        url = site_url + f.url
+        url = self.site_url + f.url
         fsize = f.size
         logical_file_type = f.logical_file_type_name
         file_name = os.path.basename(f.resource_file.name)
@@ -101,8 +104,19 @@ class ContentTypes(generics.ListAPIView):
 
 class CheckTaskStatus(generics.RetrieveAPIView):
 
-    # TODO, setup a serializer for in/out, figure out if redirect is needed...
+    # TODO, setup a serializer for in, figure out if redirect is needed...
+    tid = openapi.Parameter('task_id', openapi.IN_PATH, description="id of the task", type=openapi.TYPE_STRING)
+
+    @swagger_auto_schema(operation_description="Get the status of an asynchronous task",
+                         responses={200: serializers.CheckStatusSerializer}, manual_parameters=[tid])
     def get(self, request, task_id):
+        '''
+        Get the status of an asynchronous task
+
+        :param request:
+        :param task_id: Id of the task
+        :return: JSON response to return result from asynchronous task
+        '''
         url = reverse('rest_check_task_status', kwargs={'task_id': task_id})
         return HttpResponseRedirect(url)
 
@@ -118,14 +132,9 @@ class ResourceReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     def get(self, request, pk):
         res, _, _ = view_utils.authorize(request, pk,
                                          needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-        if res.resource_type.lower() == "reftimeseriesresource":
 
-            # if res is RefTimeSeriesResource
-            bag_url = reverse('rest_download_refts_resource_bag',
-                              kwargs={'shortkey': pk})
-        else:
-            bag_url = reverse('rest_download',
-                              kwargs={'path': 'bags/{}.zip'.format(pk)})
+        bag_url = reverse('rest_download',
+                          kwargs={'path': 'bags/{}.zip'.format(pk)})
         return HttpResponseRedirect(bag_url)
 
     @swagger_auto_schema(operation_description="Not Implemented")
@@ -150,7 +159,7 @@ class ResourceListCreate(generics.ListCreateAPIView):
 
     # Override the create() method from the CreateAPIView class
     def create(self, request, *args, **kwargs):
-        if not request.user.is_authenticated():
+        if not request.user.is_authenticated:
             raise NotAuthenticated()
 
         resource_create_request_validator = serializers.ResourceCreateRequestValidator(
@@ -233,7 +242,7 @@ class ResourceListCreate(generics.ListCreateAPIView):
         response_data = {'resource_type': resource_type, 'resource_id': resource.short_id,
                          'message': post_creation_error_msg}
 
-        return Response(data=response_data,  status=status.HTTP_201_CREATED)
+        return Response(data=response_data, status=status.HTTP_201_CREATED)
 
     pagination_class = PageNumberPagination
     pagination_class.page_size_query_param = 'count'
@@ -252,13 +261,18 @@ class ResourceListCreate(generics.ListCreateAPIView):
             raise ValidationError(detail=resource_list_request_validator.errors)
 
         filter_parms = resource_list_request_validator.validated_data
-        filter_parms['user'] = (self.request.user if self.request.user.is_authenticated() else None)
+
+        if 'coverage_type' in filter_parms:
+            site_url = hydroshare.utils.current_site_url()
+            message = f"Spatial query is currently disabled in hsapi. Please use discover: {site_url}/search"
+            raise ValidationError(detail=message)
+        filter_parms['user'] = (self.request.user if self.request.user.is_authenticated else None)
         if len(filter_parms['type']) == 0:
             filter_parms['type'] = None
         else:
             filter_parms['type'] = list(filter_parms['type'])
 
-        filter_parms['public'] = not self.request.user.is_authenticated()
+        filter_parms['public'] = not self.request.user.is_authenticated
 
         return hydroshare.get_resource_list(**filter_parms)
 
@@ -749,13 +763,33 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
         """
         return self.list(request)
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            resource_file_info_list = []
+            for f in page:
+                try:
+                    resource_file_info_list.append(self.resourceFileToListItem(f))
+                except SessionException as err:
+                    logger.error(f"Error for file {f.storage_path} from iRODS: {err.stderr}")
+                except CoreValidationError as err:
+                    # primarily this exception will be raised if the file is not found in iRODS
+                    logger.error(f"Error for file {f.storage_path} from iRODS: {str(err)}")
+
+            serializer = self.get_serializer(resource_file_info_list, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
     def get_queryset(self):
         resource, _, _ = view_utils.authorize(self.request, self.kwargs['pk'],
                                               needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-        resource_file_info_list = []
-        for f in resource.files.all():
-            resource_file_info_list.append(self.resourceFileToListItem(f))
-        return resource_file_info_list
+
+        # exclude files with size 0 as they are missing from iRODS
+        return resource.files.exclude(_size=0).all()
 
     def get_serializer_class(self):
         return serializers.ResourceFileSerializer

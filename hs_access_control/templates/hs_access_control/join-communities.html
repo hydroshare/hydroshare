@@ -1,0 +1,48 @@
+<script id="join-communities-template" type="text/x-template">
+  <div class="modal-content">
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+          aria-hidden="true">&times;</span>
+      </button>
+      <h4 class="modal-title" id="joinLabel">Ask to join a Community</h4>
+    </div>
+    <div class="modal-body">
+      <div v-if="isGroupPrivate" class="alert alert-warning">
+        <div class="flex align-center flex-sm-column">
+          <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+          <div>The owners of the community you request to join will be able to see the metadata for your group.</div>
+        </div>
+      </div>
+      <p>Your request to join a Community will be sent to the owner(s) of the Community. Community owner(s) can decide which Groups can join their Community.</p>
+      <span v-if="message.text"
+        :class="'label has-space-top label-' + message.type">${ message.text }
+      </span>
+      <template v-if="groups.length || communities.length">
+        <fieldset v-if="groups.length" class="has-space-top">
+          <label for="select-group">Select the name of the Group</label>
+          <select id="select-group" class="form-control" v-model="selectedGroupId">
+            <option v-for="group of groups" :key="group.id" :value="group.id">${ group.name }</option>
+          </select>
+        </fieldset>
+
+        <fieldset v-if="communities.length" class="has-space-top">
+          <label for="select-community">Select the name of the Community you want the Group to join</label>
+          <select class="form-control" v-model="selectedCommunityId">
+            <option v-for="community of communities" :key="community.id" :value="community.id">${ community.name }</option>
+          </select>
+        </fieldset>
+      </template>
+      <template v-else>
+        <div v-if="selectedGroupId" class="alert alert-info has-space-top">There are no communities available to join right now.</div>
+        <div v-else class="alert alert-info has-space-top">You don't own other groups that can be invited right now.</div>
+      </template>
+    </div>
+    <div class="modal-footer text-right">
+      <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+      <button @click="joinCommunity" type="button" class="btn btn-success"
+        :disabled="!selectedCommunityId || !selectedGroupId">Send Request</button>
+    </div>
+  </div>
+</script>
+
+<script type="text/javascript" src="{% static 'js/hs-vue/join-communities.component.js' %}"></script>

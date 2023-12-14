@@ -9,8 +9,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, HTML
 from crispy_forms.bootstrap import Field
 
-from .hydroshare import utils
-from .models import Party, Creator, Contributor, validate_user_url, Relation, Source, Identifier, \
+from .models import Party, Creator, Contributor, validate_hydroshare_user_id, Relation, Identifier, \
     FundingAgency, Description
 
 
@@ -25,37 +24,37 @@ class Helper(object):
         """
         modal_title = "Add %s" % element_name.title()
         layout = Layout(
-                        HTML('<div class="modal fade" id="add-element-dialog" tabindex="-1" '
-                             'role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'
-                             '<div class="modal-dialog">'
-                             '<div class="modal-content">'),
-                        HTML('<form action="{{ form.action }}" '
-                             'method="POST" enctype="multipart/form-data"> '),
-                        HTML('{% csrf_token %} '
-                             '<input name="resource-mode" type="hidden" value="edit"/>'
-                             '<div class="modal-header">'
-                             '<button type="button" class="close" '
-                             'data-dismiss="modal" aria-hidden="true">&times;'
-                             '</button>'),
-                        HTML('<h4 class="modal-title" id="myModalLabel"> Add Element </h4>'),
-                        HTML('</div>'
-                             '<div class="modal-body">'
-                             '{% csrf_token %}'
-                             '<div class="form-group">'),
-                        HTML('{% load crispy_forms_tags %} {% crispy add_creator_modal_form %} '),
-                        HTML('</div>'
-                             '</div>'
-                             '<div class="modal-footer">'
-                             '<button type="button" class="btn btn-default" '
-                             'data-dismiss="modal">Close</button>'
-                             '<button type="submit" class="btn btn-primary">'
-                             'Save changes</button>'
-                             '</div>'
-                             '</form>'
-                             '</div>'
-                             '</div>'
-                             '</div>')
-                        )
+            HTML('<div class="modal fade" id="add-element-dialog" tabindex="-1" '
+                 'role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'
+                 '<div class="modal-dialog">'
+                 '<div class="modal-content">'),
+            HTML('<form action="{{ form.action }}" '
+                 'method="POST" enctype="multipart/form-data"> '),
+            HTML('{% csrf_token %} '
+                 '<input name="resource-mode" type="hidden" value="edit"/>'
+                 '<div class="modal-header">'
+                 '<button type="button" class="close" '
+                 'data-dismiss="modal" aria-hidden="true">&times;'
+                 '</button>'),
+            HTML('<h4 class="modal-title" id="myModalLabel"> Add Element </h4>'),
+            HTML('</div>'
+                 '<div class="modal-body">'
+                 '{% csrf_token %}'
+                 '<div class="form-group">'),
+            HTML('{% load crispy_forms_tags %} {% crispy add_creator_modal_form %} '),
+            HTML('</div>'
+                 '</div>'
+                 '<div class="modal-footer">'
+                 '<button type="button" class="btn btn-default" '
+                 'data-dismiss="modal">Close</button>'
+                 '<button type="submit" class="btn btn-primary">'
+                 'Save changes</button>'
+                 '</div>'
+                 '</form>'
+                 '</div>'
+                 '</div>'
+                 '</div>')
+        )
 
         layout[0] = HTML('<div class="modal fade" id="add-%s-dialog" tabindex="-1" role="dialog" '
                          'aria-labelledby="myModalLabel" aria-hidden="true">'
@@ -75,31 +74,31 @@ class Helper(object):
 # the 1st and the 3rd HTML layout objects get replaced in MetaDataElementDeleteForm class
 def _get_modal_confirm_delete_matadata_element():
     layout = Layout(
-                    HTML('<div class="modal fade" id="delete-metadata-element-dialog" '
-                         'tabindex="-1" role="dialog" aria-labelledby="myModalLabel" '
-                         'aria-hidden="true">'),
-                    HTML('<div class="modal-dialog">'
-                         '<div class="modal-content">'
-                         '<div class="modal-header">'
-                         '<button type="button" class="close" data-dismiss="modal" '
-                         'aria-hidden="true">&times;</button>'
-                         '<h4 class="modal-title" id="myModalLabel">'
-                         'Delete metadata element</h4>'
-                         '</div>'
-                         '<div class="modal-body">'
-                         '<strong>Are you sure you want to delete this metadata '
-                         'element?</strong>'
+        HTML('<div class="modal fade" id="delete-metadata-element-dialog" '
+             'tabindex="-1" role="dialog" aria-labelledby="myModalLabel" '
+             'aria-hidden="true">'),
+        HTML('<div class="modal-dialog">'
+             '<div class="modal-content">'
+             '<div class="modal-header">'
+             '<button type="button" class="close" data-dismiss="modal" '
+             'aria-hidden="true">&times;</button>'
+             '<h4 class="modal-title" id="myModalLabel">'
+             'Delete metadata element</h4>'
+             '</div>'
+             '<div class="modal-body">'
+             '<strong>Are you sure you want to delete this metadata '
+             'element?</strong>'
 
-                         '</div>'
-                         '<div class="modal-footer">'
-                         '<button type="button" class="btn btn-default" '
-                         'data-dismiss="modal">Cancel</button>'),
-                    HTML('<a type="button" class="btn btn-danger" href="">Delete</a>'),
-                    HTML('</div>'
-                         '</div>'
-                         '</div>'
-                         '</div>'),
-                    )
+             '</div>'
+             '<div class="modal-footer">'
+             '<button type="button" class="btn btn-default" '
+             'data-dismiss="modal">Cancel</button>'),
+        HTML('<a type="button" class="btn btn-danger" href="">Delete</a>'),
+        HTML('</div>'
+             '</div>'
+             '</div>'
+             '</div>'),
+    )
     return layout
 
 
@@ -151,7 +150,7 @@ class CreatorFormSetHelper(FormHelper):
         self.layout = Layout(
             Fieldset('Creator',
                      Field('name', css_class=field_width),
-                     Field('description', css_class=field_width),
+                     Field('hydroshare_user_id', css_class=field_width),
                      Field('organization', css_class=field_width),
                      Field('email', css_class=field_width),
                      Field('address', css_class=field_width),
@@ -167,14 +166,7 @@ class PartyForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         """Render form for creating and editing Party models, aka people.
-
-        Removes profile link formset and renders proper description URL
         """
-        if 'initial' in kwargs:
-            if 'description' in kwargs['initial']:
-                if kwargs['initial']['description']:
-                    kwargs['initial']['description'] = utils.current_site_url() + \
-                                                       kwargs['initial']['description']
         super(PartyForm, self).__init__(*args, **kwargs)
         self.profile_link_formset = None
         self.number = 0
@@ -186,10 +178,10 @@ class PartyForm(ModelForm):
         """
 
         model = Party
-        fields = ['name', 'description', 'organization', 'email', 'address', 'phone', 'homepage']
+        fields = ['name', 'hydroshare_user_id', 'organization', 'email', 'address', 'phone', 'homepage']
 
         # TODO: field labels and widgets types to be specified
-        labels = {'description': 'HydroShare User Identifier (URL)'}
+        labels = {'hydroshare_user_id': 'HydroShare User Identifier'}
 
 
 class CreatorForm(PartyForm):
@@ -239,7 +231,7 @@ class CreatorForm(PartyForm):
 class PartyValidationForm(forms.Form):
     """Validate form for Party models."""
 
-    description = forms.CharField(required=False, validators=[validate_user_url])
+    hydroshare_user_id = forms.IntegerField(required=False, validators=[validate_hydroshare_user_id])
     name = forms.CharField(required=False, max_length=100)
     organization = forms.CharField(max_length=200, required=False)
     email = forms.EmailField(required=False)
@@ -247,15 +239,6 @@ class PartyValidationForm(forms.Form):
     phone = forms.CharField(max_length=25, required=False)
     homepage = forms.URLField(required=False)
     identifiers = forms.CharField(required=False)
-
-    def clean_description(self):
-        """Create absolute URL for Party.description field."""
-        user_absolute_url = self.cleaned_data['description']
-        if user_absolute_url:
-            url_parts = user_absolute_url.split('/')
-            if len(url_parts) > 4:
-                return '/user/{user_id}/'.format(user_id=url_parts[4])
-        return user_absolute_url
 
     def clean_identifiers(self):
         data = self.cleaned_data['identifiers']
@@ -317,7 +300,7 @@ class ContributorFormSetHelper(FormHelper):
         self.layout = Layout(
             Fieldset('Contributor',
                      Field('name', css_class=field_width),
-                     Field('description', css_class=field_width),
+                     Field('hydroshare_user_id', css_class=field_width),
                      Field('organization', css_class=field_width),
                      Field('email', css_class=field_width),
                      Field('address', css_class=field_width),
@@ -452,71 +435,14 @@ class RelationValidationForm(forms.Form):
     """Validate RelationForm 'type' and 'value' CharFields."""
 
     type = forms.CharField(max_length=100)
-    value = forms.CharField(max_length=500)
+    value = forms.CharField()
 
 
-class SourceFormSetHelper(FormHelper):
-    """Render layout for Source form including HTML5 valdiation and errors."""
-
-    def __init__(self, *args, **kwargs):
-        """Render layout for Source form including HTML5 valdiation and errors."""
-        super(SourceFormSetHelper, self).__init__(*args, **kwargs)
-        # the order in which the model fields are listed for the FieldSet is the order these
-        # fields will be displayed
-        field_width = 'form-control input-sm'
-        self.form_tag = False
-        self.form_show_errors = True
-        self.error_text_inline = True
-        self.html5_required = False
-        self.layout = Layout(
-            Fieldset('Source',
-                     Field('derived_from', css_class=field_width),
-                     ),
-        )
-
-
-class SourceForm(ModelForm):
-    """Render Source model form with appropriate attributes."""
-
-    def __init__(self, allow_edit=True, res_short_id=None, *args, **kwargs):
-        """Render Source model form with appropriate attributes."""
-        super(SourceForm, self).__init__(*args, **kwargs)
-        self.helper = SourceFormSetHelper()
-        self.number = 0
-        self.delete_modal_form = None
-        self.allow_edit = allow_edit
-        if res_short_id:
-            self.action = "/hsapi/_internal/%s/source/add-metadata/" % res_short_id
-        else:
-            self.action = ""
-        if not allow_edit:
-            self.fields['derived_from'].widget.attrs['readonly'] = True
-            self.fields['derived_from'].widget.attrs['style'] = "background-color:white;"
-
-    @property
-    def form_id(self):
-        """Render proper form id by prepending 'id_source_'."""
-        form_id = 'id_source_%s' % self.number
-        return form_id
-
-    @property
-    def form_id_button(self):
-        """Render proper form id with quotes."""
-        form_id = 'id_source_%s' % self.number
-        return "'" + form_id + "'"
-
-    class Meta:
-        """Define meta properties for SourceForm."""
-
-        model = Source
-        # fields that will be displayed are specified here - but not necessarily in the same order
-        fields = ['derived_from']
-
-
-class SourceValidationForm(forms.Form):
-    """Validate derived_from field from SourceForm."""
-
-    derived_from = forms.CharField(max_length=300)
+class GeospatialRelationValidationForm(RelationValidationForm):
+    """Validate GeospatialRelationForm 'text' and 'value' CharFields."""
+    type = forms.CharField(max_length=100)
+    value = forms.CharField()
+    text = forms.CharField(max_length=100)
 
 
 class IdentifierFormSetHelper(FormHelper):
@@ -652,7 +578,7 @@ class BaseFormHelper(FormHelper):
     """Render non-repeatable element related forms."""
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
-                 element_layout=None,  *args, **kwargs):
+                 element_layout=None, *args, **kwargs):
         """Render non-repeatable element related forms."""
         coverage_type = kwargs.pop('coverage', None)
         element_name_label = kwargs.pop('element_name_label', None)
@@ -690,22 +616,22 @@ class BaseFormHelper(FormHelper):
             element_name = "Abstract"
         if res_short_id and allow_edit:
             self.layout = Layout(
-                            Fieldset(element_name,
-                                     element_layout,
-                                     HTML('<div style="margin-top:10px">'),
-                                     HTML('<button type="button" '
-                                          'class="btn btn-primary pull-right btn-form-submit" '
-                                          'return false;">Save changes</button>'),
-                                     HTML('</div>')
-                                     ),
-                         )  # TODO: TESTING
+                Fieldset(element_name,
+                         element_layout,
+                         HTML('<div style="margin-top:10px">'),
+                         HTML('<button type="button" '
+                              'class="btn btn-primary pull-right btn-form-submit" '
+                              'return false;">Save changes</button>'),
+                         HTML('</div>')
+                         ),
+            )  # TODO: TESTING
         else:
             self.form_tag = False
             self.layout = Layout(
-                            Fieldset(element_name,
-                                     element_layout,
-                                     ),
-                          )
+                Fieldset(element_name,
+                         element_layout,
+                         ),
+            )
 
 
 class TitleValidationForm(forms.Form):
@@ -731,11 +657,11 @@ class SubjectsFormHelper(BaseFormHelper):
         """
         field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('value', css_class=field_width),
-                 )
+            Field('value', css_class=field_width),
+        )
 
         super(SubjectsFormHelper, self).__init__(allow_edit, res_short_id, element_id,
-                                                 element_name, layout,  *args, **kwargs)
+                                                 element_name, layout, *args, **kwargs)
 
 
 class SubjectsForm(forms.Form):
@@ -776,11 +702,11 @@ class AbstractFormHelper(BaseFormHelper):
         """
         field_width = 'form-control input-sm'
         layout = Layout(
-                        Field('abstract', css_class=field_width),
-                 )
+            Field('abstract', css_class=field_width),
+        )
 
         super(AbstractFormHelper, self).__init__(allow_edit, res_short_id, element_id,
-                                                 element_name, layout,  *args, **kwargs)
+                                                 element_name, layout, *args, **kwargs)
 
 
 class AbstractForm(ModelForm):
@@ -813,19 +739,8 @@ class AbstractValidationForm(forms.Form):
 class RightsValidationForm(forms.Form):
     """Validate Rights form with statement and URL field."""
 
-    statement = forms.CharField(required=False)
+    statement = forms.CharField()
     url = forms.URLField(required=False, max_length=500)
-
-    def clean(self):
-        """Clean data and render proper error messages."""
-        cleaned_data = super(RightsValidationForm, self).clean()
-        statement = cleaned_data.get('statement', None)
-        url = cleaned_data.get('url', None)
-        if not statement and not url:
-            self._errors['statement'] = ["A value for statement is missing"]
-            self._errors['url'] = ["A value for Url is missing"]
-
-        return self.cleaned_data
 
 
 class CoverageTemporalFormHelper(BaseFormHelper):
@@ -846,7 +761,7 @@ class CoverageTemporalFormHelper(BaseFormHelper):
         kwargs['coverage'] = 'temporal'
 
         super(CoverageTemporalFormHelper, self).__init__(allow_edit, res_short_id, element_id,
-                                                         element_name, layout,  *args, **kwargs)
+                                                         element_name, layout, *args, **kwargs)
 
 
 class CoverageTemporalForm(forms.Form):
@@ -879,17 +794,21 @@ class CoverageTemporalForm(forms.Form):
         super(CoverageTemporalForm, self).clean()
         start_date = self.cleaned_data.get('start', None)
         end_date = self.cleaned_data.get('end', None)
-        if not start_date:
-            self._errors['start'] = ["Data for start date is missing"]
+        if self.errors:
+            self.errors.clear()
+
+        if start_date is None:
+            self.add_error('start', "Data for start date is missing")
             is_form_errors = True
 
-        if not end_date:
-            self._errors['end'] = ["Data for end date is missing"]
+        if end_date is None:
+            self.add_error('end', "Data for end date is missing")
             is_form_errors = True
 
-        if start_date > end_date:
-            self._errors['end'] = ["End date should be date after the start date"]
-            is_form_errors = True
+        if not is_form_errors:
+            if start_date > end_date:
+                self.add_error('end', "End date should be a date after the start date")
+                is_form_errors = True
 
         if is_form_errors:
             return self.cleaned_data
@@ -930,7 +849,7 @@ class CoverageSpatialFormHelper(BaseFormHelper):
             layout.append(field)
         kwargs['coverage'] = 'spatial'
         super(CoverageSpatialFormHelper, self).__init__(allow_edit, res_short_id, element_id,
-                                                        element_name, layout,  *args, **kwargs)
+                                                        element_name, layout, *args, **kwargs)
 
 
 class CoverageSpatialForm(forms.Form):
@@ -965,8 +884,6 @@ class CoverageSpatialForm(forms.Form):
                                                 file_type=file_type)
         self.number = 0
         self.delete_modal_form = None
-        if self.errors:
-            self.errors.clear()
         if res_short_id:
             self.action = "/hsapi/_internal/%s/coverage/add-metadata/" % res_short_id
         else:
@@ -1009,14 +926,12 @@ class CoverageSpatialForm(forms.Form):
             north = temp_cleaned_data.get('north', None)
             east = temp_cleaned_data.get('east', None)
             if not north and north != 0:
-                self._errors['north'] = ["Data for north is missing"]
+                self.add_error('north', "Data for longitude is missing")
                 is_form_errors = True
-                del self.cleaned_data['north']
 
             if not east and east != 0:
-                self._errors['east'] = ["Data for east is missing"]
+                self.add_error('east', "Data for latitude is missing")
                 is_form_errors = True
-                del self.cleaned_data['east']
 
             if is_form_errors:
                 return self.cleaned_data
@@ -1045,13 +960,14 @@ class CoverageSpatialForm(forms.Form):
             if 'elevation' in temp_cleaned_data:
                 del temp_cleaned_data['elevation']
 
-            for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
+            box_fields_map = {"northlimit": "north latitude", "southlimit": "south latitude",
+                              "eastlimit": "east longitude", "westlimit": "west longitude"}
+            for limit in box_fields_map.keys():
                 limit_data = temp_cleaned_data.get(limit, None)
                 # allow value of 0 to go through
                 if not limit_data and limit_data != 0:
-                    self._errors[limit] = ["Data for %s is missing" % limit]
+                    self.add_error(limit, "Data for %s is missing" % box_fields_map[limit])
                     is_form_errors = True
-                    del self.cleaned_data[limit]
 
             if is_form_errors:
                 return self.cleaned_data
@@ -1073,9 +989,9 @@ class CoverageSpatialForm(forms.Form):
         self.cleaned_data['value'] = copy.deepcopy(temp_cleaned_data)
 
         if 'northlimit' in self.cleaned_data:
-                del self.cleaned_data['northlimit']
+            del self.cleaned_data['northlimit']
         if 'eastlimit' in self.cleaned_data:
-                del self.cleaned_data['eastlimit']
+            del self.cleaned_data['eastlimit']
         if 'southlimit' in self.cleaned_data:
             del self.cleaned_data['southlimit']
         if 'westlimit' in self.cleaned_data:

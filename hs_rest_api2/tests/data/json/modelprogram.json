@@ -1,0 +1,37 @@
+{
+  "type": "ModelProgram",
+  "url": "http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598/data/contents/setup_resmap.xml#aggregation",
+  "title": "setup againas",
+  "subjects": [
+    "asdf",
+    "fdsa"
+  ],
+  "language": "eng",
+  "additional_metadata": {
+    "1": "2",
+    "3": "4"
+  },
+  "rights": {
+    "statement": "This resource is shared under the Creative Commons Attribution CC BY.",
+    "url": "http://creativecommons.org/licenses/by/4.0/"
+  },
+  "version": "1",
+  "programming_languages": [
+    "R",
+    "python"
+  ],
+  "operating_systems": [
+    "linux",
+    "windows"
+  ],
+  "release_date": "2021-09-22",
+  "website": "https://www.hydroshare.org",
+  "code_repository": "https://www.github.com",
+  "file_types": [
+    {
+      "type": "https://www.hydroshare.org/terms/modelReleaseNotes",
+      "url": "http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598/data/contents/setup.cfg"
+    }
+  ],
+  "program_schema_json": "http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598/data/contents/setup_schema.json"
+}

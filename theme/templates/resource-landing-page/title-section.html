@@ -1,13 +1,22 @@
 {% load hydroshare_tags %}
 
-{# ======= Resource Publication just published notification =======#}
-{% if cm.raccess.published and just_published %}
+{# ======= Resource Submitted for Minimum Metadata Check Pre Publication =======#}
+{% if cm.raccess.review_pending and resource_edit_mode %}
     <div class="col-xs-12">
-        <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+        <div class="alert alert-warning alert-dismissible" role="alert">
             <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <strong>Congratulations! </strong>
-            <span>Your resource has been published. You will see the DOI in the citation for your resource below,
-                but it may take approximately one day for your DOI to become active.</span>
+            <span><strong>This resource is under review</strong> for appropriate
+                <a href="https://help.hydroshare.org/publishing-in-hydroshare/minimum-metadata-requirements-for-publishing-in-hydroshare/" target="_blank">minimum metadata</a>
+                and to ensure that it adheres to
+                <a href="https://help.hydroshare.org/publishing-in-hydroshare/terms-of-use-and-community-guidelines/" target="_blank">community guidelines</a>.
+                The review process will likely be complete within 1 business day, but not exceed 2 business days.
+                During this time, you can edit some of the metadata elements for published resources, but you cannot change the following:
+            </span>
+            <ul>
+                <li>Title</li>
+                <li>Authors</li>
+                <li>Content files</li>
+            </ul>
         </div>
     </div>
 {% endif %}
@@ -18,7 +27,7 @@
         <div class="alert alert-warning alert-dismissible" role="alert">
             <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             <strong>This resource has been formally published. </strong>
-            <span>You can edit some of the metadata elements for published resources, but you cannot change the followings:</span>
+            <span>You can edit some of the metadata elements for published resources, but you cannot change the following:</span>
             <ul>
                 <li>Title</li>
                 <li>Authors</li>
@@ -62,32 +71,41 @@
 
 {# ======= Missing fields notification =======#}
 {% if page.perms.change and not is_replaced_by %}
-    {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" or not cm.has_required_content_files %}
+    {% if missing_metadata_elements_for_discoverable or title|stringformat:"s" == "Untitled resource" or not cm.has_required_content_files %}
         <div class="col-xs-12">
             <div id="missing-metadata-or-file" class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                         aria-hidden="true">&times;</span></button>
-                {% if missing_metadata_elements %}
+                {% if missing_metadata_elements_for_discoverable %}
                     {% if just_created %}
-                        This is the landing page for the resource you just created. Add files in the content area below
-                        and enter metadata where needed. The following metadata is required for your resource to be
-                        {% if cm.resource_type != 'ToolResource' %} published or{% endif %} made public:
-                    {% else %}
-                        <span>The following metadata are still required to
-                            {% if cm.resource_type != 'ToolResource' %}publish the resource or {% endif %}make the resource public or discoverable:</span>
+                        This is the landing page for the {{ cm.display_name|lower }} you just created. Add files in the content area below and enter metadata where needed.
                     {% endif %}
+                    <span>We recommend following these minimum metadata requirements before making your {{ cm.display_name|lower }} public or discoverable:</span>
                     <ul>
-                        {% for element in missing_metadata_elements %}
+                        {% for element in missing_metadata_elements_for_discoverable %}
                             <li>{{ element }}</li>
                         {% endfor %}
                         {% if title|stringformat:"s" == "Untitled resource" %}
                            <li>Title: needs to be changed</li>
                         {% endif %}
+                        {% if recommended_missing_elements %}
+                            {% for element in recommended_missing_elements %}
+                                <li>{{ element }}</li>
+                            {% endfor %}
+                    {%  endif %}
                     </ul>
                 {%  endif %}
                 {%  if not cm.has_required_content_files %}
                          <br>
-                        <span>You must {% if missing_metadata_elements %}also {% endif %}add content files to your resource before it can be published, public or discoverable.</span>
+                        <span>You must {% if missing_metadata_elements_for_discoverable %}also {% endif %}add content files to your resource before it can be published, public or discoverable.</span>
+                {% endif %}
+                {% if cm.resource_type != 'ToolResource' %}
+                <br>
+                    <span>Publishing a {{ cm.display_name|lower }} requires meeting
+                        <a href="https://help.hydroshare.org/publishing-in-hydroshare/minimum-metadata-requirements-for-publishing-in-hydroshare/" target="_blank">minimum metadata standards</a>
+                        and adherence to
+                        <a href="https://help.hydroshare.org/publishing-in-hydroshare/terms-of-use-and-community-guidelines/" target="_blank">community guidelines</a>.
+                    </span>
                 {% endif %}
                 {%  if cm.resource_type|lower == "collectionresource" %}
                     {% if not cm.has_resources%}
@@ -95,10 +113,11 @@
                         <span>A collection must contain at least one resource before it can be published, public or discoverable.</span>
                     {% endif %}
                 {% endif %}
+
                 {% if not resource_edit_mode %}
                     <hr>
                     <span class="glyphicon glyphicon-question-sign"></span>
-                    <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.</small>
+                    <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this {{ cm.display_name|lower }}.</small>
                 {% endif %}
             </div>
         </div>
@@ -135,49 +154,69 @@
             </div>
         </div>
     {% endif %}
-{% endif %}
-
-{# ======= Check MODFLOW Model Instance content files =======#}
-{% if cm.resource_type == "MODFLOWModelInstanceResource" %}
-    {% if self_access_level == 'owner' or self_access_level == 'edit' %}
-        {% if cm.check_content_files %}
-            <div class="col-sm-12">
-                <div id="missing-metadata-or-file" role="alert"
-                     class="alert persistent {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible">
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="false">&times;</span>
-                    </button>
-                    <br>
-                    {% if cm.check_content_files == 'multiple_nam' %}
-                        <span>The following conditions are recommended to have a complete resource before making the resource public or discoverable:<br>
-                        <ul>
-                            <li>Only one .nam or .mfn is allowed</li>
-                        </ul>
-                    </span>
-                    {% else %}
-                        <span>The following files are recommended to have a complete resource before making the resource public or discoverable:<br>
-                        <ul>{% for f in cm.check_content_files %}
-                            <li>{{ f }} </li>{% endfor %}</ul>
-                    </span>
-                    {% endif %}
+    <div id="checking-for-paths" class="col-sm-12">
+        <p class="alert alert-warning">Checking for non-preferred file/folder path names (may take a long time depending on the number of files/folders) ...</p>
+    </div>
+    <div id="non-preferred-paths">
+        <div class="col-sm-12">
+            <div id="non-preferred-paths" class="alert alert-warning alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+            <p>This resource contains some files/folders that have non-preferred characters in their name.
+                <a href="#" data-toggle="modal" data-target="#non-preferred-paths-dialog">Show non-conforming files/folders.</a>
+            </p>
+            </div>
+        </div>
+        <div class="modal fade" id="non-preferred-paths-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title">File/Folders with non preferred characters</h4>
+                        <p>
+                         The following files/folders contain non-preferred characters in their name.
+                         This may result in problems and you are encouraged to change the name to follow the
+                         <a href="https://help.hydroshare.org/hydroshare-resources/special-characters-in-file-folder-names/" target="_blank">HydroShare preferred character set.</a>
+                        </p>
+                    </div>
+                    <div class="modal-body">
+                    {# non preferred paths are populated here by JS code #}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
                 </div>
             </div>
-        {% endif %}
-    {% endif %}
+        </div>
+    </div>
+{% endif %}
+
+{# ======= ResourceFile Repair notification =======#}
+{% if resource_edit_mode and notify_on_repair and recently_repaired %}
+    <div class="col-sm-12">
+        <div id="missing-metadata-file-type" class="alert alert-danger alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                    aria-hidden="true">&times;</span></button>
+
+            <span>
+                Within the last week, the files contained in this resource were found to be corrupt and were repaired. 
+                For more information please contact <a href="mailto:help@cuahsi.org?subject=Corrupt Resource Files">help@cuahsi.org</a>
+            </span>
+        </div>
+    </div>
 {% endif %}
 
 {# ======= Title ======= #}
 <div class="col-xs-12">
     {% if not resource_edit_mode %}
-        <div class="flex">
-            <h2 id="resource-title">{{ title }}</h2>
+        <div class="flex align-center">
+            <h2 id="resource-title">{{ title|escape }}</h2>
 
             {% if tool_homepage_url %}
                 <span id="apps-url">
                     <a class='btn btn-primary' href="{{ tool_homepage_url }}" target="_blank">Open Web App</a>
                 </span>
             {% endif %}
-
             <span id="apps-dropdown" v-if="openWithTools.length">
                 <div v-if="!isLoading" class="btn-group">
                     <button class="btn btn-primary dropdown-toggle"
@@ -197,8 +236,13 @@
                         </li>
                      </ul>
                 </div>
+                <a v-if="openWithTools.length" data-toggle="tooltip" data-placement="auto"
+                  href="https://www.youtube.com/watch?v=rw4RERFchns" target="_blank"
+                  title='How to: Use Open With Function'
+                  class="fa fa-youtube-play icon-red has-space-left no-decoration icon-guide">
+                </a>
             </span>
-            <script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/relevant-tools.js"></script>
+            <script type="text/javascript" src="{% static 'js/hs-vue/relevant-tools.js' %}"></script>
         </div>
         <hr>
     {% else %}
@@ -259,10 +303,10 @@
             // contents here are required by topics.js
             const topics_from_page = JSON.parse("{{ topics_json }}");
         </script>
-        <script src="{{ STATIC_URL }}js/dual-listbox.js"></script>
+        <script src="{% static 'js/dual-listbox.js' %}"></script>
 
 
-        {% if not cm.raccess.published %}
+        {% if not cm.raccess.published_or_review_pending %}
             <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
                   id="id-title" method="post">
                 {% csrf_token %}
@@ -292,8 +336,8 @@
 
 {% if is_replaced_by %}
     <div class="col-xs-12">
-        <div class="clear-fix"><i>A newer version of this resource <a
-                href="{{ is_replaced_by }}">{{ is_replaced_by }}</a> is available that replaces this version.</i>
+        <div class="clear-fix">
+            <i>A newer version of this resource {{ is_replaced_by|urlize }} is available that replaces this version.</i>
         </div>
     </div>
 {% endif %}
@@ -304,11 +348,10 @@
         <div class="col-xs-12">
     {% else %}
         {# need to add space to the bottom as the right side toolbar buttons won't be displayed for unauthenticated user #}
-        <div class="col-xs-12 space-bottom">
+        <div class="col-xs-12 has-space-bottom">
     {% endif %}
         <div class="clear-fix">
-            <i>An older version of this resource <a
-                href="{{ is_version_of }}">{{ is_version_of }}</a> is available.</i>
+            <i>An older version of this resource {{ is_version_of|urlize }} is available.</i>
         </div>
     </div>
 {% endif %}
@@ -316,15 +359,15 @@
 {% if cm.resource_type == "ToolResource" and cm.metadata.approved %}
     <div class="col-xs-12">
         <div id="app-approved" class="flex" style="align-items: center">
-            <img src="/static/img/approved_app.png">
-            <span>This WebApp resource has been approved by HydroShare admin.</span>
+            <img src="{% static 'img/approved_app.png' %}">
+            <span>This App Connector has been approved by HydroShare admin.</span>
         </div>
     </div>
 {% endif %}
 
 {% block extra_js %}
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/title-builder.css">
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/vue-mover.css">
+    <link rel="stylesheet" href="{% static 'css/title-builder.css' %}">
+    <link rel="stylesheet" href="{% static 'css/vue-mover.css' %}">
 
     <style>
         [v-cloak] {
@@ -334,8 +377,14 @@
         .title-builder-input {
             margin-top: 1em;
         }
+        .path-align {
+          word-wrap: break-word;
+          white-space: normal !important;
+        }
     </style>
+
     {#        vue-mover uses Sortable.min.js#}
-    <script src="{{ STATIC_URL }}js/Sortable.min.js"></script>
-    <script src="{{ STATIC_URL }}js/vue-mover.js"></script>
+    <script src="{% static 'js/non_preferred_paths_in_resource.js' %}"></script>
+    <script src="{% static 'js/Sortable.min.js' %}"></script>
+    <script src="{% static 'js/vue-mover.js' %}"></script>
 {% endblock %}

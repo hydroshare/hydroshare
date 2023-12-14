@@ -4,10 +4,13 @@ import re
 import operator
 from datetime import datetime, timedelta
 from haystack.query import SQ
+from haystack.inputs import Exact, Clean
 from django.conf import settings
-
+import logging
+logger = logging.getLogger(__name__)
 
 HAYSTACK_DEFAULT_OPERATOR = getattr(settings, 'HAYSTACK_DEFAULT_OPERATOR', 'AND')
+# Enable what you need here.
 
 
 class MatchingBracketsNotFoundError(Exception):
@@ -17,7 +20,7 @@ class MatchingBracketsNotFoundError(Exception):
         self.value = value
 
     def __str__(self):
-        return "Matching brackets were not found: "+self.value
+        return "Matching brackets were not found: " + self.value
 
 
 class InequalityNotAllowedError(Exception):
@@ -126,6 +129,7 @@ class ParseSQ(object):
         'language',
         'source',
         'relation',
+        'geospatialrelation'
         'resource_type',
         'content_type',
         'comment',
@@ -189,8 +193,11 @@ class ParseSQ(object):
     Pattern_Quoted_Text = re.compile(r"^\"([^\"]*)\"\s*", re.U)
     Pattern_Unquoted_Text = re.compile(r"^(\w*)\s*", re.U)
 
-    def __init__(self, use_default=HAYSTACK_DEFAULT_OPERATOR):
+    def __init__(self, use_default=HAYSTACK_DEFAULT_OPERATOR,
+                 handle_logic=False, handle_fields=False):
         self.Default_Operator = use_default
+        self.handle_logic = handle_logic
+        self.handle_fields = handle_fields
 
     @property
     def current(self):
@@ -232,11 +239,11 @@ class ParseSQ(object):
         mat = re.search(self.Pattern_Quoted_Text, self.query)
         if mat:
             text_in_quotes = mat.group(1)
-            if (search_operator != ':'):
+            if search_operator != ':':
                 raise InequalityNotAllowedError(
                     "Inequality is not meaningful for quoted text \"{}\"."
                     .format(text_in_quotes))
-            self.sq = self.apply_operand(SQ(**{search_field+"__exact": text_in_quotes}))
+            self.sq = self.apply_operand(SQ(**{search_field: Exact(text_in_quotes)}))
             # remove quoted text from query
             self.query = re.sub(self.Pattern_Quoted_Text, '', self.query, 1)
         else:  # no quotes
@@ -254,23 +261,23 @@ class ParseSQ(object):
                     # limit creation date to one day by generating two inequalities
                     nextday_object = thisday_object + timedelta(days=1)
                     nextday = nextday_object.strftime("%Y-%m-%dT%H:%M:%SZ")
-                    self.sq = self.apply_operand(SQ(**{search_field+'__gte': thisday}) &
-                                                 SQ(**{search_field+'__lt': nextday}))
+                    self.sq = self.apply_operand(SQ(**{search_field + '__gte': thisday})
+                                                 & SQ(**{search_field + '__lt': nextday}))
                 elif search_operator == '<=':  # include whole day of target date
                     nextday_object = thisday_object + timedelta(days=1)
                     nextday = nextday_object.strftime("%Y-%m-%dT%H:%M:%SZ")
                     self.sq = self.apply_operand(
-                        SQ(**{search_field+"__lt": nextday}))
+                        SQ(**{search_field + "__lt": nextday}))
                 elif search_operator == '>':  # include whole day of target date
                     nextday_object = thisday_object + timedelta(days=1)
                     nextday = nextday_object.strftime("%Y-%m-%dT%H:%M:%SZ")
                     self.sq = self.apply_operand(
-                        SQ(**{search_field+"__gte": nextday}))
+                        SQ(**{search_field + "__gte": nextday}))
                 else:
                     self.sq = self.apply_operand(
-                        SQ(**{search_field+inequality_qualifier: thisday}))
+                        SQ(**{search_field + inequality_qualifier: thisday}))
             else:
-                self.sq = self.apply_operand(SQ(**{search_field+inequality_qualifier: word}))
+                self.sq = self.apply_operand(SQ(**{search_field + inequality_qualifier: word}))
             # remove unquoted text from query
             self.query = tail(self.query)
 
@@ -287,8 +294,10 @@ class ParseSQ(object):
                 no_brackets += 1
             i += 1
         if not no_brackets:
-            parser = ParseSQ(self.Default_Operator)
-            self.sq = self.apply_operand(parser.parse(self.query[1:i-1]))
+            parser = ParseSQ(use_default=self.Default_Operator,
+                             handle_logic=self.handle_logic,
+                             handle_fields=self.handle_fields)
+            self.sq = self.apply_operand(parser.parse(self.query[1:i - 1]))
         else:
             raise MatchingBracketsNotFoundError("Parentheses must match in '{}'."
                                                 .format(self.query))
@@ -296,7 +305,8 @@ class ParseSQ(object):
 
     def handle_normal_query(self):
         word = head(self.query)
-        self.sq = self.apply_operand(SQ(content=word))
+        word = word.replace('-', ' ')
+        self.sq = self.apply_operand(SQ(content=Clean(word)))
         self.current = self.Default_Operator
         self.query = tail(self.query)
 
@@ -310,7 +320,7 @@ class ParseSQ(object):
         # it seams that haystack exact only works if there is a space in the query.So adding a space
         # if not re.search(r'\s', text_in_quotes):
         #     text_in_quotes+=" "
-        self.sq = self.apply_operand(SQ(content__exact=text_in_quotes))
+        self.sq = self.apply_operand(SQ(content=Exact(text_in_quotes)))
         self.query, n = re.subn(self.Pattern_Quoted_Text, '', self.query, 1)
         self.current = self.Default_Operator
 
@@ -325,18 +335,15 @@ class ParseSQ(object):
         self.current = self.Default_Operator
         while self.query:
             self.query = self.query.lstrip()
-            if re.search(self.Pattern_Field_Query, self.query):
+            if self.handle_fields and re.search(self.Pattern_Field_Query, self.query):
                 self.handle_field_query()
-            # # Optional control of exact keyword: disabled for now
-            # elif re.search(self.Pattern_Field_Exact_Query, self.query):
-            #     self.handle_field_exact_query()
             elif re.search(self.Pattern_Quoted_Text, self.query):
                 self.handle_quoted_query()
-            elif re.search(self.Pattern_Operator, self.query):
+            elif self.handle_logic and re.search(self.Pattern_Operator, self.query):
                 self.handle_operator_query()
             elif re.search(self.Pattern_Normal_Query, self.query):
                 self.handle_normal_query()
-            elif self.query and self.query[0] == "(":
+            elif self.handle_logic and self.query and self.query[0] == "(":
                 self.handle_brackets()
             else:
                 self.handle_normal_query()

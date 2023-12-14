@@ -3,6 +3,8 @@
 from django import template
 import timeago
 from django.utils import timezone as django_timezone
+from django.utils.html import escape
+
 register = template.Library()
 
 
@@ -15,7 +17,7 @@ def date_time_pac(in_datetime):
 @register.simple_tag(name='resource_link_builder')
 def build_resource_link(title, short_id):
     link = "/resource/" + short_id + "/"
-    return "<strong> <a href=\"" + link + "\">" + title + "</a> </strong>"
+    return "<strong> <a href=\"" + link + "\">" + escape(title) + "</a> </strong>"
 
 
 @register.simple_tag(name='build_privacy_status')
@@ -49,33 +51,11 @@ def resource_verbose_name_builder(rsc_type):
 class ResourceNameDBToUIMap:
     dict = {
         'CompositeResource': 'composite',
-        'RasterResource': 'geographicraster',
-        'RefTimeSeriesResource': 'his',
-        'ScriptResource': 'script',
-        'ModelProgramResource': 'modelprogram',
-        'ModelInstanceResource': 'modelinstance',
-        'SWATModelInstanceResource': 'swat',
-        'NetcdfResource': 'multidimensional',
-        'Time Series': 'timeseries',
-        'GeographicFeatureResouce': 'geographicfeature',
         'ToolResource': 'webapp',
-        'CollectionResource': 'collection',
-        'MODFLOWModelInstanceResource': 'modflow',
-        'GenericResource': 'generic'
+        'CollectionResource': 'collection'
     }
     dict_verbose_name = {
-        'CompositeResource': 'Composite',
-        'RasterResource': 'Geographic Raster',
-        'RefTimeSeriesResource': 'HIS Referenced Time Series',
-        'ScriptResource': 'Script',
-        'ModelProgramResource': 'Model Program',
-        'ModelInstanceResource': 'Model Instance',
-        'SWATModelInstanceResource': 'SWAT Model Instance',
-        'NetcdfResource': 'Multidimensional (NetCDF)',
-        'Time Series': 'Time Series',
-        'GeographicFeatureResouce': 'Geographic Feature',
-        'ToolResource': 'Web App',
-        'CollectionResource': 'Collection',
-        'MODFLOWModelInstanceResource': 'MODFLOW Model Instance',
-        'GenericResource': 'Generic'
+        'CompositeResource': 'Resource',
+        'ToolResource': 'App Connector',
+        'CollectionResource': 'Collection'
     }

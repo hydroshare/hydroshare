@@ -3,11 +3,11 @@
 from django.db import migrations
 from django.contrib.auth.models import User
 
-from hs_core.models import BaseResource
-from hs_labels.models import UserLabels, ResourceLabels
-
 
 def migrate_users_and_resources(apps, schema_editor):
+    BaseResource = apps.get_model('hs_core', 'BaseResource')
+    UserLabels = apps.get_model('hs_labels', 'UserLabels')
+    ResourceLabels = apps.get_model('hs_labels', 'ResourceLabels')
     # create a 'UserLabel' record for each existing user - needed for the new resource labelling
     UserLabels.objects.all().delete()
     for u in User.objects.all():
@@ -21,6 +21,9 @@ def migrate_users_and_resources(apps, schema_editor):
 
 
 def undo_migrate_users_and_resources(apps, schema_editor):
+    UserLabels = apps.get_model('hs_labels', 'UserLabels')
+    ResourceLabels = apps.get_model('hs_labels', 'ResourceLabels')
+    
     UserLabels.objects.all().delete()
 
     ResourceLabels.objects.all().delete()

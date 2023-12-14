@@ -1,0 +1,31 @@
+<div class="col-lg-2" id="facets">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <span class="glyphicon glyphicon glyphicon-user"></span>
+        &nbsp;Shared by
+      </h4>
+    </div>
+    <div id="filter-shared-by" class="facet-list">
+      <div class="panel-body">
+        <div class="list-group">
+          <div id="groups-list">
+            <div v-if="!Object.keys(resourcesByGroup).length" class="no-items-found">No resources have been shared with this community yet.</div>
+
+            <ul class="list-group inputs-group">
+              <template v-for="group of members">
+                <li v-if="resourcesByGroup.hasOwnProperty(group.id)" class="list-group-item" :id="group.id">
+                  <span data-facet="none" class="badge">${ resourcesByGroup[group.id].length }</span>
+                  <label class="checkbox noselect"><input :id="group.id" type="checkbox" data-facet="none" value="Click"
+                      @click="updateContributors(group.id)" />
+                    ${group.name}
+                  </label>
+                </li>
+              </template>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,5 +1,5 @@
 from django.test import TestCase
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 
 from hs_access_control.models import UserResourceProvenance, UserResourcePrivilege, \
     GroupResourceProvenance, GroupResourcePrivilege, \
@@ -8,6 +8,7 @@ from hs_access_control.models import UserResourceProvenance, UserResourcePrivile
 
 from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.models import BaseResource
 
 from hs_access_control.tests.utilities import global_reset, \
     is_equal_to_as_set, check_provenance_synchronization
@@ -61,7 +62,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
 
         # george creates a entity 'bikes'
         self.bikes = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.george,
             title='Bikes',
             metadata=[],
@@ -72,7 +73,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
 
         # george creates a entity 'harps'
         self.harps = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.george,
             title='Harps',
             metadata=[],
@@ -80,6 +81,14 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
 
         # george creates a entity 'harpers'
         self.harpers = self.george.uaccess.create_group('Harpers', 'Without any ferries')
+
+    def tearDown(self):
+        super(UnitTests, self).tearDown()
+        User.objects.all().delete()
+        Group.objects.all().delete()
+        self.harps.delete()
+        self.bikes.delete()
+        BaseResource.objects.all().delete()
 
     def test_user_resource_provenance_crosstalk(self):
         george = self.george

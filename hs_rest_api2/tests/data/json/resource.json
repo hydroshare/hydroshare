@@ -1,0 +1,113 @@
+{
+  "type": "CompositeResource",
+  "url": "http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598",
+  "identifier": "http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598",
+  "title": "sadfadsgasdf",
+  "abstract": "sadfasdfsadfa",
+  "language": "eng",
+  "subjects": [
+    "CUAHSI",
+    "other",
+    "key1",
+    "changed",
+    "key2",
+    "key 1",
+    "Logan River",
+    "key",
+    "fdas",
+    "value1",
+    "Snow water equivalent",
+    "UEB",
+    "Time Series",
+    "asdf"
+  ],
+  "creators": [
+    {
+      "name": "some_last_name, some_first_name",
+      "organization": "RENCI",
+      "email": "test_user@email.com",
+      "hydroshare_user_id": 1,
+      "identifiers": {}
+    },
+    {
+      "name": "Tseganeh Z. Gichamo",
+      "identifiers": {}
+    }
+  ],
+  "contributors": [
+    {
+      "name": "Anthony Michael Castronova",
+      "phone": "tel:3399334127",
+      "address": "MA, US",
+      "organization": "CUAHSI",
+      "email": "castronova.anthony@gmail.com",
+      "homepage": "http://anthonycastronova.com",
+      "identifiers": {
+        "GoogleScholarID": "https://scholar.google.com/citations?user=ScWTFoQAAAAJ&hl=en",
+        "ResearchGateID": "https://www.researchgate.net/profile/Anthony_Castronova",
+        "ORCID": "https://orcid.org/0000-0002-1341-5681"
+      }
+    },
+    {
+      "name": "David Tarboton",
+      "phone": "tel:4357973172",
+      "address": "Utah, US",
+      "organization": "Utah State University",
+      "email": "dtarb@usu.edu",
+      "homepage": "http://hydrology.usu.edu/dtarb",
+      "identifiers": {
+        "ORCID": "https://orcid.org/0000-0002-1998-3479"
+      }
+    }
+  ],
+  "relations": [
+    {
+      "type": "This resource is required by",
+      "value": "https://www.hydroshare.org/resource/12345abc"
+    },
+    {
+      "type": "This resource is described by",
+      "value": "https://www.hydroshare.org/resource/12345"
+    }
+  ],
+  "additional_metadata": {
+    "key1": "value1",
+    "key2": "value2"
+  },
+  "rights": {
+    "statement": "my statement",
+    "url": "http://studio.bakajo.com"
+  },
+  "created": "2020-07-09T19:12:21.354703+00:00",
+  "modified": "2020-11-13T19:40:57.276064+00:00",
+  "review_started": "2020-07-16T23:12:19.334831+00:00",
+  "awards": [
+    {
+      "funding_agency_name": "agency1",
+      "title": "t",
+      "number": "n",
+      "funding_agency_url": "https://google.com"
+    },
+    {
+      "funding_agency_name": "agency2",
+      "title": "T2",
+      "number": "TN",
+      "funding_agency_url": "https://google.com"
+    }
+  ],
+  "spatial_coverage": {
+    "type": "box",
+    "name": "asdfsadf",
+    "northlimit": 42.1505,
+    "eastlimit": -84.5739,
+    "southlimit": 30.282,
+    "westlimit": -104.7887,
+    "units": "Decimal degrees",
+    "projection": "WGS 84 EPSG:4326"
+  },
+  "period_coverage": {
+    "start": "2020-07-10T00:00:00",
+    "end": "2020-07-29T00:00:00"
+  },
+  "citation": "a custom citation"
+}

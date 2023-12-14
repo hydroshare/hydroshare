@@ -4,7 +4,7 @@ from django.test import TestCase
 
 from hs_core.hydroshare.users import create_account
 from hs_core.hydroshare.resource import add_resource_files, create_resource
-from hs_core.models import GenericResource
+from hs_core.models import BaseResource
 from hs_core.tasks import create_temp_zip
 from django_irods.storage import IrodsStorage
 from hs_core.models import ResourceFile
@@ -61,7 +61,7 @@ class TestFolderDownloadZip(TestCase):
         if self.refts_file:
             self.refts_file.close()
             os.remove(self.refts_file.name)
-        GenericResource.objects.all().delete()
+        BaseResource.objects.all().delete()
         if self.istorage.exists("zips"):
             self.istorage.delete("zips")
 

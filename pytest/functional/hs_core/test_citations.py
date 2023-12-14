@@ -30,4 +30,4 @@ def test_citation_create(sample_user, resource_for_citation):
     assert (str(resource_for_citation.metadata.citation.first()) == updated_citation)
     client.post('/hsapi/_internal/{}/citation/{}/delete-metadata/'.format(resource_for_citation.short_id,
                                                                           citation_id), HTTP_REFERER='http://url')
-    assert(citation_id not in [citation.get('id') for citation in resource_for_citation.metadata.citation.all()])
+    assert (citation_id not in [citation.get('id') for citation in resource_for_citation.metadata.citation.all()])

@@ -1,13 +1,13 @@
 {# This template is used as the landing page for Composite Resource #}
 
-{% extends "pages/genericresource.html" %}
+{% extends "pages/baseresource.html" %}
 {% load pages_tags mezzanine_tags hydroshare_tags crispy_forms_tags %}
 {% include "resource-landing-page/coordinates_picker.html" %}
 
 {% block extra_js %}
     {{ block.super }}
     {# resource specific js can go here #}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/composite-resource.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/time-series-filetype.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jsoneditor.min.js"></script>
+    <script type="text/javascript" src="{% static 'js/composite-resource.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/time-series-filetype.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/jsoneditor.min.js' %}"></script>
 {% endblock %}

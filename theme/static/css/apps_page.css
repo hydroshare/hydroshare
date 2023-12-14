@@ -3,6 +3,13 @@
   border-bottom: 1px solid #cdcdcd;
   background: #efefef;
   margin-bottom: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
+  gap: 1rem;
+}
+
+.apps-container::before, .apps-container::after { 
+  display: none !important;
 }
 
 .webapp-listing {

@@ -55,7 +55,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
 
         # george creates a resource 'bikes'
         self.bikes = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.george,
             title='Bikes',
             metadata=[],
@@ -223,7 +223,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
             is_equal_to_as_set(
                 george.uaccess.view_resources,
                 [bikes]))
-        trikes = hydroshare.create_resource(resource_type='GenericResource',
+        trikes = hydroshare.create_resource(resource_type='CompositeResource',
                                             owner=self.george,
                                             title='Trikes',
                                             metadata=[],)
@@ -239,7 +239,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
             is_equal_to_as_set(
                 george.uaccess.owned_resources,
                 [bikes]))
-        trikes = hydroshare.create_resource(resource_type='GenericResource',
+        trikes = hydroshare.create_resource(resource_type='CompositeResource',
                                             owner=self.george,
                                             title='Trikes',
                                             metadata=[],)
@@ -255,7 +255,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
             is_equal_to_as_set(
                 george.uaccess.edit_resources,
                 [bikes]))
-        trikes = hydroshare.create_resource(resource_type='GenericResource',
+        trikes = hydroshare.create_resource(resource_type='CompositeResource',
                                             owner=self.george,
                                             title='Trikes',
                                             metadata=[],)
@@ -673,4 +673,22 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
             PrivilegeCodes.OWNER)
         self.assertEqual(
             bikes.raccess.get_effective_privilege(alva),
+            PrivilegeCodes.NONE)
+
+    def test_resource_get_effective_privilege_ignore_super(self):
+        george = self.george
+        alva = self.alva
+        admin = self.admin
+        bikes = self.bikes
+        self.assertEqual(
+            bikes.raccess.get_effective_privilege(admin, ignore_superuser=False),
+            PrivilegeCodes.OWNER)
+        self.assertEqual(
+            bikes.raccess.get_effective_privilege(admin, ignore_superuser=True),
+            PrivilegeCodes.NONE)
+        self.assertEqual(
+            bikes.raccess.get_effective_privilege(george, ignore_superuser=True),
+            PrivilegeCodes.OWNER)
+        self.assertEqual(
+            bikes.raccess.get_effective_privilege(alva, ignore_superuser=True),
             PrivilegeCodes.NONE)

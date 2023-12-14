@@ -8,7 +8,7 @@
 				"refType": "WOF",
 				"returnType": "WaterML 1.1",
 				"serviceType": "SOAP",
-				"url": "http://hydroportal.cuahsi.org/nwisdv/cuahsi_1_1.asmx?WSDL"
+				"url": "http://www.google.com"
 			},
 			"site": {
 				"siteName": " ",

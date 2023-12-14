@@ -5,7 +5,7 @@ from django.contrib.auth.models import User, Group
 
 from hs_core.hydroshare.resource import add_resource_files, create_resource
 from hs_core.hydroshare.users import create_account
-from hs_core.models import GenericResource
+from hs_core.models import BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core.hydroshare.utils import QuotaException, resource_file_add_pre_process
 from theme.models import QuotaMessage
@@ -50,7 +50,8 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         super(TestAddResourceFiles, self).tearDown()
         User.objects.all().delete()
         Group.objects.all().delete()
-        GenericResource.objects.all().delete()
+        self.res.delete()
+        BaseResource.objects.all().delete()
         self.myfile1.close()
         os.remove(self.myfile1.name)
         self.myfile2.close()
@@ -60,37 +61,36 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
 
     def test_add_files(self):
         # create a resource
-        res = create_resource(resource_type='GenericResource',
-                              owner=self.user,
-                              title='Test Resource',
-                              metadata=[],)
+        self.res = create_resource(resource_type='CompositeResource',
+                                   owner=self.user,
+                                   title='Test Resource',
+                                   metadata=[], )
 
-        self.assertEqual(0, res.size)
+        self.assertEqual(0, self.res.size)
 
         # add files - this is the api we are testing
-        add_resource_files(res.short_id, self.myfile1, self.myfile2, self.myfile3)
+        add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3)
 
         # resource should have 3 files
-        self.assertEqual(res.files.all().count(), 3)
-        self.assertEqual(81, res.size)
+        self.assertEqual(self.res.files.all().count(), 3)
+        self.assertEqual(81, self.res.size)
 
         # add each file of resource to list
         file_list = []
-        for f in res.files.all():
+        for f in self.res.files.all():
             file_list.append(f.resource_file.name.split('/')[-1])
 
         # check if the file name is in the list of files
         self.assertTrue(self.n1 in file_list, "file 1 has not been added")
         self.assertTrue(self.n2 in file_list, "file 2 has not been added")
         self.assertTrue(self.n3 in file_list, "file 3 has not been added")
-        res.delete()
 
     def test_add_files_over_quota(self):
         # create a resource
-        res = create_resource(resource_type='GenericResource',
-                              owner=self.user,
-                              title='Test Resource',
-                              metadata=[],)
+        self.res = create_resource(resource_type='CompositeResource',
+                                   owner=self.user,
+                                   title='Test Resource',
+                                   metadata=[], )
 
         if not QuotaMessage.objects.exists():
             QuotaMessage.objects.create()
@@ -107,19 +107,30 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         # and quota enforce flag is set to True
         files = [self.myfile1, self.myfile2, self.myfile3]
         with self.assertRaises(QuotaException):
-            resource_file_add_pre_process(resource=res, files=files,
-                                          user=self.user,
+            resource_file_add_pre_process(resource=self.res, files=files,
+                                          user=self.user, folder="",
                                           extract_metadata=False)
 
         qmsg.enforce_quota = False
         qmsg.save()
         # add files should not raise quota exception since enforce_quota flag is set to False
         try:
-            resource_file_add_pre_process(resource=res, files=files,
-                                          user=self.user,
+            resource_file_add_pre_process(resource=self.res, files=files,
+                                          user=self.user, folder="",
                                           extract_metadata=False)
         except QuotaException as ex:
             self.fail("add resource file action should not raise QuotaException for "
                       "over quota cases if quota is not enforced - Quota Exception: " + str(ex))
 
-        res.delete()
+    def test_add_files_toggles_bag_flag(self):
+        # create a resource
+        self.res = create_resource(resource_type='CompositeResource',
+                                   owner=self.user,
+                                   title='Test Resource',
+                                   metadata=[], )
+        self.res.setAVU('bag_modified', 'false')
+        self.assertFalse(self.res.getAVU('bag_modified'))
+        # add files - this is the api we are testing
+        add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3)
+
+        self.assertTrue(self.res.getAVU('bag_modified'))

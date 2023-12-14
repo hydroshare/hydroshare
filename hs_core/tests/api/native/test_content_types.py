@@ -17,7 +17,7 @@ def is_equal_to_as_set(l1, l2):
     """
     # Note specifically that set(l1) == set(l2) does not work as expected.
     return len(set(l1) & set(l2)) == len(set(l1)) and \
-           len(set(l1) | set(l2)) == len(set(l1))
+        len(set(l1) | set(l2)) == len(set(l1))
 
 
 class TestContentTypes(MockIRODSTestCaseMixin,
@@ -79,9 +79,9 @@ class TestContentTypes(MockIRODSTestCaseMixin,
 
         types = get_content_types(self.res)
         self.assertTrue(is_equal_to_as_set(
-                            types[0],
-                            ['Composite', 'Document', 'Presentation', 'Spreadsheet',
-                             'Jupyter Notebook']))
+            types[0],
+            ['Resource', 'Document', 'Presentation', 'Spreadsheet',
+             'Jupyter Notebook']))
 
         self.assertTrue(is_equal_to_as_set(types[1], []))  # no left-over extensions
 
@@ -102,7 +102,7 @@ class TestContentTypes(MockIRODSTestCaseMixin,
                          msg="resource file count didn't match")
 
         types = get_content_types(self.res)
-        self.assertTrue(is_equal_to_as_set(types[0], ['Composite', self.content_types[0]]))
+        self.assertTrue(is_equal_to_as_set(types[0], ['Resource', self.content_types[0]]))
 
         self.assertTrue(is_equal_to_as_set(types[1], []))  # no left-over extensions
 
@@ -123,7 +123,7 @@ class TestContentTypes(MockIRODSTestCaseMixin,
                          msg="resource file count didn't match")
 
         types = get_content_types(self.res)
-        self.assertTrue(is_equal_to_as_set(types[0], ['Composite', self.content_types[2]]))
+        self.assertTrue(is_equal_to_as_set(types[0], ['Resource', self.content_types[2]]))
 
         self.assertTrue(is_equal_to_as_set(types[1], []))  # no left-over extensions
 
@@ -144,7 +144,7 @@ class TestContentTypes(MockIRODSTestCaseMixin,
                          msg="resource file count didn't match")
 
         types = get_content_types(self.res)
-        self.assertTrue(is_equal_to_as_set(types[0], ['Composite', self.content_types[3]]))
+        self.assertTrue(is_equal_to_as_set(types[0], ['Resource', self.content_types[3]]))
 
         self.assertTrue(is_equal_to_as_set(types[1], []))  # no left-over extensions
 
@@ -167,7 +167,7 @@ class TestContentTypes(MockIRODSTestCaseMixin,
 
         types = get_content_types(self.res)
         # no extensions match content types
-        self.assertTrue(is_equal_to_as_set(types[0], ['Composite', 'Generic Data']))
+        self.assertTrue(is_equal_to_as_set(types[0], ['Resource', 'Generic Data']))
         # extensions are flagged as not matching
         self.assertTrue(is_equal_to_as_set(types[1], self.weird_extensions))
 

@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='baseresource',
             name='creator',
-            field=models.ForeignKey(related_name='creator_of_hs_core_baseresource', to=settings.AUTH_USER_MODEL, help_text='This is the person who first uploaded the resource'),
+            field=models.ForeignKey(related_name='creator_of_hs_core_baseresource', on_delete=models.SET_NULL, to=settings.AUTH_USER_MODEL, help_text='This is the person who first uploaded the resource'),
             preserve_default=True,
         ),
         migrations.AlterField(
@@ -42,7 +42,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='baseresource',
             name='last_changed_by',
-            field=models.ForeignKey(related_name='last_changed_hs_core_baseresource', to=settings.AUTH_USER_MODEL, help_text='The person who last changed the resource', null=True),
+            field=models.ForeignKey(related_name='last_changed_hs_core_baseresource', on_delete=models.SET_NULL, to=settings.AUTH_USER_MODEL, help_text='The person who last changed the resource', null=True),
             preserve_default=True,
         ),
         migrations.AlterField(
@@ -54,7 +54,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='baseresource',
             name='user',
-            field=models.ForeignKey(related_name='baseresources', verbose_name='Author', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(related_name='baseresources', verbose_name='Author', on_delete=models.SET_NULL, to=settings.AUTH_USER_MODEL),
             preserve_default=True,
         ),
         migrations.AlterField(

@@ -20,9 +20,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('date_requested', models.DateTimeField(auto_now_add=True)),
-                ('group_to_join', models.ForeignKey(related_name='g2gmrequest', to='auth.Group')),
-                ('invitation_to', models.ForeignKey(related_name='iu2gmrequest', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
-                ('request_from', models.ForeignKey(related_name='ru2gmrequest', to=settings.AUTH_USER_MODEL)),
+                ('group_to_join', models.ForeignKey(related_name='g2gmrequest', on_delete=models.CASCADE, to='auth.Group')),
+                ('invitation_to', models.ForeignKey(related_name='iu2gmrequest', on_delete=models.CASCADE, blank=True, to=settings.AUTH_USER_MODEL, null=True)),
+                ('request_from', models.ForeignKey(related_name='ru2gmrequest', on_delete=models.CASCADE,to=settings.AUTH_USER_MODEL)),
             ],
         ),
         migrations.AddField(

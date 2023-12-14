@@ -1,6 +1,5 @@
 import os
 import tempfile
-# import zipfile
 
 from rest_framework import status
 
@@ -25,14 +24,11 @@ class TestPublicZipEndpoint(HSRESTTestCase):
         self.raster_file_name = 'cea.tif'
         self.raster_file_path = 'hs_core/tests/data/cea.tif'
 
-        self.rtype = 'GenericResource'
+        self.rtype = 'CompositeResource'
         self.title = 'My Test resource'
-        res = resource.create_resource(self.rtype,
-                                       self.user,
-                                       self.title,
-                                       unpack_file=False)
+        self.res = resource.create_resource(self.rtype, self.user, self.title, unpack_file=False)
 
-        self.pid = res.short_id
+        self.pid = self.res.short_id
         self.resources_to_delete.append(self.pid)
 
         # create a folder 'foo'
@@ -82,6 +78,16 @@ class TestPublicZipEndpoint(HSRESTTestCase):
             "input_coll_path": "data/contents/foo",
             "output_zip_file_name": "test.zip",
             "remove_original_after_zip": False
+        }, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_zip_aggregation(self):
+        zip_url = "/hsapi/resource/%s/functions/zip-by-aggregation-file/" % self.pid
+        raster_vrt_filename, _ = os.path.splitext(self.raster_file_name)
+        raster_vrt_filename = f"{raster_vrt_filename}.vrt"
+        response = self.client.post(zip_url, {
+            "aggregation_path": f"data/contents/foo/{raster_vrt_filename}",
+            "output_zip_file_name": "test.zip"
         }, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 

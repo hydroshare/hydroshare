@@ -54,7 +54,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
         self.holes = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.cat,
             title='all about dog holes',
             metadata=[],
@@ -1084,6 +1084,46 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
 
         # unshare method coherence
         assertUserResourceUnshareCoherence(self)
+
+    def test_share_resource_with_admin(self):
+        """Resource can be explicitly shared with admin user even though admin has owner role on every resource"""
+
+        holes = self.holes
+        cat = self.cat
+        admin = self.admin
+
+        def reset_admin_access():
+            # remove access to resource for admin user
+            cat.uaccess.unshare_resource_with_user(holes, admin)
+            self.assertFalse(admin in holes.raccess.owners)
+            self.assertFalse(admin in holes.raccess.edit_users)
+            self.assertFalse(admin in holes.raccess.view_users)
+
+        self.assertTrue(cat.uaccess.owns_resource(holes))
+        # check that the resource has only one owner
+        self.assertEqual(holes.raccess.owners.count(), 1)
+        self.assertFalse(admin in holes.raccess.owners)
+
+        # grant owner access on resource for admin user
+        cat.uaccess.share_resource_with_user(holes, admin, PrivilegeCodes.OWNER)
+        # check that the resource has 2 owners
+        self.assertEqual(holes.raccess.owners.count(), 2)
+        self.assertTrue(admin in holes.raccess.owners)
+        reset_admin_access()
+
+        # grant edit access on resource for admin user
+        self.assertEqual(holes.raccess.edit_users.count(), 1)
+        cat.uaccess.share_resource_with_user(holes, admin, PrivilegeCodes.CHANGE)
+        self.assertEqual(holes.raccess.edit_users.count(), 2)
+        self.assertTrue(admin in holes.raccess.edit_users)
+        reset_admin_access()
+
+        # grant view access on resource for admin user
+        self.assertEqual(holes.raccess.view_users.count(), 1)
+        cat.uaccess.share_resource_with_user(holes, admin, PrivilegeCodes.VIEW)
+        self.assertEqual(holes.raccess.view_users.count(), 2)
+        self.assertTrue(admin in holes.raccess.view_users)
+        reset_admin_access()
 
     def test_06_group_unshared_state(self):
         """Groups cannot be accessed by users with no access"""

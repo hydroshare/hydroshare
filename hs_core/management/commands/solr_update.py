@@ -56,25 +56,26 @@ class Command(BaseCommand):
         else:
             sqs = SearchQuerySet().all()
             print("SOLR count = {}".format(sqs.count()))
-            dqs = BaseResource.objects.filter(Q(raccess__discoverable=True) |
-                                              Q(raccess__public=True))
+            dqs = BaseResource.objects.filter(Q(raccess__discoverable=True)
+                                              | Q(raccess__public=True)).select_related('raccess')
             print("Django count = {}".format(dqs.count()))
 
             # what is in Django that isn't in SOLR
             print("checking for resources in Django that aren't in SOLR...")
             found_in_solr = set()
-            for r in list(sqs):
+            for r in sqs:
                 found_in_solr.add(r.short_id)  # enable fast matching
 
             django_indexed = 0
             django_replaced = 0
             django_refreshed = 0
-
-            for r in dqs:
+            res_show_in_discover = False
+            for r in dqs.iterator():
                 if not options['debug']:
                     try:
                         resource = get_resource_by_shortkey(r.short_id, or_404=False)
-                        if resource.show_in_discover:
+                        res_show_in_discover = resource.show_in_discover
+                        if res_show_in_discover:
                             django_indexed += 1
                         else:
                             django_replaced += 1
@@ -86,14 +87,15 @@ class Command(BaseCommand):
                         print("resource {} generated exception {}".format(r.short_id, str(e)))
                 else:
                     resource = get_resource_by_shortkey(r.short_id, or_404=False)
-                    if resource.show_in_discover:
+                    res_show_in_discover = resource.show_in_discover
+                    if res_show_in_discover:
                         django_indexed += 1
                     else:
                         django_replaced += 1
 
-                if resource.show_in_discover and r.short_id not in found_in_solr:
+                if res_show_in_discover and r.short_id not in found_in_solr:
                     print("{} {} NOT FOUND in SOLR: adding to index".format(
-                            r.short_id, resource.discovery_content_type))
+                        r.short_id, resource.discovery_content_type))
                     if not options['debug']:
                         try:
                             ind.update_object(r)
@@ -137,8 +139,10 @@ class Command(BaseCommand):
                     else:
                         solr_replaced += 1
                 except BaseResource.DoesNotExist:
-                    print("SOLR resource {} NOT FOUND in Django; cannot remove from SOLR"
+                    print("SOLR resource {} NOT FOUND in Django; removing from SOLR"
                           .format(r.short_id))
+                    solr_key = f"hs_core.baseresource.{r.pk}"
+                    ind.remove_object(solr_key)
                     solr_deleted += 1
                     continue
 

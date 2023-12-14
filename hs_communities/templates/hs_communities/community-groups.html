@@ -1,0 +1,190 @@
+<div class="flex gap-2 flex-sm-column">
+  {% if not user.is_anonymous %}
+  <div class="community-groups--sidebar">
+    <button v-if="isAdmin" class="btn btn-primary has-space-bottom btn-block"
+      data-toggle="modal" data-target="#invite-groups-modal">
+      <i class="fa fa-plus" aria-hidden="true"></i> 
+      Invite Groups</button>
+    <div v-else class="alert alert-info">
+      <p>Have a HydroShare group you want to add to this community? Click the button below to request that your group be added.</p>
+      <button class="btn btn-default btn-block has-space-top" data-toggle="modal"
+        data-target="#join-communities-modal">Ask to join a Community</button>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="community-groups--content flex-grow-1 flex flex-column gap-2">
+    <!-- PENDING JOIN REQUESTS -->
+    <div v-if="isAdmin && pending.length">
+      <h4 class="heading">Pending Group Membership Requests</h4>
+      <div v-for="request of pending" class="community-group-card panel panel-default">
+        <div class="panel-body flex gap-1 align-center">
+          <div v-if="request.group.picture" class="group-image-wrapper medium has-space-right">
+              <div class="group-image"
+              :style="`background-image: url(${request.group.picture})`"></div>
+          </div>
+          <div v-else class="group-image-wrapper medium has-space-right">
+              <div class="group-image group-preview-image-default"
+                  style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
+              </div>
+          </div>
+          <div class="community-card--info flex-grow-1">
+            <a class="community-card--heading" :href="'/group/' + request.group.id">${ request.group.name }</a>
+            <p>${ request.group.description }</p>
+          </div>
+          <div class="community-card--actions">
+            <div v-if="!request.when_community">
+              <button class="btn btn-primary btn-sm has-space-bottom"
+                @click="approveGroup(request.group.id)" :disabled="isApprovingGroup[request.group.id]">Approve Group</button>
+              <button @click="targetGroup = request.group"
+                data-toggle="modal"
+                data-target="#reject-group-modal"
+                :disabled="isRejectingGroup[request.group.id]"
+                type="button" class="btn btn-default btn-sm has-space-bottom">
+                ${ isRejectingGroup[request.group.id] ? 'Rejecting Group...' : 'Reject Group'}
+              </button>
+            </div>
+            
+            <div v-else>
+              <div class="text-center has-space-bottom">
+                <span class="label label-success">Invitation Sent</span>
+              </div>
+              <button @click="targetGroup = request.group"
+                data-toggle="modal" data-target="#cancel-group-invitation-modal"
+                :disabled="isCancelingInvitation[request.group.id]"
+                type="button" class="btn btn-default btn-sm">
+                ${ isCancelingInvitation[request.group.id] ? 'Retracting Invitation...' : 'Retract Invitation'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GROUPS THAT HAVE JOINED -->
+    <div>
+      <h4 class="heading">Groups that are Members of this Community</h4>
+      <template v-if="members.length">
+        <div v-for="group of members" class="community-group-card panel panel-default">
+          <div class="panel-body flex gap-1 align-center">
+            <div v-if="group.picture" class="group-image-wrapper medium has-space-right">
+                <div class="group-image"
+                :style="`background-image: url(${group.picture})`"></div>
+            </div>
+            <div v-else class="group-image-wrapper medium has-space-right">
+                <div class="group-image group-preview-image-default"
+                    style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
+                </div>
+            </div>
+
+            <div class="community-card--info flex-grow-1">
+              <a class="community-card--heading" :href="'/group/' + group.id">${ group.name }</a>
+              <p>${ group.description }</p>
+            </div>
+            <div v-if="isAdmin" class="community-card--actions">
+              <button class="btn btn-default btn-sm" @click="targetGroup = group" :disabled="isRemoving[group.id]"
+                data-toggle="modal" data-target="#remove-group-modal">Remove Group</button>
+            </div>
+          </div>
+        </div>
+      </template>
+      <p v-else class="text-muted">No Groups have been added to this Community yet.</p>
+    </div>
+  </div>
+
+  <!-- Remove Group Modal -->
+  <div v-if="isAdmin" class="modal fade" id="remove-group-modal" tabindex="-1" role="dialog"
+    aria-labelledby="removeGroupLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" v-if="targetGroup">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="removeGroupLabel">Remove Group</h4>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to remove the Group from this community?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                      Cancel
+                </button>
+                <button class="btn btn-danger"
+                      @click="removeGroup(targetGroup.id)" :disabled="isRemoving[targetGroup.id]">
+                      Remove Group
+                </button>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <!-- Reject Group Modal -->
+  <div v-if="isAdmin" class="modal fade" id="reject-group-modal" tabindex="-1" role="dialog"
+    aria-labelledby="rejectGroupLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" v-if="targetGroup">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="rejectGroupLabel">Reject Group</h4>
+            </div>
+            <div class="modal-body">
+                Are you sure you want reject this Group from joining the Community?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                      Cancel
+                </button>
+                <button class="btn btn-danger"
+                      @click="rejectGroup(targetGroup.id)" :disabled="isRejectingGroup[targetGroup.id]">
+                      Reject Group
+                </button>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <!-- Cancel Group Invitation Modal -->
+  <div v-if="isAdmin" class="modal fade" id="cancel-group-invitation-modal" tabindex="-1" role="dialog"
+    aria-labelledby="cancelInvitationLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" v-if="targetGroup">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="cancelInvitationLabel">Retract Group Invitation</h4>
+            </div>
+            <div class="modal-body">
+                Are you sure you want retract this group invitation?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    Cancel
+                </button>
+                <button class="btn btn-danger"
+                        @click="cancelGroupInvitation(targetGroup.id)"
+                        :disabled="isCancelingInvitation[targetGroup.id]">Retract Invitation
+                </button>
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
+
+{% include "hs_access_control/community-invite-groups-modal.html" %}
+
+<div class="modal fade" id="join-communities-modal" tabindex="-1" role="dialog" aria-labelledby="joinLabel">
+  <div class="modal-dialog" role="document">
+    <!-- The template for this component needs to be included outside of a Vue app -->
+    <!-- Included at the top of community.html -->
+    <join-communities
+      @update-members="members = $event"
+      @update-pending="pending = $event"
+      :groups="availableToInvite"
+      :default-community-id="community.id"
+    />
+  </div>
+</div>

@@ -1,8 +1,11 @@
 {% extends "base.html" %}
 
-{% load mezzanine_tags static blog_tags accounts_tags hydroshare_tags %}
+{% load mezzanine_tags blog_tags accounts_tags hydroshare_tags %}
 
 {% block meta_title %}Find, Analyze and Share Water Data{% endblock %}
+
+{% block extra_css %}
+{% endblock %}
 
 {% block main %}
     {# Begin Maintenance Warning #}
@@ -28,7 +31,7 @@
                             HydroShare is CUAHSI's online collaboration environment for
                             sharing data, models, and code.
                         </h3></strong></center>
-                        <center><a class="btn btn-primary btn-signup slideInBlock" href="/sign-up/">Sign up now</a>
+                        <center><a class="btn btn-primary btn-signup slideInBlock" href="{{ request|signup_url }}">Sign up now</a>
                         </center>
                     </div>
                 </div>
@@ -87,116 +90,169 @@
         </a>
     </div>
 
-    <div class="container">
+    <section class="container-grey">
+        <div class="container">
+            <h2 class="home-page-block-title">How can HydroShare support your research?</h2>
+            <div class="features-container row slideInBlock">
+                <div class="feature col-xs-12" style="justify-content: center; flex-direction: column;">
+                  <img class="feature-icon" src="{% static 'img/home-page/FAIR.png' %}" style="max-width: 350px;" alt="FAIR">
+                  <p>Sharing research products with colleagues and others using FAIR Data Principles</p>
+                </div>
+
+                <div class="feature col-xs-12 col-sm-6">
+                    <div class="feature-icon"><i class="fa fa-cogs fa-5x" aria-hidden="true"></i></div>
+                    <p>A dependable data management and publication solution for hydrologic data types and models</p>
+                </div>
+
+                <div class="feature col-xs-12 col-sm-6">
+                    <div class="feature-icon"><i class="fa fa-cloud fa-5x" aria-hidden="true"></i></div>
+                    <p>A gateway to cloud compute resources using Jupyter and Matlab</p>
+                </div>
+
+                <div class="feature col-xs-12 col-sm-6">
+                    <div class="feature-icon"><i class="fa fa-window-maximize fa-5x" aria-hidden="true"></i></div>
+                    <p>Tools for collaboration, enabling you to manage access and more easily work together</p>
+                </div>
+
+                <div class="feature col-xs-12 col-sm-6">
+                    <div class="feature-icon"><i class="fa fa-graduation-cap fa-5x" aria-hidden="true"></i></div>
+                    <p>Tools for engaging students in active learning</p>
+                </div>
+
+                <div class="feature col-xs-12 col-sm-6">
+                    <div class="feature-icon"><i class="fa fa-check-square-o fa-5x" aria-hidden="true"></i></div>
+                    <p>Compliance with funding agency or journal publisher requirements for sharing data</p>
+                </div>
+
+                <div class="feature col-xs-12 col-sm-6">
+                    <div class="feature-icon"><i class="fa fa-code fa-5x" aria-hidden="true"></i></div>
+                    <p>A REST web service API and Python client for automated access</p>
+                </div>
+
+                <div class="feature col-xs-12 col-sm-6">
+                    <div class="feature-icon"><i class="fa fa-database fa-5x" aria-hidden="true"></i></div>
+                    <p>Discover and access data and models published by others</p>
+                </div>
+
+                <div class="feature col-xs-12 col-sm-6">
+                    <div class="feature-icon"><i class="fa fa-desktop fa-5x" aria-hidden="true"></i></div>
+                    <p>Web apps for visualizing, analyzing, and running models on data in HydroShare</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="container">
         <h2 class="home-page-block-title">How it works</h2>
-        <div class="row home-page-block">
-            <div class="steps-container">
-                <div class="col-xs-12 col-md-4 col-lg-2 col-lg-offset-1 step-wrapper slideInBlock">
-                    <div class="step-item">
-                        <div class="step-number">1</div>
-                        <h4>Create data</h4>
-                        <div class="description-container table-display">
-                            <span class="step-description table-cell-display">Collect your data using the same methods you use now. HydroShare supports a broad set of hydrologic data types.</span>
-                        </div>
-                        <div>
-                            <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step1.png"
-                                 alt="Create data">
-                        </div>
+        <div class="row">
+            <div class="steps-container flex flex-sm-column col-xs-12">
+                <div class="step-item slideInBlock">
+                    <a href="https://help.hydroshare.org/hydroshare-resources/content-types/">
+                      <img class="img-responsive img-step" src="{% static 'img/home-page/step1.png' %}" alt="Create data">
+                    </a>
+                    <hr>
+                    <div class="step-number">1</div>
+                    <a href="https://help.hydroshare.org/hydroshare-resources/content-types/"><h4>Create data</h4></a>
+                    <div class="step-description">
+                        Collect your data using the same methods you use now. HydroShare supports a broad set of hydrologic data types.
                     </div>
                 </div>
 
-                <div class="col-xs-12 col-md-4 col-lg-2 step-wrapper slideInBlock">
-                    <div class="step-item">
-                        <div class="step-number">2</div>
-                        <h4>Upload to HydroShare</h4>
-                        <div class="description-container table-display">
-                            <span class="step-description table-cell-display">Upload your data files to HydroShare through the web user interface. HydroShare will automatically extract as much metadata as it can from the files you upload.</span>
-                        </div>
-                        <div>
-                            <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step2.png"
-                                 alt="Upload to HydroShare">
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="col-xs-12 col-md-4 col-lg-2 step-wrapper slideInBlock">
-                    <div class="step-item">
-                        <div class="step-number">3</div>
-                        <h4>Describe with metadata</h4>
-                        <div class="description-container table-display">
-                            <span class="step-description table-cell-display">Use HydroShare's simple metadata entry forms to finish describing your data so that your colleagues can find, access, and interpret it.</span>
-                        </div>
-                        <div>
-                            <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step3.png"
-                                 alt="Describe with metadata">
-                        </div>
+                <div class="step-item slideInBlock">
+                    <a href="https://help.hydroshare.org/creating-and-managing-resources/creating-resources/">
+                      <img class="img-responsive img-step" src="{% static 'img/home-page/step2.png' %}" alt="Upload to HydroShare">
+                    </a>
+                    <hr>
+                    <div class="step-number">2</div>
+                    <a href="https://help.hydroshare.org/creating-and-managing-resources/creating-resources/"><h4>Upload to HydroShare</h4></a>
+                    <div class="step-description">
+                        Upload your data files to HydroShare through the web user interface. HydroShare will automatically extract as much metadata as it can from the files you upload.
                     </div>
                 </div>
 
-                <div class="col-xs-12 col-md-6 col-lg-2 step-wrapper slideInBlock">
-                    <div class="step-item">
-                        <div class="step-number">4</div>
-                        <h4>Share with colleagues</h4>
-                        <div class="description-container table-display">
-                            <span class="step-description table-cell-display">Choose who has access to the data and models you have uploaded to HydroShare. You can share with individual users or make your resources public for everyone to access.</span>
-                        </div>
-                        <div>
-                            <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step4.png"
-                                 alt="Share with colleagues">
-                        </div>
+
+                <div class="step-item slideInBlock">
+                    <a href="https://help.hydroshare.org/creating-and-managing-resources/best-practices-for-describing-your-resource-with-metadata/">
+                      <img class="img-responsive img-step" src="{% static 'img/home-page/step3.png' %}" alt="Describe with metadata">
+                    </a>
+                    <hr>
+                    <div class="step-number">3</div>
+                    <a href="https://help.hydroshare.org/creating-and-managing-resources/best-practices-for-describing-your-resource-with-metadata/"><h4>Describe with metadata</h4></a>
+                    <div class="step-description">
+                        Use HydroShare's simple metadata entry forms to finish describing your data so that your colleagues can find, access, and interpret it.
                     </div>
                 </div>
 
-                <div class="col-xs-12 col-md-6 col-lg-2 step-wrapper slideInBlock">
-                    <div class="step-item">
-                        <div class="step-number">5</div>
-                        <h4>Permanently Publish</h4>
-                        <div class="description-container table-display">
-                            <span class="step-description table-cell-display">Obtain a Digital Object Identifier (DOI) so your work can be
-                            easily cited. Reference related journal publications in your metadata.</span>
-                        </div>
-                        <div>
-                            <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step5.png"
-                                 alt="Formally Publish">
-                        </div>
+                <div class="step-item slideInBlock">
+                    <a href="https://help.hydroshare.org/sharing-and-privacy/">
+                      <img class="img-responsive img-step" src="{% static 'img/home-page/step4.png' %}" alt="Share with colleagues">
+                    </a>
+                    <hr>
+                    <div class="step-number">4</div>
+                    <a href="https://help.hydroshare.org/sharing-and-privacy/"><h4>Share with colleagues</h4></a>
+                    <div class="step-description">
+                        Choose who has access to the data and models you have uploaded to HydroShare. You can share with individual users or make your resources public for everyone to access.
+                    </div>
+                </div>
+
+                <div class="step-item slideInBlock">
+                    <a href="https://help.hydroshare.org/creating-and-managing-resources/formally-publishing-data/">
+                      <img class="img-responsive img-step" src="{% static 'img/home-page/step5.png' %}" alt="Formally Publish">
+                    </a>
+                    <hr>
+                    <div class="step-number">5</div>
+                    <a href="https://help.hydroshare.org/creating-and-managing-resources/formally-publishing-data/"><h4>Permanently Publish</h4></a>
+                    <div class="step-description">
+                        Obtain a Digital Object Identifier (DOI) so your work can be
+                        easily cited. Reference related journal publications in your metadata.
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <div>
-        <div class="container home-page-block">
-            <div class="row">
-                <div class="col-sm-12"><h2 class="home-page-block-title">What you can do with HydroShare</h2></div>
-                <div class="col-xs-12 col-sm-7 slideInBlock">
-                    <table id="table-features">
-                        <tbody>
-                            <tr><td><div class="glyphicon glyphicon-ok checkmark"></div></td><td>Share your data and models with colleagues</td></tr>
-                                <tr><td><div class="glyphicon glyphicon-ok checkmark"></div></td><td>Manage who has access to the content that you share</td></tr>
-                                <tr><td><div class="glyphicon glyphicon-ok checkmark"></div></td><td>Share, access, visualize and manipulate a broad set of hydrologic data types and models</td></tr>
-                                <tr><td><div class="glyphicon glyphicon-ok checkmark"></div></td><td>Use the web services API to program automated and client access</td></tr>
-                                <tr><td><div class="glyphicon glyphicon-ok checkmark"></div></td><td>Publish data and models to meet the requirements of your data management plan</td></tr>
-                                <tr><td><div class="glyphicon glyphicon-ok checkmark"></div></td><td>Discover and access data and models published by others</td></tr>
-                                <tr><td><div class="glyphicon glyphicon-ok checkmark"></div></td><td>Use web apps to visualize, analyze and run models on data in HydroShare</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="col-xs-12- col-sm-5 slideInBlock">
-                    <img class="img-responsive" src="{{ STATIC_URL }}img/home-page/laptop.png"
-                         alt="Browsing HydroShare">
-                </div>
+    <section class="container-grey">
+        <div class="container text-center">
+            <h2 class="home-page-block-title">Who uses HydroShare?</h2>
+            <p>Whether you are a faculty member, researcher, student, or a professional, HydroShare provides functionality that can take your research to the next level of openness and reproducibility, enhance the trustworthiness of research findings, and increase the reusability of research outputs. </p>
+            <br>
+            <p>HydroShare provides Data Services to meet the needs of many different research organizations.</p>
+            <div class="carousel-wrapper">
+              <div class="featured-organizations groups-carousel owl-carousel">
+                  <a href="https://www.hydroshare.org/group/6" target="_self"><img src="{% static 'img/home-page/iutah_logo.png' %}" alt="iUtah logo"></a>
+                  <a href="https://www.criticalzone.org/" target="_blank"><img src="{% static 'img/home-page/CZN_Logo.png' %}" alt="CZN logo"></a>
+                  <a href="https://www.hydroshare.org/community/1/" target="_self"><img src="{% static 'img/home-page/czo_logo.png' %}" alt="CZO logo"></a>
+                  <a href="https://www.hydroshare.org/group/138" target="_self"><img src="{% static 'img/home-page/lro_logo.png' %}" alt="LRO logo"></a>
+              </div>
             </div>
+            <p>Want your organization to be featured here? <a href="mailto:help.cuahsi.org?subject=How we use HydroShare">Tell us how you are using HydroShare!</a></p>
         </div>
     </div>
 
-    <script type="text/javascript" src="{{ STATIC_URL }}js/home-page.js"></script>
+    <section class="container text-center">
+        <h2 class="home-page-block-title">Trusted by the Scientific Community</h2>
+        <p>We collaborate with a variety of institutions to ensure that HydroShare is a trusted repository for your data and research products. We are committed to FAIR Data Principles and strive to maintain functionality to support more transparent and reproducible research.</p>
+        <a class="btn btn-primary" href="https://help.hydroshare.org/about-hydroshare/hydroshare-a-trusted-repository-for-the-water-science-community/">Learn more</a>
+        <div class="carousel-wrapper">
+            <div class="featured-institutions institutions-carousel owl-carousel">
+                <a href="https://fairsharing.org/" target="_blank"><img src="{% static 'img/home-page/FAIRsharing-sdp.svg' %}" alt="Fair Sharing logo"></a>
+                <a href="https://www.re3data.org/" target="_blank"><img src="{% static 'img/home-page/re3datalogo_black.png' %}" alt="re3data logo"></a>
+                <a href="https://www.springernature.com/gp" target="_blank"><img src="{% static 'img/home-page/springer_nature_logo.png' %}" alt="CZO logo"></a>
+                <a href="https://agupubs.onlinelibrary.wiley.com/journal/21698961" target="_blank"><img src="{% static 'img/home-page/jgr_logo.png' %}" alt="JGR Biogeosciences logo"></a>
+                <a href="https://www.nature.com/sdata/policies/repositories" target="_blank"><img src="{% static 'img/home-page/scientific_data_logo.jpg' %}" alt="Scientific Data logo"></a>
+                <a href="https://ascelibrary.org/page/dataavailability" target="_blank"><img src="{% static 'img/home-page/asce_logo.png' %}" alt="ASCE Journal of Water Resources Planning and Management logo"></a>
+                <a href="https://data.agu.org/resources/useful-domain-repositories" target="_blank"><img src="{% static 'img/home-page/agu_logo.png' %}" alt="AGU logo"></a>
+                <a href="https://copdess.org/" target="_blank"><img src="{% static 'img/home-page/copdess_logo.png' %}" alt="COPDESS logo"></a>
+            </div>
+        </div>
+    </section>
+
+    <script type="text/javascript" src="{% static 'js/home-page.js' %}"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
 
 {% endblock %}
 
 {% block extra_head %}
-{% if not page|is_debug %}
 <script type="application/ld+json">
 {
     "@context": {
@@ -356,5 +412,4 @@
     ]
 }
 </script>
-{% endif %}
 {% endblock %}

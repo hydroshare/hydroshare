@@ -22,7 +22,7 @@ class UpdateAccountTest(unittest.TestCase):
             last_name='john',
             superuser=True,
             groups=[]
-            )
+        )
 
         pic_file = "photo.tif"
         cv_file = "cv.pdf"
@@ -94,7 +94,7 @@ class UpdateAccountTest(unittest.TestCase):
         profile_data = {'title': "Software Engineer",
                         'middle_name': 'Larson',
                         'user_type': 'Computer Programming',
-                        'subject_areas': 'Python, Django, SQL',
+                        'subject_areas': ['Python', 'Django', 'SQL'],
                         'organization': 'Utah State University',
                         'phone_1': '435-678-0987',
                         'phone_1_type': 'Work',
@@ -115,7 +115,7 @@ class UpdateAccountTest(unittest.TestCase):
         self.assertEqual(user_profile.title, 'Software Engineer')
         self.assertEqual(user_profile.middle_name, 'Larson')
         self.assertEqual(user_profile.user_type, 'Computer Programming')
-        self.assertEqual(user_profile.subject_areas, 'Python, Django, SQL')
+        self.assertEqual(user_profile.subject_areas, ['Python', 'Django', 'SQL'])
         self.assertEqual(user_profile.organization, 'Utah State University')
         self.assertEqual(user_profile.phone_1, '435-678-0987')
         self.assertEqual(user_profile.phone_1_type, 'Work')

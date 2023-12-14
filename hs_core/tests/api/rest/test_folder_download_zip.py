@@ -25,7 +25,7 @@ class TestPublicZipEndpoint(HSRESTTestCase):
         self.raster_file_name = 'cea.tif'
         self.raster_file_path = 'hs_core/tests/data/cea.tif'
 
-        self.rtype = 'GenericResource'
+        self.rtype = 'CompositeResource'
         self.title = 'My Test resource'
         res = resource.create_resource(self.rtype,
                                        self.user,

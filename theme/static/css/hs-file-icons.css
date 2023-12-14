@@ -284,7 +284,8 @@
 	font-size: 32px;
 }
 
-.fb-view-grid .fb-folder i.fa-tag {
+.fb-view-grid .fb-folder i.fa-tag,
+ #legend-collapse i.fa-tag {
 	transform: rotate(90deg);
 	color: #FF9800;
 	top: -3px;

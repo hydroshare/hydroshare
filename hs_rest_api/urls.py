@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.conf.urls import url, include
 
 from hs_dictionary import views as dict_views
 from hs_core import views as core_views
@@ -15,17 +15,28 @@ from rest_framework import permissions
 from .views.resource_share import ShareResourceGroup, ShareResourceUser
 from .discovery import DiscoverSearchView
 
+
+hsapi_urlpatterns = [
+    url('^hsapi/', include('hs_rest_api.urls')),
+    url('^hsapi/', include('hs_core.urls')),
+    url('^hsapi/', include('hs_labels.urls')),
+    url('^hsapi/', include('hs_collection_resource.urls')),
+    url('^hsapi/', include('hs_file_types.urls')),
+    url('^hsapi/', include('hs_composite_resource.urls')),
+]
+
 schema_view_yasg = get_schema_view(
-   openapi.Info(
-      title="Hydroshare API",
-      default_version='v1',
-      description="Hydroshare Rest API",
-      terms_of_service="https://help.hydroshare.org/about-hydroshare/policies/terms-of-use/",
-      contact=openapi.Contact(email="help@cuahsi.org"),
-   ),
-   validators=[],
-   public=True,
-   permission_classes=(permissions.AllowAny,),
+    openapi.Info(
+        title="Hydroshare API",
+        default_version='v1',
+        description="Hydroshare Rest API",
+        terms_of_service="https://help.hydroshare.org/about-hydroshare/policies/terms-of-use/",
+        contact=openapi.Contact(email="help@cuahsi.org"),
+    ),
+    validators=[],
+    public=True,
+    permission_classes=(permissions.AllowAny,),
+    patterns=hsapi_urlpatterns,
 )
 
 urlpatterns = [
@@ -87,7 +98,7 @@ urlpatterns = [
         name='get_update_science_metadata_elements'),
 
     # Update key-value metadata
-    url(r'^resource/(?P<pk>[0-9a-f-]+)/scimeta/custom/$',
+    url(r'^resource/(?P<id>[0-9a-f-]+)/scimeta/custom/$',
         core_views.update_key_value_metadata_public,
         name='update_custom_metadata'),
 
@@ -149,6 +160,10 @@ urlpatterns = [
     url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/zip/$',
         core_views.resource_folder_hierarchy.data_store_folder_zip_public),
 
+    # public zip aggregation by file endpoint
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/zip-by-aggregation-file/$',
+        core_views.resource_folder_hierarchy.zip_aggregation_file_public),
+
     # public move or rename
     url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/move-or-rename/$',
         core_views.resource_folder_hierarchy.data_store_file_or_folder_move_or_rename_public),
@@ -188,11 +203,17 @@ urlpatterns = [
     url(r'^userInfo/$',
         core_views.user_rest_api.UserInfo.as_view(), name='get_logged_in_user_info'),
 
-    url(r'^userDetails/(?P<user_identifier>[\d]+)/$',
+    url(r'^userDetails/(?P<user_identifier>.+)/$',
         core_views.hsapi_get_user, name='get_user_details'),
+
+    url(r'^userKeycloak/(?P<user_identifier>.+)$',
+        core_views.hsapi_get_user_for_keycloak, name='get_user_for_keycloak'),
 
     url(r'^dictionary/universities/$',
         dict_views.ListUniversities.as_view(), name="get_dictionary"),
+
+    url(r'^dictionary/subject_areas/$',
+        dict_views.ListSubjectAreas.as_view(), name="get_subject_areas"),
 
     # Resource Access
     url(r'^resource/(?P<pk>[0-9a-f-]+)/access/$',
@@ -200,4 +221,35 @@ urlpatterns = [
         name='get_update_delete_resource_access'),
 
     url(r'^resource/search$', DiscoverSearchView.as_view({'get': 'list'}), name='discover-hsapi'),
+
+    # Gets a list of metadata template schema file names for model program aggregation
+    url(r'^modelprogram/template/meta/schemas/$', file_type_views.list_model_program_template_metadata_schemas,
+        name='list_model_program_template_meta_schemas'),
+
+    # Gets JSON data for the specified template metadata schema file for model program aggregation
+    url(r'^modelprogram/template/meta/schema/(?P<schema_filename>.*)$',
+        file_type_views.get_model_program_template_metadata_schema,
+        name='get_model_program_template_meta_schema'),
+
+    # Assigns a specific metadata template schema to be used as the meta schema for a given model program aggregation
+    url(r'^resource/(?P<resource_id>[0-9a-f]+)/modelprogram/template/meta/schema/(?P<aggregation_path>.*)/'
+        r'(?P<schema_filename>.*)$',
+        file_type_views.use_template_metadata_schema_for_model_program,
+        name='use_template_meta_schema_for_model_program'),
+
+    # Updates metadata schema for a given model instance aggregation using the schema from the linked model program
+    # aggregation
+    url(r'^resource/(?P<resource_id>[0-9a-f]+)/modelinstance/meta/schema/(?P<aggregation_path>.*)$',
+        file_type_views.update_metadata_schema_for_model_instance,
+        name='update_meta_schema_for_model_instance'),
+
+    # Gets/updates metadata for a given model program aggregation
+    url(r'^resource/(?P<resource_id>[0-9a-f]+)/modelprogram/meta/(?P<aggregation_path>.*)$',
+        file_type_views.model_program_metadata_in_json,
+        name='model_program_metadata_in_json'),
+
+    # Gets/updates metadata for a given model instance aggregation
+    url(r'^resource/(?P<resource_id>[0-9a-f]+)/modelinstance/meta/(?P<aggregation_path>.*)$',
+        file_type_views.model_instance_metadata_in_json,
+        name='model_instance_metadata_in_json'),
 ]

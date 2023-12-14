@@ -1,30 +1,83 @@
 <table id="table-stats" class="info-table">
     <tr>
         <th>Sharing Status:</th>
-        <td id="hl-sharing-status">
+        <td id="hl-sharing-status" style="display: flex; align-items: flex-start;">
             {% if cm.raccess.published %}
                 Published
             {% elif cm.raccess.public %}
                 Public
+            {% elif cm.raccess.discoverable and cm.raccess.allow_private_sharing %}
+                Discoverable (Accessible via direct link sharing)
             {% elif cm.raccess.discoverable %}
                 Discoverable
+            {% elif cm.raccess.allow_private_sharing %}
+                Private (Accessible via direct link sharing)
             {% else %}
                 Private
             {% endif %}
+            {% if resource_edit_mode %}
+            <a data-toggle="tooltip" data-placement="auto"
+                href="https://www.youtube.com/watch?v=_zfeUpyk0to" target="_blank"
+                title='How to: Set a HydroShare Resource to “public”, “private”, or “discoverable”'
+                class="fa fa-youtube-play icon-red has-space-left no-decoration icon-guide">
+            </a>
+            {% endif %}
         </td>
     </tr>
-    {% if cm.raccess.published %}
-        {% if "pending" in cm.doi or "failure" in cm.doi %}
+    {% if user.is_superuser %}
+        <tr>
+            {% if not cm.spam_allowlisted %}
+                <a id="spam_allowlist" href="/hsapi/_internal/spam_allowlist/{{ cm.short_id }}/allow/">
+                    <button
+                        class="btn btn-info btn-xs">
+                        Allow in Discover even if spam patterns
+                    </button>
+                </a>
+            {% else %}
+                <a id="spam_disallowlist" href="/hsapi/_internal/spam_allowlist/{{ cm.short_id }}/disallow/">
+                    <button
+                        class="btn btn-warning btn-xs">
+                        Remove from spam allowlist
+                    </button>
+                </a>
+            {% endif %}
+        </tr>
+    {% endif %}
+    {% if "pending" in cm.doi or "failure" in cm.doi or cm.raccess.review_pending %}
             <tr>
                 <th>Publication Status: </th>
                 <td>
-                    <div>Pending publication</div>
+                    {% if cm.raccess.review_pending %}
+                    <div>Pending Metadata Review</div>
+                        {% if user.is_superuser %}
+                        <a id="metadata_approve" href="/hsapi/_internal/metadata_review/{{ cm.short_id }}/approve/">
+                            <button
+                                class="btn btn-info btn-xs">
+                                Approve metadata for publication
+                            </button>
+                        </a>
+                        <a id="metadata_reject" href="/hsapi/_internal/metadata_review/{{ cm.short_id }}/reject/">
+                            <button
+                                class="btn btn-warning btn-xs">
+                                Reject metadata for publication
+                            </button>
+                        </a>
+                        {% else %}
+                        <div class="small text-muted">
+                            This resource is under review for 
+                            <a href="https://help.hydroshare.org/publishing-in-hydroshare/minimum-metadata-requirements-for-publishing-in-hydroshare/" target="_blank">minimum metadata</a> 
+                            and to ensure that it adheres to 
+                            <a href="https://help.hydroshare.org/publishing-in-hydroshare/terms-of-use-and-community-guidelines/" target="_blank">community guidelines</a>.
+                        </div>
+                        {% endif %}
+                    {% else %}
+                    <div>Pending Publication</div>
                     <div class="small text-muted">
                         Note that the DOI will not be available until it has been registered and activated.
                     </div>
+                    {% endif %}
                 </td>
             </tr>
-        {% endif %}
     {% endif %}
     <tr>
         <th>Views: </th>

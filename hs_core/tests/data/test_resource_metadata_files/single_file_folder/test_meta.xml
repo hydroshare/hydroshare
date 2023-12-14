@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+  xmlns:hsterms="https://www.hydroshare.org/terms/"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+>
+  <hsterms:SingleFileAggregation rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/single_file_folder/test_resmap.xml#aggregation">
+    <dc:rights>
+      <rdf:Description>
+        <hsterms:URL rdf:resource="http://studio.bakajo.com"/>
+        <hsterms:rightsStatement>my statement</hsterms:rightsStatement>
+      </rdf:Description>
+    </dc:rights>
+    <dc:type rdf:resource="https://www.hydroshare.org/terms/SingleFileAggregation"/>
+    <dc:title>test</dc:title>
+    <dc:language>eng</dc:language>
+    <hsterms:extendedMetadata>
+      <rdf:Description>
+        <hsterms:value>value2</hsterms:value>
+        <hsterms:key>key2</hsterms:key>
+      </rdf:Description>
+    </hsterms:extendedMetadata>
+    <hsterms:extendedMetadata>
+      <rdf:Description>
+        <hsterms:value>value</hsterms:value>
+        <hsterms:key>key</hsterms:key>
+      </rdf:Description>
+    </hsterms:extendedMetadata>
+  </hsterms:SingleFileAggregation>
+  <rdf:Description rdf:about="http://www.hydroshare.org/terms/SingleFileAggregation">
+    <rdfs:label>Single File Content: A single file with file specific metadata</rdfs:label>
+    <rdfs:isDefinedBy rdf:resource="https://www.hydroshare.org/terms/"/>
+  </rdf:Description>
+</rdf:RDF>

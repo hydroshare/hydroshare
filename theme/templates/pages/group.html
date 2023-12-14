@@ -1,795 +1,294 @@
 {% extends "pages/page.html" %}
-{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
+{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags thumbnail %}
 
 {% block extra_css %}
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/jquery.dataTables.min.css">
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/group.css">
+<link rel="stylesheet" type="text/css" href="{% static 'css/collaborate.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'css/jquery.dataTables.min.css' %}">
 {% endblock %}
 
+{% block meta_title %}{{ group.name|default:"Group" }}{% endblock %}
+
 {% block main %}
-    <div class="collaborate-header">
-        <div class="container">
-            <div class="row">
-                <div class="col-sm-12">
-                    <div class="collaborate-nav">
-                        <a href="{% url "collaborate" %}" class="collaborate-nav-item">Find Groups</a>
-                        <a href="{% url "my_groups" %}" class="collaborate-nav-item">My Groups</a>
-                    </div>
-                </div>
-            </div>
+{% include 'includes/groups-nav.html' with active='my_groups' %}
+
+{% if denied %}
+<div class="col-xs-12">{{ denied }}</div>
+{% else %}
+{# These components needs to be included first so they are available before this app initializes #}
+{% include "hs_access_control/join-communities.html" %}
+
+<div class="container">
+    <div>
+        {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+        {% if not group.gaccess.active %}
+        <div class="alert alert-warning alert-dismissible has-space-bottom-2x" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                    aria-hidden="true">&times;</span></button>
+            This group is set to <strong>inactive.</strong> Only owners of the group have access. Resources
+            cannot be shared with the group and other users cannot be invited.
+            <hr>
+            <span class="glyphicon glyphicon-question-sign"></span>
+            <small> Click on the restore button ( <span class="glyphicon glyphicon-retweet"></span> ) in the Owner
+                Settings tab if you want to make the group active again.</small>
         </div>
-    </div>
+        {% endif %}
+        {% endif %}
 
-    <div class="container">
-
-        <div class="row">
-            {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-                {% if not group.gaccess.active %}
-                    <div class="alert alert-warning alert-dismissible" role="alert">
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
-                                aria-hidden="true">&times;</span></button>
-                        This group is set to <strong>inactive.</strong> Only owners of the group have access. Resources
-                        cannot be shared with the group and other users cannot be invited.
-                        <hr>
-                        <span class="glyphicon glyphicon-question-sign"></span>
-                        <small> Click on the restore button ( <span class="glyphicon glyphicon-retweet"></span> ) below
-                            if you want to make the group active again.
-                        </small>
-                    </div>
-                {% endif %}
-            {% endif %}
-
-            <div class="col-sm-3">
-                {#  Group Picture #}
+        <div class="flex group-header align-flex-start flex-sm-column gap-1">
+            <div>
+                {# Group Picture #}
                 {% if group.gaccess.picture and group.gaccess.picture.url %}
-                    <div class="group-image-wrapper group-image-wrapper-medium">
-                        <div class="group-image" style="background-image: url({{ group.gaccess.picture.url }})"></div>
-                    </div>
-
+                <div class="group-image-wrapper medium">
+                    {% thumbnail group.gaccess.picture "x130" crop="center" as im %}
+                    <div class="group-image" style="background-image: url({{ im.url }})"></div>
+                    {% endthumbnail %}
+                </div>
                 {% else %}
-                    <div class="group-image-wrapper group-image-wrapper-medium">
-                        <div class="group-image group-preview-image-default"
-                             style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
-                    </div>
+                <div class="group-image-wrapper medium">
+                    <div class="group-image group-preview-image-default"
+                        style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                </div>
                 {% endif %}
             </div>
 
-            <div class="col-sm-7">
-                <h2 class="group-title">{{ group.name }}</h2>
-                <h4 class="text-muted">{{ group.gaccess.purpose|linebreaks }}</h4>
+            <div class="flex-grow-1 full-width">
+                <div class="group-title-container flex justify-space-between align-flex-start">
+                    <h2 class="group-title is-marginless">{{ group.name }}</h2>
 
-                <p>{{ group.gaccess.description|linebreaks }}</p>
-            </div>
+                    <div class="spacer"></div>
 
-            {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
-                <div class="col-sm-2">
-                    {% if group.gaccess.active %}
-                        {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-                            <a href="#" id="btn-edit-group" data-toggle="modal" data-target="#edit-group-dialog">
-                                <span class="glyphicon glyphicon-pencil icon-blue icon-button" data-toggle="tooltip"
-                                      data-placement="auto" title="Edit Group"></span></a>
+                    <div class="flex gap-1">
+                        {% if profile_user.is_group_member %}
+                        <div>
+                            <a href="#" id="btn-leave-group" class="btn btn-default" data-toggle="modal"
+                                data-target="#leave-group-dialog">
+                                Leave Group
+                            </a>
+                        </div>
                         {% endif %}
+                    </div>
+                </div>
+
+                {% if group.gaccess.public and group.gaccess.discoverable %}
+                <img src="{% static 'img/public.png' %}" alt="Public Group" title="Public Group"><span
+                    class="small">Public Group</span>
+                {% elif not group.gaccess.public and group.gaccess.discoverable %}
+                <img src="{% static 'img/discoverable.png' %}" alt="Discoverable Group" title="Discoverable Group"><span
+                    class="small">Discoverable Group</span>
+                {% else %}
+                <img src="{% static 'img/private.png' %}" alt="Private Group" title="Private Group"><span
+                    class="small">Private Group</span>
+                {% endif %}
+
+                {% if group.gaccess.purpose %}<h4>{{ group.gaccess.purpose|linebreaks }}</h4>{% endif %}
+
+                {# Group Info #}
+                {% if group.gaccess.email or group.gaccess.url %}
+                <div class="group-info">
+                    {% if group.gaccess.url %}
+                    <div class="text-muted">
+                        <i class="fa fa-link"></i> <a href="{{ group.gaccess.url }}" target="_blank">
+                            {{ group.gaccess.url }}</a>
+                    </div>
                     {% endif %}
-                    <a href="#" id="btn-leave-group" data-toggle="modal" data-target="#leave-group-dialog">
-                        <span class="glyphicon glyphicon-hand-left btn-remove icon-button" data-toggle="tooltip"
-                              data-placement="auto" title="Leave Group"></span></a>
-                    {% if profile_user.is_group_owner and group.gaccess.active %}
-                        <a href="#" id="btn-delete-group" data-toggle="modal" data-target="#delete-group-dialog">
-                            <span class="glyphicon glyphicon-trash icon-button btn-remove" data-toggle="tooltip"
-                                  data-placement="auto" title="Delete Group"></span></a>
-                    {% endif %}
-                    {% if profile_user.is_group_owner and not group.gaccess.active %}
-                        <a href="{% url "restore_user_group" group.id %}">
-                            <span class="glyphicon glyphicon-retweet icon-button" data-toggle="tooltip"
-                                  data-placement="auto" title="Restore Group"></span></a>
+
+                    {% if group.gaccess.email %}
+                    <div class="text-muted">
+                        <i class="fa fa-envelope-o"></i> <a href="mailto:{{ group.gaccess.email }}">
+                            {{ group.gaccess.email }}</a>
+                    </div>
                     {% endif %}
                 </div>
-            {% endif %}
+                {% endif %}
+            </div>
         </div>
 
-        <div class="full-width-tabs-container" id="user-profile-tabs">
-            <!-- Nav tabs -->
-            <ul class="nav nav-tabs full-width-tabs" role="tablist">
-                <li role="presentation" class="active">
-                    <a href="#resources" aria-controls="resources" role="tab" data-toggle="tab">
-                        <i class="glyphicon glyphicon-file"></i> Resources</a>
-                </li>
+        {% if group.gaccess.description %}
+        <div class="group-description word-break-normal has-space-top">
+            {{ group.gaccess.description|linebreaks }}
+        </div>
+        {% endif %}
 
-                {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer or group.gaccess.public %}
-                    <li role="presentation">
-                        <a href="#members" aria-controls="members" role="tab" data-toggle="tab">
-                            <i class="glyphicon glyphicon-user"></i> Members</a>
-                    </li>
+        <div>
+            {% if not profile_user.is_group_member and request.user.is_authenticated %}
+            <div>
+                {% if group.gaccess.active %}
+                <hr>
+                <h4><i>You are not a member of this group</i></h4>
+                {% if group.join_request_waiting_user_action %}
+                <div class="request-block">
+                    <span class="flag-joined">You have been invited to join!</span>
+                    <br><br>
+                    <div class="height-fix">
+                        <form class="act-on-request height-fix"
+                            action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/accept/"
+                            method="POST">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success" data-user-action="Accept">Accept
+                            </button>
+                        </form>
+
+                        <form class="act-on-request height-fix"
+                            action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/reject/"
+                            method="POST">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-default">
+                                Decline
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% elif group.join_request_waiting_owner_action %}
+                <span class="badge badge-success"><i class="fa fa-paper-plane"></i> Request Sent</span>
+                {% else %}
+                <form id="join-{{ group.id }}" method="post"
+                    action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-primary btn-ask-join" role="button"
+                        data-form-id="join-{{ group.id }}"
+                        requires_explanation="{{ group.gaccess.requires_explanation }}">Ask to join
+                    </button>
+                </form>
                 {% endif %}
-            </ul>
-
-            <!-- Tab panes -->
-            <div class="tab-content">
-                <div role="tabpanel" class="tab-pane fade" id="members">
-                    <div class="row">
-                        <div class="col-sm-12 col-md-3">
-                            {% if profile_user.is_group_owner %}
-                                {% if group.gaccess.active %}
-                                    <div class="text-center">
-                                        <a href="#" class="btn btn-primary" role="button" data-toggle="modal"
-                                           data-target="#invite-dialog">Invite People</a></div>
-                                    <br>
-                                {% endif %}
-                            {% endif %}
-                            <table id="members-filter" class="table-user-contributions table table-hover">
-                                <tbody>
-                                <tr class="active c-pointer" data-filter-by="all">
-                                    <td><span>All</span></td>
-                                    <td><span class="badge" data-filter-by='All'>0</span></td>
-                                </tr>
-                                <tr class="c-pointer" data-filter-by="edit-user">
-                                    <td><span>Owners</span></td>
-                                    <td><span class="badge" data-filter-by='Owners'>0</span></td>
-                                </tr>
-                                <tr class="c-pointer" data-filter-by="pending">
-                                    <td><span>Pending</span></td>
-                                    <td><span class="badge" data-filter-by='Pending'>0</span></td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="col-sm-12 col-md-9">
-                            {#  All members #}
-                            <table data-edit-count="{{ edit_users|length }}"
-                                   data-view-count="{{ view_users|length }}"
-                                   data-pending-count="{{ group.gaccess.group_membership_requests|length }}"
-                                   id="all-members-table" class="table-members-list active">
-
-                                {% for owner in group.gaccess.owners %}
-                                    <tr data-filter-by="edit-user">
-                                        <td>
-                                            {% if  owner.userprofile.picture and owner.userprofile.picture.url %}
-                                                <div style="background-image: url('{{ owner.userprofile.picture.url }}');"
-                                                     class="profile-pic-thumbnail round-image pull-left">
-                                                </div>
-                                            {% else %}
-                                                <div class="profile-pic-thumbnail-small round-image user-icon"></div>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <h4><strong><a>{{ owner|contact }}</a></strong></h4>
-                                            {% if  owner.userprofile.title %}
-                                                <span class="text-muted">{{ owner.userprofile.title }}</span>{% endif %}
-                                        </td>
-                                        <td>
-                                            {% if profile_user.is_group_owner and group.gaccess.active or profile_user.is_group_editor and group.gaccess.active %}
-                                                <div class="dropdown custom-dropdown">
-                                                    <button class="btn btn-default dropdown-toggle" type="button"
-                                                            id="roleDropDown-{{ member.id }}" data-toggle="dropdown"
-                                                            aria-haspopup="true"
-                                                            aria-expanded="true">
-                                                        Owner
-                                                        <span class="caret"></span>
-                                                    </button>
-                                                    <ul class="dropdown-menu"
-                                                        aria-labelledby="roleDropDown-{{ member.id }}">
-                                                        <li>
-                                                            <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ owner.id }}/owner/">
-                                                                {% csrf_token %}
-                                                                <a href="#" class="btn-share-group" data-role="Owner">Owner</a>
-                                                            </form>
-                                                        </li>
-                                                        <li>
-                                                            <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ owner.id }}/view/">
-                                                                {% csrf_token %}
-                                                                <a href="#" class="btn-share-group" data-role="Member">Member</a>
-                                                            </form>
-                                                        </li>
-                                                        <li role="separator" class="divider"></li>
-                                                        <li>
-                                                            <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ owner.id }}/">
-                                                                {% csrf_token %}
-                                                                <a href="#" class="btn-unshare-group">Expel</a>
-                                                            </form>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            {% else %}
-                                                Owner
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-
-                                {#  Template to generate subsequent rows after accepting join request   #}
-                                <tr data-filter-by="view-user" id="templateRow">
-                                    <td>
-                                        <h4><strong><a data-id="name"></a></strong></h4>
-                                        <span class="text-muted" data-id="title"></span>
-                                    </td>
-                                    <td>
-                                        <div class="dropdown custom-dropdown">
-                                            <button class="btn btn-default dropdown-toggle" type="button"
-                                                    data-toggle="dropdown" aria-haspopup="true"
-                                                    aria-expanded="true">
-                                                Member
-                                                <span class="caret"></span>
-                                            </button>
-                                            <ul class="dropdown-menu">
-                                                <li>
-                                                    <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/member_id/owner/">
-                                                        {% csrf_token %}
-                                                        <a href="#" class="btn-share-group"
-                                                           data-role="Owner">Owner</a>
-                                                    </form>
-                                                </li>
-                                                <li>
-                                                    <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/member_id/view/">
-                                                        {% csrf_token %}
-                                                        <a href="#" class="btn-share-group"
-                                                           data-role="Member">Member</a>
-                                                    </form>
-                                                </li>
-                                                <li role="separator" class="divider"></li>
-                                                <li>
-                                                    <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/member_id/">
-                                                        {% csrf_token %}
-                                                        <a href="#" class="btn-unshare-group">Expel</a>
-                                                    </form>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </td>
-                                </tr>
-
-                                {% for member in view_users %}
-                                    <tr data-filter-by="view-user">
-                                        <td>
-                                            {% if member.userprofile.picture and member.userprofile.picture.url %}
-                                                <div style="background-image: url('{{ member.userprofile.picture.url }}');"
-                                                     class="profile-pic-thumbnail round-image pull-left">
-                                                </div>
-                                            {% else %}
-                                                <div class="profile-pic-thumbnail-small round-image user-icon"></div>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <h4><strong><a>{{ member|contact }}</a></strong></h4>
-                                            {% if  member.userprofile.title %}
-                                                <span class="text-muted">{{ member.userprofile.title }}</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if profile_user.is_group_owner and group.gaccess.active or profile_user.is_group_editor and group.gaccess.active %}
-                                                <div class="dropdown custom-dropdown">
-                                                    <button class="btn btn-default dropdown-toggle" type="button"
-                                                            id="roleDropDown-{{ member.id }}" data-toggle="dropdown"
-                                                            aria-haspopup="true"
-                                                            aria-expanded="true">
-                                                        Member
-                                                        <span class="caret"></span>
-                                                    </button>
-                                                    <ul class="dropdown-menu"
-                                                        aria-labelledby="roleDropDown-{{ member.id }}">
-                                                        <li>
-                                                            <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ member.id }}/owner/">
-                                                                {% csrf_token %}
-                                                                <a href="#" class="btn-share-group" data-role="Owner">Owner</a>
-                                                            </form>
-                                                        </li>
-                                                        <li>
-                                                            <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ member.id }}/view/">
-                                                                {% csrf_token %}
-                                                                <a href="#" class="btn-share-group" data-role="Member">Member</a>
-                                                            </form>
-                                                        </li>
-                                                        <li role="separator" class="divider"></li>
-                                                        <li>
-                                                            <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ member.id }}/">
-                                                                {% csrf_token %}
-                                                                <a href="#" class="btn-unshare-group">Expel</a>
-                                                            </form>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            {% else %}
-                                                Member
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </table>
-
-                            {#  Pending invitation requests #}
-                            <table data-filter-by="pending" class="table-members-list">
-                                {% if group.gaccess.group_membership_requests %}
-                                    {% for pendingrequest in group.gaccess.group_membership_requests %}
-                                        {% if not pendingrequest.invitation_to %}
-                                            <tr>
-                                                <td data-id="picture">
-                                                    {% if pendingrequest.request_from.userprofile and pendingrequest.request_from.userprofile.picture.url %}
-                                                        <div style="background-image: url('{{ pendingrequest.request_from.userprofile.picture.url }}');"
-                                                             class="profile-pic-thumbnail round-image pull-left">
-                                                        </div>
-                                                    {% else %}
-                                                        <div class="profile-pic-thumbnail-small round-image user-icon"></div>
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    <h4>
-                                                        <strong><a>{{ pendingrequest.request_from|contact }}</a></strong>
-                                                    </h4>
-                                                    {% if  pendingrequest.request_from.userprofile.title %}
-                                                        <span class="text-muted">{{ pendingrequest.request_from.userprofile.title }}</span>
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-                                                        <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/accept/">
-                                                            {% csrf_token %}
-                                                            <a href="#" class="btn btn-success btn-act-on-request"
-                                                               data-user-action="Accept"
-                                                               data-member-id="{{ pendingrequest.request_from.id }}"
-                                                               data-name="{{ pendingrequest.request_from|best_name }}"
-                                                               data-title="
-                                                                       {% if pendingrequest.request_from.userprofile.title %}{{ pendingrequest.request_from.userprofile.title }}{% endif %}"><span
-                                                                    class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a>
-                                                        </form>
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-                                                        <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/reject/">
-                                                            {% csrf_token %}
-                                                            <a href="#" class="btn btn-default btn-act-on-request"
-                                                               data-user-action="Reject"><span
-                                                                    class="glyphicon glyphicon-remove"></span>&nbsp;Reject</a>
-                                                        </form>
-                                                    {% endif %}
-                                                </td>
-                                            </tr>
-                                        {% else %}
-                                            <tr>
-                                                <td data-id="picture">
-                                                    {% if pendingrequest.invitation_to.userprofile and pendingrequest.invitation_to.userprofile.picture.url %}
-                                                        <div style="background-image: url('{{ pendingrequest.invitation_to.userprofile.picture.url }}');"
-                                                             class="profile-pic-thumbnail round-image pull-left">
-                                                        </div>
-                                                    {% else %}
-                                                        <div class="profile-pic-thumbnail-small round-image user-icon"></div>
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    <h4><strong>{{ pendingrequest.invitation_to|contact }}</strong>
-                                                    </h4>
-                                                    {% if  pendingrequest.invitation_to.userprofile.title %}
-                                                        <span class="text-muted">{{ pendingrequest.invitation_to.userprofile.title }}</span>
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-                                                        <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/reject/">
-                                                            {% csrf_token %}
-                                                            <a href="#" class="btn btn-default btn-act-on-request">Cancel
-                                                                Invitation</a>
-                                                        </form>
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                </td>
-                                            </tr>
-                                        {% endif %}
-                                    {% endfor %}
-                                {% else %}
-                                    <tr class="no-pending-requests">
-                                        <td><i>No pending requests.</i></td>
-                                    </tr>
-                                {% endif %}
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <div role="tabpanel" class="tab-pane fade in active" id="resources">
-                    <div class="row">
-                        {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
-                            <div class="col-lg-2" id="facets">
-                                <div class="panel panel-default">
-                                    <div class="panel-heading">
-                                        <h4 class="panel-title">
-                                            <span class="glyphicon glyphicon glyphicon-user"></span>
-                                            <a data-toggle="collapse" class="accordion-toggle"
-                                               data-parent="#accordion" href="#filter-shared-by">&nbsp;Shared by</a>
-                                        </h4>
-                                    </div>
-                                    <div id="filter-shared-by" class="facet-list panel-collapse collapse in">
-                                        <div class="panel-body">
-                                            <div class="list-group">
-                                                <ul class="list-group inputs-group">
-                                                    <i class="list-group-item no-items-found">
-                                                        <h5>No resources have been
-                                                        shared with this group yet.</h5>
-                                                    </i>
-                                                </ul>
-                                            </div>
-
-                                            <div id="grantors-list">
-                                                {% for res in group_resources %}
-                                                    <span data-grantor-id="{{ res.grantor.id }}"
-                                                          data-grantor-name="{{ res.grantor|best_name }}"></span>
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-10" id="items">
-                            <div class="row">
-                                <div class="col-sm-12">
-                                    <div id="search-container" class="input-group">
-                                        <span class="glyphicon glyphicon-search search-icon"></span>
-                                        <input id="resource-search-input" type="text" class="form-control"
-                                               placeholder="Search"/>
-                                        <span id="btn-clear-search-input"
-                                              class="glyphicon glyphicon-remove-sign btn-clear-search"></span>
-
-                                        <div class="input-group-btn">
-                                            <div class="btn-group" role="group">
-                                                <div class="dropdown dropdown-lg">
-                                                    <button type="button" class="btn btn-default dropdown-toggle"
-                                                            data-toggle="dropdown"
-                                                            aria-expanded="false"><span class="caret"></span></button>
-
-                                                    <div class="shadow-md dropdown-menu dropdown-menu-left" role="menu">
-                                                        <form class="form-horizontal" role="form">
-                                                            <div class="form-group">
-                                                                <label for="filter">Resource Type</label>
-                                                                <select id="input-resource-type"
-                                                                        class="form-control pull-left">
-                                                                    <option value="" selected>All</option>
-                                                                    <option value="collection resource">Collection
-                                                                    </option>
-                                                                    <option value="composite resource">Composite
-                                                                    </option>
-                                                                    <option value="generic">Generic</option>
-                                                                    <option value="geographic feature">Geographic
-                                                                        Feature (ESRI Shapefiles)
-                                                                    </option>
-                                                                    <option value="geographic raster">Geographic
-                                                                        Raster
-                                                                    </option>
-                                                                    <option value="his referenced time series">HIS
-                                                                        Referenced Time Series
-                                                                    </option>
-                                                                    <option value="model instance resource">Model
-                                                                        Instance
-                                                                    </option>
-                                                                    <option value="model program">Model Program</option>
-                                                                    <option value="modflow model instance resource">
-                                                                        MODFLOW Model Instance
-                                                                    </option>
-                                                                    <option value="multidimensional">Multidimensional
-                                                                        (NetCDF)
-                                                                    </option>
-                                                                    <option value="script resource">Script Resource
-                                                                    </option>
-                                                                    <option value="swat model instance resource">Swat
-                                                                        Model Instance
-                                                                    </option>
-                                                                    <option value="time series">Time Series</option>
-                                                                    <option value="web app resource">Web App</option>
-                                                                </select>
-                                                            </div>
-                                                            <div class="form-group">
-                                                                <label for="contain">Author</label>
-                                                                <input id="input-author" class="form-control"
-                                                                       type="text"/>
-                                                                <span id="btn-clear-author-input"
-                                                                      class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
-                                                            </div>
-                                                            <div class="form-group">
-                                                                <label for="contain">Subject</label>
-                                                                <input id="input-subject" class="form-control"
-                                                                       type="text"/>
-                                                                <span id="btn-clear-subject-input"
-                                                                      class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- /input-group -->
-                            <table id="item-selectors" class="table-hover table-striped resource-custom-table">
-                                <thead>
-                                <tr>
-                                    <th><input class="all-rows-selector" type="checkbox"></th>
-                                    <th>Type</th>
-                                    <th>Title</th>
-                                    <th>First Author</th>
-                                    <th>Date Created</th>
-                                    <th>Last Modified</th>
-                                    <th>Subject</th>
-                                    {# Used in table processing #}
-                                    <th>Authors</th>
-                                    {# Used in table processing #}
-                                    <th>Permission Level</th>
-                                    {# Used in table processing #}
-                                    <th>Labels</th>
-                                    {# Used in table processing #}
-                                    <th>Favorite</th>
-                                    {# Used in table processing #}
-                                    <th>Last modified</th>
-                                    {# Used in table processing #}
-                                    <th>Sharing Status</th>
-                                    {# Used in table processing #}
-                                    <th>Date Created</th>
-                                    {# Used in table processing #}
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {% for res in group_resources %}
-                                    <tr class="data-row">
-                                        {# Selection controls #}
-                                        <td>
-                                            <input class="row-selector" type="checkbox">
-                                            {% if res.is_favorite %}
-                                                <span data-form-id="form-favorite-{{ res.short_id }}"
-                                                      data-form-type="toggle-favorite"
-                                                      class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>
-
-                                                <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
-                                                      action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
-                                                      method="post">
-                                                    {% csrf_token %}
-                                                    <input type="hidden" name="action" value="DELETE">
-                                                    <input type="hidden" name="label_type" value="FAVORITE">
-                                                </form>
-                                            {% else %}
-                                                <span data-form-id="form-favorite-{{ res.short_id }}"
-                                                      data-form-type="toggle-favorite"
-                                                      class="glyphicon glyphicon-star btn-inline-favorite"></span>
-
-                                                <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
-                                                      action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
-                                                      method="post">
-                                                    {% csrf_token %}
-                                                    <input type="hidden" name="action" value="CREATE">
-                                                    <input type="hidden" name="label_type" value="FAVORITE">
-                                                </form>
-                                            {% endif %}
-
-                                            <span class="glyphicon glyphicon-tag btn-inline-label"
-                                                  data-toggle="dropdown" aria-expanded="false"></span>
-
-                                            <div class="dropdown-menu inline-dropdown" role="menu">
-                                                <div class="panel-body" role="form">
-                                                    <ul data-resource-id="{{ res.short_id }}"
-                                                        class="list-group list-labels">
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        {# Type #}
-                                        <td data-col="resource-type">
-                                            {% include "includes/res_type_col.html" with resource=res %}
-                                        </td>
-                                        {# Title #}
-                                        <td>
-                                            <strong>
-                                                <a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a>
-                                            </strong>
-                                        </td>
-                                        {# First Author #}
-                                        <td>{{ res|resource_first_author }}</td>
-                                        {# Date Created #}
-                                        <td>{{ res.created|date:"d M, Y" }} {{ res.created|time }}</td>
-                                        {# Last Modified #}
-                                        <td>{{ res.last_updated|date:"d M, Y" }} {{ res.last_updated|time }}</td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td>{{ res.last_updated|date:"U" }}</td>
-                                        <td><!-- Needed for datatable to function properly --></td>
-                                        <td>{{ res.created|date:"U" }}</td>
-                                        <td>{{ res.grantor.id }}</td>
-                                    </tr>
-                                {% endfor %}
-                                </tbody>
-                            </table>
-
-                            {% include "includes/legend.html" %}
-
-                        {% else %}
-
-                            <div class="col-lg-10" id="items">
-                                {% if group.gaccess.active %}
-                                    <h4><i>You are not a member of this group.</i></h4>
-                                    {% if group.join_request_waiting_user_action %}
-                                        <div class="request-block pull-left">
-                                            <span class="flag-joined">You have been invited to join!</span>
-                                            <br><br>
-                                            <div class="height-fix">
-                                                <form class="act-on-request height-fix"
-                                                      action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/accept/"
-                                                      method="POST">
-                                                    {% csrf_token %}
-                                                    <button type="submit" class="btn btn-success"
-                                                            data-user-action="Accept">Accept
-                                                    </button>
-                                                </form>
-
-                                                <form class="act-on-request height-fix"
-                                                      action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/reject/"
-                                                      method="POST">
-                                                    {% csrf_token %}
-                                                    <button type="submit" class="btn btn-default">
-                                                        Decline
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    {% elif group.join_request_waiting_owner_action %}
-                                        <h4 class="flag-joined"><span class="glyphicon glyphicon-send"></span> Request
-                                            Sent</h4>
-                                    {% else %}
-                                        <form id="join-{{ group.id }}" method="post"
-                                              action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-primary" role="button">Ask to join
-                                            </button>
-                                        </form>
-                                    {% endif %}
-                                {% else %}
-                                    <h4><i>This group is currently inactive.</i></h4>
-                                {% endif %}
-                            </div>
-                        {% endif %}
-
-                        </div>
-                    </div>
-                </div>
+                {% else %}
+                <h4><i>This group is currently inactive.</i></h4>
+                {% endif %}
             </div>
+
+            {% if group and profile_user.is_group_owner %}
+            <a href="{% url 'restore_user_group' group.id %}">
+                <span class="glyphicon glyphicon-retweet icon-button" data-toggle="tooltip" data-placement="auto"
+                    title="Restore Group"></span></a>
+            {% endif %}
+            {% endif %}
         </div>
     </div>
 
-    {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
-        <!-- Invite to Group Modal -->
-        <div class="modal fade" id="invite-dialog" tabindex="-1" role="dialog"
-             aria-labelledby="Invite">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal"
-                                aria-label="Close"><span aria-hidden="true">&times;</span>
-                        </button>
-                        <h4 class="modal-title" id="Invite">Invite People</h4>
-                    </div>
-                    <form id="invite-to-group" action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
-                        <div class="modal-body">
-                            <div id="div-invite-people" class="flex">
-                                {% csrf_token %}
-                                {{ add_view_user_form.user }}
-                                <form action="">
-                                    <a id="btn-group-invite"
-                                       class="btn btn-add-access btn-success glyphicon glyphicon-send space-left"><span
-                                            class="button-label">&nbsp;&nbsp;Send Invitation</span>
-                                    </a>
-                                </form>
-                            </div>
-                        </div>
+    <div class="full-width-tabs-container" id="group-tabs">
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs full-width-tabs" role="tablist">
+            {% if group.gaccess.public or profile_user.is_group_member %}
+            <li role="presentation">
+                <a href="#resources" aria-controls="resources" role="tab" data-toggle="tab">
+                    <i class="glyphicon glyphicon-file"></i> Resources </a>
+            </li>
+            {% endif %}
 
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        </div>
-                    </form>
-                </div>
+            {% if group.gaccess.public or profile_user.is_group_member %}
+            <li role="presentation">
+                <a href="#members" aria-controls="members" role="tab" data-toggle="tab">
+                    <i class="glyphicon glyphicon-user"></i> Members</a>
+            </li>
+            {% endif %}
+
+            <li role="presentation">
+                <a href="#communities" aria-controls="communities" role="tab" data-toggle="tab">
+                    <i class="fa fa-users"></i> Communities </a>
+            </li>
+
+            {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+            <li role="presentation">
+                <a href="#owner-settings" aria-controls="owner-settings" role="tab" data-toggle="tab">
+                    <i class="fa fa-lock"></i> Owner Settings </a>
+            </li>
+            {% endif %}
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content">
+            {% if group.gaccess.public or profile_user.is_group_member %}
+            <div role="tabpanel" class="tab-pane fade" id="resources">
+              <div class="row">
+                {% include 'includes/group-facets.html' %}
+                {% include "includes/resource-table.html" with rows_template='includes/my-resources-trows.html' collection=group_resources %}
+              </div>
             </div>
-        </div>
+            {% endif %}
 
-        <!-- Leave Group Modal -->
-        <div class="modal fade" id="leave-group-dialog" tabindex="-1" role="dialog"
-             aria-labelledby="Leave">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal"
-                                aria-label="Close"><span aria-hidden="true">&times;</span>
-                        </button>
-                        <h4 class="modal-title" id="Leave">Leave Group</h4>
-                    </div>
-                    <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ user.id }}/">
-                        <div class="modal-body">
-                            <h5>Are you sure you want to leave this group?</h5>
-                        </div>
-
-                        <div class="modal-footer">
-                            <button type="submit" class="btn btn-primary">Confirm</button>
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        </div>
-                    </form>
-                </div>
+            {% if group.gaccess.public or profile_user.is_group_member %}
+            <!-- TODO: move this logic to a Vue app -->
+            <div role="tabpanel" class="tab-pane fade" id="members">
+                {% include "hs_access_control/group-members.html" %}
             </div>
-        </div>
+            {% endif %}
 
-        <!-- Delete/Inactive Group Modal -->
-        <div class="modal fade" id="delete-group-dialog" tabindex="-1" role="dialog"
-             aria-labelledby="Delete">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal"
-                                aria-label="Close"><span aria-hidden="true">&times;</span>
-                        </button>
-                        <h4 class="modal-title" id="Delete">Delete Group</h4>
-                    </div>
-                    <form action="/hsapi/_internal/delete-user-group/{{ group.id }}">
-                        <div class="modal-body">
-                            <h5>Are you sure you want to delete this group? If you decide to delete it, you can restore
-                                it later.</h5>
-                        </div>
-
-                        <div class="modal-footer">
-                            <button type="submit" class="btn btn-primary">Confirm</button>
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        </div>
-                    </form>
-                </div>
+            <div role="tabpanel" class="tab-pane fade" id="communities">
+                {% include "hs_access_control/group-communities.html" %}
             </div>
-        </div>
-    {% endif %}
 
-    {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-        <!-- Edit Group Modal -->
-        <div class="modal fade" id="edit-group-dialog" tabindex="-1" role="dialog"
-             aria-labelledby="Invite">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <form action="/hsapi/_internal/update-user-group/{{ group.id }}" method="POST"
-                          enctype="multipart/form-data">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal"
-                                    aria-label="Close"><span aria-hidden="true">&times;</span>
-                            </button>
-                            <h4 class="modal-title" id="myModalLabel">Edit Group Details</h4>
-                        </div>
-                        <div class="modal-body">
+            {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+            <div role="tabpanel" class="tab-pane fade col-xs-12 col-sm-7" id="owner-settings">
+                <div class="panel panel-default">
+                    <div class="panel-heading">Group Preferences</div>
+                    <div class="panel-body">
+                        <form action="/hsapi/_internal/update-user-group/{{ group.id }}" method="POST"
+                            enctype="multipart/form-data">
                             {% csrf_token %}
                             <div class="row">
                                 {# Group Name #}
                                 <fieldset class="col-sm-12">
                                     <label>Group Name *</label>
                                     <small class="text-muted">150 characters or less</small>
-                                    <input class="form-control" required="required" name="name" value="{{ group.name }}"
-                                           maxlength="150">
+                                    <textarea class="form-control" required="required" name="name" maxlength="150" rows="1"
+                                      >{{ group.name }}</textarea>
+                                </fieldset>
 
+                                {# Group Contact Email #}
+                                <fieldset class="col-sm-12 has-space-top">
+                                    <label>Group Contact Email</label>
+                                    <input class="form-control" type="email" name="email"
+                                        value="{{ profile_user.email }}"></input>
+                                    <small class="text-muted">An email address for someone in charge of the
+                                        group.</small>
+                                </fieldset>
+
+                                {# Group Url #}
+                                <fieldset class="col-sm-12 has-space-top">
+                                    <label>Group URL</label>
+                                    <input class="form-control" value='{{ group.gaccess.url|default:"" }}' type="url"
+                                        name="url"></input>
+                                    <small class="text-muted">A URL for a web page that describes the group in more
+                                        detail.</small>
                                 </fieldset>
 
                                 {# Purpose #}
-                                <fieldset class="col-sm-12">
+                                <fieldset class="col-sm-12 has-space-top">
                                     <label>Purpose</label>
-                                    <small class="text-muted">300 characters or less</small>
                                     <textarea class="form-control" name="purpose"
-                                              maxlength="300">{{ group.gaccess.purpose }}</textarea>
-
+                                        maxlength="300">{{ group.gaccess.purpose }}</textarea>
+                                    <small class="text-muted">A brief description of the purpose for which the group was
+                                        created.</small><br>
+                                    <small class="text-muted">300 characters or less.</small>
                                 </fieldset>
 
                                 {# Group Description #}
-                                <fieldset class="col-sm-12">
+                                <fieldset class="col-sm-12 has-space-top">
                                     <label>About this group *</label>
                                     <textarea class="form-control" required="required"
-                                              name="description">{{ group.gaccess.description }}</textarea>
+                                        name="description">{{ group.gaccess.description }}</textarea>
+                                    <small class="text-muted">A longer text description for the group.</small>
                                 </fieldset>
 
                                 {# auto approve #}
-                                <fieldset class="col-sm-12">
-                                    <input id="auto-approve" type="checkbox" name="auto_approve"
-                                           {% if group.gaccess.auto_approve %}checked{% endif %}>
-                                    <label class="checkbox-label" for="auto-approve">Auto approve membership</label>
+                                <fieldset class="col-sm-12 has-space-top">
+                                    <input id="auto-approve" type="checkbox"
+                                        {% if group.gaccess.auto_approve %}checked{% endif %} name="auto_approve">
+                                    <label class="checkbox-label" for="auto-approve">Auto approve membership</label><br>
+                                    <small class="text-muted">Choose this option if you want group membership requests
+                                        to be automatically approved.</small>
+                                </fieldset>
+
+                                {# explanation #}
+                                <fieldset class="col-sm-12 has-space-top">
+                                    <input id="requires_explanation" type="checkbox" name="requires_explanation"
+                                        {% if group.gaccess.requires_explanation %}checked{% endif %}>
+                                    <label class="checkbox-label" for="requires_explanation">Require explanation when
+                                        requesting membership</label>
                                 </fieldset>
 
                                 {# Picture #}
-                                <div class="col-sm-12">
+                                <div class="col-sm-12 has-space-top">
                                     <fieldset>
                                         <label>Add a photo</label>
 
@@ -797,23 +296,23 @@
                                             <span class="input-group-btn">
                                                 <span id="cv-custom-upload" class="btn btn-default btn-file">
                                                     Browse&hellip; <input class="upload-picture" type="file"
-                                                                          name="picture">
+                                                        name="picture">
                                                 </span>
                                             </span>
                                             <input type="text" class="form-control" readonly>
                                         </div>
+                                        <small class="text-muted hint">Add a photo, Logo, or icon image to identify your
+                                            group.</small>
                                     </fieldset>
                                 </div>
 
-                                <br>
-
                                 {# Privacy #}
-                                <fieldset class="col-sm-12">
+                                <fieldset class="col-sm-12 has-space-top">
                                     <label>Privacy *</label>
                                     <div class="radio">
                                         <label>
-                                            <input type="radio" name="privacy_level" value="public"
-                                                   {% if group.gaccess.public and group.gaccess.discoverable %}checked{% endif %}>Public
+                                            <input type="radio" name="privacy_level" value="public" 
+                                                {% if group.gaccess.public and group.gaccess.discoverable %}checked{% endif%}>Public
                                             <div class="text-muted">Other users can find the group and see who has
                                                 membership.
                                             </div>
@@ -823,7 +322,7 @@
                                     <div class="radio">
                                         <label>
                                             <input type="radio" name="privacy_level" value="discoverable"
-                                                   {% if not group.gaccess.public and group.gaccess.discoverable %}checked{% endif %}>Discoverable
+                                                {% if not group.gaccess.public and group.gaccess.discoverable %}checked{% endif%}>Discoverable
                                             <div class="text-muted">Other users can find this group, but membership
                                                 information is hidden.
                                             </div>
@@ -833,34 +332,348 @@
                                     <div class="radio">
                                         <label>
                                             <input type="radio" name="privacy_level" value="private"
-                                                   {% if not group.gaccess.public and not group.gaccess.discoverable %}checked{% endif %}>Private
+                                                {% if not group.gaccess.public and not group.gaccess.discoverable %}checked{% endif %}>Private
                                             <div class="text-muted">Other users can not find this group.</div>
                                         </label>
                                     </div>
                                 </fieldset>
 
-                                <br>
-                                <fieldset class="col-sm-12">
+                                <fieldset class="col-sm-12 has-space-top">
                                     <small class="text-muted">( * ) Required fields</small>
                                 </fieldset>
+                                <br>
                             </div>
-                        </div>
+                            <button type="submit" class="btn btn-primary">Update Group Profile</button>
+                        </form>
+                    </div>
+                </div>
 
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Save</button>
-                        </div>
-                    </form>
+                <div class="panel panel-default">
+                    {% if group.gaccess.active %}
+                    <div class="panel-heading">Delete this Group</div>
+                    <div class="panel-body">
+                        <p>Deleting a group does not delete any of the resources that have been shared with the group.
+                            However, once your group is deleted, it will be gone forever. Make sure this is what you
+                            want to do!</p>
+                        <button type="button" class="btn btn-danger" data-toggle="modal"
+                            data-target="#delete-group-dialog">Delete this group</button>
+                    </div>
+                    {% else %}
+                    <div class="panel-heading">Restore this Group</div>
+                    <div class="panel-body">
+                        <p>Click on the button below if you want to make the group active again.</p>
+                        <a href='{% url 'restore_user_group' group.id %}' class="btn btn-success">
+                            <span class="glyphicon glyphicon-retweet"></span> Restore this Group</a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
+            {% endif %}
         </div>
-    {% endif %}
+    </div>
+</div>
 
+{% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
+<!-- Invite to Group Modal -->
+<div class="modal fade" id="invite-dialog" tabindex="-1" role="dialog" aria-labelledby="Invite">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="Invite">Invite People</h4>
+            </div>
+            <form id="invite-to-group" action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
+                <div class="modal-body">
+                    <div id="div-invite-people" class="flex">
+                        {% csrf_token %}
+                        {{ add_view_user_form.user }}
+                        <form action="">
+                            <a id="btn-group-invite"
+                                class="btn btn-add-access btn-success glyphicon glyphicon-send has-space-left"><span
+                                    class="button-label">&nbsp;&nbsp;Send Invitation</span>
+                            </a>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Leave Group Modal -->
+<div class="modal fade" id="leave-group-dialog" tabindex="-1" role="dialog" aria-labelledby="Leave">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="Leave">Leave Group</h4>
+            </div>
+            <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ user.id }}/">
+                <div class="modal-body">
+                    <h5>Are you sure you want to leave this group?</h5>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Confirm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete/Inactive Group Modal -->
+<div class="modal fade" id="delete-group-dialog" tabindex="-1" role="dialog" aria-labelledby="Delete">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Cancel"><span
+                        aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="Delete">Delete Group</h4>
+            </div>
+            <form action="/hsapi/_internal/delete-user-group/{{ group.id }}">
+                <div class="modal-body">
+                    <h5>Are you sure you want to delete this group? If you decide to delete it, you can restore
+                        it later.</h5>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if profile_user.is_group_owner or profile_user.is_group_editor %}
+<!-- Edit Group Modal -->
+<div class="modal fade" id="edit-group-dialog" tabindex="-1" role="dialog" aria-labelledby="Invite">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form action="/hsapi/_internal/update-user-group/{{ group.id }}" method="POST"
+                enctype="multipart/form-data">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">Edit Group Details</h4>
+                </div>
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="row">
+                        {# Group Name #}
+                        <fieldset class="col-sm-12">
+                            <label>Group Name *</label>
+                            <small class="text-muted">150 characters or less</small>
+                            <input class="form-control" required="required" name="name" value="{{ group.name }}"
+                                maxlength="150">
+
+                        </fieldset>
+
+                        {# Purpose #}
+                        <fieldset class="col-sm-12">
+                            <label>Purpose</label>
+                            <small class="text-muted">300 characters or less</small>
+                            <textarea class="form-control" name="purpose"
+                                maxlength="300">{{ group.gaccess.purpose }}</textarea>
+
+                        </fieldset>
+
+                        {# Group Description #}
+                        <fieldset class="col-sm-12">
+                            <label>About this group *</label>
+                            <textarea class="form-control" required="required"
+                                name="description">{{ group.gaccess.description }}</textarea>
+                        </fieldset>
+
+                        {# auto approve #}
+                        <fieldset class="col-sm-12">
+                            <input id="auto-approve" type="checkbox" name="auto_approve"
+                                {% if group.gaccess.auto_approve %}checked{% endif %}>
+                            <label class="checkbox-label" for="auto-approve">Auto approve membership</label>
+                        </fieldset>
+
+                        {# explanation #}
+                        <fieldset class="col-sm-12">
+                            <input id="requires_explanation" type="checkbox" name="requires_explanation"
+                                {% if group.gaccess.requires_explanation %}checked{% endif %}>
+                            <label class="checkbox-label" for="requires_explanation">Require explanation when requesting
+                                membership</label>
+                        </fieldset>
+
+                        {# Picture #}
+                        <div class="col-sm-12">
+                            <fieldset>
+                                <label>Add a photo</label>
+
+                                <div class="input-group">
+                                    <span class="input-group-btn">
+                                        <span id="cv-custom-upload" class="btn btn-default btn-file">
+                                            Browse&hellip; <input class="upload-picture" type="file" name="picture"
+                                                accept=".png, .jpg, .jpeg, .gif">
+                                        </span>
+                                    </span>
+                                    <input type="text" class="form-control" readonly>
+                                </div>
+                            </fieldset>
+                        </div>
+
+                        <br>
+
+                        {# Privacy #}
+                        <fieldset class="col-sm-12">
+                            <label>Privacy *</label>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="privacy_level" value="public"
+                                        {% if group.gaccess.public and group.gaccess.discoverable %}checked{% endif %}>Public
+                                    <div class="text-muted">Other users can find the group and see who has
+                                        membership.
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="privacy_level" value="discoverable"
+                                        {% if not group.gaccess.public and group.gaccess.discoverable %}checked{% endif %}>Discoverable
+                                    <div class="text-muted">Other users can find this group, but membership
+                                        information is hidden.
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="privacy_level" value="private"
+                                        {% if not group.gaccess.public and not group.gaccess.discoverable %}checked{% endif %}>Private
+                                    <div class="text-muted">Other users can not find this group.</div>
+                                </label>
+                            </div>
+                        </fieldset>
+
+                        <br>
+                        <fieldset class="col-sm-12">
+                            <small class="text-muted">( * ) Required fields</small>
+                        </fieldset>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% include "includes/group_explanation_modal.html" %}
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}
-    {{ block.super }}
-    <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/jquery.dataTables.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/group.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table.js"></script>
+{{ block.super }}
+<script type="text/javascript" src="{% static 'js/group-actions.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/group.js' %}"></script>
+<script type="text/javascript">
+  var resourceTable;
+  
+  var ACTIONS_COL = 0;
+  var RESOURCE_TYPE_COL = 1;
+  var TITLE_COL = 2;
+  var OWNER_COL = 3;
+  var DATE_CREATED_COL = 4;
+  var LAST_MODIFIED_COL = 5;
+  var SUBJECT_COL = 6;
+  var AUTHORS_COL = 7;
+  var PERM_LEVEL_COL = 8;
+  var LABELS_COL = 9;
+  var FAVORITE_COL = 10;
+  var LAST_MODIF_SORT_COL = 11;
+  var SHARING_STATUS_COL = 12;
+  var DATE_CREATED_SORT_COL = 13;
+  var ACCESS_GRANTOR_COL = 14;
+  
+  var colDefs = [
+  {
+    targets: [ACTIONS_COL], // Row selector and controls
+    visible: false,
+  },
+  {
+    targets: [RESOURCE_TYPE_COL], // Resource type
+    width: "100px",
+  },
+  {
+    targets: [ACTIONS_COL], // Actions
+    orderable: false,
+    searchable: false,
+    width: "70px",
+  },
+  {
+    targets: [LAST_MODIFIED_COL], // Last modified
+    iDataSort: LAST_MODIF_SORT_COL,
+  },
+  {
+    targets: [DATE_CREATED_COL], // Created
+    iDataSort: DATE_CREATED_SORT_COL,
+  },
+  {
+    targets: [SUBJECT_COL], // Subject
+    visible: false,
+    searchable: true,
+  },
+  {
+    targets: [AUTHORS_COL], // Authors
+    visible: false,
+    searchable: true,
+  },
+  {
+    targets: [PERM_LEVEL_COL], // Permission level
+    visible: false,
+    searchable: true,
+  },
+  {
+    targets: [LABELS_COL], // Labels
+    visible: false,
+    searchable: true,
+  },
+  {
+    targets: [FAVORITE_COL], // Favorite
+    visible: false,
+    searchable: true,
+  },
+  {
+    targets: [LAST_MODIF_SORT_COL], // Last modified (for sorting)
+    visible: false,
+    searchable: true,
+  },
+  {
+    targets: [DATE_CREATED_SORT_COL], // Last modified (for sorting)
+    visible: false,
+    searchable: true,
+  },
+  {
+    targets: [SHARING_STATUS_COL], // Sharing status
+    visible: false,
+    searchable: false,
+  },
+  {
+    targets: [ACCESS_GRANTOR_COL], // Access Grantor
+    visible: false,
+    searchable: true,
+  },
+];
+</script>
+
 {% endblock %}

@@ -1,17 +1,63 @@
 import logging
+
 from dateutil import parser
-
-from django.http import JsonResponse
 from django.db import transaction
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+from rest_framework import status as http_status
+from django.core.exceptions import ValidationError
 
-from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
-from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
-
-from .utils import add_or_remove_relation_metadata, RES_LANDING_PAGE_URL_TEMPLATE,\
-    update_collection_list_csv, get_collectable_resources
+from hs_core.enums import RelationTypes
+from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, set_dirty_bag_flag
+from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
+from .utils import add_or_remove_relation_metadata, get_collectable_resources
+from hs_access_control.models.privilege import UserResourcePrivilege, PrivilegeCodes
 
 logger = logging.getLogger(__name__)
 UI_DATETIME_FORMAT = "%m/%d/%Y"
+
+
+def get_collectable_resources_modal(request, shortkey, *args, **kwargs):
+    status = "success"
+    msg = ""
+    collectable_resources_modal_html = ''
+    status_code = http_status.HTTP_200_OK
+    try:
+        collection_res, is_authorized, user = authorize(request, shortkey,
+                                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+
+        if collection_res.resource_type.lower() != "collectionresource":
+            raise Exception(f"{shortkey} is not a collection.")
+
+        if collection_res.raccess.published:
+            raise Exception(f"Collection {shortkey} is a published collection and can't be changed")
+
+        collectable_resources = get_collectable_resources(user, collection_res)
+
+        # fetch the owners of the resources rather than query for each resource
+        collectable_resource_ids = [r.short_id for r in collectable_resources]
+        urp_qs = UserResourcePrivilege.objects \
+            .filter(resource__short_id__in=collectable_resource_ids, privilege=PrivilegeCodes.OWNER)\
+            .select_related("user", "resource", "resource__raccess") \
+            .order_by("resource__title", "resource__short_id") \
+            .distinct("resource__title", "resource__short_id")
+
+        context = {'user_resource_privileges': urp_qs}
+        template_name = 'pages/collectable_resources_modal.html'
+        collectable_resources_modal_html = render_to_string(template_name, context, request)
+    except Exception as ex:
+        err_msg = "update_collection: {0} ; username: {1}; collection_id: {2} ."
+        logger.error(err_msg.format(str(ex),
+                     request.user.username if request.user.is_authenticated else "anonymous",
+                     shortkey))
+        status = "error"
+        msg = str(ex)
+        status_code = http_status.HTTP_400_BAD_REQUEST
+    finally:
+        ajax_response_data = {'status': status, 'msg': msg,
+                              'collectable_resources_modal': collectable_resources_modal_html
+                              }
+        return JsonResponse(ajax_response_data, status=status_code)
 
 
 # update collection
@@ -21,7 +67,7 @@ def update_collection(request, shortkey, *args, **kwargs):
     list of resource ids and a 'update_type' parameter with value of 'set', 'add' or 'remove',
     which are three different mode to update the collection.If no 'update_type' parameter is
     provided, the 'set' will be used by default.
-    To add a resource to collection, user should have certain premission on both collection
+    To add a resource to collection, user should have certain permission on both collection
     and resources being added.
     For collection: user should have at least Edit permission
     For resources being added, one the following criteria should be met:
@@ -43,7 +89,7 @@ def update_collection(request, shortkey, *args, **kwargs):
                             needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
             if collection_res_obj.resource_type.lower() != "collectionresource":
-                raise Exception("Resource {0} is not a collection resource.".format(shortkey))
+                raise Exception(f"{shortkey} is not a collection.")
 
             if collection_res_obj.raccess.published:
                 raise Exception("Resources of a published collection can't be changed")
@@ -72,8 +118,7 @@ def update_collection(request, shortkey, *args, **kwargs):
                     raise Exception("Can not contain collection itself.")
 
             # current contained res
-            res_id_list_current_collection = \
-                [res.short_id for res in collection_res_obj.resources.all()]
+            res_id_list_current_collection = [res.short_id for res in collection_res_obj.resources.all()]
 
             # res to remove
             res_id_list_remove = []
@@ -90,15 +135,23 @@ def update_collection(request, shortkey, *args, **kwargs):
                         res_id_list_remove.append(res_id_remove)
 
             for res_id_remove in res_id_list_remove:
-                # user with Edit permission over this collection can remove any resource from it
-                res_obj_remove = get_resource_by_shortkey(res_id_remove)
-                collection_res_obj.resources.remove(res_obj_remove)
+                try:
+                    # user with Edit permission over this collection can remove any resource from it
+                    res_obj_remove = get_resource_by_shortkey(res_id_remove)
+                    collection_res_obj.resources.remove(res_obj_remove)
 
-                # change "Relation" metadata in collection
-                value = RES_LANDING_PAGE_URL_TEMPLATE.format(res_id_remove)
-                add_or_remove_relation_metadata(add=False, target_res_obj=collection_res_obj,
-                                                relation_type=hasPart, relation_value=value,
-                                                set_res_modified=False)
+                    # delete relation meta element of type 'hasPart' for the collection resource
+                    add_or_remove_relation_metadata(add=False, target_res_obj=collection_res_obj,
+                                                    relation_type=hasPart, relation_value=res_obj_remove.get_citation(),
+                                                    set_res_modified=False)
+
+                    # delete relation meta element of type 'isPartOf' from the resource removed from the collection
+                    rel = res_obj_remove.metadata.relations.filter(type=RelationTypes.isPartOf,
+                                                                   value__contains=collection_res_obj.short_id).first()
+                    rel.delete()
+                    set_dirty_bag_flag(res_obj_remove)
+                except AttributeError as e:
+                    logger.exception(f"update_collection, removing metadata; collection_id:{shortkey}; {e}")
 
             # res to add
             res_id_list_add = []
@@ -128,35 +181,42 @@ def update_collection(request, shortkey, *args, **kwargs):
                 # to "exists" and exactly matches the intent of the UI.  It is much
                 # more efficient than it looks.
 
-                if not get_collectable_resources(user, collection_res_obj, annotate=False)\
+                if not get_collectable_resources(user, collection_res_obj) \
                         .filter(short_id=res_to_add.short_id).exists():
                     raise Exception('Only resource owner can add a non-shareable private'
                                     'resource to a collection ')
 
                 # add this new res to collection
-                res_obj_add = get_resource_by_shortkey(res_id_add)
-                collection_res_obj.resources.add(res_obj_add)
+                collection_res_obj.resources.add(res_to_add)
 
-                # change "Relation" metadata in collection
-                value = RES_LANDING_PAGE_URL_TEMPLATE.format(res_id_add)
+                # add relation meta element of type 'hasPart' to the collection resource
                 add_or_remove_relation_metadata(add=True, target_res_obj=collection_res_obj,
-                                                relation_type=hasPart, relation_value=value,
+                                                relation_type=hasPart, relation_value=res_to_add.get_citation(),
                                                 set_res_modified=False)
+
+                # add relation meta element of type 'isPartOf' to the resource added to the collection
+                try:
+                    res_to_add.metadata.create_element('relation', type='isPartOf',
+                                                       value=collection_res_obj.get_citation())
+                except ValidationError:
+                    # The isPartOf metadata already exists
+                    pass
+                set_dirty_bag_flag(res_to_add)
 
             if collection_res_obj.can_be_public_or_discoverable:
                 metadata_status = "Sufficient to make public"
 
             new_coverage_list = _update_collection_coverages(collection_res_obj)
 
-            update_collection_list_csv(collection_res_obj)
-
+            # set flag to update csv collection resource file to be generated at the time of bag download
+            collection_res_obj.set_update_text_file(flag='True')
             resource_modified(collection_res_obj, user, overwrite_bag=False)
 
     except Exception as ex:
         err_msg = "update_collection: {0} ; username: {1}; collection_id: {2} ."
-        logger.error(err_msg.format(str(ex),
-                     request.user.username if request.user.is_authenticated() else "anonymous",
-                     shortkey))
+        logger.exception(err_msg.format(str(ex),
+                         request.user.username if request.user.is_authenticated else "anonymous",
+                         shortkey))
         status = "error"
         msg = str(ex)
     finally:
@@ -183,18 +243,7 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
                             needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
             if collection_res.resource_type.lower() != "collectionresource":
-                raise Exception("Resource {0} is not a collection resource.".format(shortkey))
-
-            # handle "Relation" metadata
-            hasPart = "hasPart"
-            for deleted_res_log in collection_res.deleted_resources:
-                relation_value = RES_LANDING_PAGE_URL_TEMPLATE.format(deleted_res_log.resource_id)
-
-                add_or_remove_relation_metadata(add=False,
-                                                target_res_obj=collection_res,
-                                                relation_type=hasPart,
-                                                relation_value=relation_value,
-                                                set_res_modified=False)
+                raise Exception(f"{shortkey} is not a collection.")
 
             new_coverage_list = _update_collection_coverages(collection_res)
             ajax_response_data['new_coverage_list'] = new_coverage_list
@@ -202,8 +251,8 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
             # remove all logged deleted resources for the collection
             collection_res.deleted_resources.all().delete()
 
-            update_collection_list_csv(collection_res)
-
+            # set flag to update csv collection resource file to be generated at the time of bag download
+            collection_res.set_update_text_file(flag='True')
             resource_modified(collection_res, user, overwrite_bag=False)
 
     except Exception as ex:
@@ -228,7 +277,7 @@ def calculate_collection_coverages(request, shortkey, *args, **kwargs):
                         needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
 
         if collection_res.resource_type.lower() != "collectionresource":
-            raise Exception("Resource {0} is not a collection resource.".format(shortkey))
+            raise Exception(f"{shortkey} is not a collection.")
 
         new_coverage_list = _calculate_collection_coverages(collection_res)
         ajax_response_data['new_coverage_list'] = new_coverage_list

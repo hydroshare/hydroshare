@@ -2,14 +2,14 @@ import datetime
 import os
 import logging
 
-from django.core.validators import RegexValidator
 from django.utils import timezone
 from django.dispatch import receiver
 from django.contrib.auth.models import User
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 from django.db.models.signals import pre_save
 from django.template import RequestContext, Template, TemplateSyntaxError
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.utils.html import strip_tags
 from django.core.exceptions import ValidationError
 from django.contrib.postgres.fields import HStoreField
@@ -20,21 +20,25 @@ from mezzanine.core.request import current_request
 from mezzanine.pages.models import Page
 from mezzanine.utils.models import upload_to
 
+from sorl.thumbnail import ImageField as ThumbnailImageField
+from theme.utils import get_upload_path_userprofile
+
 
 DEFAULT_COPYRIGHT = '&copy; {% now "Y" %} {{ settings.SITE_TITLE }}'
 logger = logging.getLogger(__name__)
 
 
 class SiteConfiguration(SiteRelated):
-    '''
+    """
     A model to edit sitewide content
-    '''
+    """
+
     col1_heading = models.CharField(max_length=200, default="Contact us")
     col1_content = RichTextField()
     col2_heading = models.CharField(max_length=200, default="Follow")
-    col2_content = RichTextField(blank=True,
-                                 help_text="If present will override the "
-                                           "social network icons.")
+    col2_content = RichTextField(
+        blank=True, help_text="If present will override the " "social network icons."
+    )
     col3_heading = models.CharField(max_length=200, default="Subscribe")
     col3_content = RichTextField()
     twitter_link = models.CharField(max_length=2000, blank=True)
@@ -49,38 +53,46 @@ class SiteConfiguration(SiteRelated):
     copyright = models.TextField(default=DEFAULT_COPYRIGHT)
 
     class Meta:
-        verbose_name = _('Site Configuration')
-        verbose_name_plural = _('Site Configuration')
+        verbose_name = _("Site Configuration")
+        verbose_name_plural = _("Site Configuration")
 
     def save(self, *args, **kwargs):
-        '''
+        """
         Set has_social_network_links
-        '''
-        if (self.twitter_link or self.facebook_link or self.pinterest_link or
-            self.youtube_link or self.github_link or self.linkedin_link or
-            self.vk_link or self.gplus_link):
+        """
+        if (
+            self.twitter_link
+            or self.facebook_link
+            or self.pinterest_link
+            or self.youtube_link
+            or self.github_link
+            or self.linkedin_link
+            or self.vk_link
+            or self.gplus_link
+        ):
             self.has_social_network_links = True
         else:
             self.has_social_network_links = False
         super(SiteConfiguration, self).save(*args, **kwargs)
 
     def render_copyright(self):
-        '''
+        """
         Render the footer
-        '''
+        """
         c = RequestContext(current_request())
         try:
             t = Template(self.copyright)
         except TemplateSyntaxError:
-            return ''
+            return ""
         return t.render(c)
 
 
 class HomePage(Page):
-    '''
+    """
     A home page page type
-    '''
-    MESSAGE_TYPE_CHOICES = (('warning', 'Warning'), ('information', 'Information'))
+    """
+
+    MESSAGE_TYPE_CHOICES = (("warning", "Warning"), ("information", "Information"))
     heading = models.CharField(max_length=100)
     slide_in_one_icon = models.CharField(max_length=50, blank=True)
     slide_in_one = models.CharField(max_length=200, blank=True)
@@ -88,30 +100,43 @@ class HomePage(Page):
     slide_in_two = models.CharField(max_length=200, blank=True)
     slide_in_three_icon = models.CharField(max_length=50, blank=True)
     slide_in_three = models.CharField(max_length=200, blank=True)
-    header_background = FileField(verbose_name=_("Header Background"),
+    header_background = FileField(
+        verbose_name=_("Header Background"),
         upload_to=upload_to("theme.HomePage.header_background", "homepage"),
-        format="Image", max_length=255, blank=True)
-    header_image = FileField(verbose_name=_("Header Image (optional)"),
+        format="Image",
+        max_length=255,
+        blank=True,
+    )
+    header_image = FileField(
+        verbose_name=_("Header Image (optional)"),
         upload_to=upload_to("theme.HomePage.header_image", "homepage"),
-        format="Image", max_length=255, blank=True, null=True)
+        format="Image",
+        max_length=255,
+        blank=True,
+        null=True,
+    )
     welcome_heading = models.CharField(max_length=100, default="Welcome")
     content = RichTextField()
     recent_blog_heading = models.CharField(max_length=100, default="Latest blog posts")
-    number_recent_posts = models.PositiveIntegerField(default=3,
-        help_text="Number of recent blog posts to show")
+    number_recent_posts = models.PositiveIntegerField(
+        default=3, help_text="Number of recent blog posts to show"
+    )
 
     # The following date fields are used for duration during which the message will be displayed
-    message_start_date = models.DateField(null=True, help_text="Date from which the message will "
-                                                               "be displayed")
-    message_end_date = models.DateField(null=True, help_text="Date on which the message will no "
-                                                             "more be displayed")
+    message_start_date = models.DateField(
+        null=True, help_text="Date from which the message will " "be displayed"
+    )
+    message_end_date = models.DateField(
+        null=True, help_text="Date on which the message will no " "more be displayed"
+    )
 
     # this must be True for the message to be displayed
     show_message = models.BooleanField(default=False, help_text="Check to show message")
 
     # use message type to change background color of the message
-    message_type = models.CharField(max_length=100, choices=MESSAGE_TYPE_CHOICES,
-                                    default='Information')
+    message_type = models.CharField(
+        max_length=100, choices=MESSAGE_TYPE_CHOICES, default="Information"
+    )
 
     class Meta:
         verbose_name = _("Home page")
@@ -135,18 +160,26 @@ class HomePage(Page):
 
 
 class IconBox(Orderable):
-    '''
+    """
     An icon box on a HomePage
-    '''
-    homepage = models.ForeignKey(HomePage, related_name="boxes")
-    icon = models.CharField(max_length=50,
+    """
+
+    homepage = models.ForeignKey(
+        HomePage, on_delete=models.CASCADE, related_name="boxes"
+    )
+    icon = models.CharField(
+        max_length=50,
         help_text="Enter the name of a font awesome icon, i.e. "
-                  "fa-eye. A list is available here "
-                  "http://fontawesome.io/")
+        "fa-eye. A list is available here "
+        "http://fontawesome.io/",
+    )
     title = models.CharField(max_length=200)
     link_text = models.CharField(max_length=100)
-    link = models.CharField(max_length=2000, blank=True,
-        help_text="Optional, if provided clicking the box will go here.")
+    link = models.CharField(
+        max_length=2000,
+        blank=True,
+        help_text="Optional, if provided clicking the box will go here.",
+    )
 
 
 class QuotaMessage(models.Model):
@@ -155,37 +188,45 @@ class QuotaMessage(models.Model):
     # content when over quota within grace period and less than 125% of hard limit quota;
     # enforce_content_prepend prepends the content to form an enforcement message to inform users
     # after grace period or when they are over hard limit quota
-    warning_content_prepend = models.TextField(default='Your quota for HydroShare resources is '
-                                                       '{allocated}{unit} in {zone} zone. You '
-                                                       'currently have resources that consume '
-                                                       '{used}{unit}, {percent}% of your quota. '
-                                                       'Once your quota reaches 100% you will no '
-                                                       'longer be able to create new resources in '
-                                                       'HydroShare. ')
-    grace_period_content_prepend = models.TextField(default='You have exceeded your HydroShare '
-                                                            'quota. Your quota for HydroShare '
-                                                            'resources is {allocated}{unit} in '
-                                                            '{zone} zone. You currently have '
-                                                            'resources that consume {used}{unit}, '
-                                                            '{percent}% of your quota. You have a '
-                                                            'grace period until {cut_off_date} to '
-                                                            'reduce your use to below your quota, '
-                                                            'or to acquire additional quota, after '
-                                                            'which you will no longer be able to '
-                                                            'create new resources in HydroShare. ')
-    enforce_content_prepend = models.TextField(default='Your action '
-                                                       'was refused because you have exceeded your '
-                                                       'quota. Your quota for HydroShare resources '
-                                                       'is {allocated}{unit} in {zone} zone. You '
-                                                       'currently have resources that consume '
-                                                       '{used}{unit}, {percent}% of your quota. ')
-    content = models.TextField(default='To request additional quota, please contact '
-                                       'help@cuahsi.org. We will try to accommodate '
-                                       'reasonable requests for additional quota. If you have a '
-                                       'large quota request you may need to contribute toward the '
-                                       'costs of providing the additional space you need. See '
-                                       'https://help.hydroshare.org/about-hydroshare/policies/'
-                                       'quota/ for more information about the quota policy.')
+    warning_content_prepend = models.TextField(
+        default="Your quota for HydroShare resources is "
+        "{allocated}{unit} in {zone} zone. You "
+        "currently have resources that consume "
+        "{used}{unit}, {percent}% of your quota. "
+        "Once your quota reaches 100% you will no "
+        "longer be able to create new resources in "
+        "HydroShare. "
+    )
+    grace_period_content_prepend = models.TextField(
+        default="You have exceeded your HydroShare "
+        "quota. Your quota for HydroShare "
+        "resources is {allocated}{unit} in "
+        "{zone} zone. You currently have "
+        "resources that consume {used}{unit}, "
+        "{percent}% of your quota. You have a "
+        "grace period until {cut_off_date} to "
+        "reduce your use to below your quota, "
+        "or to acquire additional quota, after "
+        "which you will no longer be able to "
+        "create new resources in HydroShare. "
+    )
+    enforce_content_prepend = models.TextField(
+        default="Your action "
+        "was refused because you have exceeded your "
+        "quota. Your quota for HydroShare resources "
+        "is {allocated}{unit} in {zone} zone. You "
+        "currently have resources that consume "
+        "{used}{unit}, {percent}% of your quota. "
+    )
+    content = models.TextField(
+        default="To request additional quota, please contact "
+        "help@cuahsi.org. We will try to accommodate "
+        "reasonable requests for additional quota. If you have a "
+        "large quota request you may need to contribute toward the "
+        "costs of providing the additional space you need. See "
+        "https://help.hydroshare.org/about-hydroshare/policies/"
+        "quota/ for more information about the quota policy."
+    )
     # quota soft limit percent value for starting to show quota usage warning. Default is 80%
     soft_limit_percent = models.IntegerField(default=80)
     # quota hard limit percent value for hard quota enforcement. Default is 125%
@@ -203,12 +244,14 @@ class UserQuota(models.Model):
     # the UserQuota model instance defines quota in hydroshareZone and hydroshareuserZone,
     # categorized as hydroshare in zone field in UserQuota model, however,
     # another UserQuota model instance could be defined in a third-party federated zone as needed.
-    user = models.ForeignKey(User,
-                             editable=False,
-                             null=False,
-                             on_delete=models.CASCADE,
-                             related_name='quotas',
-                             related_query_name='quotas')
+    user = models.ForeignKey(
+        User,
+        editable=False,
+        null=False,
+        on_delete=models.CASCADE,
+        related_name="quotas",
+        related_query_name="quotas",
+    )
 
     allocated_value = models.FloatField(default=20)
     used_value = models.FloatField(default=0)
@@ -218,14 +261,15 @@ class UserQuota(models.Model):
     # soft quota limit and thus grace period has not started. When grace period is 0, quota
     # enforcement takes place
     remaining_grace_period = models.IntegerField(default=-1)
+
     class Meta:
         verbose_name = _("User quota")
         verbose_name_plural = _("User quotas")
-        unique_together = ('user', 'zone')
+        unique_together = ("user", "zone")
 
     @property
     def used_percent(self):
-        return self.used_value*100.0/self.allocated_value
+        return self.used_value * 100.0 / self.allocated_value
 
     def update_used_value(self, size):
         """
@@ -234,6 +278,7 @@ class UserQuota(models.Model):
         :return:
         """
         from hs_core.hydroshare.utils import convert_file_size_to_unit
+
         self.used_value = convert_file_size_to_unit(size, self.unit)
         self.save()
 
@@ -245,70 +290,97 @@ class UserQuota(models.Model):
         :return: summation of self.used_value and pass in size, converted to the same self.unit
         """
         from hs_core.hydroshare.utils import convert_file_size_to_unit
+
         return self.used_value + convert_file_size_to_unit(size, self.unit)
 
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User)
-    picture = models.ImageField(upload_to='profile', null=True, blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    picture = ThumbnailImageField(
+        upload_to=get_upload_path_userprofile, null=True, blank=True
+    )
     middle_name = models.CharField(max_length=1024, null=True, blank=True)
     website = models.URLField(null=True, blank=True)
     title = models.CharField(
-        max_length=1024, null=True, blank=True,
-        help_text='e.g. Assistant Professor, Program Director, Adjunct Professor, Software Developer.')
-    user_type = models.CharField(
         max_length=1024,
         null=True,
         blank=True,
-        default='Unspecified'
+        help_text="e.g. Assistant Professor, Program Director, Adjunct Professor, Software Developer.",
     )
-    subject_areas = models.CharField(
-        max_length=1024, null=True, blank=True,
-        help_text='A comma-separated list of subject areas you are interested in researching. e.g. "Computer Science, Hydrology, Water Management"')
+    user_type = models.CharField(
+        max_length=1024, null=True, blank=True, default="Unspecified"
+    )
+    subject_areas = ArrayField(
+        models.CharField(max_length=1024),
+        help_text='A list of subject areas you are interested in researching. e.g. "Water Management." '
+                  'Free text entry or select from the suggestions',
+        null=True, blank=True
+    )
     organization = models.CharField(
         max_length=1024,
         null=True,
         blank=True,
-        help_text="The name of the organization you work for."
+        help_text="The name of the organization you work for.",
     )
-    phone_regex = RegexValidator(regex=r'^\d{8,15}$',
-                                 message="Our validation for phone numbers has recently changed. Please ensure that "
-                                         "your phone number is entered in the following format: '999999999'. Up to 16 "
-                                         "digits are allowed.  If you made other changes to your profile - please make "
-                                         "sure they saved successfully.")
-    phone_1 = models.CharField(validators=[phone_regex], max_length=16, null=True, blank=True)
-    phone_1_type = models.CharField(max_length=1024, null=True, blank=True, choices=(
-        ('Home', 'Home'),
-        ('Work', 'Work'),
-        ('Mobile', 'Mobile'),
-    ))
-    phone_2 = models.CharField(validators=[phone_regex], max_length=16, null=True, blank=True)
-    phone_2_type = models.CharField(max_length=1024, null=True, blank=True, choices=(
-        ('Home', 'Home'),
-        ('Work', 'Work'),
-        ('Mobile', 'Mobile'),
-    ))
-    public = models.BooleanField(default=True, help_text='Uncheck to make your profile contact information and '
-                                                         'details private.')
-    cv = models.FileField(upload_to='profile',
-                          help_text='Upload your Curriculum Vitae if you wish people to be able to download it.',
-                          null=True, blank=True)
-    details = models.TextField("Description", help_text='Tell the HydroShare community a little about yourself.',
-                               null=True, blank=True)
+    phone_1 = models.CharField(
+        max_length=32, null=True, blank=True
+    )
+    phone_1_type = models.CharField(
+        max_length=1024,
+        null=True,
+        blank=True,
+        choices=(
+            ("Home", "Home"),
+            ("Work", "Work"),
+            ("Mobile", "Mobile"),
+        ),
+    )
+    phone_2 = models.CharField(
+        max_length=32, null=True, blank=True
+    )
+    phone_2_type = models.CharField(
+        max_length=1024,
+        null=True,
+        blank=True,
+        choices=(
+            ("Home", "Home"),
+            ("Work", "Work"),
+            ("Mobile", "Mobile"),
+        ),
+    )
+    public = models.BooleanField(
+        default=True,
+        help_text="Uncheck to make your profile contact information and "
+        "details private.",
+    )
+    cv = models.FileField(
+        upload_to="profile",
+        help_text="Upload your Curriculum Vitae if you wish people to be able to download it.",
+        null=True,
+        blank=True,
+    )
+    details = models.TextField(
+        "Description",
+        help_text="Tell the HydroShare community a little about yourself.",
+        null=True,
+        blank=True,
+    )
 
     state = models.CharField(max_length=1024, null=True, blank=True)
     country = models.CharField(max_length=1024, null=True, blank=True)
 
-    create_irods_user_account = models.BooleanField(default=False,
-                                                    help_text='Check to create an iRODS user account in HydroShare user '
-                                                              'iRODS space for staging large files (>2GB) using iRODS clients such as Cyberduck '
-                                                              '(https://cyberduck.io/) and icommands (https://docs.irods.org/master/icommands/user/).'
-                                                              'Uncheck to delete your iRODS user account. Note that deletion of your iRODS user '
-                                                              'account deletes all of your files under this account as well.')
+    create_irods_user_account = models.BooleanField(
+        default=False,
+        help_text="Check to create an iRODS user account in HydroShare user "
+        "iRODS space for staging large files (>2GB) using iRODS clients such as Cyberduck "
+        "(https://cyberduck.io/) and icommands (https://docs.irods.org/master/icommands/user/)."
+        "Uncheck to delete your iRODS user account. Note that deletion of your iRODS user "
+        "account deletes all of your files under this account as well.",
+    )
 
     # to store one or more external identifier (Google Scholar, ResearchGate, ORCID etc)
     # each identifier is stored as a key/value pair {name:link}
-    identifiers = HStoreField(default={}, null=True, blank=True)
+    identifiers = HStoreField(default=dict, null=True, blank=True)
 
     email_opt_out = models.BooleanField(default=False)
 
@@ -348,7 +420,9 @@ def auto_delete_file_on_change(sender, instance, **kwargs):
         if not old_file_cv and not old_file_pic:
             return
     except UserProfile.DoesNotExist:
-        logger.warning(f"user profile for {instance.pk} does not exist when trying to update it")
+        logger.warning(
+            f"user profile for {instance.pk} does not exist when trying to update it"
+        )
         return
 
     updated_profile = instance

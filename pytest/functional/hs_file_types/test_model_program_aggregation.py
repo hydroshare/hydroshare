@@ -8,7 +8,7 @@ from django.core.files.uploadedfile import UploadedFile
 from rest_framework.exceptions import ValidationError as RF_ValidationError
 
 from hs_core.hydroshare import add_file_to_resource, ResourceFile
-from hs_core.views.utils import move_or_rename_file_or_folder
+from hs_core.views.utils import move_or_rename_file_or_folder, delete_resource_file
 from hs_file_types.models import ModelProgramLogicalFile, GenericLogicalFile, ModelInstanceLogicalFile, \
     ModelProgramResourceFileType
 from hs_file_types.forms import ModelProgramMetadataValidationForm
@@ -45,6 +45,7 @@ def test_mark_res_file_as_mp_file_type(composite_resource, mp_type, mock_irods):
     mp_res_file_type = ModelProgramResourceFileType.objects.first()
     assert mp_res_file_type.res_file.short_path == res_file.short_path
     assert mp_res_file_type.file_type == ModelProgramResourceFileType.type_from_string(mp_type)
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -88,6 +89,7 @@ def test_mark_multiple_res_files_as_mp_file_type(composite_resource, mock_irods)
     ModelProgramResourceFileType.create(file_type=mp_type, res_file=res_file_vrt,
                                         mp_metadata=mp_aggregation.metadata)
     assert ModelProgramResourceFileType.objects.count() == 2
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -126,6 +128,7 @@ def test_mark_res_file_as_mp_file_type_failure_1(composite_resource, mock_irods)
                                             mp_metadata=mp_aggregation.metadata)
 
     assert ModelProgramResourceFileType.objects.count() == 1
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -165,6 +168,7 @@ def test_mark_res_file_as_mp_file_type_failure_2(composite_resource, mock_irods)
                                             mp_metadata=mp_aggregation.metadata)
 
     assert ModelProgramResourceFileType.objects.count() == 0
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -183,9 +187,11 @@ def test_delete_res_file_deletes_mp_file_object(composite_resource_with_mp_aggre
                                         mp_metadata=mp_aggregation.metadata)
     assert ModelProgramResourceFileType.objects.count() == 1
     # delete res_file
-    res_file.delete()
+    delete_resource_file(pk=res.short_id, filename_or_id=res_file.id, user=user)
     # mp program file type got deleted
     assert ModelProgramResourceFileType.objects.count() == 0
+    assert ModelProgramLogicalFile.objects.count() == 0
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -303,11 +309,13 @@ def test_metadata_schema_json_invalid(invalid_schema_file, mock_irods):
     """
 
     schema_file_path = 'pytest/assets/{}'.format(invalid_schema_file)
-    with open(schema_file_path, 'r') as file_obj:
-        json_schema = file_obj.read()
-    assert len(json_schema) > 0
-    metadata_validation_from = ModelProgramMetadataValidationForm(data={"mi_json_schema": json_schema})
-    assert not metadata_validation_from.is_valid()
+    file_size = os.stat(schema_file_path).st_size
+    assert file_size > 0
+    file_to_upload = UploadedFile(file=open(schema_file_path, 'rb'),
+                                  name=os.path.basename(schema_file_path), size=file_size)
+    files = {"mi_json_schema_file": file_to_upload}
+    metadata_validation_form = ModelProgramMetadataValidationForm(files=files)
+    assert not metadata_validation_form.is_valid()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -387,6 +395,7 @@ def test_set_metadata(composite_resource_with_mp_aggregation, mock_irods):
     mp_aggr.metadata.code_repository = 'https://github.com/swat'
     mp_aggr.metadata.save()
     assert mp_aggr.metadata.code_repository == 'https://github.com/swat'
+    assert not res.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -423,8 +432,208 @@ def test_move_single_file_aggr_into_model_prog_aggr_failure(composite_resource, 
     # set file to generic/model instance logical file type (aggregation)
     aggr_cls.set_file_type(res, user, res_file.id)
     assert aggr_cls.objects.count() == 1
-    # moving the logan.vrt file into the mp_mi_folder should fail
+    # moving the logan.vrt file into the mp_folder should fail
     src_path = 'data/contents/{}'.format(single_file_name)
     tgt_path = 'data/contents/{}/{}'.format(mp_folder, single_file_name)
     with pytest.raises(RF_ValidationError):
         move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
+
+    tgt_path = 'data/contents/{}'.format(mp_folder)
+    with pytest.raises(RF_ValidationError):
+        move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
+
+    assert not res.dangling_aggregations_exist()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_move_single_file_into_model_program_aggregation(composite_resource, mock_irods):
+    """ test that we move a single file into a folder that represents a
+    model program aggregation the moved file becomes part of the model program aggregation"""
+
+    res, user = composite_resource
+    file_path = 'pytest/assets/generic_file.txt'
+    mp_folder = 'mp_folder'
+    ResourceFile.create_folder(res, mp_folder)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=mp_folder, check_target_folder=True)
+    assert res.files.count() == 1
+    # at this point there should not be any model program aggregation
+    assert ModelProgramLogicalFile.objects.count() == 0
+    # set folder to model program aggregation type
+    ModelProgramLogicalFile.set_file_type(resource=res, user=user, folder_path=mp_folder)
+    res_file = res.files.first()
+    assert res_file.has_logical_file
+    # file has folder
+    assert res_file.file_folder == mp_folder
+    assert ModelProgramLogicalFile.objects.count() == 1
+    mp_aggr = ModelProgramLogicalFile.objects.first()
+    assert mp_aggr.files.count() == 1
+    # upload another file to the resource
+    single_file_name = 'logan.vrt'
+    file_path = 'pytest/assets/{}'.format(single_file_name)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, check_target_folder=True)
+    assert res.files.count() == 2
+    # moving the logan.vrt file into mp_folder
+    src_path = 'data/contents/{}'.format(single_file_name)
+    tgt_path = 'data/contents/{}/{}'.format(mp_folder, single_file_name)
+
+    move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
+    assert res.files.count() == 2
+    mp_aggr = ModelProgramLogicalFile.objects.first()
+    assert mp_aggr.files.count() == 2
+    assert mp_aggr.metadata.is_dirty
+    assert not res.dangling_aggregations_exist()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_move_single_file_out_of_model_program_aggregation(composite_resource, mock_irods):
+    """ test that when we move a file out of a folder that represents a
+    model program aggregation the moved file is no more part of the model program aggregation"""
+
+    res, user = composite_resource
+    file_path = 'pytest/assets/generic_file.txt'
+    mp_folder = 'mp_folder'
+    ResourceFile.create_folder(res, mp_folder)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=mp_folder, check_target_folder=True)
+    assert res.files.count() == 1
+    # upload another file to the resource
+    single_file_name = 'logan.vrt'
+    file_path = 'pytest/assets/{}'.format(single_file_name)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=mp_folder, check_target_folder=True)
+    assert res.files.count() == 2
+
+    # at this point there should not be any model program aggregation
+    assert ModelProgramLogicalFile.objects.count() == 0
+    # set folder to model program aggregation type
+    ModelProgramLogicalFile.set_file_type(resource=res, user=user, folder_path=mp_folder)
+    for res_file in res.files.all():
+        assert res_file.has_logical_file
+        # file has folder
+        assert res_file.file_folder == mp_folder
+    assert ModelProgramLogicalFile.objects.count() == 1
+    mp_aggr = ModelProgramLogicalFile.objects.first()
+    # aggregation should have two files
+    assert mp_aggr.files.count() == 2
+
+    # moving the logan.vrt file out from mp_folder to the root of the resource
+    src_path = 'data/contents/{}/{}'.format(mp_folder, single_file_name)
+    tgt_path = 'data/contents/{}'.format(single_file_name)
+
+    move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
+    assert res.files.count() == 2
+    mp_aggr = ModelProgramLogicalFile.objects.first()
+    # aggregation should have only one file
+    assert mp_aggr.files.count() == 1
+    assert mp_aggr.metadata.is_dirty
+    assert not res.dangling_aggregations_exist()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_move_folder_into_model_program_aggregation(composite_resource, mock_irods):
+    """ test that when we move a folder into a folder that represents a
+    model program aggregation the files in the moved folder become part of the model program aggregation"""
+
+    res, user = composite_resource
+    file_path = 'pytest/assets/generic_file.txt'
+    mp_folder = 'mp_folder'
+    ResourceFile.create_folder(res, mp_folder)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=mp_folder, check_target_folder=True)
+    assert res.files.count() == 1
+    # at this point there should not be any model program aggregation
+    assert ModelProgramLogicalFile.objects.count() == 0
+    # set folder to model program aggregation type
+    ModelProgramLogicalFile.set_file_type(resource=res, user=user, folder_path=mp_folder)
+    res_file = res.files.first()
+    assert res_file.has_logical_file
+    # file has folder
+    assert res_file.file_folder == mp_folder
+    assert ModelProgramLogicalFile.objects.count() == 1
+    mp_aggr = ModelProgramLogicalFile.objects.first()
+    assert mp_aggr.files.count() == 1
+    # upload another file to the resource to a different folder
+    normal_folder = 'normal_folder'
+    ResourceFile.create_folder(res, normal_folder)
+    single_file_name = 'logan.vrt'
+    file_path = 'pytest/assets/{}'.format(single_file_name)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=normal_folder, check_target_folder=True)
+    assert res.files.count() == 2
+    # moving normal_folder into mp_folder
+    src_path = 'data/contents/{}'.format(normal_folder)
+    tgt_path = 'data/contents/{}/{}'.format(mp_folder, normal_folder)
+
+    move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
+    assert res.files.count() == 2
+    for res_file in res.files.all():
+        assert res_file.has_logical_file
+    mp_aggr = ModelProgramLogicalFile.objects.first()
+    assert mp_aggr.files.count() == 2
+    assert mp_aggr.metadata.is_dirty
+    assert not res.dangling_aggregations_exist()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_move_folder_out_of_model_program_aggregation(composite_resource, mock_irods):
+    """ test that when we move a folder out of a folder that represents a
+    model program aggregation the files in the moved folder are no mare part of the model program aggregation"""
+
+    res, user = composite_resource
+    file_path = 'pytest/assets/generic_file.txt'
+    mp_folder = 'mp_folder'
+    ResourceFile.create_folder(res, mp_folder)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=mp_folder, check_target_folder=True)
+    # upload another file to the resource to a different folder
+    normal_folder = 'normal_folder'
+    sub_folder_path = os.path.join(mp_folder, normal_folder)
+    ResourceFile.create_folder(res, sub_folder_path)
+    single_file_name = 'logan.vrt'
+    file_path = 'pytest/assets/{}'.format(single_file_name)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=sub_folder_path, check_target_folder=True)
+    assert res.files.count() == 2
+    # at this point there should not be any model program aggregation
+    assert ModelProgramLogicalFile.objects.count() == 0
+    # set folder to model instance aggregation type
+    ModelProgramLogicalFile.set_file_type(resource=res, user=user, folder_path=mp_folder)
+    for res_file in res.files.all():
+        assert res_file.has_logical_file
+        # file has folder
+        assert res_file.file_folder != ""
+
+    assert ModelProgramLogicalFile.objects.count() == 1
+    mp_aggr = ModelProgramLogicalFile.objects.first()
+    # aggregation should have two files
+    assert mp_aggr.files.count() == 2
+
+    # moving normal_folder out of mp_folder
+    src_path = 'data/contents/{}/{}'.format(mp_folder, normal_folder)
+    tgt_path = 'data/contents/{}'.format(normal_folder)
+
+    move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
+    assert res.files.count() == 2
+    mp_aggr = ModelProgramLogicalFile.objects.first()
+    # check that the aggregation has only one file
+    assert mp_aggr.files.count() == 1
+    assert mp_aggr.metadata.is_dirty
+    assert not res.dangling_aggregations_exist()

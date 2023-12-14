@@ -54,7 +54,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
         self.holes = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.cat,
             title='all about dog holes',
             metadata=[],

@@ -4,9 +4,9 @@ from hs_file_types import views
 
 urlpatterns = [
     url(r'^_internal/(?P<resource_id>[0-9a-f]+)/(?P<file_id>[0-9]+)/'
-            r'(?P<hs_file_type>[A-z]+)/set-file-type/$',
-            views.set_file_type,
-            name="set_file_type"),
+        r'(?P<hs_file_type>[A-z]+)/set-file-type/$',
+        views.set_file_type,
+        name="set_file_type"),
 
     url(r'^_internal/(?P<resource_id>[0-9a-f]+)/(?P<hs_file_type>[A-z]+)/set-file-type/$',
         views.set_file_type,

@@ -43,13 +43,13 @@ class T11ExplicitGet(MockIRODSTestCaseMixin, TestCase):
         )
 
         self.r1_resource = hydroshare.create_resource(
-            resource_type='GenericResource', owner=self.A_user, title='R1', metadata=[],)
+            resource_type='CompositeResource', owner=self.A_user, title='R1', metadata=[],)
 
         self.r2_resource = hydroshare.create_resource(
-            resource_type='GenericResource', owner=self.A_user, title='R2', metadata=[],)
+            resource_type='CompositeResource', owner=self.A_user, title='R2', metadata=[],)
 
         self.r3_resource = hydroshare.create_resource(
-            resource_type='GenericResource', owner=self.A_user, title='R3', metadata=[],)
+            resource_type='CompositeResource', owner=self.A_user, title='R3', metadata=[],)
 
         self.A_group = self.A_user.uaccess\
             .create_group(title='Test Group A',

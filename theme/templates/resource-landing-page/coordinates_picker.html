@@ -12,7 +12,7 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-                <div id="picker-map-container"></div>
+                <div id="picker-map-container" style="height:300px"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button type="button" id="btn-confirm-coordinates" class="btn btn-primary">Confirm</button>
@@ -21,4 +21,4 @@
     </div>
 </div>
 
-<script type="text/javascript" src="{{ STATIC_URL }}js/coordinates-picker.js"></script>
+<script type="text/javascript" src="{% static 'js/coordinates-picker.js' %}"></script>

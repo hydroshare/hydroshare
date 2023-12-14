@@ -253,12 +253,12 @@ cp -fr nginx/Dockerfile-nginx.template nginx/Dockerfile-nginx
 sed -i $SED_EXT 's!FQDN_OR_IP!'`hostname`'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
 
 sed -i $SED_EXT 's!IRODS_DATA_URI!'${IRODS_DATA_URI}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
-sed -i $SED_EXT 's!IRODS_USER_URI!'${IRODS_USER_URI}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
-sed -i $SED_EXT 's!IRODS_CACHE_URI!'${IRODS_CACHE_URI}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
+# sed -i $SED_EXT 's!IRODS_USER_URI!'${IRODS_USER_URI}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
+# sed -i $SED_EXT 's!IRODS_CACHE_URI!'${IRODS_CACHE_URI}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
 
 sed -i $SED_EXT 's!IRODS_DATA_ROOT!'${IRODS_DATA_ROOT}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
-sed -i $SED_EXT 's!IRODS_USER_ROOT!'${IRODS_USER_ROOT}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
-sed -i $SED_EXT 's!IRODS_CACHE_ROOT!'${IRODS_CACHE_ROOT}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
+# sed -i $SED_EXT 's!IRODS_USER_ROOT!'${IRODS_USER_ROOT}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
+# sed -i $SED_EXT 's!IRODS_CACHE_ROOT!'${IRODS_CACHE_ROOT}'!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
 
 sed -i $SED_EXT 's!SENDFILE_IRODS_USER!'${SENDFILE_IRODS_USER}'!g' ${NGINX_CONFIG_DIRECTORY}/nginx.conf-default
 sed -i $SED_EXT 's!SENDFILE_IRODS_GROUP!'${SENDFILE_IRODS_GROUP}'!g' ${NGINX_CONFIG_DIRECTORY}/nginx.conf-default
@@ -269,6 +269,7 @@ sed -i $SED_EXT 's!SENDFILE_IRODS_USER!'${SENDFILE_IRODS_USER}'!g' nginx/Dockerf
 sed -i $SED_EXT 's!SENDFILE_IRODS_GROUP!'${SENDFILE_IRODS_GROUP}'!g' nginx/Dockerfile-nginx
 
 cp hydroshare/local_settings.template hydroshare/local_settings.py 2>/dev/null
+mkdir -p hydroshare/static/static 2>/dev/null
 mkdir -p hydroshare/static/media 2>/dev/null
 rm -fr log .irods 2>/dev/null
 mkdir -p log/nginx 2>/dev/null
@@ -408,6 +409,11 @@ echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py migrate --fake-initial --noinput"
 echo
 docker $DOCKER_PARAM exec hydroshare python manage.py migrate --fake-initial --noinput
+
+echo
+echo "  - docker exec -u hydro-service hydroshare python manage.py prevent_web_crawling"
+echo
+docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py prevent_web_crawling
 
 echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py fix_permissions"

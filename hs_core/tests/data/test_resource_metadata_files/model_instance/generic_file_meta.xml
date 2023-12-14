@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:hsterms="https://www.hydroshare.org/terms/"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+>
+  <hsterms:ModelInstanceAggregation rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/generic_file_resmap.xml#aggregation">
+    <dc:subject>fdsa</dc:subject>
+    <hsterms:includesModelOutput rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</hsterms:includesModelOutput>
+    <hsterms:modelProgramSchema rdf:resource="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/generic_file_schema.json"/>
+    <hsterms:extendedMetadata>
+      <rdf:Description>
+        <hsterms:key>1</hsterms:key>
+        <hsterms:value>2</hsterms:value>
+      </rdf:Description>
+    </hsterms:extendedMetadata>
+    <dc:language>eng</dc:language>
+    <dc:type rdf:resource="https://www.hydroshare.org/terms/ModelInstanceAggregation"/>
+    <hsterms:extendedMetadata>
+      <rdf:Description>
+        <hsterms:value>4</hsterms:value>
+        <hsterms:key>3</hsterms:key>
+      </rdf:Description>
+    </hsterms:extendedMetadata>
+    <dc:title>generic_file</dc:title>
+    <dc:rights>
+      <rdf:Description>
+        <hsterms:URL rdf:resource="http://creativecommons.org/licenses/by/4.0/"/>
+        <hsterms:rightsStatement>This resource is shared under the Creative Commons Attribution CC BY.</hsterms:rightsStatement>
+      </rdf:Description>
+    </dc:rights>
+    <dc:subject>asdf</dc:subject>
+    <dc:coverage>
+      <dcterms:point>
+        <rdf:value>name=asdf; projection=WGS 84 EPSG:4326; east=-98.1969; north=41.85; units=Decimal degrees</rdf:value>
+      </dcterms:point>
+    </dc:coverage>
+    <dc:coverage>
+      <dcterms:period>
+        <rdf:value>start=2021-10-08T00:00:00; end=2021-10-15T00:00:00</rdf:value>
+      </dcterms:period>
+    </dc:coverage>
+    <hsterms:executedByModelProgram rdf:resource="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/setup_resmap.xml#aggregation"/>
+    <hsterms:modelProgramSchemaValues rdf:resource="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/generic_file_schema_values.json"/>
+  </hsterms:ModelInstanceAggregation>
+  <rdf:Description rdf:about="http://www.hydroshare.org/terms/ModelInstanceAggregation">
+    <rdfs:label>Model Instance Content: One or more files with specific metadata</rdfs:label>
+    <rdfs:isDefinedBy rdf:resource="https://www.hydroshare.org/terms/"/>
+  </rdf:Description>
+</rdf:RDF>

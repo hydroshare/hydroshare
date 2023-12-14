@@ -239,10 +239,10 @@ class TestReadmeResourceFile(MockIRODSTestCaseMixin, TransactionTestCase):
 
     def _create_composite_resource(self):
         self.composite_resource = hydroshare.create_resource(
-             resource_type='CompositeResource',
-             owner=self.user,
-             title='Test Readme File'
-         )
+            resource_type='CompositeResource',
+            owner=self.user,
+            title='Test Readme File'
+        )
 
     def _add_files_to_resource(self, files_to_add, upload_folder=''):
         files_to_upload = []

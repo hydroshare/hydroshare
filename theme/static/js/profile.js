@@ -5,7 +5,7 @@
 var CHECK_PROFILE_IMAGE_SIZE = true;
 const KILO_BYTE = 1024;
 const MEGA_BYTE = KILO_BYTE * KILO_BYTE;
-const PROFILE_IMAGE_SIZE_BYTE_LIMIT = KILO_BYTE * KILO_BYTE * 2;
+const PROFILE_IMAGE_SIZE_BYTE_LIMIT = DATA_UPLOAD_MAX_MEMORY_SIZE;
 const MEGA_BYTE_STR="MB";
 var PROFILE_IMAGE_SIZE_MB_LIMIT_MSG = PROFILE_IMAGE_SIZE_BYTE_LIMIT/MEGA_BYTE
                 + " " + MEGA_BYTE_STR;
@@ -70,7 +70,7 @@ function validateForm() {
 function validateRequiredElements() {
     var requiredElements = $(".form-required");
     for (var i = 0; i < requiredElements.length; i++) {
-        if (!$(requiredElements[i]).val().trim()) {
+        if (!$(requiredElements[i]).val() || !$(requiredElements[i]).val().trim()) {
             $(requiredElements[i]).addClass("form-invalid");
             $(requiredElements[i]).parent().find(".error-label").remove();
             $(requiredElements[i]).parent().append(errorLabel("This field is required."));
@@ -195,10 +195,10 @@ function create_irods_account() {
             }
         },
         error: function(xhr, errmsg, err) {
-            err_info = xhr.status + ": " + xhr.responseText;
             $('#create-irods-account-dialog').modal('hide');
             var irodsContainer = $("#irods-account-container");
-            irodsContainer.append(irods_status_info('alert-danger', xhr.responseText, 'Failure'));
+            const errorText = JSON.parse(xhr.responseText).error
+            errorText && irodsContainer.append(irods_status_info('alert-danger', errorText , 'Failure'));
         }
     });
     return false;
@@ -223,10 +223,10 @@ function delete_irods_account() {
             $('#delete-irods-account-dialog').modal('hide');
         },
         error: function(xhr, errmsg, err) {
-            err_info = xhr.status + ": " + xhr.responseText;
             $('#delete-irods-account-dialog').modal('hide');
             var irodsContainer = $("#irods-account-container");
-            irodsContainer.append(irods_status_info('alert-warning', xhr.responseText, 'Failure'));
+            const errorText = JSON.parse(xhr.responseText).error
+            errorText && irodsContainer.append(irods_status_info('alert-warning', errorText, 'Failure'));
         }
     });
     return false;
@@ -245,7 +245,112 @@ function getUrlVars()
     return vars;
 }
 
+function isPhoneValidInCountry(phone, country){
+    if (!BFHPhoneFormatList.hasOwnProperty(country)) return false;
+    let BFHString = BFHPhoneFormatList[country];
+
+    // Turn the string into a regex
+    stringFormat = BFHString.replace(/\s/g, String.fromCharCode(92)+"s");
+    stringFormat = stringFormat.replace("+", String.fromCharCode(92)+"+");
+    stringFormat = stringFormat.replace("(", String.fromCharCode(92)+"(");
+    stringFormat = stringFormat.replace(")", String.fromCharCode(92)+")");
+    stringFormat = stringFormat.replace(/d/g, String.fromCharCode(92)+"d");
+    stringFormat = new RegExp(stringFormat);
+    return stringFormat.test(phone) || BFHString;
+}
+
+function isPhoneCountryCodeOnly(phone, country){
+    if (!BFHPhoneFormatList.hasOwnProperty(country)) return false;
+    let BFHString = BFHPhoneFormatList[country];
+    let stringFormat = BFHString.replace(/d/g, '');
+    stringFormat = stringFormat.replace(/[\(\)-]/g, '');
+    return phone.trim().length === stringFormat.trim().length
+}
+
+function resetPhoneValues(){
+    // Bootstrap-formhelper will erase existing values if they don't conform to the expected country format
+    // So we update with the original values where necessary
+    $('input[type="tel"]').each(function(){
+        const oldPhones = PHONES || null;
+        if (!oldPhones || oldPhones === 'None') return;
+        const phoneObj = $(this);
+        if (oldPhones[phoneObj[0].name] === 'None') return;
+        phoneObj.val(oldPhones[phoneObj[0].name]);
+    });
+}
+
+function checkForInvalidPhones(){
+    $('input[type="tel"]').each(function(){
+        checkPhone(this, false);
+    });
+}
+
+function checkPhone(phoneField, isInputEvent=true){
+    const country = $("#country").val();
+    phoneField = $(phoneField);
+    phoneField.siblings('.error-label').remove();
+    phoneField.removeClass('form-invalid');
+    if (! country ) {
+        if (isInputEvent){
+            phoneField
+            .addClass('form-invalid')
+            .parent().append(errorLabel("Please add a country before adding phone to your profile"));
+        }
+        return;
+    }
+    const phoneValue = phoneField.val();
+    if( !phoneValue ) return;
+    const phoneValidation = isPhoneValidInCountry(phoneValue, country);
+    const onlyCode = isPhoneCountryCodeOnly(phoneValue, country);
+    onlyCode ? phoneField.addClass('only-country-code') : phoneField.removeClass('only-country-code');
+    if ( phoneValidation !== true && !onlyCode ){
+        phoneField
+            .addClass('form-invalid')
+            .parent().append(errorLabel(`Please update to format: [${phoneValidation}]`));
+    }
+}
+
+function isStateInCountry(stateCode, country){
+    if (!BFHStatesList.hasOwnProperty(country)) return false;
+    const asArray = Object.entries(BFHStatesList[country]);
+    const filtered = asArray.filter(([key, state]) => state.code === stateCode);
+    return filtered.length > 0;
+}
+
+function checkForInvalidStates(country){
+    const oldState = OLD_STATE || null;
+    if (!oldState || oldState === 'None') return;
+    country = country || $("#country").val()
+    const stateField = $('#state');
+    if ( !isStateInCountry(oldState, country)){
+        stateField.append($('<option>', {
+            value: oldState,
+            text: oldState,
+            class: "old-state-option"
+        }));
+        stateField.val(oldState)
+            .change()
+            .addClass('form-invalid')
+            .parent().append(errorLabel("No longer valid, please update."));
+
+        // Register one-time listener to clear the message and old option
+        stateField.one('change', function(){
+            $(this).siblings('.error-label').remove();
+            $(this).removeClass('form-invalid');
+            $(".old-state-option").remove();
+        });
+    }
+
+    // Update for view mode
+    if (! $('#db-state').text()) {
+        $('#db-state').text(OLD_STATE);
+    }
+}
+
 $(document).ready(function () {
+    // Multiple orgs are a string delimited by ";" --wrap them so we can style them
+    $("#organization").splitAndWrapWithClass(";", "organization-divider");
+    
     $("#btn-create-irods-account").click(create_irods_account);
     $("#btn-delete-irods-account").click(delete_irods_account);
 
@@ -343,7 +448,7 @@ $(document).ready(function () {
         }
     );
 
-    $('.tagsinput').tagsInput({
+    $('#organization_input').tagsInput({
       interactive: true,
       placeholder: "Organization(s)",
       delimiter: [";"],
@@ -357,15 +462,29 @@ $(document).ready(function () {
       }
     });
 
+    $('#subject_areas').tagsInput({
+        interactive: true,
+        placeholder: "Subject Area(s)",
+        delimiter: [","],
+        autocomplete: {
+          source: "/hsapi/dictionary/subject_areas/",
+          minLength: 3,
+          delay: 500,
+          classes: {
+              "ui-autocomplete": "minHeight"
+          }
+        }
+      });
+
     $('.ui-autocomplete-input').on('blur', function(e) {
       e.preventDefault();
-      $('.ui-autocomplete-input').trigger(jQuery.Event('keypress', { which: 13 }));
+      $(this).trigger(jQuery.Event('keypress', { which: $.ui.keyCode.ENTER }));
     });
 
     $('.ui-autocomplete-input').on('keydown', function(e) {
       if(e.keyCode === 9 && $(this).val() !== '') {
         e.preventDefault();
-        $(this).trigger(jQuery.Event('keypress', { which: 13 }));
+        $(this).trigger(jQuery.Event('keypress', { which: $.ui.keyCode.ENTER }));
       }
     });
 
@@ -374,4 +493,20 @@ $(document).ready(function () {
         // clear out the edit query params so edit mode isn't reopened on save
         history.pushState('', document.title, window.location.pathname);
     }
+
+    // Event listeners for profile phone changes
+    $('input[type="tel"]').on('keyup', (e)=>checkPhone(e.target));
+    $('#country').on('change', function(){
+        resetPhoneValues();
+        checkForInvalidPhones();
+    });
+
+    $('.btn-save-profile').click(function(e){
+        // clear phones that only have country codes before submit
+        $('.only-country-code').val("");
+    });
+
+    resetPhoneValues();
+    checkForInvalidPhones();
+    checkForInvalidStates();
 });

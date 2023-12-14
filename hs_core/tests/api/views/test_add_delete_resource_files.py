@@ -2,11 +2,12 @@ import os
 import shutil
 
 from django.contrib.auth.models import Group
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from rest_framework import status
 
 from hs_core import hydroshare
+from hs_core.models import ResourceFile
 from hs_core.views import add_files_to_resource, delete_file, delete_multiple_files
 from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
 
@@ -27,9 +28,9 @@ class TestAddDeleteResourceFiles(MockIRODSTestCaseMixin, ViewTestCase):
             groups=[]
         )
         self.gen_res = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user,
-            title='Generic Resource Key/Value Metadata Testing'
+            title='Resource Key/Value Metadata Testing'
         )
 
         # Make a text file
@@ -66,6 +67,7 @@ class TestAddDeleteResourceFiles(MockIRODSTestCaseMixin, ViewTestCase):
         # make it a ajax request
         request.META['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
         self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         response = add_files_to_resource(request, shortkey=self.gen_res.short_id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # there should be 1 file
@@ -76,8 +78,9 @@ class TestAddDeleteResourceFiles(MockIRODSTestCaseMixin, ViewTestCase):
         hydroshare.delete_resource_file(self.gen_res.short_id, res_file.id, self.user)
         # there should be no file
         self.assertEqual(self.gen_res.files.count(), 0)
+        ResourceFile.create_folder(resource=self.gen_res, folder="foo")
         post_data = {'files': (self.txt_file_name_1, open(self.txt_file_path_1), 'text/plain'),
-                     'file_folder': 'data/contents/foo'}
+                     'file_folder': 'foo'}
         url_params = {'shortkey': self.gen_res.short_id}
 
         url = reverse('add_files_to_resource', kwargs=url_params)
@@ -86,6 +89,7 @@ class TestAddDeleteResourceFiles(MockIRODSTestCaseMixin, ViewTestCase):
         # make it a ajax request
         request.META['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
         self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         response = add_files_to_resource(request, shortkey=self.gen_res.short_id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # there should be 1 file
@@ -108,6 +112,7 @@ class TestAddDeleteResourceFiles(MockIRODSTestCaseMixin, ViewTestCase):
         # make it a ajax request
         request.META['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
         self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         add_files_to_resource(request, shortkey=self.gen_res.short_id)
         res_file = self.gen_res.files.first()
 
@@ -145,6 +150,7 @@ class TestAddDeleteResourceFiles(MockIRODSTestCaseMixin, ViewTestCase):
         # make it a ajax request
         request.META['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
         self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         add_files_to_resource(request, shortkey=self.gen_res.short_id)
         self.assertEqual(self.gen_res.files.count(), 2)
 

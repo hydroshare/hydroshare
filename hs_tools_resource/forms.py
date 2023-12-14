@@ -1,7 +1,7 @@
 from django.forms import ModelForm
 from django import forms
 
-from crispy_forms.layout import Layout, Field, HTML
+from crispy_forms.layout import Layout, Field, HTML, Row, Column
 
 from .models import RequestUrlBase, AppHomePageUrl, TestingProtocolUrl, \
     HelpPageUrl, SourceCodeUrl, IssuesPageUrl, MailingListUrl, Roadmap, \
@@ -456,21 +456,49 @@ class ToolIconFormHelper(BaseFormHelper):
                  element_id=None, element_name=None, *args, **kwargs):
         # the order in which the model fields are listed for the
         # FieldSet is the order these fields will be displayed
-        data_url = ""
+        data_url_db = ""
         if "instance" in kwargs:
             webapp_obj = kwargs.pop("instance")
             if webapp_obj and webapp_obj.metadata.app_icon:
-                data_url = webapp_obj.metadata.app_icon.data_url
+                data_url_db = webapp_obj.metadata.app_icon.data_url
         field_width = 'form-control input-sm'
         layout = Layout(
-            Field('value', css_class=field_width),
-            HTML("""
+            Row(
+                Column(
+                    Field('value', css_class=field_width, placeholder="Type URL here..."),
+                    css_class='col-sm-6'
+                ),
+                Column(
+                    Field('data_url', css_class=field_width, type="hidden"),
+                    HTML("""
+                        <input id="icon-select" class="upload-picture"
+                            type="file" accept="image/*" style="display: none;">
+                        <a type="button" id="icon-select-btn"
+                            class="btn btn-success btn-xs" title="Upload from computer">
+                            <span class="glyphicon glyphicon-plus"></span>
+                            Browse for file
+                        </a>
+                        """),
+                    HTML("""
+                        <a type="button" id="icon-delete-btn" class="" title="Clear icon">
+                            <span class="glyphicon glyphicon-trash icon-button btn-remove"></span>
+                        </a>
+                        """),
+                    css_class='form-group col-sm-6'
+                ),
+            ),
+            Row(
+                Column(
+                    HTML("""
                         <span id="icon-preview-label" class="control-label">Preview</span>
                         <br>
-                        <img id="tool-icon-preview" src="{data_url}">
-                        """.format(data_url=data_url)),
+                        <img id="tool-icon-preview" src="{data_url_db}">
+                        """.format(data_url_db=data_url_db)),
+                    css_class='form-group col-sm-12'
+                ),
+            )
         )
-        kwargs['element_name_label'] = 'Icon URL'
+        kwargs['element_name_label'] = 'Icon URL or File'
         super(ToolIconFormHelper, self).__init__(allow_edit,
                                                  res_short_id,
                                                  element_id,
@@ -489,16 +517,17 @@ class ToolIconForm(ModelForm):
                                          element_name='ToolIcon',
                                          **kwargs)
         self.fields['value'].label = ""
+        self.fields['data_url'].label = ""
 
     class Meta:
         model = ToolIcon
-        fields = ['value']
+        fields = ['value', 'data_url']
         exclude = ['content_object']
 
 
 class ToolIconValidationForm(forms.Form):
-    value = forms.CharField(max_length=1024, required=False)
-    data_url = forms.URLField(required=False)
+    value = forms.URLField(max_length=1024, required=False)
+    data_url = forms.CharField(required=False)
 
 
 class MetadataField(Field):
@@ -516,7 +545,7 @@ class SupportedResTypeFormHelper(BaseFormHelper):
         # the order in which the model fields are listed for
         # the FieldSet is the order these fields will be displayed
         layout = Layout(MetadataField('supported_res_types'))
-        kwargs['element_name_label'] = 'Supported Resource Types'
+        kwargs['element_name_label'] = 'Support'
         super(SupportedResTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id,
                                                          element_name, layout, *args, **kwargs)
 
@@ -530,7 +559,7 @@ class SupportedResTypesForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         model_instance = kwargs.get('instance')
         super(SupportedResTypesForm, self).__init__(*args, **kwargs)
-        self.fields['supported_res_types'].label = "Choose Resource Types:"
+        self.fields['supported_res_types'].label = "Choose what this app connector supports (can act on):"
         self.helper = SupportedResTypeFormHelper(allow_edit, res_short_id, element_id,
                                                  element_name='SupportedResTypes')
 
@@ -611,7 +640,7 @@ class SupportedSharingStatusFormHelper(BaseFormHelper):
         # the order in which the model fields are listed for
         # the FieldSet is the order these fields will be displayed
         layout = Layout(MetadataField('sharing_status'))
-        kwargs['element_name_label'] = 'Supported Resource Sharing Status'
+        kwargs['element_name_label'] = 'Sharing Status'
         super(SupportedSharingStatusFormHelper, self). \
             __init__(allow_edit, res_short_id, element_id,
                      element_name, layout, *args, **kwargs)
@@ -625,7 +654,7 @@ class SupportedSharingStatusForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         model_instance = kwargs.get('instance')
         super(SupportedSharingStatusForm, self).__init__(*args, **kwargs)
-        self.fields['sharing_status'].label = "Choose Sharing Status:"
+        self.fields['sharing_status'].label = "Choose the sharing status required by this app connector:"
         self.helper = SupportedSharingStatusFormHelper(allow_edit, res_short_id, element_id,
                                                        element_name='SupportedSharingStatus')
         if model_instance:

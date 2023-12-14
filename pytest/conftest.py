@@ -81,8 +81,11 @@ def base_sample_resource(username='admin', title=str(uuid.uuid4()), contributor=
     # relation
     metadata.append({'relation': {'type': 'isPartOf',
                                   'value': 'http://hydroshare.org/resource/001'}})
-    # source
-    metadata.append({'source': {'derived_from': 'http://hydroshare.org/resource/0001'}})
+
+    # geospatialrelation
+    metadata.append({'geospatialrelation': {'type': 'relation',
+                                            'value': 'https://geoconnex.us/ref/dams/1083460',
+                                            'text': 'Bonnie Meade [dams/1083460]'}})
 
     # identifier
     # metadata.append({'identifier': {'name': 'someIdentifier', 'url': 'http://some.org/001'}})

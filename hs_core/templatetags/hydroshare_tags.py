@@ -4,28 +4,37 @@ from json import dumps
 
 from django.utils.html import format_html
 from django.conf import settings
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
 
 from mezzanine import template
 
 from hs_core.hydroshare.utils import get_resource_by_shortkey
-
+from hs_core.authentication import build_oidc_url
 from hs_core.search_indexes import normalize_name
-
+from hs_access_control.models.privilege import PrivilegeCodes, UserResourcePrivilege
 
 register = template.Library()
+
+RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS = {"CompositeResource": "Resource",
+                                     "CollectionResource": "Collection",
+                                     "ToolResource": "App Connector"
+                                     }
 
 
 @register.filter
 def user_permission(content, arg):
     user_pk = arg
     permission = "None"
-    res_obj = content.get_content_model()
-    if res_obj.raccess.owners.filter(pk=user_pk).exists():
-        permission = "Owner"
-    elif res_obj.raccess.edit_users.filter(pk=user_pk).exists():
-        permission = "Edit"
-    elif res_obj.raccess.view_users.filter(pk=user_pk).exists():
-        permission = "View"
+    res_obj = content
+    urp = UserResourcePrivilege.objects.filter(user__id=user_pk, resource=res_obj).first()
+    if urp is not None:
+        if urp.privilege == PrivilegeCodes.OWNER:
+            permission = "Owner"
+        elif urp.privilege == PrivilegeCodes.CHANGE:
+            permission = "Edit"
+        elif urp.privilege == PrivilegeCodes.VIEW:
+            permission = "View"
 
     if permission == "None":
         if res_obj.raccess.published or res_obj.raccess.discoverable or res_obj.raccess.public:
@@ -36,9 +45,23 @@ def user_permission(content, arg):
 @register.filter
 def user_resource_labels(resource, user):
     # get a list of labels associated with a specified resource by a given user
-    if resource.has_labels:
+    if hasattr(resource, 'has_labels') and resource.has_labels:
         return resource.rlabels.get_labels(user)
     return []
+
+
+@register.filter
+def get_user_privilege(resource, user):
+    user_privilege = resource.raccess.get_effective_privilege(user, ignore_superuser=True)
+    if user_privilege == PrivilegeCodes.OWNER:
+        self_access_level = 'Owned'
+    elif user_privilege == PrivilegeCodes.CHANGE:
+        self_access_level = 'Editable'
+    elif user_privilege == PrivilegeCodes.VIEW:
+        self_access_level = 'Viewable'
+    else:
+        self_access_level = "Discovered"
+    return self_access_level
 
 
 @register.filter
@@ -56,6 +79,19 @@ def app_on_open_with_list(content, arg):
 
 
 @register.filter
+def is_url(content):
+    """
+    Check whether the content is a valid URL
+    """
+    validator = URLValidator()
+    try:
+        validator(content)
+    except ValidationError:
+        return False
+    return True
+
+
+@register.filter
 def published_date(res_obj):
     if res_obj.raccess.published:
         return res_obj.metadata.dates.all().filter(type='published').first().start_date
@@ -65,27 +101,34 @@ def published_date(res_obj):
 
 @register.filter
 def resource_type(content):
-    return content.get_content_model()._meta.verbose_name
+    content_model = content.get_content_model()
+    if content_model.resource_type in RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS:
+        return RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS[content_model.resource_type]
+    return content_model._meta.verbose_name
 
 
 @register.filter
 def resource_first_author(content):
     if not content:
         return ''
-    if content.first_creator.name and content.first_creator.description:
-        return format_html('<a href="{desc}">{name}</a>',
-                           desc=content.first_creator.description,
-                           name=content.first_creator.name)
-    elif content.first_creator.name:
-        return format_html('<span>{name}</span>', name=content.first_creator.name)
-    else:
-        first_creator = content.metadata.creators.filter(order=1).first()
-        if first_creator.name:
-            return format_html('<span>{name}</span>', name=first_creator.name)
-        if first_creator.organization:
-            return format_html('<span>{name}</span>', name=first_creator.organization)
 
-        return ''
+    first_creator = None
+    for creator in content.metadata.creators.all():
+        if creator.order == 1:
+            first_creator = creator
+            break
+
+    if first_creator.name:
+        if first_creator.relative_uri and first_creator.is_active_user:
+            return format_html('<a href="{desc}">{name}</a>',
+                               desc=first_creator.relative_uri,
+                               name=first_creator.name)
+        else:
+            return format_html('<span>{name}</span>', name=first_creator.name)
+    elif first_creator.organization:
+        return format_html('<span>{name}</span>', name=first_creator.organization)
+
+    return ''
 
 
 @register.filter
@@ -97,7 +140,7 @@ def contact(content):
     if not content:
         return ''
 
-    if not content.is_authenticated():
+    if not content.is_authenticated:
         content = "Anonymous"
     elif content.first_name:
         if content.userprofile.middle_name:
@@ -126,7 +169,7 @@ def best_name(content):
     each of the functions specified by the RICHTEXT_FILTERS setting.
     """
 
-    if not content.is_authenticated():
+    if not content.is_authenticated:
         content = "Anonymous"
     elif content.first_name:
         if content.userprofile.middle_name:
@@ -158,6 +201,14 @@ def name_without_commas(name):
             return first_names + " " + last_names
 
     return name  # default
+
+
+@register.filter(name='join')
+def join(value, delimiter):
+    """
+        Returns the array joined with delimiter
+    """
+    return f'{delimiter}'.join(value)
 
 
 @register.filter
@@ -200,7 +251,17 @@ def to_int(value):
 @register.filter
 def relative_irods_path(fed_irods_file_name):
     idx = fed_irods_file_name.find('/data/contents/')
-    return fed_irods_file_name[idx+1:]
+    return fed_irods_file_name[idx + 1:]
+
+
+@register.filter
+def resource_replaced_by(res):
+    return res.get_relation_version_res_url('isReplacedBy')
+
+
+@register.filter
+def resource_version_of(res):
+    return res.get_relation_version_res_url('isVersionOf')
 
 
 @register.filter
@@ -215,16 +276,16 @@ def res_uuid_from_res_path(path):
     prefix_str = 'resource/'
     prefix_idx = path.find(prefix_str)
     if prefix_idx >= 0:
-        sidx = prefix_idx+len(prefix_str)
+        sidx = prefix_idx + len(prefix_str)
         # resource uuid is 32 bits
-        return path[sidx:sidx+32]
+        return path[sidx:sidx + 32]
     else:
         return path
 
 
 @register.filter
 def remove_last_char(statement):
-    return statement[:len(statement)-1]
+    return statement[:len(statement) - 1]
 
 
 @register.filter
@@ -279,13 +340,13 @@ def creator_json_ld_element(crs):
             cr_dict["@type"] = "Organization"
             cr_dict["name"] = cr.organization
 
-        if cr.description:
+        if cr.relative_uri:
             if cr.name:
                 # append www.hydroshare.org since schema.org script is only embedded in production
-                urls.append("https://www.hydroshare.org" + cr.description)
+                urls.append("https://www.hydroshare.org" + cr.relative_uri)
             else:
                 # organization
-                urls.append(cr.description)
+                urls.append(cr.relative_uri)
         if cr.homepage:
             urls.append(cr.homepage)
         if cr.identifiers:
@@ -313,3 +374,39 @@ def discoverable(item):
     if item is None or item == 'Unknown':
         return ""
     return item
+
+
+@register.filter
+def signup_url(request):
+    if settings.ENABLE_OIDC_AUTHENTICATION:
+        return build_oidc_url(request).replace('/auth?', '/registrations?')
+    return "/sign-up/"
+
+
+@register.simple_tag(takes_context=True)
+def param_replace(context, **kwargs):
+    """
+    Return encoded URL parameters that are the same as the current
+    request's parameters, only with the specified GET parameters added or changed.
+
+    It also removes any empty parameters to keep things neat,
+    so you can remove a parm by setting it to ``""``.
+
+    For example, if you're on the page ``/things/?with_frosting=true&page=5``,
+    then
+
+    <a href="/things/?{% param_replace page=3 %}">Page 3</a>
+
+    would expand to
+
+    <a href="/things/?with_frosting=true&page=3">Page 3</a>
+
+    Based on
+    https://stackoverflow.com/questions/22734695/next-and-before-links-for-a-django-paginated-query/22735278#22735278
+    """
+    d = context['request'].GET.copy()
+    for k, v in kwargs.items():
+        d[k] = v
+    for k in [k for k, v in d.items() if not v]:
+        del d[k]
+    return d.urlencode()

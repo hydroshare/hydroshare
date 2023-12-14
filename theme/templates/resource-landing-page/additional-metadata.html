@@ -22,7 +22,7 @@
             {% for extra_meta_name, extra_meta_value in cm.extra_metadata.items %}
                 <tr id="{{ forloop.counter0 }}">
                     <td>
-                        {{ extra_meta_name }}
+                        {{ extra_meta_name|escape }}
                     </td>
                     <td>
                         {{ extra_meta_value|urlize }}

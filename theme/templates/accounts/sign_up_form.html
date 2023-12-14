@@ -1,9 +1,8 @@
-{% load static %}
 {% load theme_tags %}
 {% get_recaptcha_site_key as sitekey %}
 
 {% block extra_css %}
-  <link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.tagsinput-revisited.min.css" />
+  <link rel="stylesheet" href="{% static 'css/jquery.tagsinput-revisited.min.css' %}" />
   <style>
     .tagsinput {
       border: 1px solid #ccc;
@@ -25,25 +24,25 @@
     {{ form.non_field_errors }}
     <div class="row">
         <div class="form-group half">
-          {% include "includes/form_field.html" with field=form.first_name inline_label=True %}
-          {% include "includes/form_field.html" with field=form.last_name inline_label=True %}
+          {% include "includes/form_field.html" with field=form.first_name inline_label=True required=False %}
+          {% include "includes/form_field.html" with field=form.last_name inline_label=True required=False %}
           <small class="text-muted">Names may be omitted if you do not wish to provide them or are creating an Organization user account.</small>
         </div>
         <div class="form-group">
-            {% include "includes/form_field.html" with field=form.email inline_label=True %}
+            {% include "includes/form_field.html" with field=form.email inline_label=True required=True %}
         </div>
         <div class="form-group">
-            {% include "includes/form_field.html" with field=form.username inline_label=True %}
+            {% include "includes/form_field.html" with field=form.username inline_label=True required=True %}
         </div>
         <div class="form-group">
           <input class="form-control form-required tagsinput" name="organization" {% if profile.organization %}value="{{ profile.organization }}"{% endif %}>
           <small class="text-muted">The names of the organizations you are associated with.</small>
         </div>
         <div class="form-group">
-            {% include "includes/form_field.html" with field=form.password1 inline_label=True %}
+            {% include "includes/form_field.html" with field=form.password1 inline_label=True required=True %}
         </div>
         <div class="form-group">
-            {% include "includes/form_field.html" with field=form.password2 inline_label=True %}
+            {% include "includes/form_field.html" with field=form.password2 inline_label=True required=True %}
         </div>
         <div class="form-group">
           <fieldset>
@@ -78,7 +77,8 @@
 
           {#        State       #}
           <div class="form-group">
-            <input id="id_state" class="form-control form-required" name="state" placeholder="State/Province *">
+            <small class="text-muted">State/Region</small>
+            <select id="id_state" class="form-control bfh-states" name="state" data-country="id_country"></select>
           </div>
         </div>
     </div>
@@ -86,12 +86,12 @@
       <script src='https://www.google.com/recaptcha/api.js'></script>
       <div class="g-recaptcha" data-sitekey={{ sitekey }}></div>
         <div id="missing-data-div" class="space-bottom"></div>
-        <input class="btn btn-primary space-top" type="button" id="signup" value="Join HydroShare & start collaborating">
+        <input class="btn btn-primary has-space-top" type="button" id="signup" value="Join HydroShare & start collaborating">
     </div>
 </form>
 
-<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tagsinput-revisited.min.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
+<script type="text/javascript" src="{% static 'js/jquery.tagsinput-revisited.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/bootstrap-formhelpers.js' %}"></script>
 <script type="text/javascript">
     $(document).ready(function() {
          $('input[type="button"]').prop('disabled', false);
@@ -150,9 +150,9 @@
             var pwconfirm = $("#id_password2").val();
             // These are the required form fields
             var requiredFieldsToCheck = ["#id_username", "#id_email", "#id_password1",
-                "#id_password2",  "[name='organization']", "#id_country", "#id_state"];
+                "#id_password2",  "[name='organization']", "#id_country"];
             var fieldNames = [ 'User name', 'Email', 'Password', 'Password (again)', "Organization",
-                "Country", "State/Province"];
+                "Country", "State/Region"];
             var empty = false;
             var missingFields = 'Data missing for:';
             var missingFieldCount = 0;
@@ -219,7 +219,7 @@
 
     $('.tagsinput').tagsInput({
       interactive: true,
-      placeholder: "Organization(s)",
+      placeholder: "Organization(s) *",
       delimiter: [";"],
       autocomplete: {
           source: "/hsapi/dictionary/universities/",
@@ -233,7 +233,7 @@
 
     $('.ui-autocomplete-input').on('blur', function(e) {
       e.preventDefault();
-      $('.ui-autocomplete-input').trigger(jQuery.Event('keypress', { which: 13 }));
+      $(this).trigger(jQuery.Event('keypress', { which: $.ui.keyCode.ENTER }));
     });
 
     $('.ui-autocomplete-input').on('keydown', function(e) {

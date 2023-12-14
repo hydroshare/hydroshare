@@ -5,6 +5,19 @@
 var radioPointSelector = 'input[type="radio"][value="point"]';
 var radioBoxSelector = 'input[type="radio"][value="box"]';
 
+function getErrorMessage(xhr) {
+    let errorMsg = JSON.stringify(xhr.responseText);
+    try {
+        let errorMessageJSON = JSON.parse(xhr.responseText);
+        if (errorMessageJSON.hasOwnProperty("error")) {
+            errorMsg = errorMessageJSON.error;
+        }
+    } catch (e) {
+        console.error(e);
+    }
+    return errorMsg
+}
+
 function label_ajax_submit() {
     var el = $(this);
     var dataFormID = el.attr("data-form-id");
@@ -126,25 +139,13 @@ function showWaitDialog(){
 
 function handleIsDirty(json_response) {
     // show update netcdf file update option for NetCDFLogicalFile
-    if (json_response.logical_file_type === "NetCDFLogicalFile") {
+    if (json_response.logical_file_type === "NetCDFLogicalFile" && json_response.is_update_file) {
         $("#div-netcdf-file-update").show();
     }
     // show update sqlite file update option for TimeSeriesLogicalFile
     if (json_response.logical_file_type === "TimeSeriesLogicalFile" &&
-        json_response.is_dirty && json_response.can_update_sqlite) {
+        json_response.is_update_file && json_response.can_update_sqlite) {
         $("#div-sqlite-file-update").show();
-    }
-    // show update netcdf resource
-    if (RES_TYPE === 'Multidimensional (NetCDF)' &&
-        json_response.is_dirty) {
-        $("#netcdf-file-update").show();
-    }
-
-    // start timeseries resource specific DOM manipulation
-    if (RES_TYPE === 'Time Series') {
-        if ($("#can-update-sqlite-file").val() === "True" && ($("#metadata-dirty").val() === "True" || json_response.is_dirty)) {
-            $("#sql-file-update").show();
-        }
     }
 }
 
@@ -194,14 +195,15 @@ function metadata_update_ajax_submit(form_id){
                 // file type 'coverage' element gets updated for composite resource
                 if ((json_response.element_name.toLowerCase() === 'site' && resourceType === 'Time Series') ||
                     ((json_response.element_name.toLowerCase() === 'coverage' ||
-                    json_response.element_name.toLowerCase() === 'site') && resourceType === 'Composite Resource')){
-                    if (json_response.hasOwnProperty('temporal_coverage')){
+                    json_response.element_name.toLowerCase() === 'site') && resourceType === 'Resource')){
+                    const element_type = json_response.element_type?.toLowerCase() || '';
+                    if (element_type === 'period' && json_response.hasOwnProperty('temporal_coverage')){
                         var temporalCoverage = json_response.temporal_coverage;
                         updateResourceTemporalCoverage(temporalCoverage);
                         // show/hide delete option for resource temporal coverage
                         setResourceTemporalCoverageDeleteOption();
 
-                        if(resourceType === 'Composite Resource' && json_response.has_logical_temporal_coverage) {
+                        if(resourceType === 'Resource' && json_response.has_logical_temporal_coverage) {
                              $("#btn-update-resource-temporal-coverage").show();
                         }
                         else {
@@ -209,16 +211,16 @@ function metadata_update_ajax_submit(form_id){
                         }
                     }
 
-                    if (json_response.hasOwnProperty('spatial_coverage')) {
+                    if (['box', 'point'].includes(element_type) && json_response.hasOwnProperty('spatial_coverage')) {
                         var spatialCoverage = json_response.spatial_coverage;
                         updateResourceSpatialCoverage(spatialCoverage);
-                        if(resourceType === 'Composite Resource' && json_response.has_logical_spatial_coverage) {
+                        if(resourceType === 'Resource' && json_response.has_logical_spatial_coverage) {
                             $("#btn-update-resource-spatial-coverage").show();
                         }
                         else {
                            $("#btn-update-resource-spatial-coverage").hide();
                         }
-                        if(resourceType === 'Composite Resource') {
+                        if(resourceType === 'Resource') {
                             // show/hide spatial coverage delete option for resource
                             setResourceSpatialCoverageDeleteOption();
                         }
@@ -308,8 +310,12 @@ function metadata_update_ajax_submit(form_id){
             $form.find(".btn-form-submit").removeClass("disabled");
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
-            var responseText = JSON.parse(XMLHttpRequest.responseText);
-            var errMessage = "Metadata failed to update " + JSON.stringify(responseText.message);
+            var responseMessage = "Could not parse the error message";
+            try{
+                responseMessage = JSON.parse(XMLHttpRequest.responseText).message;
+            } catch (Error){
+            }
+            var errMessage = "Metadata failed to update " + JSON.stringify(responseMessage);
             $alert_error = $alert_error.replace("Metadata failed to update.", errMessage);
             $('#' + form_id).before($alert_error);
             $(".alert-error").fadeTo(2000, 500).slideUp(1000, function(){
@@ -329,35 +335,41 @@ function showCompletedMessage(json_response) {
     if (json_response.hasOwnProperty('metadata_status')) {
         if (json_response.metadata_status !== $('#metadata-status').text()) {
             $('#metadata-status').text(json_response.metadata_status);
-            if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
-                manageAccessApp.$data.canBePublicDiscoverable = true;
-                let resourceType = RES_TYPE;
-                let promptMessage = "";
-                if (resourceType != 'Web App Resource' && resourceType != 'Collection Resource')
-                    promptMessage = "All required fields are completed. The resource can now be made discoverable " +
-                      "or public. To permanently publish the resource and obtain a DOI, the resource " +
-                      "must first be made public.";
-                else
-                    promptMessage = "All required fields are completed. The resource can now be made discoverable " +
-                      "or public.";
+            let showMetaStatus = true;
+            if (json_response.hasOwnProperty('show_meta_status')) {
+                showMetaStatus = json_response.show_meta_status;
+            }
+            if (showMetaStatus) {
+                let sufficient = json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1;
+                if (sufficient && manageAccessApp.canChangeResourceFlags) {
+                    manageAccessApp.$data.canBePublicDiscoverable = true;
+                    let resourceType = RES_TYPE;
+                    let promptMessage = "";
+                    if (resourceType === 'Resource')
+                        promptMessage = "All required fields are completed. The resource can now be made discoverable " +
+                            "or public. To permanently publish the resource and obtain a DOI, the resource " +
+                            "must first be made public.";
+                    else
+                        promptMessage = "All required fields are completed. The " + resourceType.toLowerCase() +
+                            " can now be made discoverable or public.";
 
-                if (!metadata_update_ajax_submit.resourceSatusDisplayed) {
-                    metadata_update_ajax_submit.resourceSatusDisplayed = true;
-                    if (json_response.hasOwnProperty('res_public_status')) {
-                        if (json_response.res_public_status.toLowerCase() === "not public") {
-                            // if the resource is already public no need to show the following alert message
-                            customAlert("Resource Status:", promptMessage, "success", 8000);
+                    if (!metadata_update_ajax_submit.resourceSatusDisplayed) {
+                        metadata_update_ajax_submit.resourceSatusDisplayed = true;
+                        const alertTitle = resourceType + " Status:"
+                        if (json_response.hasOwnProperty('res_public_status')) {
+                            if (json_response.res_public_status.toLowerCase() === "not public") {
+                                // if the resource is already public no need to show the following alert message
+                                customAlert(alertTitle, promptMessage, "success", 8000);
+                            }
+                        } else {
+                            customAlert(alertTitle, promptMessage, "success", 8000);
                         }
                     }
-                    else {
-                        customAlert("Resource Status:", promptMessage, "success", 8000);
-                    }
+                    $("#missing-metadata-or-file:not(.persistent)").fadeOut();
+                    $("#missing-metadata-file-type:not(.persistent)").fadeOut();
+                } else {
+                    manageAccessApp.onMetadataInsufficient();
                 }
-                $("#missing-metadata-or-file:not(.persistent)").fadeOut();
-                $("#missing-metadata-file-type:not(.persistent)").fadeOut();
-            }
-            else {
-                manageAccessApp.onMetadataInsufficient();
             }
         }
     }
@@ -629,9 +641,8 @@ function get_user_info_ajax_submit(url, obj) {
         success: function (result) {
             var formContainer = $(obj).parent().parent();
             var json_response = JSON.parse(result);
-            var user_id = "/user/" + json_response.url.split("/")[4] + "/";
             formContainer.find("input[name='name']").val(json_response.name);
-            formContainer.find("input[name='description']").val(user_id);
+            formContainer.find("input[name='hydroshare_user_id']").val(userID);
             formContainer.find("input[name='organization']").val(json_response.organization);
             formContainer.find("input[name='email']").val(json_response.email);
             formContainer.find("input[name='address']").val(json_response.address);
@@ -712,6 +723,31 @@ function delete_virtual_folder_ajax_submit(hs_file_type, file_type_id) {
     });
 }
 
+function resetAfterFBDelete() {
+    refreshFileBrowser();
+    $("#fb-files-container li.ui-selected").css("cursor", "auto").removeClass("deleting");
+    $(".file-browser-container, #fb-files-container").css("cursor", "auto");
+    $(".fb-cust-spinner").remove();
+}
+
+function deleteRemainingFiles(filesToDelete) {
+    // Add the data into the form and then serialize it because we need the csrf token
+    $("#fb-delete-files-form input[name='file_ids']").val(filesToDelete);
+    let data = $("#fb-delete-files-form").serialize();
+    
+    $.ajax({
+        type: "POST",
+        url: `/hsapi/_internal/${SHORT_ID}/delete-multiple-files/`,
+        data: data,
+    })
+    .fail(function(e){
+        console.log(e.responseText);
+    })
+    .always(function(){
+        resetAfterFBDelete();
+    });
+}
+
 function get_aggregation_folder_struct(aggregation) {
     let files = aggregation.files;
     $('#fb-files-container').empty();
@@ -787,7 +823,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                 if (mode === "edit") {
                     $('#fb-files-container').append(
                         '<div>' +
-                            '<span class="text-muted fb-empty-dir space-bottom">This directory is empty</span>' +
+                            '<span class="text-muted fb-empty-dir has-space-bottom">This directory is empty</span>' +
                             '<div class="hs-upload-indicator text-center">' +
                                 '<i class="fa fa-file" aria-hidden="true"></i>' +
                                 '<h4>Drop files here or click "Add files" to upload</h4>' +
@@ -863,16 +899,6 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $(".selection-menu").hide();
             $("#flag-uploading").remove();
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
-
-            if (mode === "edit" && result.hasOwnProperty('spatial_coverage')){
-                var spatialCoverage = result.spatial_coverage;
-                updateResourceSpatialCoverage(spatialCoverage);
-            }
-
-            if (mode == "edit" && result.hasOwnProperty('temporal_coverage')){
-                var temporalCoverage = result.temporal_coverage;
-                updateResourceTemporalCoverage(temporalCoverage);
-            }
         },
         error: function(xhr, errmsg, err){
             $(".selection-menu").hide();
@@ -902,13 +928,36 @@ function zip_irods_folder_ajax_submit(res_id, input_coll_path, fileName) {
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
         },
         error: function (xhr, errmsg, err) {
-            display_error_message('Folder Zipping Failed', xhr.responseText);
+            let errorMsg = getErrorMessage(xhr)
+            display_error_message('Folder Zipping Failed', errorMsg);
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
         }
     });
 }
 
-function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
+function zip_by_aggregation_file_ajax_submit(res_id, aggregationPath, zipFileName) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/zip-by-aggregation-file/',
+        async: true,
+        data: {
+            res_id: res_id,
+            aggregation_path: aggregationPath,
+            output_zip_file_name: zipFileName
+        },
+        success: function (result) {
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
+        },
+        error: function (xhr, errmsg, err) {
+            let errorMsg = getErrorMessage(xhr)
+            display_error_message('Folder Zipping Failed', errorMsg);
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
+        }
+    });
+}
+
+function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path, overwrite, unzip_to_folder) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
@@ -917,14 +966,21 @@ function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
         data: {
             res_id: res_id,
             zip_with_rel_path: zip_with_rel_path,
-            remove_original_zip: "false"
+            remove_original_zip: "false",
+            overwrite: overwrite,
+            unzip_to_folder: unzip_to_folder
         },
         success: function (task) {
+            $('#unzip_res_id').val(res_id);
+            $('#zip_with_rel_path').val(zip_with_rel_path);
             notificationsApp.registerTask(task);
             notificationsApp.show();
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
         },
         error: function (xhr, errmsg, err) {
-            display_error_message('File Unzipping Failed', xhr.responseText);
+            let errorMsg = getErrorMessage(xhr)
+            display_error_message('Folder Creation Failed', errorMsg);
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
         }
     });
 }
@@ -946,9 +1002,14 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
                 $('#create-folder-dialog').modal('hide');
                 $("#txtFolderName").val("");
             }
+            else {
+                $('#create-folder-dialog').modal('hide');
+            }
         },
         error: function(xhr, errmsg, err){
-            display_error_message('Folder Creation Failed', xhr.responseText);
+            let errorMsg = getErrorMessage(xhr)
+            display_error_message('Folder Creation Failed', errorMsg);
+            $('#create-folder-dialog').modal('hide');
         }
     });
 }
@@ -1026,7 +1087,7 @@ function update_ref_url_ajax_submit(res_id, curr_path, url_filename, new_ref_url
 }
 
 // target_path must be a folder
-function move_to_folder_ajax_submit(source_paths, target_path) {
+function move_to_folder_ajax_submit(source_paths, target_path, file_override) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
@@ -1035,7 +1096,8 @@ function move_to_folder_ajax_submit(source_paths, target_path) {
         data: {
             res_id: SHORT_ID,
             source_paths: JSON.stringify(source_paths),
-            target_path: target_path
+            target_path: target_path,
+            file_override: file_override
         },
         success: function (result) {
             var target_rel_path = result.target_rel_path;
@@ -1044,22 +1106,47 @@ function move_to_folder_ajax_submit(source_paths, target_path) {
             }
         },
         error: function(xhr, errmsg, err){
-            display_error_message('File/Folder Moving Failed', xhr.responseText);
+            if (xhr.status == 300) {
+                $('#resp-message').text(xhr.responseText);
+                $("#source_paths").val(JSON.stringify(source_paths));
+                $("#target_path").val(target_path);
+                $('#move-override-confirm-dialog').modal('show');
+            }
+            else {
+                display_error_message('File/Folder Moving Failed', xhr.responseText);
+                $('#move-override-confirm-dialog').modal('hide');
+            }
         }
     });
 }
 
-function move_virtual_folder_ajax_submit(hs_file_type, file_type_id, targetPath) {
+function move_virtual_folder_ajax_submit(hs_file_type, file_type_id, targetPath, file_override) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/' + SHORT_ID + '/' + hs_file_type + '/' + file_type_id + '/move-aggregation/' + targetPath,
+        data: {
+            file_override: file_override
+        },
         async: true,
-        success: function (result) {
-
+        success: function (task) {
+            notificationsApp.registerTask(task);
+            notificationsApp.show();
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
         },
         error: function(xhr, errmsg, err){
-            display_error_message('File/Folder Moving Failed', xhr.responseText);
+            if (xhr.status == 300) {
+                $('#aggr-move-resp-message').text(xhr.responseText);
+                $("#file_type").val(hs_file_type);
+                $("#file_type_id").val(file_type_id);
+                $("#target_path").val(targetPath);
+                $('#move-aggr-override-confirm-dialog').modal('show');
+            }
+            else {
+                display_error_message('File/Folder Moving Failed', xhr.responseText);
+                $('#move-aggr-override-confirm-dialog').modal('hide');
+            }
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
         }
     });
 }
@@ -1083,7 +1170,8 @@ function rename_file_or_folder_ajax_submit(res_id, source_path, target_path) {
             }
         },
         error: function(xhr, errmsg, err){
-            display_error_message('File/Folder Renaming Failed', xhr.responseText);
+            let errorMsg = getErrorMessage(xhr)
+            display_error_message('File/Folder Renaming Failed', errorMsg);
         }
     });
 }
@@ -1321,13 +1409,25 @@ function BindKeyValueFileTypeClickHandlers(){
     keyvalue_add_modal_form.find("button.btn-primary").click(function () {
         addFileTypeExtraMetadata();
     });
+    
+    // clear the form on cancel
+    keyvalue_add_modal_form.find("button.btn-default:contains('Cancel')").click(function () {
+        keyvalue_add_modal_form.find("input[type=text], textarea").val("");
+    });
 
     // bind all key value edit modal forms OK button click event
     $("#fileTypeMetaData").find('[id^=edit-keyvalue-filetype-metadata]').each(function(){
         var formId = $(this).attr('id');
         $(this).find("button.btn-primary").click(function (){
             updateFileTypeExtraMetadata(formId);
-        })
+        });
+
+        // reset the form on cancel
+        $(this).find("button.btn-default:contains('Cancel')").click(function() {
+            $(this).closest('form').find("input[type=text], textarea").each(function(){
+                $(this).val($(this).prop("defaultValue"));
+            });
+        });
     });
 
     // bind all key value delete modal forms Delete button click event
@@ -1380,6 +1480,44 @@ function initializeDatePickers(){
         if(pickerDate != null){
             $(this).datepicker("setDate", pickerDate);
         }
+    });
+
+    // Temporal coverage: only allow submit if both dates are completed
+    let temporal_button = $("#coverage-temporal button");
+    let temporal_warn = $('#temporal-warn');
+    if (temporal_warn.length === 0) {
+        temporal_warn = $("<em>", {
+            id: "temporal-warn",
+            text: "Both a Start Date and End Date are required when providing temporal information",
+            css: {
+                "font-style": "italic",
+                "color": "red"
+            }
+        });
+        temporal_button.closest('div').before(temporal_warn);
+    }
+    temporal_warn.hide();
+
+    $("#coverage-temporal .dateinput").each(function () {
+        $(this).on('change', function (e) {
+            let this_date = $(this)
+            let other_date = $(this).closest("form").find(".form-control").not(this).first();
+            if (this_date.val() && other_date.val()) {
+                temporal_button.removeClass("disabled");
+                temporal_warn.hide();
+            }else if (this_date.val()) {
+                temporal_button.addClass("disabled");
+                other_date.after(temporal_warn);
+                temporal_warn.show();
+            }else if (other_date.val()) {
+                temporal_button.addClass("disabled");
+                this_date.after(temporal_warn);
+                temporal_warn.show();
+            }else{
+                temporal_button.hide()
+                temporal_warn.hide()
+            }
+        });
     });
 }
 
@@ -1539,7 +1677,7 @@ function updateResourceSpatialCoverage(spatialCoverage) {
         $("#id_name").val(spatialCoverage.name);
         if (spatialCoverage.type === 'point') {
             $point_radio.attr('checked', 'checked');
-            if(resourceType !== "Composite Resource"){
+            if(resourceType !== "Resource"){
                 $box_radio.attr('disabled', true);
                 $box_radio.parent().closest("label").addClass("text-muted");
             }
@@ -1559,7 +1697,7 @@ function updateResourceSpatialCoverage(spatialCoverage) {
         }
         else { //coverage type is 'box'
             $box_radio.attr('checked', 'checked');
-            if(resourceType !== "Composite Resource"){
+            if(resourceType !== "Resource"){
                 $point_radio.attr('disabled', true);
                 $point_radio.parent().closest("label").addClass("text-muted");
             }
@@ -1733,7 +1871,7 @@ function updateResourceAuthors(authors) {
             order: author.order.toString(),
             organization: author.organization,
             phone: author.phone,
-            profileUrl: author.description,
+            profileUrl: author.relative_uri,
             homepage: author.homepage,
         };
     })

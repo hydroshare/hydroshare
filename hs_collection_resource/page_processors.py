@@ -1,10 +1,9 @@
-from django.http import HttpResponseRedirect, HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponseRedirect
 from mezzanine.pages.page_processors import processor_for
 
 from hs_core import page_processors
 from hs_core.views import add_generic_context
 from .models import CollectionResource
-from .utils import get_collectable_resources
 
 
 @processor_for(CollectionResource)
@@ -13,7 +12,7 @@ def landing_page(request, page):
     edit_resource = page_processors.check_resource_mode(request)
 
     # current contained resources list
-    collection_items_list = list(content_model.resources.all())
+    collection_items_list = list(content_model.resources.all().select_related('raccess'))
 
     # get the context from hs_core
     context = page_processors.get_page_context(page, request.user,
@@ -22,10 +21,9 @@ def landing_page(request, page):
                                                request=request)
     if edit_resource:
         user = request.user
-        if not user.is_authenticated():
+        if not user.is_authenticated:
             return HttpResponseForbidden()
 
-        context['collection_candidate'] = get_collectable_resources(user, content_model)
         context['collection_res_id'] = content_model.short_id
     elif isinstance(context, HttpResponseRedirect):
         # resource view mode

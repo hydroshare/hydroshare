@@ -111,6 +111,37 @@ def create_bagit_files_by_irods(res, istorage):
         raise ObjectDoesNotExist('Resource {} does not exist.'.format(resource_id))
 
 
+def _create_temp_dir_on_irods(istorage):
+    temp_path = istorage.getUniqueTmpPath
+    try:
+        os.makedirs(temp_path)
+    except OSError as ex:
+        # TODO: there might be concurrent operations.
+        if ex.errno == errno.EEXIST:
+            shutil.rmtree(temp_path)
+            os.makedirs(temp_path)
+        else:
+            raise Exception(str(ex))
+    return temp_path
+
+
+def save_resource_metadata_xml(resource):
+    """
+    Writes the resource level metadata from the db to the resourcemetadata.xml file of a resource
+
+    Parameters:
+    :param resource: A resource instance
+    """
+    istorage = resource.get_irods_storage()
+    temp_path = _create_temp_dir_on_irods(istorage)
+    from_file_name = os.path.join(temp_path, 'resourcemetadata.xml')
+    with open(from_file_name, 'w') as out:
+        # write resource level metadata
+        out.write(resource.get_metadata_xml())
+    to_file_name = os.path.join(resource.root_path, 'data', 'resourcemetadata.xml')
+    istorage.saveFile(from_file_name, to_file_name, True)
+
+
 def create_bag_metadata_files(resource):
     """
     create and update files needed by bagit operation that is conducted on iRODS server;
@@ -133,17 +164,7 @@ def create_bag_metadata_files(resource):
     # to accommodate asynchronous multiple file move operations for the same resource
 
     # TODO: This is always in /tmp; otherwise code breaks because open() is called on the result!
-    temp_path = istorage.getUniqueTmpPath
-
-    try:
-        os.makedirs(temp_path)
-    except OSError as ex:
-        # TODO: there might be concurrent operations.
-        if ex.errno == errno.EEXIST:
-            shutil.rmtree(temp_path)
-            os.makedirs(temp_path)
-        else:
-            raise Exception(str(ex))
+    temp_path = _create_temp_dir_on_irods(istorage)
 
     # an empty visualization directory will not be put into the zipped bag file by ibun command,
     # so creating an empty visualization directory to be put into the zip file as done by the two
@@ -154,12 +175,7 @@ def create_bag_metadata_files(resource):
     # istorage.saveFile('', to_file_name, create_directory=True)
 
     # create resourcemetadata.xml in local directory and upload it to iRODS
-    from_file_name = os.path.join(temp_path, 'resourcemetadata.xml')
-    with open(from_file_name, 'w') as out:
-        # write resource level metadata
-        out.write(resource.get_metadata_xml())
-    to_file_name = os.path.join(resource.root_path, 'data', 'resourcemetadata.xml')
-    istorage.saveFile(from_file_name, to_file_name, True)
+    save_resource_metadata_xml(resource)
 
     # URLs are found in the /data/ subdirectory to comply with bagit format assumptions
     current_site_url = current_site_url()
@@ -206,14 +222,15 @@ def create_bag_metadata_files(resource):
         # only the files that are not part of file type aggregation (logical file)
         # should be added to the resource level map xml file
         if f.logical_file is None:
+            short_path = f.get_short_path(resource=resource)
             res_uri = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
                 hs_url=current_site_url,
                 res_id=resource.short_id,
-                file_name=f.short_path)
+                file_name=short_path)
             res_uri = encode_resource_url(res_uri)
             ar = AggregatedResource(res_uri)
             ar._ore.isAggregatedBy = ag_url
-            ar._dc.format = get_file_mime_type(os.path.basename(f.short_path))
+            ar._dc.format = get_file_mime_type(os.path.basename(short_path))
             a.add_resource(ar)
 
     # handle collection resource type
@@ -222,8 +239,8 @@ def create_bag_metadata_files(resource):
         for contained_res in resource.resources.all():
             contained_res_id = contained_res.short_id
             resource_map_url = '{hs_url}/resource/{res_id}/data/resourcemap.xml'.format(
-                    hs_url=current_site_url,
-                    res_id=contained_res_id)
+                hs_url=current_site_url,
+                res_id=contained_res_id)
 
             ar = AggregatedResource(resource_map_url)
             ar._ore.isAggregatedBy = ag_url

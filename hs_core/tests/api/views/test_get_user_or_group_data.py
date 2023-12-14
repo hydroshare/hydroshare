@@ -2,7 +2,7 @@ import json
 
 from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import Group, User
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import Http404
 
 from rest_framework import status

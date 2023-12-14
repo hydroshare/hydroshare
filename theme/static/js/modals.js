@@ -68,6 +68,7 @@ $(document).ready(function() {
 
     $("#download-bag-btn").click(function() {
         $("#license-agree-dialog-bag").modal('hide');
+        $("#agree-chk-download-bag").prop( "checked", false );
     });
 
     $("#btn-add-hydroshare-user").click(function () {

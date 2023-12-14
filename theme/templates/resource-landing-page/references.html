@@ -1,55 +1,19 @@
 {% load hydroshare_tags crispy_forms_tags %}
 
 {% if not resource_edit_mode %}
-    {% if sources or show_relations_section or belongs_to_collections %}
+    {% if show_relations_section or belongs_to_collections %}
         <div class="col-xs-12 content-block">
-            <h3>References</h3>
-        </div>
-    {% endif %}
-    {% if sources %}
-        <div class="col-xs-12 content-block">
-            <h4>Sources</h4>
-            <table class="info-table">
-                {% for source in sources %}
-                    <tr>
-                        <td class="dataset-label">Derived From:</td>
-                        <td class="dataset-details">{{ source.derived_from|urlize }}</td>
-                    </tr>
-                {% endfor %}
-            </table>
+            <h3>Related Resources</h3>
         </div>
     {% endif %}
     {% if show_relations_section %}
         <div class="col-xs-12 content-block">
-            <h4>Related Resources</h4>
-            <table class="info-table">
+            <table class="table hs-table info-table">
                 {% for relation in relations %}
-                    {% if relation.type|lower != "haspart" %}
-                        <tr>
-                            <td class="dataset-label">
-                                {% if relation.type == "isCopiedFrom" %}
-                                    The content of this resource was copied from:
-                                {% elif relation.type == "isPartOf" %}
-                                    The content of this resource is part of:
-                                {% elif relation.type == "isExecutedBy" %}
-                                    The content of this resource can be executed by:
-                                {% elif relation.type == "isCreatedBy" %}
-                                    The content of this resource was created by:
-                                {% elif relation.type == "isDataFor" %}
-                                    The content of this resource serves as the data for:
-                                {% elif relation.type == "cites" %}
-                                    This resource cites:
-                                {% elif relation.type == "isDescribedBy" %}
-                                    This resource is described by:
-                                {% elif relation.type == "IsReferencedBy" %}
-                                    This resource is referenced by:
-                                {% elif relation.type == "isVersionOf" %}
-                                    This resource updates and replaces previous version:
-                                {% elif relation.type == "isReplacedBy" %}
-                                    This resource has been replaced by newer version:
-                                {% else %}
-                                    {{ relation.type }}
-                                {% endif %}
+                    {% if relation.type|lower != "haspart" and relation.type|lower != "ispartof" %}
+                        <tr style="padding-bottom: 20px">
+                            <td class="dataset-label" style="min-width: 100px;">
+                                {{ relation.type_description }}
                             </td>
                             <td class="dataset-details">{{ relation.value|urlize }}</td>
                         </tr>
@@ -60,65 +24,15 @@
     {% endif %}
 {% else %}
     <div class="col-xs-12 content-block">
-        <h3>References</h3>
-    </div>
-    <div class="col-xs-12 content-block">
-        <h4>Sources
-            <a id="add-source" class="btn btn-success btn-xs" data-toggle="modal"
-            title='Add Source
-
-If this resource was derived from another resource, click this button to create a link to the source resource from which this resource was derived. If the source resource is a HydroShare resource, you should paste in the URL to the source resource in HydroShare. If the source resource is something outside of HydroShare, you can paste in a URL or a full text citation to the external resource.'
-           data-target="#add-source-dialog"><i class="fa fa-plus"></i>
-            </a>
-        </h4>
-
-        <div class="alert alert-info alert-dismissible" role="alert">
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-            <div class="flex">
-                <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
-                <em style="padding-right:20px;">If the data in your resource was derived from another source or dataset, you can cite or acknowledge
-                    those references here. Click on "Add Source" and then add a full text citation to the original
-                    content, a
-                    web link, or text describing the source of the data.</em>
-            </div>
-        </div>
-
-        {% if sources %}
-        <table class="table hs-table">
-            <tbody>
-            {% for source in sources %}
-                <tr>
-                    <td scope="row" class="dataset-label">Derived From:</td>
-                    <td class="dataset-details">{{ source.derived_from|urlize }}</td>
-                    <td>
-                        <span data-toggle="modal" data-placement="auto" title="Edit"
-                              class="glyphicon glyphicon-pencil table-icon icon-button icon-blue"
-                              data-target="#edit-source-dialog{{ source.id }}"></span>
-                        <span data-toggle="modal" data-placement="auto"
-                              title="Remove"
-                              class="glyphicon glyphicon-trash table-icon icon-button btn-remove"
-                              data-target="#delete-source-element-dialog{{ source.id }}"></span>
-                    </td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-            <p class="small text-muted">No sources have been added.</p>
-        {% endif %}
-    </div>
-    <div class="col-xs-12 content-block">
         <br>
-        <h4>Related Resources
+        <h3>Related Resources
             <a id="add-relation" class="btn btn-success btn-xs" data-toggle="modal" title="Add Relation
 
 Click this button to add a relationship to another resource, external website, or document. You can express the type of relationship and then enter a URL to the resource or website. If the related resource does not have a URL, you can paste in a full text citation."
             data-target="#add-relation-dialog">
                 <i class="fa fa-plus"></i>
             </a>
-        </h4>
+        </h3>
 
         <div class="alert alert-info alert-dismissible" role="alert">
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -126,49 +40,25 @@ Click this button to add a relationship to another resource, external website, o
             </button>
             <div class="flex">
                 <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
-                <em style="padding-right:20px;">If this resource is related to other documents, datasets, websites,
-                    etc., you can record those relationships here as references. For example, if this resource is cited
-                    by a paper you published, select a relationship type of "The content of this resource serves as the
-                    data for" and then provide a full text citation for the paper that used the data, including the
-                    paper's DOI encoded as an HTTP URL if available. This records that this resource is the data for the
-                    paper that cited it. If you enter a URL as part of the citation, it will be converted to an active
-                    link.</em>
+                <em style="padding-right:20px;">
+                    If this resource is related to other documents, datasets, publications etc., you can record those relationships here as related resources. 
+                    For example, if the citation for this resource appears in the references of a published paper, from the drop down you can select the relationship “this resource is referenced by” and provide the citation or DOI for the paper. 
+                    A URL will be converted to an active link.
+                </em>
             </div>
         </div>
 
         {% if relations %}
-        <table class="table hs-table">
+        <table class="table hs-table info-table">
             <tbody>
             {% for relation in relations %}
-                {% if  relation.type|lower != "haspart" %}
+                {% if  relation.type|lower != "haspart" and relation.type|lower != "ispartof" and relation.type|lower != "relation" %}
                     <tr>
-                        <td scope="row" class="dataset-label">
-                            {% if relation.type == "isCopiedFrom" %}
-                                The content of this resource was copied from:
-                            {% elif relation.type == "isPartOf" %}
-                                The content of this resource is part of:
-                            {% elif relation.type == "isExecutedBy" %}
-                                The content of this resource can be executed by:
-                            {% elif relation.type == "isCreatedBy" %}
-                                The content of this resource was created by:
-                            {% elif relation.type == "isDataFor" %}
-                                The content of this resource serves as the data for:
-                            {% elif relation.type == "cites" %}
-                                This resource cites:
-                            {% elif relation.type == "isDescribedBy" %}
-                                This resource is described by:
-                            {% elif relation.type == "IsReferencedBy" %}
-                                This resource is referenced by:
-                            {% elif relation.type == "isVersionOf" %}
-                                This resource updates and replaces previous version:
-                            {% elif relation.type == "isReplacedBy" %}
-                                This resource has been replaced by newer version:
-                            {% else %}
-                                {{ relation.type }}
-                            {% endif %}
+                        <td scope="row" class="dataset-label" style="min-width: 100px;">
+                            {{ relation.type_description }}
                         </td>
                         <td class="dataset-details">{{ relation.value|urlize }}</td>
-                        {% if relation.type != "isVersionOf" %}
+                        {% if relation.type not in relation.NOT_USER_EDITABLE %}
                             <td style="min-width: 120px;">
                                 <span data-toggle="modal" data-placement="auto" title="Edit"
                                    class="glyphicon glyphicon-pencil icon-blue icon-button table-icon"
@@ -204,12 +94,13 @@ Click this button to add a relationship to another resource, external website, o
             </thead>
             <tbody>
             {% for res in belongs_to_collections %}
+                {% with res|user_permission:request.user.pk as res_permission %}
                 <tr id="{{ res.short_id }}">
                     <td>
-                        {% if res|user_permission:request.user.pk|lower == "none" %}
+                        {% if res_permission|lower == "none" %}
                             <strong>{{ res.metadata.title }}</strong>
                         {% else %}
-                            <strong><a href="{{ res.get_absolute_url }}"
+                            <strong><a href="{{ res.absolute_url }}"
                                        target="_blank">{{ res.metadata.title }}</a></strong>
                         {% endif %}
                     </td>
@@ -249,15 +140,16 @@ Click this button to add a relationship to another resource, external website, o
                         {% endif %}
                     </td>
                     <td>
-                        {% if res|user_permission:request.user.pk|lower == "none" %}
-                            <strong class="label-private">{{ res|user_permission:request.user.pk }}</strong>
-                        {% elif res|user_permission:request.user.pk|lower == "open access" %}
-                            <strong class="label-public">{{ res|user_permission:request.user.pk }}</strong>
+                        {% if res_permission|lower == "none" %}
+                            <strong class="label-private">{{ res_permission }}</strong>
+                        {% elif res_permission|lower == "open access" %}
+                            <strong class="label-public">{{ res_permission }}</strong>
                         {% else %}
-                            {{ res|user_permission:request.user.pk }}
+                            {{ res_permission }}
                         {% endif %}
                     </td>
                 </tr>
+                {% endwith %}
             {% endfor %}
             </tbody>
         </table>

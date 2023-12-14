@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
                 ('award_title', models.TextField(null=True, blank=True)),
                 ('award_number', models.TextField(null=True, blank=True)),
                 ('agency_url', models.URLField(null=True, blank=True)),
-                ('content_type', models.ForeignKey(related_name='hs_core_fundingagency_related', to='contenttypes.ContentType')),
+                ('content_type', models.ForeignKey(related_name='hs_core_fundingagency_related', on_delete=models.CASCADE, to='contenttypes.ContentType')),
             ],
             options={
                 'abstract': False,

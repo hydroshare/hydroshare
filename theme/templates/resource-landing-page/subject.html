@@ -39,57 +39,56 @@
                         </div>
                     {% endif %}
                 {% endif %}
+                <div id="subj-inline-error" style="display:none">
+                    <p class="text-danger small" v-if="showIsDuplicate"> Duplicate. Keyword not added.</p>
+                    <div v-if="error" class='alert alert-danger has-space-top small'>
+                        <strong>Error: </strong>
+                        <span v-html="error"></span>
+                    </div>
+                </div>
                 <ul id="lst-tags" class="custom-well tag-list" style="display:none">
                     <li class="small text-muted" v-if="!resKeywords.length">No subject keywords have been added.</li>
                     <li v-else v-for="k in resKeywords">
                         {% if resource_edit_mode %}
-                            {% if cm.raccess.published  %}
+                            {% if cm.raccess.published %}
                                 <span v-if="resKeywords.length" class="tag">
-                                    {% templatetag openvariable %} k {% templatetag closevariable %}<span v-if="resKeywords.length > 1"
+                                    ${ k }<span v-if="resKeywords.length > 1"
                                         @click="removeKeyword('{{ cm.short_id }}', k )"
                                         class="glyphicon glyphicon-remove-circle icon-remove"></span>
                                 </span>
                             {% else %}
                                 <span v-if="resKeywords.length" class="tag">
-                                    {% templatetag openvariable %} k {% templatetag closevariable %}<span
+                                    ${ k }<span
                                         @click="removeKeyword('{{ cm.short_id }}', k )"
                                         class="glyphicon glyphicon-remove-circle icon-remove"></span>
                                 </span>
                             {% endif %}
                         {% else %}
                             <a class='tag' target="_blank"
-                               :href="'/search/?subject=' + safeJS(k)">{% templatetag openvariable %} k {% templatetag closevariable %}</a>
+                               :href="'/search/?subject=' + safeJS(k)">${ k }</a>
                         {% endif %}
                     </li>
                 </ul>
             </div>
-            <div id="subj-inline-error" style="display:none">
-                <p class="text-danger small" v-if="showIsDuplicate"> Duplicate. Keyword not added.</p>
-                <div v-if="error" class='alert alert-danger space-top small'>
-                    <strong>Error: </strong>{% templatetag openvariable %} k {% templatetag closevariable %}
-                </div>
-            </div>
         </div>
         {% if not cm.raccess.published %}
             <div v-if="resMode === 'Edit'" class="col-xs-12 col-sm-6">
-                <span class="alert alert-warning group-title" role="alert">
-                    <div class="flex">
-                        <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
-                        <em style="padding-right:20px;">
-                            Deleting all keywords will set the resource sharing status to <strong>private</strong>.
-                        </em>
-                    </div>
-                </span>
+                <div class="alert alert-warning group-title flex" role="alert">
+                    <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                    <em style="padding-right:20px;">
+                        Deleting all keywords will set the resource sharing status to <strong>private</strong>.
+                    </em>
+                </div>
             </div>
        {% endif %}
     </div>
 </div>
 {% block extra_css %}
     {# typeahead is used in title.html #}
-    <link href="{{ STATIC_URL }}css/vue-bootstrap-typeahead.0.2.6.css" rel="stylesheet">
+    <link href="{% static 'css/vue-bootstrap-typeahead.0.2.6.css' %}" rel="stylesheet">
 {% endblock %}
 {% block extra_js %}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/vue-bootstrap-typeahead.0.2.6.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/subject-keywords-app.js"></script>
+    <script type="text/javascript" src="{% static 'js/vue-bootstrap-typeahead.0.2.6.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/hs-vue/subject-keywords-app.js' %}"></script>
 {% endblock %}
 

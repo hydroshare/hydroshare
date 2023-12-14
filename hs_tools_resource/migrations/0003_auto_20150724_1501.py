@@ -29,6 +29,6 @@ class Migration(migrations.Migration):
                 'verbose_name': 'Tool Resource',
                 'proxy': True,
             },
-            bases=('hs_core.genericresource',),
+            bases=('hs_core.baseresource',),
         ),
     ]

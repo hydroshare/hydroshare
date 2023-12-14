@@ -1,46 +1,416 @@
-import os
+import json
 import logging
+import os
+import parser
 import shutil
 import subprocess
+import defusedxml.ElementTree as ET
 import zipfile
-
-import xml.etree.ElementTree as ET
-
-import gdal
-from gdalconst import GA_ReadOnly
-
 from functools import partial, wraps
 
-from django.db import models, transaction
+import gdal
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
+from django.db import models, transaction
 from django.forms.models import formset_factory
 from django.template import Template, Context
+from dominate import tags as html_tags
+from gdalconst import GA_ReadOnly
+from rdflib import BNode, RDF, Literal
 
-from dominate.tags import div, legend, form, button
-
-from hs_core.hydroshare import utils
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
-from hs_core.models import ResourceFile
+from hs_core.hs_rdf import HSTERMS, rdf_terms
+from hs_core.hydroshare import utils
+from hs_core.models import ResourceFile, AbstractMetaDataElement
 from hs_core.signals import post_add_raster_aggregation
-
-from hs_geo_raster_resource.models import CellInformation, BandInformation, OriginalCoverage, \
-    GeoRasterMetaDataMixin
-from hs_geo_raster_resource.forms import BandInfoForm, BaseBandInfoFormSet, BandInfoValidationForm
-
 from hs_file_types import raster_meta_extract
 from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+
+
+# additional metadata for raster aggregation type to store the original box type coverage
+# since the core metadata coverage stores the converted WGS84 geographic coordinate
+# system projection coverage, see issue #210 on github for details
+@rdf_terms(HSTERMS.spatialReference)
+class OriginalCoverageRaster(AbstractMetaDataElement):
+    term = 'OriginalCoverage'
+
+    """
+    _value field stores a json string as shown below for box coverage type
+     _value = "{'northlimit':northenmost coordinate value,
+                'eastlimit':easternmost coordinate value,
+                'southlimit':southernmost coordinate value,
+                'westlimit':westernmost coordinate value,
+                'units:units applying to 4 limits (north, east, south & east),
+                'projection': name of the projection (optional),
+                'projection_string: OGC WKT string of the projection (optional),
+                'datum: projection datum name (optional),
+                }"
+    """
+    _value = models.CharField(max_length=10000, null=True)
+
+    class Meta:
+        # OriginalCoverage element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+    @property
+    def value(self):
+        return json.loads(self._value)
+
+    @classmethod
+    def create(cls, **kwargs):
+        """
+        The '_value' subelement needs special processing. (Check if the 'value' includes the
+        required info and convert 'value' dict as Json string to be the '_value' subelement value.)
+        The base class create() can't do it.
+
+        :param kwargs: the 'value' in kwargs should be a dictionary
+
+        """
+
+        value_arg_dict = None
+        if 'value' in kwargs:
+            value_arg_dict = kwargs['value']
+        elif '_value' in kwargs:
+            value_arg_dict = json.loads(kwargs['_value'])
+
+        if value_arg_dict:
+            # check that all the required sub-elements exist
+            for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
+                if value_item not in value_arg_dict:
+                    raise ValidationError("For coverage of type 'box' values for {} is missing. {}"
+                                          .format(value_item, value_arg_dict))
+
+            value_dict = {k: v for k, v in list(value_arg_dict.items())
+                          if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit',
+                                   'projection', 'projection_string', 'datum')}
+
+            value_json = json.dumps(value_dict)
+            if 'value' in kwargs:
+                del kwargs['value']
+            kwargs['_value'] = value_json
+            return super(OriginalCoverageRaster, cls).create(**kwargs)
+        else:
+            raise ValidationError('Coverage value is missing.')
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        """
+        The '_value' subelement needs special processing.
+        (Convert the 'value' dict as Json string to be the "_value" subelement value.)
+        The base class update() can't do it.
+
+        :param kwargs: the 'value' in kwargs should be a dictionary
+        """
+
+        cov = OriginalCoverageRaster.objects.get(id=element_id)
+
+        if 'value' in kwargs:
+            value_dict = cov.value
+
+            for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit',
+                              'projection', 'projection_string', 'datum'):
+                if item_name in kwargs['value']:
+                    value_dict[item_name] = kwargs['value'][item_name]
+
+            value_json = json.dumps(value_dict)
+            del kwargs['value']
+            kwargs['_value'] = value_json
+            super(OriginalCoverageRaster, cls).update(element_id, **kwargs)
+
+    @classmethod
+    def remove(cls, element_id):
+        raise ValidationError("Coverage element can't be deleted.")
+
+    hsterms = ['spatialReference', 'box', ]
+    rdf = ['value']
+
+    def rdf_triples(self, subject, graph):
+        original_coverage = BNode()
+        graph.add((subject, self.get_class_term(), original_coverage))
+        graph.add((original_coverage, RDF.type, HSTERMS.box))
+        value_string = "; ".join(["=".join([key, str(val)]) for key, val in self.value.items()])
+        graph.add((original_coverage, RDF.value, Literal(value_string)))
+
+    @classmethod
+    def ingest_rdf(cls, graph, subject, content_object):
+        for _, _, cov in graph.triples((subject, cls.get_class_term(), None)):
+            value_str = graph.value(subject=cov, predicate=RDF.value)
+            if value_str:
+                value_dict = {}
+                for key_value in value_str.split(";"):
+                    key_value = key_value.strip()
+                    k, v = key_value.split("=")
+                    if k in ['start', 'end']:
+                        v = parser.parse(v).strftime("%Y/%m/%d")
+                    value_dict[k] = v
+                OriginalCoverageRaster.create(value=value_dict, content_object=content_object)
+
+    @classmethod
+    def get_html_form(cls, resource, element=None, allow_edit=True, file_type=False):
+        """Generates html form code for an instance of this metadata element so
+        that this element can be edited"""
+
+        from ..forms import OriginalCoverageSpatialForm
+
+        ori_coverage_data_dict = {}
+        if element is not None:
+            ori_coverage_data_dict['projection'] = element.value.get('projection', None)
+            ori_coverage_data_dict['datum'] = element.value.get('datum', None)
+            ori_coverage_data_dict['projection_string'] = element.value.get('projection_string',
+                                                                            None)
+            ori_coverage_data_dict['units'] = element.value['units']
+            ori_coverage_data_dict['northlimit'] = element.value['northlimit']
+            ori_coverage_data_dict['eastlimit'] = element.value['eastlimit']
+            ori_coverage_data_dict['southlimit'] = element.value['southlimit']
+            ori_coverage_data_dict['westlimit'] = element.value['westlimit']
+
+        originalcov_form = OriginalCoverageSpatialForm(
+            initial=ori_coverage_data_dict, allow_edit=allow_edit,
+            res_short_id=resource.short_id if resource else None,
+            element_id=element.id if element else None, file_type=file_type)
+
+        return originalcov_form
+
+    def get_html(self, pretty=True):
+        """Generates html code for displaying data for this metadata element"""
+
+        root_div = html_tags.div(cls="content-block")
+
+        def get_th(heading_name):
+            return html_tags.th(heading_name, cls="text-muted")
+
+        with root_div:
+            html_tags.legend('Spatial Reference')
+            html_tags.div('Coordinate Reference System', cls='text-muted has-space-top')
+            html_tags.div(self.value.get('projection', ''))
+            html_tags.div('Coordinate Reference System Unit', cls='text-muted has-space-top')
+            html_tags.div(self.value['units'])
+            html_tags.div('Datum', cls='text-muted has-space-top')
+            html_tags.div(self.value.get('datum', ''))
+            html_tags.div('Coordinate String', cls='text-muted has-space-top')
+            html_tags.div(self.value.get('projection_string', ''), style="word-break: break-all;")
+            html_tags.h4('Extent', cls='space-top')
+            with html_tags.table(cls='custom-table'):
+                with html_tags.tbody():
+                    with html_tags.tr():
+                        get_th('North')
+                        html_tags.td(self.value['northlimit'])
+                    with html_tags.tr():
+                        get_th('West')
+                        html_tags.td(self.value['westlimit'])
+                    with html_tags.tr():
+                        get_th('South')
+                        html_tags.td(self.value['southlimit'])
+                    with html_tags.tr():
+                        get_th('East')
+                        html_tags.td(self.value['eastlimit'])
+
+        return root_div.render(pretty=pretty)
+
+
+class BandInformation(AbstractMetaDataElement):
+    term = 'BandInformation'
+    # required fields
+    # has to call the field name rather than bandName, which seems to be enforced by
+    # the AbstractMetaDataElement;
+    # otherwise, got an error indicating required "name" field does not exist
+    name = models.CharField(max_length=500, null=True)
+    variableName = models.TextField(max_length=100, null=True)
+    variableUnit = models.CharField(max_length=50, null=True)
+
+    # optional fields
+    method = models.TextField(null=True, blank=True)
+    comment = models.TextField(null=True, blank=True)
+    noDataValue = models.TextField(null=True, blank=True)
+    maximumValue = models.TextField(null=True, blank=True)
+    minimumValue = models.TextField(null=True, blank=True)
+
+    def __unicode__(self):
+        return self.name
+
+    @classmethod
+    def remove(cls, element_id):
+        raise ValidationError("BandInformation element of the raster resource cannot be deleted.")
+
+    def get_html(self, pretty=True):
+        """Generates html code for displaying data for this metadata element"""
+
+        root_div = html_tags.div()
+
+        def get_th(heading_name):
+            return html_tags.th(heading_name, cls="text-muted")
+
+        with root_div:
+            with html_tags.div(cls="custom-well"):
+                html_tags.strong(self.name)
+                with html_tags.table(cls='custom-table'):
+                    with html_tags.tbody():
+                        with html_tags.tr():
+                            get_th('Variable Name')
+                            html_tags.td(self.variableName)
+                        with html_tags.tr():
+                            get_th('Variable Unit')
+                            html_tags.td(self.variableUnit)
+                        if self.noDataValue:
+                            with html_tags.tr():
+                                get_th('No Data Value')
+                                html_tags.td(self.noDataValue)
+                        if self.maximumValue:
+                            with html_tags.tr():
+                                get_th('Maximum Value')
+                                html_tags.td(self.maximumValue)
+                        if self.minimumValue:
+                            with html_tags.tr():
+                                get_th('Minimum Value')
+                                html_tags.td(self.minimumValue)
+                        if self.method:
+                            with html_tags.tr():
+                                get_th('Method')
+                                html_tags.td(self.method)
+                        if self.comment:
+                            with html_tags.tr():
+                                get_th('Comment')
+                                html_tags.td(self.comment)
+
+        return root_div.render(pretty=pretty)
+
+
+class CellInformation(AbstractMetaDataElement):
+    term = 'CellInformation'
+    # required fields
+    name = models.CharField(max_length=500, null=True)
+    rows = models.IntegerField(null=True)
+    columns = models.IntegerField(null=True)
+    cellSizeXValue = models.FloatField(null=True)
+    cellSizeYValue = models.FloatField(null=True)
+    cellDataType = models.CharField(max_length=50, null=True)
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        # CellInformation element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+    @classmethod
+    def remove(cls, element_id):
+        raise ValidationError("CellInformation element of a raster resource cannot be removed")
+
+    def get_html_form(self, resource):
+        """Generates html form code for this metadata element so that this element can be edited"""
+
+        from ..forms import CellInfoForm
+        cellinfo_form = CellInfoForm(instance=self,
+                                     res_short_id=resource.short_id if resource else None,
+                                     element_id=self.id if self else None)
+        return cellinfo_form
+
+    def get_html(self, pretty=True):
+        """Generates html code for displaying data for this metadata element"""
+
+        root_div = html_tags.div(cls="content-block")
+
+        def get_th(heading_name):
+            return html_tags.th(heading_name, cls="text-muted")
+
+        with root_div:
+            html_tags.legend('Cell Information')
+            with html_tags.table(cls='custom-table'):
+                with html_tags.tbody():
+                    with html_tags.tr():
+                        get_th('Rows')
+                        html_tags.td(self.rows)
+                    with html_tags.tr():
+                        get_th('Columns')
+                        html_tags.td(self.columns)
+                    with html_tags.tr():
+                        get_th('Cell Size X Value')
+                        html_tags.td(self.cellSizeXValue)
+                    with html_tags.tr():
+                        get_th('Cell Size Y Value')
+                        html_tags.td(self.cellSizeYValue)
+                    with html_tags.tr():
+                        get_th('Cell Data Type')
+                        html_tags.td(self.cellDataType)
+
+        return root_div.render(pretty=pretty)
+
+
+class GeoRasterMetaDataMixin(models.Model):
+    """This class must be the first class in the multi-inheritance list of classes"""
+
+    # required non-repeatable cell information metadata elements
+    _cell_information = GenericRelation(CellInformation)
+    _band_information = GenericRelation(BandInformation)
+    _ori_coverage = GenericRelation(OriginalCoverageRaster)
+
+    class Meta:
+        abstract = True
+
+    @property
+    def cellInformation(self):
+        return self._cell_information.all().first()
+
+    @property
+    def bandInformations(self):
+        return self._band_information.all()
+
+    @property
+    def originalCoverage(self):
+        return self._ori_coverage.all().first()
+
+    def has_all_required_elements(self):
+        if not super(GeoRasterMetaDataMixin, self).has_all_required_elements():
+            return False
+        if not self.cellInformation:
+            return False
+        if self.bandInformations.count() == 0:
+            return False
+        if not self.coverages.all().filter(type='box').first():
+            return False
+        return True
+
+    def get_required_missing_elements(self):
+        missing_required_elements = super(GeoRasterMetaDataMixin,
+                                          self).get_required_missing_elements()
+        if not self.coverages.all().filter(type='box').first():
+            missing_required_elements.append('Spatial Coverage')
+        if not self.cellInformation:
+            missing_required_elements.append('Cell Information')
+        if not self.bandInformations:
+            missing_required_elements.append('Band Information')
+
+        return missing_required_elements
+
+    def delete_all_elements(self):
+        super(GeoRasterMetaDataMixin, self).delete_all_elements()
+        if self.cellInformation:
+            self.cellInformation.delete()
+        if self.originalCoverage:
+            self.originalCoverage.delete()
+        self.bandInformations.delete()
+
+    @classmethod
+    def get_supported_element_names(cls):
+        # get the names of all core metadata elements
+        elements = super(GeoRasterMetaDataMixin, cls).get_supported_element_names()
+        # add the name of any additional element to the list
+        elements.append('CellInformation')
+        elements.append('BandInformation')
+        elements.append('OriginalCoverageRaster')
+        return elements
 
 
 class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
     # the metadata element models used for this file type are from the raster resource type app
     # use the 'model_app_label' attribute with ContentType, do dynamically find the right element
     # model class from element name (string)
-    model_app_label = 'hs_geo_raster_resource'
+    model_app_label = 'hs_file_types'
 
     @classmethod
     def get_metadata_model_classes(cls):
         metadata_model_classes = super(GeoRasterFileMetaData, cls).get_metadata_model_classes()
-        metadata_model_classes['originalcoverage'] = OriginalCoverage
+        metadata_model_classes['originalcoverageraster'] = OriginalCoverageRaster
         metadata_model_classes['bandinformation'] = BandInformation
         metadata_model_classes['cellinformation'] = CellInformation
         return metadata_model_classes
@@ -51,20 +421,28 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         elements += list(self.bandInformations.all())
         return elements
 
+    def _get_metadata_element_model_type(self, element_model_name):
+        if element_model_name.lower() == 'originalcoverage':
+            element_model_name = 'originalcoverageraster'
+        return super()._get_metadata_element_model_type(element_model_name)
+
     def get_html(self, **kwargs):
         """overrides the base class function to generate html needed to display metadata
         in view mode"""
 
         html_string = super(GeoRasterFileMetaData, self).get_html()
-        if self.spatial_coverage:
-            html_string += self.spatial_coverage.get_html()
-        if self.originalCoverage:
-            html_string += self.originalCoverage.get_html()
+        spatial_coverage = self.spatial_coverage
+        if spatial_coverage:
+            html_string += spatial_coverage.get_html()
+        originalCoverage = self.originalCoverage
+        if originalCoverage:
+            html_string += originalCoverage.get_html()
 
         html_string += self.cellInformation.get_html()
-        if self.temporal_coverage:
-            html_string += self.temporal_coverage.get_html()
-        band_legend = legend("Band Information")
+        temporal_coverage = self.temporal_coverage
+        if temporal_coverage:
+            html_string += temporal_coverage.get_html()
+        band_legend = html_tags.legend("Band Information")
         html_string += band_legend.render()
         for band_info in self.bandInformations:
             html_string += band_info.get_html()
@@ -76,38 +454,38 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
     def get_html_forms(self, dataset_name_form=True, temporal_coverage=True, **kwargs):
         """overrides the base class function to generate html needed for metadata editing"""
 
-        root_div = div("{% load crispy_forms_tags %}")
+        root_div = html_tags.div("{% load crispy_forms_tags %}")
         with root_div:
             super(GeoRasterFileMetaData, self).get_html_forms()
-            with div(id="spatial-coverage-filetype"):
-                with form(id="id-spatial-coverage-file-type",
-                          cls='hs-coordinates-picker', data_coordinates_type="point",
-                          action="{{ coverage_form.action }}",
-                          method="post", enctype="multipart/form-data"):
-                    div("{% crispy coverage_form %}")
-                    with div(cls="row", style="margin-top:10px;"):
-                        with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                     "col-md-2 col-xs-6"):
-                            button("Save changes", type="button",
-                                   cls="btn btn-primary pull-right",
-                                   style="display: none;")
+            with html_tags.div(id="spatial-coverage-filetype"):
+                with html_tags.form(id="id-spatial-coverage-file-type",
+                                    cls='hs-coordinates-picker', data_coordinates_type="point",
+                                    action="{{ coverage_form.action }}",
+                                    method="post", enctype="multipart/form-data"):
+                    html_tags.div("{% crispy coverage_form %}")
+                    with html_tags.div(cls="row", style="margin-top:10px;"):
+                        with html_tags.div(cls="col-md-offset-10 col-xs-offset-6 "
+                                               "col-md-2 col-xs-6"):
+                            html_tags.button("Save changes", type="button",
+                                             cls="btn btn-primary pull-right",
+                                             style="display: none;")
 
-                div("{% crispy orig_coverage_form %}", cls="content-block")
+                html_tags.div("{% crispy orig_coverage_form %}", cls="content-block")
 
-                div("{% crispy cellinfo_form %}", cls='content-block')
+                html_tags.div("{% crispy cellinfo_form %}", cls='content-block')
 
-                with div(id="variables", cls="content-block"):
-                    div("{% for form in bandinfo_formset_forms %}")
-                    with form(id="{{ form.form_id }}", action="{{ form.action }}",
-                              method="post", enctype="multipart/form-data", cls='well'):
-                        div("{% crispy form %}")
-                        with div(cls="row", style="margin-top:10px;"):
-                            with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                         "col-md-2 col-xs-6"):
-                                button("Save changes", type="button",
-                                       cls="btn btn-primary pull-right btn-form-submit",
-                                       style="display: none;")
-                    div("{% endfor %}")
+                with html_tags.div(id="variables", cls="content-block"):
+                    html_tags.div("{% for form in bandinfo_formset_forms %}")
+                    with html_tags.form(id="{{ form.form_id }}", action="{{ form.action }}",
+                                        method="post", enctype="multipart/form-data", cls='well'):
+                        html_tags.div("{% crispy form %}")
+                        with html_tags.div(cls="row", style="margin-top:10px;"):
+                            with html_tags.div(cls="col-md-offset-10 col-xs-offset-6 "
+                                                   "col-md-2 col-xs-6"):
+                                html_tags.button("Save changes", type="button",
+                                                 cls="btn btn-primary pull-right btn-form-submit",
+                                                 style="display: none;")
+                    html_tags.div("{% endfor %}")
 
         template = Template(root_div.render())
         context_dict = dict()
@@ -119,17 +497,19 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         update_action = "/hsapi/_internal/GeoRasterLogicalFile/{0}/{1}/{2}/update-file-metadata/"
         create_action = "/hsapi/_internal/GeoRasterLogicalFile/{0}/{1}/add-file-metadata/"
         spatial_cov_form = self.get_spatial_coverage_form(allow_edit=True)
-        if self.spatial_coverage:
+        spatial_coverage = self.spatial_coverage
+        if spatial_coverage:
             form_action = update_action.format(self.logical_file.id, "coverage",
-                                               self.spatial_coverage.id)
+                                               spatial_coverage.id)
         else:
             form_action = create_action.format(self.logical_file.id, "coverage")
 
         spatial_cov_form.action = form_action
 
-        if self.temporal_coverage:
+        temporal_coverage = self.temporal_coverage
+        if temporal_coverage:
             form_action = update_action.format(self.logical_file.id, "coverage",
-                                               self.temporal_coverage.id)
+                                               temporal_coverage.id)
             temp_cov_form.action = form_action
         else:
             form_action = create_action.format(self.logical_file.id, "coverage")
@@ -146,10 +526,12 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         return self.cellInformation.get_html_form(resource=None)
 
     def get_original_coverage_form(self):
-        return OriginalCoverage.get_html_form(resource=None, element=self.originalCoverage,
-                                              file_type=True, allow_edit=False)
+        return OriginalCoverageRaster.get_html_form(resource=None, element=self.originalCoverage,
+                                                    file_type=True, allow_edit=False)
 
     def get_bandinfo_formset(self):
+        from ..forms import BandInfoForm, BaseBandInfoFormSet
+
         BandInfoFormSetEdit = formset_factory(
             wraps(BandInfoForm)(partial(BandInfoForm, allow_edit=True)),
             formset=BaseBandInfoFormSet, extra=0)
@@ -167,6 +549,8 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
     @classmethod
     def validate_element_data(cls, request, element_name):
         """overriding the base class method"""
+
+        from ..forms import BandInfoValidationForm
 
         if element_name.lower() not in [el_name.lower() for el_name
                                         in cls.get_supported_element_names()]:
@@ -208,7 +592,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
 
 
 class GeoRasterLogicalFile(AbstractLogicalFile):
-    metadata = models.OneToOneField(GeoRasterFileMetaData, related_name="logical_file")
+    metadata = models.OneToOneField(GeoRasterFileMetaData, on_delete=models.CASCADE, related_name="logical_file")
     data_type = "GeographicRaster"
 
     @classmethod
@@ -250,7 +634,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
     @classmethod
     def create(cls, resource):
         """this custom method MUST be used to create an instance of this class"""
-        raster_metadata = GeoRasterFileMetaData.objects.create(keywords=[])
+        raster_metadata = GeoRasterFileMetaData.objects.create(keywords=[], extra_metadata={})
         # Note we are not creating the logical file record in DB at this point
         # the caller must save this to DB
         return cls(metadata=raster_metadata, resource=resource)
@@ -297,8 +681,8 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
             return ""
 
         # check if there are multiple tif files, then there has to be one vrt file
-        tif_files = [f for f in files if f.extension.lower() == ".tif" or f.extension.lower() ==
-                     ".tiff"]
+        tif_files = [f for f in files if f.extension.lower() == ".tif" or f.extension.lower()
+                     == ".tiff"]
         if len(tif_files) > 1:
             if len(vrt_files) != 1:
                 return ""
@@ -333,8 +717,8 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                                                         raster_folder=raster_folder)
 
             if not validation_results['error_info']:
+                vrt_created = validation_results['vrt_created']
                 msg = "Geographic raster aggregation. Error when creating aggregation. Error:{}"
-                file_type_success = False
                 log.info("Geographic raster aggregation validation successful.")
                 # extract metadata
                 temp_vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if
@@ -355,23 +739,23 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 
                         log.info("Geographic raster aggregation type - new files were added "
                                  "to the resource.")
-
+                        logical_file.extra_data['vrt_created'] = str(vrt_created)
+                        logical_file.save()
                         # use the extracted metadata to populate file metadata
                         for element in metadata:
                             # here k is the name of the element
                             # v is a dict of all element attributes/field names and field values
                             k, v = list(element.items())[0]
                             logical_file.metadata.create_element(k, **v)
-                        log.info("Geographic raster aggregation type - metadata was saved to DB")
 
-                        file_type_success = True
+                        log.info("Geographic raster aggregation type - metadata was saved to DB")
                         ft_ctx.logical_file = logical_file
                     except Exception as ex:
+                        logical_file.remove_aggregation()
                         msg = msg.format(str(ex))
                         log.exception(msg)
+                        raise ValidationError(msg)
 
-                if not file_type_success:
-                    raise ValidationError(msg)
                 return logical_file
             else:
                 err_msg = "Geographic raster aggregation type validation failed. {}".format(
@@ -379,9 +763,27 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                 log.error(err_msg)
                 raise ValidationError(err_msg)
 
+    def remove_aggregation(self):
+        """Deletes the aggregation object (logical file) *self* and the associated metadata
+        object. If the aggregation contains a system generated vrt file that resource file also will be
+        deleted."""
+
+        # need to delete the system generated vrt file
+        vrt_created = self.extra_data.get('vrt_created', 'False')
+        vrt_file = None
+        if vrt_created == 'True':
+            # the vrt file is a system generated file
+            for res_file in self.files.all():
+                if res_file.file_name.lower().endswith(".vrt"):
+                    vrt_file = res_file
+                    break
+        super(GeoRasterLogicalFile, self).remove_aggregation()
+        if vrt_file is not None:
+            vrt_file.delete()
+
     @classmethod
-    def get_primary_resouce_file(cls, resource_files):
-        """Gets a resource file that has extension .vrt (if exists) otherwsie 'tif'
+    def get_primary_resource_file(cls, resource_files):
+        """Gets a resource file that has extension .vrt (if exists) otherwise 'tif'
         from the list of files *resource_files* """
 
         res_files = [f for f in resource_files if f.extension.lower() == '.vrt']
@@ -402,15 +804,14 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
     :param  raster_file: a temp file (extension tif or zip) retrieved from irods and stored on temp
     dir in django
     :param  raster_folder: (optional) folder in which raster file exists on irods.
-    :param  resource: an instance of CompositeResource or GeoRasterResource in which
-    raster_file exits.
+    :param  resource: an instance of CompositeResource in which raster_file exits.
 
     :return A list of error messages and a list of file paths for all files that belong to raster
     """
     error_info = []
     new_resource_files_to_add = []
     raster_resource_files = []
-    create_vrt = True
+    create_vrt = False
     validation_results = {'error_info': error_info,
                           'new_resource_files_to_add': new_resource_files_to_add,
                           'raster_resource_files': raster_resource_files,
@@ -420,20 +821,6 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
     if ext == '.tif' or ext == '.tiff':
         res_files = ResourceFile.list_folder(resource=resource, folder=raster_folder,
                                              sub_folders=False)
-        if resource.resource_type == "RasterResource":
-            # check if there is already a vrt file in that folder
-            vrt_files = [f for f in res_files if f.extension.lower() == ".vrt"]
-            tif_files = [f for f in res_files if f.extension.lower() == ".tif" or
-                         f.extension.lower() == ".tiff"]
-            if vrt_files:
-                if len(vrt_files) > 1:
-                    error_info.append("More than one vrt file was found.")
-                    return validation_results
-                create_vrt = False
-            elif len(tif_files) != 1:
-                # if there are more than one tif file, there needs to be one vrt file
-                error_info.append("A vrt file is missing.")
-                return validation_results
 
         vrt_files_for_raster = get_vrt_files(raster_file, res_files)
         if len(vrt_files_for_raster) > 1:
@@ -444,9 +831,9 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
         if len(vrt_files_for_raster) == 1:
             vrt_file = vrt_files_for_raster[0]
             raster_resource_files.extend([vrt_file])
-            create_vrt = False
             temp_dir = os.path.dirname(raster_file)
-            temp_vrt_file = utils.get_file_from_irods(vrt_file, temp_dir)
+            temp_vrt_file = utils.get_file_from_irods(resource=resource, file_path=vrt_file.storage_path,
+                                                      temp_dir=temp_dir)
             listed_tif_files = list_tif_files(vrt_file)
             tif_files = [f for f in res_files if f.file_name in listed_tif_files]
             if len(tif_files) != len(listed_tif_files):
@@ -460,6 +847,8 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
             try:
                 vrt_file = create_vrt_file(raster_file)
                 temp_vrt_file = vrt_file
+                create_vrt = True
+                validation_results['vrt_created'] = create_vrt
             except Exception as ex:
                 error_info.append(str(ex))
             else:
@@ -536,26 +925,11 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
 
             file_names = [f_name for f_name in file_names if not f_name.endswith('.vrt')]
 
-            if resource.resource_type == "RasterResource":
-                tif_files = [f for f in resource.files.all() if f.extension.lower() == ".tif" or
-                             f.extension.lower() == ".tiff"]
-                if len(tif_files) > len(file_names_in_vrt):
-                    msg = 'One or more additional tif files were found which are not listed in ' \
-                          'the provided {} file.'
-                    msg = msg.format(os.path.basename(temp_vrt_file))
-                    error_info.append(msg)
-
             for vrt_ref_raster_name in file_names_in_vrt:
                 if vrt_ref_raster_name in file_names \
-                        or (os.path.split(vrt_ref_raster_name)[0] == '.' and
-                            os.path.split(vrt_ref_raster_name)[1] in file_names):
+                        or (os.path.split(vrt_ref_raster_name)[0] == '.'
+                            and os.path.split(vrt_ref_raster_name)[1] in file_names):
                     continue
-                elif resource.resource_type == "RasterResource" and os.path.basename(vrt_ref_raster_name) in file_names:
-                    msg = "Please specify {} as {} in the .vrt file, because it will " \
-                          "be saved in the same folder with .vrt file in HydroShare."
-                    msg = msg.format(vrt_ref_raster_name, os.path.basename(vrt_ref_raster_name))
-                    error_info.append(msg)
-                    break
                 else:
                     msg = "The file {tif} which is listed in the {vrt} file is missing."
                     msg = msg.format(tif=os.path.basename(vrt_ref_raster_name),
@@ -570,15 +944,15 @@ def list_tif_files(vrt_file):
     """
     lists tif files named in a vrt_file
     :param vrt_file: ResourceFile for of a vrt to list associated tif(f) files
-    :return: List of string filenames read from vrt_file, empty list if not found
+    :return: List of string filenames read from vrt_file
     """
-    temp_vrt_file = utils.get_file_from_irods(vrt_file)
+    resource = vrt_file.resource
+    temp_vrt_file = utils.get_file_from_irods(resource=resource, file_path=vrt_file.storage_path)
     with open(temp_vrt_file, 'r') as opened_vrt_file:
         vrt_string = opened_vrt_file.read()
         root = ET.fromstring(vrt_string)
         file_names_in_vrt = [file_name.text for file_name in root.iter('SourceFilename')]
         return file_names_in_vrt
-    return []
 
 
 def get_vrt_files(raster_file, res_files):
@@ -614,7 +988,7 @@ def extract_metadata(temp_vrt_file_path):
     # Here the assumption is that if there is no value for the 'northlimit' then there is no value
     # for the bounding box
     if orig_cov_info['northlimit'] is not None:
-        ori_cov = {'OriginalCoverage': {'value': orig_cov_info}}
+        ori_cov = {'OriginalCoverageRaster': {'value': orig_cov_info}}
         metadata.append(ori_cov)
 
     # Save extended meta cell info

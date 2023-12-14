@@ -6,7 +6,7 @@ import os
 from django.contrib.auth.models import Group, User
 
 from hs_core import hydroshare
-from hs_core.models import ResourceFile, GenericResource
+from hs_core.models import ResourceFile, BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
 
@@ -23,7 +23,7 @@ class TestDeleteResourceFile(MockIRODSTestCaseMixin, unittest.TestCase):
             groups=[]
         )
 
-        self.res = hydroshare.create_resource(resource_type='GenericResource',
+        self.res = hydroshare.create_resource(resource_type='CompositeResource',
                                               owner=self.user,
                                               title='Test Resource',
                                               metadata=[],)
@@ -39,8 +39,8 @@ class TestDeleteResourceFile(MockIRODSTestCaseMixin, unittest.TestCase):
         super(TestDeleteResourceFile, self).tearDown()
         User.objects.all().delete()
         Group.objects.all().delete()
-
-        GenericResource.objects.all().delete()
+        self.res.delete()
+        BaseResource.objects.all().delete()
         self.file.close()
         os.remove(self.file.name)
 

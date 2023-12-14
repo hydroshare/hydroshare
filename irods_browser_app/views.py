@@ -93,8 +93,8 @@ def store(request):
     """
     return_object = {}
     irods_sess = iRODSSession(user=str(request.POST['user']), password=str(request.POST['password']),
-                                  zone=str(request.POST['zone']), host=str(request.POST['host']),
-                                  port=int(request.POST['port']))
+                              zone=str(request.POST['zone']), host=str(request.POST['host']),
+                              port=int(request.POST['port']))
     datastore = str(request.POST['store'])
     coll = irods_sess.collections.get(datastore)
     store = search_ds(coll)
@@ -116,7 +116,7 @@ def upload_add(request):
     irods_fnames_list = irods_fnames.split(',')
     res_cls = resource.__class__
 
-    # TODO: read resource type from resource, not from input file 
+    # TODO: read resource type from resource, not from input file
     valid, ext = check_upload_files(res_cls, irods_fnames_list)
     source_names = []
     if not valid:
@@ -144,7 +144,7 @@ def upload_add(request):
 
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
-                                            extract_metadata=extract_metadata, 
+                                            extract_metadata=extract_metadata,
                                             source_names=source_names, folder='')
     except hydroshare.utils.ResourceFileSizeException as ex:
         return JsonResponse({'error': str(ex)}, status=status.HTTP_400_BAD_REQUEST)
@@ -153,7 +153,7 @@ def upload_add(request):
         return JsonResponse({'error': str(ex)}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        hydroshare.utils.resource_file_add_process(resource=resource, files=res_files, 
+        hydroshare.utils.resource_file_add_process(resource=resource, files=res_files,
                                                    user=request.user,
                                                    extract_metadata=extract_metadata,
                                                    source_names=source_names, folder='')

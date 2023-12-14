@@ -12,6 +12,7 @@ from django.views.generic import TemplateView
 from haystack.query import SearchQuerySet, SQ
 from haystack.inputs import Exact
 from rest_framework.views import APIView
+from hs_core.discovery_parser import ParseSQ
 
 logger = logging.getLogger(__name__)
 
@@ -51,12 +52,13 @@ class SearchAPI(APIView):
         "coverage_type": list point, period, ...
         """
         start = time.time()
-
         sqs = SearchQuerySet().all()
 
         if request.GET.get('q'):
             q = request.GET.get('q')
-            sqs = sqs.filter(content=q)
+            parser = ParseSQ(handle_fields=True, handle_logic=True)
+            sq = parser.parse(q)
+            sqs = sqs.filter(sq)
 
         try:
             qs = request.query_params
@@ -229,14 +231,14 @@ class SearchAPI(APIView):
                     pt['westlimit'] = result.westlimit
 
                 geodata.append(pt)
-            except:
+            except: # noqa
                 pass  # HydroShare production contains dirty data, this handling is in place, until data cleaned
 
             resources.append({
                 "title": result.title,
                 "link": result.absolute_url,
                 "availability": result.availability,
-                "availabilityurl": "/static/img/{}.png".format(result.availability[0]),
+                "availabilityurl": "/static/static/img/{}.png".format(result.availability[0]),
                 "type": result.resource_type,
                 "author": author,
                 "authors": authors,

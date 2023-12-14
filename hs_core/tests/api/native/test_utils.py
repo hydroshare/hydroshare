@@ -1,13 +1,14 @@
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
 from django.test import TestCase
 
 from mezzanine.conf import settings
 
 from hs_core.hydroshare import utils
-from hs_core.models import GenericResource, BaseResource
+from hs_core.models import BaseResource
 from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin
+from hs_composite_resource.models import CompositeResource
 
 
 class TestUtils(MockIRODSTestCaseMixin, TestCase):
@@ -33,23 +34,30 @@ class TestUtils(MockIRODSTestCaseMixin, TestCase):
         )
 
         self.res = hydroshare.create_resource(
-            'GenericResource',
+            'CompositeResource',
             self.user,
             'test resource',
         )
         self.res.doi = 'doi1000100010001'
         self.res.save()
 
+    def tearDown(self):
+        super(TestUtils, self).tearDown()
+        User.objects.all().delete()
+        Group.objects.all().delete()
+        self.res.delete()
+        BaseResource.objects.all().delete()
+
     def test_get_resource_types(self):
         res_types = utils.get_resource_types()
-        self.assertIn(GenericResource, res_types)
+        self.assertIn(CompositeResource, res_types)
 
         for res_type in res_types:
             self.assertTrue(issubclass(res_type, BaseResource))
 
     def test_get_resource_instance(self):
         self.assertEqual(
-            utils.get_resource_instance('hs_core', 'GenericResource', self.res.pk),
+            utils.get_resource_instance('hs_composite_resource', 'CompositeResource', self.res.pk),
             self.res
         )
 

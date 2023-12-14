@@ -1,16 +1,16 @@
 import datetime
 import re
 
-import pytz
+from dateutil import tz
 
 HS_DATE_PATT = "^(?P<year>[0-9]{4})-(?P<month>[0-9]{2})-(?P<day>[0-9]{2})"
 HS_DATE_PATT += "T(?P<hour>[0-9]{2}):(?P<minute>[0-9]{2}):(?P<second>[0-9]{2})"
-HS_DATE_PATT += "T(?P<tz>\S+)$"
+HS_DATE_PATT += "T(?P<tz>\S+)$" # noqa
 HS_DATE_RE = re.compile(HS_DATE_PATT)
 
 HS_DATE_ISO_PATT = "^(?P<year>[0-9]{4})-(?P<month>[0-9]{2})-(?P<day>[0-9]{2})"
-HS_DATE_ISO_PATT += "[T\s](?P<hour>[0-9]{2}):(?P<minute>[0-9]{2}):(?P<second>[0-9]{2})(?P<microsecond>\.[0-9]+){0,1}"
-HS_DATE_ISO_PATT += "(?P<tz>\S+)$"
+HS_DATE_ISO_PATT += "[T\s](?P<hour>[0-9]{2}):(?P<minute>[0-9]{2}):(?P<second>[0-9]{2})(?P<microsecond>\.[0-9]+){0,1}" # noqa
+HS_DATE_ISO_PATT += "(?P<tz>\S+)$" # noqa
 HS_DATE_ISO_RE = re.compile(HS_DATE_ISO_PATT)
 
 HS_DATE_NOTZ_PATT = "^(?P<year>[0-9]{4})-(?P<month>[0-9]{2})-(?P<day>[0-9]{2})"
@@ -37,7 +37,7 @@ def hs_date_to_datetime(datestr):
                                      hour=int(m.group('hour')),
                                      minute=int(m.group('minute')),
                                      second=int(m.group('second')),
-                                     tzinfo=pytz.utc)
+                                     tzinfo=tz.UTC)
     except Exception as e:
         msg = "Unable to parse date {0}, error {1}.".format(datestr,
                                                             str(e))
@@ -72,7 +72,7 @@ def hs_date_to_datetime_iso(datestr):
                                      minute=int(m.group('minute')),
                                      second=int(m.group('second')),
                                      microsecond=microsecond,
-                                     tzinfo=pytz.utc)
+                                     tzinfo=tz.UTC)
     except Exception as e:
         msg = "Unable to parse date {0}, error {1}.".format(datestr,
                                                             str(e))
@@ -99,7 +99,7 @@ def hs_date_to_datetime_notz(datestr):
                                      hour=int(m.group('hour')),
                                      minute=int(m.group('minute')),
                                      second=int(m.group('second')),
-                                     tzinfo=pytz.utc)
+                                     tzinfo=tz.UTC)
     except Exception as e:
         msg = "Unable to parse date {0}, error {1}.".format(datestr,
                                                             str(e))

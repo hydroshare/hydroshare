@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:hsterms="https://www.hydroshare.org/terms/"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+>
+  <hsterms:CompositeResource rdf:about="http://localhost:8000/resource/d6c7a5744920404f8aceaf3c7774596e">
+    <dc:language>eng</dc:language>
+    <dc:title>czo res</dc:title>
+    <dc:identifier>
+      <rdf:Description>
+        <hsterms:hydroShareIdentifier rdf:resource="http://localhost:8000/resource/d6c7a5744920404f8aceaf3c7774596e"/>
+      </rdf:Description>
+    </dc:identifier>
+    <dc:type>
+      <rdf:Description rdf:about="http://localhost:8000/terms/CompositeResource">
+        <rdfs:label>Composite Resource</rdfs:label>
+        <rdfs:isDefinedBy rdf:resource="https://www.hydroshare.org/terms/"/>
+      </rdf:Description>
+    </dc:type>
+    <dc:date>
+      <dcterms:created>
+        <rdf:value>2022-04-11T12:29:52.016225+00:00</rdf:value>
+      </dcterms:created>
+    </dc:date>
+    <dc:date>
+      <dcterms:modified>
+        <rdf:value>2022-04-12T17:43:07.468505+00:00</rdf:value>
+      </dcterms:modified>
+    </dc:date>
+    <dc:date>
+      <hsterms:reviewStarted>
+        <rdf:value>2022-04-13T17:43:07.468505+00:00</rdf:value>
+      </hsterms:reviewStarted>
+    </dc:date>
+    <dc:rights>
+      <rdf:Description>
+        <hsterms:rightsStatement>This resource is shared under the Creative Commons Attribution CC BY.</hsterms:rightsStatement>
+        <hsterms:URL rdf:resource="http://creativecommons.org/licenses/by/4.0/"/>
+      </rdf:Description>
+    </dc:rights>
+    <dcterms:bibliographicCitation>user, c. (2022). czo res, HydroShare, http://localhost:8000/resource/d6c7a5744920404f8aceaf3c7774596e</dcterms:bibliographicCitation>
+    <dc:creator>
+      <rdf:Description>
+        <hsterms:email>email@email.com</hsterms:email>
+        <hsterms:name>user, cz</hsterms:name>
+        <hsterms:organization>asdf</hsterms:organization>
+        <hsterms:creatorOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</hsterms:creatorOrder>
+      </rdf:Description>
+    </dc:creator>
+  </hsterms:CompositeResource>
+</rdf:RDF>

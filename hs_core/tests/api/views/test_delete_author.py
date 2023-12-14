@@ -2,12 +2,13 @@ import os
 import shutil
 import json
 
-from django.contrib.auth.models import Group
-from django.core.urlresolvers import reverse
+from django.contrib.auth.models import Group, User
+from django.urls import reverse
 
 from rest_framework import status
 
 from hs_core import hydroshare
+from hs_core.models import BaseResource
 from hs_core.views import add_metadata_element, delete_author
 from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
 
@@ -28,7 +29,7 @@ class TestDeleteAuthor(MockIRODSTestCaseMixin, ViewTestCase):
             groups=[]
         )
         self.gen_res = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user,
             title='My Test Resource'
         )
@@ -37,6 +38,9 @@ class TestDeleteAuthor(MockIRODSTestCaseMixin, ViewTestCase):
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
         super(TestDeleteAuthor, self).tearDown()
+        User.objects.all().delete()
+        Group.objects.all().delete()
+        BaseResource.objects.all().delete()
 
     def test_delete_author(self):
         # testing the delete_author view function

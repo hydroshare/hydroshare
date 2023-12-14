@@ -7,4 +7,6 @@ urlpatterns = [
         views.update_collection_for_deleted_resources),
     url(r'^_internal/calculate-collection-coverages/(?P<shortkey>[A-z0-9]+)/$',
         views.calculate_collection_coverages, name='calculate-collection-coverages'),
+    url(r'^_internal/(?P<shortkey>[A-z0-9]+)/get-collectable-resources/$',
+        views.get_collectable_resources_modal, name='get-collectable-resources'),
 ]

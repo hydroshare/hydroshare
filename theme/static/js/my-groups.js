@@ -23,8 +23,6 @@ $(document).on('change', '.btn-file :file', function () {
 });
 
 $(document).ready(function () {
-    $("title").text("My Groups | HydroShare"); // Fix page title
-
     // File name preview for picture field, file select method
     $('.btn-file :file').on('fileselect', function (event, numFiles, label) {
         var input = $(this).parents('.input-group').find(':text');
@@ -38,4 +36,18 @@ $(document).ready(function () {
             $(this).text("Show deleted groups");
         }
     })
+
+    // Hide explanation checkbox if auto-approval is enabled
+    if($('#auto-approve').is(':checked')){
+        $('#requires_explanation').prop( "checked", false );
+        $('#requires_explanation').parent().hide();
+    }
+    $('#auto-approve').change(function() {
+        if(this.checked) {
+            $('#requires_explanation').prop( "checked", false );
+            $('#requires_explanation').parent().hide();
+        }else{
+            $('#requires_explanation').parent().show();
+        }
+    });
 });

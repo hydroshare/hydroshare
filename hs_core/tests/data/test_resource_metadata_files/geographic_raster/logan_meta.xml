@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:hsterms="https://www.hydroshare.org/terms/"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+>
+  <hsterms:GeographicRasterAggregation rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/logan_resmap.xml#aggregation">
+    <hsterms:BandInformation>
+      <rdf:Description>
+        <hsterms:minimumValue>2.67393466e-316</hsterms:minimumValue>
+        <hsterms:noDataValue>-3.4028234663852886e+38</hsterms:noDataValue>
+        <hsterms:name>Band_1</hsterms:name>
+        <hsterms:maximumValue>6.9103932008822e-310</hsterms:maximumValue>
+      </rdf:Description>
+    </hsterms:BandInformation>
+    <dc:title>logan1</dc:title>
+    <hsterms:spatialReference>
+      <hsterms:box>
+        <rdf:value>northlimit=4655492.446916306; southlimit=4648592.446916306; eastlimit=452174.01909127034; westlimit=445574.01909127034; projection=NAD83 / UTM zone 12N; units=meter; projection_string=PROJCS["NAD83 / UTM zone 12N",GEOGCS["NAD83",DATUM["North_American_Datum_1983",SPHEROID["GRS 1980",6378137,298.2572221010002,AUTHORITY["EPSG","7019"]],AUTHORITY["EPSG","6269"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433],AUTHORITY["EPSG","4269"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-111],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AUTHORITY["EPSG","26912"]]; datum=North_American_Datum_1983</rdf:value>
+      </hsterms:box>
+    </hsterms:spatialReference>
+    <dc:coverage>
+      <dcterms:box>
+        <rdf:value>northlimit=42.050028785767275; southlimit=41.98745777902698; eastlimit=-111.5773750264389; westlimit=-111.65768822411239; units=Decimal degrees; projection=WGS 84 EPSG:4326</rdf:value>
+      </dcterms:box>
+    </dc:coverage>
+    <dc:rights>
+      <rdf:Description>
+        <hsterms:URL rdf:resource="http://studio.bakajo.com"/>
+        <hsterms:rightsStatement>my statement</hsterms:rightsStatement>
+      </rdf:Description>
+    </dc:rights>
+    <dc:type rdf:resource="https://www.hydroshare.org/terms/GeographicRasterAggregation"/>
+    <hsterms:CellInformation>
+      <rdf:Description>
+        <hsterms:columns rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">220</hsterms:columns>
+        <hsterms:name>logan.vrt</hsterms:name>
+        <hsterms:rows rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">230</hsterms:rows>
+        <hsterms:cellSizeYValue rdf:datatype="http://www.w3.org/2001/XMLSchema#double">30.0</hsterms:cellSizeYValue>
+        <hsterms:cellSizeXValue rdf:datatype="http://www.w3.org/2001/XMLSchema#double">30.0</hsterms:cellSizeXValue>
+        <hsterms:cellDataType>Float32</hsterms:cellDataType>
+      </rdf:Description>
+    </hsterms:CellInformation>
+    <dc:language>eng</dc:language>
+    <hsterms:extendedMetadata>
+      <rdf:Description>
+        <hsterms:value>value2</hsterms:value>
+        <hsterms:key>key2</hsterms:key>
+      </rdf:Description>
+    </hsterms:extendedMetadata>
+    <hsterms:extendedMetadata>
+      <rdf:Description>
+        <hsterms:value>value</hsterms:value>
+        <hsterms:key>key</hsterms:key>
+      </rdf:Description>
+    </hsterms:extendedMetadata>
+  </hsterms:GeographicRasterAggregation>
+  <rdf:Description rdf:about="http://www.hydroshare.org/terms/GeographicRasterAggregation">
+    <rdfs:label>Geographic Raster Content: A geographic grid represented by a virtual raster tile (.vrt) file and one or more geotiff (.tif) files</rdfs:label>
+    <rdfs:isDefinedBy rdf:resource="https://www.hydroshare.org/terms/"/>
+  </rdf:Description>
+</rdf:RDF>

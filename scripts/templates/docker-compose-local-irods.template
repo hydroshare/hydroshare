@@ -1,5 +1,7 @@
 postgis:
-  image: hydroshare/hs_postgres:9.4.7
+  image: postgis/postgis:15-3.3
+  environment:
+      POSTGRES_PASSWORD: 'postgres'
   container_name: postgis
   volumes:
     - "/var/lib/postgresql/data"
@@ -64,6 +66,7 @@ defaultworker:
     POSTGIS_DB: postgres
     PGPASSWORD: postgres
     C_FORCE_ROOT: 1
+    COLUMNS: 80
   volumes_from:
     - hydroshare
   volumes:

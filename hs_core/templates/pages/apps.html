@@ -3,7 +3,7 @@
 {% block meta_title %}HydroShare Apps{% endblock %}
 
 {% block extra_css %}
-  <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/apps_page.css" />
+  <link rel="stylesheet" type="text/css" href="{% static 'css/apps_page.css' %}" />
 {% endblock %}
 
 {% block main %}
@@ -24,33 +24,31 @@
   </div>
 
   <div class="container apps-container">
-    <div class="row">
-      {% for resource in webapp_resources %}
-        <div class="webapp col-lg-3 col-md-4 col-sm-12">
-          <div class="webapp-listing">
-            <a class="webapp-link"
-               href="{{resource.metadata.app_home_page_url.value}}"
-               target="_blank" title="Open {{ resource.title }} in new tab">
-                {% if resource.metadata.app_icon.data_url %}
-                    <img src="{{ resource.metadata.app_icon.data_url }}" alt="" />
-                {% else %}
-                    <img src="/static/img/web-app-default-icon.png" alt="" />
-                {% endif %}
-              <h3>
-                {{ resource.title }}
-              </h3>
-            </a>
-            <p class="app-description">
-              {{ resource.metadata.description|truncatewords:35 }}
-              <br /><br />
-              <a href="/resource/{{ resource.short_id }}">View Resource Page</a>
-            </p>
+    {% for resource in webapp_resources %}
+      <div class="webapp">
+        <div class="webapp-listing">
+          <a class="webapp-link"
+              href="{{resource.metadata.app_home_page_url.value}}"
+              target="_blank" title="Open {{ resource.title }} in new tab">
+              {% if resource.metadata.app_icon.data_url %}
+                  <img src="{{ resource.metadata.app_icon.data_url }}" alt="" />
+              {% else %}
+                  <img src="{% static 'img/web-app-default-icon.png' %}" alt="" />
+              {% endif %}
+            <h3>
+              {{ resource.title }}
+            </h3>
+          </a>
+          <p class="app-description">
+            {{ resource.metadata.description|truncatewords:35 }}
+            <br /><br />
+            <a href="/resource/{{ resource.short_id }}">View App Connector Page</a>
+          </p>
 
-            <a href="#" class="app-info-toggle">i</a>
-          </div>
+          <a href="#" class="app-info-toggle">i</a>
         </div>
-      {% endfor %}
-    </div>
+      </div>
+    {% endfor %}
   </div>
 {% endblock %}
 

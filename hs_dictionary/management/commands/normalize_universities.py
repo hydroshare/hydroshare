@@ -39,16 +39,16 @@ class Command(BaseCommand):
                 organization = profile.organization.strip().lower()
                 match = [tl for tl in transliterations if tl['Old'].lower() == organization][0]
                 new_match = match['New'].strip()
-                if(match['Secondary']):
+                if (match['Secondary']):
                     secondary_match = match['Secondary'].strip()
                 else:
                     secondary_match = None
 
-                if(len(match) == 0):
+                if (len(match) == 0):
                     print("Warning: unmatched organization %s" % profile.organization)
 
                 new_organization = new_match
-                if(secondary_match):
+                if (secondary_match):
                     new_organization = "%s,%s" % (new_match, secondary_match)
 
                 if (dry_run):

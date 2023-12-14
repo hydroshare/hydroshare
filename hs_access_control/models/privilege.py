@@ -67,6 +67,7 @@ class PrivilegeBase(models.Model):
     share, unshare, undo_share, and ensure that provenance and privilege
     are always in sync with one another.
     """
+
     class Meta:
         abstract = True
 
@@ -196,19 +197,19 @@ class UserGroupPrivilege(PrivilegeBase):
                                     default=PrivilegeCodes.VIEW)
     start = models.DateTimeField(editable=False, auto_now=True)
 
-    user = models.ForeignKey(User,
+    user = models.ForeignKey(User, on_delete=models.CASCADE,
                              null=False,
                              editable=False,
                              related_name='u2ugp',
                              help_text='user to be granted privilege')
 
-    group = models.ForeignKey(Group,
+    group = models.ForeignKey(Group, on_delete=models.CASCADE,
                               null=False,
                               editable=False,
                               related_name='g2ugp',
                               help_text='group to which privilege applies')
 
-    grantor = models.ForeignKey(User,
+    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
                                 null=False,
                                 editable=False,
                                 related_name='x2ugp',
@@ -219,9 +220,9 @@ class UserGroupPrivilege(PrivilegeBase):
 
     def __str__(self):
         """ Return printed depiction for debugging """
-        return str.format("<user '{}' (id={}) holds {} ({})" +
-                          " over group '{}' (id={})" +
-                          " via grantor '{}' (id={})>",
+        return str.format("<user '{}' (id={}) holds {} ({})"
+                          + " over group '{}' (id={})"
+                          + " via grantor '{}' (id={})>",
                           str(self.user.username), str(self.user.id),
                           PrivilegeCodes.NAMES[self.privilege],
                           str(self.privilege),
@@ -374,32 +375,37 @@ class UserResourcePrivilege(PrivilegeBase):
                                     default=PrivilegeCodes.VIEW)
     start = models.DateTimeField(editable=False, auto_now=True)
 
-    user = models.ForeignKey(User,
+    user = models.ForeignKey(User, on_delete=models.CASCADE,
                              null=False,
                              editable=False,
                              related_name='u2urp',
                              help_text='user to be granted privilege')
 
-    resource = models.ForeignKey(BaseResource,
+    resource = models.ForeignKey(BaseResource, on_delete=models.CASCADE,
                                  null=False,
                                  editable=False,
                                  related_name='r2urp',
                                  help_text='resource to which privilege applies')
 
-    grantor = models.ForeignKey(User,
+    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
                                 null=False,
                                 editable=False,
                                 related_name='x2urp',
                                 help_text='grantor of privilege')
+
+    exhibit = models.BooleanField(default=False,
+                                  null=False,
+                                  editable=False,
+                                  help_text='exhibit resource as product')
 
     class Meta:
         unique_together = ('user', 'resource')
 
     def __str__(self):
         """ Return printed depiction for debugging """
-        return str.format("<user '{}' (id={}) holds {} ({})" +
-                          " over resource '{}' (id={})" +
-                          " via grantor '{}' (id={})>",
+        return str.format("<user '{}' (id={}) holds {} ({})"
+                          + " over resource '{}' (id={})"
+                          + " via grantor '{}' (id={})>",
                           str(self.user.username), str(self.user.id),
                           PrivilegeCodes.NAMES[self.privilege],
                           str(self.privilege),
@@ -500,7 +506,7 @@ class UserResourcePrivilege(PrivilegeBase):
         del kwargs['grantor']
         r = UserResourceProvenance.get_current_record(**kwargs)
         # post to privilege table.
-        cls.update(user=r.user, resource=r.resource, privilege=r.privilege, grantor=r.grantor)
+        cls.update(user=r.user, resource=r.resource, privilege=r.privilege, grantor=r.grantor, exhibit=r.exhibit)
 
     @classmethod
     def get_undo_users(cls, **kwargs):
@@ -540,32 +546,37 @@ class GroupResourcePrivilege(PrivilegeBase):
                                     default=PrivilegeCodes.VIEW)
     start = models.DateTimeField(editable=False, auto_now=True)
 
-    group = models.ForeignKey(Group,
+    group = models.ForeignKey(Group, on_delete=models.CASCADE,
                               null=False,
                               editable=False,
                               related_name='g2grp',
                               help_text='group to be granted privilege')
 
-    resource = models.ForeignKey(BaseResource,
+    resource = models.ForeignKey(BaseResource, on_delete=models.CASCADE,
                                  null=False,
                                  editable=False,
                                  related_name='r2grp',
                                  help_text='resource to which privilege applies')
 
-    grantor = models.ForeignKey(User,
+    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
                                 null=False,
                                 editable=False,
                                 related_name='x2grp',
                                 help_text='grantor of privilege')
+
+    exhibit = models.BooleanField(default=False,
+                                  null=False,
+                                  editable=False,
+                                  help_text='exhibit resource as product')
 
     class Meta:
         unique_together = ('group', 'resource')
 
     def __str__(self):
         """ Return printed depiction for debugging """
-        return str.format("<group '{}' (id={}) holds {} ({})" +
-                          " over resource '{}' (id={})" +
-                          " via grantor '{}' (id={})>",
+        return str.format("<group '{}' (id={}) holds {} ({})"
+                          + " over resource '{}' (id={})"
+                          + " via grantor '{}' (id={})>",
                           str(self.group.name), str(self.group.id),
                           PrivilegeCodes.NAMES[self.privilege],
                           str(self.privilege),
@@ -651,7 +662,7 @@ class GroupResourcePrivilege(PrivilegeBase):
         GroupResourceProvenance.undo_share(**kwargs)
         del kwargs['grantor']
         r = GroupResourceProvenance.get_current_record(**kwargs)
-        cls.update(group=r.group, resource=r.resource, privilege=r.privilege, grantor=r.grantor)
+        cls.update(group=r.group, resource=r.resource, privilege=r.privilege, grantor=r.grantor, exhibit=r.exhibit)
 
     @classmethod
     def get_undo_groups(cls, **kwargs):
@@ -690,19 +701,19 @@ class UserCommunityPrivilege(PrivilegeBase):
                                     default=PrivilegeCodes.VIEW)
     start = models.DateTimeField(editable=False, auto_now=True)
 
-    community = models.ForeignKey(Community,
+    community = models.ForeignKey(Community, on_delete=models.CASCADE,
                                   null=False,
                                   editable=False,
                                   related_name='c2ucp',
                                   help_text='community to be granted privilege')
 
-    user = models.ForeignKey(User,
+    user = models.ForeignKey(User, on_delete=models.CASCADE,
                              null=False,
                              editable=False,
                              related_name='u2ucp',
                              help_text='group providing privilege')
 
-    grantor = models.ForeignKey(User,
+    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
                                 null=False,
                                 editable=False,
                                 related_name='x2ucp',
@@ -713,9 +724,9 @@ class UserCommunityPrivilege(PrivilegeBase):
 
     def __str__(self):
         """ Return printed depiction for debugging """
-        return str.format("<community '{}' (id={}) holds {} ({})" +
-                          " over user '{}' (id={})" +
-                          " via grantor '{}' (id={})>",
+        return str.format("<community '{}' (id={}) holds {} ({})"
+                          + " over user '{}' (id={})"
+                          + " via grantor '{}' (id={})>",
                           str(self.community.name), str(self.community.id),
                           PrivilegeCodes.NAMES[self.privilege],
                           str(self.privilege),
@@ -872,32 +883,37 @@ class GroupCommunityPrivilege(PrivilegeBase):
 
     start = models.DateTimeField(editable=False, auto_now=True)
 
-    community = models.ForeignKey(Community,
+    community = models.ForeignKey(Community, on_delete=models.CASCADE,
                                   null=False,
                                   editable=False,
                                   related_name='c2gcp',
                                   help_text='community to be granted privilege')
 
-    group = models.ForeignKey(Group,
+    group = models.ForeignKey(Group, on_delete=models.CASCADE,
                               null=False,
                               editable=False,
                               related_name='g2gcp',
                               help_text='group providing privilege')
 
-    grantor = models.ForeignKey(User,
+    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
                                 null=False,
                                 editable=False,
-                                related_name='x2swp',
+                                related_name='x2gcp',
                                 help_text='grantor of privilege')
+
+    exhibit = models.BooleanField(default=False,
+                                  null=False,
+                                  editable=False,
+                                  help_text='exhibit resource as product')
 
     class Meta:
         unique_together = ('community', 'group')
 
     def __str__(self):
         """ Return printed depiction for debugging """
-        return str.format("<community '{}' (id={}) holds {} ({})" +
-                          " over group '{}' (id={})" +
-                          " via grantor '{}' (id={})>",
+        return str.format("<community '{}' (id={}) holds {} ({})"
+                          + " over group '{}' (id={})"
+                          + " via grantor '{}' (id={})>",
                           str(self.community.name), str(self.community.id),
                           PrivilegeCodes.NAMES[self.privilege],
                           str(self.privilege),
@@ -1009,7 +1025,8 @@ class GroupCommunityPrivilege(PrivilegeBase):
         GroupCommunityProvenance.undo_share(grantor=grantor, **kwargs)
         # read that record and post to privilege table.
         r = GroupCommunityProvenance.get_current_record(**kwargs)
-        cls.update(community=r.community, group=r.group, privilege=r.privilege, grantor=r.grantor)
+        cls.update(community=r.community, group=r.group, privilege=r.privilege,
+                   grantor=r.grantor, exhibit=r.exhibit)
 
     @classmethod
     def get_undo_groups(cls, **kwargs):
@@ -1031,3 +1048,189 @@ class GroupCommunityPrivilege(PrivilegeBase):
             assert isinstance(kwargs['grantor'], User)
             assert len(kwargs) == 2
         return GroupCommunityProvenance.get_undo_groups(**kwargs)
+
+
+class CommunityResourcePrivilege(PrivilegeBase):
+    """ Privileges of a resource over a community
+
+    This encodes the privileges of a specific resource over a community.
+
+    * VIEW privilege means the resource can view resources of the community.
+    * No other privileges are allowed.
+
+    There is a reasonable meaning to PrivilegeCodes.NONE, which is to be
+    a community member without the ability to view anything in the community.
+    However, this is currently disallowed. It is used in the provenance models
+    to record removing a privilege.
+    """
+
+    privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
+                                    editable=False,
+                                    default=PrivilegeCodes.VIEW)
+
+    start = models.DateTimeField(editable=False, auto_now=True)
+
+    community = models.ForeignKey(Community, on_delete=models.CASCADE,
+                                  null=False,
+                                  editable=False,
+                                  related_name='c2crp',
+                                  help_text='community to be granted privilege')
+
+    resource = models.ForeignKey(BaseResource, on_delete=models.CASCADE,
+                                 null=False,
+                                 editable=False,
+                                 related_name='r2crp',
+                                 help_text='resource providing privilege')
+
+    grantor = models.ForeignKey(User, on_delete=models.CASCADE,
+                                null=False,
+                                editable=False,
+                                related_name='x2crp',
+                                help_text='grantor of privilege')
+
+    exhibit = models.BooleanField(default=False,
+                                  null=False,
+                                  editable=False,
+                                  help_text='exhibit resource as product')
+
+    class Meta:
+        unique_together = ('community', 'resource')
+
+    def __str__(self):
+        """ Return printed depiction for debugging """
+        return str.format("<community '{}' (id={}) holds {} ({})"
+                          + " over resource '{}' (id={})"
+                          + " via grantor '{}' (id={})>",
+                          str(self.community.name), str(self.community.id),
+                          PrivilegeCodes.NAMES[self.privilege],
+                          str(self.privilege),
+                          str(self.resource.name), str(self.group.id),
+                          str(self.grantor.username), str(self.grantor.id))
+
+    @classmethod
+    def share(cls, **kwargs):
+        """
+        Share a resource with a community and update provenance
+
+        ***This completely bypasses access control*** but keeps provenance in sync.
+
+        :param resource: source group to share
+        :param community: target community with which to share
+        :param privilege: privilege 1-4.
+        :param grantor: user who requested privilege.
+
+        Usage:
+            CommunityResourcePrivilege.share(resource={X}, community={Y}, privilege={Z}, grantor={W}
+        """
+        # prevent import loops
+        from hs_access_control.models.provenance import CommunityResourceProvenance
+        if __debug__:
+            assert 'community' in kwargs
+            assert isinstance(kwargs['community'], Community)
+            assert 'resource' in kwargs
+            assert isinstance(kwargs['resource'], BaseResource)
+            assert 'grantor' in kwargs
+            assert isinstance(kwargs['grantor'], User)
+            assert 'privilege' in kwargs
+            assert \
+                kwargs['privilege'] >= PrivilegeCodes.OWNER and \
+                kwargs['privilege'] <= PrivilegeCodes.NONE
+            assert len(kwargs) == 4
+        cls.update(**kwargs)
+        CommunityResourceProvenance.update(**kwargs)
+
+    @classmethod
+    def unshare(cls, **kwargs):
+        """
+        Unshare a resource with a community and update provenance
+
+        ***This completely bypasses access control*** but keeps provenance in sync.
+
+        :param resource: source group to share
+        :param community: target community with which to unshare
+        :param grantor: user who requested privilege.
+
+        Usage:
+            CommunityResourcePrivilege.unshare(resource={X}, user={Y}, grantor={W})
+
+        Important: this does not guard against removing a single owner.
+
+        **This is a system routine** that should not be called directly by developers!
+        Use UserAccess.unshare_resource_with_community instead.
+        """
+        # prevent import loops
+        from hs_access_control.models.provenance import CommunityResourceProvenance
+        if __debug__:
+            assert 'community' in kwargs
+            assert isinstance(kwargs['community'], Community)
+            assert 'resource' in kwargs
+            assert isinstance(kwargs['resource'], BaseResource)
+            assert 'grantor' in kwargs
+            assert isinstance(kwargs['grantor'], User)
+            assert len(kwargs) == 3
+        cls.update(privilege=PrivilegeCodes.NONE, **kwargs)
+        CommunityResourceProvenance.update(privilege=PrivilegeCodes.NONE, **kwargs)
+
+    @classmethod
+    def undo_share(cls, **kwargs):
+        """
+        Undo a share a resource with a community and update provenance
+
+        ***This completely bypasses access control*** but keeps provenance in sync.
+
+        :param resource: source group to undo
+        :param community: target community with which to undo share
+        :param grantor: user who requested privilege.
+
+        Usage:
+            CommunityResourcePrivilege.undo_share(community={X}, resource={Y}, grantor={W})
+
+        In practice:
+
+        The "undo" operation is independent of the privileges a user currently holds.
+        Suppose -- for example -- that a user holds CHANGE, grants that to another user,
+        and then loses CHANGE. The undo of the other user is still possible, even though the
+        original user no longer has the privilege.
+
+        Important: this does not guard against removing a single owner.
+
+        **This is a system routine** that should not be called directly by developers!
+        """
+        # prevent import loops
+        from hs_access_control.models.provenance import CommunityResourceProvenance
+        if __debug__:
+            assert 'community' in kwargs
+            assert isinstance(kwargs['community'], Community)
+            assert 'resource' in kwargs
+            assert isinstance(kwargs['resource'], BaseResource)
+            assert 'grantor' in kwargs
+            assert isinstance(kwargs['grantor'], User)
+            assert len(kwargs) == 3
+        grantor = kwargs['grantor']
+        del kwargs['grantor']
+        # undo in provenance model; add a record that reinstates previous privilege.
+        CommunityResourceProvenance.undo_share(grantor=grantor, **kwargs)
+        # read that record and post to privilege table.
+        r = CommunityResourceProvenance.get_current_record(**kwargs)
+        cls.update(community=r.community, resource=r.resource, privilege=r.privilege, grantor=r.grantor)
+
+    @classmethod
+    def get_undo_resources(cls, **kwargs):
+        """ Get a set of communities for which a grantor can undo privilege
+
+        :param community: community to check
+        :param grantor: user that will undo privilege
+
+        Important: this does not guard against removing a single owner.
+
+        **This is a system routine** that should not be called directly by developers!
+        """
+        # prevent import loops
+        from hs_access_control.models.provenance import CommunityResourceProvenance
+        if __debug__:
+            assert 'community' in kwargs
+            assert isinstance(kwargs['community'], Community)
+            assert 'grantor' in kwargs
+            assert isinstance(kwargs['grantor'], User)
+            assert len(kwargs) == 2
+        return CommunityResourceProvenance.get_undo_resources(**kwargs)

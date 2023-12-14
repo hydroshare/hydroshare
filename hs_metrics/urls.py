@@ -7,4 +7,3 @@ urlpatterns = [
     url(r'^metrics/$', views.HydroshareSiteMetrics.as_view()),
 
 ]
-

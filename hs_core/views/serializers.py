@@ -1,7 +1,8 @@
 import json
 from collections import namedtuple
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.contrib.auth.models import Group, User
+from theme.models import UserProfile
 from rest_framework import serializers
 
 from hs_core.hydroshare import utils
@@ -58,10 +59,10 @@ class ResourceUpdateRequestValidator(serializers.Serializer):
 
 class ResourceCreateRequestValidator(ResourceUpdateRequestValidator):
     resource_type = serializers.ChoiceField(
-            choices=list(zip(
-                [x.__name__ for x in hydroshare.get_resource_types()],
-                [x.__name__ for x in hydroshare.get_resource_types()]
-            )), default='CompositeResource')
+        choices=list(zip(
+            [x.__name__ for x in hydroshare.get_resource_types()],
+            [x.__name__ for x in hydroshare.get_resource_types()]
+        )), default='CompositeResource')
 
 
 class ResourceTypesSerializer(serializers.Serializer):
@@ -72,8 +73,13 @@ class ResourceTypesSerializer(serializers.Serializer):
 
 class ContentTypesSerializer(serializers.Serializer):
     content_type = serializers.CharField(max_length=100, required=True,
-                                          validators=[lambda x: x in CONTENT_TYPES],
-                                          help_text='list of content types')
+                                         validators=[lambda x: x in CONTENT_TYPES],
+                                         help_text='list of content types')
+
+
+class CheckStatusSerializer(serializers.Serializer):
+    status = serializers.BooleanField(help_text='Whether the task is complete')
+    payload = serializers.URLField(help_text="URL of the generated zip")
 
 
 class TaskStatusSerializer(serializers.Serializer):
@@ -236,6 +242,20 @@ class UserPrivilegeSerializer(serializers.Serializer):
     is_current_user = serializers.BooleanField(help_text="Indicates whether the currently logged "
                                                          "in user made ther permission request")
     error_msg = serializers.CharField(help_text="Description of error")
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['title', 'organization', 'state', 'country', 'user_type']
+
+
+class UserInfoSerializer(serializers.ModelSerializer):
+    user_profile = UserProfileSerializer(read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'first_name', 'id', 'last_name', 'user_profile']
 
 
 class ResourceType(object):

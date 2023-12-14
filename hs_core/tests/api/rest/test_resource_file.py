@@ -5,9 +5,9 @@ import tempfile
 import shutil
 
 from rest_framework import status
-from datetime import datetime
 
 from hs_core.hydroshare import resource
+from hs_core.models import ResourceFile
 from hs_core.tests.api.utils import MyTemporaryUploadedFile
 from .base import HSRESTTestCase
 
@@ -39,12 +39,12 @@ class TestResourceFile(HSRESTTestCase):
         payload = MyTemporaryUploadedFile(open(zip_path, 'rb'), name=zip_path,
                                           content_type='application/zip',
                                           size=os.stat(zip_path).st_size)
-        res = resource.create_resource('GenericResource',
-                                       self.user,
-                                       'My Test resource',
-                                       files=(payload,),
-                                       unpack_file=True)
-        self.pid = res.short_id
+        self.res = resource.create_resource('CompositeResource',
+                                            self.user,
+                                            'My Test resource',
+                                            files=(payload,),
+                                            unpack_file=True)
+        self.pid = self.res.short_id
         self.resources_to_delete.append(self.pid)
 
     def tearDown(self):
@@ -79,7 +79,7 @@ class TestResourceFile(HSRESTTestCase):
     def test_get_resource_file(self):
         files = (MyTemporaryUploadedFile(file=open(self.txt_file_path, 'rb'), name=self.txt_file_path))
         resource.add_resource_files(self.pid, files)
-        file_response = self.getResourceFile(self.pid, "text.txt")
+        _ = self.getResourceFile(self.pid, "text.txt")
 
     def test_create_resource_file(self):
         # Make a new text file
@@ -116,7 +116,9 @@ class TestResourceFile(HSRESTTestCase):
         txt = open(txt_file_path, 'w')
         txt.write("Hello World, again.\n")
         txt.close()
-        # Upload the new resource file
+        # create the folder where the file will be uploaded
+        ResourceFile.create_folder(resource=self.res, folder="folder/path")
+        # Upload the new resource file to the above folder
 
         params = {
             'file': (txt_file_name, open(txt_file_path, 'rb'), 'text/plain'),
@@ -127,7 +129,7 @@ class TestResourceFile(HSRESTTestCase):
         response = self.client.post(url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        url2 = str.format('/hsapi/resource/{}/folders/folder/path/', self.pid )
+        url2 = str.format('/hsapi/resource/{}/folders/folder/path/', self.pid)
         response = self.client.get(url2, {})
         content = json.loads(response.content.decode())
         self.assertEqual(len(content['files']), 1)

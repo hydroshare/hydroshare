@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 ('discoverable', models.BooleanField(default=True, help_text='whether group description is discoverable by everyone', editable=False)),
                 ('public', models.BooleanField(default=True, help_text='whether group members can be listed by everyone', editable=False)),
                 ('shareable', models.BooleanField(default=True, help_text='whether group can be shared by non-owners', editable=False)),
-                ('group', models.OneToOneField(related_query_name='gaccess', related_name='gaccess', null=True, editable=False, to='auth.Group', help_text='group object that this object protects')),
+                ('group', models.OneToOneField(related_query_name='gaccess', related_name='gaccess', null=True, editable=False, on_delete=models.CASCADE, to='auth.Group', help_text='group object that this object protects')),
             ],
             options={
             },
@@ -72,9 +72,9 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('privilege', models.IntegerField(default=3, editable=False, choices=[(1, 'Owner'), (2, 'Change'), (3, 'View')])),
                 ('start', models.DateTimeField(auto_now=True)),
-                ('grantor', models.ForeignKey(related_name='x2ugp', editable=False, to='hs_access_control.UserAccess', help_text='grantor of privilege', null=True)),
-                ('group', models.ForeignKey(related_name='g2ugp', editable=False, to='hs_access_control.GroupAccess', help_text='group to which privilege applies', null=True)),
-                ('user', models.ForeignKey(related_name='u2ugp', editable=False, to='hs_access_control.UserAccess', help_text='user to be granted privilege', null=True)),
+                ('grantor', models.ForeignKey(related_name='x2ugp', editable=False, on_delete=models.CASCADE, to='hs_access_control.UserAccess', help_text='grantor of privilege', null=True)),
+                ('group', models.ForeignKey(related_name='g2ugp', editable=False, on_delete=models.CASCADE, to='hs_access_control.GroupAccess', help_text='group to which privilege applies', null=True)),
+                ('user', models.ForeignKey(related_name='u2ugp', editable=False, on_delete=models.CASCADE, to='hs_access_control.UserAccess', help_text='user to be granted privilege', null=True)),
             ],
             options={
             },
@@ -86,9 +86,9 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('privilege', models.IntegerField(default=3, editable=False, choices=[(1, 'Owner'), (2, 'Change'), (3, 'View')])),
                 ('start', models.DateTimeField(auto_now=True)),
-                ('grantor', models.ForeignKey(related_name='x2urp', editable=False, to='hs_access_control.UserAccess', help_text='grantor of privilege', null=True)),
-                ('resource', models.ForeignKey(related_name='r2urp', editable=False, to='hs_access_control.ResourceAccess', help_text='resource to which privilege applies', null=True)),
-                ('user', models.ForeignKey(related_name='u2urp', editable=False, to='hs_access_control.UserAccess', help_text='user to be granted privilege', null=True)),
+                ('grantor', models.ForeignKey(related_name='x2urp', editable=False, on_delete=models.CASCADE, to='hs_access_control.UserAccess', help_text='grantor of privilege', null=True)),
+                ('resource', models.ForeignKey(related_name='r2urp', editable=False, on_delete=models.CASCADE, to='hs_access_control.ResourceAccess', help_text='resource to which privilege applies', null=True)),
+                ('user', models.ForeignKey(related_name='u2urp', editable=False, on_delete=models.CASCADE, to='hs_access_control.UserAccess', help_text='user to be granted privilege', null=True)),
             ],
             options={
             },
@@ -117,7 +117,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='useraccess',
             name='user',
-            field=models.OneToOneField(related_query_name='uaccess', related_name='uaccess', null=True, editable=False, to=settings.AUTH_USER_MODEL),
+            field=models.OneToOneField(related_query_name='uaccess', related_name='uaccess', null=True, editable=False, on_delete=models.CASCADE, to=settings.AUTH_USER_MODEL),
             preserve_default=True,
         ),
         migrations.AddField(
@@ -129,25 +129,25 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='resourceaccess',
             name='resource',
-            field=models.OneToOneField(related_query_name='raccess', related_name='raccess', null=True, editable=False, to='hs_core.BaseResource'),
+            field=models.OneToOneField(related_query_name='raccess', related_name='raccess', null=True, editable=False, on_delete=models.CASCADE, to='hs_core.BaseResource'),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='groupresourceprivilege',
             name='grantor',
-            field=models.ForeignKey(related_name='x2grp', editable=False, to='hs_access_control.UserAccess', help_text='grantor of privilege', null=True),
+            field=models.ForeignKey(related_name='x2grp', editable=False, on_delete=models.CASCADE, to='hs_access_control.UserAccess', help_text='grantor of privilege', null=True),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='groupresourceprivilege',
             name='group',
-            field=models.ForeignKey(related_name='g2grp', editable=False, to='hs_access_control.GroupAccess', help_text='group to be granted privilege', null=True),
+            field=models.ForeignKey(related_name='g2grp', editable=False, on_delete=models.CASCADE, to='hs_access_control.GroupAccess', help_text='group to be granted privilege', null=True),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='groupresourceprivilege',
             name='resource',
-            field=models.ForeignKey(related_name='r2grp', editable=False, to='hs_access_control.ResourceAccess', help_text='resource to which privilege applies', null=True),
+            field=models.ForeignKey(related_name='r2grp', editable=False, on_delete=models.CASCADE, to='hs_access_control.ResourceAccess', help_text='resource to which privilege applies', null=True),
             preserve_default=True,
         ),
         migrations.AlterUniqueTogether(

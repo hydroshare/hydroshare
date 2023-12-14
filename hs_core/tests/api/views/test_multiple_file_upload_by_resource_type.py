@@ -1,8 +1,8 @@
 import json
 
 from django.test import TestCase, RequestFactory
-from django.contrib.auth.models import Group
-from django.core.urlresolvers import reverse
+from django.contrib.auth.models import Group, User
+from django.urls import reverse
 
 from rest_framework import status
 
@@ -29,20 +29,13 @@ class TestResourceTypeFileTypes(TestCase):
 
         self.factory = RequestFactory()
 
+    def tearDown(self):
+        super(TestResourceTypeFileTypes, self).tearDown()
+        User.objects.all().delete()
+        Group.objects.all().delete()
+
     def test_resource_type_multiple_file_upload(self):
         # here we are testing the is_multiple_file_upload_allowed view function
-
-        # test for generic resource type
-        resp_json = self._make_request("GenericResource")
-        self.assertEqual(resp_json['allow_multiple_file'], True)
-
-        # test for NetcdfResource
-        resp_json = self._make_request("NetcdfResource")
-        self.assertEqual(resp_json['allow_multiple_file'], False)
-
-        # test for TimeSeriesResource
-        resp_json = self._make_request("TimeSeriesResource")
-        self.assertEqual(resp_json['allow_multiple_file'], False)
 
         # test for CollectionResource
         resp_json = self._make_request("CollectionResource")
@@ -50,34 +43,6 @@ class TestResourceTypeFileTypes(TestCase):
 
         # test for CompositeResource
         resp_json = self._make_request("CompositeResource")
-        self.assertEqual(resp_json['allow_multiple_file'], True)
-
-        # test for RasterResource
-        resp_json = self._make_request("RasterResource")
-        self.assertEqual(resp_json['allow_multiple_file'], True)
-
-        # test for GeographicFeatureResource
-        resp_json = self._make_request("GeographicFeatureResource")
-        self.assertEqual(resp_json['allow_multiple_file'], True)
-
-        # test for ModelProgramResource
-        resp_json = self._make_request("ModelProgramResource")
-        self.assertEqual(resp_json['allow_multiple_file'], True)
-
-        # test for ModelInstanceResource
-        resp_json = self._make_request("ModelInstanceResource")
-        self.assertEqual(resp_json['allow_multiple_file'], True)
-
-        # test for MODFLOWModelInstanceResource
-        resp_json = self._make_request("MODFLOWModelInstanceResource")
-        self.assertEqual(resp_json['allow_multiple_file'], True)
-
-        # test for ScriptResource
-        resp_json = self._make_request("ScriptResource")
-        self.assertEqual(resp_json['allow_multiple_file'], True)
-
-        # test for SWATModelInstanceResource
-        resp_json = self._make_request("SWATModelInstanceResource")
         self.assertEqual(resp_json['allow_multiple_file'], True)
 
         # test for ToolResource

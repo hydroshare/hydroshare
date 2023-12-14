@@ -1,70 +1,112 @@
 {% extends "pages/page.html" %}
 
-{% load hydroshare_tags %}
+{% load hydroshare_tags thumbnail %}
 
 {% block meta_title %}My Communities {% endblock %}
 
+{% block extra_css %}
+<link href="{% static 'css/collaborate.css' %}" rel="stylesheet" />
+{% endblock %}
+
 {% block main %}
-    <div class="collaborate-header">
-        <div class="container">
-            <div class="row">
-                <div class="col-sm-12">
-                    <div class="collaborate-nav">
-                        <a href="{% url "communities" %}" class="collaborate-nav-item">Find Communities</a>
-                        <a href="{% url "my_communities" %}" class="collaborate-nav-item active">My Communities</a>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- Load context data needed in Vue app -->
+{{ data|json_script:"my-communities-app-data" }}
+
+{% include 'hs_communities/communities-nav.html' with active='my_communities' %}
+<div class="container">
+  <div id="my-communities-app" class="row">
+    <div class="col-sm-12">
+      <h2 class="page-title">My Communities</h2>
     </div>
-    <div class="container">
-        <div class="row">
-            <div class="col-sm-12">
-                <h2 class="page-title">My Communities</h2>
-            </div>
-            <div class="col-sm-9">
-                <div class="row">
-                    <div class="col-sm-12">
-                        {% if communities_list %}
-                            <table class="groups-table">
-                                {% for c in communities_list %}
-                                    <tr>
-                                        <td>
-                                            {% if group.gaccess.picture and group.gaccess.picture.url %}
-                                                <div class="group-image-wrapper">
-                                                    <div class="group-image-small"
-                                                         style="background-image: url({{ group.gaccess.picture.url }})"></div>
-                                                </div>
-                                            {% else %}
-                                                <div class="group-image-wrapper">
-                                                    <div class="group-image-small"
-                                                         style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
-                                                </div>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <h4><a href="/community/{{ c.id }}">{{ c.name }}</a></h4>
-                                            <img src="{{ STATIC_URL }}img/public.png" alt="Public Community"
-                                                 title="Public Community">
-                                            <small class="text-muted"> Public Community</small>
-                                        </td>
-                                        <td style="text-align: right"><span>{% if group.is_group_owner %}Owner{% else %}
-                                            Member{% endif %}</span></td>
-                                    </tr>
-                                {% endfor %}
-                            </table>
-                        {% endif %}
-                        {% if not communities_list %}
-                            <i>You have not joined any communities.</i>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
+    <div class="col-sm-4">
+      <a class="btn btn-success has-space-bottom" data-toggle="modal" data-target="#request-new-community-dialog">
+        <i class="fa fa-plus"></i> Request a New Community
+      </a>
+
+      <h4><span class="glyphicon glyphicon-send"></span>&nbsp;Pending Requests</h4>
+      <i v-if="!allRequests.length">No pending requests.</i>
+      <template v-else>
+        <div v-for="request of allRequests" class="request-block">
+          <span v-if="request.status === 'Submitted'" class="badge pull-right">Pending Approval</span>
+          <span v-if="request.status === 'Rejected'" class="badge pull-right"
+            style="background-color: #d9534f;">Rejected</span>
+          <h5><a :href="`{% url "manage_requests" %}${request.id}`">${ request.community_to_approve.name }</a></h5>
+          <div class="text-muted">${ request.date_requested }</div>
+          <br>
+          <button type="submit" class="btn btn-default" @click="targetRequest = request"
+            :disabled="isRemoving[request.id]" data-toggle="modal" data-target="#remove-community-request-modal">Cancel
+            Request</button>
         </div>
+        <!-- Remove Community Request Modal -->
+        <div class="modal fade" id="remove-community-request-modal" tabindex="-1" role="dialog"
+          aria-labelledby="removeGroupLabel">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content" v-if="targetRequest">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                    aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="removeGroupLabel">Cancel Request</h4>
+              </div>
+              <div class="modal-body">
+                Are you sure you want cancel this request?
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                  Close
+                </button>
+                <button class="btn btn-danger" @click="cancelRequest(targetRequest.id)"
+                  :disabled="isRemoving[targetRequest.id]" value="clear">Cancel Request
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
     </div>
+    <div class="col-sm-8">
+      <div class="row">
+        <div class="col-sm-12">
+          {% if communities_list %}
+          <table class="groups-table">
+            {% for c in communities_list %}
+            <tr>
+              <td>
+                <div class="group-image-wrapper has-space-right">
+                  {% if c.picture and c.picture.url %}
+                  {% thumbnail c.picture "x80" crop="center" as im %}
+                  <div class="group-image-small" style="background-image: url({{ im.url }})"></div>
+                  {% endthumbnail %}
+                  {% else %}
+                  <div class="group-image-small group-preview-image-default" style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
+                  </div>
+                  {% endif %}
+                </div>
+              </td>
+              <td>
+                <h4 style="word-break: break-all"><a href="/community/{{ c.id }}">{{ c.name }}</a></h4>
+                <img src="{% static 'img/public.png' %}" alt="Public Community" title="Public Community">
+                <small class="text-muted"> Public Community</small>
+              </td>
+              <td style="text-align: right"><span>{% if c.is_user_owner %}Owner{% else %}Member{% endif %}</span></td>
+            </tr>
+            {% endfor %}
+          </table>
+          {% endif %}
+          {% if not communities_list %}
+          <i>You have not joined any communities.</i>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Request New Community Dialog -->
+{% include 'hs_communities/request-new-community-modal.html' %}
 {% endblock %}
 
 {% block extra_js %}
-    {{ block.super }}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
+{{ block.super }}
+<script type="text/javascript" src="{% static 'js/bootstrap-formhelpers.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/my-communities.js' %}"></script>
 {% endblock %}

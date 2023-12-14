@@ -1,0 +1,163 @@
+#app-geoconnex .flex {
+  flex-direction: row;
+  /* justify-content: space-between; */
+  gap: 2rem;
+}
+
+#geoconnex-message-wrapper {
+  margin-bottom: 1rem;
+}
+
+#app-geoconnex .v-application--wrap {
+  min-height: 100px;
+}
+
+#app-geoconnex .v-subheader {
+  font-size: 1.5rem;
+}
+
+#app-geoconnex .v-list-item__subtitle {
+  font-size: 1.2rem;
+}
+
+#app-geoconnex .v-list-item__title {
+  font-size: 1.5rem;
+}
+
+#app-geoconnex .glyphicon-remove-circle {
+  color: rgb(217, 83, 79);
+  cursor: pointer;
+}
+
+#app-geoconnex .glyphicon-remove-circle.text-muted {
+  color: #999;
+}
+
+#geoconnex-controls {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  flex-direction: row;
+}
+
+#app-geoconnex .opaque #geoconnex-leaflet {
+  opacity: 0.4;
+  filter: alpha(opacity=40);
+  pointer-events: none;
+}
+
+#app-geoconnex .v-chip__content .glyphicon {
+  padding: 1rem;
+}
+
+#app-geoconnex .tooltip-inner {
+  padding: 3px 8px;
+  font-weight: normal;
+}
+
+#geoconnex-map-wrapper {
+  flex: 2 1 500px;
+}
+
+#geoconnex-leaflet{
+  z-index: 2;
+}
+
+#geoconnex-controls-wrapper {
+  padding-right: 12px;
+  padding-left: 12px;
+}
+
+#geoconnex-leaflet {
+  height: 400px;
+  border: 1px solid #ddd;
+  margin-bottom: 1rem;
+}
+
+.leaflet-control-container,
+.leaflet-popup {
+  font-size: 1.2rem !important;
+}
+
+#app-geoconnex .dataset-details {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+#app-geoconnex .v-application .error--text {
+  color: #c09853 !important;
+}
+
+/* ******************* BUTTON OVERRIDES ******************* */
+#app-geoconnex .v-btn {
+  font-size: 1.2rem;
+}
+
+.v-application .btn {
+  padding: 6px 12px;
+  border-style: solid;
+  -webkit-box-shadow: 0 1px 0 rgba(255, 255, 255, 0.3) inset;
+  -moz-box-shadow: 0 1px 0 rgba(255, 255, 255, 0.3) inset;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.3) inset;
+}
+
+.v-application .btn i.fa {
+  margin-right: 1rem;
+}
+
+.v-application .btn-info,
+.btn-primary,
+.btn-success,
+.btn-danger,
+.btn-warning {
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+  color: #fff !important;
+}
+
+.v-application .btn-success {
+  background-color: #eee;
+  background-image: -webkit-linear-gradient(#74e274, #5cb85c);
+  background-image: linear-gradient(#74e274, #5cb85c);
+  border-color: #20833f;
+}
+
+.v-application .btn-danger {
+  background-color: #d9534f !important;
+  /* border-color: #d43f3a  !important; */
+  border-color: #8c3c3a !important;
+}
+
+.v-application .btn-warning {
+  background-color: #f0ad4e;
+  border-color: #eea236;
+}
+
+.v-application .btn-info {
+  background-color: #5bc0de;
+  border-color: #46b8da;
+}
+
+.v-application .btn-default {
+  background-color: #eee;
+  background-image: -webkit-linear-gradient(#fcfcfc, #eee);
+  background-image: linear-gradient(#fcfcfc, #eee);
+}
+
+.v-application .btn-default:not(.active) {
+  text-shadow: 1px 1px #fff;
+}
+
+#app-geoconnex .btn-primary {
+  background-image: linear-gradient(#7ab2e2, #428bca);
+  background-color: #eee;
+  background-image: -webkit-linear-gradient(#7ab2e2, #428bca);
+  background-image: linear-gradient(#7ab2e2, #428bca);
+  border-color: #428bca;
+}
+
+.v-application .btn-success {
+  background-color: #eee;
+  background-image: -webkit-linear-gradient(#74e274, #5cb85c);
+  background-image: linear-gradient(#74e274, #5cb85c);
+  border-color: #20833f;
+}

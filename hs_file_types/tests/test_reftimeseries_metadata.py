@@ -68,9 +68,12 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file = res_file.logical_file
         self.assertEqual(logical_file.metadata.json_file_content.encode(), res_file.resource_file.read())
 
+        # check that there are no required missing metadata for the ref-timeseries aggregation
+        self.assertEqual(len(logical_file.metadata.get_required_missing_elements()), 0)
+
         # test resource file is not in a folder
         self.assertEqual(res_file.file_folder, '')
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_aggregation_2(self):
@@ -114,7 +117,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # test resource file is in a folder
         self.assertEqual(res_file.file_folder, new_folder)
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_res_metadata_on_create_aggregation(self):
@@ -155,6 +158,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         for kw in keywords:
             self.assertIn(kw, ["key-word-1", "CUAHSI", "Time Series"])
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_name(self):
@@ -208,6 +212,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file = res_file.logical_file
         expected_aggregation_name = '{0}/{1}'.format(folder_rename, res_file.file_name)
         self.assertEqual(logical_file.aggregation_name, expected_aggregation_name)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_aggregation_xml_file_paths(self):
@@ -277,6 +282,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         expected_map_path = '{0}/{1}{2}'.format(folder_rename, res_file_name, RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_file_rename(self):
@@ -298,7 +304,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
                                       tgt_path)
         res_file = self.composite_resource.files.first()
         self.assertEqual(res_file.file_name, '{0}_1{1}'.format(base_file_name, ext))
-
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_file_move(self):
@@ -325,6 +331,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # file should in a folder
         self.assertEqual(res_file.file_folder, new_folder)
         self.assertTrue(res_file.resource_file.name.endswith(tgt_path))
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_create_aggregation_with_invalid_urls(self):
@@ -588,6 +595,7 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # check the files associated with the aggregation not deleted
         self.assertEqual(self.composite_resource.files.all().count(), 1)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def test_main_file(self):
@@ -602,6 +610,8 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(self.refts_file_name,
                          RefTimeseriesLogicalFile.objects.first().get_main_file.file_name)
 
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
+
     def _test_valid_json_file(self, json_file_name):
         refts_file = 'hs_file_types/tests/{}'.format(json_file_name)
 
@@ -615,8 +625,9 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertTrue(json_res_file.has_logical_file)
         logical_file = json_res_file.logical_file
         self.assertTrue(isinstance(logical_file, RefTimeseriesLogicalFile))
-        self.assertEqual(logical_file.metadata.json_file_content.encode(),
-                         json_res_file.resource_file.read())
+        self.assertEqual(logical_file.metadata.json_file_content.encode(), json_res_file.resource_file.read())
+
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
     def _test_invalid_json_file(self, invalid_json_file_name):
@@ -635,9 +646,11 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         with self.assertRaises(ValidationError):
             RefTimeseriesLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
 
+        self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 0)
         # test that the invalid file did not get deleted
         self.assertEqual(self.composite_resource.files.all().count(), 1)
 
         # check that the resource file is not associated with any logical file
         self.assertEqual(res_file.has_logical_file, False)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()

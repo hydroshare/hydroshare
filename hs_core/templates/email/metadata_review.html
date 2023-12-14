@@ -1,0 +1,58 @@
+{% load i18n %}
+{% block main %}
+    <p>{% trans "Dear " %}{{ user.first_name }} {{ user.last_name }},</p>
+    <p>{% trans "User " %}{{ user_from.first_name }} {{ user_from.last_name }} 
+        (<a href="{{ request.scheme }}://{{ request.get_host }}/user/{{ user_from.id }}">{{ request.scheme }}://{{ request.get_host }}/user/{{ user_from.id }}</a>) 
+        has requested publication of the following resource:</p>
+        <p><a href="{{ request.scheme }}://{{ request.get_host }}/resource/{{ resource.short_id }}">{{ request.scheme }}://{{ request.get_host }}/resource/{{ resource.short_id }}</a></p>
+    
+    <p>Requesting user information:</p>
+    User Type: {{ user_from.userprofile.user_type }}<br>
+    Organization: {{ user_from.userprofile.organization }}<br>
+    Country: {{ user_from.userprofile.country }}<br>
+    State/Region: {{ user_from.userprofile.state }}<br>
+    Email: {{ user_from.email }}<br>
+    {% if user_from.userprofile.title %}User Title: {{ user_from.userprofile.title }}<br>{% endif %}
+    
+    <p>Resource metadata:</p>
+    {% spaceless %}
+    TITLE:
+    <p>{{ resource.title }}</p>
+    
+    ABSTRACT:
+    <p>{{ resource.metadata.description }}</p>
+    
+    SUBJECT KEYWORDS:
+    {% for subject in resource.metadata.subjects.all %}
+    <li>{{ subject }}</li>
+    {% endfor %}<br>
+
+    FUNDING AGENCIES:<br>
+    {% for agency in resource.metadata.funding_agencies.all %}
+    <li>{{ agency }}</li>
+    {% endfor %}<br>
+
+    {% with resource.get_readme_file_content as readme %}
+    {% if readme %}
+    README:<br>
+    <p>{{ readme.content|safe }}</p>
+    {% endif %}
+    {% endwith %}
+
+    COVERAGE:<br>
+    {% if spatial_coverage %}
+    {% if spatial_coverage.type == 'point' %}
+    <li>latitude: {{ spatial_coverage.north|floatformat:"4" }}</li>
+    <li>longitude: {{ spatial_coverage.east|floatformat:"4" }}</li>
+    {% else %}
+    <p>box: {{ spatial_coverage.southlimit|floatformat:"4" }} {{ spatial_coverage.westlimit|floatformat:"4" }} {{ spatial_coverage.northlimit|floatformat:"4" }} {{ spatial_coverage.eastlimit|floatformat:"4" }}</p>
+    {% endif %}
+    {% endif %}
+    {% endspaceless %}
+
+    <p><a href="{{ request.scheme }}://{{ request.get_host }}{{ action_url }}">Click here to accept this request.</a></p>
+    <p><a href="{{ request.scheme }}://{{ request.get_host }}{{ reject_url }}">Click here to reject this request.</a>
+    If rejecting this request, please also <a href="{{ href_for_mailto_reject }}">email the requestor</a></p>
+
+        <p>{% trans "Thanks, The HydroShare Team" %}</p>
+{% endblock %}

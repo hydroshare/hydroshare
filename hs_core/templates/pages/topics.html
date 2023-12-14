@@ -5,7 +5,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap-select-1.6.3.min.css"/>{% endblock %}
+    <link rel="stylesheet" href="{% static 'css/bootstrap-select-1.6.3.min.css' %}"/>{% endblock %}
 {% block main %}
     <div id="topics-app">
         <div style="margin-left: 2em">
@@ -28,11 +28,10 @@
                 </ul>
             </template>
         </div>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/vue-2.6.10-dev.js"></script>
     <script type="application/javascript">
         // contents here are required by topics.js
         const topics_from_page = JSON.parse("{{ topics_json }}");
     </script>
 
-    <script type="text/javascript" src="{{ STATIC_URL }}js/topics.js"></script>
+    <script type="text/javascript" src="{% static 'js/topics.js' %}"></script>
 {% endblock main %}

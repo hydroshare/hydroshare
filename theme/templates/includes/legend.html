@@ -1,3 +1,7 @@
+{% block extra_head %}
+    <link href="{% static 'css/hs-file-icons.css' %}" rel="stylesheet"/>
+{% endblock %}
+
 <div class="panel-group" role="tablist">
     <div class="panel panel-default">
         <div class="panel-heading" role="tab" id="headingLegend">
@@ -13,134 +17,130 @@
         <div id="legend-collapse" class="panel-collapse collapse" role="tabpanel"
              aria-labelledby="headingLegend">
             <div class="panel-body">
-                <div class="row">
+                <div id="legend-content-type" class="row">
                     <div class="col-xs-12 col-sm-7">
-                        <div class="row" id="legend-content-type">
-                            <div class="col-sm-12"><label>Content Types</label></div>
+                      <div><label>Content Types</label></div>
 
-                            <div class="col-sm-6">
-                                <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
-                                     alt="Geographic Feature Resource Icon" class="table-res-type-icon"/>
-                                <small>&nbsp;Geographic Feature</small>
-                            </div>
+                      <div id="grid-content-types">
+                          <div>
+                              <img src="{% static 'img/resource-icons/geographicfeature48x48.png' %}"
+                                    alt="Geographic Feature Resource Icon" class="table-res-type-icon"/>
+                              <small>&nbsp;Geographic Feature</small>
+                          </div>
 
-                            <div class="col-sm-6">
-                                <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
-                                     alt="Geographic Raster Resource Icon" class="table-res-type-icon"/>
-                                <small>&nbsp;Geographic Raster</small>
-                            </div>
+                          <div>
+                              <img src="{% static 'img/resource-icons/geographicraster48x48.png' %}"
+                                    alt="Geographic Raster Resource Icon" class="table-res-type-icon"/>
+                              <small>&nbsp;Geographic Raster</small>
+                          </div>
 
-                            <div class="col-sm-6">
-                                <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
-                                     alt="Multidimensional Resource Icon" class="table-res-type-icon"/>
-                                <small>&nbsp;Multidimensional</small>
-                            </div>
+                          <div>
+                              <img src="{% static 'img/resource-icons/multidimensional48x48.png' %}"
+                                    alt="Multidimensional Resource Icon" class="table-res-type-icon"/>
+                              <small>&nbsp;Multidimensional</small>
+                          </div>
 
-                            <div class="col-sm-6">
-                                <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
-                                     alt="Time Series Resource Icon" class="table-res-type-icon"/>
-                                <small>&nbsp;Time Series</small>
-                            </div>
+                          <div>
+                              <img src="{% static 'img/resource-icons/timeseries48x48.png' %}"
+                                    alt="Time Series Resource Icon" class="table-res-type-icon"/>
+                              <small>&nbsp;Time Series</small>
+                          </div>
 
-                            <div class="col-sm-6">
-                                <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
-                                     alt="HIS Referenced Time Series Resource Icon"
-                                     class="table-res-type-icon"/>
-                                <small>&nbsp;HIS Referenced Time Series</small>
-                            </div>
+                          <div>
+                              <img src="{% static 'img/resource-icons/his48x48.png' %}"
+                                    alt="HIS Referenced Time Series Resource Icon"
+                                    class="table-res-type-icon"/>
+                              <small>&nbsp;HIS Referenced Time Series</small>
+                          </div>
 
-                        </div>
+                          <div>
+                            <img src="{% static 'img/resource-icons/modelprogram48x48.png' %}"
+                                  alt="Model Program Resource Icon" class="table-res-type-icon"/>
+                            <small>&nbsp;Model Program</small>
+                          </div>
+
+                          <div>
+                              <img src="{% static 'img/resource-icons/modelinstance48x48.png' %}"
+                                    alt="Model Instance Resource Icon" class="table-res-type-icon"/>
+                              <small>&nbsp;Model Instance</small>
+                          </div>
+
+                          <div>
+                            <span class='fa-stack fb-stack'>
+                              <i class='fb-file-icon fa fa-folder fa-stack-2x fb-folder-aggregation' aria-hidden='true'></i>
+                              <i class='fa fa-tag fa-stack-1x' aria-hidden='true'></i>
+                            </span>
+                            <small>&nbsp;File Set</small>
+                          </div>
+                      </div>
                     </div>
-                    <div class="col-xs-12 col-sm-5">
-                        <div class="row">
-                            <div class="col-sm-12"><label>Sharing and Access</label></div>
 
-                            <div class="col-sm-6">
-                                <img src="{{ STATIC_URL }}img/public.png" alt="Public Resource"/>
+                    <div class="col-xs-12 col-sm-5">
+                        <div><label>Sharing and Access</label></div>
+
+                        <div id="grid-sharing-and-access">
+                            <div>
+                                <img src="{% static 'img/public.png' %}" alt="Public Resource"/>
                                 <small>Public</small>
                             </div>
 
-                            <div class="col-sm-6">
-                                <img src="{{ STATIC_URL }}img/private.png" alt="Private Resource"/>
+                            <div>
+                                <img src="{% static 'img/private.png' %}" alt="Private Resource"/>
                                 <small>Private</small>
                             </div>
 
-                            <div class="col-sm-6">
-                                <img src="{{ STATIC_URL }}img/discoverable.png" alt="Discoverable Resource"/>
+                            <div>
+                                <img src="{% static 'img/discoverable.png' %}" alt="Discoverable Resource"/>
                                 <small>Discoverable</small>
                             </div>
 
-                            <div class="col-sm-6">
-                                <img src="{{ STATIC_URL }}img/published.png" alt="Published Resource"/>
+                            <div>
+                                <img src="{% static 'img/published.png' %}" alt="Published Resource"/>
                                 <small>Published</small>
                             </div>
 
-                            <div class="col-sm-6">
-                                <img src="{{ STATIC_URL }}img/pending.png" alt="Pending Publication"/>
-                                <small>Pending publication</small>
+                            <div>
+                                <img src="{% static 'img/pending.png' %}" alt="Pending Publication"/>
+                                <small>Pending Publication</small>
                             </div>
 
-                            <div class="col-sm-6">
-                                <img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"/>
+                            <div>
+                                <img src="{% static 'img/shareable.png' %}" alt="Sharable Resource"/>
                                 <small>Shareable</small>
                             </div>
 
-                            <div class="col-sm-8">
-                                <img src="{{ STATIC_URL }}img/non-shareable.png" alt="Non Sharable Resource"/>
-                                <small>Not shareable</small>
+                            <div>
+                                <img src="{% static 'img/non-shareable.png' %}" alt="Non Sharable Resource"/>
+                                <small>Not Shareable</small>
                             </div>
 
-                            <br>
-
+                            <div>
+                              <img src="{% static 'img/Globe-Green.png' %}" height="25" width="25" alt="Contains Spatial Coverage"/>
+                              <small>Contains Spatial Coverage</small>
+                            </div>
                         </div>
                     </div>
 
                     <div class="col-xs-12 col-sm-7">
-                        <div class="row" id="legend-resource-type">
-                            <div class="col-sm-12"><label>Resource Types</label></div>
-
-                            <div class="col-sm-6">
-                                <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
-                                     alt="Collection Resource Icon" class="table-res-type-icon"/>
+                        <div><label>Resource Types</label></div>
+                        <div id="grid-resource-types">
+                            <div>
+                                <img src="{% static 'img/resource-icons/collection48x48.png' %}"
+                                      alt="Collection Resource Icon" class="table-res-type-icon"/>
                                 <small>&nbsp;Collection</small>
                             </div>
 
-                            <div class="col-sm-6">
-                                <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
-                                     alt="Composite Resource Icon" class="table-res-type-icon"/>
+                            <div>
+                                <img src="{% static 'img/resource-icons/composite48x48.png' %}"
+                                      alt="Composite Resource Icon" class="table-res-type-icon"/>
                                 <small>&nbsp;Composite</small>
                             </div>
 
-                            <div class="col-sm-6">
-                                <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
-                                     alt="Model Instance Resource Icon" class="table-res-type-icon"/>
-                                <small>&nbsp;Model Instance</small>
+                            <div>
+                              <img src="{% static 'img/resource-icons/webapp48x48.png' %}"
+                                    alt="App Connector Icon" class="table-res-type-icon"/>
+                              <small>&nbsp;App Connector</small>
                             </div>
-
-                            <div class="col-sm-6">
-                                <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
-                                     alt="Collection Resource Icon" class="table-res-type-icon"/>
-                                <small>&nbsp;MODFLOW Model Instance</small>
-                            </div>
-
-                            <div class="col-sm-6">
-                                <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
-                                     alt="SWAT Model Instance Resource Icon" class="table-res-type-icon"/>
-                                <small>&nbsp;SWAT Model Instance</small>
-                            </div>
-
-                            <div class="col-sm-6">
-                                <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
-                                     alt="Web App Resource Icon" class="table-res-type-icon"/>
-                                <small>&nbsp;Web App</small>
-                            </div>
-
-                            <div class="col-sm-6">
-                                <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
-                                     alt="Model Program Resource Icon" class="table-res-type-icon"/>
-                                <small>&nbsp;Model Program</small>
-                            </div>
-
                         </div>
                     </div>
                 </div>

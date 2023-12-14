@@ -1,176 +1,102 @@
 {% extends "pages/page.html" %}
 
-{% load hydroshare_tags %}
+{% load hydroshare_tags thumbnail %}
 
-{% block meta_title %}Find Communities {% endblock %}
+{% block meta_title %}Find Communities{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/collaborate.css' %}" rel="stylesheet" />
+{% endblock %}
 
 {% block main %}
-
-    <div class="collaborate-header">
-        <div class="container">
-            <div class="row">
-                <div class="col-sm-12">
-                    <div class="collaborate-nav">
-                        <a href="{% url "communities" %}" class="collaborate-nav-item active">Find Communities</a>
-                        <a href="{% url "my_communities" %}" class="collaborate-nav-item">My Communities</a>
-                    </div>
-                </div>
-            </div>
+{% include 'hs_communities/communities-nav.html' with active='communities' %}
+<div class="container has-space-bottom-2x">
+  <div class="row">
+    <div class="col-sm-12">
+      <h2 class="page-title">Find Communities</h2>
+      <a class="btn btn-success" data-toggle="modal" data-target="#request-new-community-dialog">
+        <i class="fa fa-plus"></i> Request a New Community
+      </a>
+      {% comment %} <div>
+        <div class="alert alert-info alert-dismissible" role="alert">
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+              aria-hidden="true">&times;</span></button>
+          <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+          Communities are a new feature in HydroShare. For more information about creating one please
+          contact <b><a href="mailto:help@cuahsi.org?subject=Creating New Communities">help@cuahsi.org</a></b>
         </div>
+      </div> {% endcomment %}
+      <div class="group-search input-group has-space-top">
+        <span class="glyphicon glyphicon-search search-icon"></span>
+        <input id="txt-search-groups" type="text" class="form-control" placeholder="Search by community name..." />
+      </div>
+      <p id="id-Group-Search-Result-Msg"></p>
     </div>
+  </div>
 
-    <div class="container">
-        <div class="row">
-            <div class="col-sm-12">
-                <h2 class="page-title">Find Communities</h2>
-                {#                <a class="btn btn-success" data-toggle="modal" data-target="#create-group-dialog" disabled><i class="fa fa-plus"></i> Create Community</a>#}
-                <div>
-                    <div id="missing-metadata-or-file"
-                         class="alert alert-info alert-dismissible"
-                         role="alert">
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
-                                aria-hidden="true">&times;</span></button>
-                        <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
-                        Communities are a new feature in HydroShare. For more information about creating one please
-                        contact <b><a href="mailto:help@cuahsi.org?subject=Creating New Communities">help@cuahsi.org</a></b>
-                    </div>
-                </div>
-                <div class="group-search input-group">
-                    <span class="glyphicon glyphicon-search search-icon"></span>
-                    <input id="txt-search-groups" type="text" class="form-control" placeholder="Search by community name..."/>
-                </div>
-                <p id="id-Group-Search-Result-Msg"></p>
-            </div>
+  <div class="group-thumbnails">
+    {% if not communities_list %}
+    <div class="col-sm-12"><i>No communities have been created yet.</i></div>
+    {% endif %}
+
+    {% for community in communities_list %}
+    <div class="group-container word-break-normal">
+      <div class="group-thumbnail contribution community">
+        {% if community.banner and community.banner.url %}
+        <div class="community-banner" style="background-image: url({{ community.banner.url }})">
         </div>
-
-        <div class="row group-thumbnails">
-            {% if not communities_list %}
-                <div class="col-sm-12"><i>No communities have been created yet.</i></div>
-            {% endif %}
-                {% for c in communities_list %}
-                        <div class="col-sm-6 col-md-4 group-container">
-                            <div class="group-thumbnail contribution">
-                                {% if group.gaccess.picture and group.gaccess.picture.url %}
-                                    <div class="group-preview-image"
-                                         style="background-image: url({{ group.gaccess.picture.url }})"></div>
-                                {% else %}
-                                    <div class="group-preview-image group-preview-image-default"
-                                         style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
-                                {% endif %}
-                                <div class="group-caption">
-                                    <h3 class="group-name">
-                                        <a href="/community/{{ c.id }}">{{ c.name }}</a>
-                                    </h3>
-                                    <div class="group-purpose" style="overflow-y: auto">
-                                        <p>{{ group.gaccess.purpose|linebreaks }}</p>
-                                    </div>
-                                    <div class="group-description"><p>{{ group.gaccess.description|linebreaks }}</p>
-                                    </div>
-
-                                    <div class="text-center group-thumbnail-footer">
-                                        {% if group.gaccess.public %}
-                                            <div class="users-joined height-fix">
-                                                <div class="link-members"><a class="text-muted" href="#"
-                                                                             data-toggle="modal"
-                                                                             data-target="#modal-members-list-{{ group.id }}">MEMBERS</a>
-                                                </div>
-                                                {% for member in group.gaccess.members|slice:":5" %}
-                                                    {% if  member.userprofile.picture and member.userprofile.picture.url %}
-                                                        <div style="background-image: url('{{ member.userprofile.picture.url }}');"
-                                                             class="round-image profile-pic-thumbnail"
-                                                             title="{{ member|best_name }}">
-                                                        </div>
-                                                    {% else %}
-                                                        <div class="profile-pic-thumbnail-small round-image"
-                                                             title="{{ member|best_name }}">
-
-                                                        </div>
-                                                    {% endif %}
-                                                {% endfor %}
-                                            </div>
-                                            {% if group.gaccess.members|length > 5 %}
-                                                <div>
-                                                    <small class="text-muted">
-                                                        and {{ group.gaccess.members|length|add:"-5" }} others have
-                                                        joined
-                                                    </small>
-                                                </div>
-                                            {% endif %}
-
-                                            <!-- Members List Modal -->
-                                            <div class="modal fade members-modal" id="modal-members-list-{{ group.id }}"
-                                                 tabindex="-1" role="dialog"
-                                                 aria-labelledby="Invite">
-                                                <div class="modal-dialog" role="document">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <button type="button" class="close" data-dismiss="modal"
-                                                                    aria-label="Close"><span
-                                                                    aria-hidden="true">&times;</span>
-                                                            </button>
-                                                            <h4 class="modal-title">Members</h4>
-                                                        </div>
-
-                                                        <div class="modal-body">
-                                                            <table class="table access-table members-table"
-                                                                   style="text-align: left;">
-                                                                <tbody>
-                                                                {% for u in group.gaccess.members %}
-                                                                    <tr id="row-id-{{ u.pk }}"
-                                                                        {% if owners|length == 1 or not self_access_level == 'owner' %}class="hide-actions"{% endif %}>
-                                                                        <td>
-                                                                            <div class="user-scope">
-                                                                                {% if u.userprofile.picture %}
-                                                                                    <div style="background-image: url('{{ u.userprofile.picture.url }}');"
-                                                                                         class="profile-pic-thumbnail round-image"></div>
-                                                                                {% else %}
-                                                                                    <div class="profile-pic-thumbnail round-image user-icon"></div>
-                                                                                {% endif %}
-
-                                                                                <a data-col="name"
-                                                                                   class="user-name">{{ u|contact }}</a>
-                                                                                {% if u.pk == current_user.pk %}
-                                                                                    <span class="text-muted you-flag">(You)</span>
-                                                                                {% endif %}
-                                                                                <br>
-                                                                                <span data-col="user-name"
-                                                                                      class="user-username-content">{{ u.username }}</span>
-                                                                            </div>
-                                                                        </td>
-                                                                    </tr>
-                                                                {% endfor %}
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-default"
-                                                                    data-dismiss="modal">Close
-                                                            </button>
-                                                        </div>
-
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        {% endif %}
-
-                                        <br>
-
-                                            <div class="text-center">
-                                                <h4 class="flag-joined"></h4>
-                                            </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                {% endfor %}
+        {% elif community.is_czo_community %}
+        <div class="community-banner czo-banner"
+          style="background-image: url({% static 'img/czo-logo-wide.png' %})">
         </div>
+        {% else %}
+        <div class="community-banner default"></div>
+        {% endif %}
+
+        {% if community.picture and community.picture.url %}
+        {% thumbnail community.picture "x150" crop="center" as im %}
+        <div class="group-image-wrapper medium">
+          <div class="group-image" style="background-image: url({{ im.url }})"></div>
+        </div>
+        {% endthumbnail %}
+        {% else %}
+        <div class="group-image-wrapper medium">
+          <div class="group-image group-preview-image-default"
+            style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="community-caption">
+          <h3 class="group-name">
+            <a href="/community/{{ community.id }}">{{ community.name }}</a>
+          </h3>
+
+          {% if community.purpose %}
+          <div class="community-purpose word-break-normal text-muted">
+            <p>{{ community.purpose|linebreaks }}</p>
+          </div>
+          {% endif %}
+
+          {% if community.description %}
+          <h5 class="is-marginless has-space-top">About this community:</h5>
+          <div class="community-description">
+            <p>{{ community.description|linebreaks }}</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
     </div>
+    {% endfor %}
+  </div>
+</div>
+{% include 'hs_communities/request-new-community-modal.html' %}
 
 {% endblock %}
 
 {% block extra_js %}
-    {{ block.super }}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-toolkit.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/collaborate.js"></script>
+{{ block.super }}
+<script type="text/javascript" src="{% static 'js/bootstrap-toolkit.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/group-actions.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/collaborate.js' %}"></script>
 {% endblock %}

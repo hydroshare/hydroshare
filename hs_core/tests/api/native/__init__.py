@@ -26,4 +26,3 @@ from .test_update_metadata import *
 from .test_update_resource_file import *
 from .test_user_from_id import *
 from .test_utils import *
-

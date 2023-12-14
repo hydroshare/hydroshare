@@ -2,12 +2,13 @@ import os
 import shutil
 import json
 
-from django.contrib.auth.models import Group
-from django.core.urlresolvers import reverse
+from django.contrib.auth.models import Group, User
+from django.urls import reverse
 from django.core.files.uploadedfile import UploadedFile
 
 
 from hs_core import hydroshare
+from hs_core.models import BaseResource
 from hs_core.views import set_resource_flag
 from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
 
@@ -28,9 +29,9 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
             groups=[]
         )
         self.gen_res_one = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user,
-            title='Generic Resource Set Flag Testing-1'
+            title='Resource Set Flag Testing-1'
         )
 
         # Make a text file
@@ -46,9 +47,9 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
             {'subject': {'value': 'sub-1'}}
         ]
         self.gen_res_two = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user,
-            title='Generic Resource Set Flag Testing-2',
+            title='Resource Set Flag Testing-2',
             files=files,
             metadata=metadata_dict
         )
@@ -57,6 +58,9 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
         super(TestSetResourceFlag, self).tearDown()
+        User.objects.all().delete()
+        Group.objects.all().delete()
+        BaseResource.objects.all().delete()
 
     def test_set_resource_flag_make_public(self):
         # here we are testing the set_resource_flag view function to make a resource public
@@ -256,6 +260,62 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
         # check that the resource is not shareable now
         self.gen_res_one.raccess.refresh_from_db()
         self.assertEqual(self.gen_res_one.raccess.shareable, False)
+        # clean up
+        hydroshare.delete_resource(self.gen_res_one.short_id)
+        hydroshare.delete_resource(self.gen_res_two.short_id)
+
+    def test_set_resource_flag_enable_private_sharing_link(self):
+        """Here we are testing the set_resource_flag view function to enable private link sharing"""
+
+        # test that the resource is  not enabled for private link sharing
+        self.assertFalse(self.gen_res_one.raccess.allow_private_sharing)
+        # set it not shareable
+        self.gen_res_one.raccess.shareable = False
+        self.gen_res_one.raccess.save()
+
+        url_params = {'shortkey': self.gen_res_one.short_id}
+        post_data = {'flag': 'enable_private_sharing_link'}
+        url = reverse('set_resource_flag', kwargs=url_params)
+        request = self.factory.post(url, data=post_data)
+        request.user = self.user
+
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
+        response = set_resource_flag(request, shortkey=self.gen_res_one.short_id)
+        response_data = json.loads(response.content.decode())
+        self.assertEqual(response_data['status'], 'success')
+
+        # check that the resource is enabled for private link sharing
+        self.gen_res_one.raccess.refresh_from_db()
+        self.assertTrue(self.gen_res_one.raccess.allow_private_sharing)
+        # clean up
+        hydroshare.delete_resource(self.gen_res_one.short_id)
+        hydroshare.delete_resource(self.gen_res_two.short_id)
+
+    def test_set_resource_flag_remove_private_sharing_link(self):
+        """Here we are testing the set_resource_flag view function to not allow private link sharing"""
+
+        # test that the resource is  not enabled for private link sharing
+        self.assertFalse(self.gen_res_one.raccess.allow_private_sharing)
+        # set it not shareable
+        self.gen_res_one.raccess.allow_private_sharing = True
+        self.gen_res_one.raccess.save()
+
+        url_params = {'shortkey': self.gen_res_one.short_id}
+        post_data = {'flag': 'remove_private_sharing_link'}
+        url = reverse('set_resource_flag', kwargs=url_params)
+        request = self.factory.post(url, data=post_data)
+        request.user = self.user
+
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
+        response = set_resource_flag(request, shortkey=self.gen_res_one.short_id)
+        response_data = json.loads(response.content.decode())
+        self.assertEqual(response_data['status'], 'success')
+
+        # check that the resource is not enabled for private link sharing
+        self.gen_res_one.raccess.refresh_from_db()
+        self.assertFalse(self.gen_res_one.raccess.allow_private_sharing)
         # clean up
         hydroshare.delete_resource(self.gen_res_one.short_id)
         hydroshare.delete_resource(self.gen_res_two.short_id)

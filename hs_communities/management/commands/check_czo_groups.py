@@ -13,7 +13,7 @@ If a resource has an inappropriate prefix for a group,
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User, Group
 from hs_access_control.models import UserResourcePrivilege, GroupResourcePrivilege, \
-        GroupCommunityPrivilege, PrivilegeCodes, Community
+    GroupCommunityPrivilege, PrivilegeCodes, Community
 from hs_core.models import BaseResource
 from django_irods.icommands import SessionException
 
@@ -48,20 +48,20 @@ def set_quota_holder(resource, user):
     except SessionException as ex:
         # some resources copied from www for testing do not exist in the iRODS backend,
         # hence need to skip these test artifects
-        print(resource.short_id + ' raised SessionException when setting quota holder: ' +
-              ex.stderr)
+        print(resource.short_id + ' raised SessionException when setting quota holder: '
+              + ex.stderr)
         return False
     except AttributeError as ex:
         # when federation is not set up correctly, istorage does not have a session
         # attribute, hence raise AttributeError - ignore for testing
-        print(resource.short_id + ' raised AttributeError when setting quota holder: ' +
-              ex.message)
+        print(resource.short_id + ' raised AttributeError when setting quota holder: '
+              + str(ex))
         return False
     except ValueError as ex:
         # when federation is not set up correctly, istorage does not have a session
         # attribute, hence raise AttributeError - ignore for testing
-        print(resource.short_id + ' raised ValueError when setting quota holder: ' +
-              ex.message)
+        print(resource.short_id + ' raised ValueError when setting quota holder: '
+              + str(ex))
         return False
     return True
 

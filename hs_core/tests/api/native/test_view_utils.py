@@ -20,7 +20,7 @@ class TestViewUtils(MockIRODSTestCaseMixin, TestCase):
         )
 
         resource = hydroshare.create_resource(
-            'GenericResource',
+            'CompositeResource',
             user,
             'test resource',
         )
@@ -56,7 +56,7 @@ class TestViewUtils(MockIRODSTestCaseMixin, TestCase):
         )
 
         resource = hydroshare.create_resource(
-            'GenericResource',
+            'CompositeResource',
             user,
             'test resource',
         )

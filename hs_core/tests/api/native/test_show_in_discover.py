@@ -20,7 +20,7 @@ class TestHideOldVersions(TestCase):
             superuser=False,
             groups=[]
         )
-        # create a generic resource
+        # create a composite resource
         self.version0 = hydroshare.create_resource(
             resource_type='CompositeResource',
             owner=self.owner,

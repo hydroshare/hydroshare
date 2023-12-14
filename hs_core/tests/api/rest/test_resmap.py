@@ -14,7 +14,7 @@ class TestResourceMap(ResMapTestCase):
     def setUp(self):
         super(TestResourceMap, self).setUp()
 
-        self.rtype = 'GenericResource'
+        self.rtype = 'CompositeResource'
         self.title = 'My Test resource'
         self.res = resource.create_resource(self.rtype,
                                             self.user,
@@ -60,12 +60,12 @@ class TestResourceMap(ResMapTestCase):
             doclen += 1
             self.assertTrue(isinstance(s, term.URIRef))
             subject = s.split('/')
-            subject = subject[len(subject)-1]
+            subject = subject[len(subject) - 1]
             self.assertEqual(subject, "resourcemetadata.xml")
 
             self.assertTrue(isinstance(o, term.Literal))
             object = o.split('/')
-            object = object[len(object)-1]
+            object = object[len(object) - 1]
             self.assertEqual(object, "resourcemap.xml#aggregation")
 
         self.assertEqual(doclen, 1)
@@ -116,12 +116,12 @@ class TestResourceMap(ResMapTestCase):
             doclen += 1
             self.assertTrue(isinstance(s, term.URIRef))
             subject = s.split('/')
-            subject = subject[len(subject)-1]
+            subject = subject[len(subject) - 1]
             self.assertEqual(subject, "resourcemetadata.xml")
 
             self.assertTrue(isinstance(o, term.Literal))
             object = o.split('/')
-            object = object[len(object)-1]
+            object = object[len(object) - 1]
             self.assertEqual(object, "resourcemap.xml#aggregation")
 
         self.assertEqual(doclen, 1)
@@ -137,7 +137,7 @@ class TestResourceMap(ResMapTestCase):
         for s, p, o in formats:
             fmtlen += 1
             subject = s.split('/')
-            subject = subject[len(subject)-1]
+            subject = subject[len(subject) - 1]
             self.assertTrue(isinstance(o, term.Literal))
             if (subject == 'test.txt'):
                 txt_count += 1

@@ -23,7 +23,7 @@ class TestResourceFileFolderOprsAPI(MockIRODSTestCaseMixin,
         )
 
         self.res = hydroshare.create_resource(
-            'GenericResource',
+            'CompositeResource',
             self.user,
             'My Test Resource'
         )
@@ -49,6 +49,14 @@ class TestResourceFileFolderOprsAPI(MockIRODSTestCaseMixin,
         self.test_file_2 = open(self.test_file_name2, 'rb')
         self.test_file_3 = open(self.test_file_name3, 'rb')
 
+        # use existing test data file
+        self.test_data_file_name = "test.txt"
+        self.test_data_file_path = f"hs_core/tests/data/{self.test_data_file_name}"
+        self.test_data_zip_file_name = "test.zip"
+        self.test_data_zip_file_path = f"hs_core/tests/data/{self.test_data_zip_file_name}"
+        self.test_data_file = open(self.test_data_file_path, 'rb')
+        self.test_data_zip_file = open(self.test_data_zip_file_path, 'rb')
+
     def tearDown(self):
         super(TestResourceFileFolderOprsAPI, self).tearDown()
         self.test_file_1.close()
@@ -57,6 +65,8 @@ class TestResourceFileFolderOprsAPI(MockIRODSTestCaseMixin,
         os.remove(self.test_file_2.name)
         self.test_file_3.close()
         os.remove(self.test_file_3.name)
+        self.test_data_file.close()
+        self.test_data_zip_file.close()
 
     def test_resource_file_folder_oprs(self):
         # resource should not have any files at this point

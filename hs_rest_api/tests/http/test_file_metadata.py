@@ -2,7 +2,7 @@ import os
 import json
 import tempfile
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from rest_framework import status
 
 from hs_core.tests.api.rest.base import HSRESTTestCase
@@ -99,7 +99,7 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
 
         # Update point spatial coverage
         response = self.client.put(file_metadata_url, {
-            "spatial_coverage":  {
+            "spatial_coverage": {
                 "units": "Decimal degrees",
                 "east": -84.0465,
                 "north": 49.6791,
@@ -183,7 +183,7 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
 
         # Create box spatial coverage
         response = self.client.put(file_metadata_url, {
-            "spatial_coverage":  {
+            "spatial_coverage": {
                 "units": "Decimal degrees",
                 "type": "box",
                 "eastlimit": -97.92170777387547,
@@ -208,7 +208,7 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
 
         # Update box spatial coverage
         response = self.client.put(file_metadata_url, {
-            "spatial_coverage":  {
+            "spatial_coverage": {
                 "units": "Decimal degrees",
                 "type": "box",
                 "eastlimit": -97.921707773875,

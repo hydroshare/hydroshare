@@ -7,20 +7,32 @@
                 <tr>
                     <th>Authors:</th>
 
-                    <td class="authors-wrapper" v-if="res_mode === 'View'">
-                        <a v-for="(author, index) in authors" data-toggle="modal"
-                           @click="selectAuthor(author, index)"
-                           data-target="#view-author-modal">
-                            <template v-if="author.name">${ author.name | nameWithoutCommas }</template>
-                            <template v-else-if="author.organization">${ author.organization }</template>
-                            <template v-else>${ author.email }</template>
-                        </a>
-                    </td>
+                    <td style="display:flex; align-items: flex-start;">
+                      <div v-if="res_mode === 'View'" class="authors-wrapper">
+                        <template v-if="authors.length">
+                          <a v-for="(author, index) in authors" data-toggle="modal"
+                            @click="selectAuthor(author, index)"
+                            data-target="#view-author-modal">
+                              <template v-if="author.name">${ author.name | nameWithoutCommas }</template>
+                              <template v-else-if="author.organization">${ author.organization }</template>
+                              <template v-else>${ author.email }</template>
+                          </a>
+                        </template>
+                        <template v-else>
+                          This resource does not have an author who is an active HydroShare user.
+                          Contact CUAHSI (<a href="mailto:help@cuahsi.org">help@cuahsi.org</a>)
+                          {% if cm.raccess.public %}
+                              for information on this resource.
+                          {% else %}
+                              to determine if accessing this resource is possible.
+                          {% endif %}
+                        </template>
+                      </div>
 
-                    <td v-if="res_mode === 'Edit'">
-                        {% if not cm.raccess.published %}
+                      <div v-if="res_mode === 'Edit'">
+                        {% if not cm.raccess.published_or_review_pending %}
                         <a :disabled="isUpdatingAuthor" type="button" id="btn-add-new-author"
-                           class="btn btn-success btn-xs" data-toggle="modal"
+                           class="btn btn-success btn-xs has-space-right" data-toggle="modal"
                            data-target="#add-author-modal" title="Add Author">
                             <span class="glyphicon glyphicon-plus"></span>
                         </a>
@@ -35,10 +47,7 @@
                                 </a>
                             </span>
                         </span>
-                        <span data-toggle="tooltip" data-placement="auto"
-                              title='Drag and drop Authors to rearrange.'
-                              class="glyphicon glyphicon-info-sign text-muted">
-                        </span>
+                        
                         {% else %}
                           <span class="authors-wrapper">
                                <a v-for="(author, index) in authors" data-toggle="modal"
@@ -50,27 +59,52 @@
                                 </a>
                           </span>
                         {% endif %}
+                      </div>
+                      <div class="flex has-space-left align-center gap-1">
+                        {% if resource_edit_mode %}
+                            {% if not cm.raccess.published_or_review_pending %}
+                                <span data-toggle="tooltip" data-placement="auto"
+                                    title='Drag and drop Authors to rearrange.'
+                                    class="glyphicon glyphicon-info-sign text-muted">
+                                </span>
+                            {% endif %}
+                            <a data-toggle="tooltip" data-placement="auto"
+                                href="https://www.youtube.com/watch?v=5rYQjvnRXlI" target="_blank"
+                                title='How to: Authorship and Ownership'
+                                class="fa fa-youtube-play icon-red no-decoration icon-guide">
+                            </a>
+                        {% endif %}
+                      </div>
                     </td>
                 </tr>
                 <tr>
                     <th>Owners:</th>
-                    <td class="owners-wrapper">
+                    <td v-if="owners.length" class="owners-wrapper">
                         <template v-for="owner in owners">
                             <profile-link
-                                :user="owner" :key="owner.id" @load-card="onLoadOwnerCard($event)">
+                                :user="owner" :key="owner.id" @load-card="loadOwnerCard($event)">
                             </profile-link>
                         </template>
 
                         <profile-card :user="userCardSelected" :position="cardPosition"></profile-card>
                     </td>
+                    <td v-else class="owners-wrapper">
+                        This resource does not have an owner who is an active HydroShare user.
+                        Contact CUAHSI (<a href="mailto:help@cuahsi.org">help@cuahsi.org</a>)
+                        {% if cm.raccess.public %}
+                            for information on this resource.
+                        {% else %}
+                            to determine if accessing this resource is possible.
+                        {% endif %}
+                    </td>
                 </tr>
                 <tr>
-                    <th>Resource type:</th>
+                    <th>Type:</th>
                     <td>{{ cm|resource_type }}</td>
                 </tr>
                 <tr>
                     <th>Storage:</th>
-                    <td>The size of this resource is {{ cm.size|filesizeformat }}</td>
+                    <td>The size of this {{ cm|resource_type|lower }} is {{ cm.size|filesizeformat }}</td>
                 </tr>
                 <tr>
                     <th>Created:</th>
@@ -79,8 +113,8 @@
                 <tr>
                     <th>Last updated:</th>
                     <td> {{ cm.last_updated|date:"M d, Y" }} at {{ cm.last_updated|time }}
-                        <profile-link v-on:load-card="onLoadOwnerCard($event)" :user="lastChanagedBy"></profile-link>
-                        <profile-card :user="lastChanagedBy" :position="cardPosition"></profile-card>
+                        <profile-link v-if="lastChanagedBy.is_active" v-on:load-card="loadOwnerCard($event)" :user="lastChanagedBy"></profile-link>
+                        <profile-card v-if="lastChanagedBy.is_active" :user="lastChanagedBy" :position="cardPosition"></profile-card>
                     </td>
                 </tr>
                 {% if cm.raccess.published %}
@@ -129,4 +163,4 @@
     </div>
 </div>
 
-<script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/left-header-app.js"></script>
+<script type="text/javascript" src="{% static 'js/hs-vue/left-header-app.js' %}"></script>

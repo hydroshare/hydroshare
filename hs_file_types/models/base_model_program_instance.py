@@ -5,7 +5,7 @@ import random
 import shutil
 from uuid import uuid4
 
-from django.contrib.postgres.fields import JSONField
+from django.core.exceptions import ValidationError
 from django.db import models
 from foresite import utils, Aggregation, URIRef, AggregatedResource, RdfLibSerializer
 from rdflib import Namespace
@@ -25,7 +25,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
 
     # metadata schema (in json format) for model instance aggregation
     # metadata for the model instance aggregation is validated based on this schema
-    metadata_schema_json = JSONField(default=dict)
+    metadata_schema_json = models.JSONField(default=dict)
 
     class Meta:
         abstract = True
@@ -42,7 +42,9 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
             # this model program/instance aggregation has been created from a single resource file
             # the path of the resource file is the aggregation name
             single_res_file = self.files.first()
-            return single_res_file.short_path
+            if single_res_file:
+                return single_res_file.short_path
+            return ""
 
     @property
     def schema_short_file_path(self):
@@ -50,6 +52,9 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         """
 
         json_file_name = self.aggregation_name
+        if not json_file_name:
+            return json_file_name
+
         if "/" in json_file_name:
             json_file_name = os.path.basename(json_file_name)
 
@@ -60,7 +65,10 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         if self.folder:
             file_folder = self.folder
         else:
-            file_folder = self.files.first().file_folder
+            file_folder = ''
+            aggr_file = self.files.first()
+            if aggr_file is not None:
+                file_folder = aggr_file.file_folder
         if file_folder:
             json_file_name = os.path.join(file_folder, json_file_name)
 
@@ -71,6 +79,13 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         """Full path of the aggregation metadata schema json file starting with {resource_id}/data/contents/
         """
         return os.path.join(self.resource.file_path, self.schema_short_file_path)
+
+    @property
+    def schema_file_url(self):
+        """URL to the aggregation metadata schema json file
+        """
+        from hs_core.hydroshare.utils import current_site_url
+        return "{}/resource/{}".format(current_site_url(), self.schema_file_path)
 
     @classmethod
     def get_main_file_type(cls):
@@ -92,10 +107,15 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         return cls.__name__
 
     @classmethod
-    def get_primary_resouce_file(cls, resource_files):
+    def get_primary_resource_file(cls, resource_files):
         """Gets any one resource file from the list of files *resource_files* """
 
         return resource_files[0] if resource_files else None
+
+    @classmethod
+    def supports_folder_based_aggregation(cls):
+        """A model program/model instance aggregation can be created from a folder"""
+        return True
 
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=''):
@@ -134,17 +154,24 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
                                                   res_files=res_files,
                                                   new_files_to_upload=[],
                                                   folder_path=folder_path)
+            try:
+                if folder_path and file_id is None:
+                    logical_file.folder = folder_path
+                    logical_file.save()
+                    # make all the files in the selected folder as part of the aggregation
+                    logical_file.add_resource_files_in_folder(resource, folder_path)
+                    log.info("{0} aggregation was created for folder:{1}.".format(logical_file.data_type, folder_path))
+                else:
+                    log.info("{0} aggregation was created for file:{1}.".format(logical_file.data_type,
+                                                                                res_file.storage_path))
+                ft_ctx.logical_file = logical_file
+            except Exception as ex:
+                msg = "{} aggregation. Error when creating aggregation. Error:{}".format(logical_file.data_type,
+                                                                                         str(ex))
+                log.exception(msg)
+                logical_file.remove_aggregation()
+                raise ValidationError(msg)
 
-            if folder_path and file_id is None:
-                logical_file.folder = folder_path
-                logical_file.save()
-                # make all the files in the selected folder as part of the aggregation
-                logical_file.add_resource_files_in_folder(resource, folder_path)
-                log.info("{0} aggregation was created for folder:{1}.".format(logical_file.data_type, folder_path))
-            else:
-                log.info("{0} aggregation was created for file:{1}.".format(logical_file.data_type,
-                                                                            res_file.storage_path))
-            ft_ctx.logical_file = logical_file
         return logical_file
 
     def generate_map_xml(self):
@@ -205,17 +232,6 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
             resFiles[n]._ore.isAggregatedBy = ag_url
             resFiles[n]._dc.format = get_file_mime_type(os.path.basename(f.short_path))
 
-        # if this is a model program or model instance, add the metadata schema json exists
-        if self.metadata_schema_json:
-            n = len(files)
-            res_uri = '{hs_url}/resource/{res_id}/data/contents/{file_short_path}'.format(
-                hs_url=current_site_url,
-                res_id=self.resource.short_id,
-                file_short_path=self.schema_short_file_path)
-            resFiles.append(AggregatedResource(res_uri))
-            resFiles[n]._ore.isAggregatedBy = ag_url
-            resFiles[n]._dc.format = get_file_mime_type(os.path.basename(self.schema_short_file_path))
-
         # Add the resource files to the aggregation
         a.add_resource(resMetaFile)
         for f in resFiles:
@@ -266,47 +282,60 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         if self.folder is not None:
             file_folder = self.folder
         else:
-            file_folder = self.files.first().file_folder
+            file_folder = ''
+            aggr_file = self.files.first()
+            if aggr_file is not None:
+                file_folder = aggr_file.file_folder
 
         if file_folder:
             xml_file_name = os.path.join(file_folder, xml_file_name)
         return xml_file_name
 
-    def logical_delete(self, user, delete_res_files=True):
+    def logical_delete(self, user, resource=None, delete_res_files=True, delete_meta_files=True):
         """
         Deletes the logical file as well as all resource files associated with this logical file.
         This function is primarily used by the system to delete logical file object and associated
         metadata as part of deleting a resource file object. Any time a request is made to
-        deleted a specific resource file object, if the the requested file is part of a
+        delete a specific resource file object, if the requested file is part of a
         logical file then all files in the same logical file group will be deleted. if custom logic
         requires deleting logical file object (LFO) then instead of using LFO.delete(), you must
         use LFO.logical_delete()
-        :param  user    user who is deleting file type/aggregation
-        :param delete_res_files If True all resource files that are part of this logical file will
+        :param  user: user who is deleting file type/aggregation
+        :param  resource: an instance of CompositeResource to which this logical file belongs to
+        :param delete_res_files: If True all resource files that are part of this logical file will
         be deleted
+        :param delete_meta_files: If True the resource map and metadata files that are part of this logical file
+        will be deleted. The only time this should be set to False is when deleting a folder as the folder
+        gets deleted from iRODS which deletes the associated metadata and resource map files.
         """
 
         from hs_core.hydroshare.resource import delete_resource_file
 
         parent_aggr = self.get_parent()
+        if resource is None:
+            resource = self.resource
 
-        # delete associated metadata and map xml documents
-        istorage = self.resource.get_irods_storage()
-        if istorage.exists(self.metadata_file_path):
-            istorage.delete(self.metadata_file_path)
-        if istorage.exists(self.map_file_path):
-            istorage.delete(self.map_file_path)
+        if delete_meta_files:
+            # delete associated metadata and map xml documents
+            istorage = resource.get_irods_storage()
+            if istorage.exists(self.metadata_file_path):
+                istorage.delete(self.metadata_file_path)
+            if istorage.exists(self.map_file_path):
+                istorage.delete(self.map_file_path)
 
-        # delete schema json file if this a model aggregation
-        # if self.is_model_program or self.is_model_instance:
-        if istorage.exists(self.schema_file_path):
-            istorage.delete(self.schema_file_path)
+            # delete schema json file if this a model aggregation
+            if istorage.exists(self.schema_file_path):
+                istorage.delete(self.schema_file_path)
 
         # delete all resource files associated with this instance of logical file
         if delete_res_files:
             for f in self.files.all():
-                delete_resource_file(f.resource.short_id, f.id, user,
-                                     delete_logical_file=False)
+                delete_resource_file(resource.short_id, f.id, user, delete_logical_file=False)
+        else:
+            # first need to set the aggregation for each of the associated resource files to None
+            # so that deleting the aggregation (logical file) does not cascade to deleting of
+            # resource files associated with the aggregation
+            self.files.update(logical_file_object_id=None, logical_file_content_type=None)
 
         # delete logical file first then delete the associated metadata file object
         # deleting the logical file object will not automatically delete the associated
@@ -324,10 +353,12 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
             # the metadata object
             metadata.delete()
 
-        # if the this deleted aggregation has a parent aggregation - recreate xml files for the parent
-        # aggregation so that the references to the deleted aggregation can be removed
+        # if this deleted aggregation has a parent aggregation - xml files for the parent
+        # aggregation need to be regenerated at the time of download - so need to set metadata to dirty
         if parent_aggr is not None:
-            parent_aggr.create_aggregation_xml_documents()
+            parent_aggr.set_metadata_dirty()
+
+        resource.cleanup_aggregations()
 
     def remove_aggregation(self):
         """Deletes the aggregation object (logical file) *self* and the associated metadata
@@ -354,9 +385,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         # first need to set the aggregation for each of the associated resource files to None
         # so that deleting the aggregation (logical file) does not cascade to deleting of
         # resource files associated with the aggregation
-        for res_file in self.files.all():
-            res_file.logical_file_content_object = None
-            res_file.save()
+        self.files.update(logical_file_object_id=None, logical_file_content_type=None)
 
         # delete logical file (aggregation) first then delete the associated metadata file object
         # deleting the logical file object will not automatically delete the associated
@@ -379,9 +408,9 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
             for res_file in res_files:
                 parent_aggr.add_resource_file(res_file)
 
-            # need to regenerate the xml files for the parent so that the references to this deleted aggregation
-            # can be removed from the parent xml files
-            parent_aggr.create_aggregation_xml_documents()
+            # need to regenerate the xml files for the parent at the time of download so that the references
+            # to this deleted aggregation can be removed from the parent xml files - so need to set metadata to dirty
+            parent_aggr.set_metadata_dirty()
 
         post_remove_file_aggregation.send(
             sender=self.__class__,
@@ -429,16 +458,19 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         return self.folder is None
 
     @classmethod
-    def can_set_folder_to_aggregation(cls, resource, dir_path):
+    def can_set_folder_to_aggregation(cls, resource, dir_path, aggregations=None):
         """helper to check if the specified folder *dir_path* can be set to ModelProgram or ModelInstance aggregation
         """
 
         # checking target folder for any aggregation
-        if resource.get_folder_aggregation_object(dir_path) is not None:
+        if resource.get_folder_aggregation_object(dir_path, aggregations=aggregations) is not None:
             # target folder is already an aggregation
             return False
 
-        aggregation_path = dir_path[len(resource.file_path) + 1:]
+        aggregation_path = dir_path
+        if dir_path.startswith(resource.file_path):
+            aggregation_path = dir_path[len(resource.file_path) + 1:]
+
         # checking sub-folders for fileset aggregation
         # check that we don't have any sub folder of dir_path representing a fileset aggregation
         # so that we can avoid nesting a fileset aggregation inside a model program or model instance aggregation
@@ -470,7 +502,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         while '/' in path:
             if path == resource.file_path:
                 break
-            parent_aggregation = resource.get_folder_aggregation_object(path)
+            parent_aggregation = resource.get_folder_aggregation_object(path, aggregations=aggregations)
             if parent_aggregation is not None:
                 # this is the first parent folder that represents an aggregation
                 break
@@ -504,8 +536,8 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
                 else:
                     # if any of the files is part of a model instance aggr or fileset - folder can't be
                     # set to model instance
-                    return not any(res_file.has_logical_file and (res_file.logical_file.is_model_instance or
-                                                                  res_file.logical_file.is_fileset) for
+                    return not any(res_file.has_logical_file and (res_file.logical_file.is_model_instance
+                                                                  or res_file.logical_file.is_fileset) for
                                    res_file in files_in_path)
 
             # path has no files - can't set the folder to aggregation

@@ -112,12 +112,12 @@ class ResourceIRODSMixin(models.Model):
 
         # authorize user
         if write:
-            if not user.is_authenticated() or not user.uaccess.can_change_resource(self):
+            if not user.is_authenticated or not user.uaccess.can_change_resource(self):
                 raise PermissionDenied("user {} cannot change resource {}"
                                        .format(user.username, self.short_id))
         else:
-            if not self.raccess.public and (not user.is_authenticated() or
-                                            not user.uaccess.can_view_resource(self)):
+            if not self.raccess.public and (not user.is_authenticated
+                                            or not user.uaccess.can_view_resource(self)):
                 raise PermissionDenied("user {} cannot view resource {}"
                                        .format(user.username, self.short_id))
         if path is None:
@@ -179,23 +179,23 @@ class ResourceIRODSMixin(models.Model):
                         output['full_path'] = value
                         if self.is_federated:
                             if __debug__:
-                                assert(value.startswith(self.resource_federation_path))
+                                assert (value.startswith(self.resource_federation_path))
                             output['long_path'] = value[len(self.resource_federation_path):]
                             output['home_path'] = self.resource_federation_path
                         else:
                             location = value.find(self.short_id)
                             if __debug__:
-                                assert(location >= 0)
+                                assert (location >= 0)
                             if location == 0:
                                 output['long_path'] = value
                                 output['home_path'] = self.irods_home_path
                             else:
                                 output['long_path'] = value[location:]
                                 # omit trailing slash
-                                output['home_path'] = value[:(location-1)]
+                                output['home_path'] = value[:(location - 1)]
 
                         if __debug__:
-                            assert(output['long_path'].startswith(self.short_id))
+                            assert (output['long_path'].startswith(self.short_id))
 
                     if key == 'string':
                         output['ticket_id'] = value
@@ -253,11 +253,11 @@ class ResourceIRODSMixin(models.Model):
 
         # authorize user
         if write:
-            if not user.is_authenticated() or not user.uaccess.can_change_resource(self):
+            if not user.is_authenticated or not user.uaccess.can_change_resource(self):
                 raise PermissionDenied("user {} cannot delete change ticket {} for {}"
                                        .format(user.username, ticket_id, self.short_id))
         else:
-            if not user.is_authenticated() or not user.uaccess.can_view_resource(self):
+            if not user.is_authenticated or not user.uaccess.can_view_resource(self):
                 raise PermissionDenied("user {} cannot delete view ticket {} for {}"
                                        .format(user.username, ticket_id, self.short_id))
         istorage = self.get_irods_storage()

@@ -1,0 +1,278 @@
+{% load pages_tags mezzanine_tags hydroshare_tags thumbnail %}
+<div id="group-members" class="row">
+  <div class="col-sm-12 col-md-3">
+    {% if profile_user.is_group_owner %}
+    {% if group.gaccess.active %}
+    <button type="button" class="btn btn-primary has-space-bottom" role="button" data-toggle="modal"
+      data-target="#invite-dialog"><span class="fa fa-user-plus"></span> Invite People</button>
+    {% endif %}
+    {% endif %}
+    <table id="members-filter" class="table-user-contributions table table-hover">
+      <tbody>
+        <tr class="active c-pointer" data-filter-by="all">
+          <td><span>All</span></td>
+          <td><span class="badge" data-filter-by='All'>0</span></td>
+        </tr>
+        <tr class="c-pointer" data-filter-by="edit-user">
+          <td><span>Owners</span></td>
+          <td><span class="badge" data-filter-by='Owners'>0</span></td>
+        </tr>
+        <tr class="c-pointer" data-filter-by="pending">
+          <td><span>Pending</span></td>
+          <td><span class="badge" data-filter-by='Pending'>0</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col-sm-12 col-md-9">
+    {# All members #}
+    <table data-edit-count="{{ edit_users|length }}" data-view-count="{{ view_users|length }}"
+      data-pending-count="{{ group.gaccess.active_group_membership_requests|length }}" id="all-members-table"
+      class="table-members-list active">
+
+      {% for owner in group.gaccess.owners %}
+      <tr data-filter-by="edit-user">
+        <td>
+          {% if owner.userprofile.picture and owner.userprofile.picture.url %}
+          {% thumbnail owner.userprofile.picture "x80" crop="center" as im %}
+          <div style="background-image: url('{{ im.url }}');" class="profile-pic-thumbnail round-image">
+          </div>
+          {% endthumbnail %}
+          {% else %}
+          <div class="profile-pic-thumbnail-small round-image user-icon"></div>
+          {% endif %}
+        </td>
+        <td>
+          <!-- TODO: replace for profile card component -->
+          <h4><strong><a>{{ owner|contact }}</a></strong></h4>
+          {% if owner.userprofile.title %}
+          <span class="text-muted">{{ owner.userprofile.title }}</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if profile_user.is_group_owner and group.gaccess.active or profile_user.is_group_editor and group.gaccess.active %}
+          <div class="dropdown custom-dropdown">
+            <button class="btn btn-default dropdown-toggle" type="button" id="roleDropDown-{{ member.id }}"
+              data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+              Owner
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="roleDropDown-{{ member.id }}">
+              <li>
+                <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ owner.id }}/owner/">
+                  {% csrf_token %}
+                  <a href="#" class="btn-share-group" data-role="Owner">Owner</a>
+                </form>
+              </li>
+              <li>
+                <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ owner.id }}/view/">
+                  {% csrf_token %}
+                  <a href="#" class="btn-share-group" data-role="Member">Member</a>
+                </form>
+              </li>
+              <li role="separator" class="divider"></li>
+              <li>
+                <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ owner.id }}/">
+                  {% csrf_token %}
+                  <a href="#" class="btn-unshare-group">Expel</a>
+                </form>
+              </li>
+            </ul>
+          </div>
+          {% else %}
+          Owner
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+
+      {# Template to generate subsequent rows after accepting join request #}
+      <tr data-filter-by="view-user" id="templateRow">
+        <td>
+          <h4><strong><a data-id="name"></a></strong></h4>
+          <span class="text-muted" data-id="title"></span>
+        </td>
+        <td>
+          <div class="dropdown custom-dropdown">
+            <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true"
+              aria-expanded="true">
+              Member
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+              <li>
+                <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/member_id/owner/">
+                  {% csrf_token %}
+                  <a href="#" class="btn-share-group" data-role="Owner">Owner</a>
+                </form>
+              </li>
+              <li>
+                <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/member_id/view/">
+                  {% csrf_token %}
+                  <a href="#" class="btn-share-group" data-role="Member">Member</a>
+                </form>
+              </li>
+              <li role="separator" class="divider"></li>
+              <li>
+                <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/member_id/">
+                  {% csrf_token %}
+                  <a href="#" class="btn-unshare-group">Expel</a>
+                </form>
+              </li>
+            </ul>
+          </div>
+        </td>
+      </tr>
+
+      {% for member in view_users %}
+      <tr data-filter-by="view-user">
+        <td>
+          {% if member.userprofile.picture and member.userprofile.picture.url %}
+          {% thumbnail member.userprofile.picture "x80" crop="center" as im %}
+          <div style="background-image: url('{{ im.url }}');" class="profile-pic-thumbnail round-image pull-left">
+          </div>
+          {% endthumbnail %}
+          {% else %}
+          <div class="profile-pic-thumbnail-small round-image user-icon"></div>
+          {% endif %}
+        </td>
+        <td>
+          <h4><strong><a>{{ member|contact }}</a></strong></h4>
+          {% if member.userprofile.title %}
+          <span class="text-muted">{{ member.userprofile.title }}</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if profile_user.is_group_owner and group.gaccess.active or profile_user.is_group_editor and group.gaccess.active %}
+          <div class="dropdown custom-dropdown">
+            <button class="btn btn-default dropdown-toggle" type="button" id="roleDropDown-{{ member.id }}"
+              data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+              Member
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="roleDropDown-{{ member.id }}">
+              <li>
+                <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ member.id }}/owner/">
+                  {% csrf_token %}
+                  <a href="#" class="btn-share-group" data-role="Owner">Owner</a>
+                </form>
+              </li>
+              <li>
+                <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ member.id }}/view/">
+                  {% csrf_token %}
+                  <a href="#" class="btn-share-group" data-role="Member">Member</a>
+                </form>
+              </li>
+              <li role="separator" class="divider"></li>
+              <li>
+                <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ member.id }}/">
+                  {% csrf_token %}
+                  <a href="#" class="btn-unshare-group">Expel</a>
+                </form>
+              </li>
+            </ul>
+          </div>
+          {% else %}
+          Member
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    {# Pending invitation requests #}
+    <table data-filter-by="pending" class="table-members-list">
+      {% if group.gaccess.active_group_membership_requests %}
+      {% for pendingrequest in group.gaccess.active_group_membership_requests %}
+      {% if not pendingrequest.invitation_to %}
+      <tr>
+        <td data-id="picture">
+          {% if pendingrequest.request_from.userprofile and pendingrequest.request_from.userprofile.picture.url %}
+          {% thumbnail pendingrequest.request_from.userprofile.picture "x80" crop="center" as im %}
+          <div style="background-image: url('{{ im.url }}');" class="profile-pic-thumbnail round-image pull-left">
+          </div>
+          {% endthumbnail %}
+          {% else %}
+          <div class="profile-pic-thumbnail-small round-image user-icon"></div>
+          {% endif %}
+        </td>
+        <td>
+          <h4>
+            <strong><a>{{ pendingrequest.request_from|contact }}</a></strong>
+          </h4>
+          {% if pendingrequest.request_from.userprofile.title %}
+          <span class="text-muted">{{ pendingrequest.request_from.userprofile.title }}</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+          <div class="flex gap-1">
+            <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/reject/">
+              {% csrf_token %}
+              <a href="#" class="btn btn-default btn-act-on-request" data-user-action="Reject"><span
+                  class="glyphicon glyphicon-remove"></span>&nbsp;Reject</a>
+            </form>
+            <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/accept/">
+              {% csrf_token %}
+              <a href="#" class="btn btn-success btn-act-on-request" data-user-action="Accept"
+                data-member-id="{{ pendingrequest.request_from.id }}"
+                data-name="{{ pendingrequest.request_from|best_name }}"
+                data-title="
+                                                   {% if pendingrequest.request_from.userprofile.title %}{{ pendingrequest.request_from.userprofile.title }}{% endif %}"><span
+                  class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a>
+            </form>
+          </div>
+          {% endif %}
+        </td>
+        {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+          {% if pendingrequest.explanation %}
+          <td class="text-muted explanation" title="{{ pendingrequest.explanation }}">Explanation: {{ pendingrequest.explanation }} </td>
+          {% else %}
+          <td class="text-muted explanation" title="">Explanation not required. You can modify this setting by editing the
+            group.</td>
+          {% endif %}
+        {% endif %}
+      </tr>
+      {% else %}
+      <tr>
+        <td data-id="picture">
+          {% if pendingrequest.invitation_to.userprofile and pendingrequest.invitation_to.userprofile.picture.url %}
+          {% thumbnail pendingrequest.invitation_to.userprofile.picture "x80" crop="center" as im %}
+          <div style="background-image: url('{{ im.url }}');" class="profile-pic-thumbnail round-image pull-left">
+          </div>
+          {% endthumbnail %}
+          {% else %}
+          <div class="profile-pic-thumbnail-small round-image user-icon"></div>
+          {% endif %}
+        </td>
+        <td>
+          <h4><strong>{{ pendingrequest.invitation_to|contact }}</strong>
+          </h4>
+          {% if pendingrequest.invitation_to.userprofile.title %}
+          <span class="text-muted">{{ pendingrequest.invitation_to.userprofile.title }}</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+          <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/reject/">
+            {% csrf_token %}
+            <a href="#" class="btn btn-default btn-act-on-request">Cancel
+              Invitation</a>
+          </form>
+          {% endif %}
+        </td>
+        <td>
+        </td>
+      </tr>
+      {% endif %}
+      {% endfor %}
+      {% else %}
+      <tr class="no-pending-requests">
+        <td><i>No pending requests.</i></td>
+      </tr>
+      {% endif %}
+    </table>
+  </div>
+</div>
+
+<!-- <script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/group-members-app.js"></script> -->

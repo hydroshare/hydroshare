@@ -2,43 +2,37 @@
 
 {% load hydroshare_tags %}
 
+{% block extra_css %}
+    <link href="{% static 'css/collaborate.css' %}" rel="stylesheet"/>
+{% endblock %}
+
 {% block main %}
-    <div class="container">
-        <div class="row">
-            <div class="col-sm-12">
-                <h2 class="page-title">Collaborate</h2>
+<div class="container has-space-bottom-2x">
+    <div class="row">
+        <div class="col-sm-12">
+            <h2 class="page-title">Collaborate</h2>
+        </div>
+        <div class="col-sm-12 collaborate-nav">
+            <div class="flex align-center has-space-bottom-2x">
+                <a class="has-text-center has-space-right" href="{% url 'groups' %}">
+                    <img src="{% static 'img/groups.png' %}">
+                    <h4>GROUPS</h4>
+                </a>
+                <p>Groups allow research teams to share Private resources among members. These are often themed around a
+                    concept or event. Access and permissions to Resources are administered by designated individuals in
+                    each Group.</p>
             </div>
-            <table>
-                <tr>
-                    <td>
-                        <div style="float: left; margin-bottom: 3em; margin-right: 2em">
-                            <a style="text-decoration: none" href="{% url 'groups' %}"><img
-                                    src="{{ STATIC_URL }}/img/groups.png"><h4 style="text-align: center">GROUPS</h4></a>
-                        </div>
-                    </td>
-                    <td>
-                        <div style="width: 500px;">
-                            Groups allow research teams to share Private resources among members. These are often
-                            themed around a concept or event. Access and permissions to Resources are administered by
-                            designated individuals in each Group.
-                        </div>
-                    </td>
-                <tr>
-                    <td>
-                        <div style="float: left; margin-right: 2em;">
-                            <a style="text-decoration: none" href="{% url 'communities' %}"><img
-                                    src="{{ STATIC_URL }}img/communities.png"><h4 style="text-align: center">
-                                COMMUNITIES</h4></a></div>
-                    </td>
-                    <td>
-                        <div style="width: 600px;">
-                            Communities are designed for Groups to share resources more seamlessly, fostering public
-                            data sharing and open access. Current examples of Communities include collaborations
-                            between large research networks and collections of universities.
-                        </div>
-                    </td>
-                </tr>
-            </table>
+
+            <div class="flex align-center">
+                <a class="has-text-center has-space-right" href="{% url 'communities' %}">
+                    <img src="{% static 'img/communities.png' %}">
+                    <h4>COMMUNITIES</h4>
+                </a>
+                <p>Communities are designed for Groups to share resources more seamlessly, fostering public data sharing
+                    and open access. Current examples of Communities include collaborations between large research
+                    networks and collections of universities.</p>
+            </div>
         </div>
     </div>
+</div>
 {% endblock %}

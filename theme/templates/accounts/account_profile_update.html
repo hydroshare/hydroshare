@@ -8,8 +8,8 @@
 <div class="container">
     <div class="row">
         <div class="col-sm-12">
-            <h2 class="page-title">Change Password</h2>
-            <span>Passwords must be at least 6 characters long.</span>
+            <h2 class="page-title">Change API Password</h2>
+            <span>This form is for changing your HydroShare API Password. Passwords must be at least 6 characters long.</span>
             <br><br>
         </div>
 
@@ -50,6 +50,6 @@
 
 {% block extra_js %}
 {{ block.super }}
-<script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}js/password_reset.js"></script>
+<script type="text/javascript" src="{% static 'js/bootstrap-formhelpers.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/password_reset.js' %}"></script>
 {% endblock %}

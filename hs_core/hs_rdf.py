@@ -51,7 +51,7 @@ class RDF_MetaData_Mixin(object):
         """Given an rdflib Graph, run ingest_rdf for all generic relations on the object"""
         subject = self.rdf_subject_from_graph(graph)
 
-        generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
+        generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.private_fields))
         for generic_relation in generic_relations:
             if generic_relation.related_model not in self.ignored_generic_relations():
                 getattr(self, generic_relation.name).all().delete()
@@ -68,7 +68,7 @@ class RDF_MetaData_Mixin(object):
 
         subject = self.rdf_subject()
         graph.add((subject, RDF.type, self.rdf_type()))
-        generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.virtual_fields))
+        generic_relations = list(filter(lambda f: isinstance(f, GenericRelation), type(self)._meta.private_fields))
         for generic_relation in generic_relations:
             if generic_relation.related_model not in self.ignored_generic_relations():
                 gr_name = generic_relation.name
@@ -121,7 +121,7 @@ class RDF_Term_MixIn(object):
         for field in [field for field in self._meta.fields if field.name not in extra_ignored_fields]:
             field_term = self.get_field_term(field.name)
             field_value = getattr(self, field.name)
-            if field_value and field_value != 'None':
+            if field_value is not None and field_value != 'None':
                 # urls should be a URIRef term, all others should be a Literal term
                 if isinstance(field_value, str) and field_value.startswith('http'):
                     field_value = URIRef(encode_resource_url(field_value))
@@ -160,13 +160,14 @@ class RDF_Term_MixIn(object):
             metadata_nodes = [subject]
         else:
             metadata_nodes = graph.objects(subject=subject, predicate=term)
+
         for metadata_node in metadata_nodes:
             value_dict = {}
             for field in cls._meta.fields:
                 if cls.ignored_fields and field.name in cls.ignored_fields:
                     continue
                 field_term = cls.get_field_term(field.name)
-                val = graph.value(metadata_node, field_term)
+                val = graph.value(subject=metadata_node, predicate=field_term)
                 if val is not None:
                     if isinstance(val, URIRef):
                         value_dict[field.name] = decode_resource_url(str(val.toPython()))
@@ -271,7 +272,7 @@ class HydroPrettyXMLSerializer(Serializer):
 
             try:
                 self.nm.qname(type)
-            except:
+            except: # noqa
                 type = None
 
             element = type or RDF.Description
@@ -326,8 +327,8 @@ class HydroPrettyXMLSerializer(Serializer):
                 # RDF.first and RDF.rest are ignored... including RDF.List
                 import warnings
                 warnings.warn(
-                    "Assertions on %s other than RDF.first " % repr(object) +
-                    "and RDF.rest are ignored ... including RDF.List",
+                    "Assertions on %s other than RDF.first " % repr(object)
+                    + "and RDF.rest are ignored ... including RDF.List",
                     UserWarning, stacklevel=2)
                 writer.attribute(RDF.parseType, "Collection")
 
@@ -363,6 +364,7 @@ class HydroPrettyXMLSerializer(Serializer):
                     writer.attribute(RDF.resource, self.relativize(object))
 
         writer.pop(predicate)
+
 
 register(
     'hydro-xml', Serializer,

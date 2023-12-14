@@ -1,5 +1,5 @@
-{% load pages_tags mezzanine_tags theme_tags hydroshare_tags %}
-<link rel="stylesheet" type="text/css" href="/static/css/notifications-app.css">
+{% load pages_tags mezzanine_tags theme_tags hydroshare_tags thumbnail %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/notifications-app.css' %}">
 
 <style>
     /* Navbar */
@@ -91,7 +91,6 @@
     }
 
     .profile-card .flex > div:first-child {
-        background: #f8f8f8;
         border-right: 1px solid #DDD;
         width: 110px;
     }
@@ -160,7 +159,7 @@
                 <span class="icon-bar"></span>
             </button>
             <a class="navbar-brand" href="/landingPage">
-                <img id="img-brand-logo" src="/static/img/logo-lg.png" alt="{{ settings.SITE_TITLE }}"/>
+                <img id="img-brand-logo" src="{% static 'img/logo-lg.png' %}" alt="{{ settings.SITE_TITLE }}"/>
             </a>
         </div>
         <div class="collapse navbar-collapse">
@@ -169,11 +168,13 @@
                     {% if request.user.is_authenticated %}
                         <li id="profile-menu" class="display-block">
                             {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                    <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                         class="round-image profile-pic-thumbnail pull-left">
-                                    </div>
-                                </a>
+                                {% thumbnail request.user.userprofile.picture "x80" crop="center" as im %}
+                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                        <div style="background-image: url('{{ im.url }}');"
+                                            class="round-image profile-pic-thumbnail pull-left">
+                                        </div>
+                                    </a>
+                                {% endthumbnail %}
                             {% else %}
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                     <div class="profile-pic-thumbnail-small round-image pull-left"></div>
@@ -184,9 +185,11 @@
                                     <div class="row">
                                         <div class="col-sm-4">
                                             {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
-                                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                                     class="round-image dropdown-profile-pic-thumbnail pull-left">
-                                                </div>
+                                                {% thumbnail request.user.userprofile.picture "x150" crop="center" as im %}
+                                                    <div style="background-image: url('{{ im.url }}');"
+                                                        class="round-image dropdown-profile-pic-thumbnail pull-left">
+                                                    </div>
+                                                {% endthumbnail %}
                                             {% else %}
                                                 <div class="dropdown-profile-pic-thumbnail round-image dropdown-user-icon pull-left"></div>
                                             {% endif %}
@@ -201,7 +204,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="dropdown-footer">
+                                    <div class="dropdown-footer has-background-light-gray">
                                         <a href="/user/{{ user.id }}/" class="btn btn-primary">Profile</a>
                                         <a href="{% url 'logout' %}" id="signout-menu" class="btn btn-default">
                                             <span class="glyphicon glyphicon-log-out"></span> Sign out
@@ -220,7 +223,7 @@
             <div id="app-notifications">
                 <div class="notifications--header">
                     <h4>Notifications <span v-if="tasks.length">(${tasks.length})</span></h4>
-                    <a id="btn-notifications-clear" v-on:click="clear">Clear</a>
+                    <a role="button" id="btn-notifications-clear" v-on:click="clear">Clear</a>
                 </div>
 
                 <div v-if="loading" class="default-content">
@@ -230,7 +233,7 @@
                     <div v-if="tasks.length">
                         <div class="task" v-for="task in tasks">
                             <div class="notification--content">
-                                <div class="notification--name">${taskMessages[task.name].title}</span>
+                                <div class="notification--name">${taskMessages[task.name].title}
                                     <div class="notification--status">
                                         <span :class="statusIcons[task.status]"></span>
 
@@ -242,7 +245,12 @@
                                         <small v-else>${taskMessages[task.name].status[task.status]}.
                                             <span v-if="task.payload && (task.status === 'delivered' || task.status === 'completed')">
                                             Click <a :href="task.payload">here</a> to refresh user interface.
-                                            </span></small>
+                                            </span>
+                                            <span v-else-if="task.payload.includes('FileOverrideException') && task.status === 'failed'">
+                                            <a id='btn-file-override' v-on:click="showFileOverrideDialog(task.payload)">Select whether to allow file override</a>
+                                            </span>
+                                            <span v-else-if="task.status === 'failed'">${task.payload}</span>
+                                        </small>
                                     </div>
                                 </div>
                             </div>
@@ -287,7 +295,7 @@
                     <a href="/collaborate/">Collaborate</a>
                 </li>
                 <li class="" id="dropdown-menu-https:--www.hydroshare.org-apps-">
-                    <a href="https://www.hydroshare.org/apps/">Apps</a>
+                    <a href="https://www.hydroshare.org/apps/" target="_self">Apps</a>
                 </li>
                 <li class="" id="dropdown-menu-https:--help.hydroshare.org">
                     <a href="http://help.hydroshare.org">Help</a>
@@ -309,8 +317,8 @@
                                        data-modal-title="Create a Resource"
                                        data-modal-input-title="Enter the title for the new resource."
                                        data-value="CompositeResource">
-                                        <img src="/static/img/resource-icons/composite48x48.png"
-                                             alt="Composite Resource Icon" class="resource-type-icon"/>
+                                        <img src="{% static 'img/resource-icons/composite48x48.png' %}"
+                                             alt="Resource Icon" class="resource-type-icon"/>
                                         <div class="resource-type-name">&nbsp;Resource</div>
                                     </a>
                                 </li>
@@ -320,7 +328,7 @@
                                        data-modal-title="Create a Collection"
                                        data-modal-input-title="Enter the title for the new collection of HydroShare resources."
                                        data-value="CollectionResource">
-                                        <img src="/static/img/resource-icons/collection48x48.png"
+                                        <img src="{% static 'img/resource-icons/collection48x48.png' %}"
                                              alt="Collection Resource Icon" class="resource-type-icon"/>
                                         <div class="resource-type-name">&nbsp;Collection</div>
                                     </a>
@@ -328,12 +336,12 @@
                                 <li>
                                     <a data-toggle="tooltip" data-placement="left"
                                        title="A shortcut (or reference) to an external web application that functions with HydroShare data resources."
-                                       data-modal-title="Create a Web App Connector"
-                                       data-modal-input-title="Enter the name for the new Web App Connector."
+                                       data-modal-title="Create an App Connector"
+                                       data-modal-input-title="Enter the name for the new app connector."
                                        data-value="ToolResource">
-                                        <img src="/static/img/resource-icons/webapp48x48.png"
+                                        <img src="{% static 'img/resource-icons/webapp48x48.png' %}"
                                              alt="Web App Resource Icon" class="resource-type-icon"/>
-                                        <div class="resource-type-name">&nbsp;Web App Connector</div>
+                                        <div class="resource-type-name">&nbsp;App Connector</div>
                                     </a>
                                 </li>
                             </ul>
@@ -377,7 +385,7 @@
                     </div>
                     <br>
                     <input id="input-title" class="form-control textinput textInput" maxlength="300"
-                           name="value" type="text" placeholder="Resource Title" value="">
+                           name="value" type="text" placeholder="Title" value="">
                 </div>
             </div>
             <div class="modal-footer">
@@ -390,8 +398,8 @@
         </div>
     </div>
 </div>
+
 {# ======= Modal window ends =======#}
-<script type="text/javascript" src="/static/js/vue-2.6.10-min.js"></script>
 
 <script>
     $("#hs-nav-bar .res-dropdown ul > li>  a").on("click", function () {
@@ -438,9 +446,22 @@
         formData.append("csrfmiddlewaretoken", csrftoken);
         formData.append("title", title);
         formData.append("resource-type", type);
+        let contentType;
+        if (type === "CompositeResource") {
+            contentType = "resource";
+        }
+        else if (type === "CollectionResource") {
+            contentType = "collection";
+        }
+        else {
+            contentType = "app connector";
+        }
 
-        customAlert("Creating your resource", "Please wait...", "success", -1); // Persistent alert
+        const alertTitle = "Creating your " + contentType;
+        customAlert(alertTitle, "Please wait...", "success", -1); // Persistent alert
         $("html").css("cursor", "progress");
+
+        const errorMsg = "Failed to create " + contentType + ".";
 
         $.ajax({
             type: "POST",
@@ -455,7 +476,7 @@
                 else {
                     console.log(response);
                     $(".custom-alert").alert('close');  // Dismiss previous alert
-                    customAlert("Error", 'Failed to create resource.', "error", 6000);
+                    customAlert("Error", errorMsg, "error", 6000);
                     $("html").css("cursor", "initial");
                     $(".navbar-inverse .res-dropdown").toggleClass("disabled", false);
                 }
@@ -463,7 +484,7 @@
             error: function (response) {
                 console.log(response);
                 $(".custom-alert").alert('close');  // Dismiss previous alert
-                customAlert("Error", 'Failed to create resource.', "error", 6000);
+                customAlert("Error", errorMsg, "error", 6000);
                 $("html").css("cursor", "initial");
                 $(".navbar-inverse .res-dropdown").toggleClass("disabled", false);
             }
@@ -548,6 +569,15 @@
                         "failed": "Failed",
                         "delivered": "Delivered"
                     }
+                },
+                "aggregation move": {
+                    title: "Aggregation move",
+                    status: {
+                        "progress": "In progress...",
+                        "completed": "Completed",
+                        "failed": "Failed",
+                        "delivered": "Delivered"
+                    }
                 }
             },
             statusIcons: {
@@ -566,6 +596,18 @@
             }
         },
         methods: {
+            showFileOverrideDialog: function (message) {
+              let msg_start_pos = message.indexOf("'");
+              if (msg_start_pos >= 0) {
+                  let msg_end_pos = message.indexOf("'", msg_start_pos+1);
+                  if (msg_end_pos > 0) {
+                      message = message.slice(msg_start_pos + 1, msg_end_pos);
+                      message = message.charAt(0).toUpperCase() + message.slice(1);
+                  }
+              }
+              $('#unzip-resp-message').text(message);
+              $('#unzip-override-confirm-dialog').modal('show');
+            },
             // Shows the tasks dropdown
             show: function () {
                 $('#notifications-dropdown').addClass('open');
@@ -625,6 +667,7 @@
                         type: "GET",
                         url: '/hsapi/_internal/set_task_delivered/' + task.id,
                         success: function (task) {
+                            $("html").css("cursor", "default");
                         },
                         error: function (response) {
                             console.log(response);
@@ -760,6 +803,11 @@
                             vue.deliverTask(task);
                         }
                         break;
+                    case "aggregation move":
+                        if (task.status === "completed" && task.payload) {
+                            vue.deliverTask(task);
+                        }
+                        break;
                     case "file unzip":
                         if (task.status === "completed" && task.payload) {
                             vue.deliverTask(task);
@@ -812,6 +860,4 @@
             vue.fetchTasks();
         }
     });
-
-
 </script>

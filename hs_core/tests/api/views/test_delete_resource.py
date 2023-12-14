@@ -3,7 +3,7 @@ import shutil
 import json
 
 from django.contrib.auth.models import Group
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from rest_framework import status
 
@@ -29,9 +29,9 @@ class TestDeleteResource(MockIRODSTestCaseMixin, ViewTestCase):
             groups=[]
         )
         self.gen_res = hydroshare.create_resource(
-            resource_type='GenericResource',
+            resource_type='CompositeResource',
             owner=self.user,
-            title='Generic Resource Delete Testing'
+            title='Resource Delete Testing'
         )
 
     def tearDown(self):

@@ -1,0 +1,88 @@
+{
+  "type": "NetCDF",
+  "url": "http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598/data/contents/SWE_time_resmap.xml#aggregation",
+  "title": "changed UEB modael simulation of snow water equivalent in Logan River watershed from 2008 to 2009",
+  "subjects": [
+    "changed",
+    "Snow water equivalent",
+    "Logan River",
+    "UEB"
+  ],
+  "language": "eng",
+  "additional_metadata": {
+    "key1": "value1",
+    "key2": "value2"
+  },
+  "spatial_coverage": {
+    "type": "box",
+    "name": "named",
+    "northlimit": 39.4499,
+    "eastlimit": -90.4626,
+    "southlimit": 30.5397,
+    "westlimit": -107.6891,
+    "units": "Decimal degrees",
+    "projection": "WGS 84 EPSG:4326"
+  },
+  "period_coverage": {
+    "start": "2008-10-05T00:00:00",
+    "end": "2009-06-18T00:00:00"
+  },
+  "rights": {
+    "statement": "my statement",
+    "url": "http://studio.bakajo.com"
+  },
+  "variables": [
+    {
+      "name": "x",
+      "unit": "m",
+      "type": "Float",
+      "shape": "x",
+      "descriptive_name": "x coordinate of projection"
+    },
+    {
+      "name": "transverse_mercator",
+      "unit": "Unknown",
+      "type": "Unknown",
+      "shape": "Not defined"
+    },
+    {
+      "name": "time",
+      "unit": "hours since 2008-10-1 0:0:00 UTC",
+      "type": "Float",
+      "shape": "time",
+      "descriptive_name": "time",
+      "method": "a comment",
+      "missing_value": "chnagd"
+    },
+    {
+      "name": "y",
+      "unit": "m",
+      "type": "Float",
+      "shape": "y",
+      "descriptive_name": "y coordinate of projection",
+      "method": "comment",
+      "missing_value": "changed"
+    },
+    {
+      "name": "SWE",
+      "unit": "m",
+      "type": "Float",
+      "shape": "time,y,x",
+      "descriptive_name": "Snow water equivalent",
+      "method": "comment",
+      "missing_value": "missing value"
+    }
+  ],
+  "spatial_reference": {
+    "type": "box",
+    "northlimit": 47.1121,
+    "eastlimit": -95.736,
+    "southlimit": 25.2607,
+    "westlimit": -120.8727,
+    "units": "Meter",
+    "projection_string": "PROJCS[\"NAD83 / UTM zone 12N\",GEOGCS[\"NAD83\",DATUM[\"North_American_Datum_1983\",SPHEROID[\"GRS 1980\",6378137,298.2572221010002,AUTHORITY[\"EPSG\",\"7019\"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",\"6269\"]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433],AUTHORITY[\"EPSG\",\"4269\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",-111],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AUTHORITY[\"EPSG\",\"26912\"]]",
+    "projection_string_type": "box",
+    "datum": "North_American_Datum_1983",
+    "projection_name": "NAD83 / UTM zone 12N"
+  }
+}

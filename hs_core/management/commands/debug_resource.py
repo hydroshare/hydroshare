@@ -20,7 +20,7 @@ def debug_resource(short_id):
     resource = res.get_content_model()
     assert resource, (res, res.content_model)
 
-    irods_issues, irods_errors = check_irods_files(resource, log_errors=False, return_errors=True)
+    irods_issues, irods_errors, _, _ = check_irods_files(resource, log_errors=False, return_errors=True)
 
     print("resource: {}".format(short_id))
     print("resource type: {}".format(resource.resource_type))

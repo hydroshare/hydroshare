@@ -1,6 +1,7 @@
 import logging
 import os
 
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from hs_core.models import ResourceFile
@@ -15,7 +16,7 @@ class FileSetMetaData(GenericFileMetaDataMixin):
 class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
     """ One more files in a specific folder can be part of this aggregation """
 
-    metadata = models.OneToOneField(FileSetMetaData, related_name="logical_file")
+    metadata = models.OneToOneField(FileSetMetaData, on_delete=models.CASCADE, related_name="logical_file")
     # folder path relative to {resource_id}/data/contents/ that represents this aggregation
     # folder becomes the name of the aggregation
     folder = models.CharField(max_length=4096)
@@ -24,7 +25,7 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
     @classmethod
     def create(cls, resource):
         # this custom method MUST be used to create an instance of this class
-        generic_metadata = FileSetMetaData.objects.create(keywords=[])
+        generic_metadata = FileSetMetaData.objects.create(keywords=[], extra_metadata={})
         # Note we are not creating the logical file record in DB at this point
         # the caller must save this to DB
         return cls(metadata=generic_metadata, resource=resource)
@@ -85,13 +86,18 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         return cls.__name__
 
     @classmethod
-    def get_primary_resouce_file(cls, resource_files):
+    def supports_folder_based_aggregation(cls):
+        """A fileset aggregation must be created from a folder"""
+        return True
+
+    @classmethod
+    def get_primary_resource_file(cls, resource_files):
         """Gets any one resource file from the list of files *resource_files* """
 
         return resource_files[0] if resource_files else None
 
     @classmethod
-    def can_set_folder_to_aggregation(cls, resource, dir_path):
+    def can_set_folder_to_aggregation(cls, resource, dir_path, aggregations=None):
         """Checks if the specified folder *dir_path* can be set to Fileset aggregation
 
         :return
@@ -105,14 +111,14 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         fileset aggregation can contain any other aggregation types including fileset aggregation
         """
 
-        if resource.get_folder_aggregation_object(dir_path) is not None:
+        if resource.get_folder_aggregation_object(dir_path, aggregations=aggregations) is not None:
             # target folder is already an aggregation
             return False
 
         # checking all parent folders
         path = os.path.dirname(dir_path)
         while '/' in path:
-            parent_aggr = resource.get_folder_aggregation_object(path)
+            parent_aggr = resource.get_folder_aggregation_object(path, aggregations=aggregations)
             if parent_aggr is not None and (parent_aggr.is_model_program or parent_aggr.is_model_instance):
                 # avoid creating a fileset aggregation inside a model program/instance aggregation folder
                 return False
@@ -140,6 +146,7 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
                              post_aggr_signal=None,
                              is_temp_file=False) as ft_ctx:
 
+            msg = "Fileset aggregation. Error when creating aggregation. Error:{}"
             folder_name = folder_path
             if '/' in folder_path:
                 folder_name = os.path.basename(folder_path)
@@ -151,12 +158,19 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
                                                   new_files_to_upload=[],
                                                   folder_path=folder_path)
 
-            logical_file.folder = folder_path
-            logical_file.save()
-            # make all the files in the selected folder as part of the aggregation
-            logical_file.add_resource_files_in_folder(resource, folder_path)
-            ft_ctx.logical_file = logical_file
-            log.info("File set aggregation was created for folder:{}.".format(folder_path))
+            try:
+                logical_file.folder = folder_path
+                logical_file.save()
+                # make all the files in the selected folder as part of the aggregation
+                logical_file.add_resource_files_in_folder(resource, folder_path)
+                log.info("File set aggregation was created for folder:{}.".format(folder_path))
+                ft_ctx.logical_file = logical_file
+            except Exception as ex:
+                logical_file.remove_aggregation()
+                msg = msg.format(str(ex))
+                log.exception(msg)
+                raise ValidationError(msg)
+
             return logical_file
 
     def xml_file_short_path(self, resmap=True):
@@ -184,13 +198,13 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
 
         for res_file in res_files:
             if not res_file.has_logical_file:
-                self.add_resource_file(res_file)
+                self.add_resource_file(res_file, set_metadata_dirty=False)
             elif res_file.logical_file.is_fileset and not res_file.logical_file.aggregation_name.startswith(folder):
                 # resource file that is part of a fileset aggregation where the fileset aggregation
                 # is not a sub folder of *folder* needs to be made part of this new fileset
                 # aggregation
-                self.add_resource_file(res_file)
-
+                self.add_resource_file(res_file, set_metadata_dirty=False)
+        self.set_metadata_dirty()
         return res_files
 
     def update_folder(self, new_folder, old_folder):
@@ -209,13 +223,26 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         for child_aggr in self.get_children():
             if child_aggr.is_fileset:
                 child_aggr.folder = new_folder + child_aggr.folder[len(old_folder):]
-                child_aggr.save()
+                child_aggr.save(update_fields=["folder"])
 
         # update self
         self.folder = new_folder + self.folder[len(old_folder):]
         self.save()
 
+    def set_metadata_dirty(self):
+        super(FileSetLogicalFile, self).set_metadata_dirty()
+        for child_aggr in self.get_children():
+            child_aggr.set_metadata_dirty()
+
     def create_aggregation_xml_documents(self, create_map_xml=True):
         super(FileSetLogicalFile, self).create_aggregation_xml_documents(create_map_xml=create_map_xml)
         for child_aggr in self.get_children():
             child_aggr.create_aggregation_xml_documents(create_map_xml=create_map_xml)
+
+    def get_copy(self, copied_resource):
+        """Overrides the base class method"""
+
+        copy_of_logical_file = super(FileSetLogicalFile, self).get_copy(copied_resource)
+        copy_of_logical_file.folder = self.folder
+        copy_of_logical_file.save()
+        return copy_of_logical_file

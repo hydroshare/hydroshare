@@ -1,0 +1,212 @@
+<!-- Load context data needed in Vue app -->
+{{ data|json_script:"communities-app-data" }}
+
+<div id="group-communities" class="flex gap-2">
+  <div v-if="isGroupOwner" class="group-communities--sidebar">
+    <div class="alert alert-info">
+      <p>Want your Group to join a HydroShare Community? Click the button below to request that your group be added.</p>
+      <button class="btn btn-default has-space-top" data-toggle="modal"
+        data-target="#join-communities-modal">Ask to join a Community</button>
+    </div>
+  </div>
+
+  <div class="group-communities--content flex-grow-1 flex flex-column gap-2">
+    <!-- PENDING INVITATIONS -->
+    <div v-if="isGroupOwner && pending.length">
+      <h4 class="heading">Pending Community Membership Requests</h4>
+      <div v-if="isGroupPrivate" class="alert alert-warning">
+        <div class="flex align-center flex-sm-column">
+          <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+          <div>The owners of the communities you accept to join will be able to see the metadata for your group.</div>
+        </div>
+      </div>
+      <div v-for="request of pending" class="group-community-card panel panel-default">
+        <div class="panel-body flex gap-1 align-center">
+          <div v-if="request.community.logo" class="group-image-wrapper medium">
+            <div class="group-image"
+              :style="`background-image: url(${request.community.logo})`"></div>
+          </div>
+          <div v-else class="group-image-wrapper medium">
+            <div class="group-image group-preview-image-default"
+                style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
+            </div>
+          </div>
+          <div class="community-card--info">
+            <a class="community-card--heading" :href="'/community/' + request.community.id"
+              >${ request.community.name }</a>
+            <p v-if="request.community.purpose" class="has-space-top">${ request.community.purpose }</p>
+            <!-- TODO (phase 2): auto share -->
+            <!-- <div class="checkbox">
+              <label :for="'auto-share-' + request.community.id">
+                <input type="checkbox" :value="request.community.autoshare" @change="" :id="'auto-share-' + request.community.id">
+                <div class="text-muted">Automatically share public and and published resources with this Community</div>
+              </label>
+            </div> -->
+            
+            <div v-if="request.when_community">
+              <button class="btn btn-primary btn-sm" @click="acceptInvitation(request.community.id)"
+                :disabled="isAcceptingInvitation[request.community.id]">
+                <i class="fa fa-user-plus" aria-hidden="true"></i> Join Community</button>
+
+              <button @click="targetCommunity = request.community"
+                :disabled="isDecliningInvitation[request.community.id]"
+                data-toggle="modal"
+                data-target="#decline-community-invitation-modal"
+                type="button" class="btn btn-default btn-sm">
+                ${ isDecliningInvitation[request.community.id] ? 'Declining Invitation...' : 'Decline Invitation'}
+              </button>
+            </div>
+
+            <div v-else>
+              <div class="has-space-bottom">
+                <span class="label label-success">Requested to join</span>
+              </div>
+
+              <button @click="targetCommunity = request.community"
+                :disabled="isRetractingRequest[request.community.id]"
+                data-toggle="modal"
+                data-target="#retract-community-join-request-modal"
+                type="button" class="btn btn-default btn-sm">
+                ${ isRetractingRequest[request.community.id] ? 'Retracting Request...' : 'Retract Request'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JOINED COMMUNITIES -->
+    <h4 class="heading">This Group is a member of the following Communities</h4> 
+    <template v-if="joined.length">
+      <div v-for="community of joined" class="group-community-card panel panel-default">
+        <div class="panel-body flex gap-1 align-center">
+          <div v-if="community.logo"
+            class="group-image-wrapper medium has-space-right">
+            <div class="group-image"
+              :style="`background-image: url(${community.logo})`"></div>
+          </div>
+          <div v-else class="group-image-wrapper medium has-space-right">
+            <div class="group-image group-preview-image-default"
+                style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)">
+            </div>
+          </div>
+          <div class="community-card--info flex-grow-1">
+            <a class="community-card--heading" :href="'/community/' + community.id">${ community.name }</a>
+            <p v-if="community.purpose" class="has-space-top">${ community.purpose }</p>
+            <!-- TODO (phase 2): auto share -->
+            <!-- <div class="checkbox">
+              <label :for="'auto-share-' + community.id">
+                <input type="checkbox" :id="'auto-share-' + community.id">
+                <div class="text-muted">Automatically share public and and published resources with this Community</div>
+              </label>
+            </div> -->
+          </div>
+          <div class="community-card--actions" v-if="isGroupOwner">
+            <button class="btn btn-default" @click="targetCommunity = community" :disabled="isLeaving[community.id]" 
+              data-toggle="modal" data-target="#leave-community-modal">Leave Community</button>
+          </div>
+        </div>
+      </div>
+    </template>
+    <p v-else>This Group is not a member of any Communities yet.</p>
+  </div>
+
+  <!-- Retract Community Join Request Modal -->
+  <div v-if="isGroupOwner" class="modal fade" id="retract-community-join-request-modal"
+    tabindex="-1" role="dialog"
+    aria-labelledby="retractRequestLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" v-if="targetCommunity">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="retractRequestLabel">Retract Community Join Request</h4>
+            </div>
+            <div class="modal-body">
+                Are you sure you want retract this request?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    Cancel
+                </button>
+                <button class="btn btn-danger"
+                        @click="retractRequest(targetCommunity.id)"
+                        :disabled="isRetractingRequest[targetCommunity.id]">Retract Request
+                </button>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <!-- Decline Community Invitation Modal -->
+  <div v-if="isGroupOwner" class="modal fade" id="decline-community-invitation-modal" tabindex="-1" role="dialog"
+    aria-labelledby="declineInvitationLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" v-if="targetCommunity">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="declineInvitationLabel">Decline Community Invitation</h4>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to decline this invitation?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    Cancel
+                </button>
+                <button class="btn btn-danger"
+                        @click="declineInvitation(targetCommunity.id)"
+                        :disabled="isDecliningInvitation[targetCommunity.id]">Decline Invitation
+                </button>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <!-- Leave Community Modal -->
+  <div class="modal fade" id="leave-community-modal" tabindex="-1" role="dialog"
+        aria-labelledby="leaveCommunityLabel">
+      <div class="modal-dialog" role="document">
+          <div class="modal-content" v-if="targetCommunity">
+              <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal"
+                          aria-label="Close"><span aria-hidden="true">&times;</span>
+                  </button>
+                  <h4 class="modal-title" id="leaveCommunityLabel">Leave Community</h4>
+              </div>
+              <div class="modal-body">
+                  Are you sure you want the group to leave this community?
+              </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">
+                      Cancel
+                  </button>
+                  <button class="btn btn-danger"
+                          @click="leaveCommunity(targetCommunity.id)" :disabled="isLeaving[targetCommunity.id]"
+                          value="clear">Leave Community
+                  </button>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <div v-if="isGroupOwner" class="modal fade" id="join-communities-modal" tabindex="-1" role="dialog" aria-labelledby="joinLabel">
+    <div class="modal-dialog" role="document">
+      <!-- The template for this component needs to be included outside of a Vue app -->
+      <!-- Included at the top of group.html -->
+      <join-communities
+        @update-pending="pending = $event"
+        @update-available-to-join="availableToJoin = $event"
+        @update-joined="joined = $event"
+        :communities="availableToJoin"
+        :default-group-id="groupId"
+        :is-group-private="isGroupPrivate"
+      />
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript" src="{{ STATIC_URL }}js/hs-vue/group-communities-app.js"></script>

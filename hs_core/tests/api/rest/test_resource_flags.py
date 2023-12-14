@@ -13,7 +13,7 @@ class TestPublicResourceFlagsEndpoint(HSRESTTestCase):
         super(TestPublicResourceFlagsEndpoint, self).setUp()
         self.tmp_dir = tempfile.mkdtemp()
 
-        self.rtype = 'GenericResource'
+        self.rtype = 'CompositeResource'
         self.title = 'My Test resource'
         res = resource.create_resource(self.rtype,
                                        self.user,
@@ -31,7 +31,7 @@ class TestPublicResourceFlagsEndpoint(HSRESTTestCase):
         txt.write("Hello World\n")
         txt.close()
 
-        self.rtype = 'GenericResource'
+        self.rtype = 'CompositeResource'
         self.title = 'My Test resource'
         res_two = resource.create_resource(self.rtype,
                                            self.user,

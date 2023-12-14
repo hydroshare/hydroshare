@@ -18,18 +18,18 @@ def set_quota_holder(resource, user):
     except SessionException as ex:
         # some resources copied from www for testing do not exist in the iRODS backend,
         # hence need to skip these test artifects
-        print(resource.short_id + ' raised SessionException when setting quota holder: ' +
-              ex.stderr)
+        print(resource.short_id + ' raised SessionException when setting quota holder: '
+              + ex.stderr)
     except AttributeError as ex:
         # when federation is not set up correctly, istorage does not have a session
         # attribute, hence raise AttributeError - ignore for testing
-        print((resource.short_id + ' raised AttributeError when setting quota holder: ' +
-              str(ex)))
+        print((resource.short_id + ' raised AttributeError when setting quota holder: '
+              + str(ex)))
     except ValueError as ex:
         # when federation is not set up correctly, istorage does not have a session
         # attribute, hence raise AttributeError - ignore for testing
-        print((resource.short_id + ' raised ValueError when setting quota holder: ' +
-              str(ex)))
+        print((resource.short_id + ' raised ValueError when setting quota holder: '
+              + str(ex)))
 
 
 class Command(BaseCommand):

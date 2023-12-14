@@ -88,7 +88,7 @@
                     {% endif %}
                 {% endif %}
                 {% if page.perms.change or self_access_level == 'owner' and cm.raccess.published %}
-                    <form action="{{ cm.get_absolute_url }}" method="post">
+                    <form action="{{ cm.absolute_url }}" method="post">
                         {% csrf_token %}
 
                         {% if page.perms.delete or cm.raccess.published %}
@@ -100,8 +100,7 @@
                                       class="fa fa-code-fork icon-button icon-blue"></span>
                             </a>
                         {% endif %}
-
-                        {% if page.perms.delete and cm.can_be_published %}
+                        {% if page.perms.delete and cm.can_be_submitted_for_metadata_review and not cm.raccess.review_pending %}
                             <a id="publish" {% if cm.raccess.public %}data-toggle="modal"{% endif %}
                                data-target="#submit-for-publication-dialog"
                                {% if not cm.raccess.public %}class="disabled"{% endif %}>
@@ -134,7 +133,7 @@
                 {% endif %}
             {% endif %}
         {% else %}
-            <a href="{{ cm.get_absolute_url }}">
+            <a href="{{ cm.absolute_url }}">
                     <span data-toggle="tooltip" data-placement="bottom" title="View resource"
                           class="glyphicon glyphicon-circle-arrow-left icon-button icon-blue"></span>
             </a>

@@ -12,7 +12,7 @@
    data-address="{{ author.address|default:"" }}"
    data-phone="{{ author.phone|default:"" }}"
    data-homepage="{{ author.homepage|default:"" }}"
-   data-profileurl="{{ author.description|default:"" }}">
+   data-profileurl="{{ author.relative_uri|default:'' }}">
     {% if author.name %}
         {{ author.name|name_without_commas|default:"" }}
     {% else %}

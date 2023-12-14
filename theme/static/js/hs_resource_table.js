@@ -19,33 +19,44 @@ var SHARING_STATUS_COL = 12;
 var DATE_CREATED_SORT_COL = 13;
 var ACCESS_GRANTOR_COL = 14;
 
+var filtersUpdated = false
+var filtersLoaded = []
+var spinner = $('<i class="fa fa-spinner fa-pulse fa-lg my-res-filter-spinner" style="z-index: 1;"></i>')
+
 $(document).ready(function () {
-/*==================================================
-    Table columns
-    0 - actions
-    1 - Resource Type
-    2 - Title
-    3 - Owner
-    4 - Date Created
-    5 - Last Modified
-    6 - Subject
-    7 - Authors
-    8 - Permission Level
-    9 - Labels
-    10 - Favorite
-    11 - Last modified (sortable format)
-    12 - Sharing Status
-    13 - Date created (sortable format)
-    14 - Access Grantor
-==================================================*/
+    ROUTE_NAME === "my_resources" && setInitialFilters();
+    resourceTable = initTable("#item-selectors");
+    ROUTE_NAME === "my_resources"  && updateFilterCount();
+    updateTable();
+    setEventListeners();
+});
 
-    resourceTable = $("#item-selectors").DataTable({
-        "order": [[DATE_CREATED_COL, "desc"]],
-        "paging": false,
-        "info": false,
-        "columnDefs": colDefs
-    });
+function setInitialFilters(){
+    // filter badges spin for async
+    let filterBadges = $("#filter li.list-group-item .badge");
+    filterBadges.prepend(spinner);
 
+    const url = new URL(window.location.href);
+    let url_filters = url.searchParams.getAll('f');
+    if (url_filters.length !== 0){
+        filtersLoaded = url_filters;
+    }else{
+        // default filters (checked in the template) are:
+        filtersLoaded = ['owned', 'discovered', 'favorites'];
+        for(let filter of filtersLoaded){
+            url.searchParams.append('f', filter);
+        }
+        window.history.pushState({}, '', url);
+    }
+
+    // check the boxes accordignly
+    $("#filter input[type='checkbox']").prop("checked", false);
+    for(let filter of filtersLoaded){
+        $(`#filter input[type='checkbox'][data-facet='${filter}']`).prop("checked", true);
+    }
+}
+
+function setEventListeners(){
     $("#item-selectors").css("width", "100%");
 
     // Fix for horizontal scroll bar appearing unnecessarily on firefox.
@@ -53,8 +64,14 @@ $(document).ready(function () {
         $("#item-selectors").width($("#item-selectors").width() - 2);
     }
 
+    function clearLabelErrorMessaging(){
+        $("#txtLabelName").removeClass("invalid-input");
+        $("#txtLabelName").closest(".modal-body").find(".error-label").remove();
+    }
+
     // Trigger label creation when pressing Enter
     $("#txtLabelName").keyup(function (event) {
+        clearLabelErrorMessaging();
         var label = $("#txtLabelName").val().trim();
         if (event.keyCode == 13 && label != "") {
             $("#btn-create-label").click();
@@ -73,16 +90,27 @@ $(document).ready(function () {
         $("#txtLabelName").focus();
     });
 
+    // remove error messaging and input, if any
+    $("#modalCreateLabel").on('hidden.bs.modal', function () {
+        $("#txtLabelName").val("");
+        clearLabelErrorMessaging();
+    });
+
     $("#item-selectors").show();
 
     // Bind ajax submit events to favorite and label buttons
     $("#item-selectors").on("click", ".btn-inline-favorite, .btn-label-remove", label_ajax_submit);
     $("#btn-create-label").click(label_ajax_submit);
+    $(".btn-label-remove").click(label_ajax_submit);
 
-    $("#filter input[type='checkbox']").on("change", function () {
-        resourceTable.draw();
-        updateLabelDropdowns();
-        updateLabelCount();
+    $("#filter input[type='checkbox']").on("change", function (e) {
+        let check_val = e.target.attributes['data-facet'].value;
+        let ignore_filters = ["recent"];
+        if(ignore_filters.includes(check_val)){
+            updateTable();
+            return;
+        }
+        dataRefresh(e.target);
     });
 
     $("#user-labels-left").on("change", "input[type='checkbox']", function () {
@@ -316,11 +344,43 @@ $(document).ready(function () {
     $('.dropdown-menu label, .list-labels label').click(function (e) {
         e.stopPropagation();
     });
+}
 
+function initTable(selector){
+    /*==================================================
+        Table columns
+        0 - actions
+        1 - Resource Type
+        2 - Title
+        3 - Owner
+        4 - Date Created
+        5 - Last Modified
+        6 - Subject
+        7 - Authors
+        8 - Permission Level
+        9 - Labels
+        10 - Favorite
+        11 - Last modified (sortable format)
+        12 - Sharing Status
+        13 - Date created (sortable format)
+        14 - Access Grantor
+    ==================================================*/
+
+    return $(selector).DataTable({
+        "order": [[DATE_CREATED_COL, "desc"]],
+        "paging": false,
+        "info": false,
+        "columnDefs": colDefs,
+        "autoWidth": false
+    });
+}
+
+function updateTable(){
+    resourceTable.draw();
     updateLabelsList();
     updateLabelDropdowns();
     updateLabelCount();
-});
+}
 
 function delete_multiple_resources_ajax_submit(indexes) {
     var calls = [];
@@ -328,7 +388,6 @@ function delete_multiple_resources_ajax_submit(indexes) {
     // Submit all delete requests asynchronously
     for (var i = 0; i < indexes.length; i++) {
         var form = $(indexes[i]).find("form[data-form-type='delete-resource']");
-        const row = $(indexes[i]);  // Needs to be a constant so the value doesn't change during the asynchronous calls
         var datastring = $(form).serialize();
         var url = $(form).attr("action");
         let deleteText = $('#confirm-res-id-text').val();
@@ -356,7 +415,7 @@ function delete_multiple_resources_ajax_submit(indexes) {
     // Wait for all asynchronous calls to finish
     $.when.apply($, calls)
       .done(function () {
-          $("html").css("cursor", "initial"); // Restore default cursor
+          window.location.href = "/my-resources/";
       })
       .fail(function () {
           customAlert("Error", 'Failed to delete resource(s).', "error", 10000);
@@ -364,12 +423,42 @@ function delete_multiple_resources_ajax_submit(indexes) {
       });
 }
 
+function errorLabel(message) {
+    return "<div class='label label-danger error-label'>" + message + "</div>";
+}
+
 function label_ajax_submit() {
     var el = $(this);
+    var formType = el.attr("data-form-type");
+
+    if (formType == "create-label"){
+        var labelText = $("#txtLabelName").val();
+        var sanitizedLabelText = $("<div/>").html(labelText.trim()).text();
+        let message = "";
+        if (labelText.length >= 75){
+            message = "Your label was too long. Please trim it to < 75 characters.";
+        }else if (labelText.trim().length === 0){
+            message = "Your label was empty, please try again.";
+        }else if (labelText !== sanitizedLabelText){
+            message = "Your label contains HTML and cannot be saved.";
+        }
+        $("#user-labels-left input").each(function(i, el){
+            if ($(el).attr("data-label") === sanitizedLabelText){
+                message = "You entered a duplicate label.";
+            }
+        });
+
+        if(message){
+            $("#txtLabelName").closest(".modal-body").append(errorLabel(message))
+            $("#txtLabelName").addClass("invalid-input");
+            return;
+        }
+    }
+    
+    $("#txtLabelName").val(labelText);
     var form = $("form[data-id='" + el.attr("data-form-id") + "']");
     var datastring = form.serialize();
     var url = form.attr('action');
-    var formType = el.attr("data-form-type");
     var tableRow = form.closest("tr");
 
     $.ajax({
@@ -488,6 +577,71 @@ function updateLabelsList() {
             );
         }
     }
+}
+
+// Gets new data when filters change
+async function dataRefresh(target){
+    
+    // Check the url for query parameters
+    let url = new URL(window.location.href);
+    let filter_val = target.value.toLowerCase();
+    let existing_filters = url.searchParams.getAll('f');
+    if (existing_filters){
+        let index = existing_filters.indexOf(filter_val);
+        if(index > -1){
+            if (!target.checked){
+                existing_filters.splice(index, 1);
+                url.searchParams.delete('f');
+                existing_filters.forEach(filter => url.searchParams.append('f', filter));
+            }
+        }else{
+            if (target.checked){
+                url.searchParams.append('f', filter_val);
+            }
+        }
+    }
+
+    window.history.pushState({}, '', url);
+
+    if(target.checked && !filtersLoaded.includes(filter_val)){
+        // fetch the filter that is new
+        await ajaxFetchResources(url, filter_val);
+    }else{
+        updateTable();
+    }
+}
+
+function ajaxFetchResources(url, filter_val){
+    $("#filter-panel .panel-title").append(spinner);
+    $("#filter").addClass("no-interact")
+    $('#item-selectors tbody').hide();
+    $('#item-selectors thead').hide();
+
+    $.ajax({
+        type: 'GET',
+        url: url,
+        data: {
+            new_filter: filter_val
+        }
+    })
+    .done(function(data){
+        resourceTable.destroy();
+        $('#item-selectors tbody').append(data.trows);
+        resourceTable = initTable('#item-selectors');
+        resourceTable.deDupe();
+        resourceTable.draw();
+        filtersLoaded.push(filter_val);
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) {
+        customAlert("Error", `Failed fetch resources for your filter (${errorThrown})`, "error", 10000);
+    })
+    .always(function(){
+        $('#item-selectors thead').show();
+        $('#item-selectors tbody').show();
+        spinner.remove();
+        $("#filter").removeClass("no-interact");
+        updateTable();
+    });
 }
 
 // Updates the status of labels in the left panel
@@ -632,16 +786,42 @@ function createLabel () {
     }
 }
 
-function updateLabelCount() {
-    $("#labels input[data-label]").parent().parent().find(".badge").text("0");
-    $("#toolbar-labels-dropdown input[type='checkbox']").prop("checked", true);
 
-    var collection = [];
-    var favorites = 0;
-    var ownedCount = 0;
-    var addedCount = 0;
-    var sharedCount = 0;
+
+async function updateFilterCount() {
+    if( !filtersUpdated ){
+        $("#toolbar-labels-dropdown input[type='checkbox']").prop("checked", true);
+        var favorites = 0;
+        var ownedCount = 0;
+        var addedCount = 0;
+        var sharedCount = 0;
+        await getFilterCounts();
+    }
+    function getFilterCounts(){
+        return $.ajax({
+            type: 'GET',
+            url: '/my-resources-counts/',
+            success: function (data) {
+                favorites = data.filter_counts.favorites;
+                ownedCount = data.filter_counts.ownedCount;
+                addedCount = data.filter_counts.addedCount;
+                sharedCount = data.filter_counts.sharedCount;
+                $(".my-res-filter-spinner").remove();
+                    // Update filter badges count
+                $("#filter .badge[data-facet='owned']").text(ownedCount);
+                $("#filter .badge[data-facet='shared']").text(sharedCount);
+                $("#filter .badge[data-facet='discovered']").text(addedCount);
+                $("#filter .badge[data-facet='favorites']").text(favorites);
+                filtersUpdated = true;
+            }
+        })
+    }
+}
+
+function updateLabelCount() {
     var recentCount = 0;
+    var favorites = 0;
+    var collection = [];
 
     var cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - 5);
@@ -652,23 +832,11 @@ function updateLabelCount() {
         // List of labels already applied to the resource;
         var dataColLabels = this.data()[LABELS_COL].replace(/\s+/g, ' ').split(",");
         var dataColFavorite = this.data()[FAVORITE_COL].trim();
-        var dataColPermissionLevel = this.data()[PERM_LEVEL_COL].trim();
-
-        if (dataColPermissionLevel == "Owned") {
-            ownedCount++;
-        }
-        else if (dataColPermissionLevel == "Discovered") {
-            addedCount++;
-        }
-        else if (dataColPermissionLevel != "Owned" && dataColPermissionLevel != "Discovered") {
-            sharedCount++;
-        }
 
         if (dataColFavorite == "Favorite") {
             favorites++;
         }
 
-        // Update Recent count
         if (this.data()[LAST_MODIF_SORT_COL] >= cutoff) {
             recentCount++;
         }
@@ -683,12 +851,8 @@ function updateLabelCount() {
         }
     });
 
-    // Update filter badges count
-    $("#filter .badge[data-facet='owned']").text(ownedCount);
-    $("#filter .badge[data-facet='shared']").text(sharedCount);
-    $("#filter .badge[data-facet='discovered']").text(addedCount);
-    $("#filter .badge[data-facet='favorites']").text(favorites);
     $("#filter .badge[data-facet='recent']").text(recentCount);
+    $("#filter .badge[data-facet='favorites']").text(favorites);
 
     // Set label counts
     for (var key in collection) {
@@ -760,6 +924,15 @@ function typeQueryStrings () {
     var searchQuery = "";
 
     if (type) {
+        if (type === "composite resource") {
+            type = "resource";
+        }
+        else if (type === "collection resource") {
+            type = "collection";
+        }
+        else if (type === "web app resource") {
+            type = "app connector";
+        }
         searchQuery = searchQuery + " [type:" + type + "]";
     }
 
@@ -796,6 +969,7 @@ function typeQueryStrings () {
 ==================================================*/
 
 /* Custom filtering function which will search data for the values in the custom filter dropdown or query strings */
+// https://datatables.net/manual/plug-ins/search
 $.fn.dataTable.ext.search.push (
     function (settings, data, dataIndex) {
         var inputString = $("#resource-search-input").val().toLowerCase();
@@ -855,7 +1029,7 @@ $.fn.dataTable.ext.search.push (
 
             // Shared with me
             if ($('#filter input[type="checkbox"][value="Shared"]').prop("checked") == true) {
-                if (data[PERM_LEVEL_COL] != "Owned" && data[PERM_LEVEL_COL] != "Discovered") {
+                if (data[PERM_LEVEL_COL] != "Owned" && data[PERM_LEVEL_COL] != "Discovered" && data[PERM_LEVEL_COL] != "") {
                     inFilters = true;
                 }
             }
@@ -929,3 +1103,24 @@ $.fn.dataTable.ext.search.push (
         return inLabels && inFilters && inGrantors;
     }
 );
+
+$.fn.dataTable.Api.register('deDupe', function (idColumn) {
+    idColumn = idColumn || TITLE_COL;
+
+    let regex = /resource\/([0-9a-z]*)\/">/;
+    let titles = this.columns().data()[idColumn];
+    let resIds = titles.map(x => x.match(regex)[1]);
+
+    let i=0;
+    while(i < resIds.length) {
+        let matchedIndex = resIds.lastIndexOf(resIds[i]);
+        if(matchedIndex !== i) {
+            let matchedRow = $(this.rows().nodes()[i]);
+            this.row(matchedRow).remove();
+            resIds.splice(matchedIndex, 1);
+        }
+        i++;
+    }
+    
+    return this;
+  });
