@@ -55,7 +55,7 @@ let fundingAgenciesApp = new Vue({
       }
     },
     showFundersAlert: function () {
-      const message = `The resource has the following funders listed that do not exist in the <a href="https://www.crossref.org/services/funder-registry" target="_blank">Open Funder Registry</a>:
+      const message = `This resource contains funders (listed below) that do not exist in the <a href="https://www.crossref.org/services/funder-registry" target="_blank">Open Funder Registry</a>:
         <br><ul><strong><li>${this.unmatchedFunders.join(
           "</li><li>"
         )}</strong></ul><br>
