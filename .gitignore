@@ -15,7 +15,8 @@ __pycache__/
 /config/hydroshare-config.sh
 /config/hydroshare-config.yaml
 /hydroshare/static
-/log
+/log/*
+!/log/timer.log
 /nginx/.htpasswd
 /nginx/htpasswd
 /nginx/Dockerfile

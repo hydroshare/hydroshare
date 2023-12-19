@@ -1,0 +1,594 @@
+2023-12-19 13:49:47,150 - INFO - run_comparisons - line 141 - ********* Start 'download_single_resource' *********
+2023-12-19 13:49:47,150 - INFO - run_comparisons - line 141 - ********* Start 'download_single_resource' *********
+2023-12-19 13:49:47,150 - INFO - run_comparisons - line 141 - ********* Start 'download_single_resource' *********
+2023-12-19 13:49:47,150 - INFO - run_comparisons - line 141 - ********* Start 'download_single_resource' *********
+2023-12-19 13:49:47,151 - INFO - run_comparisons - line 147 - Starting run 0 of download_single_resource on beta.hydroshare.org...
+2023-12-19 13:49:47,151 - INFO - run_comparisons - line 147 - Starting run 0 of download_single_resource on beta.hydroshare.org...
+2023-12-19 13:49:47,151 - INFO - run_comparisons - line 147 - Starting run 0 of download_single_resource on beta.hydroshare.org...
+2023-12-19 13:49:47,151 - INFO - run_comparisons - line 147 - Starting run 0 of download_single_resource on beta.hydroshare.org...
+2023-12-19 13:49:50,505 - INFO - create_timer_log - line 18 - Starting call function download_single_resource at 2023-12-19 18:49:50 with UUID=19db6860-c2ba-47b9-8454-7547a72c2b2d
+2023-12-19 13:49:50,505 - INFO - create_timer_log - line 18 - Starting call function download_single_resource at 2023-12-19 18:49:50 with UUID=19db6860-c2ba-47b9-8454-7547a72c2b2d
+2023-12-19 13:49:50,505 - INFO - create_timer_log - line 18 - Starting call function download_single_resource at 2023-12-19 18:49:50 with UUID=19db6860-c2ba-47b9-8454-7547a72c2b2d
+2023-12-19 13:49:50,505 - INFO - create_timer_log - line 18 - Starting call function download_single_resource at 2023-12-19 18:49:50 with UUID=19db6860-c2ba-47b9-8454-7547a72c2b2d
+2023-12-19 13:50:50,563 - INFO - wrap_func - line 18 - Function 'download_single_resource_inner' executed in 33.2561s
+2023-12-19 13:50:50,563 - INFO - wrap_func - line 18 - Function 'download_single_resource_inner' executed in 33.2561s
+2023-12-19 13:50:50,563 - INFO - wrap_func - line 18 - Function 'download_single_resource_inner' executed in 33.2561s
+2023-12-19 13:50:50,563 - INFO - wrap_func - line 18 - Function 'download_single_resource_inner' executed in 33.2561s
+2023-12-19 13:50:50,564 - INFO - run_comparisons - line 150 - [33.25609993934631]
+2023-12-19 13:50:50,564 - INFO - run_comparisons - line 150 - [33.25609993934631]
+2023-12-19 13:50:50,564 - INFO - run_comparisons - line 150 - [33.25609993934631]
+2023-12-19 13:50:50,564 - INFO - run_comparisons - line 150 - [33.25609993934631]
+2023-12-19 13:50:50,564 - INFO - run_comparisons - line 147 - Starting run 1 of download_single_resource on beta.hydroshare.org...
+2023-12-19 13:50:50,564 - INFO - run_comparisons - line 147 - Starting run 1 of download_single_resource on beta.hydroshare.org...
+2023-12-19 13:50:50,564 - INFO - run_comparisons - line 147 - Starting run 1 of download_single_resource on beta.hydroshare.org...
+2023-12-19 13:50:50,564 - INFO - run_comparisons - line 147 - Starting run 1 of download_single_resource on beta.hydroshare.org...
+2023-12-19 13:50:50,873 - INFO - create_timer_log - line 18 - Starting call function download_single_resource at 2023-12-19 18:50:50 with UUID=9b9899ae-1bb9-4b68-af15-7c2623fe92e2
+2023-12-19 13:50:50,873 - INFO - create_timer_log - line 18 - Starting call function download_single_resource at 2023-12-19 18:50:50 with UUID=9b9899ae-1bb9-4b68-af15-7c2623fe92e2
+2023-12-19 13:50:50,873 - INFO - create_timer_log - line 18 - Starting call function download_single_resource at 2023-12-19 18:50:50 with UUID=9b9899ae-1bb9-4b68-af15-7c2623fe92e2
+2023-12-19 13:50:50,873 - INFO - create_timer_log - line 18 - Starting call function download_single_resource at 2023-12-19 18:50:50 with UUID=9b9899ae-1bb9-4b68-af15-7c2623fe92e2
+2023-12-19 13:51:54,895 - INFO - wrap_func - line 18 - Function 'download_single_resource_inner' executed in 37.1817s
+2023-12-19 13:51:54,895 - INFO - wrap_func - line 18 - Function 'download_single_resource_inner' executed in 37.1817s
+2023-12-19 13:51:54,895 - INFO - wrap_func - line 18 - Function 'download_single_resource_inner' executed in 37.1817s
+2023-12-19 13:51:54,895 - INFO - wrap_func - line 18 - Function 'download_single_resource_inner' executed in 37.1817s
+2023-12-19 13:51:54,895 - INFO - run_comparisons - line 150 - [33.25609993934631, 37.18172574043274]
+2023-12-19 13:51:54,895 - INFO - run_comparisons - line 150 - [33.25609993934631, 37.18172574043274]
+2023-12-19 13:51:54,895 - INFO - run_comparisons - line 150 - [33.25609993934631, 37.18172574043274]
+2023-12-19 13:51:54,895 - INFO - run_comparisons - line 150 - [33.25609993934631, 37.18172574043274]
+2023-12-19 13:51:54,896 - INFO - run_comparisons - line 147 - Starting run 2 of download_single_resource on beta.hydroshare.org...
+2023-12-19 13:51:54,896 - INFO - run_comparisons - line 147 - Starting run 2 of download_single_resource on beta.hydroshare.org...
+2023-12-19 13:51:54,896 - INFO - run_comparisons - line 147 - Starting run 2 of download_single_resource on beta.hydroshare.org...
+2023-12-19 13:51:54,896 - INFO - run_comparisons - line 147 - Starting run 2 of download_single_resource on beta.hydroshare.org...
+2023-12-19 13:51:55,194 - INFO - create_timer_log - line 18 - Starting call function download_single_resource at 2023-12-19 18:51:55 with UUID=3e1b90ae-ccd9-4a38-aa98-accd096e206b
+2023-12-19 13:51:55,194 - INFO - create_timer_log - line 18 - Starting call function download_single_resource at 2023-12-19 18:51:55 with UUID=3e1b90ae-ccd9-4a38-aa98-accd096e206b
+2023-12-19 13:51:55,194 - INFO - create_timer_log - line 18 - Starting call function download_single_resource at 2023-12-19 18:51:55 with UUID=3e1b90ae-ccd9-4a38-aa98-accd096e206b
+2023-12-19 13:51:55,194 - INFO - create_timer_log - line 18 - Starting call function download_single_resource at 2023-12-19 18:51:55 with UUID=3e1b90ae-ccd9-4a38-aa98-accd096e206b
+2023-12-19 13:53:01,747 - INFO - wrap_func - line 18 - Function 'download_single_resource_inner' executed in 39.6335s
+2023-12-19 13:53:01,747 - INFO - wrap_func - line 18 - Function 'download_single_resource_inner' executed in 39.6335s
+2023-12-19 13:53:01,747 - INFO - wrap_func - line 18 - Function 'download_single_resource_inner' executed in 39.6335s
+2023-12-19 13:53:01,747 - INFO - wrap_func - line 18 - Function 'download_single_resource_inner' executed in 39.6335s
+2023-12-19 13:53:01,748 - INFO - run_comparisons - line 150 - [33.25609993934631, 37.18172574043274, 39.633548974990845]
+2023-12-19 13:53:01,748 - INFO - run_comparisons - line 150 - [33.25609993934631, 37.18172574043274, 39.633548974990845]
+2023-12-19 13:53:01,748 - INFO - run_comparisons - line 150 - [33.25609993934631, 37.18172574043274, 39.633548974990845]
+2023-12-19 13:53:01,748 - INFO - run_comparisons - line 150 - [33.25609993934631, 37.18172574043274, 39.633548974990845]
+2023-12-19 13:53:01,748 - INFO - run_comparisons - line 141 - ********* Start 'create_dir_upload_file' *********
+2023-12-19 13:53:01,748 - INFO - run_comparisons - line 141 - ********* Start 'create_dir_upload_file' *********
+2023-12-19 13:53:01,748 - INFO - run_comparisons - line 141 - ********* Start 'create_dir_upload_file' *********
+2023-12-19 13:53:01,748 - INFO - run_comparisons - line 141 - ********* Start 'create_dir_upload_file' *********
+2023-12-19 13:53:01,749 - INFO - run_comparisons - line 147 - Starting run 0 of create_dir_upload_file on beta.hydroshare.org...
+2023-12-19 13:53:01,749 - INFO - run_comparisons - line 147 - Starting run 0 of create_dir_upload_file on beta.hydroshare.org...
+2023-12-19 13:53:01,749 - INFO - run_comparisons - line 147 - Starting run 0 of create_dir_upload_file on beta.hydroshare.org...
+2023-12-19 13:53:01,749 - INFO - run_comparisons - line 147 - Starting run 0 of create_dir_upload_file on beta.hydroshare.org...
+2023-12-19 13:53:02,072 - INFO - create_timer_log - line 18 - Starting call function create_dir_upload_file at 2023-12-19 18:53:02 with UUID=97a45fdd-f4b8-44e8-a02a-208ee1de4d84
+2023-12-19 13:53:02,072 - INFO - create_timer_log - line 18 - Starting call function create_dir_upload_file at 2023-12-19 18:53:02 with UUID=97a45fdd-f4b8-44e8-a02a-208ee1de4d84
+2023-12-19 13:53:02,072 - INFO - create_timer_log - line 18 - Starting call function create_dir_upload_file at 2023-12-19 18:53:02 with UUID=97a45fdd-f4b8-44e8-a02a-208ee1de4d84
+2023-12-19 13:53:02,072 - INFO - create_timer_log - line 18 - Starting call function create_dir_upload_file at 2023-12-19 18:53:02 with UUID=97a45fdd-f4b8-44e8-a02a-208ee1de4d84
+2023-12-19 13:53:47,067 - INFO - wrap_func - line 18 - Function 'create_dir_upload_file_inner' executed in 16.1238s
+2023-12-19 13:53:47,067 - INFO - wrap_func - line 18 - Function 'create_dir_upload_file_inner' executed in 16.1238s
+2023-12-19 13:53:47,067 - INFO - wrap_func - line 18 - Function 'create_dir_upload_file_inner' executed in 16.1238s
+2023-12-19 13:53:47,067 - INFO - wrap_func - line 18 - Function 'create_dir_upload_file_inner' executed in 16.1238s
+2023-12-19 13:53:47,067 - INFO - run_comparisons - line 150 - [16.1237952709198]
+2023-12-19 13:53:47,067 - INFO - run_comparisons - line 150 - [16.1237952709198]
+2023-12-19 13:53:47,067 - INFO - run_comparisons - line 150 - [16.1237952709198]
+2023-12-19 13:53:47,067 - INFO - run_comparisons - line 150 - [16.1237952709198]
+2023-12-19 13:53:47,068 - INFO - run_comparisons - line 147 - Starting run 1 of create_dir_upload_file on beta.hydroshare.org...
+2023-12-19 13:53:47,068 - INFO - run_comparisons - line 147 - Starting run 1 of create_dir_upload_file on beta.hydroshare.org...
+2023-12-19 13:53:47,068 - INFO - run_comparisons - line 147 - Starting run 1 of create_dir_upload_file on beta.hydroshare.org...
+2023-12-19 13:53:47,068 - INFO - run_comparisons - line 147 - Starting run 1 of create_dir_upload_file on beta.hydroshare.org...
+2023-12-19 13:53:50,414 - INFO - create_timer_log - line 18 - Starting call function create_dir_upload_file at 2023-12-19 18:53:50 with UUID=d5a10534-c80c-4ecd-93cc-273feb24e0bd
+2023-12-19 13:53:50,414 - INFO - create_timer_log - line 18 - Starting call function create_dir_upload_file at 2023-12-19 18:53:50 with UUID=d5a10534-c80c-4ecd-93cc-273feb24e0bd
+2023-12-19 13:53:50,414 - INFO - create_timer_log - line 18 - Starting call function create_dir_upload_file at 2023-12-19 18:53:50 with UUID=d5a10534-c80c-4ecd-93cc-273feb24e0bd
+2023-12-19 13:53:50,414 - INFO - create_timer_log - line 18 - Starting call function create_dir_upload_file at 2023-12-19 18:53:50 with UUID=d5a10534-c80c-4ecd-93cc-273feb24e0bd
+2023-12-19 13:54:38,127 - INFO - wrap_func - line 18 - Function 'create_dir_upload_file_inner' executed in 24.5449s
+2023-12-19 13:54:38,127 - INFO - wrap_func - line 18 - Function 'create_dir_upload_file_inner' executed in 24.5449s
+2023-12-19 13:54:38,127 - INFO - wrap_func - line 18 - Function 'create_dir_upload_file_inner' executed in 24.5449s
+2023-12-19 13:54:38,127 - INFO - wrap_func - line 18 - Function 'create_dir_upload_file_inner' executed in 24.5449s
+2023-12-19 13:54:38,128 - INFO - run_comparisons - line 150 - [16.1237952709198, 24.544891119003296]
+2023-12-19 13:54:38,128 - INFO - run_comparisons - line 150 - [16.1237952709198, 24.544891119003296]
+2023-12-19 13:54:38,128 - INFO - run_comparisons - line 150 - [16.1237952709198, 24.544891119003296]
+2023-12-19 13:54:38,128 - INFO - run_comparisons - line 150 - [16.1237952709198, 24.544891119003296]
+2023-12-19 13:54:38,129 - INFO - run_comparisons - line 147 - Starting run 2 of create_dir_upload_file on beta.hydroshare.org...
+2023-12-19 13:54:38,129 - INFO - run_comparisons - line 147 - Starting run 2 of create_dir_upload_file on beta.hydroshare.org...
+2023-12-19 13:54:38,129 - INFO - run_comparisons - line 147 - Starting run 2 of create_dir_upload_file on beta.hydroshare.org...
+2023-12-19 13:54:38,129 - INFO - run_comparisons - line 147 - Starting run 2 of create_dir_upload_file on beta.hydroshare.org...
+2023-12-19 13:54:38,419 - INFO - create_timer_log - line 18 - Starting call function create_dir_upload_file at 2023-12-19 18:54:38 with UUID=0391e0d5-1989-4016-b929-6401ce71d2e6
+2023-12-19 13:54:38,419 - INFO - create_timer_log - line 18 - Starting call function create_dir_upload_file at 2023-12-19 18:54:38 with UUID=0391e0d5-1989-4016-b929-6401ce71d2e6
+2023-12-19 13:54:38,419 - INFO - create_timer_log - line 18 - Starting call function create_dir_upload_file at 2023-12-19 18:54:38 with UUID=0391e0d5-1989-4016-b929-6401ce71d2e6
+2023-12-19 13:54:38,419 - INFO - create_timer_log - line 18 - Starting call function create_dir_upload_file at 2023-12-19 18:54:38 with UUID=0391e0d5-1989-4016-b929-6401ce71d2e6
+2023-12-19 13:55:20,674 - INFO - wrap_func - line 18 - Function 'create_dir_upload_file_inner' executed in 20.3853s
+2023-12-19 13:55:20,674 - INFO - wrap_func - line 18 - Function 'create_dir_upload_file_inner' executed in 20.3853s
+2023-12-19 13:55:20,674 - INFO - wrap_func - line 18 - Function 'create_dir_upload_file_inner' executed in 20.3853s
+2023-12-19 13:55:20,674 - INFO - wrap_func - line 18 - Function 'create_dir_upload_file_inner' executed in 20.3853s
+2023-12-19 13:55:20,674 - INFO - run_comparisons - line 150 - [16.1237952709198, 24.544891119003296, 20.385324001312256]
+2023-12-19 13:55:20,674 - INFO - run_comparisons - line 150 - [16.1237952709198, 24.544891119003296, 20.385324001312256]
+2023-12-19 13:55:20,674 - INFO - run_comparisons - line 150 - [16.1237952709198, 24.544891119003296, 20.385324001312256]
+2023-12-19 13:55:20,674 - INFO - run_comparisons - line 150 - [16.1237952709198, 24.544891119003296, 20.385324001312256]
+2023-12-19 13:55:20,675 - INFO - run_comparisons - line 141 - ********* Start 'delete_single_file' *********
+2023-12-19 13:55:20,675 - INFO - run_comparisons - line 141 - ********* Start 'delete_single_file' *********
+2023-12-19 13:55:20,675 - INFO - run_comparisons - line 141 - ********* Start 'delete_single_file' *********
+2023-12-19 13:55:20,675 - INFO - run_comparisons - line 141 - ********* Start 'delete_single_file' *********
+2023-12-19 13:55:20,675 - INFO - run_comparisons - line 147 - Starting run 0 of delete_single_file on beta.hydroshare.org...
+2023-12-19 13:55:20,675 - INFO - run_comparisons - line 147 - Starting run 0 of delete_single_file on beta.hydroshare.org...
+2023-12-19 13:55:20,675 - INFO - run_comparisons - line 147 - Starting run 0 of delete_single_file on beta.hydroshare.org...
+2023-12-19 13:55:20,675 - INFO - run_comparisons - line 147 - Starting run 0 of delete_single_file on beta.hydroshare.org...
+2023-12-19 13:55:23,396 - INFO - create_timer_log - line 18 - Starting call function delete_single_file at 2023-12-19 18:55:23 with UUID=3a4d01f6-9b7f-4489-975b-3f8bb0d5d85e
+2023-12-19 13:55:23,396 - INFO - create_timer_log - line 18 - Starting call function delete_single_file at 2023-12-19 18:55:23 with UUID=3a4d01f6-9b7f-4489-975b-3f8bb0d5d85e
+2023-12-19 13:55:23,396 - INFO - create_timer_log - line 18 - Starting call function delete_single_file at 2023-12-19 18:55:23 with UUID=3a4d01f6-9b7f-4489-975b-3f8bb0d5d85e
+2023-12-19 13:55:23,396 - INFO - create_timer_log - line 18 - Starting call function delete_single_file at 2023-12-19 18:55:23 with UUID=3a4d01f6-9b7f-4489-975b-3f8bb0d5d85e
+2023-12-19 13:56:21,893 - INFO - wrap_func - line 18 - Function 'delete_single_file_inner' executed in 25.7226s
+2023-12-19 13:56:21,893 - INFO - wrap_func - line 18 - Function 'delete_single_file_inner' executed in 25.7226s
+2023-12-19 13:56:21,893 - INFO - wrap_func - line 18 - Function 'delete_single_file_inner' executed in 25.7226s
+2023-12-19 13:56:21,893 - INFO - wrap_func - line 18 - Function 'delete_single_file_inner' executed in 25.7226s
+2023-12-19 13:56:21,893 - INFO - run_comparisons - line 150 - [25.722639799118042]
+2023-12-19 13:56:21,893 - INFO - run_comparisons - line 150 - [25.722639799118042]
+2023-12-19 13:56:21,893 - INFO - run_comparisons - line 150 - [25.722639799118042]
+2023-12-19 13:56:21,893 - INFO - run_comparisons - line 150 - [25.722639799118042]
+2023-12-19 13:56:21,894 - INFO - run_comparisons - line 147 - Starting run 1 of delete_single_file on beta.hydroshare.org...
+2023-12-19 13:56:21,894 - INFO - run_comparisons - line 147 - Starting run 1 of delete_single_file on beta.hydroshare.org...
+2023-12-19 13:56:21,894 - INFO - run_comparisons - line 147 - Starting run 1 of delete_single_file on beta.hydroshare.org...
+2023-12-19 13:56:21,894 - INFO - run_comparisons - line 147 - Starting run 1 of delete_single_file on beta.hydroshare.org...
+2023-12-19 13:56:22,186 - INFO - create_timer_log - line 18 - Starting call function delete_single_file at 2023-12-19 18:56:22 with UUID=5102239f-bd54-4ec3-9718-812c85e2c5d2
+2023-12-19 13:56:22,186 - INFO - create_timer_log - line 18 - Starting call function delete_single_file at 2023-12-19 18:56:22 with UUID=5102239f-bd54-4ec3-9718-812c85e2c5d2
+2023-12-19 13:56:22,186 - INFO - create_timer_log - line 18 - Starting call function delete_single_file at 2023-12-19 18:56:22 with UUID=5102239f-bd54-4ec3-9718-812c85e2c5d2
+2023-12-19 13:56:22,186 - INFO - create_timer_log - line 18 - Starting call function delete_single_file at 2023-12-19 18:56:22 with UUID=5102239f-bd54-4ec3-9718-812c85e2c5d2
+2023-12-19 13:57:33,319 - INFO - wrap_func - line 18 - Function 'delete_single_file_inner' executed in 26.4760s
+2023-12-19 13:57:33,319 - INFO - wrap_func - line 18 - Function 'delete_single_file_inner' executed in 26.4760s
+2023-12-19 13:57:33,319 - INFO - wrap_func - line 18 - Function 'delete_single_file_inner' executed in 26.4760s
+2023-12-19 13:57:33,319 - INFO - wrap_func - line 18 - Function 'delete_single_file_inner' executed in 26.4760s
+2023-12-19 13:57:33,321 - INFO - run_comparisons - line 150 - [25.722639799118042, 26.47598385810852]
+2023-12-19 13:57:33,321 - INFO - run_comparisons - line 150 - [25.722639799118042, 26.47598385810852]
+2023-12-19 13:57:33,321 - INFO - run_comparisons - line 150 - [25.722639799118042, 26.47598385810852]
+2023-12-19 13:57:33,321 - INFO - run_comparisons - line 150 - [25.722639799118042, 26.47598385810852]
+2023-12-19 13:57:33,321 - INFO - run_comparisons - line 147 - Starting run 2 of delete_single_file on beta.hydroshare.org...
+2023-12-19 13:57:33,321 - INFO - run_comparisons - line 147 - Starting run 2 of delete_single_file on beta.hydroshare.org...
+2023-12-19 13:57:33,321 - INFO - run_comparisons - line 147 - Starting run 2 of delete_single_file on beta.hydroshare.org...
+2023-12-19 13:57:33,321 - INFO - run_comparisons - line 147 - Starting run 2 of delete_single_file on beta.hydroshare.org...
+2023-12-19 13:57:33,687 - INFO - create_timer_log - line 18 - Starting call function delete_single_file at 2023-12-19 18:57:33 with UUID=f6d10291-0892-46d0-a516-d1810e9ed8a9
+2023-12-19 13:57:33,687 - INFO - create_timer_log - line 18 - Starting call function delete_single_file at 2023-12-19 18:57:33 with UUID=f6d10291-0892-46d0-a516-d1810e9ed8a9
+2023-12-19 13:57:33,687 - INFO - create_timer_log - line 18 - Starting call function delete_single_file at 2023-12-19 18:57:33 with UUID=f6d10291-0892-46d0-a516-d1810e9ed8a9
+2023-12-19 13:57:33,687 - INFO - create_timer_log - line 18 - Starting call function delete_single_file at 2023-12-19 18:57:33 with UUID=f6d10291-0892-46d0-a516-d1810e9ed8a9
+2023-12-19 13:58:48,427 - INFO - wrap_func - line 18 - Function 'delete_single_file_inner' executed in 35.4353s
+2023-12-19 13:58:48,427 - INFO - wrap_func - line 18 - Function 'delete_single_file_inner' executed in 35.4353s
+2023-12-19 13:58:48,427 - INFO - wrap_func - line 18 - Function 'delete_single_file_inner' executed in 35.4353s
+2023-12-19 13:58:48,427 - INFO - wrap_func - line 18 - Function 'delete_single_file_inner' executed in 35.4353s
+2023-12-19 13:58:48,428 - INFO - run_comparisons - line 150 - [25.722639799118042, 26.47598385810852, 35.43530201911926]
+2023-12-19 13:58:48,428 - INFO - run_comparisons - line 150 - [25.722639799118042, 26.47598385810852, 35.43530201911926]
+2023-12-19 13:58:48,428 - INFO - run_comparisons - line 150 - [25.722639799118042, 26.47598385810852, 35.43530201911926]
+2023-12-19 13:58:48,428 - INFO - run_comparisons - line 150 - [25.722639799118042, 26.47598385810852, 35.43530201911926]
+2023-12-19 13:58:48,429 - INFO - run_comparisons - line 141 - ********* Start 'delete_resources' *********
+2023-12-19 13:58:48,429 - INFO - run_comparisons - line 141 - ********* Start 'delete_resources' *********
+2023-12-19 13:58:48,429 - INFO - run_comparisons - line 141 - ********* Start 'delete_resources' *********
+2023-12-19 13:58:48,429 - INFO - run_comparisons - line 141 - ********* Start 'delete_resources' *********
+2023-12-19 13:58:48,429 - INFO - run_comparisons - line 147 - Starting run 0 of delete_resources on beta.hydroshare.org...
+2023-12-19 13:58:48,429 - INFO - run_comparisons - line 147 - Starting run 0 of delete_resources on beta.hydroshare.org...
+2023-12-19 13:58:48,429 - INFO - run_comparisons - line 147 - Starting run 0 of delete_resources on beta.hydroshare.org...
+2023-12-19 13:58:48,429 - INFO - run_comparisons - line 147 - Starting run 0 of delete_resources on beta.hydroshare.org...
+2023-12-19 13:58:48,752 - INFO - create_timer_log - line 18 - Starting call function delete_resources at 2023-12-19 18:58:48 with UUID=0a6dd610-9562-4c17-a80f-aa870296aa09
+2023-12-19 13:58:48,752 - INFO - create_timer_log - line 18 - Starting call function delete_resources at 2023-12-19 18:58:48 with UUID=0a6dd610-9562-4c17-a80f-aa870296aa09
+2023-12-19 13:58:48,752 - INFO - create_timer_log - line 18 - Starting call function delete_resources at 2023-12-19 18:58:48 with UUID=0a6dd610-9562-4c17-a80f-aa870296aa09
+2023-12-19 13:58:48,752 - INFO - create_timer_log - line 18 - Starting call function delete_resources at 2023-12-19 18:58:48 with UUID=0a6dd610-9562-4c17-a80f-aa870296aa09
+2023-12-19 14:03:13,936 - INFO - wrap_func - line 18 - Function 'delete_resources' executed in 265.5067s
+2023-12-19 14:03:13,936 - INFO - wrap_func - line 18 - Function 'delete_resources' executed in 265.5067s
+2023-12-19 14:03:13,936 - INFO - wrap_func - line 18 - Function 'delete_resources' executed in 265.5067s
+2023-12-19 14:03:13,936 - INFO - wrap_func - line 18 - Function 'delete_resources' executed in 265.5067s
+2023-12-19 14:03:13,936 - INFO - run_comparisons - line 150 - [265.5066831111908]
+2023-12-19 14:03:13,936 - INFO - run_comparisons - line 150 - [265.5066831111908]
+2023-12-19 14:03:13,936 - INFO - run_comparisons - line 150 - [265.5066831111908]
+2023-12-19 14:03:13,936 - INFO - run_comparisons - line 150 - [265.5066831111908]
+2023-12-19 14:03:13,947 - INFO - run_comparisons - line 141 - ********* Start 'upload_file' *********
+2023-12-19 14:03:13,947 - INFO - run_comparisons - line 141 - ********* Start 'upload_file' *********
+2023-12-19 14:03:13,947 - INFO - run_comparisons - line 141 - ********* Start 'upload_file' *********
+2023-12-19 14:03:13,947 - INFO - run_comparisons - line 141 - ********* Start 'upload_file' *********
+2023-12-19 14:03:13,949 - INFO - run_comparisons - line 147 - Starting run 0 of upload_file on beta.hydroshare.org...
+2023-12-19 14:03:13,949 - INFO - run_comparisons - line 147 - Starting run 0 of upload_file on beta.hydroshare.org...
+2023-12-19 14:03:13,949 - INFO - run_comparisons - line 147 - Starting run 0 of upload_file on beta.hydroshare.org...
+2023-12-19 14:03:13,949 - INFO - run_comparisons - line 147 - Starting run 0 of upload_file on beta.hydroshare.org...
+2023-12-19 14:03:15,170 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:03:15 with UUID=317727c8-9ccb-4df9-80af-6f5999a443c6
+2023-12-19 14:03:15,170 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:03:15 with UUID=317727c8-9ccb-4df9-80af-6f5999a443c6
+2023-12-19 14:03:15,170 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:03:15 with UUID=317727c8-9ccb-4df9-80af-6f5999a443c6
+2023-12-19 14:03:15,170 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:03:15 with UUID=317727c8-9ccb-4df9-80af-6f5999a443c6
+2023-12-19 14:03:42,482 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 5.7137s
+2023-12-19 14:03:42,482 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 5.7137s
+2023-12-19 14:03:42,482 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 5.7137s
+2023-12-19 14:03:42,482 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 5.7137s
+2023-12-19 14:03:42,483 - INFO - run_comparisons - line 150 - [5.71367883682251]
+2023-12-19 14:03:42,483 - INFO - run_comparisons - line 150 - [5.71367883682251]
+2023-12-19 14:03:42,483 - INFO - run_comparisons - line 150 - [5.71367883682251]
+2023-12-19 14:03:42,483 - INFO - run_comparisons - line 150 - [5.71367883682251]
+2023-12-19 14:03:42,483 - INFO - run_comparisons - line 147 - Starting run 1 of upload_file on beta.hydroshare.org...
+2023-12-19 14:03:42,483 - INFO - run_comparisons - line 147 - Starting run 1 of upload_file on beta.hydroshare.org...
+2023-12-19 14:03:42,483 - INFO - run_comparisons - line 147 - Starting run 1 of upload_file on beta.hydroshare.org...
+2023-12-19 14:03:42,483 - INFO - run_comparisons - line 147 - Starting run 1 of upload_file on beta.hydroshare.org...
+2023-12-19 14:03:42,885 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:03:42 with UUID=5366be82-44eb-4bb5-9d0f-bccf311b0be5
+2023-12-19 14:03:42,885 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:03:42 with UUID=5366be82-44eb-4bb5-9d0f-bccf311b0be5
+2023-12-19 14:03:42,885 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:03:42 with UUID=5366be82-44eb-4bb5-9d0f-bccf311b0be5
+2023-12-19 14:03:42,885 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:03:42 with UUID=5366be82-44eb-4bb5-9d0f-bccf311b0be5
+2023-12-19 14:04:12,989 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 3.0886s
+2023-12-19 14:04:12,989 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 3.0886s
+2023-12-19 14:04:12,989 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 3.0886s
+2023-12-19 14:04:12,989 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 3.0886s
+2023-12-19 14:04:12,989 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156]
+2023-12-19 14:04:12,989 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156]
+2023-12-19 14:04:12,989 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156]
+2023-12-19 14:04:12,989 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156]
+2023-12-19 14:04:12,989 - INFO - run_comparisons - line 147 - Starting run 2 of upload_file on beta.hydroshare.org...
+2023-12-19 14:04:12,989 - INFO - run_comparisons - line 147 - Starting run 2 of upload_file on beta.hydroshare.org...
+2023-12-19 14:04:12,989 - INFO - run_comparisons - line 147 - Starting run 2 of upload_file on beta.hydroshare.org...
+2023-12-19 14:04:12,989 - INFO - run_comparisons - line 147 - Starting run 2 of upload_file on beta.hydroshare.org...
+2023-12-19 14:04:16,305 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:04:16 with UUID=c0dc4971-d006-4bd2-81e8-a9e2da599650
+2023-12-19 14:04:16,305 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:04:16 with UUID=c0dc4971-d006-4bd2-81e8-a9e2da599650
+2023-12-19 14:04:16,305 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:04:16 with UUID=c0dc4971-d006-4bd2-81e8-a9e2da599650
+2023-12-19 14:04:16,305 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:04:16 with UUID=c0dc4971-d006-4bd2-81e8-a9e2da599650
+2023-12-19 14:04:49,147 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 5.8259s
+2023-12-19 14:04:49,147 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 5.8259s
+2023-12-19 14:04:49,147 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 5.8259s
+2023-12-19 14:04:49,147 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 5.8259s
+2023-12-19 14:04:49,148 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855]
+2023-12-19 14:04:49,148 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855]
+2023-12-19 14:04:49,148 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855]
+2023-12-19 14:04:49,148 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855]
+2023-12-19 14:04:49,148 - INFO - run_comparisons - line 147 - Starting run 3 of upload_file on beta.hydroshare.org...
+2023-12-19 14:04:49,148 - INFO - run_comparisons - line 147 - Starting run 3 of upload_file on beta.hydroshare.org...
+2023-12-19 14:04:49,148 - INFO - run_comparisons - line 147 - Starting run 3 of upload_file on beta.hydroshare.org...
+2023-12-19 14:04:49,148 - INFO - run_comparisons - line 147 - Starting run 3 of upload_file on beta.hydroshare.org...
+2023-12-19 14:04:50,550 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:04:50 with UUID=e91bf227-0dd3-425e-bf7b-d2084cace994
+2023-12-19 14:04:50,550 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:04:50 with UUID=e91bf227-0dd3-425e-bf7b-d2084cace994
+2023-12-19 14:04:50,550 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:04:50 with UUID=e91bf227-0dd3-425e-bf7b-d2084cace994
+2023-12-19 14:04:50,550 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:04:50 with UUID=e91bf227-0dd3-425e-bf7b-d2084cace994
+2023-12-19 14:05:15,506 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 2.7734s
+2023-12-19 14:05:15,506 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 2.7734s
+2023-12-19 14:05:15,506 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 2.7734s
+2023-12-19 14:05:15,506 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 2.7734s
+2023-12-19 14:05:15,507 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669]
+2023-12-19 14:05:15,507 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669]
+2023-12-19 14:05:15,507 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669]
+2023-12-19 14:05:15,507 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669]
+2023-12-19 14:05:15,507 - INFO - run_comparisons - line 147 - Starting run 4 of upload_file on beta.hydroshare.org...
+2023-12-19 14:05:15,507 - INFO - run_comparisons - line 147 - Starting run 4 of upload_file on beta.hydroshare.org...
+2023-12-19 14:05:15,507 - INFO - run_comparisons - line 147 - Starting run 4 of upload_file on beta.hydroshare.org...
+2023-12-19 14:05:15,507 - INFO - run_comparisons - line 147 - Starting run 4 of upload_file on beta.hydroshare.org...
+2023-12-19 14:05:18,875 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:05:18 with UUID=9c25d94d-f35c-401d-92e8-5bb245be36da
+2023-12-19 14:05:18,875 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:05:18 with UUID=9c25d94d-f35c-401d-92e8-5bb245be36da
+2023-12-19 14:05:18,875 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:05:18 with UUID=9c25d94d-f35c-401d-92e8-5bb245be36da
+2023-12-19 14:05:18,875 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:05:18 with UUID=9c25d94d-f35c-401d-92e8-5bb245be36da
+2023-12-19 14:05:52,101 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 5.8080s
+2023-12-19 14:05:52,101 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 5.8080s
+2023-12-19 14:05:52,101 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 5.8080s
+2023-12-19 14:05:52,101 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 5.8080s
+2023-12-19 14:05:52,101 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607]
+2023-12-19 14:05:52,101 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607]
+2023-12-19 14:05:52,101 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607]
+2023-12-19 14:05:52,101 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607]
+2023-12-19 14:05:52,102 - INFO - run_comparisons - line 147 - Starting run 5 of upload_file on beta.hydroshare.org...
+2023-12-19 14:05:52,102 - INFO - run_comparisons - line 147 - Starting run 5 of upload_file on beta.hydroshare.org...
+2023-12-19 14:05:52,102 - INFO - run_comparisons - line 147 - Starting run 5 of upload_file on beta.hydroshare.org...
+2023-12-19 14:05:52,102 - INFO - run_comparisons - line 147 - Starting run 5 of upload_file on beta.hydroshare.org...
+2023-12-19 14:05:52,398 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:05:52 with UUID=403fd188-7ea8-4c79-b061-220dabb5c1b7
+2023-12-19 14:05:52,398 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:05:52 with UUID=403fd188-7ea8-4c79-b061-220dabb5c1b7
+2023-12-19 14:05:52,398 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:05:52 with UUID=403fd188-7ea8-4c79-b061-220dabb5c1b7
+2023-12-19 14:05:52,398 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:05:52 with UUID=403fd188-7ea8-4c79-b061-220dabb5c1b7
+2023-12-19 14:06:24,471 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 7.6790s
+2023-12-19 14:06:24,471 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 7.6790s
+2023-12-19 14:06:24,471 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 7.6790s
+2023-12-19 14:06:24,471 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 7.6790s
+2023-12-19 14:06:24,471 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607, 7.679003953933716]
+2023-12-19 14:06:24,471 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607, 7.679003953933716]
+2023-12-19 14:06:24,471 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607, 7.679003953933716]
+2023-12-19 14:06:24,471 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607, 7.679003953933716]
+2023-12-19 14:06:24,472 - INFO - run_comparisons - line 147 - Starting run 6 of upload_file on beta.hydroshare.org...
+2023-12-19 14:06:24,472 - INFO - run_comparisons - line 147 - Starting run 6 of upload_file on beta.hydroshare.org...
+2023-12-19 14:06:24,472 - INFO - run_comparisons - line 147 - Starting run 6 of upload_file on beta.hydroshare.org...
+2023-12-19 14:06:24,472 - INFO - run_comparisons - line 147 - Starting run 6 of upload_file on beta.hydroshare.org...
+2023-12-19 14:06:24,775 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:06:24 with UUID=dce65662-6606-4558-9139-67513c1cfea4
+2023-12-19 14:06:24,775 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:06:24 with UUID=dce65662-6606-4558-9139-67513c1cfea4
+2023-12-19 14:06:24,775 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:06:24 with UUID=dce65662-6606-4558-9139-67513c1cfea4
+2023-12-19 14:06:24,775 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:06:24 with UUID=dce65662-6606-4558-9139-67513c1cfea4
+2023-12-19 14:06:49,633 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 2.8059s
+2023-12-19 14:06:49,633 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 2.8059s
+2023-12-19 14:06:49,633 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 2.8059s
+2023-12-19 14:06:49,633 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 2.8059s
+2023-12-19 14:06:49,633 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607, 7.679003953933716, 2.805884838104248]
+2023-12-19 14:06:49,633 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607, 7.679003953933716, 2.805884838104248]
+2023-12-19 14:06:49,633 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607, 7.679003953933716, 2.805884838104248]
+2023-12-19 14:06:49,633 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607, 7.679003953933716, 2.805884838104248]
+2023-12-19 14:06:49,634 - INFO - run_comparisons - line 147 - Starting run 7 of upload_file on beta.hydroshare.org...
+2023-12-19 14:06:49,634 - INFO - run_comparisons - line 147 - Starting run 7 of upload_file on beta.hydroshare.org...
+2023-12-19 14:06:49,634 - INFO - run_comparisons - line 147 - Starting run 7 of upload_file on beta.hydroshare.org...
+2023-12-19 14:06:49,634 - INFO - run_comparisons - line 147 - Starting run 7 of upload_file on beta.hydroshare.org...
+2023-12-19 14:06:52,976 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:06:53 with UUID=b0d0b6be-25be-44c4-9124-d438cad6a487
+2023-12-19 14:06:52,976 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:06:53 with UUID=b0d0b6be-25be-44c4-9124-d438cad6a487
+2023-12-19 14:06:52,976 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:06:53 with UUID=b0d0b6be-25be-44c4-9124-d438cad6a487
+2023-12-19 14:06:52,976 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:06:53 with UUID=b0d0b6be-25be-44c4-9124-d438cad6a487
+2023-12-19 14:07:20,121 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 7.6283s
+2023-12-19 14:07:20,121 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 7.6283s
+2023-12-19 14:07:20,121 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 7.6283s
+2023-12-19 14:07:20,121 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 7.6283s
+2023-12-19 14:07:20,121 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607, 7.679003953933716, 2.805884838104248, 7.6282641887664795]
+2023-12-19 14:07:20,121 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607, 7.679003953933716, 2.805884838104248, 7.6282641887664795]
+2023-12-19 14:07:20,121 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607, 7.679003953933716, 2.805884838104248, 7.6282641887664795]
+2023-12-19 14:07:20,121 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607, 7.679003953933716, 2.805884838104248, 7.6282641887664795]
+2023-12-19 14:07:20,122 - INFO - run_comparisons - line 147 - Starting run 8 of upload_file on beta.hydroshare.org...
+2023-12-19 14:07:20,122 - INFO - run_comparisons - line 147 - Starting run 8 of upload_file on beta.hydroshare.org...
+2023-12-19 14:07:20,122 - INFO - run_comparisons - line 147 - Starting run 8 of upload_file on beta.hydroshare.org...
+2023-12-19 14:07:20,122 - INFO - run_comparisons - line 147 - Starting run 8 of upload_file on beta.hydroshare.org...
+2023-12-19 14:07:22,886 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:07:22 with UUID=5d3611e8-a661-4b4d-9f1f-8e336c7d3cd3
+2023-12-19 14:07:22,886 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:07:22 with UUID=5d3611e8-a661-4b4d-9f1f-8e336c7d3cd3
+2023-12-19 14:07:22,886 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:07:22 with UUID=5d3611e8-a661-4b4d-9f1f-8e336c7d3cd3
+2023-12-19 14:07:22,886 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:07:22 with UUID=5d3611e8-a661-4b4d-9f1f-8e336c7d3cd3
+2023-12-19 14:07:53,803 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 5.7749s
+2023-12-19 14:07:53,803 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 5.7749s
+2023-12-19 14:07:53,803 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 5.7749s
+2023-12-19 14:07:53,803 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 5.7749s
+2023-12-19 14:07:53,804 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607, 7.679003953933716, 2.805884838104248, 7.6282641887664795, 5.774852752685547]
+2023-12-19 14:07:53,804 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607, 7.679003953933716, 2.805884838104248, 7.6282641887664795, 5.774852752685547]
+2023-12-19 14:07:53,804 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607, 7.679003953933716, 2.805884838104248, 7.6282641887664795, 5.774852752685547]
+2023-12-19 14:07:53,804 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607, 7.679003953933716, 2.805884838104248, 7.6282641887664795, 5.774852752685547]
+2023-12-19 14:07:53,804 - INFO - run_comparisons - line 147 - Starting run 9 of upload_file on beta.hydroshare.org...
+2023-12-19 14:07:53,804 - INFO - run_comparisons - line 147 - Starting run 9 of upload_file on beta.hydroshare.org...
+2023-12-19 14:07:53,804 - INFO - run_comparisons - line 147 - Starting run 9 of upload_file on beta.hydroshare.org...
+2023-12-19 14:07:53,804 - INFO - run_comparisons - line 147 - Starting run 9 of upload_file on beta.hydroshare.org...
+2023-12-19 14:07:55,350 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:07:55 with UUID=6ab9630d-16b3-460a-9675-d6a8d00befcf
+2023-12-19 14:07:55,350 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:07:55 with UUID=6ab9630d-16b3-460a-9675-d6a8d00befcf
+2023-12-19 14:07:55,350 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:07:55 with UUID=6ab9630d-16b3-460a-9675-d6a8d00befcf
+2023-12-19 14:07:55,350 - INFO - create_timer_log - line 18 - Starting call function upload_file at 2023-12-19 19:07:55 with UUID=6ab9630d-16b3-460a-9675-d6a8d00befcf
+2023-12-19 14:08:31,724 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 6.0656s
+2023-12-19 14:08:31,724 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 6.0656s
+2023-12-19 14:08:31,724 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 6.0656s
+2023-12-19 14:08:31,724 - INFO - wrap_func - line 18 - Function 'upload_file_inner' executed in 6.0656s
+2023-12-19 14:08:31,725 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607, 7.679003953933716, 2.805884838104248, 7.6282641887664795, 5.774852752685547, 6.065620183944702]
+2023-12-19 14:08:31,725 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607, 7.679003953933716, 2.805884838104248, 7.6282641887664795, 5.774852752685547, 6.065620183944702]
+2023-12-19 14:08:31,725 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607, 7.679003953933716, 2.805884838104248, 7.6282641887664795, 5.774852752685547, 6.065620183944702]
+2023-12-19 14:08:31,725 - INFO - run_comparisons - line 150 - [5.71367883682251, 3.0885658264160156, 5.8258891105651855, 2.773413896560669, 5.807986736297607, 7.679003953933716, 2.805884838104248, 7.6282641887664795, 5.774852752685547, 6.065620183944702]
+2023-12-19 14:08:31,738 - INFO - run_comparisons - line 141 - ********* Start 'create_res' *********
+2023-12-19 14:08:31,738 - INFO - run_comparisons - line 141 - ********* Start 'create_res' *********
+2023-12-19 14:08:31,738 - INFO - run_comparisons - line 141 - ********* Start 'create_res' *********
+2023-12-19 14:08:31,738 - INFO - run_comparisons - line 141 - ********* Start 'create_res' *********
+2023-12-19 14:08:31,739 - INFO - run_comparisons - line 147 - Starting run 0 of create_res on beta.hydroshare.org...
+2023-12-19 14:08:31,739 - INFO - run_comparisons - line 147 - Starting run 0 of create_res on beta.hydroshare.org...
+2023-12-19 14:08:31,739 - INFO - run_comparisons - line 147 - Starting run 0 of create_res on beta.hydroshare.org...
+2023-12-19 14:08:31,739 - INFO - run_comparisons - line 147 - Starting run 0 of create_res on beta.hydroshare.org...
+2023-12-19 14:08:32,111 - INFO - create_timer_log - line 18 - Starting call function create_res at 2023-12-19 19:08:32 with UUID=b5a8919e-44ab-4722-b5d0-b94cfa64e572
+2023-12-19 14:08:32,111 - INFO - create_timer_log - line 18 - Starting call function create_res at 2023-12-19 19:08:32 with UUID=b5a8919e-44ab-4722-b5d0-b94cfa64e572
+2023-12-19 14:08:32,111 - INFO - create_timer_log - line 18 - Starting call function create_res at 2023-12-19 19:08:32 with UUID=b5a8919e-44ab-4722-b5d0-b94cfa64e572
+2023-12-19 14:08:32,111 - INFO - create_timer_log - line 18 - Starting call function create_res at 2023-12-19 19:08:32 with UUID=b5a8919e-44ab-4722-b5d0-b94cfa64e572
+2023-12-19 14:09:00,250 - INFO - wrap_func - line 18 - Function 'create_res_time' executed in 28.1364s
+2023-12-19 14:09:00,250 - INFO - wrap_func - line 18 - Function 'create_res_time' executed in 28.1364s
+2023-12-19 14:09:00,250 - INFO - wrap_func - line 18 - Function 'create_res_time' executed in 28.1364s
+2023-12-19 14:09:00,250 - INFO - wrap_func - line 18 - Function 'create_res_time' executed in 28.1364s
+2023-12-19 14:09:00,250 - INFO - run_comparisons - line 150 - [28.136365175247192]
+2023-12-19 14:09:00,250 - INFO - run_comparisons - line 150 - [28.136365175247192]
+2023-12-19 14:09:00,250 - INFO - run_comparisons - line 150 - [28.136365175247192]
+2023-12-19 14:09:00,250 - INFO - run_comparisons - line 150 - [28.136365175247192]
+2023-12-19 14:09:00,251 - INFO - run_comparisons - line 147 - Starting run 1 of create_res on beta.hydroshare.org...
+2023-12-19 14:09:00,251 - INFO - run_comparisons - line 147 - Starting run 1 of create_res on beta.hydroshare.org...
+2023-12-19 14:09:00,251 - INFO - run_comparisons - line 147 - Starting run 1 of create_res on beta.hydroshare.org...
+2023-12-19 14:09:00,251 - INFO - run_comparisons - line 147 - Starting run 1 of create_res on beta.hydroshare.org...
+2023-12-19 14:09:00,562 - INFO - create_timer_log - line 18 - Starting call function create_res at 2023-12-19 19:09:00 with UUID=da23d7d3-3706-4ae7-9c86-3ab32e81fad9
+2023-12-19 14:09:00,562 - INFO - create_timer_log - line 18 - Starting call function create_res at 2023-12-19 19:09:00 with UUID=da23d7d3-3706-4ae7-9c86-3ab32e81fad9
+2023-12-19 14:09:00,562 - INFO - create_timer_log - line 18 - Starting call function create_res at 2023-12-19 19:09:00 with UUID=da23d7d3-3706-4ae7-9c86-3ab32e81fad9
+2023-12-19 14:09:00,562 - INFO - create_timer_log - line 18 - Starting call function create_res at 2023-12-19 19:09:00 with UUID=da23d7d3-3706-4ae7-9c86-3ab32e81fad9
+2023-12-19 14:09:28,921 - INFO - wrap_func - line 18 - Function 'create_res_time' executed in 28.3560s
+2023-12-19 14:09:28,921 - INFO - wrap_func - line 18 - Function 'create_res_time' executed in 28.3560s
+2023-12-19 14:09:28,921 - INFO - wrap_func - line 18 - Function 'create_res_time' executed in 28.3560s
+2023-12-19 14:09:28,921 - INFO - wrap_func - line 18 - Function 'create_res_time' executed in 28.3560s
+2023-12-19 14:09:28,921 - INFO - run_comparisons - line 150 - [28.136365175247192, 28.356043577194214]
+2023-12-19 14:09:28,921 - INFO - run_comparisons - line 150 - [28.136365175247192, 28.356043577194214]
+2023-12-19 14:09:28,921 - INFO - run_comparisons - line 150 - [28.136365175247192, 28.356043577194214]
+2023-12-19 14:09:28,921 - INFO - run_comparisons - line 150 - [28.136365175247192, 28.356043577194214]
+2023-12-19 14:09:28,921 - INFO - run_comparisons - line 147 - Starting run 2 of create_res on beta.hydroshare.org...
+2023-12-19 14:09:28,921 - INFO - run_comparisons - line 147 - Starting run 2 of create_res on beta.hydroshare.org...
+2023-12-19 14:09:28,921 - INFO - run_comparisons - line 147 - Starting run 2 of create_res on beta.hydroshare.org...
+2023-12-19 14:09:28,921 - INFO - run_comparisons - line 147 - Starting run 2 of create_res on beta.hydroshare.org...
+2023-12-19 14:09:29,311 - INFO - create_timer_log - line 18 - Starting call function create_res at 2023-12-19 19:09:29 with UUID=61720e2d-1129-4bce-813f-66a34007a36b
+2023-12-19 14:09:29,311 - INFO - create_timer_log - line 18 - Starting call function create_res at 2023-12-19 19:09:29 with UUID=61720e2d-1129-4bce-813f-66a34007a36b
+2023-12-19 14:09:29,311 - INFO - create_timer_log - line 18 - Starting call function create_res at 2023-12-19 19:09:29 with UUID=61720e2d-1129-4bce-813f-66a34007a36b
+2023-12-19 14:09:29,311 - INFO - create_timer_log - line 18 - Starting call function create_res at 2023-12-19 19:09:29 with UUID=61720e2d-1129-4bce-813f-66a34007a36b
+2023-12-19 14:09:55,679 - INFO - wrap_func - line 18 - Function 'create_res_time' executed in 26.3650s
+2023-12-19 14:09:55,679 - INFO - wrap_func - line 18 - Function 'create_res_time' executed in 26.3650s
+2023-12-19 14:09:55,679 - INFO - wrap_func - line 18 - Function 'create_res_time' executed in 26.3650s
+2023-12-19 14:09:55,679 - INFO - wrap_func - line 18 - Function 'create_res_time' executed in 26.3650s
+2023-12-19 14:09:55,679 - INFO - run_comparisons - line 150 - [28.136365175247192, 28.356043577194214, 26.364990949630737]
+2023-12-19 14:09:55,679 - INFO - run_comparisons - line 150 - [28.136365175247192, 28.356043577194214, 26.364990949630737]
+2023-12-19 14:09:55,679 - INFO - run_comparisons - line 150 - [28.136365175247192, 28.356043577194214, 26.364990949630737]
+2023-12-19 14:09:55,679 - INFO - run_comparisons - line 150 - [28.136365175247192, 28.356043577194214, 26.364990949630737]
+2023-12-19 14:09:55,680 - INFO - run_comparisons - line 147 - Starting run 3 of create_res on beta.hydroshare.org...
+2023-12-19 14:09:55,680 - INFO - run_comparisons - line 147 - Starting run 3 of create_res on beta.hydroshare.org...
+2023-12-19 14:09:55,680 - INFO - run_comparisons - line 147 - Starting run 3 of create_res on beta.hydroshare.org...
+2023-12-19 14:09:55,680 - INFO - run_comparisons - line 147 - Starting run 3 of create_res on beta.hydroshare.org...
+2023-12-19 14:09:55,985 - INFO - create_timer_log - line 18 - Starting call function create_res at 2023-12-19 19:09:56 with UUID=1c749e46-59f3-40ad-984a-fc9a58c11c3c
+2023-12-19 14:09:55,985 - INFO - create_timer_log - line 18 - Starting call function create_res at 2023-12-19 19:09:56 with UUID=1c749e46-59f3-40ad-984a-fc9a58c11c3c
+2023-12-19 14:09:55,985 - INFO - create_timer_log - line 18 - Starting call function create_res at 2023-12-19 19:09:56 with UUID=1c749e46-59f3-40ad-984a-fc9a58c11c3c
+2023-12-19 14:09:55,985 - INFO - create_timer_log - line 18 - Starting call function create_res at 2023-12-19 19:09:56 with UUID=1c749e46-59f3-40ad-984a-fc9a58c11c3c
+2023-12-19 14:10:26,020 - INFO - wrap_func - line 18 - Function 'create_res_time' executed in 30.0325s
+2023-12-19 14:10:26,020 - INFO - wrap_func - line 18 - Function 'create_res_time' executed in 30.0325s
+2023-12-19 14:10:26,020 - INFO - wrap_func - line 18 - Function 'create_res_time' executed in 30.0325s
+2023-12-19 14:10:26,020 - INFO - wrap_func - line 18 - Function 'create_res_time' executed in 30.0325s
+2023-12-19 14:10:26,021 - INFO - run_comparisons - line 150 - [28.136365175247192, 28.356043577194214, 26.364990949630737, 30.03247594833374]
+2023-12-19 14:10:26,021 - INFO - run_comparisons - line 150 - [28.136365175247192, 28.356043577194214, 26.364990949630737, 30.03247594833374]
+2023-12-19 14:10:26,021 - INFO - run_comparisons - line 150 - [28.136365175247192, 28.356043577194214, 26.364990949630737, 30.03247594833374]
+2023-12-19 14:10:26,021 - INFO - run_comparisons - line 150 - [28.136365175247192, 28.356043577194214, 26.364990949630737, 30.03247594833374]
+2023-12-19 14:10:26,022 - INFO - run_comparisons - line 147 - Starting run 4 of create_res on beta.hydroshare.org...
+2023-12-19 14:10:26,022 - INFO - run_comparisons - line 147 - Starting run 4 of create_res on beta.hydroshare.org...
+2023-12-19 14:10:26,022 - INFO - run_comparisons - line 147 - Starting run 4 of create_res on beta.hydroshare.org...
+2023-12-19 14:10:26,022 - INFO - run_comparisons - line 147 - Starting run 4 of create_res on beta.hydroshare.org...
+2023-12-19 14:10:26,330 - INFO - create_timer_log - line 18 - Starting call function create_res at 2023-12-19 19:10:26 with UUID=d4b10d8f-0cb4-4e0c-92e4-49738bfdc6c2
+2023-12-19 14:10:26,330 - INFO - create_timer_log - line 18 - Starting call function create_res at 2023-12-19 19:10:26 with UUID=d4b10d8f-0cb4-4e0c-92e4-49738bfdc6c2
+2023-12-19 14:10:26,330 - INFO - create_timer_log - line 18 - Starting call function create_res at 2023-12-19 19:10:26 with UUID=d4b10d8f-0cb4-4e0c-92e4-49738bfdc6c2
+2023-12-19 14:10:26,330 - INFO - create_timer_log - line 18 - Starting call function create_res at 2023-12-19 19:10:26 with UUID=d4b10d8f-0cb4-4e0c-92e4-49738bfdc6c2
+2023-12-19 14:10:55,698 - INFO - wrap_func - line 18 - Function 'create_res_time' executed in 29.3661s
+2023-12-19 14:10:55,698 - INFO - wrap_func - line 18 - Function 'create_res_time' executed in 29.3661s
+2023-12-19 14:10:55,698 - INFO - wrap_func - line 18 - Function 'create_res_time' executed in 29.3661s
+2023-12-19 14:10:55,698 - INFO - wrap_func - line 18 - Function 'create_res_time' executed in 29.3661s
+2023-12-19 14:10:55,699 - INFO - run_comparisons - line 150 - [28.136365175247192, 28.356043577194214, 26.364990949630737, 30.03247594833374, 29.36609411239624]
+2023-12-19 14:10:55,699 - INFO - run_comparisons - line 150 - [28.136365175247192, 28.356043577194214, 26.364990949630737, 30.03247594833374, 29.36609411239624]
+2023-12-19 14:10:55,699 - INFO - run_comparisons - line 150 - [28.136365175247192, 28.356043577194214, 26.364990949630737, 30.03247594833374, 29.36609411239624]
+2023-12-19 14:10:55,699 - INFO - run_comparisons - line 150 - [28.136365175247192, 28.356043577194214, 26.364990949630737, 30.03247594833374, 29.36609411239624]
+2023-12-19 14:10:55,699 - INFO - run_comparisons - line 141 - ********* Start 'download_all_resources' *********
+2023-12-19 14:10:55,699 - INFO - run_comparisons - line 141 - ********* Start 'download_all_resources' *********
+2023-12-19 14:10:55,699 - INFO - run_comparisons - line 141 - ********* Start 'download_all_resources' *********
+2023-12-19 14:10:55,699 - INFO - run_comparisons - line 141 - ********* Start 'download_all_resources' *********
+2023-12-19 14:10:55,700 - INFO - run_comparisons - line 147 - Starting run 0 of download_all_resources on beta.hydroshare.org...
+2023-12-19 14:10:55,700 - INFO - run_comparisons - line 147 - Starting run 0 of download_all_resources on beta.hydroshare.org...
+2023-12-19 14:10:55,700 - INFO - run_comparisons - line 147 - Starting run 0 of download_all_resources on beta.hydroshare.org...
+2023-12-19 14:10:55,700 - INFO - run_comparisons - line 147 - Starting run 0 of download_all_resources on beta.hydroshare.org...
+2023-12-19 14:10:59,053 - INFO - create_timer_log - line 18 - Starting call function download_all_resources at 2023-12-19 19:10:59 with UUID=fbb4a80a-3a87-47fd-8e54-682e94651ab2
+2023-12-19 14:10:59,053 - INFO - create_timer_log - line 18 - Starting call function download_all_resources at 2023-12-19 19:10:59 with UUID=fbb4a80a-3a87-47fd-8e54-682e94651ab2
+2023-12-19 14:10:59,053 - INFO - create_timer_log - line 18 - Starting call function download_all_resources at 2023-12-19 19:10:59 with UUID=fbb4a80a-3a87-47fd-8e54-682e94651ab2
+2023-12-19 14:10:59,053 - INFO - create_timer_log - line 18 - Starting call function download_all_resources at 2023-12-19 19:10:59 with UUID=fbb4a80a-3a87-47fd-8e54-682e94651ab2
+2023-12-19 14:12:25,467 - INFO - wrap_func - line 18 - Function 'download_all_resources' executed in 89.7672s
+2023-12-19 14:12:25,467 - INFO - wrap_func - line 18 - Function 'download_all_resources' executed in 89.7672s
+2023-12-19 14:12:25,467 - INFO - wrap_func - line 18 - Function 'download_all_resources' executed in 89.7672s
+2023-12-19 14:12:25,467 - INFO - wrap_func - line 18 - Function 'download_all_resources' executed in 89.7672s
+2023-12-19 14:12:25,467 - INFO - run_comparisons - line 150 - [89.7672119140625]
+2023-12-19 14:12:25,467 - INFO - run_comparisons - line 150 - [89.7672119140625]
+2023-12-19 14:12:25,467 - INFO - run_comparisons - line 150 - [89.7672119140625]
+2023-12-19 14:12:25,467 - INFO - run_comparisons - line 150 - [89.7672119140625]
+2023-12-19 14:12:25,468 - INFO - run_comparisons - line 147 - Starting run 1 of download_all_resources on beta.hydroshare.org...
+2023-12-19 14:12:25,468 - INFO - run_comparisons - line 147 - Starting run 1 of download_all_resources on beta.hydroshare.org...
+2023-12-19 14:12:25,468 - INFO - run_comparisons - line 147 - Starting run 1 of download_all_resources on beta.hydroshare.org...
+2023-12-19 14:12:25,468 - INFO - run_comparisons - line 147 - Starting run 1 of download_all_resources on beta.hydroshare.org...
+2023-12-19 14:12:27,572 - INFO - create_timer_log - line 18 - Starting call function download_all_resources at 2023-12-19 19:12:27 with UUID=256b7323-6fe3-4dc6-82fa-73128b037a53
+2023-12-19 14:12:27,572 - INFO - create_timer_log - line 18 - Starting call function download_all_resources at 2023-12-19 19:12:27 with UUID=256b7323-6fe3-4dc6-82fa-73128b037a53
+2023-12-19 14:12:27,572 - INFO - create_timer_log - line 18 - Starting call function download_all_resources at 2023-12-19 19:12:27 with UUID=256b7323-6fe3-4dc6-82fa-73128b037a53
+2023-12-19 14:12:27,572 - INFO - create_timer_log - line 18 - Starting call function download_all_resources at 2023-12-19 19:12:27 with UUID=256b7323-6fe3-4dc6-82fa-73128b037a53
+2023-12-19 14:13:11,840 - INFO - wrap_func - line 18 - Function 'download_all_resources' executed in 46.3721s
+2023-12-19 14:13:11,840 - INFO - wrap_func - line 18 - Function 'download_all_resources' executed in 46.3721s
+2023-12-19 14:13:11,840 - INFO - wrap_func - line 18 - Function 'download_all_resources' executed in 46.3721s
+2023-12-19 14:13:11,840 - INFO - wrap_func - line 18 - Function 'download_all_resources' executed in 46.3721s
+2023-12-19 14:13:11,840 - INFO - run_comparisons - line 150 - [89.7672119140625, 46.37209391593933]
+2023-12-19 14:13:11,840 - INFO - run_comparisons - line 150 - [89.7672119140625, 46.37209391593933]
+2023-12-19 14:13:11,840 - INFO - run_comparisons - line 150 - [89.7672119140625, 46.37209391593933]
+2023-12-19 14:13:11,840 - INFO - run_comparisons - line 150 - [89.7672119140625, 46.37209391593933]
+2023-12-19 14:13:11,841 - INFO - run_comparisons - line 147 - Starting run 2 of download_all_resources on beta.hydroshare.org...
+2023-12-19 14:13:11,841 - INFO - run_comparisons - line 147 - Starting run 2 of download_all_resources on beta.hydroshare.org...
+2023-12-19 14:13:11,841 - INFO - run_comparisons - line 147 - Starting run 2 of download_all_resources on beta.hydroshare.org...
+2023-12-19 14:13:11,841 - INFO - run_comparisons - line 147 - Starting run 2 of download_all_resources on beta.hydroshare.org...
+2023-12-19 14:13:12,137 - INFO - create_timer_log - line 18 - Starting call function download_all_resources at 2023-12-19 19:13:12 with UUID=ead7ce71-71b4-4ef7-91e8-f512ee7f5e1c
+2023-12-19 14:13:12,137 - INFO - create_timer_log - line 18 - Starting call function download_all_resources at 2023-12-19 19:13:12 with UUID=ead7ce71-71b4-4ef7-91e8-f512ee7f5e1c
+2023-12-19 14:13:12,137 - INFO - create_timer_log - line 18 - Starting call function download_all_resources at 2023-12-19 19:13:12 with UUID=ead7ce71-71b4-4ef7-91e8-f512ee7f5e1c
+2023-12-19 14:13:12,137 - INFO - create_timer_log - line 18 - Starting call function download_all_resources at 2023-12-19 19:13:12 with UUID=ead7ce71-71b4-4ef7-91e8-f512ee7f5e1c
+2023-12-19 14:13:59,832 - INFO - wrap_func - line 18 - Function 'download_all_resources' executed in 47.9912s
+2023-12-19 14:13:59,832 - INFO - wrap_func - line 18 - Function 'download_all_resources' executed in 47.9912s
+2023-12-19 14:13:59,832 - INFO - wrap_func - line 18 - Function 'download_all_resources' executed in 47.9912s
+2023-12-19 14:13:59,832 - INFO - wrap_func - line 18 - Function 'download_all_resources' executed in 47.9912s
+2023-12-19 14:13:59,832 - INFO - run_comparisons - line 150 - [89.7672119140625, 46.37209391593933, 47.99117422103882]
+2023-12-19 14:13:59,832 - INFO - run_comparisons - line 150 - [89.7672119140625, 46.37209391593933, 47.99117422103882]
+2023-12-19 14:13:59,832 - INFO - run_comparisons - line 150 - [89.7672119140625, 46.37209391593933, 47.99117422103882]
+2023-12-19 14:13:59,832 - INFO - run_comparisons - line 150 - [89.7672119140625, 46.37209391593933, 47.99117422103882]
+2023-12-19 14:13:59,833 - INFO - run_comparisons - line 147 - Starting run 3 of download_all_resources on beta.hydroshare.org...
+2023-12-19 14:13:59,833 - INFO - run_comparisons - line 147 - Starting run 3 of download_all_resources on beta.hydroshare.org...
+2023-12-19 14:13:59,833 - INFO - run_comparisons - line 147 - Starting run 3 of download_all_resources on beta.hydroshare.org...
+2023-12-19 14:13:59,833 - INFO - run_comparisons - line 147 - Starting run 3 of download_all_resources on beta.hydroshare.org...
+2023-12-19 14:14:01,952 - INFO - create_timer_log - line 18 - Starting call function download_all_resources at 2023-12-19 19:14:02 with UUID=31917625-ea91-4e88-b7f2-e1ff98d28c7f
+2023-12-19 14:14:01,952 - INFO - create_timer_log - line 18 - Starting call function download_all_resources at 2023-12-19 19:14:02 with UUID=31917625-ea91-4e88-b7f2-e1ff98d28c7f
+2023-12-19 14:14:01,952 - INFO - create_timer_log - line 18 - Starting call function download_all_resources at 2023-12-19 19:14:02 with UUID=31917625-ea91-4e88-b7f2-e1ff98d28c7f
+2023-12-19 14:14:01,952 - INFO - create_timer_log - line 18 - Starting call function download_all_resources at 2023-12-19 19:14:02 with UUID=31917625-ea91-4e88-b7f2-e1ff98d28c7f
+2023-12-19 14:14:43,716 - INFO - wrap_func - line 18 - Function 'download_all_resources' executed in 43.8827s
+2023-12-19 14:14:43,716 - INFO - wrap_func - line 18 - Function 'download_all_resources' executed in 43.8827s
+2023-12-19 14:14:43,716 - INFO - wrap_func - line 18 - Function 'download_all_resources' executed in 43.8827s
+2023-12-19 14:14:43,716 - INFO - wrap_func - line 18 - Function 'download_all_resources' executed in 43.8827s
+2023-12-19 14:14:43,716 - INFO - run_comparisons - line 150 - [89.7672119140625, 46.37209391593933, 47.99117422103882, 43.88272285461426]
+2023-12-19 14:14:43,716 - INFO - run_comparisons - line 150 - [89.7672119140625, 46.37209391593933, 47.99117422103882, 43.88272285461426]
+2023-12-19 14:14:43,716 - INFO - run_comparisons - line 150 - [89.7672119140625, 46.37209391593933, 47.99117422103882, 43.88272285461426]
+2023-12-19 14:14:43,716 - INFO - run_comparisons - line 150 - [89.7672119140625, 46.37209391593933, 47.99117422103882, 43.88272285461426]
+2023-12-19 14:14:43,717 - INFO - run_comparisons - line 147 - Starting run 4 of download_all_resources on beta.hydroshare.org...
+2023-12-19 14:14:43,717 - INFO - run_comparisons - line 147 - Starting run 4 of download_all_resources on beta.hydroshare.org...
+2023-12-19 14:14:43,717 - INFO - run_comparisons - line 147 - Starting run 4 of download_all_resources on beta.hydroshare.org...
+2023-12-19 14:14:43,717 - INFO - run_comparisons - line 147 - Starting run 4 of download_all_resources on beta.hydroshare.org...
+2023-12-19 14:14:45,798 - INFO - create_timer_log - line 18 - Starting call function download_all_resources at 2023-12-19 19:14:45 with UUID=ba987fe2-dea1-4711-9b7f-178691f346ed
+2023-12-19 14:14:45,798 - INFO - create_timer_log - line 18 - Starting call function download_all_resources at 2023-12-19 19:14:45 with UUID=ba987fe2-dea1-4711-9b7f-178691f346ed
+2023-12-19 14:14:45,798 - INFO - create_timer_log - line 18 - Starting call function download_all_resources at 2023-12-19 19:14:45 with UUID=ba987fe2-dea1-4711-9b7f-178691f346ed
+2023-12-19 14:14:45,798 - INFO - create_timer_log - line 18 - Starting call function download_all_resources at 2023-12-19 19:14:45 with UUID=ba987fe2-dea1-4711-9b7f-178691f346ed
+2023-12-19 14:15:26,817 - INFO - wrap_func - line 18 - Function 'download_all_resources' executed in 43.0995s
+2023-12-19 14:15:26,817 - INFO - wrap_func - line 18 - Function 'download_all_resources' executed in 43.0995s
+2023-12-19 14:15:26,817 - INFO - wrap_func - line 18 - Function 'download_all_resources' executed in 43.0995s
+2023-12-19 14:15:26,817 - INFO - wrap_func - line 18 - Function 'download_all_resources' executed in 43.0995s
+2023-12-19 14:15:26,817 - INFO - run_comparisons - line 150 - [89.7672119140625, 46.37209391593933, 47.99117422103882, 43.88272285461426, 43.0995237827301]
+2023-12-19 14:15:26,817 - INFO - run_comparisons - line 150 - [89.7672119140625, 46.37209391593933, 47.99117422103882, 43.88272285461426, 43.0995237827301]
+2023-12-19 14:15:26,817 - INFO - run_comparisons - line 150 - [89.7672119140625, 46.37209391593933, 47.99117422103882, 43.88272285461426, 43.0995237827301]
+2023-12-19 14:15:26,817 - INFO - run_comparisons - line 150 - [89.7672119140625, 46.37209391593933, 47.99117422103882, 43.88272285461426, 43.0995237827301]
+2023-12-19 14:15:26,817 - INFO - run_comparisons - line 141 - ********* Start 'delete_single_resource' *********
+2023-12-19 14:15:26,817 - INFO - run_comparisons - line 141 - ********* Start 'delete_single_resource' *********
+2023-12-19 14:15:26,817 - INFO - run_comparisons - line 141 - ********* Start 'delete_single_resource' *********
+2023-12-19 14:15:26,817 - INFO - run_comparisons - line 141 - ********* Start 'delete_single_resource' *********
+2023-12-19 14:15:26,817 - INFO - run_comparisons - line 147 - Starting run 0 of delete_single_resource on beta.hydroshare.org...
+2023-12-19 14:15:26,817 - INFO - run_comparisons - line 147 - Starting run 0 of delete_single_resource on beta.hydroshare.org...
+2023-12-19 14:15:26,817 - INFO - run_comparisons - line 147 - Starting run 0 of delete_single_resource on beta.hydroshare.org...
+2023-12-19 14:15:26,817 - INFO - run_comparisons - line 147 - Starting run 0 of delete_single_resource on beta.hydroshare.org...
+2023-12-19 14:15:30,226 - INFO - create_timer_log - line 18 - Starting call function delete_single_resource at 2023-12-19 19:15:30 with UUID=25639082-7a32-4247-b3c9-637f32cc5ae2
+2023-12-19 14:15:30,226 - INFO - create_timer_log - line 18 - Starting call function delete_single_resource at 2023-12-19 19:15:30 with UUID=25639082-7a32-4247-b3c9-637f32cc5ae2
+2023-12-19 14:15:30,226 - INFO - create_timer_log - line 18 - Starting call function delete_single_resource at 2023-12-19 19:15:30 with UUID=25639082-7a32-4247-b3c9-637f32cc5ae2
+2023-12-19 14:15:30,226 - INFO - create_timer_log - line 18 - Starting call function delete_single_resource at 2023-12-19 19:15:30 with UUID=25639082-7a32-4247-b3c9-637f32cc5ae2
+2023-12-19 14:16:39,531 - INFO - wrap_func - line 18 - Function 'delete_single_resource_inner' executed in 34.5196s
+2023-12-19 14:16:39,531 - INFO - wrap_func - line 18 - Function 'delete_single_resource_inner' executed in 34.5196s
+2023-12-19 14:16:39,531 - INFO - wrap_func - line 18 - Function 'delete_single_resource_inner' executed in 34.5196s
+2023-12-19 14:16:39,531 - INFO - wrap_func - line 18 - Function 'delete_single_resource_inner' executed in 34.5196s
+2023-12-19 14:16:39,532 - INFO - run_comparisons - line 150 - [34.519609689712524]
+2023-12-19 14:16:39,532 - INFO - run_comparisons - line 150 - [34.519609689712524]
+2023-12-19 14:16:39,532 - INFO - run_comparisons - line 150 - [34.519609689712524]
+2023-12-19 14:16:39,532 - INFO - run_comparisons - line 150 - [34.519609689712524]
+2023-12-19 14:16:39,533 - INFO - run_comparisons - line 147 - Starting run 1 of delete_single_resource on beta.hydroshare.org...
+2023-12-19 14:16:39,533 - INFO - run_comparisons - line 147 - Starting run 1 of delete_single_resource on beta.hydroshare.org...
+2023-12-19 14:16:39,533 - INFO - run_comparisons - line 147 - Starting run 1 of delete_single_resource on beta.hydroshare.org...
+2023-12-19 14:16:39,533 - INFO - run_comparisons - line 147 - Starting run 1 of delete_single_resource on beta.hydroshare.org...
+2023-12-19 14:16:42,837 - INFO - create_timer_log - line 18 - Starting call function delete_single_resource at 2023-12-19 19:16:42 with UUID=74cecef4-f44d-4180-94cd-b18332f3c906
+2023-12-19 14:16:42,837 - INFO - create_timer_log - line 18 - Starting call function delete_single_resource at 2023-12-19 19:16:42 with UUID=74cecef4-f44d-4180-94cd-b18332f3c906
+2023-12-19 14:16:42,837 - INFO - create_timer_log - line 18 - Starting call function delete_single_resource at 2023-12-19 19:16:42 with UUID=74cecef4-f44d-4180-94cd-b18332f3c906
+2023-12-19 14:16:42,837 - INFO - create_timer_log - line 18 - Starting call function delete_single_resource at 2023-12-19 19:16:42 with UUID=74cecef4-f44d-4180-94cd-b18332f3c906
+2023-12-19 14:17:40,035 - INFO - wrap_func - line 18 - Function 'delete_single_resource_inner' executed in 26.4649s
+2023-12-19 14:17:40,035 - INFO - wrap_func - line 18 - Function 'delete_single_resource_inner' executed in 26.4649s
+2023-12-19 14:17:40,035 - INFO - wrap_func - line 18 - Function 'delete_single_resource_inner' executed in 26.4649s
+2023-12-19 14:17:40,035 - INFO - wrap_func - line 18 - Function 'delete_single_resource_inner' executed in 26.4649s
+2023-12-19 14:17:40,035 - INFO - run_comparisons - line 150 - [34.519609689712524, 26.464863061904907]
+2023-12-19 14:17:40,035 - INFO - run_comparisons - line 150 - [34.519609689712524, 26.464863061904907]
+2023-12-19 14:17:40,035 - INFO - run_comparisons - line 150 - [34.519609689712524, 26.464863061904907]
+2023-12-19 14:17:40,035 - INFO - run_comparisons - line 150 - [34.519609689712524, 26.464863061904907]
+2023-12-19 14:17:40,036 - INFO - run_comparisons - line 147 - Starting run 2 of delete_single_resource on beta.hydroshare.org...
+2023-12-19 14:17:40,036 - INFO - run_comparisons - line 147 - Starting run 2 of delete_single_resource on beta.hydroshare.org...
+2023-12-19 14:17:40,036 - INFO - run_comparisons - line 147 - Starting run 2 of delete_single_resource on beta.hydroshare.org...
+2023-12-19 14:17:40,036 - INFO - run_comparisons - line 147 - Starting run 2 of delete_single_resource on beta.hydroshare.org...
+2023-12-19 14:17:40,342 - INFO - create_timer_log - line 18 - Starting call function delete_single_resource at 2023-12-19 19:17:40 with UUID=bfc8f756-2513-4966-b014-f9852f65e33c
+2023-12-19 14:17:40,342 - INFO - create_timer_log - line 18 - Starting call function delete_single_resource at 2023-12-19 19:17:40 with UUID=bfc8f756-2513-4966-b014-f9852f65e33c
+2023-12-19 14:17:40,342 - INFO - create_timer_log - line 18 - Starting call function delete_single_resource at 2023-12-19 19:17:40 with UUID=bfc8f756-2513-4966-b014-f9852f65e33c
+2023-12-19 14:17:40,342 - INFO - create_timer_log - line 18 - Starting call function delete_single_resource at 2023-12-19 19:17:40 with UUID=bfc8f756-2513-4966-b014-f9852f65e33c
+2023-12-19 14:18:37,682 - INFO - wrap_func - line 18 - Function 'delete_single_resource_inner' executed in 35.0251s
+2023-12-19 14:18:37,682 - INFO - wrap_func - line 18 - Function 'delete_single_resource_inner' executed in 35.0251s
+2023-12-19 14:18:37,682 - INFO - wrap_func - line 18 - Function 'delete_single_resource_inner' executed in 35.0251s
+2023-12-19 14:18:37,682 - INFO - wrap_func - line 18 - Function 'delete_single_resource_inner' executed in 35.0251s
+2023-12-19 14:18:37,683 - INFO - run_comparisons - line 150 - [34.519609689712524, 26.464863061904907, 35.02505373954773]
+2023-12-19 14:18:37,683 - INFO - run_comparisons - line 150 - [34.519609689712524, 26.464863061904907, 35.02505373954773]
+2023-12-19 14:18:37,683 - INFO - run_comparisons - line 150 - [34.519609689712524, 26.464863061904907, 35.02505373954773]
+2023-12-19 14:18:37,683 - INFO - run_comparisons - line 150 - [34.519609689712524, 26.464863061904907, 35.02505373954773]
+2023-12-19 14:18:37,683 - INFO - run_comparisons - line 147 - Starting run 3 of delete_single_resource on beta.hydroshare.org...
+2023-12-19 14:18:37,683 - INFO - run_comparisons - line 147 - Starting run 3 of delete_single_resource on beta.hydroshare.org...
+2023-12-19 14:18:37,683 - INFO - run_comparisons - line 147 - Starting run 3 of delete_single_resource on beta.hydroshare.org...
+2023-12-19 14:18:37,683 - INFO - run_comparisons - line 147 - Starting run 3 of delete_single_resource on beta.hydroshare.org...
+2023-12-19 14:18:40,990 - INFO - create_timer_log - line 18 - Starting call function delete_single_resource at 2023-12-19 19:18:41 with UUID=3bba8f0b-193f-4345-a98d-cbf82014fc02
+2023-12-19 14:18:40,990 - INFO - create_timer_log - line 18 - Starting call function delete_single_resource at 2023-12-19 19:18:41 with UUID=3bba8f0b-193f-4345-a98d-cbf82014fc02
+2023-12-19 14:18:40,990 - INFO - create_timer_log - line 18 - Starting call function delete_single_resource at 2023-12-19 19:18:41 with UUID=3bba8f0b-193f-4345-a98d-cbf82014fc02
+2023-12-19 14:18:40,990 - INFO - create_timer_log - line 18 - Starting call function delete_single_resource at 2023-12-19 19:18:41 with UUID=3bba8f0b-193f-4345-a98d-cbf82014fc02
+2023-12-19 14:19:42,969 - INFO - wrap_func - line 18 - Function 'delete_single_resource_inner' executed in 38.7589s
+2023-12-19 14:19:42,969 - INFO - wrap_func - line 18 - Function 'delete_single_resource_inner' executed in 38.7589s
+2023-12-19 14:19:42,969 - INFO - wrap_func - line 18 - Function 'delete_single_resource_inner' executed in 38.7589s
+2023-12-19 14:19:42,969 - INFO - wrap_func - line 18 - Function 'delete_single_resource_inner' executed in 38.7589s
+2023-12-19 14:19:42,970 - INFO - run_comparisons - line 150 - [34.519609689712524, 26.464863061904907, 35.02505373954773, 38.758880853652954]
+2023-12-19 14:19:42,970 - INFO - run_comparisons - line 150 - [34.519609689712524, 26.464863061904907, 35.02505373954773, 38.758880853652954]
+2023-12-19 14:19:42,970 - INFO - run_comparisons - line 150 - [34.519609689712524, 26.464863061904907, 35.02505373954773, 38.758880853652954]
+2023-12-19 14:19:42,970 - INFO - run_comparisons - line 150 - [34.519609689712524, 26.464863061904907, 35.02505373954773, 38.758880853652954]
+2023-12-19 14:19:42,971 - INFO - run_comparisons - line 147 - Starting run 4 of delete_single_resource on beta.hydroshare.org...
+2023-12-19 14:19:42,971 - INFO - run_comparisons - line 147 - Starting run 4 of delete_single_resource on beta.hydroshare.org...
+2023-12-19 14:19:42,971 - INFO - run_comparisons - line 147 - Starting run 4 of delete_single_resource on beta.hydroshare.org...
+2023-12-19 14:19:42,971 - INFO - run_comparisons - line 147 - Starting run 4 of delete_single_resource on beta.hydroshare.org...
+2023-12-19 14:19:46,344 - INFO - create_timer_log - line 18 - Starting call function delete_single_resource at 2023-12-19 19:19:46 with UUID=e8a93bc4-6856-4095-bba1-33328669d2e5
+2023-12-19 14:19:46,344 - INFO - create_timer_log - line 18 - Starting call function delete_single_resource at 2023-12-19 19:19:46 with UUID=e8a93bc4-6856-4095-bba1-33328669d2e5
+2023-12-19 14:19:46,344 - INFO - create_timer_log - line 18 - Starting call function delete_single_resource at 2023-12-19 19:19:46 with UUID=e8a93bc4-6856-4095-bba1-33328669d2e5
+2023-12-19 14:19:46,344 - INFO - create_timer_log - line 18 - Starting call function delete_single_resource at 2023-12-19 19:19:46 with UUID=e8a93bc4-6856-4095-bba1-33328669d2e5
+2023-12-19 14:20:49,690 - INFO - wrap_func - line 18 - Function 'delete_single_resource_inner' executed in 29.3752s
+2023-12-19 14:20:49,690 - INFO - wrap_func - line 18 - Function 'delete_single_resource_inner' executed in 29.3752s
+2023-12-19 14:20:49,690 - INFO - wrap_func - line 18 - Function 'delete_single_resource_inner' executed in 29.3752s
+2023-12-19 14:20:49,690 - INFO - wrap_func - line 18 - Function 'delete_single_resource_inner' executed in 29.3752s
+2023-12-19 14:20:49,691 - INFO - run_comparisons - line 150 - [34.519609689712524, 26.464863061904907, 35.02505373954773, 38.758880853652954, 29.375238180160522]
+2023-12-19 14:20:49,691 - INFO - run_comparisons - line 150 - [34.519609689712524, 26.464863061904907, 35.02505373954773, 38.758880853652954, 29.375238180160522]
+2023-12-19 14:20:49,691 - INFO - run_comparisons - line 150 - [34.519609689712524, 26.464863061904907, 35.02505373954773, 38.758880853652954, 29.375238180160522]
+2023-12-19 14:20:49,691 - INFO - run_comparisons - line 150 - [34.519609689712524, 26.464863061904907, 35.02505373954773, 38.758880853652954, 29.375238180160522]
+
+---- END "BEFORE" TEST -----
