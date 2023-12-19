@@ -43,12 +43,12 @@ def check_aggregation_files_to_sync(request, resource_id, **kwargs):
                                         needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                                         raises_exception=False)
     if not authorized:
-        response_data = {"message": "Permission denied"}
+        response_data = {"status": "ERROR", "message": "Permission denied"}
         return JsonResponse(response_data, status=status.HTTP_401_UNAUTHORIZED)
 
     file_paths = {"nc_files": [], "ts_files": []}
     if resource.resource_type != "CompositeResource":
-        response_data = {"message": "Resource is not a composite resource"}
+        response_data = {"status": "ERROR", "message": "Resource is not a composite resource"}
         return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
     if resource.raccess.published or resource.raccess.review_pending:
