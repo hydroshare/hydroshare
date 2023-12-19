@@ -36,9 +36,12 @@
                                             maxMatches="15"
                                         >
                                         <template slot="append">
-                                            <div v-if="isPending">
+                                            <div v-if="isPending && !crossreffApiDown">
                                                 <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
                                                 Searching known funders
+                                            </div>
+                                            <div class="text-info " v-if="crossreffApiDown">
+                                                We are having trouble reaching the Open Funder Registry. To add funders from the registry, please try again later.
                                             </div>
                                         </template>
                                         </vue-bootstrap-typeahead>

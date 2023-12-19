@@ -26,6 +26,7 @@ let fundingAgenciesApp = new Vue({
     startedEditing: {}, // store the funder that we started editing
     deleteUrl: "", // Django endpoint to call for deleting a funder
     currentlyDeleting: {}, // store the funder that we are deleting
+    crossreffApiDown: false
   },
   mounted() {
     if (this.selfAccessLevel === "owner" && this.resPublished) {
@@ -88,6 +89,7 @@ let fundingAgenciesApp = new Vue({
         return funders;
       } catch (e) {
         console.error(`Error querying Crossref API: ${e}`);
+        this.crossreffApiDown = true
       }
       return null;
     },
@@ -130,18 +132,20 @@ let fundingAgenciesApp = new Vue({
         }
 
         if (
-          this.mode == "Edit" &&
-          JSON.stringify(this.startedEditing) ===
-            JSON.stringify(this.currentlyEditing)
-        ) {
-          this.notifications.push({
-            error: "You haven't made any modifications yet.",
-          });
-        } else {
-          this.notifications.push({
-            error:
-              "A funding agency other than the one you're editing already has these values.",
-          });
+          this.mode == "Edit"
+        ){
+          if(JSON.stringify(this.startedEditing) ===
+          JSON.stringify(this.currentlyEditing)
+      ) {
+        this.notifications.push({
+          error: "You haven't made any modifications yet.",
+        });
+      } else {
+        this.notifications.push({
+          error:
+            "A funding agency other than the one you're editing already has these values.",
+        });
+      }
         }
       }
 
@@ -174,6 +178,7 @@ let fundingAgenciesApp = new Vue({
     selectAgency: function (event) {
       this.isPending = false;
       this.crossrefSelected = true;
+      this.currentlyEditing.agency_name = event.name;
       this.currentlyEditing.agency_url = event.uri;
       this.checkAgencyName();
     },
