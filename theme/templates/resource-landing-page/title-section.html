@@ -189,6 +189,36 @@
             </div>
         </div>
     </div>
+    <div id="aggr-files-to-sync">
+        <div class="col-sm-12">
+            <div id="aggr-files-to-sync" class="alert alert-warning alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+            <p>This resource contains content types with files that need to be updated to match with metadata changes.
+                <a href="#" data-toggle="modal" data-target="#aggr-files-sync-dialog">Show content type files that need updating.</a>
+            </p>
+            </div>
+        </div>
+        <div class="modal fade" id="aggr-files-sync-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title">Content type files that need to be updated</h4>
+                        <p>
+                         The following files are out of sync with the metadata changes.
+                        </p>
+                    </div>
+                    <div class="modal-body" style="overflow-y: auto; max-height: 500px">
+                    {# aggregation files paths are populated here by JS code #}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endif %}
 
 {# ======= ResourceFile Repair notification =======#}
@@ -199,7 +229,7 @@
                     aria-hidden="true">&times;</span></button>
 
             <span>
-                Within the last week, the files contained in this resource were found to be corrupt and were repaired. 
+                Within the last week, the files contained in this resource were found to be corrupt and were repaired.
                 For more information please contact <a href="mailto:help@cuahsi.org?subject=Corrupt Resource Files">help@cuahsi.org</a>
             </span>
         </div>
@@ -385,6 +415,7 @@
 
     {#        vue-mover uses Sortable.min.js#}
     <script src="{% static 'js/non_preferred_paths_in_resource.js' %}"></script>
+    <script src="{% static 'js/aggregation_files_to_sync.js' %}"></script>
     <script src="{% static 'js/Sortable.min.js' %}"></script>
     <script src="{% static 'js/vue-mover.js' %}"></script>
 {% endblock %}
