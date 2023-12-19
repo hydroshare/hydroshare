@@ -87,6 +87,7 @@ from . import resource_folder_hierarchy
 from . import resource_folder_rest_api
 from . import resource_metadata_rest_api
 from . import resource_rest_api
+from . import timer_rest_api
 from . import resource_ticket_rest_api
 from . import user_rest_api
 from .utils import (

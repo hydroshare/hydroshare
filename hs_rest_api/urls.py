@@ -197,6 +197,10 @@ urlpatterns = [
         core_views.resource_rest_api.CheckTaskStatus.as_view(),
         name='get_task_status'),
 
+    url(r'^timer/(?P<function_name>[A-z0-9\-]+)/(?P<uuid>[A-z0-9\-]+)/$',
+        core_views.timer_rest_api.Timer.as_view(),
+        name='set_timer'),
+
     url(r'^user/$',
         core_views.user_rest_api.UserInfo.as_view(), name='get_logged_in_user_info'),
 
