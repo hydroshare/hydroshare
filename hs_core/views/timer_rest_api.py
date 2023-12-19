@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from time import gmtime, strftime
 from rest_framework.views import APIView
 
-logger = logging.getLogger("django.timer")
+tlogger = logging.getLogger("django.timer")
 
 
 class Timer(APIView):
@@ -17,5 +17,5 @@ class Timer(APIView):
         '''
         here = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         message = f"Starting call function {function_name} at {here} with UUID={uuid}"
-        logger.info("*" * 5 + message + "*" * 5)
+        tlogger.info("*" * 5 + message + "*" * 5)
         return JsonResponse({"message": message})

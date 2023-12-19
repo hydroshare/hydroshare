@@ -169,8 +169,8 @@ class Session(object):
         if data:
             stdin = StringIO(data)
         import logging
-        logger = logging.getLogger("django.timer")
-        logger.info(f"Calling iCommand: {argList}")
+        tlogger = logging.getLogger("django.timer")
+        tlogger.info(f"Calling iCommand: {argList}")
         import time
         st = time.time()
 
@@ -184,7 +184,7 @@ class Session(object):
         stdout, stderr = proc.communicate(input=data) if stdin else proc.communicate()
         et = time.time()
         elapsed_time = et - st
-        logger.info(f"Elapsed time for icommand {argList} = {elapsed_time}")
+        tlogger.info(f"Elapsed time for icommand {argList} = {elapsed_time}")
 
         if proc.returncode:
             raise SessionException(proc.returncode, stdout, stderr)
