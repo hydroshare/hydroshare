@@ -630,6 +630,14 @@ LOGGING = {
             "maxBytes": 1024 * 1024 * 15,  # 15MB
             "backupCount": 10,
         },
+        "timerlog": {
+            "level": "DEBUG",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": "/hydroshare/log/timer.log",
+            "formatter": "verbose",
+            "maxBytes": 1024 * 1024 * 15,  # 15MB
+            "backupCount": 10,
+        },
     },
     "loggers": {
         "django": {
@@ -652,6 +660,11 @@ LOGGING = {
             "handlers": ["celerylog"],
             "level": "WARNING",
             "propagate": False,
+        },
+        "django.timer": {
+            'handlers': ['timerlog'],
+            'level': 'DEBUG',
+            'propagate': True,
         },
         # Catch-all logger for HydroShare apps
         "": {"handlers": ["hydrosharelog"], "propagate": False, "level": "DEBUG"},

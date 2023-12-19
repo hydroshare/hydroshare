@@ -1540,9 +1540,10 @@ def remove_folder(user, res_id, folder_path):
 
     # Seems safest to delete from irods before removing from Django
     # istorage command is the longest-running and most likely to get interrupted
-    logger.info(" ----- start delete ------")
+    tlogger = logging.getLogger("django.timer")
+    tlogger.info(" ----- start delete ------")
     istorage.delete(coll_path)
-    logger.info(" ----- ending folder delete ------")
+    tlogger.info(" ----- ending folder delete ------")
     remove_irods_folder_in_django(resource, coll_path, user)
 
     resource.update_public_and_discoverable()  # make private if required

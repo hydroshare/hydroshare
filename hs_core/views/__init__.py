@@ -277,9 +277,10 @@ def change_quota_holder(request, shortkey):
 @swagger_auto_schema(method="post", auto_schema=None)
 @api_view(["POST"])
 def update_quota_usage(request, username):
-    logger.info("*" * 300)
-    logger.info("Update quota usage called")
-    logger.info("*" * 300)
+    tlogger = logging.getLogger("django.timer")
+    tlogger.info("*" * 300)
+    tlogger.info("Update quota usage called")
+    tlogger.info("*" * 300)
     req_user = request.user
     if req_user.username != settings.IRODS_SERVICE_ACCOUNT_USERNAME:
         return HttpResponseForbidden(

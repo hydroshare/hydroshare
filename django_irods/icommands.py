@@ -169,7 +169,7 @@ class Session(object):
         if data:
             stdin = StringIO(data)
         import logging
-        logger = logging.getLogger(__name__)
+        logger = logging.getLogger("django.timer")
         logger.info(f"Calling iCommand: {argList}")
         import time
         st = time.time()
