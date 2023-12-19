@@ -17,5 +17,5 @@ class Timer(APIView):
         '''
         here = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         message = f"Starting call function {function_name} at {here} with UUID={uuid}"
-        tlogger.info("*" * 5 + message + "*" * 5)
+        tlogger.info("*" * 50 + message + "*" * 50)
         return JsonResponse({"message": message})
