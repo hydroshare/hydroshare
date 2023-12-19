@@ -28,7 +28,7 @@ let fundingAgenciesApp = new Vue({
     currentlyDeleting: {}, // store the funder that we are deleting
     crossreffApiDown: false, // if we are having trouble reaching the crossref api
     removeCharsFromQuery: ["."], // characters to be removed from search
-    filteredWords: []
+    filteredWords: [],
   },
   mounted() {
     if (this.selfAccessLevel === "owner" && this.resPublished) {
@@ -82,27 +82,27 @@ let fundingAgenciesApp = new Vue({
       try {
         let words = funderName.split(" ");
         words = words.map((w) => encodeURIComponent(w));
-        this.filteredWords = []
-        words = words.filter((word)=>{
-          for (let char of this.removeCharsFromQuery){
-            if (word.includes(char)){
-              this.filteredWords.push(word)
-              return false
+        this.filteredWords = [];
+        words = words.filter((word) => {
+          for (let char of this.removeCharsFromQuery) {
+            if (word.includes(char)) {
+              this.filteredWords.push(word);
+              return false;
             }
           }
-          return true
-        })
+          return true;
+        });
         let query = words.join("+");
         query = `${query}&mailto=help@cuahsi.org`;
         // https://api.crossref.org/swagger-ui/index.html#/Funders/get_funders
         const res = await fetch(this.CROSSREF_API_URL.replace(":query", query));
         const result = await res.json();
         const funders = result.message.items;
-        this.crossreffApiDown = false
+        this.crossreffApiDown = false;
         return funders;
       } catch (e) {
         console.error(`Error querying Crossref API: ${e}`);
-        this.crossreffApiDown = true
+        this.crossreffApiDown = true;
       }
       return null;
     },
@@ -144,21 +144,20 @@ let fundingAgenciesApp = new Vue({
           });
         }
 
-        if (
-          this.mode == "Edit"
-        ){
-          if(JSON.stringify(this.startedEditing) ===
-          JSON.stringify(this.currentlyEditing)
-      ) {
-        this.notifications.push({
-          error: "You haven't made any modifications yet.",
-        });
-      } else {
-        this.notifications.push({
-          error:
-            "A funding agency other than the one you're editing already has these values.",
-        });
-      }
+        if (this.mode == "Edit") {
+          if (
+            JSON.stringify(this.startedEditing) ===
+            JSON.stringify(this.currentlyEditing)
+          ) {
+            this.notifications.push({
+              error: "You haven't made any modifications yet.",
+            });
+          } else {
+            this.notifications.push({
+              error:
+                "A funding agency other than the one you're editing already has these values.",
+            });
+          }
         }
       }
 
