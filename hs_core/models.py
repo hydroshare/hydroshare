@@ -3974,7 +3974,15 @@ class BaseResource(Page, AbstractResource):
                 return ''
 
         def parse_creator_name(_creator):
-            name = HumanName(_creator.name.strip())
+            creator_name = _creator.name.strip()
+            name = HumanName(creator_name)
+            # both first name ane last name are required for crossref deposit
+            if not name.first or not name.last:
+                name_parts = creator_name.split()
+                if not name.first:
+                    name.first = name_parts[0]
+                if not name.last:
+                    name.last = name_parts[-1]
             return name.first, name.last
 
         def create_contributor_node(_creator, sequence="additional"):
@@ -3983,8 +3991,7 @@ class BaseResource(Page, AbstractResource):
                 creator_node = etree.SubElement(contributors_node, 'person_name', contributor_role="author",
                                                 sequence=sequence)
                 etree.SubElement(creator_node, 'given_name').text = first_name
-                if last_name:
-                    etree.SubElement(creator_node, 'surname').text = last_name
+                etree.SubElement(creator_node, 'surname').text = last_name
                 orcid = _creator.identifiers.get('ORCID', "")
                 if orcid:
                     etree.SubElement(creator_node, 'ORCID').text = orcid
