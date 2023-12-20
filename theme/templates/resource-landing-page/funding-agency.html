@@ -36,12 +36,16 @@
                                             maxMatches="15"
                                         >
                                         <template slot="append">
-                                            <div v-if="isPending">
+                                            <div v-if="isPending && !crossreffApiDown">
                                                 <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
                                                 Searching known funders
                                             </div>
+                                            <div class="text-info small" v-if="crossreffApiDown">
+                                                We are having trouble reaching the Open Funder Registry. To add funders from the registry, please try again later.
+                                            </div>
                                         </template>
                                         </vue-bootstrap-typeahead>
+                                        <div class="text-muted small" v-if="filteredWords.length > 0">Words not included in Funder Registry Search: <strong v-for="word in filteredWords">${word}</strong></div>
                                     </div>
                                 </div>
                                 <input v-model="agencyNameInput" maxlength="250" name="agency_name" type="hidden" required>
@@ -78,10 +82,10 @@
                         </div>
                         <div id="agency-inline-notification">
                             <p class="text-danger" v-for="error in errorNotifications"> 
-                                ${ error.error }
+                                <i class="glyphicon glyphicon-info-sign" style="margin-right: 5px;"></i>${ error.error }
                             </p>
                             <p class="text-info" v-for="info in infoNotifications"> 
-                                ${ info.info }
+                                <i class="glyphicon glyphicon-info-sign" style="margin-right: 5px;"></i>${ info.info }
                             </p>
                         </div>
                     </div>

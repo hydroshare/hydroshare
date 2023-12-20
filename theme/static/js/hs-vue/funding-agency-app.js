@@ -26,6 +26,9 @@ let fundingAgenciesApp = new Vue({
     startedEditing: {}, // store the funder that we started editing
     deleteUrl: "", // Django endpoint to call for deleting a funder
     currentlyDeleting: {}, // store the funder that we are deleting
+    crossreffApiDown: false, // if we are having trouble reaching the crossref api
+    removeCharsFromQuery: ["."], // characters to be removed from search
+    filteredWords: [],
   },
   mounted() {
     if (this.selfAccessLevel === "owner" && this.resPublished) {
@@ -79,15 +82,27 @@ let fundingAgenciesApp = new Vue({
       try {
         let words = funderName.split(" ");
         words = words.map((w) => encodeURIComponent(w));
+        this.filteredWords = [];
+        words = words.filter((word) => {
+          for (let char of this.removeCharsFromQuery) {
+            if (word.includes(char)) {
+              this.filteredWords.push(word);
+              return false;
+            }
+          }
+          return true;
+        });
         let query = words.join("+");
         query = `${query}&mailto=help@cuahsi.org`;
         // https://api.crossref.org/swagger-ui/index.html#/Funders/get_funders
         const res = await fetch(this.CROSSREF_API_URL.replace(":query", query));
         const result = await res.json();
         const funders = result.message.items;
+        this.crossreffApiDown = false;
         return funders;
       } catch (e) {
         console.error(`Error querying Crossref API: ${e}`);
+        this.crossreffApiDown = true;
       }
       return null;
     },
@@ -129,19 +144,20 @@ let fundingAgenciesApp = new Vue({
           });
         }
 
-        if (
-          this.mode == "Edit" &&
-          JSON.stringify(this.startedEditing) ===
+        if (this.mode == "Edit") {
+          if (
+            JSON.stringify(this.startedEditing) ===
             JSON.stringify(this.currentlyEditing)
-        ) {
-          this.notifications.push({
-            error: "You haven't made any modifications yet.",
-          });
-        } else {
-          this.notifications.push({
-            error:
-              "A funding agency other than the one you're editing already has these values.",
-          });
+          ) {
+            this.notifications.push({
+              error: "You haven't made any modifications yet.",
+            });
+          } else {
+            this.notifications.push({
+              error:
+                "A funding agency other than the one you're editing already has these values.",
+            });
+          }
         }
       }
 
@@ -174,6 +190,7 @@ let fundingAgenciesApp = new Vue({
     selectAgency: function (event) {
       this.isPending = false;
       this.crossrefSelected = true;
+      this.currentlyEditing.agency_name = event.name;
       this.currentlyEditing.agency_url = event.uri;
       this.checkAgencyName();
     },
@@ -184,6 +201,7 @@ let fundingAgenciesApp = new Vue({
       this.mode = "Add";
       this.currentlyEditing = {};
       this.notifications = [];
+      this.filteredWords = [];
       this.agencyNameInput = "";
       // open source bug https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19
       this.$refs.agencyNameInput.inputValue = "";
@@ -191,6 +209,7 @@ let fundingAgenciesApp = new Vue({
     openEditModal(id) {
       this.mode = "Edit";
       this.notifications = [];
+      this.filteredWords = [];
       const editingFundingAgency = this.fundingAgencies.filter((agency) => {
         return agency.agency_id == id;
       })[0];
