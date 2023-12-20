@@ -132,7 +132,8 @@ class IrodsStorage(Storage):
         :return: None
         """
         # SessionException will be raised from run() in icommands.py
-        self.session.run("irule", None, " -r", "irods_rule_engine_plugin-irods_rule_language-instance", "-F", rule_name, input_path, input_resource)
+        self.session.run("irule", None, " -r", "irods_rule_engine_plugin-irods_rule_language-instance", "-F",
+                         rule_name, input_path, input_resource)
 
     def zipup(self, in_name, out_name):
         """
