@@ -201,6 +201,7 @@ let fundingAgenciesApp = new Vue({
       this.mode = "Add";
       this.currentlyEditing = {};
       this.notifications = [];
+      this.filteredWords = [];
       this.agencyNameInput = "";
       // open source bug https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19
       this.$refs.agencyNameInput.inputValue = "";
@@ -208,6 +209,7 @@ let fundingAgenciesApp = new Vue({
     openEditModal(id) {
       this.mode = "Edit";
       this.notifications = [];
+      this.filteredWords = [];
       const editingFundingAgency = this.fundingAgencies.filter((agency) => {
         return agency.agency_id == id;
       })[0];
