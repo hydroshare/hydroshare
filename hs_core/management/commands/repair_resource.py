@@ -100,6 +100,12 @@ class Command(BaseCommand):
             res_url = site_url + resource.absolute_url
             print("*" * 100)
             print(f"{current_resource}/{total_res_to_check}: Checking resource {res_url}")
+            if resource.raccess.published:
+                print("This Resource is published")
+                if admin:
+                    print("Command running with --admin. Published resources will be repaired if needed.")
+                else:
+                    print("Command running without --admin. Fixing a published resource raise ValidationError")
             _, missing_in_django, dangling_in_django = repair_resource(resource, logger, dry_run=dry_run, user=user)
             if dangling_in_django > 0 or missing_in_django > 0:
                 impacted_resources += 1
