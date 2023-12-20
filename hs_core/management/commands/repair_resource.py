@@ -13,6 +13,7 @@ This checks that:
 from django.core.management.base import BaseCommand, CommandError
 from hs_core.models import BaseResource
 from hs_core.management.utils import repair_resource
+from hs_core.views.utils import get_default_admin_user
 from hs_core import hydroshare
 from django.utils import timezone
 from django.db.models import F
@@ -27,7 +28,12 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('resource_ids', nargs='*', type=str)
         parser.add_argument('--days', type=int, dest='days', help='include resources updated in the last X days')
-        # Named (optional) arguments
+        parser.add_argument(
+            '--admin',
+            action='store_true',  # True for presence, False for absence
+            dest='admin',  # value is options['dry_run']
+            help='run process as admin user - this allows published resources to be modified',
+        )
         parser.add_argument(
             '--dryrun',
             action='store_true',  # True for presence, False for absence
@@ -46,6 +52,7 @@ class Command(BaseCommand):
         resources_ids = options['resource_ids']
         resources = BaseResource.objects.all()
         days = options['days']
+        admin = options['admin']
         dry_run = options['dry_run']
         published = options['published']
         site_url = hydroshare.utils.current_site_url()
@@ -73,6 +80,12 @@ class Command(BaseCommand):
             print("NO RESOURCES FOUND MATCHING YOUR FILTER ARGUMENTS")
             return
 
+        if admin:
+            print("PROCESSES WILL BE RUN AS ADMIN USER. ALLOWS DELETING DJANGO RESOURCE FILES ON PUBLISHED RESOURCES")
+            user = get_default_admin_user()
+        else:
+            user = None
+
         resources = resources.order_by(F('updated').asc(nulls_first=True))
 
         total_res_to_check = resources.count()
@@ -87,7 +100,7 @@ class Command(BaseCommand):
             res_url = site_url + resource.absolute_url
             print("*" * 100)
             print(f"{current_resource}/{total_res_to_check}: Checking resource {res_url}")
-            _, missing_in_django, dangling_in_django = repair_resource(resource, logger, dry_run=dry_run)
+            _, missing_in_django, dangling_in_django = repair_resource(resource, logger, dry_run=dry_run, user=user)
             if dangling_in_django > 0 or missing_in_django > 0:
                 impacted_resources += 1
                 total_files_missing_in_django += missing_in_django
