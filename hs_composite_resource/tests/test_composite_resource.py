@@ -14,35 +14,28 @@ from rest_framework import status
 
 from hs_composite_resource.models import CompositeResource
 from hs_core import hydroshare
-from hs_core.hydroshare.utils import (
-    ResourceVersioningException,
-    add_file_to_resource, get_file_from_irods,
-    get_resource_by_shortkey, resource_file_add_process
-)
+from hs_core.hydroshare.utils import (ResourceVersioningException,
+                                      add_file_to_resource,
+                                      get_file_from_irods,
+                                      get_resource_by_shortkey,
+                                      resource_file_add_process)
 from hs_core.models import BaseResource, ResourceFile
 from hs_core.tasks import FileOverrideException
 from hs_core.testing import MockIRODSTestCaseMixin
-from hs_core.views.utils import (
-    add_reference_url_to_resource,
-    create_folder, delete_resource_file,
-    edit_reference_url_in_resource,
-    move_or_rename_file_or_folder,
-    remove_folder,
-    unzip_file, zip_by_aggregation_file
-)
-from hs_file_types.models import (
-    FileSetLogicalFile,
-    GenericFileMetaData,
-    GenericLogicalFile,
-    GeoFeatureLogicalFile,
-    GeoRasterLogicalFile,
-    ModelInstanceLogicalFile,
-    ModelProgramLogicalFile,
-    NetCDFLogicalFile,
-    RefTimeseriesLogicalFile,
-    TimeSeriesLogicalFile
-)
-from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
+from hs_core.views.utils import (add_reference_url_to_resource, create_folder,
+                                 delete_resource_file,
+                                 edit_reference_url_in_resource,
+                                 move_or_rename_file_or_folder, remove_folder,
+                                 unzip_file, zip_by_aggregation_file)
+from hs_file_types.models import (FileSetLogicalFile, GenericFileMetaData,
+                                  GenericLogicalFile, GeoFeatureLogicalFile,
+                                  GeoRasterLogicalFile,
+                                  ModelInstanceLogicalFile,
+                                  ModelProgramLogicalFile, NetCDFLogicalFile,
+                                  RefTimeseriesLogicalFile,
+                                  TimeSeriesLogicalFile)
+from hs_file_types.models.base import (METADATA_FILE_ENDSWITH,
+                                       RESMAP_FILE_ENDSWITH)
 from hs_file_types.tests.utils import CompositeResourceTestMixin
 
 
@@ -4049,7 +4042,7 @@ class CompositeResourceTest(
         # test that db queries for landing page have constant time complexity
 
         # expected number of queries for landing page when the resource has no resource file
-        _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 161
+        _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 158
 
         # expected number of queries for landing page when the resource has resource file
         _LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT = _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT + 16
