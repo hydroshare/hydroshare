@@ -138,10 +138,10 @@ class UserProfileView(TemplateView):
                     err_msg = "You don't have permission to request additional quota"
                     messages.error(self.request, err_msg)
                 except Exception as ex:
-                    messages.error(self.request, f"Quota request errors:{str(ex)}.")
+                    messages.error(self.request, f"Quota request errors: {str(ex)}.")
 
             else:
-                messages.error(self.request, "Quota request errors:{}.".format(quota_form.errors.as_json))
+                messages.error(self.request, f"Quota request errors: {quota_form.errors.as_json}.")
 
         else:
             quota_form = QuotaRequestForm()
@@ -241,12 +241,12 @@ def quota_request(request, *args, **kwargs):
                 #                                   on_event=CommunityRequestEvents.CREATED).send()
                 # return HttpResponseRedirect(reverse('update_profile', kwargs={"profile_user_id": user.id}))
             else:
-                messages.error(request, "Quota request errors:{}.".format(quota_form.errors.as_json))
+                messages.error(request, f"Quota request errors: {quota_form.errors.as_json}.")
         except PermissionDenied:
             err_msg = "You don't have permission to request additional quota"
             messages.error(request, err_msg)
         except Exception as ex:
-            messages.error(request, f"Quota request errors:{str(ex)}.")
+            messages.error(request, f"Quota request errors: {str(ex)}.")
 
     else:
         quota_form = QuotaRequestForm()
