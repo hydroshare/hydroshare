@@ -124,12 +124,12 @@ class UserProfileView(TemplateView):
             status="pending"
         ).all()
         if self.request.method == "POST":
-            quota_form = QuotaRequestForm(request.POST)
+            quota_form = QuotaRequestForm(self.request.POST)
             if quota_form.is_valid():
                 try:
-                    quota_form = quota_form.save(request)
+                    quota_form = quota_form.save(self.request)
                     msg = "New quota request was successful."
-                    messages.success(request, msg)
+                    messages.success(self.request, msg)
                     # send email to hydroshare support
                     # CommunityRequestEmailNotification(request=request, community_request=new_quota_request,
                     #                                   on_event=CommunityRequestEvents.CREATED).send()
@@ -173,7 +173,6 @@ def act_on_quota_request(
     :param action: need to have a value of either 'accept' or 'decline'
     :return:
     """
-    user_acting = request.user
 
     try:
         quota_request = QuotaRequest.objects.get(
