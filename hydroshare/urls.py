@@ -2,6 +2,7 @@ from autocomplete_light import shortcuts as autocomplete_light
 from django.conf.urls import include, url
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
+from django.views.generic.base import RedirectView
 from mezzanine.conf import settings
 from mezzanine.core.views import direct_to_template # noqa
 from mezzanine.pages.views import page
@@ -15,7 +16,7 @@ from hs_rest_api2.urls import hsapi2_urlpatterns
 from hs_sitemap.views import sitemap
 from hs_tracking import views as tracking
 from theme import views as theme
-from theme.views import delete_resource_comment
+from theme.views import delete_resource_comment, oidc_signup, LogoutView
 
 autocomplete_light.autodiscover()
 admin.autodiscover()
@@ -23,7 +24,17 @@ admin.autodiscover()
 # Add the urlpatterns for any custom Django applications here.
 # You can also change the ``home`` view to add your own functionality
 # to the project's homepage.
-urlpatterns = i18n_patterns(
+urlpatterns = []
+if settings.ENABLE_OIDC_AUTHENTICATION:
+    urlpatterns += i18n_patterns(
+        url(r"^admin/login/$", RedirectView.as_view(url='/oidc/authenticate'), name="admin_login"),
+        url(r"^sign-up/$", oidc_signup, name='sign-up'),
+        url(r"^accounts/logout/$", LogoutView.as_view(), name='logout'),
+        url(r"^accounts/login/$", RedirectView.as_view(url='/oidc/authenticate'), name="login"),
+        url('oidc/', include('mozilla_django_oidc.urls')),
+    )
+
+urlpatterns += i18n_patterns(
     # Change the admin prefix here to use an alternate URL for the
     # admin interface, which would be marginally more secure.
     url("^admin/", include(admin.site.urls)),
@@ -98,7 +109,6 @@ urlpatterns = i18n_patterns(
         theme.create_irods_account,
         name="create_irods_account",
     ),
-    url(r"^accounts/login/$", theme.login, name="login"),
     url(r"^landingPage/$", theme.landingPage, name="landing_page"),
     url(r"^home/$", theme.dashboard, name="dashboard"),
     url(r"^$", theme.home_router, name="home_router"),

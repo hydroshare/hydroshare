@@ -267,7 +267,7 @@ def fix_resourcefile_duplicates(dry_run=False, logger=None, get_model=False):
 def check_irods_files(resource, stop_on_error=False, log_errors=True,
                       echo_errors=False, return_errors=False,
                       sync_ispublic=False, clean_irods=False, clean_django=False,
-                      dry_run=False):
+                      dry_run=False, user=None):
     """Check whether files in resource.files and on iRODS agree.
 
     :param resource: resource to check
@@ -319,7 +319,9 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
                 msg = "check_irods_files: django file {} does not exist in iRODS"\
                     .format(file_storage_path)
                 if clean_django and not dry_run:
-                    delete_resource_file(resource.short_id, f.short_path, resource.creator,
+                    if not user:
+                        user = resource.creator
+                    delete_resource_file(resource.short_id, f.short_path, user,
                                          delete_logical_file=False)
                     msg += " (DELETED FROM DJANGO)"
                 if echo_errors:
@@ -729,7 +731,7 @@ class CheckJSONLD(object):
             return
 
 
-def repair_resource(resource, logger, dry_run=False):
+def repair_resource(resource, logger, dry_run=False, user=None):
 
     print("CHECKING IF RESOURCE {} NEEDS REPAIR".format(resource.short_id))
     now = timezone.now()
@@ -742,7 +744,8 @@ def repair_resource(resource, logger, dry_run=False):
                                                                            clean_irods=False,
                                                                            clean_django=True,
                                                                            sync_ispublic=True,
-                                                                           dry_run=dry_run)
+                                                                           dry_run=dry_run,
+                                                                           user=user)
     if ecount:
         print("... affected resource {} has type {}, title '{}'"
               .format(resource.short_id, resource.resource_type,

@@ -123,6 +123,10 @@ def get_user(request):
         return request.user
 
 
+class UserValidationError(ValidationError):
+    pass
+
+
 def validate_hydroshare_user_id(value):
     """Validate that a hydroshare_user_id is valid for a hydroshare user."""
     err_message = '%s is not a valid id for hydroshare user' % value
@@ -134,7 +138,7 @@ def validate_hydroshare_user_id(value):
 
         # check the user exists for the provided user id
         if not User.objects.filter(pk=value).exists():
-            raise ValidationError(err_message)
+            raise UserValidationError(err_message)
 
 
 def validate_user_url(value):
@@ -1327,6 +1331,8 @@ class Publisher(AbstractMetaDataElement):
         metadata_obj = kwargs['content_object']
         # get matching resource
         resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
+        if not resource:
+            raise ValidationError("Resource not found")
         if not resource.raccess.published:
             raise ValidationError("Publisher element can't be created for a resource that "
                                   "is not yet published.")
@@ -1348,13 +1354,14 @@ class Publisher(AbstractMetaDataElement):
             kwargs['url'] = 'https://www.cuahsi.org'
         else:
             # make sure we are not setting CUAHSI as publisher for a resource
-            # that has no content files
-            if 'name' in kwargs:
-                if kwargs['name'].lower() == publisher_CUAHSI.lower():
-                    raise ValidationError("Invalid publisher name")
-            if 'url' in kwargs:
-                if kwargs['url'].lower() == 'https://www.cuahsi.org':
-                    raise ValidationError("Invalid publisher URL")
+            # that has no content files, unless it is a Collection
+            if resource.resource_type.lower() != "collectionresource":
+                if 'name' in kwargs:
+                    if kwargs['name'].lower() == publisher_CUAHSI.lower():
+                        raise ValidationError("Invalid publisher name")
+                if 'url' in kwargs:
+                    if kwargs['url'].lower() == 'https://www.cuahsi.org':
+                        raise ValidationError("Invalid publisher URL")
 
         return super(Publisher, cls).create(**kwargs)
 
@@ -4634,6 +4641,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
     def copy_all_elements_from(self, src_md, exclude_elements=None):
         """Copy all metadata elements from another resource."""
+        logger = logging.getLogger(__name__)
         md_type = ContentType.objects.get_for_model(src_md)
         supported_element_names = src_md.get_supported_element_names()
         for element_name in supported_element_names:
@@ -4645,10 +4653,16 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 element_args.pop('content_type')
                 element_args.pop('id')
                 element_args.pop('object_id')
-                if exclude_elements:
-                    if not element_name.lower() in exclude_elements:
+                try:
+                    if exclude_elements:
+                        if not element_name.lower() in exclude_elements:
+                            self.create_element(element_name, **element_args)
+                    else:
                         self.create_element(element_name, **element_args)
-                else:
+                except UserValidationError as uve:
+                    logger.error(f"Error copying {element}: {str(uve)}")
+                    element_args["hydroshare_user_id"] = None
+                    del element_args["is_active_user"]
                     self.create_element(element_name, **element_args)
 
     # this method needs to be overriden by any subclass of this class

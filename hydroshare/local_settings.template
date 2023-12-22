@@ -167,7 +167,7 @@ MAILCHIMP_SUBSCRIBERS = "f0c27254e3"
 # sendfile support for large files
 # These must match settings in nginx
 SENDFILE_ON = True
-IRODS_USER_URI = "/irods-user"
+# IRODS_USER_URI = "/irods-user"
 IRODS_DATA_URI = "/irods-data"
 LOCAL_CACHE_URI = "/local-cache"
 
@@ -192,3 +192,25 @@ hydroshare | security.PasswordExpiry.user: (fields.W342) Setting unique=True on 
 using a OneToOneField.
 """
 # SILENCED_SYSTEM_CHECKS = ["mezzanine.core.W03", "fields.W342"]
+
+ENABLE_OIDC_AUTHENTICATION = False
+# If OIDC is enabled, the following additional settings should be defined in local_settings
+# OIDC_OP_AUTHORIZATION_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/auth"
+# OIDC_OP_TOKEN_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/token"
+# OIDC_OP_USER_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/userinfo"
+# OIDC_RP_SIGN_ALGO = "RS256"
+# OIDC_OP_JWKS_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/certs"
+# OIDC_RP_CLIENT_ID = 'hydroshare'
+# OIDC_RP_CLIENT_SECRET = 'Ya4GzskPjEmvkX6cL8w3X0sQPNW6CwkM'
+# LOGIN_REDIRECT_URL = '/home/'
+# LOGIN_URL = '/oidc/authenticate/'
+# OIDC_CHANGE_PASSWORD_URL = "https://auth.cuahsi.io/realms/CUAHSI/account?#/security/signingin"
+# ALLOW_LOGOUT_GET_METHOD = True
+# LOGOUT_REDIRECT_URL = '/'
+# OIDC_OP_LOGOUT_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/logout"
+
+# The following two settings will logout of OIDC during signout
+# If these two settings are not enabled, 
+# the user will be redirected to auth.cuahsi.io to choose if they want to logout of SSO
+# OIDC_OP_LOGOUT_URL_METHOD = 'hs_core.authentication.provider_logout'
+# OIDC_STORE_ID_TOKEN = True

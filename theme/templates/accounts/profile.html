@@ -80,10 +80,13 @@
                             <div data-page-mode="edit">
                                 <hr>
                                 <div class="profile-picture-controls text-center">
-                                    <div><a href="/accounts/update">Change HydroShare password</a></div>
+                                    {% if oidc_change_password_url %}
+                                        <div><a href="{{ oidc_change_password_url }}">Change CUAHSI SSO password</a></div>
+                                    {% endif %}
 
                                     {#        Account deactivation       #}
                                     <div><a data-toggle="modal" data-target="#deactivate-account-dialog">Deactivate HydroShare account</a></div>
+                                    <div><a href="/accounts/update">Change HydroShare API password</a></div>
                                     <hr>
                                     {# Account creation/deletion in iRODS user zone #}
                                     <div id="irods-account-container">
@@ -537,7 +540,7 @@
                                                 {% else %}
                                                     <tr>
                                                         <td><span class="text-muted">Email</span></td>
-                                                        <td>(<a href="/accounts/login/">Log in to send email</a>)</td>
+                                                        <td>(<a href="{% url 'login' %}">Log in to send email</a>)</td>
                                                     </tr>
                                                 {% endif %}
                                             {% endif %}
