@@ -20,4 +20,8 @@ class Command(BaseCommand):
 
             if res_show_in_discover and r.short_id:
                 print("Updating Mongo record for " + resource.short_id)
-                update_mongo(resource)
+                try:
+                    update_mongo(resource)
+                except Exception as e:
+                    print("failed to update Mongo record for " + resource.short_id)
+                    print(e)
