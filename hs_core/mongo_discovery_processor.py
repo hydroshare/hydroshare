@@ -1,5 +1,4 @@
 import logging
-import json
 
 from django.conf import settings
 from hs_core.atlas_mongo import _HydroshareResourceMetadata
@@ -16,7 +15,7 @@ def update_mongo(res):
     res_json = resource_metadata(res)
     res_metadata = _HydroshareResourceMetadata(**res_json.dict())
     discovery_record = res_metadata.to_catalog_dataset()
-    db.discovery.update_one({"url": str(res_json.url)}, {"$set": json.loads(discovery_record.model_dump_json(by_alias=True))}, upsert=True)
+    db.discovery.update_one({"url": str(res_json.url)}, {"$set": discovery_record.dict(by_alias=True)}, upsert=True)
     logger.info("updated discovery record in mongodb for " + res.short_id)
 
 def remove_mongo(res):
