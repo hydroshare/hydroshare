@@ -81,19 +81,20 @@ class FileOverrideException(Exception):
 
 class HydroshareRequest(Request):
     '''A Celery custom request to log failures.
-    https://docs.celeryq.dev/en/v4.4.7/userguide/tasks.html?#requests-and-custom-requests
+    https://docs.celeryq.dev/en/v5.2.7/userguide/tasks.html#requests-and-custom-requests
     '''
     def on_failure(self, exc_info, send_failed_event=True, return_ok=False):
         super(HydroshareRequest, self).on_failure(
             exc_info,
-            send_failed_event=send_failed_event,
-            return_ok=return_ok
+            # always mark failed
+            send_failed_event=True,
+            return_ok=False
         )
-        warning_message = f'Failure detected for task {self.task.name}'
+        warning_message = f"Failure detected for task {self.task.name}. Exception: {exc_info}"
         logger.warning(warning_message)
         if not settings.DISABLE_TASK_EMAILS:
             subject = 'Notification of failing Celery task'
-            send_mail(subject, warning_message, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
+            send_mail(subject, warning_message, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_FROM_EMAIL])
 
 
 class HydroshareTask(Task):
