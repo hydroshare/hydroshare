@@ -1075,6 +1075,9 @@ def submit_resource_for_review(request, pk):
     resource.raccess.immutable = True
     resource.raccess.save()
 
+    # set resource modified before attempting repair
+    utils.resource_modified(resource, request.user, overwrite_bag=False)
+
     # Repair resource and email support user if there are issues
     from hs_core.tasks import repair_resource_before_publication
     repair_resource_before_publication.apply_async((resource.short_id,))
@@ -1145,8 +1148,6 @@ def publish_resource(user, pk):
     md_args = {'name': 'doi',
                'url': get_activated_doi(resource.doi)}
     resource.metadata.create_element('Identifier', **md_args)
-
-    utils.resource_modified(resource, user, overwrite_bag=False)
 
     return pk
 
