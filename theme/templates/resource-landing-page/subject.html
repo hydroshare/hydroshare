@@ -46,7 +46,7 @@
                         <span v-html="error"></span>
                     </div>
                 </div>
-                <ul id="lst-tags" class="custom-well tag-list" style="display:none">
+                <ul id="lst-tags" class="custom-well tag-list">
                     <li class="small text-muted" v-if="!resKeywords.length">No subject keywords have been added.</li>
                     <li v-else v-for="k in resKeywords">
                         {% if resource_edit_mode %}
