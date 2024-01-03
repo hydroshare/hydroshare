@@ -31,6 +31,7 @@ class TestHStore(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.res.extra_metadata, {})
         self.res.extra_metadata = {'name': 'John Jackson'}
         self.res.save()
+        self.res.refresh_from_db()
 
         self.assertNotEqual(self.res.extra_metadata, {})
         self.assertEqual(self.res.extra_metadata['name'], 'John Jackson')
@@ -38,16 +39,19 @@ class TestHStore(MockIRODSTestCaseMixin, TestCase):
         # update extra metadata (add email)
         self.res.extra_metadata = {'name': 'John Jackson', 'email': 'jj@gmail.com'}
         self.res.save()
+        self.res.refresh_from_db()
         self.assertEqual(self.res.extra_metadata['name'], 'John Jackson')
         self.assertEqual(self.res.extra_metadata['email'], 'jj@gmail.com')
 
         # update extra metadata (remove email)
         self.res.extra_metadata = {'name': 'John Jackson'}
         self.res.save()
+        self.res.refresh_from_db()
         self.assertEqual(self.res.extra_metadata['name'], 'John Jackson')
         self.assertEqual(self.res.extra_metadata.get('email', None), None)
 
         # delete all extra metadata
         self.res.extra_metadata = {}
         self.res.save()
+        self.res.refresh_from_db()
         self.assertEqual(self.res.extra_metadata, {})

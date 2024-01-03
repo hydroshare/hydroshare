@@ -1,3 +1,4 @@
+{% load hydroshare_tags %}
 <table id="table-stats" class="info-table">
     <tr>
         <th>Sharing Status:</th>
@@ -43,7 +44,7 @@
             {% endif %}
         </tr>
     {% endif %}
-    {% if "pending" in cm.doi or "failure" in cm.doi or cm.raccess.review_pending %}
+    {% if cm|show_publication_status %}
             <tr>
                 <th>Publication Status: </th>
                 <td>
@@ -64,9 +65,9 @@
                         </a>
                         {% else %}
                         <div class="small text-muted">
-                            This resource is under review for 
-                            <a href="https://help.hydroshare.org/publishing-in-hydroshare/minimum-metadata-requirements-for-publishing-in-hydroshare/" target="_blank">minimum metadata</a> 
-                            and to ensure that it adheres to 
+                            This resource is under review for
+                            <a href="https://help.hydroshare.org/publishing-in-hydroshare/minimum-metadata-requirements-for-publishing-in-hydroshare/" target="_blank">minimum metadata</a>
+                            and to ensure that it adheres to
                             <a href="https://help.hydroshare.org/publishing-in-hydroshare/terms-of-use-and-community-guidelines/" target="_blank">community guidelines</a>.
                         </div>
                         {% endif %}
