@@ -28,6 +28,7 @@ from mezzanine.conf import settings
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from hs_access_control.models.community import Community
+from hs_access_control.models.privilege import PrivilegeCodes
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 from hs_core.models import AbstractResource, BaseResource, GeospatialRelation, ResourceFile
 from hs_core.signals import post_create_resource, pre_add_files_to_resource, pre_create_resource
@@ -583,7 +584,7 @@ def copy_and_create_metadata(src_res, dest_res):
 
 
 # TODO: should be BaseResource.mark_as_modified.
-def resource_modified(resource, by_user=None, overwrite_bag=True):
+def resource_modified(resource, by_user, overwrite_bag=True):
     """
     Set an AVU flag that forces the bag to be recreated before fetch.
 
@@ -591,6 +592,7 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
 
     """
 
+    error_message = ""
     if not by_user:
         user = None
     else:
@@ -601,16 +603,25 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
                 user = User.objects.get(username=by_user)
             except User.DoesNotExist:
                 user = None
-    if user:
+                error_message = f"Resource cannot be modified by nonexistent user '{by_user}'"
+
+    # user can only mark modified if they are an owner of the resource
+    # this prevents the last_changed_by getting set to an admin user that edits a resource
+    user_privilege = resource.raccess.get_effective_user_privilege(by_user, ignore_superuser=True)
+    if user_privilege > PrivilegeCodes.CHANGE:
+        error_message = "User does not have adequate privilege to modify resource."
+
+    if user and not error_message:
         resource.last_changed_by = user
 
-    resource.updated = now().isoformat()
+        resource.updated = now().isoformat()
+        res_modified_date = resource.metadata.dates.all().filter(type='modified').first()
+        if res_modified_date:
+            resource.metadata.update_element('date', res_modified_date.id)
+
     # seems this is the best place to sync resource title with metadata title
     resource.title = resource.metadata.title.value
     resource.save()
-    res_modified_date = resource.metadata.dates.all().filter(type='modified').first()
-    if res_modified_date:
-        resource.metadata.update_element('date', res_modified_date.id)
 
     if overwrite_bag:
         create_bag_metadata_files(resource)
@@ -618,6 +629,9 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
     # set bag_modified-true AVU pair for the modified resource in iRODS to indicate
     # the resource is modified for on-demand bagging.
     set_dirty_bag_flag(resource)
+
+    if error_message:
+        logger.error(error_message)
 
 
 # TODO: should be part of BaseResource

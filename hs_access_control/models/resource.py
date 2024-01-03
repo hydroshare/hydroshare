@@ -320,6 +320,7 @@ class ResourceAccess(models.Model):
         Return the user-based privilege of a specific user over this resource
 
         :param this_user: the user upon which to report
+        :param ignore_superuser: should superuser privilege be ignored
         :return: integer privilege 1-4 (PrivilegeCodes)
 
         This does not account for resource flags.
@@ -399,6 +400,7 @@ class ResourceAccess(models.Model):
         Return the effective user-based privilege of a specific user over this resource
 
         :param this_user: the user upon which to report
+        :param ignore_superuser: should superuser privilege be ignored
         :return: integer privilege 1-4 (PrivilegeCodes)
 
         This accounts for resource flags by revoking CHANGE on immutable resources.
