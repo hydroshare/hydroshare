@@ -605,19 +605,19 @@ def resource_modified(resource, by_user, overwrite_bag=True):
                 user = None
                 error_message = f"Resource cannot be modified by nonexistent user '{by_user}'"
 
-    # user can only mark modified if they are an owner of the resource
-    # this prevents the last_changed_by getting set to an admin user that edits a resource
-    user_privilege = resource.raccess.get_effective_user_privilege(by_user, ignore_superuser=True)
-    if user_privilege > PrivilegeCodes.CHANGE:
-        error_message = "User does not have adequate privilege to modify resource."
+    if user:
+        # user can only mark modified if they are an owner of the resource
+        # this prevents the last_changed_by getting set to an admin user that edits a resource
+        user_privilege = resource.raccess.get_effective_user_privilege(user, ignore_superuser=True)
+        if user_privilege > PrivilegeCodes.CHANGE:
+            error_message = "User does not have adequate privilege to modify resource."
+        else:
+            resource.last_changed_by = user
 
-    if user and not error_message:
-        resource.last_changed_by = user
-
-        resource.updated = now().isoformat()
-        res_modified_date = resource.metadata.dates.all().filter(type='modified').first()
-        if res_modified_date:
-            resource.metadata.update_element('date', res_modified_date.id)
+            resource.updated = now().isoformat()
+            res_modified_date = resource.metadata.dates.all().filter(type='modified').first()
+            if res_modified_date:
+                resource.metadata.update_element('date', res_modified_date.id)
 
     # seems this is the best place to sync resource title with metadata title
     resource.title = resource.metadata.title.value

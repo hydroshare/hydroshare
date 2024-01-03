@@ -33,6 +33,15 @@ class TestUtils(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
+        self.admin_user = hydroshare.create_account(
+            'admin@nowhere.com',
+            username='admin',
+            first_name='admin_FirstName',
+            last_name='admin_LastName',
+            superuser=True,
+            groups=[]
+        )
+
         self.res = hydroshare.create_resource(
             'CompositeResource',
             self.user,
@@ -123,10 +132,31 @@ class TestUtils(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(utils.current_site_url(), url)
 
     def test_resource_modified(self):
+        # Test owner can set resource_modified on their resource
+        modified_date1 = self.res.metadata.dates.filter(type='modified').first()
+        self.assertEqual(self.res.last_changed_by, self.user)
+        utils.resource_modified(self.res, self.user)
+        modified_date2 = self.res.metadata.dates.filter(type='modified').first()
+        self.assertTrue((modified_date2.start_date - modified_date1.start_date).total_seconds() > 0)
+        self.assertEqual(self.res.last_changed_by, self.user)
+        self.assertEqual(self.res.last_updated, modified_date2.start_date)
+
+    def test_resource_modified_non_owner(self):
+        # Test non-owner can NOT set resource_modified on a resource
         modified_date1 = self.res.metadata.dates.filter(type='modified').first()
         self.assertEqual(self.res.last_changed_by, self.user)
         utils.resource_modified(self.res, self.user2)
         modified_date2 = self.res.metadata.dates.filter(type='modified').first()
-        self.assertTrue((modified_date2.start_date - modified_date1.start_date).total_seconds() > 0)
-        self.assertEqual(self.res.last_changed_by, self.user2)
-        self.assertEqual(self.res.last_updated, modified_date2.start_date)
+        self.assertFalse((modified_date2.start_date - modified_date1.start_date).total_seconds() > 0)
+        self.assertNotEqual(self.res.last_changed_by, self.user2)
+        self.assertNotEqual(self.res.last_updated, modified_date2.start_date)
+
+    def test_resource_modified_admin(self):
+        # Test admin cannot set resource_modified on a resource
+        modified_date1 = self.res.metadata.dates.filter(type='modified').first()
+        self.assertEqual(self.res.last_changed_by, self.user)
+        utils.resource_modified(self.res, self.admin_user)
+        modified_date2 = self.res.metadata.dates.filter(type='modified').first()
+        self.assertFalse((modified_date2.start_date - modified_date1.start_date).total_seconds() > 0)
+        self.assertNotEqual(self.res.last_changed_by, self.user2)
+        self.assertNotEqual(self.res.last_updated, modified_date2.start_date)
