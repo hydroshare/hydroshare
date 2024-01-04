@@ -241,7 +241,8 @@ def quota_request(request, *args, **kwargs):
                 #                                   on_event=CommunityRequestEvents.CREATED).send()
                 # return HttpResponseRedirect(reverse('update_profile', kwargs={"profile_user_id": user.id}))
             else:
-                messages.error(request, f"Quota request errors: {quota_form.errors.as_json}.")
+                for k, v in quota_form.errors.items():
+                    messages.error(request, f"Invalid {k}: {v[0]}")
         except PermissionDenied:
             err_msg = "You don't have permission to request additional quota"
             messages.error(request, err_msg)

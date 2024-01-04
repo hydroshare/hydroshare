@@ -13,7 +13,7 @@ from django.template import RequestContext, Template, TemplateSyntaxError
 from django.utils.translation import gettext_lazy as _
 from django.utils.html import strip_tags
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator, MinLengthValidator, MaxLengthValidator
 from django.contrib.postgres.fields import HStoreField
 
 from mezzanine.core.fields import FileField, RichTextField
@@ -312,8 +312,9 @@ class QuotaRequest(models.Model):
     request_from = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ru2qrequest')
     quota = models.ForeignKey(UserQuota, on_delete=models.CASCADE, related_name='g2qrequest')
     date_requested = models.DateTimeField(editable=False, auto_now_add=True)
-    justification = models.TextField(null=True, blank=True, max_length=300)
-    storage = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)], default=0)
+    justification = models.TextField(validators=[MinLengthValidator(15, 'must contain at least 15 characters'),
+                                                 MaxLengthValidator(300, 'maximum 300 characters')], null=True)
+    storage = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(100)], default=1)
 
 
 class QuotaRequestForm(ModelForm):
