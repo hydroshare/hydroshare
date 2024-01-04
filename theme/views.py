@@ -170,6 +170,26 @@ def act_on_quota_request(request, quota_request_id, action, uidb36=None, token=N
     """
 
     invalid = False
+    if request.is_ajax:
+        if action != "revoke":
+            return JsonResponse({"message": "Invalid action"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            quota_request = QuotaRequest.objects.get(
+                pk=quota_request_id
+            )
+        except ObjectDoesNotExist:
+            return JsonResponse({"message": "No matching quota request was found"}, status=status.HTTP_400_BAD_REQUEST)
+        if request.user != quota_request.request_from:
+            return JsonResponse({"message": f"You are not authorized to {action} this quota"},
+                                status=status.HTTP_401_UNAUTHORIZED)
+        if quota_request.status != "pending":
+            return JsonResponse({"message": f"Quota request not revoked because it is not pending"},
+                                status=status.HTTP_400_BAD_REQUEST)
+        quota_request.status = "revoked"
+        quota_request.save()
+        return JsonResponse({"message": "Quota request revoked"}, status=status.HTTP_200_OK)
+
     if uidb36:
         user = authenticate(uidb36=uidb36, token=token, is_active=True)
         if user is None:
@@ -200,22 +220,18 @@ def act_on_quota_request(request, quota_request_id, action, uidb36=None, token=N
                 # user_acting.uaccess.act_on_group_quota_request(
                 #     quota_request, accept_request
                 # )
-                if action == "revoke":
-                    quota_request.status = "revoked"
-                    message = "Quota request revoked"
-                elif action == "approve":
+                if action == "approve":
                     quota_request.status = "approved"
-                    message = "Quota request approved"
-                    # send email to notify membership acceptance
+                    messages.success(request, "Quota request approved")
+                    # send email to notify acceptance
                     # TODO #5228
                     # _send_email_on_group_membership_acceptance(quota_request)
                 elif action == "deny":
                     quota_request.status = "denied"
-                    message = "Quota request approved"
+                    messages.success(request, "Quota request approved")
                 else:
-                    message = "Quota request denied"
+                    messages.error(request, f"Requested {action} not taken on quota request")
                 quota_request.save()
-                messages.success(request, message)
 
             except PermissionDenied as ex:
                 messages.error(request, str(ex))

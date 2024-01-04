@@ -549,13 +549,16 @@ async function revokeQuota(url) {
     });
 
     if (response.ok) {
-        if ( response?.url ) {
-            localStorage.setItem("quota-status", "revoked")
-            window.location.replace(response.url);
-        }
+        localStorage.setItem("quota-status", "revoked");
+        let data = await response.json();
+        localStorage.setItem("quota-status", "revoked");
+        location.reload();
     }
     else {
-      customAlert("Quota Request", 'Failed to revoke request', "error", 6000, true);
+        let data = await response.json()
+        if ( data?.message ) {
+            customAlert("Quota Request", data.message, "error", 6000, true);
+        }
     }
     this.isApproving = false
 }
