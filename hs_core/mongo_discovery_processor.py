@@ -37,18 +37,16 @@ def remove_mongo(resource_id: str):
 @receiver(hs_access_control.signals.access_changed, sender=PrivilegeBase)
 def access_changed(sender, **kwargs):
     if 'users' in kwargs:
-        for username in kwargs['users']:
-            update_mongo_user_privileges.apply_async((username,))
-    if 'users' in kwargs:
         update_mongo_user_privileges.apply_async((kwargs['users'],))
     logger.info("access_changed: users: {} resources: {}".format(kwargs['users'], kwargs['resources']))
 
 
 @shared_task
-def update_mongo_user_privileges(username):
-    user = User.objects.get(username=username)
-    user_privileges = user_resource_privileges(user)
-    db.userprivileges.update_one({"username": username}, {"$set": user_privileges}, upsert=True)
+def update_mongo_user_privileges(usernames):
+    for username in usernames:
+        user = User.objects.get(username=username)
+        user_privileges = user_resource_privileges(user)
+        db.userprivileges.update_one({"username": username}, {"$set": user_privileges}, upsert=True)
 
 
 
