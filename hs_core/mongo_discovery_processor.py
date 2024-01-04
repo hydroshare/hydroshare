@@ -37,7 +37,7 @@ def remove_mongo(resource_id: str):
 @receiver(hs_access_control.signals.access_changed, sender=PrivilegeBase)
 def access_changed(sender, **kwargs):
     if 'users' in kwargs:
-        for username in kwargs['user']:
+        for username in kwargs['users']:
             update_mongo_user_privileges.apply_async((username,))
     if 'users' in kwargs:
         update_mongo_user_privileges.apply_async((kwargs['users'],))
