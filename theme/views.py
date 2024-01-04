@@ -159,28 +159,41 @@ class UserProfileView(TemplateView):
         }
 
 
-@login_required
-def act_on_quota_request(
-    request, quota_request_id, action, *args, **kwargs
-):
+def act_on_quota_request(request, quota_request_id, action, uidb36=None, token=None, **kwargs):
     """
-    Take action (accept or decline) on group membership request
+    Take action (accept or decline) on quota request
 
-    :param request: requesting user is either owner of the group taking action on a request from a user
-                    or a user taking action on a invitation to join a group from a group owner
-    :param membership_request_id: id of the membership request object (an instance of GroupMembershipRequest)
-                                  to act on
-    :param action: need to have a value of either 'accept' or 'decline'
+    :param request: requesting user is either owner of the quota request or an admin approving the request
+    :param quota_request_id: id of the quota request object to act on
+    :param action: need to have a value of either 'revoke', 'approve', or 'deny'
     :return:
     """
 
+    invalid = False
+    if uidb36:
+        user = authenticate(uidb36=uidb36, token=token, is_active=True)
+        if user is None:
+            messages.error(
+                request,
+                "The link you clicked has expired.",
+            )
+            invalid = True
+    else:
+        user = request.user
+    if not user:
+        messages.error(request, "Invalid user.")
+        invalid = True
     try:
         quota_request = QuotaRequest.objects.get(
             pk=quota_request_id
         )
     except ObjectDoesNotExist:
-        messages.error(request, "No matching group membership request was found")
-    else:
+        invalid = True
+        messages.error(request, "No matching quota request was found")
+    if not user.is_superuser and not user == quota_request.request_from:
+        invalid = True
+        messages.error(request, "Invalid user.")
+    if not invalid:
         if quota_request.status == "pending":
             try:
                 # TODO: #5228
