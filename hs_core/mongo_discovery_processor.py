@@ -46,7 +46,7 @@ def access_changed(sender, **kwargs):
 
 @shared_task
 def update_mongo_user_privileges(username):
-    user = User.object.get(username=username)
+    user = User.objects.get(username=username)
     user_privileges = user_resource_privileges(user)
     db.userprivileges.update_one({"username": username}, {"$set": user_privileges}, upsert=True)
 
