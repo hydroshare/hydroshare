@@ -1,6 +1,6 @@
 import re
 import json
-from datetime import datetime
+from datetime import datetime, date
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
@@ -369,10 +369,10 @@ class CoreMetadata(SchemaBaseModel):
 
     class Settings:
         bson_encoders = {
-            datetime.date: lambda dt: datetime.datetime(
+            date: lambda dt: datetime(
                 year=dt.year, month=dt.month, day=dt.day, hour=0, minute=0, second=0
             ),
-            datetime.datetime: lambda dt: datetime.datetime(
+            datetime: lambda dt: datetime(
                 year=dt.year, month=dt.month, day=dt.day, hour=dt.hour, minute=dt.minute, second=dt.second
             )
         }
