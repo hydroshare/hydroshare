@@ -2197,7 +2197,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         # avoid import loop
         from hs_core.views.utils import run_script_to_update_hyrax_input_files
         from hs_core.signals import post_raccess_change
-        from hs_core.hs_access_control.models.shortcut import zone_of_publicity
+        from hs_access_control.models.shortcut import zone_of_publicity
 
         # access control is separate from validation logic
         if user is not None and not user.uaccess.can_change_resource_flags(self):
