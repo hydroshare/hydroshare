@@ -169,8 +169,8 @@ def act_on_quota_request(request, quota_request_id, action, uidb36=None, token=N
     :return:
     """
 
-    invalid = False
     if request.is_ajax:
+        # Revoke requests are made by the user via ajax
         if action != "revoke":
             return JsonResponse({"message": "Invalid action"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -184,61 +184,53 @@ def act_on_quota_request(request, quota_request_id, action, uidb36=None, token=N
             return JsonResponse({"message": f"You are not authorized to {action} this quota"},
                                 status=status.HTTP_401_UNAUTHORIZED)
         if quota_request.status != "pending":
-            return JsonResponse({"message": f"Quota request not revoked because it is not pending"},
+            return JsonResponse({"message": "Quota request not revoked because it is not pending"},
                                 status=status.HTTP_400_BAD_REQUEST)
         quota_request.status = "revoked"
         quota_request.save()
         return JsonResponse({"message": "Quota request revoked"}, status=status.HTTP_200_OK)
 
-    if uidb36:
-        user = authenticate(uidb36=uidb36, token=token, is_active=True)
-        if user is None:
-            messages.error(
-                request,
-                "The link you clicked has expired.",
-            )
-            invalid = True
-    else:
-        user = request.user
-    if not user:
-        messages.error(request, "Invalid user.")
-        invalid = True
+    # approve and deny requests are made via clickable links in email to admin
     try:
-        quota_request = QuotaRequest.objects.get(
-            pk=quota_request_id
-        )
-    except ObjectDoesNotExist:
-        invalid = True
-        messages.error(request, "No matching quota request was found")
-    if not user.is_superuser and not user == quota_request.request_from:
-        invalid = True
-        messages.error(request, "Invalid user.")
-    if not invalid:
-        if quota_request.status == "pending":
-            try:
-                # TODO: #5228
-                # user_acting.uaccess.act_on_group_quota_request(
-                #     quota_request, accept_request
-                # )
-                if action == "approve":
-                    quota_request.status = "approved"
-                    messages.success(request, "Quota request approved")
-                    # send email to notify acceptance
-                    # TODO #5228
-                    # _send_email_on_group_membership_acceptance(quota_request)
-                elif action == "deny":
-                    quota_request.status = "denied"
-                    messages.success(request, "Quota request approved")
-                else:
-                    messages.error(request, f"Requested {action} not taken on quota request")
-                quota_request.save()
-
-            except PermissionDenied as ex:
-                messages.error(request, str(ex))
+        if uidb36:
+            user = authenticate(uidb36=uidb36, token=token, is_active=True)
+            if user is None:
+                raise ValidationError("The link you clicked has expired.")
         else:
-            messages.error(request, "Request already redeemed")
+            user = request.user
+        if not user:
+            raise ValidationError("Invalid user.")
+        try:
+            quota_request = QuotaRequest.objects.get(
+                pk=quota_request_id
+            )
+        except ObjectDoesNotExist:
+            raise ValidationError("No matching quota request was found.")
+        if not user.is_superuser and not user == quota_request.request_from:
+            raise PermissionDenied("Invalid user.")
 
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+        if quota_request.status == "pending":
+            # TODO: #5228
+            # user_acting.uaccess.act_on_group_quota_request(
+            #     quota_request, accept_request
+            # )
+            if action == "approve":
+                quota_request.status = "approved"
+                # send email to notify acceptance
+                # TODO #5228
+                # _send_email_on_group_membership_acceptance(quota_request)
+            elif action == "deny":
+                quota_request.status = "denied"
+            else:
+                raise ValidationError(f"Requested action '{action}' is not valid.")
+        else:
+            raise ValidationError("Request already redeemed.")
+    except Exception as ex:
+        messages.error(request, str(ex))
+    else:
+        quota_request.save()
+        messages.success(request, f"Quota {action} request successful")
+    return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
 
 
 @login_required
