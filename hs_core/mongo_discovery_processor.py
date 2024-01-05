@@ -38,7 +38,26 @@ def remove_mongo(resource_id: str):
 def access_changed(sender, **kwargs):
     if 'users' in kwargs:
         update_mongo_user_privileges.apply_async((kwargs['users'],))
+    if 'resources' in kwargs:
+        update_mongo_resource_access.apply_async((kwargs['resources'],))
     logger.info("access_changed: users: {} resources: {}".format(kwargs['users'], kwargs['resources']))
+
+
+@shared_task
+def update_mongo_resource_access(resource_ids):
+    for resource_id in resource_ids:
+        resource_access_json = get_resource_access_json(resource_id)
+        db.resourceaccess.update_one({"resource_id": resource_id}, {"$set": resource_access_json}, upsert=True)
+
+
+def get_resource_access_json(resource_id):
+    resource = get_resource_by_shortkey(resource_id)
+    return {
+        "resource_id": resource_id,
+        "show_in_discover": resource.show_in_discover,
+        "is_public": resource.raccess.public,
+        "minio_resource": resource.extra_metadata.get("minio", None)  == 'cuahsi' 
+    }
 
 
 @shared_task
@@ -54,10 +73,16 @@ def user_resource_privileges(user):
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
     editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE, via_group=True)
     viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW, via_group=True)
-    return {"owner": list(
-        owned_resources.filter(extra_metadata__minio__exact="cuahsi").values_list("short_id", flat=True).iterator()),
-            "edit": list(editable_resources.filter(extra_metadata__minio__exact="cuahsi").values_list("short_id",
-                                                                                                 flat=True).iterator()),
-            "view": list(viewable_resources.filter(extra_metadata__minio__exact="cuahsi").values_list("short_id",
-                                                                                                 flat=True).iterator()),
-            "username": user.username}
+    return {
+        "all": {
+            "owner": list(owned_resources.values_list("short_id", flat=True).iterator()),
+            "edit": list(editable_resources.values_list("short_id", flat=True).iterator()),
+            "view": list(viewable_resources.values_list("short_id", flat=True).iterator()),
+        },
+        "minio": {
+            "owner": list(owned_resources.filter(extra_metadata__minio__exact="cuahsi").values_list("short_id", flat=True).iterator()),
+            "edit": list(editable_resources.filter(extra_metadata__minio__exact="cuahsi").values_list("short_id", flat=True).iterator()),
+            "view": list(viewable_resources.filter(extra_metadata__minio__exact="cuahsi").values_list("short_id", flat=True).iterator()),
+        },
+        "username": user.username
+    }
