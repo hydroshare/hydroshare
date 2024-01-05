@@ -80,9 +80,18 @@ def user_resource_privileges(user):
             "view": list(viewable_resources.values_list("short_id", flat=True).iterator()),
         },
         "minio": {
-            "owner": list(owned_resources.filter(extra_metadata__minio__exact="cuahsi").values_list("short_id", flat=True).iterator()),
-            "edit": list(editable_resources.filter(extra_metadata__minio__exact="cuahsi").values_list("short_id", flat=True).iterator()),
-            "view": list(viewable_resources.filter(extra_metadata__minio__exact="cuahsi").values_list("short_id", flat=True).iterator()),
+            "owner": parse_query_result(owned_resources.filter(extra_metadata__has_key="minio_resource_url")),
+            "edit": parse_query_result(editable_resources.filter(extra_metadata__has_key="minio_resource_url")),
+            "view": parse_query_result(viewable_resources.filter(extra_metadata__has_key="minio_resource_url")),
         },
         "username": user.username
     }
+
+def parse_query_result(resources):
+    results = []
+    for resource in resources.all():
+        owners = list(resource.raccess.owners.values_list("username", flat=True))
+        resource_id = resource.short_id
+        minio_resource_url = resource.extra_metadata["minio_resource_url"]
+        results.append({"owners": owners, "resource_id": resource_id, "minio_resource_url": minio_resource_url})
+    return results
