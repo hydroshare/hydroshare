@@ -2108,7 +2108,6 @@ def group_membership(request, uidb36, token, membership_request_id, **kwargs):
 
 
 def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs):
-    # #5228
     """
     View for the link in the verification email that was sent to a user
     when they request publication/metadata review.

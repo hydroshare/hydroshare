@@ -1,0 +1,48 @@
+{% load i18n %}
+{% block main %}
+    <p>{% trans "Dear " %}{{ user.first_name }} {{ user.last_name }},</p>
+    <p>{% trans "User " %}{{ user_from.first_name }} {{ user_from.last_name }} 
+        (<a href="{{ request.scheme }}://{{ request.get_host }}/user/{{ user_from.id }}">{{ request.scheme }}://{{ request.get_host }}/user/{{ user_from.id }}</a>) 
+        has requested a quota increase.</p>
+
+    {% spaceless %}
+    JUSTIFICATION:
+    <p>{{ quota_request_form.justification }}</p>
+
+    STORAGE INCREASE REQUESTED:
+    <p>{{ quota_request_form.storage }} GB</p>
+    {% endspaceless %}
+
+    <p>Existing quota:</p>
+    {% spaceless %}
+    ALLOCATED:
+    <p>{{ user_quota.allocated_value }}</p>
+
+    USED:
+    <p>{{ user_quota.used_value }}</p>
+
+    UNITS:
+    <p>{{ user_quota.unit }}</p>
+
+    ZONE:
+    <p>{{ user_quota.zone }}</p>
+
+    REMAINING GRACE PERIOD:
+    <p>{{ user_quota.remaining_grace_period }}</p>
+    {% endspaceless %}
+
+    <p>Requesting user information:</p>
+    User Type: {{ user_from.userprofile.user_type }}<br>
+    Organization: {{ user_from.userprofile.organization }}<br>
+    Country: {{ user_from.userprofile.country }}<br>
+    State/Region: {{ user_from.userprofile.state }}<br>
+    Email: {{ user_from.email }}<br>
+    {% if user_from.userprofile.title %}User Title: {{ user_from.userprofile.title }}<br>{% endif %}
+    
+    
+    <p><a href="{{ request.scheme }}://{{ request.get_host }}{{ action_url }}">Click here to approve this request.</a></p>
+    <p><a href="{{ request.scheme }}://{{ request.get_host }}{{ reject_url }}">Click here to reject this request.</a></p>
+    <p>If rejecting this request, please also <a href="{{ href_for_mailto_reject }}">email the requester</a></p>
+
+        <p>{% trans "Thanks, The HydroShare Team" %}</p>
+{% endblock %}

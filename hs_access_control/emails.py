@@ -12,7 +12,6 @@ from .enums import CommunityRequestEvents, CommunityGroupEvents
 
 
 class CommunityGroupEmailNotification:
-    #  TODO #5228 emails
     """A class for sending email notifications related to group association with a community"""
 
     def __init__(self, request: HttpRequest, group_community_request: GroupCommunityRequest,

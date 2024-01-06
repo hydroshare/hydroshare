@@ -169,7 +169,7 @@ def act_on_quota_request(request, quota_request_id, action, uidb36=None, token=N
     :return:
     """
 
-    if request.is_ajax:
+    if not uidb36:
         # Revoke requests are made by the user via ajax
         if action != "revoke":
             return JsonResponse({"message": "Invalid action"}, status=status.HTTP_400_BAD_REQUEST)
@@ -210,15 +210,8 @@ def act_on_quota_request(request, quota_request_id, action, uidb36=None, token=N
             raise PermissionDenied("Invalid user.")
 
         if quota_request.status == "pending":
-            # TODO: #5228
-            # user_acting.uaccess.act_on_group_quota_request(
-            #     quota_request, accept_request
-            # )
             if action == "approve":
                 quota_request.status = "approved"
-                # send email to notify acceptance
-                # TODO #5228
-                # _send_email_on_group_membership_acceptance(quota_request)
             elif action == "deny":
                 quota_request.status = "denied"
             else:
@@ -229,6 +222,9 @@ def act_on_quota_request(request, quota_request_id, action, uidb36=None, token=N
         messages.error(request, str(ex))
     else:
         quota_request.save()
+        # send email to notify acceptance/deny
+        # TODO #5228!
+        # _send_email_on_group_membership_acceptance(quota_request)
         messages.success(request, f"Quota {action} request successful")
     return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
 
@@ -257,10 +253,7 @@ def quota_request(request, *args, **kwargs):
                 quota_form.save()
                 msg = "New quota request was successful."
                 messages.success(request, msg)
-                # TODO: #5228 send email to hydroshare support
-                # CommunityRequestEmailNotification(request=request, community_request=new_quota_request,
-                #                                   on_event=CommunityRequestEvents.CREATED).send()
-                # return HttpResponseRedirect(reverse('update_profile', kwargs={"profile_user_id": user.id}))
+                notify_of_quota_request(request, uq, quota_form)
             else:
                 for k, v in quota_form.errors.items():
                     messages.error(request, f"Invalid {k}: {v[0]}")
@@ -747,6 +740,25 @@ def send_verification_mail_for_password_reset(request, user):
         user.email,
         context=context,
     )
+
+
+def notify_of_quota_request(request, user_quota, quota_request_form):
+    """
+    Notifies the support admin user of a quota request.
+
+    Parameters:
+        user_quota - quota object that will be updated by the request
+        quota_request_form - the form request submitted by the quota holder
+    """
+    from hs_core.views.utils import get_default_support_user
+
+    user_to = get_default_support_user()
+    from hs_core.views.utils import send_action_to_take_email
+    send_action_to_take_email(request, user=user_to,
+                              user_from=request.user,
+                              action_type='act_on_quota_request',
+                              user_quota=user_quota,
+                              quota_request_form=quota_request_form,)
 
 
 def home_router(request):

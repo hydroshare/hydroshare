@@ -742,6 +742,27 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
             f'{ request.scheme }://{ request.get_host() }/resource/{ resource.short_id }'
         )
         context['href_for_mailto_reject'] = href_for_mailto_reject
+    elif action_type == 'act_on_quota_request':
+        user_from = kwargs.get('user_from', None)
+        context['user_from'] = user_from
+        email_to = kwargs.get('email_to', user)
+        quota_request_form = kwargs.pop('quota_request_form')
+        context['quota_request_form'] = quota_request_form
+        context['user_quota'] = kwargs.pop('user_quota')
+        action_url = reverse(action_type, kwargs={
+            "action": "approve",
+            "quota_request_id": quota_request_form.id,
+            "uidb36": int_to_base36(user.id),
+            "token": without_login_date_token_generator.make_token(email_to),
+        }) + "?next=" + (next_url(request) or "/")
+        context['reject_url'] = action_url.replace("approve", "deny")
+        reject_subject = parse.quote("Quota Increase Request Rejected")
+        reject_body = parse.quote("Your Quota Increase Request was rejected. ")
+        href_for_mailto_reject = (
+            f"mailto:{user_from.email}?subject={ reject_subject }&body={ reject_body }"
+            f'{ request.scheme }://{ request.get_host() }/user/{ user_from.id }'
+        )
+        context['href_for_mailto_reject'] = href_for_mailto_reject
     else:
         email_to = kwargs.get('group_owner', user)
         action_url = reverse(action_type, kwargs={
