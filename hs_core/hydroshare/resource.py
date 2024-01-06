@@ -24,14 +24,7 @@ from hs_labels.models import ResourceLabels
 from theme.models import UserQuota, QuotaMessage
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
-from hs_access_control.models import (PrivilegeCodes, ResourceAccess,
-                                      UserResourcePrivilege)
-from hs_core import signals
 from hs_core.enums import CrossRefSubmissionStatus
-from hs_core.hydroshare import hs_bagit, utils
-from hs_core.models import ResourceFile
-from hs_labels.models import ResourceLabels
-from theme.models import UserQuota
 
 FILE_SIZE_LIMIT = 1 * (1024 ** 3)
 FILE_SIZE_LIMIT_FOR_DISPLAY = '1G'
