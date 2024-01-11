@@ -1127,8 +1127,13 @@ def publish_resource(user, pk):
     if settings.DEBUG:
         # in debug mode, making sure we are using the test CrossRef service
         assert settings.USE_CROSSREF_TEST is True
-
-    response = deposit_res_metadata_with_crossref(resource)
+    try:
+        response = deposit_res_metadata_with_crossref(resource)
+    except ValueError as v:
+        logger.error(f"Failed depositing XML {v} with Crossref for res id {pk}")
+        resource.doi = get_resource_doi(pk)
+        resource.save()
+        raise
     if not response.status_code == status.HTTP_200_OK:
         # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
         # crontab celery task
