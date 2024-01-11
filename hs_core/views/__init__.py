@@ -2135,9 +2135,6 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
             f"This resource does not have a pending metadata review for you to { action }.",
         )
     else:
-        res.raccess.review_pending = False
-        res.raccess.immutable = False
-        res.raccess.save()
         if action == "approve":
             hydroshare.publish_resource(user, shortkey)
             messages.success(

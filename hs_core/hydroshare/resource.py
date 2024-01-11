@@ -1112,7 +1112,9 @@ def publish_resource(user, pk):
     resource = utils.get_resource_by_shortkey(pk)
     if resource.raccess.published:
         raise ValidationError("This resource is already published")
-
+    resource.raccess.review_pending = False
+    resource.raccess.immutable = False
+    resource.raccess.save()
     # TODO: whether a resource can be published is not considered in can_be_submitted_for_metadata_review
     # TODO: can_be_submitted_for_metadata_review is currently an alias for can_be_public_or_discoverable
     if not resource.can_be_submitted_for_metadata_review:
@@ -1132,6 +1134,9 @@ def publish_resource(user, pk):
     except ValueError as v:
         logger.error(f"Failed depositing XML {v} with Crossref for res id {pk}")
         resource.doi = get_resource_doi(pk)
+        resource.raccess.review_pending = True
+        resource.raccess.immutable = True
+        resource.raccess.save()
         resource.save()
         raise
     if not response.status_code == status.HTTP_200_OK:
