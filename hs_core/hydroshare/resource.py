@@ -1078,9 +1078,7 @@ def submit_resource_for_review(request, pk):
     resource.metadata.dates.all().filter(type='reviewStarted').delete()
     resource.metadata.create_element('date', type='reviewStarted', start_date=datetime.datetime.now(tz.UTC))
 
-    resource.raccess.review_pending = True
-    resource.raccess.immutable = True
-    resource.raccess.save()
+    resource.raccess.alter_review_pending_flags(initiating_review=True)
 
     # Repair resource and email support user if there are issues
     from hs_core.tasks import repair_resource_before_publication
@@ -1112,8 +1110,7 @@ def publish_resource(user, pk):
     resource = utils.get_resource_by_shortkey(pk)
     if resource.raccess.published:
         raise ValidationError("This resource is already published")
-    resource.raccess.review_pending = False
-    resource.raccess.immutable = False
+    resource.raccess.alter_review_pending_flags(initiating_review=False)
     resource.raccess.save()
     # TODO: whether a resource can be published is not considered in can_be_submitted_for_metadata_review
     # TODO: can_be_submitted_for_metadata_review is currently an alias for can_be_public_or_discoverable
@@ -1134,10 +1131,9 @@ def publish_resource(user, pk):
     except ValueError as v:
         logger.error(f"Failed depositing XML {v} with Crossref for res id {pk}")
         resource.doi = get_resource_doi(pk)
-        resource.raccess.review_pending = True
-        resource.raccess.immutable = True
-        resource.raccess.save()
         resource.save()
+        # set the resource back into review_pending
+        resource.raccess.alter_review_pending_flags(initiating_review=True)
         raise
     if not response.status_code == status.HTTP_200_OK:
         # resource metadata deposition failed from CrossRef - set failure flag to be retried in a

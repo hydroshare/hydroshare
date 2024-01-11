@@ -1190,9 +1190,6 @@ def publish(request, shortkey, *args, **kwargs):
     if not request.user.is_superuser:
         raise ValidationError("Resource can only be published by an admin user")
     try:
-        res = get_resource_by_shortkey(shortkey)
-        res.raccess.review_pending = False
-        res.raccess.save()
         hydroshare.publish_resource(request.user, shortkey)
     except ValidationError as exp:
         request.session["validation_error"] = str(exp)
