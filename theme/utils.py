@@ -43,6 +43,7 @@ def get_quota_message(user):
     soft_limit = qmsg.soft_limit_percent
     hard_limit = qmsg.hard_limit_percent
     return_msg = ''
+    # TODO #5228 move quota_data to view instead of utils
     quota_data = []
     for uq in user.quotas.all():
         allocated = uq.allocated_value
@@ -52,7 +53,7 @@ def get_quota_message(user):
         uz = uz * 100.0 / allocated
         dz = dz * 100.0 / allocated
         percent = used * 100.0 / allocated
-        uq_data = {"used": used, "allocated": allocated, "unit": unit, "uz_percent": uz, "dz_percent": dz, }
+        uq_data = {"used": used, "allocated": allocated, "unit": unit, "uz_percent": uz, "dz_percent": dz, "remaining": 100 - percent}
         rounded_percent = round(percent, 2)
         rounded_used_val = round(used, 4)
         quota_data.append(uq_data)
