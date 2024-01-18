@@ -49,14 +49,14 @@ def get_quota_message(user):
         allocated = uq.allocated_value
         percent = used * 100.0 / allocated
         unit = uq.unit
-        uq_data = {"used": used, "allocated": allocated, "unit": unit}
+        uq_data = {"used": used, "allocated": allocated, "unit": unit, "percent": percent, }
         rounded_percent = round(percent, 2)
         rounded_used_val = round(used, 4)
         quota_data.append(uq_data)
 
         if percent >= hard_limit or (percent >= 100 and uq.remaining_grace_period == 0):
             # return quota enforcement message
-            msg_template_str = '{}{}\n'.format(qmsg.enforce_content_prepend, qmsg.content)
+            msg_template_str = f'{qmsg.enforce_content_prepend} {qmsg.content}\n'
             return_msg += msg_template_str.format(used=rounded_used_val,
                                                   unit=uq.unit,
                                                   allocated=uq.allocated_value,
@@ -65,7 +65,7 @@ def get_quota_message(user):
         elif percent >= 100 and uq.remaining_grace_period > 0:
             # return quota grace period message
             cut_off_date = date.today() + timedelta(days=uq.remaining_grace_period)
-            msg_template_str = '{}{}\n'.format(qmsg.grace_period_content_prepend, qmsg.content)
+            msg_template_str = f'{qmsg.grace_period_content_prepend} {qmsg.content}\n'
             return_msg += msg_template_str.format(used=rounded_used_val,
                                                   unit=uq.unit,
                                                   allocated=uq.allocated_value,
@@ -74,7 +74,7 @@ def get_quota_message(user):
                                                   cut_off_date=cut_off_date)
         elif percent >= soft_limit:
             # return quota warning message
-            msg_template_str = '{}{}\n'.format(qmsg.warning_content_prepend, qmsg.content)
+            msg_template_str = f'{qmsg.warning_content_prepend} {qmsg.content}\n'
             return_msg += msg_template_str.format(used=rounded_used_val,
                                                   unit=uq.unit,
                                                   allocated=uq.allocated_value,

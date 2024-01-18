@@ -371,12 +371,19 @@
                                             <div class="panel-body">
                                                 {% for qd in quota_data %}
                                                     <div>
-                                                        You have used {{ qd.used }} of your {{ qd.allocated }}{{ qd.unit }} allocated.
-                                                        <a href="https://help.hydroshare.org/about-hydroshare/policies/quota/" target="_blank">More information on HydroShare Quota.</a>
+                                                        <div id="quotaProgress">
+                                                            <div id="quotaBar" style="width: {{ qd.percent }}%">{{ qd.percent|floatformat:"0" }}%</div>
+                                                          </div>
                                                     </div>
                                                 {% endfor %}
+                                                {% if quota_message %}
+                                                    <div class="alert alert-info">
+                                                        {{ quota_message }}
+                                                        Additional Quota information can be found <a href="https://help.hydroshare.org/about-hydroshare/policies/quota/" target="_blank">here.</a>
+                                                    </div>
+                                                {% endif %}
                                                 {% if not quota_requests %}
-                                                    <button id="quota-request-storage" type="button" data-toggle="modal" data-target="#manage-quota-dialog" class="btn btn-primary has-space-top">
+                                                    <button id="quota-request-storage" type="button" data-toggle="modal" data-target="#manage-quota-dialog" class="btn btn-primary has-space-bottom">
                                                         <i class="fa fa-plus" aria-hidden="true"></i> Request additional storage
                                                     </button>
                                                 {% else%}
@@ -462,7 +469,6 @@
                                                 {% else %}
                                                     <div class="alert alert-warning">You have not created an associated iRODS account in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
                                                 {% endif %}
-                                                {% if quota_message %}<div class="alert alert-info">{{ quota_message }}</div>{% endif %}
                                             {% endif %}
                                         </div>
 
@@ -984,6 +990,21 @@
     .disabled {
         pointer-events: all !important;
     }
+
+    #quotaProgress {
+        width: 100%;
+        background-color: grey;
+    }
+
+    #quotaBar {
+    /* width: 10%; */
+    height: 30px;
+    background-color: #04AA6D;
+    text-align: center; /* To center it horizontally (if you want) */
+    line-height: 30px; /* To center it vertically */
+    color: white;
+    }
+
   </style>
 {%  endblock %}
 
