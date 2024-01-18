@@ -744,6 +744,7 @@ def validate_user_quota(user_or_username, size):
                  size input parameter should be in byte unit
     :return: raise exception for the over quota case
     """
+    # todo 5228 check when we run this validation
     if user_or_username:
         if isinstance(user_or_username, User):
             user = user_or_username

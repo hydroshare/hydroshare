@@ -261,7 +261,8 @@ class UserQuota(models.Model):
     )
 
     allocated_value = models.FloatField(default=20)
-    used_value = models.FloatField(default=0)
+    user_zone_value = models.FloatField(default=0)
+    data_zone_value = models.FloatField(default=0)
     unit = models.CharField(max_length=10, default="GB")
     zone = models.CharField(max_length=100, default="hydroshare")
     # remaining_grace_period to be quota-enforced. Default is -1 meaning the user is below
@@ -278,15 +279,32 @@ class UserQuota(models.Model):
     def used_percent(self):
         return self.used_value * 100.0 / self.allocated_value
 
-    def update_used_value(self, size):
+    @property
+    def used_value(self):
+        uz, dz = self.get_used_value_by_zone(refresh_from_irods=False)
+        return uz + dz
+
+    def get_used_value_by_zone(self, refresh_from_irods=False):
+        from hs_core.hydroshare.resource import get_quota_usage_from_irods
+        if refresh_from_irods:
+            uz, dz = get_quota_usage_from_irods(self.user.username, False)
+            self.update_used_value(uz, dz)
+            self.save()
+            return uz, dz
+        return self.user_zone_value, self.data_zone_value
+
+    def update_used_value(self, uz_size, dz_size):
         """
         set self.used_value in self.unit with pass in size in bytes.
-        :param size: pass in size in bytes unit
+        :param uz_size: pass in size in bytes unit from userZone
+        :param dz_size: pass in size in bytes unit from dataZone
         :return:
         """
         from hs_core.hydroshare.utils import convert_file_size_to_unit
-
-        self.used_value = convert_file_size_to_unit(size, self.unit)
+        if uz_size:
+            self.user_zone_value = convert_file_size_to_unit(uz_size, self.unit)
+        if dz_size:
+            self.data_zone_value = convert_file_size_to_unit(dz_size, self.unit)
         self.save()
 
     def add_to_used_value(self, size):

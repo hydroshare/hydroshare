@@ -38,7 +38,7 @@ def get_quota_usage_from_irods(username, raise_on_error=True):
     """
     Query iRODS AVU to get quota usage for a user reported in iRODS quota microservices
     :param username: the user name to get quota usage for.
-    :return: the combined quota usage from iRODS data zone and user zone; raise ValidationError
+    :return: the quota usage from iRODS data zone and user zone; raise ValidationError
     if quota usage cannot be retrieved from iRODS
     """
     attname = username + '-usage'
@@ -80,15 +80,11 @@ def get_quota_usage_from_irods(username, raise_on_error=True):
         logger.error(err_msg)
         if raise_on_error:
             raise ValidationError(err_msg)
-        else:
-            return 0
     elif uqUserZoneSize < 0:
-        used_val = uqDataZoneSize
+        uqUserZoneSize = 0
     elif uqDataZoneSize < 0:
-        used_val = uqUserZoneSize
-    else:
-        used_val = uqDataZoneSize + uqUserZoneSize
-    return used_val
+        uqDataZoneSize = 0
+    return uqUserZoneSize, uqDataZoneSize
 
 
 def get_storage_usage(user, flag="published"):
@@ -137,17 +133,17 @@ def update_quota_usage(username):
         logger.error(err_msg)
         raise ValidationError(err_msg)
 
-    used_val = get_quota_usage_from_irods(username, raise_on_error=False)
+    uz, dz = get_quota_usage_from_irods(username, raise_on_error=False)
 
-    # subtract out published resources
+    # subtract out published resources from the datazone
     if not QuotaMessage.objects.exists():
         QuotaMessage.objects.create()
     qmsg = QuotaMessage.objects.first()
     published_percent = qmsg.published_resource_percent
     user = User.objects.get(username=username)
     published_size = get_storage_usage(user, flag="published")
-    used_val -= published_size * (1 - published_percent)
-    uq.update_used_value(used_val)
+    dz -= published_size * (1 - published_percent)
+    uq.update_used_value(uz, dz)
 
 
 def res_has_web_reference(res):

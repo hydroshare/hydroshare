@@ -22,7 +22,8 @@ class Command(BaseCommand):
                 msg_str = ''
                 if uqs:
                     msg_str = 'Dear ' + uname + ':\n\n'
-                    msg_str += get_quota_message(user)
+                    msg, _ = get_quota_message(user)
+                    msg_str += msg
 
                 if msg_str:
                     msg_str += '\n\nHydroShare Support'

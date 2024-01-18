@@ -221,6 +221,8 @@ def act_on_quota_request(request, quota_request_id, action, uidb36=None, token=N
     except Exception as ex:
         messages.error(request, str(ex))
     else:
+        # TODO: #5228 need to increment the allowed value for the user quota object
+        # Ideally handle changes to the quota made in the admin panel too -- if they approve, it should notify and increment etc
         quota_request.save()
         notify_user_of_quota_action(quota_request)
         messages.success(request, f"Quota {action} request successful")

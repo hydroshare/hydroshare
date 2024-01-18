@@ -1,5 +1,7 @@
 # HydroShare Quota Notes #
 
+<!-- TODO 5228 -->
+
 Although back-end code implementation for HydroShare quota management is included in the HydroShare code base and will make its way into next production deployment, front-end quota notification messaging and email notification languages may need some tweaks to better notify users about their quota situation and the actions they need to take. As a result, we need to turn quota front-end notification messaging off until the languages are approved by the team. The following lines in the code base need to be commented out in order to turn the quota front-end notification messaging off, and uncommented to turn the quota front-end notification messaging back on. Specifically, to turn off the quota front-end notification messaging, follow the steps below:
 
 - Comment out the line as shown in https://github.com/hydroshare/hydroshare/blob/develop/theme/templates/accounts/profile.html#L357 by enclosing the line ```<div class="text-muted">{{ quota_message }}</div>``` with ```{#``` and ```#}```.

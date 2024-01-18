@@ -20,8 +20,11 @@ class Command(BaseCommand):
         for uq in UserQuota.objects.filter(
                 user__is_active=True).filter(user__is_superuser=False):
             used_value = 0.0
+            uz = 0.0
+            dz = 0.0
             try:
-                used_value = get_quota_usage_from_irods(uq.user.username)
+                uz, dz = get_quota_usage_from_irods(uq.user.username)
+                used_value = uz + dz
             except ValidationError:
                 pass
             used_value = convert_file_size_to_unit(used_value, "gb")
@@ -29,8 +32,12 @@ class Command(BaseCommand):
                 # report inconsistency
                 report_dict = {
                     'user': uq.user.username,
-                    'django': uq.used_value,
-                    'irods': used_value}
+                    'django total': uq.used_value,
+                    'django user zone': uq.user_zone_value,
+                    'django data zone': uq.data_zone_value,
+                    'irods total': used_value,
+                    'irods user zone': uz,
+                    'irods data zone': dz, }
                 quota_report_list.append(report_dict)
                 print('quota incosistency: {} reported in django vs {} reported in iRODS for user {}'.format(
                     uq.used_value, used_value, uq.user.username), flush=True)
