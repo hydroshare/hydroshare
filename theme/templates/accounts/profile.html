@@ -371,8 +371,19 @@
                                             <div class="panel-body">
                                                 {% for qd in quota_data %}
                                                     <div>
-                                                        <div id="quotaProgress">
-                                                            <div id="quotaBar" style="width: {{ qd.percent }}%">{{ qd.percent|floatformat:"0" }}%</div>
+                                                        <div class="quotaBar" id="quotaProgress">
+                                                            {% spaceless %}
+                                                            <div class="quotaBar uzQuotaBar" style="width: {{ qd.uz_percent }}%">
+                                                                {% if qd.uz_percent > 5 %}
+                                                                    {{ qd.uz_percent|floatformat:"0" }}%
+                                                                {% endif %}
+                                                            </div>
+                                                            <div class="quotaBar dzQuotaBar" style="width: {{ qd.dz_percent }}%">
+                                                                {% if qd.dz_percent > 5 %}
+                                                                    {{ qd.dz_percent|floatformat:"0" }}%
+                                                                {% endif %}
+                                                            </div>
+                                                            {% endspaceless %}
                                                           </div>
                                                     </div>
                                                 {% endfor %}
@@ -991,18 +1002,28 @@
         pointer-events: all !important;
     }
 
+    .quotaBar {
+        height: 30px;
+        /* text-align: center; */
+        line-height: 30px;
+    }
+
     #quotaProgress {
         width: 100%;
         background-color: grey;
     }
 
-    #quotaBar {
-    /* width: 10%; */
-    height: 30px;
+    .uzQuotaBar {
     background-color: #04AA6D;
-    text-align: center; /* To center it horizontally (if you want) */
-    line-height: 30px; /* To center it vertically */
+    
     color: white;
+    display: inline-block;
+    }
+
+    .dzQuotaBar {
+    background-color: #0600b7;
+    color: white;
+    display: inline-block;
     }
 
   </style>

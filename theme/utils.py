@@ -46,11 +46,13 @@ def get_quota_message(user):
     quota_data = []
     for uq in user.quotas.all():
         allocated = uq.allocated_value
-        percent = used * 100.0 / allocated
         unit = uq.unit
-        uz, dz = uq.used_value_by_zone()
+        uz, dz = uq.get_used_value_by_zone()
         used = uz + dz
-        uq_data = {"used": used, "allocated": allocated, "unit": unit, "percent": percent, "uz": uz, "dz": dz, }
+        uz = uz * 100.0 / allocated
+        dz = dz * 100.0 / allocated
+        percent = used * 100.0 / allocated
+        uq_data = {"used": used, "allocated": allocated, "unit": unit, "uz_percent": uz, "dz_percent": dz, }
         rounded_percent = round(percent, 2)
         rounded_used_val = round(used, 4)
         quota_data.append(uq_data)
