@@ -1190,9 +1190,6 @@ def publish(request, shortkey, *args, **kwargs):
     if not request.user.is_superuser:
         raise ValidationError("Resource can only be published by an admin user")
     try:
-        res = get_resource_by_shortkey(shortkey)
-        res.raccess.review_pending = False
-        res.raccess.save()
         hydroshare.publish_resource(request.user, shortkey)
     except ValidationError as exp:
         request.session["validation_error"] = str(exp)
@@ -2135,9 +2132,6 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
             f"This resource does not have a pending metadata review for you to { action }.",
         )
     else:
-        res.raccess.review_pending = False
-        res.raccess.immutable = False
-        res.raccess.save()
         if action == "approve":
             hydroshare.publish_resource(user, shortkey)
             messages.success(
