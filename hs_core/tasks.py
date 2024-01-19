@@ -476,7 +476,7 @@ def send_over_quota_emails():
                         # reduce remaining_grace_period by one day
                         uq.remaining_grace_period -= 1
                         # TODO 5228 this only works if we ensure that the task runs daily
-                        # Also there is a lag between when I exceed the limit and when the remaining_grace_period gets updated
+                        # Also there is a lag between exceed the limit and when the remaining_grace_period gets updated
                 elif used_percent >= qmsg.hard_limit_percent:
                     # set grace period to 0 when user quota exceeds hard limit
                     uq.remaining_grace_period = 0
