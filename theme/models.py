@@ -23,7 +23,7 @@ from mezzanine.pages.models import Page
 from mezzanine.utils.models import upload_to
 
 from sorl.thumbnail import ImageField as ThumbnailImageField
-from theme.utils import get_upload_path_userprofile
+from theme.utils import get_upload_path_userprofile, notify_user_of_quota_action
 
 
 DEFAULT_COPYRIGHT = '&copy; {% now "Y" %} {{ settings.SITE_TITLE }}'
@@ -500,3 +500,27 @@ def auto_delete_file_on_change(sender, instance, **kwargs):
         if os.path.isfile(old_file_pic.path):
             os.remove(old_file_pic.path)
     return
+
+
+@receiver(models.signals.post_save, sender=QuotaRequest)
+def update_user_quota_on_quota_request(sender, instance, **kwargs):
+    """
+    Increment the allocated_value for a UserQuota object uppon approval of a QuotaRequest
+    """
+    if kwargs.get('created'):
+        # it is a new QuotaRequest instance, no need to check further
+        return
+    if instance.status != 'approved':
+        return
+
+    try:
+        qr = QuotaRequest.objects.get(pk=instance.pk)
+        qr.quota.allocated_value += qr.storage
+        qr.quota.save()
+        notify_user_of_quota_action(qr)
+    except QuotaRequest.DoesNotExist:
+        logger.warning(
+            f"QuotaRequest for {instance.pk} does not exist when trying to update it"
+        )
+        # return
+    # return

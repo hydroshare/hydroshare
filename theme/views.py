@@ -222,41 +222,9 @@ def act_on_quota_request(request, quota_request_id, action, uidb36=None, token=N
     except Exception as ex:
         messages.error(request, str(ex))
     else:
-        # TODO: #5228 need to increment the allowed value for the user quota object
-        # Ideally handle changes to the quota made in the admin panel too -- if they approve, it should notify and increment etc
         quota_request.save()
-        notify_user_of_quota_action(quota_request)
         messages.success(request, f"Quota {action} request successful")
     return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
-
-
-def notify_user_of_quota_action(quota_request, send_on_deny=False):
-    """
-    Sends email notification to user on approval/denial of thie quota request
-
-    :param quota_request: the quota_request object
-    :param send_on_deny: whether emails should be sent on denial. default is to only send emails on quota approval
-    :return:
-    """
-
-    if quota_request.status != 'approved' and not send_on_deny:
-        return
-
-    date = quota_request.date_requested.strftime("%m/%d/%Y, %H:%M:%S")
-    email_msg = f'''Dear Hydroshare User,
-    <p>On { date }, you requested { quota_request.storage } GB increase in quota.</p>
-    <p>Here is the justification you provided: <strong>'{ quota_request.justification }'</strong></p>
-
-    <p>Your request for Quota increase has been reviewed and { quota_request.status }.</p>
-
-    <p>Thank you,</p>
-    <p>The HydroShare Team</p>
-    '''
-    send_mail(subject="HydroShare resource metadata review completed",
-              message=email_msg,
-              html_message=email_msg,
-              from_email=settings.DEFAULT_FROM_EMAIL,
-              recipient_list=[quota_request.request_from.email])
 
 
 @login_required

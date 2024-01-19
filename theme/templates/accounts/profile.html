@@ -370,15 +370,16 @@
                                     
                                             <div class="panel-body">
                                                 {% for qd in quota_data %}
+                                                <!-- TODO: 5228 handle percent >100 -->
                                                     <div id="quotaProgress">
                                                         <div class="quotaBar" id="quotaRemaining" style="width: {{ qd.remaining }}%">
-                                                            {{ qd.remaining|floatformat:"0" }}% Remaining allocated space unused
+                                                            {{ qd.remaining|floatformat:"1" }}% Remaining allocated space unused
                                                         </div>
                                                           <div class="quotaBar" id="uzQuotaBar" style="width: {{ qd.uz_percent }}%">
-                                                                {{ qd.uz_percent|floatformat:"0" }}% of quota is used by userZone
+                                                                {{ qd.uz_percent|floatformat:"1" }}% of quota is used by userZone
                                                         </div>
                                                         <div class="quotaBar" id="dzQuotaBar" style="width: {{ qd.dz_percent }}%">
-                                                                {{ qd.dz_percent|floatformat:"0" }}% of quota is used by dataZone
+                                                                {{ qd.dz_percent|floatformat:"1" }}% of quota is used by dataZone
                                                         </div>
                                                     </div>
                                                 {% endfor %}
