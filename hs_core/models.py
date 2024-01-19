@@ -4,6 +4,7 @@ import json
 import logging
 import os.path
 import re
+import sys
 import unicodedata
 import urllib.parse
 from uuid import uuid4
@@ -4007,6 +4008,34 @@ class BaseResource(Page, AbstractResource):
             etree.SubElement(date_node, 'month').text = str(date.month)
             etree.SubElement(date_node, 'day').text = str(date.day)
             etree.SubElement(date_node, 'year').text = str(date.year)
+
+        def sanitize_illegal_xml(original_string):
+            """Removes invalid XML characters from a string
+            Uses recommendations from https://stackoverflow.com/a/64570125
+
+            Args:
+                original_string (str): the string to be sanitized
+
+            Returns:
+                str: the sanitized string
+            """
+            illegal_unichrs = [(0x00, 0x08), (0x0B, 0x0C), (0x0E, 0x1F), (0x7F, 0x84), (0x86, 0x9F), (0xFDD0, 0xFDDF),
+                               (0xFFFE, 0xFFFF)]
+            if sys.maxunicode >= 0x10000:  # not narrow build
+                illegal_unichrs.extend([(0x1FFFE, 0x1FFFF), (0x2FFFE, 0x2FFFF),
+                                        (0x3FFFE, 0x3FFFF), (0x4FFFE, 0x4FFFF),
+                                        (0x5FFFE, 0x5FFFF), (0x6FFFE, 0x6FFFF),
+                                        (0x7FFFE, 0x7FFFF), (0x8FFFE, 0x8FFFF),
+                                        (0x9FFFE, 0x9FFFF), (0xAFFFE, 0xAFFFF),
+                                        (0xBFFFE, 0xBFFFF), (0xCFFFE, 0xCFFFF),
+                                        (0xDFFFE, 0xDFFFF), (0xEFFFE, 0xEFFFF),
+                                        (0xFFFFE, 0xFFFFF), (0x10FFFE, 0x10FFFF)])
+
+            illegal_ranges = [fr'{chr(low)}-{chr(high)}' for (low, high) in illegal_unichrs]
+            xml_illegal_character_regex = '[' + ''.join(illegal_ranges) + ']'
+            illegal_xml_chars_re = re.compile(xml_illegal_character_regex)
+            filtered_string = illegal_xml_chars_re.sub('', original_string)
+            return filtered_string
 
         xsi = "http://www.w3.org/2001/XMLSchema-instance"
         schemaLocation = 'http://www.crossref.org/schema/5.3.1 ' \
