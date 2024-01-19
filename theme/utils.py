@@ -52,8 +52,21 @@ def get_quota_message(user):
         percent = used * 100.0 / allocated
         rounded_percent = round(percent, 2)
         rounded_used_val = round(used, 4)
+        grace = uq.remaining_grace_period
 
-        if percent >= hard_limit or (percent >= 100 and uq.remaining_grace_period == 0):
+        # initiate grace_period counting if not already started by the daily celery task
+        should_save = False
+        if percent >= 100 and grace < 0:
+            uq.remaining_grace_period = qmsg.grace_period
+            should_save = True
+        if percent < 100 and grace >= 0:
+            uq.remaining_grace_period = -1
+            should_save = True
+        if should_save:
+            uq.save()
+            grace = uq.remaining_grace_period
+
+        if percent >= hard_limit or (percent >= 100 and grace == 0):
             # return quota enforcement message
             msg_template_str = f'{qmsg.enforce_content_prepend} {qmsg.content}\n'
             return_msg += msg_template_str.format(used=rounded_used_val,
@@ -61,9 +74,9 @@ def get_quota_message(user):
                                                   allocated=uq.allocated_value,
                                                   zone=uq.zone,
                                                   percent=rounded_percent)
-        elif percent >= 100 and uq.remaining_grace_period > 0:
+        elif percent >= 100 and grace > 0:
             # return quota grace period message
-            cut_off_date = date.today() + timedelta(days=uq.remaining_grace_period)
+            cut_off_date = date.today() + timedelta(days=grace)
             msg_template_str = f'{qmsg.grace_period_content_prepend} {qmsg.content}\n'
             return_msg += msg_template_str.format(used=rounded_used_val,
                                                   unit=uq.unit,
