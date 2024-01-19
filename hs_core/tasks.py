@@ -511,12 +511,7 @@ def send_over_quota_emails():
                 msg_str = 'Dear ' + sal_name + ':\n\n'
 
                 ori_qm = get_quota_message(u)
-                # make embedded settings.DEFAULT_SUPPORT_EMAIL clickable with subject auto-filled
-                # TODO #5228 requests should be made from the UI
-                replace_substr = "<a href='mailto:{0}?subject=Request more quota'>{0}</a>".format(
-                    settings.DEFAULT_SUPPORT_EMAIL)
-                new_qm = ori_qm.replace(settings.DEFAULT_SUPPORT_EMAIL, replace_substr)
-                msg_str += new_qm
+                msg_str += ori_qm
 
                 msg_str += '\n\nHydroShare Support'
                 subject = 'Quota warning'

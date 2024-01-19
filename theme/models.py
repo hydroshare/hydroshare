@@ -221,8 +221,8 @@ class QuotaMessage(models.Model):
         "{used}{unit}, {percent}% of your quota. "
     )
     content = models.TextField(
-        default="To request additional quota, please contact "
-        "help@cuahsi.org. We will try to accommodate "
+        default="You can request additional quota, from your "
+        "User Profile. We will try to accommodate "
         "reasonable requests for additional quota. If you have a "
         "large quota request you may need to contribute toward the "
         "costs of providing the additional space you need. See "
