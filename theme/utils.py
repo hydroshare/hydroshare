@@ -94,6 +94,8 @@ def get_quota_data(user):
     get user quota data for display on user profile page
     :param user: The User instance
     :return: list of dictionaries, each containing data for a user quota
+
+    Note that percents are in the range 0 to 100
     """
     quota_data = []
     for uq in user.quotas.all():
@@ -107,9 +109,11 @@ def get_quota_data(user):
         uq_data = {"used": used,
                    "allocated": allocated,
                    "unit": unit,
-                   "uz_percent": uz,
-                   "dz_percent": dz,
-                   "remaining": 100 - percent}
+                   "uz_percent": uz if uz < 100 else 100,
+                   "dz_percent": dz if dz < 100 else 100,
+                   "remaining": 0 if percent >= 100 else 100 - percent,
+                   "percent_over": 0 if percent < 100 else percent - 100,
+                   }
         quota_data.append(uq_data)
 
     return quota_data

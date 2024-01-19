@@ -370,17 +370,22 @@
                                     
                                             <div class="panel-body">
                                                 {% for qd in quota_data %}
-                                                <!-- TODO: 5228 handle percent >100 -->
                                                     <div id="quotaProgress">
-                                                        <div class="quotaBar" id="quotaRemaining" style="width: {{ qd.remaining }}%">
-                                                            {{ qd.remaining|floatformat:"1" }}% Remaining allocated space unused
-                                                        </div>
-                                                          <div class="quotaBar" id="uzQuotaBar" style="width: {{ qd.uz_percent }}%">
-                                                                {{ qd.uz_percent|floatformat:"1" }}% of quota is used by userZone
-                                                        </div>
-                                                        <div class="quotaBar" id="dzQuotaBar" style="width: {{ qd.dz_percent }}%">
-                                                                {{ qd.dz_percent|floatformat:"1" }}% of quota is used by dataZone
-                                                        </div>
+                                                        {% if qd.remaining <= 0 %}
+                                                            <div class="quotaBar" id="quotaOver" style="width: {%if qd.percent_over > 100%}100{%else%}{{qd.percent_over}}{%endif%}%">
+                                                                {{ qd.percent_over|floatformat:"1" }}% Over allocated space
+                                                            </div>
+                                                        {% else %}
+                                                            <div class="quotaBar" id="quotaRemaining" style="width: {{ qd.remaining }}%">
+                                                                {{ qd.remaining|floatformat:"1" }}% Remaining allocated space unused
+                                                            </div>
+                                                            <div class="quotaBar" id="uzQuotaBar" style="width: {{ qd.uz_percent }}%">
+                                                                    {{ qd.uz_percent|floatformat:"1" }}% of quota is used by userZone
+                                                            </div>
+                                                            <div class="quotaBar" id="dzQuotaBar" style="width: {{ qd.dz_percent }}%">
+                                                                    {{ qd.dz_percent|floatformat:"1" }}% of quota is used by dataZone
+                                                            </div>
+                                                        {% endif %}
                                                     </div>
                                                 {% endfor %}
                                                 {% if quota_message %}
@@ -393,7 +398,7 @@
                                                     <button id="quota-request-storage" type="button" data-toggle="modal" data-target="#manage-quota-dialog" class="btn btn-primary has-space-bottom">
                                                         <i class="fa fa-plus" aria-hidden="true"></i> Request additional storage
                                                     </button>
-                                                {% else%}
+                                                {% else %}
                                                     <hr class="solid">
                                                     {% for request in quota_requests %}
                                                         <div class="request-block">
@@ -1002,17 +1007,22 @@
         /* text-align: center; */
         overflow: visible;
         line-height: 30px;
-        color: white;
+        color: black;
         overflow-x:visible;
         white-space: nowrap;
         padding-left: 10px;
     }
 
     #quotaProgress {
-        background-color: gray;
+        background-color: #f5f5f5;
     }
+
     #quotaRemaining {
-        background-color: #457d2f;
+        background-color: #9fc689;
+    }
+
+    #quotaOver {
+        background-color: red;
     }
 
     #uzQuotaBar {
@@ -1021,7 +1031,7 @@
     }
 
     #dzQuotaBar {
-    background-color: #093e54;
+    background-color: #4bb5c1;
     }
 
   </style>
