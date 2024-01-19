@@ -121,14 +121,13 @@ def setup_periodic_tasks(sender, **kwargs):
         sender.add_periodic_task(crontab(minute=30, hour=5), nightly_repair_resource_files.s())
         sender.add_periodic_task(crontab(minute=0, hour=6), nightly_cache_file_system_metadata.s())
         sender.add_periodic_task(crontab(minute=30, hour=6), nightly_periodic_task_check.s())
+        sender.add_periodic_task(crontab(minute=0, hour=7), send_over_quota_emails.s())
 
         # Weekly
         sender.add_periodic_task(crontab(minute=0, hour=7, day_of_week=1), task_notification_cleanup.s())
 
         # Monthly
         sender.add_periodic_task(crontab(minute=30, hour=7, day_of_month=1), update_from_geoconnex_task.s())
-        sender.add_periodic_task(crontab(minute=0, hour=8, day_of_week=1, day_of_month='1-7'),
-                                 send_over_quota_emails.s())
         sender.add_periodic_task(
             crontab(minute=30, hour=8, day_of_month=1), monthly_group_membership_requests_cleanup.s())
 
@@ -495,8 +494,6 @@ def send_over_quota_emails():
                     elif uq.remaining_grace_period > 0:
                         # reduce remaining_grace_period by one day
                         uq.remaining_grace_period -= 1
-                        # TODO 5228 this only works if we ensure that the task runs daily
-                        # Also there is a lag between exceed the limit and when the remaining_grace_period gets updated
                 elif used_percent >= qmsg.hard_limit_percent:
                     # set grace period to 0 when user quota exceeds hard limit
                     uq.remaining_grace_period = 0
@@ -515,6 +512,7 @@ def send_over_quota_emails():
 
                 ori_qm = get_quota_message(u)
                 # make embedded settings.DEFAULT_SUPPORT_EMAIL clickable with subject auto-filled
+                # TODO #5228 requests should be made from the UI
                 replace_substr = "<a href='mailto:{0}?subject=Request more quota'>{0}</a>".format(
                     settings.DEFAULT_SUPPORT_EMAIL)
                 new_qm = ori_qm.replace(settings.DEFAULT_SUPPORT_EMAIL, replace_substr)
@@ -527,10 +525,14 @@ def send_over_quota_emails():
                                 "{}".format(msg_str))
                 else:
                     try:
+                        # Only include SUPPORT_EMAIL once per month
+                        today = datetime.now()
+                        if today.day == 1:
+                            recipients = [u.email, settings.DEFAULT_SUPPORT_EMAIL]
+                        else:
+                            recipients = [u.email]
                         # send email for people monitoring and follow-up as needed
-                        send_mail(subject, '', settings.DEFAULT_FROM_EMAIL,
-                                  [u.email, settings.DEFAULT_SUPPORT_EMAIL],
-                                  html_message=msg_str)
+                        send_mail(subject, '', settings.DEFAULT_FROM_EMAIL, recipients, html_message=msg_str)
                     except Exception as ex:
                         logger.debug("Failed to send quota warning email: " + str(ex))
             else:
