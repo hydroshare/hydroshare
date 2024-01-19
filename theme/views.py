@@ -54,7 +54,7 @@ from hs_tracking.models import Variable
 from theme.forms import RatingForm, UserProfileForm, UserForm
 from theme.forms import ThreadedCommentForm
 from theme.models import UserProfile, QuotaRequest, QuotaRequestForm, UserQuota
-from theme.utils import get_quota_message
+from theme.utils import get_quota_message, get_quota_data
 from .forms import SignupForm
 
 
@@ -145,7 +145,8 @@ class UserProfileView(TemplateView):
 
         else:
             quota_form = QuotaRequestForm()
-        message, quota_data = get_quota_message(u)
+        message = get_quota_message(u)
+        quota_data = get_quota_data(u)
         return {
             "profile_user": u,
             "resources": resources,
@@ -821,7 +822,7 @@ def login(
     if request.method == "POST" and form.is_valid():
         login_msg = "Successfully logged in"
         authenticated_user = form.save()
-        add_msg, __ = get_quota_message(authenticated_user)
+        add_msg = get_quota_message(authenticated_user)
         if add_msg:
             login_msg += " - " + add_msg
         info(request, _(login_msg))

@@ -493,7 +493,7 @@ def send_over_quota_emails():
 
                 msg_str = 'Dear ' + sal_name + ':\n\n'
 
-                ori_qm, _ = get_quota_message(u)
+                ori_qm = get_quota_message(u)
                 # make embedded settings.DEFAULT_SUPPORT_EMAIL clickable with subject auto-filled
                 replace_substr = "<a href='mailto:{0}?subject=Request more quota'>{0}</a>".format(
                     settings.DEFAULT_SUPPORT_EMAIL)

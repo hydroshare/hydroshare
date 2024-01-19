@@ -43,20 +43,13 @@ def get_quota_message(user):
     soft_limit = qmsg.soft_limit_percent
     hard_limit = qmsg.hard_limit_percent
     return_msg = ''
-    # TODO #5228 move quota_data to view instead of utils
-    quota_data = []
     for uq in user.quotas.all():
         allocated = uq.allocated_value
-        unit = uq.unit
         uz, dz = uq.get_used_value_by_zone()
         used = uz + dz
-        uz = uz * 100.0 / allocated
-        dz = dz * 100.0 / allocated
         percent = used * 100.0 / allocated
-        uq_data = {"used": used, "allocated": allocated, "unit": unit, "uz_percent": uz, "dz_percent": dz, "remaining": 100 - percent}
         rounded_percent = round(percent, 2)
         rounded_used_val = round(used, 4)
-        quota_data.append(uq_data)
 
         if percent >= hard_limit or (percent >= 100 and uq.remaining_grace_period == 0):
             # return quota enforcement message
@@ -91,4 +84,25 @@ def get_quota_message(user):
                                                               used=rounded_used_val,
                                                               zone=uq.zone,
                                                               percent=rounded_percent)
-    return return_msg, quota_data
+    return return_msg
+
+
+def get_quota_data(user):
+    """
+    get user quota data for display on user profile page
+    :param user: The User instance
+    :return: list of dictionaries, each containing data for a user quota
+    """
+    quota_data = []
+    for uq in user.quotas.all():
+        allocated = uq.allocated_value
+        unit = uq.unit
+        uz, dz = uq.get_used_value_by_zone()
+        used = uz + dz
+        uz = uz * 100.0 / allocated
+        dz = dz * 100.0 / allocated
+        percent = used * 100.0 / allocated
+        uq_data = {"used": used, "allocated": allocated, "unit": unit, "uz_percent": uz, "dz_percent": dz, "remaining": 100 - percent}
+        quota_data.append(uq_data)
+
+    return quota_data
