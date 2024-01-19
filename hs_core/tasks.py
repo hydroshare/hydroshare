@@ -243,6 +243,26 @@ def repair_resource_before_publication(res_id):
                       from_email=settings.DEFAULT_FROM_EMAIL,
                       recipient_list=[settings.DEFAULT_SUPPORT_EMAIL])
 
+    try:
+        res.get_crossref_deposit_xml()
+    except Exception:
+        res_url = current_site_url() + res.get_absolute_url()
+
+        email_msg = f'''
+        <p>We were unable to generate Crossref xml in the following resource that is under review for publication:
+        <a href="{ res_url }">{ res_url }</a></p>
+        <p>Error details:</p>
+        <p>{traceback.format_exc()}</p>
+        <p>These issues need to be fixed manually. We have notified {settings.DEFAULT_FROM_EMAIL}.</p>
+        '''
+
+        if not settings.DISABLE_TASK_EMAILS:
+            send_mail(subject="HydroShare metadata contains invalid chars for resource under publication review",
+                      message=email_msg,
+                      html_message=email_msg,
+                      from_email=settings.DEFAULT_FROM_EMAIL,
+                      recipient_list=[settings.DEFAULT_SUPPORT_EMAIL, settings.DEFAULT_FROM_EMAIL])
+
 
 def notify_owners_of_resource_repair(resource):
     """
