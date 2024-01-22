@@ -5,31 +5,17 @@
         (<a href="{{ request.scheme }}://{{ request.get_host }}/user/{{ user_from.id }}">{{ request.scheme }}://{{ request.get_host }}/user/{{ user_from.id }}</a>) 
         has requested a quota increase.</p>
 
-    {% spaceless %}
-    JUSTIFICATION:
-    <p>{{ quota_request_form.justification }}</p>
+    JUSTIFICATION: <strong>'{{ quota_request_form.justification }}'</strong><br>
 
-    STORAGE INCREASE REQUESTED:
-    <p>{{ quota_request_form.storage }} GB</p>
-    {% endspaceless %}
+    STORAGE INCREASE REQUESTED: {{ quota_request_form.storage }} GB<br>
 
-    <p>Existing quota:</p>
-    {% spaceless %}
-    ALLOCATED:
-    <p>{{ user_quota.allocated_value }}</p>
+    CURRENTLY ALLOCATED: {{ user_quota.allocated_value }}<br>
 
-    USED:
-    <p>{{ user_quota.used_value }}</p>
+    USED: {{ user_quota.used_value }}{{ user_quota.unit }}<br>
 
-    UNITS:
-    <p>{{ user_quota.unit }}</p>
+    ZONE: {{ user_quota.zone }}<br>
 
-    ZONE:
-    <p>{{ user_quota.zone }}</p>
-
-    REMAINING GRACE PERIOD:
-    <p>{{ user_quota.remaining_grace_period }}</p>
-    {% endspaceless %}
+    REMAINING GRACE PERIOD (negative indicates grace period not yet started): {{ user_quota.remaining_grace_period }}<br>
 
     <p>Requesting user information:</p>
     User Type: {{ user_from.userprofile.user_type }}<br>
