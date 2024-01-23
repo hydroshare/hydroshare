@@ -20,7 +20,8 @@ class Command(BaseCommand):
         parser.add_argument('resource_ids', nargs='*', type=str)
 
         # a list of strings to filter existing funder names
-        parser.add_argument('name_contains', nargs='*', type=str)
+        # call like < hsctl managepy check_unknown_funder_names_published_resources --name_contains test >
+        parser.add_argument('--name_contains', nargs='*', type=str)
 
     def handle(self, *args, **options):
         requests.packages.urllib3.disable_warnings()    # turn off SSL warnings
@@ -44,6 +45,7 @@ class Command(BaseCommand):
             response = requests.get(url, verify=False)
             found_match = False
             error_msg = ""
+            items = []
             if response.status_code == 200:
                 response_json = response.json()
                 if response_json['status'] == 'ok':
@@ -51,28 +53,32 @@ class Command(BaseCommand):
                     for item in items:
                         if item['name'].lower() == funder_name:
                             found_match = True
-                            return found_match, error_msg
                         for alt_name in item['alt-names']:
                             if alt_name.lower() == funder_name:
                                 found_match = True
-                                return found_match, error_msg
-                    return found_match, error_msg
-                return found_match, error_msg
             else:
                 error_msg = "Failed to check funder_name: '{}' from Crossref funders registry. " \
                             "Status code: {}".format(funder_name, response.status_code)
-                return found_match, error_msg
+            return found_match, error_msg, items
 
         def check_funders(funders, unmatched_res_counter):
             unmatched_funder_names = set()
             for funder in funders:
-                funder_match, err_msg = check_funder_name(funder.agency_name)
+                funder_match, err_msg, items = check_funder_name(funder.agency_name)
                 if err_msg:
                     print("-" * 100)
                     print(f"{err_msg} for resource: {resource.short_id}")
                     print("-" * 100)
                 elif not funder_match:
                     unmatched_funder_names.add(funder.agency_name)
+                    if items and options['name_contains']:
+                        print("-" * 100)
+                        print(f"Potential near matches for funder name '{funder.agency_name}':")
+                        for item in items:
+                            print(item['name'].lower())
+                            if item['alt-names']:
+                                print(item['alt-names'])
+                        print("-" * 100)
             if unmatched_funder_names:
                 unmatched_res_counter += 1
                 owners = resource.raccess.owners
@@ -115,18 +121,20 @@ class Command(BaseCommand):
                 unmatched_res_counter = check_funders(funders, unmatched_res_counter)
         else:
             # check all published resources
-            published_resources = BaseResource.objects.filter(raccess__published=True)
             names = options['name_contains']
-            if len(names) > 0:
-                published_resources = published_resources.filter(
-                    metadata__funding_agencies__agency_name__icontains=reduce(
-                        lambda x, y: x & y, [Q(name__icontains=name) for name in names]))
+            # TODO: reset this to filter published
+            published_resources = BaseResource.objects.all()
             res_count = published_resources.count()
             print(f"TOTAL PUBLISHED RESOURCES TO CHECK FOR FUNDER NAMES: {res_count}")
             print("=" * 100)
             res_counter = 0
             unmatched_res_counter = 0
             for resource in published_resources:
+                if len(names) > 0:
+                    if not resource.metadata.funding_agencies.filter(
+                        reduce(lambda x, y: x & y, [Q(agency_name__icontains=name) for name in names])).exists():
+                        print(f"Resource {resource.short_id} does not contain any of the names {names}")
+                        continue
                 res_counter += 1
                 resource = resource.get_content_model()
                 funders = resource.metadata.funding_agencies.all()
