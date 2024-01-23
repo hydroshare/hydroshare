@@ -23,6 +23,13 @@ class Command(BaseCommand):
         # call like < hsctl managepy check_unknown_funder_names_published_resources --name_contains test >
         parser.add_argument('--name_contains', nargs='*', type=str)
 
+        parser.add_argument(
+            '--near_matches',
+            action='store_true',  # True for presence, False for absence
+            dest='near_matches',  # value is options['near_matches']
+            help='show near matches from the Crossref Funders list',
+        )
+
     def handle(self, *args, **options):
         requests.packages.urllib3.disable_warnings()    # turn off SSL warnings
 
@@ -71,7 +78,7 @@ class Command(BaseCommand):
                     print("-" * 100)
                 elif not funder_match:
                     unmatched_funder_names.add(funder.agency_name)
-                    if items and options['name_contains']:
+                    if items and options['near_matches']:
                         print("-" * 100)
                         print(f"Potential near matches for funder name '{funder.agency_name}':")
                         for item in items:
@@ -122,8 +129,7 @@ class Command(BaseCommand):
         else:
             # check all published resources
             names = options['name_contains']
-            # TODO: reset this to filter published
-            published_resources = BaseResource.objects.all()
+            published_resources = BaseResource.objects.filter(raccess__published=True)
             res_count = published_resources.count()
             print(f"TOTAL PUBLISHED RESOURCES TO CHECK FOR FUNDER NAMES: {res_count}")
             print("=" * 100)
