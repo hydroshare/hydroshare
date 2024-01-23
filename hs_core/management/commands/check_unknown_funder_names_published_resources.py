@@ -1,9 +1,11 @@
 import urllib.parse
 
 import requests
+from functools import reduce
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
+from django.db.models import Q
 
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.models import BaseResource
@@ -14,8 +16,11 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
 
-        # # a list of resource id's, or none to check all published resources
+        # a list of resource id's, or none to check all published resources
         parser.add_argument('resource_ids', nargs='*', type=str)
+
+        # a list of strings to filter existing funder names
+        parser.add_argument('name_contains', nargs='*', type=str)
 
     def handle(self, *args, **options):
         requests.packages.urllib3.disable_warnings()    # turn off SSL warnings
@@ -89,6 +94,8 @@ class Command(BaseCommand):
             return unmatched_res_counter
 
         if len(options['resource_ids']) > 0:
+            if len(options['name_contains']) > 0:
+                raise CommandError("Please only specify either resource_ids or name_contains args")
             res_count = len(options['resource_ids'])
             print(f"TOTAL RESOURCES TO CHECK FOR FUNDER NAMES: {res_count}")
             print("=" * 100)
@@ -108,12 +115,18 @@ class Command(BaseCommand):
                 unmatched_res_counter = check_funders(funders, unmatched_res_counter)
         else:
             # check all published resources
-            res_count = BaseResource.objects.filter(raccess__published=True).count()
+            published_resources = BaseResource.objects.filter(raccess__published=True)
+            names = options['name_contains']
+            if len(names) > 0:
+                published_resources = published_resources.filter(
+                    metadata__funding_agencies__agency_name__icontains=reduce(
+                        lambda x, y: x & y, [Q(name__icontains=name) for name in names]))
+            res_count = published_resources.count()
             print(f"TOTAL PUBLISHED RESOURCES TO CHECK FOR FUNDER NAMES: {res_count}")
             print("=" * 100)
             res_counter = 0
             unmatched_res_counter = 0
-            for resource in BaseResource.objects.filter(raccess__published=True):
+            for resource in published_resources:
                 res_counter += 1
                 resource = resource.get_content_model()
                 funders = resource.metadata.funding_agencies.all()
