@@ -23,11 +23,12 @@ class Command(BaseCommand):
         # call like < hsctl managepy check_unknown_funder_names_published_resources --name_contains test >
         parser.add_argument('--name_contains', nargs='*', type=str)
 
+        # call like < hsctl managepy check_unknown_funder_names_published_resources --num_near_to_show 5 >
         parser.add_argument(
-            '--near_matches',
-            action='store_true',  # True for presence, False for absence
-            dest='near_matches',  # value is options['near_matches']
-            help='show near matches from the Crossref Funders list',
+            '--num_near_to_show',
+            type=int,
+            dest='num_near_to_show',  # value is options['num_near_to_show']
+            help='number of near matches to show from the Crossref Funders list',
         )
 
     def handle(self, *args, **options):
@@ -70,6 +71,8 @@ class Command(BaseCommand):
 
         def check_funders(funders, unmatched_res_counter):
             unmatched_funder_names = set()
+            num_near_to_show = options['num_near_to_show']
+            near_matches = {}
             for funder in funders:
                 funder_match, err_msg, items = check_funder_name(funder.agency_name)
                 if err_msg:
@@ -78,14 +81,13 @@ class Command(BaseCommand):
                     print("-" * 100)
                 elif not funder_match:
                     unmatched_funder_names.add(funder.agency_name)
-                    if items and options['near_matches']:
-                        print("-" * 100)
-                        print(f"Potential near matches for funder name '{funder.agency_name}':")
+                    if items and num_near_to_show:
+                        near_matches[funder.agency_name] = []
+                        del items[num_near_to_show:]
                         for item in items:
-                            print(item['name'].lower())
+                            near_matches[funder.agency_name].append(item['name'].lower())
                             if item['alt-names']:
-                                print(item['alt-names'])
-                        print("-" * 100)
+                                near_matches[funder.agency_name].append(item['alt-names'])
             if unmatched_funder_names:
                 unmatched_res_counter += 1
                 owners = resource.raccess.owners
@@ -99,6 +101,11 @@ class Command(BaseCommand):
                 print(f"{res_counter}({unmatched_res_counter}). Resource:{resource.short_id},"
                       f" Unmatched funder names: {unmatched_names_str},"
                       f" Owners:{owners_details_str}")
+                if near_matches:
+                    for name, matches in near_matches.items():
+                        print(f"First {num_near_to_show} near matches for '{name}' from the Crossref Funders list:")
+                        for match in matches:
+                            print(match)
             else:
                 if funders:
                     print(f"{res_counter}. Resource:{resource.short_id} has all funder names matched")
@@ -129,17 +136,19 @@ class Command(BaseCommand):
         else:
             # check all published resources
             names = options['name_contains']
-            published_resources = BaseResource.objects.filter(raccess__published=True)
+            # published_resources = BaseResource.objects.filter(raccess__published=True)
+            published_resources = BaseResource.objects.filter()
             res_count = published_resources.count()
             print(f"TOTAL PUBLISHED RESOURCES TO CHECK FOR FUNDER NAMES: {res_count}")
             print("=" * 100)
+            if names:
+                print(f"Resources will be filtered to include only those with agency_names in {names}")
             res_counter = 0
             unmatched_res_counter = 0
             for resource in published_resources:
                 if len(names) > 0:
                     if not resource.metadata.funding_agencies.filter(
                         reduce(lambda x, y: x & y, [Q(agency_name__icontains=name) for name in names])).exists():
-                        print(f"Resource {resource.short_id} does not contain any of the names {names}")
                         continue
                 res_counter += 1
                 resource = resource.get_content_model()
