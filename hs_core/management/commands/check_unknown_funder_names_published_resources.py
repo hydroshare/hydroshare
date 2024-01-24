@@ -136,8 +136,7 @@ class Command(BaseCommand):
         else:
             # check all published resources
             names = options['name_contains']
-            # published_resources = BaseResource.objects.filter(raccess__published=True)
-            published_resources = BaseResource.objects.filter()
+            published_resources = BaseResource.objects.filter(raccess__published=True)
             res_count = published_resources.count()
             print(f"TOTAL PUBLISHED RESOURCES TO CHECK FOR FUNDER NAMES: {res_count}")
             print("=" * 100)
