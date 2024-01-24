@@ -147,7 +147,7 @@ class Command(BaseCommand):
             for resource in published_resources:
                 if len(names) > 0:
                     if not resource.metadata.funding_agencies.filter(
-                        reduce(lambda x, y: x & y, [Q(agency_name__icontains=name) for name in names])).exists():
+                            reduce(lambda x, y: x & y, [Q(agency_name__icontains=name) for name in names])).exists():
                         continue
                 res_counter += 1
                 resource = resource.get_content_model()
