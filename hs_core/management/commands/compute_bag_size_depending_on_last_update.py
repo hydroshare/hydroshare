@@ -1,0 +1,64 @@
+import math
+from django.core.management.base import BaseCommand, CommandError
+
+from hs_core.models import BaseResource
+from hs_core.hydroshare.utils import get_resource_by_shortkey
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+from datetime import timedelta
+
+
+class Command(BaseCommand):
+    help = "Compute the size of the bagit archive size/storage for resources that haven't been updated recently"
+
+    def add_arguments(self, parser):
+
+        # a list of resource id's: if none, process all published resources
+        parser.add_argument('resource_ids', nargs='*', type=str)
+
+        parser.add_argument('--months', type=int, dest='months', help='include res not updated in the last X months')
+
+    def convert_size(self, size_bytes):
+        if size_bytes == 0:
+            return "0B"
+        size_name = ("B", "KB", "MB", "GB", "TB")
+        i = int(math.floor(math.log(size_bytes, 1024)))
+        p = math.pow(1024, i)
+        s = round(size_bytes / p, 2)
+        return "%s %s" % (s, size_name[i])
+
+    def handle(self, *args, **options):
+        resources = []
+        add_message = ""
+        months = options['months']
+        if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
+            if months:
+                raise CommandError("Cant privide resource_ids and also filter by months")
+            for rid in options['resource_ids']:
+                resources.append(get_resource_by_shortkey(rid))
+        else:
+            resources = BaseResource.objects.all()
+
+        if months:
+            print(f"FILTERING TO INCLUDE RESOURCES NOT UPDATED IN UPDATED IN LAST {months} MONTHS")
+            add_message = f"for resources not updated in last {months} months"
+            cuttoff_time = timezone.now() - timedelta(months)
+            resources = resources.filter(updated__lte=cuttoff_time)
+        cumulative_size = 0
+        count = len(resources)
+        counter = 1
+        print(f"Iterating {count} resources...")
+        for res in resources:
+            converted_size = self.convert_size(cumulative_size)
+            print(f"{counter}/{count}: cumulative thus far = {converted_size}")
+            try:
+                src_file = res.bag_path
+                istorage = res.get_irods_storage()
+                fsize = istorage.size(src_file)
+                cumulative_size += fsize
+                print(f"Size for {src_file} = {fsize}")
+            except ValidationError as ve:
+                print(f"Size not computed for {res.short_id}: {ve}")
+            counter += 1
+        converted_size = self.convert_size(cumulative_size)
+        print(f"Total cumulative size {add_message}: {converted_size}")
