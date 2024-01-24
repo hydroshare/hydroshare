@@ -1035,7 +1035,7 @@ def deposit_res_metadata_with_crossref(res):
     return response
 
 
-def submit_resource_for_review(request, pk):
+def submit_resource_for_review(pk, user=None):
     """
     Submits a resource for minimum metadata review, prior to publishing.
     The user must be an owner of a resource or an administrator to perform this action.
@@ -1055,7 +1055,7 @@ def submit_resource_for_review(request, pk):
     and other general exceptions
 
     """
-    from hs_core.views.utils import get_default_support_user
+    from hs_core.views.utils import get_default_admin_user
 
     resource = utils.get_resource_by_shortkey(pk)
     if resource.raccess.published:
@@ -1069,16 +1069,17 @@ def submit_resource_for_review(request, pk):
                               "it does not have required metadata or content files, or it contains "
                               "reference content, or this resource type is not allowed for publication.")
 
-    user_to = get_default_support_user()
-    from hs_core.views.utils import send_action_to_take_email
-    send_action_to_take_email(request, user=user_to, user_from=request.user,
-                              action_type='metadata_review', resource=resource)
+    if not user:
+        user = get_default_admin_user()
 
     # create review date -- must be before review_pending = True
     resource.metadata.dates.all().filter(type='reviewStarted').delete()
     resource.metadata.create_element('date', type='reviewStarted', start_date=datetime.datetime.now(tz.UTC))
 
     resource.raccess.alter_review_pending_flags(initiating_review=True)
+
+    # set resource modified before attempting repair
+    utils.resource_modified(resource, user, overwrite_bag=False)
 
     # Repair resource and email support user if there are issues
     from hs_core.tasks import repair_resource_before_publication
@@ -1107,6 +1108,8 @@ def publish_resource(user, pk):
 
     Note:  This is different than just giving public access to a resource via access control rule
     """
+    if not user.is_superuser:
+        raise ValidationError("Resource can only be published by an admin user")
     resource = utils.get_resource_by_shortkey(pk)
     if resource.raccess.published:
         raise ValidationError("This resource is already published")
@@ -1159,8 +1162,6 @@ def publish_resource(user, pk):
     md_args = {'name': 'doi',
                'url': get_activated_doi(resource.doi)}
     resource.metadata.create_element('Identifier', **md_args)
-
-    utils.resource_modified(resource, user, overwrite_bag=False)
 
     return pk
 
