@@ -1,13 +1,11 @@
 import urllib.parse
 
 import requests
-from functools import reduce
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.management.base import BaseCommand, CommandError
-from django.db.models import Q
 
-from hs_core.hydroshare.utils import get_resource_by_shortkey
+from hs_core.hydroshare.utils import get_resource_by_shortkey, current_site_url
 from hs_core.models import BaseResource
 
 
@@ -20,8 +18,13 @@ class Command(BaseCommand):
         parser.add_argument('resource_ids', nargs='*', type=str)
 
         # a list of strings to filter existing funder names
-        # call like < hsctl managepy check_unknown_funder_names_published_resources --name_contains test >
-        parser.add_argument('--name_contains', nargs='*', type=str)
+        # call like < hsctl managepy check_unknown_funder_names_published_resources --name_filter test >
+        parser.add_argument(
+            '--name_filter',
+            type=str,
+            dest='name_filter',
+            help='filter to funding agencies that contain this name',
+        )
 
         # call like < hsctl managepy check_unknown_funder_names_published_resources --num_near_to_show 5 >
         parser.add_argument(
@@ -33,6 +36,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         requests.packages.urllib3.disable_warnings()    # turn off SSL warnings
+        existing_crossref_queries = {}
+        name_filter = options['name_filter']
+        site_url = current_site_url()
 
         def check_funder_name(funder_name):
             """Checks if the funder name exits in Crossref funders registry.
@@ -45,12 +51,16 @@ class Command(BaseCommand):
             encoded_words = [urllib.parse.quote(word) for word in words]
             # match all words in the funder name
             query = "+".join(encoded_words)
-            # if we can't find a match in first 50 search records then we are not going to find a match
-            max_record_count = 50
-            email = settings.DEFAULT_SUPPORT_EMAIL
-            url = f"https://api.crossref.org/funders?query={query}&rows={max_record_count}&mailto={email}"
-            funder_name = funder_name.lower()
-            response = requests.get(url, verify=False)
+            if query in existing_crossref_queries:
+                response = existing_crossref_queries[query]
+            else:
+                # if we can't find a match in first 50 search records then we are not going to find a match
+                max_record_count = 50
+                email = settings.DEFAULT_SUPPORT_EMAIL
+                url = f"https://api.crossref.org/funders?query={query}&rows={max_record_count}&mailto={email}"
+                funder_name = funder_name.lower()
+                response = requests.get(url, verify=False)
+                existing_crossref_queries[query] = response
             found_match = False
             error_msg = ""
             items = []
@@ -61,15 +71,18 @@ class Command(BaseCommand):
                     for item in items:
                         if item['name'].lower() == funder_name:
                             found_match = True
+                            break
                         for alt_name in item['alt-names']:
                             if alt_name.lower() == funder_name:
                                 found_match = True
+                                return found_match, error_msg, items
             else:
                 error_msg = "Failed to check funder_name: '{}' from Crossref funders registry. " \
                             "Status code: {}".format(funder_name, response.status_code)
             return found_match, error_msg, items
 
         def check_funders(funders, unmatched_res_counter):
+            res_url = site_url + resource.absolute_url
             unmatched_funder_names = set()
             num_near_to_show = options['num_near_to_show']
             near_matches = {}
@@ -77,7 +90,7 @@ class Command(BaseCommand):
                 funder_match, err_msg, items = check_funder_name(funder.agency_name)
                 if err_msg:
                     print("-" * 100)
-                    print(f"{err_msg} for resource: {resource.short_id}")
+                    print(f"{err_msg} for resource: {res_url}")
                     print("-" * 100)
                 elif not funder_match:
                     unmatched_funder_names.add(funder.agency_name)
@@ -98,24 +111,25 @@ class Command(BaseCommand):
                     owner_details += f" ({owner.email})"
                     owners_details.append(owner_details)
                 owners_details_str = ", ".join(owners_details)
-                print(f"{res_counter}({unmatched_res_counter}). Resource:{resource.short_id},"
+                print(f"{res_counter}({unmatched_res_counter}). Resource: {res_url},"
                       f" Unmatched funder names: {unmatched_names_str},"
                       f" Owners:{owners_details_str}")
                 if near_matches:
                     for name, matches in near_matches.items():
-                        print(f"First {num_near_to_show} near matches for '{name}' from the Crossref Funders list:")
+                        print(f"* {len(matches)} near matches found for '{name}' from the Crossref Funders list:")
                         for match in matches:
-                            print(match)
+                            print(f" - {match}")
             else:
                 if funders:
-                    print(f"{res_counter}. Resource:{resource.short_id} has all funder names matched")
+                    print(f"{res_counter}. Resource: {res_url} has all funder names matched")
                 else:
-                    print(f"{res_counter}. Resource:{resource.short_id} has no funder names")
+                    print(f"{res_counter}. Resource: {res_url} has no funder names")
+            print("*" * 100 + "\n")
             return unmatched_res_counter
 
         if len(options['resource_ids']) > 0:
-            if len(options['name_contains']) > 0:
-                raise CommandError("Please only specify either resource_ids or name_contains args")
+            if name_filter:
+                raise CommandError("Please only specify either resource_ids or name_filter args")
             res_count = len(options['resource_ids'])
             print(f"TOTAL RESOURCES TO CHECK FOR FUNDER NAMES: {res_count}")
             print("=" * 100)
@@ -135,21 +149,23 @@ class Command(BaseCommand):
                 unmatched_res_counter = check_funders(funders, unmatched_res_counter)
         else:
             # check all published resources
-            names = options['name_contains']
             published_resources = BaseResource.objects.filter(raccess__published=True)
             res_count = published_resources.count()
             print(f"TOTAL PUBLISHED RESOURCES TO CHECK FOR FUNDER NAMES: {res_count}")
-            print("=" * 100)
-            if names:
-                print(f"Resources will be filtered to include only those with agency_names in {names}")
+            if name_filter:
+                print(f"Resources will be filtered to include only those with agency_names containing {name_filter}")
+            print("=" * 100 + "\n")
             res_counter = 0
             unmatched_res_counter = 0
             for resource in published_resources:
-                if len(names) > 0:
-                    if not resource.metadata.funding_agencies.filter(
-                            reduce(lambda x, y: x & y, [Q(agency_name__icontains=name) for name in names])).exists():
-                        continue
                 res_counter += 1
                 resource = resource.get_content_model()
                 funders = resource.metadata.funding_agencies.all()
+                if name_filter:
+                    funders = funders.filter(agency_name__icontains=name_filter)
+                    if not funders:
+                        print(f"{res_counter}. Skip: {site_url + resource.absolute_url}. "
+                              f"No funders contain name '{name_filter}'")
+                        print("*" * 100 + "\n")
+                        continue
                 unmatched_res_counter = check_funders(funders, unmatched_res_counter)
