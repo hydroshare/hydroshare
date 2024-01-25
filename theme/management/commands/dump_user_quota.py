@@ -15,8 +15,11 @@ class Command(BaseCommand):
             fields = [
                 'User id',
                 'User name',
+                'User email',
                 'Allocated quota value',
                 'Used quota value',
+                'UserZone value',
+                'DataZone value',
                 'Quota unit',
                 'Storage zone'
             ]
@@ -27,8 +30,11 @@ class Command(BaseCommand):
                 values = [
                     uq.user.id,
                     uq.user.username,
+                    uq.user.email,
                     uq.allocated_value,
                     uq.used_value,
+                    uq.user_zone_value,
+                    uq.data_zone_value,
                     uq.unit,
                     uq.zone
                 ]

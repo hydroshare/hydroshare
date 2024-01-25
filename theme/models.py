@@ -299,7 +299,7 @@ class UserQuota(models.Model):
 
     def update_used_value(self, uz_size, dz_size):
         """
-        set self.used_value in self.unit with pass in size in bytes.
+        set used values in self.unit with pass in size in bytes.
         :param uz_size: pass in size in bytes unit from userZone
         :param dz_size: pass in size in bytes unit from dataZone
         :return:
