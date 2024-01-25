@@ -13,7 +13,7 @@ from uuid import uuid4
 
 import aiohttp
 from asgiref.sync import sync_to_async
-from datetime import datetime
+from datetime import date
 from django.apps import apps
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -771,7 +771,7 @@ def validate_user_quota(user_or_username, size):
                 used_percent = uq.used_percent
                 rounded_percent = round(used_percent, 2)
                 rounded_used_val = round(used_size, 4)
-                if used_percent >= hard_limit or uq.grace_period_ends <= datetime.now():
+                if used_percent >= hard_limit or uq.grace_period_ends <= date.today():
                     msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
                                                          qmsg.content)
                     msg_str = msg_template_str.format(used=rounded_used_val,

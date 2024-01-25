@@ -2031,7 +2031,14 @@ $(document).ready(function () {
 
                 // An error occured. Receives the errorMessage as second parameter and if the error was due to the XMLHttpRequest the xhr object as third.
                 this.on("error", function (error, errorMessage) {
-                    let errorMsg = JSON.stringify(errorMessage);
+                    let errorMsg = "";
+                    if (typeof errorMessage === 'object'){
+                        for (const [key, value] of Object.entries(errorMessage)) {
+                            errorMsg += `${key}: ${value}`;
+                          }
+                    }else{
+                        errorMsg = JSON.stringify(errorMessage);
+                    }
                     try {
                         let errorMessageJSON = JSON.parse(errorMessage);
                         if (errorMessageJSON.hasOwnProperty("validation_error")) {
