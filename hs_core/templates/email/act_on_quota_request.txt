@@ -15,7 +15,7 @@
 
     ZONE: {{ user_quota.zone }}<br>
 
-    REMAINING GRACE PERIOD (negative indicates grace period not yet started): {{ user_quota.remaining_grace_period }}<br>
+    GRACE PERIOD ENDS: {{ user_quota.grace_period_ends }}<br>
 
     <p>Requesting user information:</p>
     User Type: {{ user_from.userprofile.user_type }}<br>

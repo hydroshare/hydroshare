@@ -487,19 +487,15 @@ def send_over_quota_emails():
         uq = UserQuota.objects.filter(user__username=u.username, zone=hs_internal_zone).first()
         if uq:
             used_percent = uq.used_percent
+            today = date.today()
             if used_percent >= qmsg.soft_limit_percent:
                 if used_percent >= 100 and used_percent < qmsg.hard_limit_percent:
-                    if uq.remaining_grace_period < 0:
+                    if not uq.grace_period_ends:
                         # triggers grace period counting
-                        uq.remaining_grace_period = qmsg.grace_period
-                    elif uq.remaining_grace_period > 0:
-                        # reduce remaining_grace_period by one day
-                        uq.remaining_grace_period -= 1
-                        # TODO 5228 this only works if we ensure that the task runs daily
-                        # Also there is a lag between exceed the limit and when the remaining_grace_period gets updated
+                        uq.grace_period_ends = today + timedelta(days=qmsg.grace_period)
                 elif used_percent >= qmsg.hard_limit_percent:
-                    # set grace period to 0 when user quota exceeds hard limit
-                    uq.remaining_grace_period = 0
+                    # reset grace period to 0 when user quota exceeds hard limit
+                    uq.grace_period_ends = None
                 uq.save()
 
                 if u.first_name and u.last_name:
@@ -530,9 +526,9 @@ def send_over_quota_emails():
                     except Exception as ex:
                         logger.debug("Failed to send quota warning email: " + str(ex))
             else:
-                if uq.remaining_grace_period >= 0:
+                if uq.grace_period_ends < today :
                     # turn grace period off now that the user is below quota soft limit
-                    uq.remaining_grace_period = -1
+                    uq.grace_period_ends = None
                     uq.save()
         else:
             logger.debug('user ' + u.username + ' does not have UserQuota foreign key relation')

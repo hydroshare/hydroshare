@@ -265,10 +265,14 @@ class UserQuota(models.Model):
     data_zone_value = models.FloatField(default=0)
     unit = models.CharField(max_length=10, default="GB")
     zone = models.CharField(max_length=100, default="hydroshare")
-    # remaining_grace_period to be quota-enforced. Default is -1 meaning the user is below
-    # soft quota limit and thus grace period has not started. When grace period is 0, quota
+    # grace_period_ends to be quota-enforced. Default is None meaning the user is below
+    # soft quota limit and thus grace period has not started. When today=grace_period_ends, quota
     # enforcement takes place
-    remaining_grace_period = models.IntegerField(default=-1)
+    grace_period_ends = models.DateField(verbose_name='Remaining Grace Period',
+                                         null=True,
+                                         blank=True,
+                                         help_text='The date that Grace Period will end for this User Quota',
+                                         default=None)
 
     class Meta:
         verbose_name = _("User quota")
