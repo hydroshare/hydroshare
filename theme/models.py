@@ -526,5 +526,25 @@ def update_user_quota_on_quota_request(sender, instance, **kwargs):
         logger.warning(
             f"QuotaRequest for {instance.pk} does not exist when trying to update it"
         )
-        # return
-    # return
+
+
+@receiver(models.signals.pre_save, sender=QuotaMessage)
+def update_user_quota_on_grace_period_change(sender, instance, **kwargs):
+    """
+    Adjust the pending UserQuota grace periouds when the grace period setting is modified in the QuotaMessage
+    """
+    if instance.id is None:  # new object will be created
+        pass
+    else:
+        previous = QuotaMessage.objects.get(id=instance.id)
+        if previous.grace_period != instance.grace_period:
+            # grace_period is being updated
+            grace_delta = instance.grace_period - previous.grace_period
+            cuttoff_date = datetime.date.today()
+            if grace_delta < 0:
+                # we don't want to force pending quotas "into the past"
+                cuttoff_date = datetime.date.today() - datetime.timedelta(days=grace_delta)
+            pending_quotas = UserQuota.objects.filter(grace_period_ends__gt=cuttoff_date)
+            # add grace_delta to each of the pending grace periods
+            pending_quotas.update(grace_period_ends=models.F('grace_period_ends')
+                                  + datetime.timedelta(days=grace_delta))
