@@ -1093,7 +1093,7 @@ def publish_resource(user, pk):
     be an owner of a resource or an administrator to perform this action.
 
     Parameters:
-        user - requesting user to publish the resource who must be one of the owners of the resource
+        user - requesting user to publish the resource who must be an admin
         pk - Unique HydroShare identifier for the resource to be formally published.
 
     Returns:    The id of the resource that was published
@@ -1147,6 +1147,7 @@ def publish_resource(user, pk):
 
     resource.set_public(True)  # also sets discoverable to True
     resource.raccess.published = True
+    resource.raccess.immutable = True
     resource.raccess.save()
 
     # change "Publisher" element of science metadata to CUAHSI
@@ -1162,6 +1163,11 @@ def publish_resource(user, pk):
     md_args = {'name': 'doi',
                'url': get_activated_doi(resource.doi)}
     resource.metadata.create_element('Identifier', **md_args)
+
+    # Here we publish the resource on behalf of the last_changed_by user
+    # This ensures that the modified date closely matches the date that the metadata are submitted to Crossref
+    last_modified = resource.last_changed_by
+    utils.resource_modified(resource, by_user=last_modified, overwrite_bag=False)
 
     return pk
 

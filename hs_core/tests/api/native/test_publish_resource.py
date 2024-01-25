@@ -186,11 +186,19 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
         hydroshare.submit_resource_for_review(pk=self.complete_res.short_id, user=admin_user)
 
     def test_last_updated(self):
+        """Test that publishing a resource updates last_changed_by user and last_updated date"""
         admin_user = get_default_admin_user()
+
+        last_updated_user_before_submit = self.complete_res.last_changed_by
         hydroshare.submit_resource_for_review(pk=self.complete_res.short_id, user=self.user)
+        time_after_submit = self.complete_res.last_updated
+        self.assertEqual(last_updated_user_before_submit, self.complete_res.last_changed_by)
+
         hydroshare.publish_resource(user=admin_user, pk=self.complete_res.short_id)
 
-        self.assertEqual(self.complete_res.last_changed_by, self.user)
+        self.assertEqual(self.complete_res.last_changed_by, last_updated_user_before_submit)
+        self.assertTrue(self.complete_res.metadata.dates.filter(type='published').exists())
+        self.assertGreater(self.complete_res.last_updated, time_after_submit)
 
     def test_crossref_deposit_xml(self):
         """Test that the crossref deposit xml is generated correctly for a resource"""
