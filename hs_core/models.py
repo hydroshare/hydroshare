@@ -7,29 +7,28 @@ import re
 import unicodedata
 import urllib.parse
 from uuid import uuid4
-import arrow
-from dateutil import parser
 
+import arrow
+import requests
+from dateutil import parser
 from django.conf import settings
-from django.contrib.auth.models import User, Group
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.auth.models import Group, User
+from django.contrib.contenttypes.fields import (GenericForeignKey,
+                                                GenericRelation)
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import HStoreField
-from django.core.exceptions import ObjectDoesNotExist, ValidationError, \
-    SuspiciousFileOperation, PermissionDenied
+from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
+                                    SuspiciousFileOperation, ValidationError)
 from django.core.files import File
-from django.urls import reverse
 from django.core.validators import URLValidator
-from django.db import models
-from django.db import transaction
+from django.db import models, transaction
 from django.db.models import Q, Sum
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
+from django.urls import reverse
 from django.utils.timezone import now
-
-from dominate.tags import div, legend, table, tbody, tr, th, td, h4
+from dominate.tags import div, h4, legend, table, tbody, td, th, tr
 from lxml import etree
 from markdown import markdown
 from mezzanine.conf import settings as s
@@ -38,16 +37,20 @@ from mezzanine.core.models import Ownable
 from mezzanine.generic.fields import CommentsField, RatingField
 from mezzanine.pages.managers import PageManager
 from mezzanine.pages.models import Page
+from nameparser import HumanName
 from pyld import jsonld
-from rdflib import Literal, BNode, URIRef
+from rdflib import BNode, Literal, URIRef
 from rdflib.namespace import DC, DCTERMS, RDF
 from spam_patterns.worst_patterns_re import patterns
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
-from hs_core.enums import RelationTypes
-from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
-from .hs_rdf import HSTERMS, RDF_Term_MixIn, RDF_MetaData_Mixin, rdf_terms, RDFS1
+from hs_core.enums import (CrossRefSubmissionStatus, CrossRefUpdate,
+                           RelationTypes)
+from hs_core.irods import ResourceFileIRODSMixin, ResourceIRODSMixin
+
+from .hs_rdf import (HSTERMS, RDFS1, RDF_MetaData_Mixin, RDF_Term_MixIn,
+                     rdf_terms)
 from .languages_iso import languages as iso_languages
 
 
@@ -186,7 +189,7 @@ class ResourcePermissionsMixin(Ownable):
     def can_delete(self, request):
         """Use utils.authorize method to determine if user can delete a resource."""
         # have to do import locally to avoid circular import
-        from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
+        from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
         return authorize(request, self,
                          needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE,
                          raises_exception=False)[1]
@@ -194,7 +197,7 @@ class ResourcePermissionsMixin(Ownable):
     def can_change(self, request):
         """Use utils.authorize method to determine if user can change a resource."""
         # have to do import locally to avoid circular import
-        from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
+        from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
         return authorize(request, self,
                          needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                          raises_exception=False)[1]
@@ -202,7 +205,7 @@ class ResourcePermissionsMixin(Ownable):
     def can_view(self, request):
         """Use utils.authorize method to determine if user can view a resource."""
         # have to do import locally to avoid circular import
-        from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
+        from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
         return authorize(request, self,
                          needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA,
                          raises_exception=False)[1]
@@ -2195,8 +2198,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         invalidated outside of the control of a specific user. In this case, user can be None
         """
         # avoid import loop
-        from hs_core.views.utils import run_script_to_update_hyrax_input_files
         from hs_core.signals import post_raccess_change
+        from hs_core.views.utils import run_script_to_update_hyrax_input_files
 
         # access control is separate from validation logic
         if user is not None and not user.uaccess.can_change_resource_flags(self):
@@ -2527,7 +2530,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         Note: this will return true for any file that ends with the metadata endings
         We are taking the risk that user might create a file with the same filename ending
         """
-        from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
+        from hs_file_types.models.base import (METADATA_FILE_ENDSWITH,
+                                               RESMAP_FILE_ENDSWITH)
         if not (file_path.endswith(METADATA_FILE_ENDSWITH)
                 or file_path.endswith(RESMAP_FILE_ENDSWITH)):
             return False
@@ -2648,7 +2652,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         if doi and not forceHydroshareURI:
             hs_identifier = doi[0]
-            if self.doi.find('pending') >= 0 or self.doi.find('failure') >= 0:
+            if (self.doi.find(CrossRefSubmissionStatus.PENDING) >= 0
+                    or self.doi.find(CrossRefSubmissionStatus.FAILURE) >= 0):
                 isPendingActivation = True
         else:
             hs_identifier = [idn for idn in identifiers if idn.name == "hydroShareIdentifier"]
@@ -3924,56 +3929,195 @@ class BaseResource(Page, AbstractResource):
 
     # create crossref deposit xml for resource publication
     def get_crossref_deposit_xml(self, pretty_print=True):
-        """Return XML structure describing crossref deposit."""
+        """Return XML structure describing crossref deposit.
+        The mapping of hydroshare resource metadata to crossref metadata has been implemented here as per
+        the specification in this repo: https://github.com/hydroshare/hs_doi_deposit_metadata
+        """
         # importing here to avoid circular import problem
         from .hydroshare.resource import get_activated_doi
 
+        logger = logging.getLogger(__name__)
+
+        def get_funder_id(funder_name):
+            """Return funder_id for a given funder_name from Crossref funders registry.
+            Crossref API Documentation: https://api.crossref.org/swagger-ui/index.html#/Funders/get_funders
+            """
+
+            # url encode the funder name for the query parameter
+            words = funder_name.split()
+            # filter out words that contain the char '.'
+            words = [word for word in words if '.' not in word]
+            encoded_words = [urllib.parse.quote(word) for word in words]
+            # match all words in the funder name
+            query = "+".join(encoded_words)
+            # if we can't find a match in first 50 search records then we are not going to find a match
+            max_record_count = 50
+            email = settings.DEFAULT_SUPPORT_EMAIL
+            url = f"https://api.crossref.org/funders?query={query}&rows={max_record_count}&mailto={email}"
+            funder_name = funder_name.lower()
+            response = requests.get(url, verify=False)
+            if response.status_code == 200:
+                response_json = response.json()
+                if response_json['status'] == 'ok':
+                    items = response_json['message']['items']
+                    for item in items:
+                        if item['name'].lower() == funder_name:
+                            return item['uri']
+                        for alt_name in item['alt-names']:
+                            if alt_name.lower() == funder_name:
+                                return item['uri']
+                    return ''
+                return ''
+            else:
+                msg = "Failed to get funder_id for funder_name: '{}' from Crossref funders registry. " \
+                      "Status code: {} for resource id: {}"
+                msg = msg.format(funder_name, response.status_code, self.short_id)
+                logger.error(msg)
+                return ''
+
+        def parse_creator_name(_creator):
+            creator_name = _creator.name.strip()
+            name = HumanName(creator_name)
+            # both first name ane last name are required for crossref deposit
+            if not name.first or not name.last:
+                name_parts = creator_name.split()
+                if not name.first:
+                    name.first = name_parts[0]
+                if not name.last:
+                    name.last = name_parts[-1]
+            return name.first, name.last
+
+        def create_contributor_node(_creator, sequence="additional"):
+            if _creator.name:
+                first_name, last_name = parse_creator_name(_creator)
+                creator_node = etree.SubElement(contributors_node, 'person_name', contributor_role="author",
+                                                sequence=sequence)
+                etree.SubElement(creator_node, 'given_name').text = first_name
+                etree.SubElement(creator_node, 'surname').text = last_name
+                orcid = _creator.identifiers.get('ORCID', "")
+                if orcid:
+                    etree.SubElement(creator_node, 'ORCID').text = orcid
+            else:
+                org = etree.SubElement(contributors_node, 'organization', contributor_role="author",
+                                       sequence=sequence)
+                org.text = _creator.organization
+
+        def create_date_node(date, date_type):
+            date_node = etree.SubElement(database_dates_node, date_type)
+            etree.SubElement(date_node, 'month').text = str(date.month)
+            etree.SubElement(date_node, 'day').text = str(date.day)
+            etree.SubElement(date_node, 'year').text = str(date.year)
+
         xsi = "http://www.w3.org/2001/XMLSchema-instance"
-        schemaLocation = 'http://www.crossref.org/schema/4.3.6 ' \
-                         'http://www.crossref.org/schemas/crossref4.3.6.xsd'
-        ns = "http://www.crossref.org/schema/4.3.6"
-        ROOT = etree.Element('{%s}doi_batch' % ns, version="4.3.6", nsmap={None: ns},
+        schemaLocation = 'http://www.crossref.org/schema/5.3.1 ' \
+                         'http://www.crossref.org/schemas/crossref5.3.1.xsd'
+        ns = "http://www.crossref.org/schema/5.3.1"
+        fr = "http://www.crossref.org/fundref.xsd"
+        ai = "http://www.crossref.org/AccessIndicators.xsd"
+        ROOT = etree.Element('{%s}doi_batch' % ns, version="5.3.1", nsmap={None: ns, "xsi": xsi, "fr": fr, "ai": ai},
                              attrib={"{%s}schemaLocation" % xsi: schemaLocation})
 
         # get the resource object associated with this metadata container object - needed
         # to get the verbose_name
 
         # create the head sub element
-        head = etree.SubElement(ROOT, 'head')
-        etree.SubElement(head, 'doi_batch_id').text = self.short_id
-        etree.SubElement(head, 'timestamp').text = arrow.get(self.updated)\
+        head_node = etree.SubElement(ROOT, 'head')
+        etree.SubElement(head_node, 'doi_batch_id').text = self.short_id
+        etree.SubElement(head_node, 'timestamp').text = arrow.get(self.updated)\
             .format("YYYYMMDDHHmmss")
-        depositor = etree.SubElement(head, 'depositor')
-        etree.SubElement(depositor, 'depositor_name').text = 'HydroShare'
-        etree.SubElement(depositor, 'email_address').text = settings.DEFAULT_SUPPORT_EMAIL
+        depositor_node = etree.SubElement(head_node, 'depositor')
+        etree.SubElement(depositor_node, 'depositor_name').text = 'HydroShare'
+        etree.SubElement(depositor_node, 'email_address').text = settings.DEFAULT_SUPPORT_EMAIL
         # The organization that owns the information being registered.
-        etree.SubElement(head, 'registrant').text = 'Consortium of Universities for the ' \
-                                                    'Advancement of Hydrologic Science, Inc. ' \
-                                                    '(CUAHSI)'
+        organization = 'Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)'
+        etree.SubElement(head_node, 'registrant').text = organization
 
         # create the body sub element
-        body = etree.SubElement(ROOT, 'body')
+        body_node = etree.SubElement(ROOT, 'body')
         # create the database sub element
-        db = etree.SubElement(body, 'database')
+        db_node = etree.SubElement(body_node, 'database')
         # create the database_metadata sub element
-        db_md = etree.SubElement(db, 'database_metadata', language="en")
+        db_md_node = etree.SubElement(db_node, 'database_metadata', language="en")
         # titles is required element for database_metadata
-        titles = etree.SubElement(db_md, 'titles')
-        etree.SubElement(titles, 'title').text = "HydroShare Resources"
+        titles_node = etree.SubElement(db_md_node, 'titles')
+        etree.SubElement(titles_node, 'title').text = "HydroShare Resources"
         # create the dataset sub element, dataset_type can be record or collection, set it to
         # collection for HydroShare resources
-        dataset = etree.SubElement(db, 'dataset', dataset_type="collection")
-        ds_titles = etree.SubElement(dataset, 'titles')
-        etree.SubElement(ds_titles, 'title').text = self.metadata.title.value
+        dataset_node = etree.SubElement(db_node, 'dataset', dataset_type="record")
+        # create contributors sub element
+        contributors_node = etree.SubElement(dataset_node, 'contributors')
+        # creators are required element for contributors
+        creators = self.metadata.creators.all()
+        first_author = [cr for cr in creators if cr.order == 1][0]
+        create_contributor_node(first_author, sequence="first")
+        other_authors = [cr for cr in creators if cr.order > 1]
+        for auth in other_authors:
+            create_contributor_node(auth, sequence="additional")
+
+        # create dataset title
+        dataset_titles_node = etree.SubElement(dataset_node, 'titles')
+        etree.SubElement(dataset_titles_node, 'title').text = self.metadata.title.value
+        # create dataset date sub element
+        database_dates_node = etree.SubElement(dataset_node, 'database_date')
+        # create creation_date sub element
+        create_date_node(date=self.created, date_type="creation_date")
+        # create a publication_date sub element
+        pub_date_meta = self.metadata.dates.all().filter(type='published').first()
+        if pub_date_meta:
+            # this is a published resource - generating crossref xml for updating crossref deposit
+            pub_date = pub_date_meta.start_date
+        else:
+            # generating crossref xml for registering a new resource in crossref
+            pub_date = self.updated
+
+        create_date_node(date=pub_date, date_type="publication_date")
+        # create update_date sub element
+        create_date_node(date=self.updated, date_type="update_date")
+        # create dataset description sub element
+        etree.SubElement(dataset_node, 'description').text = self.metadata.description.abstract
+        # funder related elements
+        funders = self.metadata.funding_agencies.all()
+        if funders:
+            funding_references = etree.SubElement(dataset_node, '{%s}program' % fr, name="fundref")
+            for funder in funders:
+                funder_group_node = etree.SubElement(funding_references, '{%s}assertion' % fr, name="fundgroup")
+                funder_name_node = etree.SubElement(funder_group_node, '{%s}assertion' % fr, name="funder_name")
+                funder_name_node.text = funder.agency_name
+                # get funder_id from Crossref funders registry
+                funder_id = get_funder_id(funder.agency_name)
+                if not funder_id:
+                    logger.warning(f"Funder id was not found in Crossref funder registry "
+                                   f"for funder name: {funder.agency_name} for resource: {self.short_id}")
+                if funder_id or funder.agency_url:
+                    id_node = etree.SubElement(funder_name_node, '{%s}assertion' % fr, name="funder_identifier")
+                    if funder_id:
+                        id_node.text = funder_id
+                    else:
+                        id_node.text = funder.agency_url
+                if funder.award_number:
+                    award_node = etree.SubElement(funder_group_node, '{%s}assertion' % fr, name='award_number')
+                    award_node.text = funder.award_number
+
+        # create dataset license sub element
+        dataset_licenses_node = etree.SubElement(dataset_node, '{%s}program' % ai, name="AccessIndicators")
+        pub_date_str = pub_date.strftime("%Y-%m-%d")
+        rights = self.metadata.rights
+        license_node = etree.SubElement(dataset_licenses_node, '{%s}license_ref' % ai, applies_to="vor",
+                                        start_date=pub_date_str)
+        if rights.url:
+            license_node.text = rights.url
+        else:
+            license_node.text = rights.statement
+
         # doi_data is required element for dataset
-        doi_data = etree.SubElement(dataset, 'doi_data')
+        doi_data_node = etree.SubElement(dataset_node, 'doi_data')
         res_doi = get_activated_doi(self.doi)
         idx = res_doi.find('10.4211')
         if idx >= 0:
             res_doi = res_doi[idx:]
-        etree.SubElement(doi_data, 'doi').text = res_doi
-        etree.SubElement(doi_data, 'resource').text = self.metadata.identifiers.all().filter(
-            name='hydroShareIdentifier')[0].url
+        etree.SubElement(doi_data_node, 'doi').text = res_doi
+        res_url = self.metadata.identifiers.all().filter(name='hydroShareIdentifier')[0].url
+        etree.SubElement(doi_data_node, 'resource').text = res_url
 
         return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(
             ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
@@ -4242,6 +4386,32 @@ class BaseResource(Page, AbstractResource):
         if dir_path.startswith(self.file_path):
             dir_path = dir_path[len(self.file_path) + 1:]
         return dir_path
+
+    def update_crossref_deposit(self):
+        """
+        Update crossref deposit xml file for this published resource
+        Used when metadata (abstract or funding agency) for a published resource is updated
+        """
+        from hs_core.tasks import update_crossref_meta_deposit
+
+        if not self.raccess.published:
+            err_msg = "Crossref deposit can be updated only for a published resource. "
+            err_msg += f"Resource {self.short_id} is not a published resource."
+            raise ValidationError(err_msg)
+
+        if self.doi.endswith(self.short_id):
+            # doi has no crossref status
+            self.extra_data[CrossRefUpdate.UPDATE.value] = 'False'
+            update_crossref_meta_deposit.apply_async((self.short_id,))
+
+        # check for both 'pending' and 'update_pending' status in doi
+        if CrossRefSubmissionStatus.PENDING in self.doi:
+            # setting this flag will update the crossref deposit when the hourly celery task runs
+            self.extra_data[CrossRefUpdate.UPDATE.value] = 'True'
+
+        # if the resource crossref deposit is in a 'failure' or 'update_failure' state, then update of the
+        # crossref deposit will be attempted when the hourly celery task runs
+        self.save()
 
 
 old_get_content_model = Page.get_content_model
@@ -4661,9 +4831,11 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         :param  user: user who is updating metadata
         :return:
         """
-        from .forms import TitleValidationForm, AbstractValidationForm, LanguageValidationForm, \
-            RightsValidationForm, CreatorValidationForm, ContributorValidationForm, \
-            RelationValidationForm, GeospatialRelationValidationForm, FundingAgencyValidationForm
+        from .forms import (AbstractValidationForm, ContributorValidationForm,
+                            CreatorValidationForm, FundingAgencyValidationForm,
+                            GeospatialRelationValidationForm,
+                            LanguageValidationForm, RelationValidationForm,
+                            RightsValidationForm, TitleValidationForm)
 
         validation_forms_mapping = {'title': TitleValidationForm,
                                     'description': AbstractValidationForm,
@@ -4784,7 +4956,8 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         element_model_name = element_model_name.lower()
-        if self.resource.raccess.published:
+        resource = self.resource
+        if resource.raccess.published:
             if element_model_name == 'creator':
                 raise ValidationError("{} can't be created for a published resource".format(element_model_name))
             elif element_model_name == 'identifier':
@@ -4797,6 +4970,9 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 if date_type and date_type not in ('modified', 'published'):
                     raise ValidationError("{} date can't be created for a published resource".format(date_type))
         element = model_type.model_class().create(**kwargs)
+        if resource.raccess.published:
+            if element_model_name in ('fundingagency',):
+                resource.update_crossref_deposit()
         return element
 
     def update_element(self, element_model_name, element_id, **kwargs):
@@ -4804,7 +4980,8 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         element_model_name = element_model_name.lower()
-        if self.resource.raccess.published:
+        resource = self.resource
+        if resource.raccess.published:
             if element_model_name in ('title', 'creator', 'rights', 'identifier', 'format', 'publisher'):
                 raise ValidationError("{} can't be updated for a published resource".format(element_model_name))
             elif element_model_name == 'date':
@@ -4812,15 +4989,22 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 if date_type and date_type != 'modified':
                     raise ValidationError("{} date can't be updated for a published resource".format(date_type))
         model_type.model_class().update(element_id, **kwargs)
+        if resource.raccess.published:
+            if element_model_name in ('description', 'fundingagency',):
+                resource.update_crossref_deposit()
 
     def delete_element(self, element_model_name, element_id):
         """Delete Metadata element."""
         model_type = self._get_metadata_element_model_type(element_model_name)
         element_model_name = element_model_name.lower()
-        if self.resource.raccess.published:
+        resource = self.resource
+        if resource.raccess.published:
             if element_model_name not in ('subject', 'contributor', 'source', 'relation', 'fundingagency', 'format'):
                 raise ValidationError("{} can't be deleted for a published resource".format(element_model_name))
         model_type.model_class().remove(element_id)
+        if resource.raccess.published:
+            if element_model_name in ('fundingagency',):
+                resource.update_crossref_deposit()
 
     def _get_metadata_element_model_type(self, element_model_name):
         """Get type of metadata element based on model type."""
