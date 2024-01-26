@@ -832,6 +832,7 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
         the new versioned resource url as the payload
     """
     try:
+        ori_res = utils.get_resource_by_shortkey(ori_res_id)
         new_res = None
         if not new_res_id:
             new_res = create_empty_resource(ori_res_id, username)
@@ -839,7 +840,6 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
         utils.copy_resource_files_and_AVUs(ori_res_id, new_res_id)
 
         # copy metadata from source resource to target new-versioned resource except three elements
-        ori_res = utils.get_resource_by_shortkey(ori_res_id)
         if not new_res:
             new_res = utils.get_resource_by_shortkey(new_res_id)
         utils.copy_and_create_metadata(ori_res, new_res)
