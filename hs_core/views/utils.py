@@ -39,7 +39,7 @@ from hs_core import hydroshare
 from hs_core.enums import RelationTypes
 from hs_core.hydroshare import add_resource_files, validate_resource_file_size
 from hs_core.hydroshare import check_resource_type, delete_resource_file
-from hs_core.hydroshare.utils import check_aggregations, get_file_mime_type, validate_user_quota
+from hs_core.hydroshare.utils import check_aggregations, get_file_mime_type, validate_user_quota, QuotaException
 from hs_core.models import AbstractMetaDataElement, BaseResource, Relation, \
     ResourceFile, get_user, CoreMetaData
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
@@ -1070,6 +1070,13 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
 
     istorage.session.run("ibun", None, '-cDzip', '-f', output_zip_full_path, res_coll_input)
     output_zip_size = istorage.size(output_zip_full_path)
+    if not bool_remove_original:
+        try:
+            validate_user_quota(resource.get_quota_holder(), output_zip_size)
+        except QuotaException as ex:
+            # remove the zip file that was created
+            istorage.delete(output_zip_full_path)
+            raise ex
     zip_res_file = link_irods_file_to_django(resource, output_zip_full_path)
     if resource.resource_type == "CompositeResource":
         # make the newly added zip file part of an aggregation if needed
