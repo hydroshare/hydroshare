@@ -819,15 +819,27 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             // Default display message for empty directories
             if (!files.length && !folders.length) {
                 if (mode === "edit") {
-                    $('#fb-files-container').append(
-                        '<div>' +
-                            '<span class="text-muted fb-empty-dir has-space-bottom">This directory is empty</span>' +
-                            '<div class="hs-upload-indicator text-center">' +
-                                '<i class="fa fa-file" aria-hidden="true"></i>' +
-                                '<h4>Drop files here or click "Add files" to upload</h4>' +
-                            '</div>' +
-                        '</div>'
-                    );
+                    if (MAX_FILE_SIZE > 0) {
+                        $('#fb-files-container').append(
+                            '<div>' +
+                                '<span class="text-muted fb-empty-dir has-space-bottom">This directory is empty</span>' +
+                                '<div class="hs-upload-indicator text-center">' +
+                                    '<i class="fa fa-file" aria-hidden="true"></i>' +
+                                    '<h4>Drop files here or click "Add files" to upload</h4>' +
+                                '</div>' +
+                            '</div>'
+                        );
+                    }
+                    else {
+                        $('#fb-files-container').append(
+                            '<div>' +
+                                '<span class="text-muted fb-empty-dir has-space-bottom">This directory is empty</span>' +
+                                '<div class="hs-upload-indicator text-center">' +
+                                    '<h4>File upload disabled due to quota enforcement</h4>' +
+                                '</div>' +
+                            '</div>'
+                        );
+                    }
                 }
                 else {
                     $('#fb-files-container').append(
@@ -910,6 +922,7 @@ function zip_by_aggregation_file_ajax_submit(res_id, aggregationPath, zipFileNam
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/zip-by-aggregation-file/',
+        // TODO #5228 prevent zip-by-aggregation-file for quota enforcement
         async: true,
         data: {
             res_id: res_id,
@@ -932,6 +945,7 @@ function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path, overwrite, unzi
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-folder-unzip/',
+        // TODO #5228 prevent data-store-folder-unzip for quota enforcement
         async: true,
         data: {
             res_id: res_id,
@@ -989,6 +1003,7 @@ function add_ref_content_ajax_submit(res_id, curr_path, ref_name, ref_url, valid
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-add-reference/',
+        // TODO: 5228 prevent data store add folder for quota enforcement
         async: true,
         data: {
             res_id: res_id,

@@ -745,7 +745,6 @@ def validate_user_quota(user_or_username, size):
                  size input parameter should be in byte unit
     :return: raise exception for the over quota case
     """
-    # todo 5228 check when we run this validation
     if user_or_username:
         if isinstance(user_or_username, User):
             user = user_or_username
@@ -780,6 +779,36 @@ def validate_user_quota(user_or_username, size):
                                                       zone=uq.zone,
                                                       percent=rounded_percent)
                     raise QuotaException(msg_str)
+
+
+def get_remaining_user_quota(user_or_username, units='MB'):
+    """
+    get the remaining quota for the user
+    :param user_or_username: the user to be validated
+    :param units: the units for the quota to be returned. It should be one of the four: 'kb', 'mb', 'gb', 'tb'
+    :return: the remaining quota for the user, or None if the quota is not enforced
+    """
+    if user_or_username:
+        if isinstance(user_or_username, User):
+            user = user_or_username
+        else:
+            try:
+                user = User.objects.get(username=user_or_username)
+            except User.DoesNotExist:
+                user = None
+    else:
+        user = None
+
+    if user:
+        uq = user.quotas.filter(zone='hydroshare').first()
+        if uq:
+            qmsg = QuotaMessage.objects.first()
+            enforce_flag = qmsg.enforce_quota
+            if enforce_flag:
+                remaining = uq.allocated_value - uq.used_value
+                remaining = convert_file_size_to_unit(remaining, units)
+                return min(remaining, 0)
+    return None
 
 
 def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key,

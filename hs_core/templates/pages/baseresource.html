@@ -284,7 +284,7 @@
                         <span class="glyphicon glyphicon-trash icon-button btn-remove"></span>
                         <span>Delete</span>
                     </li>
-
+                    <!-- TODO 5228 prevent zip/unzip for quota -->
                     <li id="zip-separator" role="separator" class="divider"></li>
 
                     <li id="btn-zip" data-menu-name="zip" data-toggle="modal" data-fb-action="zip"
@@ -674,7 +674,7 @@
                                         <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12">
                                             {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                                                 {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
-                                                    <a type="button" data-fb-action="uploadFiles"
+                                                    <a {% if max_file_size <= 0 %}disabled{% endif %} type="button" data-fb-action="uploadFiles"
                                                        class="btn btn-success btn-xs dz-clickable upload-toggle">
                                                         <i class="fa fa-plus"></i> Add files
                                                     </a>
@@ -684,7 +684,8 @@
                                                                 class="btn btn-default btn-xs dropdown-toggle fb-space-right"
                                                                 data-toggle="dropdown" aria-haspopup="true"
                                                                 title="Add files from an iRODS server"
-                                                                aria-expanded="false">
+                                                                aria-expanded="false"
+                                                                {% if max_file_size <= 0 %}disabled{% endif %}>
                                                             <span>iRODS</span>&nbsp;<span class="caret"></span>
                                                         </button>
 
@@ -726,7 +727,7 @@
                                                             title="Create new folder">
                                                         <span class="fa fa-folder icon-blue"></span>
                                                     </button>
-                                                    <button id="fb-add-reference" class="fb-space-right"
+                                                    <button id="fb-add-reference" class="fb-space-right {% if max_file_size <= 0 %}disabled{% endif %}"
                                                             data-fb-action="createFolder"
                                                             data-toggle="modal"
                                                             data-target="#add-reference-url-dialog"
@@ -753,7 +754,7 @@
                                                         <span class="glyphicon glyphicon-pencil icon-blue"></span>
                                                     </button>
                                                 {% endif %}
-
+                                                <!-- TODO: 5228 disabled zip/unzip for quota -->
                                                 {% if cm.resource_type == "CompositeResource" %}
                                                     <button id="fb-zip" data-fb-action="zip"
                                                             class="disabled"
@@ -877,9 +878,14 @@
                                     {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                                         {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
                                             <div class="fb-upload-caption ">
-                                                <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload files
-                                                smaller than 1GB in size by dragging & dropping, or click <a
-                                                    class="dz-clickable upload-toggle">here</a> to select them.
+                                                {% if max_file_size > 0 %}
+                                                    <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload files
+                                                    smaller than {{ max_file_size }}MB in size by dragging & dropping, or click <a
+                                                        class="dz-clickable upload-toggle">here</a> to select them.
+                                                {% else %}
+                                                    <i class="fa fa-exclamation" aria-hidden="true"></i>&nbsp;&nbsp;File upload
+                                                    is disabled due to quota enforcement.
+                                                {% endif %}
                                             </div>
                                         {% endif %}
                                     {% endif %}
@@ -1012,7 +1018,7 @@
       const SHORT_ID = "{{ cm.short_id }}";
       var global_num_ext_refs = 0;
       var global_custom_citation = "{{ custom_citation }}";
-
+      const MAX_FILE_SIZE = {{ max_file_size }};
       $.ajax({
         type: "GET",
         url: '/hsapi/_internal/' + SHORT_ID + '/list-referenced-content/',
