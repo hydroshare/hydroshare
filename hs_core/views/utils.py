@@ -37,10 +37,9 @@ from django_irods.storage import IrodsStorage
 from hs_access_control.models import PrivilegeCodes
 from hs_core import hydroshare
 from hs_core.enums import RelationTypes
-from hs_core.hydroshare import add_resource_files
+from hs_core.hydroshare import add_resource_files, validate_resource_file_size
 from hs_core.hydroshare import check_resource_type, delete_resource_file
-from hs_core.hydroshare.utils import check_aggregations
-from hs_core.hydroshare.utils import get_file_mime_type
+from hs_core.hydroshare.utils import check_aggregations, get_file_mime_type, validate_user_quota
 from hs_core.models import AbstractMetaDataElement, BaseResource, Relation, \
     ResourceFile, get_user, CoreMetaData
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
@@ -1308,6 +1307,9 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                                     istorage.delete(override_tgt_path)
                     else:
                         istorage.delete(override_tgt_path)
+
+            size = validate_resource_file_size(res_files)
+            validate_user_quota(resource.get_quota_holder(), size)
 
             # now move each file to the destination
             for file in res_files:

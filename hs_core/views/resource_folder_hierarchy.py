@@ -12,7 +12,7 @@ from rest_framework.response import Response
 
 from django_irods.icommands import SessionException
 from hs_core.hydroshare import delete_resource_file
-from hs_core.hydroshare.utils import get_file_mime_type, resolve_request
+from hs_core.hydroshare.utils import get_file_mime_type, resolve_request, validate_user_quota
 from hs_core.models import ResourceFile
 from hs_core.task_utils import get_or_create_task_notification
 from hs_core.tasks import FileOverrideException, unzip_task
