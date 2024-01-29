@@ -90,7 +90,7 @@
                                     <hr>
                                     {# Account creation/deletion in iRODS user zone #}
                                     <div id="irods-account-container">
-                                        {% if profile.create_irods_user_account %}
+                                        {% if profile.get_user_zone_status_info %}
                                             {# an iRODS account already exists #}
                                             <a data-toggle="modal" data-target="#delete-irods-account-dialog">Delete your iRODS user account</a>
                                         {% else %}
@@ -476,7 +476,7 @@
                                             {% endif %}
                                             {% if profile_user.id == user.id or user.is_superuser %}
                                                 <br>
-                                                {% if profile.create_irods_user_account %}
+                                                {% if profile.get_user_zone_status_info %}
                                                     <div class="alert alert-success">You have created an associated iRODS account (username: <strong>{{ profile_user.username }}</strong>) in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
                                                 {% else %}
                                                     <div class="alert alert-warning">You have not created an associated iRODS account in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>

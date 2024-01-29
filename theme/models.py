@@ -4,6 +4,7 @@ import logging
 
 from django.utils import timezone
 from django.dispatch import receiver
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
 from django.forms import ModelForm
@@ -455,6 +456,18 @@ class UserProfile(models.Model):
             missing.append("User Type")
         return missing
 
+    @property
+    def get_user_zone_status_info(self):
+        """
+        This function should be called to determine whether user zone functionality should be
+        enabled or not on the web site front end
+        Returns:
+            enable_user_zone boolean indicating whether user zone functionality should be enabled or
+            not on the web site front end
+        """
+        enable_user_zone = self.create_irods_user_account and settings.REMOTE_USE_IRODS
+        return enable_user_zone
+
 
 def force_unique_emails(sender, instance, **kwargs):
     if instance:
@@ -520,6 +533,10 @@ def update_user_quota_on_quota_request(sender, instance, **kwargs):
     try:
         qr = QuotaRequest.objects.get(pk=instance.pk)
         qr.quota.allocated_value += qr.storage
+
+        # approving a quota request will also reset the grace period
+        # this is done by the reset_grace_period_on_allocation_change signal
+
         qr.quota.save()
         notify_user_of_quota_action(qr)
     except QuotaRequest.DoesNotExist:
@@ -528,10 +545,24 @@ def update_user_quota_on_quota_request(sender, instance, **kwargs):
         )
 
 
+@receiver(models.signals.pre_save, sender=UserQuota)
+def reset_grace_period_on_allocation_change(sender, instance, **kwargs):
+    """
+    Reset the pending UserQuota grace perioud when the allocated_value is modified in the UserQuota
+    """
+    if instance.id is None:  # new object will be created
+        pass
+    else:
+        previous = UserQuota.objects.get(id=instance.id)
+        if previous.allocated_value != instance.allocated_value:
+            # allocated_value is being updated
+            instance.grace_period_ends = None
+
+
 @receiver(models.signals.pre_save, sender=QuotaMessage)
 def update_user_quota_on_grace_period_change(sender, instance, **kwargs):
     """
-    Adjust the pending UserQuota grace periouds when the grace period setting is modified in the QuotaMessage
+    Adjust the pending UserQuota grace periods when the grace period setting is modified in the QuotaMessage
     """
     if instance.id is None:  # new object will be created
         pass
