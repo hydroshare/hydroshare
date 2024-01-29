@@ -39,6 +39,7 @@ def get_quota_message(user):
     :return: quota message string
     """
     from theme.models import QuotaMessage
+    from hs_core.tasks import send_user_notification_at_quota_grace_start
     if not QuotaMessage.objects.exists():
         QuotaMessage.objects.create()
     qmsg = QuotaMessage.objects.first()
@@ -60,6 +61,7 @@ def get_quota_message(user):
             grace = today + timedelta(days=qmsg.grace_period)
             uq.grace_period_ends = grace
             uq.save()
+            send_user_notification_at_quota_grace_start.apply_async((user,))
 
         if percent >= hard_limit or (percent >= 100 and grace <= today):
             # return quota enforcement message
