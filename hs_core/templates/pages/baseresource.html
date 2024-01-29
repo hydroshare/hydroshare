@@ -880,7 +880,7 @@
                                             <div class="fb-upload-caption ">
                                                 {% if max_file_size > 0 %}
                                                     <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload files
-                                                    smaller than {{ max_file_size }}MB in size by dragging & dropping, or click <a
+                                                    smaller than {{ max_file_size|floatformat:"1" }}MB in size by dragging & dropping, or click <a
                                                         class="dz-clickable upload-toggle">here</a> to select them.
                                                 {% else %}
                                                     <i class="fa fa-exclamation" aria-hidden="true"></i>&nbsp;&nbsp;File upload

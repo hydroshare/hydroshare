@@ -711,17 +711,36 @@ def validate_resource_file_count(resource_cls, files):
             raise ResourceFileValidationException(err_msg)
 
 
-def convert_file_size_to_unit(size, unit):
+def convert_file_size_to_unit(size, to_unit, from_unit='B'):
     """
     Convert file size to unit for quota comparison
-    :param size: in byte unit
-    :param unit: should be one of the four: 'KB', 'MB', 'GB', or 'TB'
+    :param size: the size to be converted
+    :param to_unit: should be one of the four: 'KB', 'MB', 'GB', or 'TB'
+    :param from_unit: should be one of the five: 'B', 'KB', 'MB', 'GB', or 'TB'
     :return: the size converted to the pass-in unit
     """
-    unit = unit.lower()
+    unit = to_unit.lower()
     if unit not in ('kb', 'mb', 'gb', 'tb'):
         raise ValidationError('Pass-in unit for file size conversion must be one of KB, MB, GB, '
                               'or TB')
+    from_unit = from_unit.lower()
+    if from_unit not in ('b', 'kb', 'mb', 'gb', 'tb'):
+        raise ValidationError('Starting unit for file size conversion must be one of B, KB, MB, GB, '
+                              'or TB')
+    # First convert to byte unit
+    if from_unit == 'b':
+        factor = 0
+    elif from_unit == 'kb':
+        factor = 1
+    elif from_unit == 'mb':
+        factor = 2
+    elif from_unit == 'gb':
+        factor = 3
+    else:
+        factor = 4
+    size = size * 1024**factor
+
+    # Now convert to the pass-in unit
     factor = 1024.0
     kbsize = size / factor
     if unit == 'kb':
@@ -806,8 +825,8 @@ def get_remaining_user_quota(user_or_username, units='MB'):
             enforce_flag = qmsg.enforce_quota
             if enforce_flag:
                 remaining = uq.allocated_value - uq.used_value
-                remaining = convert_file_size_to_unit(remaining, units)
-                return min(remaining, 0)
+                remaining = convert_file_size_to_unit(remaining, to_unit=units, from_unit=uq.unit)
+                return max(remaining, 0)
     return None
 
 
