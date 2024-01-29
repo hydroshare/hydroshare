@@ -835,7 +835,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                             '<div>' +
                                 '<span class="text-muted fb-empty-dir has-space-bottom">This directory is empty</span>' +
                                 '<div class="hs-upload-indicator text-center">' +
-                                    '<h4>File upload disabled due to quota enforcement</h4>' +
+                                    '<h4>File upload disabled due to your storage being over quota.</h4>' +
                                 '</div>' +
                             '</div>'
                         );
