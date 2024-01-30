@@ -13,9 +13,6 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
 
-        # a list of resource id's: if none, process all published resources
-        parser.add_argument('resource_ids', nargs='*', type=str)
-
         parser.add_argument('--months', type=int, dest='months', help='include res not updated in the last X months')
 
     def convert_size(self, size_bytes):
@@ -31,13 +28,7 @@ class Command(BaseCommand):
         resources = []
         add_message = ""
         months = options['months']
-        if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
-            if months:
-                raise CommandError("Cant privide resource_ids and also filter by months")
-            for rid in options['resource_ids']:
-                resources.append(get_resource_by_shortkey(rid))
-        else:
-            resources = BaseResource.objects.all()
+        resources = BaseResource.objects.all()
 
         if months:
             print(f"FILTERING TO INCLUDE RESOURCES NOT UPDATED IN UPDATED IN LAST {months} MONTHS")
