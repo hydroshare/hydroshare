@@ -789,7 +789,9 @@ def validate_user_quota(user_or_username, size):
                 used_percent = uq.used_percent
                 rounded_percent = round(used_percent, 2)
                 rounded_used_val = round(used_size, 4)
-                if used_percent >= hard_limit or uq.grace_period_ends <= date.today():
+                grace_ends = uq.grace_period_ends
+                past_grace_period = grace_ends < date.today() if grace_ends else False
+                if used_percent >= hard_limit or past_grace_period:
                     msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
                                                          qmsg.content)
                     msg_str = msg_template_str.format(used=rounded_used_val,
