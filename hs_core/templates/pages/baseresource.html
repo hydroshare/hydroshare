@@ -284,24 +284,25 @@
                         <span class="glyphicon glyphicon-trash icon-button btn-remove"></span>
                         <span>Delete</span>
                     </li>
-                    <!-- TODO 5228 prevent zip/unzip for quota -->
-                    <li id="zip-separator" role="separator" class="divider"></li>
+                    {% if max_file_size > 0 %}
+                        <li id="zip-separator" role="separator" class="divider"></li>
 
-                    <li id="btn-zip" data-menu-name="zip" data-toggle="modal" data-fb-action="zip"
-                        data-target="#zip-folder-dialog">
-                        <span class="glyphicon glyphicon-compressed icon-blue"></span>
-                        <span>Zip folder...</span>
-                    </li>
+                        <li id="btn-zip" data-menu-name="zip" data-toggle="modal" data-fb-action="zip"
+                            data-target="#zip-folder-dialog">
+                            <span class="glyphicon glyphicon-compressed icon-blue"></span>
+                            <span>Zip folder...</span>
+                        </li>
 
-                    <li id="btn-unzip" data-menu-name="unzip" data-fb-action="unzip">
-                        <span class="fa fa-file-archive-o icon-blue"></span>
-                        <span>Unzip here</span>
-                    </li>
+                        <li id="btn-unzip" data-menu-name="unzip" data-fb-action="unzip">
+                            <span class="fa fa-file-archive-o icon-blue"></span>
+                            <span>Unzip here</span>
+                        </li>
 
-                    <li id="btn-unzip-to-folder" data-menu-name="unzip-to-folder" data-fb-action="unzipToFolder">
-                        <span class="fa fa-file-archive-o icon-blue"></span>
-                        <span>Unzip to folder</span>
-                    </li>
+                        <li id="btn-unzip-to-folder" data-menu-name="unzip-to-folder" data-fb-action="unzipToFolder">
+                            <span class="fa fa-file-archive-o icon-blue"></span>
+                            <span>Unzip to folder</span>
+                        </li>
+                    {% endif %}
 
                     <li role="separator" class="divider"></li>
                 {% endif %}
@@ -755,7 +756,7 @@
                                                     </button>
                                                 {% endif %}
                                                 <!-- TODO: 5228 disabled zip/unzip for quota -->
-                                                {% if cm.resource_type == "CompositeResource" %}
+                                                {% if cm.resource_type == "CompositeResource" and max_file_size > 0 %}
                                                     <button id="fb-zip" data-fb-action="zip"
                                                             class="disabled"
                                                             title="Zip folder" data-toggle="modal"
