@@ -1,8 +1,7 @@
 import math
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 
 from hs_core.models import BaseResource
-from hs_core.hydroshare.utils import get_resource_by_shortkey
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from datetime import timedelta
