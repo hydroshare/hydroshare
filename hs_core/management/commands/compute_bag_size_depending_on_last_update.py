@@ -13,7 +13,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
 
-        parser.add_argument('--months', type=int, dest='months', help='include res not updated in the last X months')
+        parser.add_argument('--weeks', type=int, dest='weeks', help='include res not updated in the last X weeks')
 
     def convert_size(self, size_bytes):
         if size_bytes == 0:
@@ -27,13 +27,13 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         resources = []
         add_message = ""
-        months = options['months']
+        weeks = options['weeks']
         resources = BaseResource.objects.all()
 
-        if months:
-            print(f"FILTERING TO INCLUDE RESOURCES NOT UPDATED IN UPDATED IN LAST {months} MONTHS")
-            add_message = f"for resources not updated in last {months} months"
-            cuttoff_time = timezone.now() - timedelta(months)
+        if weeks:
+            print(f"FILTERING TO INCLUDE RESOURCES NOT UPDATED IN UPDATED IN LAST {weeks} WEEKS")
+            add_message = f"for resources not updated in last {weeks} weeks"
+            cuttoff_time = timezone.now() - timedelta(weeks=weeks)
             resources = resources.filter(updated__lte=cuttoff_time)
         cumulative_size = 0
         count = len(resources)
