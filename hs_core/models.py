@@ -4041,6 +4041,10 @@ class BaseResource(Page, AbstractResource):
         # titles is required element for database_metadata
         titles_node = etree.SubElement(db_md_node, 'titles')
         etree.SubElement(titles_node, 'title').text = "HydroShare Resources"
+        # add publisher element to database_metadata
+        pub_node = etree.SubElement(db_md_node, 'publisher')
+        etree.SubElement(pub_node, 'publisher_name').text = "HydroShare"
+
         # create the dataset sub element, dataset_type can be record or collection, set it to
         # collection for HydroShare resources
         dataset_node = etree.SubElement(db_node, 'dataset', dataset_type="record")
