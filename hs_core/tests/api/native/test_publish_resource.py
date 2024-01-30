@@ -150,6 +150,9 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
         <titles>
           <title>HydroShare Resources</title>
         </titles>
+        <publisher>
+          <publisher_name>HydroShare</publisher_name>
+        </publisher>
       </database_metadata>
       <dataset dataset_type="record">
         <contributors>
