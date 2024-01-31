@@ -2,6 +2,7 @@ import difflib
 import unittest
 
 import arrow
+from freezegun import freeze_time
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.test import TestCase
@@ -107,12 +108,16 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
         if not hasattr(settings, 'DEFAULT_SUPPORT_EMAIL'):
             settings.DEFAULT_SUPPORT_EMAIL = "help@cuahsi.org"
 
+        freeze = arrow.now().format("YYYY-MM-DD HH:mm:ss")
+        freezer = freeze_time(freeze)
+        freezer.start()
+
         # set doi - simulating published resource
         self.res.doi = get_resource_doi(self.res.short_id)
         self.res.save()
         crossref_xml = self.res.get_crossref_deposit_xml()
         crossref_xml = crossref_xml.strip()
-        timestamp = arrow.get(self.res.updated).format("YYYYMMDDHHmmss")
+        timestamp = arrow.now().format("YYYYMMDDHHmmss")
         res_id = self.res.short_id
         created_date = self.res.created
         updated_date = self.res.updated
@@ -126,6 +131,9 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
                                                        published_date=published_date, site_url=site_url,
                                                        support_email=support_email)
         expected_xml = expected_xml.strip()
+
+        freezer.stop()
+
         self.assertTrue(len(crossref_xml) == len(expected_xml))
         match_ratio = difflib.SequenceMatcher(None, crossref_xml.splitlines(), expected_xml.splitlines()).ratio()
         self.assertTrue(match_ratio == 1.0, msg="crossref xml is not as expected")
