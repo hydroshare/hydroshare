@@ -1190,7 +1190,7 @@ def create_new_version_resource_public(request, pk):
     :return: HttpResponse with status code
     """
     redirect = create_new_version_resource(request, pk)
-    if redirect.status_code != 200:
+    if not redirect.status_code < 400:
         return redirect
     return HttpResponse(redirect.url.split("/")[2], status=202)
 
