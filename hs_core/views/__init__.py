@@ -1124,7 +1124,7 @@ def copy_resource_public(request, pk):
     :param pk: id of the resource to be copied
     """
     response = copy_resource(request, pk)
-    if response.status_code != 200:
+    if not response.status_code < 400:
         return response
     return HttpResponse(response.url.split("/")[2], status=202)
 
