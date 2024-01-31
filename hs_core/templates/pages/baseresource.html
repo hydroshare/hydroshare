@@ -431,12 +431,14 @@
                             <span class="fa fa-folder icon-blue"></span>
                             <span>New folder</span>
                         </li>
-                        <li id="menu-add-reference" data-menu-name="add-reference" data-toggle="modal"
-                            data-fb-action="createFolder"
-                            data-target="#add-reference-url-dialog">
-                            <span class="fa fa-external-link icon-blue"></span>
-                            <span>Add content from the web</span>
-                        </li>
+                        {% if max_file_size > 0 %}
+                            <li id="menu-add-reference" data-menu-name="add-reference" data-toggle="modal"
+                                data-fb-action="createFolder"
+                                data-target="#add-reference-url-dialog">
+                                <span class="fa fa-external-link icon-blue"></span>
+                                <span>Add content from the web</span>
+                            </li>
+                        {% endif %}
                         <li data-menu-name="paste" data-fb-action="paste">
                             <span class="fa fa-clipboard icon-blue"></span>
                             <span>Paste</span>
@@ -728,13 +730,15 @@
                                                             title="Create new folder">
                                                         <span class="fa fa-folder icon-blue"></span>
                                                     </button>
-                                                    <button id="fb-add-reference" class="fb-space-right {% if max_file_size <= 0 %}disabled{% endif %}"
-                                                            data-fb-action="createFolder"
-                                                            data-toggle="modal"
-                                                            data-target="#add-reference-url-dialog"
-                                                        title="Add content from the web">
-                                                    <span class="fa fa-external-link icon-blue"></span>
-                                                    </button>
+                                                    {% if max_file_size > 0 %}
+                                                        <button id="fb-add-reference" class="fb-space-right {% if max_file_size <= 0 %}disabled{% endif %}"
+                                                                data-fb-action="createFolder"
+                                                                data-toggle="modal"
+                                                                data-target="#add-reference-url-dialog"
+                                                            title="Add content from the web">
+                                                        <span class="fa fa-external-link icon-blue"></span>
+                                                        </button>
+                                                    {% endif %}
                                                     <button id="fb-cut" data-fb-action="cut"
                                                             class="disabled"
                                                             title="Cut">
@@ -755,7 +759,7 @@
                                                         <span class="glyphicon glyphicon-pencil icon-blue"></span>
                                                     </button>
                                                 {% endif %}
-                                                <!-- TODO: 5228 disabled zip/unzip for quota -->
+
                                                 {% if cm.resource_type == "CompositeResource" and max_file_size > 0 %}
                                                     <button id="fb-zip" data-fb-action="zip"
                                                             class="disabled"

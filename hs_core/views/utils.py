@@ -149,6 +149,13 @@ def add_url_file_to_resource(res_id, ref_url, ref_file_name, curr_path):
     urltempfile = NamedTemporaryFile()
     urlstring = '[InternetShortcut]\nURL=' + ref_url + '\n'
     urltempfile.write(urlstring.encode())
+    urltempfile.flush()  # Make sure all data is written to the file
+
+    # validate file size before adding file to resource
+    file_size = os.path.getsize(urltempfile.name)
+    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+    validate_user_quota(resource.get_quota_holder(), file_size)
+
     fileobj = File(file=urltempfile, name=ref_file_name)
 
     filelist = add_resource_files(res_id, fileobj, folder=curr_path)
@@ -191,12 +198,13 @@ def add_reference_url_to_resource(user, res_id, ref_url, ref_name, curr_path,
     if res.raccess.published and not user.is_superuser:
         err_msg = "Only admin can add file to a published resource"
         return status.HTTP_400_BAD_REQUEST, err_msg, None
-
-    f = add_url_file_to_resource(res_id, ref_url, ref_name, curr_path)
-
-    if not f:
-        return status.HTTP_500_INTERNAL_SERVER_ERROR, 'New url file failed to be added to the ' \
-                                                      'resource', None
+    try:
+        f = add_url_file_to_resource(res_id, ref_url, ref_name, curr_path)
+        if not f:
+            return status.HTTP_500_INTERNAL_SERVER_ERROR, 'New url file failed to be added to the ' \
+                                                          'resource', None
+    except QuotaException as ex:
+        return status.HTTP_400_BAD_REQUEST, str(ex), None
 
     # make sure the new file has logical file set and is single file aggregation
     try:
@@ -1150,6 +1158,10 @@ def zip_by_aggregation_file(user, res_id, aggregation_name, output_zip_fname):
     irods_aggr_input_path = os.path.join(resource.file_path, aggregation_name)
     create_temp_zip(resource_id=res_id, input_path=irods_aggr_input_path, output_path=irods_output_path,
                     aggregation_name=aggregation_name)
+
+    # validate the size of the zip file with the user quota
+    zip_file_size = istorage.size(irods_output_path)
+    validate_user_quota(resource.get_quota_holder(), zip_file_size)
 
     # move the zip file to the input path
     move_zip_file_to = os.path.dirname(irods_aggr_input_path)

@@ -922,7 +922,6 @@ function zip_by_aggregation_file_ajax_submit(res_id, aggregationPath, zipFileNam
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/zip-by-aggregation-file/',
-        // TODO #5228 prevent zip-by-aggregation-file for quota enforcement
         async: true,
         data: {
             res_id: res_id,
@@ -945,7 +944,6 @@ function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path, overwrite, unzi
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-folder-unzip/',
-        // TODO #5228 prevent data-store-folder-unzip for quota enforcement
         async: true,
         data: {
             res_id: res_id,
@@ -1003,7 +1001,6 @@ function add_ref_content_ajax_submit(res_id, curr_path, ref_name, ref_url, valid
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-add-reference/',
-        // TODO: 5228 prevent data store add folder for quota enforcement
         async: true,
         data: {
             res_id: res_id,
@@ -1031,6 +1028,7 @@ function add_ref_content_ajax_submit(res_id, curr_path, ref_name, ref_url, valid
             else {
                 // Response text is not yet user friendly enough to display in UI
                 display_error_message('Error', "Failed to add reference content.");
+                console.error(`Failed to add reference content: ${xhr.responseText}`);
                 $('#add-reference-url-dialog').modal('hide');
                 $('#validate-reference-url-dialog').modal('hide');
             }
