@@ -507,23 +507,38 @@
                 {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                     {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
                         <div id="fb-alerts">
-                            <div class="alert alert-warning alert-dismissible" role="alert">
-                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
+                            {% if max_file_size > 0 %}
+                                <div class="alert alert-warning alert-dismissible" role="alert">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
 
-                                <div class="flex">
-                                    <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
-                                    <em>
-                                        <strong>Uploading</strong>
-                                        <ul>
-                                            <li><span id="file-types"></span></li>
-                                            <li><span id="file-multiple"></span></li>
-                                            {% block upload_message %}{% endblock %}
-                                        </ul>
-                                    </em>
+                                    <div class="flex">
+                                        <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                                        <em>
+                                            <strong>Uploading</strong>
+                                            <ul>
+                                                <li><span id="file-types"></span></li>
+                                                <li><span id="file-multiple"></span></li>
+                                                {% block upload_message %}{% endblock %}
+                                            </ul>
+                                        </em>
+                                    </div>
                                 </div>
-                            </div>
+                            {% else %}
+                                <div class="alert alert-danger alert-dismissible" role="alert">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                    <div class="flex">
+                                        <i class="fa fa-exclamation-circle" style="margin-right: 20px; margin-left: 10px;"></i>
+                                        <em>
+                                            File upload is not allowed because you have exceeded your quota.
+                                            More information can be found on your <a href="/user/{{current_user.id}}">User Profile</a> page.
+                                        </em>
+                                    </div>
+                                </div>
+                            {% endif %}
                         </div>
                    {% endif %}
                 {% endif %}
@@ -882,16 +897,13 @@
 
                                     {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                                         {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
-                                            <div class="fb-upload-caption ">
-                                                {% if max_file_size > 0 %}
-                                                    <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload files
-                                                    smaller than {{ max_file_size|floatformat:"1" }}MB in size by dragging & dropping, or click <a
-                                                        class="dz-clickable upload-toggle">here</a> to select them.
-                                                {% else %}
-                                                    <i class="fa fa-exclamation" aria-hidden="true"></i>&nbsp;&nbsp;File upload
-                                                    is disabled, you have exceeded you quota. ...TODO: 5228 add link.
-                                                {% endif %}
-                                            </div>
+                                            {% if max_file_size > 0 %}
+                                                <div class="fb-upload-caption">
+                                                    <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;
+                                                    Upload files smaller than {{ max_file_size|floatformat:"1" }}MB in size by dragging & dropping, or click 
+                                                    <a class="dz-clickable upload-toggle">here</a> to select them.
+                                                </div>
+                                            {% endif %}
                                         {% endif %}
                                     {% endif %}
                                 </div>

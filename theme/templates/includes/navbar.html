@@ -477,7 +477,7 @@
                     console.log(response);
                     $(".custom-alert").alert('close');  // Dismiss previous alert
                     errorMsg += `: \n${response.message}`
-                    customAlert("Error", errorMsg, "error", 6000);
+                    customAlert("Error", errorMsg, "error", -1, dismissable=true);
                     $("html").css("cursor", "initial");
                     $(".navbar-inverse .res-dropdown").toggleClass("disabled", false);
                 }
