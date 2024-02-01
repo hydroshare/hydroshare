@@ -2050,7 +2050,7 @@ $(document).ready(function () {
 
                     $("#fb-alerts .upload-failed-alert").remove();
                     $("#hsDropzone").toggleClass("glow-blue", false);
-
+                    // TODO: #5228 - Display error message in a more user-friendly way
                     $("#fb-alerts").append(
                             '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
                                 '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
