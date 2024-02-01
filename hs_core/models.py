@@ -4023,8 +4023,7 @@ class BaseResource(Page, AbstractResource):
         # create the head sub element
         head_node = etree.SubElement(ROOT, 'head')
         etree.SubElement(head_node, 'doi_batch_id').text = self.short_id
-        etree.SubElement(head_node, 'timestamp').text = arrow.get(self.updated)\
-            .format("YYYYMMDDHHmmss")
+        etree.SubElement(head_node, 'timestamp').text = arrow.now().format("YYYYMMDDHHmmss")
         depositor_node = etree.SubElement(head_node, 'depositor')
         etree.SubElement(depositor_node, 'depositor_name').text = 'HydroShare'
         etree.SubElement(depositor_node, 'email_address').text = settings.DEFAULT_SUPPORT_EMAIL
@@ -4041,6 +4040,10 @@ class BaseResource(Page, AbstractResource):
         # titles is required element for database_metadata
         titles_node = etree.SubElement(db_md_node, 'titles')
         etree.SubElement(titles_node, 'title').text = "HydroShare Resources"
+        # add publisher element to database_metadata
+        pub_node = etree.SubElement(db_md_node, 'publisher')
+        etree.SubElement(pub_node, 'publisher_name').text = "HydroShare"
+
         # create the dataset sub element, dataset_type can be record or collection, set it to
         # collection for HydroShare resources
         dataset_node = etree.SubElement(db_node, 'dataset', dataset_type="record")
