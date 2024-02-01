@@ -176,7 +176,6 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
 
         unzip_url = "/hsapi/resource/%s/functions/unzip/test.zip/" % self.pid
         response = self.client.post(unzip_url, data={"remove_original_zip": "false"})
-        # TODO: 5228 - This should return a 400 it currently returns a 500
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         response = self.client.post(unzip_url, data={"remove_original_zip": "true"})

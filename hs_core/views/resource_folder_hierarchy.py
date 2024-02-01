@@ -475,7 +475,7 @@ def data_store_folder_unzip(request, **kwargs):
                            "iRODS error follows: "
             err_msg = specific_msg + ex.stderr
             return JsonResponse({"error": err_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        except (DRF_ValidationError, SuspiciousFileOperation, FileOverrideException) as ex:
+        except (DRF_ValidationError, SuspiciousFileOperation, FileOverrideException, QuotaException) as ex:
             err_msg = ex.detail if isinstance(ex, DRF_ValidationError) else str(ex)
             return JsonResponse({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as ex:
