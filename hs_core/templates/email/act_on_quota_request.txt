@@ -13,8 +13,6 @@
 
     USED: {{ user_quota.used_value }}{{ user_quota.unit }}<br>
 
-    ZONE: {{ user_quota.zone }}<br>
-
     GRACE PERIOD ENDS: {{ user_quota.grace_period_ends }}<br>
 
     <p>Requesting user information:</p>

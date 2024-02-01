@@ -193,7 +193,7 @@ class QuotaMessage(models.Model):
     # after grace period or when they are over hard limit quota
     warning_content_prepend = models.TextField(
         default="Your quota for HydroShare resources is "
-        "{allocated}{unit} in {zone} zone. You "
+        "{allocated}{unit}. You "
         "currently have resources that consume "
         "{used}{unit}, {percent}% of your quota. "
         "Once your quota reaches 100% you will no "
@@ -203,8 +203,7 @@ class QuotaMessage(models.Model):
     grace_period_content_prepend = models.TextField(
         default="You have exceeded your HydroShare "
         "quota. Your quota for HydroShare "
-        "resources is {allocated}{unit} in "
-        "{zone} zone. You currently have "
+        "resources is {allocated}{unit}. You currently have "
         "resources that consume {used}{unit}, "
         "{percent}% of your quota. You have a "
         "grace period until {cut_off_date} to "
@@ -214,10 +213,10 @@ class QuotaMessage(models.Model):
         "create new resources in HydroShare. "
     )
     enforce_content_prepend = models.TextField(
-        default="Your action "
-        "was refused because you have exceeded your "
+        default="You can not take further action "
+        "because you have exceeded your "
         "quota. Your quota for HydroShare resources "
-        "is {allocated}{unit} in {zone} zone. You "
+        "is {allocated}{unit}. You "
         "currently have resources that consume "
         "{used}{unit}, {percent}% of your quota. "
     )
@@ -265,7 +264,6 @@ class UserQuota(models.Model):
     user_zone_value = models.FloatField(default=0)
     data_zone_value = models.FloatField(default=0)
     unit = models.CharField(max_length=10, default="GB")
-    zone = models.CharField(max_length=100, default="hydroshare")
     # grace_period_ends to be quota-enforced. Default is None meaning the user is below
     # soft quota limit and thus grace period has not started. When today=grace_period_ends, quota
     # enforcement takes place
@@ -278,7 +276,6 @@ class UserQuota(models.Model):
     class Meta:
         verbose_name = _("User quota")
         verbose_name_plural = _("User quotas")
-        unique_together = ("user", "zone")
 
     @property
     def used_percent(self):
