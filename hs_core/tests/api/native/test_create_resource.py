@@ -415,6 +415,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             res.delete()
 
     def test_create_resource_over_quota(self):
+        # TODO: 5228
         if not QuotaMessage.objects.exists():
             QuotaMessage.objects.create()
         qmsg = QuotaMessage.objects.first()

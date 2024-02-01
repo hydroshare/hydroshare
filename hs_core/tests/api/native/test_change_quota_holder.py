@@ -36,6 +36,7 @@ class TestChangeQuotaHolder(MockIRODSTestCaseMixin, TestCase):
         )
 
     def test_change_quota_holder(self):
+        # TODO: 5228
         res = resource.create_resource(
             'CompositeResource',
             self.user1,
