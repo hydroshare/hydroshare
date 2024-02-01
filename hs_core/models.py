@@ -4049,8 +4049,7 @@ class BaseResource(Page, AbstractResource):
         # create the head sub element
         head_node = etree.SubElement(ROOT, 'head')
         etree.SubElement(head_node, 'doi_batch_id').text = self.short_id
-        etree.SubElement(head_node, 'timestamp').text = arrow.get(self.updated)\
-            .format("YYYYMMDDHHmmss")
+        etree.SubElement(head_node, 'timestamp').text = arrow.now().format("YYYYMMDDHHmmss")
         depositor_node = etree.SubElement(head_node, 'depositor')
         etree.SubElement(depositor_node, 'depositor_name').text = 'HydroShare'
         etree.SubElement(depositor_node, 'email_address').text = settings.DEFAULT_SUPPORT_EMAIL
