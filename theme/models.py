@@ -267,7 +267,7 @@ class UserQuota(models.Model):
     # grace_period_ends to be quota-enforced. Default is None meaning the user is below
     # soft quota limit and thus grace period has not started. When today=grace_period_ends, quota
     # enforcement takes place
-    grace_period_ends = models.DateField(verbose_name='Remaining Grace Period',
+    grace_period_ends = models.DateField(verbose_name='Grace Period Ends',
                                          null=True,
                                          blank=True,
                                          help_text='The date that Grace Period will end for this User Quota',
