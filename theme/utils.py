@@ -115,12 +115,13 @@ def get_quota_data(user):
         uz = uz * 100.0 / allocated
         dz = dz * 100.0 / allocated
         percent = used * 100.0 / allocated
+        remaining = allocated - used
         uq_data = {"used": used,
                    "allocated": allocated,
                    "unit": unit,
                    "uz_percent": uz if uz < 100 else 100,
                    "dz_percent": dz if dz < 100 else 100,
-                   "remaining": 0 if percent >= 100 else 100 - percent,
+                   "remaining": 0 if remaining < 0 else remaining,
                    "percent_over": 0 if percent < 100 else percent - 100,
                    }
         quota_data.append(uq_data)
