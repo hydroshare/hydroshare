@@ -797,6 +797,7 @@ def validate_user_quota(user_or_username, size):
                     msg_str = msg_template_str.format(used=rounded_used_val,
                                                       unit=uq.unit,
                                                       allocated=uq.allocated_value,
+                                                      zone=uq.zone,
                                                       percent=rounded_percent)
                     raise QuotaException(msg_str)
 

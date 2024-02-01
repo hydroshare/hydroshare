@@ -69,6 +69,7 @@ def get_quota_message(user):
             return_msg += msg_template_str.format(used=rounded_used_val,
                                                   unit=uq.unit,
                                                   allocated=uq.allocated_value,
+                                                  zone=uq.zone,
                                                   percent=rounded_percent)
         elif percent >= 100 and grace > today:
             # return quota grace period message
@@ -76,6 +77,7 @@ def get_quota_message(user):
             return_msg += msg_template_str.format(used=rounded_used_val,
                                                   unit=uq.unit,
                                                   allocated=uq.allocated_value,
+                                                  zone=uq.zone,
                                                   percent=rounded_percent,
                                                   cut_off_date=grace)
         elif percent >= soft_limit:
@@ -84,12 +86,14 @@ def get_quota_message(user):
             return_msg += msg_template_str.format(used=rounded_used_val,
                                                   unit=uq.unit,
                                                   allocated=uq.allocated_value,
+                                                  zone=uq.zone,
                                                   percent=rounded_percent)
         else:
             # return quota informational message
             return_msg += qmsg.warning_content_prepend.format(allocated=uq.allocated_value,
                                                               unit=uq.unit,
                                                               used=rounded_used_val,
+                                                              zone=uq.zone,
                                                               percent=rounded_percent)
     return return_msg
 

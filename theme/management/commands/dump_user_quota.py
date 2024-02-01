@@ -21,6 +21,7 @@ class Command(BaseCommand):
                 'UserZone value',
                 'DataZone value',
                 'Quota unit',
+                'Storage zone'
             ]
             w.writerow(fields)
 
@@ -35,5 +36,6 @@ class Command(BaseCommand):
                     uq.user_zone_value,
                     uq.data_zone_value,
                     uq.unit,
+                    uq.zone
                 ]
                 w.writerow([str(v) for v in values])
