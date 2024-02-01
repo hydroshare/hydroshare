@@ -37,8 +37,6 @@ class TestCreateResourceVersion(HSRESTTestCase):
 
         version_url = "/hsapi/resource/%s/version/" % self.pid
         response = self.client.post(version_url, {}, format='json')
-        self.resources_to_delete.append(response.content.decode())
-        # TODO: 5228 right now this raises a 404 instead of a 400
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         # stop quota enforcement
