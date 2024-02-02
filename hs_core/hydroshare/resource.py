@@ -1035,7 +1035,7 @@ def deposit_res_metadata_with_crossref(res):
     return response
 
 
-def submit_resource_for_review(pk, user=None):
+def submit_resource_for_review(pk, user):
     """
     Submits a resource for minimum metadata review, prior to publishing.
     The user must be an owner of a resource or an administrator to perform this action.
@@ -1055,9 +1055,10 @@ def submit_resource_for_review(pk, user=None):
     and other general exceptions
 
     """
-    from hs_core.views.utils import get_default_admin_user
 
     resource = utils.get_resource_by_shortkey(pk)
+    if not user.is_superuser and not user.uaccess.owns_resource(resource):
+        raise PermissionDenied('Only resource owners or admins can submit a resource for review')
     if resource.raccess.published:
         raise ValidationError("This resource is already published")
 
@@ -1068,9 +1069,6 @@ def submit_resource_for_review(pk, user=None):
         raise ValidationError("This resource cannot be submitted for metadata review since "
                               "it does not have required metadata or content files, or it contains "
                               "reference content, or this resource type is not allowed for publication.")
-
-    if not user:
-        user = get_default_admin_user()
 
     # create review date -- must be before review_pending = True
     resource.metadata.dates.all().filter(type='reviewStarted').delete()
