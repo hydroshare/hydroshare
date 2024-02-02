@@ -31,11 +31,22 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
+        # create a 2nd user
+        self.editor = hydroshare.create_account(
+            'editor@usu.edu',
+            username='editor',
+            first_name='Editor_FirstName',
+            last_name='Editor_LastName',
+            superuser=False,
+            groups=[]
+        )
+
         # create a resource
         self.res = hydroshare.create_resource(
             'CompositeResource',
             self.user,
-            'Test Resource'
+            'Test Resource',
+            edit_users=[self.editor]
         )
 
         self.tmp_dir = tempfile.mkdtemp()
@@ -52,6 +63,7 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
             'CompositeResource',
             self.user,
             'My Test Resource ' * 10,
+            edit_users=[self.editor],
             files=(self.file_one,),
             keywords=('a', 'b', 'c'),
         )
@@ -87,7 +99,7 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(self.res.metadata.dates.filter(type='published').exists())
 
         admin_user = get_default_admin_user()
-        hydroshare.submit_resource_for_review(pk=self.complete_res.short_id, user=admin_user)
+        hydroshare.submit_resource_for_review(pk=self.complete_res.short_id, user=self.user)
 
         # publish resource - this is the api we are testing
         hydroshare.publish_resource(user=admin_user, pk=self.complete_res.short_id)
@@ -135,7 +147,7 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(self.res.metadata.dates.filter(type='published').exists())
 
         admin_user = get_default_admin_user()
-        hydroshare.submit_resource_for_review(pk=self.complete_res.short_id, user=admin_user)
+        hydroshare.submit_resource_for_review(pk=self.complete_res.short_id, user=self.user)
 
         with self.assertRaises(ValidationError):
             hydroshare.publish_resource(user=self.user, pk=self.complete_res.short_id)
@@ -189,15 +201,21 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
         """Test that publishing a resource updates last_changed_by user and last_updated date"""
         admin_user = get_default_admin_user()
 
-        last_updated_user_before_submit = self.complete_res.last_changed_by
-        hydroshare.submit_resource_for_review(pk=self.complete_res.short_id, user=self.user)
+        # the last_changed_by should be the user who created the resource
+        self.assertEqual(self.complete_res.last_changed_by, self.user)
+        hydroshare.submit_resource_for_review(pk=self.complete_res.short_id, user=self.editor)
         time_after_submit = self.complete_res.last_updated
-        self.assertEqual(last_updated_user_before_submit, self.complete_res.last_changed_by)
+
+        # The last_changed_by should now be the editor who submitted the resource for review
+        self.assertEqual(self.editor, self.complete_res.last_changed_by)
 
         hydroshare.publish_resource(user=admin_user, pk=self.complete_res.short_id)
 
-        self.assertEqual(self.complete_res.last_changed_by, last_updated_user_before_submit)
+        # the last_changed_by should still be the editor who submitted the resource for review
+        self.assertEqual(self.complete_res.last_changed_by, self.editor)
         self.assertTrue(self.complete_res.metadata.dates.filter(type='published').exists())
+
+        # last_updated date should be updated when the resource is published, even though the last_changed_by is not
         self.assertGreater(self.complete_res.last_updated, time_after_submit)
 
     def test_crossref_deposit_xml(self):
