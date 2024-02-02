@@ -609,7 +609,7 @@ def resource_modified(resource, by_user, overwrite_bag=True):
         # this prevents the last_changed_by getting set to an admin user that edits a resource
         user_privilege = resource.raccess.get_effective_user_privilege(user, ignore_superuser=True)
 
-        if user_privilege < PrivilegeCodes.CHANGE:
+        if user_privilege > PrivilegeCodes.CHANGE:
             error_message = "User does not have adequate privilege to modify resource."
         else:
             resource.last_changed_by = user

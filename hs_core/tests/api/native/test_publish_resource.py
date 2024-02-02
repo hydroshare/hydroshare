@@ -9,12 +9,13 @@ from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.test import TestCase
 
+from hs_access_control.models.privilege import UserResourcePrivilege, PrivilegeCodes
 from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_doi
 from hs_core.models import BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core.views.utils import get_default_admin_user
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 
 
 class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
@@ -32,11 +33,11 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
         )
 
         # create a 2nd user
-        self.editor = hydroshare.create_account(
-            'editor@usu.edu',
-            username='editor',
-            first_name='Editor_FirstName',
-            last_name='Editor_LastName',
+        self.user2 = hydroshare.create_account(
+            'user2@usu.edu',
+            username='user2',
+            first_name='user2_FirstName',
+            last_name='user2_LastName',
             superuser=False,
             groups=[]
         )
@@ -46,7 +47,7 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
             'CompositeResource',
             self.user,
             'Test Resource',
-            edit_users=[self.editor]
+            edit_users=[self.user2]
         )
 
         self.tmp_dir = tempfile.mkdtemp()
@@ -63,7 +64,7 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
             'CompositeResource',
             self.user,
             'My Test Resource ' * 10,
-            edit_users=[self.editor],
+            edit_users=[self.user2],
             files=(self.file_one,),
             keywords=('a', 'b', 'c'),
         )
@@ -190,33 +191,45 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
         # there should not be published date type metadata element
         self.assertFalse(self.res.metadata.dates.filter(type='published').exists())
 
-        admin_user = get_default_admin_user()
         with self.assertRaises(ValidationError):
-            hydroshare.submit_resource_for_review(pk=self.res.short_id, user=admin_user)
+            hydroshare.submit_resource_for_review(pk=self.res.short_id, user=self.user)
 
         # submit with complete res should be successful
-        hydroshare.submit_resource_for_review(pk=self.complete_res.short_id, user=admin_user)
+        hydroshare.submit_resource_for_review(pk=self.complete_res.short_id, user=self.user)
 
     def test_last_updated(self):
         """Test that publishing a resource updates last_changed_by user and last_updated date"""
         admin_user = get_default_admin_user()
+        res = self.complete_res
 
         # the last_changed_by should be the user who created the resource
-        self.assertEqual(self.complete_res.last_changed_by, self.user)
-        hydroshare.submit_resource_for_review(pk=self.complete_res.short_id, user=self.editor)
-        time_after_submit = self.complete_res.last_updated
+        self.assertEqual(res.last_changed_by, self.user)
 
-        # The last_changed_by should now be the editor who submitted the resource for review
-        self.assertEqual(self.editor, self.complete_res.last_changed_by)
+        # only the owner or admin can submit a resource for review
+        with self.assertRaises(PermissionDenied):
+            hydroshare.submit_resource_for_review(pk=res.short_id, user=self.user2)
 
-        hydroshare.publish_resource(user=admin_user, pk=self.complete_res.short_id)
+        # add user2 as an owner
+        UserResourcePrivilege.share(user=self.user2,
+                                    resource=res,
+                                    privilege=PrivilegeCodes.OWNER,
+                                    grantor=self.user)
 
-        # the last_changed_by should still be the editor who submitted the resource for review
-        self.assertEqual(self.complete_res.last_changed_by, self.editor)
-        self.assertTrue(self.complete_res.metadata.dates.filter(type='published').exists())
+        hydroshare.submit_resource_for_review(pk=res.short_id, user=self.user2)
+        res.refresh_from_db()
+
+        # The last_changed_by should now be the user2 who submitted the resource for review
+        self.assertEqual(self.user2, res.last_changed_by)
+        time_after_submit = res.last_updated
+
+        hydroshare.publish_resource(user=admin_user, pk=res.short_id)
+
+        # the last_changed_by should still be the user2 who submitted the resource for review
+        self.assertEqual(res.last_changed_by, self.user2)
+        self.assertTrue(res.metadata.dates.filter(type='published').exists())
 
         # last_updated date should be updated when the resource is published, even though the last_changed_by is not
-        self.assertGreater(self.complete_res.last_updated, time_after_submit)
+        self.assertGreater(res.last_updated, time_after_submit)
 
     def test_crossref_deposit_xml(self):
         """Test that the crossref deposit xml is generated correctly for a resource"""
