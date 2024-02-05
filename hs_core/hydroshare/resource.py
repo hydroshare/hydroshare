@@ -175,9 +175,9 @@ def update_quota_usage(username):
                 uq.save()
         if original_quota_status != updated_quota_status:
             if updated_quota_status == QuotaStatus.ENFORCEMENT:
-                toggle_userzone_upload(user_pk=user.pk, allow_upload=False)
+                toggle_userzone_upload.apply_async((user.pk, False))
             if original_quota_status == QuotaStatus.ENFORCEMENT:
-                toggle_userzone_upload(user_pk=user.pk, allow_upload=True)
+                toggle_userzone_upload.apply_async((user.pk, True))
 
 
 def res_has_web_reference(res):

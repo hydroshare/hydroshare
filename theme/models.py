@@ -548,7 +548,7 @@ def update_user_quota_on_quota_request(sender, instance, **kwargs):
 @receiver(models.signals.pre_save, sender=UserQuota)
 def reset_grace_period_on_allocation_change(sender, instance, **kwargs):
     """
-    Reset the pending UserQuota grace perioud when the allocated_value is modified in the UserQuota
+    Reset the pending UserQuota grace period when the allocated_value is modified in the UserQuota
     """
     if instance.id is None:  # new object will be created
         pass
@@ -557,7 +557,7 @@ def reset_grace_period_on_allocation_change(sender, instance, **kwargs):
         if previous.allocated_value != instance.allocated_value:
             # allocated_value is being updated
             instance.grace_period_ends = None
-            toggle_userzone_upload(user_pk=instance.user.pk, allow_upload=True)
+            toggle_userzone_upload.apply_async((instance.user.pk, True))
 
 
 @receiver(models.signals.pre_save, sender=QuotaMessage)
