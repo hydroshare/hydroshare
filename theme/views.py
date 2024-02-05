@@ -145,8 +145,8 @@ class UserProfileView(TemplateView):
 
         else:
             quota_form = QuotaRequestForm()
-        message = get_quota_message(u)
         quota_data = get_quota_data(u)
+        message = get_quota_message(u, quota_data)
         return {
             "profile_user": u,
             "resources": resources,

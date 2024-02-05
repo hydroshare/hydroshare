@@ -3,6 +3,7 @@ from uuid import uuid4
 from datetime import date, timedelta
 from django.core.mail import send_mail
 from mezzanine.conf import settings
+from enums import UserQuotaEnum
 
 
 def _get_upload_path(folder_name, name, filename):
@@ -31,7 +32,7 @@ def get_upload_path_userprofile(instance, filename):
     return _get_upload_path('profile', instance.user.username, filename)
 
 
-def get_quota_message(user):
+def get_quota_message(user, quota_data=None):
     """
     get quota warning, grace period, or enforcement message to email users and display
     when the user logins in and display on user profile page
@@ -39,66 +40,65 @@ def get_quota_message(user):
     :return: quota message string
     """
     from theme.models import QuotaMessage
-    from hs_core.tasks import send_user_notification_at_quota_grace_start
     if not QuotaMessage.objects.exists():
         QuotaMessage.objects.create()
     qmsg = QuotaMessage.objects.first()
-    soft_limit = qmsg.soft_limit_percent
-    hard_limit = qmsg.hard_limit_percent
     return_msg = ''
-    for uq in user.quotas.all():
-        allocated = uq.allocated_value
-        uz, dz = uq.get_used_value_by_zone()
-        used = uz + dz
-        percent = used * 100.0 / allocated
-        rounded_percent = round(percent, 2)
-        rounded_used_val = round(used, 4)
-        today = date.today()
-        grace = uq.grace_period_ends
+    uq = user.quotas.filter(zone='hydroshare').first()
+    if not quota_data:
+        quota_data = get_quota_data(uq)
+    allocated = quota_data["allocated"]
+    used = quota_data["used"]
+    grace = quota_data["grace_period_ends"]
+    quota_status = quota_data["status"]
+    percent = used * 100.0 / allocated
+    rounded_percent = round(percent, 2)
+    rounded_used_val = round(used, 4)
+    today = date.today()
 
-        # initiate grace_period counting if not already started by the daily celery task
-        if percent >= 100 and not grace:
-            grace = today + timedelta(days=qmsg.grace_period)
-            uq.grace_period_ends = grace
-            uq.save()
-            send_user_notification_at_quota_grace_start.apply_async((user.pk,))
+    # initiate grace_period counting if not already started by the daily celery task
+    # TODO #5228 we might want to do this at quota_update instead of here
+    if percent >= 100 and not grace:
+        grace = today + timedelta(days=qmsg.grace_period)
+        uq.grace_period_ends = grace
+        uq.save()
 
-        if percent >= hard_limit or (percent >= 100 and grace <= today):
-            # return quota enforcement message
-            msg_template_str = f'{qmsg.enforce_content_prepend} {qmsg.content}\n'
-            return_msg += msg_template_str.format(used=rounded_used_val,
-                                                  unit=uq.unit,
-                                                  allocated=uq.allocated_value,
-                                                  zone=uq.zone,
-                                                  percent=rounded_percent)
-        elif percent >= 100 and grace > today:
-            # return quota grace period message
-            msg_template_str = f'{qmsg.grace_period_content_prepend} {qmsg.content}\n'
-            return_msg += msg_template_str.format(used=rounded_used_val,
-                                                  unit=uq.unit,
-                                                  allocated=uq.allocated_value,
-                                                  zone=uq.zone,
-                                                  percent=rounded_percent,
-                                                  cut_off_date=grace)
-        elif percent >= soft_limit:
-            # return quota warning message
-            msg_template_str = f'{qmsg.warning_content_prepend} {qmsg.content}\n'
-            return_msg += msg_template_str.format(used=rounded_used_val,
-                                                  unit=uq.unit,
-                                                  allocated=uq.allocated_value,
-                                                  zone=uq.zone,
-                                                  percent=rounded_percent)
-        else:
-            # return quota informational message
-            return_msg += qmsg.warning_content_prepend.format(allocated=uq.allocated_value,
-                                                              unit=uq.unit,
-                                                              used=rounded_used_val,
-                                                              zone=uq.zone,
-                                                              percent=rounded_percent)
+    if quota_status == UserQuotaEnum.GRACE:
+        # return quota enforcement message
+        msg_template_str = f'{qmsg.enforce_content_prepend} {qmsg.content}\n'
+        return_msg += msg_template_str.format(used=rounded_used_val,
+                                                unit=uq.unit,
+                                                allocated=uq.allocated_value,
+                                                zone=uq.zone,
+                                                percent=rounded_percent)
+    elif quota_status == UserQuotaEnum.ENFORCEMENT:
+        # return quota grace period message
+        msg_template_str = f'{qmsg.grace_period_content_prepend} {qmsg.content}\n'
+        return_msg += msg_template_str.format(used=rounded_used_val,
+                                                unit=uq.unit,
+                                                allocated=uq.allocated_value,
+                                                zone=uq.zone,
+                                                percent=rounded_percent,
+                                                cut_off_date=grace)
+    elif quota_status == UserQuotaEnum.WARNING:
+        # return quota warning message
+        msg_template_str = f'{qmsg.warning_content_prepend} {qmsg.content}\n'
+        return_msg += msg_template_str.format(used=rounded_used_val,
+                                                unit=uq.unit,
+                                                allocated=uq.allocated_value,
+                                                zone=uq.zone,
+                                                percent=rounded_percent)
+    else:
+        # return quota informational message
+        return_msg += qmsg.warning_content_prepend.format(allocated=uq.allocated_value,
+                                                            unit=uq.unit,
+                                                            used=rounded_used_val,
+                                                            zone=uq.zone,
+                                                            percent=rounded_percent)
     return return_msg
 
 
-def get_quota_data(user):
+def get_quota_data(uq):
     """
     get user quota data for display on user profile page
     :param user: The User instance
@@ -106,27 +106,51 @@ def get_quota_data(user):
 
     Note that percents are in the range 0 to 100
     """
-    quota_data = []
-    for uq in user.quotas.all():
-        allocated = uq.allocated_value
-        unit = uq.unit
-        uz, dz = uq.get_used_value_by_zone()
-        used = uz + dz
-        uz = uz * 100.0 / allocated
-        dz = dz * 100.0 / allocated
-        percent = used * 100.0 / allocated
-        remaining = allocated - used
-        uq_data = {"used": used,
-                   "allocated": allocated,
-                   "unit": unit,
-                   "uz_percent": uz if uz < 100 else 100,
-                   "dz_percent": dz if dz < 100 else 100,
-                   "remaining": 0 if remaining < 0 else remaining,
-                   "percent_over": 0 if percent < 100 else percent - 100,
-                   }
-        quota_data.append(uq_data)
+    from theme.models import QuotaMessage
+    if not QuotaMessage.objects.exists():
+        QuotaMessage.objects.create()
+    qmsg = QuotaMessage.objects.first()
+    soft_limit = qmsg.soft_limit_percent
+    hard_limit = qmsg.hard_limit_percent
+    today = date.today()
+    grace = uq.grace_period_ends
+    allocated = uq.allocated_value
+    unit = uq.unit
+    uz, dz = uq.get_used_value_by_zone()
+    used = uz + dz
+    uz = uz * 100.0 / allocated
+    dz = dz * 100.0 / allocated
+    percent = used * 100.0 / allocated
+    remaining = allocated - used
 
-    return quota_data
+    # initiate grace_period counting if not already started by the daily celery task
+    if percent >= 100 and not grace:
+        status = UserQuotaEnum.GRACE
+
+    elif percent >= hard_limit or (percent >= 100 and grace <= today):
+        # return quota enforcement message
+        status = UserQuotaEnum.ENFORCEMENT
+    elif percent >= 100 and grace > today:
+        # return quota grace period message
+        status = UserQuotaEnum.GRACE
+    elif percent >= soft_limit:
+        # return quota warning message
+        status = UserQuotaEnum.WARNING
+    else:
+        # return quota informational message
+        status = UserQuotaEnum.INFO
+
+    uq_data = {"used": used,
+               "allocated": allocated,
+               "unit": unit,
+               "uz_percent": uz if uz < 100 else 100,
+               "dz_percent": dz if dz < 100 else 100,
+               "remaining": 0 if remaining < 0 else remaining,
+               "percent_over": 0 if percent < 100 else percent - 100,
+               "grace_period_ends": grace,
+               "status": status,
+               }
+    return uq_data
 
 
 def notify_user_of_quota_action(quota_request, send_on_deny=False):
