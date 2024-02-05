@@ -931,6 +931,7 @@ def delete_irods_account(request):
 
 @login_required
 def create_irods_account(request):
+    # TODO: #5228 #5329 create utility functions as async tasks to disable and enable upload in userzone
     if request.method == "POST":
         try:
             user = request.user

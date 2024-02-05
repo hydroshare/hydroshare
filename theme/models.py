@@ -556,6 +556,7 @@ def reset_grace_period_on_allocation_change(sender, instance, **kwargs):
         if previous.allocated_value != instance.allocated_value:
             # allocated_value is being updated
             instance.grace_period_ends = None
+            # TODO #5228 #5329 toggle prevent upload to userZone here
 
 
 @receiver(models.signals.pre_save, sender=QuotaMessage)

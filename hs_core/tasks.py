@@ -506,6 +506,7 @@ def send_over_quota_emails():
                 elif used_percent >= qmsg.hard_limit_percent:
                     # reset grace period to 0 when user quota exceeds hard limit
                     uq.grace_period_ends = None
+                    # TODO #5228 #5329 toggle prevent upload to userZone here
                 uq.save()
 
                 support_user = get_default_support_user()
@@ -529,6 +530,7 @@ def send_over_quota_emails():
                 if uq.grace_period_ends and uq.grace_period_ends < today :
                     # reset grace period now that the user is below quota soft limit
                     uq.grace_period_ends = None
+                    # TODO #5228 #5329 toggle allow upload to userZone here
                     uq.save()
         else:
             logger.debug('user ' + u.username + ' does not have UserQuota foreign key relation')
