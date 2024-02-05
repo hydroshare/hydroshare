@@ -25,6 +25,7 @@ from mezzanine.utils.models import upload_to
 
 from sorl.thumbnail import ImageField as ThumbnailImageField
 from theme.utils import get_upload_path_userprofile, notify_user_of_quota_action
+from irods.tasks import toggle_userzone_upload
 
 
 DEFAULT_COPYRIGHT = '&copy; {% now "Y" %} {{ settings.SITE_TITLE }}'
@@ -556,7 +557,7 @@ def reset_grace_period_on_allocation_change(sender, instance, **kwargs):
         if previous.allocated_value != instance.allocated_value:
             # allocated_value is being updated
             instance.grace_period_ends = None
-            # TODO #5228 #5329 toggle prevent upload to userZone here
+            toggle_userzone_upload(user_pk=instance.user.pk, allow_upload=True)
 
 
 @receiver(models.signals.pre_save, sender=QuotaMessage)
