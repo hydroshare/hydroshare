@@ -21,7 +21,9 @@ from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
-from theme.models import UserQuota, QuotaMessage
+from theme.models import UserQuota
+from theme.enums import QuotaStatus
+from theme.utils import get_quota_data
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from hs_core.enums import CrossRefSubmissionStatus
@@ -125,6 +127,7 @@ def update_quota_usage(username):
     username: the name of the user that needs to update quota usage for.
     :return: raise ValidationError if quota cannot be updated.
     """
+    from hs_core.tasks import send_user_notification_at_quota_grace_start
     hs_internal_zone = "hydroshare"
     uq = UserQuota.objects.filter(user__username=username, zone=hs_internal_zone).first()
     if uq is None:
@@ -136,14 +139,50 @@ def update_quota_usage(username):
     uz, dz = get_quota_usage_from_irods(username, raise_on_error=False)
 
     # subtract out published resources from the datazone
-    if not QuotaMessage.objects.exists():
-        QuotaMessage.objects.create()
-    qmsg = QuotaMessage.objects.first()
+    quota_data = get_quota_data(uq)
+    qmsg = quota_data["qmsg"]
     published_percent = qmsg.published_resource_percent
     user = User.objects.get(username=username)
     published_size = get_storage_usage(user, flag="published")
     dz -= published_size * (1 - published_percent)
     uq.update_used_value(uz, dz)
+
+    if quota_data["enforce_quota"]:
+        # if enforcing quota, take steps to send messages
+        percent = quota_data["percent"]
+        if percent < qmsg.soft_limit_percent:
+            # No need for further action
+            return
+        quota_status = quota_data["status"]
+        today = datetime.date.today()
+        if percent >= qmsg.soft_limit_percent:
+            if percent >= 100 and percent < qmsg.hard_limit_percent:
+                if not uq.grace_period_ends:
+                    # triggers grace period counting
+                    uq.grace_period_ends = today + datetime.timedelta(days=qmsg.grace_period)
+                    send_user_notification_at_quota_grace_start(user.pk)
+            elif percent >= qmsg.hard_limit_percent:
+                # reset grace period when user quota exceeds hard limit
+                uq.grace_period_ends = None
+            uq.save()
+        else:
+            if uq.grace_period_ends and uq.grace_period_ends < today :
+                # reset grace period now that the user is below quota soft limit
+                uq.grace_period_ends = None
+                uq.save()
+        # TODO #5329 implement toggle userzone
+        if quota_status == QuotaStatus.ENFORCEMENT:
+            # quota needs to be enforced
+            pass
+        elif quota_status == QuotaStatus.GRACE_PERIOD:
+            # quota is in grace period
+            pass
+        elif quota_status == QuotaStatus.WARNING:
+            # return quota warning message
+            pass
+        elif quota_status == QuotaStatus.INFO:
+            # return quota informational message
+            pass
 
 
 def res_has_web_reference(res):
@@ -1071,7 +1110,7 @@ def deposit_res_metadata_with_crossref(res):
     return response
 
 
-def submit_resource_for_review(request, pk):
+def submit_resource_for_review(pk, user):
     """
     Submits a resource for minimum metadata review, prior to publishing.
     The user must be an owner of a resource or an administrator to perform this action.
@@ -1091,9 +1130,10 @@ def submit_resource_for_review(request, pk):
     and other general exceptions
 
     """
-    from hs_core.views.utils import get_default_support_user
 
     resource = utils.get_resource_by_shortkey(pk)
+    if not user.is_superuser and not user.uaccess.owns_resource(resource):
+        raise PermissionDenied('Only resource owners or admins can submit a resource for review')
     if resource.raccess.published:
         raise ValidationError("This resource is already published")
 
@@ -1105,16 +1145,14 @@ def submit_resource_for_review(request, pk):
                               "it does not have required metadata or content files, or it contains "
                               "reference content, or this resource type is not allowed for publication.")
 
-    user_to = get_default_support_user()
-    from hs_core.views.utils import send_action_to_take_email
-    send_action_to_take_email(request, user=user_to, user_from=request.user,
-                              action_type='metadata_review', resource=resource)
-
     # create review date -- must be before review_pending = True
     resource.metadata.dates.all().filter(type='reviewStarted').delete()
     resource.metadata.create_element('date', type='reviewStarted', start_date=datetime.datetime.now(tz.UTC))
 
     resource.raccess.alter_review_pending_flags(initiating_review=True)
+
+    # set resource modified before attempting repair
+    utils.resource_modified(resource, user, overwrite_bag=False)
 
     # Repair resource and email support user if there are issues
     from hs_core.tasks import repair_resource_before_publication
@@ -1128,7 +1166,7 @@ def publish_resource(user, pk):
     be an owner of a resource or an administrator to perform this action.
 
     Parameters:
-        user - requesting user to publish the resource who must be one of the owners of the resource
+        user - requesting user to publish the resource who must be an admin
         pk - Unique HydroShare identifier for the resource to be formally published.
 
     Returns:    The id of the resource that was published
@@ -1143,6 +1181,8 @@ def publish_resource(user, pk):
 
     Note:  This is different than just giving public access to a resource via access control rule
     """
+    if not user.is_superuser:
+        raise ValidationError("Resource can only be published by an admin user")
     resource = utils.get_resource_by_shortkey(pk)
     if user is not None and not user.uaccess.can_change_resource_flags(resource):
         raise ValidationError("You don't have permission to change resource sharing status")
@@ -1181,7 +1221,9 @@ def publish_resource(user, pk):
         resource.save()
 
     resource.set_public(True)  # also sets discoverable to True
-    resource.set_published(True)
+    resource.raccess.published = True
+    resource.raccess.immutable = True
+    resource.raccess.save()
 
     # change "Publisher" element of science metadata to CUAHSI
     md_args = {'name': 'Consortium of Universities for the Advancement of Hydrologic Science, '
@@ -1197,7 +1239,10 @@ def publish_resource(user, pk):
                'url': get_activated_doi(resource.doi)}
     resource.metadata.create_element('Identifier', **md_args)
 
-    utils.resource_modified(resource, user, overwrite_bag=False)
+    # Here we publish the resource on behalf of the last_changed_by user
+    # This ensures that the modified date closely matches the date that the metadata are submitted to Crossref
+    last_modified = resource.last_changed_by
+    utils.resource_modified(resource, by_user=last_modified, overwrite_bag=False)
 
     return pk
 
