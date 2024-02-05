@@ -61,7 +61,7 @@ def get_quota_message(user):
             grace = today + timedelta(days=qmsg.grace_period)
             uq.grace_period_ends = grace
             uq.save()
-            send_user_notification_at_quota_grace_start.apply_async((user,))
+            send_user_notification_at_quota_grace_start.apply_async((user.pk,))
 
         if percent >= hard_limit or (percent >= 100 and grace <= today):
             # return quota enforcement message

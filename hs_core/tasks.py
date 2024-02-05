@@ -477,7 +477,15 @@ def notify_owners_of_publication_success(resource):
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
 def send_over_quota_emails():
-    # check over quota cases and send quota warning emails as needed
+    """
+    Checks over quota cases and sends quota warning emails as needed.
+
+    This function retrieves the quota message settings and user quotas from the database,
+    and sends warning emails to users who have exceeded their quota limits.
+
+    Returns:
+        None
+    """
     from hs_core.views.utils import get_default_support_user
     hs_internal_zone = "hydroshare"
     if not QuotaMessage.objects.exists():
@@ -494,13 +502,13 @@ def send_over_quota_emails():
                     if not uq.grace_period_ends:
                         # triggers grace period counting
                         uq.grace_period_ends = today + timedelta(days=qmsg.grace_period)
-                        send_user_notification_at_quota_grace_start(u)
+                        send_user_notification_at_quota_grace_start(u.pk)
                 elif used_percent >= qmsg.hard_limit_percent:
                     # reset grace period to 0 when user quota exceeds hard limit
                     uq.grace_period_ends = None
                 uq.save()
 
-                support_user = get_default_support_user
+                support_user = get_default_support_user()
                 msg_str = f'Dear {support_user.first_name}{support_user.last_name}:\n\n'
                 msg_str += f'The following user (#{ u.id }) has exceeded their quota:{u.email}\n\n'
                 ori_qm = get_quota_message(u)
@@ -518,7 +526,7 @@ def send_over_quota_emails():
                     except Exception as ex:
                         logger.error("Failed to send quota warning email: " + str(ex))
             else:
-                if uq.grace_period_ends < today :
+                if uq.grace_period_ends and uq.grace_period_ends < today :
                     # reset grace period now that the user is below quota soft limit
                     uq.grace_period_ends = None
                     uq.save()
@@ -527,7 +535,8 @@ def send_over_quota_emails():
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
-def send_user_notification_at_quota_grace_start(u):
+def send_user_notification_at_quota_grace_start(user_pk):
+    u = User.objects.get(pk=user_pk)
     if u.first_name and u.last_name:
         sal_name = '{} {}'.format(u.first_name, u.last_name)
     elif u.first_name:
