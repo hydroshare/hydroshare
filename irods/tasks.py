@@ -1,5 +1,6 @@
 """Define celery tasks for irods app."""
 
+import json
 import logging
 from datetime import date, timedelta
 
@@ -9,6 +10,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 
 from celery import Task
+from hs_core.views.utils import run_ssh_command
 from hydroshare.hydrocelery import app as celery_app
 from theme.models import QuotaMessage, User, UserQuota
 from theme.utils import get_quota_message
@@ -157,3 +159,70 @@ def send_user_notification_at_quota_grace_start(user_pk):
                       html_message=msg_str)
         except Exception as ex:
             logger.debug("Failed to send quota warning email: " + str(ex))
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def toggle_userzone_upload(user_pk, allow_upload=True):
+    """
+    Toggles the upload permission for a user in the iRODS user zone.
+
+    Args:
+        user_pk (int): The primary key of the user.
+        allow_upload (bool, optional): Whether to allow or disable upload. Defaults to True.
+
+    Returns:
+        str: JSON-encoded string containing the success message if the operation is successful,
+             otherwise an error message.
+
+    Raises:
+        Exception: If an error occurs while toggling the upload permission.
+    """
+    try:
+        user = User.objects.get(pk=user_pk)
+        if allow_upload:
+            script = settings.LINUX_ADMIN_USER_ENABLE_UPLOAD_IN_USER_ZONE_CMD
+        else:
+            script = settings.LINUX_ADMIN_USER_DISABLE_UPLOAD_IN_USER_ZONE_CMD
+        exec_cmd = "{0} {1}".format(
+            script,
+            user.username,
+        )
+        output = run_ssh_command(
+            host=settings.HS_USER_ZONE_HOST,
+            uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
+            pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
+            exec_cmd=exec_cmd,
+        )
+        for out_str in output:
+            if "bash:" in out_str or (
+                "ERROR:" in out_str.upper()
+                and "CATALOG_ALREADY_HAS_ITEM_BY_THAT_NAME" not in out_str.upper()
+            ):
+                # there is an error from icommand run which is not about the fact
+                # that the user already exists, report the error
+                return json.dumps(
+                    {
+                        "error": "iRODS server failed to create this iRODS account {0}. "
+                        "If this issue persists, please notify help@cuahsi.org.".format(
+                            user.username
+                        )
+                    },
+                )
+
+        message = f"iRODS upload for user {user.username} was"
+        if allow_upload:
+            message += " enabled successfully"
+        else:
+            message += " disabled successfully"
+        return json.dumps(
+            {
+                "success": message,
+            },
+        )
+    except Exception as ex:
+        return json.dumps(
+            {
+                "error": str(ex)
+                + " - iRODS server failed to take action on userzone for user {user.username}."
+            },
+        )
