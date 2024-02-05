@@ -427,7 +427,6 @@ let leftHeaderApp = new Vue({
             country: null,
             joined: null,
         },
-        lastChanagedBy: LAST_CHANGED_BY,
         cardPosition: {
             top: 0,
             left: 0,

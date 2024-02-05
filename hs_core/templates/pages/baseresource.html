@@ -1068,7 +1068,6 @@
       const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
       const STATIC_URL = "{{ STATIC_URL }}";
       const USERS_JSON = {{ users_json|safe }};
-      const LAST_CHANGED_BY = {{ last_changed_by|safe }};
       const AUTHORS = [
           {% for author in creators %}
             {
