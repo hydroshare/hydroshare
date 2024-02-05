@@ -2,7 +2,6 @@
 
 import json
 import logging
-from datetime import date, timedelta
 
 from celery.schedules import crontab
 from celery.worker.request import Request
