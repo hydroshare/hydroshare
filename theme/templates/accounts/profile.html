@@ -369,7 +369,7 @@
                                             </div>
                                     
                                             <div class="panel-body">
-                                                {% for qd in quota_data %}
+                                                {% with quota_data as qd %}
                                                 <div class="quota">
                                                     {% if qd.remaining == 0 %}
                                                         <div class="progress">
@@ -396,7 +396,7 @@
                                                         <span>{{ qd.remaining }}{{ qd.unit }} free of {{ qd.allocated }}{{ qd.unit }}</span>
                                                     {% endif %}
                                                 </div>
-                                                {% endfor %}
+                                                {% endwith %}
                                                 {% if quota_message %}
                                                     <div class="alert alert-info">
                                                         {{ quota_message }}
