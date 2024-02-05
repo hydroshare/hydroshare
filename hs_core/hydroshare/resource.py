@@ -21,7 +21,9 @@ from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
-from theme.models import UserQuota, QuotaMessage
+from theme.models import UserQuota
+from theme.enums import QuotaStatus
+from theme.utils import get_quota_data
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from hs_core.enums import CrossRefSubmissionStatus
@@ -125,6 +127,7 @@ def update_quota_usage(username):
     username: the name of the user that needs to update quota usage for.
     :return: raise ValidationError if quota cannot be updated.
     """
+    from hs_core.tasks import send_user_notification_at_quota_grace_start
     hs_internal_zone = "hydroshare"
     uq = UserQuota.objects.filter(user__username=username, zone=hs_internal_zone).first()
     if uq is None:
@@ -136,14 +139,42 @@ def update_quota_usage(username):
     uz, dz = get_quota_usage_from_irods(username, raise_on_error=False)
 
     # subtract out published resources from the datazone
-    if not QuotaMessage.objects.exists():
-        QuotaMessage.objects.create()
-    qmsg = QuotaMessage.objects.first()
+    quota_data = get_quota_data(uq)
+    qmsg = quota_data["qmsg"]
     published_percent = qmsg.published_resource_percent
     user = User.objects.get(username=username)
     published_size = get_storage_usage(user, flag="published")
     dz -= published_size * (1 - published_percent)
     uq.update_used_value(uz, dz)
+
+    if quota_data["enforce_quota"]:
+        # if enforcing quota, take steps to send messages
+        percent = quota_data["percent"]
+        if percent < qmsg.soft_limit_percent:
+            # No need for further action
+            return
+        quota_status = quota_data["status"]
+        grace_ends = quota_data["grace_ends"]
+        today = datetime.date.today()
+        # TODO: 5228 should this be soft_limit instead of percent?
+        if percent >= 100 and not grace_ends:
+            # initiate grace_period counting if not already started by the daily celery task
+            uq.grace_period_ends = today + datetime.timedelta(days=qmsg.grace_period)
+            uq.save()
+            send_user_notification_at_quota_grace_start.apply_async((user.pk,))
+        # TODO 5228 implement sending email
+        if quota_status == QuotaStatus.ENFORCEMENT:
+            # quota needs to be enforced
+            pass
+        elif quota_status == QuotaStatus.GRACE_PERIOD:
+            # quota is in grace period
+            pass
+        elif quota_status == QuotaStatus.WARNING:
+            # return quota warning message
+            pass
+        elif quota_status == QuotaStatus.INFO:
+            # return quota informational message
+            pass
 
 
 def res_has_web_reference(res):

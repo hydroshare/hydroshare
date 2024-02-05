@@ -3,7 +3,7 @@ from uuid import uuid4
 from datetime import date, timedelta
 from django.core.mail import send_mail
 from mezzanine.conf import settings
-from enums import UserQuotaEnum
+from .enums import QuotaStatus
 
 
 def _get_upload_path(folder_name, name, filename):
@@ -39,14 +39,11 @@ def get_quota_message(user, quota_data=None):
     :param user: The User instance
     :return: quota message string
     """
-    from theme.models import QuotaMessage
-    if not QuotaMessage.objects.exists():
-        QuotaMessage.objects.create()
-    qmsg = QuotaMessage.objects.first()
     return_msg = ''
     uq = user.quotas.filter(zone='hydroshare').first()
     if not quota_data:
         quota_data = get_quota_data(uq)
+    qmsg = quota_data["qmsg"]
     allocated = quota_data["allocated"]
     used = quota_data["used"]
     grace = quota_data["grace_period_ends"]
@@ -56,14 +53,7 @@ def get_quota_message(user, quota_data=None):
     rounded_used_val = round(used, 4)
     today = date.today()
 
-    # initiate grace_period counting if not already started by the daily celery task
-    # TODO #5228 we might want to do this at quota_update instead of here
-    if percent >= 100 and not grace:
-        grace = today + timedelta(days=qmsg.grace_period)
-        uq.grace_period_ends = grace
-        uq.save()
-
-    if quota_status == UserQuotaEnum.GRACE:
+    if quota_status == QuotaStatus.GRACE_PERIOD:
         # return quota enforcement message
         msg_template_str = f'{qmsg.enforce_content_prepend} {qmsg.content}\n'
         return_msg += msg_template_str.format(used=rounded_used_val,
@@ -71,7 +61,7 @@ def get_quota_message(user, quota_data=None):
                                                 allocated=uq.allocated_value,
                                                 zone=uq.zone,
                                                 percent=rounded_percent)
-    elif quota_status == UserQuotaEnum.ENFORCEMENT:
+    elif quota_status == QuotaStatus.ENFORCEMENT:
         # return quota grace period message
         msg_template_str = f'{qmsg.grace_period_content_prepend} {qmsg.content}\n'
         return_msg += msg_template_str.format(used=rounded_used_val,
@@ -80,7 +70,7 @@ def get_quota_message(user, quota_data=None):
                                                 zone=uq.zone,
                                                 percent=rounded_percent,
                                                 cut_off_date=grace)
-    elif quota_status == UserQuotaEnum.WARNING:
+    elif quota_status == QuotaStatus.WARNING:
         # return quota warning message
         msg_template_str = f'{qmsg.warning_content_prepend} {qmsg.content}\n'
         return_msg += msg_template_str.format(used=rounded_used_val,
@@ -110,6 +100,7 @@ def get_quota_data(uq):
     if not QuotaMessage.objects.exists():
         QuotaMessage.objects.create()
     qmsg = QuotaMessage.objects.first()
+    enforce_quota = qmsg.enforce_quota
     soft_limit = qmsg.soft_limit_percent
     hard_limit = qmsg.hard_limit_percent
     today = date.today()
@@ -124,31 +115,32 @@ def get_quota_data(uq):
     remaining = allocated - used
 
     # initiate grace_period counting if not already started by the daily celery task
+    # TODO 5228 should this be soft_limit instead of percent?
+    # TODO #5228 review the enum
     if percent >= 100 and not grace:
-        status = UserQuotaEnum.GRACE
+        status = QuotaStatus.GRACE_PERIOD
 
     elif percent >= hard_limit or (percent >= 100 and grace <= today):
-        # return quota enforcement message
-        status = UserQuotaEnum.ENFORCEMENT
+        status = QuotaStatus.ENFORCEMENT
     elif percent >= 100 and grace > today:
-        # return quota grace period message
-        status = UserQuotaEnum.GRACE
+        status = QuotaStatus.GRACE_PERIOD
     elif percent >= soft_limit:
-        # return quota warning message
-        status = UserQuotaEnum.WARNING
+        status = QuotaStatus.WARNING
     else:
-        # return quota informational message
-        status = UserQuotaEnum.INFO
+        status = QuotaStatus.INFO
 
     uq_data = {"used": used,
                "allocated": allocated,
                "unit": unit,
                "uz_percent": uz if uz < 100 else 100,
                "dz_percent": dz if dz < 100 else 100,
+               "percent": percent if percent < 100 else 100,
                "remaining": 0 if remaining < 0 else remaining,
                "percent_over": 0 if percent < 100 else percent - 100,
                "grace_period_ends": grace,
+               "enforce_quota": enforce_quota,
                "status": status,
+               "qmsg": qmsg,
                }
     return uq_data
 

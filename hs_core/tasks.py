@@ -498,9 +498,10 @@ def send_over_quota_emails():
             used_percent = uq.used_percent
             today = date.today()
             if used_percent >= qmsg.soft_limit_percent:
+                # TODO 5228 should this be soft_limit instead of percent?
                 if used_percent >= 100 and used_percent < qmsg.hard_limit_percent:
                     if not uq.grace_period_ends:
-                        # triggers grace period counting
+                        # triggers grace period counting if it wasn't initiated by hs_core.hydroshare.resource update_quota_usage()
                         uq.grace_period_ends = today + timedelta(days=qmsg.grace_period)
                         send_user_notification_at_quota_grace_start(u.pk)
                 elif used_percent >= qmsg.hard_limit_percent:
