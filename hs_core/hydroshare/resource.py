@@ -21,6 +21,7 @@ from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
+from irods.tasks import toggle_userzone_upload
 from theme.models import UserQuota
 from theme.enums import QuotaStatus
 from theme.utils import get_quota_data
@@ -139,21 +140,23 @@ def update_quota_usage(username):
     uz, dz = get_quota_usage_from_irods(username, raise_on_error=False)
 
     # subtract out published resources from the datazone
-    quota_data = get_quota_data(uq)
-    qmsg = quota_data["qmsg"]
+    original_quota_data = get_quota_data(uq)
+    qmsg = original_quota_data["qmsg"]
     published_percent = qmsg.published_resource_percent
     user = User.objects.get(username=username)
     published_size = get_storage_usage(user, flag="published")
     dz -= published_size * (1 - published_percent)
     uq.update_used_value(uz, dz)
 
-    if quota_data["enforce_quota"]:
+    if original_quota_data["enforce_quota"]:
+        updated_quota_data = get_quota_data(uq)
         # if enforcing quota, take steps to send messages
-        percent = quota_data["percent"]
+        percent = updated_quota_data["percent"]
         if percent < qmsg.soft_limit_percent:
             # No need for further action
             return
-        quota_status = quota_data["status"]
+        updated_quota_status = updated_quota_data["status"]
+        original_quota_status = original_quota_data["status"]
         today = datetime.date.today()
         if percent >= qmsg.soft_limit_percent:
             if percent >= 100 and percent < qmsg.hard_limit_percent:
@@ -170,19 +173,11 @@ def update_quota_usage(username):
                 # reset grace period now that the user is below quota soft limit
                 uq.grace_period_ends = None
                 uq.save()
-        # TODO #5329 implement toggle userzone
-        if quota_status == QuotaStatus.ENFORCEMENT:
-            # quota needs to be enforced
-            pass
-        elif quota_status == QuotaStatus.GRACE_PERIOD:
-            # quota is in grace period
-            pass
-        elif quota_status == QuotaStatus.WARNING:
-            # return quota warning message
-            pass
-        elif quota_status == QuotaStatus.INFO:
-            # return quota informational message
-            pass
+        if original_quota_status != updated_quota_status:
+            if updated_quota_status == QuotaStatus.ENFORCEMENT:
+                toggle_userzone_upload(user_pk=user.pk, allow_upload=False)
+            if original_quota_status == QuotaStatus.ENFORCEMENT:
+                toggle_userzone_upload(user_pk=user.pk, allow_upload=True)
 
 
 def res_has_web_reference(res):
