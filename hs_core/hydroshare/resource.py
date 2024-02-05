@@ -154,15 +154,23 @@ def update_quota_usage(username):
             # No need for further action
             return
         quota_status = quota_data["status"]
-        grace_ends = quota_data["grace_ends"]
         today = datetime.date.today()
-        # TODO: 5228 should this be soft_limit instead of percent?
-        if percent >= 100 and not grace_ends:
-            # initiate grace_period counting if not already started by the daily celery task
-            uq.grace_period_ends = today + datetime.timedelta(days=qmsg.grace_period)
+        if percent >= qmsg.soft_limit_percent:
+            if percent >= 100 and percent < qmsg.hard_limit_percent:
+                if not uq.grace_period_ends:
+                    # triggers grace period counting
+                    uq.grace_period_ends = today + datetime.timedelta(days=qmsg.grace_period)
+                    send_user_notification_at_quota_grace_start(user.pk)
+            elif percent >= qmsg.hard_limit_percent:
+                # reset grace period when user quota exceeds hard limit
+                uq.grace_period_ends = None
             uq.save()
-            send_user_notification_at_quota_grace_start.apply_async((user.pk,))
-        # TODO 5228 implement sending email
+        else:
+            if uq.grace_period_ends and uq.grace_period_ends < today :
+                # reset grace period now that the user is below quota soft limit
+                uq.grace_period_ends = None
+                uq.save()
+        # TODO #5329 implement toggle userzone
         if quota_status == QuotaStatus.ENFORCEMENT:
             # quota needs to be enforced
             pass

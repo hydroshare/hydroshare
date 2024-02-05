@@ -481,7 +481,7 @@ def send_over_quota_emails():
     Checks over quota cases and sends quota warning emails as needed.
 
     This function retrieves the quota message settings and user quotas from the database,
-    and sends warning emails to users who have exceeded their quota limits.
+    and sends warning emails to admin for users who have exceeded their quota limits.
 
     Returns:
         None
@@ -496,19 +496,7 @@ def send_over_quota_emails():
         uq = UserQuota.objects.filter(user__username=u.username, zone=hs_internal_zone).first()
         if uq:
             used_percent = uq.used_percent
-            today = date.today()
             if used_percent >= qmsg.soft_limit_percent:
-                # TODO 5228 should this be soft_limit instead of percent?
-                if used_percent >= 100 and used_percent < qmsg.hard_limit_percent:
-                    if not uq.grace_period_ends:
-                        # triggers grace period counting if it wasn't initiated by hs_core.hydroshare.resource update_quota_usage()
-                        uq.grace_period_ends = today + timedelta(days=qmsg.grace_period)
-                        send_user_notification_at_quota_grace_start(u.pk)
-                elif used_percent >= qmsg.hard_limit_percent:
-                    # reset grace period to 0 when user quota exceeds hard limit
-                    uq.grace_period_ends = None
-                uq.save()
-
                 support_user = get_default_support_user()
                 msg_str = f'Dear {support_user.first_name}{support_user.last_name}:\n\n'
                 msg_str += f'The following user (#{ u.id }) has exceeded their quota:{u.email}\n\n'
@@ -526,11 +514,6 @@ def send_over_quota_emails():
                                   html_message=msg_str)
                     except Exception as ex:
                         logger.error("Failed to send quota warning email: " + str(ex))
-            else:
-                if uq.grace_period_ends and uq.grace_period_ends < today :
-                    # reset grace period now that the user is below quota soft limit
-                    uq.grace_period_ends = None
-                    uq.save()
         else:
             logger.debug('user ' + u.username + ' does not have UserQuota foreign key relation')
 

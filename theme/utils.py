@@ -1,9 +1,12 @@
 import os
 from uuid import uuid4
-from datetime import date, timedelta
+from datetime import date
 from django.core.mail import send_mail
 from mezzanine.conf import settings
 from .enums import QuotaStatus
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 def _get_upload_path(folder_name, name, filename):
@@ -51,40 +54,39 @@ def get_quota_message(user, quota_data=None):
     percent = used * 100.0 / allocated
     rounded_percent = round(percent, 2)
     rounded_used_val = round(used, 4)
-    today = date.today()
 
     if quota_status == QuotaStatus.GRACE_PERIOD:
         # return quota enforcement message
         msg_template_str = f'{qmsg.enforce_content_prepend} {qmsg.content}\n'
         return_msg += msg_template_str.format(used=rounded_used_val,
-                                                unit=uq.unit,
-                                                allocated=uq.allocated_value,
-                                                zone=uq.zone,
-                                                percent=rounded_percent)
+                                              unit=uq.unit,
+                                              allocated=uq.allocated_value,
+                                              zone=uq.zone,
+                                              percent=rounded_percent)
     elif quota_status == QuotaStatus.ENFORCEMENT:
         # return quota grace period message
         msg_template_str = f'{qmsg.grace_period_content_prepend} {qmsg.content}\n'
         return_msg += msg_template_str.format(used=rounded_used_val,
-                                                unit=uq.unit,
-                                                allocated=uq.allocated_value,
-                                                zone=uq.zone,
-                                                percent=rounded_percent,
-                                                cut_off_date=grace)
+                                              unit=uq.unit,
+                                              allocated=uq.allocated_value,
+                                              zone=uq.zone,
+                                              percent=rounded_percent,
+                                              cut_off_date=grace)
     elif quota_status == QuotaStatus.WARNING:
         # return quota warning message
         msg_template_str = f'{qmsg.warning_content_prepend} {qmsg.content}\n'
         return_msg += msg_template_str.format(used=rounded_used_val,
-                                                unit=uq.unit,
-                                                allocated=uq.allocated_value,
-                                                zone=uq.zone,
-                                                percent=rounded_percent)
+                                              unit=uq.unit,
+                                              allocated=uq.allocated_value,
+                                              zone=uq.zone,
+                                              percent=rounded_percent)
     else:
         # return quota informational message
         return_msg += qmsg.warning_content_prepend.format(allocated=uq.allocated_value,
-                                                            unit=uq.unit,
-                                                            used=rounded_used_val,
-                                                            zone=uq.zone,
-                                                            percent=rounded_percent)
+                                                          unit=uq.unit,
+                                                          used=rounded_used_val,
+                                                          zone=uq.zone,
+                                                          percent=rounded_percent)
     return return_msg
 
 
@@ -115,12 +117,13 @@ def get_quota_data(uq):
     remaining = allocated - used
 
     # initiate grace_period counting if not already started by the daily celery task
-    # TODO 5228 should this be soft_limit instead of percent?
-    # TODO #5228 review the enum
     if percent >= 100 and not grace:
+        # This would indicate that the grace period has not been set even though the user went over quota.
+        # This should not happen.
+        logger.error(f"User {uq.user.username} went over quota but grace period was not set.")
         status = QuotaStatus.GRACE_PERIOD
 
-    elif percent >= hard_limit or (percent >= 100 and grace <= today):
+    if percent >= hard_limit or (percent >= 100 and grace <= today):
         status = QuotaStatus.ENFORCEMENT
     elif percent >= 100 and grace > today:
         status = QuotaStatus.GRACE_PERIOD
