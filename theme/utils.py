@@ -39,7 +39,7 @@ def get_quota_message(user):
     :return: quota message string
     """
     from theme.models import QuotaMessage
-    from hs_core.tasks import send_user_notification_at_quota_grace_start
+    from irods.tasks import send_user_notification_at_quota_grace_start
     if not QuotaMessage.objects.exists():
         QuotaMessage.objects.create()
     qmsg = QuotaMessage.objects.first()
