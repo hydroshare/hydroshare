@@ -51,7 +51,6 @@ class TestBagIt(TestCase):
         self.assertTrue(isinstance(irods_storage_obj, IrodsStorage))
 
     def test_bag_creation_and_deletion(self):
-        # TODO #5310 add test for bag last downloaded date
         status = create_bag_by_irods(self.test_res.short_id)
         self.assertTrue(status)
         # test checksum will be computed for published resource
