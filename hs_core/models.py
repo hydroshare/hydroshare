@@ -878,7 +878,8 @@ class Date(AbstractMetaDataElement):
     )
     HS_DATE_TYPE_CHOICES = (
         ('reviewStarted', 'Review Started'),
-        ('published', 'Published')
+        ('published', 'Published'),
+        ('bag_last_downloaded', 'Bag Last Downloaded'),
     )
     DATE_TYPE_CHOICES = DC_DATE_TYPE_CHOICES + HS_DATE_TYPE_CHOICES
 
@@ -2101,6 +2102,18 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """Return the last updated date stored in metadata"""
         for dt in self.metadata.dates.all():
             if dt.type == 'modified':
+                return dt.start_date
+
+    @property
+    def bag_last_downloaded(self):
+        """
+        Returns the start date of the last bag download date in the metadata.
+
+        Returns:
+            datetime.date: The start date of the last download date in the metadata.
+        """
+        for dt in self.metadata.dates.all():
+            if dt.type == 'bag_last_downloaded':
                 return dt.start_date
 
     @property
