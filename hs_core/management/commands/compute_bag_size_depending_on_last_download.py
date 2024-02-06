@@ -1,7 +1,7 @@
 import math
 from django.core.management.base import BaseCommand
 
-from hs_core.models import BaseResource
+from hs_core.models import BaseResource, CoreMetaData
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.utils import timezone
@@ -34,10 +34,11 @@ class Command(BaseCommand):
             print(f"FILTERING TO INCLUDE RESOURCES NOT BEEN IN DOWNLOADED IN THE LAST {weeks} WEEKS")
             add_message = f"for resources not downloaded in last {weeks} weeks"
             cuttoff_time = timezone.now() - timedelta(weeks=weeks)
-            # TODO #5310: revise query
-            resources = resources.filter(Q(metadata__dates__type="bag_last_downloaded"),
-                                         Q(metadata__dates__start_date__isnull=True)
-                                         | Q(metadata__dates__start_date__lte=cuttoff_time))
+            meta_ids = CoreMetaData.objects.filter(Q(metadata__dates__type="bag_last_downloaded"),
+                                                   Q(metadata__dates__start_date__isnull=True)
+                                                   | Q(metadata__dates__start_date__lte=cuttoff_time)
+                                                   ).values_list('id', flat=True)
+            resources = BaseResource.objects.filter(object_id__in=meta_ids)
         cumulative_size = 0
         count = len(resources)
         counter = 1

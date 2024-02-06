@@ -4477,7 +4477,11 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     _type = GenericRelation(Type)
     _publisher = GenericRelation(Publisher)
     funding_agencies = GenericRelation(FundingAgency)
-    resource = GenericRelation(BaseResource, related_query_name='metadata', related_name='metadata')
+
+    @property
+    def resource(self):
+        """Return base resource object that the metadata defines."""
+        return BaseResource.objects.filter(object_id=self.id).first()
 
     @property
     def title(self):
@@ -4998,7 +5002,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 raise ValidationError("{} can't be updated for a published resource".format(element_model_name))
             elif element_model_name == 'date':
                 date_type = kwargs.get('type', '')
-                if date_type and date_type != 'modified':
+                if date_type and not date_type in ['modified', 'bag_last_downloaded']:
                     raise ValidationError("{} date can't be updated for a published resource".format(date_type))
         model_type.model_class().update(element_id, **kwargs)
         if resource.raccess.published:

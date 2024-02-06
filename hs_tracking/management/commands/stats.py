@@ -163,6 +163,11 @@ class Command(BaseCommand):
             except Date.DoesNotExist:
                 pub_date = None
             try:
+                last_downloaded = r.metadata.dates.filter(type='bag_last_downloaded')
+                if last_downloaded:
+                    last_downloaded = last_downloaded.start_date.strftime("%m/%d/%Y %H:%M:%S.%f")
+                else:
+                    last_downloaded = None
                 values = [
                     r.metadata.dates.get(type="created").
                     start_date.strftime("%m/%d/%Y %H:%M:%S.%f"),
@@ -174,8 +179,7 @@ class Command(BaseCommand):
                     r.user_id,
                     r.short_id,
                     pub_date,
-                    r.metadata.dates.get(type="bag_last_downloaded").
-                    start_date.strftime("%m/%d/%Y %H:%M:%S.%f"),
+                    last_downloaded,
                 ]
                 w.writerow([str(v) for v in values])
 
