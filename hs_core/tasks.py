@@ -89,7 +89,7 @@ class HydroshareRequest(Request):
         logger.warning(warning_message)
         if not settings.DISABLE_TASK_EMAILS:
             subject = 'Notification of failing Celery task'
-            send_mail(subject, warning_message, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_FROM_EMAIL])
+            send_mail(subject, warning_message, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_DEVELOPER_EMAIL])
 
 
 class HydroshareTask(Task):
@@ -241,7 +241,7 @@ def repair_resource_before_publication(res_id):
                       message=email_msg,
                       html_message=email_msg,
                       from_email=settings.DEFAULT_FROM_EMAIL,
-                      recipient_list=[settings.DEFAULT_SUPPORT_EMAIL])
+                      recipient_list=[settings.DEFAULT_DEVELOPER_EMAIL])
 
     try:
         res.get_crossref_deposit_xml()
@@ -253,7 +253,7 @@ def repair_resource_before_publication(res_id):
         <a href="{ res_url }">{ res_url }</a></p>
         <p>Error details:</p>
         <p>{traceback.format_exc()}</p>
-        <p>These issues need to be fixed manually. We have notified {settings.DEFAULT_FROM_EMAIL}.</p>
+        <p>These issues need to be fixed manually. We have notified {settings.DEFAULT_DEVELOPER_EMAIL}.</p>
         '''
 
         if not settings.DISABLE_TASK_EMAILS:
@@ -261,7 +261,7 @@ def repair_resource_before_publication(res_id):
                       message=email_msg,
                       html_message=email_msg,
                       from_email=settings.DEFAULT_FROM_EMAIL,
-                      recipient_list=[settings.DEFAULT_SUPPORT_EMAIL, settings.DEFAULT_FROM_EMAIL])
+                      recipient_list=[settings.DEFAULT_SUPPORT_EMAIL, settings.DEFAULT_DEVELOPER_EMAIL])
 
 
 def notify_owners_of_resource_repair(resource):
@@ -403,7 +403,7 @@ def manage_task_hourly():
         email_msg = '\n'.join(msg_lst)
         subject = 'Notification of pending DOI deposition/activation of published resources'
         # send email for people monitoring and follow-up as needed
-        send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
+        send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_DEVELOPER_EMAIL])
 
     # update crossref deposit for published resource for which relevant metadata has been updated
     # excludes published resources that have either 'pending' or 'update_pending' in doi
@@ -591,7 +591,7 @@ def check_geoserver_registrations(resources, run_async=True):
                 err_msg += f'{res_url} => {json.dumps(resp)}\n'
             if not settings.DISABLE_TASK_EMAILS:
                 subject = "Web services failed to update"
-                recipients = [settings.DEFAULT_SUPPORT_EMAIL]
+                recipients = [settings.DEFAULT_DEVELOPER_EMAIL]
                 send_mail(subject, err_msg, settings.DEFAULT_FROM_EMAIL, recipients)
             else:
                 logger.error(err_msg)

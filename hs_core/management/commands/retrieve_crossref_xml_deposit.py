@@ -44,7 +44,7 @@ class Command(BaseCommand):
         # https://doi.crossref.org/servlet/query?pid={email}&format=unixref&id={DOI}
 
         res_doi = resource.doi[len("https://doi.org/"):]
-        email = settings.DEFAULT_SUPPORT_EMAIL
+        email = settings.DEFAULT_DEVELOPER_EMAIL
         url = f"https://doi.crossref.org/servlet/query?pid={email}&format=unixref&id={res_doi}"
         requests.packages.urllib3.disable_warnings()  # turn off SSL warnings
         print(
