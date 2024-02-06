@@ -4462,26 +4462,22 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
     _description = GenericRelation(Description)    # resource abstract
     _title = GenericRelation(Title)
-    creators = GenericRelation(Creator)
-    contributors = GenericRelation(Contributor)
-    citation = GenericRelation(Citation)
-    dates = GenericRelation(Date)
-    coverages = GenericRelation(Coverage)
-    formats = GenericRelation(Format)
-    identifiers = GenericRelation(Identifier)
+    creators = GenericRelation(Creator, related_query_name='metadata')
+    contributors = GenericRelation(Contributor, related_query_name='metadata')
+    citation = GenericRelation(Citation, related_query_name='metadata')
+    dates = GenericRelation(Date, related_query_name='metadata')
+    coverages = GenericRelation(Coverage, related_query_name='metadata')
+    formats = GenericRelation(Format, related_query_name='metadata')
+    identifiers = GenericRelation(Identifier, related_query_name='metadata')
     _language = GenericRelation(Language)
-    subjects = GenericRelation(Subject)
-    relations = GenericRelation(Relation)
-    geospatialrelations = GenericRelation(GeospatialRelation)
+    subjects = GenericRelation(Subject, related_query_name='metadata')
+    relations = GenericRelation(Relation, related_query_name='metadata')
+    geospatialrelations = GenericRelation(GeospatialRelation, related_query_name='metadata')
     _rights = GenericRelation(Rights)
     _type = GenericRelation(Type)
     _publisher = GenericRelation(Publisher)
-    funding_agencies = GenericRelation(FundingAgency)
-
-    @property
-    def resource(self):
-        """Return base resource object that the metadata defines."""
-        return BaseResource.objects.filter(object_id=self.id).first()
+    funding_agencies = GenericRelation(FundingAgency, related_query_name='metadata')
+    resource = GenericRelation(BaseResource, related_query_name='metadata')
 
     @property
     def title(self):
