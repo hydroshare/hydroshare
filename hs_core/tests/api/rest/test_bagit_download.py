@@ -21,9 +21,6 @@ class TestBagitDownload(HSRESTTestCase):
         txt.write("Hello World\n")
         txt.close()
 
-        self.raster_file_name = 'cea.tif'
-        self.raster_file_path = 'hs_core/tests/data/cea.tif'
-
         self.rtype = 'CompositeResource'
         self.title = 'My Test resource'
         res = resource.create_resource(self.rtype,
