@@ -163,7 +163,7 @@ class Command(BaseCommand):
             except Date.DoesNotExist:
                 pub_date = None
             try:
-                last_downloaded = r.metadata.dates.filter(type='bag_last_downloaded')
+                last_downloaded = r.metadata.dates.filter(type='bag_last_downloaded').first()
                 if last_downloaded:
                     last_downloaded = last_downloaded.start_date.strftime("%m/%d/%Y %H:%M:%S.%f")
                 else:
