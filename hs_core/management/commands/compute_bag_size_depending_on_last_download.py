@@ -15,6 +15,12 @@ class Command(BaseCommand):
 
         parser.add_argument('--weeks', type=int, dest='weeks', help='include res not downloaded in the last X weeks')
 
+        parser.add_argument(
+            '--published',
+            action='store_true',  # True for presence, False for absence
+            dest='published',  # value is options['published']
+            help='filter to include only published resources')
+
     def convert_size(self, size_bytes):
         if size_bytes == 0:
             return "0B"
@@ -32,13 +38,18 @@ class Command(BaseCommand):
 
         if weeks:
             print(f"FILTERING TO INCLUDE RESOURCES NOT BEEN IN DOWNLOADED IN THE LAST {weeks} WEEKS")
-            add_message = f"for resources not downloaded in last {weeks} weeks"
+            add_message += f" (including resources not downloaded in last {weeks} weeks)"
             cuttoff_time = timezone.now() - timedelta(weeks=weeks)
-            meta_ids = CoreMetaData.objects.filter(Q(metadata__dates__type="bag_last_downloaded"),
-                                                   Q(metadata__dates__start_date__isnull=True)
-                                                   | Q(metadata__dates__start_date__lte=cuttoff_time)
+            meta_ids = CoreMetaData.objects.filter(Q(dates__type="bag_last_downloaded"),
+                                                   Q(dates__start_date__isnull=True)
+                                                   | Q(dates__start_date__lte=cuttoff_time)
                                                    ).values_list('id', flat=True)
             resources = BaseResource.objects.filter(object_id__in=meta_ids)
+
+        if options['published']:
+            print("FILTERING TO INCLUDE ONLY PUBLISHED RESOURCES")
+            add_message += " (including only published resources)"
+            resources = resources.filter(raccess__published=True)
         cumulative_size = 0
         count = len(resources)
         counter = 1
@@ -56,4 +67,4 @@ class Command(BaseCommand):
                 print(f"Size not computed for {res.short_id}: {ve}")
             counter += 1
         converted_size = self.convert_size(cumulative_size)
-        print(f"Total cumulative size {add_message}: {converted_size}")
+        print(f"Total cumulative size{add_message}: {converted_size}")
