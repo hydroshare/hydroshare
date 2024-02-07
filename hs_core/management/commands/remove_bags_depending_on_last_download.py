@@ -23,6 +23,14 @@ class Command(BaseCommand):
             dest='published',  # value is options['published']
             help='filter to include only published resources')
 
+        parser.add_argument(
+            '--dryrun',
+            action='store_true',
+            dest='dryrun',
+            default=False,
+            help='Show cumulative size of bags to be removed without actually removing them',
+        )
+
     def convert_size(self, size_bytes):
         if size_bytes == 0:
             return "0B"
@@ -37,6 +45,7 @@ class Command(BaseCommand):
         add_message = ""
         weeks = options['weeks']
         resources = BaseResource.objects.all()
+        dryrun = options['dryrun']
 
         if weeks:
             print(f"FILTERING TO INCLUDE RESOURCES THAT HAVE NOT BEEN DOWNLOADED IN THE LAST {weeks} WEEKS")
@@ -52,6 +61,9 @@ class Command(BaseCommand):
             print("FILTERING TO INCLUDE ONLY PUBLISHED RESOURCES")
             add_message += " (including only published resources)"
             resources = resources.filter(raccess__published=True)
+        if dryrun:
+            print("Dry run mode: bags will not be removed. Size will be shown.")
+            add_message += " (dry run)"
         cumulative_size = 0
         count = len(resources)
         counter = 1
@@ -62,8 +74,9 @@ class Command(BaseCommand):
             try:
                 src_file = res.bag_path
                 istorage = res.get_irods_storage()
-                delete_bag(res, istorage)
-                set_dirty_bag_flag(res)
+                if not dryrun:
+                    delete_bag(res, istorage)
+                    set_dirty_bag_flag(res)
                 fsize = istorage.size(src_file)
                 cumulative_size += fsize
                 print(f"Size for {src_file} = {fsize}")
@@ -71,4 +84,4 @@ class Command(BaseCommand):
                 print(f"Bag not removed for {res.short_id}: {ve}")
             counter += 1
         converted_size = self.convert_size(cumulative_size)
-        print(f"Total cumulative size removed{add_message}: {converted_size}")
+        print(f"Total cumulative size{add_message}: {converted_size}")
