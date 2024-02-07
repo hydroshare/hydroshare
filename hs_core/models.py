@@ -776,6 +776,18 @@ class Description(AbstractMetaDataElement):
         unique_together = ("content_type", "object_id")
 
     @classmethod
+    def create(cls, **kwargs):
+        """Define custom update method for Description model."""
+        validate_abstract(kwargs['abstract'])
+        return super(Description, cls).create(**kwargs)
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        """Define custom update method for Description model."""
+        validate_abstract(kwargs['abstract'])
+        super(Description, cls).update(element_id, **kwargs)
+
+    @classmethod
     def remove(cls, element_id):
         """Create custom remove method for Description model."""
         raise ValidationError("Description element of a resource can't be deleted.")
