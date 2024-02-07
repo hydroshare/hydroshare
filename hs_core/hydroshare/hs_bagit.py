@@ -39,6 +39,21 @@ def delete_files_and_bag(resource):
         logger = logging.getLogger(__name__)
         logger.error("cannot remove {}: {}".format(resource.root_path, e))
 
+    delete_bag(resource, istorage)
+
+
+def delete_bag(resource, istorage=None):
+    """
+    delete the resource bag.
+
+    Parameters:
+    :param resource: the resource to delete the bag for.
+    :param istorage: An IrodsStorage instance
+    :return: none
+    """
+    if istorage is None:
+        istorage = resource.get_irods_storage()
+
     try:
         if istorage.exists(resource.bag_path):
             istorage.delete(resource.bag_path)

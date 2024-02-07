@@ -3,13 +3,15 @@ from django.core.management.base import BaseCommand
 
 from hs_core.models import BaseResource, CoreMetaData
 from django.core.exceptions import ValidationError
+from hs_core.hydroshare.hs_bagit import delete_bag
+from hs_core.hydroshare.utils import set_dirty_bag_flag
 from django.db.models import Q
 from django.utils import timezone
 from datetime import timedelta
 
 
 class Command(BaseCommand):
-    help = "Compute the size of the bagit archive size/storage for resources that haven't been downloaded recently"
+    help = "Remove bags for resources that haven't been downloaded recently"
 
     def add_arguments(self, parser):
 
@@ -60,11 +62,13 @@ class Command(BaseCommand):
             try:
                 src_file = res.bag_path
                 istorage = res.get_irods_storage()
+                delete_bag(res, istorage)
+                set_dirty_bag_flag(res)
                 fsize = istorage.size(src_file)
                 cumulative_size += fsize
                 print(f"Size for {src_file} = {fsize}")
             except ValidationError as ve:
-                print(f"Size not computed for {res.short_id}: {ve}")
+                print(f"Bag not removed for {res.short_id}: {ve}")
             counter += 1
         converted_size = self.convert_size(cumulative_size)
-        print(f"Total cumulative size{add_message}: {converted_size}")
+        print(f"Total cumulative size removed{add_message}: {converted_size}")
