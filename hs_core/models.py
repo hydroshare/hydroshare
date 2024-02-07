@@ -1,5 +1,6 @@
 """Declare critical models for Hydroshare hs_core app."""
 import copy
+import difflib
 import json
 import logging
 import os.path
@@ -745,12 +746,25 @@ class Creator(Party):
         ordering = ['order']
 
 
+def validate_abstract(value):
+    """Validate that an abstract is valid."""
+    err_message = 'The abstract is not valid. It contains characters that are not XML compatible.'
+    if value:
+        try:
+            clean = clean_for_xml(value)
+            assert (len(clean) == len(value))
+            match_ratio = difflib.SequenceMatcher(None, clean.splitlines(), value.splitlines()).ratio()
+            assert (match_ratio == 1.0)
+        except AssertionError:
+            raise ValidationError(err_message)
+
+
 @rdf_terms(DC.description, abstract=DCTERMS.abstract)
 class Description(AbstractMetaDataElement):
     """Define Description metadata element model."""
 
     term = 'Description'
-    abstract = models.TextField()
+    abstract = models.TextField(validators=[validate_abstract])
 
     def __unicode__(self):
         """Return abstract field for unicode representation."""
