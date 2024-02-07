@@ -17,7 +17,7 @@ from hs_core.management.utils import repair_resource
 from hs_core.views.utils import get_default_admin_user
 from hs_core import hydroshare
 from django.utils import timezone
-from django.db.models import F
+from django.db.models import F, Q
 from datetime import timedelta
 
 import logging
@@ -81,7 +81,7 @@ class Command(BaseCommand):
         if ignore_repaired_since:
             print(f"FILTERING TO INCLUDE RESOURCES NOT REPAIRED IN THE LAST {ignore_repaired_since} DAYS")
             cuttoff_time = timezone.now() - timedelta(days=ignore_repaired_since)
-            resources = resources.filter(repaired__lt=cuttoff_time)
+            resources = resources.filter(Q(repaired__lt=cuttoff_time) | Q(repaired__isnull=True))
 
         if dry_run:
             print("CONDUCTING A DRY RUN: FIXES WILL NOT BE SAVED")
