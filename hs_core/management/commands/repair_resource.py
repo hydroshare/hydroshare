@@ -30,7 +30,7 @@ class Command(BaseCommand):
         parser.add_argument('resource_ids', nargs='*', type=str)
         parser.add_argument('--updated_since', type=int, dest='updated_since',
                             help='include only resources updated in the last X days')
-        parser.add_argument('--ingored_repaired_since', type=int, dest='ingored_repaired_since',
+        parser.add_argument('--ignore_repaired_since', type=int, dest='ignore_repaired_since',
                             help='ignore resources repaired since X days ago')
         parser.add_argument(
             '--admin',
@@ -60,7 +60,7 @@ class Command(BaseCommand):
         dry_run = options['dry_run']
         published = options['published']
         site_url = hydroshare.utils.current_site_url()
-        ingored_repaired_since = options['ingored_repaired_since']
+        ignore_repaired_since = options['ignore_repaired_since']
 
         if resources_ids:  # an array of resource short_id to check.
             print("CHECKING RESOURCES PROVIDED")
@@ -78,9 +78,9 @@ class Command(BaseCommand):
             cuttoff_time = timezone.now() - timedelta(updated_since)
             resources = resources.filter(updated__gte=cuttoff_time)
 
-        if ingored_repaired_since:
-            print(f"FILTERING TO INCLUDE RESOURCES NOT REPAIRED IN THE LAST {ingored_repaired_since} DAYS")
-            cuttoff_time = timezone.now() - timedelta(days=ingored_repaired_since)
+        if ignore_repaired_since:
+            print(f"FILTERING TO INCLUDE RESOURCES NOT REPAIRED IN THE LAST {ignore_repaired_since} DAYS")
+            cuttoff_time = timezone.now() - timedelta(days=ignore_repaired_since)
             resources = resources.filter(repaired__lt=cuttoff_time)
 
         if dry_run:
