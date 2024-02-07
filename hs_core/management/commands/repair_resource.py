@@ -28,7 +28,10 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('resource_ids', nargs='*', type=str)
-        parser.add_argument('--days', type=int, dest='days', help='include resources updated in the last X days')
+        parser.add_argument('--updated_since', type=int, dest='updated_since',
+                            help='include only resources updated in the last X days')
+        parser.add_argument('--ingored_repaired_since', type=int, dest='ingored_repaired_since',
+                            help='ignore resources repaired since X days ago')
         parser.add_argument(
             '--admin',
             action='store_true',  # True for presence, False for absence
@@ -52,11 +55,12 @@ class Command(BaseCommand):
         logger = logging.getLogger(__name__)
         resources_ids = options['resource_ids']
         resources = BaseResource.objects.all()
-        days = options['days']
+        updated_since = options['updated_since']
         admin = options['admin']
         dry_run = options['dry_run']
         published = options['published']
         site_url = hydroshare.utils.current_site_url()
+        ingored_repaired_since = options['ingored_repaired_since']
 
         if resources_ids:  # an array of resource short_id to check.
             print("CHECKING RESOURCES PROVIDED")
@@ -67,12 +71,17 @@ class Command(BaseCommand):
             print("FILTERING TO INCLUDE PUBLISHED RESOURCES ONLY")
             resources = resources.filter(raccess__published=True)
 
-        if days:
-            print(f"FILTERING TO INCLUDE RESOURCES UPDATED IN LAST {days} DAYS")
+        if updated_since:
+            print(f"FILTERING TO INCLUDE RESOURCES UPDATED IN LAST {updated_since} DAYS")
             if resources_ids:
-                print("Your supplied resource_ids will be filtered by the --days that you provided. ")
-            cuttoff_time = timezone.now() - timedelta(days)
+                print("Your supplied resource_ids will be filtered by the --updated_since days that you provided. ")
+            cuttoff_time = timezone.now() - timedelta(updated_since)
             resources = resources.filter(updated__gte=cuttoff_time)
+
+        if ingored_repaired_since:
+            print(f"FILTERING TO INCLUDE RESOURCES NOT REPAIRED IN THE LAST {ingored_repaired_since} DAYS")
+            cuttoff_time = timezone.now() - timedelta(days=ingored_repaired_since)
+            resources = resources.filter(repaired__lt=cuttoff_time)
 
         if dry_run:
             print("CONDUCTING A DRY RUN: FIXES WILL NOT BE SAVED")
@@ -87,7 +96,7 @@ class Command(BaseCommand):
         else:
             user = None
 
-        resources = resources.order_by(F('updated').asc(nulls_first=True))
+        resources = resources.order_by(F('repaired').asc(nulls_first=True))
 
         total_res_to_check = resources.count()
         current_resource = 0
