@@ -98,6 +98,7 @@ from .utils import (
     run_script_to_update_hyrax_input_files,
     send_action_to_take_email,
     upload_from_irods,
+    get_default_support_user,
 )
 
 logger = logging.getLogger(__name__)
@@ -1212,7 +1213,10 @@ def submit_for_review(request, shortkey, *args, **kwargs):
         return HttpResponseRedirect(request.META["HTTP_REFERER"])
 
     try:
-        hydroshare.submit_resource_for_review(request, shortkey)
+        hydroshare.submit_resource_for_review(shortkey, request.user)
+        user_to = get_default_support_user()
+        send_action_to_take_email(request, user=user_to, user_from=request.user,
+                                  action_type='metadata_review', resource=res)
     except ValidationError as exp:
         request.session["validation_error"] = str(exp)
         logger.warning(str(exp))
@@ -2132,6 +2136,7 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
             f"This resource does not have a pending metadata review for you to { action }.",
         )
     else:
+        res.raccess.alter_review_pending_flags(initiating_review=False)
         if action == "approve":
             hydroshare.publish_resource(user, shortkey)
             messages.success(

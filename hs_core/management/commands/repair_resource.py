@@ -11,6 +11,7 @@ This checks that:
 """
 
 from django.core.management.base import BaseCommand, CommandError
+from django.core.exceptions import ValidationError
 from hs_core.models import BaseResource
 from hs_core.management.utils import repair_resource
 from hs_core.views.utils import get_default_admin_user
@@ -95,6 +96,7 @@ class Command(BaseCommand):
         total_files_dangling_in_django = 0
         resources_with_missing_django = []
         resources_with_missing_irods = []
+        failed_resources = []
         for resource in resources.iterator():
             current_resource += 1
             res_url = site_url + resource.absolute_url
@@ -106,7 +108,13 @@ class Command(BaseCommand):
                     print("Command running with --admin. Published resources will be repaired if needed.")
                 else:
                     print("Command running without --admin. Fixing a published resource raise ValidationError")
-            _, missing_in_django, dangling_in_django = repair_resource(resource, logger, dry_run=dry_run, user=user)
+            try:
+                _, missing_in_django, dangling_in_django = repair_resource(resource, logger, dry_run=dry_run, user=user)
+            except ValidationError as ve:
+                failed_resources.append(res_url)
+                print("Exception while attempting to repair resource:")
+                print(ve)
+                continue
             if dangling_in_django > 0 or missing_in_django > 0:
                 impacted_resources += 1
                 total_files_missing_in_django += missing_in_django
@@ -139,7 +147,13 @@ class Command(BaseCommand):
             print(res)
 
         # Make it simple to detect clean/fail run in Jenkins
-        if impacted_resources:
-            raise CommandError("repair_resources detected problems")
+        if impacted_resources and dry_run:
+            raise CommandError("repair_resources detected resources in need of repair during dry run")
         else:
-            print("Completed run without detecting issues")
+            print("Completed run of repair_resource")
+        if failed_resources:
+            print("*" * 100)
+            print("Repair was attempted but failed for the following resources:")
+            for res in resources_with_missing_irods:
+                print(res)
+            raise CommandError("Repair was attempted but failed on at least one resource")
