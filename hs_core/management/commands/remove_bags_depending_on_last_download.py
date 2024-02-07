@@ -1,13 +1,13 @@
 import math
-from django.core.management.base import BaseCommand
 
-from hs_core.models import BaseResource, CoreMetaData
+from datetime import timedelta
 from django.core.exceptions import ValidationError
-from hs_core.hydroshare.hs_bagit import delete_bag
-from hs_core.hydroshare.utils import set_dirty_bag_flag
+from django.core.management.base import BaseCommand
 from django.db.models import Q
 from django.utils import timezone
-from datetime import timedelta
+from hs_core.models import BaseResource
+from hs_core.hydroshare.hs_bagit import delete_bag
+from hs_core.hydroshare.utils import set_dirty_bag_flag
 
 
 class Command(BaseCommand):
@@ -51,11 +51,8 @@ class Command(BaseCommand):
             print(f"FILTERING TO INCLUDE RESOURCES THAT HAVE NOT BEEN DOWNLOADED IN THE LAST {weeks} WEEKS")
             add_message += f" (including only resources not downloaded in last {weeks} weeks)"
             cuttoff_time = timezone.now() - timedelta(weeks=weeks)
-            meta_ids = CoreMetaData.objects.filter(Q(dates__type="bag_last_downloaded"),
-                                                   Q(dates__start_date__isnull=True)
-                                                   | Q(dates__start_date__lte=cuttoff_time)
-                                                   ).values_list('id', flat=True)
-            resources = BaseResource.objects.filter(object_id__in=meta_ids)
+            resources = BaseResource.objects.filter(Q(bag_last_downloaded__lte=cuttoff_time)
+                                                    | Q(bag_last_downloaded__isnull=True))
 
         if options['published']:
             print("FILTERING TO INCLUDE ONLY PUBLISHED RESOURCES")

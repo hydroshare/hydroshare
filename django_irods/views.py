@@ -204,12 +204,8 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
             # to be streamed below
 
     elif is_bag_download:
-        bag_downloaded_date = res.metadata.dates.all().filter(type='bag_last_downloaded').first()
         now = datetime.datetime.now(tz.UTC)
-        if bag_downloaded_date:
-            res.metadata.update_element('date', bag_downloaded_date.id, start_date=now)
-        else:
-            res.metadata.create_element('date', type='bag_last_downloaded', start_date=now)
+        res.bag_last_downloaded = now
         res.save()
         # Shorten request if it contains extra junk at the end
         bag_file_name = res_id + '.zip'

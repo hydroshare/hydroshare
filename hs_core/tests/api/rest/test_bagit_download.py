@@ -49,7 +49,7 @@ class TestBagitDownload(HSRESTTestCase):
         """
         res = self.res
 
-        last_downloaded_date = res.metadata.dates.filter(type='bag_last_downloaded').first()
+        last_downloaded_date = res.bag_last_downloaded
         self.assertIsNone(last_downloaded_date)
 
         zip_download_url = f"/django_irods/rest_download/bags/{res.short_id}.zip?"
@@ -60,7 +60,8 @@ class TestBagitDownload(HSRESTTestCase):
         response = self.client.get(zip_download_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        pre_last_downloaded_date = res.metadata.dates.filter(type='bag_last_downloaded').first().start_date
+        res.refresh_from_db()
+        pre_last_downloaded_date = res.bag_last_downloaded
         self.assertIsNotNone(pre_last_downloaded_date)
 
         # download again
@@ -68,6 +69,6 @@ class TestBagitDownload(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         res.refresh_from_db()
-        post_last_downloaded_date = res.metadata.dates.filter(type='bag_last_downloaded').first().start_date
+        post_last_downloaded_date = res.bag_last_downloaded
 
         self.assertGreater(post_last_downloaded_date, pre_last_downloaded_date)

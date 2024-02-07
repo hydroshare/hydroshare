@@ -879,7 +879,6 @@ class Date(AbstractMetaDataElement):
     HS_DATE_TYPE_CHOICES = (
         ('reviewStarted', 'Review Started'),
         ('published', 'Published'),
-        ('bag_last_downloaded', 'Bag Last Downloaded'),
     )
     DATE_TYPE_CHOICES = DC_DATE_TYPE_CHOICES + HS_DATE_TYPE_CHOICES
 
@@ -2071,6 +2070,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     # for tracking number of times resource and its files have been downloaded
     download_count = models.PositiveIntegerField(default=0)
+    bag_last_downloaded = models.DateTimeField(null=True, blank=True)
     # for tracking number of times resource has been viewed
     view_count = models.PositiveIntegerField(default=0)
 
@@ -2102,18 +2102,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """Return the last updated date stored in metadata"""
         for dt in self.metadata.dates.all():
             if dt.type == 'modified':
-                return dt.start_date
-
-    @property
-    def bag_last_downloaded(self):
-        """
-        Returns the start date of the last bag download date in the metadata.
-
-        Returns:
-            datetime.date: The start date of the last download date in the metadata.
-        """
-        for dt in self.metadata.dates.all():
-            if dt.type == 'bag_last_downloaded':
                 return dt.start_date
 
     @property
@@ -5002,7 +4990,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 raise ValidationError("{} can't be updated for a published resource".format(element_model_name))
             elif element_model_name == 'date':
                 date_type = kwargs.get('type', '')
-                if date_type and date_type not in ['modified', 'bag_last_downloaded']:
+                if date_type and date_type != 'modified':
                     raise ValidationError("{} date can't be updated for a published resource".format(date_type))
         model_type.model_class().update(element_id, **kwargs)
         if resource.raccess.published:
