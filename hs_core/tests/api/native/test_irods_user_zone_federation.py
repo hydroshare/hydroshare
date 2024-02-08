@@ -127,6 +127,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
 
         # create a resource in the default HydroShare data iRODS zone for aggregated quota
         # update testing
+        # TODO: #5329 add test for quota update in user zone
         res = hydroshare.resource.create_resource(
             'CompositeResource',
             self.user,

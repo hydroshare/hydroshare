@@ -143,7 +143,7 @@ def send_user_notification_at_quota_grace_start(user_pk):
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
-def toggle_userzone_upload(user_pk, allow_upload=True):
+def set_user_quota_in_userzone(user_pk, quota=0):
     """
     Toggles the upload permission for a user in the iRODS user zone.
 
@@ -160,13 +160,11 @@ def toggle_userzone_upload(user_pk, allow_upload=True):
     """
     try:
         user = User.objects.get(pk=user_pk)
-        if allow_upload:
-            script = settings.LINUX_ADMIN_USER_ENABLE_UPLOAD_IN_USER_ZONE_CMD
-        else:
-            script = settings.LINUX_ADMIN_USER_DISABLE_UPLOAD_IN_USER_ZONE_CMD
-        exec_cmd = "{0} {1}".format(
+        script = settings.LINUX_ADMIN_USER_SET_QUOTA_IN_USER_ZONE_CMD
+        exec_cmd = "{0} {1} {2}".format(
             script,
             user.username,
+            quota,
         )
         output = run_ssh_command(
             host=settings.HS_USER_ZONE_HOST,
@@ -175,26 +173,18 @@ def toggle_userzone_upload(user_pk, allow_upload=True):
             exec_cmd=exec_cmd,
         )
         for out_str in output:
-            if "bash:" in out_str or (
-                "ERROR:" in out_str.upper()
-                and "CATALOG_ALREADY_HAS_ITEM_BY_THAT_NAME" not in out_str.upper()
-            ):
-                # there is an error from icommand run which is not about the fact
-                # that the user already exists, report the error
+            if "ERROR:" in out_str.upper():
+                # there is an error from icommand run, report the error
                 return json.dumps(
                     {
-                        "error": "iRODS server failed to create this iRODS account {0}. "
+                        "error": "iRODS server failed to set quota for this iRODS account {0}. "
                         "If this issue persists, please notify help@cuahsi.org.".format(
                             user.username
                         )
                     },
                 )
 
-        message = f"iRODS upload for user {user.username} was"
-        if allow_upload:
-            message += " enabled successfully"
-        else:
-            message += " disabled successfully"
+        message = f"iRODS quota for user {user.username} was set successfully"
         return json.dumps(
             {
                 "success": message,
@@ -204,6 +194,6 @@ def toggle_userzone_upload(user_pk, allow_upload=True):
         return json.dumps(
             {
                 "error": str(ex)
-                + " - iRODS server failed to take action on userzone for user {user.username}."
+                + " - iRODS server failed to set quota in userzone for user {user.username}."
             },
         )

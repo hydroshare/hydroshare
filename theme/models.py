@@ -284,6 +284,11 @@ class UserQuota(models.Model):
         return self.used_value * 100.0 / self.allocated_value
 
     @property
+    def remaining(self):
+        delta = self.allocated_value - self.used_value
+        return delta if delta > 0 else 0
+
+    @property
     def used_value(self):
         uz, dz = self.get_used_value_by_zone(refresh_from_irods=False)
         return uz + dz
@@ -523,6 +528,7 @@ def update_user_quota_on_quota_request(sender, instance, **kwargs):
     """
     Increment the allocated_value for a UserQuota object uppon approval of a QuotaRequest
     """
+    from irods.tasks import set_user_quota_in_userzone
     if kwargs.get('created'):
         # it is a new QuotaRequest instance, no need to check further
         return
@@ -538,6 +544,7 @@ def update_user_quota_on_quota_request(sender, instance, **kwargs):
 
         qr.quota.save()
         notify_user_of_quota_action(qr)
+        set_user_quota_in_userzone.apply_async((qr.request_from.pk, qr.quota.remaining,))
     except QuotaRequest.DoesNotExist:
         logger.warning(
             f"QuotaRequest for {instance.pk} does not exist when trying to update it"
@@ -549,7 +556,7 @@ def reset_grace_period_on_allocation_change(sender, instance, **kwargs):
     """
     Reset the pending UserQuota grace period when the allocated_value is modified in the UserQuota
     """
-    from irods.tasks import toggle_userzone_upload
+    from irods.tasks import set_user_quota_in_userzone
     if instance.id is None:  # new object will be created
         pass
     else:
@@ -557,7 +564,7 @@ def reset_grace_period_on_allocation_change(sender, instance, **kwargs):
         if previous.allocated_value != instance.allocated_value:
             # allocated_value is being updated
             instance.grace_period_ends = None
-            toggle_userzone_upload.apply_async((instance.user.pk, True))
+            set_user_quota_in_userzone.apply_async((instance.user.pk, instance.remaining,))
 
 
 @receiver(models.signals.pre_save, sender=QuotaMessage)

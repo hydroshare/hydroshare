@@ -21,7 +21,6 @@ from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
-from theme.enums import QuotaStatus
 from theme.utils import get_quota_data
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
@@ -126,9 +125,9 @@ def update_quota_usage(username):
     username: the name of the user that needs to update quota usage for.
     :return: raise ValidationError if quota cannot be updated.
     """
-    from irods.tasks import toggle_userzone_upload
+    from irods.tasks import set_user_quota_in_userzone
     from theme.models import UserQuota
-    from hs_core.tasks import send_user_notification_at_quota_grace_start
+    from irods.tasks import send_user_notification_at_quota_grace_start
     hs_internal_zone = "hydroshare"
     uq = UserQuota.objects.filter(user__username=username, zone=hs_internal_zone).first()
     if uq is None:
@@ -152,11 +151,11 @@ def update_quota_usage(username):
         updated_quota_data = get_quota_data(uq)
         # if enforcing quota, take steps to send messages
         percent = updated_quota_data["percent"]
+        remaining = updated_quota_data["remaining"]
+        set_user_quota_in_userzone.apply_async((user.pk, remaining))
         if percent < qmsg.soft_limit_percent:
             # No need for further action
             return
-        updated_quota_status = updated_quota_data["status"]
-        original_quota_status = original_quota_data["status"]
         today = datetime.date.today()
         if percent >= qmsg.soft_limit_percent:
             if percent >= 100 and percent < qmsg.hard_limit_percent:
@@ -173,11 +172,6 @@ def update_quota_usage(username):
                 # reset grace period now that the user is below quota soft limit
                 uq.grace_period_ends = None
                 uq.save()
-        if original_quota_status != updated_quota_status:
-            if updated_quota_status == QuotaStatus.ENFORCEMENT:
-                toggle_userzone_upload.apply_async((user.pk, False))
-            if original_quota_status == QuotaStatus.ENFORCEMENT:
-                toggle_userzone_upload.apply_async((user.pk, True))
 
 
 def res_has_web_reference(res):
