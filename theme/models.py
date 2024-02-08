@@ -528,7 +528,7 @@ def update_user_quota_on_quota_request(sender, instance, **kwargs):
     """
     Increment the allocated_value for a UserQuota object uppon approval of a QuotaRequest
     """
-    from irods.tasks import set_user_quota_in_userzone
+    from hs_core.tasks import set_user_quota_in_userzone
     if kwargs.get('created'):
         # it is a new QuotaRequest instance, no need to check further
         return
@@ -556,7 +556,7 @@ def reset_grace_period_on_allocation_change(sender, instance, **kwargs):
     """
     Reset the pending UserQuota grace period when the allocated_value is modified in the UserQuota
     """
-    from irods.tasks import set_user_quota_in_userzone
+    from hs_core.tasks import set_user_quota_in_userzone
     if instance.id is None:  # new object will be created
         pass
     else:

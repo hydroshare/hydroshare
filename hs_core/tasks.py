@@ -48,7 +48,8 @@ from hs_file_types.models import (FileSetLogicalFile, GenericLogicalFile,
                                   TimeSeriesLogicalFile)
 from hs_odm2.models import ODM2Variable
 from hydroshare.hydrocelery import app as celery_app
-from theme.models import User
+from theme.models import QuotaMessage, User, UserQuota
+from theme.utils import get_quota_message
 
 FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
                  "FileSetLogicalFile": FileSetLogicalFile,
@@ -126,6 +127,8 @@ def setup_periodic_tasks(sender, **kwargs):
 
         # Monthly
         sender.add_periodic_task(crontab(minute=30, hour=7, day_of_month=1), update_from_geoconnex_task.s())
+        sender.add_periodic_task(crontab(minute=0, hour=8, day_of_week=1, day_of_month='1-7'),
+                                 send_over_quota_emails.s())
         sender.add_periodic_task(
             crontab(minute=30, hour=8, day_of_month=1), monthly_group_membership_requests_cleanup.s())
 
@@ -476,6 +479,138 @@ def notify_owners_of_publication_success(resource):
                   html_message=email_msg,
                   from_email=settings.DEFAULT_FROM_EMAIL,
                   recipient_list=[o.email for o in resource.raccess.owners.all()])
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def send_over_quota_emails():
+    """
+    Checks over quota cases and sends quota warning emails as needed.
+
+    This function retrieves the quota message settings and user quotas from the database,
+    and sends warning emails to admin for users who have exceeded their quota limits.
+
+    Returns:
+        None
+    """
+    hs_internal_zone = "hydroshare"
+    if not QuotaMessage.objects.exists():
+        QuotaMessage.objects.create()
+    qmsg = QuotaMessage.objects.first()
+    users = User.objects.filter(is_active=True).filter(is_superuser=False).all()
+    for u in users:
+        uq = UserQuota.objects.filter(user__username=u.username, zone=hs_internal_zone).first()
+        if uq:
+            used_percent = uq.used_percent
+            if used_percent >= qmsg.soft_limit_percent:
+                support_user = get_default_support_user()
+                msg_str = f'Dear {support_user.first_name}{support_user.last_name}:\n\n'
+                msg_str += f'The following user (#{ u.id }) has exceeded their quota:{u.email}\n\n'
+                ori_qm = get_quota_message(u)
+                msg_str += ori_qm
+                subject = f'Quota warning for {u.email}(id#{u.id})'
+                if settings.DEBUG or settings.DISABLE_TASK_EMAILS:
+                    logger.info("quota warning email not sent out on debug server but logged instead: "
+                                "{}".format(msg_str))
+                else:
+                    try:
+                        # send email for people monitoring and follow-up as needed
+                        send_mail(subject, '', settings.DEFAULT_FROM_EMAIL,
+                                  [settings.DEFAULT_SUPPORT_EMAIL],
+                                  html_message=msg_str)
+                    except Exception as ex:
+                        logger.error("Failed to send quota warning email: " + str(ex))
+        else:
+            logger.debug('user ' + u.username + ' does not have UserQuota foreign key relation')
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def send_user_notification_at_quota_grace_start(user_pk):
+    u = User.objects.get(pk=user_pk)
+    if u.first_name and u.last_name:
+        sal_name = '{} {}'.format(u.first_name, u.last_name)
+    elif u.first_name:
+        sal_name = u.first_name
+    elif u.last_name:
+        sal_name = u.last_name
+    else:
+        sal_name = u.username
+
+    msg_str = 'Dear ' + sal_name + ':\n\n'
+
+    ori_qm = get_quota_message(u)
+    msg_str += ori_qm
+
+    msg_str += '\n\nHydroShare Support'
+    subject = 'Quota warning'
+    if settings.DEBUG or settings.DISABLE_TASK_EMAILS:
+        logger.info("quota warning email not sent out on debug server but logged instead: "
+                    "{}".format(msg_str))
+    else:
+        try:
+            # send email for people monitoring and follow-up as needed
+            send_mail(subject, '', settings.DEFAULT_FROM_EMAIL,
+                      [u.email],
+                      html_message=msg_str)
+        except Exception as ex:
+            logger.debug("Failed to send quota warning email: " + str(ex))
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def set_user_quota_in_userzone(user_pk, quota=0):
+    """
+    Toggles the upload permission for a user in the iRODS user zone.
+
+    Args:
+        user_pk (int): The primary key of the user.
+        allow_upload (bool, optional): Whether to allow or disable upload. Defaults to True.
+
+    Returns:
+        str: JSON-encoded string containing the success message if the operation is successful,
+             otherwise an error message.
+
+    Raises:
+        Exception: If an error occurs while toggling the upload permission.
+    """
+    from hs_core.views.utils import run_ssh_command
+    try:
+        user = User.objects.get(pk=user_pk)
+        script = settings.LINUX_ADMIN_USER_SET_QUOTA_IN_USER_ZONE_CMD
+        exec_cmd = "{0} {1} {2}".format(
+            script,
+            user.username,
+            quota,
+        )
+        output = run_ssh_command(
+            host=settings.HS_USER_ZONE_HOST,
+            uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
+            pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
+            exec_cmd=exec_cmd,
+        )
+        for out_str in output:
+            if "ERROR:" in out_str.upper():
+                # there is an error from icommand run, report the error
+                return json.dumps(
+                    {
+                        "error": "iRODS server failed to set quota for this iRODS account {0}. "
+                        "If this issue persists, please notify help@cuahsi.org.".format(
+                            user.username
+                        )
+                    },
+                )
+
+        message = f"iRODS quota for user {user.username} was set successfully"
+        return json.dumps(
+            {
+                "success": message,
+            },
+        )
+    except Exception as ex:
+        return json.dumps(
+            {
+                "error": str(ex)
+                + " - iRODS server failed to set quota in userzone for user {user.username}."
+            },
+        )
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)

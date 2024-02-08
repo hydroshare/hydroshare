@@ -125,9 +125,8 @@ def update_quota_usage(username):
     username: the name of the user that needs to update quota usage for.
     :return: raise ValidationError if quota cannot be updated.
     """
-    from irods.tasks import set_user_quota_in_userzone
+    from hs_core.tasks import set_user_quota_in_userzone, send_user_notification_at_quota_grace_start
     from theme.models import UserQuota
-    from irods.tasks import send_user_notification_at_quota_grace_start
     hs_internal_zone = "hydroshare"
     uq = UserQuota.objects.filter(user__username=username, zone=hs_internal_zone).first()
     if uq is None:
