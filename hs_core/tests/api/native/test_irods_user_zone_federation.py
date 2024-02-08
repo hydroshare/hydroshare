@@ -6,7 +6,7 @@ from django.contrib.auth.models import Group
 
 from hs_core.models import BaseResource
 from hs_core import hydroshare
-from hs_core.tasks import replicate_resource_bag_to_user_zone_task
+from hs_core.tasks import replicate_resource_bag_to_user_zone_task, set_user_quota_in_userzone
 from hs_core.testing import TestCaseCommonUtilities
 from hs_core.hydroshare.resource import update_quota_usage
 
@@ -127,7 +127,6 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
 
         # create a resource in the default HydroShare data iRODS zone for aggregated quota
         # update testing
-        # TODO: #5329 add test for quota update in user zone
         res = hydroshare.resource.create_resource(
             'CompositeResource',
             self.user,
@@ -162,3 +161,33 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
 
         # delete test resources
         hydroshare.resource.delete_resource(res.short_id)
+
+    def test_set_user_quota_in_userzone(self):
+        super(TestUserZoneIRODSFederation, self).assert_federated_irods_available()
+        # created in hydroshare zone
+        res = hydroshare.resource.create_resource(
+            resource_type='CompositeResource',
+            owner=self.user,
+            title='My Test Resource in HydroShare Zone'
+        )
+        self.assertEqual(res.files.all().count(), 0,
+                         msg="Number of content files is not equal to 0")
+        fed_test_file1_full_path = '/{zone}/home/testuser/{fname}'.format(
+            zone=settings.HS_USER_IRODS_ZONE, fname=self.file_one)
+        fed_file2_full_path = '/{zone}/home/testuser/{fname}'.format(
+            zone=settings.HS_USER_IRODS_ZONE, fname=self.file_two)
+        hydroshare.add_resource_files(
+            res.short_id,
+            source_names=[fed_test_file1_full_path, fed_file2_full_path])
+        # test resource has two files
+        self.assertEqual(res.files.all().count(), 2,
+                         msg="Number of content files is not equal to 2")
+
+        # replicate resource bag to user zone
+        res.setAVU('bag_modified', 'false')
+        replicate_resource_bag_to_user_zone_task(res.short_id, self.user.username)
+
+        # test setting user quota in user zone. This should raise an exception as the user quota is not adequate
+        set_user_quota_in_userzone(self.user.pk, 1)
+        with self.assertRaises(Exception):
+            replicate_resource_bag_to_user_zone_task(res.short_id, self.user.username)
