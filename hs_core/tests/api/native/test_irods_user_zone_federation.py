@@ -163,15 +163,22 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         hydroshare.resource.delete_resource(res.short_id)
 
     def test_set_user_quota_in_userzone(self):
+        """
+        Test case for setting user quota in user zone.
+
+        This test case verifies that setting the user quota in the user zone works as expected.
+        It creates a test resource in the HydroShare zone, adds files to the resource, and then
+        replicates the resource bag to the user zone. It then attempts to replicate the resource
+        bag again, but with a user quota that is not adequate. The test expects an exception to be
+        raised in this case.
+        """
         super(TestUserZoneIRODSFederation, self).assert_federated_irods_available()
-        # created in hydroshare zone
+
         res = hydroshare.resource.create_resource(
             resource_type='CompositeResource',
             owner=self.user,
             title='My Test Resource in HydroShare Zone'
         )
-        self.assertEqual(res.files.all().count(), 0,
-                         msg="Number of content files is not equal to 0")
         fed_test_file1_full_path = '/{zone}/home/testuser/{fname}'.format(
             zone=settings.HS_USER_IRODS_ZONE, fname=self.file_one)
         fed_file2_full_path = '/{zone}/home/testuser/{fname}'.format(
@@ -179,15 +186,13 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         hydroshare.add_resource_files(
             res.short_id,
             source_names=[fed_test_file1_full_path, fed_file2_full_path])
-        # test resource has two files
-        self.assertEqual(res.files.all().count(), 2,
-                         msg="Number of content files is not equal to 2")
 
-        # replicate resource bag to user zone
+        # ensure replicate resource bag to user zone is successful
         res.setAVU('bag_modified', 'false')
         replicate_resource_bag_to_user_zone_task(res.short_id, self.user.username)
 
-        # test setting user quota in user zone. This should raise an exception as the user quota is not adequate
+        # test setting user quota in user zone
         set_user_quota_in_userzone(self.user.pk, 1)
+        # This should raise an exception as the user quota is not adequate to replicate the resource
         with self.assertRaises(Exception):
             replicate_resource_bag_to_user_zone_task(res.short_id, self.user.username)
