@@ -559,11 +559,11 @@ def send_user_notification_at_quota_grace_start(user_pk):
 @celery_app.task(ignore_result=True, base=HydroshareTask)
 def set_user_quota_in_userzone(user_pk, quota=0):
     """
-    Toggles the upload permission for a user in the iRODS user zone.
+    Toggles the irods managed quota for a user in the iRODS user zone.
 
     Args:
         user_pk (int): The primary key of the user.
-        allow_upload (bool, optional): Whether to allow or disable upload. Defaults to True.
+        quota (int): The quota size in bytes.
 
     Returns:
         str: JSON-encoded string containing the success message if the operation is successful,
