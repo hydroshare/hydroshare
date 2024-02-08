@@ -21,8 +21,6 @@ from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
-from irods.tasks import toggle_userzone_upload
-from theme.models import UserQuota
 from theme.enums import QuotaStatus
 from theme.utils import get_quota_data
 from django_irods.icommands import SessionException
@@ -128,6 +126,8 @@ def update_quota_usage(username):
     username: the name of the user that needs to update quota usage for.
     :return: raise ValidationError if quota cannot be updated.
     """
+    from irods.tasks import toggle_userzone_upload
+    from theme.models import UserQuota
     from hs_core.tasks import send_user_notification_at_quota_grace_start
     hs_internal_zone = "hydroshare"
     uq = UserQuota.objects.filter(user__username=username, zone=hs_internal_zone).first()

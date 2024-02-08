@@ -25,7 +25,6 @@ from mezzanine.utils.models import upload_to
 
 from sorl.thumbnail import ImageField as ThumbnailImageField
 from theme.utils import get_upload_path_userprofile, notify_user_of_quota_action
-from irods.tasks import toggle_userzone_upload
 
 
 DEFAULT_COPYRIGHT = '&copy; {% now "Y" %} {{ settings.SITE_TITLE }}'
@@ -550,6 +549,7 @@ def reset_grace_period_on_allocation_change(sender, instance, **kwargs):
     """
     Reset the pending UserQuota grace period when the allocated_value is modified in the UserQuota
     """
+    from irods.tasks import toggle_userzone_upload
     if instance.id is None:  # new object will be created
         pass
     else:
