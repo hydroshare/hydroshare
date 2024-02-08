@@ -192,7 +192,8 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         replicate_resource_bag_to_user_zone_task(res.short_id, self.user.username)
 
         # test setting user quota in user zone
-        set_user_quota_in_userzone(self.user.pk, 1)
+        result = set_user_quota_in_userzone(self.user.pk, 1)
+        self.assertTrue('success' in result, msg='setting user quota in user zone failed')
         # This should raise an exception as the user quota is not adequate to replicate the resource
         with self.assertRaises(Exception):
             replicate_resource_bag_to_user_zone_task(res.short_id, self.user.username)
