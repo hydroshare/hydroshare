@@ -40,6 +40,7 @@ from hs_core.hydroshare.resource import (deposit_res_metadata_with_crossref,
                                          get_resource_doi)
 from hs_core.models import BaseResource, ResourceFile, TaskNotification
 from hs_core.task_utils import get_or_create_task_notification
+from hs_core.views.utils import get_default_support_user
 from hs_file_types.models import (FileSetLogicalFile, GenericLogicalFile,
                                   GeoFeatureLogicalFile, GeoRasterLogicalFile,
                                   ModelInstanceLogicalFile,
