@@ -111,8 +111,8 @@ def get_quota_data(uq):
     unit = uq.unit
     uz, dz = uq.get_used_value_by_zone()
     used = uz + dz
-    uz = uz * 100.0 / allocated
-    dz = dz * 100.0 / allocated
+    uzp = uz * 100.0 / allocated
+    dzp = dz * 100.0 / allocated
     percent = used * 100.0 / allocated
     remaining = allocated - used
 
@@ -135,8 +135,10 @@ def get_quota_data(uq):
     uq_data = {"used": used,
                "allocated": allocated,
                "unit": unit,
-               "uz_percent": uz if uz < 100 else 100,
-               "dz_percent": dz if dz < 100 else 100,
+               "uz": uz,
+               "dz": dz,
+               "uz_percent": uzp if uzp < 100 else 100,
+               "dz_percent": dzp if dzp < 100 else 100,
                "percent": percent if percent < 100 else 100,
                "remaining": 0 if remaining < 0 else remaining,
                "percent_over": 0 if percent < 100 else percent - 100,

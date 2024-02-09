@@ -525,6 +525,31 @@ def send_over_quota_emails():
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
+def notify_increased_usage_during_quota_enforcement(user, message):
+    from hs_core.views.utils import get_default_support_user
+    support_user = get_default_support_user()
+    msg_str = f'Dear {support_user.first_name}{support_user.last_name}:\n\n'
+    msg_str += f'User (#{ user.id }, {user.email}) previously exceeded their quota.\n'
+    msg_str += 'They have continued to put data in spite of their quota being in enforcement status.\n\n'
+    msg_str += message
+    msg_str += 'Here is the quota message for the user:\n'
+    ori_qm = get_quota_message(user)
+    msg_str += ori_qm
+    subject = f'Continued uploads while over quota {user.email}(id#{user.id})'
+    if settings.DEBUG or settings.DISABLE_TASK_EMAILS:
+        logger.info("quota warning email not sent out on debug server but logged instead: "
+                    "{}".format(msg_str))
+    else:
+        try:
+            # send email for people monitoring and follow-up as needed
+            send_mail(subject, '', settings.DEFAULT_FROM_EMAIL,
+                      [settings.DEFAULT_SUPPORT_EMAIL],
+                      html_message=msg_str)
+        except Exception as ex:
+            logger.error("Failed to send quota warning email: " + str(ex))
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def send_user_notification_at_quota_grace_start(user_pk):
     u = User.objects.get(pk=user_pk)
     if u.first_name and u.last_name:
