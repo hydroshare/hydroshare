@@ -127,7 +127,7 @@ def update_quota_usage(username):
     username: the name of the user that needs to update quota usage for.
     :return: raise ValidationError if quota cannot be updated.
     """
-    from hs_core.tasks import send_user_notification_at_quota_grace_start
+    from hs_core import tasks
     hs_internal_zone = "hydroshare"
     uq = UserQuota.objects.filter(user__username=username, zone=hs_internal_zone).first()
     if uq is None:
@@ -139,28 +139,28 @@ def update_quota_usage(username):
     uz, dz = get_quota_usage_from_irods(username, raise_on_error=False)
 
     # subtract out published resources from the datazone
-    quota_data = get_quota_data(uq)
-    qmsg = quota_data["qmsg"]
+    original_quota_data = get_quota_data(uq)
+    qmsg = original_quota_data["qmsg"]
     published_percent = qmsg.published_resource_percent
     user = User.objects.get(username=username)
     published_size = get_storage_usage(user, flag="published")
     dz -= published_size * (1 - published_percent)
     uq.update_used_value(uz, dz)
 
-    if quota_data["enforce_quota"]:
+    if original_quota_data["enforce_quota"]:
+        updated_quota_data = get_quota_data(uq)
         # if enforcing quota, take steps to send messages
-        percent = quota_data["percent"]
+        percent = updated_quota_data["percent"]
         if percent < qmsg.soft_limit_percent:
             # No need for further action
             return
-        quota_status = quota_data["status"]
         today = datetime.date.today()
         if percent >= qmsg.soft_limit_percent:
             if percent >= 100 and percent < qmsg.hard_limit_percent:
                 if not uq.grace_period_ends:
                     # triggers grace period counting
                     uq.grace_period_ends = today + datetime.timedelta(days=qmsg.grace_period)
-                    send_user_notification_at_quota_grace_start(user.pk)
+                    tasks.send_user_notification_at_quota_grace_start.apply_async((user.pk))
             elif percent >= qmsg.hard_limit_percent:
                 # reset grace period when user quota exceeds hard limit
                 uq.grace_period_ends = None
@@ -170,19 +170,27 @@ def update_quota_usage(username):
                 # reset grace period now that the user is below quota soft limit
                 uq.grace_period_ends = None
                 uq.save()
-        # TODO #5329 implement toggle userzone
-        if quota_status == QuotaStatus.ENFORCEMENT:
-            # quota needs to be enforced
-            pass
-        elif quota_status == QuotaStatus.GRACE_PERIOD:
-            # quota is in grace period
-            pass
-        elif quota_status == QuotaStatus.WARNING:
-            # return quota warning message
-            pass
-        elif quota_status == QuotaStatus.INFO:
-            # return quota informational message
-            pass
+        updated_quota_status = updated_quota_data["status"]
+        original_quota_status = original_quota_data["status"]
+        if original_quota_status == QuotaStatus.ENFORCEMENT and updated_quota_status == QuotaStatus.ENFORCEMENT:
+            original_userzone_usage = original_quota_data["uz"]
+            original_datazone_usage = original_quota_data["dz"]
+            message = ""
+            if uz > original_userzone_usage:
+                # userZone quota usage has increased
+                message += f"""UserZone quota usage has increased from {original_userzone_usage} to {uz}.
+                It is possible for the user to continue putting resources into the userZone
+                because quota is not enforced in userZone. You are being notified to manually check this usage
+                and determine what action is appropriate. It is possible to remove the user account from the irods
+                userzone if necessary."""
+            if dz > original_datazone_usage:
+                # dataZone quota usage has increased
+                message += f"""DataZone quota usage has increased from {original_datazone_usage} to {dz}.
+                This user has exceeded quota and limitations should have been enforced. It should not have been possible
+                for the user to continue putting resources into the dataZone. This case requires manual intervention.
+                """
+            if message:
+                tasks.notify_increased_usage_during_quota_enforcement.apply_async((user, message))
 
 
 def res_has_web_reference(res):

@@ -284,6 +284,11 @@ class UserQuota(models.Model):
         return self.used_value * 100.0 / self.allocated_value
 
     @property
+    def remaining(self):
+        delta = self.allocated_value - self.used_value
+        return delta if delta > 0 else 0
+
+    @property
     def used_value(self):
         uz, dz = self.get_used_value_by_zone(refresh_from_irods=False)
         return uz + dz
@@ -547,7 +552,7 @@ def update_user_quota_on_quota_request(sender, instance, **kwargs):
 @receiver(models.signals.pre_save, sender=UserQuota)
 def reset_grace_period_on_allocation_change(sender, instance, **kwargs):
     """
-    Reset the pending UserQuota grace perioud when the allocated_value is modified in the UserQuota
+    Reset the pending UserQuota grace period when the allocated_value is modified in the UserQuota
     """
     if instance.id is None:  # new object will be created
         pass
