@@ -54,18 +54,14 @@ i.identifier-icon {
     margin-right: 12px;
 }
 
-img.identifier-icon {
+img.identifier-icon, .identifier-icon img.ai {
     width: 36px;
     height: 36px;
     margin-right: 12px;
-}
-
-.identifier-icon img.ai{
     object-fit: contain;
-    width: 1.2em;
-    padding: 1px;
+    border-radius: 4px;
+    padding: 2px;
     margin-top: 0;
-    margin-right: .2em;
 }
 
 img.identifier-icon.ai-orcid, .identifier-icon .ai-orcid {
