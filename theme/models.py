@@ -528,7 +528,6 @@ def update_user_quota_on_quota_request(sender, instance, **kwargs):
     """
     Increment the allocated_value for a UserQuota object uppon approval of a QuotaRequest
     """
-    from hs_core.tasks import set_user_quota_in_userzone
     if kwargs.get('created'):
         # it is a new QuotaRequest instance, no need to check further
         return
@@ -544,7 +543,6 @@ def update_user_quota_on_quota_request(sender, instance, **kwargs):
 
         qr.quota.save()
         notify_user_of_quota_action(qr)
-        set_user_quota_in_userzone.apply_async((qr.request_from.pk, qr.quota.remaining,))
     except QuotaRequest.DoesNotExist:
         logger.warning(
             f"QuotaRequest for {instance.pk} does not exist when trying to update it"
@@ -556,7 +554,6 @@ def reset_grace_period_on_allocation_change(sender, instance, **kwargs):
     """
     Reset the pending UserQuota grace period when the allocated_value is modified in the UserQuota
     """
-    from hs_core.tasks import set_user_quota_in_userzone
     if instance.id is None:  # new object will be created
         pass
     else:
@@ -564,7 +561,6 @@ def reset_grace_period_on_allocation_change(sender, instance, **kwargs):
         if previous.allocated_value != instance.allocated_value:
             # allocated_value is being updated
             instance.grace_period_ends = None
-            set_user_quota_in_userzone.apply_async((instance.user.pk, instance.remaining,))
 
 
 @receiver(models.signals.pre_save, sender=QuotaMessage)

@@ -557,64 +557,6 @@ def send_user_notification_at_quota_grace_start(user_pk):
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
-def set_user_quota_in_userzone(user_pk, quota=0):
-    """
-    Toggles the irods managed quota for a user in the iRODS user zone.
-
-    Args:
-        user_pk (int): The primary key of the user.
-        quota (int): The quota size in bytes.
-
-    Returns:
-        str: JSON-encoded string containing the success message if the operation is successful,
-             otherwise an error message.
-
-    Raises:
-        Exception: If an error occurs while toggling the upload permission.
-    """
-    from hs_core.views.utils import run_ssh_command
-    try:
-        user = User.objects.get(pk=user_pk)
-        script = settings.LINUX_ADMIN_USER_SET_QUOTA_IN_USER_ZONE_CMD
-        exec_cmd = "{0} {1} {2}".format(
-            script,
-            user.username,
-            quota,
-        )
-        output = run_ssh_command(
-            host=settings.HS_USER_ZONE_HOST,
-            uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
-            pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
-            exec_cmd=exec_cmd,
-        )
-        for out_str in output:
-            if "ERROR:" in out_str.upper():
-                # there is an error from icommand run, report the error
-                return json.dumps(
-                    {
-                        "error": "iRODS server failed to set quota for this iRODS account {0}. "
-                        "If this issue persists, please notify help@cuahsi.org.".format(
-                            user.username
-                        )
-                    },
-                )
-
-        message = f"iRODS quota for user {user.username} was set successfully"
-        return json.dumps(
-            {
-                "success": message,
-            },
-        )
-    except Exception as ex:
-        return json.dumps(
-            {
-                "error": str(ex)
-                + " - iRODS server failed to set quota in userzone for user {user.username}."
-            },
-        )
-
-
-@celery_app.task(ignore_result=True, base=HydroshareTask)
 def check_geoserver_registrations(resources, run_async=True):
     # Check to ensure resources have updated web services registrations
 
