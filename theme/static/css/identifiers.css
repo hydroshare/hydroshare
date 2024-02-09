@@ -80,6 +80,12 @@ img.identifier-icon.ai-researchgate-square, .identifier-icon .ai-researchgate-sq
     background-size: contain;
 }
 
+img.identifier-icon.ai-researcherid-square, .identifier-icon .ai-researcherid-square {
+    color: #b7b7b7;
+    background: url("/static/static/img/researcherID.png") no-repeat center center;
+    background-size: contain;
+}
+
 i.identifier-icon.fa-address-card, .identifier-icon .fa-address-card {
     color: #b7b7b7;
 }
