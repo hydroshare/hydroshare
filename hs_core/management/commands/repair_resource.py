@@ -75,11 +75,13 @@ class Command(BaseCommand):
             print(f"FILTERING TO INCLUDE RESOURCES UPDATED IN LAST {updated_since} DAYS")
             if resources_ids:
                 print("Your supplied resource_ids will be filtered by the --updated_since days that you provided. ")
-            cuttoff_time = timezone.now() - timedelta(updated_since)
+            cuttoff_time = timezone.now() - timedelta(days=updated_since)
             resources = resources.filter(updated__gte=cuttoff_time)
 
         if ignore_repaired_since:
             print(f"FILTERING TO INCLUDE RESOURCES NOT REPAIRED IN THE LAST {ignore_repaired_since} DAYS")
+            if resources_ids:
+                print("Your supplied resource_ids will be filtered by the --ignore_repaired_since days provided. ")
             cuttoff_time = timezone.now() - timedelta(days=ignore_repaired_since)
             resources = resources.filter(Q(repaired__lt=cuttoff_time) | Q(repaired__isnull=True))
 
