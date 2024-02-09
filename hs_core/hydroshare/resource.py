@@ -1,31 +1,30 @@
-import os
-import zipfile
-import shutil
-import logging
-import requests
 import datetime
-from dateutil import tz
+import logging
+import os
+import shutil
+import zipfile
 
+import requests
+from dateutil import tz
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.models import User
+from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
+                                    ValidationError)
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
-from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
-from django.contrib.auth.models import User
-
 from rest_framework import status
 
-from hs_core.hydroshare import hs_bagit
-from hs_core.models import ResourceFile
-from hs_core import signals
-from hs_core.hydroshare import utils
-from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
-from hs_labels.models import ResourceLabels
-from theme.models import UserQuota
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
-
+from hs_access_control.models import (PrivilegeCodes, ResourceAccess,
+                                      UserResourcePrivilege)
+from hs_core import signals
+from hs_core.enums import CrossRefSubmissionStatus
+from hs_core.hydroshare import hs_bagit, utils
+from hs_core.models import ResourceFile
+from hs_labels.models import ResourceLabels
+from theme.models import UserQuota
 
 FILE_SIZE_LIMIT = 1 * (1024 ** 3)
 FILE_SIZE_LIMIT_FOR_DISPLAY = '1G'
@@ -676,7 +675,7 @@ def add_resource_files(pk, *files, **kwargs):
     resource = kwargs.pop("resource", None)
     if resource is None:
         resource = utils.get_resource_by_shortkey(pk)
-    res_files = []
+    uploaded_res_files = []
     source_names = kwargs.pop('source_names', [])
     full_paths = kwargs.pop('full_paths', {})
     auto_aggregate = kwargs.pop('auto_aggregate', True)
@@ -711,28 +710,45 @@ def add_resource_files(pk, *files, **kwargs):
             dir_name = os.path.dirname(full_path)
             # Only do join if dir_name is not empty, otherwise, it'd result in a trailing slash
             full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
-        res_files.append(utils.add_file_to_resource(resource, f, folder=full_dir, user=user,
-                                                    save_file_system_metadata=False))
+        res_file = utils.add_file_to_resource(resource, f, folder=full_dir, user=user, add_to_aggregation=False,
+                                              save_file_system_metadata=False)
+        uploaded_res_files.append(res_file)
 
     for ifname in source_names:
-        res_files.append(utils.add_file_to_resource(resource, None,
-                                                    folder=folder,
-                                                    source_name=ifname,
-                                                    user=user,
-                                                    save_file_system_metadata=False))
+        res_file = utils.add_file_to_resource(resource, None, folder=folder, source_name=ifname, user=user,
+                                              add_to_aggregation=False,
+                                              save_file_system_metadata=False)
+        uploaded_res_files.append(res_file)
 
-    if not res_files:
+    if not uploaded_res_files:
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)
     else:
-        if resource.resource_type == "CompositeResource" and auto_aggregate:
-            utils.check_aggregations(resource, res_files)
+        if resource.resource_type == "CompositeResource":
+            upload_to_folder = base_dir
+            if upload_to_folder:
+                aggregations = list(resource.logical_files)
+                # check if there is folder based model program or model instance aggregation in the upload path
+                aggregation = resource.get_model_aggregation_in_path(upload_to_folder, aggregations=aggregations)
+                if aggregation is None:
+                    # check if there is a fileset aggregation in the upload path
+                    aggregation = resource.get_fileset_aggregation_in_path(upload_to_folder, aggregations=aggregations)
+                if aggregation:
+                    # Note: we can't use bulk_update here because we need to update the logical_file_content_object
+                    # which is not a concrete field in the ResourceFile model
+                    for res_file in uploaded_res_files:
+                        aggregation.add_resource_file(res_file, set_metadata_dirty=False)
+
+                    aggregation.set_metadata_dirty()
+            if auto_aggregate:
+                utils.check_aggregations(resource, uploaded_res_files)
+
         utils.resource_modified(resource, user, overwrite_bag=False)
 
         # store file level system metadata in Django DB (async task)
         set_resource_files_system_metadata.apply_async((resource.short_id,))
 
-    return res_files
+    return uploaded_res_files
 
 
 def update_science_metadata(pk, metadata, user):
@@ -948,6 +964,8 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
 def get_resource_doi(res_id, flag=''):
     doi_str = "https://doi.org/10.4211/hs.{shortkey}".format(shortkey=res_id)
     if flag:
+        if flag not in CrossRefSubmissionStatus:
+            raise ValidationError("Invalid flag value: {}".format(flag))
         return "{doi}{append_flag}".format(doi=doi_str, append_flag=flag)
     else:
         return doi_str
@@ -955,12 +973,16 @@ def get_resource_doi(res_id, flag=''):
 
 def get_activated_doi(doi):
     """
-    Get activated DOI with flags removed. The following two flags are appended
+    Get activated DOI with flags removed. The following four flags are appended
     to the DOI string to indicate publication status for internal use:
-    'pending' flag indicates the metadata deposition with CrossRef succeeds, but
+    'pending' flag indicates the metadata deposition with CrossRef succeeds when the resource is published, but
      pending activation with CrossRef for DOI to take effect.
     'failure' flag indicates the metadata deposition failed with CrossRef due to
-    network or system issues with CrossRef
+    network or system issues with CrossRef when the resource is published.
+    'update_pending' flag indicates the metadata update with CrossRef succeeds when the resource metadata is updated,
+    but pending to take effect.
+    'update_failure' flag indicates the metadata update failed with CrossRef due to
+    network or system issues with CrossRef when the resource metadata is updated.
 
     Args:
         doi: the DOI string with possible status flags appended
@@ -968,14 +990,16 @@ def get_activated_doi(doi):
     Returns:
         the activated DOI with all flags removed if any
     """
-    idx1 = doi.find('pending')
-    idx2 = doi.find('failure')
-    if idx1 >= 0:
-        return doi[:idx1]
-    elif idx2 >= 0:
-        return doi[:idx2]
-    else:
-        return doi
+
+    if doi.endswith(CrossRefSubmissionStatus.UPDATE_PENDING):
+        return doi[:-len(CrossRefSubmissionStatus.UPDATE_PENDING)]
+    if doi.endswith(CrossRefSubmissionStatus.UPDATE_FAILURE):
+        return doi[:-len(CrossRefSubmissionStatus.UPDATE_FAILURE)]
+    if doi.endswith(CrossRefSubmissionStatus.PENDING):
+        return doi[:-len(CrossRefSubmissionStatus.PENDING)]
+    if doi.endswith(CrossRefSubmissionStatus.FAILURE):
+        return doi[:-len(CrossRefSubmissionStatus.FAILURE)]
+    return doi
 
 
 def get_crossref_url():
@@ -1011,7 +1035,7 @@ def deposit_res_metadata_with_crossref(res):
     return response
 
 
-def submit_resource_for_review(request, pk):
+def submit_resource_for_review(pk, user):
     """
     Submits a resource for minimum metadata review, prior to publishing.
     The user must be an owner of a resource or an administrator to perform this action.
@@ -1031,9 +1055,10 @@ def submit_resource_for_review(request, pk):
     and other general exceptions
 
     """
-    from hs_core.views.utils import get_default_support_user
 
     resource = utils.get_resource_by_shortkey(pk)
+    if not user.is_superuser and not user.uaccess.owns_resource(resource):
+        raise PermissionDenied('Only resource owners or admins can submit a resource for review')
     if resource.raccess.published:
         raise ValidationError("This resource is already published")
 
@@ -1045,18 +1070,14 @@ def submit_resource_for_review(request, pk):
                               "it does not have required metadata or content files, or it contains "
                               "reference content, or this resource type is not allowed for publication.")
 
-    user_to = get_default_support_user()
-    from hs_core.views.utils import send_action_to_take_email
-    send_action_to_take_email(request, user=user_to, user_from=request.user,
-                              action_type='metadata_review', resource=resource)
-
     # create review date -- must be before review_pending = True
     resource.metadata.dates.all().filter(type='reviewStarted').delete()
     resource.metadata.create_element('date', type='reviewStarted', start_date=datetime.datetime.now(tz.UTC))
 
-    resource.raccess.review_pending = True
-    resource.raccess.immutable = True
-    resource.raccess.save()
+    resource.raccess.alter_review_pending_flags(initiating_review=True)
+
+    # set resource modified before attempting repair
+    utils.resource_modified(resource, user, overwrite_bag=False)
 
     # Repair resource and email support user if there are issues
     from hs_core.tasks import repair_resource_before_publication
@@ -1070,7 +1091,7 @@ def publish_resource(user, pk):
     be an owner of a resource or an administrator to perform this action.
 
     Parameters:
-        user - requesting user to publish the resource who must be one of the owners of the resource
+        user - requesting user to publish the resource who must be an admin
         pk - Unique HydroShare identifier for the resource to be formally published.
 
     Returns:    The id of the resource that was published
@@ -1085,10 +1106,13 @@ def publish_resource(user, pk):
 
     Note:  This is different than just giving public access to a resource via access control rule
     """
+    if not user.is_superuser:
+        raise ValidationError("Resource can only be published by an admin user")
     resource = utils.get_resource_by_shortkey(pk)
     if resource.raccess.published:
         raise ValidationError("This resource is already published")
-
+    resource.raccess.alter_review_pending_flags(initiating_review=False)
+    resource.raccess.save()
     # TODO: whether a resource can be published is not considered in can_be_submitted_for_metadata_review
     # TODO: can_be_submitted_for_metadata_review is currently an alias for can_be_public_or_discoverable
     if not resource.can_be_submitted_for_metadata_review:
@@ -1098,21 +1122,30 @@ def publish_resource(user, pk):
 
     # append pending to the doi field to indicate DOI is not activated yet. Upon successful
     # activation, "pending" will be removed from DOI field
-    resource.doi = get_resource_doi(pk, 'pending')
+    resource.doi = get_resource_doi(pk, CrossRefSubmissionStatus.PENDING)
     resource.save()
-
-    if not settings.DEBUG:
-        # only in production environment submit doi request to crossref
+    if settings.DEBUG:
+        # in debug mode, making sure we are using the test CrossRef service
+        assert settings.USE_CROSSREF_TEST is True
+    try:
         response = deposit_res_metadata_with_crossref(resource)
-        if not response.status_code == status.HTTP_200_OK:
-            # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
-            # crontab celery task
-            logger.error(f"Received a {response.status_code} from Crossref while depositing metadata for res id {pk}")
-            resource.doi = get_resource_doi(pk, 'failure')
-            resource.save()
+    except ValueError as v:
+        logger.error(f"Failed depositing XML {v} with Crossref for res id {pk}")
+        resource.doi = get_resource_doi(pk)
+        resource.save()
+        # set the resource back into review_pending
+        resource.raccess.alter_review_pending_flags(initiating_review=True)
+        raise
+    if not response.status_code == status.HTTP_200_OK:
+        # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
+        # crontab celery task
+        logger.error(f"Received a {response.status_code} from Crossref while depositing metadata for res id {pk}")
+        resource.doi = get_resource_doi(pk, CrossRefSubmissionStatus.FAILURE)
+        resource.save()
 
     resource.set_public(True)  # also sets discoverable to True
     resource.raccess.published = True
+    resource.raccess.immutable = True
     resource.raccess.save()
 
     # change "Publisher" element of science metadata to CUAHSI
@@ -1129,7 +1162,10 @@ def publish_resource(user, pk):
                'url': get_activated_doi(resource.doi)}
     resource.metadata.create_element('Identifier', **md_args)
 
-    utils.resource_modified(resource, user, overwrite_bag=False)
+    # Here we publish the resource on behalf of the last_changed_by user
+    # This ensures that the modified date closely matches the date that the metadata are submitted to Crossref
+    last_modified = resource.last_changed_by
+    utils.resource_modified(resource, by_user=last_modified, overwrite_bag=False)
 
     return pk
 

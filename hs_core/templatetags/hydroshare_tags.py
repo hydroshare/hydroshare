@@ -1,17 +1,19 @@
 
-from future.builtins import int
 from json import dumps
 
-from django.utils.html import format_html
 from django.conf import settings
-from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
-
+from django.core.validators import URLValidator
+from django.utils.html import format_html
+from future.builtins import int
 from mezzanine import template
 
+from hs_access_control.models.privilege import (PrivilegeCodes,
+                                                UserResourcePrivilege)
+from hs_core.authentication import build_oidc_url
+from hs_core.enums import CrossRefSubmissionStatus
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.search_indexes import normalize_name
-from hs_access_control.models.privilege import PrivilegeCodes, UserResourcePrivilege
 
 register = template.Library()
 
@@ -375,6 +377,13 @@ def discoverable(item):
     return item
 
 
+@register.filter
+def signup_url(request):
+    if settings.ENABLE_OIDC_AUTHENTICATION:
+        return build_oidc_url(request).replace('/auth?', '/registrations?')
+    return "/sign-up/"
+
+
 @register.simple_tag(takes_context=True)
 def param_replace(context, **kwargs):
     """
@@ -402,3 +411,19 @@ def param_replace(context, **kwargs):
     for k in [k for k, v in d.items() if not v]:
         del d[k]
     return d.urlencode()
+
+
+@register.filter
+def show_publication_status(resource):
+    if resource.raccess.review_pending:
+        return True
+
+    doi = resource.doi
+    if doi.endswith(resource.short_id):
+        return False
+    if doi.endswith(CrossRefSubmissionStatus.PENDING) and not doi.endswith(CrossRefSubmissionStatus.UPDATE_PENDING):
+        return True
+    if doi.endswith(CrossRefSubmissionStatus.FAILURE) and not doi.endswith(CrossRefSubmissionStatus.UPDATE_FAILURE):
+        return True
+
+    return False

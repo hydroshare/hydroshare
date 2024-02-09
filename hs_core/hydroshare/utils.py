@@ -1,42 +1,38 @@
+import asyncio
+import copy
+import errno
+import logging
 import mimetypes
 import os
-import tempfile
-import logging
 import shutil
-import copy
-from uuid import uuid4
-from urllib.parse import quote
-import errno
+import tempfile
 import urllib
-import aiohttp
-import asyncio
-from asgiref.sync import sync_to_async
-
+from urllib.parse import quote
 from urllib.request import pathname2url, url2pathname
+from uuid import uuid4
 
+import aiohttp
+from asgiref.sync import sync_to_async
 from django.apps import apps
+from django.contrib.auth.models import Group, User
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.files import File
+from django.core.files.storage import DefaultStorage
+from django.core.files.uploadedfile import UploadedFile
+from django.core.validators import URLValidator, validate_email
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.contrib.auth.models import User, Group
-from django.core.files import File
-from django.core.files.uploadedfile import UploadedFile
-from django.core.files.storage import DefaultStorage
-from django.core.validators import validate_email, URLValidator
-from hs_access_control.models.community import Community
-
 from mezzanine.conf import settings
-
-from hs_core.signals import pre_create_resource, post_create_resource, pre_add_files_to_resource, \
-    post_add_files_to_resource
-from hs_core.models import AbstractResource, BaseResource, ResourceFile, GeospatialRelation
-from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
+from hs_access_control.models.community import Community
+from hs_access_control.models.privilege import PrivilegeCodes
+from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
+from hs_core.models import AbstractResource, BaseResource, GeospatialRelation, ResourceFile
+from hs_core.signals import post_create_resource, pre_add_files_to_resource, pre_create_resource
 from theme.models import QuotaMessage
-
 
 logger = logging.getLogger(__name__)
 
@@ -588,7 +584,7 @@ def copy_and_create_metadata(src_res, dest_res):
 
 
 # TODO: should be BaseResource.mark_as_modified.
-def resource_modified(resource, by_user=None, overwrite_bag=True):
+def resource_modified(resource, by_user, overwrite_bag=True):
     """
     Set an AVU flag that forces the bag to be recreated before fetch.
 
@@ -596,6 +592,7 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
 
     """
 
+    error_message = ""
     if not by_user:
         user = None
     else:
@@ -606,16 +603,27 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
                 user = User.objects.get(username=by_user)
             except User.DoesNotExist:
                 user = None
+                error_message = f"Resource cannot be modified by nonexistent user '{by_user}'"
     if user:
-        resource.last_changed_by = user
+        # user can only mark modified if they are an owner/editor of the resource
+        # this prevents the last_changed_by getting set to an admin user that edits a resource
+        user_privilege = resource.raccess.get_effective_user_privilege(user, ignore_superuser=True)
 
-    resource.updated = now().isoformat()
+        if user_privilege > PrivilegeCodes.CHANGE:
+            error_message = "User does not have adequate privilege to modify resource."
+        else:
+            resource.last_changed_by = user
+
+            resource.updated = now().isoformat()
+            res_modified_date = resource.metadata.dates.all().filter(type='modified').first()
+            if res_modified_date:
+                resource.metadata.update_element('date', res_modified_date.id)
+            else:
+                resource.metadata.create_element('date', type='modified', start_date=resource.updated)
+
     # seems this is the best place to sync resource title with metadata title
     resource.title = resource.metadata.title.value
     resource.save()
-    res_modified_date = resource.metadata.dates.all().filter(type='modified').first()
-    if res_modified_date:
-        resource.metadata.update_element('date', res_modified_date.id)
 
     if overwrite_bag:
         create_bag_metadata_files(resource)
@@ -623,6 +631,9 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
     # set bag_modified-true AVU pair for the modified resource in iRODS to indicate
     # the resource is modified for on-demand bagging.
     set_dirty_bag_flag(resource)
+
+    if error_message:
+        logger.error(error_message)
 
 
 # TODO: should be part of BaseResource
@@ -706,38 +717,13 @@ def validate_resource_file_size(resource_files):
     return size
 
 
-def validate_resource_file_type(resource_cls, files):
-    supported_file_types = resource_cls.get_supported_upload_file_types()
-    # see if file type checking is needed
-    if '.*' in supported_file_types:
-        # all file types are supported
-        return
-
-    supported_file_types = [x.lower() for x in supported_file_types]
-    for f in files:
-        file_ext = os.path.splitext(f.name)[1]
-        if file_ext.lower() not in supported_file_types:
-            err_msg = "{file_name} is not a supported file type for {res_type} resource"
-            err_msg = err_msg.format(file_name=f.name, res_type=resource_cls)
-            raise ResourceFileValidationException(err_msg)
-
-
-def validate_resource_file_count(resource_cls, files, resource=None):
+def validate_resource_file_count(resource_cls, files):
     if len(files) > 0:
-        if len(resource_cls.get_supported_upload_file_types()) == 0:
+        resource_type = resource_cls.__name__
+        if resource_type != "CompositeResource":
             err_msg = "Content files are not allowed in {res_type} resource"
             err_msg = err_msg.format(res_type=resource_cls)
             raise ResourceFileValidationException(err_msg)
-
-        err_msg = "Multiple content files are not supported in {res_type} resource"
-        err_msg = err_msg.format(res_type=resource_cls)
-        if len(files) > 1:
-            if not resource_cls.allow_multiple_file_upload():
-                raise ResourceFileValidationException(err_msg)
-
-        if resource is not None and resource.files.all().count() > 0:
-            if not resource_cls.can_have_multiple_files():
-                raise ResourceFileValidationException(err_msg)
 
 
 def convert_file_size_to_unit(size, unit):
@@ -827,7 +813,6 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
     if len(files) > 0:
         size = validate_resource_file_size(files)
         validate_resource_file_count(resource_cls, files)
-        validate_resource_file_type(resource_cls, files)
         # validate it is within quota hard limit
         validate_user_quota(requesting_user, size)
 
@@ -985,8 +970,7 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
     if len(files) > 0:
         size = validate_resource_file_size(files)
         validate_user_quota(resource.get_quota_holder(), size)
-        validate_resource_file_type(resource_cls, files)
-        validate_resource_file_count(resource_cls, files, resource)
+        validate_resource_file_count(resource_cls, files)
 
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     pre_add_files_to_resource.send(sender=resource_cls, files=files, resource=resource, user=user,
@@ -1015,17 +999,6 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
                                                source_names=source_names, full_paths=full_paths,
                                                auto_aggregate=auto_aggregate, user=user)
     resource.refresh_from_db()
-    # receivers need to change the values of this dict if file validation fails
-    # in case of file validation failure it is assumed the resource type also deleted the file
-    file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
-    post_add_files_to_resource.send(sender=resource.__class__, files=files,
-                                    source_names=source_names,
-                                    resource=resource, user=user,
-                                    validate_files=file_validation_dict,
-                                    extract_metadata=extract_metadata,
-                                    res_files=resource_file_objects, **kwargs)
-
-    check_file_dict_for_error(file_validation_dict)
     return resource_file_objects
 
 

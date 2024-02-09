@@ -75,15 +75,15 @@ server {
         alias IRODS_DATA_ROOT/;
     }
 
-    location /IRODS_USER_URI/ {
-        internal; 
-        alias IRODS_USER_ROOT/;
-    }
+    # location /IRODS_USER_URI/ {
+    #     internal; 
+    #     alias IRODS_USER_ROOT/;
+    # }
 
-    location /IRODS_CACHE_URI/ {
-        internal; 
-        alias IRODS_CACHE_ROOT/;
-    }
+    # location /IRODS_CACHE_URI/ {
+    #     internal; 
+    #     alias IRODS_CACHE_ROOT/;
+    # }
 
     location /django_irods/download/ {
         if (-f $document_root/maintenance_on.html) {

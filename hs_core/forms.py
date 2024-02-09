@@ -10,7 +10,7 @@ from crispy_forms.layout import Layout, Fieldset, HTML
 from crispy_forms.bootstrap import Field
 
 from .models import Party, Creator, Contributor, validate_hydroshare_user_id, Relation, Identifier, \
-    FundingAgency, Description
+    FundingAgency, Description, validate_abstract
 
 
 class Helper(object):
@@ -733,7 +733,7 @@ class AbstractForm(ModelForm):
 class AbstractValidationForm(forms.Form):
     """Validate Abstract form with abstract field."""
 
-    abstract = forms.CharField(max_length=5000)
+    abstract = forms.CharField(max_length=5000, validators=[validate_abstract])
 
 
 class RightsValidationForm(forms.Form):
