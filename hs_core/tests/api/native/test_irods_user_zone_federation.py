@@ -161,4 +161,3 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
 
         # delete test resources
         hydroshare.resource.delete_resource(res.short_id)
-

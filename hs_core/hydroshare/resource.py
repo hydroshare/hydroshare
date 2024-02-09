@@ -183,7 +183,6 @@ def update_quota_usage(username):
                 pass
 
 
-
 def res_has_web_reference(res):
     """
     Check whether a resource includes web reference url file.
