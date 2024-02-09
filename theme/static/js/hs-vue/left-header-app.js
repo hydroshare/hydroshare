@@ -363,10 +363,6 @@ Vue.component('author-preview-modal', {
                     classes: "ai ai-researchgate-square hover-shadow",
                     title: "ResearchGate"
                 },
-                ResearcherID: {
-                    classes: "",
-                    title: "ResearcherID"
-                },
                 GoogleScholarID: {
                     classes: "ai ai-google-scholar-square hover-shadow",
                     title: "Google Scholar"

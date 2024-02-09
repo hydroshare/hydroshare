@@ -1,4 +1,5 @@
 /*AUTHOR IDENTIFIERS*/
+{% load static %}
 
 .edit-identifiers-container .well {
     padding-top: 5px;
@@ -60,16 +61,28 @@ img.identifier-icon {
     margin-right: 12px;
 }
 
-i.identifier-icon.ai-orcid, .identifier-icon .ai-orcid {
+img.identifier-icon.ai-orcid, .identifier-icon .ai-orcid {
     color: #a6ce39;
+    background: url("/static/static/img/orcid.logo.icon.svg") no-repeat center center;
 }
 
-i.identifier-icon.ai-google-scholar-square, .identifier-icon .ai-google-scholar-square {
+.identifier-icon img.ai{
+    object-fit: contain;
+    width: 1.2em;
+    padding: 1px;
+    margin-top: 0;
+    margin-right: .2em;
+}
+
+img.identifier-icon.ai-google-scholar-square, .identifier-icon .ai-google-scholar-square {
     color: #367df3;
+    background: url("/static/static/img/google-scholar.svg") no-repeat center center;
 }
 
-i.identifier-icon.ai-researchgate-square, .identifier-icon .ai-researchgate-square {
+img.identifier-icon.ai-researchgate-square, .identifier-icon .ai-researchgate-square {
     color: #00CCBB;
+    background: url("/static/static/img/researcherID.png") no-repeat center center;
+    background-size: contain;
 }
 
 i.identifier-icon.fa-address-card, .identifier-icon .fa-address-card {
