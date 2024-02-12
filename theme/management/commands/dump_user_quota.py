@@ -9,6 +9,13 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('output_file_name_with_path', help='output file name with path')
 
+        parser.add_argument(
+            '--exceeded',
+            action='store_true',  # True for presence, False for absence
+            dest='exceeded',  # value is options['exceeded']
+            help='show only users who have exceeded their quota',
+        )
+
     def handle(self, *args, **options):
         with open(options['output_file_name_with_path'], 'w') as csvfile:
             w = csv.writer(csvfile)
@@ -21,12 +28,19 @@ class Command(BaseCommand):
                 'UserZone value',
                 'DataZone value',
                 'Quota unit',
-                'Storage zone'
+                'Storage zone',
+                'Grace period ends',
+                'Remaining quota value'
             ]
             w.writerow(fields)
 
-            for uq in UserQuota.objects.filter(
-                    user__is_active=True).filter(user__is_superuser=False):
+            user_quotas = UserQuota.objects.all()
+            user_quotas.filter(user__is_active=True).filter(user__is_superuser=False)
+            exceeded = options['exceeded']
+
+            for uq in user_quotas:
+                if exceeded and uq.remaining > 0:
+                    continue
                 values = [
                     uq.user.id,
                     uq.user.username,
@@ -36,6 +50,8 @@ class Command(BaseCommand):
                     uq.user_zone_value,
                     uq.data_zone_value,
                     uq.unit,
-                    uq.zone
+                    uq.zone,
+                    uq.grace_period_ends,
+                    uq.remaining,
                 ]
                 w.writerow([str(v) for v in values])
