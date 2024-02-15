@@ -1,7 +1,11 @@
+from urllib.parse import urlparse
+
 import robot_detection
 from ipware.ip import get_ip
-from hs_tools_resource.models import RequestUrlBase, RequestUrlBaseAggregation, RequestUrlBaseFile
-from urllib.parse import urlparse
+
+from hs_tools_resource.models import (RequestUrlBase,
+                                      RequestUrlBaseAggregation,
+                                      RequestUrlBaseFile)
 
 
 def get_client_ip(request):
@@ -48,7 +52,7 @@ def get_std_log_fields(request, session=None):
     This ensures that all activities are reporting a consistent set of metrics
     """
     try:
-        user_agent = request.META['HTTP_USER_AGENT']
+        user_agent = request.headers['user-agent']
         human = is_human(user_agent)
     except KeyError:
         user_agent = None

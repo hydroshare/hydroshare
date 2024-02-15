@@ -1,29 +1,27 @@
 import datetime
+import logging
 import mimetypes
 import os
 import urllib
 from uuid import uuid4
 
 from django.conf import settings
-from django.http import HttpResponse, FileResponse, HttpResponseRedirect, JsonResponse
-from rest_framework.decorators import api_view
+from django.http import (FileResponse, HttpResponse, HttpResponseRedirect,
+                         JsonResponse)
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
+from rest_framework.decorators import api_view
 
 from django_irods import icommands
 from hs_core.hydroshare.resource import check_resource_type
-from hs_core.task_utils import (
-    get_resource_bag_task,
-    get_or_create_task_notification,
-    get_task_user_id,
-    get_task_notification
-)
-
-from hs_core.signals import pre_download_file, pre_download_resource, pre_check_bag_flag
+from hs_core.signals import (pre_check_bag_flag, pre_download_file,
+                             pre_download_resource)
+from hs_core.task_utils import (get_or_create_task_notification,
+                                get_resource_bag_task, get_task_notification,
+                                get_task_user_id)
 from hs_core.tasks import create_bag_by_irods, create_temp_zip, delete_zip
-from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
-from drf_yasg.utils import swagger_auto_schema
+from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, is_ajax
 
-import logging
 logger = logging.getLogger(__name__)
 
 
@@ -261,7 +259,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
                     response = HttpResponse()
                     response.content = content_msg
                     return response
-        elif request.is_ajax():
+        elif is_ajax(request):
             task_dict = {
                 'id': datetime.datetime.today().isoformat(),
                 'name': "bag download",
@@ -313,7 +311,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
     # and reverse proxy isn't overridden by user (use_reverse_proxy=True).
 
     if use_reverse_proxy and getattr(settings, 'SENDFILE_ON', False) and \
-       'HTTP_X_DJANGO_REVERSE_PROXY' in request.META:
+       'x-django-reverse-proxy' in request.headers:
 
         # The NGINX sendfile abstraction is invoked as follows:
         # 1. The request to download a file enters this routine via the /rest_download or /download
