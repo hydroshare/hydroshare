@@ -27,11 +27,13 @@
       "organization": "RENCI",
       "email": "test_user@email.com",
       "hydroshare_user_id": 1,
-      "identifiers": {}
+      "identifiers": {},
+      "creator_order": 1
     },
     {
       "name": "Tseganeh Z. Gichamo",
-      "identifiers": {}
+      "identifiers": {},
+      "creator_order": 2
     }
   ],
   "contributors": [
@@ -41,7 +43,7 @@
       "address": "MA, US",
       "organization": "CUAHSI",
       "email": "castronova.anthony@gmail.com",
-      "homepage": "http://anthonycastronova.com",
+      "homepage": "http://anthonycastronova.com/",
       "identifiers": {
         "GoogleScholarID": "https://scholar.google.com/citations?user=ScWTFoQAAAAJ&hl=en",
         "ResearchGateID": "https://www.researchgate.net/profile/Anthony_Castronova",
@@ -54,7 +56,7 @@
       "address": "Utah, US",
       "organization": "Utah State University",
       "email": "dtarb@usu.edu",
-      "homepage": "http://hydrology.usu.edu/dtarb",
+      "homepage": "http://hydrology.usu.edu/dtarb/",
       "identifiers": {
         "ORCID": "https://orcid.org/0000-0002-1998-3479"
       }
@@ -76,7 +78,7 @@
   },
   "rights": {
     "statement": "my statement",
-    "url": "http://studio.bakajo.com"
+    "url": "http://studio.bakajo.com/"
   },
   "created": "2020-07-09T19:12:21.354703+00:00",
   "modified": "2020-11-13T19:40:57.276064+00:00",
@@ -86,13 +88,13 @@
       "funding_agency_name": "agency1",
       "title": "t",
       "number": "n",
-      "funding_agency_url": "https://google.com"
+      "funding_agency_url": "https://google.com/"
     },
     {
       "funding_agency_name": "agency2",
       "title": "T2",
       "number": "TN",
-      "funding_agency_url": "https://google.com"
+      "funding_agency_url": "https://google.com/"
     }
   ],
   "spatial_coverage": {
