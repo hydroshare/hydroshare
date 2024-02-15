@@ -1,5 +1,8 @@
+
+import tempfile
+import os
 import difflib
-import unittest
+import shutil
 
 import arrow
 from freezegun import freeze_time
@@ -7,10 +10,13 @@ from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.test import TestCase
 
+from hs_access_control.models.privilege import UserResourcePrivilege, PrivilegeCodes
 from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_doi
 from hs_core.models import BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.views.utils import get_default_admin_user
+from django.core.exceptions import ValidationError, PermissionDenied
 
 
 class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
@@ -27,23 +33,53 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
+        # create a 2nd user
+        self.user2 = hydroshare.create_account(
+            'user2@usu.edu',
+            username='user2',
+            first_name='user2_FirstName',
+            last_name='user2_LastName',
+            superuser=False,
+            groups=[]
+        )
+
         # create a resource
         self.res = hydroshare.create_resource(
             'CompositeResource',
             self.user,
-            'Test Resource'
+            'Test Resource',
+            edit_users=[self.user2]
         )
+
+        self.tmp_dir = tempfile.mkdtemp()
+        file_one = os.path.join(self.tmp_dir, "test1.txt")
+
+        file_one_write = open(file_one, "w")
+        file_one_write.write("Putting something inside")
+        file_one_write.close()
+
+        # open files for read and upload
+        self.file_one = open(file_one, "rb")
+
+        self.complete_res = hydroshare.create_resource(
+            'CompositeResource',
+            self.user,
+            'My Test Resource ' * 10,
+            edit_users=[self.user2],
+            files=(self.file_one,),
+            keywords=('a', 'b', 'c'),
+        )
+        self.complete_res.metadata.create_element("description", abstract="new abstract for the resource " * 10)
 
     def tearDown(self):
         super(TestPublishResource, self).tearDown()
         User.objects.all().delete()
         Group.objects.all().delete()
         self.res.delete()
+        self.complete_res.delete()
         BaseResource.objects.all().delete()
+        shutil.rmtree(self.tmp_dir)
 
-    # TODO: This test needs to be enabled once the publish_resource() function is updated to register resource DOI
-    # with crossref. At that point the call to crossref needs to be mocked here in this test (IMPORTANT)
-    @unittest.skip
     def test_publish_resource(self):
         # check status prior to publishing the resource
         self.assertFalse(
@@ -64,9 +100,12 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
         # there should not be published date type metadata element
         self.assertFalse(self.res.metadata.dates.filter(type='published').exists())
 
+        admin_user = get_default_admin_user()
+        hydroshare.submit_resource_for_review(pk=self.complete_res.short_id, user=self.user)
+
         # publish resource - this is the api we are testing
-        hydroshare.publish_resource(self.res.short_id)
-        self.pub_res = hydroshare.get_resource_by_shortkey(self.res.short_id)
+        hydroshare.publish_resource(user=admin_user, pk=self.complete_res.short_id)
+        self.pub_res = hydroshare.get_resource_by_shortkey(self.complete_res.short_id)
 
         # test publish state
         self.assertTrue(
@@ -88,6 +127,110 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
 
         # there should now published date type metadata element
         self.assertTrue(self.pub_res.metadata.dates.filter(type='published').exists())
+
+    def test_only_admin_can_publish_resource(self):
+        # check status prior to publishing the resource
+        self.assertFalse(
+            self.complete_res.raccess.published,
+            msg='The resource is published'
+        )
+
+        self.assertFalse(
+            self.complete_res.raccess.immutable,
+            msg='The resource is frozen'
+        )
+
+        self.assertFalse(
+            self.complete_res.doi,
+            msg='doi is assigned'
+        )
+
+        # there should not be published date type metadata element
+        self.assertFalse(self.res.metadata.dates.filter(type='published').exists())
+
+        admin_user = get_default_admin_user()
+        hydroshare.submit_resource_for_review(pk=self.complete_res.short_id, user=self.user)
+
+        with self.assertRaises(ValidationError):
+            hydroshare.publish_resource(user=self.user, pk=self.complete_res.short_id)
+
+        # publish with admin user should be successful
+        hydroshare.publish_resource(user=admin_user, pk=self.complete_res.short_id)
+
+    def test_incomplete_resource_cant_publish(self):
+        # check status prior to publishing the resource
+        self.assertFalse(
+            self.complete_res.raccess.published,
+            msg='The resource is published'
+        )
+
+        self.assertFalse(
+            self.complete_res.raccess.immutable,
+            msg='The resource is frozen'
+        )
+
+        self.assertFalse(
+            self.complete_res.doi,
+            msg='doi is assigned'
+        )
+
+        self.assertFalse(
+            self.res.raccess.published,
+            msg='The resource is published'
+        )
+
+        self.assertFalse(
+            self.res.raccess.immutable,
+            msg='The resource is frozen'
+        )
+
+        self.assertFalse(
+            self.res.doi,
+            msg='doi is assigned'
+        )
+
+        # there should not be published date type metadata element
+        self.assertFalse(self.res.metadata.dates.filter(type='published').exists())
+
+        with self.assertRaises(ValidationError):
+            hydroshare.submit_resource_for_review(pk=self.res.short_id, user=self.user)
+
+        # submit with complete res should be successful
+        hydroshare.submit_resource_for_review(pk=self.complete_res.short_id, user=self.user)
+
+    def test_last_updated(self):
+        """Test that publishing a resource updates last_changed_by user and last_updated date"""
+        admin_user = get_default_admin_user()
+        res = self.complete_res
+
+        # the last_changed_by should be the user who created the resource
+        self.assertEqual(res.last_changed_by, self.user)
+
+        # only the owner or admin can submit a resource for review
+        with self.assertRaises(PermissionDenied):
+            hydroshare.submit_resource_for_review(pk=res.short_id, user=self.user2)
+
+        # add user2 as an owner
+        UserResourcePrivilege.share(user=self.user2,
+                                    resource=res,
+                                    privilege=PrivilegeCodes.OWNER,
+                                    grantor=self.user)
+
+        hydroshare.submit_resource_for_review(pk=res.short_id, user=self.user2)
+        res.refresh_from_db()
+
+        # The last_changed_by should now be the user2 who submitted the resource for review
+        self.assertEqual(self.user2, res.last_changed_by)
+        time_after_submit = res.last_updated
+
+        hydroshare.publish_resource(user=admin_user, pk=res.short_id)
+
+        # the last_changed_by should still be the user2 who submitted the resource for review
+        self.assertEqual(res.last_changed_by, self.user2)
+        self.assertTrue(res.metadata.dates.filter(type='published').exists())
+
+        # last_updated date should be updated when the resource is published, even though the last_changed_by is not
+        self.assertGreater(res.last_updated, time_after_submit)
 
     def test_crossref_deposit_xml(self):
         """Test that the crossref deposit xml is generated correctly for a resource"""

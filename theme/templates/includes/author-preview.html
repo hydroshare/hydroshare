@@ -62,12 +62,7 @@
                                                :title="identifierAttributes[key].title"
                                                class="identifier-icon" target="_blank"
                                                data-toggle="tooltip" data-placement="top">
-
-                                                <img v-if="key === 'ResearchGateID'" class="hover-shadow"
-                                                     src="{% static 'img/researcherID.png' %}"
-                                                     alt="ResearcherID icon"/>
-
-                                                <i v-else :class="identifierAttributes[key].classes"></i>
+                                                <img :class="identifierAttributes[key].classes"/>
                                             </a>
 
                                             <a v-else :href="identifier" class="identifier-icon" target="_blank"

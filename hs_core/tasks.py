@@ -310,14 +310,13 @@ def manage_task_hourly():
             act_doi = get_activated_doi(res.doi)
             response = deposit_res_metadata_with_crossref(res)
             if response.status_code == status.HTTP_200_OK:
-                # TODO: Pabitra - we are not setting the doi to pending here - the comment below is not correct
-                #  should we set it to pending?
                 # retry of metadata deposition succeeds, change resource flag from failure
                 # to pending
-                res.doi = act_doi
+                if CrossRefSubmissionStatus.UPDATE_FAILURE in res.doi:
+                    res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.UPDATE_PENDING)
+                else:
+                    res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.PENDING)
                 res.save()
-                # create bag and compute checksum for published resource to meet DataONE requirement
-                create_bag_by_irods(res.short_id)
             else:
                 # retry of metadata deposition failed again, notify admin
                 if CrossRefSubmissionStatus.UPDATE_FAILURE not in res.doi:
@@ -347,17 +346,19 @@ def manage_task_hourly():
             pub_date = pub_date.start_date.strftime('%m/%d/%Y')
             act_doi = get_activated_doi(res.doi)
             main_url = get_crossref_url()
+            # ref: https://www.crossref.org/documentation/register-maintain-records/verify-your-registration/submission-queue-and-log/  # noqa
             req_str = '{MAIN_URL}servlet/submissionDownload?usr={USERNAME}&pwd=' \
-                      '{PASSWORD}&doi_batch_id={DOI_BATCH_ID}&type={TYPE}'
+                      '{PASSWORD}&file_name={FILE_NAME}&type={TYPE}'
             response = requests.get(req_str.format(MAIN_URL=main_url,
                                                    USERNAME=settings.CROSSREF_LOGIN_ID,
                                                    PASSWORD=settings.CROSSREF_LOGIN_PWD,
-                                                   DOI_BATCH_ID=res.short_id,
+                                                   FILE_NAME=f"{res.short_id}_deposit_metadata.xml",
                                                    TYPE='result'),
                                     verify=False)
             root = ElementTree.fromstring(response.content)
             rec_cnt_elem = root.find('.//record_count')
             failure_cnt_elem = root.find('.//failure_count')
+            # ref: https://www.crossref.org/documentation/register-maintain-records/verify-your-registration/interpret-submission-logs/ # noqa
             success = False
             if rec_cnt_elem is not None and failure_cnt_elem is not None:
                 rec_cnt = int(rec_cnt_elem.text)
@@ -368,6 +369,13 @@ def manage_task_hourly():
                     success = True
                     # create bag and compute checksum for published resource to meet DataONE requirement
                     create_bag_by_irods(res.short_id)
+                elif failure_cnt > 0 :
+                    # set the doi status to failure
+                    if CrossRefSubmissionStatus.UPDATE_PENDING in res.doi:
+                        res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.UPDATE_FAILURE)
+                    else:
+                        res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.FAILURE)
+                    res.save()
             if not success:
                 if CrossRefSubmissionStatus.UPDATE_PENDING not in res.doi:
                     # this is the case of initial deposit when publishing the resource
