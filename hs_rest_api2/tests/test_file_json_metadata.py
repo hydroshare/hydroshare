@@ -166,7 +166,8 @@ class TestFileBasedJSON(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         in_resource_json = {'bad_title': 'this better not work!'}
-        response = self.client.put(reverse(endpoint, kwargs=kwargs), data=in_resource_json, content_type='application/json')
+        response = self.client.put(reverse(endpoint, kwargs=kwargs), data=in_resource_json,
+                                   content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_resource_metadata_update_unknown_field(self):
@@ -221,7 +222,8 @@ class TestFileBasedJSON(HSRESTTestCase):
         schema_in_instance = ResourceMetadataIn(**expected_json)
         in_json = schema_in_instance.model_dump_json(exclude_defaults=True)
         kwargs = {"pk": self.res.short_id}
-        response = self.client.put(reverse("hsapi2:resource_metadata_json", kwargs=kwargs), data=in_json, content_type='application/json')
+        response = self.client.put(reverse("hsapi2:resource_metadata_json", kwargs=kwargs), data=in_json,
+                                   content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_aggregation_metadata_update_published(self):
