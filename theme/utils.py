@@ -40,6 +40,7 @@ def get_quota_message(user, quota_data=None):
     get quota warning, grace period, or enforcement message to email users and display
     when the user logins in and display on user profile page
     :param user: The User instance
+    :param quota_data: dictionary containing quota data
     :return: quota message string
     """
     return_msg = ''
@@ -93,8 +94,8 @@ def get_quota_message(user, quota_data=None):
 def get_quota_data(uq):
     """
     get user quota data for display on user profile page
-    :param user: The User instance
-    :return: list of dictionaries, each containing data for a user quota
+    :param uq: UserQuota instance
+    :return: dictionary containing quota data
 
     Note that percents are in the range 0 to 100
     """
