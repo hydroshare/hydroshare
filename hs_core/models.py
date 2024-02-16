@@ -904,7 +904,7 @@ class Date(AbstractMetaDataElement):
     )
     HS_DATE_TYPE_CHOICES = (
         ('reviewStarted', 'Review Started'),
-        ('published', 'Published')
+        ('published', 'Published'),
     )
     DATE_TYPE_CHOICES = DC_DATE_TYPE_CHOICES + HS_DATE_TYPE_CHOICES
 
@@ -2096,6 +2096,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     # for tracking number of times resource and its files have been downloaded
     download_count = models.PositiveIntegerField(default=0)
+    bag_last_downloaded = models.DateTimeField(null=True, blank=True)
     # for tracking number of times resource has been viewed
     view_count = models.PositiveIntegerField(default=0)
 
