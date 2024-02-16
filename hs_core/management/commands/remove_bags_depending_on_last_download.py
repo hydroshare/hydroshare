@@ -31,6 +31,15 @@ class Command(BaseCommand):
             help='Show cumulative size of bags to be removed without actually removing them',
         )
 
+        parser.add_argument(
+            '--dirty',
+            action='store_true',
+            dest='dirty',
+            default=False,
+            help='Only remove bags that have the bag_modified flag set. \
+            For removing bags that have been modified since the last download.',
+        )
+
     def convert_size(self, size_bytes):
         if size_bytes == 0:
             return "0B"
@@ -46,9 +55,10 @@ class Command(BaseCommand):
         weeks = options['weeks']
         resources = BaseResource.objects.all()
         dryrun = options['dryrun']
+        dirty = options['dirty']
 
         if weeks:
-            if weeks < 8:
+            if weeks < 8 and not dirty:
                 raise ValidationError("--weeks must be at least 8 weeks. This is to prevent deleting all bags.")
             print(f"FILTERING TO INCLUDE RESOURCES THAT HAVE NOT BEEN DOWNLOADED IN THE LAST {weeks} WEEKS")
             add_message += f" (including only resources not downloaded in last {weeks} weeks)"
@@ -56,8 +66,8 @@ class Command(BaseCommand):
             resources = BaseResource.objects.filter(Q(bag_last_downloaded__lte=cuttoff_time)
                                                     | Q(bag_last_downloaded__isnull=True))
         else:
-            if not dryrun:
-                raise ValidationError("You must specify either --weeks or --dryrun to prevent removing all bags.")
+            if not dryrun and not dirty:
+                raise ValidationError("Must specify either --weeks, --dryrun, or --dirty to prevent removing all bags.")
 
         if options['published']:
             print("FILTERING TO INCLUDE ONLY PUBLISHED RESOURCES")
@@ -73,6 +83,9 @@ class Command(BaseCommand):
         for res in resources:
             converted_size = self.convert_size(cumulative_size)
             print(f"{counter}/{count}: cumulative thus far = {converted_size}")
+            if dirty and not res.getAVU('bag_modified'):
+                print(f"Skipping {res.short_id} because the bag is not dirty")
+                continue
             try:
                 src_file = res.bag_path
                 istorage = res.get_irods_storage()
