@@ -165,7 +165,7 @@ class Command(BaseCommand):
             try:
                 last_downloaded = r.bag_last_downloaded
                 if last_downloaded:
-                    last_downloaded = last_downloaded.start_date.strftime("%m/%d/%Y %H:%M:%S.%f")
+                    last_downloaded = last_downloaded.strftime("%m/%d/%Y %H:%M:%S.%f")
                 else:
                     last_downloaded = None
                 values = [

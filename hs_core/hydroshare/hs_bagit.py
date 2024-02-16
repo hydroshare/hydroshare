@@ -42,7 +42,7 @@ def delete_files_and_bag(resource):
     delete_bag(resource, istorage)
 
 
-def delete_bag(resource, istorage=None):
+def delete_bag(resource, istorage=None, raise_on_exception=False):
     """
     delete the resource bag.
 
@@ -60,6 +60,8 @@ def delete_bag(resource, istorage=None):
     except Exception as e:
         logger = logging.getLogger(__name__)
         logger.error("cannot remove {}: {}".format(resource.bag_path, e))
+        if raise_on_exception:
+            raise HsBagitException("failed to remove {}: {}".format(resource.bag_path, e))
 
 
 def create_bagit_files_by_irods(res, istorage):

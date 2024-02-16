@@ -48,11 +48,16 @@ class Command(BaseCommand):
         dryrun = options['dryrun']
 
         if weeks:
+            if weeks < 8:
+                raise ValidationError("--weeks must be at least 8 weeks. This is to prevent deleting all bags.")
             print(f"FILTERING TO INCLUDE RESOURCES THAT HAVE NOT BEEN DOWNLOADED IN THE LAST {weeks} WEEKS")
             add_message += f" (including only resources not downloaded in last {weeks} weeks)"
             cuttoff_time = timezone.now() - timedelta(weeks=weeks)
             resources = BaseResource.objects.filter(Q(bag_last_downloaded__lte=cuttoff_time)
                                                     | Q(bag_last_downloaded__isnull=True))
+        else:
+            if not dryrun:
+                raise ValidationError("You must specify either --weeks or --dryrun to prevent removing all bags.")
 
         if options['published']:
             print("FILTERING TO INCLUDE ONLY PUBLISHED RESOURCES")
@@ -71,14 +76,14 @@ class Command(BaseCommand):
             try:
                 src_file = res.bag_path
                 istorage = res.get_irods_storage()
-                if not dryrun:
-                    delete_bag(res, istorage)
-                    set_dirty_bag_flag(res)
                 fsize = istorage.size(src_file)
+                if not dryrun:
+                    delete_bag(res, istorage, raise_on_exception=True)
+                    set_dirty_bag_flag(res)
                 cumulative_size += fsize
                 print(f"Size for {src_file} = {fsize}")
-            except ValidationError as ve:
-                print(f"Bag not removed for {res.short_id}: {ve}")
+            except Exception as e:
+                print(f"Issue removing bag for {res.short_id}: {e}")
             counter += 1
         converted_size = self.convert_size(cumulative_size)
         print(f"Total cumulative size{add_message}: {converted_size}")
