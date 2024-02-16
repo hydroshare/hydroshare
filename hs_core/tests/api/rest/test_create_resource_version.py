@@ -25,7 +25,9 @@ class TestCreateResourceVersion(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_create_resource_version_over_quota(self):
-        # prepare quota enforcement
+        """
+        Test case to verify the behavior of creating a resource version when the user is over their quota.
+        """
         if not QuotaMessage.objects.exists():
             QuotaMessage.objects.create()
         qmsg = QuotaMessage.objects.first()

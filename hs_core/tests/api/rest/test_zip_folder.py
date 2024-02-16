@@ -104,6 +104,27 @@ class TestPublicZipEndpoint(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_zip_over_quota(self):
+        """
+        Test case for zipping a folder when the user is over the quota limit.
+
+        This test case verifies that the `zip_folder` function raises a `QuotaException` when the user is over the quota
+        limit and the quota enforce flag is set to True. It also checks that the function does not raise a `QuotaException`
+        when the quota enforce flag is set to False.
+
+        Steps:
+        1. Create a composite resource.
+        2. Set up the quota message and enforce the quota limit.
+        3. Create three test files.
+        4. Open the files for read and upload.
+        5. Add the files to the resource.
+        6. Set the user's quota over the hard limit.
+        7. Verify that zipping the folder raises a `QuotaException`.
+        8. Verify that zipping the files does not raise a `QuotaException` when `bool_remove_original` is set to True.
+        9. Disable quota enforcement.
+        10. Add the files to a different folder.
+        11. Verify that zipping the files does not raise a `QuotaException` when quota enforcement is disabled.
+
+        """
         self.res = resource.create_resource(resource_type='CompositeResource',
                                             owner=self.user,
                                             title='Test Resource',
