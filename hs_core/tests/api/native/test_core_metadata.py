@@ -1401,6 +1401,43 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
             ),
         )
 
+    def test_description_xml(self):
+
+        # test that the resource metadata does not contain abstract
+        self.assertEqual(
+            self.res.metadata.description, None, msg="Abstract exists for the resource"
+        )
+
+        # test adding invalid XML raises exception
+        self.assertRaises(
+            ValidationError,
+            lambda: resource.create_metadata_element(
+                self.res.short_id,
+                "description",
+                abstract="analysis throughput rates greater than 7 h1. The soil dept",
+            ),
+        )
+
+        # create a abstract for the resource
+        resource.create_metadata_element(
+            self.res.short_id, "description", abstract="new abstract for the resource"
+        )
+
+        # attempt update, this should fail
+        self.assertRaises(
+            ValidationError,
+            lambda: resource.update_metadata_element(
+                self.res.short_id,
+                "description",
+                self.res.metadata.description.id,
+                abstract="analysis throughput rates greater than 7 h1. The soil dept",
+            )
+        )
+        # the abstract should remain unchanged
+        self.assertEqual(
+            self.res.metadata.description.abstract, "new abstract for the resource"
+        )
+
     def test_format(self):
         # when a resource is created with no content files, there should not be any formats elements
         # associated with it
