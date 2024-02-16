@@ -33,7 +33,7 @@ schema_view_yasg = get_schema_view(
     ),
     validators=[],
     public=True,
-    permission_classes=(permissions.AllowAny,),
+    permission_classes=[permissions.AllowAny],
     patterns=hsapi_urlpatterns,
 )
 
