@@ -5,6 +5,7 @@ import os
 import urllib
 from uuid import uuid4
 
+from dateutil import tz
 from django.conf import settings
 from django.http import (FileResponse, HttpResponse, HttpResponseRedirect,
                          JsonResponse)
@@ -201,6 +202,9 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
             # to be streamed below
 
     elif is_bag_download:
+        now = datetime.datetime.now(tz.UTC)
+        res.bag_last_downloaded = now
+        res.save()
         # Shorten request if it contains extra junk at the end
         bag_file_name = res_id + '.zip'
         output_path = os.path.join('bags', bag_file_name)

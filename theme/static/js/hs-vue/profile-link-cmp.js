@@ -36,7 +36,7 @@ Vue.component('profile-card', {
                     title: "ResearchGate"
                 },
                 ResearcherID: {
-                    classes: "",
+                    classes: "ai ai-researcherid-square hover-shadow",
                     title: "ResearcherID"
                 },
                 GoogleScholarID: {
