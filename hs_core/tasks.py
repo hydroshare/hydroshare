@@ -346,17 +346,19 @@ def manage_task_hourly():
             pub_date = pub_date.start_date.strftime('%m/%d/%Y')
             act_doi = get_activated_doi(res.doi)
             main_url = get_crossref_url()
+            # ref: https://www.crossref.org/documentation/register-maintain-records/verify-your-registration/submission-queue-and-log/  # noqa
             req_str = '{MAIN_URL}servlet/submissionDownload?usr={USERNAME}&pwd=' \
-                      '{PASSWORD}&doi_batch_id={DOI_BATCH_ID}&type={TYPE}'
+                      '{PASSWORD}&file_name={FILE_NAME}&type={TYPE}'
             response = requests.get(req_str.format(MAIN_URL=main_url,
                                                    USERNAME=settings.CROSSREF_LOGIN_ID,
                                                    PASSWORD=settings.CROSSREF_LOGIN_PWD,
-                                                   DOI_BATCH_ID=res.short_id,
+                                                   FILE_NAME=f"{res.short_id}_deposit_metadata.xml",
                                                    TYPE='result'),
                                     verify=False)
             root = ElementTree.fromstring(response.content)
             rec_cnt_elem = root.find('.//record_count')
             failure_cnt_elem = root.find('.//failure_count')
+            # ref: https://www.crossref.org/documentation/register-maintain-records/verify-your-registration/interpret-submission-logs/ # noqa
             success = False
             if rec_cnt_elem is not None and failure_cnt_elem is not None:
                 rec_cnt = int(rec_cnt_elem.text)

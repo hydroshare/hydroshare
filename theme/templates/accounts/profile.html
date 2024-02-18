@@ -662,17 +662,15 @@
                                             <tr>
                                                 <td>
                                                     {% if name == "GoogleScholarID" %}
-                                                    <i class="identifier-icon ai ai-google-scholar-square"></i>
+                                                    <img class="identifier-icon ai ai-google-scholar-square"/>
                                                     {% elif name == "ORCID" %}
-                                                    <i class="identifier-icon ai ai-orcid"></i>
+                                                    <img class="identifier-icon ai ai-orcid"/>
                                                     {% elif name == "ResearchGateID" %}
-                                                    <i class="identifier-icon ai ai-researchgate-square"></i>
+                                                    <img class="identifier-icon ai ai-researchgate-square"/>
                                                     {% elif name == "ResearcherID" %}
-                                                    <img class="identifier-icon"
-                                                         src="{% static 'img/researcherID.png' %}"
-                                                         alt="ResearcherID icon"/>
+                                                    <img class="identifier-icon ai ai-researcherid-square"/>
                                                     {% else %}
-                                                    <i class="identifier-icon fa fa-address-card"></i>
+                                                    <img class="identifier-icon fa fa-address-card"/>
                                                     {% endif %}
                                                 </td>
                                                 <td><a href="{{ link }}" target="_blank"
