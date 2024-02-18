@@ -1,22 +1,22 @@
-from datetime import datetime, timedelta
 import csv
-from io import StringIO
-
-from django.test import TestCase
-from django.contrib.auth.models import User, Group
-from django.test import Client
-from django.http import HttpRequest, QueryDict, response
-from mock import patch, Mock
-
-from hs_tracking.models import Variable, Session, Visitor, SESSION_TIMEOUT, VISITOR_FIELDS
-from hs_core import hydroshare
-from hs_tracking.views import AppLaunch
-import hs_tracking.utils as utils
-from hs_tools_resource.models import RequestUrlBase
-import urllib.request
-import urllib.parse
 import urllib.error
+import urllib.parse
+import urllib.request
+from datetime import datetime, timedelta
+from io import StringIO
 from pprint import pprint
+
+from django.contrib.auth.models import Group, User
+from django.http import HttpRequest, QueryDict, response
+from django.test import Client, TestCase
+from mock import Mock, patch
+
+import hs_tracking.utils as utils
+from hs_core import hydroshare
+from hs_tools_resource.models import RequestUrlBase
+from hs_tracking.models import (SESSION_TIMEOUT, VISITOR_FIELDS, Session,
+                                Variable, Visitor)
+from hs_tracking.views import AppLaunch
 
 
 class ViewTests(TestCase):
@@ -51,6 +51,7 @@ class ViewTests(TestCase):
 
     def createRequest(self, user=None):
         self.request = Mock()
+        self.request.headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '}
         if user is not None:
             self.request.user = user
 
@@ -95,7 +96,7 @@ class ViewTests(TestCase):
         url_redirect = app_logging.get(r)
 
         # validate response
-        self.assertTrue(type(url_redirect) == response.HttpResponseRedirect)
+        self.assertTrue(type(url_redirect) is response.HttpResponseRedirect)
         self.assertTrue(url_redirect.url == request_url)
 
         # validate logged data
@@ -150,7 +151,7 @@ class ViewTests(TestCase):
         url_redirect = app_logging.get(r)
 
         # validate response
-        self.assertTrue(type(url_redirect) == response.HttpResponseForbidden)
+        self.assertTrue(type(url_redirect) is response.HttpResponseForbidden)
 
         # validate logged data
         app_lauch_cnt = Variable.objects.filter(name='app_launch').count()
@@ -176,6 +177,7 @@ class TrackingTests(TestCase):
 
     def createRequest(self, user=None):
         request = Mock()
+        request.headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '}
         if user is not None:
             request.user = user
 

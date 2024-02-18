@@ -1,22 +1,22 @@
 """Test cases and utilities for hs_core module. See also ./tests folder."""
 
-from dateutil import parser
-import tempfile
 import os
+import tempfile
 
+from dateutil import parser
 from django.conf import settings
-from django.contrib.sessions.middleware import SessionMiddleware
 from django.contrib.messages.storage.fallback import FallbackStorage
+from django.contrib.sessions.middleware import SessionMiddleware
 from django.core.files.uploadedfile import UploadedFile
-from django.test import TestCase, RequestFactory
+from django.test import RequestFactory, TestCase
 
-from hs_core.hydroshare import add_file_to_resource, add_resource_files
-from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, zip_folder, \
-    unzip_file, remove_folder
-from hs_core.views.utils import run_ssh_command
-from hs_core.tasks import FileOverrideException
-from theme.models import UserProfile
 from django_irods.storage import IrodsStorage
+from hs_core.hydroshare import add_file_to_resource, add_resource_files
+from hs_core.tasks import FileOverrideException
+from hs_core.views.utils import (create_folder, move_or_rename_file_or_folder,
+                                 remove_folder, run_ssh_command, unzip_file,
+                                 zip_folder)
+from theme.models import UserProfile
 
 
 class MockIRODSTestCaseMixin(object):
@@ -733,6 +733,6 @@ class ViewTestCase(TestCase):
     def add_session_to_request(request):
         """Use SessionMiddleware to add a session to the request."""
         """Annotate a request object with a session"""
-        middleware = SessionMiddleware()
+        middleware = SessionMiddleware(request)
         middleware.process_request(request)
         request.session.save()

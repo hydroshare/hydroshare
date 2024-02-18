@@ -42,7 +42,7 @@ def get_user_email_tld(session, emaildomain=None):
 
 
 def is_human(user_agent):
-    if robot_detection.is_robot(user_agent):
+    if robot_detection.is_robot(str(user_agent)):
         return False
     return True
 
