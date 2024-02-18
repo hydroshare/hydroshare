@@ -108,8 +108,8 @@ class TestPublicZipEndpoint(HSRESTTestCase):
         Test case for zipping a folder when the user is over the quota limit.
 
         This test case verifies that the `zip_folder` function raises a `QuotaException` when the user is over the quota
-        limit and the quota enforce flag is set to True. It also checks that the function does not raise a `QuotaException`
-        when the quota enforce flag is set to False.
+        limit and the quota enforce flag is set to True. It also checks that the function does not raise a
+        `QuotaException` when the quota enforce flag is set to False.
 
         Steps:
         1. Create a composite resource.
