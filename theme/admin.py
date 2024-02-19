@@ -1,11 +1,11 @@
-from django.contrib import admin
 from django import forms
+from django.contrib import admin
 from django.contrib.auth.models import User
-
 from mezzanine.core.admin import TabularDynamicInlineAdmin
 from mezzanine.utils.admin import SingletonAdmin
 
-from .models import SiteConfiguration, HomePage, IconBox, UserQuota, QuotaMessage
+from .models import (HomePage, IconBox, QuotaMessage, SiteConfiguration,
+                     UserQuota)
 
 
 class IconBoxInline(TabularDynamicInlineAdmin):
@@ -28,6 +28,7 @@ class UserQuotaForm(forms.ModelForm):
         return instance
 
 
+@admin.register(UserQuota)
 class QuotaAdmin(admin.ModelAdmin):
     model = UserQuota
 
@@ -47,5 +48,4 @@ class QuotaAdmin(admin.ModelAdmin):
 
 admin.site.register(HomePage)
 admin.site.register(SiteConfiguration, SingletonAdmin)
-admin.site.register(UserQuota, QuotaAdmin)
 admin.site.register(QuotaMessage, SingletonAdmin)
