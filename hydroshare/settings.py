@@ -138,6 +138,10 @@ DEBUG = False
 # Best set to ``True`` in local_settings.py
 DISABLE_TASK_EMAILS = False
 
+DEFAULT_FROM_EMAIL = 'hydro@hydroshare.org'
+DEFAULT_SUPPORT_EMAIL = 'support@hydroshare.org'
+DEFAULT_DEVELOPER_EMAIL = 'developer@hydroshare.org'
+
 # Integer seconds that worker should allocate every night to repair_resource file discrepancies
 NIGHTLY_RESOURCE_REPAIR_DURATION = 60 * 60
 

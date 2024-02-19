@@ -56,7 +56,7 @@ class Command(BaseCommand):
             else:
                 # if we can't find a match in first 50 search records then we are not going to find a match
                 max_record_count = 50
-                email = settings.DEFAULT_SUPPORT_EMAIL
+                email = settings.DEFAULT_DEVELOPER_EMAIL
                 url = f"https://api.crossref.org/funders?query={query}&rows={max_record_count}&mailto={email}"
                 funder_name = funder_name.lower()
                 response = requests.get(url, verify=False)
