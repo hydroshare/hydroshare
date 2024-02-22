@@ -6,6 +6,7 @@ RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
 
 RUN pip install mozilla-django-oidc pymongo
 RUN pip install spam_patterns@git+https://github.com/CUAHSI/spam_patterns.git@0.0.4
+RUN pip install freezegun
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en

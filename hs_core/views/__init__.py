@@ -98,6 +98,7 @@ from .utils import (
     run_script_to_update_hyrax_input_files,
     send_action_to_take_email,
     upload_from_irods,
+    get_default_support_user,
 )
 
 logger = logging.getLogger(__name__)
@@ -627,6 +628,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                             element = res.metadata.create_element(
                                 element_name, **element_data_dict
                             )
+                            res.refresh_from_db()
                             is_add_success = True
                         except ValidationError as exp:
                             err_msg = err_msg.format(element_name, str(exp))
@@ -753,6 +755,7 @@ def update_metadata_element(
                     res.metadata.update_element(
                         element_name, element_id, **element_data_dict
                     )
+                    res.refresh_from_db()
                     post_handler_response = signals.post_metadata_element_update.send(
                         sender=sender_resource,
                         element_name=element_name,
@@ -877,6 +880,7 @@ def delete_metadata_element(
     )
 
     res.metadata.delete_element(element_name, element_id)
+    res.refresh_from_db()
     res.update_public_and_discoverable()
     resource_modified(res, request.user, overwrite_bag=False)
     request.session["resource-mode"] = "edit"
@@ -1187,9 +1191,6 @@ def publish(request, shortkey, *args, **kwargs):
     if not request.user.is_superuser:
         raise ValidationError("Resource can only be published by an admin user")
     try:
-        res = get_resource_by_shortkey(shortkey)
-        res.raccess.review_pending = False
-        res.raccess.save()
         hydroshare.publish_resource(request.user, shortkey)
     except ValidationError as exp:
         request.session["validation_error"] = str(exp)
@@ -1212,7 +1213,10 @@ def submit_for_review(request, shortkey, *args, **kwargs):
         return HttpResponseRedirect(request.META["HTTP_REFERER"])
 
     try:
-        hydroshare.submit_resource_for_review(request, shortkey)
+        hydroshare.submit_resource_for_review(shortkey, request.user)
+        user_to = get_default_support_user()
+        send_action_to_take_email(request, user=user_to, user_from=request.user,
+                                  action_type='metadata_review', resource=res)
     except ValidationError as exp:
         request.session["validation_error"] = str(exp)
         logger.warning(str(exp))
@@ -2132,9 +2136,7 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
             f"This resource does not have a pending metadata review for you to { action }.",
         )
     else:
-        res.raccess.review_pending = False
-        res.raccess.immutable = False
-        res.raccess.save()
+        res.raccess.alter_review_pending_flags(initiating_review=False)
         if action == "approve":
             hydroshare.publish_resource(user, shortkey)
             messages.success(

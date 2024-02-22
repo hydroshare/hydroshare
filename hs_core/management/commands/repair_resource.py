@@ -11,12 +11,13 @@ This checks that:
 """
 
 from django.core.management.base import BaseCommand, CommandError
+from django.core.exceptions import ValidationError
 from hs_core.models import BaseResource
 from hs_core.management.utils import repair_resource
 from hs_core.views.utils import get_default_admin_user
 from hs_core import hydroshare
 from django.utils import timezone
-from django.db.models import F
+from django.db.models import F, Q
 from datetime import timedelta
 
 import logging
@@ -27,7 +28,10 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('resource_ids', nargs='*', type=str)
-        parser.add_argument('--days', type=int, dest='days', help='include resources updated in the last X days')
+        parser.add_argument('--updated_since', type=int, dest='updated_since',
+                            help='include only resources updated in the last X days')
+        parser.add_argument('--ignore_repaired_since', type=int, dest='ignore_repaired_since',
+                            help='ignore resources repaired since X days ago')
         parser.add_argument(
             '--admin',
             action='store_true',  # True for presence, False for absence
@@ -51,11 +55,12 @@ class Command(BaseCommand):
         logger = logging.getLogger(__name__)
         resources_ids = options['resource_ids']
         resources = BaseResource.objects.all()
-        days = options['days']
+        updated_since = options['updated_since']
         admin = options['admin']
         dry_run = options['dry_run']
         published = options['published']
         site_url = hydroshare.utils.current_site_url()
+        ignore_repaired_since = options['ignore_repaired_since']
 
         if resources_ids:  # an array of resource short_id to check.
             print("CHECKING RESOURCES PROVIDED")
@@ -66,12 +71,19 @@ class Command(BaseCommand):
             print("FILTERING TO INCLUDE PUBLISHED RESOURCES ONLY")
             resources = resources.filter(raccess__published=True)
 
-        if days:
-            print(f"FILTERING TO INCLUDE RESOURCES UPDATED IN LAST {days} DAYS")
+        if updated_since:
+            print(f"FILTERING TO INCLUDE RESOURCES UPDATED IN LAST {updated_since} DAYS")
             if resources_ids:
-                print("Your supplied resource_ids will be filtered by the --days that you provided. ")
-            cuttoff_time = timezone.now() - timedelta(days)
+                print("Your supplied resource_ids will be filtered by the --updated_since days that you provided. ")
+            cuttoff_time = timezone.now() - timedelta(days=updated_since)
             resources = resources.filter(updated__gte=cuttoff_time)
+
+        if ignore_repaired_since:
+            print(f"FILTERING TO INCLUDE RESOURCES NOT REPAIRED IN THE LAST {ignore_repaired_since} DAYS")
+            if resources_ids:
+                print("Your supplied resource_ids will be filtered by the --ignore_repaired_since days provided. ")
+            cuttoff_time = timezone.now() - timedelta(days=ignore_repaired_since)
+            resources = resources.filter(Q(repaired__lt=cuttoff_time) | Q(repaired__isnull=True))
 
         if dry_run:
             print("CONDUCTING A DRY RUN: FIXES WILL NOT BE SAVED")
@@ -86,7 +98,7 @@ class Command(BaseCommand):
         else:
             user = None
 
-        resources = resources.order_by(F('updated').asc(nulls_first=True))
+        resources = resources.order_by(F('repaired').asc(nulls_first=True))
 
         total_res_to_check = resources.count()
         current_resource = 0
@@ -95,6 +107,7 @@ class Command(BaseCommand):
         total_files_dangling_in_django = 0
         resources_with_missing_django = []
         resources_with_missing_irods = []
+        failed_resources = []
         for resource in resources.iterator():
             current_resource += 1
             res_url = site_url + resource.absolute_url
@@ -106,7 +119,13 @@ class Command(BaseCommand):
                     print("Command running with --admin. Published resources will be repaired if needed.")
                 else:
                     print("Command running without --admin. Fixing a published resource raise ValidationError")
-            _, missing_in_django, dangling_in_django = repair_resource(resource, logger, dry_run=dry_run, user=user)
+            try:
+                _, missing_in_django, dangling_in_django = repair_resource(resource, logger, dry_run=dry_run, user=user)
+            except ValidationError as ve:
+                failed_resources.append(res_url)
+                print("Exception while attempting to repair resource:")
+                print(ve)
+                continue
             if dangling_in_django > 0 or missing_in_django > 0:
                 impacted_resources += 1
                 total_files_missing_in_django += missing_in_django
@@ -139,7 +158,13 @@ class Command(BaseCommand):
             print(res)
 
         # Make it simple to detect clean/fail run in Jenkins
-        if impacted_resources:
-            raise CommandError("repair_resources detected problems")
+        if impacted_resources and dry_run:
+            raise CommandError("repair_resources detected resources in need of repair during dry run")
         else:
-            print("Completed run without detecting issues")
+            print("Completed run of repair_resource")
+        if failed_resources:
+            print("*" * 100)
+            print("Repair was attempted but failed for the following resources:")
+            for res in resources_with_missing_irods:
+                print(res)
+            raise CommandError("Repair was attempted but failed on at least one resource")

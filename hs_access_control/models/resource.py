@@ -320,6 +320,7 @@ class ResourceAccess(models.Model):
         Return the user-based privilege of a specific user over this resource
 
         :param this_user: the user upon which to report
+        :param ignore_superuser: should superuser privilege be ignored
         :return: integer privilege 1-4 (PrivilegeCodes)
 
         This does not account for resource flags.
@@ -399,6 +400,7 @@ class ResourceAccess(models.Model):
         Return the effective user-based privilege of a specific user over this resource
 
         :param this_user: the user upon which to report
+        :param ignore_superuser: should superuser privilege be ignored
         :return: integer privilege 1-4 (PrivilegeCodes)
 
         This accounts for resource flags by revoking CHANGE on immutable resources.
@@ -470,6 +472,17 @@ class ResourceAccess(models.Model):
         group_priv = self.get_effective_group_privilege(this_user)
         # community_priv = self.get_effective_community_privilege(this_user)
         return min(user_priv, group_priv)  # , community_priv)
+
+    def alter_review_pending_flags(self, initiating_review=True):
+        """Sets the appropriate flags when metadata review (prior to publication) is either being initiated or ending.
+
+        Args:
+            initiating_review (bool, optional): Whether or not the resource will now be under 'Human in the Loop'
+            metadata review. Defaults to True.
+        """
+        self.review_pending = initiating_review
+        self.immutable = initiating_review
+        self.save()
 
     @property
     def sharing_status(self):

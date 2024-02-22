@@ -1023,6 +1023,17 @@
       });
       const CITATION_ID = "{{ citation_id }}";
       const RES_KEYWORDS = {{ keywords|safe }};
+      const RES_FUNDING_AGENCIES = [
+        {% for agency in fundingagencies %}
+            {   
+                "agency_id": "{{ agency.id }}",
+                "award_number": "{{ agency.award_number }}",
+                "award_title": "{{ agency.award_title | escapejs }}",
+                "agency_name": "{{ agency.agency_name | escapejs }}",
+                "agency_url": "{{ agency.agency_url }}"
+            },
+        {% endfor %}
+      ];
       const SELF_ACCESS_LEVEL = "{{ self_access_level }}";
       const CAN_CHANGE = "{{ page.perms.change }}" === "True";
       const RES_TYPE = "{{ cm|resource_type }}";
@@ -1034,7 +1045,6 @@
       const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
       const STATIC_URL = "{{ STATIC_URL }}";
       const USERS_JSON = {{ users_json|safe }};
-      const LAST_CHANGED_BY = {{ last_changed_by|safe }};
       const AUTHORS = [
           {% for author in creators %}
             {

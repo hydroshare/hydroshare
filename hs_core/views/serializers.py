@@ -147,6 +147,7 @@ class ResourceListItemSerializer(serializers.Serializer):
     doi = serializers.CharField(max_length=200)
     date_created = serializers.DateTimeField(format='%m-%d-%Y')
     date_last_updated = serializers.DateTimeField(format='%m-%d-%Y')
+    bag_last_downloaded = serializers.DateTimeField(format='%m-%d-%Y')
     public = serializers.BooleanField()
     discoverable = serializers.BooleanField()
     shareable = serializers.BooleanField()
@@ -191,6 +192,7 @@ class ResourceListItemSerializer(serializers.Serializer):
                 'published': instance.raccess.published,
                 'date_created': instance.created,
                 'date_last_updated': instance.last_updated,
+                'bag_last_downloaded': instance.bag_last_downloaded,
                 'bag_url': bag_url,
                 'coverages': coverages,
                 'science_metadata_url': science_metadata_url,
@@ -283,6 +285,7 @@ ResourceListItem = namedtuple('ResourceListItem',
                                'published',
                                'date_created',
                                'date_last_updated',
+                               'bag_last_downloaded',
                                'bag_url',
                                'coverages',
                                'science_metadata_url',
