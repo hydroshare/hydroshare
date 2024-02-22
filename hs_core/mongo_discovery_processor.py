@@ -17,16 +17,6 @@ client = MongoClient(getattr(settings, "MONGO_DISCOVERY_URL", ""), uuidRepresent
 db = client[getattr(settings, "MONGO_DISCOVERY_DATABASE", "hydroshare_beta")]
 
 
-@shared_task
-def update_mongo(resource_id: str):
-    db.discovery.update_one({"resource_id": resource_id}, {"$set": {"resource_id": resource_id, "updated": datetime.datetime.now().timestamp()}}, upsert=True)
-
-
-@shared_task
-def remove_mongo(resource_id: str):
-    db.discovery.delete_one({"resource_id": resource_id})
-
-
 @receiver(hs_access_control.signals.access_changed, sender=PrivilegeBase)
 def access_changed(sender, **kwargs):
     if 'users' in kwargs:
