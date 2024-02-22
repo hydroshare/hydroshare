@@ -59,60 +59,6 @@ function getImageID() {
     docker $DOCKER_PARAM images | grep $1 | tr -s ' ' | cut -f3 -d' '
 }
 
-##nodejs build for discovery
-
-node_build() {
-
-HS_PATH=`pwd`
-#### Set version pin variable ####
-#n_ver="15.0.0"
-n_ver="14.14.0"
-
-echo '####################################################################################################'
-echo "Starting Node Build .... "
-echo '####################################################################################################'
-
-### Create Directory structure outside to maintain correct permissions
-cd hs_discover
-rm -rf static templates
-mkdir static templates
-mkdir templates/hs_discover
-mkdir static/js
-mkdir static/css
-
-# Start Docker container and Run build
-docker run -i -v $HS_PATH:/hydroshare --name=nodejs node:$n_ver /bin/bash << eof
-
-cd hydroshare
-cd hs_discover
-npm install
-npm run build
-mkdir -p static/js
-mkdir -p static/css
-cp -rp templates/hs_discover/js static/
-cp -rp templates/hs_discover/css static/
-cp -p templates/hs_discover/map.js static/js/
-echo "----------------js--------------------"
-ls -l static/js
-echo "--------------------------------------"
-echo "----------------css-------------------"
-ls -l static/css
-echo "--------------------------------------"
-cd static/
-mv js/app.*.js js/app.js
-mv js/chunk-vendors.*.js js/chunk-vendors.js
-cd ..
-eof
-
-echo "Node Build completed ..."
-echo
-echo "Removing node container"
-docker container rm nodejs
-cd $HS_PATH
-sleep 1
-
-}
-
 
 ### Clean-up | Setup hydroshare environment
 
@@ -379,14 +325,6 @@ do
   echo -ne "$SECOND ...\033[0K\r" && sleep 1;
 done
 echo
-
-echo
-echo '########################################################################################################################'
-echo " Building Node for Discovery"
-echo '########################################################################################################################'
-echo
-
-node_build
 
 echo
 echo '########################################################################################################################'
