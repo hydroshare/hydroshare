@@ -39,7 +39,7 @@ def get_resource_access_json(resource_id):
         "resource_id": resource_id,
         "show_in_discover": resource.show_in_discover,
         "is_public": resource.raccess.public,
-        "minio_resource": resource.extra_metadata.get("minio", None)  == 'cuahsi' 
+        "minio_resource": resource.extra_metadata.get("minio_resource_url", None)
     }
 
 
