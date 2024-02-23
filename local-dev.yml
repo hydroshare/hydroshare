@@ -150,7 +150,9 @@ services:
       DJANGO_SETTINGS_MODULE: hydroshare.settings
     volumes:
       # hydroshare repository
-      - ".:/hydroshare"
+      # this volume will override hs_discovery files created during build
+      # optionally remove the node build step from the Dockerfile to speed up dev builds
+      # when repeatedly building the hydroshare container
       # shared location for gunicorn.sock between containers
       - "temp_vol:/hs_tmp"
       # temp directory shared with celery workers
