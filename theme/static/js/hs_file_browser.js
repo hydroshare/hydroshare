@@ -1579,8 +1579,21 @@ function startDownload(zipFiles) {
             else {
                 let frameID = "download-frame-" + i;
                 console.log(url);
-                $("body").append("<iframe class='temp-download-frame' id='"
+                $.ajax({
+                    url : url
+                })
+                .success(function() {
+                    $("body").append("<iframe class='temp-download-frame' id='"
                     + frameID + "' style='display:none;' src='" + url + "'></iframe>");
+                })
+                .error(function(xhr, errmsg, err){
+                    const {status} = xhr;
+                    if (status < 500 ){
+                        $('#authenticate-dialog').modal('show');
+                    }else{
+                        display_error_message('Failed to download files', xhr.responseText);
+                    }
+                })
             }
         }
     }
