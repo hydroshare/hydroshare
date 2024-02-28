@@ -1,6 +1,5 @@
 """Declare critical models for Hydroshare hs_core app."""
 import copy
-import difflib
 import json
 import logging
 import os.path
@@ -55,6 +54,34 @@ from .hs_rdf import (HSTERMS, RDFS1, RDF_MetaData_Mixin, RDF_Term_MixIn,
 from .languages_iso import languages as iso_languages
 
 
+def clean_abstract(original_string):
+    """Clean abstract for XML inclusion."""
+    # https://stackoverflow.com/a/64570125
+    import re
+    import sys
+    try:
+        illegal_unichrs = [(0x00, 0x08), (0x0B, 0x0C), (0x0E, 0x1F),
+                           (0x7F, 0x84), (0x86, 0x9F),
+                           (0xFDD0, 0xFDDF), (0xFFFE, 0xFFFF)]
+        if sys.maxunicode >= 0x10000:  # not narrow build
+            illegal_unichrs.extend([(0x1FFFE, 0x1FFFF), (0x2FFFE, 0x2FFFF),
+                                    (0x3FFFE, 0x3FFFF), (0x4FFFE, 0x4FFFF),
+                                    (0x5FFFE, 0x5FFFF), (0x6FFFE, 0x6FFFF),
+                                    (0x7FFFE, 0x7FFFF), (0x8FFFE, 0x8FFFF),
+                                    (0x9FFFE, 0x9FFFF), (0xAFFFE, 0xAFFFF),
+                                    (0xBFFFE, 0xBFFFF), (0xCFFFE, 0xCFFFF),
+                                    (0xDFFFE, 0xDFFFF), (0xEFFFE, 0xEFFFF),
+                                    (0xFFFFE, 0xFFFFF), (0x10FFFE, 0x10FFFF)])
+
+        illegal_ranges = [fr'{chr(low)}-{chr(high)}' for (low, high) in illegal_unichrs]
+        xml_illegal_character_regex = '[' + ''.join(illegal_ranges) + ']'
+        illegal_xml_chars_re = re.compile(xml_illegal_character_regex)
+        filtered_string = illegal_xml_chars_re.sub('', original_string)
+        return filtered_string
+    except (KeyError, TypeError) as ex:
+        raise ValidationError(f"Error cleaning abstract: {ex}")
+
+
 def clean_for_xml(s):
     """
     Remove all control characters from a unicode string in preparation for XML inclusion
@@ -65,6 +92,7 @@ def clean_for_xml(s):
     * Space-pad paragraph and NL symbols as necessary
 
     """
+    # https://www.w3.org/TR/REC-xml/#sec-line-ends
     CR = chr(0x23CE)  # carriage return unicode SYMBOL
     PARA = chr(0xB6)  # paragraph mark unicode SYMBOL
     output = ''
@@ -747,16 +775,17 @@ class Creator(Party):
 
 
 def validate_abstract(value):
-    """Validate that an abstract is valid."""
-    err_message = 'The abstract is not valid. It contains characters that are not XML compatible.'
+    """
+    Validate the abstract
+    This validator only ensures that the abstract CAN be cleaned without error.
+    The actual cleaning is done at the time of Crossref submission.
+    """
+    err_message = 'The abstract is invalid.'
     if value:
         try:
-            clean = clean_for_xml(value)
-            assert (len(clean) == len(value))
-            match_ratio = difflib.SequenceMatcher(None, clean.splitlines(), value.splitlines()).ratio()
-            assert (match_ratio == 1.0)
-        except AssertionError:
-            raise ValidationError(err_message)
+            clean_abstract(value)
+        except Exception as ex:
+            raise ValidationError(f'{err_message}, more info: {ex}')
 
 
 @rdf_terms(DC.description, abstract=DCTERMS.abstract)
@@ -4104,7 +4133,8 @@ class BaseResource(Page, AbstractResource):
         # create update_date sub element
         create_date_node(date=self.updated, date_type="update_date")
         # create dataset description sub element
-        etree.SubElement(dataset_node, 'description').text = self.metadata.description.abstract
+        c_abstract = clean_abstract(self.metadata.description.abstract)
+        etree.SubElement(dataset_node, 'description').text = c_abstract
         # funder related elements
         funders = self.metadata.funding_agencies.all()
         if funders:
