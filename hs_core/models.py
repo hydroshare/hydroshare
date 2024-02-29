@@ -4,6 +4,7 @@ import json
 import logging
 import os.path
 import re
+import sys
 import unicodedata
 import urllib.parse
 from uuid import uuid4
@@ -55,10 +56,22 @@ from .languages_iso import languages as iso_languages
 
 
 def clean_abstract(original_string):
-    """Clean abstract for XML inclusion."""
+    """Clean abstract for XML inclusion.
+
+    This function takes an original string and removes any illegal XML characters
+    from it. It uses regular expressions to identify and remove the illegal characters.
+
+    Args:
+        original_string (str): The original string to be cleaned.
+
+    Returns:
+        str: The cleaned string with illegal XML characters removed.
+
+    Raises:
+        ValidationError: If there is an error cleaning the abstract.
+
+    """
     # https://stackoverflow.com/a/64570125
-    import re
-    import sys
     try:
         illegal_unichrs = [(0x00, 0x08), (0x0B, 0x0C), (0x0E, 0x1F),
                            (0x7F, 0x84), (0x86, 0x9F),
@@ -776,14 +789,24 @@ class Creator(Party):
 
 def validate_abstract(value):
     """
-    Validate the abstract
-    This validator only ensures that the abstract CAN be cleaned without error.
-    The actual cleaning is done at the time of Crossref submission.
+    Validates the abstract value by ensuring it can serialize as XML.
+
+    Args:
+        value (str): The abstract value to be validated.
+
+    Raises:
+        ValidationError: If there is an error parsing the abstract as XML.
+
+    Returns:
+        None
     """
-    err_message = 'The abstract is invalid.'
+    err_message = 'Error parsing abstract as XML.'
     if value:
         try:
-            clean_abstract(value)
+            ROOT = etree.Element('root')
+            body_node = etree.SubElement(ROOT, 'body')
+            c_abstract = clean_abstract(value)
+            etree.SubElement(body_node, 'description').text = c_abstract
         except Exception as ex:
             raise ValidationError(f'{err_message}, more info: {ex}')
 
@@ -807,13 +830,13 @@ class Description(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         """Define custom update method for Description model."""
-        validate_abstract(kwargs['abstract'])
+        kwargs['abstract'] = clean_abstract(kwargs['abstract'])
         return super(Description, cls).create(**kwargs)
 
     @classmethod
     def update(cls, element_id, **kwargs):
         """Define custom update method for Description model."""
-        validate_abstract(kwargs['abstract'])
+        kwargs['abstract'] = clean_abstract(kwargs['abstract'])
         super(Description, cls).update(element_id, **kwargs)
 
     @classmethod
