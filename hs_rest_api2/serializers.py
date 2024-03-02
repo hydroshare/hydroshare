@@ -19,6 +19,7 @@ from hsmodels.schemas.aggregations import (FileSetMetadataIn,
                                            SingleFileMetadataIn,
                                            TimeSeriesMetadataIn)
 from hsmodels.schemas.resource import ResourceMetadataIn
+from pydantic import ConfigDict
 from rest_framework.serializers import Serializer
 
 
@@ -34,9 +35,7 @@ def get_schema_open_api_v2(schema):
 
 
 class ResourceMetadataInForbidExtra(ResourceMetadataIn):
-
-    class Config:
-        extra = 'forbid'
+    model_config = ConfigDict(extra="forbid")
 
 
 class ResourceMetadataSerializer(Serializer):
