@@ -472,11 +472,15 @@ class Party(AbstractMetaDataElement):
     # each identifier is stored as a key/value pair {name:link}
     identifiers = HStoreField(default=dict)
 
-    # list of identifier currently supported
-    supported_identifiers = {'ResearchGateID': 'https://www.researchgate.net/',
-                             'ORCID': 'https://orcid.org/',
-                             'GoogleScholarID': 'https://scholar.google.com/',
-                             'ResearcherID': 'https://www.researcherid.com/'}
+    # list of identifiers currently supported
+    supported_identifiers = {'ResearchGateID':
+                             re.compile(r'^https:\/\/www\.researchgate\.net\/profile\/[a-zA-Z0-9-]+$'),
+                             'ORCID':
+                             re.compile(r'^https:\/\/orcid\.org\/[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}$'),
+                             'GoogleScholarID':
+                             re.compile(r'^https:\/\/scholar\.google\.com\/citations\?.*user=[a-zA-Z0-9-].*$'),
+                             'ResearcherID':
+                             'https://www.researcherid.com/'}
 
     def __unicode__(self):
         """Return name field for unicode representation."""
@@ -677,7 +681,7 @@ class Party(AbstractMetaDataElement):
     @classmethod
     def validate_identifiers(cls, identifiers):
         """Validates optional identifiers for user/creator/contributor
-        :param  identifiers: identifier data as a json string or as a dict
+        :param  identifiers: identifier data as a json string or as a dict!
         """
 
         if not isinstance(identifiers, dict):
@@ -720,8 +724,8 @@ class Party(AbstractMetaDataElement):
             for id_name in cls.supported_identifiers:
                 id_link = identifiers.get(id_name, '')
                 if id_link:
-                    if not id_link.startswith(cls.supported_identifiers[id_name]) \
-                            or len(id_link) <= len(cls.supported_identifiers[id_name]):
+                    # if not id_link.startswith(cls.supported_identifiers[id_name]) \
+                    if not re.match(cls.supported_identifiers[id_name], id_link):
                         raise ValidationError("URL for {} is invalid".format(id_name))
         return identifiers
 

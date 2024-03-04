@@ -581,7 +581,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         kwargs = {
             "name": "Lisa Howard",
             "email": "lasah@yahoo.com",
-            "identifiers": {"ResearchGateID": "https://www.researchgate.net/LH001"},
+            "identifiers": {"ResearchGateID": "https://www.researchgate.net/profile/LH001"},
         }
         resource.create_metadata_element(self.res.short_id, "creator", **kwargs)
         # test external link (identifiers)
@@ -635,8 +635,8 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # test that multiple identifiers can be created for one creator
         kwargs = {
             "identifiers": {
-                "ResearchGateID": "https://www.researchgate.net/LH001",
-                "ORCID": "https://orcid.org/LH001",
+                "ResearchGateID": "https://www.researchgate.net/profile/LH001",
+                "ORCID": "https://orcid.org/0000-0003-4621-0559",
             }
         }
 
@@ -654,7 +654,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         for name, link in list(cr_lisa.identifiers.items()):
             self.assertIn(name, ["ResearchGateID", "ORCID"])
             self.assertIn(
-                link, ["https://www.researchgate.net/LH001", "https://orcid.org/LH001"]
+                link, ["https://www.researchgate.net/profile/LH001", "https://orcid.org/0000-0003-4621-0559"]
             )
 
         # test that duplicate identifier name is not allowed - should raise validation error
@@ -698,7 +698,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         kwargs = {
             "name": "Lisa Howard",
             "email": "lasah@yahoo.com",
-            "identifiers": {"ResearchGateID": "https://www.researchgate.net/LH001"},
+            "identifiers": {"ResearchGateID": "https://www.researchgate.net/profile/LH001"},
         }
         resource.create_metadata_element(self.res.short_id, "contributor", **kwargs)
         # test external link
@@ -716,9 +716,9 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # test that multiple identifiers can be created for one contributor
         kwargs = {
             "identifiers": {
-                "ResearchGateID": "https://www.researchgate.net/LH001",
-                "ORCID": "https://orcid.org/LH001",
-                "GoogleScholarID": "https://scholar.google.com/LH001",
+                "ResearchGateID": "https://www.researchgate.net/profile/LH001",
+                "ORCID": "https://orcid.org/0000-0003-4621-0559",
+                "GoogleScholarID": "https://scholar.google.com/citations?user=IqoYwgIAAAAJ&hl=en",
                 "ResearcherID": "https://www.researcherid.com/LH001",
             }
         }
@@ -741,9 +741,9 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
             self.assertIn(
                 link,
                 [
-                    "https://www.researchgate.net/LH001",
-                    "https://orcid.org/LH001",
-                    "https://scholar.google.com/LH001",
+                    "https://www.researchgate.net/profile/LH001",
+                    "https://orcid.org/0000-0003-4621-0559",
+                    "https://scholar.google.com/citations?user=IqoYwgIAAAAJ&hl=en",
                     "https://www.researcherid.com/LH001",
                 ],
             )
