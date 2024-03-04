@@ -4819,6 +4819,7 @@ div.property-selector {
 
 .full-width {
   width: 100%;
+  word-break: break-word;
 }
 
 .word-break-normal {
