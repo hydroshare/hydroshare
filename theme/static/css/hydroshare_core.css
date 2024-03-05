@@ -4769,6 +4769,11 @@ a[data-toggle="modal"] {
 	border: 1px solid #DDD;
 }
 
+.text-break {
+	word-break: break-word;
+	overflow-wrap: break-word;
+}
+
 .c-pointer {
 	cursor: pointer;
 }
@@ -4819,7 +4824,6 @@ div.property-selector {
 
 .full-width {
   width: 100%;
-  word-break: break-word;
 }
 
 .word-break-normal {
