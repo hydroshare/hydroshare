@@ -474,11 +474,11 @@ class Party(AbstractMetaDataElement):
 
     # list of identifiers currently supported
     supported_identifiers = {'ResearchGateID':
-                             re.compile(r'^https:\/\/www\.researchgate\.net\/profile\/[a-zA-Z0-9-]+$'),
+                             re.compile(r'^https:\/\/www\.researchgate\.net\/profile\/[^\s]+$'),
                              'ORCID':
                              re.compile(r'^https:\/\/orcid\.org\/[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}$'),
                              'GoogleScholarID':
-                             re.compile(r'^https:\/\/scholar\.google\.com\/citations\?.*user=[a-zA-Z0-9-].*$'),
+                             re.compile(r'^https:\/\/scholar\.google\.com\/citations\?.*user=[^\s]+$'),
                              'ResearcherID':
                              'https://www.researcherid.com/'}
 
@@ -724,9 +724,9 @@ class Party(AbstractMetaDataElement):
             for id_name in cls.supported_identifiers:
                 id_link = identifiers.get(id_name, '')
                 if id_link:
-                    # if not id_link.startswith(cls.supported_identifiers[id_name]) \
-                    if not re.match(cls.supported_identifiers[id_name], id_link):
-                        raise ValidationError("URL for {} is invalid".format(id_name))
+                    regex = cls.supported_identifiers[id_name]
+                    if not re.match(regex, id_link):
+                        raise ValidationError(f"URL for {id_name} is invalid.")
         return identifiers
 
 

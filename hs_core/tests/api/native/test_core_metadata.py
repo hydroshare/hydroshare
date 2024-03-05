@@ -672,8 +672,8 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # test that duplicate identifier link is not allowed - should raise validation error
         kwargs = {
             "identifiers": {
-                "researchGate": "https://www.researchgate.net/LH001",
-                "ORCID": "https://www.researchgate.net/LH001",
+                "researchGate": "https://www.researchgate.net/profile/LH001",
+                "ORCID": "https://www.researchgate.net/profile/LH001",
             }
         }
         with self.assertRaises(ValidationError):
