@@ -173,7 +173,7 @@ def notify_user_of_quota_action(quota_request, send_on_deny=False):
     <p>Thank you,</p>
     <p>The HydroShare Team</p>
     '''
-    send_mail(subject="HydroShare resource metadata review completed",
+    send_mail(subject=f"HydroShare request for Quota increase { quota_request.status }",
               message=email_msg,
               html_message=email_msg,
               from_email=settings.DEFAULT_FROM_EMAIL,

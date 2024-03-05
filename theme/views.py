@@ -130,15 +130,9 @@ class UserProfileView(TemplateView):
                     quota_form = quota_form.save(self.request)
                     msg = "New quota request was successful."
                     messages.success(self.request, msg)
-                    # send email to hydroshare support
-                    # CommunityRequestEmailNotification(request=request, community_request=new_quota_request,
-                    #                                   on_event=CommunityRequestEvents.CREATED).send()
-                    return HttpResponseRedirect(reverse('my_communities'))
                 except PermissionDenied:
                     err_msg = "You don't have permission to request additional quota"
                     messages.error(self.request, err_msg)
-                except Exception as ex:
-                    messages.error(self.request, f"Quota request errors: {str(ex)}.")
 
             else:
                 messages.error(self.request, f"Quota request errors: {quota_form.errors.as_json}.")
@@ -208,7 +202,7 @@ def act_on_quota_request(request, quota_request_id, action, uidb36=None, token=N
             )
         except ObjectDoesNotExist:
             raise ValidationError("No matching quota request was found.")
-        if not user.is_superuser and not user == quota_request.request_from:
+        if not user.is_superuser:
             raise PermissionDenied("Invalid user.")
 
         if quota_request.status == "pending":
@@ -236,7 +230,7 @@ def quota_request(request, *args, **kwargs):
             user = request.user
             if user.is_superuser:
                 raise ObjectDoesNotExist("Admin users don't have quota")
-            up = UserProfile.objects.get(pk=user.pk)
+            up = UserProfile.objects.filter(user=user).first()
             missing = up.profile_is_missing
             if missing:
                 raise ValidationError(f"Your profile must be complete before you can request more quota. \
@@ -259,13 +253,10 @@ def quota_request(request, *args, **kwargs):
         except PermissionDenied:
             err_msg = "You don't have permission to request additional quota"
             messages.error(request, err_msg)
-        except Exception as ex:
-            messages.error(request, f"Quota request errors: {str(ex)}.")
 
     else:
         quota_form = QuotaRequestForm()
 
-    # return render(request, "name.html", {"quota_form": quota_form})
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
