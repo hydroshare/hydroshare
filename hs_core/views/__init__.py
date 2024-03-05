@@ -2108,7 +2108,7 @@ def group_membership(request, uidb36, token, membership_request_id, **kwargs):
     return redirect("/")
 
 
-def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs):
+def metadata_review(request, shortkey, action, uidb64=None, token=None, **kwargs):
     """
     View for the link in the verification email that was sent to a user
     when they request publication/metadata review.
@@ -2118,8 +2118,9 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
     :param uidb36: ID of the user to whom the email was sent (part of the link in the email)
     :param token: token that was part of the link in the email
     """
-    if uidb36:
-        user = authenticate(uidb36=uidb36, token=token, is_active=True)
+    # https://docs.djangoproject.com/en/3.2/releases/1.6/#django-contrib-auth-password-reset-uses-base-64-encoding-of-user-pk
+    if uidb64:
+        user = authenticate(uidb64=uidb64, token=token, is_active=True)
         if user is None:
             messages.error(
                 request,

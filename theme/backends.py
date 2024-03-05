@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.tokens import default_token_generator, PasswordResetTokenGenerator
 from django.db.models import Q
-from django.utils.http import base36_to_int
+from django.utils.http import base36_to_int, urlsafe_base64_decode
 from six import text_type
 
 
@@ -52,9 +52,13 @@ class CaseInsensitiveMezzanineBackend(ModelBackend):
                     if user.check_password(password):
                         return user
             else:
-                if 'uidb36' not in kwargs:
+                if 'uidb36' in kwargs:
+                    kwargs["id"] = base36_to_int(kwargs.pop("uidb36"))
+                elif 'uidb64' in kwargs:
+                    uidb64 = kwargs.pop("uidb64")
+                    kwargs["id"] = urlsafe_base64_decode(uidb64).decode()
+                else:
                     return
-                kwargs["id"] = base36_to_int(kwargs.pop("uidb36"))
                 token = kwargs.pop("token")
                 try:
                     user = User.objects.get(**kwargs)
