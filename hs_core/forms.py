@@ -10,7 +10,7 @@ from crispy_forms.layout import Layout, Fieldset, HTML
 from crispy_forms.bootstrap import Field
 
 from .models import Party, Creator, Contributor, validate_hydroshare_user_id, Relation, Identifier, \
-    FundingAgency, Description, validate_abstract
+    FundingAgency, Description, validate_abstract, clean_abstract as clean_abstract_core
 
 
 class Helper(object):
@@ -734,6 +734,11 @@ class AbstractValidationForm(forms.Form):
     """Validate Abstract form with abstract field."""
 
     abstract = forms.CharField(max_length=5000, validators=[validate_abstract])
+
+    def clean_abstract(self):
+        """Ensure that the abstract doesn't contain invalid characters."""
+        abstract = self.cleaned_data['abstract']
+        return clean_abstract_core(abstract)
 
 
 class RightsValidationForm(forms.Form):
