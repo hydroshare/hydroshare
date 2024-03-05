@@ -2118,7 +2118,6 @@ def metadata_review(request, shortkey, action, uidb64=None, token=None, **kwargs
     :param uidb36: ID of the user to whom the email was sent (part of the link in the email)
     :param token: token that was part of the link in the email
     """
-    # https://docs.djangoproject.com/en/3.2/releases/1.6/#django-contrib-auth-password-reset-uses-base-64-encoding-of-user-pk
     if uidb64:
         user = authenticate(uidb64=uidb64, token=token, is_active=True)
         if user is None:

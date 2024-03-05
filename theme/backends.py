@@ -55,6 +55,7 @@ class CaseInsensitiveMezzanineBackend(ModelBackend):
                 if 'uidb36' in kwargs:
                     kwargs["id"] = base36_to_int(kwargs.pop("uidb36"))
                 elif 'uidb64' in kwargs:
+                    # https://docs.djangoproject.com/en/3.2/releases/1.6/#django-contrib-auth-password-reset-uses-base-64-encoding-of-user-pk
                     uidb64 = kwargs.pop("uidb64")
                     kwargs["id"] = urlsafe_base64_decode(uidb64).decode()
                 else:

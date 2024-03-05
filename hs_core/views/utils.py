@@ -727,9 +727,7 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
         email_to = kwargs.get('email_to', user)
         resource = kwargs.pop('resource')
         context['resource'] = resource
-        # uidb64 = base64.b64encode(str(user.id).encode("utf-8"))
         uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
-        # uidb64 = urlsafe_base64_encode(str(user.id).encode("utf-8"))
         action_url = reverse(action_type, kwargs={
             "shortkey": resource.short_id,
             "action": "approve",
