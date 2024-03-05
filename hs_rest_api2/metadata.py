@@ -70,7 +70,7 @@ def resource_metadata_json_loads(resource):
     """
     Returns the resource metadata as a JSON dict
     """
-    return json.loads(resource_metadata(resource).json())
+    return json.loads(resource_metadata(resource).model_dump_json())
 
 
 def ingest_resource_metadata(resource, incoming_metadata):
@@ -85,7 +85,7 @@ def ingest_resource_metadata(resource, incoming_metadata):
 
     :raises: ValidationError when incoming_metadata does not pass validation
     """
-    r_md = resource_metadata(resource).dict()
+    r_md = resource_metadata(resource).model_dump()
     try:
         incoming_r_md = ResourceMetadataInForbidExtra(**incoming_metadata)
     except PydanticValidationError as e:
@@ -93,7 +93,7 @@ def ingest_resource_metadata(resource, incoming_metadata):
     # merge existing metadata with incoming, incoming overrides existing
     merged_metadata = {
         **r_md,
-        **incoming_r_md.dict(exclude_defaults=True),
+        **incoming_r_md.model_dump(exclude_defaults=True),
         "modified": datetime.now(timezone.utc).isoformat(),
     }
     res_metadata = ResourceMetadata(**merged_metadata)
@@ -109,7 +109,7 @@ def ingest_resource_metadata(resource, incoming_metadata):
         )
         raise
     save_resource_metadata_xml(resource)
-    return json.loads(res_metadata.json())
+    return json.loads(res_metadata.model_dump_json())
 
 
 def ingest_aggregation_metadata(resource, incoming_metadata, file_path):
@@ -133,7 +133,7 @@ def ingest_aggregation_metadata(resource, incoming_metadata, file_path):
         resource.get_irods_storage(), aggregation.metadata_file_path
     )
 
-    agg_md_dict = agg_md.dict()
+    agg_md_dict = agg_md.model_dump()
 
     # get schema classes
     out_schema = agg_md.__class__
@@ -146,7 +146,7 @@ def ingest_aggregation_metadata(resource, incoming_metadata, file_path):
         raise ValidationError(e)
 
     # merge existing metadata with incoming, incoming overrides existing
-    incoming_dict = {**incoming_md.dict(exclude_defaults=True)}
+    incoming_dict = {**incoming_md.model_dump(exclude_defaults=True)}
     existing_dict = {**agg_md_dict}
     merged_metadata = {**existing_dict, **incoming_dict}
 
@@ -156,7 +156,7 @@ def ingest_aggregation_metadata(resource, incoming_metadata, file_path):
     # write the updated metadata back to file
     ingest_logical_file_metadata(graph, resource)
     aggregation.refresh_from_db()
-    return json.loads(agg_metadata.json())
+    return json.loads(agg_metadata.model_dump_json())
 
 
 def aggregation_metadata_json_loads(resource, file_path):
@@ -169,4 +169,4 @@ def aggregation_metadata_json_loads(resource, file_path):
     agg_md = load_metadata_from_file(
         resource.get_irods_storage(), agg.metadata_file_path
     )
-    return json.loads(agg_md.json())
+    return json.loads(agg_md.model_dump_json())

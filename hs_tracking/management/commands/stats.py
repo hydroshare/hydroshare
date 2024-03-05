@@ -151,7 +151,8 @@ class Command(BaseCommand):
             'user type',
             'user id',
             'resource id',
-            'publication date'
+            'publication date',
+            'bag last downloaded date',
         ]
         w.writerow(fields)
         failed_resource_ids = []
@@ -162,6 +163,11 @@ class Command(BaseCommand):
             except Date.DoesNotExist:
                 pub_date = None
             try:
+                last_downloaded = r.bag_last_downloaded
+                if last_downloaded:
+                    last_downloaded = last_downloaded.strftime("%m/%d/%Y %H:%M:%S.%f")
+                else:
+                    last_downloaded = None
                 values = [
                     r.metadata.dates.get(type="created").
                     start_date.strftime("%m/%d/%Y %H:%M:%S.%f"),
@@ -172,7 +178,8 @@ class Command(BaseCommand):
                     r.user.userprofile.user_type,
                     r.user_id,
                     r.short_id,
-                    pub_date
+                    pub_date,
+                    last_downloaded,
                 ]
                 w.writerow([str(v) for v in values])
 

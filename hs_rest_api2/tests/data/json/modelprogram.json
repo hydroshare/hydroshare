@@ -25,8 +25,8 @@
     "windows"
   ],
   "release_date": "2021-09-22",
-  "website": "https://www.hydroshare.org",
-  "code_repository": "https://www.github.com",
+  "website": "https://www.hydroshare.org/",
+  "code_repository": "https://www.github.com/",
   "file_types": [
     {
       "type": "https://www.hydroshare.org/terms/modelReleaseNotes",
