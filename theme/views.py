@@ -732,7 +732,7 @@ def delete_irods_account(request):
             output = run_ssh_command(
                 host=settings.HS_USER_ZONE_HOST,
                 uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
-                pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
+                private_key_file=settings.PRIVATE_KEY_FILE_FOR_HS_USER_ZONE,
                 exec_cmd=exec_cmd,
             )
             for out_str in output:
@@ -784,7 +784,7 @@ def create_irods_account(request):
             output = run_ssh_command(
                 host=settings.HS_USER_ZONE_HOST,
                 uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
-                pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
+                private_key_file=settings.PRIVATE_KEY_FILE_FOR_HS_USER_ZONE,
                 exec_cmd=exec_cmd,
             )
             for out_str in output:

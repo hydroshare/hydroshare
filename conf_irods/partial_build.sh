@@ -44,6 +44,7 @@ echo "iadmin mkuser ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} rodsadmin" | $RUN_ON_US
 echo " - iadmin mkuser ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} rodsadmin"
 echo "iadmin moduser ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} password ${LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE}" | $RUN_ON_USER
 echo " - iadmin moduser ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} password ${LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE}"
+# TODO copy the private key for pka
 
 echo "------------------------------------------------------------"
 echo "INFO: make resource ${HS_IRODS_USER_ZONE_DEF_RES} is able to access in ${HS_USER_ZONE_HOST}"

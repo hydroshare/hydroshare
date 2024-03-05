@@ -65,7 +65,7 @@ class TestCaseCommonUtilities(object):
                                             self.user.username, self.user.username)
             output = run_ssh_command(host=settings.HS_USER_ZONE_HOST,
                                      uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
-                                     pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
+                                     private_key_file=settings.PRIVATE_KEY_FILE_FOR_HS_USER_ZONE,
                                      exec_cmd=exec_cmd)
             for out_str in output:
                 if 'ERROR:' in out_str.upper():
@@ -85,7 +85,7 @@ class TestCaseCommonUtilities(object):
                                         self.user.username)
             output = run_ssh_command(host=settings.HS_USER_ZONE_HOST,
                                      uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
-                                     pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
+                                     private_key_file=settings.PRIVATE_KEY_FILE_FOR_HS_USER_ZONE,
                                      exec_cmd=exec_cmd)
             if output:
                 for out_str in output:
