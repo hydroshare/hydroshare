@@ -1,4 +1,3 @@
-import copy
 import json
 
 from drf_yasg.generators import OpenAPISchemaGenerator
@@ -24,14 +23,11 @@ from rest_framework.serializers import Serializer
 
 
 def get_schema_open_api_v2(schema):
-    # convert $defs to definitions to make it compatible with openapi v2
+    # replace $defs with definitions in schema to make it compatible with openapi v2
     schema_str = json.dumps(schema)
     schema_str = schema_str.replace('$defs', 'definitions')
     schema = json.loads(schema_str)
-    updated_schema = copy.deepcopy(schema)
-    for d in schema['definitions']:
-        updated_schema.update({d: schema['definitions'][d]})
-    return updated_schema
+    return schema
 
 
 class ResourceMetadataInForbidExtra(ResourceMetadataIn):
