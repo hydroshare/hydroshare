@@ -235,51 +235,15 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
     def test_crossref_deposit_xml(self):
         """Test that the crossref deposit xml is generated correctly for a resource"""
 
-        # create abstract metadata element
-        self.res.metadata.create_element('description', abstract='This is a test abstract')
-        # add an organization as an author
-        self.res.metadata.create_element('creator', organization='Utah State University')
-        # add a person with ORCID identifier as an author
-        identifiers = {"ORCID": 'https://orcid.org/0000-0002-1825-0097'}
-        self.res.metadata.create_element('creator', name='John Smith', identifiers=identifiers)
-        # add a funder that can be found in crossref funders registry
-        self.res.metadata.create_element('fundingagency', agency_name='National Science Foundation',
-                                         award_title='NSF Award', award_number='12345', agency_url='https://nsf.gov')
-        # add a funder that can't be found in crossref funders registry
-        self.res.metadata.create_element('fundingagency', agency_name='Utah Water Research Laboratory')
+        self.create_xml_test_resource()
+        self.freeze_and_assert()
 
-        if not hasattr(settings, 'DEFAULT_SUPPORT_EMAIL'):
-            settings.DEFAULT_SUPPORT_EMAIL = "help@cuahsi.org"
-
-        freeze = arrow.now().format("YYYY-MM-DD HH:mm:ss")
-        freezer = freeze_time(freeze)
-        freezer.start()
-
-        # set doi - simulating published resource
-        self.res.doi = get_resource_doi(self.res.short_id)
-        self.res.save()
-        crossref_xml = self.res.get_crossref_deposit_xml()
-        crossref_xml = crossref_xml.strip()
-        timestamp = arrow.now().format("YYYYMMDDHHmmss")
-        res_id = self.res.short_id
-        created_date = self.res.created
-        updated_date = self.res.updated
-        # use updated date as published date as we don't have a published date for this test resource
-        # also when we do real publication the publication date is the same as updated date at the time of publication
-        published_date = updated_date
-        site_url = hydroshare.utils.current_site_url()
-        support_email = settings.DEFAULT_SUPPORT_EMAIL
-        expected_xml = self._get_expected_crossref_xml(res_id=res_id, timestamp=timestamp,
-                                                       created_date=created_date, updated_date=updated_date,
-                                                       published_date=published_date, site_url=site_url,
-                                                       support_email=support_email)
-        expected_xml = expected_xml.strip()
-
-        freezer.stop()
-
-        self.assertTrue(len(crossref_xml) == len(expected_xml))
-        match_ratio = difflib.SequenceMatcher(None, crossref_xml.splitlines(), expected_xml.splitlines()).ratio()
-        self.assertTrue(match_ratio == 1.0, msg="crossref xml is not as expected")
+    def test_crossref_deposit_dirty_xml(self):
+        """Test that the crossref deposit xml is generated correctly for a resource with dirty abstract"""
+        self.create_xml_test_resource()
+        self.res.metadata.update_element('description', self.res.metadata.description.id,
+                                         abstract='This is a test abstract\x1F')
+        self.freeze_and_assert()
 
     @staticmethod
     def _get_expected_crossref_xml(res_id, timestamp, created_date, updated_date, published_date, site_url,
@@ -360,3 +324,51 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
   </body>
 </doi_batch>""" # noqa
         return expected_xml
+
+    def create_xml_test_resource(self):
+        # create abstract metadata element
+        self.res.metadata.create_element('description', abstract='This is a test abstract')
+        # add an organization as an author
+        self.res.metadata.create_element('creator', organization='Utah State University')
+        # add a person with ORCID identifier as an author
+        identifiers = {"ORCID": 'https://orcid.org/0000-0002-1825-0097'}
+        self.res.metadata.create_element('creator', name='John Smith', identifiers=identifiers)
+        # add a funder that can be found in crossref funders registry
+        self.res.metadata.create_element('fundingagency', agency_name='National Science Foundation',
+                                         award_title='NSF Award', award_number='12345', agency_url='https://nsf.gov')
+        # add a funder that can't be found in crossref funders registry
+        self.res.metadata.create_element('fundingagency', agency_name='Utah Water Research Laboratory')
+
+        if not hasattr(settings, 'DEFAULT_SUPPORT_EMAIL'):
+            settings.DEFAULT_SUPPORT_EMAIL = "help@cuahsi.org"
+
+    def freeze_and_assert(self):
+        freeze = arrow.now().format("YYYY-MM-DD HH:mm:ss")
+        freezer = freeze_time(freeze)
+        freezer.start()
+
+        # set doi - simulating published resource
+        self.res.doi = get_resource_doi(self.res.short_id)
+        self.res.save()
+        crossref_xml = self.res.get_crossref_deposit_xml()
+        crossref_xml = crossref_xml.strip()
+        timestamp = arrow.now().format("YYYYMMDDHHmmss")
+        res_id = self.res.short_id
+        created_date = self.res.created
+        updated_date = self.res.updated
+        # use updated date as published date as we don't have a published date for this test resource
+        # also when we do real publication the publication date is the same as updated date at the time of publication
+        published_date = updated_date
+        site_url = hydroshare.utils.current_site_url()
+        support_email = settings.DEFAULT_SUPPORT_EMAIL
+        expected_xml = self._get_expected_crossref_xml(res_id=res_id, timestamp=timestamp,
+                                                       created_date=created_date, updated_date=updated_date,
+                                                       published_date=published_date, site_url=site_url,
+                                                       support_email=support_email)
+        expected_xml = expected_xml.strip()
+
+        freezer.stop()
+
+        self.assertTrue(len(crossref_xml) == len(expected_xml))
+        match_ratio = difflib.SequenceMatcher(None, crossref_xml.splitlines(), expected_xml.splitlines()).ratio()
+        self.assertTrue(match_ratio == 1.0, msg="crossref xml is not as expected")
