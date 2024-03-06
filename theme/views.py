@@ -54,7 +54,7 @@ from hs_tracking.models import Variable
 from theme.forms import RatingForm, UserProfileForm, UserForm
 from theme.forms import ThreadedCommentForm
 from theme.models import UserProfile, QuotaRequest, QuotaRequestForm, UserQuota
-from theme.utils import get_quota_message, get_quota_data
+from theme.utils import get_quota_message
 from .forms import SignupForm
 
 
@@ -140,7 +140,8 @@ class UserProfileView(TemplateView):
         else:
             quota_form = QuotaRequestForm()
         uq = UserQuota.objects.filter(user=u).first()
-        quota_data = get_quota_data(uq)
+        if uq:
+            quota_data = uq.get_quota_data()
         message = get_quota_message(u, quota_data)
         return {
             "profile_user": u,

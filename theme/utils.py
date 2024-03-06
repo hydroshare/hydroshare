@@ -1,6 +1,5 @@
 import os
 from uuid import uuid4
-from datetime import date
 from django.core.mail import send_mail
 from mezzanine.conf import settings
 from .enums import QuotaStatus
@@ -46,7 +45,7 @@ def get_quota_message(user, quota_data=None):
     return_msg = ''
     uq = user.quotas.filter(zone='hydroshare').first()
     if not quota_data:
-        quota_data = get_quota_data(uq)
+        quota_data = uq.get_quota_data()
     qmsg = quota_data["qmsg"]
     allocated = quota_data["allocated"]
     used = quota_data["used"]
@@ -89,65 +88,6 @@ def get_quota_message(user, quota_data=None):
                                                           zone=uq.zone,
                                                           percent=rounded_percent)
     return return_msg
-
-
-def get_quota_data(uq):
-    """
-    get user quota data for display on user profile page
-    :param uq: UserQuota instance
-    :return: dictionary containing quota data
-
-    Note that percents are in the range 0 to 100
-    """
-    from theme.models import QuotaMessage
-    qmsg = QuotaMessage.objects.first()
-    if qmsg is None:
-        qmsg = QuotaMessage.objects.create()
-
-    enforce_quota = qmsg.enforce_quota
-    soft_limit = qmsg.soft_limit_percent
-    hard_limit = qmsg.hard_limit_percent
-    today = date.today()
-    grace = uq.grace_period_ends
-    allocated = uq.allocated_value
-    unit = uq.unit
-    uz, dz = uq.get_used_value_by_zone()
-    used = uz + dz
-    uzp = uz * 100.0 / allocated
-    dzp = dz * 100.0 / allocated
-    percent = used * 100.0 / allocated
-    remaining = allocated - used
-
-    # initiate grace_period counting if not already started by the daily celery task
-    if percent >= 100 and not grace:
-        # This would indicate that the grace period has not been set even though the user went over quota.
-        # This should not happen.
-        logger.error(f"User {uq.user.username} went over quota but grace period was not set.")
-        status = QuotaStatus.INFO
-
-    if percent >= hard_limit or (percent >= 100 and grace <= today):
-        status = QuotaStatus.ENFORCEMENT
-    elif percent >= 100 and grace > today:
-        status = QuotaStatus.GRACE_PERIOD
-    elif percent >= soft_limit:
-        status = QuotaStatus.WARNING
-
-    uq_data = {"used": used,
-               "allocated": allocated,
-               "unit": unit,
-               "uz": uz,
-               "dz": dz,
-               "uz_percent": uzp if uzp < 100 else 100,
-               "dz_percent": dzp if dzp < 100 else 100,
-               "percent": percent if percent < 100 else 100,
-               "remaining": 0 if remaining < 0 else remaining,
-               "percent_over": 0 if percent < 100 else percent - 100,
-               "grace_period_ends": grace,
-               "enforce_quota": enforce_quota,
-               "status": status,
-               "qmsg": qmsg,
-               }
-    return uq_data
 
 
 def notify_user_of_quota_action(quota_request, send_on_deny=False):

@@ -24,7 +24,7 @@ from mezzanine.pages.models import Page
 from mezzanine.utils.models import upload_to
 
 from sorl.thumbnail import ImageField as ThumbnailImageField
-from theme.utils import get_upload_path_userprofile, notify_user_of_quota_action, get_quota_data
+from theme.utils import get_upload_path_userprofile, notify_user_of_quota_action
 from theme.enums import QuotaStatus
 
 
@@ -354,7 +354,7 @@ class UserQuota(models.Model):
         user = self.user
 
         if updated_quota_data is None:
-            updated_quota_data = get_quota_data(self)
+            updated_quota_data = self.get_quota_data()
 
         uz = updated_quota_data["uz"]
         dz = updated_quota_data["dz"]
@@ -379,6 +379,63 @@ class UserQuota(models.Model):
                 """
             if message:
                 tasks.notify_increased_usage_during_quota_enforcement.apply_async((user, message))
+
+    def get_quota_data(self):
+        """
+        get user quota data for display on user profile page
+        :return: dictionary containing quota data
+
+        Note that percents are in the range 0 to 100
+        """
+        from theme.models import QuotaMessage
+        qmsg = QuotaMessage.objects.first()
+        if qmsg is None:
+            qmsg = QuotaMessage.objects.create()
+
+        enforce_quota = qmsg.enforce_quota
+        soft_limit = qmsg.soft_limit_percent
+        hard_limit = qmsg.hard_limit_percent
+        today = datetime.date.today()
+        grace = self.grace_period_ends
+        allocated = self.allocated_value
+        unit = self.unit
+        uz, dz = self.get_used_value_by_zone()
+        used = uz + dz
+        uzp = uz * 100.0 / allocated
+        dzp = dz * 100.0 / allocated
+        percent = used * 100.0 / allocated
+        remaining = allocated - used
+
+        # initiate grace_period counting if not already started by the daily celery task
+        if percent >= 100 and not grace:
+            # This would indicate that the grace period has not been set even though the user went over quota.
+            # This should not happen.
+            logger.error(f"User {self.user.username} went over quota but grace period was not set.")
+            status = QuotaStatus.INFO
+
+        if percent >= hard_limit or (percent >= 100 and grace <= today):
+            status = QuotaStatus.ENFORCEMENT
+        elif percent >= 100 and grace > today:
+            status = QuotaStatus.GRACE_PERIOD
+        elif percent >= soft_limit:
+            status = QuotaStatus.WARNING
+
+        uq_data = {"used": used,
+                   "allocated": allocated,
+                   "unit": unit,
+                   "uz": uz,
+                   "dz": dz,
+                   "uz_percent": uzp if uzp < 100 else 100,
+                   "dz_percent": dzp if dzp < 100 else 100,
+                   "percent": percent if percent < 100 else 100,
+                   "remaining": 0 if remaining < 0 else remaining,
+                   "percent_over": 0 if percent < 100 else percent - 100,
+                   "grace_period_ends": grace,
+                   "enforce_quota": enforce_quota,
+                   "status": status,
+                   "qmsg": qmsg,
+                   }
+        return uq_data
 
 
 class QuotaRequest(models.Model):

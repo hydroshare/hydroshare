@@ -22,8 +22,6 @@ from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
 from theme.models import UserQuota
-from theme.enums import QuotaStatus
-from theme.utils import get_quota_data
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from hs_core.enums import CrossRefSubmissionStatus
@@ -140,7 +138,7 @@ def update_quota_usage(username):
     uz, dz = get_quota_usage_from_irods(username, raise_on_error=False)
 
     # subtract out published resources from the datazone
-    original_quota_data = get_quota_data(uq)
+    original_quota_data = uq.get_quota_data()
     qmsg = original_quota_data["qmsg"]
     published_percent = qmsg.published_resource_percent
     user = User.objects.get(username=username)
@@ -149,7 +147,7 @@ def update_quota_usage(username):
     uq.update_used_value(uz, dz)
 
     if original_quota_data["enforce_quota"]:
-        updated_quota_data = get_quota_data(uq)
+        updated_quota_data = uq.get_quota_data()
         # if enforcing quota, take steps to send messages
         percent = updated_quota_data["percent"]
         if percent < qmsg.soft_limit_percent:
