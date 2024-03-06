@@ -310,10 +310,8 @@ class UserQuota(models.Model):
         :return:
         """
         from hs_core.hydroshare.utils import convert_file_size_to_unit
-        if uz_size:
-            self.user_zone_value = convert_file_size_to_unit(uz_size, self.unit)
-        if dz_size:
-            self.data_zone_value = convert_file_size_to_unit(dz_size, self.unit)
+        self.user_zone_value = convert_file_size_to_unit(uz_size, self.unit)
+        self.data_zone_value = convert_file_size_to_unit(dz_size, self.unit)
         self.save()
 
     def add_to_used_value(self, size):
