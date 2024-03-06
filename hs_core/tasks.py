@@ -552,7 +552,7 @@ def notify_increased_usage_during_quota_enforcement(user, message):
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
-def send_user_notification_at_quota_grace_start(user_pk):
+def send_user_quota_notification(user_pk):
     u = User.objects.get(pk=user_pk)
     if u.first_name and u.last_name:
         sal_name = '{} {}'.format(u.first_name, u.last_name)
@@ -569,7 +569,7 @@ def send_user_notification_at_quota_grace_start(user_pk):
     msg_str += ori_qm
 
     msg_str += '\n\nHydroShare Support'
-    subject = 'Quota warning'
+    subject = 'HydroShare Quota Notification'
     if settings.DEBUG or settings.DISABLE_TASK_EMAILS:
         logger.info("quota warning email not sent out on debug server but logged instead: "
                     "{}".format(msg_str))

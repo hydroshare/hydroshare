@@ -110,8 +110,8 @@ def get_storage_usage(user, flag="published"):
     # if quotaholder is the user, get the resource size and aggregate
     aggregate_size = 0
     for res in resources:
-        uname = res.getAVU("quotaUserName")
-        if not uname == user.username:
+        quota_user = res.get_quota_holder()
+        if not quota_user == user:
             continue
         aggregate_size += res.size
     return aggregate_size
@@ -123,6 +123,7 @@ def update_quota_usage(username):
     quota update only happens on HydroShare iRODS data zone and user zone independently, so the aggregation of usage
     in both zones need to be accounted for in this function to update Django DB as an aggregated usage for hydroshare
     internal zone.
+    This function is called by the IRODS quota micro-service to update quota usage for a user in Django DB.
     :param
     username: the name of the user that needs to update quota usage for.
     :return: raise ValidationError if quota cannot be updated.
@@ -144,7 +145,7 @@ def update_quota_usage(username):
     published_percent = qmsg.published_resource_percent
     user = User.objects.get(username=username)
     published_size = get_storage_usage(user, flag="published")
-    dz -= published_size * (1 - published_percent)
+    dz -= published_size * (1 - published_percent / 100)
     uq.update_used_value(uz, dz)
 
     if original_quota_data["enforce_quota"]:
@@ -152,24 +153,24 @@ def update_quota_usage(username):
         # if enforcing quota, take steps to send messages
         percent = updated_quota_data["percent"]
         if percent < qmsg.soft_limit_percent:
-            # No need for further action
+            if uq.grace_period_ends:
+                # reset grace period now that the user is below quota soft limit
+                uq.grace_period_ends = None
+                uq.save()
             return
-        today = datetime.date.today()
-        if percent >= qmsg.soft_limit_percent:
+        else:
+            # percent >= qmsg.soft_limit_percent
+            today = datetime.date.today()
             if percent >= 100 and percent < qmsg.hard_limit_percent:
                 if not uq.grace_period_ends:
                     # triggers grace period counting
                     uq.grace_period_ends = today + datetime.timedelta(days=qmsg.grace_period)
-                    tasks.send_user_notification_at_quota_grace_start.apply_async((user.pk))
             elif percent >= qmsg.hard_limit_percent:
                 # reset grace period when user quota exceeds hard limit
                 uq.grace_period_ends = None
             uq.save()
-        else:
-            if uq.grace_period_ends and uq.grace_period_ends < today :
-                # reset grace period now that the user is below quota soft limit
-                uq.grace_period_ends = None
-                uq.save()
+            # send notification to user in the cases of exceeding soft limit or hard limit
+            tasks.send_user_quota_notification.apply_async((user.pk))
         check_if_userzone_quota_enforcement_is_bypassed(user, original_quota_data, updated_quota_data)
 
 
