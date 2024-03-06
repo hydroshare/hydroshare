@@ -343,6 +343,8 @@ def zip_aggregation_file(request, res_id=None):
         return JsonResponse({"error": ex.stderr}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except DRF_ValidationError as ex:
         return JsonResponse({"error": ex.detail}, status=status.HTTP_400_BAD_REQUEST)
+    except (QuotaException) as ex:
+        return JsonResponse({"error": str(ex)}, status=status.HTTP_400_BAD_REQUEST)
 
     return_data = {"name": output_zip_fname, "size": size, "type": "zip"}
     return JsonResponse(return_data)

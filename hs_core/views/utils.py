@@ -1121,6 +1121,8 @@ def zip_by_aggregation_file(user, res_id, aggregation_name, output_zip_fname):
     :param aggregation_name: short path (relative to res_id/data/contents/) of the aggregation to be zipped
     :param output_zip_fname: name of the zip file
     :return: zip file path and size of the zip file
+    :raises: ValidationError if the aggregation is not found or if the zip file name is invalid
+    :raises: QuotaException if the user's quota is exceeded
     """
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.resource_type != "CompositeResource":
