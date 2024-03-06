@@ -150,14 +150,13 @@ def update_quota_usage(username):
         updated_quota_data = uq.get_quota_data()
         # if enforcing quota, take steps to send messages
         percent = updated_quota_data["percent"]
-        if percent < qmsg.soft_limit_percent:
+        if percent < 100:
             if uq.grace_period_ends:
-                # reset grace period now that the user is below quota soft limit
+                # reset grace period now that the user is below allocation
                 uq.reset_grace_period()
             return
         else:
-            # percent >= qmsg.soft_limit_percent
-            if percent >= 100 and percent < qmsg.hard_limit_percent:
+            if percent < qmsg.hard_limit_percent:
                 if not uq.grace_period_ends:
                     # triggers grace period counting
                     uq.start_grace_period(qmsg_days=qmsg.grace_period)
