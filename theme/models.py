@@ -407,13 +407,12 @@ class UserQuota(models.Model):
         percent = used * 100.0 / allocated
         remaining = allocated - used
 
-        # initiate grace_period counting if not already started by the daily celery task
         if percent >= 100 and not grace:
             # This would indicate that the grace period has not been set even though the user went over quota.
             # This should not happen.
             logger.error(f"User {self.user.username} went over quota but grace period was not set.")
-            status = QuotaStatus.INFO
 
+        status = QuotaStatus.INFO
         if percent >= hard_limit or (percent >= 100 and grace <= today):
             status = QuotaStatus.ENFORCEMENT
         elif percent >= 100 and grace > today:
