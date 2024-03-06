@@ -836,7 +836,7 @@ def get_remaining_user_quota(user_or_username, units='MB'):
     else:
         user = None
 
-    if user:
+    if user and user.is_active:
         uq = user.quotas.filter(zone='hydroshare').first()
         if uq:
             qmsg = QuotaMessage.objects.first()
