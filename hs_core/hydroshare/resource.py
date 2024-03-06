@@ -170,27 +170,42 @@ def update_quota_usage(username):
                 # reset grace period now that the user is below quota soft limit
                 uq.grace_period_ends = None
                 uq.save()
-        updated_quota_status = updated_quota_data["status"]
-        original_quota_status = original_quota_data["status"]
-        if original_quota_status == QuotaStatus.ENFORCEMENT and updated_quota_status == QuotaStatus.ENFORCEMENT:
-            original_userzone_usage = original_quota_data["uz"]
-            original_datazone_usage = original_quota_data["dz"]
-            message = ""
-            if uz > original_userzone_usage:
-                # userZone quota usage has increased
-                message += f"""UserZone quota usage has increased from {original_userzone_usage} to {uz}.
-                It is possible for the user to continue putting resources into the userZone
-                because quota is not enforced in userZone. You are being notified to manually check this usage
-                and determine what action is appropriate. It is possible to remove the user account from the irods
-                userzone if necessary."""
-            if dz > original_datazone_usage:
-                # dataZone quota usage has increased
-                message += f"""DataZone quota usage has increased from {original_datazone_usage} to {dz}.
-                This user has exceeded quota and limitations should have been enforced. It should not have been possible
-                for the user to continue putting resources into the dataZone. This case requires manual intervention.
-                """
-            if message:
-                tasks.notify_increased_usage_during_quota_enforcement.apply_async((user, message))
+        check_if_userzone_quota_enforcement_is_bypassed(user, original_quota_data, updated_quota_data)
+
+
+def check_if_userzone_quota_enforcement_is_bypassed(user, original_quota_data, updated_quota_data):
+    """
+    Check if a user is bypassing quota enforcement in userZone by continuing to put resources
+    Notifies admin if user is continuing to upload while over quota
+    :param user: the user to check
+    :param original_quota_data: the original quota data
+    :param updated_quota_data: the updated quota data
+    :return:
+    """
+    from hs_core import tasks
+    uz = updated_quota_data["uz"]
+    dz = updated_quota_data["dz"]
+    updated_quota_status = updated_quota_data["status"]
+    original_quota_status = original_quota_data["status"]
+    if original_quota_status == QuotaStatus.ENFORCEMENT and updated_quota_status == QuotaStatus.ENFORCEMENT:
+        original_userzone_usage = original_quota_data["uz"]
+        original_datazone_usage = original_quota_data["dz"]
+        message = ""
+        if uz > original_userzone_usage:
+            # userZone quota usage has increased
+            message += f"""UserZone quota usage has increased from {original_userzone_usage} to {uz}.
+            It is possible for the user to continue putting resources into the userZone
+            because quota is not enforced in userZone. You are being notified to manually check this usage
+            and determine what action is appropriate. It is possible to remove the user account from the irods
+            userzone if necessary."""
+        if dz > original_datazone_usage:
+            # dataZone quota usage has increased
+            message += f"""DataZone quota usage has increased from {original_datazone_usage} to {dz}.
+            This user has exceeded quota and limitations should have been enforced. It should not have been possible
+            for the user to continue putting resources into the dataZone. This case requires manual intervention.
+            """
+        if message:
+            tasks.notify_increased_usage_during_quota_enforcement.apply_async((user, message))
 
 
 def res_has_web_reference(res):
@@ -1192,8 +1207,6 @@ def publish_resource(user, pk):
     if not user.is_superuser:
         raise ValidationError("Resource can only be published by an admin user")
     resource = utils.get_resource_by_shortkey(pk)
-    if user is not None and not user.uaccess.can_change_resource_flags(resource):
-        raise ValidationError("You don't have permission to change resource sharing status")
     if resource.raccess.published:
         raise ValidationError("This resource is already published")
     resource.raccess.alter_review_pending_flags(initiating_review=False)
