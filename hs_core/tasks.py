@@ -49,7 +49,6 @@ from hs_file_types.models import (FileSetLogicalFile, GenericLogicalFile,
 from hs_odm2.models import ODM2Variable
 from hydroshare.hydrocelery import app as celery_app
 from theme.models import QuotaMessage, User, UserQuota
-from theme.utils import get_quota_message
 
 FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
                  "FileSetLogicalFile": FileSetLogicalFile,
@@ -508,7 +507,7 @@ def send_over_quota_emails():
                 support_user = get_default_support_user()
                 msg_str = f'Dear {support_user.first_name}{support_user.last_name}:\n\n'
                 msg_str += f'The following user (#{ u.id }) has exceeded their quota:{u.email}\n\n'
-                ori_qm = get_quota_message(u)
+                ori_qm = uq.get_quota_message()
                 msg_str += ori_qm
                 subject = f'Quota warning for {u.email}(id#{u.id})'
                 if settings.DEBUG or settings.DISABLE_TASK_EMAILS:
@@ -527,15 +526,17 @@ def send_over_quota_emails():
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
-def notify_increased_usage_during_quota_enforcement(user, message):
+def notify_increased_usage_during_quota_enforcement(user_pk, message):
     from hs_core.views.utils import get_default_support_user
+    user = User.objects.get(pk=user_pk)
     support_user = get_default_support_user()
     msg_str = f'Dear {support_user.first_name}{support_user.last_name}:\n\n'
     msg_str += f'User (#{ user.id }, {user.email}) previously exceeded their quota.\n'
     msg_str += 'They have continued to put data in spite of their quota being in enforcement status.\n\n'
     msg_str += message
     msg_str += 'Here is the quota message for the user:\n'
-    ori_qm = get_quota_message(user)
+    uq = user.quotas.first()
+    ori_qm = uq.get_quota_message()
     msg_str += ori_qm
     subject = f'Continued uploads while over quota {user.email}(id#{user.id})'
     if settings.DEBUG or settings.DISABLE_TASK_EMAILS:
@@ -554,6 +555,7 @@ def notify_increased_usage_during_quota_enforcement(user, message):
 @celery_app.task(ignore_result=True, base=HydroshareTask)
 def send_user_quota_notification(user_pk):
     u = User.objects.get(pk=user_pk)
+    uq = u.quotas.first()
     if u.first_name and u.last_name:
         sal_name = '{} {}'.format(u.first_name, u.last_name)
     elif u.first_name:
@@ -565,7 +567,7 @@ def send_user_quota_notification(user_pk):
 
     msg_str = 'Dear ' + sal_name + ':\n\n'
 
-    ori_qm = get_quota_message(u)
+    ori_qm = uq.get_quota_message()
     msg_str += ori_qm
 
     msg_str += '\n\nHydroShare Support'

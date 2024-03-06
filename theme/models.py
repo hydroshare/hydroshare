@@ -379,7 +379,7 @@ class UserQuota(models.Model):
                 for the user to continue putting resources into the dataZone. This case requires manual intervention.
                 """
             if message:
-                tasks.notify_increased_usage_during_quota_enforcement.apply_async((user, message))
+                tasks.notify_increased_usage_during_quota_enforcement.apply_async((user.pk, message))
 
     def get_quota_data(self):
         """
@@ -437,6 +437,60 @@ class UserQuota(models.Model):
                    "qmsg": qmsg,
                    }
         return uq_data
+
+    def get_quota_message(self, quota_data=None):
+        """
+        get quota warning, grace period, or enforcement message to email users and display
+        when the user logins in and display on user profile page
+        :param user: The User instance
+        :param quota_data: dictionary containing quota data
+        :return: quota message string
+        """
+        return_msg = ''
+        if not quota_data:
+            quota_data = self.get_quota_data()
+        qmsg = quota_data["qmsg"]
+        allocated = quota_data["allocated"]
+        used = quota_data["used"]
+        grace = quota_data["grace_period_ends"]
+        quota_status = quota_data["status"]
+        percent = used * 100.0 / allocated
+        rounded_percent = round(percent, 2)
+        rounded_used_val = round(used, 4)
+
+        if quota_status == QuotaStatus.GRACE_PERIOD:
+            # return quota enforcement message
+            msg_template_str = f'{qmsg.enforce_content_prepend} {qmsg.content}\n'
+            return_msg += msg_template_str.format(used=rounded_used_val,
+                                                  unit=self.unit,
+                                                  allocated=self.allocated_value,
+                                                  zone=self.zone,
+                                                  percent=rounded_percent)
+        elif quota_status == QuotaStatus.ENFORCEMENT:
+            # return quota grace period message
+            msg_template_str = f'{qmsg.grace_period_content_prepend} {qmsg.content}\n'
+            return_msg += msg_template_str.format(used=rounded_used_val,
+                                                  unit=self.unit,
+                                                  allocated=self.allocated_value,
+                                                  zone=self.zone,
+                                                  percent=rounded_percent,
+                                                  cut_off_date=grace)
+        elif quota_status == QuotaStatus.WARNING:
+            # return quota warning message
+            msg_template_str = f'{qmsg.warning_content_prepend} {qmsg.content}\n'
+            return_msg += msg_template_str.format(used=rounded_used_val,
+                                                  unit=self.unit,
+                                                  allocated=self.allocated_value,
+                                                  zone=self.zone,
+                                                  percent=rounded_percent)
+        else:
+            # return quota informational message
+            return_msg += qmsg.warning_content_prepend.format(allocated=self.allocated_value,
+                                                              unit=self.unit,
+                                                              used=rounded_used_val,
+                                                              zone=self.zone,
+                                                              percent=rounded_percent)
+        return return_msg
 
 
 class QuotaRequest(models.Model):
