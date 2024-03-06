@@ -2353,6 +2353,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         from hs_core.signals import post_raccess_change
 
         self.raccess.published = value
+        self.raccess.immutable = value
         if value:  # can't be published without being public
             self.raccess.public = value
         self.raccess.save()

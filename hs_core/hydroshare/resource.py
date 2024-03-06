@@ -1229,8 +1229,7 @@ def publish_resource(user, pk):
         resource.save()
 
     resource.set_public(True)  # also sets discoverable to True
-    resource.raccess.published = True
-    resource.raccess.immutable = True
+    resource.set_published(True)
     resource.raccess.save()
 
     # change "Publisher" element of science metadata to CUAHSI
