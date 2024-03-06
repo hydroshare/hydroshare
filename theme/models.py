@@ -24,7 +24,8 @@ from mezzanine.pages.models import Page
 from mezzanine.utils.models import upload_to
 
 from sorl.thumbnail import ImageField as ThumbnailImageField
-from theme.utils import get_upload_path_userprofile, notify_user_of_quota_action
+from theme.utils import get_upload_path_userprofile, notify_user_of_quota_action, get_quota_data
+from theme.enums import QuotaStatus
 
 
 DEFAULT_COPYRIGHT = '&copy; {% now "Y" %} {{ settings.SITE_TITLE }}'
@@ -324,6 +325,60 @@ class UserQuota(models.Model):
         from hs_core.hydroshare.utils import convert_file_size_to_unit
 
         return self.used_value + convert_file_size_to_unit(size, self.unit)
+
+    def start_grace_period(self, qmsg_days=7):
+        """
+        start grace period for this user quota
+        :param qmsg_days: number of days for grace period
+        """
+        self.grace_period_ends = datetime.date.today() + datetime.timedelta(days=qmsg_days)
+        self.save()
+
+    def reset_grace_period(self):
+        """
+        reset grace period for this user quota
+        """
+        self.grace_period_ends = None
+        self.save()
+
+    def check_if_userzone_quota_enforcement_is_bypassed(self, original_quota_data, updated_quota_data=None):
+        """
+        Check if a user is bypassing quota enforcement in userZone by continuing to put resources
+        Notifies admin if user is continuing to upload while over quota
+        :param user: the user to check
+        :param original_quota_data: the original quota data
+        :param updated_quota_data: the updated quota data
+        :return:
+        """
+        from hs_core import tasks
+        user = self.user
+
+        if updated_quota_data is None:
+            updated_quota_data = get_quota_data(self)
+
+        uz = updated_quota_data["uz"]
+        dz = updated_quota_data["dz"]
+        updated_quota_status = updated_quota_data["status"]
+        original_quota_status = original_quota_data["status"]
+        if original_quota_status == QuotaStatus.ENFORCEMENT and updated_quota_status == QuotaStatus.ENFORCEMENT:
+            original_userzone_usage = original_quota_data["uz"]
+            original_datazone_usage = original_quota_data["dz"]
+            message = ""
+            if uz > original_userzone_usage:
+                # userZone quota usage has increased
+                message += f"""UserZone quota usage has increased from {original_userzone_usage} to {uz}.
+                It is possible for the user to continue putting resources into the userZone
+                because quota is not enforced in userZone. You are being notified to manually check this usage
+                and determine what action is appropriate. It is possible to remove the user account from the irods
+                userzone if necessary."""
+            if dz > original_datazone_usage:
+                # dataZone quota usage has increased
+                message += f"""DataZone quota usage has increased from {original_datazone_usage} to {dz}.
+                This user has exceeded quota and limitations should have been enforced. It should not have been possible
+                for the user to continue putting resources into the dataZone. This case requires manual intervention.
+                """
+            if message:
+                tasks.notify_increased_usage_during_quota_enforcement.apply_async((user, message))
 
 
 class QuotaRequest(models.Model):

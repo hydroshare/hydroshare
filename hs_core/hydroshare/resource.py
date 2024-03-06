@@ -155,58 +155,20 @@ def update_quota_usage(username):
         if percent < qmsg.soft_limit_percent:
             if uq.grace_period_ends:
                 # reset grace period now that the user is below quota soft limit
-                uq.grace_period_ends = None
-                uq.save()
+                uq.reset_grace_period()
             return
         else:
             # percent >= qmsg.soft_limit_percent
-            today = datetime.date.today()
             if percent >= 100 and percent < qmsg.hard_limit_percent:
                 if not uq.grace_period_ends:
                     # triggers grace period counting
-                    uq.grace_period_ends = today + datetime.timedelta(days=qmsg.grace_period)
+                    uq.start_grace_period(qmsg_days=qmsg.grace_period)
             elif percent >= qmsg.hard_limit_percent:
                 # reset grace period when user quota exceeds hard limit
-                uq.grace_period_ends = None
-            uq.save()
+                uq.reset_grace_period()
             # send notification to user in the cases of exceeding soft limit or hard limit
             tasks.send_user_quota_notification.apply_async((user.pk))
-        check_if_userzone_quota_enforcement_is_bypassed(user, original_quota_data, updated_quota_data)
-
-
-def check_if_userzone_quota_enforcement_is_bypassed(user, original_quota_data, updated_quota_data):
-    """
-    Check if a user is bypassing quota enforcement in userZone by continuing to put resources
-    Notifies admin if user is continuing to upload while over quota
-    :param user: the user to check
-    :param original_quota_data: the original quota data
-    :param updated_quota_data: the updated quota data
-    :return:
-    """
-    from hs_core import tasks
-    uz = updated_quota_data["uz"]
-    dz = updated_quota_data["dz"]
-    updated_quota_status = updated_quota_data["status"]
-    original_quota_status = original_quota_data["status"]
-    if original_quota_status == QuotaStatus.ENFORCEMENT and updated_quota_status == QuotaStatus.ENFORCEMENT:
-        original_userzone_usage = original_quota_data["uz"]
-        original_datazone_usage = original_quota_data["dz"]
-        message = ""
-        if uz > original_userzone_usage:
-            # userZone quota usage has increased
-            message += f"""UserZone quota usage has increased from {original_userzone_usage} to {uz}.
-            It is possible for the user to continue putting resources into the userZone
-            because quota is not enforced in userZone. You are being notified to manually check this usage
-            and determine what action is appropriate. It is possible to remove the user account from the irods
-            userzone if necessary."""
-        if dz > original_datazone_usage:
-            # dataZone quota usage has increased
-            message += f"""DataZone quota usage has increased from {original_datazone_usage} to {dz}.
-            This user has exceeded quota and limitations should have been enforced. It should not have been possible
-            for the user to continue putting resources into the dataZone. This case requires manual intervention.
-            """
-        if message:
-            tasks.notify_increased_usage_during_quota_enforcement.apply_async((user, message))
+        uq.check_if_userzone_quota_enforcement_is_bypassed(user, original_quota_data, updated_quota_data)
 
 
 def res_has_web_reference(res):
