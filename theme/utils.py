@@ -100,9 +100,10 @@ def get_quota_data(uq):
     Note that percents are in the range 0 to 100
     """
     from theme.models import QuotaMessage
-    if not QuotaMessage.objects.exists():
-        QuotaMessage.objects.create()
     qmsg = QuotaMessage.objects.first()
+    if qmsg is None:
+        qmsg = QuotaMessage.objects.create()
+
     enforce_quota = qmsg.enforce_quota
     soft_limit = qmsg.soft_limit_percent
     hard_limit = qmsg.hard_limit_percent
@@ -122,7 +123,7 @@ def get_quota_data(uq):
         # This would indicate that the grace period has not been set even though the user went over quota.
         # This should not happen.
         logger.error(f"User {uq.user.username} went over quota but grace period was not set.")
-        status = QuotaStatus.GRACE_PERIOD
+        status = QuotaStatus.INFO
 
     if percent >= hard_limit or (percent >= 100 and grace <= today):
         status = QuotaStatus.ENFORCEMENT
@@ -130,8 +131,6 @@ def get_quota_data(uq):
         status = QuotaStatus.GRACE_PERIOD
     elif percent >= soft_limit:
         status = QuotaStatus.WARNING
-    else:
-        status = QuotaStatus.INFO
 
     uq_data = {"used": used,
                "allocated": allocated,
@@ -155,7 +154,7 @@ def notify_user_of_quota_action(quota_request, send_on_deny=False):
     """
     Sends email notification to user on approval/denial of thie quota request
 
-    :param quota_request: the quota_request object
+    :param quota_request: an instance of QuotaRequest
     :param send_on_deny: whether emails should be sent on denial. default is to only send emails on quota approval
     :return:
     """
