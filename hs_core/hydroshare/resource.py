@@ -93,18 +93,18 @@ def get_storage_usage(user, flag="published"):
     """
     Query resources by iRODS AVU quotaholder and resource state
     :param user: the user to get quota usage for.
-    :param flag: resource state (private, discoverable, published)
-    :return: estimated storage used by published resources
+    :param flag: resource state (private, discoverable, public, published)
+    :return: estimated storage used by resources
     """
     resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
     if flag == "published":
         resources.filter(raccess__published=True)
     elif flag == "discoverable":
-        resources.filter(raccess__discoverable=True)
+        resources.filter(raccess__discoverable=True, raccess__public=False)
     elif flag == "public":
-        resources.filter(raccess__public=True)
+        resources.filter(raccess__public=True, raccess__discoverable=True)
     elif flag == "private":
-        resources.filter(raccess__private=True)
+        resources.filter(raccess__public=False, raccess__discoverable=False)
 
     # Iterate over resources and check the quotaholder
     # if quotaholder is the user, get the resource size and aggregate
