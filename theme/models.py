@@ -533,7 +533,7 @@ def update_user_quota_on_quota_request(sender, instance, **kwargs):
         return
 
     try:
-        qr = QuotaRequest.objects.get(pk=instance.pk)
+        qr = QuotaRequest.objects.select_related("quota").get(pk=instance.pk)
         qr.quota.allocated_value += qr.storage
 
         # approving a quota request will also reset the grace period
