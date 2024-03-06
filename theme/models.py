@@ -14,6 +14,7 @@ from django.template import RequestContext, Template, TemplateSyntaxError
 from django.utils.translation import gettext_lazy as _
 from django.utils.html import strip_tags
 from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
 from django.core.validators import MinValueValidator, MaxValueValidator, MinLengthValidator, MaxLengthValidator
 from django.contrib.postgres.fields import HStoreField
 
@@ -24,7 +25,7 @@ from mezzanine.pages.models import Page
 from mezzanine.utils.models import upload_to
 
 from sorl.thumbnail import ImageField as ThumbnailImageField
-from theme.utils import get_upload_path_userprofile, notify_user_of_quota_action
+from theme.utils import get_upload_path_userprofile
 from theme.enums import QuotaStatus
 
 
@@ -453,6 +454,33 @@ class QuotaRequest(models.Model):
                                                  MaxLengthValidator(300, 'maximum 300 characters')], null=True)
     storage = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(100)], default=1)
 
+    def notify_user_of_quota_action(self, send_on_deny=False):
+        """
+        Sends email notification to user on approval/denial of thie quota request
+
+        :param send_on_deny: whether emails should be sent on denial. default is to only send emails on quota approval
+        :return:
+        """
+
+        if self.status != 'approved' and not send_on_deny:
+            return
+
+        date = self.date_requested.strftime("%m/%d/%Y, %H:%M:%S")
+        email_msg = f'''Dear Hydroshare User,
+        <p>On { date }, you requested { self.storage } GB increase in quota.</p>
+        <p>Here is the justification you provided: <strong>'{ self.justification }'</strong></p>
+
+        <p>Your request for Quota increase has been reviewed and { self.status }.</p>
+
+        <p>Thank you,</p>
+        <p>The HydroShare Team</p>
+        '''
+        send_mail(subject=f"HydroShare request for Quota increase { self.status }",
+                  message=email_msg,
+                  html_message=email_msg,
+                  from_email=settings.DEFAULT_FROM_EMAIL,
+                  recipient_list=[self.request_from.email])
+
 
 class QuotaRequestForm(ModelForm):
     class Meta:
@@ -652,7 +680,7 @@ def update_user_quota_on_quota_request(sender, instance, **kwargs):
         # this is done by the reset_grace_period_on_allocation_change signal
 
         qr.quota.save()
-        notify_user_of_quota_action(qr)
+        qr.notify_user_of_quota_action()
     except QuotaRequest.DoesNotExist:
         logger.warning(
             f"QuotaRequest for {instance.pk} does not exist when trying to update it"
