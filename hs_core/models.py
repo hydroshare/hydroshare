@@ -681,7 +681,7 @@ class Party(AbstractMetaDataElement):
     @classmethod
     def validate_identifiers(cls, identifiers):
         """Validates optional identifiers for user/creator/contributor
-        :param  identifiers: identifier data as a json string or as a dict!
+        :param  identifiers: identifier data as a json string or as a dict
         """
 
         if not isinstance(identifiers, dict):
