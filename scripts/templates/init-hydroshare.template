@@ -13,4 +13,8 @@ userdel hydro-service \
  && chown -R hydro-service:storage-hydro /hydroshare /hs_tmp /shared_tmp /tmp \
  && chmod -R 3777 /hs_tmp /shared_tmp /tmp 
 
+mkdir -p /home/hydro-service/.ssh \
+ && cp -r /root/.ssh /home/hydro-service/.ssh \
+ && chown -R hydro-service:storage-hydro /home/hydro-service
+
 HS_DJANGO_SERVER

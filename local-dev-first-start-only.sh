@@ -314,7 +314,28 @@ echo -e " Setting up iRODS"
 echo '########################################################################################################################'
 echo
 
+# TODO - update correct paths/usernames to keys
+echo " - rm -rf .ssh"
+rm -rf .ssh
+echo " - mkdir .ssh"
+mkdir .ssh
+echo " - ssh-keygen -t ed25519 -f .ssh/id_ed25519_hs -N ''"
+ssh-keygen -t ed25519 -f .ssh/id_ed25519_hs -N ''
+echo " - ssh-keygen -f .ssh/id_ed25519_hs.pub -e -m pem > .ssh/id_ed25519_hs.pub.pem"
+ssh-keygen -f .ssh/id_ed25519_hs.pub -e -m pem > .ssh/id_ed25519_hs.pub.pem
+echo " - ssh-keygen -f .ssh/id_ed25519_hs -e -m pem > .ssh/id_ed25519_hs.pem"
+ssh-keygen -f .ssh/id_ed25519_hs -e -m pem > .ssh/id_ed25519_hs.pem
+echo " - docker exec users.local.org mkdir -p /home/hsuserproxy/.ssh/authorized_keys"
+docker exec users.local.org mkdir -p /home/hsuserproxy/.ssh/authorized_keys
+echo " - docker cp .ssh/id_ed25519_hs.pub.pem users.local.org:/home/hsuserproxy/.ssh/authorized_keys/id_ed25519_hs.pub.pem"
+docker cp .ssh/id_ed25519_hs.pub.pem users.local.org:/home/hsuserproxy/.ssh/authorized_keys/id_ed25519_hs.pub.pem
+echo " - docker exec hydroshare mkdir -p /root/.ssh"
+docker exec hydroshare mkdir -p /root/.ssh
+echo " - docker cp .ssh/id_ed25519_hs.pem hydroshare:/root/.ssh/id_ed25519_hs.pem"
+docker cp .ssh/id_ed25519_hs.pem hydroshare:/root/.ssh/id_ed25519_hs.pem
+echo " - exec hydroshare bash scripts/chown-root-items"
 docker exec hydroshare bash scripts/chown-root-items
+
 
 cd conf_irods/
 ./partial_build.sh 
