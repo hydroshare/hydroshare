@@ -301,7 +301,7 @@ def run_ssh_command(host, uname, exec_cmd, pwd=None, private_key_file=None):
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     if private_key_file:
-        rsa_key = paramiko.RSAKey.from_private_key_file(private_key_file)
+        rsa_key = paramiko.Ed25519Key.from_private_key_file(private_key_file)
         ssh.connect(host, username=uname, pkey=rsa_key)
     else:
         ssh.connect(host, username=uname, password=pwd)
