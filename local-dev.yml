@@ -29,7 +29,7 @@ services:
       HS_USER_ZONE_HOST: 'users.local.org'
       LINUX_ADMIN_USER_FOR_HS_USER_ZONE: 'hsuserproxy'
       LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE: 'hsuserproxy'
-      PUBLIC_KEY_FILE_FOR_HS_USER_ZONE: '/home/hsuserproxy/.ssh/authorized_keys/id_ed25519_hs.pub'
+      PUBLIC_KEY_FILE_FOR_HS_USER_ZONE: '/home/hsuserproxy/.ssh/authorized_keys'
       LINUX_ADMIN_USER_CREATE_USER_IN_USER_ZONE_CMD: '/home/hsuserproxy/create_user.sh'
       LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD: '/home/hsuserproxy/delete_user.sh'
       HS_IRODS_PROXY_USER_IN_USER_ZONE: 'localHydroProxy'
@@ -50,7 +50,7 @@ services:
       - "iuser_iconf_vol:/etc/irods"
       - "iuser_vault_vol:/var/lib/irods"
       - "iuser_pgres_vol:/var/lib/postgresql/data"
-      - "./.ssh/id_ed25519_hs.pub:/home/hsuserproxy/.ssh/authorized_keys/id_ed25519_hs.pub"
+      - "./.ssh/id_ed25519_hs.pub:/home/hsuserproxy/.ssh/authorized_keys"
     environment:
       SHARED_NEG_KEY: 'hydroshareZonehydroshareuserZone'
       USE_IRODS: 'True'
@@ -68,7 +68,7 @@ services:
       HS_USER_ZONE_HOST: 'users.local.org'
       LINUX_ADMIN_USER_FOR_HS_USER_ZONE: 'hsuserproxy'
       LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE: 'hsuserproxy'
-      PUBLIC_KEY_FILE_FOR_HS_USER_ZONE: '/home/hsuserproxy/.ssh/authorized_keys/id_ed25519_hs.pub'
+      PUBLIC_KEY_FILE_FOR_HS_USER_ZONE: '/home/hsuserproxy/.ssh/authorized_keys'
       LINUX_ADMIN_USER_CREATE_USER_IN_USER_ZONE_CMD: '/home/hsuserproxy/create_user.sh'
       LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD: '/home/hsuserproxy/delete_user.sh'
       HS_IRODS_PROXY_USER_IN_USER_ZONE: 'localHydroProxy'

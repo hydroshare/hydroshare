@@ -108,6 +108,7 @@ echo "[root@${HS_USER_ZONE_HOST}]$ apt-get update"
 docker exec ${HS_USER_ZONE_HOST} sh -c "apt-get update"
 echo "[root@${HS_USER_ZONE_HOST}]$ apt-get install -y openssh-client openssh-server && mkdir /var/run/sshd && sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd && /etc/init.d/ssh restart"
 docker exec ${HS_USER_ZONE_HOST} sh -c "apt-get install -y openssh-client openssh-server && mkdir /var/run/sshd && sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd && /etc/init.d/ssh restart"
+# TODO: modify for key auth
 
 # Create Linux user ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} on ${HS_USER_ZONE_HOST}
 echo "INFO: Create Linux user ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} on ${HS_USER_ZONE_HOST}"
@@ -119,6 +120,8 @@ docker cp delete_user.sh ${HS_USER_ZONE_HOST}:/home/${LINUX_ADMIN_USER_FOR_HS_US
 docker exec ${HS_USER_ZONE_HOST} chown -R ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}:${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} /home/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}
 docker exec ${HS_USER_ZONE_HOST} sh -c "echo "${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}":"${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}" | chpasswd"
 # TODO: gen and copy the public key for pka
+# echo "ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N '' -C 'hsuserproxy@${HS_USER_ZONE_HOST}'" | $RUN_ON_USER
+# echo " - ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N '' -C 'hsuserproxy@${HS_USER_ZONE_HOST}'"
 
 # Make ${IRODS_HOST} and ${HS_USER_ZONE_HOST} aware of each other via /etc/hosts
 echo "INFO: update /etc/hosts"
