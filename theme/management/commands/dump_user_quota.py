@@ -34,8 +34,7 @@ class Command(BaseCommand):
             ]
             w.writerow(fields)
 
-            user_quotas = UserQuota.objects.all()
-            user_quotas.filter(user__is_active=True).filter(user__is_superuser=False)
+            user_quotas = UserQuota.objects.filter(user__is_active=True).filter(user__is_superuser=False)
             exceeded = options['exceeded']
 
             for uq in user_quotas:
