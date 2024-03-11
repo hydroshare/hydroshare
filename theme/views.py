@@ -254,9 +254,6 @@ def quota_request(request, *args, **kwargs):
             err_msg = "You don't have permission to request additional quota"
             messages.error(request, err_msg)
 
-    else:
-        quota_form = QuotaRequestForm()
-
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
