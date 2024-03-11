@@ -322,12 +322,14 @@ mkdir .ssh
 echo " - ssh-keygen -t ed25519 -f .ssh/id_ed25519_hs -N ''"
 ssh-keygen -t ed25519 -f .ssh/id_ed25519_hs -N ''
 
-echo " - exec hydroshare bash scripts/chown-root-items"
-docker exec hydroshare bash scripts/chown-root-items
+# echo " - exec hydroshare bash scripts/chown-root-items"
+# docker exec hydroshare bash scripts/chown-root-items
 
 
 cd conf_irods/
 ./partial_build.sh 
+# cd irods/
+# ./use-local-irods.sh
 cd ..
 sleep 2
 
@@ -396,7 +398,8 @@ echo " Building Node for Discovery"
 echo '########################################################################################################################'
 echo
 
-node_build
+# TODO: re enable node_build
+# node_build
 
 echo
 echo '########################################################################################################################'
@@ -430,36 +433,37 @@ echo "  - docker exec -u hydro-service hydroshare python manage.py fix_permissio
 echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py fix_permissions
 
-echo
-echo '########################################################################################################################'
-echo " Reindexing SOLR"
-echo '########################################################################################################################'
-# TODO - fix hydroshare container permissions to allow use of hydro-service user
-echo
-echo " - docker exec solr bin/solr create_core -c collection1 -n basic_config"
-docker $DOCKER_PARAM exec solr bin/solr create -c collection1 -d basic_configs
+# TODO enable solr reindexing
+# echo
+# echo '########################################################################################################################'
+# echo " Reindexing SOLR"
+# echo '########################################################################################################################'
+# # TODO - fix hydroshare container permissions to allow use of hydro-service user
+# echo
+# echo " - docker exec solr bin/solr create_core -c collection1 -n basic_config"
+# docker $DOCKER_PARAM exec solr bin/solr create -c collection1 -d basic_configs
 
-echo
-echo "  - docker exec hydroshare python manage.py build_solr_schema -f schema.xml"
-echo
-docker $DOCKER_PARAM exec hydroshare python manage.py build_solr_schema -f schema.xml
+# echo
+# echo "  - docker exec hydroshare python manage.py build_solr_schema -f schema.xml"
+# echo
+# docker $DOCKER_PARAM exec hydroshare python manage.py build_solr_schema -f schema.xml
 
-echo
-echo "  - docker cp schema.xml solr:/opt/solr/server/solr/collection1/conf/schema.xml"
-echo
-docker $DOCKER_PARAM cp schema.xml solr:/opt/solr/server/solr/collection1/conf/schema.xml
+# echo
+# echo "  - docker cp schema.xml solr:/opt/solr/server/solr/collection1/conf/schema.xml"
+# echo
+# docker $DOCKER_PARAM cp schema.xml solr:/opt/solr/server/solr/collection1/conf/schema.xml
 
-echo
-echo "  - docker exec solr sed -i '/<schemaFactory class=\"ManagedIndexSchemaFactory\">/,+4d' /opt/solr/server/solr/collection1/conf/solrconfig.xml"
-docker $DOCKER_PARAM exec solr sed -i '/<schemaFactory class="ManagedIndexSchemaFactory">/,+4d' /opt/solr/server/solr/collection1/conf/solrconfig.xml
+# echo
+# echo "  - docker exec solr sed -i '/<schemaFactory class=\"ManagedIndexSchemaFactory\">/,+4d' /opt/solr/server/solr/collection1/conf/solrconfig.xml"
+# docker $DOCKER_PARAM exec solr sed -i '/<schemaFactory class="ManagedIndexSchemaFactory">/,+4d' /opt/solr/server/solr/collection1/conf/solrconfig.xml
 
-echo
-echo "  - docker exec solr rm /opt/solr/server/solr/collection1/conf/managed-schema"
-docker $DOCKER_PARAM exec solr rm /opt/solr/server/solr/collection1/conf/managed-schema
+# echo
+# echo "  - docker exec solr rm /opt/solr/server/solr/collection1/conf/managed-schema"
+# docker $DOCKER_PARAM exec solr rm /opt/solr/server/solr/collection1/conf/managed-schema
 
-echo '  - docker exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"'
-echo
-docker $DOCKER_PARAM exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
+# echo '  - docker exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"'
+# echo
+# docker $DOCKER_PARAM exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
 
 docker-compose -f local-dev.yml down
 

@@ -2,8 +2,55 @@
 
 source env-files/use-local-irods.env
 
+# Install OpenSSH iproute2 and jq on ${HS_USER_ZONE_HOST}
+echo "INFO: running apt-get update on ${HS_USER_ZONE_HOST}"
+docker exec ${HS_USER_ZONE_HOST} sh -c "apt-get update"
+echo "[root@${HS_USER_ZONE_HOST}]$ apt-get install -y iproute2 jq"
+docker exec ${HS_USER_ZONE_HOST} sh -c "apt-get install -y iproute2 jq"
+
+# add irods_environment.json file for rods user
+jq -n --arg h "${HS_USER_ZONE_HOST}" --arg p ${IRODS_PORT} --arg z "${HS_USER_IRODS_ZONE}" --arg n "${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}" '{"irods_host": $h, "irods_port": 1247, "irods_zone_name": $z, "irods_user_name": $n}' > env-files/rods@${HS_USER_ZONE_HOST}.json
+docker cp env-files/rods@${HS_USER_ZONE_HOST}.json ${HS_USER_ZONE_HOST}:/home/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}/.irods/irods_environment.json
+docker exec ${HS_USER_ZONE_HOST} chown ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}:${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} /home/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}/.irods/irods_environment.json
+
+# TODO: is this necessary?
+# add irods_environment.json file for root
+docker exec ${HS_USER_ZONE_HOST} mkdir -p /root/.irods
+docker cp env-files/rods@${HS_USER_ZONE_HOST}.json ${HS_USER_ZONE_HOST}:/root/.irods/irods_environment.json
+
 echo "echo rods | iinit" | $RUN_ON_DATA
 echo "echo rods | iinit" | $RUN_ON_USER
+
+echo "INFO: Install OpenSSH on ${HS_USER_ZONE_HOST}"
+echo "[root@${HS_USER_ZONE_HOST}]$ apt-get update"
+docker exec ${HS_USER_ZONE_HOST} sh -c "apt-get update"
+echo "[root@${HS_USER_ZONE_HOST}]$ apt-get install -y openssh-client openssh-server && mkdir /var/run/sshd && sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd && /etc/init.d/ssh restart"
+docker exec ${HS_USER_ZONE_HOST} sh -c "apt-get install -y openssh-client openssh-server && mkdir /var/run/sshd && sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd && /etc/init.d/ssh restart"
+# TODO: modify for key auth
+
+# Create Linux user ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} on ${HS_USER_ZONE_HOST}
+echo "INFO: Create Linux user ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} on ${HS_USER_ZONE_HOST}"
+echo "[root@${HS_USER_ZONE_HOST}]$ useradd -m -p ${LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE} -s /bin/bash ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}"
+docker exec ${HS_USER_ZONE_HOST} sh -c "useradd -m -p ${LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE} -s /bin/bash ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}"
+echo "[root@${HS_USER_ZONE_HOST}]$ cp create_user.sh delete_user.sh /home/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}"
+docker cp create_user.sh ${HS_USER_ZONE_HOST}:/home/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}
+docker cp delete_user.sh ${HS_USER_ZONE_HOST}:/home/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}
+docker exec ${HS_USER_ZONE_HOST} chown -R ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}:${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} /home/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}
+docker exec ${HS_USER_ZONE_HOST} sh -c "echo "${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}":"${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}" | chpasswd"
+# TODO: gen and copy the public key for pka
+
+# Make ${IRODS_HOST} and ${HS_USER_ZONE_HOST} aware of each other via /etc/hosts
+echo "INFO: update /etc/hosts"
+ICAT1IP=$(docker exec ${IRODS_HOST} /sbin/ip -f inet -4 -o addr | grep eth | cut -d '/' -f 1 | rev | cut -d ' ' -f 1 | rev)
+ICAT2IP=$(docker exec ${HS_USER_ZONE_HOST} /sbin/ip -f inet -4 -o addr | grep eth | cut -d '/' -f 1 | rev | cut -d ' ' -f 1 | rev)
+echo "[root@${IRODS_HOST}]$ echo \"'${ICAT2IP}' ${HS_USER_ZONE_HOST}\" >> /etc/hosts"
+docker exec ${IRODS_HOST} sh -c 'echo "'${ICAT2IP}' '${HS_USER_ZONE_HOST}'" >> /etc/hosts'
+echo "[root@${HS_USER_ZONE_HOST}]$ echo \"'${ICAT1IP}' ${IRODS_HOST}\" >> /etc/hosts"
+docker exec ${HS_USER_ZONE_HOST} sh -c 'echo "'${ICAT1IP}' '${IRODS_HOST}'" >> /etc/hosts'
+
+# Generate .env files for rods@${IRODS_HOST} and rods@${HS_USER_ZONE_HOST}
+printf "IRODS_HOST=${ICAT1IP}\nIRODS_PORT=${IRODS_PORT}\nIRODS_USER_NAME=rods\nIRODS_ZONE_NAME=${IRODS_ZONE}\nIRODS_PASSWORD=rods" > env-files/rods@${IRODS_HOST}.env
+printf "IRODS_HOST=${ICAT2IP}\nIRODS_PORT=1247\nIRODS_USER_NAME=rods\nIRODS_ZONE_NAME=${HS_USER_IRODS_ZONE}\nIRODS_PASSWORD=rods" > env-files/rods@${HS_USER_ZONE_HOST}.env
 
 echo "INFO: Federate ${IRODS_ZONE} with ${HS_USER_IRODS_ZONE}"
 
@@ -44,8 +91,6 @@ echo "iadmin mkuser ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} rodsadmin" | $RUN_ON_US
 echo " - iadmin mkuser ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} rodsadmin"
 echo "iadmin moduser ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} password ${LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE}" | $RUN_ON_USER
 echo " - iadmin moduser ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} password ${LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE}"
-# echo "ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N '' -C 'hsuserproxy@${HS_USER_ZONE_HOST}'" | $RUN_ON_USER
-# echo " - ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N '' -C 'hsuserproxy@${HS_USER_ZONE_HOST}'"
 
 
 echo "------------------------------------------------------------"
