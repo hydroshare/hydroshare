@@ -139,9 +139,11 @@ class UserProfileView(TemplateView):
         else:
             quota_form = QuotaRequestForm()
         uq = UserQuota.objects.filter(user=u).first()
+        message = ""
+        quota_data = {}
         if uq:
             quota_data = uq.get_quota_data()
-        message = uq.get_quota_message(quota_data)
+            message = uq.get_quota_message(quota_data)
         return {
             "profile_user": u,
             "resources": resources,
