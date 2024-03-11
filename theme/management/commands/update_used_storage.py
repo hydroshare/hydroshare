@@ -16,11 +16,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         errors = {}
-        users = User.objects.all()
+        users = User.objects.filter(is_active=True, is_superuser=False)
         count = users.count()
         for i, u in enumerate(users, start=0):
             i += 1
-            if UserQuota.objects.filter(user=u).exists() and u.is_active and not u.is_superuser:
+            if UserQuota.objects.filter(user=u).exists():
                 count_string = f"{i}/{count}:"
                 profile = f"{current_site_url()}/user/{u.id}"
                 try:
