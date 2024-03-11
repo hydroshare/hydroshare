@@ -267,7 +267,7 @@ def fix_resourcefile_duplicates(dry_run=False, logger=None, get_model=False):
 def check_irods_files(resource, stop_on_error=False, log_errors=True,
                       echo_errors=False, return_errors=False,
                       sync_ispublic=False, clean_irods=False, clean_django=False,
-                      dry_run=False, user=None):
+                      dry_run=False, user=None, ingest_from_irods=False):
     """Check whether files in resource.files and on iRODS agree.
 
     :param resource: resource to check
@@ -279,6 +279,10 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
            and AVU isPublic
     :param clean_irods: whether to delete files in iRODs that are not in Django
     :param clean_django: whether to delete files in Django that are not in iRODs
+    :param ingest_from_irods: whether to ingest files missing in Django from iRODS
+    :param dry_run: whether to make no changes to the system
+    :param user: the user to attribute changes to, if any
+    :return: a tuple (errors, ecount, dangling_in_django, missing_in_django)
     """
     from hs_core.hydroshare.resource import delete_resource_file
 
@@ -355,13 +359,14 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
                         raise ValidationError(msg)
 
         # Step 4: does every iRODS file correspond to a record in files?
-        should_clean = clean_irods and not dry_run
+        should_del_irods = clean_irods and not dry_run
         error2, missing_in_django = __check_irods_directory(resource, resource.file_path, logger,
                                                             stop_on_error=stop_on_error,
                                                             log_errors=log_errors,
                                                             echo_errors=echo_errors,
                                                             return_errors=return_errors,
-                                                            clean=should_clean)
+                                                            delete_irods=should_del_irods,
+                                                            ingest_from_irods=ingest_from_irods)
         errors.extend(error2)
         ecount += missing_in_django
 
@@ -438,13 +443,15 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
 def __check_irods_directory(resource, dir, logger,
                             stop_on_error=False, log_errors=True,
                             echo_errors=False, return_errors=False,
-                            clean=False):
+                            delete_irods=False, ingest_from_irods=False):
     """List a directory and check files there for conformance with django ResourceFiles.
 
     :param stop_on_error: whether to raise a ValidationError exception on first error
     :param log_errors: whether to log errors to Django log
     :param echo_errors: whether to print errors on stdout
     :param return_errors: whether to collect errors in an array and return them.
+    :param delete_irods: whether to delete files in iRODs that are not in Django
+    :ingest_from_irods: whether to ingest files missing in Django from iRODS
 
     """
     errors = []
@@ -452,6 +459,7 @@ def __check_irods_directory(resource, dir, logger,
     istorage = resource.get_irods_storage()
     try:
         listing = istorage.listdir(dir)
+        need_to_ingest = False
         for fname in listing[1]:  # files
             # do not use os.path.join because fname might contain unicode characters
             fullpath = dir + '/' + fname
@@ -473,13 +481,15 @@ def __check_irods_directory(resource, dir, logger,
                 ecount += 1
                 msg = "check_irods_files: file {} in iRODs does not exist in Django"\
                     .format(fullpath)
-                if clean:
+                if delete_irods:
                     try:
                         istorage.delete(fullpath)
                         msg += " (DELETED FROM IRODS)"
                     except SessionException as ex:
                         msg += ": (CANNOT DELETE: {})"\
                             .format(ex.stderr)
+                if ingest_from_irods:
+                    need_to_ingest = True
                 if echo_errors:
                     print(msg)
                 if log_errors:
@@ -488,17 +498,26 @@ def __check_irods_directory(resource, dir, logger,
                     errors.append(msg)
                 if stop_on_error:
                     raise ValidationError(msg)
+        if need_to_ingest:
+            error2, ecount2 = ingest_irods_files(resource, logger,
+                                                 stop_on_error=stop_on_error,
+                                                 echo_errors=echo_errors,
+                                                 log_errors=log_errors,
+                                                 return_errors=return_errors)
+            errors.extend(error2)
+            ecount += ecount2
 
         for dname in listing[0]:  # directories
             # do not use os.path.join because paths might contain unicode characters!
-            error2, ecount2 = __check_irods_directory(resource, dir + '/' + dname, logger,
+            error3, ecount3 = __check_irods_directory(resource, dir + '/' + dname, logger,
                                                       stop_on_error=stop_on_error,
                                                       echo_errors=echo_errors,
                                                       log_errors=log_errors,
                                                       return_errors=return_errors,
-                                                      clean=clean)
-            errors.extend(error2)
-            ecount += ecount2
+                                                      delete_irods=delete_irods,
+                                                      ingest_from_irods=ingest_from_irods)
+            errors.extend(error3)
+            ecount += ecount3
 
     except SessionException:
         pass  # not an error not to have a file directory.
@@ -745,7 +764,8 @@ def repair_resource(resource, logger, dry_run=False, user=None):
                                                                            clean_django=True,
                                                                            sync_ispublic=True,
                                                                            dry_run=dry_run,
-                                                                           user=user)
+                                                                           user=user,
+                                                                           ingest_from_irods=True)
     if ecount:
         print("... affected resource {} has type {}, title '{}'"
               .format(resource.short_id, resource.resource_type,
