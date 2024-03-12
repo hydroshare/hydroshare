@@ -401,7 +401,9 @@ class UserQuota(models.Model):
 
         if percent >= 100 and not grace:
             # This would indicate that the grace period has not been set even though the user went over quota.
-            # This should not happen.
+            # This can only happen in a race condition where the quota microservice is still in the process of updating
+            self.start_grace_period(qmsg.grace_period)
+            grace = self.grace_period_ends
             logger.error(f"User {self.user.username} went over quota but grace period was not set.")
 
         status = QuotaStatus.INFO

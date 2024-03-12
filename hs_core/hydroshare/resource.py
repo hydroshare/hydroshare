@@ -164,7 +164,10 @@ def update_quota_usage(username):
                 # reset grace period when user quota exceeds hard limit
                 uq.reset_grace_period()
             # send notification to user in the cases of exceeding soft limit or hard limit
-            tasks.send_user_quota_notification.apply_async((user.pk))
+            # only send notificaiton if the quota status changed
+            # this avoids sending multiple notifications when files are changed but the status does not change
+            if original_quota_data["status"] != updated_quota_data["status"]:
+                tasks.send_user_quota_notification.apply_async((user.pk))
         uq.check_if_userzone_quota_enforcement_is_bypassed(user, original_quota_data, updated_quota_data)
 
 
