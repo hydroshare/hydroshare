@@ -539,10 +539,6 @@ class QuotaRequestForm(ModelForm):
     class Meta:
         model = QuotaRequest
         fields = ["justification", "storage"]
-        labels = {
-            "justification": _("Enter justification for more quota"),
-            "storage": _("How much more storage to you require? (GB)"),
-        }
 
     def __init__(self, *args, **kwargs):
         super(QuotaRequestForm, self).__init__(*args, **kwargs)

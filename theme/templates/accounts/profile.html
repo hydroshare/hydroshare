@@ -974,7 +974,19 @@
                                 <h4 class="modal-title" id="myModalLabel">Request Additional HydroShare Quota</h4>
                             </div>
                             <div class="modal-body">
-                                {{ quota_form.as_p }}
+                                <form action="{% url 'quota_request' %}" method="post">
+                                    {% csrf_token %}
+                                <div class="form-group control-group has-space-top">
+                                    <label for="id_justification">Justification for additional quota</label>    
+                                    {{ quota_form.justification }}
+                                </div>
+                                <div class="form-group control-group has-space-top">
+                                    <div class="input-group">
+                                        <span class="input-group-addon" data-toggle="tooltip" data-placement="auto" title="How much more storage do you require?">Storage</span>
+                                        {{ quota_form.storage }}
+                                        <span class="input-group-addon">GB</span>
+                                    </div>
+                                </div>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -1013,6 +1025,9 @@
     }
     .quota {
         margin-bottom: 0.5em;
+    }
+    #manage-quota-dialog .modal-footer {
+        margin-top: 0;
     }
 
   </style>
