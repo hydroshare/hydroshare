@@ -603,27 +603,85 @@ def __ingest_irods_directory(resource,
     try:
         listing = istorage.listdir(dir)
         for fname in listing[1]:  # files
-            # do not use os.path.join because fname might contain unicode characters
-            fullpath = dir + '/' + fname
-            found = False
-            for res_file in resource.files.all():
-                if res_file.get_storage_path(resource=resource) == fullpath:
-                    found = True
-                    break
+            try:
+                # do not use os.path.join because fname might contain unicode characters
+                fullpath = dir + '/' + fname
+                found = False
+                for res_file in resource.files.all():
+                    if res_file.get_storage_path(resource=resource) == fullpath:
+                        found = True
+                        break
 
-            if not found:
-                if resource.is_metadata_xml_file(fullpath):
-                    print("Skipping {} because it is a metadata XML file.".format(fullpath))
-                    continue
-                if resource.is_collection_list_csv(fullpath):
-                    print("Skipping {} because it is a collection .csv file.".format(fullpath))
-                    continue
-                if resource.is_schema_json_file(fullpath):
-                    print("Skipping {} because it is a schema.json file.".format(fullpath))
-                    continue
-                ecount += 1
-                msg = "ingest_irods_files: file {} in iRODs does not exist in Django (INGESTING)"\
-                    .format(fullpath)
+                if not found:
+                    if resource.is_metadata_xml_file(fullpath):
+                        print("Skipping {} because it is a metadata XML file.".format(fullpath))
+                        continue
+                    if resource.is_collection_list_csv(fullpath):
+                        print("Skipping {} because it is a collection .csv file.".format(fullpath))
+                        continue
+                    if resource.is_schema_json_file(fullpath):
+                        print("Skipping {} because it is a schema.json file.".format(fullpath))
+                        continue
+                    ecount += 1
+                    msg = "ingest_irods_files: file {} in iRODs does not exist in Django (INGESTING)"\
+                        .format(fullpath)
+                    if echo_errors:
+                        print(msg)
+                    if log_errors:
+                        logger.error(msg)
+                    if return_errors:
+                        errors.append(msg)
+                    if stop_on_error:
+                        raise ValidationError(msg)
+                    # TODO: does not ingest logical file structure for composite resources
+                    res_file = link_irods_file_to_django(resource, fullpath)
+
+                    # Create required logical files as necessary
+                    if resource.resource_type == "CompositeResource":
+                        file_type = get_logical_file_type(res=resource,
+                                                          file_id=res_file.pk, fail_feedback=False)
+                        if not res_file.has_logical_file and file_type is not None:
+                            msg = "ingest_irods_files: setting required logical file for {}"\
+                                .format(fullpath)
+                            if echo_errors:
+                                print(msg)
+                            if log_errors:
+                                logger.error(msg)
+                            if return_errors:
+                                errors.append(msg)
+                            if stop_on_error:
+                                raise ValidationError(msg)
+                            set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
+                                                  fail_feedback=False)
+                        elif res_file.has_logical_file and file_type is not None and \
+                                not isinstance(res_file.logical_file, file_type):
+                            msg = "ingest_irods_files: logical file for {} has type {}, should be {}"\
+                                .format(res_file.get_storage_path(resource=resource),
+                                        type(res_file.logical_file).__name__,
+                                        file_type.__name__)
+                            if echo_errors:
+                                print(msg)
+                            if log_errors:
+                                logger.error(msg)
+                            if return_errors:
+                                errors.append(msg)
+                            if stop_on_error:
+                                raise ValidationError(msg)
+                        elif res_file.has_logical_file and file_type is None:
+                            msg = "ingest_irods_files: logical file for {} has type {}, not needed"\
+                                .format(res_file.get_storage_path(resource=resource),
+                                        type(res_file.logical_file).__name__)
+                            if echo_errors:
+                                print(msg)
+                            if log_errors:
+                                logger.error(msg)
+                            if return_errors:
+                                errors.append(msg)
+                            if stop_on_error:
+                                raise ValidationError(msg)
+            except Exception as ex:
+                msg = "ingest_irods_files: exception ingesting file {}: {}"\
+                    .format(fname, ex)
                 if echo_errors:
                     print(msg)
                 if log_errors:
@@ -632,51 +690,9 @@ def __ingest_irods_directory(resource,
                     errors.append(msg)
                 if stop_on_error:
                     raise ValidationError(msg)
-                # TODO: does not ingest logical file structure for composite resources
-                res_file = link_irods_file_to_django(resource, fullpath)
-
-                # Create required logical files as necessary
-                if resource.resource_type == "CompositeResource":
-                    file_type = get_logical_file_type(res=resource,
-                                                      file_id=res_file.pk, fail_feedback=False)
-                    if not res_file.has_logical_file and file_type is not None:
-                        msg = "ingest_irods_files: setting required logical file for {}"\
-                              .format(fullpath)
-                        if echo_errors:
-                            print(msg)
-                        if log_errors:
-                            logger.error(msg)
-                        if return_errors:
-                            errors.append(msg)
-                        if stop_on_error:
-                            raise ValidationError(msg)
-                        set_logical_file_type(res=resource, user=None, file_id=res_file.pk,
-                                              fail_feedback=False)
-                    elif res_file.has_logical_file and file_type is not None and \
-                            not isinstance(res_file.logical_file, file_type):
-                        msg = "ingest_irods_files: logical file for {} has type {}, should be {}"\
-                            .format(res_file.get_storage_path(resource=resource),
-                                    type(res_file.logical_file).__name__,
-                                    file_type.__name__)
-                        if echo_errors:
-                            print(msg)
-                        if log_errors:
-                            logger.error(msg)
-                        if return_errors:
-                            errors.append(msg)
-                        if stop_on_error:
-                            raise ValidationError(msg)
-                    elif res_file.has_logical_file and file_type is None:
-                        msg = "ingest_irods_files: logical file for {} has type {}, not needed"\
-                            .format(res_file.get_storage_path(resource=resource), type(res_file.logical_file).__name__)
-                        if echo_errors:
-                            print(msg)
-                        if log_errors:
-                            logger.error(msg)
-                        if return_errors:
-                            errors.append(msg)
-                        if stop_on_error:
-                            raise ValidationError(msg)
+                else:
+                    # Continue to next file
+                    continue
 
         for dname in listing[0]:  # directories
             # do not use os.path.join because fname might contain unicode characters
