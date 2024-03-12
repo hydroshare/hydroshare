@@ -569,6 +569,7 @@ def send_user_quota_notification(user_pk):
 
     ori_qm = uq.get_quota_message()
     msg_str += ori_qm
+    msg_str += 'See https://help.hydroshare.org/about-hydroshare/policies/quota/ for more information.'
 
     msg_str += '\n\nHydroShare Support'
     subject = 'HydroShare Quota Notification'

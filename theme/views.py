@@ -143,7 +143,7 @@ class UserProfileView(TemplateView):
         quota_data = {}
         if uq:
             quota_data = uq.get_quota_data()
-            message = uq.get_quota_message(quota_data)
+            message = uq.get_quota_message(quota_data, include_quota_usage_info=False)
         return {
             "profile_user": u,
             "resources": resources,

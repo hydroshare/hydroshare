@@ -382,12 +382,12 @@
                                                         <span class="text-danger">You are over your allocated quota by {{ qd.percent_over|floatformat:"1" }}%</span>
                                                     {% else %}
                                                         <div class="progress">
-                                                            <div class="progress-bar progress-bar-success" 
+                                                            <div class="progress-bar {%if qd.percent < 85%}progress-bar-success{%else%}progress-bar-warning{%endif%}" 
                                                                 style="width: {{ qd.uz_percent }}%" 
                                                                 title="{{ qd.uz_percent|floatformat:"1" }}% used by userZone">
                                                                 <span class="sr-only">{{ qd.uz_percent|floatformat:"1" }}% of quota used by userZone</span>
                                                             </div>
-                                                            <div class="progress-bar progress-bar-info" 
+                                                            <div class="progress-bar {%if qd.percent < 85%}progress-bar-info{%else%}progress-bar-danger{%endif%}" 
                                                                 style="width: {{ qd.dz_percent }}%"
                                                                 title="{{ qd.dz_percent|floatformat:"1" }}% used by dataZone">
                                                                 <span class="sr-only">{{ qd.dz_percent|floatformat:"1" }}% of quota is used by dataZone</span>

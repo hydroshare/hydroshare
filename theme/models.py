@@ -194,20 +194,13 @@ class QuotaMessage(models.Model):
     # enforce_content_prepend prepends the content to form an enforcement message to inform users
     # after grace period or when they are over hard limit quota
     warning_content_prepend = models.TextField(
-        default="Your quota for HydroShare resources is "
-        "{allocated}{unit}. You "
-        "currently have resources that consume "
-        "{used}{unit}, {percent}% of your quota. "
-        "Once your quota reaches 100% you will no "
+        default="Once your quota reaches 100% you will no "
         "longer be able to create new resources in "
         "HydroShare. "
     )
     grace_period_content_prepend = models.TextField(
         default="You have exceeded your HydroShare "
-        "quota. Your quota for HydroShare "
-        "resources is {allocated}{unit}. You currently have "
-        "resources that consume {used}{unit}, "
-        "{percent}% of your quota. You have a "
+        "quota. You have a "
         "grace period until {cut_off_date} to "
         "reduce your use to below your quota, "
         "or to acquire additional quota, after "
@@ -217,19 +210,18 @@ class QuotaMessage(models.Model):
     enforce_content_prepend = models.TextField(
         default="You can not take further action "
         "because you have exceeded your "
-        "quota. Your quota for HydroShare resources "
-        "is {allocated}{unit}. You "
-        "currently have resources that consume "
-        "{used}{unit}, {percent}% of your quota. "
+        "quota. "
+    )
+    quota_usage_info = models.TextField(
+        default="Your quota for HydroShare resources is {allocated}{unit}. "
+        "You currently have resources that consume {used}{unit}, {percent}% of your quota. "
     )
     content = models.TextField(
         default="You can request additional quota, from your "
         "User Profile. We will try to accommodate "
         "reasonable requests for additional quota. If you have a "
         "large quota request you may need to contribute toward the "
-        "costs of providing the additional space you need. See "
-        "https://help.hydroshare.org/about-hydroshare/policies/"
-        "quota/ for more information about the quota policy."
+        "costs of providing the additional space you need. "
     )
     # quota soft limit percent value for starting to show quota usage warning. Default is 80%
     soft_limit_percent = models.IntegerField(default=80)
@@ -437,11 +429,10 @@ class UserQuota(models.Model):
                    }
         return uq_data
 
-    def get_quota_message(self, quota_data=None):
+    def get_quota_message(self, quota_data=None, include_quota_usage_info=True):
         """
         get quota warning, grace period, or enforcement message to email users and display
         when the user logins in and display on user profile page
-        :param user: The User instance
         :param quota_data: dictionary containing quota data
         :return: quota message string
         """
@@ -457,17 +448,23 @@ class UserQuota(models.Model):
         rounded_percent = round(percent, 2)
         rounded_used_val = round(used, 4)
 
-        if quota_status == QuotaStatus.GRACE_PERIOD:
+        if quota_status == QuotaStatus.ENFORCEMENT:
             # return quota enforcement message
-            msg_template_str = f'{qmsg.enforce_content_prepend} {qmsg.content}\n'
+            if include_quota_usage_info:
+                msg_template_str = f'{qmsg.enforce_content_prepend} {qmsg.quota_usage_info} {qmsg.content}\n'
+            else:
+                msg_template_str = f'{qmsg.enforce_content_prepend} {qmsg.content}\n'
             return_msg += msg_template_str.format(used=rounded_used_val,
                                                   unit=self.unit,
                                                   allocated=self.allocated_value,
                                                   zone=self.zone,
                                                   percent=rounded_percent)
-        elif quota_status == QuotaStatus.ENFORCEMENT:
+        elif quota_status == QuotaStatus.GRACE_PERIOD:
             # return quota grace period message
-            msg_template_str = f'{qmsg.grace_period_content_prepend} {qmsg.content}\n'
+            if include_quota_usage_info:
+                msg_template_str = f'{qmsg.grace_period_content_prepend} {qmsg.quota_usage_info} {qmsg.content}\n'
+            else:
+                msg_template_str = f'{qmsg.grace_period_content_prepend} {qmsg.content}\n'
             return_msg += msg_template_str.format(used=rounded_used_val,
                                                   unit=self.unit,
                                                   allocated=self.allocated_value,
@@ -476,7 +473,10 @@ class UserQuota(models.Model):
                                                   cut_off_date=grace)
         elif quota_status == QuotaStatus.WARNING:
             # return quota warning message
-            msg_template_str = f'{qmsg.warning_content_prepend} {qmsg.content}\n'
+            if include_quota_usage_info:
+                msg_template_str = f'{qmsg.quota_usage_info} {qmsg.warning_content_prepend} {qmsg.content}\n'
+            else:
+                msg_template_str = f'{qmsg.warning_content_prepend} {qmsg.content}\n'
             return_msg += msg_template_str.format(used=rounded_used_val,
                                                   unit=self.unit,
                                                   allocated=self.allocated_value,
@@ -484,11 +484,15 @@ class UserQuota(models.Model):
                                                   percent=rounded_percent)
         else:
             # return quota informational message
-            return_msg += qmsg.warning_content_prepend.format(allocated=self.allocated_value,
-                                                              unit=self.unit,
-                                                              used=rounded_used_val,
-                                                              zone=self.zone,
-                                                              percent=rounded_percent)
+            if include_quota_usage_info:
+                msg_template_str = f'{qmsg.quota_usage_info} {qmsg.warning_content_prepend}\n'
+            else:
+                msg_template_str = f'{qmsg.warning_content_prepend}\n'
+            return_msg += msg_template_str.format(allocated=self.allocated_value,
+                                                  unit=self.unit,
+                                                  used=rounded_used_val,
+                                                  zone=self.zone,
+                                                  percent=rounded_percent)
         return return_msg
 
 
