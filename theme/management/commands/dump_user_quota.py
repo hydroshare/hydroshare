@@ -112,4 +112,5 @@ class Command(BaseCommand):
 
         df = pd.DataFrame(data, columns=fields)
         df.to_csv(output_file_name_with_path, index=False)
-        print(df)
+        with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+            print(df)
