@@ -393,18 +393,18 @@
                                                                 <span class="sr-only">{{ qd.dz_percent|floatformat:"1" }}% of quota is used by dataZone</span>
                                                             </div>
                                                         </div>
-                                                        <span>{{ qd.remaining }}{{ qd.unit }} free of {{ qd.allocated }}{{ qd.unit }}</span>
+                                                        <span>{{ qd.remaining }} {{ qd.unit }} free of {{ qd.allocated }} {{ qd.unit }}</span>
                                                     {% endif %}
                                                 </div>
                                                 {% endwith %}
                                                 {% if quota_message %}
                                                     <div class="alert alert-info">
                                                         {{ quota_message }}
-                                                        Additional Quota information can be found <a href="https://help.hydroshare.org/about-hydroshare/policies/quota/" target="_blank">here.</a>
+                                                        Read more about <strong><a href="https://help.hydroshare.org/about-hydroshare/policies/quota/" target="_blank">Additional Quota</a></strong>
                                                     </div>
                                                 {% endif %}
                                                 {% if not quota_requests %}
-                                                    <button id="quota-request-storage" type="button" data-toggle="modal" data-target="#manage-quota-dialog" class="btn btn-primary has-space-bottom">
+                                                    <button id="quota-request-storage" type="button" data-toggle="modal" data-target="#manage-quota-dialog" class="btn btn-default has-space-bottom">
                                                         <i class="fa fa-plus" aria-hidden="true"></i> Request additional storage
                                                     </button>
                                                 {% else %}
@@ -1009,7 +1009,7 @@
         pointer-events: all !important;
     }
     .progress {
-        margin-bottom: 0;
+        margin-bottom: 0.5em;
     }
     .quota {
         margin-bottom: 0.5em;
