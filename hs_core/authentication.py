@@ -72,7 +72,6 @@ def provider_logout(request):
     return logout_url
 
 
-
 KEYCLOAK = KeycloakOpenID(
     server_url=settings.OIDC_KEYCLOAK_URL,
     client_id=settings.OIDC_RP_CLIENT_ID,
@@ -95,7 +94,7 @@ class BasicOIDCAuthentication(BaseAuthentication):
         # authenticate against keycloak
         try:
             KEYCLOAK.token(decoded_username, decoded_password)
-        except (KeycloakAuthenticationError, KeycloakPostError) as err:
+        except (KeycloakAuthenticationError, KeycloakPostError):
             return None
 
         user = User.objects.get(username=decoded_username)
