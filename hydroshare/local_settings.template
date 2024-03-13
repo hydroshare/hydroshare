@@ -213,8 +213,6 @@ ENABLE_OIDC_AUTHENTICATION = False
 # OIDC_KEYCLOAK_REALM = "CUAHSI"
 
 DEFAULT_AUTHENTICATION_CLASSES = (
-    # enable BasicOIDCAuthentication when using OIDC!
-    # "hs_core.authentication.BasicOIDCAuthentication",
     "rest_framework.authentication.BasicAuthentication",
     "rest_framework.authentication.SessionAuthentication",
     "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
