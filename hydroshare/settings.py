@@ -178,11 +178,6 @@ AUTHENTICATION_BACKENDS = [
     "theme.backends.CaseInsensitiveMezzanineBackend",
 ]
 
-# Wether to enable OIDC auth via mozilla_django_oidc
-# Default false to enable local development
-# Set to true in local_settings if desired for specific deployment
-ENABLE_OIDC_AUTHENTICATION = False
-
 # If OIDC is enabled, the following additional settings should be defined in local_settings
 # OIDC_OP_AUTHORIZATION_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/auth"
 # OIDC_OP_TOKEN_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/token"
@@ -542,6 +537,8 @@ ACCOUNTS_PROFILE_MODEL = "theme.UserProfile"
 CRISPY_TEMPLATE_PACK = "bootstrap"
 
 DEFAULT_AUTHENTICATION_CLASSES = (
+    # enable BasicOIDCAuthentication when using OIDC!
+    #"hs_core.authentication.BasicOIDCAuthentication",
     "rest_framework.authentication.BasicAuthentication",
     "rest_framework.authentication.SessionAuthentication",
     "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
@@ -855,7 +852,3 @@ MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
 )
 
 BULK_UPDATE_CREATE_BATCH_SIZE = 1000
-
-if ENABLE_OIDC_AUTHENTICATION:
-    DEFAULT_AUTHENTICATION_CLASSES = ("hs_core.authentication.BasicOIDCAuthentication", "mozilla_django_oidc.contrib.drf.OIDCAuthentication",) + DEFAULT_AUTHENTICATION_CLASSES
-    AUTHENTICATION_BACKENDS.append("hs_core.authentication.HydroShareOIDCAuthenticationBackend")
