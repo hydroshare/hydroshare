@@ -472,7 +472,6 @@ MIDDLEWARE = (
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
     "hs_core.robots.RobotFilter",
     "hs_tracking.middleware.Tracking",
-    "hs_core.middleware.SunsetMiddleware",
 )
 
 # security settings
@@ -860,3 +859,4 @@ BULK_UPDATE_CREATE_BATCH_SIZE = 1000
 if ENABLE_OIDC_AUTHENTICATION:
     DEFAULT_AUTHENTICATION_CLASSES += ("mozilla_django_oidc.contrib.drf.OIDCAuthentication",)
     AUTHENTICATION_BACKENDS.append("hs_core.authentication.HydroShareOIDCAuthenticationBackend")
+    AUTHENTICATION_BACKENDS.append("hs_core.authentication.BasicOIDCAuthentication")

@@ -1,9 +1,17 @@
 import requests
+import base64
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 from hs_core.hydroshare import create_account
 from django.urls import reverse, resolve
 from django.conf import settings
 from django.utils.http import urlencode
+from django.contrib.auth.models import User
+from rest_framework.authentication import BaseAuthentication
+from keycloak.exceptions import (
+    KeycloakAuthenticationError,
+    KeycloakPostError,
+)
+from keycloak.keycloak_openid import KeycloakOpenID
 
 
 class HydroShareOIDCAuthenticationBackend(OIDCAuthenticationBackend):
@@ -62,3 +70,33 @@ def provider_logout(request):
         else:
             logout_url = redirect_url
     return logout_url
+
+
+
+AUTH_HEADER = "HTTP_AUTHORIZATION"
+
+KEYCLOAK = KeycloakOpenID(
+    server_url=settings.OIDC_KEYCLOAK_URL,
+    client_id=settings.OIDC_RP_CLIENT_ID,
+    realm_name=settings.OIDC_KEYCLOAK_REALM,
+    client_secret_key=settings.OIDC_RP_CLIENT_SECRET,
+)
+
+class BasicOIDCAuthentication(BaseAuthentication):
+
+    def authenticate(self, request):
+        auth_type, value, *_ = request.META.get(AUTH_HEADER).split()
+        if not auth_type or auth_type != 'Basic':
+            return None
+
+        decoded_username, decoded_password = (
+            base64.b64decode(value).decode("utf-8").split(":")
+        )
+        # authenticate against keycloak
+        try:
+            KEYCLOAK.token(decoded_username, decoded_password)
+        except (KeycloakAuthenticationError, KeycloakPostError) as err:
+            return None
+
+        user = User.objects.get(username=decoded_username)
+        return (user, None)
