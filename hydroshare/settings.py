@@ -537,8 +537,7 @@ ACCOUNTS_PROFILE_MODEL = "theme.UserProfile"
 CRISPY_TEMPLATE_PACK = "bootstrap"
 
 DEFAULT_AUTHENTICATION_CLASSES = (
-    # enable BasicOIDCAuthentication when using OIDC!
-    #"hs_core.authentication.BasicOIDCAuthentication",
+    "hs_core.authentication.BasicOIDCAuthentication",
     "rest_framework.authentication.BasicAuthentication",
     "rest_framework.authentication.SessionAuthentication",
     "oauth2_provider.contrib.rest_framework.OAuth2Authentication",

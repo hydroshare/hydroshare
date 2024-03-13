@@ -209,6 +209,16 @@ ENABLE_OIDC_AUTHENTICATION = False
 # ALLOW_LOGOUT_GET_METHOD = True
 # LOGOUT_REDIRECT_URL = '/'
 # OIDC_OP_LOGOUT_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/logout"
+# OIDC_KEYCLOAK_URL = "https://auth.cuahsi.org/"
+# OIDC_KEYCLOAK_REALM = "CUAHSI"
+
+DEFAULT_AUTHENTICATION_CLASSES = (
+    # enable BasicOIDCAuthentication when using OIDC!
+    # "hs_core.authentication.BasicOIDCAuthentication",
+    "rest_framework.authentication.BasicAuthentication",
+    "rest_framework.authentication.SessionAuthentication",
+    "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
+)
 
 # The following two settings will logout of OIDC during signout
 # If these two settings are not enabled, 
