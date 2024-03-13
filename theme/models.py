@@ -380,7 +380,6 @@ class UserQuota(models.Model):
 
         Note that percents are in the range 0 to 100
         """
-        from theme.models import QuotaMessage
         qmsg = QuotaMessage.objects.first()
         if qmsg is None:
             qmsg = QuotaMessage.objects.create()
