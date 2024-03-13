@@ -73,8 +73,6 @@ def provider_logout(request):
 
 
 
-AUTH_HEADER = "HTTP_AUTHORIZATION"
-
 KEYCLOAK = KeycloakOpenID(
     server_url=settings.OIDC_KEYCLOAK_URL,
     client_id=settings.OIDC_RP_CLIENT_ID,
@@ -82,12 +80,14 @@ KEYCLOAK = KeycloakOpenID(
     client_secret_key=settings.OIDC_RP_CLIENT_SECRET,
 )
 
+
 class BasicOIDCAuthentication(BaseAuthentication):
 
     def authenticate(self, request):
-        auth_type, value, *_ = request.META.get(AUTH_HEADER).split()
-        if not auth_type or auth_type != 'Basic':
+        auth = request.headers.get('Authorization')
+        if not auth or 'Basic' not in auth:
             return None
+        _, value, *_ = request.headers.get('Authorization').split()
 
         decoded_username, decoded_password = (
             base64.b64decode(value).decode("utf-8").split(":")
@@ -99,4 +99,4 @@ class BasicOIDCAuthentication(BaseAuthentication):
             return None
 
         user = User.objects.get(username=decoded_username)
-        return (user, None)
+        return user
