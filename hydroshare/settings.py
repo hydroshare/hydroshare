@@ -199,6 +199,9 @@ AUTHENTICATION_BACKENDS = [
 # OIDC_OP_LOGOUT_URL_METHOD = 'hs_core.authentication.provider_logout'
 # OIDC_STORE_ID_TOKEN = True
 
+OIDC_KEYCLOAK_URL = "https://auth.cuahsi.org/"
+OIDC_KEYCLOAK_REALM = "CUAHSI"
+
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (
