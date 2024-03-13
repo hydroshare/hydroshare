@@ -21,6 +21,9 @@ from .icommands import (
     IRodsEnv,
 )
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 @deconstructible
 class IrodsStorage(Storage):
@@ -430,16 +433,21 @@ class IrodsStorage(Storage):
                 IrodsStorage.get_absolute_path_query(coll_name), file_name
             )
         )
+        logger.error("*" * 100 + "\nBeginning iquest query for size")
         stdout = self.session.run("iquest", None, "%s", qrystr)[0]
+        logger.error("!stdout: {}".format(stdout))
 
         if "CAT_NO_ROWS_FOUND" in stdout:
+            logger.error("CAT_NO_ROWS_FOUND in stdout")
             raise ValidationError(
                 "{} cannot be found in iRODS to retrieve " "file size".format(name)
             )
         # remove potential '\n' from stdout
         size_string = stdout.strip("0\n").replace("\n", "")
+        logger.error("!size_string: {}".format(size_string))
         try:
             ret = int(float(size_string))
+            logger.error("!ret: {}".format(ret))
             return ret
         except ValueError:
             return 0

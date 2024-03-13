@@ -8,6 +8,9 @@ from io import StringIO
 from django.conf import settings
 from collections import namedtuple
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class SessionException(Exception):
     def __init__(self, exitcode, stdout, stderr):
@@ -164,6 +167,8 @@ class Session(object):
         argList = [cmdStr]
         uargs = [str(x) for x in args]
         argList.extend(uargs)
+
+        logger.error("!Running iRODS command: {0}\n With environment: {1}".format(argList, myenv))
 
         stdin = None
         if data:
