@@ -99,4 +99,4 @@ class BasicOIDCAuthentication(BaseAuthentication):
             return None
 
         user = User.objects.get(username=decoded_username)
-        return user
+        return (user, None)
