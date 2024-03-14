@@ -178,6 +178,11 @@ AUTHENTICATION_BACKENDS = [
     "theme.backends.CaseInsensitiveMezzanineBackend",
 ]
 
+# Wether to enable OIDC auth via mozilla_django_oidc
+# Default false to enable local development
+# Set to true in local_settings if desired for specific deployment
+ENABLE_OIDC_AUTHENTICATION = False
+
 # If OIDC is enabled, the following additional settings should be defined in local_settings
 # OIDC_OP_AUTHORIZATION_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/auth"
 # OIDC_OP_TOKEN_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/token"
