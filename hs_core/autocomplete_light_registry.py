@@ -1,9 +1,6 @@
-# from autocomplete_light import shortcuts as autocomplete_light
 from dal import autocomplete
 from django.contrib.auth.models import Group, User
 from django.db.models import Q
-
-# TODO: Pabitra - need to add cleanup code once we make the autocomplete work
 
 
 class UserAutocompleteView(autocomplete.Select2QuerySetView):
@@ -18,8 +15,9 @@ class UserAutocompleteView(autocomplete.Select2QuerySetView):
                 | Q(first_name__istartswith=self.q)
                 | Q(last_name__istartswith=self.q)
             )
+            return qs
 
-        return qs
+        return qs.none()
 
     def get_result_label(self, item):
         label = " ".join(
@@ -41,61 +39,14 @@ class UserAutocompleteView(autocomplete.Select2QuerySetView):
         return label
 
 
-# class UserAutocomplete(forms.ModelForm):
-#     class Meta:
-#         model = User
-#         fields = ['id']
-#         widgets = {
-#             'id': autocomplete.ModelSelect2(url='user-autocomplete',
-#                                             attrs={'data-placeholder': 'Search by name or username',
-#                                                    'data-minimum-input-length': 1}
-#                                             )
-#         }
-
-
-# class UserAutocomplete(autocomplete.ModelSelect2):
-#     search_fields = ['username', 'first_name', 'last_name']
-#     split_words = True
-#
-#     def choices_for_request(self):
-#         self.choices = self.choices.filter(is_active=True)
-#         return super(UserAutocomplete, self).choices_for_request()
-#
-#     def choice_label(self, choice):
-#         label = " ".join([choice.first_name or "", choice.userprofile.middle_name or "", choice.last_name or ""])
-#
-#         if choice.userprofile.organization:
-#             if choice.first_name or choice.last_name:
-#                 label += ", "
-#             label += choice.userprofile.organization
-#
-#         if choice.username:
-#             label += "".join([" (", choice.username, ")"])
-#
-#         return label
-#
-#
-# autocomplete_light.register(User, UserAutocomplete)
-
-
 class GroupAutocompleteView(autocomplete.Select2QuerySetView):
     search_fields = ["name"]
 
     def get_queryset(self):
-        qs = Group.objects.all(gaccess__active=True).exclude(name="Hydroshare Author")
+        qs = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
 
         if self.q:
             qs = qs.filter(name__istartswith=self.q)
+            return qs
 
-        return qs
-
-
-# class GroupAutocomplete(autocomplete_light.AutocompleteModelBase):
-#     search_fields = ['name']
-#
-#     def choices_for_request(self):
-#         self.choices = self.choices.filter(gaccess__active=True).exclude(name='Hydroshare Author')
-#         return super(GroupAutocomplete, self).choices_for_request()
-#
-#
-# autocomplete_light.register(Group, GroupAutocomplete)
+        return qs.none()

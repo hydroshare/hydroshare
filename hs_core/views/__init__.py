@@ -2,9 +2,6 @@ import datetime
 import json
 import logging
 
-# from autocomplete_light import shortcuts as autocomplete_light
-# TODO: Pabitra - make this new version of autocomplete to work - may its JS files are not loading
-# TODO: Pabitra - need to add cleanup code once we make the autocomplete work
 from dal import autocomplete as dal_autocomplete
 from dateutil import tz
 from django import forms
@@ -55,8 +52,7 @@ from hs_core.hydroshare.resource import (METADATA_STATUS_INSUFFICIENT,
                                          METADATA_STATUS_SUFFICIENT)
 from hs_core.hydroshare.resource import \
     update_quota_usage as update_quota_usage_utility
-from hs_core.hydroshare.utils import (get_resource_by_shortkey,
-                                      resolve_request, resource_modified)
+from hs_core.hydroshare.utils import resolve_request, resource_modified
 from hs_core.models import (BaseResource, CoreMetaData, Subject,
                             TaskNotification, resource_processor)
 from hs_core.task_utils import (dismiss_task_by_id, get_all_tasks,
@@ -1613,92 +1609,62 @@ class GroupUpdateForm(GroupForm):
         self._set_privacy_level(group_to_update, privacy_level)
 
 
-# class PatchedChoiceWidget(autocomplete.ChoiceWidget):
-#     """Patching the render() function of ChoiceWidget class to work with Django 3.2"""
-#
-#     def __init__(
-#         self,
-#         autocomplete=None,
-#         widget_js_attributes=None,
-#         autocomplete_js_attributes=None,
-#         extra_context=None,
-#         registry=None,
-#         widget_template=None,
-#         widget_attrs=None,
-#         *args,
-#         **kwargs,
-#     ):
-#         super(PatchedChoiceWidget, self).__init__(
-#             autocomplete,
-#             widget_js_attributes,
-#             autocomplete_js_attributes,
-#             extra_context,
-#             registry,
-#             widget_template,
-#             widget_attrs,
-#             *args,
-#             **kwargs,
-#         )
-#
-#     def render(self, name, value, attrs=None, renderer=None):
-#         """Adding the 'renderer' parameter to fix the exception
-#         'render() got an unexpected keyword argument 'renderer'"""
-#
-#         return super(PatchedChoiceWidget, self).render(name, value, attrs)
-
-
 @processor_for(BaseResource)
 def add_generic_context(request, page):
+    # each of the following auto complete forms should have a unique form field name for the ModelChoiceField widget
+    # to work properly. if a page has more than one auto complete form, the form field name should be unique across all
+    # forms on the page. The form field name is used to generate the id for the input field in the form. if the form
+    # id is duplicate, the auto complete widget will not work properly.
     user = request.user
     user_zone_account_exist = hydroshare.utils.get_user_zone_status_info(user)
     user_widget = dal_autocomplete.ModelSelect2(
         url="user-autocomplete",
-        attrs={"id": "user", "data-placeholder": "Search by name or username"},
+        attrs={
+            "data-placeholder": "Search by name or username",
+            'data-minimum-input-length': 3
+        },
     )
 
     class AddUserForm(forms.Form):
-        user = forms.ModelChoiceField(
-            queryset=User.objects.filter(is_active=True).all(),
+        user_invite_to_group = forms.ModelChoiceField(
+            queryset=User.objects.none(),
             widget=user_widget,
-            # widget=PatchedChoiceWidget(
-            #     autocomplete="UserAutocomplete", attrs={"id": "user"}
-            # ),
         )
 
     class AddUserContriForm(forms.Form):
-        user = forms.ModelChoiceField(
-            User.objects.filter(is_active=True).all(),
+        contributor = forms.ModelChoiceField(
+            queryset=User.objects.none(),
             widget=user_widget,
-            # widget=PatchedChoiceWidget(
-            #     autocomplete="UserAutocomplete", attrs={"id": "user"}
-            # ),
         )
 
     class AddUserInviteForm(forms.Form):
         user = forms.ModelChoiceField(
-            User.objects.filter(is_active=True).all(),
+            queryset=User.objects.none(),
             widget=user_widget,
-            # widget=PatchedChoiceWidget(
-            #     autocomplete="UserAutocomplete", attrs={"id": "user"}
-            # ),
+        )
+
+    class AddUserResourcePermissionForm(forms.Form):
+        user_resource_permission = forms.ModelChoiceField(
+            queryset=User.objects.none(),
+            widget=user_widget,
         )
 
     class AddUserHSForm(forms.Form):
-        user = forms.ModelChoiceField(
-            User.objects.filter(is_active=True).all(),
+        author = forms.ModelChoiceField(
+            queryset=User.objects.none(),
             widget=user_widget,
-            # widget=PatchedChoiceWidget(
-            #     autocomplete="UserAutocomplete", attrs={"id": "user"}
-            # ),
         )
 
     class AddGroupForm(forms.Form):
         group = forms.ModelChoiceField(
-            Group.objects.filter(gaccess__active=True)
-            .exclude(name="Hydroshare Author")
-            .all(),
-            widget=dal_autocomplete.ModelSelect2(url="group-autocomplete"),
-            # widget=PatchedChoiceWidget(autocomplete="GroupAutocomplete"),
+            queryset=Group.objects.none(),
+            widget=dal_autocomplete.ModelSelect2(
+                url="group-autocomplete",
+                attrs={
+                    "data-placeholder": "Search by name",
+                    'data-minimum-input-length': 3
+                }
+            ),
         )
 
     return {
@@ -1706,8 +1672,10 @@ def add_generic_context(request, page):
         "add_view_invite_user_form": AddUserInviteForm(),
         "add_view_hs_user_form": AddUserHSForm(),
         "add_view_user_form": AddUserForm(),
+        "add_view_resource_permission_form": AddUserResourcePermissionForm(),
         # Reuse the same class AddGroupForm() leads to duplicated IDs.
         "add_view_group_form": AddGroupForm(),
+        # TODO: the following form is not used in any template - should be deleted
         "add_edit_group_form": AddGroupForm(),
         "user_zone_account_exist": user_zone_account_exist,
     }
@@ -2653,8 +2621,16 @@ class MyGroupsView(TemplateView):
 
 
 class AddUserForm(forms.Form):
-    user = forms.ModelChoiceField(
-        User.objects.all(), widget=dal_autocomplete.Select2(url="user-autocomplete")
+    user_widget = dal_autocomplete.ModelSelect2(
+        url="user-autocomplete",
+        attrs={
+            "data-placeholder": "Search by name or username",
+            'data-minimum-input-length': 3
+        },
+    )
+    user_invite_to_group = forms.ModelChoiceField(
+        queryset=User.objects.none(),
+        widget=user_widget,
     )
 
 
