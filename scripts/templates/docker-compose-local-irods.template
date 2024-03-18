@@ -35,8 +35,8 @@ hydroshare:
     SOLR_HOST: solr
     TMP: /hs_tmp
   volumes:
-    # hydroshare repository
-    - "HS_PATH:/hydroshare"
+    # hydroshare repository -- mounting as read only
+    - "HS_PATH:/hydroshare:ro"
     # pycharm debugging
     # - "/home/hydro/pycharm-debug:/pycharm-debug"
     # log files
