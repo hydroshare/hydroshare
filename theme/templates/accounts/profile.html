@@ -382,15 +382,16 @@
                                                         <span class="text-danger">You are over your allocated quota by {{ qd.percent_over|floatformat:"1" }}%</span>
                                                     {% else %}
                                                         <div class="progress">
-                                                            <div class="progress-bar {%if qd.percent < 85%}progress-bar-success{%else%}progress-bar-warning{%endif%}" 
-                                                                style="width: {{ qd.uz_percent }}%" 
-                                                                title="{{ qd.uz_percent|floatformat:"1" }}% used by userZone">
-                                                                <span class="sr-only">{{ qd.uz_percent|floatformat:"1" }}% of quota used by userZone</span>
-                                                            </div>
-                                                            <div class="progress-bar {%if qd.percent < 85%}progress-bar-info{%else%}progress-bar-danger{%endif%}" 
+                                                            <div class="progress-bar {%if qd.percent < 70%}progress-bar-success{%elif qd.percent < 90%}progress-bar-warning{%else%}progress-bar-danger{%endif%}"
                                                                 style="width: {{ qd.dz_percent }}%"
                                                                 title="{{ qd.dz_percent|floatformat:"1" }}% used by dataZone">
                                                                 <span class="sr-only">{{ qd.dz_percent|floatformat:"1" }}% of quota is used by dataZone</span>
+                                                            </div>
+                                                            <div class="progress-bar progress-divider"></div>
+                                                            <div class="progress-bar progress-bar-striped active {%if qd.percent < 70%}progress-bar-success{%elif qd.percent < 90%}progress-bar-warning{%else%}progress-bar-danger{%endif%}"
+                                                                style="width: {{ qd.uz_percent }}%" 
+                                                                title="{{ qd.uz_percent|floatformat:"1" }}% used by userZone">
+                                                                <span class="sr-only">{{ qd.uz_percent|floatformat:"1" }}% of quota used by userZone</span>
                                                             </div>
                                                         </div>
                                                         <span>{{ qd.remaining }} {{ qd.unit }} free of {{ qd.allocated }} {{ qd.unit }}</span>
@@ -1022,6 +1023,10 @@
     }
     .progress {
         margin-bottom: 0.5em;
+    }
+    .progress-divider {
+        width: 2px;
+        background-color: #999
     }
     .quota {
         margin-bottom: 0.5em;

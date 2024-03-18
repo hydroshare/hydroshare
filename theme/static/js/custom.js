@@ -172,6 +172,7 @@ $(document).ready(function () {
     checkProfileComplete().then(([user, missing])=>{
         if(missing.length) {
             // Disable publishing resources
+            // TODO: #5228 ensure link works
             popup_profile_alert(user.id, missing)
         }
     });
