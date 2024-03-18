@@ -326,22 +326,25 @@ async function checkProfileComplete(){
     localStorage.removeItem('missing-profile-fields')
     let missing_profile_fields = [];
     const user = {};
-    const val = await $.ajax({
-        url: "/hsapi/userInfo/",
-        success: function(user) {
-            if(!user.organization)
-                missing_profile_fields.push('Organization')
-            if(!user.country)
-                missing_profile_fields.push('Country')
-            if(!user.user_type)
-                missing_profile_fields.push('User Type')
-            localStorage.setItem('profile-user', JSON.stringify(user))
-            localStorage.setItem('missing-profile-fields', missing_profile_fields.toString())
-            return [user, missing_profile_fields];
-        },
-        error: function(response) {
-            console.log(response);
-        }
-    });
-    return val.length ? val : [user, missing_profile_fields];
+    try{
+        const resp = await $.ajax({
+            url: "/hsapi/userInfo/",
+        });
+        const checkArray = _checkProfile(resp);
+        return checkArray.length ? checkArray : [user, missing_profile_fields];
+    }catch(e){
+        console.error(e);
+    }
+
+    function _checkProfile(user) {
+        if(!user.organization)
+            missing_profile_fields.push('Organization')
+        if(!user.country)
+            missing_profile_fields.push('Country')
+        if(!user.user_type)
+            missing_profile_fields.push('User Type')
+        localStorage.setItem('profile-user', JSON.stringify(user))
+        localStorage.setItem('missing-profile-fields', missing_profile_fields.toString())
+        return [user, missing_profile_fields];
+    }
 }
