@@ -150,7 +150,7 @@ services:
       DJANGO_SETTINGS_MODULE: hydroshare.settings
     volumes:
       # hydroshare repository
-      - ".:/hydroshare"
+      - ".:/hydroshare:ro"
       # shared location for gunicorn.sock between containers
       - "temp_vol:/hs_tmp"
       # temp directory shared with celery workers
