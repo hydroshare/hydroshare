@@ -94,7 +94,7 @@ class BasicOIDCAuthentication(BaseAuthentication):
         # authenticate against keycloak
         try:
             KEYCLOAK.token(decoded_username, decoded_password)
-        except (KeycloakAuthenticationError, KeycloakPostError):
+        except:
             return None
 
         user = User.objects.get(username=decoded_username)
