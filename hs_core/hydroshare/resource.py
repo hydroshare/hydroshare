@@ -15,16 +15,16 @@ from django.core.files.uploadedfile import UploadedFile
 from django.db import transaction
 from rest_framework import status
 
-from django_irods.icommands import SessionException
-from django_irods.storage import IrodsStorage
-from hs_access_control.models import (PrivilegeCodes, ResourceAccess,
-                                      UserResourcePrivilege)
-from hs_core import signals
-from hs_core.enums import CrossRefSubmissionStatus
-from hs_core.hydroshare import hs_bagit, utils
+from hs_core.hydroshare import hs_bagit
 from hs_core.models import ResourceFile
+from hs_core import signals
+from hs_core.hydroshare import utils
+from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
 from theme.models import UserQuota
+from django_irods.icommands import SessionException
+from django_irods.storage import IrodsStorage
+from hs_core.enums import CrossRefSubmissionStatus
 
 FILE_SIZE_LIMIT = 1 * (1024 ** 3)
 FILE_SIZE_LIMIT_FOR_DISPLAY = '1G'
@@ -34,11 +34,11 @@ METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
 logger = logging.getLogger(__name__)
 
 
-def get_quota_usage_from_irods(username):
+def get_quota_usage_from_irods(username, raise_on_error=True):
     """
     Query iRODS AVU to get quota usage for a user reported in iRODS quota microservices
     :param username: the user name to get quota usage for.
-    :return: the combined quota usage from iRODS data zone and user zone; raise ValidationError
+    :return: the quota usage from iRODS data zone and user zone; raise ValidationError
     if quota usage cannot be retrieved from iRODS
     """
     attname = username + '-usage'
@@ -78,14 +78,41 @@ def get_quota_usage_from_irods(username):
     if uqDataZoneSize < 0 and uqUserZoneSize < 0:
         err_msg = 'no quota size AVU in data zone and user zone for user {}'.format(username)
         logger.error(err_msg)
-        raise ValidationError(err_msg)
+        if raise_on_error:
+            raise ValidationError(err_msg)
     elif uqUserZoneSize < 0:
-        used_val = uqDataZoneSize
+        uqUserZoneSize = 0
     elif uqDataZoneSize < 0:
-        used_val = uqUserZoneSize
-    else:
-        used_val = uqDataZoneSize + uqUserZoneSize
-    return used_val
+        uqDataZoneSize = 0
+    return uqUserZoneSize, uqDataZoneSize
+
+
+def get_storage_usage(user, flag="published"):
+    """
+    Query resources by iRODS AVU quotaholder and resource state
+    :param user: the user to get quota usage for.
+    :param flag: resource state (private, discoverable, public, published)
+    :return: estimated storage used by resources
+    """
+    resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
+    if flag == "published":
+        resources.filter(raccess__published=True)
+    elif flag == "discoverable":
+        resources.filter(raccess__discoverable=True, raccess__public=False)
+    elif flag == "public":
+        resources.filter(raccess__public=True, raccess__discoverable=True)
+    elif flag == "private":
+        resources.filter(raccess__public=False, raccess__discoverable=False)
+
+    # Iterate over resources and check the quotaholder
+    # if quotaholder is the user, get the resource size and aggregate
+    aggregate_size = 0
+    for res in resources:
+        quota_user = res.get_quota_holder()
+        if not quota_user == user:
+            continue
+        aggregate_size += res.size
+    return aggregate_size
 
 
 def update_quota_usage(username):
@@ -94,10 +121,12 @@ def update_quota_usage(username):
     quota update only happens on HydroShare iRODS data zone and user zone independently, so the aggregation of usage
     in both zones need to be accounted for in this function to update Django DB as an aggregated usage for hydroshare
     internal zone.
+    This function is called by the IRODS quota micro-service to update quota usage for a user in Django DB.
     :param
     username: the name of the user that needs to update quota usage for.
     :return: raise ValidationError if quota cannot be updated.
     """
+    from hs_core import tasks
     hs_internal_zone = "hydroshare"
     uq = UserQuota.objects.filter(user__username=username, zone=hs_internal_zone).first()
     if uq is None:
@@ -106,8 +135,40 @@ def update_quota_usage(username):
         logger.error(err_msg)
         raise ValidationError(err_msg)
 
-    used_val = get_quota_usage_from_irods(username)
-    uq.update_used_value(used_val)
+    uz, dz = get_quota_usage_from_irods(username, raise_on_error=False)
+
+    # subtract out published resources from the datazone
+    original_quota_data = uq.get_quota_data()
+    qmsg = original_quota_data["qmsg"]
+    published_percent = qmsg.published_resource_percent
+    user = User.objects.get(username=username)
+    published_size = get_storage_usage(user, flag="published")
+    dz -= published_size * (1 - published_percent / 100)
+    uq.update_used_value(uz, dz)
+
+    if original_quota_data["enforce_quota"]:
+        updated_quota_data = uq.get_quota_data()
+        # if enforcing quota, take steps to send messages
+        percent = updated_quota_data["percent"]
+        if percent < 100:
+            if uq.grace_period_ends:
+                # reset grace period now that the user is below allocation
+                uq.reset_grace_period()
+            return
+        else:
+            if percent < qmsg.hard_limit_percent:
+                if not uq.grace_period_ends:
+                    # triggers grace period counting
+                    uq.start_grace_period(qmsg_days=qmsg.grace_period)
+            elif percent >= qmsg.hard_limit_percent:
+                # reset grace period when user quota exceeds hard limit
+                uq.reset_grace_period()
+            # send notification to user in the cases of exceeding soft limit or hard limit
+            # only send notificaiton if the quota status changed
+            # this avoids sending multiple notifications when files are changed but the status does not change
+            if original_quota_data["status"] != updated_quota_data["status"]:
+                tasks.send_user_quota_notification.apply_async((user.pk))
+        uq.check_if_userzone_quota_enforcement_is_bypassed(user, original_quota_data, updated_quota_data)
 
 
 def res_has_web_reference(res):
@@ -1144,8 +1205,7 @@ def publish_resource(user, pk):
         resource.save()
 
     resource.set_public(True)  # also sets discoverable to True
-    resource.raccess.published = True
-    resource.raccess.immutable = True
+    resource.set_published(True)
     resource.raccess.save()
 
     # change "Publisher" element of science metadata to CUAHSI

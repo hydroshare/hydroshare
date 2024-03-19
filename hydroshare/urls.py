@@ -73,6 +73,11 @@ urlpatterns += i18n_patterns(
         theme.update_user_profile,
         name="update_profile",
     ),
+    url(r'^act-on-quota-request/(?P<quota_request_id>[0-9]+)/(?P<action>[a-z]+)/$',
+        theme.act_on_quota_request, name='act_on_quota_request_noauth'),
+    url(r'^act-on-quota-request/(?P<quota_request_id>[0-9]+)/(?P<action>[a-z]+)/(?P<uidb36>[-\w]+)/(?P<token>[-\w]+)/$',
+        theme.act_on_quota_request, name='act_on_quota_request'),
+    url(r'^quota-request/$', theme.quota_request, name='quota_request'),
     url(r"^update_password/$", theme.update_user_password, name="update_password"),
     url(
         r"^resend_verification_email/(?P<email>.*)/",

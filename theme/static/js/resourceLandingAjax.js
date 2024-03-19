@@ -819,15 +819,27 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             // Default display message for empty directories
             if (!files.length && !folders.length) {
                 if (mode === "edit") {
-                    $('#fb-files-container').append(
-                        '<div>' +
-                            '<span class="text-muted fb-empty-dir has-space-bottom">This directory is empty</span>' +
-                            '<div class="hs-upload-indicator text-center">' +
-                                '<i class="fa fa-file" aria-hidden="true"></i>' +
-                                '<h4>Drop files here or click "Add files" to upload</h4>' +
-                            '</div>' +
-                        '</div>'
-                    );
+                    if (MAX_FILE_SIZE > 0) {
+                        $('#fb-files-container').append(
+                            '<div>' +
+                                '<span class="text-muted fb-empty-dir has-space-bottom">This directory is empty</span>' +
+                                '<div class="hs-upload-indicator text-center">' +
+                                    '<i class="fa fa-file" aria-hidden="true"></i>' +
+                                    '<h4>Drop files here or click "Add files" to upload</h4>' +
+                                '</div>' +
+                            '</div>'
+                        );
+                    }
+                    else {
+                        $('#fb-files-container').append(
+                            '<div>' +
+                                '<span class="text-muted fb-empty-dir has-space-bottom">This directory is empty</span>' +
+                                '<div class="hs-upload-indicator text-center">' +
+                                    '<h4>File upload disabled due to your storage being over quota.</h4>' +
+                                '</div>' +
+                            '</div>'
+                        );
+                    }
                 }
                 else {
                     $('#fb-files-container').append(
@@ -1016,6 +1028,7 @@ function add_ref_content_ajax_submit(res_id, curr_path, ref_name, ref_url, valid
             else {
                 // Response text is not yet user friendly enough to display in UI
                 display_error_message('Error', "Failed to add reference content.");
+                console.error(`Failed to add reference content: ${xhr.responseText}`);
                 $('#add-reference-url-dialog').modal('hide');
                 $('#validate-reference-url-dialog').modal('hide');
             }

@@ -306,6 +306,7 @@ def get_access_object(user, user_type, user_access):
 def page_permissions_page_processor(request, page):
     """Return a dict describing permissions for current user."""
     from hs_access_control.models.privilege import PrivilegeCodes
+    from hs_core.hydroshare.utils import get_remaining_user_quota
 
     cm = page.get_content_model()
     can_change_resource_flags = False
@@ -413,6 +414,14 @@ def page_permissions_page_processor(request, page):
     if is_owner or (cm.raccess.shareable and (is_view or is_edit)):
         show_manage_access = True
 
+    if hasattr(settings, 'FILE_UPLOAD_MAX_SIZE'):
+        max_file_size = settings.FILE_UPLOAD_MAX_SIZE
+    else:
+        max_file_size = 1024
+    remaining_quota = get_remaining_user_quota(cm.get_quota_holder(), "MB")
+    if remaining_quota is not None:
+        max_file_size = min(max_file_size, remaining_quota)
+
     return {
         'resource_type': cm._meta.verbose_name,
         "users_json": users_json,
@@ -423,7 +432,8 @@ def page_permissions_page_processor(request, page):
         "is_replaced_by": is_replaced_by,
         "is_version_of": is_version_of,
         "show_manage_access": show_manage_access,
-        "last_changed_by": last_changed_by
+        "last_changed_by": last_changed_by,
+        "max_file_size": max_file_size,
     }
 
 
@@ -2336,6 +2346,23 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
                 if value and settings.RUN_HYRAX_UPDATE and is_netcdf_to_public:
                     run_script_to_update_hyrax_input_files(self.short_id)
+
+    def set_published(self, value):
+        """Set the published flag for a resource.
+
+        :param value: True or False
+
+        This sets the published flag (self.raccess.published)
+        """
+        from hs_core.signals import post_raccess_change
+
+        self.raccess.published = value
+        self.raccess.immutable = value
+        if value:  # can't be published without being public
+            self.raccess.public = value
+        self.raccess.save()
+        post_raccess_change.send(sender=self, resource=self)
+        self.update_index()
 
     def update_index(self):
         """updates previous versions of a resource (self) in index"""

@@ -33,7 +33,6 @@ var loading_metadata_alert =
         '<span class="sr-only">Loading...</span>' +
     '</div>';
 
-const MAX_FILE_SIZE = 1024; // MB
 
 function getCurrentPath() {
     return pathLog[pathLogIndex];
@@ -219,8 +218,6 @@ function updateSelectionMenuContext() {
     $.each(uiActions, function (i, val) {
         uiActionStates[val] = $.extend(true, {}, initActionState);  // Deep copy
     });
-
-    var maxSize = MAX_FILE_SIZE * 1024 * 1024; // convert MB to Bytes
 
     if (selected.length > 1) {
         //  ------------- Multiple files selected -------------
@@ -1944,7 +1941,7 @@ $(document).ready(function () {
             uploadMultiple: true,
             parallelUploads : 10,
             error: function (file, response) {
-                // console.log(response);
+                console.error(response);
             },
             success: onUploadSuccess,
             successmultiple: onUploadSuccess,
@@ -2031,7 +2028,14 @@ $(document).ready(function () {
 
                 // An error occured. Receives the errorMessage as second parameter and if the error was due to the XMLHttpRequest the xhr object as third.
                 this.on("error", function (error, errorMessage) {
-                    let errorMsg = JSON.stringify(errorMessage);
+                    let errorMsg = "";
+                    if (typeof errorMessage === 'object'){
+                        for (const [key, value] of Object.entries(errorMessage)) {
+                            errorMsg += `${key}: ${value}`;
+                          }
+                    }else{
+                        errorMsg = JSON.stringify(errorMessage);
+                    }
                     try {
                         let errorMessageJSON = JSON.parse(errorMessage);
                         if (errorMessageJSON.hasOwnProperty("validation_error")) {
@@ -2046,7 +2050,6 @@ $(document).ready(function () {
 
                     $("#fb-alerts .upload-failed-alert").remove();
                     $("#hsDropzone").toggleClass("glow-blue", false);
-
                     $("#fb-alerts").append(
                             '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
                                 '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +

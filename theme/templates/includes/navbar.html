@@ -461,7 +461,7 @@
         customAlert(alertTitle, "Please wait...", "success", -1); // Persistent alert
         $("html").css("cursor", "progress");
 
-        const errorMsg = "Failed to create " + contentType + ".";
+        let errorMsg = "Failed to create " + contentType;
 
         $.ajax({
             type: "POST",
@@ -476,7 +476,8 @@
                 else {
                     console.log(response);
                     $(".custom-alert").alert('close');  // Dismiss previous alert
-                    customAlert("Error", errorMsg, "error", 6000);
+                    errorMsg += `: \n${response.message}`
+                    customAlert("Error", errorMsg, "error", -1, dismissable=true);
                     $("html").css("cursor", "initial");
                     $(".navbar-inverse .res-dropdown").toggleClass("disabled", false);
                 }
