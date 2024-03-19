@@ -519,7 +519,7 @@ class Party(AbstractMetaDataElement):
                              'ORCID':
                              re.compile(r'^https:\/\/orcid\.org\/[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}$'),
                              'GoogleScholarID':
-                             re.compile(r'^https:\/\/scholar\.google\.com\/citations\?.*user=[^\s]+$'),
+                             re.compile(r'^https:\/\/scholar\.google\.com\/citations\?user=[^\s]+$'),
                              'ResearcherID':
                              'https://www.researcherid.com/'}
 
