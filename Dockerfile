@@ -26,7 +26,7 @@ RUN rm -rf static templates && \
     cp js/app.*.js js/app.js && \
     cp js/chunk-vendors.*.js js/chunk-vendors.js
 
-FROM hydroshare/hs_docker_base:42e31f1
+FROM hydroshare/hs_docker_base:7a6c581
 
 COPY --from=node-build /hydroshare /hydroshare
 

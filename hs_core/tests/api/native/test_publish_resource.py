@@ -6,17 +6,22 @@ import shutil
 
 import arrow
 from freezegun import freeze_time
+from rest_framework import status
 from django.conf import settings
 from django.contrib.auth.models import Group, User
-from django.test import TestCase
+from django.test import TestCase, Client
+from django.urls import reverse
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 
 from hs_access_control.models.privilege import UserResourcePrivilege, PrivilegeCodes
 from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_doi
 from hs_core.models import BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
-from hs_core.views.utils import get_default_admin_user
+from hs_core.views.utils import get_default_admin_user, get_default_support_user
 from django.core.exceptions import ValidationError, PermissionDenied
+from theme.backends import without_login_date_token_generator
 
 
 class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
@@ -128,6 +133,91 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
         # there should now published date type metadata element
         self.assertTrue(self.pub_res.metadata.dates.filter(type='published').exists())
 
+    def test_publish_via_email_link(self):
+        """
+        Test case for publishing a resource via email link.
+
+        This test verifies that a resource can be published by clicking on the approval link
+        received via email. It checks that the resource is initially not published, submits
+        the resource for review, generates the approval link, and then simulates clicking on
+        the link. Finally, it checks that the resource is published and no longer in review.
+        """
+        self.assertFalse(
+            self.res.raccess.published,
+            msg='The resource is published'
+        )
+
+        hydroshare.submit_resource_for_review(pk=self.complete_res.short_id, user=self.user)
+
+        support = get_default_support_user()
+        token = without_login_date_token_generator.make_token(support)
+        uidb64 = urlsafe_base64_encode(force_bytes(support.pk))
+        url = reverse('metadata_review', kwargs={
+            "shortkey": self.complete_res.short_id,
+            "action": "approve",
+            "uidb64": uidb64,
+            "token": token,
+        })
+
+        client = Client()
+        # let support click the link in the email
+        response = client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+
+        pub_res = hydroshare.get_resource_by_shortkey(self.complete_res.short_id)
+
+        self.assertTrue(
+            pub_res.raccess.published,
+            msg='The resource is not published'
+        )
+        self.assertFalse(
+            pub_res.raccess.review_pending,
+            msg='The resource is still in review'
+        )
+
+    def test_reject_publish_via_email_link(self):
+        """
+        Test case to verify the rejection of resource publishing via email link.
+
+        This test checks if the resource is not published and then submits the resource for review.
+        It generates an email link for rejecting the review and simulates the support user clicking the link.
+        Finally, it verifies that the resource is not published and the review status is not pending.
+        """
+        self.assertFalse(
+            self.res.raccess.published,
+            msg='The resource is published'
+        )
+
+        hydroshare.submit_resource_for_review(pk=self.complete_res.short_id, user=self.user)
+
+        support = get_default_support_user()
+        token = without_login_date_token_generator.make_token(support)
+        uidb64 = urlsafe_base64_encode(force_bytes(support.pk))
+        url = reverse('metadata_review', kwargs={
+            "shortkey": self.complete_res.short_id,
+            "action": "reject",
+            "uidb64": uidb64,
+            "token": token,
+        })
+
+        client = Client()
+        # let support click the link in the email
+        response = client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+
+        potentially_pub_res = hydroshare.get_resource_by_shortkey(self.complete_res.short_id)
+
+        self.assertFalse(
+            potentially_pub_res.raccess.published,
+            msg='The resource is not published'
+        )
+        self.assertFalse(
+            potentially_pub_res.raccess.review_pending,
+            msg='The resource is still in review'
+        )
+
     def test_only_admin_can_publish_resource(self):
         # check status prior to publishing the resource
         self.assertFalse(
@@ -235,51 +325,15 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
     def test_crossref_deposit_xml(self):
         """Test that the crossref deposit xml is generated correctly for a resource"""
 
-        # create abstract metadata element
-        self.res.metadata.create_element('description', abstract='This is a test abstract')
-        # add an organization as an author
-        self.res.metadata.create_element('creator', organization='Utah State University')
-        # add a person with ORCID identifier as an author
-        identifiers = {"ORCID": 'https://orcid.org/0000-0002-1825-0097'}
-        self.res.metadata.create_element('creator', name='John Smith', identifiers=identifiers)
-        # add a funder that can be found in crossref funders registry
-        self.res.metadata.create_element('fundingagency', agency_name='National Science Foundation',
-                                         award_title='NSF Award', award_number='12345', agency_url='https://nsf.gov')
-        # add a funder that can't be found in crossref funders registry
-        self.res.metadata.create_element('fundingagency', agency_name='Utah Water Research Laboratory')
+        self.create_xml_test_resource()
+        self.freeze_and_assert()
 
-        if not hasattr(settings, 'DEFAULT_SUPPORT_EMAIL'):
-            settings.DEFAULT_SUPPORT_EMAIL = "help@cuahsi.org"
-
-        freeze = arrow.now().format("YYYY-MM-DD HH:mm:ss")
-        freezer = freeze_time(freeze)
-        freezer.start()
-
-        # set doi - simulating published resource
-        self.res.doi = get_resource_doi(self.res.short_id)
-        self.res.save()
-        crossref_xml = self.res.get_crossref_deposit_xml()
-        crossref_xml = crossref_xml.strip()
-        timestamp = arrow.now().format("YYYYMMDDHHmmss")
-        res_id = self.res.short_id
-        created_date = self.res.created
-        updated_date = self.res.updated
-        # use updated date as published date as we don't have a published date for this test resource
-        # also when we do real publication the publication date is the same as updated date at the time of publication
-        published_date = updated_date
-        site_url = hydroshare.utils.current_site_url()
-        support_email = settings.DEFAULT_SUPPORT_EMAIL
-        expected_xml = self._get_expected_crossref_xml(res_id=res_id, timestamp=timestamp,
-                                                       created_date=created_date, updated_date=updated_date,
-                                                       published_date=published_date, site_url=site_url,
-                                                       support_email=support_email)
-        expected_xml = expected_xml.strip()
-
-        freezer.stop()
-
-        self.assertTrue(len(crossref_xml) == len(expected_xml))
-        match_ratio = difflib.SequenceMatcher(None, crossref_xml.splitlines(), expected_xml.splitlines()).ratio()
-        self.assertTrue(match_ratio == 1.0, msg="crossref xml is not as expected")
+    def test_crossref_deposit_dirty_xml(self):
+        """Test that the crossref deposit xml is generated correctly for a resource with dirty abstract"""
+        self.create_xml_test_resource()
+        self.res.metadata.update_element('description', self.res.metadata.description.id,
+                                         abstract='This is a test abstract\x1F')
+        self.freeze_and_assert()
 
     @staticmethod
     def _get_expected_crossref_xml(res_id, timestamp, created_date, updated_date, published_date, site_url,
@@ -360,3 +414,51 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
   </body>
 </doi_batch>""" # noqa
         return expected_xml
+
+    def create_xml_test_resource(self):
+        # create abstract metadata element
+        self.res.metadata.create_element('description', abstract='This is a test abstract')
+        # add an organization as an author
+        self.res.metadata.create_element('creator', organization='Utah State University')
+        # add a person with ORCID identifier as an author
+        identifiers = {"ORCID": 'https://orcid.org/0000-0002-1825-0097'}
+        self.res.metadata.create_element('creator', name='John Smith', identifiers=identifiers)
+        # add a funder that can be found in crossref funders registry
+        self.res.metadata.create_element('fundingagency', agency_name='National Science Foundation',
+                                         award_title='NSF Award', award_number='12345', agency_url='https://nsf.gov')
+        # add a funder that can't be found in crossref funders registry
+        self.res.metadata.create_element('fundingagency', agency_name='Utah Water Research Laboratory')
+
+        if not hasattr(settings, 'DEFAULT_SUPPORT_EMAIL'):
+            settings.DEFAULT_SUPPORT_EMAIL = "help@cuahsi.org"
+
+    def freeze_and_assert(self):
+        freeze = arrow.now().format("YYYY-MM-DD HH:mm:ss")
+        freezer = freeze_time(freeze)
+        freezer.start()
+
+        # set doi - simulating published resource
+        self.res.doi = get_resource_doi(self.res.short_id)
+        self.res.save()
+        crossref_xml = self.res.get_crossref_deposit_xml()
+        crossref_xml = crossref_xml.strip()
+        timestamp = arrow.now().format("YYYYMMDDHHmmss")
+        res_id = self.res.short_id
+        created_date = self.res.created
+        updated_date = self.res.updated
+        # use updated date as published date as we don't have a published date for this test resource
+        # also when we do real publication the publication date is the same as updated date at the time of publication
+        published_date = updated_date
+        site_url = hydroshare.utils.current_site_url()
+        support_email = settings.DEFAULT_SUPPORT_EMAIL
+        expected_xml = self._get_expected_crossref_xml(res_id=res_id, timestamp=timestamp,
+                                                       created_date=created_date, updated_date=updated_date,
+                                                       published_date=published_date, site_url=site_url,
+                                                       support_email=support_email)
+        expected_xml = expected_xml.strip()
+
+        freezer.stop()
+
+        self.assertTrue(len(crossref_xml) == len(expected_xml))
+        match_ratio = difflib.SequenceMatcher(None, crossref_xml.splitlines(), expected_xml.splitlines()).ratio()
+        self.assertTrue(match_ratio == 1.0, msg="crossref xml is not as expected")
