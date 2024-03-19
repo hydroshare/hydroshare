@@ -2284,6 +2284,10 @@ def hsapi_get_user(request, user_identifier):
 @api_view(["POST"])
 def hsapi_user_s3_authorization(request):
     # request body example https://min.io/docs/minio/linux/administration/identity-access-management/pluggable-authorization.html#id5
+
+    def wrap_result(authorized: bool):
+        return { "result" : { "allow" : authorized } }
+
     auth_request = json.loads(request.body.decode('utf-8'))["input"]
     bucket = auth_request["bucket"]
     action: str = auth_request["action"] # "s3:"
@@ -2304,13 +2308,13 @@ def hsapi_user_s3_authorization(request):
 
     if action in view_permissions:
         if res.raccess.discoverable and action != "s3:GetObject":
-            return True
+            return wrap_result(True)
         if res.raccess.public or res.raccess.allow_private_sharing:
-            return True
+            return wrap_result(True)
         return user.uaccess.can_view_resources(res)
     if action in edit_permissions:
         return user.uaccess.can_change_resource(resource_metadata_rest_api)
-    return False
+    return wrap_result(False)
 
 
 @swagger_auto_schema(
