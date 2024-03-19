@@ -393,8 +393,14 @@ rebuild_hs() {
     
     # after our entire build, change the file permissions in root project directory to catch write actions
     echo "Changing file permissions in /hydroshare to read only"
-    echo "  - docker exec hydroshare chmod 444 /hydroshare"
-    docker exec hydroshare chmod 444 /hydroshare
+    echo "  - docker exec hydroshare chmod 744 /hydroshare"
+    docker exec hydroshare chmod 744 /hydroshare
+    echo " Change owner of /hydroshare to root"
+    echo "  - docker exec hydroshare chown root:storage-hydro /hydroshare"
+    docker exec hydroshare chown root:storage-hydro /hydroshare
+    # Ensure that hydro-service is member of storage-hydro group
+    echo "  - docker exec hydroshare usermod -a -G storage-hydro hydro-service"
+    docker exec hydroshare usermod -a -G storage-hydro hydro-service
 }
 
 reloaddb_hs() {
