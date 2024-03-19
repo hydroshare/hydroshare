@@ -7,10 +7,6 @@ from django.conf import settings
 from django.utils.http import urlencode
 from django.contrib.auth.models import User
 from rest_framework.authentication import BaseAuthentication
-from keycloak.exceptions import (
-    KeycloakAuthenticationError,
-    KeycloakPostError,
-)
 from keycloak.keycloak_openid import KeycloakOpenID
 
 
@@ -94,7 +90,7 @@ class BasicOIDCAuthentication(BaseAuthentication):
         # authenticate against keycloak
         try:
             KEYCLOAK.token(decoded_username, decoded_password)
-        except:
+        except Exception:
             return None
 
         user = User.objects.get(username=decoded_username)
