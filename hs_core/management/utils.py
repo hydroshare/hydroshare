@@ -690,9 +690,6 @@ def __ingest_irods_directory(resource,
                     errors.append(msg)
                 if stop_on_error:
                     raise ValidationError(msg)
-                else:
-                    # Continue to next file
-                    continue
 
         for dname in listing[0]:  # directories
             # do not use os.path.join because fname might contain unicode characters
