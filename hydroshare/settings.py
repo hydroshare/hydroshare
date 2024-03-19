@@ -545,7 +545,6 @@ ACCOUNTS_PROFILE_MODEL = "theme.UserProfile"
 CRISPY_TEMPLATE_PACK = "bootstrap"
 
 DEFAULT_AUTHENTICATION_CLASSES = (
-    "hs_core.authentication.BasicOIDCAuthentication",
     "rest_framework.authentication.BasicAuthentication",
     "rest_framework.authentication.SessionAuthentication",
     "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
@@ -859,3 +858,7 @@ MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
 )
 
 BULK_UPDATE_CREATE_BATCH_SIZE = 1000
+
+if ENABLE_OIDC_AUTHENTICATION:
+    DEFAULT_AUTHENTICATION_CLASSES = ("hs_core.authentication.BasicOIDCAuthentication", "mozilla_django_oidc.contrib.drf.OIDCAuthentication",) + DEFAULT_AUTHENTICATION_CLASSES
+    AUTHENTICATION_BACKENDS.append("hs_core.authentication.HydroShareOIDCAuthenticationBackend")
