@@ -387,6 +387,12 @@ rebuild_hs() {
     else
         echo "Skipping filling SOLR index. Fill via './hsctl managepy solr_update'"
     fi
+
+    # after our entire build, change the file permissions in root project directory to catch write actions
+    echo "Changing file permissions in /hydroshare to read only"
+    echo "  - docker exec hydroshare chmod -R  444 /hydroshare"
+    docker exec hydroshare chmod -R  444 /hydroshare
+
     restart_hs
     echo "END BUILD"
 }
