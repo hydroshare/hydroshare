@@ -53,7 +53,7 @@ services:
       # shared location for gunicorn.sock between containers
       - "/hs_tmp"
       # temp directory shared with celery workers
-      - "/shared_tmp"
+      - "shared_tmp/shared_tmp"
     ports:
       - "1338:2022"
       - "8000:8000"
@@ -76,10 +76,9 @@ services:
       PGPASSWORD: postgres
       C_FORCE_ROOT: 1
       COLUMNS: 80
-    volumes_from:
-      - hydroshare
     volumes:
       - "/var/run/docker.sock:/docker.sock"
+      - ".:/hydroshare"
     links:
       - postgis:postgis
       - rabbitmq:rabbitmq
