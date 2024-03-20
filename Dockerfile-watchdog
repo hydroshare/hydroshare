@@ -1,0 +1,5 @@
+FROM python:3
+RUN python -m pip install -U watchdog
+RUN mkdir /watchdog
+WORKDIR /watchdog
+CMD ["watchmedo", "log", "--verbose", "--ignore-directories", "--ignore-pattern=\"watchdog.out\"", "/hydroshare", "|", "tee", "/watchdog/watchdog.out"]
