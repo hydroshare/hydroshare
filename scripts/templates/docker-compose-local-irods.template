@@ -6,8 +6,8 @@ services:
       dockerfile: Dockerfile-watchdog
     container_name: watchdog
     volumes:
-      - "HS_PATH:/hydroshare"
-      - "/watchdog:/watchdog"
+      - HS_PATH:/hydroshare
+    entrypoint: watchmedo shell-command --ignore-directories --ignore-pattern="watchdog.out" /hydroshare >> /hydroshare/watchdog.out
   postgis:
     image: postgis/postgis:15-3.3
     environment:
