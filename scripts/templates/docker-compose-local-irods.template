@@ -1,7 +1,6 @@
 watchdog:
   build:
-    context: .
-    dockerfile: Dockerfile-watchdog
+    dockerfile: ./Dockerfile-watchdog
   container_name: watchdog
   volumes:
     - "HS_PATH:/hydroshare"
