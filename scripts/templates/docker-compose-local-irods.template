@@ -4,7 +4,7 @@ watchdog:
   container_name: watchdog
   volumes:
     - "HS_PATH:/hydroshare"
-    - "./watchdog:/watchdog"
+    - "/watchdog:/watchdog"
 postgis:
   image: postgis/postgis:15-3.3
   environment:
