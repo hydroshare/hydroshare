@@ -1,3 +1,10 @@
+watchdog:
+  image: python:3.9
+  container_name: watchdog
+  volumes:
+    - "HS_PATH:/hydroshare"
+    - "./watchdog:/watchdog"
+  command: python -m pip install -U watchdog && watchmedo log --verbose --ignore-directories --ignore-pattern="watchdog.out" /hydroshare >> /watchdog/watchdog.out 2>&1 &
 postgis:
   image: postgis/postgis:15-3.3
   environment:
