@@ -4,7 +4,7 @@ watchdog:
   volumes:
     - "HS_PATH:/hydroshare"
     - "./watchdog:/watchdog"
-  command: python -m pip install -U watchdog && watchmedo log --verbose --ignore-directories --ignore-pattern="watchdog.out" /hydroshare | tee /watchdog/watchdog.out
+  entrypoint: ["python -m pip install -U watchdog", "watchmedo log --verbose --ignore-directories --ignore-pattern=\"watchdog.out\" /hydroshare | tee /watchdog/watchdog.out"]
 postgis:
   image: postgis/postgis:15-3.3
   environment:
