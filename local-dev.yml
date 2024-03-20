@@ -1,5 +1,14 @@
 version: '3'
 services:
+  watchdog:
+    build:
+      context: .
+      dockerfile: Dockerfile-watchdog
+    container_name: watchdog
+    volumes:
+      - ./:/hydroshare
+    # entrypoint: watchmedo log --ignore-directories --ignore-pattern="watchdog.out" /hydroshare
+    entrypoint: watchmedo log /hydroshare
   data.local.org:
     image: hydroshare/hs-irods:4.2.6-buster
     container_name: data.local.org
