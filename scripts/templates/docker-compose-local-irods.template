@@ -54,7 +54,7 @@ services:
       # shared location for gunicorn.sock between containers
       - "/hs_tmp"
       # temp directory shared with celery workers
-      - "shared_tmp/shared_tmp"
+      - "/shared_tmp"
     ports:
       - "1338:2022"
       - "8000:8000"
