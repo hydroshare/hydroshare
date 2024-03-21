@@ -62,6 +62,7 @@ from hs_core.models import (
     Subject,
     TaskNotification,
     resource_processor,
+    PartyValidationError,
 )
 from hs_core.task_utils import (
     dismiss_task_by_id,
@@ -1768,6 +1769,11 @@ def create_resource(request, *args, **kwargs):
             full_paths=full_paths,
             auto_aggregate=auto_aggregate,
         )
+    except PartyValidationError as ex:
+        party_message = "Validation issue in Party metadata. " + \
+            f"One of the authors or owners has invalid identifiers in their profile: {str(ex)}."
+        ajax_response_data["message"] = party_message
+        return JsonResponse(ajax_response_data)
     except SessionException as ex:
         ajax_response_data["message"] = ex.stderr
         return JsonResponse(ajax_response_data)
