@@ -79,7 +79,17 @@ services:
       COLUMNS: 80
     volumes:
       - "/var/run/docker.sock:/docker.sock"
-      - ".:/hydroshare"
+      # volumes from hydroshare
+      # hydroshare repository
+      - "HS_PATH:/hydroshare"
+      # pycharm debugging
+      # - "/home/hydro/pycharm-debug:/pycharm-debug"
+      # log files
+      - "HS_LOG_FILES:/hydroshare/log"
+      # shared location for gunicorn.sock between containers
+      - "/hs_tmp"
+      # temp directory shared with celery workers
+      - "/shared_tmp"
     links:
       - postgis:postgis
       - rabbitmq:rabbitmq
