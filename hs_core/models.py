@@ -494,6 +494,10 @@ class HSAdaptorEditInline(object):
         return cm.can_change(adaptor_field.request)
 
 
+class PartyValidationError(ValidationError):
+    pass
+
+
 class Party(AbstractMetaDataElement):
     """Define party model to define a person."""
 
@@ -614,14 +618,14 @@ class Party(AbstractMetaDataElement):
 
             if ('name' not in kwargs or kwargs['name'] is None) and \
                     ('organization' not in kwargs or kwargs['organization'] is None):
-                raise ValidationError(
+                raise PartyValidationError(
                     "Either an organization or name is required for a creator element")
 
             if 'name' in kwargs and kwargs['name'] is not None:
                 if len(kwargs['name'].strip()) == 0:
                     if 'organization' in kwargs and kwargs['organization'] is not None:
                         if len(kwargs['organization'].strip()) == 0:
-                            raise ValidationError(
+                            raise PartyValidationError(
                                 "Either the name or organization must not be blank for the creator "
                                 "element")
 
@@ -645,7 +649,7 @@ class Party(AbstractMetaDataElement):
             party = cls.objects.get(id=element_id)
             if party.hydroshare_user_id is not None and kwargs['hydroshare_user_id'] is not None:
                 if party.hydroshare_user_id != kwargs['hydroshare_user_id']:
-                    raise ValidationError("HydroShare user identifier can't be changed.")
+                    raise PartyValidationError("HydroShare user identifier can't be changed.")
 
         if 'order' in kwargs and element_name == 'Creator':
             creator_order = kwargs['order']
@@ -707,7 +711,7 @@ class Party(AbstractMetaDataElement):
         if isinstance(party, Creator):
             if Creator.objects.filter(object_id=party.object_id,
                                       content_type__pk=party.content_type.id).count() == 1:
-                raise ValidationError("The only creator of the resource can't be deleted.")
+                raise PartyValidationError("The only creator of the resource can't be deleted.")
 
             creators_to_update = Creator.objects.filter(
                 object_id=party.object_id,
@@ -733,33 +737,33 @@ class Party(AbstractMetaDataElement):
                 try:
                     identifiers = json.loads(identifiers)
                 except ValueError:
-                    raise ValidationError("Value for identifiers not in the correct format")
+                    raise PartyValidationError("Value for identifiers not in the correct format")
         # identifiers = kwargs['identifiers']
         if identifiers:
             # validate the identifiers are one of the supported ones
             for name in identifiers:
                 if name not in cls.supported_identifiers:
-                    raise ValidationError("Invalid data found for identifiers. "
-                                          "{} not a supported identifier.". format(name))
+                    raise PartyValidationError("Invalid data found for identifiers. "
+                                               "{} not a supported identifier.". format(name))
             # validate identifier values - check for duplicate links
             links = [link.lower() for link in list(identifiers.values())]
             if len(links) != len(set(links)):
-                raise ValidationError("Invalid data found for identifiers. "
-                                      "Duplicate identifier links found.")
+                raise PartyValidationError("Invalid data found for identifiers. "
+                                           "Duplicate identifier links found.")
 
             for link in links:
                 validator = URLValidator()
                 try:
                     validator(link)
                 except ValidationError:
-                    raise ValidationError("Invalid data found for identifiers. "
-                                          "Identifier link must be a URL.")
+                    raise PartyValidationError("Invalid data found for identifiers. "
+                                               "Identifier link must be a URL.")
 
             # validate identifier keys - check for duplicate names
             names = [n.lower() for n in list(identifiers.keys())]
             if len(names) != len(set(names)):
-                raise ValidationError("Invalid data found for identifiers. "
-                                      "Duplicate identifier names found")
+                raise PartyValidationError("Invalid data found for identifiers. "
+                                           "Duplicate identifier names found")
 
             # validate that the links for the known identifiers are valid
             for id_name in cls.supported_identifiers:
@@ -767,7 +771,8 @@ class Party(AbstractMetaDataElement):
                 if id_link:
                     regex = cls.supported_identifiers[id_name]
                     if not re.match(regex, id_link):
-                        raise ValidationError(f"URL for {id_name} is invalid.")
+                        raise PartyValidationError("Invalid data found for identifiers. "
+                                                   f"\'{id_link}\' is not a valid {id_name}.")
         return identifiers
 
 
