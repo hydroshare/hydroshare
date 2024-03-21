@@ -1770,8 +1770,8 @@ def create_resource(request, *args, **kwargs):
             auto_aggregate=auto_aggregate,
         )
     except PartyValidationError as ex:
-        party_message = "Validation issue in Party metadata. " + \
-            f"One of the authors or owners has invalid identifiers in their profile: {str(ex)}."
+        party_message = "Validation issue in Creator or Contributor metadata. " + \
+            f"One of the profiles contains invalid identifiers: {str(ex)}."
         ajax_response_data["message"] = party_message
         return JsonResponse(ajax_response_data)
     except SessionException as ex:
