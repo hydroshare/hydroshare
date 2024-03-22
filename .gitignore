@@ -43,7 +43,6 @@ celerybeat.pid
 pg.deploy.sql
 pylint.out
 .ssh
-conf_irods/env-files
 
 # Frontend
 node_modules/

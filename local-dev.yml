@@ -43,13 +43,16 @@ services:
     stdin_open: true
     tty: true
   users.local.org:
-    image: hydroshare/hs-irods:4.2.6-buster
+    build:
+      context: .
+      dockerfile: Dockerfile-users-irods
     container_name: users.local.org
     hostname: users.local.org
     volumes:
       - "iuser_iconf_vol:/etc/irods"
       - "iuser_vault_vol:/var/lib/irods"
       - "iuser_pgres_vol:/var/lib/postgresql/data"
+      - "iuser_home_vol:/home/hsuserproxy"
       - "./.ssh/id_ed25519_hs.pub:/home/hsuserproxy/.ssh/authorized_keys"
     environment:
       SHARED_NEG_KEY: 'hydroshareZonehydroshareuserZone'
@@ -110,25 +113,27 @@ services:
     ports:
       - "8983"
     command: ["solr-foreground"]
-  nginx:
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile-nginx
-    hostname: nginx
-    container_name: nginx
-    links:
-      - hydroshare:hydroshare
-    depends_on:
-      - hydroshare
-    ports:
-      - "80:80"
-    volumes:
-      - "./log/nginx:/var/log/nginx"
-      - ".:/hydroshare"
-      - "temp_vol:/hs_tmp"
-      - "share_vol:/irods/cache"
-      - "idata_vault_vol:/irods/data"
-      - "iuser_vault_vol:/irods/user"
+  # TODO: nginx container does not currently work
+  # https://github.com/hydroshare/hydroshare/issues/4980
+  # nginx:
+  #   build:
+  #     context: ./nginx
+  #     dockerfile: Dockerfile-nginx
+  #   hostname: nginx
+  #   container_name: nginx
+  #   links:
+  #     - hydroshare:hydroshare
+  #   depends_on:
+  #     - hydroshare
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - "./log/nginx:/var/log/nginx"
+  #     - ".:/hydroshare"
+  #     - "temp_vol:/hs_tmp"
+  #     - "share_vol:/irods/cache"
+  #     - "idata_vault_vol:/irods/data"
+  #     - "iuser_vault_vol:/irods/user"
   hydroshare:
     build:
       context: .
@@ -160,7 +165,6 @@ services:
       - "temp_vol:/hs_tmp"
       # temp directory shared with celery workers
       - "share_vol:/shared_tmp"
-      # - "./.ssh/id_ed25519_hs:/hydroshare/.ssh/id_ed25519_hs"
     ports:
       - "1338:2022"
       - "8000:8000"
@@ -226,6 +230,7 @@ volumes:
   iuser_iconf_vol:
   iuser_vault_vol:
   iuser_pgres_vol:
+  iuser_home_vol:
   postgis_data_vol:
   solr_data_vol:
   temp_vol:

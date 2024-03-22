@@ -11,6 +11,6 @@ userdel hydro-service \
  && echo "storage-hydro:x:HS_SERVICE_GID:" >> /etc/group \
  && echo "hydro-service:x:HS_SERVICE_UID:HS_SERVICE_GID::/hydroshare:/bin/bash" >> /etc/passwd \
  && chown -R hydro-service:storage-hydro /hydroshare /hs_tmp /shared_tmp /tmp \
- && chmod -R 3777 /hs_tmp /shared_tmp /tmp
+ && chmod -R 3777 /hs_tmp /shared_tmp /tmp 
 
 HS_DJANGO_SERVER

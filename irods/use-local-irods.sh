@@ -24,6 +24,26 @@ if [[ "${ISICAT2}" == "${HS_USER_ZONE_HOST}" ]]; then
     docker stop ${HS_USER_ZONE_HOST} && docker rm -fv ${HS_USER_ZONE_HOST}
 fi
 
+cd ..
+echo " - rm -rf .ssh"
+rm -rf .ssh
+echo " - mkdir .ssh"
+mkdir .ssh
+echo " - ssh-keygen -t ed25519 -f .ssh/id_ed25519_hs -N ''"
+ssh-keygen -t ed25519 -f .ssh/id_ed25519_hs -N '' -C "${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}@${HS_USER_ZONE_HOST}"
+cd irods
+
+# create irods_environment.json file for rods user
+echo "INFO: create irods_environment.json file for rods user"
+echo "  - jq -n --arg h "${HS_USER_ZONE_HOST}" --argjson p ${IRODS_PORT} --arg z "${HS_USER_IRODS_ZONE}" --arg n "${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}" '{"irods_host": $h, "irods_port": $p, "irods_zone_name": $z, "irods_user_name": $n}' > env-files/rods@${HS_USER_ZONE_HOST}.json"
+jq -n --arg h "${HS_USER_ZONE_HOST}" --argjson p ${IRODS_PORT} --arg z "${HS_USER_IRODS_ZONE}" --arg n "${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}" '{"irods_host": $h, "irods_port": $p, "irods_zone_name": $z, "irods_user_name": $n}' > env-files/rods@${HS_USER_ZONE_HOST}.json
+# Build the irods userzone image
+echo "BUILD: hydroshare/hs-irods:4.2.6-buster"
+cd ..
+echo " - docker build -t hs-irods-users -f Dockerfile-users-irods . "
+docker build -t hs-irods-users -f Dockerfile-users-irods .
+cd irods
+
 if [[ "${1}" == "--persist" ]]; then
     # mkdir for ${IRODS_HOST} and ${HS_USER_ZONE_HOST} persistence files
     if [[ ! -d /home/${USER}/icat1 ]]; then
@@ -53,6 +73,7 @@ if [[ "${1}" == "--persist" ]]; then
     docker run -d --name ${HS_USER_ZONE_HOST} \
         -v /home/${USER}/icat2/vault:/var/lib/irods/iRODS/Vault \
         -v /home/${USER}/icat2/pgdata:/var/lib/postgresql/data \
+        -v $(pwd)/../.ssh/id_ed25519_hs.pub:/home/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}/.ssh/id_ed25519_hs.pub \
         -e ADD_IRODS_TO_GROUP=${ADD_IRODS_TO_GROUP} \
         -e ADD_POSTGRES_TO_GROUP=${ADD_POSTGRES_TO_GROUP} \
         -e IRODS_ZONE_NAME=${HS_USER_IRODS_ZONE} \
@@ -61,7 +82,7 @@ if [[ "${1}" == "--persist" ]]; then
         -p 1247 \
         -p 22 \
         --hostname ${HS_USER_ZONE_HOST} \
-        hydroshare/hs-irods:4.2.6-buster
+        hs-irods-users:latest
 else
     # Create ${IRODS_HOST} container from irods v.4.2.6
     echo "CREATE: ${IRODS_HOST} container"
@@ -82,7 +103,14 @@ else
         -p 1247 \
         -p 22 \
         --hostname ${HS_USER_ZONE_HOST} \
-        hydroshare/hs-irods:4.2.6-buster
+        hs-irods-users:latest
+    echo "Create .ssh directory on ${HS_USER_ZONE_HOST}"
+    echo "docker exec -u ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} ${HS_USER_ZONE_HOST} sh -c \"mkdir -p /home/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}/.ssh\""
+    docker exec -u ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} ${HS_USER_ZONE_HOST} sh -c "mkdir -p /home/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}/.ssh"
+    echo "Docker cp ../.ssh/id_ed25519_hs.pub ${HS_USER_ZONE_HOST}:/home/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}/.ssh/id_ed25519_hs.pub"
+    docker cp ../.ssh/id_ed25519_hs.pub ${HS_USER_ZONE_HOST}:/home/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}/.ssh/id_ed25519_hs.pub
+    echo "docker exec -u ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} ${HS_USER_ZONE_HOST} sh -c \"cat /home/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}/.ssh/id_ed25519_hs.pub >> /home/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}/.ssh/authorized_keys\""
+    docker exec -u ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} ${HS_USER_ZONE_HOST} sh -c "cat /home/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}/.ssh/id_ed25519_hs.pub >> /home/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}/.ssh/authorized_keys"
 fi
 
 # wait for ${IRODS_HOST} and ${HS_USER_ZONE_HOST} to finish standing up
@@ -108,7 +136,6 @@ echo "[root@${HS_USER_ZONE_HOST}]$ apt-get update"
 docker exec ${HS_USER_ZONE_HOST} sh -c "apt-get update"
 echo "[root@${HS_USER_ZONE_HOST}]$ apt-get install -y openssh-client openssh-server && mkdir /var/run/sshd && sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd && /etc/init.d/ssh restart"
 docker exec ${HS_USER_ZONE_HOST} sh -c "apt-get install -y openssh-client openssh-server && mkdir /var/run/sshd && sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd && /etc/init.d/ssh restart"
-# TODO: modify for key auth
 
 # Create Linux user ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} on ${HS_USER_ZONE_HOST}
 echo "INFO: Create Linux user ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} on ${HS_USER_ZONE_HOST}"
@@ -119,9 +146,6 @@ docker cp create_user.sh ${HS_USER_ZONE_HOST}:/home/${LINUX_ADMIN_USER_FOR_HS_US
 docker cp delete_user.sh ${HS_USER_ZONE_HOST}:/home/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}
 docker exec ${HS_USER_ZONE_HOST} chown -R ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}:${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} /home/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}
 docker exec ${HS_USER_ZONE_HOST} sh -c "echo "${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}":"${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}" | chpasswd"
-# TODO: gen and copy the public key for pka
-# echo "ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N '' -C 'hsuserproxy@${HS_USER_ZONE_HOST}'" | $RUN_ON_USER
-# echo " - ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N '' -C 'hsuserproxy@${HS_USER_ZONE_HOST}'"
 
 # Make ${IRODS_HOST} and ${HS_USER_ZONE_HOST} aware of each other via /etc/hosts
 echo "INFO: update /etc/hosts"
@@ -195,8 +219,8 @@ docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
 # iint the ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} in ${HS_USER_ZONE_HOST}
 echo "[${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}@${HS_USER_ZONE_HOST}]$ iinit"
 docker exec -u ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} ${HS_USER_ZONE_HOST} sh -c "export IRODS_HOST=${ICAT2IP} && export IRODS_PORT=${IRODS_PORT} && export IRODS_USER_NAME=${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} && export IRODS_PASSWORD=${LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE} && iinit ${LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE}"
+
 # add irods_environment.json file for rods user
-jq -n --arg h "${HS_USER_ZONE_HOST}" --arg p ${IRODS_PORT} --arg z "${HS_USER_IRODS_ZONE}" --arg n "${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}" '{"irods_host": $h, "irods_port": 1247, "irods_zone_name": $z, "irods_user_name": $n}' > env-files/rods@${HS_USER_ZONE_HOST}.json
 docker cp env-files/rods@${HS_USER_ZONE_HOST}.json ${HS_USER_ZONE_HOST}:/home/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}/.irods/irods_environment.json
 docker exec ${HS_USER_ZONE_HOST} chown ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}:${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} /home/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}/.irods/irods_environment.json
 
