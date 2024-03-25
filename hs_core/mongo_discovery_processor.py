@@ -9,7 +9,7 @@ db = client[getattr(settings, "MONGO_DISCOVERY_DATABASE", "hydroshare_beta")]
 
 @shared_task
 def update_mongo(resource_id: str):
-    db.discovery_ids.update_one({"resource_id": resource_id}, {"$set": {"resource_id": resource_id, 
+    db.discovery_ids.update_one({"resource_id": resource_id}, {"$set": {"resource_id": resource_id,
                                                                         "update_time": datetime.now()}}, upsert=True)
 
 
