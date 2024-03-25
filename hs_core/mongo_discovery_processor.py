@@ -16,14 +16,8 @@ db = client[getattr(settings, "MONGO_DISCOVERY_DATABASE", "hydroshare_beta")]
 
 @shared_task
 def update_mongo(resource_id: str):
-    res = get_resource_by_shortkey(resource_id)
-    res_json = resource_metadata(res)
-    res_metadata = _HydroshareResourceMetadata(**res_json.dict())
-    discovery_record = res_metadata.to_catalog_dataset()
-    db.discovery.update_one({"url": str(res_json.url)}, {"$set": discovery_record.dict(by_alias=True)}, upsert=True)
+    db.discovery.update_one({"resource_id": resource_id}, {"$set": {"resource_id": resource_id}}, upsert=True)
 
 @shared_task
 def remove_mongo(resource_id: str):
-    res = get_resource_by_shortkey(resource_id)
-    res_json = resource_metadata(res)
-    db.discovery.delete_one({"url": str(res_json.url)})
+    db.discover_ids_delete_one({"resource_id": resource_id})
