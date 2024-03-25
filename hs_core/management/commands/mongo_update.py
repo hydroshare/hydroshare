@@ -9,7 +9,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         dqs = BaseResource.objects.filter(Q(raccess__discoverable=True)
-                                            | Q(raccess__public=True)).select_related('raccess')
+                                          | Q(raccess__public=True)).select_related('raccess')
         print("Django count = {}".format(dqs.count()))
         for r in dqs.iterator():
             print("Updating Mongo record for " + r.short_id)
