@@ -1,6 +1,6 @@
 HS_PATH=/home/hydro/hydroshare
 HOST_SSL_DIR=/opt/hs-certs
-HS_DATABASE=pg.deploy.sql
+HS_DATABASE=/var/tmp/pg.deploy.sql
 HS_LOG_FILES=/var/hydroshare/log
 HS_SERVICE_UID=20028
 HS_SERVICE_GID=10000
