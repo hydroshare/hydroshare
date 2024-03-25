@@ -2,7 +2,6 @@ from django.core.management.base import BaseCommand
 from django.db.models import Q
 from hs_core.hydro_realtime_signal_processor import update_mongo
 from hs_core.models import BaseResource
-from hs_core.hydroshare.utils import get_resource_by_shortkey
 
 
 class Command(BaseCommand):
