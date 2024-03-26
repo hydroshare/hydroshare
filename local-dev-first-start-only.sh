@@ -215,9 +215,9 @@ else
   done
 fi
 
-###############################################################################################################
-### Preparing                                                                                            
-###############################################################################################################
+echo '###############################################################################################################'
+echo " Preparing"                                                                                            
+echo '###############################################################################################################'
 
 #grep -v CMD Dockerfile > Dockerfile-defaultworker
 #grep -v CMD Dockerfile > Dockerfile-hydroshare
@@ -225,6 +225,7 @@ fi
 #cat Dockerfile-defaultworker.template >> Dockerfile-defaultworker
 #cat Dockerfile-hydroshare.template >> Dockerfile-hydroshare
 
+echo "Creating init scripts"
 cp scripts/templates/init-defaultworker.template init-defaultworker
 cp scripts/templates/init-hydroshare.template    init-hydroshare
 
@@ -245,6 +246,7 @@ sed -i $SED_EXT s/CELERY_CONCURRENCY/$CELERY_CONCURRENCY/g init-defaultworker
 #sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g Dockerfile-defaultworker
 #sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g Dockerfile-defaultworker
 
+echo "Creating nginx config files"
 NGINX_CONFIG_DIRECTORY=nginx/config-files
 cp -rf $NGINX_CONFIG_DIRECTORY/nginx.conf-default.template ${NGINX_CONFIG_DIRECTORY}/nginx.conf-default
 cp -rf $NGINX_CONFIG_DIRECTORY/hydroshare-local-nginx.conf.template ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
@@ -268,6 +270,7 @@ sed -i $SED_EXT 's!SENDFILE_IRODS_GROUP_ID!'${SENDFILE_IRODS_GROUP_ID}'!g' nginx
 sed -i $SED_EXT 's!SENDFILE_IRODS_USER!'${SENDFILE_IRODS_USER}'!g' nginx/Dockerfile-nginx
 sed -i $SED_EXT 's!SENDFILE_IRODS_GROUP!'${SENDFILE_IRODS_GROUP}'!g' nginx/Dockerfile-nginx
 
+echo "Creating django settings and static directories"
 cp hydroshare/local_settings.template hydroshare/local_settings.py 2>/dev/null
 mkdir -p hydroshare/static/static 2>/dev/null
 mkdir -p hydroshare/static/media 2>/dev/null
@@ -276,6 +279,14 @@ mkdir -p log/nginx 2>/dev/null
 #chmod -R 777 log 2>/dev/null
 
 find . -name '*.hydro-bk' -exec rm -f {} \; 2>/dev/null
+
+echo "Creating .ssh directory and generating ssh key"
+echo " - rm -rf .ssh"
+rm -rf .ssh
+echo " - mkdir .ssh"
+mkdir .ssh
+echo " - ssh-keygen -t ed25519 -f .ssh/id_ed25519_hs -N ''"
+ssh-keygen -t ed25519 -f .ssh/id_ed25519_hs -N ''
 
 echo
 echo '########################################################################################################################'
@@ -313,14 +324,6 @@ echo '##########################################################################
 echo -e " Setting up iRODS"
 echo '########################################################################################################################'
 echo
-
-echo " - rm -rf .ssh"
-rm -rf .ssh
-echo " - mkdir .ssh"
-mkdir .ssh
-echo " - ssh-keygen -t ed25519 -f .ssh/id_ed25519_hs -N ''"
-ssh-keygen -t ed25519 -f .ssh/id_ed25519_hs -N ''
-# ssh -i /hydroshare/.ssh/id_ed25519_hs hsuserproxy@users.local.org
 
 cd irods/
 ./partial_build.sh 
