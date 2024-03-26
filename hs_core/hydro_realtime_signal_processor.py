@@ -3,6 +3,7 @@ import logging
 from django.conf import settings
 from django.db import models
 from hs_core.models import Date, BaseResource
+from hs_core.mongo_discovery_processor import remove_mongo, update_mongo
 from hs_core.signals import post_spam_whitelist_change
 from hs_access_control.models import ResourceAccess
 from haystack.exceptions import NotHandled
@@ -65,6 +66,7 @@ def index_resource(signal_processor, instance: BaseResource):
                 except NotHandled:
                     logger.exception("Failure: changes to %s with short_id %s not added to Solr Index.",
                                      str(type(instance)), newbase.short_id)
+                update_mongo.apply_async((newbase.short_id,))
 
             # if object is private or becoming private, delete from index
             else:  # not to be shown in discover
@@ -74,3 +76,4 @@ def index_resource(signal_processor, instance: BaseResource):
                 except NotHandled:
                     logger.exception("Failure: delete of %s with short_id %s failed.",
                                      str(type(instance)), newbase.short_id)
+                remove_mongo.apply_async((newbase.short_id,))

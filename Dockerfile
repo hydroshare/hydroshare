@@ -34,7 +34,7 @@ COPY --from=node-build /hydroshare /hydroshare
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen
 
-RUN pip install python-keycloak
+RUN pip install python-keycloak pymongo
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
