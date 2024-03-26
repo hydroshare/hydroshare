@@ -63,9 +63,16 @@ class TestCaseCommonUtilities(object):
         try:
             exec_cmd = "{0} {1} {2}".format(settings.LINUX_ADMIN_USER_CREATE_USER_IN_USER_ZONE_CMD,
                                             self.user.username, self.user.username)
+            pwd = None
+            pk = None
+            if hasattr(settings, 'LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE'):
+                pwd = settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE
+            if hasattr(settings, 'PRIVATE_KEY_FILE_FOR_HS_USER_ZONE'):
+                pk = settings.PRIVATE_KEY_FILE_FOR_HS_USER_ZONE
             output = run_ssh_command(host=settings.HS_USER_ZONE_HOST,
                                      uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
-                                     pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
+                                     pwd=pwd,
+                                     private_key_file=pk,
                                      exec_cmd=exec_cmd)
             for out_str in output:
                 if 'ERROR:' in out_str.upper():
@@ -83,9 +90,16 @@ class TestCaseCommonUtilities(object):
         try:
             exec_cmd = "{0} {1}".format(settings.LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD,
                                         self.user.username)
+            pwd = None
+            pk = None
+            if hasattr(settings, 'LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE'):
+                pwd = settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE
+            if hasattr(settings, 'PRIVATE_KEY_FILE_FOR_HS_USER_ZONE'):
+                pk = settings.PRIVATE_KEY_FILE_FOR_HS_USER_ZONE
             output = run_ssh_command(host=settings.HS_USER_ZONE_HOST,
                                      uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
-                                     pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
+                                     pwd=pwd,
+                                     private_key_file=pk,
                                      exec_cmd=exec_cmd)
             if output:
                 for out_str in output:

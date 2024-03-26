@@ -2,6 +2,48 @@
 
 source env-files/use-local-irods.env
 
+RUN_ON_DATA="docker exec --interactive ${IRODS_HOST} sh -C"
+RUN_ON_USER="docker exec --interactive ${HS_USER_ZONE_HOST} sh -C"
+
+echo "------------------------------------------------------------"
+echo "INFO: add irods_environment.json files for ${HS_USER_ZONE_HOST}"
+
+echo "Create the ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}@${HS_USER_ZONE_HOST}.json file"
+echo "  - jq -n --arg h "${HS_USER_ZONE_HOST}" --argjson p ${IRODS_PORT} --arg z "${HS_USER_IRODS_ZONE}" --arg n "${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}" '{"irods_host": $h, "irods_port": $p, "irods_zone_name": $z, "irods_user_name": $n}' > env-files/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}@${HS_USER_ZONE_HOST}.json"
+jq -n --arg h "${HS_USER_ZONE_HOST}" --argjson p ${IRODS_PORT} --arg z "${HS_USER_IRODS_ZONE}" --arg n "${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}" '{"irods_host": $h, "irods_port": $p, "irods_zone_name": $z, "irods_user_name": $n}' > env-files/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}@${HS_USER_ZONE_HOST}.json
+docker cp env-files/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}@${HS_USER_ZONE_HOST}.json ${HS_USER_ZONE_HOST}:/home/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}/.irods/irods_environment.json
+
+echo "Create the rods@${HS_USER_ZONE_HOST}.json file"
+echo "  - jq -n --arg h "${HS_USER_ZONE_HOST}" --argjson p ${IRODS_PORT} --arg z "${HS_USER_IRODS_ZONE}" --arg n "rods" '{"irods_host": $h, "irods_port": $p, "irods_zone_name": $z, "irods_user_name": $n}' > env-files/rods@${HS_USER_ZONE_HOST}.json"
+jq -n --arg h "${HS_USER_ZONE_HOST}" --argjson p ${IRODS_PORT} --arg z "${HS_USER_IRODS_ZONE}" --arg n "rods" '{"irods_host": $h, "irods_port": $p, "irods_zone_name": $z, "irods_user_name": $n}' > env-files/rods@${HS_USER_ZONE_HOST}.json
+
+echo "Copy the ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}@${HS_USER_ZONE_HOST}.json file to ${HS_USER_ZONE_HOST}"
+docker exec ${HS_USER_ZONE_HOST} mkdir -p /root/.irods
+docker exec ${HS_USER_ZONE_HOST} mkdir -p /home/rods/.irods
+docker cp env-files/rods@${HS_USER_ZONE_HOST}.json ${HS_USER_ZONE_HOST}:/root/.irods/irods_environment.json
+docker cp env-files/rods@${HS_USER_ZONE_HOST}.json ${HS_USER_ZONE_HOST}:/home/rods/.irods/irods_environment.json
+
+echo "------------------------------------------------------------"
+echo "INFO: add irods_environment.json files for ${IRODS_HOST}"
+
+echo "Create .irods dirs"
+docker exec ${IRODS_HOST} mkdir -p /home/rods/.irods
+docker exec ${IRODS_HOST} mkdir -p /home/${IRODS_USERNAME}/.irods
+docker exec ${IRODS_HOST} mkdir -p /root/.irods
+
+echo "Create the ${IRODS_USERNAME}@${IRODS_ZONE}.json file"
+echo "  - jq -n --arg h "${IRODS_HOST}" --argjson p ${IRODS_PORT} --arg z "${IRODS_ZONE}" --arg n "${IRODS_USERNAME}" '{"irods_host": $h, "irods_port": $p, "irods_zone_name": $z, "irods_user_name": $n}' > env-files/${IRODS_USERNAME}@${IRODS_HOST}.json"
+jq -n --arg h "${IRODS_HOST}" --argjson p ${IRODS_PORT} --arg z "${IRODS_ZONE}" --arg n "${IRODS_USERNAME}" '{"irods_host": $h, "irods_port": $p, "irods_zone_name": $z, "irods_user_name": $n}' > env-files/${IRODS_USERNAME}@${IRODS_HOST}.json
+docker cp env-files/${IRODS_USERNAME}@${IRODS_HOST}.json ${IRODS_HOST}:/home/${IRODS_USERNAME}/.irods/irods_environment.json
+
+echo "Create the rods@${IRODS_ZONE}.json file"
+echo "  - jq -n --arg h "${IRODS_HOST}" --argjson p ${IRODS_PORT} --arg z "${IRODS_ZONE}" --arg n "rods" '{"irods_host": $h, "irods_port": $p, "irods_zone_name": $z, "irods_user_name": $n}' > env-files/rods@${IRODS_HOST}.json"
+jq -n --arg h "${IRODS_HOST}" --argjson p ${IRODS_PORT} --arg z "${IRODS_ZONE}" --arg n "rods" '{"irods_host": $h, "irods_port": $p, "irods_zone_name": $z, "irods_user_name": $n}' > env-files/rods@${IRODS_HOST}.json
+
+echo "Copy the ${IRODS_USERNAME}@${IRODS_ZONE}.json file to ${IRODS_HOST}"
+docker cp env-files/rods@${IRODS_HOST}.json ${IRODS_HOST}:/root/.irods/irods_environment.json
+docker cp env-files/rods@${IRODS_HOST}.json ${IRODS_HOST}:/home/rods/.irods/irods_environment.json
+
 echo "echo rods | iinit" | $RUN_ON_DATA
 echo "echo rods | iinit" | $RUN_ON_USER
 
@@ -60,9 +102,10 @@ sleep 1s
 
 echo "------------------------------------------------------------"
 echo "INFO: init the ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} in ${HS_USER_ZONE_HOST}"
-#TODO this throws error but succeeds research as low priority work
-echo "echo ${LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE} | iinit" | docker exec -u hsuserproxy ${HS_USER_ZONE_HOST} bash
-echo " - echo ${LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE} | iinit | docker exec -u hsuserproxy ${HS_USER_ZONE_HOST} bash"
+docker exec -u ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} ${HS_USER_ZONE_HOST} sh -c "export IRODS_HOST=${HS_USER_ZONE_HOST} && export IRODS_PORT=${IRODS_PORT} && export IRODS_USER_NAME=${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} && export IRODS_PASSWORD=${LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE} && iinit ${LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE}"
+
+docker exec ${IRODS_HOST} chown -R ${IRODS_USERNAME}:${IRODS_USERNAME} /home/${IRODS_USERNAME}/
+docker exec ${HS_USER_ZONE_HOST} chown -R ${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}:${LINUX_ADMIN_USER_FOR_HS_USER_ZONE} /home/${LINUX_ADMIN_USER_FOR_HS_USER_ZONE}/
 
 echo "------------------------------------------------------------"
 echo "INFO: give ${IRODS_USERNAME} own rights over ${HS_USER_IRODS_ZONE}/home"
