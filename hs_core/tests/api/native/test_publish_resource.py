@@ -6,17 +6,22 @@ import shutil
 
 import arrow
 from freezegun import freeze_time
+from rest_framework import status
 from django.conf import settings
 from django.contrib.auth.models import Group, User
-from django.test import TestCase
+from django.test import TestCase, Client
+from django.urls import reverse
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 
 from hs_access_control.models.privilege import UserResourcePrivilege, PrivilegeCodes
 from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_doi
 from hs_core.models import BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
-from hs_core.views.utils import get_default_admin_user
+from hs_core.views.utils import get_default_admin_user, get_default_support_user
 from django.core.exceptions import ValidationError, PermissionDenied
+from theme.backends import without_login_date_token_generator
 
 
 class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
@@ -127,6 +132,91 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
 
         # there should now published date type metadata element
         self.assertTrue(self.pub_res.metadata.dates.filter(type='published').exists())
+
+    def test_publish_via_email_link(self):
+        """
+        Test case for publishing a resource via email link.
+
+        This test verifies that a resource can be published by clicking on the approval link
+        received via email. It checks that the resource is initially not published, submits
+        the resource for review, generates the approval link, and then simulates clicking on
+        the link. Finally, it checks that the resource is published and no longer in review.
+        """
+        self.assertFalse(
+            self.res.raccess.published,
+            msg='The resource is published'
+        )
+
+        hydroshare.submit_resource_for_review(pk=self.complete_res.short_id, user=self.user)
+
+        support = get_default_support_user()
+        token = without_login_date_token_generator.make_token(support)
+        uidb64 = urlsafe_base64_encode(force_bytes(support.pk))
+        url = reverse('metadata_review', kwargs={
+            "shortkey": self.complete_res.short_id,
+            "action": "approve",
+            "uidb64": uidb64,
+            "token": token,
+        })
+
+        client = Client()
+        # let support click the link in the email
+        response = client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+
+        pub_res = hydroshare.get_resource_by_shortkey(self.complete_res.short_id)
+
+        self.assertTrue(
+            pub_res.raccess.published,
+            msg='The resource is not published'
+        )
+        self.assertFalse(
+            pub_res.raccess.review_pending,
+            msg='The resource is still in review'
+        )
+
+    def test_reject_publish_via_email_link(self):
+        """
+        Test case to verify the rejection of resource publishing via email link.
+
+        This test checks if the resource is not published and then submits the resource for review.
+        It generates an email link for rejecting the review and simulates the support user clicking the link.
+        Finally, it verifies that the resource is not published and the review status is not pending.
+        """
+        self.assertFalse(
+            self.res.raccess.published,
+            msg='The resource is published'
+        )
+
+        hydroshare.submit_resource_for_review(pk=self.complete_res.short_id, user=self.user)
+
+        support = get_default_support_user()
+        token = without_login_date_token_generator.make_token(support)
+        uidb64 = urlsafe_base64_encode(force_bytes(support.pk))
+        url = reverse('metadata_review', kwargs={
+            "shortkey": self.complete_res.short_id,
+            "action": "reject",
+            "uidb64": uidb64,
+            "token": token,
+        })
+
+        client = Client()
+        # let support click the link in the email
+        response = client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+
+        potentially_pub_res = hydroshare.get_resource_by_shortkey(self.complete_res.short_id)
+
+        self.assertFalse(
+            potentially_pub_res.raccess.published,
+            msg='The resource is not published'
+        )
+        self.assertFalse(
+            potentially_pub_res.raccess.review_pending,
+            msg='The resource is still in review'
+        )
 
     def test_only_admin_can_publish_resource(self):
         # check status prior to publishing the resource

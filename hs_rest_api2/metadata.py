@@ -3,15 +3,14 @@ import logging
 from datetime import datetime, timezone
 
 from django.db import transaction
+from hsmodels.schemas import ResourceMetadata, load_rdf, rdf_graph
+from pydantic import ConfigDict
 from pydantic import ValidationError as PydanticValidationError
 from rest_framework.exceptions import ValidationError
 
 from hs_core.hydroshare.hs_bagit import save_resource_metadata_xml
-
 from hs_file_types.utils import ingest_logical_file_metadata
 from hs_rest_api2.serializers import ResourceMetadataInForbidExtra
-
-from hsmodels.schemas import ResourceMetadata, load_rdf, rdf_graph
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +26,7 @@ def _get_in_schema(out_schema):
     in_schema = out_schema.__bases__[0]
 
     class IncomingForbid(in_schema):
-        class Config:
-            extra = "forbid"
+        model_config = ConfigDict(extra="forbid")
 
     return IncomingForbid
 

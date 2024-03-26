@@ -62,6 +62,7 @@ from hs_core.models import (
     Subject,
     TaskNotification,
     resource_processor,
+    PartyValidationError,
 )
 from hs_core.task_utils import (
     dismiss_task_by_id,
@@ -1768,6 +1769,11 @@ def create_resource(request, *args, **kwargs):
             full_paths=full_paths,
             auto_aggregate=auto_aggregate,
         )
+    except PartyValidationError as ex:
+        party_message = "Validation issue in Creator or Contributor metadata. " + \
+            f"One of the profiles contains invalid identifiers: {str(ex)}."
+        ajax_response_data["message"] = party_message
+        return JsonResponse(ajax_response_data)
     except SessionException as ex:
         ajax_response_data["message"] = ex.stderr
         return JsonResponse(ajax_response_data)
@@ -2108,7 +2114,7 @@ def group_membership(request, uidb36, token, membership_request_id, **kwargs):
     return redirect("/")
 
 
-def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs):
+def metadata_review(request, shortkey, action, uidb64=None, token=None, **kwargs):
     """
     View for the link in the verification email that was sent to a user
     when they request publication/metadata review.
@@ -2118,8 +2124,8 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
     :param uidb36: ID of the user to whom the email was sent (part of the link in the email)
     :param token: token that was part of the link in the email
     """
-    if uidb36:
-        user = authenticate(uidb36=uidb36, token=token, is_active=True)
+    if uidb64:
+        user = authenticate(uidb64=uidb64, token=token, is_active=True)
         if user is None:
             messages.error(
                 request,
