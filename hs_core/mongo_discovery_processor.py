@@ -13,8 +13,8 @@ if discovery_url:
 @shared_task
 def update_mongo(resource_id: str):
     if db:
-        db.discovery_ids.update_one({"resource_id": resource_id}, {"$set": {"resource_id": resource_id,
-                                                                            "update_time": datetime.now()}}, upsert=True)
+        record = {"resource_id": resource_id, "update_time": datetime.now()}
+        db.discovery_ids.update_one({"resource_id": resource_id}, {"$set": record}, upsert=True)
 
 
 @shared_task
