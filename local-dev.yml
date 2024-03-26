@@ -12,6 +12,7 @@ services:
       - "idata_iconf_vol:/etc/irods"
       - "idata_vault_vol:/var/lib/irods"
       - "idata_pgres_vol:/var/lib/postgresql/data"
+      - "idata_home_vol:/home"
     environment:
       SHARED_NEG_KEY: 'hydroshareZonehydroshareuserZone'
       USE_IRODS: 'True'
@@ -227,6 +228,7 @@ volumes:
   idata_iconf_vol:
   idata_vault_vol:
   idata_pgres_vol:
+  idata_home_vol:
   iuser_iconf_vol:
   iuser_vault_vol:
   iuser_pgres_vol:

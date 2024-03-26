@@ -34,7 +34,7 @@ docker exec ${IRODS_HOST} mkdir -p /root/.irods
 echo "Create the ${IRODS_USERNAME}@${IRODS_ZONE}.json file"
 echo "  - jq -n --arg h "${IRODS_HOST}" --argjson p ${IRODS_PORT} --arg z "${IRODS_ZONE}" --arg n "${IRODS_USERNAME}" '{"irods_host": $h, "irods_port": $p, "irods_zone_name": $z, "irods_user_name": $n}' > env-files/${IRODS_USERNAME}@${IRODS_HOST}.json"
 jq -n --arg h "${IRODS_HOST}" --argjson p ${IRODS_PORT} --arg z "${IRODS_ZONE}" --arg n "${IRODS_USERNAME}" '{"irods_host": $h, "irods_port": $p, "irods_zone_name": $z, "irods_user_name": $n}' > env-files/${IRODS_USERNAME}@${IRODS_HOST}.json
-docker cp env-files/${IRODS_USERNAME}@${HS_USER_ZONE_HOST}.json ${IRODS_ZONE}:/home/${IRODS_USERNAME}/.irods/irods_environment.json
+docker cp env-files/${IRODS_USERNAME}@${IRODS_HOST}.json ${IRODS_HOST}:/home/${IRODS_USERNAME}/.irods/irods_environment.json
 
 echo "Create the rods@${IRODS_ZONE}.json file"
 echo "  - jq -n --arg h "${IRODS_HOST}" --argjson p ${IRODS_PORT} --arg z "${IRODS_ZONE}" --arg n "rods" '{"irods_host": $h, "irods_port": $p, "irods_zone_name": $z, "irods_user_name": $n}' > env-files/rods@${IRODS_HOST}.json"
