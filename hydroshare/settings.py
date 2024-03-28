@@ -204,6 +204,9 @@ ENABLE_OIDC_AUTHENTICATION = False
 # OIDC_OP_LOGOUT_URL_METHOD = 'hs_core.authentication.provider_logout'
 # OIDC_STORE_ID_TOKEN = True
 
+# Whether or not the OIDC provider should verify SSL certificates from the identity provider
+OIDC_VERIFY_SSL = True
+
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (
@@ -860,6 +863,3 @@ BULK_UPDATE_CREATE_BATCH_SIZE = 1000
 if ENABLE_OIDC_AUTHENTICATION:
     DEFAULT_AUTHENTICATION_CLASSES += ("mozilla_django_oidc.contrib.drf.OIDCAuthentication",)
     AUTHENTICATION_BACKENDS.append("hs_core.authentication.HydroShareOIDCAuthenticationBackend")
-
-# TODO: revert this once we have a valid SSL certificate
-OIDC_VERIFY_SSL = False
