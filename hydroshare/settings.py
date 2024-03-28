@@ -205,7 +205,7 @@ ENABLE_OIDC_AUTHENTICATION = False
 # OIDC_STORE_ID_TOKEN = True
 
 # Whether or not the OIDC provider should verify SSL certificates from the identity provider
-OIDC_VERIFY_SSL = True
+# OIDC_VERIFY_SSL = True
 
 # List of finder classes that know how to find static files in
 # various locations.
