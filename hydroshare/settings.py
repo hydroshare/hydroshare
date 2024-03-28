@@ -864,3 +864,6 @@ if ENABLE_OIDC_AUTHENTICATION:
                                    "mozilla_django_oidc.contrib.drf.OIDCAuthentication",)
     DEFAULT_AUTHENTICATION_CLASSES = OIDC_AUTHENTICATION_CLASSES + DEFAULT_AUTHENTICATION_CLASSES
     AUTHENTICATION_BACKENDS.append("hs_core.authentication.HydroShareOIDCAuthenticationBackend")
+
+# TODO: revert this once we have a valid SSL certificate
+OIDC_VERIFY_SSL = False
