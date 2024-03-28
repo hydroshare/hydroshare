@@ -860,3 +860,6 @@ BULK_UPDATE_CREATE_BATCH_SIZE = 1000
 if ENABLE_OIDC_AUTHENTICATION:
     DEFAULT_AUTHENTICATION_CLASSES += ("mozilla_django_oidc.contrib.drf.OIDCAuthentication",)
     AUTHENTICATION_BACKENDS.append("hs_core.authentication.HydroShareOIDCAuthenticationBackend")
+
+# TODO: revert this once we have a valid SSL certificate
+OIDC_VERIFY_SSL = False
