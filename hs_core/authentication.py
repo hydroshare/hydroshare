@@ -45,6 +45,9 @@ def provider_logout(request):
     # and is not redirected.
     logout_url = settings.OIDC_OP_LOGOUT_ENDPOINT
     redirect_url = settings.LOGOUT_REDIRECT_URL
+    verify = settings.OIDC_VERIFY_SSL
+    if not verify:
+        verify = False
 
     # If we have the oidc_id_token, we can automatically redirect
     # the user back to the application.
@@ -56,7 +59,7 @@ def provider_logout(request):
                 location=redirect_url
             )
         }
-        res = requests.post(logout_url, data)
+        res = requests.post(logout_url, data, verify=verify)
         if not res.ok:
             logout_url = logout_url + "?" + urlencode(data)
         else:
