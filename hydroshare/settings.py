@@ -189,8 +189,8 @@ ENABLE_OIDC_AUTHENTICATION = False
 # OIDC_OP_USER_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/userinfo"
 # OIDC_RP_SIGN_ALGO = "RS256"
 # OIDC_OP_JWKS_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/certs"
-# OIDC_RP_CLIENT_ID = 'hydroshare'
-# OIDC_RP_CLIENT_SECRET = 'Ya4GzskPjEmvkX6cL8w3X0sQPNW6CwkM'
+OIDC_RP_CLIENT_ID = 'hydroshare'
+OIDC_RP_CLIENT_SECRET = 'blah'
 # LOGIN_REDIRECT_URL = '/home/'
 # LOGIN_URL = '/oidc/authenticate/'
 # OIDC_CHANGE_PASSWORD_URL = "https://auth.cuahsi.io/realms/CUAHSI/account?#/security/signingin"
@@ -203,6 +203,12 @@ ENABLE_OIDC_AUTHENTICATION = False
 # the user will be redirected to auth.cuahsi.io to choose if they want to logout of SSO
 # OIDC_OP_LOGOUT_URL_METHOD = 'hs_core.authentication.provider_logout'
 # OIDC_STORE_ID_TOKEN = True
+
+# Whether or not the OIDC provider should verify SSL certificates from the identity provider
+# OIDC_VERIFY_SSL = True
+
+OIDC_KEYCLOAK_URL = "https://auth.cuahsi.org/"
+OIDC_KEYCLOAK_REALM = "CUAHSI"
 
 # List of finder classes that know how to find static files in
 # various locations.
@@ -472,7 +478,6 @@ MIDDLEWARE = (
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
     "hs_core.robots.RobotFilter",
     "hs_tracking.middleware.Tracking",
-    "hs_core.middleware.SunsetMiddleware",
 )
 
 # security settings
@@ -858,5 +863,8 @@ MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
 BULK_UPDATE_CREATE_BATCH_SIZE = 1000
 
 if ENABLE_OIDC_AUTHENTICATION:
-    DEFAULT_AUTHENTICATION_CLASSES += ("mozilla_django_oidc.contrib.drf.OIDCAuthentication",)
+    OIDC_AUTHENTICATION_CLASSES = ("hs_core.authentication.BasicOIDCAuthentication",
+                                   "mozilla_django_oidc.contrib.drf.OIDCAuthentication",)
+    DEFAULT_AUTHENTICATION_CLASSES = OIDC_AUTHENTICATION_CLASSES + DEFAULT_AUTHENTICATION_CLASSES
+    REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = DEFAULT_AUTHENTICATION_CLASSES
     AUTHENTICATION_BACKENDS.append("hs_core.authentication.HydroShareOIDCAuthenticationBackend")
