@@ -204,6 +204,9 @@ OIDC_RP_CLIENT_SECRET = 'blah'
 # OIDC_OP_LOGOUT_URL_METHOD = 'hs_core.authentication.provider_logout'
 # OIDC_STORE_ID_TOKEN = True
 
+# Whether or not the OIDC provider should verify SSL certificates from the identity provider
+# OIDC_VERIFY_SSL = True
+
 OIDC_KEYCLOAK_URL = "https://auth.cuahsi.org/"
 OIDC_KEYCLOAK_REALM = "CUAHSI"
 
