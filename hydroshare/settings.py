@@ -588,6 +588,9 @@ PASSWORD_RESET_TIMEOUT = 60 * 60 * 24 * 7
 # extraction
 TEMP_FILE_DIR = "/hs_tmp"
 
+# hydroshareUfsResc3 represents unused campus vault storage
+IRODS_DATA_RESC_NAMES = ('hydroshareUfsResc1')
+
 ####################
 # OAUTH TOKEN SETTINGS #
 ####################

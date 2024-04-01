@@ -424,10 +424,11 @@ class IrodsStorage(Storage):
             )
         coll_name = file_info[0]
         file_name = file_info[1]
+        data_resc_names = settings.IRODS_DATA_RESC_NAMES
         qrystr = (
-            "select DATA_SIZE where DATA_REPL_STATUS != '0' AND "
+            "select DATA_SIZE where DATA_REPL_STATUS = '1' AND DATA_RESC_NAME in {} AND "
             "{} AND DATA_NAME = '{}'".format(
-                IrodsStorage.get_absolute_path_query(coll_name), file_name
+                data_resc_names, IrodsStorage.get_absolute_path_query(coll_name), file_name
             )
         )
         stdout = self.session.run("iquest", None, "%s", qrystr)[0]
