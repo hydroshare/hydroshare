@@ -334,11 +334,13 @@ class IrodsStorage(Storage):
         fname_list = []
         fsize_list = []
 
+        data_resc_names = settings.IRODS_DATA_RESC_NAMES
+
         # the query below returns name and size (separated in comma) of all data
         # objects/files under the path collection/directory
         qrystr = (
             "select DATA_NAME, DATA_SIZE where DATA_REPL_STATUS != '0' "
-            "AND {}".format(IrodsStorage.get_absolute_path_query(path))
+            "AND {} AND DATA_RESC_NAME in {}".format(IrodsStorage.get_absolute_path_query(path), data_resc_names)
         )
         stdout = self.session.run("iquest", None, "--no-page", "%s,%s", qrystr)[
             0
