@@ -863,8 +863,9 @@ MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
 BULK_UPDATE_CREATE_BATCH_SIZE = 1000
 
 if ENABLE_OIDC_AUTHENTICATION:
-    # OIDC_AUTHENTICATION_CLASSES = ("hs_core.authentication.BasicOIDCAuthentication",
-    #                                "mozilla_django_oidc.contrib.drf.OIDCAuthentication",)
+    # The order of the authentication classes is important. The OIDC authentication class
+    # see this issue: https://github.com/encode/django-rest-framework/issues/5865
+    # The basic auth classes come first, then the session auth classes, then the OIDC and OAuth2 classes
     DEFAULT_AUTHENTICATION_CLASSES = ("hs_core.authentication.BasicOIDCAuthentication",) + \
         DEFAULT_AUTHENTICATION_CLASSES + ("mozilla_django_oidc.contrib.drf.OIDCAuthentication",)
     REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = DEFAULT_AUTHENTICATION_CLASSES
