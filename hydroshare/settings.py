@@ -863,8 +863,9 @@ MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
 BULK_UPDATE_CREATE_BATCH_SIZE = 1000
 
 if ENABLE_OIDC_AUTHENTICATION:
-    OIDC_AUTHENTICATION_CLASSES = ("hs_core.authentication.BasicOIDCAuthentication",
-                                   "mozilla_django_oidc.contrib.drf.OIDCAuthentication",)
-    DEFAULT_AUTHENTICATION_CLASSES = OIDC_AUTHENTICATION_CLASSES + DEFAULT_AUTHENTICATION_CLASSES
+    # OIDC_AUTHENTICATION_CLASSES = ("hs_core.authentication.BasicOIDCAuthentication",
+    #                                "mozilla_django_oidc.contrib.drf.OIDCAuthentication",)
+    DEFAULT_AUTHENTICATION_CLASSES = ("hs_core.authentication.BasicOIDCAuthentication",) + \
+        DEFAULT_AUTHENTICATION_CLASSES + ("mozilla_django_oidc.contrib.drf.OIDCAuthentication",)
     REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = DEFAULT_AUTHENTICATION_CLASSES
     AUTHENTICATION_BACKENDS.append("hs_core.authentication.HydroShareOIDCAuthenticationBackend")
