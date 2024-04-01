@@ -533,7 +533,7 @@ def send_over_quota_emails():
 
                 msg_str += '\n\nHydroShare Support'
                 subject = 'Quota warning'
-                if settings.DEBUG or settings.DISABLE_TASK_EMAILS:
+                if settings.DEBUG or settings.DISABLE_TASK_EMAILS or not qmsg.enforce_quota:
                     logger.info("quota warning email not sent out on debug server but logged instead: "
                                 "{}".format(msg_str))
                 else:
