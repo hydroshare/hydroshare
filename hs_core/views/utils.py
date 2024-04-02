@@ -25,7 +25,8 @@ from django.core.validators import URLValidator
 from django.db.models import When, Case, Value, BooleanField, Prefetch
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse, QueryDict
-from django.utils.http import int_to_base36
+from django.utils.http import int_to_base36, urlsafe_base64_encode
+from django.utils.encoding import force_bytes
 from mezzanine.conf import settings
 from mezzanine.utils.email import subject_template, send_mail_template
 from mezzanine.utils.urls import next_url
@@ -733,10 +734,11 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
         email_to = kwargs.get('email_to', user)
         resource = kwargs.pop('resource')
         context['resource'] = resource
+        uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
         action_url = reverse(action_type, kwargs={
             "shortkey": resource.short_id,
             "action": "approve",
-            "uidb36": int_to_base36(user.id),
+            "uidb64": uidb64,
             "token": without_login_date_token_generator.make_token(email_to),
         }) + "?next=" + (next_url(request) or "/")
         context['spatial_coverage'] = get_coverage_data_dict(resource)

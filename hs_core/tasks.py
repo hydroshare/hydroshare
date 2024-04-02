@@ -339,6 +339,8 @@ def manage_task_hourly():
     pending_resources = BaseResource.objects.filter(raccess__published=True,
                                                     doi__endswith=CrossRefSubmissionStatus.PENDING.value)
     for res in pending_resources:
+        # save the doi status
+        is_metadata_update = CrossRefSubmissionStatus.UPDATE_PENDING.value in res.doi
         meta_published_date = res.metadata.dates.all().filter(type='published').first()
         if meta_published_date:
             pub_date = meta_published_date
@@ -388,7 +390,10 @@ def manage_task_hourly():
                 msg_lst.append(msg)
                 logger.debug(response.content)
             else:
-                notify_owners_of_publication_success(res)
+                if is_metadata_update:
+                    logger.info("Crossref deposit successfully updated for resource {}".format(res.short_id))
+                else:
+                    notify_owners_of_publication_success(res)
         else:
             msg_lst.append("{res_id} does not have published date in its metadata.".format(
                 res_id=res.short_id))

@@ -461,7 +461,7 @@
         customAlert(alertTitle, "Please wait...", "success", -1); // Persistent alert
         $("html").css("cursor", "progress");
 
-        let errorMsg = "Failed to create " + contentType;
+        let errorMsg = "Failed to create " + contentType + ".";
 
         $.ajax({
             type: "POST",
@@ -475,6 +475,9 @@
                 }
                 else {
                     console.log(response);
+                    if (response.hasOwnProperty('message')) {
+                        errorMsg = `${errorMsg} ${response.message}`;
+                    }
                     $(".custom-alert").alert('close');  // Dismiss previous alert
                     errorMsg += `: \n${response.message}`
                     customAlert("Error", errorMsg, "error", -1, dismissable=true);
