@@ -334,13 +334,16 @@ class IrodsStorage(Storage):
         fname_list = []
         fsize_list = []
 
-        data_resc_names = settings.IRODS_DATA_RESC_NAMES
+        default_resc = getattr(settings, 'IRODS_DEFAULT_RESOURCE', None)
+        default_resc_query = ""
+        if default_resc:
+            default_resc_query = " AND DATA_RESC_NAME = '{}'".format(default_resc)
 
         # the query below returns name and size (separated in comma) of all data
         # objects/files under the path collection/directory
         qrystr = (
             "select DATA_NAME, DATA_SIZE where DATA_REPL_STATUS = '1' "
-            "AND {} AND DATA_RESC_NAME in {}".format(IrodsStorage.get_absolute_path_query(path), data_resc_names)
+            "AND {}{}".format(IrodsStorage.get_absolute_path_query(path), default_resc_query)
         )
         stdout = self.session.run("iquest", None, "--no-page", "%s,%s", qrystr)[
             0
@@ -426,11 +429,14 @@ class IrodsStorage(Storage):
             )
         coll_name = file_info[0]
         file_name = file_info[1]
-        data_resc_names = settings.IRODS_DATA_RESC_NAMES
+        default_resc = getattr(settings, 'IRODS_DEFAULT_RESOURCE', None)
+        default_resc_query = ""
+        if default_resc:
+            default_resc_query = " AND DATA_RESC_NAME = '{}'".format(default_resc)
         qrystr = (
-            "select DATA_SIZE where DATA_REPL_STATUS = '1' AND DATA_RESC_NAME in {} AND "
+            "select DATA_SIZE where DATA_REPL_STATUS = '1'{} AND "
             "{} AND DATA_NAME = '{}'".format(
-                data_resc_names, IrodsStorage.get_absolute_path_query(coll_name), file_name
+                default_resc_query, IrodsStorage.get_absolute_path_query(coll_name), file_name
             )
         )
         stdout = self.session.run("iquest", None, "%s", qrystr)[0]
