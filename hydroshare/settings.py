@@ -204,6 +204,9 @@ OIDC_RP_CLIENT_SECRET = 'blah'
 # OIDC_OP_LOGOUT_URL_METHOD = 'hs_core.authentication.provider_logout'
 # OIDC_STORE_ID_TOKEN = True
 
+# Whether or not the OIDC provider should verify SSL certificates from the identity provider
+# OIDC_VERIFY_SSL = True
+
 OIDC_KEYCLOAK_URL = "https://auth.cuahsi.org/"
 OIDC_KEYCLOAK_REALM = "CUAHSI"
 
@@ -860,7 +863,10 @@ MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
 BULK_UPDATE_CREATE_BATCH_SIZE = 1000
 
 if ENABLE_OIDC_AUTHENTICATION:
-    OIDC_AUTHENTICATION_CLASSES = ("hs_core.authentication.BasicOIDCAuthentication",
-                                   "mozilla_django_oidc.contrib.drf.OIDCAuthentication",)
-    DEFAULT_AUTHENTICATION_CLASSES = OIDC_AUTHENTICATION_CLASSES + DEFAULT_AUTHENTICATION_CLASSES
+    # The order of the authentication classes is important. The OIDC authentication class
+    # see this issue: https://github.com/encode/django-rest-framework/issues/5865
+    # The basic auth classes come first, then the session auth classes, then the OIDC and OAuth2 classes
+    DEFAULT_AUTHENTICATION_CLASSES = ("hs_core.authentication.BasicOIDCAuthentication",) + \
+        DEFAULT_AUTHENTICATION_CLASSES + ("mozilla_django_oidc.contrib.drf.OIDCAuthentication",)
+    REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = DEFAULT_AUTHENTICATION_CLASSES
     AUTHENTICATION_BACKENDS.append("hs_core.authentication.HydroShareOIDCAuthenticationBackend")
