@@ -469,7 +469,7 @@ class IrodsStorage(Storage):
                 "{} cannot be found in iRODS to retrieve " "file size".format(name)
             )
         # remove potential '\n' from stdout
-        size_string = stdout.strip("0\n").replace("\n", "")
+        size_string = stdout.replace("\n", "")
         try:
             ret = int(float(size_string))
             return ret
