@@ -21,6 +21,9 @@ from .icommands import (
     IRodsEnv,
 )
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 @deconstructible
 class IrodsStorage(Storage):
@@ -334,16 +337,26 @@ class IrodsStorage(Storage):
         fname_list = []
         fsize_list = []
 
-        default_resc = getattr(settings, 'IRODS_DEFAULT_RESOURCE', None)
-        default_resc_query = ""
-        if default_resc:
-            default_resc_query = " AND DATA_RESC_NAME = '{}'".format(default_resc)
+        single_resc_for_query = getattr(settings, 'IRODS_SINGLE_RESC_FOR_QUERY', "")
+        if not single_resc_for_query:
+            single_resc_for_query = getattr(settings, 'IRODS_DEFAULT_RESOURCE', None)
+            logger.warning(
+                "settings.IRODS_SINGLE_RESC_FOR_QUERY is not set. Using settings.IRODS_DEFAULT_RESOURCE"
+            )
+        if single_resc_for_query:
+            resc_query = " AND DATA_RESC_NAME = '{}'".format(single_resc_for_query)
+        else:
+            resc_query = ""
+            logger.error(
+                "settings.IRODS_SINGLE_RESC_FOR_QUERY and settings.IRODS_DEFAULT_RESOURCE are not set. "
+                "The resulting size might not be accurate if the file is replicated."
+            )
 
         # the query below returns name and size (separated in comma) of all data
         # objects/files under the path collection/directory
         qrystr = (
             "select DATA_NAME, DATA_SIZE where DATA_REPL_STATUS = '1' "
-            "AND {}{}".format(IrodsStorage.get_absolute_path_query(path), default_resc_query)
+            "AND {}{}".format(IrodsStorage.get_absolute_path_query(path), resc_query)
         )
         stdout = self.session.run("iquest", None, "--no-page", "%s,%s", qrystr)[
             0
@@ -429,14 +442,24 @@ class IrodsStorage(Storage):
             )
         coll_name = file_info[0]
         file_name = file_info[1]
-        default_resc = getattr(settings, 'IRODS_DEFAULT_RESOURCE', None)
-        default_resc_query = ""
-        if default_resc:
-            default_resc_query = " AND DATA_RESC_NAME = '{}'".format(default_resc)
+        single_resc_for_query = getattr(settings, 'IRODS_SINGLE_RESC_FOR_QUERY', "")
+        if not single_resc_for_query:
+            single_resc_for_query = getattr(settings, 'IRODS_DEFAULT_RESOURCE', None)
+            logger.warning(
+                "settings.IRODS_SINGLE_RESC_FOR_QUERY is not set. Using settings.IRODS_DEFAULT_RESOURCE"
+            )
+        if single_resc_for_query:
+            resc_query = " AND DATA_RESC_NAME = '{}'".format(single_resc_for_query)
+        else:
+            resc_query = ""
+            logger.error(
+                "settings.IRODS_SINGLE_RESC_FOR_QUERY and settings.IRODS_DEFAULT_RESOURCE are not set. "
+                "The resulting size might not be accurate if the file is replicated."
+            )
         qrystr = (
             "select DATA_SIZE where DATA_REPL_STATUS = '1'{} AND "
             "{} AND DATA_NAME = '{}'".format(
-                default_resc_query, IrodsStorage.get_absolute_path_query(coll_name), file_name
+                resc_query, IrodsStorage.get_absolute_path_query(coll_name), file_name
             )
         )
         stdout = self.session.run("iquest", None, "%s", qrystr)[0]
