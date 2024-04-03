@@ -199,3 +199,9 @@ HSWS_GEOSERVER_URL = "https://geoserver.hydroshare.org/geoserver"
 HSWS_GEOSERVER_ESCAPE = {
     '/': ' '
 }
+
+DEFAULT_AUTHENTICATION_CLASSES = (
+    "rest_framework.authentication.BasicAuthentication",
+    "rest_framework.authentication.SessionAuthentication",
+    "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
+)
