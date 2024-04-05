@@ -54,30 +54,41 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('output_file_name_with_path', help='output file name with path')
-        parser.add_argument('--update', action='store_true', help='attempt to fix inconsistencies when found')
+        parser.add_argument('--update', action='store_true', help='fix inconsistencies by recalcuting sizes in django')
+        parser.add_argument('--reset', action='store_true', help='reset resource file size in django when inconsistent')
         parser.add_argument('--uid', help='filter to just a single user by uid')
 
     def handle(self, *args, **options):
         quota_report_list = []
         uid = options['uid'] if options['uid'] else None
+        update = options['update']
+        reset = options['reset']
+
+        if update and reset:
+            print('Cannot use both --update and --reset options together')
+            return
         if uid:
             uqs = UserQuota.objects.filter(user__is_active=True).filter(user__is_superuser=False).filter(user__id=uid)
         else:
             uqs = UserQuota.objects.filter(user__is_active=True).filter(user__is_superuser=False)
         for uq in uqs:
+            user = uq.user
+            print("\n" + "*" * 80)
+            print(f'Checking quota for user {user.username}, {current_site}/user/{user.id}/')
             used_value_irods_dz = 0.0
             try:
-                used_value_irods_dz = get_dz_quota_usage_from_irods(uq.user.username)
+                used_value_irods_dz = get_dz_quota_usage_from_irods(user.username)
             except ValidationError:
                 pass
             used_value_irods_dz = convert_file_size_to_unit(used_value_irods_dz, "gb")
 
             # sum the resources sizes for all resources that the user is the quota holder for
-            user = uq.user
             owned_resources = user.uaccess.owned_resources
+            held_resources = []
             total_size = 0
             for res in owned_resources:
                 if res.get_quota_holder() == user:
+                    held_resources.append(res)
                     res_size = res.size
                     # print(f'{user.username} holds {current_site}/resource/{res.short_id}: {res_size} bytes')
                     total_size += res_size
@@ -93,10 +104,10 @@ class Command(BaseCommand):
                 print('quota incosistency: {} reported in django vs {} reported in iRODS for user {}'.format(
                     converted_total_size_django, used_value_irods_dz, user.username), flush=True)
 
-                if options['update']:
-                    # attempt to fix the inconsistency by updating file size in django
+                if update:
+                    print("Attempting to fix the inconsistency by updating file sizes in django")
                     res_files = []
-                    for res in owned_resources:
+                    for res in held_resources:
                         print(f"Total files in resource {res.short_id}: {res.files.all().count()}")
                         print(f'{current_site}/resource/{res.short_id}: currently {res.size} bytes')
                         file_counter = 0
@@ -116,8 +127,18 @@ class Command(BaseCommand):
                             ResourceFile.objects.bulk_update(res_files,
                                                              ResourceFile.system_meta_fields(), batch_size=_BATCH_SIZE)
                             print(f"Updated {file_counter} files for resource {res.short_id}")
+                            res.refresh_from_db()
+                            print(f'{current_site}/resource/{res.short_id}: now {res.size} bytes')
                         else:
                             print(f"Resource {res.short_id} contains no files.")
+
+                elif reset:
+                    print("Resetting file size cache in django")
+                    for res in held_resources:
+                        print(f'Resetting all filesizes in {current_site}/resource/{res.short_id}')
+                        res.files.update(_size=-1)
+                else:
+                    print('No action taken. Use --update or --reset to fix inconsistencies')
 
         if quota_report_list:
             with open(options['output_file_name_with_path'], 'w') as csvfile:
