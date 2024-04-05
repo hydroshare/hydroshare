@@ -67,10 +67,9 @@ class Command(BaseCommand):
         if update and reset:
             print('Cannot use both --update and --reset options together')
             return
+        uqs = UserQuota.objects.filter(user__is_active=True).filter(user__is_superuser=False)
         if uid:
-            uqs = UserQuota.objects.filter(user__is_active=True).filter(user__is_superuser=False).filter(user__id=uid)
-        else:
-            uqs = UserQuota.objects.filter(user__is_active=True).filter(user__is_superuser=False)
+            uqs = uqs.filter(user__id=uid)
         for uq in uqs:
             user = uq.user
             print("\n" + "*" * 80)
