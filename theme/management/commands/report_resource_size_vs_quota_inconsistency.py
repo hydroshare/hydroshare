@@ -54,7 +54,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('output_file_name_with_path', help='output file name with path')
-        parser.add_argument('--update', action='store_true', help='fix inconsistencies by recalcuting sizes in django')
+        parser.add_argument('--update', action='store_true', help='fix inconsistencies by recalculating in django')
         parser.add_argument('--reset', action='store_true', help='reset resource file size in django when inconsistent')
         parser.add_argument('--uid', help='filter to just a single user by uid')
 
@@ -81,6 +81,7 @@ class Command(BaseCommand):
             except ValidationError:
                 pass
             used_value_irods_dz = convert_file_size_to_unit(used_value_irods_dz, "gb")
+            print(f"Quota usage in iRODS Datazone: {used_value_irods_dz} GB")
 
             # sum the resources sizes for all resources that the user is the quota holder for
             owned_resources = user.uaccess.owned_resources
@@ -90,9 +91,10 @@ class Command(BaseCommand):
                 if res.get_quota_holder() == user:
                     held_resources.append(res)
                     res_size = res.size
-                    # print(f'{user.username} holds {current_site}/resource/{res.short_id}: {res_size} bytes')
+                    print(f"Resource {res.short_id} is held by {user.username}, size: {res_size} bytes")
                     total_size += res_size
             converted_total_size_django = convert_file_size_to_unit(int(total_size), 'gb')
+            print(f"Total size of resources in Django: {converted_total_size_django} GB")
 
             if not math.isclose(used_value_irods_dz, converted_total_size_django, abs_tol=0.1):
                 # report inconsistency
