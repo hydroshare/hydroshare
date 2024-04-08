@@ -4,11 +4,10 @@ from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 from hs_core.hydroshare import create_account
 from django.urls import reverse, resolve
 from django.conf import settings
-from django.db.models import Q
 from django.utils.http import urlencode
-from django.contrib.auth.models import User
 from rest_framework.authentication import BaseAuthentication
 from keycloak.keycloak_openid import KeycloakOpenID
+from theme.utils import get_user_from_username_or_email
 
 
 class HydroShareOIDCAuthenticationBackend(OIDCAuthenticationBackend):
@@ -93,8 +92,4 @@ class BasicOIDCAuthentication(BaseAuthentication):
             KEYCLOAK.token(decoded_username, decoded_password)
         except Exception:
             return None
-        try:
-            user = User.objects.get(Q(username=decoded_username) | Q(email=decoded_username))
-        except User.DoesNotExist:
-            user = None
-        return user
+        return get_user_from_username_or_email(decoded_username)
