@@ -5,9 +5,9 @@ from hs_core.hydroshare import create_account
 from django.urls import reverse, resolve
 from django.conf import settings
 from django.utils.http import urlencode
-from django.contrib.auth.models import User
 from rest_framework.authentication import BaseAuthentication
 from keycloak.keycloak_openid import KeycloakOpenID
+from theme.utils import get_user_from_username_or_email
 
 import logging
 logger = logging.getLogger(__name__)
@@ -107,6 +107,4 @@ class BasicOIDCAuthentication(BaseAuthentication):
             KEYCLOAK.token(decoded_username, decoded_password)
         except Exception:
             return None
-
-        user = User.objects.get(username=decoded_username)
-        return (user, None)
+        return get_user_from_username_or_email(decoded_username)
