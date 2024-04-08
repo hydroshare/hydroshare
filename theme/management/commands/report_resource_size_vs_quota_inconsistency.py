@@ -9,6 +9,7 @@ from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from hs_core.hydroshare import convert_file_size_to_unit
 from theme.models import UserQuota
+from django.contrib.auth.models import User
 from hs_core.hydroshare import current_site_url
 from hs_core.models import ResourceFile
 
@@ -61,13 +62,17 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         quota_report_list = []
         uid = options['uid'] if options['uid'] else None
-        update = options['update']
-        reset = options['reset']
+        update = options['update'] if options['update'] else False
+        reset = options['reset'] if options['reset'] else False
 
         if update and reset:
             print('Cannot use both --update and --reset options together')
             return
         uqs = UserQuota.objects.filter(user__is_active=True).filter(user__is_superuser=False)
+        try:
+            user = User.objects.get(id=uid, is_active=True, is_superuser=False)
+        except User.DoesNotExist:
+            print(f'Active user with id {uid} not found')
         if uid:
             uqs = uqs.filter(user__id=uid)
         for uq in uqs:
@@ -78,6 +83,8 @@ class Command(BaseCommand):
             try:
                 used_value_irods_dz = get_dz_quota_usage_from_irods(user.username)
             except ValidationError:
+                # purposely ignore the error and continue to check for inconsistencies
+                # assumes that the user may not have any resources in the data zone
                 pass
             used_value_irods_dz = convert_file_size_to_unit(used_value_irods_dz, "gb")
             print(f"Quota usage in iRODS Datazone: {used_value_irods_dz} GB")
@@ -100,14 +107,15 @@ class Command(BaseCommand):
                 report_dict = {
                     'user': uq.user.username,
                     'django': converted_total_size_django,
+                    'django_updated': '',
                     'irods': used_value_irods_dz}
-                quota_report_list.append(report_dict)
                 print('quota incosistency: {} reported in django vs {} reported in iRODS for user {}'.format(
                     converted_total_size_django, used_value_irods_dz, user.username), flush=True)
 
                 if update:
                     print("Attempting to fix the inconsistency by updating file sizes in django")
                     res_files = []
+                    updated_size = 0
                     for res in held_resources:
                         print(f"Total files in resource {res.short_id}: {res.files.all().count()}")
                         print(f'{current_site}/resource/{res.short_id}: currently {res.size} bytes')
@@ -130,23 +138,34 @@ class Command(BaseCommand):
                             print(f"Updated {file_counter} files for resource {res.short_id}")
                             res.refresh_from_db()
                             print(f'{current_site}/resource/{res.short_id}: now {res.size} bytes')
+                            # keep track of the updated size so that we can compare again
+                            updated_size += res.size
                         else:
                             print(f"Resource {res.short_id} contains no files.")
+                    converted_updated_size_django = convert_file_size_to_unit(int(updated_size), 'gb')
+                    report_dict['django_updated'] = converted_updated_size_django
+                    if not math.isclose(used_value_irods_dz, converted_updated_size_django, abs_tol=0.1):
+                        print("Even after updating, an inconsistency remains!")
+                        print(f"Quota usage in iRODS Datazone: {used_value_irods_dz} GB")
+                        print(f"Updated Total size of resources in Django: {converted_updated_size_django} GB")
 
                 elif reset:
                     print("Resetting file size cache in django")
                     for res in held_resources:
                         print(f'Resetting all filesizes in {current_site}/resource/{res.short_id}')
                         res.files.update(_size=-1)
+                    report_dict['django_updated'] = 'reset'
                 else:
                     print('No action taken. Use --update or --reset to fix inconsistencies')
+                quota_report_list.append(report_dict)
 
         if quota_report_list:
             with open(options['output_file_name_with_path'], 'w') as csvfile:
                 w = csv.writer(csvfile)
                 fields = [
                     'User',
-                    'Usage of summed resource sizes in Django',
+                    'Starting summed resource sizes in Django',
+                    'Updated summed resource sizes in Django',
                     'Quota reported in iRODS Datazone'
                 ]
                 w.writerow(fields)
