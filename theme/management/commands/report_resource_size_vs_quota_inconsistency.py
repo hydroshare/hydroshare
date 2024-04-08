@@ -69,12 +69,12 @@ class Command(BaseCommand):
             print('Cannot use both --update and --reset options together')
             return
         uqs = UserQuota.objects.filter(user__is_active=True).filter(user__is_superuser=False)
-        try:
-            user = User.objects.get(id=uid, is_active=True, is_superuser=False)
-        except User.DoesNotExist:
-            print(f'Active user with id {uid} not found')
         if uid:
-            uqs = uqs.filter(user__id=uid)
+            try:
+                user = User.objects.get(id=uid, is_active=True, is_superuser=False)
+            except User.DoesNotExist:
+                print(f'Active user with id {uid} not found')
+            uqs = uqs.filter(user=user)
         for uq in uqs:
             user = uq.user
             print("\n" + "*" * 80)
@@ -174,6 +174,7 @@ class Command(BaseCommand):
                     values = [
                         q['user'],
                         q['django'],
+                        q['django_updated'],
                         q['irods']
                     ]
                     w.writerow([str(v) for v in values])
