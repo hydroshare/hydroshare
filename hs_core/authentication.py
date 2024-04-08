@@ -107,4 +107,5 @@ class BasicOIDCAuthentication(BaseAuthentication):
             KEYCLOAK.token(decoded_username, decoded_password)
         except Exception:
             return None
-        return get_user_from_username_or_email(decoded_username)
+        user = get_user_from_username_or_email(decoded_username)
+        return (user, None)
