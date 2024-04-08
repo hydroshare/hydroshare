@@ -5,9 +5,12 @@ from hs_core.hydroshare import create_account
 from django.urls import reverse, resolve
 from django.conf import settings
 from django.utils.http import urlencode
-from django.contrib.auth.models import User
 from rest_framework.authentication import BaseAuthentication
 from keycloak.keycloak_openid import KeycloakOpenID
+from theme.utils import get_user_from_username_or_email
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 class HydroShareOIDCAuthenticationBackend(OIDCAuthenticationBackend):
@@ -37,10 +40,22 @@ def build_oidc_url(request):
     Returns:
         string: redirect URL for oidc service
     """
-    view, args, kwargs = resolve(reverse('oidc_authentication_init'))
+    oidc_init = reverse('oidc_authentication_init')
+    view, args, kwargs = resolve(oidc_init)
     kwargs["request"] = request
-    redirect = view(*args, **kwargs)
-    return redirect.url
+    error = None
+    try:
+        redirect = view(*args, **kwargs)
+        if isinstance(redirect, Exception):
+            error = redirect
+        else:
+            return redirect.url
+    except Exception as e:
+        error = e
+
+    # If the OIDC URL could not be built, log the error and return the bare oidc_authentication_init url
+    logger.error(f"Error building OIDC URL: {error}")
+    return oidc_init
 
 
 def provider_logout(request):
@@ -92,6 +107,4 @@ class BasicOIDCAuthentication(BaseAuthentication):
             KEYCLOAK.token(decoded_username, decoded_password)
         except Exception:
             return None
-
-        user = User.objects.get(username=decoded_username)
-        return (user, None)
+        return get_user_from_username_or_email(decoded_username)
