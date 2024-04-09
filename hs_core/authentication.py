@@ -6,7 +6,7 @@ from django.urls import reverse, resolve
 from django.conf import settings
 from django.utils.http import urlencode
 from rest_framework.authentication import BaseAuthentication
-from keycloak.keycloak_openid import KeycloakOpenID
+from keycloak.keycloak_openid import KeycloakOpenID, KeycloakAdmin, KeycloakOpenIDConnection
 from theme.utils import get_user_from_username_or_email
 
 import logging
@@ -100,6 +100,17 @@ KEYCLOAK = KeycloakOpenID(
     realm_name=settings.OIDC_KEYCLOAK_REALM,
     client_secret_key=settings.OIDC_RP_CLIENT_SECRET,
 )
+
+KEYCLOAK_CONNECTION = KeycloakOpenIDConnection(
+                        server_url=settings.OIDC_KEYCLOAK_URL,
+                        username=settings.KEYCLOAK_ADMIN_USERNAME,
+                        password=settings.KEYCLOAK_ADMIN_PASSWORD,
+                        realm_name=settings.OIDC_KEYCLOAK_REALM,
+                        client_id=settings.OIDC_RP_CLIENT_ID,
+                        client_secret_key=settings.OIDC_RP_CLIENT_SECRET,
+                        verify=True)
+
+KEYCLOAK_ADMIN = KeycloakAdmin(connection=KEYCLOAK_CONNECTION)
 
 
 class BasicOIDCAuthentication(BaseAuthentication):
