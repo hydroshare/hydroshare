@@ -29,6 +29,17 @@ class HydroShareOIDCAuthenticationBackend(OIDCAuthenticationBackend):
             state=claims.get('state', ''),
             subject_areas=subject_areas)
 
+    def describe_user_by_claims(self, claims):
+        username = claims.get("preferred_username")
+        return "username {}".format(username)
+
+    def filter_users_by_claims(self, claims):
+        """Return all users matching the specified username."""
+        username = claims.get("preferred_username")
+        if not username:
+            return self.UserModel.objects.none()
+        return self.UserModel.objects.filter(username__iexact=username)
+
 
 def build_oidc_url(request):
     """Builds a link to OIDC service
