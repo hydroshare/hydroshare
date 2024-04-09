@@ -6,7 +6,8 @@ from django.urls import reverse, resolve
 from django.conf import settings
 from django.utils.http import urlencode
 from rest_framework.authentication import BaseAuthentication
-from keycloak.keycloak_openid import KeycloakOpenID, KeycloakAdmin, KeycloakOpenIDConnection
+from keycloak.keycloak_openid import KeycloakOpenID
+from keycloak import KeycloakAdmin, KeycloakOpenIDConnection
 from theme.utils import get_user_from_username_or_email
 
 import logging
