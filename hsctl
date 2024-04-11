@@ -251,6 +251,11 @@ preflight_hs() {
     else
         sed -i $SED_EXT 's/\<USE_SECURITY = True\>/USE_SECURITY = False/g' ${HS_PATH}/hydroshare/settings.py
     fi
+
+    # Copy keys into hydroshare container
+    if [ -f ${PRIVATE_KEY_FILE_FOR_HS_USER_ZONE} ]; then
+        cp -rf ${PRIVATE_KEY_FILE_FOR_HS_USER_ZONE} ${PRIVATE_KEY_FILE_FOR_HS_USER_ZONE}
+    fi
 }
 
 loaddb_hs() {

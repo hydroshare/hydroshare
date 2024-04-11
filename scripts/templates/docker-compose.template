@@ -37,6 +37,7 @@ hydroshare:
   volumes:
     # hydroshare repository
     - "HS_PATH:/hydroshare"
+    # PRIVATE_KEY_FILE_FOR_HS_USER_ZONE is copied into container in hsctl
     # pycharm debugging
     # - "/home/hydro/pycharm-debug:/pycharm-debug"
     # log files
