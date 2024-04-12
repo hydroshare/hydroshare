@@ -66,7 +66,7 @@ class Command(BaseCommand):
         uid = options['uid'] if options['uid'] else None
         update = options['update'] if options['update'] else False
         reset = options['reset'] if options['reset'] else False
-        min_size = options['min_size'] if options['min_size'] else 0
+        min_size = int(options['min_size']) if options['min_size'] else 0
 
         if update and reset:
             print('Cannot use both --update and --reset options together')
