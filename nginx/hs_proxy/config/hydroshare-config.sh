@@ -20,8 +20,6 @@ IRODS_DOCKER_MAP=/irods
 IRODS_DATA_ROOT=/irods/hydroshare/vaults/hydrotest/home/betaDataProxy/
 # IRODS_USER_ROOT=/irods/hydroshare/vaults/usersdev/home/betaUserProxy/
 # IRODS_CACHE_ROOT=/irods/hydroshare_vault/nginx_tmp/beta/cache/
-# Location of the private key on the host vm (not the hydroshare container)
-PRIVATE_KEY_FILE_FOR_HS_USER_ZONE='/opt/.ssh/id_ed25519_hs'
 SENDFILE_IRODS_USER=irods
 SENDFILE_IRODS_GROUP=irods
 SENDFILE_IRODS_USER_ID=20022
