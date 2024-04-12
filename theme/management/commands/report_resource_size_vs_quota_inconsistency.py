@@ -1,17 +1,18 @@
 
 import csv
 import math
+from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.core.exceptions import ValidationError
 from django.conf import settings
 from django_irods.icommands import SessionException
-
 from django_irods.storage import IrodsStorage
+from django.utils.timezone import now
+
 from hs_core.hydroshare import convert_file_size_to_unit
-from theme.models import UserQuota
-from django.contrib.auth.models import User
 from hs_core.hydroshare import current_site_url
 from hs_core.models import ResourceFile
+from theme.models import UserQuota
 
 current_site = current_site_url()
 _BATCH_SIZE = settings.BULK_UPDATE_CREATE_BATCH_SIZE
@@ -58,12 +59,14 @@ class Command(BaseCommand):
         parser.add_argument('--update', action='store_true', help='fix inconsistencies by recalculating in django')
         parser.add_argument('--reset', action='store_true', help='reset resource file size in django when inconsistent')
         parser.add_argument('--uid', help='filter to just a single user by uid')
+        parser.add_argument('--min_size', help='filter to just resources above a certain size (in GB)')
 
     def handle(self, *args, **options):
         quota_report_list = []
         uid = options['uid'] if options['uid'] else None
         update = options['update'] if options['update'] else False
         reset = options['reset'] if options['reset'] else False
+        min_size = options['min_size'] if options['min_size'] else 0
 
         if update and reset:
             print('Cannot use both --update and --reset options together')
@@ -91,6 +94,10 @@ class Command(BaseCommand):
 
             # sum the resources sizes for all resources that the user is the quota holder for
             owned_resources = user.uaccess.owned_resources
+            # filter resources above size limit
+            if min_size > 0:
+                # size is a property on BaseResource, so we cant filter on it directly
+                owned_resources = [res for res in owned_resources if res.size > int(min_size) * 1024 ** 3]
             held_resources = []
             total_size = 0
             for res in owned_resources:
@@ -154,6 +161,7 @@ class Command(BaseCommand):
                     for res in held_resources:
                         print(f'Resetting all filesizes in {current_site}/resource/{res.short_id}')
                         res.files.update(_size=-1)
+                        res.updated = now().isoformat()
                     report_dict['django_updated'] = 'reset'
                 else:
                     print('No action taken. Use --update or --reset to fix inconsistencies')
