@@ -59,14 +59,14 @@ class Command(BaseCommand):
         parser.add_argument('--update', action='store_true', help='fix inconsistencies by recalculating in django')
         parser.add_argument('--reset', action='store_true', help='reset resource file size in django when inconsistent')
         parser.add_argument('--uid', help='filter to just a single user by uid')
-        parser.add_argument('--min_size', help='filter to just resources above a certain size (in GB)')
+        parser.add_argument('--min_quota_use', help='filter to just users with quota use above a certain size (in GB)')
 
     def handle(self, *args, **options):
         quota_report_list = []
         uid = options['uid'] if options['uid'] else None
         update = options['update'] if options['update'] else False
         reset = options['reset'] if options['reset'] else False
-        min_size = int(options['min_size']) if options['min_size'] else 0
+        min_quota_use = int(options['min_quota_use']) if options['min_quota_use'] else 0
 
         if update and reset:
             print('Cannot use both --update and --reset options together')
@@ -91,13 +91,12 @@ class Command(BaseCommand):
                 pass
             used_value_irods_dz = convert_file_size_to_unit(used_value_irods_dz, "gb")
             print(f"Quota usage in iRODS Datazone: {used_value_irods_dz} GB")
-
+            if used_value_irods_dz < min_quota_use:
+                print(f"Quota usage in iRODS Datazone is below {min_quota_use} GB. Skipping.")
+                continue
             # sum the resources sizes for all resources that the user is the quota holder for
             owned_resources = user.uaccess.owned_resources
             # filter resources above size limit
-            if min_size > 0:
-                # size is a property on BaseResource, so we cant filter on it directly
-                owned_resources = [res for res in owned_resources if res.size > int(min_size) * 1024 ** 3]
             held_resources = []
             total_size = 0
             for res in owned_resources:
