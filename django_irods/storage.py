@@ -338,17 +338,12 @@ class IrodsStorage(Storage):
         fsize_list = []
 
         single_resc_for_query = getattr(settings, 'IRODS_SINGLE_RESC_FOR_QUERY', "")
-        if not single_resc_for_query:
-            single_resc_for_query = getattr(settings, 'IRODS_DEFAULT_RESOURCE', None)
-            logger.warning(
-                "settings.IRODS_SINGLE_RESC_FOR_QUERY is not set. Using settings.IRODS_DEFAULT_RESOURCE"
-            )
         if single_resc_for_query:
             resc_query = " AND DATA_RESC_NAME = '{}'".format(single_resc_for_query)
         else:
             resc_query = ""
             logger.error(
-                "settings.IRODS_SINGLE_RESC_FOR_QUERY and settings.IRODS_DEFAULT_RESOURCE are not set. "
+                "settings.IRODS_SINGLE_RESC_FOR_QUERY not set. "
                 "The resulting size might not be accurate if the file is replicated."
             )
 
@@ -443,17 +438,12 @@ class IrodsStorage(Storage):
         coll_name = file_info[0]
         file_name = file_info[1]
         single_resc_for_query = getattr(settings, 'IRODS_SINGLE_RESC_FOR_QUERY', "")
-        if not single_resc_for_query:
-            single_resc_for_query = getattr(settings, 'IRODS_DEFAULT_RESOURCE', None)
-            logger.warning(
-                "settings.IRODS_SINGLE_RESC_FOR_QUERY is not set. Using settings.IRODS_DEFAULT_RESOURCE"
-            )
         if single_resc_for_query:
             resc_query = " AND DATA_RESC_NAME = '{}'".format(single_resc_for_query)
         else:
             resc_query = ""
             logger.error(
-                "settings.IRODS_SINGLE_RESC_FOR_QUERY and settings.IRODS_DEFAULT_RESOURCE are not set. "
+                "settings.IRODS_SINGLE_RESC_FOR_QUERY not set. "
                 "The resulting size might not be accurate if the file is replicated."
             )
         qrystr = (
