@@ -133,7 +133,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
             'My Test Resource in Data Zone'
         )
         self.assertTrue(res.creator == self.user)
-        self.assertTrue(res.get_quota_holder() == self.user)
+        self.assertTrue(res.quota_holder == self.user)
 
         istorage = res.get_irods_storage()
         attname = self.user.username + '-usage'
@@ -146,6 +146,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
             istorage.session.run("imkdir", None, '-p', settings.IRODS_BAGIT_PATH)
         istorage.setAVU(settings.IRODS_BAGIT_PATH, attname, test_qsize)
 
+        # TODO: update tests to use the new update_quota_usage function
         get_qsize = istorage.getAVU(settings.IRODS_BAGIT_PATH, attname)
         self.assertEqual(test_qsize, get_qsize)
 

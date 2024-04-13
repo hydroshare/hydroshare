@@ -7,6 +7,7 @@ from django.db.models import Q
 import logging
 logger = logging.getLogger(__name__)
 
+
 def _get_upload_path(folder_name, name, filename):
     """
     get upload path for pictures uploaded for UserProfile, GroupAccess, and Community models
