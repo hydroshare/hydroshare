@@ -20,6 +20,7 @@ from django.core.files import File
 from django.core.files.storage import DefaultStorage
 from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import URLValidator, validate_email
+from django.db.utils import ProgrammingError
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
@@ -672,10 +673,15 @@ def get_profile(user):
 def current_site_url():
     """Returns fully qualified URL (no trailing slash) for the current site."""
     from django.contrib.sites.models import Site
-    current_site = Site.objects.get_current()
+    try:
+        current_site = Site.objects.get_current()
+        domain = current_site.domain
+    except ProgrammingError:
+        # this is needed in case the current run is a migration
+        domain = 'www.hydroshare.org'
     protocol = getattr(settings, 'MY_SITE_PROTOCOL', 'http')
     port = getattr(settings, 'MY_SITE_PORT', '')
-    url = '%s://%s' % (protocol, current_site.domain)
+    url = '%s://%s' % (protocol, domain)
     if port:
         url += ':%s' % port
     return url
