@@ -8,7 +8,6 @@ class Command(BaseCommand):
     help = "This command can be run to fix the corrupt user data where some users do not " \
            "have UserQuota foreign key relation. This management command can be run on an " \
            "as-needed basis."
-    # TODO modify or get rid of this command
 
     def handle(self, *args, **options):
         users = User.objects.filter(is_active=True).filter(is_superuser=False).all()

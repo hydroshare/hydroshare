@@ -1,18 +1,26 @@
 from django.core.management.base import BaseCommand
-from django_irods.storage import IrodsStorage
-from django.conf import settings
+from theme.models import UserQuota
 
 
 class Command(BaseCommand):
-    help = "Reset quota by forcing quota iRODS microservices to recalculate quota for all users."
+    help = "Reset quota by forcing recalculation of quota for all users."
 
     def handle(self, *args, **options):
-        # TODO: Update this script
-        # Also add a management command to read quota holders from irods avu and store in the django db resource model
-        istorage = IrodsStorage()
-        # reset quota for data zone
-        root_path = '/{}/home/{}'.format(settings.IRODS_ZONE, settings.IRODS_USERNAME)
-        istorage.setAVU(root_path, 'resetQuotaDir', 1)
-        # reset quota for user zone
-        user_root_path = '/{}/home/{}'.format(settings.HS_USER_IRODS_ZONE, settings.HS_IRODS_PROXY_USER_IN_USER_ZONE)
-        istorage.setAVU(user_root_path, 'resetQuotaDir', 1)
+        uqs = UserQuota.objects.all()
+        number_of_users = uqs.count()
+        counter = 1
+        users_with_error = []
+        print(f"Total number of users: {number_of_users}")
+        for uq in uqs:
+            try:
+                print(f"Resetting quota #{counter} for user: {uq.user.username}")
+                _, _ = uq.get_used_value_by_zone(refresh=True)
+                counter += 1
+            except Exception as ex:
+                users_with_error.append(uq.user.username)
+                print(f"Error resetting quota for user: {uq.user.username}")
+                print(f"Error message: {ex}")
+                continue
+        print("Quota reset completed.")
+        print(f"Number of users with error: {len(users_with_error)}")
+        print(f"Users with error: {users_with_error}")

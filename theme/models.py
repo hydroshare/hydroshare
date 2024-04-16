@@ -284,19 +284,19 @@ class UserQuota(models.Model):
 
     @property
     def used_value(self):
-        uz, dz = self.get_used_value_by_zone(refresh_from_irods=False)
+        uz, dz = self.get_used_value_by_zone(refresh=False)
         return uz + dz
 
-    def get_used_value_by_zone(self, refresh_from_irods=False):
+    def get_used_value_by_zone(self, refresh=False):
         from hs_core.hydroshare.resource import get_quota_usage
-        if refresh_from_irods:
+        if refresh:
             uz, dz = get_quota_usage(self.user.username, False)
-            self.update_used_value(uz, dz)
+            self.set_used_value(uz, dz)
             self.save()
             return uz, dz
         return self.user_zone_value, self.data_zone_value
 
-    def update_used_value(self, uz_size, dz_size):
+    def set_used_value(self, uz_size, dz_size):
         """
         set used values in self.unit with pass in size in bytes.
         :param uz_size: pass in size in bytes unit from userZone
@@ -391,7 +391,7 @@ class UserQuota(models.Model):
         grace = self.grace_period_ends
         allocated = self.allocated_value
         unit = self.unit
-        uz, dz = self.get_used_value_by_zone()
+        uz, dz = self.get_used_value_by_zone(refresh=False)
         used = uz + dz
         uzp = uz * 100.0 / allocated
         dzp = dz * 100.0 / allocated
