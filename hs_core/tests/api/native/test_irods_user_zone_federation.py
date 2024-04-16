@@ -8,7 +8,7 @@ from hs_core.models import BaseResource
 from hs_core import hydroshare
 from hs_core.tasks import replicate_resource_bag_to_user_zone_task
 from hs_core.testing import TestCaseCommonUtilities
-from hs_core.hydroshare.resource import update_quota_usage
+from hs_core.tasks import update_quota_usage
 
 
 class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):

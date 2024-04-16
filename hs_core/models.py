@@ -49,6 +49,7 @@ from django_irods.storage import IrodsStorage
 from hs_core.enums import (CrossRefSubmissionStatus, CrossRefUpdate,
                            RelationTypes)
 from hs_core.irods import ResourceFileIRODSMixin, ResourceIRODSMixin
+from hs_core.tasks import update_quota_usage
 
 from .hs_rdf import (HSTERMS, RDFS1, RDF_MetaData_Mixin, RDF_Term_MixIn,
                      rdf_terms)
@@ -3402,6 +3403,11 @@ class ResourceFile(ResourceFileIRODSMixin):
             # file exists in iRODS - get modified time and checksum
             self.calculate_modified_time(resource=resource, save=save)
             self.calculate_checksum(resource=resource, save=save)
+            # asynchronously update the resource size
+            if resource is None:
+                resource = self.resource
+            quota_holder = resource.quota_holder
+            update_quota_usage.apply_async((quota_holder.username,))
         else:
             # file was not found in iRODS
             self._size = 0
