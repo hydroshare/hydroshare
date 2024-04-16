@@ -49,7 +49,6 @@ from django_irods.storage import IrodsStorage
 from hs_core.enums import (CrossRefSubmissionStatus, CrossRefUpdate,
                            RelationTypes)
 from hs_core.irods import ResourceFileIRODSMixin, ResourceIRODSMixin
-from hs_core.tasks import update_quota_usage
 
 from .hs_rdf import (HSTERMS, RDFS1, RDF_MetaData_Mixin, RDF_Term_MixIn,
                      rdf_terms)
@@ -3397,7 +3396,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         """Set system metadata (size, modified time, and checksum) for a file.
         This method should be called after a file is uploaded to iRODS and registered with Django.
         """
-
+        from hs_core.tasks import update_quota_usage
         self.calculate_size(resource=resource, save=save)
         if self._size > 0:
             # file exists in iRODS - get modified time and checksum

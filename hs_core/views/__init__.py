@@ -49,7 +49,6 @@ from hs_core.enums import RelationTypes
 from hs_core.hydroshare.resource import (
     METADATA_STATUS_INSUFFICIENT,
     METADATA_STATUS_SUFFICIENT,
-    update_quota_usage as update_quota_usage_utility,
 )
 from hs_core.hydroshare.utils import (
     get_resource_by_shortkey,
@@ -78,6 +77,7 @@ from hs_core.tasks import (
     create_new_version_resource_task,
     delete_resource_task,
     replicate_resource_bag_to_user_zone_task,
+    update_quota_usage as update_quota_usage_utility,
 )
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 from theme.models import UserProfile
