@@ -862,8 +862,8 @@ MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
 
 BULK_UPDATE_CREATE_BATCH_SIZE = 1000
 
-MONGO_DISCOVERY_URL = None # overwrite in local_settings.py
-MONGO_DISCOVERY_DATABASE = None # overwrite in local_settings.py
+MONGO_DISCOVERY_URL = None  # overwrite in local_settings.py
+MONGO_DISCOVERY_DATABASE = None  # overwrite in local_settings.py
 
 
 if ENABLE_OIDC_AUTHENTICATION:
