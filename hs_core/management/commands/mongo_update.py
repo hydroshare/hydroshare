@@ -16,7 +16,7 @@ class Command(BaseCommand):
             print("Updating Mongo record for " + r.short_id)
             try:
                 update_mongo(r.short_id)
-            except Exception as e:
+            except Exception:
                 failed_resources.append(r.short_id)
         for r in failed_resources:
             print("Failed to update Mongo record for " + r)
