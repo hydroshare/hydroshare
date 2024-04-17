@@ -50,7 +50,6 @@ from hs_core.authentication import build_oidc_url
 from hs_core.hydroshare.utils import user_from_id
 from hs_core.models import Party
 from hs_core.views.utils import run_ssh_command
-from hs_core.authentication import KEYCLOAK_ADMIN
 from hs_dictionary.models import University, UncategorizedTerm
 from hs_tracking.models import Variable
 from theme.forms import RatingForm, UserProfileForm, UserForm
@@ -657,11 +656,13 @@ def email_verify(request, new_email, uidb36=None, token=None):
     if user is not None:
         user.email = new_email
         user.save()
-        try:
-            keycloak_id = KEYCLOAK_ADMIN.get_user_id(user.get_username())
-            KEYCLOAK_ADMIN.update_user(keycloak_id, payload={"email": new_email})
-        except Exception:
-            logging.exception("Failed to sync the email change to Keycloak")
+        if settings.ENABLE_OIDC_AUTHENTICATION:
+            from hs_core.authentication import KEYCLOAK_ADMIN
+            try:
+                keycloak_id = KEYCLOAK_ADMIN.get_user_id(user.get_username())
+                KEYCLOAK_ADMIN.update_user(keycloak_id, payload={"email": new_email})
+            except Exception:
+                logging.exception("Failed to sync the email change to Keycloak")
         auth_login(request, user)
         messages.info(request, _("Successfully updated email"))
         # redirect to user profile page

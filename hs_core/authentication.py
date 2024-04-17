@@ -102,16 +102,23 @@ KEYCLOAK = KeycloakOpenID(
     client_secret_key=settings.OIDC_RP_CLIENT_SECRET,
 )
 
-KEYCLOAK_CONNECTION = KeycloakOpenIDConnection(
-    server_url=settings.OIDC_KEYCLOAK_URL,
-    username=settings.KEYCLOAK_ADMIN_USERNAME,
-    password=settings.KEYCLOAK_ADMIN_PASSWORD,
-    realm_name=settings.OIDC_KEYCLOAK_REALM,
-    client_id=settings.OIDC_RP_CLIENT_ID,
-    client_secret_key=settings.OIDC_RP_CLIENT_SECRET,
-    verify=True)
+if settings.ENABLE_OIDC_AUTHENTICATION:
+    KEYCLOAK = KeycloakOpenID(
+        server_url=settings.OIDC_KEYCLOAK_URL,
+        client_id=settings.OIDC_RP_CLIENT_ID,
+        realm_name=settings.OIDC_KEYCLOAK_REALM,
+        client_secret_key=settings.OIDC_RP_CLIENT_SECRET,
+    )
+    KEYCLOAK_CONNECTION = KeycloakOpenIDConnection(
+        server_url=settings.OIDC_KEYCLOAK_URL,
+        username=settings.KEYCLOAK_ADMIN_USERNAME,
+        password=settings.KEYCLOAK_ADMIN_PASSWORD,
+        realm_name=settings.OIDC_KEYCLOAK_REALM,
+        client_id=settings.OIDC_RP_CLIENT_ID,
+        client_secret_key=settings.OIDC_RP_CLIENT_SECRET,
+        verify=True)
 
-KEYCLOAK_ADMIN = KeycloakAdmin(connection=KEYCLOAK_CONNECTION)
+    KEYCLOAK_ADMIN = KeycloakAdmin(connection=KEYCLOAK_CONNECTION)
 
 
 class BasicOIDCAuthentication(BaseAuthentication):
