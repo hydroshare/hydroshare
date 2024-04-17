@@ -2465,6 +2465,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         setter is the requesting user to transfer quota holder and setter must also be an owner
         """
         from hs_core.hydroshare.utils import validate_user_quota
+        from hs_core.signals import post_update_quota_holder
 
         if __debug__:
             assert (isinstance(setter, User))
@@ -2476,7 +2477,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         # QuotaException will be raised if new_holder does not have enough quota to hold this
         # new resource, in which case, set_quota_holder to the new user fails
         validate_user_quota(new_holder, self.size)
+        old_holder = self.quota_holder
         self.quota_holder = new_holder
+        post_update_quota_holder.send(sender=self.__class__, resource=self, new_quota_holder=new_holder,
+                                      old_quota_holder=old_holder)
         self.save()
 
     def removeAVU(self, attribute, value):
@@ -3397,7 +3401,6 @@ class ResourceFile(ResourceFileIRODSMixin):
         """Set system metadata (size, modified time, and checksum) for a file.
         This method should be called after a file is uploaded to iRODS and registered with Django.
         """
-        from hs_core.tasks import update_quota_usage
         self.calculate_size(resource=resource, save=save)
         if self._size > 0:
             # file exists in iRODS - get modified time and checksum
@@ -3413,11 +3416,6 @@ class ResourceFile(ResourceFileIRODSMixin):
             self.save(update_fields=self.system_meta_fields())
         if resource is None:
             resource = self.resource
-        quota_holder = resource.quota_holder
-        # update_quota_usage.apply_async((quota_holder.username,))
-        update_quota_usage(quota_holder.username)
-        # TODO: also have to update on resource file delete
-        # and check zip, unzip, move, change quota holder, etc
 
     # ResourceFile API handles file operations
     def set_storage_path(self, path, test_exists=True):

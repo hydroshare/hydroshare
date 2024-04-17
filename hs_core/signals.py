@@ -5,6 +5,12 @@ post_create_resource = django.dispatch.Signal(
     providing_args=['sender', 'resource', 'user', 'metadata', 'validate_files'])
 
 pre_add_files_to_resource = django.dispatch.Signal(providing_args=['files', 'resource'])
+post_add_files_to_resource = django.dispatch.Signal(providing_args=['files', 'resource'])
+post_unzip_files_in_resource = django.dispatch.Signal(providing_args=['files', 'resource'])
+post_zip_files_in_resource = django.dispatch.Signal(providing_args=['files', 'resource'])
+
+post_update_quota_holder = django.dispatch.Signal(providing_args=['resource', 'new_quota_holder', 'old_quota_holder'])
+
 pre_delete_file_from_resource = django.dispatch.Signal(providing_args=['file', 'resource'])
 post_delete_file_from_resource = django.dispatch.Signal(providing_args=['resource'])
 

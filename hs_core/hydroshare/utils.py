@@ -32,7 +32,7 @@ from hs_access_control.models.community import Community
 from hs_access_control.models.privilege import PrivilegeCodes
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 from hs_core.models import AbstractResource, BaseResource, GeospatialRelation, ResourceFile
-from hs_core.signals import post_create_resource, pre_add_files_to_resource, pre_create_resource
+from hs_core.signals import post_create_resource, pre_add_files_to_resource, pre_create_resource, post_add_files_to_resource
 from theme.models import QuotaMessage
 
 logger = logging.getLogger(__name__)
@@ -1140,6 +1140,10 @@ def add_file_to_resource(resource, f, folder='', source_name='',
         resource.metadata.create_element('format', value=file_format_type)
     if save_file_system_metadata:
         ret.set_system_metadata(resource=resource)
+
+    # send signal for post file add processing
+    post_add_files_to_resource.send(sender=resource.__class__, files=[f],
+                                    resource=resource, user=user)
 
     return ret
 
