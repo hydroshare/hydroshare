@@ -9,12 +9,14 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         dqs = BaseResource.objects.filter(Q(raccess__discoverable=True)
-                                          | Q(raccess__public=True)).select_related('raccess')
+                                          | Q(raccess__public=True))
+        failed_resources []
         print("Django count = {}".format(dqs.count()))
         for r in dqs.iterator():
             print("Updating Mongo record for " + r.short_id)
             try:
                 update_mongo(r.short_id)
             except Exception as e:
-                print("failed to update Mongo record for " + r.short_id)
-                print(e)
+                failed_resources.append(r.short_id)
+        for r in failed_resources:
+            print("Failed to update Mongo record for " + r)
