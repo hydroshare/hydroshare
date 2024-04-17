@@ -3404,10 +3404,6 @@ class ResourceFile(ResourceFileIRODSMixin):
             self.calculate_modified_time(resource=resource, save=save)
             self.calculate_checksum(resource=resource, save=save)
             # asynchronously update the resource size
-            if resource is None:
-                resource = self.resource
-            quota_holder = resource.quota_holder
-            update_quota_usage.apply_async((quota_holder.username,))
         else:
             # file was not found in iRODS
             self._size = 0
@@ -3415,6 +3411,13 @@ class ResourceFile(ResourceFileIRODSMixin):
             self._checksum = None
         if save:
             self.save(update_fields=self.system_meta_fields())
+        if resource is None:
+            resource = self.resource
+        quota_holder = resource.quota_holder
+        # update_quota_usage.apply_async((quota_holder.username,))
+        update_quota_usage(quota_holder.username)
+        # TODO: also have to update on resource file delete
+        # and check zip, unzip, move, change quota holder, etc
 
     # ResourceFile API handles file operations
     def set_storage_path(self, path, test_exists=True):

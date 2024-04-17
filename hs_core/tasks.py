@@ -1082,8 +1082,9 @@ def delete_resource_task(resource_id, request_username=None):
         # res being deleted is part of one or more collections - delete hasPart relation for all those collections
         collection_res.metadata.relations.filter(type='hasPart', value__endswith=res.short_id).delete()
         set_dirty_bag_flag(collection_res)
-
+    quota_holder = res.quota_holder
     res.delete()
+    update_quota_usage(quota_holder.username)
     if request_username:
         # if the deleted resource is part of any collection resource, then for each of those collection
         # create a CollectionDeletedResource object which can then be used to list collection deleted
