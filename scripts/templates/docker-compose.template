@@ -37,6 +37,7 @@ hydroshare:
   volumes:
     # hydroshare repository
     - "HS_PATH:/hydroshare"
+    - "${HOST_PK_FOR_HS_USER_ZONE:-/opt/.ssh/id_ed25519_hs}:${PRIVATE_KEY_FILE_FOR_HS_USER_ZONE:-/hydroshare/.ssh/id_ed25519_hs}
     # pycharm debugging
     # - "/home/hydro/pycharm-debug:/pycharm-debug"
     # log files

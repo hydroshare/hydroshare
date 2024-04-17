@@ -284,7 +284,7 @@ def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filena
     return status.HTTP_200_OK, 'success'
 
 
-def run_ssh_command(host, uname, pwd, exec_cmd):
+def run_ssh_command(host, uname, exec_cmd, pwd=None, private_key_file=None):
     """
     run ssh client to ssh to a remote host and run a command on the remote host
     Args:
@@ -297,9 +297,16 @@ def run_ssh_command(host, uname, pwd, exec_cmd):
         None, but raises SSHException from paramiko if there is any error during ssh
         connection and command execution
     """
+    if not private_key_file and not pwd:
+        raise ValueError("Either Password or .pem is required for ssh connection")
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(host, username=uname, password=pwd)
+    if private_key_file:
+        key = paramiko.Ed25519Key.from_private_key_file(private_key_file)
+        ssh.connect(host, username=uname, pkey=key)
+    else:
+        ssh.connect(host, username=uname, password=pwd)
+
     transport = ssh.get_transport()
     session = transport.open_session()
     session.set_combine_stderr(True)
@@ -319,8 +326,15 @@ def run_ssh_command(host, uname, pwd, exec_cmd):
 # when private netCDF resources are made public so that all links of data services
 # provided by Hyrax service are instantaneously available on demand
 def run_script_to_update_hyrax_input_files(shortkey):
+    pwd = None
+    pk = None
+    if hasattr(settings, 'LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE'):
+        pwd = settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE
+    if hasattr(settings, 'PRIVATE_KEY_FILE_FOR_HS_USER_ZONE'):
+        pk = settings.PRIVATE_KEY_FILE_FOR_HS_USER_ZONE
     run_ssh_command(host=settings.HYRAX_SSH_HOST, uname=settings.HYRAX_SSH_PROXY_USER,
-                    pwd=settings.HYRAX_SSH_PROXY_USER_PWD,
+                    pwd=pwd,
+                    private_key_file=pk,
                     exec_cmd=settings.HYRAX_SCRIPT_RUN_COMMAND + ' ' + shortkey)
 
 

@@ -42,6 +42,7 @@ celerybeat.pid
 /nginx/cert*
 pg.deploy.sql
 pylint.out
+.ssh
 
 # Frontend
 node_modules/
