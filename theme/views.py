@@ -880,10 +880,17 @@ def delete_irods_account(request):
             exec_cmd = "{0} {1}".format(
                 settings.LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD, user.username
             )
+            pwd = None
+            pk = None
+            if hasattr(settings, 'LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE'):
+                pwd = settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE
+            if hasattr(settings, 'PRIVATE_KEY_FILE_FOR_HS_USER_ZONE'):
+                pk = settings.PRIVATE_KEY_FILE_FOR_HS_USER_ZONE
             output = run_ssh_command(
                 host=settings.HS_USER_ZONE_HOST,
                 uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
-                pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
+                pwd=pwd,
+                private_key_file=pk,
                 exec_cmd=exec_cmd,
             )
             for out_str in output:
@@ -932,10 +939,17 @@ def create_irods_account(request):
                 user.username,
                 pwd,
             )
+            pwd = None
+            pk = None
+            if hasattr(settings, 'LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE'):
+                pwd = settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE
+            if hasattr(settings, 'PRIVATE_KEY_FILE_FOR_HS_USER_ZONE'):
+                pk = settings.PRIVATE_KEY_FILE_FOR_HS_USER_ZONE
             output = run_ssh_command(
                 host=settings.HS_USER_ZONE_HOST,
                 uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
-                pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
+                pwd=pwd,
+                private_key_file=pk,
                 exec_cmd=exec_cmd,
             )
             for out_str in output:
@@ -948,8 +962,8 @@ def create_irods_account(request):
                     return JsonResponse(
                         {
                             "error": "iRODS server failed to create this iRODS account {0}. "
-                            "If this issue persists, please notify help@cuahsi.org.".format(
-                                user.username
+                            "If this issue persists, please notify help@cuahsi.org. More details: {1}".format(
+                                user.username, out_str
                             )
                         },
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
