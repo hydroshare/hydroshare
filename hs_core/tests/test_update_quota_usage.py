@@ -13,7 +13,7 @@ class UpdateQuotaUsageTestCase(TestCase):
     def setUp(self):
         self.username = 'testuser'
         self.hs_internal_zone = 'hydroshare'
-        self.user = User.objects.create_user(username=self.username)
+        self.user = User.objects.create_user(username=self.username, password='password', email='email')
 
     @patch('hs_core.tasks.get_quota_usage')
     @patch('hs_core.tasks.get_storage_usage')
@@ -31,8 +31,8 @@ class UpdateQuotaUsageTestCase(TestCase):
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
 
         # Assert that the used values have been updated correctly
-        self.assertEqual(user_quota.used_value_user_zone, 100)
-        self.assertEqual(user_quota.used_value_data_zone, 150)
+        self.assertEqual(user_quota.user_zone_value, 100)
+        self.assertEqual(user_quota.data_zone_value, 150)
 
     def test_update_quota_usage_quota_row_not_found(self):
         # Call the update_quota_usage function when the quota row does not exist
