@@ -3401,6 +3401,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         """Set system metadata (size, modified time, and checksum) for a file.
         This method should be called after a file is uploaded to iRODS and registered with Django.
         """
+        from hs_core.signals import post_update_file_system_metadata
 
         self.calculate_size(resource=resource, save=save)
         if self._size > 0:
@@ -3414,6 +3415,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             self._checksum = None
         if save:
             self.save(update_fields=self.system_meta_fields())
+        post_update_file_system_metadata.send(sender=self.__class__, resource=self.resource)
 
     # ResourceFile API handles file operations
     def set_storage_path(self, path, test_exists=True):
