@@ -21,7 +21,6 @@ from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
-from theme.models import UserQuota
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from hs_core.enums import CrossRefSubmissionStatus
@@ -106,62 +105,6 @@ def get_storage_usage(user, flag="published"):
             continue
         aggregate_size += res.size
     return aggregate_size
-
-
-def update_quota_usage(username):
-    """
-    update quota usage by checking iRODS AVU to get the updated quota usage for the user. Note iRODS micro-service
-    quota update only happens on HydroShare iRODS data zone and user zone independently, so the aggregation of usage
-    in both zones need to be accounted for in this function to update Django DB as an aggregated usage for hydroshare
-    internal zone.
-    This function is called by the IRODS quota micro-service to update quota usage for a user in Django DB.
-    :param
-    username: the name of the user that needs to update quota usage for.
-    :return: raise ValidationError if quota cannot be updated.
-    """
-    from hs_core import tasks
-    hs_internal_zone = "hydroshare"
-    uq = UserQuota.objects.filter(user__username=username, zone=hs_internal_zone).first()
-    if uq is None:
-        # the quota row does not exist in Django
-        err_msg = 'quota row does not exist in Django for hydroshare zone for user {}'.format(username)
-        logger.error(err_msg)
-        raise ValidationError(err_msg)
-
-    uz, dz = get_quota_usage(username, raise_on_error=False)
-
-    # subtract out published resources from the datazone
-    original_quota_data = uq.get_quota_data()
-    qmsg = original_quota_data["qmsg"]
-    published_percent = qmsg.published_resource_percent
-    user = User.objects.get(username=username)
-    published_size = get_storage_usage(user, flag="published")
-    dz -= published_size * (1 - published_percent / 100)
-    uq.update_used_value(uz, dz)
-
-    if original_quota_data["enforce_quota"]:
-        updated_quota_data = uq.get_quota_data()
-        # if enforcing quota, take steps to send messages
-        percent = updated_quota_data["percent"]
-        if percent < 100:
-            if uq.grace_period_ends:
-                # reset grace period now that the user is below allocation
-                uq.reset_grace_period()
-            return
-        else:
-            if percent < qmsg.hard_limit_percent:
-                if not uq.grace_period_ends:
-                    # triggers grace period counting
-                    uq.start_grace_period(qmsg_days=qmsg.grace_period)
-            elif percent >= qmsg.hard_limit_percent:
-                # reset grace period when user quota exceeds hard limit
-                uq.reset_grace_period()
-            # send notification to user in the cases of exceeding soft limit or hard limit
-            # only send notificaiton if the quota status changed
-            # this avoids sending multiple notifications when files are changed but the status does not change
-            if original_quota_data["status"] != updated_quota_data["status"]:
-                tasks.send_user_quota_notification.apply_async((user.pk))
-        uq.check_if_userzone_quota_enforcement_is_bypassed(user, original_quota_data, updated_quota_data)
 
 
 def res_has_web_reference(res):
