@@ -2479,9 +2479,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         validate_user_quota(new_holder, self.size)
         old_holder = self.quota_holder
         self.quota_holder = new_holder
+        self.save()
         post_update_quota_holder.send(sender=self.__class__, resource=self, new_quota_holder=new_holder,
                                       old_quota_holder=old_holder)
-        self.save()
 
     def removeAVU(self, attribute, value):
         """Remove an AVU at the resource level.
