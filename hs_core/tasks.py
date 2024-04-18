@@ -674,7 +674,8 @@ def update_quota_usage(username):
     user = User.objects.get(username=username)
     published_size = get_storage_usage(user, flag="published")
     dz -= published_size * (1 - published_percent / 100)
-    uq.update_used_value(uz, dz)
+    uq.set_used_value(uz, dz)
+    uq.save()
 
     if original_quota_data["enforce_quota"]:
         updated_quota_data = uq.get_quota_data()

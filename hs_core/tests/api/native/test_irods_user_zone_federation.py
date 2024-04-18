@@ -146,7 +146,6 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
             istorage.session.run("imkdir", None, '-p', settings.IRODS_BAGIT_PATH)
         istorage.setAVU(settings.IRODS_BAGIT_PATH, attname, test_qsize)
 
-        # TODO: update tests to use the new update_quota_usage function
         get_qsize = istorage.getAVU(settings.IRODS_BAGIT_PATH, attname)
         self.assertEqual(test_qsize, get_qsize)
 
