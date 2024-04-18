@@ -1162,6 +1162,7 @@ def publish_resource(user, pk):
     # This ensures that the modified date closely matches the date that the metadata are submitted to Crossref
     last_modified = resource.last_changed_by
     utils.resource_modified(resource, by_user=last_modified, overwrite_bag=False)
+    signals.post_publish_resource.send(sender=resource.__class__, resource=resource, user=user)
 
     return pk
 

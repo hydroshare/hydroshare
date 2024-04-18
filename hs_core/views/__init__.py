@@ -975,7 +975,6 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    res_title = res.metadata.title
     if request.is_ajax():
         task_id = get_resource_delete_task(shortkey)
         if not task_id:
@@ -991,32 +990,12 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
         task_dict = get_or_create_task_notification(
             task_id, name="resource delete", payload=shortkey, username=user.username
         )
-        signals.pre_delete_resource.send(
-            sender=type(res),
-            request=request,
-            user=user,
-            resource_shortkey=shortkey,
-            resource=res,
-            resource_title=res_title,
-            resource_type=res.resource_type,
-            **kwargs,
-        )
         return JsonResponse(task_dict)
     else:
         try:
             # make resource being deleted not discoverable to inform solr to remove this resource from solr index
             res.set_discoverable(False)
             hydroshare.delete_resource(shortkey, request_username=request.user.username)
-            signals.pre_delete_resource.send(
-                sender=type(res),
-                request=request,
-                user=user,
-                resource_shortkey=shortkey,
-                resource=res,
-                resource_title=res_title,
-                resource_type=res.resource_type,
-                **kwargs,
-            )
             return HttpResponseRedirect("/my-resources/")
         except ValidationError as ex:
             request.session["validation_error"] = str(ex)

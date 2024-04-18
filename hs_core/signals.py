@@ -4,6 +4,11 @@ pre_create_resource = django.dispatch.Signal(providing_args=['metadata', 'files'
 post_create_resource = django.dispatch.Signal(
     providing_args=['sender', 'resource', 'user', 'metadata', 'validate_files'])
 
+post_publish_resource = django.dispatch.Signal(providing_args=['resource', 'user'])
+
+post_copy_resource = django.dispatch.Signal(providing_args=['resource', 'user', 'source_resource'])
+post_version_resource = django.dispatch.Signal(providing_args=['resource', 'user', 'source_resource'])
+
 pre_add_files_to_resource = django.dispatch.Signal(providing_args=['files', 'resource'])
 post_add_files_to_resource = django.dispatch.Signal(providing_args=['files', 'resource'])
 post_unzip_files_in_resource = django.dispatch.Signal(providing_args=['files', 'resource'])
@@ -27,6 +32,8 @@ pre_check_bag_flag = django.dispatch.Signal(providing_args=['resource'])
 
 pre_delete_resource = django.dispatch.Signal(providing_args=['request', 'user', 'shortkey', 'resource',
                                                              'resource_title', 'resource_type'])
+post_delete_resource = django.dispatch.Signal(providing_args=['request', 'user', 'shortkey', 'resource',
+                                                              'resource_title', 'resource_type'])
 pre_move_or_rename_file_or_folder = django.dispatch.Signal(providing_args=['resource',
                                                                            'src_full_path',
                                                                            'tgt_full_path'])

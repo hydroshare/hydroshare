@@ -40,6 +40,7 @@ from hs_core.hydroshare.resource import (deposit_res_metadata_with_crossref,
                                          get_resource_doi, get_quota_usage,
                                          get_storage_usage,)
 from hs_core.models import BaseResource, ResourceFile, TaskNotification
+from hs_core.signals import post_copy_resource, post_version_resource, pre_delete_resource, post_delete_resource
 from hs_core.task_utils import get_or_create_task_notification
 from hs_file_types.models import (FileSetLogicalFile, GenericLogicalFile,
                                   GeoFeatureLogicalFile, GeoRasterLogicalFile,
@@ -934,6 +935,8 @@ def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
             new_res.resources.set(ori_res.resources.all())
 
         utils.set_dirty_bag_flag(new_res)
+        post_copy_resource.send(sender=copy_resource_task, resource=new_res, user=request_username,
+                                source_resourse=ori_res)
         return new_res.absolute_url
     except Exception as ex:
         if new_res:
@@ -993,6 +996,8 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
         ori_res.raccess.save()
         ori_res.save()
         utils.set_dirty_bag_flag(new_res)
+        post_version_resource.send(sender=create_new_version_resource_task, resource=new_res, user=username,
+                                   source_resourse=ori_res)
         return new_res.absolute_url
     except Exception as ex:
         if new_res:
@@ -1056,6 +1061,18 @@ def delete_resource_task(resource_id, request_username=None):
     resource_related_collections = [col for col in res.collections.all()]
     owners_list = [owner for owner in res.raccess.owners.all()]
 
+    signal_args = {
+        'sender': delete_resource_task,
+        'user': request_username,
+        'resource_shortkey': resource_id,
+        'resource': res,
+        'resource_title': res_title,
+        'resource_type': res_type,
+    }
+    pre_delete_resource.send(
+        **signal_args,
+    )
+
     # when the most recent version of a resource in an obsolescence chain is deleted, the previous
     # version in the chain needs to be set as the "active" version by deleting "isReplacedBy"
     # relation element
@@ -1102,6 +1119,10 @@ def delete_resource_task(resource_id, request_username=None):
                 collection=collection_res
             )
             o.resource_owners.add(*owners_list)
+
+    post_delete_resource.send(
+        **signal_args,
+    )
 
     # return the page URL to redirect to after resource deletion task is complete
     return '/my-resources/'
