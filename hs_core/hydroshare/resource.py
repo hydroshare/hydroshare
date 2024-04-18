@@ -88,13 +88,13 @@ def get_storage_usage(user, flag="published"):
     """
     resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
     if flag == "published":
-        resources.filter(raccess__published=True)
+        resources = resources.filter(raccess__published=True)
     elif flag == "discoverable":
-        resources.filter(raccess__discoverable=True, raccess__public=False)
+        resources = resources.filter(raccess__discoverable=True, raccess__public=False)
     elif flag == "public":
-        resources.filter(raccess__public=True, raccess__discoverable=True)
+        resources = resources.filter(raccess__public=True, raccess__discoverable=True)
     elif flag == "private":
-        resources.filter(raccess__public=False, raccess__discoverable=False)
+        resources = resources.filter(raccess__public=False, raccess__discoverable=False)
 
     # Iterate over resources and check the quotaholder
     # if quotaholder is the user, get the resource size and aggregate
