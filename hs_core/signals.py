@@ -10,7 +10,7 @@ post_copy_resource = django.dispatch.Signal(providing_args=['resource', 'user', 
 post_version_resource = django.dispatch.Signal(providing_args=['resource', 'user', 'source_resource'])
 
 pre_add_files_to_resource = django.dispatch.Signal(providing_args=['files', 'resource'])
-post_add_files_to_resource = django.dispatch.Signal(providing_args=['files', 'resource'])
+post_update_file_system_metadata = django.dispatch.Signal(providing_args=['resource', 'user'])
 post_unzip_files_in_resource = django.dispatch.Signal(providing_args=['files', 'resource'])
 post_zip_files_in_resource = django.dispatch.Signal(providing_args=['files', 'resource'])
 

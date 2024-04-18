@@ -6,7 +6,7 @@ from hs_core.signals import pre_metadata_element_create, pre_metadata_element_up
     pre_delete_resource, post_add_geofeature_aggregation, post_add_generic_aggregation, \
     post_add_netcdf_aggregation, post_add_raster_aggregation, post_add_timeseries_aggregation, \
     post_add_reftimeseries_aggregation, post_remove_file_aggregation, post_raccess_change, \
-    post_delete_file_from_resource, post_add_files_to_resource, post_unzip_files_in_resource, \
+    post_delete_file_from_resource, post_update_file_system_metadata, post_unzip_files_in_resource, \
     post_zip_files_in_resource, post_update_quota_holder, post_copy_resource, post_version_resource, \
     post_delete_resource, post_publish_resource
 from hs_core.tasks import update_web_services, update_quota_usage
@@ -213,7 +213,7 @@ def hs_update_web_services(sender, **kwargs):
 @receiver(post_add_timeseries_aggregation)
 @receiver(post_add_reftimeseries_aggregation)
 @receiver(post_remove_file_aggregation)
-@receiver(post_add_files_to_resource)
+@receiver(post_update_file_system_metadata)
 @receiver(post_unzip_files_in_resource)
 @receiver(post_zip_files_in_resource)
 @receiver(post_delete_file_from_resource)
