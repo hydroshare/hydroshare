@@ -654,11 +654,11 @@ def check_geoserver_registrations(resources, run_async=True):
 @shared_task
 def update_quota_usage(username):
     """
-    update quota usage by checking iRODS AVU to get the updated quota usage for the user. Note iRODS micro-service
-    quota update only happens on HydroShare iRODS data zone and user zone independently, so the aggregation of usage
+    update quota usage by checking metadata to get the updated quota usage for the user. Note iRODS micro-service
+    quota update only happens on HydroShare iRODS user zone, so the aggregation of usage
     in both zones need to be accounted for in this function to update Django DB as an aggregated usage for hydroshare
     internal zone.
-    This function is called by the IRODS quota micro-service to update quota usage for a user in Django DB.
+
     :param
     username: the name of the user that needs to update quota usage for.
     :return: raise ValidationError if quota cannot be updated.

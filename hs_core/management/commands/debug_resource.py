@@ -28,7 +28,7 @@ def debug_resource(short_id):
     print("resource irods bag modified: {}".format(str(resource.getAVU('bag_modified'))))
     print("resource irods isPublic: {}".format(str(resource.getAVU('isPublic'))))
     print("resource irods resourceType: {}".format(str(resource.getAVU('resourceType'))))
-    print("resource irods quotaUserName: {}".format(str(resource.getAVU('quotaUserName'))))
+    print("resource quota holder: {}".format(str(resource.quota_holder.username)))
     if irods_errors:
         print("iRODS errors:")
         for e in irods_issues:
