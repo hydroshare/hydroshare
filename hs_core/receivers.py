@@ -225,7 +225,11 @@ def hs_update_web_services(sender, **kwargs):
 def hs_update_quota(sender, **kwargs):
     """Signal to update quota."""
 
+    # if tests are being run, we don't want to use celery to update quota usage
+    # during tests, we want to update quota usage synchronously
+    # however, this will cause many of our tests to run slower
     testing = getattr(settings, 'TESTING', False)
+
     old_quota_holder = kwargs.get("old_quota_holder", None)
     new_quota_holder = kwargs.get("new_quota_holder", None)
     if old_quota_holder and new_quota_holder:

@@ -1404,7 +1404,8 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
     # send signal for post unzip
-    post_unzip_files_in_resource.send(sender=resource.__class__, resource=resource, files=added_resource_files)
+    files = unzipped_files if unzipped_files else []
+    post_unzip_files_in_resource.send(sender=resource.__class__, resource=resource, files=files)
 
 
 def ingest_bag(resource, bag_file, user):

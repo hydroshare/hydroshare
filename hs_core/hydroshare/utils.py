@@ -1143,9 +1143,8 @@ def add_file_to_resource(resource, f, folder='', source_name='',
         ret.set_system_metadata(resource=resource)
 
     # send signal for post file add processing
-    post_add_files_to_resource.send(sender=resource.__class__, files=[f],
+    post_add_files_to_resource.send(sender=add_file_to_resource, files=[f],
                                     resource=resource, user=user)
-
     return ret
 
 
