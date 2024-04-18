@@ -8,7 +8,6 @@ from hs_core.models import BaseResource
 from hs_core import hydroshare
 from hs_core.tasks import replicate_resource_bag_to_user_zone_task
 from hs_core.testing import TestCaseCommonUtilities
-from hs_core.tasks import update_quota_usage
 
 
 class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
@@ -121,4 +120,3 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         # test to make sure original files still exist after resource deletion
         self.assertTrue(self.irods_storage.exists(user_path + self.file_one))
         self.assertTrue(self.irods_storage.exists(user_path + self.file_two))
-

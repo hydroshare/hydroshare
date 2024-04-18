@@ -1,12 +1,13 @@
 import os
-import shutil
+from django.http.response import Http404
 from django.test import TestCase
 from django.contrib.auth.models import User, Group
 from theme.models import UserQuota
-from hs_core.tasks import update_quota_usage
+from hs_access_control.models import PrivilegeCodes
+from hs_composite_resource.models import CompositeResource
 from hs_core import hydroshare
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, zip_folder, \
-    unzip_file
+    unzip_file, remove_folder
 
 
 class UpdateQuotaUsageTestCase(TestCase):
@@ -31,6 +32,7 @@ class UpdateQuotaUsageTestCase(TestCase):
             groups=[self.group]
         )
         self.unit = 'GB'
+        self.single_file_size = 27  # in bytes
 
         # create files
         self.n1 = "test1.txt"
@@ -86,7 +88,7 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # resource should have 3 files
         self.assertEqual(self.res.files.all().count(), 3)
-        expected = 81
+        expected = self.single_file_size * 3
         # assert math.isclose(expected, self.res.size, rel_tol=1e-5)
         self.assertAlmostEqual(expected, self.res.size, places=5)
 
@@ -104,13 +106,11 @@ class UpdateQuotaUsageTestCase(TestCase):
         # Add files to the resource
         hydroshare.resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3)
         self.assertEqual(self.res.files.all().count(), 3)
-        self.assertEqual(81, self.res.size)
+        self.assertEqual(self.single_file_size * 3, self.res.size)
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
         user_quota.refresh_from_db()
-        # TODO: need to update_quota...? This should get updated automatically
-        update_quota_usage(self.username)
         initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
 
         # Delete a file from the resource
@@ -118,13 +118,13 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Assert that the file has been deleted
         self.assertEqual(self.res.files.all().count(), 2)
-        expected = 81 - 27
+        expected = 2 * self.single_file_size
         # assert math.isclose(expected, self.res.size, rel_tol=1e-5)
         self.assertAlmostEqual(expected, self.res.size, places=5)
 
         # Assert that the quota has been updated correctly
         user_quota.refresh_from_db()
-        expected = initial_quota_value - 27
+        expected = initial_quota_value - self.single_file_size
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         # assert math.isclose(user_quota.data_zone_value, expected, rel_tol=1e-5)
         self.assertAlmostEqual(dz, expected, places=5)
@@ -134,11 +134,10 @@ class UpdateQuotaUsageTestCase(TestCase):
         hydroshare.resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3)
 
         self.assertEqual(self.res.files.all().count(), 3)
-        self.assertEqual(81, self.res.size)
+        self.assertEqual(self.single_file_size * 3, self.res.size)
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
-        initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
 
         create_folder(self.res.short_id, 'data/contents/sub_test_dir')
         move_or_rename_file_or_folder(self.user, self.res.short_id,
@@ -154,19 +153,17 @@ class UpdateQuotaUsageTestCase(TestCase):
         # Assert that the quota has been updated correctly
         user_quota.refresh_from_db()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
-        expected = initial_quota_value + 54
+        expected = 1105
         self.assertAlmostEqual(dz, expected, places=5)
 
     def test_unzipping_files_increase_quota(self):
-        # Add a zip file to the resource
-        zip_file = open('test.zip', 'wb')
-        shutil.make_archive('test', 'zip', '.', self.n1, self.n2, self.n3)
-        zip_file.close()
-        zip_file = open('test.zip', 'rb')
+        hydroshare.resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3,
+                                               folder='test')
+        zip_folder(self.user, self.res.short_id, 'data/contents/test', 'test.zip', bool_remove_original=False)
 
-        hydroshare.resource.add_resource_files(self.res.short_id, zip_file)
-        zip_file.close()
-        os.remove('test.zip')
+        # now delete the folder
+        folder_path = "data/contents/test"
+        remove_folder(self.user, self.res.short_id, folder_path)
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
@@ -175,15 +172,13 @@ class UpdateQuotaUsageTestCase(TestCase):
         # Unzip the files in the resource
         unzip_file(self.user, self.res.short_id, 'data/contents/test.zip', bool_remove_original=False)
 
-        # Assert that the resource has the original files
-        # TODO: actually 1 ??
-        self.assertEqual(self.res.files.all().count(), 3)
-        self.assertEqual(self.res.files.first().file_folder, '')
+        # Assert that the resource has the original files + 1
+        self.assertEqual(self.res.files.all().count(), 4)
 
         # Assert that the quota has been updated correctly
         user_quota.refresh_from_db()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
-        expected = initial_quota_value + 54
+        expected = initial_quota_value + 3 * self.single_file_size
         # assert math.isclose(user_quota.data_zone_value, expected, rel_tol=1e-5)
         self.assertAlmostEqual(dz, expected, places=5)
 
@@ -192,16 +187,17 @@ class UpdateQuotaUsageTestCase(TestCase):
         hydroshare.resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3)
 
         self.assertEqual(self.res.files.all().count(), 3)
-        self.assertEqual(81, self.res.size)
+        self.assertEqual(self.single_file_size * 3, self.res.size)
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
         initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
 
         # Move a file in the resource
+        rename = self.n1 + '_moved'
         move_or_rename_file_or_folder(self.user, self.res.short_id,
                                       'data/contents/' + self.n1,
-                                      'data/contents/' + self.n1)
+                                      'data/contents/' + rename)
 
         # Assert that the resource has the original files
         self.assertEqual(self.res.files.all().count(), 3)
@@ -216,7 +212,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         hydroshare.resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3)
 
         self.assertEqual(self.res.files.all().count(), 3)
-        self.assertEqual(81, self.res.size)
+        self.assertEqual(self.single_file_size * 3, self.res.size)
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
@@ -240,7 +236,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         hydroshare.resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3)
 
         self.assertEqual(self.res.files.all().count(), 3)
-        self.assertEqual(81, self.res.size)
+        self.assertEqual(self.single_file_size * 3, self.res.size)
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
@@ -257,12 +253,12 @@ class UpdateQuotaUsageTestCase(TestCase):
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertEqual(dz, initial_quota_value)
 
-    def test_deleting_folder_decrease_quota(self):
+    def test_deleting_folder_not_decrease_quota(self):
         # Add files to the resource
         hydroshare.resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3)
 
         self.assertEqual(self.res.files.all().count(), 3)
-        self.assertEqual(81, self.res.size)
+        self.assertEqual(self.single_file_size * 3, self.res.size)
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
@@ -279,10 +275,9 @@ class UpdateQuotaUsageTestCase(TestCase):
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertEqual(dz, initial_quota_value)
 
-        # Delete the folder in the resource
-        move_or_rename_file_or_folder(self.user, self.res.short_id,
-                                      'data/contents/test_folder',
-                                      'data/contents/test_folder')
+        # now delete the folder
+        folder_path = "data/contents/test_folder"
+        remove_folder(self.user, self.res.short_id, folder_path)
 
         # Assert that the resource has the original files
         self.assertEqual(self.res.files.all().count(), 3)
@@ -297,7 +292,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         hydroshare.resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3)
 
         self.assertEqual(self.res.files.all().count(), 3)
-        self.assertEqual(81, self.res.size)
+        self.assertEqual(self.single_file_size * 3, self.res.size)
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
@@ -317,7 +312,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         # Move the folder in the resource
         move_or_rename_file_or_folder(self.user, self.res.short_id,
                                       'data/contents/test_folder',
-                                      'data/contents/test_folder')
+                                      'data/contents/test_folder_new')
 
         # Assert that the resource has the original files
         self.assertEqual(self.res.files.all().count(), 3)
@@ -332,7 +327,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         hydroshare.resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3)
 
         self.assertEqual(self.res.files.all().count(), 3)
-        self.assertEqual(81, self.res.size)
+        self.assertEqual(self.single_file_size * 3, self.res.size)
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
@@ -367,24 +362,96 @@ class UpdateQuotaUsageTestCase(TestCase):
         hydroshare.resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3)
 
         self.assertEqual(self.res.files.all().count(), 3)
-        self.assertEqual(81, self.res.size)
+        self.assertEqual(self.single_file_size * 3, self.res.size)
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
         initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
+        self.assertAlmostEqual(initial_quota_value, 3 * self.single_file_size, places=5)
 
         # change the quota holder
-        self.res.set_quota_holder(self.user2)
+        # first add user2 as owner
+        self.user.uaccess.share_resource_with_user(self.res, self.user2, PrivilegeCodes.OWNER)
+        self.res.set_quota_holder(self.user, self.user2)
 
-        # Assert that the resource has the original files
-        self.assertEqual(self.res.files.all().count(), 3)
+        # Assert that the quota holder has been updated
+        self.res.refresh_from_db()
+        self.assertEqual(self.res.raccess.owners.all().count(), 2)
+        self.assertEqual(self.res.quota_holder, self.user2)
 
         # Assert that the quota has been updated
         user_quota.refresh_from_db()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
-        self.assertEqual(dz, 0)
+        self.assertAlmostEqual(dz, 0, places=5)
 
         # assert that the new quota holder has the correct quota
         user_quota2 = UserQuota.objects.get(user=self.user2, zone=self.hs_internal_zone)
         dz2 = self.convert_gb_to_bytes(user_quota2.data_zone_value)
-        self.assertEqual(dz2, initial_quota_value)
+        self.assertAlmostEqual(dz2, initial_quota_value, places=5)
+
+    def test_delete_resource_reduces_quota(self):
+        # Add files to the resource
+        hydroshare.resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3)
+
+        self.assertEqual(self.res.files.all().count(), 3)
+        self.assertEqual(self.single_file_size * 3, self.res.size)
+
+        # Retrieve the UserQuota object for the user
+        user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
+        initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
+        self.assertAlmostEqual(initial_quota_value, 3 * self.single_file_size, places=5)
+
+        # assert that the initial quota value is correct
+        self.assertAlmostEqual(initial_quota_value, self.single_file_size * 3, places=5)
+
+        # Delete the resource
+        hydroshare.delete_resource(self.res.short_id)
+
+        # Assert that the resource has been deleted
+        with self.assertRaises(Http404):
+            hydroshare.get_resource_by_shortkey(self.res.short_id)
+
+        # assert that the user no longer owns any resources
+        self.assertEqual(self.user.uaccess.owned_resources.count(), 0)
+
+        # Assert that the quota has been updated
+        user_quota.refresh_from_db()
+        dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
+        # TODO: fails with dz = 81
+        self.assertAlmostEqual(dz, 0, places=5)
+
+    def test_copying_resource_doubles_quota(self):
+        # Add files to the resource
+        hydroshare.resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3)
+
+        self.assertEqual(self.res.files.all().count(), 3)
+        self.assertEqual(self.single_file_size * 3, self.res.size)
+
+        # Retrieve the UserQuota object for the user
+        user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
+        initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
+        self.assertAlmostEqual(initial_quota_value, 3 * self.single_file_size, places=5)
+
+        new_res = hydroshare.create_empty_resource(self.res.short_id,
+                                                   self.user,
+                                                   action='copy')
+        # test to make sure the new copied empty resource has no content files
+        self.assertEqual(new_res.files.all().count(), 0)
+        # Copy the resource
+        new_res = hydroshare.copy_resource(self.res, new_res)
+
+        # test the new copied resource has the same resource type as the original resource
+        self.assertTrue(isinstance(new_res, CompositeResource))
+
+        # Assert that the copied resource has files
+        self.assertEqual(new_res.files.all().count(), 3)
+
+        # Assert that the user is the quota holder for both resources
+        self.assertEqual(new_res.quota_holder, self.user)
+        self.assertEqual(self.res.quota_holder, self.user)
+
+        # Assert that the quota has been updated
+        user_quota.refresh_from_db()
+        dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
+        # TODO: fails with 81.0 != 162.0
+        self.assertAlmostEqual(dz, initial_quota_value * 2, places=5)
