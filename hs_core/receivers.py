@@ -6,8 +6,9 @@ from hs_core.signals import pre_metadata_element_create, pre_metadata_element_up
     pre_delete_resource, post_add_geofeature_aggregation, post_add_generic_aggregation, \
     post_add_netcdf_aggregation, post_add_raster_aggregation, post_add_timeseries_aggregation, \
     post_add_reftimeseries_aggregation, post_remove_file_aggregation, post_raccess_change, \
-    post_delete_file_from_resource
-from hs_core.tasks import update_web_services
+    post_delete_file_from_resource, post_add_files_to_resource, post_unzip_files_in_resource, \
+    post_zip_files_in_resource, post_update_quota_holder
+from hs_core.tasks import update_web_services, update_quota_usage
 from hs_core.models import BaseResource, Creator, Contributor, Party
 from django.conf import settings
 from .forms import SubjectsForm, AbstractValidationForm, CreatorValidationForm, \
@@ -202,3 +203,39 @@ def hs_update_web_services(sender, **kwargs):
                 settings.HSWS_PUBLISH_URLS,
                 rid
             ), countdown=1)
+
+
+@receiver(post_add_generic_aggregation)
+@receiver(post_add_geofeature_aggregation)
+@receiver(post_add_raster_aggregation)
+@receiver(post_add_netcdf_aggregation)
+@receiver(post_add_timeseries_aggregation)
+@receiver(post_add_reftimeseries_aggregation)
+@receiver(post_remove_file_aggregation)
+@receiver(post_add_files_to_resource)
+@receiver(post_unzip_files_in_resource)
+@receiver(post_zip_files_in_resource)
+@receiver(post_delete_file_from_resource)
+@receiver(pre_delete_resource)
+@receiver(post_update_quota_holder)
+def hs_update_quota(sender, **kwargs):
+    """Signal to update quota."""
+
+    testing = getattr(settings, 'TESTING', False)
+    old_quota_holder = kwargs.get("old_quota_holder", None)
+    new_quota_holder = kwargs.get("new_quota_holder", None)
+    if old_quota_holder and new_quota_holder:
+        # update quota usage for both the old and new quota holders
+        if not testing:
+            update_quota_usage.apply_async((old_quota_holder.username,), countdown=1)
+            update_quota_usage.apply_async((new_quota_holder.username,), countdown=1)
+        else:
+            update_quota_usage(old_quota_holder.username)
+            update_quota_usage(new_quota_holder.username)
+    elif "resource" in kwargs:
+        res = kwargs.get("resource")
+        quota_holder = res.quota_holder
+        if not testing:
+            update_quota_usage.apply_async((quota_holder.username,), countdown=1)
+        else:
+            update_quota_usage(quota_holder.username)

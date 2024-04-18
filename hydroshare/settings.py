@@ -828,7 +828,7 @@ for k in dir(local_settings):
 
 if 'test' in sys.argv:
     import logging
-
+    TEST_MODE = True
     logging.disable(logging.CRITICAL)
     PASSWORD_HASHERS = [
         'django.contrib.auth.hashers.MD5PasswordHasher',
