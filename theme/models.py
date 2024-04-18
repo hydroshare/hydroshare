@@ -288,9 +288,9 @@ class UserQuota(models.Model):
         return uz + dz
 
     def get_used_value_by_zone(self, refresh_from_irods=False):
-        from hs_core.hydroshare.resource import get_quota_usage_from_irods
+        from hs_core.hydroshare.resource import get_quota_usage
         if refresh_from_irods:
-            uz, dz = get_quota_usage_from_irods(self.user.username, False)
+            uz, dz = get_quota_usage(self.user.username, False)
             self.update_used_value(uz, dz)
             self.save()
             return uz, dz

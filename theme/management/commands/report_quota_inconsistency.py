@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 
 from hs_core.hydroshare import convert_file_size_to_unit
 from theme.models import UserQuota
-from hs_core.hydroshare.resource import get_quota_usage_from_irods
+from hs_core.hydroshare.resource import get_quota_usage
 
 
 class Command(BaseCommand):
@@ -23,7 +23,7 @@ class Command(BaseCommand):
             uz = 0.0
             dz = 0.0
             try:
-                uz, dz = get_quota_usage_from_irods(uq.user.username)
+                uz, dz = get_quota_usage(uq.user.username)
                 used_value = uz + dz
             except ValidationError:
                 pass

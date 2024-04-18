@@ -418,7 +418,7 @@ def page_permissions_page_processor(request, page):
         max_file_size = settings.FILE_UPLOAD_MAX_SIZE
     else:
         max_file_size = 1024
-    remaining_quota = get_remaining_user_quota(cm.get_quota_holder(), "MB")
+    remaining_quota = get_remaining_user_quota(cm.quota_holder, "MB")
     if remaining_quota is not None:
         max_file_size = min(max_file_size, remaining_quota)
 
@@ -2178,6 +2178,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     # allow resource that contains spam_patterns to be discoverable/public
     spam_allowlisted = models.BooleanField(default=False)
 
+    quota_holder = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True,
+                                     related_name='quota_holder')
+
     def update_view_count(self):
         self.view_count += 1
         # using update query api to update instead of self.save() to avoid triggering solr realtime indexing
@@ -2473,34 +2476,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         # QuotaException will be raised if new_holder does not have enough quota to hold this
         # new resource, in which case, set_quota_holder to the new user fails
         validate_user_quota(new_holder, self.size)
-        attname = "quotaUserName"
-
-        if setter.username != new_holder.username:
-            # this condition check is needed to make sure attname exists as AVU before getting it
-            oldqu = self.getAVU(attname)
-            if oldqu:
-                # have to remove the old AVU first before setting to the new one in order to trigger
-                # quota micro-service PEP msiRemoveQuotaHolder so quota for old quota
-                # holder will be reduced as a result of setting quota holder to a different user
-                self.removeAVU(attname, oldqu)
-        self.setAVU(attname, new_holder.username)
-
-    def get_quota_holder(self):
-        """Get quota holder of the resource.
-
-        return User instance of the quota holder for the resource or None if it does not exist
-        """
-        try:
-            uname = self.getAVU("quotaUserName")
-        except SessionException:
-            # quotaUserName AVU does not exist, return None
-            return None
-
-        if uname:
-            return User.objects.filter(username=uname).first()
-        else:
-            # quotaUserName AVU does not exist, return None
-            return None
+        self.update(quota_holder=new_holder)
 
     def removeAVU(self, attribute, value):
         """Remove an AVU at the resource level.

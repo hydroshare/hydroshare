@@ -7,6 +7,8 @@ class Command(BaseCommand):
     help = "Reset quota by forcing quota iRODS microservices to recalculate quota for all users."
 
     def handle(self, *args, **options):
+        # TODO: Update this script
+        # Also add a management command to read quota holders from irods avu and store in the django db resource model
         istorage = IrodsStorage()
         # reset quota for data zone
         root_path = '/{}/home/{}'.format(settings.IRODS_ZONE, settings.IRODS_USERNAME)

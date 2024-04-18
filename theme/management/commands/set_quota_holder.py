@@ -10,6 +10,7 @@ class Command(BaseCommand):
     This command adds quota holder to a resource if missing, which adds the quotaUserName AVU to
     iRODS as needed for quota calculation update in iRODS.
     """
+    # TODO: update this script
     help = "Add quota holders to all resources if missing which triggers quota update in iRODS " \
            "as needed"
 
@@ -18,7 +19,7 @@ class Command(BaseCommand):
         count = 0
         for res in resources:
             try:
-                if not res.get_quota_holder():
+                if not res.quota_holder:
                     # if quota_holder is not set for the resource, set it to resource's creator
                     # for some resource, for some reason, the creator of the resource is not the
                     # owner, hence not allowed to be set as quota holder. This is an artifact that

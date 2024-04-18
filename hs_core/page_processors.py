@@ -101,7 +101,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     rights_allow_copy = rights_allows_copy(content_model, user)
 
-    qholder = content_model.get_quota_holder()
+    qholder = content_model.quota_holder
 
     readme = content_model.get_readme_file_content()
     if readme is None:
