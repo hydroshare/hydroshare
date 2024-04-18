@@ -510,6 +510,12 @@ def send_over_quota_emails():
         if uq:
             used_percent = uq.used_percent
             if used_percent >= qmsg.soft_limit_percent:
+                # first update the quota just to be sure that we are using the latest figures
+                update_quota_usage(u.username)
+                uq.refresh_from_db()
+                if uq.used_percent < qmsg.soft_limit_percent:
+                    # quota usage has been updated and is now below the soft limit
+                    continue
                 support_user = get_default_support_user()
                 msg_str = f'Dear {support_user.first_name}{support_user.last_name}:\n\n'
                 msg_str += f'The following user (#{ u.id }) has exceeded their quota:{u.email}\n\n'
