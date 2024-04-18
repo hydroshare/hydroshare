@@ -103,7 +103,7 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
         )
 
         # there should not be published date type metadata element
-        self.assertFalse(self.res.metadata.dates.filter(type='published').exists())
+        self.assertFalse(self.complete_res.metadata.dates.filter(type='published').exists())
 
         admin_user = get_default_admin_user()
         hydroshare.submit_resource_for_review(pk=self.complete_res.short_id, user=self.user)
