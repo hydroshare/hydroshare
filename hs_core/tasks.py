@@ -40,7 +40,7 @@ from hs_core.hydroshare.resource import (deposit_res_metadata_with_crossref,
                                          get_resource_doi, get_quota_usage,
                                          get_storage_usage,)
 from hs_core.models import BaseResource, ResourceFile, TaskNotification
-from hs_core.signals import post_copy_resource, post_version_resource, pre_delete_resource, post_delete_resource
+from hs_core.signals import post_copy_resource, post_version_resource, pre_delete_resource
 from hs_core.task_utils import get_or_create_task_notification
 from hs_file_types.models import (FileSetLogicalFile, GenericLogicalFile,
                                   GeoFeatureLogicalFile, GeoRasterLogicalFile,
@@ -1120,9 +1120,10 @@ def delete_resource_task(resource_id, request_username=None):
             )
             o.resource_owners.add(*owners_list)
 
-    post_delete_resource.send(
-        **signal_args,
-    )
+    # TODO we expect that the quotas will be off unless we enable this
+    # post_delete_resource.send(
+    #     **signal_args,
+    # )
 
     # return the page URL to redirect to after resource deletion task is complete
     return '/my-resources/'
