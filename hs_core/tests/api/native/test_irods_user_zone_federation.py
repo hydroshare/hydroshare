@@ -115,6 +115,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
 
         # test resource deletion
         hydroshare.resource.delete_resource(res.short_id)
+        # TODO: this test fails
         self.assertEqual(BaseResource.objects.all().count(), 0,
                          msg='Number of resources not equal to 0')
         # test to make sure original files still exist after resource deletion
