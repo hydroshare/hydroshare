@@ -7,12 +7,13 @@ from django.core.exceptions import ValidationError
 from django.conf import settings
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
-from django.utils.timezone import now
 
 from hs_core.hydroshare import convert_file_size_to_unit
 from hs_core.hydroshare import current_site_url
+from hs_core.hydroshare.utils import resource_modified
 from hs_core.models import ResourceFile
 from theme.models import UserQuota
+from hs_core.views.utils import get_default_admin_user
 
 current_site = current_site_url()
 _BATCH_SIZE = settings.BULK_UPDATE_CREATE_BATCH_SIZE
@@ -160,7 +161,8 @@ class Command(BaseCommand):
                     for res in held_resources:
                         print(f'Resetting all filesizes in {current_site}/resource/{res.short_id}')
                         res.files.update(_size=-1)
-                        res.updated = now().isoformat()
+                        admin = get_default_admin_user()
+                        resource_modified(res, admin, overwrite_bag=False)
                     report_dict['django_updated'] = 'reset'
                 else:
                     print('No action taken. Use --update or --reset to fix inconsistencies')
