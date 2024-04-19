@@ -70,6 +70,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         super(UpdateQuotaUsageTestCase, self).tearDown()
         User.objects.all().delete()
         Group.objects.all().delete()
+        self.res.delete()
         BaseResource.objects.all().delete()
         Group.objects.all().delete()
         self.myfile1.close()
