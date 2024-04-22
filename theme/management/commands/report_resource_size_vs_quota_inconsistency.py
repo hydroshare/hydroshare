@@ -59,24 +59,39 @@ class Command(BaseCommand):
         parser.add_argument('--update', action='store_true', help='fix inconsistencies by recalculating in django')
         parser.add_argument('--reset', action='store_true', help='reset resource file size in django when inconsistent')
         parser.add_argument('--uid', help='filter to just a single user by uid')
-        parser.add_argument('--min_quota_use', help='filter to just users with quota use above a certain size (in GB)')
+        parser.add_argument('--min_quota_use_avu', help='filter to just users with AVU quota use above this size in GB')
+        parser.add_argument('--min_quota_django_model', help='filter to django UserQuota use above this size in GB')
+        parser.add_argument('--desc', action='store_true', help='order by descending quota use in iRODS Datazone')
 
     def handle(self, *args, **options):
         uid = options['uid'] if options['uid'] else None
         update = options['update'] if options['update'] else False
+        desc = options['desc'] if options['desc'] else False
         reset = options['reset'] if options['reset'] else False
-        min_quota_use = int(options['min_quota_use']) if options['min_quota_use'] else 0
+        min_quota_use_avu = int(options['min_quota_use_avu']) if options['min_quota_use_avu'] else 0
+        min_quota_django_model = int(options['min_quota_django_model']) if options['min_quota_django_model'] else 0
+
+        if min_quota_use_avu and min_quota_django_model:
+            print('Using --min_quota_use_avu and --min_quota_django_model')
+            if min_quota_use_avu != min_quota_django_model:
+                print('Warning: min_quota_use_avu and min_quota_django_model are different')
+            print('First quotas will be filtered by django model. Then users will be filtered by iRODS AVU.')
 
         if update and reset:
             print('Cannot use both --update and --reset options together')
             return
-        uqs = UserQuota.objects.filter(user__is_active=True).filter(user__is_superuser=False)
+        uqs = UserQuota.objects.filter(user__is_active=True) \
+            .filter(user__is_superuser=False)
         if uid:
             try:
                 user = User.objects.get(id=uid, is_active=True, is_superuser=False)
             except User.DoesNotExist:
                 print(f'Active user with id {uid} not found')
             uqs = uqs.filter(user=user)
+        if min_quota_django_model > 0:
+            uqs = uqs.filter(used_value__gt=min_quota_django_model)
+        if desc:
+            uqs = uqs.order_by('-used_value')
         num_uqs = uqs.count()
         print(f"Number of user quotas to check: {num_uqs}")
         counter = 1
@@ -101,9 +116,9 @@ class Command(BaseCommand):
                 # assumes that the user may not have any resources in the data zone
                 pass
             used_value_irods_dz = convert_file_size_to_unit(used_value_irods_dz, "gb")
-            print(f"Quota usage in iRODS Datazone: {used_value_irods_dz} GB")
-            if used_value_irods_dz < min_quota_use:
-                print(f"Quota usage in iRODS Datazone is below {min_quota_use} GB. Skipping.")
+            print(f"Quota usage in iRODS Datazone from AVU: {used_value_irods_dz} GB")
+            if used_value_irods_dz < min_quota_use_avu:
+                print(f"Quota usage in iRODS Datazone AVU is below {min_quota_use_avu} GB. Skipping.")
                 continue
             # sum the resources sizes for all resources that the user is the quota holder for
             owned_resources = user.uaccess.owned_resources
