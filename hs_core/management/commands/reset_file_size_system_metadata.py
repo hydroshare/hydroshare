@@ -109,6 +109,7 @@ class Command(BaseCommand):
                 for res in owned_resources:
                     if res.get_quota_holder() == user:
                         resources_to_modify.append(res)
+                counter += 1
         else:
             resources_to_modify = ResourceFile.objects.all().order_by('-updated')
 
