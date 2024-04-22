@@ -732,13 +732,13 @@ def convert_file_size_to_unit(size, to_unit, from_unit='B'):
     """
     Convert file size to unit for quota comparison
     :param size: the size to be converted
-    :param to_unit: should be one of the four: 'KB', 'MB', 'GB', or 'TB'
+    :param to_unit: should be one of the four: 'B', 'KB', 'MB', 'GB', or 'TB'
     :param from_unit: should be one of the five: 'B', 'KB', 'MB', 'GB', or 'TB'
     :return: the size converted to the pass-in unit
     """
     unit = to_unit.lower()
-    if unit not in ('kb', 'mb', 'gb', 'tb'):
-        raise ValidationError('Pass-in unit for file size conversion must be one of KB, MB, GB, '
+    if unit not in ('b', 'kb', 'mb', 'gb', 'tb'):
+        raise ValidationError('Pass-in unit for file size conversion must be one of B, KB, MB, GB, '
                               'or TB')
     from_unit = from_unit.lower()
     if from_unit not in ('b', 'kb', 'mb', 'gb', 'tb'):
@@ -759,18 +759,16 @@ def convert_file_size_to_unit(size, to_unit, from_unit='B'):
 
     # Now convert to the pass-in unit
     factor = 1024.0
-    kbsize = size / factor
-    if unit == 'kb':
-        return kbsize
-    mbsize = kbsize / factor
-    if unit == 'mb':
-        return mbsize
-    gbsize = mbsize / factor
-    if unit == 'gb':
-        return gbsize
-    tbsize = gbsize / factor
-    if unit == 'tb':
-        return tbsize
+    if unit == 'b':
+        return size
+    elif unit == 'kb':
+        return size / factor
+    elif unit == 'mb':
+        return size / (factor**2)
+    elif unit == 'gb':
+        return size / (factor**3)
+    elif unit == 'tb':
+        return size / (factor**4)
 
 
 def validate_user_quota(user_or_username, size):

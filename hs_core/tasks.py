@@ -672,7 +672,14 @@ def update_quota_usage(username):
         logger.error(err_msg)
         raise ValidationError(err_msg)
 
-    uz, dz = get_quota_usage(username, raise_on_error=False)
+    # we could intentionally avoid querying the irods catalog for the userzone here
+    # by settings refresh_avu=False. This would be an attempt to reduce expensive irods queries
+    # however, we would then have to find a "better place" to update the quota usage for the userzone
+    # since no better place exists, we will query the irods catalog for the userzone here.
+    # It is worth noting that the perfomance burden is not of great concern since this does not represent
+    # a departure from how quota update has been conducted in the past
+    # Previously, the microservice triggered the AVU query on every file change as well.
+    uz, dz = get_quota_usage(username, raise_on_error=False, refresh_avu=True)
 
     # subtract out published resources from the datazone
     original_quota_data = uq.get_quota_data()
@@ -681,7 +688,7 @@ def update_quota_usage(username):
     user = User.objects.get(username=username)
     published_size = get_storage_usage(user, flag="published")
     dz -= published_size * (1 - published_percent / 100)
-    uq.set_used_value(uz, dz)
+    uq.set_used_value(uz_size=uz, dz_size=dz)
     uq.save()
 
     if original_quota_data["enforce_quota"]:

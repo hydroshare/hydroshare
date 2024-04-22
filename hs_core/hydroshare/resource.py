@@ -33,39 +33,50 @@ METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
 logger = logging.getLogger(__name__)
 
 
-def get_quota_usage(username, raise_on_error=True):
+def get_quota_usage(username, raise_on_error=True, refresh_avu=True):
     """
-    Query iRODS AVU to get quota usage for a user reported in iRODS quota microservices
+    Get the quota usage for a user in data zone and iRods user zone
+    Userzone queries iRODS AVU to get quota usage for a user reported in iRODS quota microservices
+    Datazone queries Django DB to get aggregate resource size for a user
     :param username: the user name to get quota usage for.
+    :param raise_on_error: if True, raise ValidationError if quota usage cannot be retrieved from iRODS
+    :param refresh_avu: if True, refresh the quota usage AVU in iRODS
     :return: the quota usage from iRODS data zone and user zone; raise ValidationError
     if quota usage cannot be retrieved from iRODS
     """
 
     # Get the dz storage size as the sum of all resources for which the user is a quota holder
     user = User.objects.get(username=username)
+    uq = user.quotas.first()
     uqDataZoneSize = 0
     for res in user.uaccess.owned_resources:
         if res.quota_holder == user:
             uqDataZoneSize += res.size
 
-    # get quota size for the user in iRODS user zone
-    attname = username + '-usage'
-    istorage = IrodsStorage()
-    try:
-        uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE, 'home',
-                                     settings.HS_IRODS_PROXY_USER_IN_USER_ZONE,
-                                     settings.IRODS_BAGIT_PATH)
-        uqUserZoneSize = istorage.getAVU(uz_bagit_path, attname)
-        if uqUserZoneSize is None:
-            # user may not have resources in user zone, so corresponding quota size AVU may not
-            # exist for this user
+    if refresh_avu:
+        # get quota size for the user from the AVU in iRODS user zone
+        attname = username + '-usage'
+        istorage = IrodsStorage()
+        try:
+            uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE, 'home',
+                                         settings.HS_IRODS_PROXY_USER_IN_USER_ZONE,
+                                         settings.IRODS_BAGIT_PATH)
+            uqUserZoneSize = istorage.getAVU(uz_bagit_path, attname)
+            if uqUserZoneSize is None:
+                # user may not have resources in user zone, so corresponding quota size AVU may not
+                # exist for this user
+                uqUserZoneSize = -1
+            else:
+                uqUserZoneSize = float(uqUserZoneSize)
+        except SessionException:
+            # user may not have resources in user zone, so corresponding quota size AVU may not exist
+            # for this user
             uqUserZoneSize = -1
-        else:
-            uqUserZoneSize = float(uqUserZoneSize)
-    except SessionException:
-        # user may not have resources in user zone, so corresponding quota size AVU may not exist
-        # for this user
-        uqUserZoneSize = -1
+    else:
+        # get quota size for userzone from the value in the django db
+        uz = uq.user_zone_value
+        # uz is in gb so convert to bytes
+        uqUserZoneSize = utils.convert_file_size_to_unit(uz, 'b', uq.unit)
 
     if uqDataZoneSize < 0 and uqUserZoneSize < 0:
         err_msg = 'no quota size AVU in data zone and user zone for user {}'.format(username)

@@ -296,7 +296,7 @@ class UserQuota(models.Model):
             return uz, dz
         return self.user_zone_value, self.data_zone_value
 
-    def set_used_value(self, uz_size, dz_size):
+    def set_used_value(self, uz_size=None, dz_size=None):
         """
         set used values in self.unit with pass in size in bytes.
         :param uz_size: pass in size in bytes unit from userZone
@@ -304,8 +304,10 @@ class UserQuota(models.Model):
         :return:
         """
         from hs_core.hydroshare.utils import convert_file_size_to_unit
-        self.user_zone_value = convert_file_size_to_unit(uz_size, self.unit)
-        self.data_zone_value = convert_file_size_to_unit(dz_size, self.unit)
+        if uz_size:
+            self.user_zone_value = convert_file_size_to_unit(uz_size, self.unit)
+        if dz_size:
+            self.data_zone_value = convert_file_size_to_unit(dz_size, self.unit)
         self.save()
 
     def add_to_used_value(self, size):
