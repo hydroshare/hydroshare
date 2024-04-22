@@ -40,7 +40,7 @@ from hs_core.hydroshare.resource import (deposit_res_metadata_with_crossref,
                                          get_resource_doi, get_quota_usage,
                                          get_storage_usage,)
 from hs_core.models import BaseResource, ResourceFile, TaskNotification
-from hs_core.signals import post_copy_resource, post_version_resource, pre_delete_resource
+from hs_core.signals import post_copy_resource, post_version_resource
 from hs_core.task_utils import get_or_create_task_notification
 from hs_file_types.models import (FileSetLogicalFile, GenericLogicalFile,
                                   GeoFeatureLogicalFile, GeoRasterLogicalFile,
@@ -1061,17 +1061,18 @@ def delete_resource_task(resource_id, request_username=None):
     resource_related_collections = [col for col in res.collections.all()]
     owners_list = [owner for owner in res.raccess.owners.all()]
 
-    signal_args = {
-        'sender': delete_resource_task,
-        'user': request_username,
-        'resource_shortkey': resource_id,
-        'resource': res,
-        'resource_title': res_title,
-        'resource_type': res_type,
-    }
-    pre_delete_resource.send(
-        **signal_args,
-    )
+    # signal_args = {
+    #     'sender': delete_resource_task,
+    #     'user': request_username,
+    #     'resource_shortkey': resource_id,
+    #     'resource': res,
+    #     'resource_title': res_title,
+    #     'resource_type': res_type,
+    # }
+    # TODO will need to enable this
+    # pre_delete_resource.send(
+    #     **signal_args,
+    # )
 
     # when the most recent version of a resource in an obsolescence chain is deleted, the previous
     # version in the chain needs to be set as the "active" version by deleting "isReplacedBy"
