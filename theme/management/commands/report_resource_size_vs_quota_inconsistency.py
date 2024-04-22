@@ -159,18 +159,21 @@ class Command(BaseCommand):
                     res_files = []
                     updated_size = 0
                     for res in held_resources:
-                        print(f"Total files in resource {res.short_id}: {res.files.all().count()}")
+                        res_files = res.files.exclude(_size=0)
+                        num_files = res_files.count()
+                        print(f"Total files in resource {res.short_id}: {num_files}")
                         print(f'{current_site}/resource/{res.short_id}: currently {res.size} bytes')
                         file_counter = 0
                         # exclude files with size 0 as they don't exist in iRODS
-                        for res_file in res.files.exclude(_size=0).iterator():
+                        print("Updating files:")
+                        for res_file in res_files.iterator():
                             # this is an expensive operation (3 irods calls per file) - about 1 min for 100 files
                             # size, checksum and modified time are obtained from irods and assigned to
                             # relevant fields of the resource file object
                             res_file.set_system_metadata(resource=res, save=False)
                             res_files.append(res_file)
                             file_counter += 1
-                            print(f"Updated file count: {file_counter}")
+                            print("{file_counter}/{num_files}", end=', ')
                             if res_file._size <= 0:
                                 print(f"File {res_file.short_path} was not found in iRODS.")
 
@@ -188,7 +191,7 @@ class Command(BaseCommand):
                     django_updated = converted_updated_size_django
                     if not math.isclose(used_value_irods_dz, converted_updated_size_django, rel_tol=rel_tol):
                         print("Even after updating, an inconsistency remains!")
-                        print(f"Quota usage in iRODS Datazone: {used_value_irods_dz} GB")
+                        print(f"Quota usage in iRODS Datazone AVU: {used_value_irods_dz} GB")
                         print(f"Updated Total size of resources in Django: {converted_updated_size_django} GB")
 
                 elif reset:
