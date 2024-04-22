@@ -78,10 +78,13 @@ class Command(BaseCommand):
             except User.DoesNotExist:
                 print(f'Active user with id {uid} not found')
             uqs = uqs.filter(user=user)
+        num_uqs = uqs.count()
+        print(f"Number of user quotas to check: {num_uqs}")
+        counter = 1
         for uq in uqs:
             user = uq.user
             print("\n" + "*" * 80)
-            print(f'Checking quota for user {user.username}, {current_site}/user/{user.id}/')
+            print(f'{counter}/{num_uqs}: Checking quota for user {user.username}, {current_site}/user/{user.id}/')
             used_value_irods_dz = 0.0
             try:
                 used_value_irods_dz = get_dz_quota_usage_from_irods(user.username)
