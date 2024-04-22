@@ -73,6 +73,9 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
     def test_resource_operations_in_user_zone(self):
         super(TestUserZoneIRODSFederation, self).assert_federated_irods_available()
 
+        self.assertEqual(BaseResource.objects.all().count(), 0,
+                         msg='Number of resources not equal to 0')
+
         # test adding files from federated user zone to an empty resource
         # created in hydroshare zone
         res = hydroshare.resource.create_resource(
