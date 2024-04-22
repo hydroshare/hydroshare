@@ -62,7 +62,6 @@ class Command(BaseCommand):
         parser.add_argument('--min_quota_use', help='filter to just users with quota use above a certain size (in GB)')
 
     def handle(self, *args, **options):
-        quota_report_list = []
         uid = options['uid'] if options['uid'] else None
         update = options['update'] if options['update'] else False
         reset = options['reset'] if options['reset'] else False
@@ -81,6 +80,15 @@ class Command(BaseCommand):
         num_uqs = uqs.count()
         print(f"Number of user quotas to check: {num_uqs}")
         counter = 1
+        csvfile = open(options['output_file_name_with_path'], 'w')
+        w = csv.writer(csvfile)
+        fields = [
+            'User',
+            'Starting summed resource sizes in Django',
+            'Updated summed resource sizes in Django',
+            'Quota reported in iRODS Datazone'
+        ]
+        w.writerow(fields)
         for uq in uqs:
             user = uq.user
             print("\n" + "*" * 80)
@@ -113,11 +121,7 @@ class Command(BaseCommand):
 
             if not math.isclose(used_value_irods_dz, converted_total_size_django, abs_tol=0.1):
                 # report inconsistency
-                report_dict = {
-                    'user': uq.user.username,
-                    'django': converted_total_size_django,
-                    'django_updated': '',
-                    'irods': used_value_irods_dz}
+                django_updated = ''
                 print('quota incosistency: {} reported in django vs {} reported in iRODS for user {}'.format(
                     converted_total_size_django, used_value_irods_dz, user.username), flush=True)
 
@@ -152,7 +156,7 @@ class Command(BaseCommand):
                         else:
                             print(f"Resource {res.short_id} contains no files.")
                     converted_updated_size_django = convert_file_size_to_unit(int(updated_size), 'gb')
-                    report_dict['django_updated'] = converted_updated_size_django
+                    django_updated = converted_updated_size_django
                     if not math.isclose(used_value_irods_dz, converted_updated_size_django, abs_tol=0.1):
                         print("Even after updating, an inconsistency remains!")
                         print(f"Quota usage in iRODS Datazone: {used_value_irods_dz} GB")
@@ -170,29 +174,10 @@ class Command(BaseCommand):
                             res.metadata.update_element('date', res_modified_date.id)
                         else:
                             res.metadata.create_element('date', type='modified', start_date=res.updated)
-                    report_dict['django_updated'] = 'reset'
+                    django_updated = 'reset'
                 else:
                     print('No action taken. Use --update or --reset to fix inconsistencies')
-                quota_report_list.append(report_dict)
-
-        if quota_report_list:
-            with open(options['output_file_name_with_path'], 'w') as csvfile:
-                w = csv.writer(csvfile)
-                fields = [
-                    'User',
-                    'Starting summed resource sizes in Django',
-                    'Updated summed resource sizes in Django',
-                    'Quota reported in iRODS Datazone'
-                ]
-                w.writerow(fields)
-
-                for q in quota_report_list:
-                    values = [
-                        q['user'],
-                        q['django'],
-                        q['django_updated'],
-                        q['irods']
-                    ]
-                    w.writerow([str(v) for v in values])
-        else:
-            print('No quota inconsistencies found')
+                w.writerow([uq.user.username, converted_total_size_django, django_updated, used_value_irods_dz])
+            counter += 1
+        csvfile.close()
+        print("Done")
