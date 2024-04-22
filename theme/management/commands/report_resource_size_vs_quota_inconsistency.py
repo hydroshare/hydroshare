@@ -62,6 +62,7 @@ class Command(BaseCommand):
         parser.add_argument('--min_quota_use_avu', help='filter to just users with AVU quota use above this size in GB')
         parser.add_argument('--min_quota_django_model', help='filter to django UserQuota use above this size in GB')
         parser.add_argument('--desc', action='store_true', help='order by descending quota use in iRODS Datazone')
+        parser.add_argument('--rel_tol', help='relative tolerance for comparing quota sizes, default is 0.01')
 
     def handle(self, *args, **options):
         uid = options['uid'] if options['uid'] else None
@@ -70,6 +71,7 @@ class Command(BaseCommand):
         reset = options['reset'] if options['reset'] else False
         min_quota_use_avu = int(options['min_quota_use_avu']) if options['min_quota_use_avu'] else 0
         min_quota_django_model = int(options['min_quota_django_model']) if options['min_quota_django_model'] else 0
+        rel_tol = float(options['rel_tol']) if options['rel_tol'] else 0.01
 
         if min_quota_use_avu and min_quota_django_model:
             print('Using --min_quota_use_avu and --min_quota_django_model')
@@ -116,7 +118,6 @@ class Command(BaseCommand):
                 # assumes that the user may not have any resources in the data zone
                 pass
             used_value_irods_dz = convert_file_size_to_unit(used_value_irods_dz, "gb")
-            print(f"Quota usage in iRODS Datazone from AVU: {used_value_irods_dz} GB")
             if used_value_irods_dz < min_quota_use_avu:
                 print(f"Quota usage in iRODS Datazone AVU is below {min_quota_use_avu} GB. Skipping.")
                 continue
@@ -132,9 +133,10 @@ class Command(BaseCommand):
                     print(f"Resource {res.short_id} is held by {user.username}, size: {res_size} bytes")
                     total_size += res_size
             converted_total_size_django = convert_file_size_to_unit(int(total_size), 'gb')
-            print(f"Total size of resources in Django: {converted_total_size_django} GB")
+            print(f"Quota usage in iRODS Datazone from AVU: {used_value_irods_dz} GB")
+            print(f"Aggregate size of resources in Django: {converted_total_size_django} GB")
 
-            if not math.isclose(used_value_irods_dz, converted_total_size_django, abs_tol=0.1):
+            if not math.isclose(used_value_irods_dz, converted_total_size_django, rel_tol=rel_tol):
                 # report inconsistency
                 django_updated = ''
                 print('quota incosistency: {} reported in django vs {} reported in iRODS for user {}'.format(
@@ -172,7 +174,7 @@ class Command(BaseCommand):
                             print(f"Resource {res.short_id} contains no files.")
                     converted_updated_size_django = convert_file_size_to_unit(int(updated_size), 'gb')
                     django_updated = converted_updated_size_django
-                    if not math.isclose(used_value_irods_dz, converted_updated_size_django, abs_tol=0.1):
+                    if not math.isclose(used_value_irods_dz, converted_updated_size_django, rel_tol=rel_tol):
                         print("Even after updating, an inconsistency remains!")
                         print(f"Quota usage in iRODS Datazone: {used_value_irods_dz} GB")
                         print(f"Updated Total size of resources in Django: {converted_updated_size_django} GB")
@@ -193,6 +195,8 @@ class Command(BaseCommand):
                 else:
                     print('No action taken. Use --update or --reset to fix inconsistencies')
                 w.writerow([uq.user.username, converted_total_size_django, django_updated, used_value_irods_dz])
+            else:
+                print(f"Quota deemed consistent for user {user.username}, using {rel_tol} relative tolerance")
             counter += 1
         csvfile.close()
         print("Done")
