@@ -1,6 +1,7 @@
 
 import csv
 import math
+import time
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.core.exceptions import ValidationError
@@ -118,6 +119,7 @@ class Command(BaseCommand):
         ]
         w.writerow(fields)
         for uq in uqs:
+            start_time = time.time()
             user = uq.user
             print("\n" + "*" * 80)
             print(f'{counter}/{num_uqs}: Checking quota for user {user.username}, {current_site}/user/{user.id}/')
@@ -208,5 +210,8 @@ class Command(BaseCommand):
             else:
                 print(f"Quota deemed consistent for user {user.username}, using {rel_tol} relative tolerance")
             counter += 1
+            # Print the amount of time spent for this user
+            time_spent = time.time() - start_time
+            print(f"Time spent for user {user.username}: {time_spent} seconds")
         csvfile.close()
         print("Done")
