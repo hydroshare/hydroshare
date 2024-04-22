@@ -58,6 +58,7 @@ class Command(BaseCommand):
         parser.add_argument('output_file_name_with_path', help='output file name with path')
         parser.add_argument('--update', action='store_true', help='fix inconsistencies by recalculating in django')
         parser.add_argument('--reset', action='store_true', help='reset resource file size in django when inconsistent')
+        parser.add_argument('--no_compare', action='store_true', help='reset/update filesizes without comparing quotas')
         parser.add_argument('--uid', help='filter to just a single user by uid')
         parser.add_argument('--min_quota_use_avu', help='filter to just users with AVU quota use above this size in GB')
         parser.add_argument('--min_quota_django_model', help='filter to django UserQuota use above this size in GB')
@@ -69,9 +70,19 @@ class Command(BaseCommand):
         update = options['update'] if options['update'] else False
         desc = options['desc'] if options['desc'] else False
         reset = options['reset'] if options['reset'] else False
+        no_compare = options['no_compare'] if options['no_compare'] else False
         min_quota_use_avu = int(options['min_quota_use_avu']) if options['min_quota_use_avu'] else 0
         min_quota_django_model = int(options['min_quota_django_model']) if options['min_quota_django_model'] else 0
         rel_tol = float(options['rel_tol']) if options['rel_tol'] else 0.01
+
+        if no_compare:
+            if not update and not reset:
+                print('Error: --no_compare option must be used with --update or --reset option')
+                return
+            if options['rel_tol']:
+                print('Warning: --rel_tol option is ignored when --no_compare is used')
+                print('Update or reset will be done even if comparison is within the tolerance.')
+            print('Using --no_compare option. Will reset/update file sizes even when no incosistency is detected.')
 
         if min_quota_use_avu and min_quota_django_model:
             print('Using --min_quota_use_avu and --min_quota_django_model')
@@ -135,15 +146,14 @@ class Command(BaseCommand):
             converted_total_size_django = convert_file_size_to_unit(int(total_size), 'gb')
             print(f"Quota usage in iRODS Datazone from AVU: {used_value_irods_dz} GB")
             print(f"Aggregate size of resources in Django: {converted_total_size_django} GB")
-
-            if not math.isclose(used_value_irods_dz, converted_total_size_django, rel_tol=rel_tol):
-                # report inconsistency
+            is_close = math.isclose(used_value_irods_dz, converted_total_size_django, rel_tol=rel_tol)
+            if not is_close or no_compare:
                 django_updated = ''
-                print('quota incosistency: {} reported in django vs {} reported in iRODS for user {}'.format(
+                print('{} reported in django vs {} reported in iRODS for user {}'.format(
                     converted_total_size_django, used_value_irods_dz, user.username), flush=True)
 
                 if update:
-                    print("Attempting to fix the inconsistency by updating file sizes in django")
+                    print("Attempting to fix any inconsistency by updating file sizes in django")
                     res_files = []
                     updated_size = 0
                     for res in held_resources:
