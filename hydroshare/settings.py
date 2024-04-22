@@ -146,7 +146,7 @@ DEFAULT_DEVELOPER_EMAIL = 'developer@hydroshare.org'
 NIGHTLY_RESOURCE_REPAIR_DURATION = 60 * 60
 
 # Integer seconds that worker should allocate every night to generating filesystem metadata
-NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION = 60 * 60
+NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION = 60 * 60 * 4  # 4 hours
 
 # Should resource owners be notified of automated resource repair?
 NOTIFY_OWNERS_AFTER_RESOURCE_REPAIR = False

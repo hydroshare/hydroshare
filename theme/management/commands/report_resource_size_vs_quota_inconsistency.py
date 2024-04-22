@@ -56,13 +56,15 @@ class Command(BaseCommand):
     help = "Output potential quota inconsistencies between iRODS and Django resource aggregate filesize for all users"
 
     def add_arguments(self, parser):
-        parser.add_argument('output_file_name_with_path', help='output file name with path')
+        parser.add_argument('output_file_name_with_path', type=str, help='output file name with path')
         parser.add_argument('--update', action='store_true', help='fix inconsistencies by recalculating in django')
         parser.add_argument('--reset', action='store_true', help='reset resource file size in django when inconsistent')
         parser.add_argument('--no_compare', action='store_true', help='reset/update filesizes without comparing quotas')
-        parser.add_argument('--uid', help='filter to just a single user by uid')
-        parser.add_argument('--min_quota_use_avu', help='filter to just users with AVU quota use above this size in GB')
-        parser.add_argument('--min_quota_django_model', help='filter to django UserQuota use above this size in GB')
+        parser.add_argument('--uid', type=str, help='filter to just a single user by uid')
+        parser.add_argument('--min_quota_use_avu', type=int,
+                            help='filter to just users with AVU quota use above this size in GB')
+        parser.add_argument('--min_quota_django_model', type=int,
+                            help='filter to django UserQuota use above this size in GB')
         parser.add_argument('--desc', action='store_true', help='order by descending quota use in iRODS Datazone')
         parser.add_argument('--rel_tol', help='relative tolerance for comparing quota sizes, default is 0.01')
 
