@@ -21,19 +21,22 @@ def update_file_sizes(resources, refreshed_weeks=None, modified_weeks=None):
         res_files = filter_files(res.files, refreshed_weeks=refreshed_weeks, modified_weeks=modified_weeks)
         num_files = res_files.count()
         print(f"Total files in resource {res.short_id}: {num_files}")
+        if num_files == 0:
+            print(f"Resource {res.short_id} has no files")
+            continue
         print(f'{current_site}/resource/{res.short_id}: currently {res.size} bytes')
         file_counter = 0
-        print("Updating files:")
+        print("Updating files:", end=': ')
         for res_file in res_files.iterator():
             res_file.set_system_metadata(resource=res, save=False)
             file_counter += 1
-            print("{file_counter}/{num_files}", end=', ')
+            print(f"{file_counter}/{num_files}")
             if res_file._size <= 0:
                 print(f"File {res_file.short_path} was not found in iRODS.")
 
         ResourceFile.objects.bulk_update(res_files,
                                          ResourceFile.system_meta_fields(), batch_size=_BATCH_SIZE)
-        print(f"Updated {file_counter} files for resource {res.short_id}")
+        print(f"\nUpdated {file_counter} files for resource {res.short_id}")
 
 
 def filter_files(file_queryset, refreshed_weeks=None, modified_weeks=None):
@@ -111,10 +114,10 @@ class Command(BaseCommand):
             res_files = filter_files(res_files, refreshed_weeks=refreshed_weeks, modified_weeks=modified_weeks)
             num_files = res_files.count()
             print(f"Total files: {num_files}")
-            if update:
+            if update and num_files > 0:
                 file_counter = 1
                 for res_file in res_files.iterator():
-                    print("{file_counter}/{num_files}", end=', ')
+                    print(f"{file_counter}/{num_files}")
                     res_file.calculate_size(resource=res_file.resource, save=False)
                     file_counter += 1
                 ResourceFile.objects.bulk_update(res_files, '_size', batch_size=_BATCH_SIZE)

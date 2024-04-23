@@ -164,6 +164,9 @@ class Command(BaseCommand):
                         res_files = res.files.exclude(_size=0)
                         num_files = res_files.count()
                         print(f"Total files in resource {res.short_id}: {num_files}")
+                        if num_files == 0:
+                            print(f"Resource {res.short_id} has no files.")
+                            continue
                         print(f'{current_site}/resource/{res.short_id}: currently {res.size} bytes')
                         file_counter = 0
                         # exclude files with size 0 as they don't exist in iRODS
@@ -174,7 +177,7 @@ class Command(BaseCommand):
                             # relevant fields of the resource file object
                             res_file.calculate_size(resource=res, save=False)
                             file_counter += 1
-                            print("{file_counter}/{num_files}", end=', ')
+                            print(f"{file_counter}/{num_files}")
                             if res_file._size <= 0:
                                 print(f"File {res_file.short_path} was not found in iRODS.")
 
