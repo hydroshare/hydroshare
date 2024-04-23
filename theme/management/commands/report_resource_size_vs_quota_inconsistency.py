@@ -172,23 +172,18 @@ class Command(BaseCommand):
                             # this is an expensive operation (3 irods calls per file) - about 1 min for 100 files
                             # size, checksum and modified time are obtained from irods and assigned to
                             # relevant fields of the resource file object
-                            res_file.set_system_metadata(resource=res, save=False)
-                            res_files.append(res_file)
+                            res_file.calculate_size(resource=res, save=False)
                             file_counter += 1
                             print("{file_counter}/{num_files}", end=', ')
                             if res_file._size <= 0:
                                 print(f"File {res_file.short_path} was not found in iRODS.")
 
-                        if res_files:
-                            ResourceFile.objects.bulk_update(res_files,
-                                                             ResourceFile.system_meta_fields(), batch_size=_BATCH_SIZE)
-                            print(f"Updated {file_counter} files for resource {res.short_id}")
-                            res.refresh_from_db()
-                            print(f'{current_site}/resource/{res.short_id}: now {res.size} bytes')
-                            # keep track of the updated size so that we can compare again
-                            updated_size += res.size
-                        else:
-                            print(f"Resource {res.short_id} contains no files.")
+                        ResourceFile.objects.bulk_update(res_files, '_size', batch_size=_BATCH_SIZE)
+                        print(f"Updated {file_counter} files for resource {res.short_id}")
+                        res.refresh_from_db()
+                        print(f'{current_site}/resource/{res.short_id}: now {res.size} bytes')
+                        # keep track of the updated size so that we can compare again
+                        updated_size += res.size
                     converted_updated_size_django = convert_file_size_to_unit(int(updated_size), 'gb')
                     django_updated = converted_updated_size_django
                     if not math.isclose(used_value_irods_dz, converted_updated_size_django, rel_tol=rel_tol):

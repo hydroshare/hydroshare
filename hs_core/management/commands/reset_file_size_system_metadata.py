@@ -17,7 +17,6 @@ _BATCH_SIZE = settings.BULK_UPDATE_CREATE_BATCH_SIZE
 
 def update_file_sizes(resources, refreshed_weeks=None, modified_weeks=None):
     print("Updating file sizes in Django")
-    res_files = []
     for res in resources:
         res_files = filter_files(res.files, refreshed_weeks=refreshed_weeks, modified_weeks=modified_weeks)
         num_files = res_files.count()
@@ -27,18 +26,14 @@ def update_file_sizes(resources, refreshed_weeks=None, modified_weeks=None):
         print("Updating files:")
         for res_file in res_files.iterator():
             res_file.set_system_metadata(resource=res, save=False)
-            res_files.append(res_file)
             file_counter += 1
             print("{file_counter}/{num_files}", end=', ')
             if res_file._size <= 0:
                 print(f"File {res_file.short_path} was not found in iRODS.")
 
-        if res_files:
-            ResourceFile.objects.bulk_update(res_files,
-                                             ResourceFile.system_meta_fields(), batch_size=_BATCH_SIZE)
-            print(f"Updated {file_counter} files for resource {res.short_id}")
-        else:
-            print(f"Resource {res.short_id} contains no files.")
+        ResourceFile.objects.bulk_update(res_files,
+                                         ResourceFile.system_meta_fields(), batch_size=_BATCH_SIZE)
+        print(f"Updated {file_counter} files for resource {res.short_id}")
 
 
 def filter_files(file_queryset, refreshed_weeks=None, modified_weeks=None):
@@ -101,6 +96,7 @@ class Command(BaseCommand):
                 uqs = uqs.filter(used_value__gt=min_quota_django_model).order_by('-used_value')
             num_uqs = uqs.count()
             counter = 1
+            print(f'Found {num_uqs} users with quota above {min_quota_django_model} GB')
             for uq in uqs:
                 user = uq.user
                 print(f'{counter}/{num_uqs}: \
@@ -111,9 +107,23 @@ class Command(BaseCommand):
                         resources_to_modify.append(res)
                 counter += 1
         else:
-            resources_to_modify = ResourceFile.objects.all().order_by('-updated')
+            res_files = ResourceFile.objects.all()
+            res_files = filter_files(res_files, refreshed_weeks=refreshed_weeks, modified_weeks=modified_weeks)
+            num_files = res_files.count()
+            print(f"Total files: {num_files}")
+            if update:
+                file_counter = 1
+                for res_file in res_files.iterator():
+                    print("{file_counter}/{num_files}", end=', ')
+                    res_file.calculate_size(resource=res_file.resource, save=False)
+                    file_counter += 1
+                ResourceFile.objects.bulk_update(res_files, '_size', batch_size=_BATCH_SIZE)
+            else:
+                # reset the cache for the files
+                res_files.update(_size=-1)
+            print("Done")
+            return
 
-        # Now either update or reset the file sizes
         if update:
             update_file_sizes(resources_to_modify, refreshed_weeks=refreshed_weeks, modified_weeks=modified_weeks)
         else:
