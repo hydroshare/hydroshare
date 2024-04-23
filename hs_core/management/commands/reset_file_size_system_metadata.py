@@ -28,14 +28,13 @@ def update_file_sizes(resources, refreshed_weeks=None, modified_weeks=None):
         file_counter = 0
         print("Updating files:", end=': ')
         for res_file in res_files.iterator():
-            res_file.set_system_metadata(resource=res, save=False)
+            res_file.calculate_size(resource=res, save=False)
             file_counter += 1
             print(f"{file_counter}/{num_files}")
             if res_file._size <= 0:
                 print(f"File {res_file.short_path} was not found in iRODS.")
 
-        ResourceFile.objects.bulk_update(res_files,
-                                         ResourceFile.system_meta_fields(), batch_size=_BATCH_SIZE)
+        ResourceFile.objects.bulk_update(res_files, ['_size', 'filesize_cache_updated'], batch_size=_BATCH_SIZE)
         print(f"\nUpdated {file_counter} files for resource {res.short_id}")
 
 
@@ -120,7 +119,7 @@ class Command(BaseCommand):
                     print(f"{file_counter}/{num_files}")
                     res_file.calculate_size(resource=res_file.resource, save=False)
                     file_counter += 1
-                ResourceFile.objects.bulk_update(res_files, '_size', batch_size=_BATCH_SIZE)
+                ResourceFile.objects.bulk_update(res_files, ['_size', 'filesize_cache_updated'], batch_size=_BATCH_SIZE)
             else:
                 # reset the cache for the files
                 res_files.update(_size=-1)
