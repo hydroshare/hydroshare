@@ -117,9 +117,8 @@ class Command(BaseCommand):
                 file_counter = 1
                 for res_file in res_files.iterator():
                     print(f"{file_counter}/{num_files}")
-                    res_file.calculate_size(resource=res_file.resource, save=False)
+                    res_file.calculate_size(resource=res_file.resource, save=True)
                     file_counter += 1
-                ResourceFile.objects.bulk_update(res_files, ['_size', 'filesize_cache_updated'], batch_size=_BATCH_SIZE)
             else:
                 # reset the cache for the files
                 res_files.update(_size=-1)
