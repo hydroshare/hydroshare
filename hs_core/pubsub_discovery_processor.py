@@ -4,7 +4,7 @@ from django.conf import settings
 from google.auth import jwt
 from google.cloud import pubsub_v1
 
-publish_discoverable = getattr(settings, "PUBLISH_DISCOVERABLE", True)
+publish_discoverable = getattr(settings, "PUBLISH_DISCOVERABLE", False)
 
 if publish_discoverable:
     audience = "https://pubsub.googleapis.com/google.pubsub.v1.Publisher"
