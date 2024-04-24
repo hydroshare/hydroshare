@@ -17,4 +17,4 @@ if publish_discoverable:
 
 def pub_update(resource_id: str, removed: bool = False):
     if publish_discoverable:
-        future = publisher.publish(topic_name, json.dumps({"resource_id": resource_id, "removed": removed}).encode("utf-8"))
+        publisher.publish(topic_name, json.dumps({"resource_id": resource_id, "removed": removed}).encode("utf-8"))
