@@ -7,6 +7,7 @@ from django.conf import settings
 from django.utils.http import urlencode
 from rest_framework.authentication import BaseAuthentication
 from keycloak.keycloak_openid import KeycloakOpenID
+from keycloak import KeycloakAdmin, KeycloakOpenIDConnection
 from theme.utils import get_user_from_username_or_email
 
 import logging
@@ -28,6 +29,17 @@ class HydroShareOIDCAuthenticationBackend(OIDCAuthenticationBackend):
             country=claims.get('country', ''),
             state=claims.get('state', ''),
             subject_areas=subject_areas)
+
+    def describe_user_by_claims(self, claims):
+        username = claims.get("preferred_username")
+        return "username {}".format(username)
+
+    def filter_users_by_claims(self, claims):
+        """Return all users matching the specified username."""
+        username = claims.get("preferred_username")
+        if not username:
+            return self.UserModel.objects.none()
+        return self.UserModel.objects.filter(username__iexact=username)
 
 
 def build_oidc_url(request):
@@ -89,6 +101,24 @@ KEYCLOAK = KeycloakOpenID(
     realm_name=settings.OIDC_KEYCLOAK_REALM,
     client_secret_key=settings.OIDC_RP_CLIENT_SECRET,
 )
+
+if settings.ENABLE_OIDC_AUTHENTICATION:
+    KEYCLOAK = KeycloakOpenID(
+        server_url=settings.OIDC_KEYCLOAK_URL,
+        client_id=settings.OIDC_RP_CLIENT_ID,
+        realm_name=settings.OIDC_KEYCLOAK_REALM,
+        client_secret_key=settings.OIDC_RP_CLIENT_SECRET,
+    )
+    KEYCLOAK_CONNECTION = KeycloakOpenIDConnection(
+        server_url=settings.OIDC_KEYCLOAK_URL,
+        username=settings.KEYCLOAK_ADMIN_USERNAME,
+        password=settings.KEYCLOAK_ADMIN_PASSWORD,
+        realm_name=settings.OIDC_KEYCLOAK_REALM,
+        client_id=settings.OIDC_RP_CLIENT_ID,
+        client_secret_key=settings.OIDC_RP_CLIENT_SECRET,
+        verify=True)
+
+    KEYCLOAK_ADMIN = KeycloakAdmin(connection=KEYCLOAK_CONNECTION)
 
 
 class BasicOIDCAuthentication(BaseAuthentication):
