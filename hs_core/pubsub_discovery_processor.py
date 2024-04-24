@@ -3,10 +3,8 @@ import json
 from django.conf import settings
 from google.auth import jwt
 from google.cloud import pubsub_v1
-from celery import shared_task
-from concurrent import futures
 
-publish_discoverable = getattr(settings, "PUBLISH_DISCOVERABLE", False)
+publish_discoverable = getattr(settings, "PUBLISH_DISCOVERABLE", True)
 
 if publish_discoverable:
     audience = "https://pubsub.googleapis.com/google.pubsub.v1.Publisher"
@@ -17,8 +15,6 @@ if publish_discoverable:
     topic_name = 'projects/{project_id}/topics/{topic}'.format(
         project_id="apps-320517", topic='discovery_ids')
 
-@shared_task
 def pub_update(resource_id: str, removed: bool = False):
     if publish_discoverable:
-        future = publisher.publish(topic_name, json.dumps({"resource_id": resource_id, "removed": removed}))
-        future.result()
+        future = publisher.publish(topic_name, json.dumps({"resource_id": resource_id, "removed": removed}).encode("utf-8"))
