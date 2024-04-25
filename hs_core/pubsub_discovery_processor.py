@@ -15,6 +15,7 @@ if publish_discoverable:
     topic_name = 'projects/{project_id}/topics/{topic}'.format(
         project_id="apps-320517", topic='discovery_ids')
 
+
 def pub_update(resource_id: str, removed: bool = False):
     if publish_discoverable:
         publisher.publish(topic_name, json.dumps({"resource_id": resource_id, "removed": removed}).encode("utf-8"))
