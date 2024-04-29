@@ -98,7 +98,7 @@ class Command(BaseCommand):
                 owned_resources = user.uaccess.owned_resources
                 total_size = 0
                 for res in owned_resources:
-                    if res.get_quota_holder() == user:
+                    if res.quota_holder == user:
                         res_size = res.size
                         converted_size = convert_size(int(res_size))
                         print(f'{user.username} holds {current_site}/resource/{res.short_id}: {converted_size}')

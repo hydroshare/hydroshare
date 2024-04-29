@@ -37,7 +37,8 @@ from hs_core.hydroshare.hs_bagit import (create_bag_metadata_files,
                                          create_bagit_files_by_irods)
 from hs_core.hydroshare.resource import (deposit_res_metadata_with_crossref,
                                          get_activated_doi, get_crossref_url,
-                                         get_resource_doi)
+                                         get_resource_doi, get_quota_usage,
+                                         get_storage_usage,)
 from hs_core.models import BaseResource, ResourceFile, TaskNotification
 from hs_core.task_utils import get_or_create_task_notification
 from hs_file_types.models import (FileSetLogicalFile, GenericLogicalFile,
@@ -509,6 +510,12 @@ def send_over_quota_emails():
         if uq:
             used_percent = uq.used_percent
             if used_percent >= qmsg.soft_limit_percent:
+                # first update the quota just to be sure that we are using the latest figures
+                update_quota_usage(u.username)
+                uq.refresh_from_db()
+                if uq.used_percent < qmsg.soft_limit_percent:
+                    # quota usage has been updated and is now below the soft limit
+                    continue
                 support_user = get_default_support_user()
                 msg_str = f'Dear {support_user.first_name}{support_user.last_name}:\n\n'
                 msg_str += f'The following user (#{ u.id }) has exceeded their quota:{u.email}\n\n'

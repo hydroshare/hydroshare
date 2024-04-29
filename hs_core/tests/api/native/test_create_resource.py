@@ -114,7 +114,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(new_res.creator == self.user)
         self.assertTrue(new_res.short_id is not None, 'Short ID has not been created!')
         self.assertEqual(new_res.files.all().count(), 1, msg="Number of content files is not equal to 1")
-        self.assertEqual(new_res.get_quota_holder(), self.user,
+        self.assertEqual(new_res.quota_holder, self.user,
                          msg="The quota holder of the newly created resource is not the creator")
 
         if new_res:
