@@ -155,11 +155,12 @@ class UpdateQuotaUsageTestCase(TestCase):
         # Assert that the resource has added a single zip file
         self.assertEqual(self.res.files.all().count(), 4)
 
+        # Assert that the resource size has increased
+        self.assertGreater(self.res.size, self.single_file_size * 3)
+
         # Assert that the quota has been updated correctly
-        user_quota.refresh_from_db()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         expected = 1105
-        # AssertionError: 80.0 != 1105 within 5 places (1025.0 difference)
         self.assertAlmostEqual(dz, expected, places=5)
 
     def test_unzipping_files_increase_quota(self):
@@ -455,6 +456,9 @@ class UpdateQuotaUsageTestCase(TestCase):
         # Assert that the copied resource has files
         self.assertEqual(new_res.files.all().count(), 3)
 
+        # Assert that the copied resource has the same size as the original resource
+        self.assertEqual(new_res.size, self.res.size)
+
         # Assert that the user is the quota holder for both resources
         self.assertEqual(new_res.quota_holder, self.user)
         self.assertEqual(self.res.quota_holder, self.user)
@@ -462,7 +466,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         # Assert that the quota has been updated
         user_quota.refresh_from_db()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
-        # AssertionError: 78.0 != 162.0 within 5 places (84.0 difference)
         self.assertAlmostEqual(dz, initial_quota_value * 2, places=5)
 
     def test_version_resource_doubles_quota(self):
