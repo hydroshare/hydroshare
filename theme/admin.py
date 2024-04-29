@@ -20,8 +20,8 @@ class UserQuotaForm(forms.ModelForm):
 
     class Meta:
         model = UserQuota
-        fields = ['allocated_value', 'user_zone_value', 'data_zone_value', 'unit', 'zone']
-        readonly_fields = ['zone', 'user_zone_value', 'data_zone_value',]
+        fields = ['allocated_value',]
+        readonly_fields = ['zone', 'unit', 'user_zone_value', 'data_zone_value',]
 
     def save(self, *args, **kwargs):
         instance = super(UserQuotaForm, self).save(commit=False)

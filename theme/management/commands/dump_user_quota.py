@@ -5,7 +5,8 @@ from django.conf import settings
 from hs_tools_resource.utils import convert_size
 from theme.models import UserQuota
 from django.core.management.base import BaseCommand
-from hs_core.hydroshare import current_site_url
+from hs_core.hydroshare import current_site_url, get_quota_usage
+from django.core.exceptions import ValidationError
 
 
 class Command(BaseCommand):
@@ -67,9 +68,12 @@ class Command(BaseCommand):
             allocated = uq.allocated_value
             if exceeded and used < allocated:
                 continue
-
-            dz_bytes = istorage.getAVU(settings.IRODS_BAGIT_PATH,
-                                       f'{user.username}-usage')
+            uz_bytes = None
+            dz_bytes = None
+            try:
+                uz_bytes, dz_bytes = get_quota_usage(user.username)
+            except ValidationError as e:
+                print(f"Error updating quota: {e.message}")
             if dz_bytes is None:
                 dz_bytes = 0
             dz = convert_size(int(dz_bytes))

@@ -37,8 +37,7 @@ from hs_core.hydroshare.hs_bagit import (create_bag_metadata_files,
                                          create_bagit_files_by_irods)
 from hs_core.hydroshare.resource import (deposit_res_metadata_with_crossref,
                                          get_activated_doi, get_crossref_url,
-                                         get_resource_doi, get_quota_usage,
-                                         get_storage_usage,)
+                                         get_resource_doi, update_quota_usage,)
 from hs_core.models import BaseResource, ResourceFile, TaskNotification
 from hs_core.task_utils import get_or_create_task_notification
 from hs_file_types.models import (FileSetLogicalFile, GenericLogicalFile,

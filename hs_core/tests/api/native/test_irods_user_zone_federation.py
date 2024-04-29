@@ -8,7 +8,6 @@ from hs_core.models import BaseResource
 from hs_core import hydroshare
 from hs_core.tasks import replicate_resource_bag_to_user_zone_task
 from hs_core.testing import TestCaseCommonUtilities
-from hs_core.hydroshare.resource import update_quota_usage
 
 
 class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
@@ -121,43 +120,3 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         # test to make sure original files still exist after resource deletion
         self.assertTrue(self.irods_storage.exists(user_path + self.file_one))
         self.assertTrue(self.irods_storage.exists(user_path + self.file_two))
-
-    def test_quota_update_in_fed_zones(self):
-        super(TestUserZoneIRODSFederation, self).assert_federated_irods_available()
-
-        # create a resource in the default HydroShare data iRODS zone for aggregated quota
-        # update testing
-        res = hydroshare.resource.create_resource(
-            'CompositeResource',
-            self.user,
-            'My Test Resource in Data Zone'
-        )
-        self.assertTrue(res.creator == self.user)
-        self.assertTrue(res.get_quota_holder() == self.user)
-
-        istorage = res.get_irods_storage()
-        attname = self.user.username + '-usage'
-        test_qsize = '2000000000'  # 2GB
-        # this quota size AVU will be set by real time iRODS quota usage update micro-services.
-        # For testing, setting it programmatically to test the quota size will be picked up
-        # automatically when files are added into this resource
-        # programmatically set quota size for the test user in data zone
-        if not istorage.exists(settings.IRODS_BAGIT_PATH):
-            istorage.session.run("imkdir", None, '-p', settings.IRODS_BAGIT_PATH)
-        istorage.setAVU(settings.IRODS_BAGIT_PATH, attname, test_qsize)
-
-        get_qsize = istorage.getAVU(settings.IRODS_BAGIT_PATH, attname)
-        self.assertEqual(test_qsize, get_qsize)
-
-        # Although the resource creation operation above will trigger quota update celery task,
-        # in the test environment, celery task is not really executed, so have to test quota update
-        # task explicitely here
-        update_quota_usage(self.user.username)
-        uquota = self.user.quotas.first()
-        target_qsize = float(test_qsize)
-        target_qsize = hydroshare.utils.convert_file_size_to_unit(target_qsize, uquota.unit)
-        error = abs(uquota.used_value - target_qsize)
-        self.assertLessEqual(error, 0.5, msg='error is ' + str(error))
-
-        # delete test resources
-        hydroshare.resource.delete_resource(res.short_id)

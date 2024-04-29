@@ -13,10 +13,11 @@ from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.db import transaction
+from django.db.models import Sum
 from rest_framework import status
 
 from hs_core.hydroshare import hs_bagit
-from hs_core.models import ResourceFile
+from hs_core.models import ResourceFile, BaseResource
 from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
@@ -38,17 +39,39 @@ def get_quota_usage(username, raise_on_error=True):
     """
     Query iRODS AVU to get quota usage for a user reported in iRODS quota microservices
     :param username: the user name to get quota usage for.
+    :param raise_on_error: if True, raise ValidationError if quota usage cannot be retrieved from iRODS
+    :param zone: the zone to get quota usage for. If None, get quota usage for both user zone and data zone
     :return: the quota usage from iRODS data zone and user zone; raise ValidationError
     if quota usage cannot be retrieved from iRODS
     """
+    uqDataZoneSize = get_data_zone_usage(username, raise_on_error=raise_on_error)
 
+    uqUserZoneSize = get_user_zone_usage(username)
+    if uqUserZoneSize < 0:
+        uqUserZoneSize = 0
+        err_msg = f'no quota size AVU for user {username} in userzone'
+        logger.error(err_msg)
+        if raise_on_error:
+            raise ValidationError(err_msg)
+    return uqUserZoneSize, uqDataZoneSize
+
+
+def get_data_zone_usage(username, raise_on_error=True):
     # Get the dz storage size as the sum of all resources for which the user is a quota holder
-    user = User.objects.get(username=username)
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        logger.error(f'User {username} does not exist')
+        if raise_on_error:
+            raise ValidationError(f'User {username} does not exist')
+        return 0
     uqDataZoneSize = 0
-    for res in user.uaccess.owned_resources:
-        if res.quota_holder == user:
-            uqDataZoneSize += res.size
+    qh_resource_ids = BaseResource.objects.filter(quota_holder=user).values_list('id', flat=True)
+    uqDataZoneSize = ResourceFile.objects.filter(object_id__in=qh_resource_ids).aggregate(Sum('_size'))["_size__sum"]
+    return uqDataZoneSize
 
+
+def get_user_zone_usage(username):
     # get quota size for the user in iRODS user zone
     attname = username + '-usage'
     istorage = IrodsStorage()
@@ -67,17 +90,6 @@ def get_quota_usage(username, raise_on_error=True):
         # user may not have resources in user zone, so corresponding quota size AVU may not exist
         # for this user
         uqUserZoneSize = -1
-
-    if uqDataZoneSize < 0 and uqUserZoneSize < 0:
-        err_msg = 'no quota size AVU in data zone and user zone for user {}'.format(username)
-        logger.error(err_msg)
-        if raise_on_error:
-            raise ValidationError(err_msg)
-    elif uqUserZoneSize < 0:
-        uqUserZoneSize = 0
-    elif uqDataZoneSize < 0:
-        uqDataZoneSize = 0
-    return uqUserZoneSize, uqDataZoneSize
 
 
 def get_storage_usage(user, flag="published"):
@@ -128,7 +140,7 @@ def update_quota_usage(username):
         logger.error(err_msg)
         raise ValidationError(err_msg)
 
-    uz, dz = get_quota_usage_from_irods(username, raise_on_error=False)
+    uz, dz = get_quota_usage(username, raise_on_error=False)
 
     # subtract out published resources from the datazone
     original_quota_data = uq.get_quota_data()
@@ -137,7 +149,8 @@ def update_quota_usage(username):
     user = User.objects.get(username=username)
     published_size = get_storage_usage(user, flag="published")
     dz -= published_size * (1 - published_percent / 100)
-    uq.update_used_value(uz, dz)
+    uq.set_userzone_used_value(uz)
+    uq.save()
 
     if original_quota_data["enforce_quota"]:
         updated_quota_data = uq.get_quota_data()

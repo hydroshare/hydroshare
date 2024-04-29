@@ -2476,7 +2476,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         # QuotaException will be raised if new_holder does not have enough quota to hold this
         # new resource, in which case, set_quota_holder to the new user fails
         validate_user_quota(new_holder, self.size)
-        old_holder = self.quota_holder
         self.quota_holder = new_holder
         self.save()
 
