@@ -393,7 +393,7 @@
                                                                 <span class="sr-only">{{ qd.uz_percent|floatformat:"1" }}% of quota used by userZone</span>
                                                             </div>
                                                         </div>
-                                                        <span>{{ qd.remaining }} {{ qd.unit }} free of {{ qd.allocated }} {{ qd.unit }}</span>
+                                                        <span>{{ qd.remaining|floatformat:"1" }} {{ qd.unit }} free of {{ qd.allocated }} {{ qd.unit }}</span>
                                                     {% endif %}
                                                 </div>
                                                 {% endwith %}

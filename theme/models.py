@@ -275,7 +275,9 @@ class UserQuota(models.Model):
     @property
     def data_zone_value(self):
         from hs_core.hydroshare.resource import get_data_zone_usage
-        get_data_zone_usage(self.user.username)
+        from hs_core.hydroshare.utils import convert_file_size_to_unit
+        dz = get_data_zone_usage(self.user.username)
+        return convert_file_size_to_unit(dz, self.unit)
 
     @property
     def used_percent(self):
@@ -309,6 +311,7 @@ class UserQuota(models.Model):
             self.set_userzone_used_value(uz)
             self.save()
         else:
+            # TODO: one of these is in bytes and the other is in the unit specified by self.unit (GB)
             uz = self.user_zone_value
             dz = self.data_zone_value
         return uz, dz
