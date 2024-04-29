@@ -56,8 +56,21 @@ def get_quota_usage(username, raise_on_error=True):
     return uqUserZoneSize, uqDataZoneSize
 
 
-def get_data_zone_usage(username, raise_on_error=True):
-    # Get the dz storage size as the sum of all resources for which the user is a quota holder
+def get_data_zone_usage(username, raise_on_error=True, include_published=False):
+    """
+    Calculate the data zone usage for a given user.
+
+    Args:
+        username (str): The username of the user.
+        raise_on_error (bool, optional): Whether to raise an error if the user does not exist. Defaults to True.
+        include_published (bool, optional): Whether to include published resources in the calculation. Default False.
+
+    Returns:
+        int: The data zone usage in bytes.
+
+    Raises:
+        ValidationError: If the user does not exist and `raise_on_error` is True.
+    """
     try:
         user = User.objects.get(username=username)
     except User.DoesNotExist:
@@ -66,9 +79,13 @@ def get_data_zone_usage(username, raise_on_error=True):
             raise ValidationError(f'User {username} does not exist')
         return 0
     uqDataZoneSize = 0
-    qh_resource_ids = BaseResource.objects.filter(quota_holder=user).values_list('id', flat=True)
+    qh_resources = BaseResource.objects.filter(quota_holder=user)
+    if not include_published:
+        qh_resources = qh_resources.exclude(raccess__published=True)
+    qh_resource_ids = qh_resources.values_list('id', flat=True)
     uqDataZoneSize = ResourceFile.objects.filter(object_id__in=qh_resource_ids).aggregate(Sum('_size'))["_size__sum"]
-    return uqDataZoneSize
+
+    return uqDataZoneSize if uqDataZoneSize is not None else 0
 
 
 def get_user_zone_usage(username):
@@ -92,34 +109,6 @@ def get_user_zone_usage(username):
         uqUserZoneSize = -1
 
 
-def get_storage_usage(user, flag="published"):
-    """
-    Query resources by iRODS AVU quotaholder and resource state
-    :param user: the user to get quota usage for.
-    :param flag: resource state (private, discoverable, public, published)
-    :return: estimated storage used by resources
-    """
-    resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
-    if flag == "published":
-        resources = resources.filter(raccess__published=True)
-    elif flag == "discoverable":
-        resources = resources.filter(raccess__discoverable=True, raccess__public=False)
-    elif flag == "public":
-        resources = resources.filter(raccess__public=True, raccess__discoverable=True)
-    elif flag == "private":
-        resources = resources.filter(raccess__public=False, raccess__discoverable=False)
-
-    # Iterate over resources and check the quotaholder
-    # if quotaholder is the user, get the resource size and aggregate
-    aggregate_size = 0
-    for res in resources:
-        quota_user = res.quota_holder
-        if not quota_user == user:
-            continue
-        aggregate_size += res.size
-    return aggregate_size
-
-
 def update_quota_usage(username):
     """
     update quota usage by checking iRODS AVU to get the updated quota usage for the user. Note iRODS micro-service
@@ -140,15 +129,11 @@ def update_quota_usage(username):
         logger.error(err_msg)
         raise ValidationError(err_msg)
 
-    uz, dz = get_quota_usage(username, raise_on_error=False)
+    uz = get_user_zone_usage(username)
 
-    # subtract out published resources from the datazone
     original_quota_data = uq.get_quota_data()
     qmsg = original_quota_data["qmsg"]
-    published_percent = qmsg.published_resource_percent
     user = User.objects.get(username=username)
-    published_size = get_storage_usage(user, flag="published")
-    dz -= published_size * (1 - published_percent / 100)
     uq.set_userzone_used_value(uz)
     uq.save()
 

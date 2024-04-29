@@ -159,6 +159,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         user_quota.refresh_from_db()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         expected = 1105
+        # AssertionError: 80.0 != 1105 within 5 places (1025.0 difference)
         self.assertAlmostEqual(dz, expected, places=5)
 
     def test_unzipping_files_increase_quota(self):
@@ -461,6 +462,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         # Assert that the quota has been updated
         user_quota.refresh_from_db()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
+        # AssertionError: 78.0 != 162.0 within 5 places (84.0 difference)
         self.assertAlmostEqual(dz, initial_quota_value * 2, places=5)
 
     def test_version_resource_doubles_quota(self):
