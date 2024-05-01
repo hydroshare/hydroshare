@@ -136,6 +136,7 @@ def update_quota_usage(username, notify_user=False):
     :return: raise ValidationError if quota cannot be updated.
     """
     from hs_core import tasks
+    from theme.models import UserQuota
     hs_internal_zone = "hydroshare"
     uq = UserQuota.objects.filter(user__username=username, zone=hs_internal_zone).first()
     if uq is None:
