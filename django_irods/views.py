@@ -7,6 +7,7 @@ from uuid import uuid4
 
 from django.conf import settings
 from django.http import HttpResponse, FileResponse, HttpResponseRedirect, JsonResponse
+from django.core.exceptions import PermissionDenied
 from rest_framework.decorators import api_view
 from rest_framework import status
 
@@ -36,6 +37,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
     :param path: the path of the thing to be downloaded.
     :param use_async: True means to utilize asynchronous creation of objects to download.
     :param use_reverse_proxy: True means to utilize NGINX reverse proxy for streaming.
+    :raises PermissionDenied if user is not authenticated
 
     The following variables are computed:
 
@@ -61,6 +63,9 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
     """
     if not settings.DEBUG:
         logger.debug("request path is {}".format(path))
+
+    if not request.user.is_authenticated:
+        raise PermissionDenied("Requesting user must be authenticated to download")
 
     split_path_strs = path.split('/')
     while split_path_strs[-1] == '':
