@@ -25,7 +25,7 @@ class Command(BaseCommand):
                 count_string = f"{i}/{count}:"
                 profile = f"{current_site_url()}/user/{u.id}"
                 try:
-                    update_quota_usage(u.username)
+                    update_quota_usage(u.username, notify_user=False)
                     print(f"{count_string}Success updating quota in Django for {u.username}: {profile}")
                 except ValidationError as e:
                     print(f"{count_string}{profile} Error updating quota:{e.message}")

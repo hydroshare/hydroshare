@@ -494,6 +494,7 @@ def send_over_quota_emails():
 
     This function retrieves the quota message settings and user quotas from the database,
     and sends warning emails to admin for users who have exceeded their quota limits.
+    Messages are not sent to the users themselves, as they have already been notified in UI.
 
     Returns:
         None
@@ -510,7 +511,7 @@ def send_over_quota_emails():
             used_percent = uq.used_percent
             if used_percent >= qmsg.soft_limit_percent:
                 # first update the quota just to be sure that we are using the latest figures
-                update_quota_usage(u.username)
+                update_quota_usage(u.username, notify_user=False)
                 uq.refresh_from_db()
                 if uq.used_percent < qmsg.soft_limit_percent:
                     # quota usage has been updated and is now below the soft limit

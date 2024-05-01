@@ -97,8 +97,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         # assert math.isclose(expected, self.res.size, rel_tol=1e-5)
         self.assertAlmostEqual(expected, self.res.size, places=5)
 
-        # update_quota_usage(self.username)
-
         user_quota.refresh_from_db()
         self.assertNotEqual(user_quota.data_zone_value, 0)
 

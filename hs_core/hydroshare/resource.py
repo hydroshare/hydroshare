@@ -122,7 +122,7 @@ def get_user_zone_usage(username):
     return uqUserZoneSize
 
 
-def update_quota_usage(username):
+def update_quota_usage(username, notify_user=False):
     """
     update quota usage by checking iRODS AVU to get the updated quota usage for the user. Note iRODS micro-service
     quota update only happens on HydroShare iRODS data zone and user zone independently, so the aggregation of usage
@@ -131,6 +131,7 @@ def update_quota_usage(username):
     This function is called by the IRODS quota micro-service to update quota usage for a user in Django DB.
     :param
     username: the name of the user that needs to update quota usage for.
+    : param notify_user: if True, send email notification to user if the quota is exceeded.
     :return: raise ValidationError if quota cannot be updated.
     """
     from hs_core import tasks
@@ -170,9 +171,9 @@ def update_quota_usage(username):
             # send notification to user in the cases of exceeding soft limit or hard limit
             # only send notificaiton if the quota status changed
             # this avoids sending multiple notifications when files are changed but the status does not change
-            if original_quota_data["status"] != updated_quota_data["status"]:
+            if notify_user and (original_quota_data["status"] != updated_quota_data["status"]):
                 tasks.send_user_quota_notification.apply_async((user.pk))
-        uq.check_if_userzone_quota_enforcement_is_bypassed(user, original_quota_data, updated_quota_data)
+        uq.check_if_userzone_quota_enforcement_is_bypassed(original_quota_data, updated_quota_data)
 
 
 def res_has_web_reference(res):
