@@ -38,7 +38,7 @@ class Command(BaseCommand):
             raise CommandError(f"iRODS path {settings.IRODS_BAGIT_PATH} does not exist.")
 
         print(f"Total number of resources: {number_of_res}")
-        for res in resources:
+        for res in resources.iterator():
             try:
                 print(f"Migrating quota #{counter} for resource: {res.short_id}")
                 quota_holder = get_quota_holder(res)
@@ -46,7 +46,7 @@ class Command(BaseCommand):
                     print(f"Quota holder AVU not found for resource: {res.short_id}")
                     continue
                 res.quota_holder = quota_holder
-                res.save()
+                res.save(update_fields=["quota_holder"])
                 counter += 1
             except Exception as ex:
                 print(f"Error migrating quota for resource: {res.short_id}")

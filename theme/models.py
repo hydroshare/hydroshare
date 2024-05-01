@@ -306,12 +306,9 @@ class UserQuota(models.Model):
         from hs_core.hydroshare.resource import get_quota_usage
 
         if refresh:
-            # TODO get_quota_usage will run the dz query, but then it gets run again below...
             uz, dz = get_quota_usage(self.user.username, False)
             self.set_userzone_used_value(uz)
-            self.save()
         else:
-            # TODO: one of these is in bytes and the other is in the unit specified by self.unit (GB)
             uz = self.user_zone_value
             dz = self.data_zone_value
         return uz, dz

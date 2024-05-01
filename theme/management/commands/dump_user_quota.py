@@ -99,14 +99,13 @@ class Command(BaseCommand):
                 uz
             ]
             if expand:
-                owned_resources = user.uaccess.owned_resources
+                quota_resources = user.uaccess.owned_resources.filter(quota_holder=user)
                 total_size = 0
-                for res in owned_resources:
-                    if res.quota_holder == user:
-                        res_size = res.size
-                        converted_size = convert_size(int(res_size))
-                        print(f'{user.username} holds {current_site}/resource/{res.short_id}: {converted_size}')
-                        total_size += res_size
+                for res in quota_resources:
+                    res_size = res.size
+                    converted_size = convert_size(int(res_size))
+                    print(f'{user.username} holds {current_site}/resource/{res.short_id}: {converted_size}')
+                    total_size += res_size
                 converted_total_size = convert_size(int(total_size))
                 total_held = f'Total size of held resources for {user.username}: {converted_total_size}'
                 values.append(converted_total_size)

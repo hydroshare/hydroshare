@@ -40,7 +40,6 @@ def get_quota_usage(username, raise_on_error=True):
     Query iRODS AVU to get quota usage for a user reported in iRODS quota microservices
     :param username: the user name to get quota usage for.
     :param raise_on_error: if True, raise ValidationError if quota usage cannot be retrieved from iRODS
-    :param zone: the zone to get quota usage for. If None, get quota usage for both user zone and data zone
     :return: the quota usage from iRODS data zone and user zone; raise ValidationError
     if quota usage cannot be retrieved from iRODS
     """
@@ -89,7 +88,20 @@ def get_data_zone_usage(username, raise_on_error=True, include_published=False):
 
 
 def get_user_zone_usage(username):
-    # get quota size for the user in iRODS user zone
+    """
+    Get the quota size for a user in the iRODS user zone.
+
+    Args:
+        username (str): The username of the user.
+
+    Returns:
+        float: The quota size for the user in the iRODS user zone. If the user does not have resources
+        in the user zone, the function returns -1.
+
+    Raises:
+        SessionException: If there is an error retrieving the quota size.
+
+    """
     attname = username + '-usage'
     istorage = IrodsStorage()
     try:
@@ -107,6 +119,7 @@ def get_user_zone_usage(username):
         # user may not have resources in user zone, so corresponding quota size AVU may not exist
         # for this user
         uqUserZoneSize = -1
+    return uqUserZoneSize
 
 
 def update_quota_usage(username):
