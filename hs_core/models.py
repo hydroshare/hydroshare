@@ -2109,14 +2109,6 @@ class ResourceManager(PageManager):
         return qs
 
 
-def get_new_quota_holder(resource):
-    """Get a new quota holder for a resource."""
-    if resource.raccess.owners.count() > 0:
-        return resource.raccess.owners.first()
-    else:
-        return None
-
-
 class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     """
     Create Abstract Class for all Resources.
@@ -2186,7 +2178,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     # allow resource that contains spam_patterns to be discoverable/public
     spam_allowlisted = models.BooleanField(default=False)
 
-    quota_holder = models.ForeignKey(User, models.SET(get_new_quota_holder()), null=True, blank=True,
+    quota_holder = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                      related_name='quota_holder')
 
     def update_view_count(self):
