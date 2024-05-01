@@ -2473,6 +2473,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         setter is the requesting user to transfer quota holder and setter must also be an owner
         """
         from hs_core.hydroshare.utils import validate_user_quota
+        from hs_core.signals import post_update_quota_holder
 
         if __debug__:
             assert (isinstance(setter, User))
@@ -2484,8 +2485,11 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         # QuotaException will be raised if new_holder does not have enough quota to hold this
         # new resource, in which case, set_quota_holder to the new user fails
         validate_user_quota(new_holder, self.size)
+        old_holder = self.quota_holder
         self.quota_holder = new_holder
         self.save()
+        post_update_quota_holder.send(sender=self.__class__, resource=self, new_quota_holder=new_holder,
+                                      old_quota_holder=old_holder)
 
     def removeAVU(self, attribute, value):
         """Remove an AVU at the resource level.
@@ -3405,6 +3409,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         """Set system metadata (size, modified time, and checksum) for a file.
         This method should be called after a file is uploaded to iRODS and registered with Django.
         """
+        from hs_core.signals import post_update_file_system_metadata
 
         self.calculate_size(resource=resource, save=save)
         if self._size > 0:
@@ -3418,6 +3423,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             self._checksum = None
         if save:
             self.save(update_fields=self.system_meta_fields())
+        post_update_file_system_metadata.send(sender=self.__class__, resource=self.resource)
 
     # ResourceFile API handles file operations
     def set_storage_path(self, path, test_exists=True):

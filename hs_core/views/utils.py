@@ -43,7 +43,8 @@ from hs_core.hydroshare import check_resource_type, delete_resource_file
 from hs_core.hydroshare.utils import check_aggregations, get_file_mime_type, validate_user_quota, QuotaException
 from hs_core.models import AbstractMetaDataElement, BaseResource, Relation, \
     ResourceFile, get_user, CoreMetaData
-from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
+from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource, post_unzip_files_in_resource, \
+    post_zip_files_in_resource
 from hs_core.tasks import create_temp_zip, FileOverrideException
 from hs_file_types.utils import set_logical_file_type
 from theme.backends import without_login_date_token_generator
@@ -1126,6 +1127,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     # TODO: should check can_be_public_or_discoverable here
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
+    post_zip_files_in_resource.send(sender=resource.__class__, resource=resource, files=[zip_res_file])
     return output_zip_fname, output_zip_size
 
 
@@ -1400,6 +1402,10 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
     # TODO: should check can_be_public_or_discoverable here
     resource.refresh_from_db()
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
+
+    # send signal for post unzip
+    files = unzipped_files if unzipped_files else []
+    post_unzip_files_in_resource.send(sender=resource.__class__, resource=resource, files=files)
 
 
 def ingest_bag(resource, bag_file, user):

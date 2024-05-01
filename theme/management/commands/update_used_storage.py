@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand
 from django.core.exceptions import ValidationError
 
 from theme.models import UserQuota
-from hs_core.hydroshare.resource import update_quota_usage
+from hs_core.tasks import update_quota_usage
 from hs_core.hydroshare import current_site_url
 
 

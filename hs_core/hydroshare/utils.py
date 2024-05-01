@@ -32,7 +32,8 @@ from hs_access_control.models.community import Community
 from hs_access_control.models.privilege import PrivilegeCodes
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 from hs_core.models import AbstractResource, BaseResource, GeospatialRelation, ResourceFile
-from hs_core.signals import post_create_resource, pre_add_files_to_resource, pre_create_resource
+from hs_core.signals import post_create_resource, pre_add_files_to_resource, \
+    pre_create_resource
 from theme.models import QuotaMessage
 
 logger = logging.getLogger(__name__)
@@ -731,13 +732,13 @@ def convert_file_size_to_unit(size, to_unit, from_unit='B'):
     """
     Convert file size to unit for quota comparison
     :param size: the size to be converted
-    :param to_unit: should be one of the four: 'KB', 'MB', 'GB', or 'TB'
+    :param to_unit: should be one of the four: 'B', 'KB', 'MB', 'GB', or 'TB'
     :param from_unit: should be one of the five: 'B', 'KB', 'MB', 'GB', or 'TB'
     :return: the size converted to the pass-in unit
     """
     unit = to_unit.lower()
-    if unit not in ('kb', 'mb', 'gb', 'tb'):
-        raise ValidationError('Pass-in unit for file size conversion must be one of KB, MB, GB, '
+    if unit not in ('b', 'kb', 'mb', 'gb', 'tb'):
+        raise ValidationError('Pass-in unit for file size conversion must be one of B, KB, MB, GB, '
                               'or TB')
     from_unit = from_unit.lower()
     if from_unit not in ('b', 'kb', 'mb', 'gb', 'tb'):
@@ -758,18 +759,16 @@ def convert_file_size_to_unit(size, to_unit, from_unit='B'):
 
     # Now convert to the pass-in unit
     factor = 1024.0
-    kbsize = size / factor
-    if unit == 'kb':
-        return kbsize
-    mbsize = kbsize / factor
-    if unit == 'mb':
-        return mbsize
-    gbsize = mbsize / factor
-    if unit == 'gb':
-        return gbsize
-    tbsize = gbsize / factor
-    if unit == 'tb':
-        return tbsize
+    if unit == 'b':
+        return size
+    elif unit == 'kb':
+        return size / factor
+    elif unit == 'mb':
+        return size / (factor**2)
+    elif unit == 'gb':
+        return size / (factor**3)
+    elif unit == 'tb':
+        return size / (factor**4)
 
 
 def validate_user_quota(user_or_username, size):
@@ -1140,7 +1139,6 @@ def add_file_to_resource(resource, f, folder='', source_name='',
         resource.metadata.create_element('format', value=file_format_type)
     if save_file_system_metadata:
         ret.set_system_metadata(resource=resource)
-
     return ret
 
 

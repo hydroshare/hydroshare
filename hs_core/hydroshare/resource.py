@@ -22,7 +22,6 @@ from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
-from theme.models import UserQuota
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from hs_core.enums import CrossRefSubmissionStatus
@@ -37,7 +36,9 @@ logger = logging.getLogger(__name__)
 
 def get_quota_usage(username, raise_on_error=True):
     """
-    Query iRODS AVU to get quota usage for a user reported in iRODS quota microservices
+    Get the quota usage for a user in data zone and iRods user zone
+    Userzone queries iRODS AVU to get quota usage for a user reported in iRODS quota microservices
+    Datazone queries Django DB to get aggregate resource size for a user
     :param username: the user name to get quota usage for.
     :param raise_on_error: if True, raise ValidationError if quota usage cannot be retrieved from iRODS
     :return: the quota usage from iRODS data zone and user zone; raise ValidationError
@@ -1231,6 +1232,7 @@ def publish_resource(user, pk):
     # This ensures that the modified date closely matches the date that the metadata are submitted to Crossref
     last_modified = resource.last_changed_by
     utils.resource_modified(resource, by_user=last_modified, overwrite_bag=False)
+    signals.post_publish_resource.send(sender=resource.__class__, resource=resource, user=user)
 
     return pk
 

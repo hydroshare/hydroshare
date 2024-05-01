@@ -37,8 +37,9 @@ from hs_core.hydroshare.hs_bagit import (create_bag_metadata_files,
                                          create_bagit_files_by_irods)
 from hs_core.hydroshare.resource import (deposit_res_metadata_with_crossref,
                                          get_activated_doi, get_crossref_url,
-                                         get_resource_doi, update_quota_usage,)
+                                         get_resource_doi, get_quota_usage,)
 from hs_core.models import BaseResource, ResourceFile, TaskNotification
+from hs_core.signals import post_copy_resource, post_version_resource, pre_delete_resource, post_delete_resource
 from hs_core.task_utils import get_or_create_task_notification
 from hs_file_types.models import (FileSetLogicalFile, GenericLogicalFile,
                                   GeoFeatureLogicalFile, GeoRasterLogicalFile,
@@ -651,6 +652,66 @@ def check_geoserver_registrations(resources, run_async=True):
 
 
 @shared_task
+def update_quota_usage(username):
+    """
+    update quota usage by checking metadata to get the updated quota usage for the user. Note iRODS micro-service
+    quota update only happens on HydroShare iRODS user zone, so the aggregation of usage
+    in both zones need to be accounted for in this function to update Django DB as an aggregated usage for hydroshare
+    internal zone.
+
+    :param
+    username: the name of the user that needs to update quota usage for.
+    :return: raise ValidationError if quota cannot be updated.
+    """
+    from hs_core import tasks
+    hs_internal_zone = "hydroshare"
+    uq = UserQuota.objects.filter(user__username=username, zone=hs_internal_zone).first()
+    if uq is None:
+        # the quota row does not exist in Django
+        err_msg = 'quota row does not exist in Django for hydroshare zone for user {}'.format(username)
+        logger.error(err_msg)
+        raise ValidationError(err_msg)
+
+    # This incurrs expensive irods queries. But if we didn't update here,
+    # we would have to find a "better place" to update the quota usage for the userzone
+    # since no better place exists, we will query the irods catalog for the userzone here.
+    # It is worth noting that the perfomance burden is not of great concern since this does not represent
+    # a departure from how quota update has been conducted in the past
+    # Previously, the microservice triggered the AVU query on every file change as well.
+    uz, _ = get_quota_usage(username, raise_on_error=False)
+
+    original_quota_data = uq.get_quota_data()
+    qmsg = original_quota_data["qmsg"]
+    user = uq.user
+    uq.set_userzone_used_value(uz_size=uz)
+    uq.save()
+
+    if original_quota_data["enforce_quota"]:
+        updated_quota_data = uq.get_quota_data()
+        # if enforcing quota, take steps to send messages
+        percent = updated_quota_data["percent"]
+        if percent < 100:
+            if uq.grace_period_ends:
+                # reset grace period now that the user is below allocation
+                uq.reset_grace_period()
+            return
+        else:
+            if percent < qmsg.hard_limit_percent:
+                if not uq.grace_period_ends:
+                    # triggers grace period counting
+                    uq.start_grace_period(qmsg_days=qmsg.grace_period)
+            elif percent >= qmsg.hard_limit_percent:
+                # reset grace period when user quota exceeds hard limit
+                uq.reset_grace_period()
+            # send notification to user in the cases of exceeding soft limit or hard limit
+            # only send notificaiton if the quota status changed
+            # this avoids sending multiple notifications when files are changed but the status does not change
+            if original_quota_data["status"] != updated_quota_data["status"]:
+                tasks.send_user_quota_notification.apply_async((user.pk))
+        uq.check_if_userzone_quota_enforcement_is_bypassed(original_quota_data, updated_quota_data)
+
+
+@shared_task
 def add_zip_file_contents_to_resource(pk, zip_file_path):
     """Add zip file to existing resource and remove tmp zip file."""
     zfile = None
@@ -876,6 +937,8 @@ def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
             new_res.resources.set(ori_res.resources.all())
 
         utils.set_dirty_bag_flag(new_res)
+        post_copy_resource.send(sender=copy_resource_task, resource=new_res, user=request_username,
+                                source_resourse=ori_res)
         return new_res.absolute_url
     except Exception as ex:
         if new_res:
@@ -935,6 +998,8 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
         ori_res.raccess.save()
         ori_res.save()
         utils.set_dirty_bag_flag(new_res)
+        post_version_resource.send(sender=create_new_version_resource_task, resource=new_res, user=username,
+                                   source_resourse=ori_res)
         return new_res.absolute_url
     except Exception as ex:
         if new_res:
@@ -998,6 +1063,18 @@ def delete_resource_task(resource_id, request_username=None):
     resource_related_collections = [col for col in res.collections.all()]
     owners_list = [owner for owner in res.raccess.owners.all()]
 
+    signal_args = {
+        'sender': delete_resource_task,
+        'user': request_username,
+        'resource_shortkey': resource_id,
+        'resource': res,
+        'resource_title': res_title,
+        'resource_type': res_type,
+    }
+    pre_delete_resource.send(
+        **signal_args,
+    )
+
     # when the most recent version of a resource in an obsolescence chain is deleted, the previous
     # version in the chain needs to be set as the "active" version by deleting "isReplacedBy"
     # relation element
@@ -1030,7 +1107,6 @@ def delete_resource_task(resource_id, request_username=None):
         # res being deleted is part of one or more collections - delete hasPart relation for all those collections
         collection_res.metadata.relations.filter(type='hasPart', value__endswith=res.short_id).delete()
         set_dirty_bag_flag(collection_res)
-
     res.delete()
     if request_username:
         # if the deleted resource is part of any collection resource, then for each of those collection
@@ -1045,6 +1121,10 @@ def delete_resource_task(resource_id, request_username=None):
                 collection=collection_res
             )
             o.resource_owners.add(*owners_list)
+
+    post_delete_resource.send(
+        **signal_args,
+    )
 
     # return the page URL to redirect to after resource deletion task is complete
     return '/my-resources/'
