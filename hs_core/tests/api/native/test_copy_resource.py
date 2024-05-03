@@ -348,7 +348,7 @@ class TestCopyResource(TestCase):
         qmsg.enforce_quota = True
         qmsg.save()
         uquota = self.owner.quotas.first()
-        uquota.data_zone_value = uquota.allocated_value * 1.3
+        uquota.user_zone_value = uquota.allocated_value * 1.3
         uquota.save()
 
         with self.assertRaises(QuotaException):
