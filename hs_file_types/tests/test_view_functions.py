@@ -1,23 +1,47 @@
 import json
+import os.path
 
-from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import Group
+from django.contrib.sessions.middleware import SessionMiddleware
+from django.test import RequestFactory, TestCase
 from django.urls import reverse
-
 from rest_framework import status
 
+from django_irods.views import download
 from hs_core import hydroshare
 from hs_core.models import ResourceFile
 from hs_core.testing import MockIRODSTestCaseMixin
-
-from hs_file_types.views import set_file_type, add_metadata_element, update_metadata_element, \
-    update_key_value_metadata, delete_key_value_metadata, add_keyword_metadata, \
-    delete_keyword_metadata, update_netcdf_file, update_dataset_name, update_refts_abstract, \
-    update_sqlite_file, update_timeseries_abstract, get_timeseries_metadata, remove_aggregation, \
-    delete_coverage_element, update_aggregation_coverage, move_aggregation, delete_aggregation
-from hs_file_types.models import GeoRasterLogicalFile, NetCDFLogicalFile, NetCDFFileMetaData, \
-    RefTimeseriesLogicalFile, TimeSeriesLogicalFile, GenericLogicalFile, FileSetLogicalFile
+from hs_file_types.models import (
+    FileSetLogicalFile,
+    GenericLogicalFile,
+    GeoRasterLogicalFile,
+    ModelProgramLogicalFile,
+    NetCDFFileMetaData,
+    NetCDFLogicalFile,
+    RefTimeseriesLogicalFile,
+    TimeSeriesLogicalFile,
+)
 from hs_file_types.tests.utils import CompositeResourceTestMixin
+from hs_file_types.views import (
+    add_keyword_metadata,
+    add_metadata_element,
+    delete_aggregation,
+    delete_coverage_element,
+    delete_key_value_metadata,
+    delete_keyword_metadata,
+    get_timeseries_metadata,
+    move_aggregation,
+    remove_aggregation,
+    set_file_type,
+    update_aggregation_coverage,
+    update_dataset_name,
+    update_key_value_metadata,
+    update_metadata_element,
+    update_netcdf_file,
+    update_refts_abstract,
+    update_sqlite_file,
+    update_timeseries_abstract,
+)
 
 
 class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResourceTestMixin):
@@ -98,7 +122,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # create a folder to place the raster file
         new_folder = 'raster_folder'
         ResourceFile.create_folder(self.composite_resource, new_folder)
-        # add the the tif file to the resource at the above folder
+        # add the tif file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.raster_file, upload_folder=new_folder)
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
@@ -283,7 +307,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # create a folder and put a file in that folder
         new_folder = 'fileset_folder'
         ResourceFile.create_folder(self.composite_resource, new_folder)
-        # add the the text file to the resource at the above folder
+        # add the text file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.text_file, upload_folder=new_folder)
 
         self.assertEqual(self.composite_resource.files.all().count(), 1)
@@ -1719,6 +1743,133 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
 
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
+
+    def test_aggregation_meta_xml_file_download(self):
+        # here we are testing that we can download meta/resmap xml file for an aggregation
+
+        # create generic/single file aggregation
+        self.create_composite_resource(file_to_upload=self.text_file)
+        res_file = self.composite_resource.files.first()
+        GenericLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        res_file = self.composite_resource.files.first()
+        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+
+        # download aggregation meta xml file
+        # compute meta xml file storage path
+        meta_file_storage_path = res_file.storage_path[:-4] + '_meta.xml'
+        url_params = {'path': meta_file_storage_path}
+        url = reverse('django_irods_download', kwargs=url_params)
+        url = f"{url}?zipped=False&aggregation=False"
+        request = self.factory.get(url)
+        request.user = self.user
+
+        self.add_session_to_request(request)
+        response = download(request, path=meta_file_storage_path)
+        # check that the download request was successful
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # download aggregation resmap xml file
+        # compute resmap  storage path
+        meta_file_storage_path = res_file.storage_path[:-4] + '_resmap.xml'
+        url_params = {'path': meta_file_storage_path}
+        url = reverse('django_irods_download', kwargs=url_params)
+        url = f"{url}?zipped=False&aggregation=False"
+        request = self.factory.get(url)
+        request.user = self.user
+
+        self.add_session_to_request(request)
+        response = download(request, path=meta_file_storage_path)
+        # check that the download request was successful
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_model_program_schema_json_file_download(self):
+        # here we are testing that we can download schema json file for a model program aggregation
+
+        # create model program aggregation
+        self.create_composite_resource(file_to_upload=self.text_file)
+        res_file = self.composite_resource.files.first()
+        ModelProgramLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        self.assertEqual(ModelProgramLogicalFile.objects.count(), 1)
+        mp_aggr = ModelProgramLogicalFile.objects.first()
+        res_file = self.composite_resource.files.first()
+        self.assertEqual(res_file.logical_file_type_name, "ModelProgramLogicalFile")
+
+        # set metadata schema for model program aggregation
+        schema_file_path = 'pytest/assets/mi_schema.json'
+        with open(schema_file_path, 'r') as file_obj:
+            json_schema = file_obj.read()
+        assert len(json_schema) > 0
+        assert not mp_aggr.metadata_schema_json
+        mp_aggr.metadata_schema_json = json.loads(json_schema)
+        mp_aggr.save()
+
+        # download aggregation schema.json file
+        # compute schema file storage path
+        meta_file_storage_path = res_file.storage_path[:-4] + '_schema.json'
+        url_params = {'path': meta_file_storage_path}
+        url = reverse('django_irods_download', kwargs=url_params)
+        url = f"{url}?zipped=False&aggregation=False"
+        request = self.factory.get(url)
+        request.user = self.user
+
+        self.add_session_to_request(request)
+        response = download(request, path=meta_file_storage_path)
+        # check that the download request was successful
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_fileset_meta_xml_file_download(self):
+        # here we are testing that we can download meta xml file for a folder based aggregation
+
+        self.create_composite_resource()
+        # create a folder and put a file in that folder
+        new_folder = 'fileset_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the text file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.text_file, upload_folder=new_folder)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        # create fileset aggregation
+        FileSetLogicalFile.set_file_type(resource=self.composite_resource, user=self.user, folder_path=new_folder)
+        self.assertEqual(FileSetLogicalFile.objects.count(), 1)
+
+        # download aggregation meta xml file
+        # compute meta xml file storage path
+        meta_file_storage_path = os.path.join(self.composite_resource.file_path, new_folder)
+        meta_file_storage_path = os.path.join(meta_file_storage_path, f"{new_folder}_meta.xml")
+        url_params = {'path': meta_file_storage_path}
+        url = reverse('django_irods_download', kwargs=url_params)
+        url = f"{url}?zipped=False&aggregation=False"
+        request = self.factory.get(url)
+        request.user = self.user
+
+        self.add_session_to_request(request)
+        response = download(request, path=meta_file_storage_path)
+        # check that the download request was successful
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # download aggregation resmap xml file
+        # compute resmap  storage path
+        meta_file_storage_path = os.path.join(self.composite_resource.file_path, new_folder)
+        meta_file_storage_path = os.path.join(meta_file_storage_path, f"{new_folder}_resmap.xml")
+        url_params = {'path': meta_file_storage_path}
+        url = reverse('django_irods_download', kwargs=url_params)
+        url = f"{url}?zipped=False&aggregation=False"
+        request = self.factory.get(url)
+        request.user = self.user
+
+        self.add_session_to_request(request)
+        response = download(request, path=meta_file_storage_path)
+        # check that the download request was successful
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @staticmethod
+    def add_session_to_request(request):
+        """Use SessionMiddleware to add a session to the request."""
+        """Annotate a request object with a session"""
+        middleware = SessionMiddleware()
+        middleware.process_request(request)
+        request.session.save()
 
     def _add_delete_keywords_file_type(self, file_path, file_type):
         self.create_composite_resource(file_path)
