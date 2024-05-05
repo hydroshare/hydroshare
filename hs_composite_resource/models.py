@@ -333,6 +333,40 @@ class CompositeResource(BaseResource):
             raise ObjectDoesNotExist(
                 "No matching aggregation was found for name:{}".format(name))
 
+    def get_aggregation_by_meta_file(self, meta_file_path):
+        """Get an aggregation that matches the specified meta xml/json file path
+        :param  meta_file_path: directory path of the meta xml/json file
+        :return an aggregation object if found
+        :raises ObjectDoesNotExist if no matching aggregation is found
+        """
+        if __debug__:
+            assert (meta_file_path.lower().endswith(METADATA_FILE_ENDSWITH) or
+                    meta_file_path.lower().endswith(RESMAP_FILE_ENDSWITH) or
+                    meta_file_path.lower().endswith(SCHEMA_JSON_FILE_ENDSWITH))
+
+        meta_file_path = self.get_relative_path(meta_file_path)
+        folder, base = os.path.split(meta_file_path)
+        if base.endswith(METADATA_FILE_ENDSWITH):
+            base_file_name_to_match = base[:-len(METADATA_FILE_ENDSWITH)]
+        elif base.endswith(RESMAP_FILE_ENDSWITH):
+            base_file_name_to_match = base[:-len(RESMAP_FILE_ENDSWITH)]
+        else:
+            base_file_name_to_match = base[:-len(SCHEMA_JSON_FILE_ENDSWITH)]
+
+        for res_file in ResourceFile.list_folder(self, folder=folder, sub_folders=False):
+            if res_file.has_logical_file:
+                file_name_to_match = f"{base_file_name_to_match}{res_file.extension}"
+                if res_file.file_name == file_name_to_match:
+                    return res_file.logical_file
+        # check for folder aggregation
+        if folder and folder == base_file_name_to_match:
+            folder_aggregation = self.get_folder_aggregation_object(folder)
+            if folder_aggregation is not None:
+                return folder_aggregation
+
+        raise ObjectDoesNotExist("No matching aggregation was found for "
+                                 "meta file path:{}".format(meta_file_path))
+
     def get_fileset_aggregation_in_path(self, path, aggregations=None):
         """Get the first fileset aggregation in the path moving up (towards the root)in the path
         :param  path: directory path in which to search for a fileset aggregation
