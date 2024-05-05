@@ -340,9 +340,10 @@ class CompositeResource(BaseResource):
         :raises ObjectDoesNotExist if no matching aggregation is found
         """
         if __debug__:
-            assert (meta_file_path.lower().endswith(METADATA_FILE_ENDSWITH) or
-                    meta_file_path.lower().endswith(RESMAP_FILE_ENDSWITH) or
-                    meta_file_path.lower().endswith(SCHEMA_JSON_FILE_ENDSWITH))
+            assert (meta_file_path.lower().endswith(METADATA_FILE_ENDSWITH)
+                    or meta_file_path.lower().endswith(RESMAP_FILE_ENDSWITH)
+                    or meta_file_path.lower().endswith(SCHEMA_JSON_FILE_ENDSWITH)
+                    )
 
         meta_file_path = self.get_relative_path(meta_file_path)
         folder, base = os.path.split(meta_file_path)
