@@ -34,6 +34,8 @@ AggregationType = Union[
     RefTimeseriesLogicalFile,
     TimeSeriesLogicalFile
 ]
+
+
 class CompositeResource(BaseResource):
     objects = ResourceManager("CompositeResource")
 
