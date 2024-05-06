@@ -130,7 +130,7 @@ class BasicOIDCAuthentication(BaseAuthentication):
         _, value, *_ = request.headers.get('Authorization').split()
 
         decoded_username, decoded_password = (
-            base64.b64decode(value).decode("utf-8").split(":")
+            base64.b64decode(value).decode("utf-8").split(":", 1)
         )
         # authenticate against keycloak
         try:
