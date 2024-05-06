@@ -18,7 +18,7 @@ from hs_file_types.models import (
     RefTimeseriesLogicalFile,
     TimeSeriesLogicalFile
 )
-from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH, SCHEMA_JSON_FILE_ENDSWITH
+from hs_file_types.enums import AggregationMetaFilePath
 from hs_file_types.utils import update_target_spatial_coverage, update_target_temporal_coverage
 
 logger = logging.getLogger(__name__)
@@ -350,19 +350,16 @@ class CompositeResource(BaseResource):
         :raises ObjectDoesNotExist if no matching aggregation is found
         """
         if __debug__:
-            assert (meta_file_path.lower().endswith(METADATA_FILE_ENDSWITH)
-                    or meta_file_path.lower().endswith(RESMAP_FILE_ENDSWITH)
-                    or meta_file_path.lower().endswith(SCHEMA_JSON_FILE_ENDSWITH)
-                    )
+            assert any(meta_file_path.endswith(ext) for ext in AggregationMetaFilePath)
 
         meta_file_path = self.get_relative_path(meta_file_path)
         folder, base = os.path.split(meta_file_path)
-        if base.endswith(METADATA_FILE_ENDSWITH):
-            base_file_name_to_match = base[:-len(METADATA_FILE_ENDSWITH)]
-        elif base.endswith(RESMAP_FILE_ENDSWITH):
-            base_file_name_to_match = base[:-len(RESMAP_FILE_ENDSWITH)]
+        if base.endswith(AggregationMetaFilePath.METADATA_FILE_ENDSWITH):
+            base_file_name_to_match = base[:-len(AggregationMetaFilePath.METADATA_FILE_ENDSWITH)]
+        elif base.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH):
+            base_file_name_to_match = base[:-len(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)]
         else:
-            base_file_name_to_match = base[:-len(SCHEMA_JSON_FILE_ENDSWITH)]
+            base_file_name_to_match = base[:-len(AggregationMetaFilePath.SCHEMA_JSON_FILE_ENDSWITH)]
 
         for res_file in ResourceFile.list_folder(self, folder=folder, sub_folders=False):
             if res_file.has_logical_file:
@@ -466,9 +463,9 @@ class CompositeResource(BaseResource):
         # remove file extension from aggregation name (note: aggregation name is a file path
         # for all aggregation types except fileset/model aggregation
         file_name, _ = os.path.splitext(orig_path)
-        schema_json_file_name = file_name + SCHEMA_JSON_FILE_ENDSWITH
-        meta_xml_file_name = file_name + METADATA_FILE_ENDSWITH
-        map_xml_file_name = file_name + RESMAP_FILE_ENDSWITH
+        schema_json_file_name = file_name + AggregationMetaFilePath.SCHEMA_JSON_FILE_ENDSWITH
+        meta_xml_file_name = file_name + AggregationMetaFilePath.METADATA_FILE_ENDSWITH
+        map_xml_file_name = file_name + AggregationMetaFilePath.RESMAP_FILE_ENDSWITH
         if not is_new_path_a_folder:
             # case of file rename/move for single file aggregation
             schema_json_file_full_path = os.path.join(self.file_path, schema_json_file_name)

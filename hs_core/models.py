@@ -2599,8 +2599,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         Note: this will return true for any file that ends with the schema.json ending
         We are taking the risk that user might create a file with the same filename ending
         """
-        from hs_file_types.models.base import SCHEMA_JSON_FILE_ENDSWITH
-        if file_path.endswith(SCHEMA_JSON_FILE_ENDSWITH):
+        from hs_file_types.enums import AggregationMetaFilePath
+
+        if file_path.endswith(AggregationMetaFilePath.SCHEMA_JSON_FILE_ENDSWITH):
             return True
         return False
 
@@ -2618,10 +2619,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         Note: this will return true for any file that ends with the metadata endings
         We are taking the risk that user might create a file with the same filename ending
         """
-        from hs_file_types.models.base import (METADATA_FILE_ENDSWITH,
-                                               RESMAP_FILE_ENDSWITH)
-        if not (file_path.endswith(METADATA_FILE_ENDSWITH)
-                or file_path.endswith(RESMAP_FILE_ENDSWITH)):
+        from hs_file_types.enums import AggregationMetaFilePath
+
+        if not (file_path.endswith(AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
+                or file_path.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)):
             return False
         return True
 
