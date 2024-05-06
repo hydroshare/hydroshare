@@ -71,6 +71,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         User.objects.all().delete()
         Group.objects.all().delete()
         BaseResource.objects.all().delete()
+        # TODO: maybe something isn't cleanun up here?
         Group.objects.all().delete()
         self.myfile1.close()
         os.remove(self.myfile1.name)

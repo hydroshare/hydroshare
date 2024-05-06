@@ -120,3 +120,19 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         # test to make sure original files still exist after resource deletion
         self.assertTrue(self.irods_storage.exists(user_path + self.file_one))
         self.assertTrue(self.irods_storage.exists(user_path + self.file_two))
+
+    def test_cleanup(self):
+        # a test to see if other tests are cleanin up correctly
+        # TODO: remove this
+        super(TestUserZoneIRODSFederation, self).assert_federated_irods_available()
+
+        # create a resource in the default HydroShare data iRODS zone for aggregated quota
+        # update testing
+        res = hydroshare.resource.create_resource(
+            'CompositeResource',
+            self.user,
+            'My Test Resource in Data Zone'
+        )
+
+        # delete test resources
+        hydroshare.resource.delete_resource(res.short_id)
