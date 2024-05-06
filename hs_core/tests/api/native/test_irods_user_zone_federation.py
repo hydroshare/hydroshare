@@ -59,6 +59,15 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         file_list_dict[self.file_two] = irods_target_path + self.file_two
         super(TestUserZoneIRODSFederation, self).save_files_to_user_zone(file_list_dict)
 
+        # start with a clean slate of resources in case other tests didn't clean up properly
+        BaseResource.objects.all().delete()
+
+        self.res = hydroshare.resource.create_resource(
+            resource_type='CompositeResource',
+            owner=self.user,
+            title='My Test Resource in HydroShare Zone'
+        )
+
     def tearDown(self):
         super(TestUserZoneIRODSFederation, self).tearDown()
         # no need for further cleanup if federation testing is not setup in the first place
@@ -69,17 +78,16 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
 
         os.remove(self.file_one)
         os.remove(self.file_two)
+        BaseResource.objects.all().delete()
 
     def test_resource_operations_in_user_zone(self):
         super(TestUserZoneIRODSFederation, self).assert_federated_irods_available()
 
         # test adding files from federated user zone to an empty resource
         # created in hydroshare zone
-        res = hydroshare.resource.create_resource(
-            resource_type='CompositeResource',
-            owner=self.user,
-            title='My Test Resource in HydroShare Zone'
-        )
+        res = self.res
+        self.assertEqual(BaseResource.objects.all().count(), 1,
+                         msg='Number of resources not equal to 1')
         self.assertEqual(res.files.all().count(), 0,
                          msg="Number of content files is not equal to 0")
         fed_test_file1_full_path = '/{zone}/home/testuser/{fname}'.format(
