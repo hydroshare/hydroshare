@@ -73,6 +73,9 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
     def test_resource_operations_in_user_zone(self):
         super(TestUserZoneIRODSFederation, self).assert_federated_irods_available()
 
+        self.assertEqual(BaseResource.objects.all().count(), 0,
+                         msg='Number of resources not equal to 0')
+
         # test adding files from federated user zone to an empty resource
         # created in hydroshare zone
         res = hydroshare.resource.create_resource(
@@ -80,6 +83,8 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
             owner=self.user,
             title='My Test Resource in HydroShare Zone'
         )
+        self.assertEqual(BaseResource.objects.all().count(), 1,
+                         msg='Number of resources not equal to 1')
         self.assertEqual(res.files.all().count(), 0,
                          msg="Number of content files is not equal to 0")
         fed_test_file1_full_path = '/{zone}/home/testuser/{fname}'.format(
@@ -121,18 +126,18 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         self.assertTrue(self.irods_storage.exists(user_path + self.file_one))
         self.assertTrue(self.irods_storage.exists(user_path + self.file_two))
 
-    def test_cleanup(self):
-        # a test to see if other tests are cleanin up correctly
-        # TODO: remove this
-        super(TestUserZoneIRODSFederation, self).assert_federated_irods_available()
+    # def test_cleanup(self):
+    #     # a test to see if other tests are cleanin up correctly
+    #     # TODO: remove this
+    #     super(TestUserZoneIRODSFederation, self).assert_federated_irods_available()
 
-        # create a resource in the default HydroShare data iRODS zone for aggregated quota
-        # update testing
-        res = hydroshare.resource.create_resource(
-            'CompositeResource',
-            self.user,
-            'My Test Resource in Data Zone'
-        )
+    #     # create a resource in the default HydroShare data iRODS zone for aggregated quota
+    #     # update testing
+    #     res = hydroshare.resource.create_resource(
+    #         'CompositeResource',
+    #         self.user,
+    #         'My Test Resource in Data Zone'
+    #     )
 
-        # delete test resources
-        hydroshare.resource.delete_resource(res.short_id)
+    #     # delete test resources
+    #     hydroshare.resource.delete_resource(res.short_id)
