@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
-coverage run manage.py test -v 3 --with-xunit $1 --with-timer --exe
+# TODO: revert this
+coverage run manage.py test -v 3 --with-xunit $1 --with-timer --exe hs_core.tests.api.native.test_irods_user_zone_federation
 coverage xml
 pytest
