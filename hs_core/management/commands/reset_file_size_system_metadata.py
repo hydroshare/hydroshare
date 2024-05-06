@@ -3,12 +3,13 @@ from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
+from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.db.models import Q
 from django.utils.timezone import now
 
 from hs_core.hydroshare import current_site_url
-from hs_core.models import ResourceFile
+from hs_core.models import ResourceFile, BaseResource
 from theme.models import UserQuota
 
 current_site = current_site_url()
@@ -69,8 +70,8 @@ class Command(BaseCommand):
         uid = options['uid'] if options['uid'] else None
         resource_id = options['resource_id'] if options['resource_id'] else None
         min_quota_django_model = int(options['min_quota_django_model']) if options['min_quota_django_model'] else 0
-        refreshed_weeks = options['refreshed_weeks']
-        modified_weeks = options['modified_weeks']
+        refreshed_weeks = options['refreshed_weeks'] if options['refreshed_weeks'] else None
+        modified_weeks = options['modified_weeks'] if options['modified_weeks'] else None
 
         resources_to_modify = []
 
@@ -78,9 +79,9 @@ class Command(BaseCommand):
             if min_quota_django_model or uid:
                 raise CommandError("Cannot filter by resource_id in addition to min_quota_django_model or uid")
             try:
-                res = ResourceFile.objects.get(short_id=resource_id)
+                res = BaseResource.objects.get(short_id=resource_id)
                 resources_to_modify = [res]
-            except Exception as e:
+            except ObjectDoesNotExist as e:
                 print(f"Resource with id {resource_id} not found: {e}")
                 raise CommandError(f"Resource with id {resource_id} not found: {e}")
         elif uid:
@@ -111,6 +112,9 @@ class Command(BaseCommand):
                 counter += 1
         else:
             res_files = ResourceFile.objects.all()
+            if not refreshed_weeks and not modified_weeks:
+                # updating all files will time out, so we don't permit it.
+                raise CommandError("No filter specified. You must specify at least one filter.")
             res_files = filter_files(res_files, refreshed_weeks=refreshed_weeks, modified_weeks=modified_weeks)
             num_files = res_files.count()
             print(f"Total files: {num_files}")
