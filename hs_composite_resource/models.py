@@ -1,6 +1,6 @@
 import logging
 import os
-
+from typing import Union
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from mezzanine.pages.page_processors import processor_for
@@ -23,7 +23,17 @@ from hs_file_types.utils import update_target_spatial_coverage, update_target_te
 
 logger = logging.getLogger(__name__)
 
-
+AggregationType = Union[
+    GenericLogicalFile,
+    FileSetLogicalFile,
+    GeoFeatureLogicalFile,
+    GeoRasterLogicalFile,
+    ModelProgramLogicalFile,
+    ModelInstanceLogicalFile,
+    NetCDFLogicalFile,
+    RefTimeseriesLogicalFile,
+    TimeSeriesLogicalFile
+]
 class CompositeResource(BaseResource):
     objects = ResourceManager("CompositeResource")
 
@@ -333,7 +343,7 @@ class CompositeResource(BaseResource):
             raise ObjectDoesNotExist(
                 "No matching aggregation was found for name:{}".format(name))
 
-    def get_aggregation_by_meta_file(self, meta_file_path):
+    def get_aggregation_by_meta_file(self, meta_file_path: str) -> AggregationType:
         """Get an aggregation that matches the specified meta xml/json file path
         :param  meta_file_path: directory path of the meta xml/json file
         :return an aggregation object if found
