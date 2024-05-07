@@ -122,7 +122,7 @@ class Command(BaseCommand):
                 .filter(user__is_superuser=False)
             num_uqs = uqs.count()
             counter = 1
-            print(f'Found {num_uqs} users with quota above {min_quota_django_model} GB')
+            print(f'Found {num_uqs} users with quotas. Filtering out users with < {min_quota_django_model}GB')
             start_time = time.time()
             for uq in uqs:
                 if uq.used_value < min_quota_django_model:
