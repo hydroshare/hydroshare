@@ -120,13 +120,14 @@ class Command(BaseCommand):
         elif min_quota_django_model > 0:
             uqs = UserQuota.objects.filter(user__is_active=True) \
                 .filter(user__is_superuser=False)
-            if min_quota_django_model > 0:
-                uqs = uqs.filter(used_value__gt=min_quota_django_model).order_by('-used_value')
             num_uqs = uqs.count()
             counter = 1
             print(f'Found {num_uqs} users with quota above {min_quota_django_model} GB')
             start_time = time.time()
             for uq in uqs:
+                if uq.used_value < min_quota_django_model:
+                    print(f"Skipping {uq.user.username}. Use={uq.used_value}GB is less than {min_quota_django_model}")
+                    continue
                 user = uq.user
                 print(f'{counter}/{num_uqs}: \
                       Getting resources for user: {user.username}, {current_site}/user/{user.id}/')

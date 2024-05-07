@@ -104,8 +104,6 @@ class Command(BaseCommand):
             except User.DoesNotExist:
                 print(f'Active user with id {uid} not found')
             uqs = uqs.filter(user=user)
-        if min_quota_django_model > 0:
-            uqs = uqs.filter(used_value__gt=min_quota_django_model)
         if desc:
             uqs = uqs.order_by('-used_value')
         num_uqs = uqs.count()
@@ -125,6 +123,9 @@ class Command(BaseCommand):
             user = uq.user
             print("\n" + "*" * 80)
             print(f'{counter}/{num_uqs}: Checking quota for user {user.username}, {current_site}/user/{user.id}/')
+            if min_quota_django_model > 0 and uq.used_value < min_quota_django_model:
+                print(f"Skipping {user.username}. Use={uq.used_value}GB is less than {min_quota_django_model}")
+                continue
             used_value_irods_dz = 0.0
             try:
                 used_value_irods_dz = get_dz_quota_usage_from_irods(user.username)
