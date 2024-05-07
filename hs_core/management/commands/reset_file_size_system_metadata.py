@@ -58,10 +58,10 @@ def update_file_sizes(resources, refreshed_weeks=None, modified_weeks=None):
             if res_file._size <= 0:
                 print(f"File {res_file.short_path} was not found in iRODS.")
         time_spent = time.time() - start_time
-        print(f"Time spent for resource {res.short_id}: {time_spent} seconds")
+        print(f"\nTime spent for resource {res.short_id}: {time_spent} seconds")
 
         ResourceFile.objects.bulk_update(res_files.all(), ['_size', 'filesize_cache_updated'], batch_size=_BATCH_SIZE)
-        print(f"\nUpdated {file_counter} files for resource {res.short_id}")
+        print(f"Updated {file_counter} files for resource {res.short_id}")
         res_count += 1
 
 
@@ -158,9 +158,9 @@ class Command(BaseCommand):
                         file_counter += 1
                     ResourceFile.objects.bulk_update(chunk.all(),
                                                      ['_size', 'filesize_cache_updated'], batch_size=_BATCH_SIZE)
-                    chunk_number += 1
                     time_spent = time.time() - start_time
                     print(f"Time spent for chunk {chunk_number}: {time_spent} seconds")
+                    chunk_number += 1
             else:
                 # reset the cache for the files
                 res_files.update(_size=-1)
