@@ -17,6 +17,25 @@ current_site = current_site_url()
 _BATCH_SIZE = settings.BULK_UPDATE_CREATE_BATCH_SIZE
 
 
+def chunked_queryset(queryset, chunk_size=_BATCH_SIZE):
+    """Slice a queryset into chunks.
+    Code adapted from https://djangosnippets.org/snippets/10599/
+    """
+    if not queryset.exists():
+        return
+    queryset = queryset.order_by("pk")
+    pks = queryset.values_list("pk", flat=True)
+    start_pk = pks[0]
+    while True:
+        try:
+            end_pk = pks.filter(pk__gte=start_pk)[chunk_size]
+        except IndexError:
+            break
+        yield queryset.filter(pk__gte=start_pk, pk__lt=end_pk)
+        start_pk = end_pk
+    yield queryset.filter(pk__gte=start_pk)
+
+
 def update_file_sizes(resources, refreshed_weeks=None, modified_weeks=None):
     total_resources = len(resources)
     print(f"Updating file sizes for {total_resources} resources in Django")
@@ -129,10 +148,17 @@ class Command(BaseCommand):
             print(f"Total files: {num_files}")
             if update and num_files > 0:
                 file_counter = 1
-                for res_file in res_files.iterator():
-                    print(f"{file_counter}/{num_files}")
-                    res_file.calculate_size(resource=res_file.resource, save=True)
-                    file_counter += 1
+                chunk_number = 1
+                for chunk in chunked_queryset(res_files):
+                    start_time = time.time()
+                    print(f"Chunk {chunk_number}/{(num_files // _BATCH_SIZE) + 1}")
+                    for res_file in chunk.iterator():
+                        print(file_counter, end=', ')
+                        res_file.calculate_size(resource=res_file.resource, save=True)
+                        file_counter += 1
+                    time_spent = time.time() - start_time
+                    print(f"Time spent for chunk {chunk_number}: {time_spent} seconds")
+                    chunk_number += 1
             else:
                 # reset the cache for the files
                 res_files.update(_size=-1)
