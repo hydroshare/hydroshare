@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
-from django.db.models import Q
+from django.db.models import Q, F
 
 from hs_core.hydroshare import current_site_url
 from hs_core.models import ResourceFile, BaseResource
@@ -73,6 +73,7 @@ def filter_files(file_queryset, refreshed_weeks=None, modified_weeks=None):
         print(f"Only including resource files that have been modified in the last {modified_weeks} weeks")
         cuttoff_time = timezone.now() - timedelta(weeks=modified_weeks)
         file_queryset = file_queryset.filter(_modified_time__gte=cuttoff_time)
+    file_queryset = file_queryset.order_by(F('filesize_cache_updated').asc(nulls_first=True))
     return file_queryset
 
 
