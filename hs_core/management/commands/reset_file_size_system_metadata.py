@@ -16,6 +16,25 @@ current_site = current_site_url()
 _BATCH_SIZE = settings.BULK_UPDATE_CREATE_BATCH_SIZE
 
 
+def chunked_queryset(queryset, chunk_size=_BATCH_SIZE):
+    """Slice a queryset into chunks.
+    Code adapted from https://djangosnippets.org/snippets/10599/
+    """
+    if not queryset.exists():
+        return
+    queryset = queryset.order_by("pk")
+    pks = queryset.values_list("pk", flat=True)
+    start_pk = pks[0]
+    while True:
+        try:
+            end_pk = pks.filter(pk__gte=start_pk)[chunk_size]
+        except IndexError:
+            break
+        yield queryset.filter(pk__gte=start_pk, pk__lt=end_pk)
+        start_pk = end_pk
+    yield queryset.filter(pk__gte=start_pk)
+
+
 def update_file_sizes(resources, refreshed_weeks=None, modified_weeks=None):
     print("Updating file sizes in Django")
     for res in resources:
@@ -27,11 +46,11 @@ def update_file_sizes(resources, refreshed_weeks=None, modified_weeks=None):
             continue
         print(f'{current_site}/resource/{res.short_id}: currently {res.size} bytes')
         file_counter = 0
-        print("Updating files:", end=': ')
+        print("Updating files:", end=' ')
         for res_file in res_files.iterator():
             res_file.calculate_size(resource=res, save=False)
             file_counter += 1
-            print(f"{file_counter}/{num_files}")
+            print(file_counter, end=', ')
             if res_file._size <= 0:
                 print(f"File {res_file.short_path} was not found in iRODS.")
 
@@ -119,10 +138,15 @@ class Command(BaseCommand):
             print(f"Total files: {num_files}")
             if update and num_files > 0:
                 file_counter = 1
-                for res_file in res_files.iterator():
-                    print(f"{file_counter}/{num_files}")
-                    res_file.calculate_size(resource=res_file.resource, save=True)
-                    file_counter += 1
+                chunk_number = 1
+                for chunk in chunked_queryset(res_files):
+                    print(f"Chunk {chunk_number}/{(num_files // _BATCH_SIZE) + 1}")
+                    for res_file in chunk.iterator():
+                        print(file_counter, end=', ')
+                        res_file.calculate_size(resource=res_file.resource, save=False)
+                        file_counter += 1
+                    ResourceFile.objects.bulk_update(chunk, ['_size', 'filesize_cache_updated'], batch_size=_BATCH_SIZE)
+                    chunk_number += 1
             else:
                 # reset the cache for the files
                 res_files.update(_size=-1)
