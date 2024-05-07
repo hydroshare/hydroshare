@@ -9,12 +9,20 @@ from hs_core import hydroshare
 from hs_core.models import Coverage, ResourceFile
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
-from hs_file_types.models import GeoFeatureLogicalFile, GenericLogicalFile, GenericFileMetaData, \
-    GeoFeatureFileMetaData
-from hs_file_types.models.base import RESMAP_FILE_ENDSWITH, METADATA_FILE_ENDSWITH
+from hs_file_types.models import (
+    GeoFeatureLogicalFile,
+    GenericLogicalFile,
+    GenericFileMetaData,
+    GeoFeatureFileMetaData,
+)
+from hs_file_types.enums import AggregationMetaFilePath
 from hs_file_types.models.geofeature import FieldInformation, GeometryInformation, OriginalCoverageGeofeature
-from .utils import assert_geofeature_file_type_metadata, CompositeResourceTestMixin, \
-    get_path_with_no_file_extension, get_number_of_decimal_places
+from .utils import (
+    assert_geofeature_file_type_metadata,
+    CompositeResourceTestMixin,
+    get_path_with_no_file_extension,
+    get_number_of_decimal_places,
+)
 
 
 class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
@@ -646,10 +654,10 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # test aggregation xml file paths
         shp_file_path = get_path_with_no_file_extension(logical_file.aggregation_name)
-        expected_meta_file_path = '{0}{1}'.format(shp_file_path, METADATA_FILE_ENDSWITH)
+        expected_meta_file_path = '{0}{1}'.format(shp_file_path, AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{0}{1}'.format(shp_file_path, RESMAP_FILE_ENDSWITH)
+        expected_map_file_path = '{0}{1}'.format(shp_file_path, AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         # test renaming folder
@@ -668,10 +676,12 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test aggregation xml file paths
         new_shp_file_path = get_path_with_no_file_extension(logical_file.aggregation_name)
         self.assertNotEqual(new_shp_file_path, shp_file_path)
-        expected_meta_file_path = '{0}{1}'.format(new_shp_file_path, METADATA_FILE_ENDSWITH)
+        expected_meta_file_path = '{0}{1}'.format(new_shp_file_path,
+                                                  AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{0}{1}'.format(new_shp_file_path, RESMAP_FILE_ENDSWITH)
+        expected_map_file_path = '{0}{1}'.format(new_shp_file_path,
+                                                 AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
@@ -702,10 +712,10 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # test aggregation xml file paths
         shp_file_path = get_path_with_no_file_extension(logical_file.aggregation_name)
-        expected_meta_file_path = '{0}{1}'.format(shp_file_path, METADATA_FILE_ENDSWITH)
+        expected_meta_file_path = '{0}{1}'.format(shp_file_path, AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{0}{1}'.format(shp_file_path, RESMAP_FILE_ENDSWITH)
+        expected_map_file_path = '{0}{1}'.format(shp_file_path, AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         # create a folder to be the parent folder of the aggregation folder
@@ -740,10 +750,11 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # test aggregation xml file paths after folder rename
         new_shp_file_path = get_path_with_no_file_extension(logical_file.aggregation_name)
         self.assertNotEqual(new_shp_file_path, shp_file_path)
-        expected_meta_file_path = '{0}{1}'.format(new_shp_file_path, METADATA_FILE_ENDSWITH)
+        expected_meta_file_path = '{0}{1}'.format(new_shp_file_path,
+                                                  AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{0}{1}'.format(new_shp_file_path, RESMAP_FILE_ENDSWITH)
+        expected_map_file_path = '{0}{1}'.format(new_shp_file_path, AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
@@ -772,10 +783,10 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file = res_file.logical_file
         shp_file_path = get_path_with_no_file_extension(logical_file.aggregation_name)
         # test aggregation xml file paths
-        expected_meta_file_path = '{0}{1}'.format(shp_file_path, METADATA_FILE_ENDSWITH)
+        expected_meta_file_path = '{0}{1}'.format(shp_file_path, AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{0}{1}'.format(shp_file_path, RESMAP_FILE_ENDSWITH)
+        expected_map_file_path = '{0}{1}'.format(shp_file_path, AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         # create a folder to move the aggregation folder there
@@ -798,10 +809,10 @@ class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         shp_file_path = get_path_with_no_file_extension(logical_file.aggregation_name)
 
         # test aggregation xml file paths
-        expected_meta_file_path = '{0}{1}'.format(shp_file_path, METADATA_FILE_ENDSWITH)
+        expected_meta_file_path = '{0}{1}'.format(shp_file_path, AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
-        expected_map_file_path = '{0}{1}'.format(shp_file_path, RESMAP_FILE_ENDSWITH)
+        expected_map_file_path = '{0}{1}'.format(shp_file_path, AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
