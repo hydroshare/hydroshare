@@ -44,7 +44,7 @@ def update_file_sizes(resources, refreshed_weeks=None, modified_weeks=None):
         start_time = time.time()
         res_files = filter_files(res.files, refreshed_weeks=refreshed_weeks, modified_weeks=modified_weeks)
         num_files = res_files.count()
-        print(f"Total files in resource {res.short_id}: {num_files}")
+        print(f"Total files to update from resource {res.short_id}: {num_files}")
         if num_files == 0:
             print(f"Resource {res.short_id} has no files")
             continue
