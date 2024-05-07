@@ -1,4 +1,5 @@
 
+import time
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth.models import User
@@ -6,7 +7,6 @@ from django.core.management.base import BaseCommand, CommandError
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.db.models import Q
-from django.utils.timezone import now
 
 from hs_core.hydroshare import current_site_url
 from hs_core.models import ResourceFile, BaseResource
@@ -36,8 +36,12 @@ def chunked_queryset(queryset, chunk_size=_BATCH_SIZE):
 
 
 def update_file_sizes(resources, refreshed_weeks=None, modified_weeks=None):
-    print("Updating file sizes in Django")
+    total_resources = len(resources)
+    print(f"Updating file sizes for {total_resources} resources in Django")
+    res_count = 1
     for res in resources:
+        print(f"\n{res_count}/{total_resources}: Updating file sizes for resource {res.short_id}")
+        start_time = time.time()
         res_files = filter_files(res.files, refreshed_weeks=refreshed_weeks, modified_weeks=modified_weeks)
         num_files = res_files.count()
         print(f"Total files in resource {res.short_id}: {num_files}")
@@ -53,9 +57,12 @@ def update_file_sizes(resources, refreshed_weeks=None, modified_weeks=None):
             print(file_counter, end=', ')
             if res_file._size <= 0:
                 print(f"File {res_file.short_path} was not found in iRODS.")
+        time_spent = time.time() - start_time
+        print(f"Time spent for resource {res.short_id}: {time_spent} seconds")
 
-        ResourceFile.objects.bulk_update(res_files, ['_size', 'filesize_cache_updated'], batch_size=_BATCH_SIZE)
+        ResourceFile.objects.bulk_update(res_files.all(), ['_size', 'filesize_cache_updated'], batch_size=_BATCH_SIZE)
         print(f"\nUpdated {file_counter} files for resource {res.short_id}")
+        res_count += 1
 
 
 def filter_files(file_queryset, refreshed_weeks=None, modified_weeks=None):
@@ -119,6 +126,7 @@ class Command(BaseCommand):
             num_uqs = uqs.count()
             counter = 1
             print(f'Found {num_uqs} users with quota above {min_quota_django_model} GB')
+            start_time = time.time()
             for uq in uqs:
                 user = uq.user
                 print(f'{counter}/{num_uqs}: \
@@ -128,6 +136,8 @@ class Command(BaseCommand):
                     if res.get_quota_holder() == user:
                         resources_to_modify.append(res)
                 counter += 1
+            time_spent = time.time() - start_time
+            print(f"Time spent collecting resources for {num_uqs} users: {time_spent} seconds")
         else:
             res_files = ResourceFile.objects.all()
             if not refreshed_weeks and not modified_weeks:
@@ -140,13 +150,17 @@ class Command(BaseCommand):
                 file_counter = 1
                 chunk_number = 1
                 for chunk in chunked_queryset(res_files):
+                    start_time = time.time()
                     print(f"Chunk {chunk_number}/{(num_files // _BATCH_SIZE) + 1}")
                     for res_file in chunk.iterator():
                         print(file_counter, end=', ')
                         res_file.calculate_size(resource=res_file.resource, save=False)
                         file_counter += 1
-                    ResourceFile.objects.bulk_update(chunk, ['_size', 'filesize_cache_updated'], batch_size=_BATCH_SIZE)
+                    ResourceFile.objects.bulk_update(chunk.all(),
+                                                     ['_size', 'filesize_cache_updated'], batch_size=_BATCH_SIZE)
                     chunk_number += 1
+                    time_spent = time.time() - start_time
+                    print(f"Time spent for chunk {chunk_number}: {time_spent} seconds")
             else:
                 # reset the cache for the files
                 res_files.update(_size=-1)
@@ -164,7 +178,7 @@ class Command(BaseCommand):
                 res_files.update(_size=-1)
 
                 # set the updated date to now so that nightly celery task can update the size
-                res.updated = now().isoformat()
+                res.updated = timezone.now().isoformat()
                 res_modified_date = res.metadata.dates.all().filter(type='modified').first()
                 if res_modified_date:
                     res.metadata.update_element('date', res_modified_date.id)
