@@ -1,4 +1,5 @@
 
+import time
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth.models import User
@@ -17,26 +18,31 @@ _BATCH_SIZE = settings.BULK_UPDATE_CREATE_BATCH_SIZE
 
 
 def update_file_sizes(resources, refreshed_weeks=None, modified_weeks=None):
-    print("Updating file sizes in Django")
+    total_resources = len(resources)
+    print(f"Updating file sizes for {total_resources} resources in Django")
+    res_count = 1
     for res in resources:
+        print(f"\n{res_count}/{total_resources}: Updating file sizes for resource {res.short_id}")
+        start_time = time.time()
         res_files = filter_files(res.files, refreshed_weeks=refreshed_weeks, modified_weeks=modified_weeks)
         num_files = res_files.count()
-        print(f"Total files in resource {res.short_id}: {num_files}")
+        print(f"Total files to update from resource {res.short_id}: {num_files}")
         if num_files == 0:
             print(f"Resource {res.short_id} has no files")
             continue
         print(f'{current_site}/resource/{res.short_id}: currently {res.size} bytes')
         file_counter = 0
-        print("Updating files:", end=': ')
+        print("Updating files:", end=' ')
         for res_file in res_files.iterator():
-            res_file.calculate_size(resource=res, save=False)
+            res_file.calculate_size(resource=res, save=True)
             file_counter += 1
-            print(f"{file_counter}/{num_files}")
+            print(file_counter, end=', ')
             if res_file._size <= 0:
                 print(f"File {res_file.short_path} was not found in iRODS.")
-
-        ResourceFile.objects.bulk_update(res_files, ['_size', 'filesize_cache_updated'], batch_size=_BATCH_SIZE)
-        print(f"\nUpdated {file_counter} files for resource {res.short_id}")
+        time_spent = time.time() - start_time
+        print(f"\nTime spent for resource {res.short_id}: {time_spent} seconds")
+        print(f"Updated {file_counter} files for resource {res.short_id}")
+        res_count += 1
 
 
 def filter_files(file_queryset, refreshed_weeks=None, modified_weeks=None):
@@ -97,7 +103,8 @@ class Command(BaseCommand):
                 .filter(user__is_superuser=False)
             num_uqs = uqs.count()
             counter = 1
-            print(f'Found {num_uqs} users with quota above {min_quota_django_model} GB')
+            print(f'Found {num_uqs} users with quotas. Filtering out users with < {min_quota_django_model}GB')
+            start_time = time.time()
             for uq in uqs:
                 if uq.used_value < min_quota_django_model:
                     print(f"Skipping {uq.user.username}. Use={uq.used_value}GB is less than {min_quota_django_model}")
@@ -110,6 +117,8 @@ class Command(BaseCommand):
                     if res.get_quota_holder() == user:
                         resources_to_modify.append(res)
                 counter += 1
+            time_spent = time.time() - start_time
+            print(f"Time spent collecting resources for {num_uqs} users: {time_spent} seconds")
         else:
             res_files = ResourceFile.objects.all()
             if not refreshed_weeks and not modified_weeks:
@@ -141,7 +150,7 @@ class Command(BaseCommand):
                 res_files.update(_size=-1)
 
                 # set the updated date to now so that nightly celery task can update the size
-                res.updated = now().isoformat()
+                res.updated = timezone.now().isoformat()
                 res_modified_date = res.metadata.dates.all().filter(type='modified').first()
                 if res_modified_date:
                     res.metadata.update_element('date', res_modified_date.id)
