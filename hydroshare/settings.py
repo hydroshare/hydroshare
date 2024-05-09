@@ -146,7 +146,7 @@ DEFAULT_DEVELOPER_EMAIL = 'developer@hydroshare.org'
 NIGHTLY_RESOURCE_REPAIR_DURATION = 60 * 60
 
 # Integer seconds that worker should allocate every night to generating filesystem metadata
-NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION = 60 * 60
+NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION = 60 * 60 * 4  # 4 hours
 
 # Should resource owners be notified of automated resource repair?
 NOTIFY_OWNERS_AFTER_RESOURCE_REPAIR = False
@@ -191,6 +191,8 @@ ENABLE_OIDC_AUTHENTICATION = False
 # OIDC_OP_JWKS_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/certs"
 OIDC_RP_CLIENT_ID = 'hydroshare'
 OIDC_RP_CLIENT_SECRET = 'blah'
+KEYCLOAK_ADMIN_USERNAME = 'blah'
+KEYCLOAK_ADMIN_PASSWORD = 'blah'
 # LOGIN_REDIRECT_URL = '/home/'
 # LOGIN_URL = '/oidc/authenticate/'
 # OIDC_CHANGE_PASSWORD_URL = "https://auth.cuahsi.io/realms/CUAHSI/account?#/security/signingin"
@@ -209,6 +211,11 @@ OIDC_RP_CLIENT_SECRET = 'blah'
 
 OIDC_KEYCLOAK_URL = "https://auth.cuahsi.org/"
 OIDC_KEYCLOAK_REALM = "CUAHSI"
+
+# Enables publishing discoverable resources to Google PubSub (hs_core/pubsub_discovery_processor.py)
+# Requires a service account json file with PubSub permissions to be placed at the root of the
+# project with the name service-account-pubsub.json
+PUBLISH_DISCOVERABLE = False
 
 # List of finder classes that know how to find static files in
 # various locations.
