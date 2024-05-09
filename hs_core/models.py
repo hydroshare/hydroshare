@@ -2626,8 +2626,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         Note: this will return true for any file that ends with the schema.json ending
         We are taking the risk that user might create a file with the same filename ending
         """
-        from hs_file_types.models.base import SCHEMA_JSON_FILE_ENDSWITH
-        if file_path.endswith(SCHEMA_JSON_FILE_ENDSWITH):
+        from hs_file_types.enums import AggregationMetaFilePath
+
+        if file_path.endswith(AggregationMetaFilePath.SCHEMA_JSON_FILE_ENDSWITH):
             return True
         return False
 
@@ -2645,10 +2646,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         Note: this will return true for any file that ends with the metadata endings
         We are taking the risk that user might create a file with the same filename ending
         """
-        from hs_file_types.models.base import (METADATA_FILE_ENDSWITH,
-                                               RESMAP_FILE_ENDSWITH)
-        if not (file_path.endswith(METADATA_FILE_ENDSWITH)
-                or file_path.endswith(RESMAP_FILE_ENDSWITH)):
+        from hs_file_types.enums import AggregationMetaFilePath
+
+        if not (file_path.endswith(AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
+                or file_path.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)):
             return False
         return True
 
@@ -3130,6 +3131,9 @@ class ResourceFile(ResourceFileIRODSMixin):
     _modified_time = models.DateTimeField(null=True, blank=True)
     _checksum = models.CharField(max_length=255, null=True, blank=True)
 
+    # for tracking when size was last compared with irods
+    filesize_cache_updated = models.DateTimeField(null=True)
+
     def __str__(self):
         """Return resource filename or federated resource filename for string representation."""
         if self.resource.resource_federation_path:
@@ -3145,7 +3149,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     @classmethod
     def system_meta_fields(cls):
         """returns a list of system metadata fields"""
-        return ['_size', '_modified_time', '_checksum']
+        return ['_size', '_modified_time', '_checksum', 'filesize_cache_updated']
 
     @classmethod
     def create(cls, resource, file, folder='', source=None):
@@ -3399,6 +3403,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                     self.resource_file.name == ''
             try:
                 self._size = self.fed_resource_file.size
+                self.filesize_cache_updated = now()
             except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
                 logger.warning("file {} not found in iRODS".format(self.storage_path))
@@ -3409,12 +3414,13 @@ class ResourceFile(ResourceFileIRODSMixin):
                     self.fed_resource_file.name == ''
             try:
                 self._size = self.resource_file.size
+                self.filesize_cache_updated = now()
             except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
                 logger.warning("file {} not found in iRODS".format(self.storage_path))
                 self._size = 0
         if save:
-            self.save(update_fields=["_size"])
+            self.save(update_fields=["_size", "filesize_cache_updated"])
 
     def set_system_metadata(self, resource=None, save=True):
         """Set system metadata (size, modified time, and checksum) for a file.

@@ -1,3 +1,5 @@
+import logging
+
 from json import dumps
 
 from django_comments.models import Comment
@@ -805,6 +807,13 @@ def email_verify(request, new_email, uidb36=None, token=None):
     if user is not None:
         user.email = new_email
         user.save()
+        if settings.ENABLE_OIDC_AUTHENTICATION:
+            from hs_core.authentication import KEYCLOAK_ADMIN
+            try:
+                keycloak_id = KEYCLOAK_ADMIN.get_user_id(user.get_username())
+                KEYCLOAK_ADMIN.update_user(keycloak_id, payload={"email": new_email})
+            except Exception:
+                logging.exception("Failed to sync the email change to Keycloak")
         auth_login(request, user)
         messages.info(request, _("Successfully updated email"))
         # redirect to user profile page
