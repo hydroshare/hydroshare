@@ -2964,8 +2964,7 @@ span.you-flag {
 .facet-list .list-group-item {
 	border: 0;
 	border-radius: 0;
-	padding: 0 10px 5px;
-	margin-bottom: 1px;
+	padding: 0 10px;
 	text-align: left;
 }
 
@@ -3009,15 +3008,22 @@ span.you-flag {
 	margin: 0;
 	word-wrap: break-word;
 }
-/* 
-label.checkbox {
-	padding-right: 1px;
+
+/* modify radio and checkbox labels
+https://github.com/twbs/bootstrap/issues/13548 */
+label.checkbox-inline {
+	word-wrap: break-word;
 }
 
-.checkbox input[type="checkbox"] {
-	margin-left: 0;
-} */
-
+.radio,
+.checkbox {
+    padding-left: 20px;
+}
+.radio label,
+.checkbox label {
+    display: inline;
+    padding: 0;
+}
 .noselect {
 	-webkit-touch-callout: none;
 	-webkit-user-select: none;

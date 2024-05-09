@@ -1245,8 +1245,6 @@ function showFileTypeMetadata(file_type_time_series, url){
              }
         }
     });
-    // alter styles for Django form radio buttons
-    $('#fb-metadata label.radio').attr('class','radio-inline');
 }
 
 
