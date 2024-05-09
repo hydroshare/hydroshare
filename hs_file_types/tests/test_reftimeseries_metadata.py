@@ -11,7 +11,7 @@ from hs_core.views.utils import move_or_rename_file_or_folder, create_folder
 from .utils import assert_ref_time_series_file_type_metadata, CompositeResourceTestMixin
 
 from hs_file_types.models import RefTimeseriesLogicalFile, RefTimeseriesFileMetaData
-from hs_file_types.models.base import METADATA_FILE_ENDSWITH, RESMAP_FILE_ENDSWITH
+from hs_file_types.enums import AggregationMetaFilePath
 
 
 class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
@@ -234,8 +234,8 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         logical_file = res_file.logical_file
         res_file_name, _ = os.path.splitext(res_file.file_name)
-        expected_meta_path = '{0}{1}'.format(res_file_name, METADATA_FILE_ENDSWITH)
-        expected_map_path = '{0}{1}'.format(res_file_name, RESMAP_FILE_ENDSWITH)
+        expected_meta_path = '{0}{1}'.format(res_file_name, AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
+        expected_map_path = '{0}{1}'.format(res_file_name, AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
 
@@ -250,8 +250,10 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         res_file_name, _ = os.path.splitext(res_file.file_name)
-        expected_meta_path = '{0}/{1}{2}'.format(new_folder, res_file_name, METADATA_FILE_ENDSWITH)
-        expected_map_path = '{0}/{1}{2}'.format(new_folder, res_file_name, RESMAP_FILE_ENDSWITH)
+        expected_meta_path = '{0}/{1}{2}'.format(new_folder, res_file_name,
+                                                 AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
+        expected_map_path = '{0}/{1}{2}'.format(new_folder, res_file_name,
+                                                AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
 
@@ -263,8 +265,10 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         res_file_name, _ = os.path.splitext(res_file.file_name)
-        expected_meta_path = '{0}/{1}{2}'.format(new_folder, res_file_name, METADATA_FILE_ENDSWITH)
-        expected_map_path = '{0}/{1}{2}'.format(new_folder, res_file_name, RESMAP_FILE_ENDSWITH)
+        expected_meta_path = '{0}/{1}{2}'.format(new_folder, res_file_name,
+                                                 AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
+        expected_map_path = '{0}/{1}{2}'.format(new_folder, res_file_name,
+                                                AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
 
@@ -278,8 +282,9 @@ class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file = res_file.logical_file
         res_file_name, _ = os.path.splitext(res_file.file_name)
         expected_meta_path = '{0}/{1}{2}'.format(folder_rename, res_file_name,
-                                                 METADATA_FILE_ENDSWITH)
-        expected_map_path = '{0}/{1}{2}'.format(folder_rename, res_file_name, RESMAP_FILE_ENDSWITH)
+                                                 AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
+        expected_map_path = '{0}/{1}{2}'.format(folder_rename, res_file_name,
+                                                AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())

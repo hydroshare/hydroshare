@@ -13,7 +13,8 @@ from rdflib import Namespace
 from hs_core.models import ResourceFile
 from hs_core.signals import post_remove_file_aggregation
 from hs_file_types.models import AbstractLogicalFile
-from hs_file_types.models.base import FileTypeContext, SCHEMA_JSON_FILE_ENDSWITH
+from hs_file_types.models.base import FileTypeContext
+from hs_file_types.enums import AggregationMetaFilePath
 from hydroshare import settings
 
 
@@ -35,7 +36,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         """Returns aggregation name as per the aggregation naming rule defined in issue#2568"""
 
         if self.folder:
-            # this model program/instance aggregation has ben created from a folder
+            # this model program/instance aggregation has been created from a folder
             # aggregation folder path is the aggregation name
             return self.folder
         else:
@@ -60,7 +61,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
 
         json_file_name, _ = os.path.splitext(json_file_name)
 
-        json_file_name += SCHEMA_JSON_FILE_ENDSWITH
+        json_file_name += AggregationMetaFilePath.SCHEMA_JSON_FILE_ENDSWITH
 
         if self.folder:
             file_folder = self.folder
