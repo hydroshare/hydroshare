@@ -34,6 +34,8 @@
 
 {% compress js %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<!-- https://jquery.com/upgrade-guide/1.9/#jquery-browser-removed -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-migrate/1.4.1/jquery-migrate.min.js" integrity="sha512-t0ovA8ZOiDuaNN5DaQQpMn37SqIwp6avyoFQoW49hOmEYSRf8mTCY2jZkEVizDT+IZ9x+VHTZPpcaMA5t2d2zQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script type="text/javascript" src="{% static 'js/custom.js' %}"></script>
 
 {# vue 2.7.16-beta.1 will break typeahead https://github.com/vuejs/vue/blob/main/CHANGELOG.md #}
