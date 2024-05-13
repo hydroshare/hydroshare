@@ -19,7 +19,11 @@ let fundingAgenciesApp = new Vue({
     CROSSREF_API_URL: "https://api.crossref.org/funders",
     LIMIT_US: true, // limit to US funders
     MIN_SEARCH_LEN: 3, // min # of chars before running a query
-    MAX_MATCHES: 1000, // max number of matches to show
+    // bug in vue-bootstrap-typeahead, this parameter doesn't seem to have any impact
+    // TODO: vue-bootstrap-typeahead is deprecated.
+    // migrate to vue-boostrap-autocomplete or similar
+    // https://github.com/drikusroor/vue-bootstrap-autocomplete
+    MAX_MATCHES: 50, // max number of matches to show
     DEBOUNCE_API_MS: 1000, // debounce api requests
     timeout: null, // used for debouncing
     notifications: [],
