@@ -15,9 +15,12 @@ let fundingAgenciesApp = new Vue({
     crossrefFunders: [], // array of funders to be filled from crossref api
     crossrefFundersNames: [],
     crossrefSelected: false,
-    CROSSREF_API_URL: "https://api.crossref.org/funders?query=:query",
+    HELP_EMAIL: "help@cuahsi.org",
+    CROSSREF_API_URL: "https://api.crossref.org/funders",
+    LIMIT_US: true, // limit to US funders
     MIN_SEARCH_LEN: 3, // min # of chars before running a query
-    DEBOUNCE_API_MS: 500, // debounce api requests
+    MAX_MATCHES: 1000, // max number of matches to show
+    DEBOUNCE_API_MS: 1000, // debounce api requests
     timeout: null, // used for debouncing
     notifications: [],
     isPending: false, // is api fetch pending
@@ -92,10 +95,17 @@ let fundingAgenciesApp = new Vue({
           }
           return true;
         });
-        let query = words.join("+");
-        query = `${query}&mailto=help@cuahsi.org`;
         // https://api.crossref.org/swagger-ui/index.html#/Funders/get_funders
-        const res = await fetch(this.CROSSREF_API_URL.replace(":query", query));
+        let url = this.CROSSREF_API_URL
+        const params = new URLSearchParams({
+          query: words.join(" "),
+          mailto: this.HELP_EMAIL,
+        })
+        if (this.LIMIT_US) {
+          params.append("filter", "location:United States");
+        }
+        url = `${url}?${params.toString()}`;
+        const res = await fetch(url);
         const result = await res.json();
         const funders = result.message.items;
         this.crossreffApiDown = false;
