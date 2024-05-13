@@ -212,9 +212,7 @@ def pre_delete_user_handler(sender, instance, **kwargs):
     # before delete the user, update the quota holder for all of the user's resources
     user = instance
     for res in BaseResource.objects.filter(quota_holder=user):
-        other_owners = None
-        if hasattr(res, 'raccess') and res.raccess is not None:
-            other_owners = res.raccess.owners.exclude(pk=user.pk)
+        other_owners = res.raccess.owners.exclude(pk=user.pk)
         if other_owners:
             res.quota_holder = other_owners.first()
         else:
