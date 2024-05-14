@@ -293,7 +293,7 @@ def update_quota_usage(request, username):
         return HttpResponseBadRequest("user to update quota for is not valid")
 
     try:
-        update_quota_usage_utility(username)
+        update_quota_usage_utility(username, notify_user=False)
         return HttpResponse(
             "quota for user {} has been updated".format(username), status=200
         )

@@ -5,7 +5,8 @@ from django.conf import settings
 from hs_tools_resource.utils import convert_size
 from theme.models import UserQuota
 from django.core.management.base import BaseCommand
-from hs_core.hydroshare import current_site_url
+from hs_core.hydroshare import current_site_url, get_quota_usage
+from django.core.exceptions import ValidationError
 
 
 class Command(BaseCommand):
@@ -67,9 +68,12 @@ class Command(BaseCommand):
             allocated = uq.allocated_value
             if exceeded and used < allocated:
                 continue
-
-            dz_bytes = istorage.getAVU(settings.IRODS_BAGIT_PATH,
-                                       f'{user.username}-usage')
+            uz_bytes = None
+            dz_bytes = None
+            try:
+                uz_bytes, dz_bytes = get_quota_usage(user.username)
+            except ValidationError as e:
+                print(f"Error updating quota: {e.message}")
             if dz_bytes is None:
                 dz_bytes = 0
             dz = convert_size(int(dz_bytes))
@@ -95,14 +99,13 @@ class Command(BaseCommand):
                 uz
             ]
             if expand:
-                owned_resources = user.uaccess.owned_resources
+                quota_resources = user.uaccess.owned_resources.filter(quota_holder=user)
                 total_size = 0
-                for res in owned_resources:
-                    if res.get_quota_holder() == user:
-                        res_size = res.size
-                        converted_size = convert_size(int(res_size))
-                        print(f'{user.username} holds {current_site}/resource/{res.short_id}: {converted_size}')
-                        total_size += res_size
+                for res in quota_resources:
+                    res_size = res.size
+                    converted_size = convert_size(int(res_size))
+                    print(f'{user.username} holds {current_site}/resource/{res.short_id}: {converted_size}')
+                    total_size += res_size
                 converted_total_size = convert_size(int(total_size))
                 total_held = f'Total size of held resources for {user.username}: {converted_total_size}'
                 values.append(converted_total_size)

@@ -39,7 +39,7 @@ czo_setup = [
 def set_quota_holder(resource, user):
     """ set quota holder and deal with iRODS failures """
     try:
-        if resource.get_quota_holder() != user:
+        if resource.quota_holder != user:
             print("    SET QUOTA HOLDER FOR  {} {} TO {}"
                   .format(resource.short_id,
                           resource.title.encode('ascii', 'ignore'),

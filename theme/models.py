@@ -256,7 +256,6 @@ class UserQuota(models.Model):
 
     allocated_value = models.FloatField(default=20)
     user_zone_value = models.FloatField(default=0)
-    data_zone_value = models.FloatField(default=0)
     unit = models.CharField(max_length=10, default="GB")
     zone = models.CharField(max_length=100, default="hydroshare")
     # grace_period_ends to be quota-enforced. Default is None meaning the user is below
@@ -274,6 +273,13 @@ class UserQuota(models.Model):
         unique_together = ("user", "zone")
 
     @property
+    def data_zone_value(self):
+        from hs_core.hydroshare.resource import get_data_zone_usage
+        from hs_core.hydroshare.utils import convert_file_size_to_unit
+        dz = get_data_zone_usage(self.user.username)
+        return convert_file_size_to_unit(dz, self.unit)
+
+    @property
     def used_percent(self):
         return self.used_value * 100.0 / self.allocated_value
 
@@ -284,28 +290,37 @@ class UserQuota(models.Model):
 
     @property
     def used_value(self):
-        uz, dz = self.get_used_value_by_zone(refresh_from_irods=False)
+        uz, dz = self.get_used_value_by_zone(refresh=False)
         return uz + dz
 
-    def get_used_value_by_zone(self, refresh_from_irods=False):
-        from hs_core.hydroshare.resource import get_quota_usage_from_irods
-        if refresh_from_irods:
-            uz, dz = get_quota_usage_from_irods(self.user.username, False)
-            self.update_used_value(uz, dz)
-            self.save()
-            return uz, dz
-        return self.user_zone_value, self.data_zone_value
+    def get_used_value_by_zone(self, refresh=False):
+        """
+        Get the used value by zone.
 
-    def update_used_value(self, uz_size, dz_size):
+        Parameters:
+            refresh (bool): If True, refreshes the quota usage before returning the values.
+
+        Returns:
+            tuple: A tuple containing the used value for the user zone and the data zone.
+        """
+        from hs_core.hydroshare.resource import get_quota_usage
+
+        if refresh:
+            uz, dz = get_quota_usage(self.user.username, False)
+            self.set_userzone_used_value(uz)
+        else:
+            uz = self.user_zone_value
+            dz = self.data_zone_value
+        return uz, dz
+
+    def set_userzone_used_value(self, uz_size):
         """
         set used values in self.unit with pass in size in bytes.
         :param uz_size: pass in size in bytes unit from userZone
-        :param dz_size: pass in size in bytes unit from dataZone
         :return:
         """
         from hs_core.hydroshare.utils import convert_file_size_to_unit
         self.user_zone_value = convert_file_size_to_unit(uz_size, self.unit)
-        self.data_zone_value = convert_file_size_to_unit(dz_size, self.unit)
         self.save()
 
     def add_to_used_value(self, size):
@@ -391,7 +406,7 @@ class UserQuota(models.Model):
         grace = self.grace_period_ends
         allocated = self.allocated_value
         unit = self.unit
-        uz, dz = self.get_used_value_by_zone()
+        uz, dz = self.get_used_value_by_zone(refresh=False)
         used = uz + dz
         uzp = uz * 100.0 / allocated
         dzp = dz * 100.0 / allocated

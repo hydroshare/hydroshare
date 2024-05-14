@@ -13,10 +13,11 @@ from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.db import transaction
+from django.db.models import Sum
 from rest_framework import status
 
 from hs_core.hydroshare import hs_bagit
-from hs_core.models import ResourceFile
+from hs_core.models import ResourceFile, BaseResource
 from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
@@ -34,31 +35,75 @@ METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
 logger = logging.getLogger(__name__)
 
 
-def get_quota_usage_from_irods(username, raise_on_error=True):
+def get_quota_usage(username, raise_on_error=True):
     """
     Query iRODS AVU to get quota usage for a user reported in iRODS quota microservices
     :param username: the user name to get quota usage for.
+    :param raise_on_error: if True, raise ValidationError if quota usage cannot be retrieved from iRODS
     :return: the quota usage from iRODS data zone and user zone; raise ValidationError
     if quota usage cannot be retrieved from iRODS
     """
+    uqDataZoneSize = get_data_zone_usage(username, raise_on_error=raise_on_error)
+
+    uqUserZoneSize = get_user_zone_usage(username)
+    if uqUserZoneSize < 0:
+        uqUserZoneSize = 0
+        err_msg = f'no quota size AVU for user {username} in userzone'
+        logger.error(err_msg)
+        if raise_on_error:
+            raise ValidationError(err_msg)
+    return uqUserZoneSize, uqDataZoneSize
+
+
+def get_data_zone_usage(username, raise_on_error=True, include_published=False):
+    """
+    Calculate the data zone usage for a given user.
+
+    Args:
+        username (str): The username of the user.
+        raise_on_error (bool, optional): Whether to raise an error if the user does not exist. Defaults to True.
+        include_published (bool, optional): Whether to include published resources in the calculation. Default False.
+
+    Returns:
+        int: The data zone usage in bytes.
+
+    Raises:
+        ValidationError: If the user does not exist and `raise_on_error` is True.
+    """
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        logger.error(f'User {username} does not exist')
+        if raise_on_error:
+            raise ValidationError(f'User {username} does not exist')
+        return 0
+    uqDataZoneSize = 0
+    qh_resources = BaseResource.objects.filter(quota_holder=user)
+    if not include_published:
+        qh_resources = qh_resources.exclude(raccess__published=True)
+    qh_resource_ids = qh_resources.values_list('id', flat=True)
+    uqDataZoneSize = ResourceFile.objects.filter(object_id__in=qh_resource_ids).aggregate(Sum('_size'))["_size__sum"]
+
+    return uqDataZoneSize if uqDataZoneSize is not None else 0
+
+
+def get_user_zone_usage(username):
+    """
+    Get the quota size for a user in the iRODS user zone.
+
+    Args:
+        username (str): The username of the user.
+
+    Returns:
+        float: The quota size for the user in the iRODS user zone. If the user does not have resources
+        in the user zone, the function returns -1.
+
+    Raises:
+        SessionException: If there is an error retrieving the quota size.
+
+    """
     attname = username + '-usage'
     istorage = IrodsStorage()
-    # get quota size for user in iRODS data zone by retrieving AVU set on irods bagit path
-    # collection
-    try:
-        uqDataZoneSize = istorage.getAVU(settings.IRODS_BAGIT_PATH, attname)
-        if uqDataZoneSize is None:
-            # user may not have resources in data zone, so corresponding quota size AVU may not
-            # exist for this user
-            uqDataZoneSize = -1
-        else:
-            uqDataZoneSize = float(uqDataZoneSize)
-    except SessionException:
-        # user may not have resources in data zone, so corresponding quota size AVU may not exist
-        # for this user
-        uqDataZoneSize = -1
-
-    # get quota size for the user in iRODS user zone
     try:
         uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE, 'home',
                                      settings.HS_IRODS_PROXY_USER_IN_USER_ZONE,
@@ -74,48 +119,10 @@ def get_quota_usage_from_irods(username, raise_on_error=True):
         # user may not have resources in user zone, so corresponding quota size AVU may not exist
         # for this user
         uqUserZoneSize = -1
-
-    if uqDataZoneSize < 0 and uqUserZoneSize < 0:
-        err_msg = 'no quota size AVU in data zone and user zone for user {}'.format(username)
-        logger.error(err_msg)
-        if raise_on_error:
-            raise ValidationError(err_msg)
-    elif uqUserZoneSize < 0:
-        uqUserZoneSize = 0
-    elif uqDataZoneSize < 0:
-        uqDataZoneSize = 0
-    return uqUserZoneSize, uqDataZoneSize
+    return uqUserZoneSize
 
 
-def get_storage_usage(user, flag="published"):
-    """
-    Query resources by iRODS AVU quotaholder and resource state
-    :param user: the user to get quota usage for.
-    :param flag: resource state (private, discoverable, public, published)
-    :return: estimated storage used by resources
-    """
-    resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
-    if flag == "published":
-        resources.filter(raccess__published=True)
-    elif flag == "discoverable":
-        resources.filter(raccess__discoverable=True, raccess__public=False)
-    elif flag == "public":
-        resources.filter(raccess__public=True, raccess__discoverable=True)
-    elif flag == "private":
-        resources.filter(raccess__public=False, raccess__discoverable=False)
-
-    # Iterate over resources and check the quotaholder
-    # if quotaholder is the user, get the resource size and aggregate
-    aggregate_size = 0
-    for res in resources:
-        quota_user = res.get_quota_holder()
-        if not quota_user == user:
-            continue
-        aggregate_size += res.size
-    return aggregate_size
-
-
-def update_quota_usage(username):
+def update_quota_usage(username, notify_user=False):
     """
     update quota usage by checking iRODS AVU to get the updated quota usage for the user. Note iRODS micro-service
     quota update only happens on HydroShare iRODS data zone and user zone independently, so the aggregation of usage
@@ -124,6 +131,7 @@ def update_quota_usage(username):
     This function is called by the IRODS quota micro-service to update quota usage for a user in Django DB.
     :param
     username: the name of the user that needs to update quota usage for.
+    : param notify_user: if True, send email notification to user if the quota is exceeded.
     :return: raise ValidationError if quota cannot be updated.
     """
     from hs_core import tasks
@@ -135,16 +143,13 @@ def update_quota_usage(username):
         logger.error(err_msg)
         raise ValidationError(err_msg)
 
-    uz, dz = get_quota_usage_from_irods(username, raise_on_error=False)
+    uz = get_user_zone_usage(username)
 
-    # subtract out published resources from the datazone
     original_quota_data = uq.get_quota_data()
     qmsg = original_quota_data["qmsg"]
-    published_percent = qmsg.published_resource_percent
     user = User.objects.get(username=username)
-    published_size = get_storage_usage(user, flag="published")
-    dz -= published_size * (1 - published_percent / 100)
-    uq.update_used_value(uz, dz)
+    uq.set_userzone_used_value(uz)
+    uq.save()
 
     if original_quota_data["enforce_quota"]:
         updated_quota_data = uq.get_quota_data()
@@ -166,9 +171,9 @@ def update_quota_usage(username):
             # send notification to user in the cases of exceeding soft limit or hard limit
             # only send notificaiton if the quota status changed
             # this avoids sending multiple notifications when files are changed but the status does not change
-            if original_quota_data["status"] != updated_quota_data["status"]:
+            if notify_user and (original_quota_data["status"] != updated_quota_data["status"]):
                 tasks.send_user_quota_notification.apply_async((user.pk))
-        uq.check_if_userzone_quota_enforcement_is_bypassed(user, original_quota_data, updated_quota_data)
+        uq.check_if_userzone_quota_enforcement_is_bypassed(original_quota_data, updated_quota_data)
 
 
 def res_has_web_reference(res):

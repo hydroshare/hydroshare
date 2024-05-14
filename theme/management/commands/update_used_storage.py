@@ -9,7 +9,8 @@ from hs_core.hydroshare import current_site_url
 
 class Command(BaseCommand):
     help = "Update used storage space in UserQuota table for all users in HydroShare by reading " \
-           "quota usage AVUs for users which are updated by iRODS quota update micro-services." \
+           "userZone quota usage AVUs for users which are updated by iRODS quota update micro-services." \
+           "This command also reads dataZone usage which is calculated upon request." \
            "This management command needs to be run initially to update Django DB quota usage " \
            "or whenever iRODS quota update micro-services are reset and Django DB needs to be " \
            "brought in sync with iRODS quota AVUs"
@@ -24,7 +25,7 @@ class Command(BaseCommand):
                 count_string = f"{i}/{count}:"
                 profile = f"{current_site_url()}/user/{u.id}"
                 try:
-                    update_quota_usage(u.username)
+                    update_quota_usage(u.username, notify_user=False)
                     print(f"{count_string}Success updating quota in Django for {u.username}: {profile}")
                 except ValidationError as e:
                     print(f"{count_string}{profile} Error updating quota:{e.message}")
