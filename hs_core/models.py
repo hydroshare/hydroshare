@@ -306,6 +306,7 @@ def get_access_object(user, user_type, user_access):
 def page_permissions_page_processor(request, page):
     """Return a dict describing permissions for current user."""
     from hs_access_control.models.privilege import PrivilegeCodes
+    from hs_core.hydroshare.utils import get_remaining_user_quota
 
     cm = page.get_content_model()
     can_change_resource_flags = False
@@ -413,6 +414,14 @@ def page_permissions_page_processor(request, page):
     if is_owner or (cm.raccess.shareable and (is_view or is_edit)):
         show_manage_access = True
 
+    if hasattr(settings, 'FILE_UPLOAD_MAX_SIZE'):
+        max_file_size = settings.FILE_UPLOAD_MAX_SIZE
+    else:
+        max_file_size = 1024
+    remaining_quota = get_remaining_user_quota(cm.quota_holder, "MB")
+    if remaining_quota is not None:
+        max_file_size = min(max_file_size, remaining_quota)
+
     return {
         'resource_type': cm._meta.verbose_name,
         "users_json": users_json,
@@ -423,7 +432,8 @@ def page_permissions_page_processor(request, page):
         "is_replaced_by": is_replaced_by,
         "is_version_of": is_version_of,
         "show_manage_access": show_manage_access,
-        "last_changed_by": last_changed_by
+        "last_changed_by": last_changed_by,
+        "max_file_size": max_file_size,
     }
 
 
@@ -2168,6 +2178,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     # allow resource that contains spam_patterns to be discoverable/public
     spam_allowlisted = models.BooleanField(default=False)
 
+    quota_holder = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                     related_name='quota_holder')
+
     def update_view_count(self):
         self.view_count += 1
         # using update query api to update instead of self.save() to avoid triggering solr realtime indexing
@@ -2342,6 +2355,23 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 if value and settings.RUN_HYRAX_UPDATE and is_netcdf_to_public:
                     run_script_to_update_hyrax_input_files(self.short_id)
 
+    def set_published(self, value):
+        """Set the published flag for a resource.
+
+        :param value: True or False
+
+        This sets the published flag (self.raccess.published)
+        """
+        from hs_core.signals import post_raccess_change
+
+        self.raccess.published = value
+        self.raccess.immutable = value
+        if value:  # can't be published without being public
+            self.raccess.public = value
+        self.raccess.save()
+        post_raccess_change.send(sender=self, resource=self)
+        self.update_index()
+
     def update_index(self):
         """updates previous versions of a resource (self) in index"""
         prev_version_resource_relation_meta = Relation.objects.filter(type='isReplacedBy',
@@ -2446,34 +2476,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         # QuotaException will be raised if new_holder does not have enough quota to hold this
         # new resource, in which case, set_quota_holder to the new user fails
         validate_user_quota(new_holder, self.size)
-        attname = "quotaUserName"
-
-        if setter.username != new_holder.username:
-            # this condition check is needed to make sure attname exists as AVU before getting it
-            oldqu = self.getAVU(attname)
-            if oldqu:
-                # have to remove the old AVU first before setting to the new one in order to trigger
-                # quota micro-service PEP msiRemoveQuotaHolder so quota for old quota
-                # holder will be reduced as a result of setting quota holder to a different user
-                self.removeAVU(attname, oldqu)
-        self.setAVU(attname, new_holder.username)
-
-    def get_quota_holder(self):
-        """Get quota holder of the resource.
-
-        return User instance of the quota holder for the resource or None if it does not exist
-        """
-        try:
-            uname = self.getAVU("quotaUserName")
-        except SessionException:
-            # quotaUserName AVU does not exist, return None
-            return None
-
-        if uname:
-            return User.objects.filter(username=uname).first()
-        else:
-            # quotaUserName AVU does not exist, return None
-            return None
+        self.quota_holder = new_holder
+        self.save()
 
     def removeAVU(self, attribute, value):
         """Remove an AVU at the resource level.

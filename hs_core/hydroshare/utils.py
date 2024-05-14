@@ -13,6 +13,7 @@ from uuid import uuid4
 
 import aiohttp
 from asgiref.sync import sync_to_async
+from datetime import date
 from django.apps import apps
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -726,17 +727,36 @@ def validate_resource_file_count(resource_cls, files):
             raise ResourceFileValidationException(err_msg)
 
 
-def convert_file_size_to_unit(size, unit):
+def convert_file_size_to_unit(size, to_unit, from_unit='B'):
     """
     Convert file size to unit for quota comparison
-    :param size: in byte unit
-    :param unit: should be one of the four: 'KB', 'MB', 'GB', or 'TB'
+    :param size: the size to be converted
+    :param to_unit: should be one of the four: 'KB', 'MB', 'GB', or 'TB'
+    :param from_unit: should be one of the five: 'B', 'KB', 'MB', 'GB', or 'TB'
     :return: the size converted to the pass-in unit
     """
-    unit = unit.lower()
+    unit = to_unit.lower()
     if unit not in ('kb', 'mb', 'gb', 'tb'):
         raise ValidationError('Pass-in unit for file size conversion must be one of KB, MB, GB, '
                               'or TB')
+    from_unit = from_unit.lower()
+    if from_unit not in ('b', 'kb', 'mb', 'gb', 'tb'):
+        raise ValidationError('Starting unit for file size conversion must be one of B, KB, MB, GB, '
+                              'or TB')
+    # First convert to byte unit
+    if from_unit == 'b':
+        factor = 0
+    elif from_unit == 'kb':
+        factor = 1
+    elif from_unit == 'mb':
+        factor = 2
+    elif from_unit == 'gb':
+        factor = 3
+    else:
+        factor = 4
+    size = size * 1024**factor
+
+    # Now convert to the pass-in unit
     factor = 1024.0
     kbsize = size / factor
     if unit == 'kb':
@@ -785,7 +805,9 @@ def validate_user_quota(user_or_username, size):
                 used_percent = uq.used_percent
                 rounded_percent = round(used_percent, 2)
                 rounded_used_val = round(used_size, 4)
-                if used_percent >= hard_limit or uq.remaining_grace_period == 0:
+                grace_ends = uq.grace_period_ends
+                past_grace_period = grace_ends < date.today() if grace_ends else False
+                if used_percent >= hard_limit or past_grace_period:
                     msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
                                                          qmsg.content)
                     msg_str = msg_template_str.format(used=rounded_used_val,
@@ -794,6 +816,36 @@ def validate_user_quota(user_or_username, size):
                                                       zone=uq.zone,
                                                       percent=rounded_percent)
                     raise QuotaException(msg_str)
+
+
+def get_remaining_user_quota(user_or_username, units='MB'):
+    """
+    get the remaining quota for the user
+    :param user_or_username: the user to be validated
+    :param units: the units for the quota to be returned. It should be one of the four: 'kb', 'mb', 'gb', 'tb'
+    :return: the remaining quota for the user, or None if the quota is not enforced
+    """
+    if user_or_username:
+        if isinstance(user_or_username, User):
+            user = user_or_username
+        else:
+            try:
+                user = User.objects.get(username=user_or_username)
+            except User.DoesNotExist:
+                user = None
+    else:
+        user = None
+
+    if user and user.is_active:
+        uq = user.quotas.filter(zone='hydroshare').first()
+        if uq:
+            qmsg = QuotaMessage.objects.first()
+            enforce_flag = qmsg.enforce_quota
+            if enforce_flag:
+                remaining = uq.allocated_value - uq.used_value
+                remaining = convert_file_size_to_unit(remaining, to_unit=units, from_unit=uq.unit)
+                return max(remaining, 0)
+    return None
 
 
 def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key,
@@ -969,7 +1021,7 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
     resource_cls = resource.__class__
     if len(files) > 0:
         size = validate_resource_file_size(files)
-        validate_user_quota(resource.get_quota_holder(), size)
+        validate_user_quota(resource.quota_holder, size)
         validate_resource_file_count(resource_cls, files)
 
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}

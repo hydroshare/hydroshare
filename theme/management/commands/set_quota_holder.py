@@ -2,23 +2,20 @@ from django.core.management.base import BaseCommand
 
 from hs_core.models import BaseResource
 from hs_access_control.models import PrivilegeCodes
-from django_irods.icommands import SessionException
 
 
 class Command(BaseCommand):
     """
-    This command adds quota holder to a resource if missing, which adds the quotaUserName AVU to
-    iRODS as needed for quota calculation update in iRODS.
+    This command adds quota holder to a resource if missing
     """
-    help = "Add quota holders to all resources if missing which triggers quota update in iRODS " \
-           "as needed"
+    help = "Add quota holders to all resources if missing"
 
     def handle(self, *args, **options):
         resources = BaseResource.objects.all()
         count = 0
         for res in resources:
             try:
-                if not res.get_quota_holder():
+                if not res.quota_holder:
                     # if quota_holder is not set for the resource, set it to resource's creator
                     # for some resource, for some reason, the creator of the resource is not the
                     # owner, hence not allowed to be set as quota holder. This is an artifact that
@@ -39,26 +36,12 @@ class Command(BaseCommand):
                     print('the quota holder of resource ' + res.short_id
                           + ' has been set to its creator ' + res.creator.username)
                     count += 1
-            except SessionException as ex:
+            except Exception as ex:
                 # this is needed for migration testing where some resources copied from www
                 # for testing do not exist in the iRODS backend, hence need to skip these
                 # test artifects
                 print(res.short_id + ' raised SessionException when setting quota holder: '
-                      + ex.stderr)
-                continue
-            except AttributeError as ex:
-                # when federation is not set up correctly, istorage does not have a session
-                # attribute, hence raise AttributeError - ignore for testing and it should not
-                # happen in production where federation is set up properly
-                print((res.short_id + ' raised AttributeError when setting quota holder: '
-                      + str(ex)))
-                continue
-            except ValueError as ex:
-                # when federation is not set up correctly, istorage does not have a session
-                # attribute, hence raise AttributeError - ignore for testing and it should not
-                # happen in production where federation is set up properly
-                print((res.short_id + ' raised ValueError when setting quota holder: '
-                      + str(ex)))
+                      + ex)
                 continue
 
         print('{} resources with missing quota holder have been fixed'.format(count))

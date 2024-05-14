@@ -169,24 +169,10 @@ $(document).ready(function () {
 
             customAlert("Profile", message, "info", 10000, true);
     }
-
-    $.ajax({
-        url: "/hsapi/userInfo/",
-        success: function(user) {
-            var missing_profile_fields = [];
-            if(!user.organization)
-                missing_profile_fields.push('Organization')
-            if(!user.country)
-                missing_profile_fields.push('Country')
-            if(!user.user_type)
-                missing_profile_fields.push('User Type')
-            if(missing_profile_fields.length) {
-                // Disable publishing resources
-                popup_profile_alert(user.id, missing_profile_fields)
-            }
-        },
-        error: function(response) {
-            console.log(response.responseText);
+    checkProfileComplete().then(([user, missing])=>{
+        if(missing.length) {
+            // Disable publishing resources
+            popup_profile_alert(user.id, missing)
         }
     });
 
@@ -332,4 +318,32 @@ function customAlert(alertTitle, alertMessage, alertType, duration, dismissable=
     }
     $(el).appendTo("body > .main-container > .container");
     $(el).hide().fadeIn(400);
+}
+
+async function checkProfileComplete(){
+    localStorage.removeItem('profile-user')
+    localStorage.removeItem('missing-profile-fields')
+    let missing_profile_fields = [];
+    const user = {};
+    try{
+        const resp = await $.ajax({
+            url: "/hsapi/userInfo/",
+        });
+        const checkArray = _checkProfile(resp);
+        return checkArray.length ? checkArray : [user, missing_profile_fields];
+    }catch(e){
+        console.error(e);
+    }
+
+    function _checkProfile(user) {
+        if(!user.organization)
+            missing_profile_fields.push('Organization')
+        if(!user.country)
+            missing_profile_fields.push('Country')
+        if(!user.user_type)
+            missing_profile_fields.push('User Type')
+        localStorage.setItem('profile-user', JSON.stringify(user))
+        localStorage.setItem('missing-profile-fields', missing_profile_fields.toString())
+        return [user, missing_profile_fields];
+    }
 }

@@ -3009,6 +3009,21 @@ span.you-flag {
 	word-wrap: break-word;
 }
 
+/* modify radio and checkbox labels
+https://github.com/twbs/bootstrap/issues/13548 */
+label.checkbox-inline {
+	word-wrap: break-word;
+}
+
+.radio,
+.checkbox {
+    padding-left: 20px;
+}
+.radio label,
+.checkbox label {
+    display: inline;
+    padding: 0;
+}
 .noselect {
 	-webkit-touch-callout: none;
 	-webkit-user-select: none;

@@ -2029,7 +2029,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
                 holes, PrivilegeCodes.OWNER))
         self.assertTrue(cat.uaccess.can_unshare_resource_with_user(holes, dog))
         # assert cat is the quota holder and quota holder cannot be removed from ownership
-        self.assertTrue(holes.get_quota_holder(), cat)
+        self.assertTrue(holes.quota_holder, cat)
         self.assertFalse(cat.uaccess.can_unshare_resource_with_user(holes, cat))
         self.assertTrue(dog.uaccess.can_unshare_resource_with_user(holes, dog))
         self.assertFalse(dog.uaccess.can_unshare_resource_with_user(holes, cat))

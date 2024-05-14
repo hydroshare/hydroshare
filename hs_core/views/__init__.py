@@ -293,7 +293,7 @@ def update_quota_usage(request, username):
         return HttpResponseBadRequest("user to update quota for is not valid")
 
     try:
-        update_quota_usage_utility(username)
+        update_quota_usage_utility(username, notify_user=False)
         return HttpResponse(
             "quota for user {} has been updated".format(username), status=200
         )
@@ -1095,8 +1095,12 @@ def copy_resource(request, shortkey, *args, **kwargs):
                 shortkey, new_res_id=None, request_username=user.username
             )
             return HttpResponseRedirect(response_url)
-        except hydroshare.utils.ResourceCopyException:
-            return HttpResponseRedirect(res.get_absolute_url())
+        except hydroshare.utils.ResourceCopyException as ex:
+            messages.error(request, str(ex))
+            request.session[
+                "resource_creation_error"
+            ] = "Failed to create a copy of " "this resource: " + str(ex)
+            return JsonResponse({"status": "false", "error": str(ex)}, status=status.HTTP_400_BAD_REQUEST, safe=False)
 
 
 res_id = openapi.Parameter(
@@ -1122,6 +1126,8 @@ def copy_resource_public(request, pk):
     :param pk: id of the resource to be copied
     """
     response = copy_resource(request, pk)
+    if not response.status_code < 400:
+        return response
     return HttpResponse(response.url.split("/")[2], status=202)
 
 
@@ -1155,10 +1161,11 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
             response_url = create_new_version_resource_task(shortkey, user.username)
             return HttpResponseRedirect(response_url)
         except hydroshare.utils.ResourceVersioningException as ex:
+            messages.error(request, str(ex))
             request.session[
                 "resource_creation_error"
             ] = "Failed to create a new version of " "this resource: " + str(ex)
-            return HttpResponseRedirect(res.get_absolute_url())
+            return JsonResponse({"status": "false", "error": str(ex)}, status=status.HTTP_400_BAD_REQUEST, safe=False)
 
 
 res_id = openapi.Parameter(
@@ -1185,6 +1192,8 @@ def create_new_version_resource_public(request, pk):
     :return: HttpResponse with status code
     """
     redirect = create_new_version_resource(request, pk)
+    if not redirect.status_code < 400:
+        return redirect
     return HttpResponse(redirect.url.split("/")[2], status=202)
 
 

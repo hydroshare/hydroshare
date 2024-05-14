@@ -4,6 +4,9 @@ import tempfile
 from rest_framework import status
 
 from hs_core.hydroshare import resource
+from hs_core.views.utils import zip_folder
+from hs_core.hydroshare.utils import QuotaException
+from theme.models import QuotaMessage
 
 from .base import HSRESTTestCase
 
@@ -99,3 +102,91 @@ class TestPublicZipEndpoint(HSRESTTestCase):
             "remove_original_after_zip": True
         }, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_zip_over_quota(self):
+        """
+        Test case for zipping a folder when the user is over the quota limit.
+
+        This test case verifies that the `zip_folder` function raises a `QuotaException` when the user is over the quota
+        limit and the quota enforce flag is set to True. It also checks that the function does not raise a
+        `QuotaException` when the quota enforce flag is set to False.
+
+        Steps:
+        1. Create a composite resource.
+        2. Set up the quota message and enforce the quota limit.
+        3. Create three test files.
+        4. Open the files for read and upload.
+        5. Add the files to the resource.
+        6. Set the user's quota over the hard limit.
+        7. Verify that zipping the folder raises a `QuotaException`.
+        8. Verify that zipping the files does not raise a `QuotaException` when `bool_remove_original` is set to True.
+        9. Disable quota enforcement.
+        10. Add the files to a different folder.
+        11. Verify that zipping the files does not raise a `QuotaException` when quota enforcement is disabled.
+
+        """
+        self.res = resource.create_resource(resource_type='CompositeResource',
+                                            owner=self.user,
+                                            title='Test Resource',
+                                            metadata=[], )
+
+        if not QuotaMessage.objects.exists():
+            QuotaMessage.objects.create()
+        qmsg = QuotaMessage.objects.first()
+        qmsg.enforce_quota = True
+        qmsg.save()
+
+        # create files
+        self.n1 = "test1.txt"
+        self.n2 = "test2.txt"
+        self.n3 = "test3.txt"
+
+        test_file = open(self.n1, 'w')
+        test_file.write("Test text file in test1.txt")
+        test_file.close()
+
+        test_file = open(self.n2, 'w')
+        test_file.write("Test text file in test2.txt")
+        test_file.close()
+
+        test_file = open(self.n3, 'w')
+        test_file.write("Test text file in test3.txt")
+        test_file.close()
+
+        # open files for read and upload
+        self.myfile1 = open(self.n1, "rb")
+        self.myfile2 = open(self.n2, "rb")
+        self.myfile3 = open(self.n3, "rb")
+
+        resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3, folder='test')
+
+        uquota = self.user.quotas.first()
+        # make user's quota over hard limit 125%
+        uquota.user_zone_value = uquota.allocated_value * 1.3
+        uquota.save()
+
+        # zip should raise quota exception now that the quota holder is over hard limit
+        # and quota enforce flag is set to True
+        with self.assertRaises(QuotaException):
+            zip_folder(self.user, self.res.short_id, 'data/contents/test', 'test.zip', bool_remove_original=False)
+
+        # zip files should not raise quota exception since bool_remove_original is set to True
+        zip_folder(self.user, self.res.short_id, 'data/contents/test', 'test.zip', bool_remove_original=True)
+
+        qmsg.enforce_quota = False
+        qmsg.save()
+
+        resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3, folder='test2')
+        # zip files should not raise quota exception since enforce_quota flag is set to False
+        try:
+            zip_folder(self.user, self.res.short_id, 'data/contents/test2', 'test2.zip', bool_remove_original=False)
+        except QuotaException as ex:
+            self.fail("zip resource file action should not raise QuotaException for "
+                      "over quota cases if quota is not enforced - Quota Exception: " + str(ex))
+
+        self.myfile1.close()
+        os.remove(self.myfile1.name)
+        self.myfile2.close()
+        os.remove(self.myfile2.name)
+        self.myfile3.close()
+        os.remove(self.myfile3.name)
