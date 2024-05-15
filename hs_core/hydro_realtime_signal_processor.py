@@ -3,6 +3,7 @@ import logging
 from django.conf import settings
 from django.db import models
 from hs_core.models import Date, BaseResource
+from hs_core.pubsub_discovery_processor import pub_update
 from hs_core.signals import post_spam_whitelist_change
 from hs_access_control.models import ResourceAccess
 from haystack.exceptions import NotHandled
@@ -62,6 +63,7 @@ def index_resource(signal_processor, instance: BaseResource):
                 try:
                     index = signal_processor.connections[using].get_unified_index().get_index(newsender)
                     index.update_object(newbase, using=using)
+                    pub_update(newbase.short_id, False)
                 except NotHandled:
                     logger.exception("Failure: changes to %s with short_id %s not added to Solr Index.",
                                      str(type(instance)), newbase.short_id)
@@ -71,6 +73,7 @@ def index_resource(signal_processor, instance: BaseResource):
                 try:
                     index = signal_processor.connections[using].get_unified_index().get_index(newsender)
                     index.remove_object(newbase, using=using)
+                    pub_update(newbase.short_id, True)
                 except NotHandled:
                     logger.exception("Failure: delete of %s with short_id %s failed.",
                                      str(type(instance)), newbase.short_id)

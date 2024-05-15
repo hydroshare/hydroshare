@@ -7,6 +7,7 @@ from uuid import uuid4
 
 from dateutil import tz
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import (FileResponse, HttpResponse, HttpResponseRedirect,
                          JsonResponse)
 from drf_yasg.utils import swagger_auto_schema
@@ -22,6 +23,7 @@ from hs_core.task_utils import (get_or_create_task_notification,
                                 get_task_user_id)
 from hs_core.tasks import create_bag_by_irods, create_temp_zip, delete_zip
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, is_ajax
+from hs_file_types.enums import AggregationMetaFilePath
 
 logger = logging.getLogger(__name__)
 
@@ -283,6 +285,15 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
             if bag_modified is None or bag_modified or not istorage.exists(irods_output_path):
                 res.setAVU("bag_modified", True)  # ensure bag_modified is set when irods_output_path does not exist
                 create_bag_by_irods(res_id, create_zip=False)
+        elif any([path.endswith(suffix) for suffix in AggregationMetaFilePath]):
+            # download aggregation meta xml/json schema file
+            try:
+                aggregation = res.get_aggregation_by_meta_file(path)
+            except ObjectDoesNotExist:
+                aggregation = None
+
+            if aggregation is not None and aggregation.metadata.is_dirty:
+                aggregation.create_aggregation_xml_documents()
 
     # If we get this far,
     # * path and irods_path point to true input

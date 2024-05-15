@@ -5,8 +5,8 @@ from theme.models import UserQuota
 
 
 class Command(BaseCommand):
-    help = "This commond can be run to fix the corrupt user data where some users do not " \
-           "have UserQuota foreign key relation. This management command can be run on a " \
+    help = "This command can be run to fix the corrupt user data where some users do not " \
+           "have UserQuota foreign key relation. This management command can be run on an " \
            "as-needed basis."
 
     def handle(self, *args, **options):

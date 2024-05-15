@@ -100,6 +100,7 @@ IRODS_ICOMMANDS_PATH = '/usr/bin'
 IRODS_HOST = 'data.local.org'
 IRODS_PORT = '1247'
 IRODS_DEFAULT_RESOURCE = 'hydroshareReplResc'
+IRODS_SINGLE_RESC_FOR_QUERY = 'hydroshareReplResc'
 IRODS_HOME_COLLECTION = '/hydroshareZone/home/wwwHydroProxy'
 IRODS_CWD = '/hydroshareZone/home/wwwHydroProxy'
 IRODS_ZONE = 'hydroshareZone'
@@ -138,8 +139,10 @@ HYRAX_SCRIPT_RUN_COMMAND = ''
 HS_USER_ZONE_HOST = 'users.local.org'
 LINUX_ADMIN_USER_FOR_HS_USER_ZONE = 'hsuserproxy'
 LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE = 'hsuserproxy'
+PRIVATE_KEY_FILE_FOR_HS_USER_ZONE = '/hydroshare/.ssh/id_ed25519_hs'
 LINUX_ADMIN_USER_CREATE_USER_IN_USER_ZONE_CMD = '/home/hsuserproxy/create_user.sh'
 LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD = '/home/hsuserproxy/delete_user.sh'
+LINUX_ADMIN_USER_SET_QUOTA_IN_USER_ZONE_CMD = '/home/hsuserproxy/set_userzone_quota.sh'
 
 # HydroShare iRODS proxy user in the federated user zone
 HS_IRODS_PROXY_USER_IN_USER_ZONE = 'localHydroProxy'
@@ -157,6 +160,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_USE_TLS = True
 # DEFAULT_FROM_EMAIL = ''
 # DEFAULT_SUPPORT_EMAIL=''
+# DEFAULT_DEVELOPER_EMAIL=''
 
 HYDROSHARE_SHARED_TEMP = '/shared_tmp'
 
@@ -208,6 +212,14 @@ ENABLE_OIDC_AUTHENTICATION = False
 # ALLOW_LOGOUT_GET_METHOD = True
 # LOGOUT_REDIRECT_URL = '/'
 # OIDC_OP_LOGOUT_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/logout"
+# OIDC_KEYCLOAK_URL = "https://auth.cuahsi.org/"
+# OIDC_KEYCLOAK_REALM = "CUAHSI"
+
+DEFAULT_AUTHENTICATION_CLASSES = (
+    "rest_framework.authentication.BasicAuthentication",
+    "rest_framework.authentication.SessionAuthentication",
+    "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
+)
 
 # The following two settings will logout of OIDC during signout
 # If these two settings are not enabled, 

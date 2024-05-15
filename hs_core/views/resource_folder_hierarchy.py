@@ -15,7 +15,8 @@ from rest_framework.response import Response
 
 from django_irods.icommands import SessionException
 from hs_core.hydroshare import delete_resource_file
-from hs_core.hydroshare.utils import get_file_mime_type, resolve_request
+from hs_core.hydroshare.utils import (QuotaException, get_file_mime_type,
+                                      resolve_request)
 from hs_core.models import ResourceFile
 from hs_core.task_utils import get_or_create_task_notification
 from hs_core.tasks import FileOverrideException, unzip_task
@@ -292,6 +293,8 @@ def data_store_folder_zip(request, res_id=None):
         return JsonResponse({"error": ex.stderr}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except DRF_ValidationError as ex:
         return JsonResponse({"error": ex.detail}, status=status.HTTP_400_BAD_REQUEST)
+    except (QuotaException) as ex:
+        return JsonResponse({"error": str(ex)}, status=status.HTTP_400_BAD_REQUEST)
 
     return_data = {"name": output_zip_fname, "size": size, "type": "zip"}
     return JsonResponse(return_data)
@@ -343,6 +346,8 @@ def zip_aggregation_file(request, res_id=None):
         return JsonResponse({"error": ex.stderr}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except DRF_ValidationError as ex:
         return JsonResponse({"error": ex.detail}, status=status.HTTP_400_BAD_REQUEST)
+    except (QuotaException) as ex:
+        return JsonResponse({"error": str(ex)}, status=status.HTTP_400_BAD_REQUEST)
 
     return_data = {"name": output_zip_fname, "size": size, "type": "zip"}
     return JsonResponse(return_data)
@@ -475,7 +480,7 @@ def data_store_folder_unzip(request, **kwargs):
                            "iRODS error follows: "
             err_msg = specific_msg + ex.stderr
             return JsonResponse({"error": err_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        except (DRF_ValidationError, SuspiciousFileOperation, FileOverrideException) as ex:
+        except (DRF_ValidationError, SuspiciousFileOperation, FileOverrideException, QuotaException) as ex:
             err_msg = ex.detail if isinstance(ex, DRF_ValidationError) else str(ex)
             return JsonResponse({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as ex:

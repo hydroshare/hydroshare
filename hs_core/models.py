@@ -1,10 +1,10 @@
 """Declare critical models for Hydroshare hs_core app."""
 import copy
-import difflib
 import json
 import logging
 import os.path
 import re
+import sys
 import unicodedata
 import urllib.parse
 from uuid import uuid4
@@ -55,6 +55,46 @@ from .hs_rdf import (HSTERMS, RDFS1, RDF_MetaData_Mixin, RDF_Term_MixIn,
 from .languages_iso import languages as iso_languages
 
 
+def clean_abstract(original_string):
+    """Clean abstract for XML inclusion.
+
+    This function takes an original string and removes any illegal XML characters
+    from it. It uses regular expressions to identify and remove the illegal characters.
+
+    Args:
+        original_string (str): The original string to be cleaned.
+
+    Returns:
+        str: The cleaned string with illegal XML characters removed.
+
+    Raises:
+        ValidationError: If there is an error cleaning the abstract.
+
+    """
+    # https://stackoverflow.com/a/64570125
+    try:
+        illegal_unichrs = [(0x00, 0x08), (0x0B, 0x0C), (0x0E, 0x1F),
+                           (0x7F, 0x84), (0x86, 0x9F),
+                           (0xFDD0, 0xFDDF), (0xFFFE, 0xFFFF)]
+        if sys.maxunicode >= 0x10000:  # not narrow build
+            illegal_unichrs.extend([(0x1FFFE, 0x1FFFF), (0x2FFFE, 0x2FFFF),
+                                    (0x3FFFE, 0x3FFFF), (0x4FFFE, 0x4FFFF),
+                                    (0x5FFFE, 0x5FFFF), (0x6FFFE, 0x6FFFF),
+                                    (0x7FFFE, 0x7FFFF), (0x8FFFE, 0x8FFFF),
+                                    (0x9FFFE, 0x9FFFF), (0xAFFFE, 0xAFFFF),
+                                    (0xBFFFE, 0xBFFFF), (0xCFFFE, 0xCFFFF),
+                                    (0xDFFFE, 0xDFFFF), (0xEFFFE, 0xEFFFF),
+                                    (0xFFFFE, 0xFFFFF), (0x10FFFE, 0x10FFFF)])
+
+        illegal_ranges = [fr'{chr(low)}-{chr(high)}' for (low, high) in illegal_unichrs]
+        xml_illegal_character_regex = '[' + ''.join(illegal_ranges) + ']'
+        illegal_xml_chars_re = re.compile(xml_illegal_character_regex)
+        filtered_string = illegal_xml_chars_re.sub('', original_string)
+        return filtered_string
+    except (KeyError, TypeError) as ex:
+        raise ValidationError(f"Error cleaning abstract: {ex}")
+
+
 def clean_for_xml(s):
     """
     Remove all control characters from a unicode string in preparation for XML inclusion
@@ -65,6 +105,7 @@ def clean_for_xml(s):
     * Space-pad paragraph and NL symbols as necessary
 
     """
+    # https://www.w3.org/TR/REC-xml/#sec-line-ends
     CR = chr(0x23CE)  # carriage return unicode SYMBOL
     PARA = chr(0xB6)  # paragraph mark unicode SYMBOL
     output = ''
@@ -265,6 +306,7 @@ def get_access_object(user, user_type, user_access):
 def page_permissions_page_processor(request, page):
     """Return a dict describing permissions for current user."""
     from hs_access_control.models.privilege import PrivilegeCodes
+    from hs_core.hydroshare.utils import get_remaining_user_quota
 
     cm = page.get_content_model()
     can_change_resource_flags = False
@@ -372,6 +414,14 @@ def page_permissions_page_processor(request, page):
     if is_owner or (cm.raccess.shareable and (is_view or is_edit)):
         show_manage_access = True
 
+    if hasattr(settings, 'FILE_UPLOAD_MAX_SIZE'):
+        max_file_size = settings.FILE_UPLOAD_MAX_SIZE
+    else:
+        max_file_size = 1024
+    remaining_quota = get_remaining_user_quota(cm.quota_holder, "MB")
+    if remaining_quota is not None:
+        max_file_size = min(max_file_size, remaining_quota)
+
     return {
         'resource_type': cm._meta.verbose_name,
         "users_json": users_json,
@@ -382,7 +432,8 @@ def page_permissions_page_processor(request, page):
         "is_replaced_by": is_replaced_by,
         "is_version_of": is_version_of,
         "show_manage_access": show_manage_access,
-        "last_changed_by": last_changed_by
+        "last_changed_by": last_changed_by,
+        "max_file_size": max_file_size,
     }
 
 
@@ -453,6 +504,10 @@ class HSAdaptorEditInline(object):
         return cm.can_change(adaptor_field.request)
 
 
+class PartyValidationError(ValidationError):
+    pass
+
+
 class Party(AbstractMetaDataElement):
     """Define party model to define a person."""
 
@@ -472,11 +527,15 @@ class Party(AbstractMetaDataElement):
     # each identifier is stored as a key/value pair {name:link}
     identifiers = HStoreField(default=dict)
 
-    # list of identifier currently supported
-    supported_identifiers = {'ResearchGateID': 'https://www.researchgate.net/',
-                             'ORCID': 'https://orcid.org/',
-                             'GoogleScholarID': 'https://scholar.google.com/',
-                             'ResearcherID': 'https://www.researcherid.com/'}
+    # list of identifiers currently supported
+    supported_identifiers = {'ResearchGateID':
+                             re.compile(r'^https:\/\/www\.researchgate\.net\/profile\/[^\s]+$'),
+                             'ORCID':
+                             re.compile(r'^https:\/\/orcid\.org\/[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}$'),
+                             'GoogleScholarID':
+                             re.compile(r'^https:\/\/scholar\.google\.com\/citations\?.*user=[^\s]+$'),
+                             'ResearcherID':
+                             'https://www.researcherid.com/'}
 
     def __unicode__(self):
         """Return name field for unicode representation."""
@@ -569,14 +628,14 @@ class Party(AbstractMetaDataElement):
 
             if ('name' not in kwargs or kwargs['name'] is None) and \
                     ('organization' not in kwargs or kwargs['organization'] is None):
-                raise ValidationError(
+                raise PartyValidationError(
                     "Either an organization or name is required for a creator element")
 
             if 'name' in kwargs and kwargs['name'] is not None:
                 if len(kwargs['name'].strip()) == 0:
                     if 'organization' in kwargs and kwargs['organization'] is not None:
                         if len(kwargs['organization'].strip()) == 0:
-                            raise ValidationError(
+                            raise PartyValidationError(
                                 "Either the name or organization must not be blank for the creator "
                                 "element")
 
@@ -600,7 +659,7 @@ class Party(AbstractMetaDataElement):
             party = cls.objects.get(id=element_id)
             if party.hydroshare_user_id is not None and kwargs['hydroshare_user_id'] is not None:
                 if party.hydroshare_user_id != kwargs['hydroshare_user_id']:
-                    raise ValidationError("HydroShare user identifier can't be changed.")
+                    raise PartyValidationError("HydroShare user identifier can't be changed.")
 
         if 'order' in kwargs and element_name == 'Creator':
             creator_order = kwargs['order']
@@ -662,7 +721,7 @@ class Party(AbstractMetaDataElement):
         if isinstance(party, Creator):
             if Creator.objects.filter(object_id=party.object_id,
                                       content_type__pk=party.content_type.id).count() == 1:
-                raise ValidationError("The only creator of the resource can't be deleted.")
+                raise PartyValidationError("The only creator of the resource can't be deleted.")
 
             creators_to_update = Creator.objects.filter(
                 object_id=party.object_id,
@@ -688,41 +747,42 @@ class Party(AbstractMetaDataElement):
                 try:
                     identifiers = json.loads(identifiers)
                 except ValueError:
-                    raise ValidationError("Value for identifiers not in the correct format")
+                    raise PartyValidationError("Value for identifiers not in the correct format")
         # identifiers = kwargs['identifiers']
         if identifiers:
             # validate the identifiers are one of the supported ones
             for name in identifiers:
                 if name not in cls.supported_identifiers:
-                    raise ValidationError("Invalid data found for identifiers. "
-                                          "{} not a supported identifier.". format(name))
+                    raise PartyValidationError("Invalid data found for identifiers. "
+                                               "{} not a supported identifier.". format(name))
             # validate identifier values - check for duplicate links
             links = [link.lower() for link in list(identifiers.values())]
             if len(links) != len(set(links)):
-                raise ValidationError("Invalid data found for identifiers. "
-                                      "Duplicate identifier links found.")
+                raise PartyValidationError("Invalid data found for identifiers. "
+                                           "Duplicate identifier links found.")
 
             for link in links:
                 validator = URLValidator()
                 try:
                     validator(link)
                 except ValidationError:
-                    raise ValidationError("Invalid data found for identifiers. "
-                                          "Identifier link must be a URL.")
+                    raise PartyValidationError("Invalid data found for identifiers. "
+                                               "Identifier link must be a URL.")
 
             # validate identifier keys - check for duplicate names
             names = [n.lower() for n in list(identifiers.keys())]
             if len(names) != len(set(names)):
-                raise ValidationError("Invalid data found for identifiers. "
-                                      "Duplicate identifier names found")
+                raise PartyValidationError("Invalid data found for identifiers. "
+                                           "Duplicate identifier names found")
 
             # validate that the links for the known identifiers are valid
             for id_name in cls.supported_identifiers:
                 id_link = identifiers.get(id_name, '')
                 if id_link:
-                    if not id_link.startswith(cls.supported_identifiers[id_name]) \
-                            or len(id_link) <= len(cls.supported_identifiers[id_name]):
-                        raise ValidationError("URL for {} is invalid".format(id_name))
+                    regex = cls.supported_identifiers[id_name]
+                    if not re.match(regex, id_link):
+                        raise PartyValidationError("Invalid data found for identifiers. "
+                                                   f"\'{id_link}\' is not a valid {id_name}.")
         return identifiers
 
 
@@ -747,16 +807,27 @@ class Creator(Party):
 
 
 def validate_abstract(value):
-    """Validate that an abstract is valid."""
-    err_message = 'The abstract is not valid. It contains characters that are not XML compatible.'
+    """
+    Validates the abstract value by ensuring it can serialize as XML.
+
+    Args:
+        value (str): The abstract value to be validated.
+
+    Raises:
+        ValidationError: If there is an error parsing the abstract as XML.
+
+    Returns:
+        None
+    """
+    err_message = 'Error parsing abstract as XML.'
     if value:
         try:
-            clean = clean_for_xml(value)
-            assert (len(clean) == len(value))
-            match_ratio = difflib.SequenceMatcher(None, clean.splitlines(), value.splitlines()).ratio()
-            assert (match_ratio == 1.0)
-        except AssertionError:
-            raise ValidationError(err_message)
+            ROOT = etree.Element('root')
+            body_node = etree.SubElement(ROOT, 'body')
+            c_abstract = clean_abstract(value)
+            etree.SubElement(body_node, 'description').text = c_abstract
+        except Exception as ex:
+            raise ValidationError(f'{err_message}, more info: {ex}')
 
 
 @rdf_terms(DC.description, abstract=DCTERMS.abstract)
@@ -778,13 +849,13 @@ class Description(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         """Define custom update method for Description model."""
-        validate_abstract(kwargs['abstract'])
+        kwargs['abstract'] = clean_abstract(kwargs['abstract'])
         return super(Description, cls).create(**kwargs)
 
     @classmethod
     def update(cls, element_id, **kwargs):
         """Define custom update method for Description model."""
-        validate_abstract(kwargs['abstract'])
+        kwargs['abstract'] = clean_abstract(kwargs['abstract'])
         super(Description, cls).update(element_id, **kwargs)
 
     @classmethod
@@ -2107,6 +2178,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     # allow resource that contains spam_patterns to be discoverable/public
     spam_allowlisted = models.BooleanField(default=False)
 
+    quota_holder = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                     related_name='quota_holder')
+
     def update_view_count(self):
         self.view_count += 1
         # using update query api to update instead of self.save() to avoid triggering solr realtime indexing
@@ -2281,6 +2355,23 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 if value and settings.RUN_HYRAX_UPDATE and is_netcdf_to_public:
                     run_script_to_update_hyrax_input_files(self.short_id)
 
+    def set_published(self, value):
+        """Set the published flag for a resource.
+
+        :param value: True or False
+
+        This sets the published flag (self.raccess.published)
+        """
+        from hs_core.signals import post_raccess_change
+
+        self.raccess.published = value
+        self.raccess.immutable = value
+        if value:  # can't be published without being public
+            self.raccess.public = value
+        self.raccess.save()
+        post_raccess_change.send(sender=self, resource=self)
+        self.update_index()
+
     def update_index(self):
         """updates previous versions of a resource (self) in index"""
         prev_version_resource_relation_meta = Relation.objects.filter(type='isReplacedBy',
@@ -2385,34 +2476,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         # QuotaException will be raised if new_holder does not have enough quota to hold this
         # new resource, in which case, set_quota_holder to the new user fails
         validate_user_quota(new_holder, self.size)
-        attname = "quotaUserName"
-
-        if setter.username != new_holder.username:
-            # this condition check is needed to make sure attname exists as AVU before getting it
-            oldqu = self.getAVU(attname)
-            if oldqu:
-                # have to remove the old AVU first before setting to the new one in order to trigger
-                # quota micro-service PEP msiRemoveQuotaHolder so quota for old quota
-                # holder will be reduced as a result of setting quota holder to a different user
-                self.removeAVU(attname, oldqu)
-        self.setAVU(attname, new_holder.username)
-
-    def get_quota_holder(self):
-        """Get quota holder of the resource.
-
-        return User instance of the quota holder for the resource or None if it does not exist
-        """
-        try:
-            uname = self.getAVU("quotaUserName")
-        except SessionException:
-            # quotaUserName AVU does not exist, return None
-            return None
-
-        if uname:
-            return User.objects.filter(username=uname).first()
-        else:
-            # quotaUserName AVU does not exist, return None
-            return None
+        self.quota_holder = new_holder
+        self.save()
 
     def removeAVU(self, attribute, value):
         """Remove an AVU at the resource level.
@@ -2538,8 +2603,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         Note: this will return true for any file that ends with the schema.json ending
         We are taking the risk that user might create a file with the same filename ending
         """
-        from hs_file_types.models.base import SCHEMA_JSON_FILE_ENDSWITH
-        if file_path.endswith(SCHEMA_JSON_FILE_ENDSWITH):
+        from hs_file_types.enums import AggregationMetaFilePath
+
+        if file_path.endswith(AggregationMetaFilePath.SCHEMA_JSON_FILE_ENDSWITH):
             return True
         return False
 
@@ -2557,10 +2623,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         Note: this will return true for any file that ends with the metadata endings
         We are taking the risk that user might create a file with the same filename ending
         """
-        from hs_file_types.models.base import (METADATA_FILE_ENDSWITH,
-                                               RESMAP_FILE_ENDSWITH)
-        if not (file_path.endswith(METADATA_FILE_ENDSWITH)
-                or file_path.endswith(RESMAP_FILE_ENDSWITH)):
+        from hs_file_types.enums import AggregationMetaFilePath
+
+        if not (file_path.endswith(AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
+                or file_path.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)):
             return False
         return True
 
@@ -3042,6 +3108,9 @@ class ResourceFile(ResourceFileIRODSMixin):
     _modified_time = models.DateTimeField(null=True, blank=True)
     _checksum = models.CharField(max_length=255, null=True, blank=True)
 
+    # for tracking when size was last compared with irods
+    filesize_cache_updated = models.DateTimeField(null=True)
+
     def __str__(self):
         """Return resource filename or federated resource filename for string representation."""
         if self.resource.resource_federation_path:
@@ -3057,7 +3126,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     @classmethod
     def system_meta_fields(cls):
         """returns a list of system metadata fields"""
-        return ['_size', '_modified_time', '_checksum']
+        return ['_size', '_modified_time', '_checksum', 'filesize_cache_updated']
 
     @classmethod
     def create(cls, resource, file, folder='', source=None):
@@ -3311,6 +3380,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                     self.resource_file.name == ''
             try:
                 self._size = self.fed_resource_file.size
+                self.filesize_cache_updated = now()
             except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
                 logger.warning("file {} not found in iRODS".format(self.storage_path))
@@ -3321,12 +3391,13 @@ class ResourceFile(ResourceFileIRODSMixin):
                     self.fed_resource_file.name == ''
             try:
                 self._size = self.resource_file.size
+                self.filesize_cache_updated = now()
             except (SessionException, ValidationError):
                 logger = logging.getLogger(__name__)
                 logger.warning("file {} not found in iRODS".format(self.storage_path))
                 self._size = 0
         if save:
-            self.save(update_fields=["_size"])
+            self.save(update_fields=["_size", "filesize_cache_updated"])
 
     def set_system_metadata(self, resource=None, save=True):
         """Set system metadata (size, modified time, and checksum) for a file.
@@ -3979,7 +4050,7 @@ class BaseResource(Page, AbstractResource):
             query = "+".join(encoded_words)
             # if we can't find a match in first 50 search records then we are not going to find a match
             max_record_count = 50
-            email = settings.DEFAULT_SUPPORT_EMAIL
+            email = settings.DEFAULT_DEVELOPER_EMAIL
             url = f"https://api.crossref.org/funders?query={query}&rows={max_record_count}&mailto={email}"
             funder_name = funder_name.lower()
             response = requests.get(url, verify=False)
@@ -4104,7 +4175,8 @@ class BaseResource(Page, AbstractResource):
         # create update_date sub element
         create_date_node(date=self.updated, date_type="update_date")
         # create dataset description sub element
-        etree.SubElement(dataset_node, 'description').text = self.metadata.description.abstract
+        c_abstract = clean_abstract(self.metadata.description.abstract)
+        etree.SubElement(dataset_node, 'description').text = c_abstract
         # funder related elements
         funders = self.metadata.funding_agencies.all()
         if funders:

@@ -181,6 +181,12 @@ urlpatterns = [
         name="group_membership",
     ),
     re_path(
+        r"^_internal/metadata_review/(?P<shortkey>[0-9a-f-]+)/"
+        r"(?P<action>[a-z]+)/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[-\w]+)/",
+        views.metadata_review,
+        name="metadata_review"
+    ),
+    re_path(
         r"^_internal/metadata_review/(?P<shortkey>[0-9a-f-]+)/(?P<action>[a-z]+)/",
         views.metadata_review,
         name="metadata_review_noauth",
@@ -189,11 +195,6 @@ urlpatterns = [
         r"^_internal/spam_allowlist/(?P<shortkey>[0-9a-f-]+)/(?P<action>[a-z]+)/",
         views.spam_allowlist,
         name="spam_allowlist",
-    ),
-    re_path(
-        r"^_internal/metadata_review/(?P<shortkey>[0-9a-f-]+)/(?P<action>[a-z]+)/(?P<uidb36>[-\w]+)/(?P<token>[-\w]+)/",
-        views.metadata_review,
-        name="metadata_review",
     ),
     re_path(
         r"^_internal/get-user-or-group-data/(?P<user_or_group_id>[0-9]+)/(?P<is_group>[a-z]+)$",

@@ -52,9 +52,10 @@ from hs_core.hydroshare.resource import (METADATA_STATUS_INSUFFICIENT,
                                          METADATA_STATUS_SUFFICIENT)
 from hs_core.hydroshare.resource import \
     update_quota_usage as update_quota_usage_utility
-from hs_core.hydroshare.utils import resolve_request, resource_modified
-from hs_core.models import (BaseResource, CoreMetaData, Subject,
-                            TaskNotification, resource_processor)
+from hs_core.hydroshare.utils import (get_resource_by_shortkey,
+                                      resolve_request, resource_modified)
+from hs_core.models import (BaseResource, CoreMetaData, PartyValidationError,
+                            Subject, TaskNotification, resource_processor)
 from hs_core.task_utils import (dismiss_task_by_id, get_all_tasks,
                                 get_or_create_task_notification,
                                 get_resource_delete_task, get_task_user_id,
@@ -267,7 +268,7 @@ def update_quota_usage(request, username):
         return HttpResponseBadRequest("user to update quota for is not valid")
 
     try:
-        update_quota_usage_utility(username)
+        update_quota_usage_utility(username, notify_user=False)
         return HttpResponse(
             "quota for user {} has been updated".format(username), status=200
         )
@@ -1069,8 +1070,12 @@ def copy_resource(request, shortkey, *args, **kwargs):
                 shortkey, new_res_id=None, request_username=user.username
             )
             return HttpResponseRedirect(response_url)
-        except hydroshare.utils.ResourceCopyException:
-            return HttpResponseRedirect(res.get_absolute_url())
+        except hydroshare.utils.ResourceCopyException as ex:
+            messages.error(request, str(ex))
+            request.session[
+                "resource_creation_error"
+            ] = "Failed to create a copy of " "this resource: " + str(ex)
+            return JsonResponse({"status": "false", "error": str(ex)}, status=status.HTTP_400_BAD_REQUEST, safe=False)
 
 
 res_id = openapi.Parameter(
@@ -1096,6 +1101,8 @@ def copy_resource_public(request, pk):
     :param pk: id of the resource to be copied
     """
     response = copy_resource(request, pk)
+    if not response.status_code < 400:
+        return response
     return HttpResponse(response.url.split("/")[2], status=202)
 
 
@@ -1129,10 +1136,11 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
             response_url = create_new_version_resource_task(shortkey, user.username)
             return HttpResponseRedirect(response_url)
         except hydroshare.utils.ResourceVersioningException as ex:
+            messages.error(request, str(ex))
             request.session[
                 "resource_creation_error"
             ] = "Failed to create a new version of " "this resource: " + str(ex)
-            return HttpResponseRedirect(res.get_absolute_url())
+            return JsonResponse({"status": "false", "error": str(ex)}, status=status.HTTP_400_BAD_REQUEST, safe=False)
 
 
 res_id = openapi.Parameter(
@@ -1159,6 +1167,8 @@ def create_new_version_resource_public(request, pk):
     :return: HttpResponse with status code
     """
     redirect = create_new_version_resource(request, pk)
+    if not redirect.status_code < 400:
+        return redirect
     return HttpResponse(redirect.url.split("/")[2], status=202)
 
 
@@ -1724,6 +1734,11 @@ def create_resource(request, *args, **kwargs):
             full_paths=full_paths,
             auto_aggregate=auto_aggregate,
         )
+    except PartyValidationError as ex:
+        party_message = "Validation issue in Creator or Contributor metadata. " + \
+            f"One of the profiles contains invalid identifiers: {str(ex)}."
+        ajax_response_data["message"] = party_message
+        return JsonResponse(ajax_response_data)
     except SessionException as ex:
         ajax_response_data["message"] = ex.stderr
         return JsonResponse(ajax_response_data)
@@ -2064,7 +2079,7 @@ def group_membership(request, uidb36, token, membership_request_id, **kwargs):
     return redirect("/")
 
 
-def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs):
+def metadata_review(request, shortkey, action, uidb64=None, token=None, **kwargs):
     """
     View for the link in the verification email that was sent to a user
     when they request publication/metadata review.
@@ -2074,8 +2089,8 @@ def metadata_review(request, shortkey, action, uidb36=None, token=None, **kwargs
     :param uidb36: ID of the user to whom the email was sent (part of the link in the email)
     :param token: token that was part of the link in the email
     """
-    if uidb36:
-        user = authenticate(uidb36=uidb36, token=token, is_active=True)
+    if uidb64:
+        user = authenticate(uidb64=uidb64, token=token, is_active=True)
         if user is None:
             messages.error(
                 request,

@@ -1,2 +1,2 @@
 {% load i18n %}
-{% trans "You become a quota holder for a HydroShare resource" %}
+{% trans "You became a quota holder for a HydroShare resource" %}

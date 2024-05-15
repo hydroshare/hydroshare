@@ -100,6 +100,7 @@ IRODS_ICOMMANDS_PATH = '/usr/bin'
 IRODS_HOST = 'hydrotest41.renci.org'
 IRODS_PORT = '1247'
 IRODS_DEFAULT_RESOURCE = 'hydrotest41Resc'
+IRODS_SINGLE_RESC_FOR_QUERY='hydrotest41Resc'
 IRODS_HOME_COLLECTION = '/hydrotest41Zone/home/hsproxy'
 IRODS_CWD = '/hydrotest41Zone/home/hsproxy'
 IRODS_ZONE = 'hydrotest41Zone'
@@ -138,6 +139,7 @@ HYRAX_SCRIPT_RUN_COMMAND = ''
 HS_USER_ZONE_HOST = ''
 LINUX_ADMIN_USER_FOR_HS_USER_ZONE = ''
 LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE = ''
+PRIVATE_KEY_FILE_FOR_HS_USER_ZONE = ''
 LINUX_ADMIN_USER_CREATE_USER_IN_USER_ZONE_CMD = ''
 LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD = ''
 
@@ -157,6 +159,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_USE_TLS = True
 # DEFAULT_FROM_EMAIL = ''
 # DEFAULT_SUPPORT_EMAIL=''
+# DEFAULT_DEVELOPER_EMAIL=''
 
 HYDROSHARE_SHARED_TEMP = '/shared_tmp'
 
@@ -197,3 +200,9 @@ HSWS_GEOSERVER_URL = "https://geoserver.hydroshare.org/geoserver"
 HSWS_GEOSERVER_ESCAPE = {
     '/': ' '
 }
+
+DEFAULT_AUTHENTICATION_CLASSES = (
+    "rest_framework.authentication.BasicAuthentication",
+    "rest_framework.authentication.SessionAuthentication",
+    "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
+)
