@@ -32,7 +32,7 @@ class ManifestGoogleCloudStorage(ManifestFilesMixin, GoogleCloudStorage):
 
     def hashed_name(self, name, content=None, filename=None):
         try:
-            result = super(ManifestGoogleCloudStorage).hashed_name(name, content, filename)
+            result = super(ManifestGoogleCloudStorage, self).hashed_name(name, content, filename)
         except ValueError as ex:
             # When the file is missing, let's forgive and ignore that.
             msg = f"Ignoring ValueError for missing file: {name}, during static collection. \nError: {str(ex)}"
