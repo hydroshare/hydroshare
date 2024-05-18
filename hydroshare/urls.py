@@ -206,7 +206,8 @@ urlpatterns += [
 ]
 from django.views.static import serve # noqa
 
-if settings.DEBUG is False:  # if DEBUG is True it will be served automatically
+if settings.DEBUG is False and not settings.ENABLE_STATIC_CLOUD_STORAGE:
+    # if DEBUG is True it will be served automatically
     urlpatterns += [
         url(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}),
     ]
