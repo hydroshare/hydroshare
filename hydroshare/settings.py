@@ -222,7 +222,9 @@ PUBLISH_DISCOVERABLE = False
 STATICFILES_FINDERS = (
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
-    "django.contrib.staticfiles.finders.DefaultStorageFinder",
+    # "django.contrib.staticfiles.finders.DefaultStorageFinder",
+    # We disable the DefaultStorageFinder because otherwise it will search for static files in Google Cloud Storage
+    # https://docs.djangoproject.com/en/3.2/ref/settings/#staticfiles-finders
 )
 
 # The numeric mode to set newly-uploaded files to. The value should be
@@ -342,12 +344,13 @@ ENABLE_STATIC_CLOUD_STORAGE = False
 # )
 # STATICFILES_STORAGE = 'hydroshare.storage.Static'
 # THUMBNAIL_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+# DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
 # # the media is served from the root of the bucket
 # MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
 # # the static files are served from a static/ dir in the bucket
 # STATIC_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/static/'
-# MEDIA_ROOT = None
-# STATIC_ROOT = None
+# MEDIA_ROOT = MEDIA_URL
+# STATIC_ROOT = STATIC_URL
 # ----- END of settings for using Google Cloud Storage for static files ----- |
 
 # Package/module name to import the root urlpatterns from for the project.
