@@ -334,11 +334,14 @@ ENABLE_STATIC_CLOUD_STORAGE = False
 # from datetime import timedelta
 # PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 # BASE_DIR = os.path.dirname(PROJECT_ROOT)
-# GS_PROJECT_ID = 'hydroshare-gcs-project'
-# GS_BUCKET_NAME = 'hydroshare-static-media-bucket'
+# GS_PROJECT_ID = 'hydroshare-403701'
+# GS_BUCKET_NAME = 'hydroshare-beta-static-media'
 # GS_BLOB_CHUNK_SIZE = 1024 * 256 * 40  # Needed for uploading large streams
 # GS_EXPIRATION = timedelta(minutes=5)
-# GS_SERVICE_ACCOUNT_FILENAME = 'hydroshare-sa.json'
+# GS_SERVICE_ACCOUNT_FILENAME = 'hydroshare-403701.json'
+# # necessary to prevent RuntimeError: Max post-process passes exceeded.
+# GS_QUERYSTRING_AUTH = False
+# GS_DEFAULT_ACL = None
 # GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
 #     os.path.join(BASE_DIR, GS_SERVICE_ACCOUNT_FILENAME)
 # )
