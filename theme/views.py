@@ -491,6 +491,12 @@ def update_user_profile(request, profile_user_id):
                 profile = profile_form.save(commit=False)
                 profile.user = user
                 profile.identifiers = identifiers
+                # TODO: remove this
+                # try:
+                #     profile.save()
+                # except Exception as ex:
+                #     messages.error(request, "Update failed. {}".format(str(ex)))
+                #     return HttpResponseRedirect(request.META["HTTP_REFERER"])
                 profile.save()
                 messages.success(request, "Your profile has been successfully updated.")
                 # if email was updated, reset to old email and send confirmation

@@ -3,6 +3,10 @@ import sys
 
 from PIL import ImageFile
 import os
+from google.oauth2 import service_account
+# from storages.backends.gcloud import GoogleCloudStorage
+# from hydroshare.storage import ManifestGoogleCloudStorage
+from datetime import timedelta
 TEST_RUNNER = "hs_core.tests.runner.CustomTestSuiteRunner"
 TEST_WITHOUT_MIGRATIONS_COMMAND = "django_nose.management.commands.test.Command"
 
@@ -292,6 +296,7 @@ STATIC_URL = "/static/static/"
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
+# TODO: see if we need to remove this
 STATIC_ROOT = os.path.join(PROJECT_ROOT, STATIC_URL.strip("/"))
 
 # using this storage class might cause issues for future tests
@@ -319,7 +324,44 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
+# TODO: see if we need to remove this from places where hard-coded
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))
+
+# Google Cloud Storage settings
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(PROJECT_ROOT)
+GS_PROJECT_ID = 'hydroshare-gcs-project'
+GS_BUCKET_NAME = 'hydroshare-static-media-bucket'
+GS_BLOB_CHUNK_SIZE = 1024 * 256 * 40  # Needed for uploading large streams
+GS_EXPIRATION = timedelta(minutes=5)
+GS_SERVICE_ACCOUNT_FILENAME = 'hydroshare-sa.json'
+GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
+    os.path.join(BASE_DIR, GS_SERVICE_ACCOUNT_FILENAME)
+)
+# TODO: add debug check for local dev
+if 'test' in sys.argv or DEBUG:
+    MEDIA_URL = "/static/media/"
+    STATIC_URL = "/static/static/"
+    STATICFILES_STORAGE = 'hydroshare.storage.ForgivingManifestStaticFilesStorage'
+else:
+    STATICFILES_STORAGE = 'hydroshare.storage.Static'
+    # Tried to use the ManifestGoogleCloudStorage class, but requires default auth
+    # STATICFILES_STORAGE = ManifestGoogleCloudStorage(location='static')
+
+    # DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+    DEFAULT_FILE_STORAGE = 'hydroshare.storage.ManifestGoogleCloudStorage'
+    # Declaring explicity even though it's the default, for clarity
+    THUMBNAIL_STORAGE = 'hydroshare.storage.ManifestGoogleCloudStorage'
+    # Attempting to set the default file storage so that it uses a /media/ prefix works initially
+    # But then the thumbnail cache doesn't end up in the right place (sorl thumbnail not account for the prefix)
+    # DEFAULT_FILE_STORAGE = ManifestGoogleCloudStorage(location='media')
+    # https://sorl-thumbnail.readthedocs.io/en/latest/reference/settings.html#thumbnail-prefix
+    # THUMBNAIL_PREFIX = 'media/cache/'
+
+    # the media is served from the root of the bucket
+    MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
+    # the static files are served from a static/ dir in the bucket
+    STATIC_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/static/'
 
 # Package/module name to import the root urlpatterns from for the project.
 ROOT_URLCONF = "%s.urls" % PROJECT_DIRNAME
@@ -518,7 +560,9 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 # These will be added to ``INSTALLED_APPS``, only if available.
 OPTIONAL_APPS = (
-    "debug_toolbar",
+    # "debug_toolbar",
+    # debug_toolbar disabled for GCS storage
+    # debug_toolbar calls ".path" on a storage object, which is not supported by GCS storage
     "django_extensions",
     # "compressor",
     PACKAGE_NAME_FILEBROWSER,
