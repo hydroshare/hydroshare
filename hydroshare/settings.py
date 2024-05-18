@@ -288,6 +288,12 @@ CACHE_MIDDLEWARE_KEY_PREFIX = PROJECT_DIRNAME
 # Ref: https://docs.djangoproject.com/en/2.2/ref/settings/#media-root
 STATIC_URL = "/static/static/"
 
+# Absolute path to the directory static files should be collected to.
+# Don't put anything in this directory yourself; store your static files
+# in apps' "static/" subdirectories and in STATICFILES_DIRS.
+# Example: "/home/media/media.lawrence.com/static/"
+STATIC_ROOT = os.path.join(PROJECT_ROOT, STATIC_URL.strip("/"))
+
 # using this storage class might cause issues for future tests
 # The documentation suggests using the default storage backend when testing
 # https://docs.djangoproject.com/en/1.11/ref/contrib/staticfiles/#django.contrib.staticfiles.storage.ManifestStaticFilesStorage.manifest_strict
@@ -308,38 +314,39 @@ THUMBNAIL_QUALITY = 95
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
+# Absolute filesystem path to the directory that will hold user-uploaded files.
+# Example: "/home/media/media.lawrence.com/media/"
+MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))
+
+# ----- START of settings for using Google Cloud Storage for static files ----- |
 ENABLE_STATIC_CLOUD_STORAGE = False
+# Whether to use Google Cloud Storage for static files
+# By default, this is set to False, and static files are served from the local filesystem / nginx
+# To enable Google Cloud Storage, the following settings should be added to local_settings.py
+# Additionally, a google service account json file should be placed at the root of the project
+# Service account should have permissions to write to the bucket
 
-if ENABLE_STATIC_CLOUD_STORAGE:
-    from google.oauth2 import service_account
-    from datetime import timedelta
-    # Google Cloud Storage settings
-    PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-    BASE_DIR = os.path.dirname(PROJECT_ROOT)
-    GS_PROJECT_ID = 'hydroshare-gcs-project'
-    GS_BUCKET_NAME = 'hydroshare-static-media-bucket'
-    GS_BLOB_CHUNK_SIZE = 1024 * 256 * 40  # Needed for uploading large streams
-    GS_EXPIRATION = timedelta(minutes=5)
-    GS_SERVICE_ACCOUNT_FILENAME = 'hydroshare-sa.json'
-    GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
-        os.path.join(BASE_DIR, GS_SERVICE_ACCOUNT_FILENAME)
-    )
-    STATICFILES_STORAGE = 'hydroshare.storage.Static'
-    THUMBNAIL_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
-    # the media is served from the root of the bucket
-    MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
-    # the static files are served from a static/ dir in the bucket
-    STATIC_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/static/'
-else:
-    # Absolute filesystem path to the directory that will hold user-uploaded files.
-    # Example: "/home/media/media.lawrence.com/media/"
-    MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))
-
-    # Absolute path to the directory static files should be collected to.
-    # Don't put anything in this directory yourself; store your static files
-    # in apps' "static/" subdirectories and in STATICFILES_DIRS.
-    # Example: "/home/media/media.lawrence.com/static/"
-    STATIC_ROOT = os.path.join(PROJECT_ROOT, STATIC_URL.strip("/"))
+# from google.oauth2 import service_account
+# from datetime import timedelta
+# PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+# BASE_DIR = os.path.dirname(PROJECT_ROOT)
+# GS_PROJECT_ID = 'hydroshare-gcs-project'
+# GS_BUCKET_NAME = 'hydroshare-static-media-bucket'
+# GS_BLOB_CHUNK_SIZE = 1024 * 256 * 40  # Needed for uploading large streams
+# GS_EXPIRATION = timedelta(minutes=5)
+# GS_SERVICE_ACCOUNT_FILENAME = 'hydroshare-sa.json'
+# GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
+#     os.path.join(BASE_DIR, GS_SERVICE_ACCOUNT_FILENAME)
+# )
+# STATICFILES_STORAGE = 'hydroshare.storage.Static'
+# THUMBNAIL_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+# # the media is served from the root of the bucket
+# MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
+# # the static files are served from a static/ dir in the bucket
+# STATIC_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/static/'
+# MEDIA_ROOT = None
+# STATIC_ROOT = None
+# ----- END of settings for using Google Cloud Storage for static files ----- |
 
 # Package/module name to import the root urlpatterns from for the project.
 ROOT_URLCONF = "%s.urls" % PROJECT_DIRNAME
