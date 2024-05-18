@@ -3,7 +3,7 @@ from django.contrib.staticfiles.storage import ManifestFilesMixin, ManifestStati
 import logging
 
 
-class ForgivingManifestStaticFilesStorage(ManifestStaticFilesStorage):
+class ForgivingManifestFilesMixin(ManifestFilesMixin):
     """
     Allow collectstatic to continue even if files are missing
     """
@@ -27,19 +27,11 @@ class ForgivingManifestStaticFilesStorage(ManifestStaticFilesStorage):
         return result
 
 
-class ManifestGoogleCloudStorage(ManifestFilesMixin, GoogleCloudStorage):
-    logger = logging.getLogger('django.contrib.staticfiles')
+class ForgivingManifestStaticFilesStorage(ForgivingManifestFilesMixin, ManifestStaticFilesStorage):
+    pass
 
-    def hashed_name(self, name, content=None, filename=None):
-        try:
-            result = super(ManifestGoogleCloudStorage, self).hashed_name(name, content, filename)
-        except ValueError as ex:
-            # When the file is missing, let's forgive and ignore that.
-            msg = f"Ignoring ValueError for missing file: {name}, during static collection. \nError: {str(ex)}"
-            print(msg)
-            self.logger.warning(msg)
-            result = name
-        return result
+
+class ManifestGoogleCloudStorage(ForgivingManifestFilesMixin, GoogleCloudStorage):
 
     def path(self, name):
         # https://docs.djangoproject.com/en/3.2/ref/files/storage/#django.core.files.storage.Storage.path
