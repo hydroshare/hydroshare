@@ -321,11 +321,13 @@ MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))
 # ----- START of settings for using Google Cloud Storage for static files ----- |
 ENABLE_STATIC_CLOUD_STORAGE = False
 # Whether to use Google Cloud Storage for static files
+# Settings documented here: https://django-storages.readthedocs.io/en/latest/backends/gcloud.html#settings
 # By default, this is set to False, and static files are served from the local filesystem / nginx
 # To enable Google Cloud Storage, the following settings should be added to local_settings.py
 # Additionally, a google service account json file should be placed at the root of the project
 # Service account should have permissions to write to the bucket
 
+# ENABLE_STATIC_CLOUD_STORAGE = True
 # from google.oauth2 import service_account
 # from datetime import timedelta
 # PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
