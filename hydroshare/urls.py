@@ -75,7 +75,7 @@ urlpatterns += i18n_patterns(
         name="update_profile",
     ),
     re_path(r"^act-on-quota-request/(?P<quota_request_id>[0-9]+)/(?P<action>[a-z]+)/$",
-         theme.act_on_quota_request, name='act_on_quota_request_noauth'),
+            theme.act_on_quota_request, name='act_on_quota_request_noauth'),
     re_path(
         r'^act-on-quota-request/(?P<quota_request_id>[0-9]+)/(?P<action>[a-z]+)/(?P<uidb36>[-\w]+)/(?P<token>[-\w]+)/$',
         theme.act_on_quota_request, name='act_on_quota_request'),
