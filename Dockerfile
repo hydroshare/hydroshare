@@ -4,6 +4,7 @@ FROM hydroshare/hs_docker_base:305f2fa
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen
 
+RUN pip install psycopg==3.1.*
 RUN pip install django==4.2.*
 RUN pip install djangorestframework==3.14.*
 RUN pip install django-haystack==3.2.*
