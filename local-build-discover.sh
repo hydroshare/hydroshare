@@ -106,10 +106,6 @@ echo "--------------------------------------"
 echo "----------------css-------------------"
 ls -l static/css
 echo "--------------------------------------"
-cd static/
-mv js/app.*.js js/app.js
-mv js/chunk-vendors.*.js js/chunk-vendors.js
-cd ..
 eof
 
 echo "Node Build completed ..."
@@ -132,20 +128,13 @@ node_build
 
 echo
 echo '########################################################################################################################'
-echo " Migrating data"
+echo " Collecting Static files for Discovery"
 echo '########################################################################################################################'
 echo
-
-# docker exec hydroshare bash scripts/chown-root-items
 
 echo "  -docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput"
 echo
 docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput
-
-# echo
-# echo "  - docker exec -u hydro-service hydroshare python manage.py fix_permissions"
-# echo
-# docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py fix_permissions
 
 echo
 echo '########################################################################################################################'

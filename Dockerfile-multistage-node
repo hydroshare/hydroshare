@@ -26,10 +26,7 @@ RUN rm -rf static templates && \
     echo "--------------------------------------" && \
     echo "----------------css-------------------" && \
     ls -l static/css && \
-    echo "--------------------------------------" && \
-    cd static/ && \
-    cp js/app.*.js js/app.js && \
-    cp js/chunk-vendors.*.js js/chunk-vendors.js
+    echo "--------------------------------------"
 
 FROM hydroshare/hs_docker_base:305f2fa
 

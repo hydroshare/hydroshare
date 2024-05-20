@@ -98,10 +98,6 @@ echo "--------------------------------------"
 echo "----------------css-------------------"
 ls -l static/css
 echo "--------------------------------------"
-cd static/
-mv js/app.*.js js/app.js
-mv js/chunk-vendors.*.js js/chunk-vendors.js
-cd ..
 eof
 
 echo "Node Build completed ..."
