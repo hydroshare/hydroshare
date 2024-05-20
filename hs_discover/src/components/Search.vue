@@ -256,6 +256,8 @@ import DatePick from 'vue-date-pick';
 import 'vue-date-pick/dist/vueDatePick.css';
 import axios from 'axios'; // css font-size overridden in hs_discover/index.html to enforce 1em
 
+const publicPath = process.env.BUCKET_URL_PUBLIC_PATH.endsWith("/") ? process.env.BUCKET_URL_PUBLIC_PATH : `${process.env.BUCKET_URL_PUBLIC_PATH}/`
+
 export default {
   data() {
     return {
@@ -293,9 +295,9 @@ export default {
       countAvailabilities: {},
       availabilityFilter: [],
       resIconName: {
-        Resource: `${process.env.BUCKET_URL_PUBLIC_PATH}img/resource-icons/composite48x48.png`,
-        Collection: `${process.env.BUCKET_URL_PUBLIC_PATH}img/resource-icons/collection48x48.png`,
-        'App Connector': `${process.env.BUCKET_URL_PUBLIC_PATH}img/resource-icons/webapp48x48.png`,
+        Resource: `${publicPath}img/resource-icons/composite48x48.png`,
+        Collection: `${publicPath}img/resource-icons/collection48x48.png`,
+        'App Connector': `${publicPath}img/resource-icons/webapp48x48.png`,
       },
       sortMap: {
         'First Author': 'author',
@@ -307,7 +309,7 @@ export default {
         'Date Created': 'created',
         'Last Modified': 'modified',
       },
-      publicPath: process.env.BUCKET_URL_PUBLIC_PATH,
+      publicPath: publicPath,
     };
   },
   name: 'Resources',
