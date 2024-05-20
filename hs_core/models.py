@@ -3068,9 +3068,9 @@ class ResourceFile(ResourceFileIRODSMixin):
     Represent a file in a resource.
     """
     class Meta:
-        index_together = [['object_id', 'resource_file'],
-                          ['object_id', 'fed_resource_file'],
-                          ]
+        indexes = [models.Index(fields=['object_id', 'resource_file']),
+                   models.Index(fields=['object_id', 'fed_resource_file'])]
+
     # A ResourceFile is a sub-object of a resource, which can have several types.
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
