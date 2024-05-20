@@ -220,7 +220,7 @@
                                 :title="entry.type" :alt="entry.type" height="30" width="30">
                             <img :src="entry.availabilityurl" v-b-tooltip.hover
                                 :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability" :key="entry">
-                            <img v-if="entry.geo" src="${publicPath}img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Contains Spatial Coverage">
+                            <img v-if="entry.geo" :src="BASE_URL + 'img/Globe-Green.png'" height="25" width="25" v-b-tooltip.hover title="Contains Spatial Coverage">
                             </span>
                         </td>
                         <td class="tbl-col-title">
@@ -256,7 +256,6 @@ import DatePick from 'vue-date-pick';
 import 'vue-date-pick/dist/vueDatePick.css';
 import axios from 'axios'; // css font-size overridden in hs_discover/index.html to enforce 1em
 
-const publicPath = process.env.BUCKET_URL_PUBLIC_PATH.endsWith("/") ? process.env.BUCKET_URL_PUBLIC_PATH : `${process.env.BUCKET_URL_PUBLIC_PATH}/`
 
 export default {
   data() {
@@ -295,9 +294,9 @@ export default {
       countAvailabilities: {},
       availabilityFilter: [],
       resIconName: {
-        Resource: `${publicPath}img/resource-icons/composite48x48.png`,
-        Collection: `${publicPath}img/resource-icons/collection48x48.png`,
-        'App Connector': `${publicPath}img/resource-icons/webapp48x48.png`,
+        Resource: `${process.env.BASE_URL}img/resource-icons/composite48x48.png`,
+        Collection: `${process.env.BASE_URL}img/resource-icons/collection48x48.png`,
+        'App Connector': `${process.env.BASE_URL}img/resource-icons/webapp48x48.png`,
       },
       sortMap: {
         'First Author': 'author',
@@ -309,7 +308,7 @@ export default {
         'Date Created': 'created',
         'Last Modified': 'modified',
       },
-      publicPath: publicPath,
+      BASE_URL: process.env.BASE_URL,
     };
   },
   name: 'Resources',

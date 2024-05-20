@@ -75,9 +75,9 @@ echo '##########################################################################
 echo "Starting Node Build .... "
 echo '####################################################################################################'
 
-echo "Building with BUCKET_URL_PUBLIC_PATH: $BUCKET_URL_PUBLIC_PATH"
+echo "Building with BASE_URL: $BASE_URL"
 echo "Export this environment variable to change the base URL"
-echo "Example: export BUCKET_URL_PUBLIC_PATH=https://storage.googleapis.com/hydroshare/static"
+echo "Example: export BASE_URL=https://storage.googleapis.com/hydroshare/static"
 echo "This should be the same as the STATIC_URL in the Django settings"
 
 ### Create Directory structure outside to maintain correct permissions
@@ -89,7 +89,7 @@ mkdir static/js
 mkdir static/css
 
 # Start Docker container and Run build
-docker run -e BUCKET_URL_PUBLIC_PATH -i -v $HS_PATH:/hydroshare --name=nodejs --user=$HS_UID:$HS_GID node:$n_ver /bin/bash << eof
+docker run -e BASE_URL -i -v $HS_PATH:/hydroshare --name=nodejs --user=$HS_UID:$HS_GID node:$n_ver /bin/bash << eof
 
 cd hydroshare
 cd hs_discover
