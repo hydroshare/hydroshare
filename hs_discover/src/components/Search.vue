@@ -220,7 +220,7 @@
                                 :title="entry.type" :alt="entry.type" height="30" width="30">
                             <img :src="entry.availabilityurl" v-b-tooltip.hover
                                 :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability" :key="entry">
-                            <img v-if="entry.geo" src="/static/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Contains Spatial Coverage">
+                            <img v-if="entry.geo" src="${publicPath}img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Contains Spatial Coverage">
                             </span>
                         </td>
                         <td class="tbl-col-title">
@@ -293,9 +293,9 @@ export default {
       countAvailabilities: {},
       availabilityFilter: [],
       resIconName: {
-        Resource: '/static/static/img/resource-icons/composite48x48.png',
-        Collection: '/static/static/img/resource-icons/collection48x48.png',
-        'App Connector': '/static/static/img/resource-icons/webapp48x48.png',
+        Resource: `${process.env.BUCKET_URL_PUBLIC_PATH}img/resource-icons/composite48x48.png`,
+        Collection: `${process.env.BUCKET_URL_PUBLIC_PATH}img/resource-icons/collection48x48.png`,
+        'App Connector': `${process.env.BUCKET_URL_PUBLIC_PATH}img/resource-icons/webapp48x48.png`,
       },
       sortMap: {
         'First Author': 'author',
@@ -307,6 +307,7 @@ export default {
         'Date Created': 'created',
         'Last Modified': 'modified',
       },
+      publicPath: process.env.BUCKET_URL_PUBLIC_PATH,
     };
   },
   name: 'Resources',
