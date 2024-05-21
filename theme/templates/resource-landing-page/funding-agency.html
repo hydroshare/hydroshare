@@ -32,8 +32,8 @@
                                             input-class="typeahead-search-input form-control input-sm textInput"
                                             @hit="selectAgency($event)"
                                             placeholder="Example: National Science Foundation"
-                                            minMatchingChars="MIN_SEARCH_LEN"
-                                            maxMatches="15"
+                                            :maxMatches="MAX_MATCHES"
+                                            :minMatchingChars="MIN_SEARCH_LEN"
                                         >
                                         <template slot="append">
                                             <div v-if="isPending && !crossreffApiDown">
