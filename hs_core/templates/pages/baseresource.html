@@ -1066,6 +1066,7 @@
       const RESOURCE_MODE = "{% if resource_edit_mode %}Edit{% else %}View{% endif %}";
       const RESOURCE_PUBLISHED_OR_UNDER_REVIEW = "{{ cm.raccess.published_or_review_pending }}" === "True";
       const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
+      let STATIC_URL = "{{ STATIC_URL }}";
       const USERS_JSON = {{ users_json|safe }};
       const AUTHORS = [
           {% for author in creators %}
