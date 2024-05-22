@@ -328,32 +328,9 @@ ENABLE_STATIC_CLOUD_STORAGE = False
 # To enable Google Cloud Storage, the following settings should be added to local_settings.py
 # Additionally, a google service account json file should be placed at the root of the project
 # Service account should have permissions to write to the bucket
+# lastly, when you build the discover VUE app, you should set export the VUE_APP_BUCKET_URL_PUBLIC_PATH env var
+# this value should be the same as the STATIC_URL that you set in django local_settings.py
 
-# ENABLE_STATIC_CLOUD_STORAGE = True
-# from google.oauth2 import service_account
-# from datetime import timedelta
-# PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-# BASE_DIR = os.path.dirname(PROJECT_ROOT)
-# GS_PROJECT_ID = 'hydroshare-403701'
-# GS_BUCKET_NAME = 'hydroshare-beta-static-media'
-# GS_BLOB_CHUNK_SIZE = 1024 * 256 * 40  # Needed for uploading large streams
-# GS_EXPIRATION = timedelta(minutes=5)
-# GS_SERVICE_ACCOUNT_FILENAME = 'hydroshare-403701.json'
-# # necessary to prevent RuntimeError: Max post-process passes exceeded.
-# GS_QUERYSTRING_AUTH = False
-# GS_DEFAULT_ACL = None
-# GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
-#     os.path.join(BASE_DIR, GS_SERVICE_ACCOUNT_FILENAME)
-# )
-# STATICFILES_STORAGE = 'hydroshare.storage.Static'
-# THUMBNAIL_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
-# DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
-# # the media is served from the root of the bucket
-# MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
-# # the static files are served from a static/ dir in the bucket
-# STATIC_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/static/'
-# MEDIA_ROOT = MEDIA_URL
-# STATIC_ROOT = STATIC_URL
 # ----- END of settings for using Google Cloud Storage for static files ----- |
 
 # Package/module name to import the root urlpatterns from for the project.

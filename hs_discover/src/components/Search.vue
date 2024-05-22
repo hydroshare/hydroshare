@@ -227,7 +227,7 @@
                                 :title="entry.type" :alt="entry.type" height="30" width="30">
                             <img :src="entry.availabilityurl" v-b-tooltip.hover
                                 :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability" :key="entry">
-                            <img v-if="entry.geo" src="${publicPath}img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Contains Spatial Coverage">
+                            <img v-if="entry.geo" :src="geoImage" height="25" width="25" v-b-tooltip.hover title="Contains Spatial Coverage">
                             </span>
                         </td>
                         <td class="tbl-col-title">
@@ -263,7 +263,8 @@ import DatePick from 'vue-date-pick';
 import 'vue-date-pick/dist/vueDatePick.css';
 import axios from 'axios'; // css font-size overridden in hs_discover/index.html to enforce 1em
 
-const publicPath = process.env.BUCKET_URL_PUBLIC_PATH.endsWith("/") ? process.env.BUCKET_URL_PUBLIC_PATH : `${process.env.BUCKET_URL_PUBLIC_PATH}/`
+let publicPath = process.env.VUE_APP_BUCKET_URL_PUBLIC_PATH ? process.env.VUE_APP_BUCKET_URL_PUBLIC_PATH : '/static/static/';
+publicPath = publicPath.endsWith('/') ? process.env.VUE_APP_BUCKET_URL_PUBLIC_PATH : `${process.env.VUE_APP_BUCKET_URL_PUBLIC_PATH}/`;
 
 export default {
   data() {
@@ -316,7 +317,8 @@ export default {
         'Date Created': 'created',
         'Last Modified': 'modified',
       },
-      publicPath: publicPath,
+      publicPath,
+      geoImage: `${publicPath}img/Globe-Green.png`,
     };
   },
   name: 'Resources',
