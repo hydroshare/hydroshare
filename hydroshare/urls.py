@@ -201,7 +201,6 @@ urlpatterns += [
 ]
 
 # robots.txt URLs for django-robots
-# TODO test robots.txt with bucket
 urlpatterns += [
     url(r"^robots\.txt", include("robots.urls")),
 ]
