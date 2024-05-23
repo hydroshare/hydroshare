@@ -2410,7 +2410,7 @@ def copy_cv_terms(src_metadata, tgt_metadata):
                                     term=cv_term.term,
                                     is_dirty=cv_term.is_dirty)
 
-    if type(src_metadata) != type(tgt_metadata):
+    if type(src_metadata) is not type(tgt_metadata):
         raise ValidationError("Source metadata and target metadata objects must be of the "
                               "same type")
 

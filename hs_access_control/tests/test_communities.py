@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import PermissionDenied
 
-from hs_access_control.models import PrivilegeCodes, GroupCommunityPrivilege,\
+from hs_access_control.models import PrivilegeCodes, GroupCommunityPrivilege, \
     GroupCommunityProvenance, UserCommunityPrivilege, UserCommunityProvenance, \
     GroupResourcePrivilege, CommunityResourcePrivilege, CommunityResourceProvenance, Community
 from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
