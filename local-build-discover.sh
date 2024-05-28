@@ -75,6 +75,8 @@ echo '##########################################################################
 echo "Starting Node Build .... "
 echo '####################################################################################################'
 
+if [ -z ${VUE_APP_BUCKET_URL_PUBLIC_PATH+x} ]; then VUE_APP_BUCKET_URL_PUBLIC_PATH=/static/static ; fi
+
 echo "Building with VUE_APP_BUCKET_URL_PUBLIC_PATH: $VUE_APP_BUCKET_URL_PUBLIC_PATH"
 echo "Export this environment variable to change the base URL"
 echo "Example: export VUE_APP_BUCKET_URL_PUBLIC_PATH=https://storage.googleapis.com/hydroshare/static"
