@@ -51,7 +51,7 @@ class AppLaunch(TemplateView):
             # i.e. represent lists in csv format without brackets [ ]
             # so that the log records don't need to be cleaned later.
             fields.update(dict((k, ','.join(v)) for k, v in list(fields.items())
-                          if type(v) == list))
+                          if type(v) is list))
 
             # format and save the log message
             msg = Variable.format_kwargs(**fields)
