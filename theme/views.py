@@ -15,6 +15,7 @@ from django.core.exceptions import (
     ValidationError,
     ObjectDoesNotExist,
     MultipleObjectsReturned,
+    PermissionDenied,
 )
 from django.core.mail import send_mail
 from django.urls import reverse
@@ -54,8 +55,7 @@ from hs_dictionary.models import University, UncategorizedTerm
 from hs_tracking.models import Variable
 from theme.forms import RatingForm, UserProfileForm, UserForm
 from theme.forms import ThreadedCommentForm
-from theme.models import UserProfile
-from theme.utils import get_quota_message
+from theme.models import UserProfile, QuotaRequest, QuotaRequestForm, UserQuota
 from .forms import SignupForm
 
 
@@ -120,14 +120,145 @@ class UserProfileView(TemplateView):
             Prefetch("content_object___description"),
             Prefetch("content_object___title"),
         )
+        quota_requests = QuotaRequest.objects.filter(
+            request_from=u,
+            status="pending"
+        ).all()
+        if self.request.method == "POST":
+            quota_form = QuotaRequestForm(self.request.POST)
+            if quota_form.is_valid():
+                try:
+                    quota_form = quota_form.save(self.request)
+                    msg = "New quota request was successful."
+                    messages.success(self.request, msg)
+                except PermissionDenied:
+                    err_msg = "You don't have permission to request additional quota"
+                    messages.error(self.request, err_msg)
+
+            else:
+                messages.error(self.request, f"Quota request errors: {quota_form.errors.as_json}.")
+
+        else:
+            quota_form = QuotaRequestForm()
+        uq = UserQuota.objects.filter(user=u).first()
+        message = ""
+        quota_data = {}
+        if uq:
+            quota_data = uq.get_quota_data()
+            message = uq.get_quota_message(quota_data, include_quota_usage_info=False)
         return {
             "profile_user": u,
             "resources": resources,
-            "quota_message": get_quota_message(u),
+            "quota_message": message,
+            "quota_data": quota_data,
+            "quota_requests": quota_requests,
+            "quota_form": quota_form,
             "group_membership_requests": group_membership_requests,
             "data_upload_max": settings.DATA_UPLOAD_MAX_MEMORY_SIZE,
             "oidc_change_password_url": oidc_change_password_url
         }
+
+
+def act_on_quota_request(request, quota_request_id, action, uidb36=None, token=None, **kwargs):
+    """
+    Take action (accept or decline) on quota request
+
+    :param request: requesting user is either owner of the quota request or an admin approving the request
+    :param quota_request_id: id of the quota request object to act on
+    :param action: need to have a value of either 'revoke', 'approve', or 'deny'
+    :return:
+    """
+
+    if not uidb36:
+        # Revoke requests are made by the user via ajax
+        if action != "revoke":
+            return JsonResponse({"message": "Invalid action"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            quota_request = QuotaRequest.objects.get(
+                pk=quota_request_id
+            )
+        except ObjectDoesNotExist:
+            return JsonResponse({"message": "No matching quota request was found"}, status=status.HTTP_400_BAD_REQUEST)
+        if request.user != quota_request.request_from:
+            return JsonResponse({"message": f"You are not authorized to {action} this quota"},
+                                status=status.HTTP_401_UNAUTHORIZED)
+        if quota_request.status != "pending":
+            return JsonResponse({"message": "Quota request not revoked because it is not pending"},
+                                status=status.HTTP_400_BAD_REQUEST)
+        quota_request.status = "revoked"
+        quota_request.save()
+        return JsonResponse({"message": "Quota request revoked"}, status=status.HTTP_200_OK)
+
+    # approve and deny requests are made via clickable links in email to admin
+    try:
+        if uidb36:
+            user = authenticate(uidb36=uidb36, token=token, is_active=True)
+            if user is None:
+                raise ValidationError("The link you clicked has expired.")
+        else:
+            user = request.user
+        if not user:
+            raise ValidationError("Invalid user.")
+        try:
+            quota_request = QuotaRequest.objects.get(
+                pk=quota_request_id
+            )
+        except ObjectDoesNotExist:
+            raise ValidationError("No matching quota request was found.")
+        if not user.is_superuser:
+            raise PermissionDenied("Invalid user.")
+
+        if quota_request.status == "pending":
+            if action == "approve":
+                quota_request.status = "approved"
+            elif action == "deny":
+                quota_request.status = "denied"
+            else:
+                raise ValidationError(f"Requested action '{action}' is not valid.")
+        else:
+            raise ValidationError("Request already redeemed.")
+    except Exception as ex:
+        messages.error(request, str(ex))
+    else:
+        quota_request.save()
+        messages.success(request, f"Quota {action} request successful")
+    return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+
+
+@login_required
+def quota_request(request, *args, **kwargs):
+    """ A view function for quota request """
+    if request.method == "POST":
+        try:
+            user = request.user
+            if user.is_superuser:
+                raise ObjectDoesNotExist("Admin users don't have quota")
+            up = UserProfile.objects.filter(user=user).first()
+            missing = up.profile_is_missing
+            if missing:
+                raise ValidationError(f"Your profile must be complete before you can request more quota. \
+                                      Your profile is missing the following: {', '.join(missing)}")
+            uq = UserQuota.objects.filter(user=user).first()
+            if not uq:
+                raise ObjectDoesNotExist(f"No quota found for {user.username}")
+            quota_form = QuotaRequestForm(request.POST)
+            if quota_form.is_valid():
+                quota_form = quota_form.save(commit=False)
+                quota_form.request_from = user
+                quota_form.quota = uq
+                quota_form.save()
+                msg = "New quota request was successful."
+                messages.success(request, msg)
+                notify_of_quota_request(request, uq, quota_form)
+            else:
+                for k, v in quota_form.errors.items():
+                    messages.error(request, f"Invalid {k}: {v[0]}")
+        except PermissionDenied:
+            err_msg = "You don't have permission to request additional quota"
+            messages.error(request, err_msg)
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
 class UserPasswordResetView(TemplateView):
@@ -602,6 +733,25 @@ def send_verification_mail_for_password_reset(request, user):
     )
 
 
+def notify_of_quota_request(request, user_quota, quota_request_form):
+    """
+    Notifies the support admin user of a quota request.
+
+    Parameters:
+        user_quota - quota object that will be updated by the request
+        quota_request_form - the form request submitted by the quota holder
+    """
+    from hs_core.views.utils import get_default_support_user
+
+    user_to = get_default_support_user()
+    from hs_core.views.utils import send_action_to_take_email
+    send_action_to_take_email(request, user=user_to,
+                              user_from=request.user,
+                              action_type='act_on_quota_request',
+                              user_quota=user_quota,
+                              quota_request_form=quota_request_form,)
+
+
 def home_router(request):
     if request.user.is_authenticated:
         return redirect("dashboard")
@@ -633,7 +783,8 @@ def login(
     if request.method == "POST" and form.is_valid():
         login_msg = "Successfully logged in"
         authenticated_user = form.save()
-        add_msg = get_quota_message(authenticated_user)
+        uq = authenticated_user.quotas.first()
+        add_msg = uq.get_quota_message()
         if add_msg:
             login_msg += " - " + add_msg
         info(request, _(login_msg))

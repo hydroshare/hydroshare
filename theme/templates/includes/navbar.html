@@ -479,7 +479,7 @@
                         errorMsg = `${errorMsg} ${response.message}`;
                     }
                     $(".custom-alert").alert('close');  // Dismiss previous alert
-                    customAlert("Error", errorMsg, "error", 6000);
+                    customAlert("Error", errorMsg, "error", -1, dismissable=true);
                     $("html").css("cursor", "initial");
                     $(".navbar-inverse .res-dropdown").toggleClass("disabled", false);
                 }

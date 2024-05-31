@@ -509,4 +509,64 @@ $(document).ready(function () {
     resetPhoneValues();
     checkForInvalidPhones();
     checkForInvalidStates();
+
+    $('#revoke-quota-request').click(function(e){
+        revokeQuota($(this).data("action"))
+    });
+    let profileMissing = localStorage.getItem('missing-profile-fields')
+    let profileUser = localStorage.getItem('profile-user')
+    if (!profileUser){
+        checkProfileComplete().then(([user, missing])=>{
+            profileMissing = missing.join(', ');
+            profileUser = user;
+            updateQuotaMessage(profileMissing);
+        });
+    }else{
+        profileMissing = profileMissing.split(',').join(', ')
+        updateQuotaMessage(profileMissing);
+    }
+    function updateQuotaMessage(profileMissing){
+        if (profileMissing){
+            const button = $('#quota-request-storage');
+            button.prop("disabled",true);
+            button.after(
+                "<br><div class='alert alert-warning' style='margin-top: 20px;'>" +
+                    "You can request additional quota once your profile is complete. " +
+                    `Your profile is missing: ${profileMissing}.` +
+                "</div>")
+        }
+    }
+    checkQuotaStatus();
 });
+
+async function revokeQuota(url) {
+    // workaround to handle embeded forms in profile.html template
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      }
+    });
+
+    if (response.ok) {
+        localStorage.setItem("quota-status", "revoked");
+        let data = await response.json();
+        localStorage.setItem("quota-status", "revoked");
+        location.reload();
+    }
+    else {
+        let data = await response.json()
+        if ( data?.message ) {
+            customAlert("Quota Request", data.message, "error", 6000, true);
+        }
+    }
+    this.isApproving = false
+}
+
+function checkQuotaStatus() {
+    const status = localStorage.getItem("quota-status")
+    if(status !== null ) {
+        customAlert("Quota Request", `Your quota request was successfully ${status}.`, "success", 6000, true);
+        localStorage.removeItem("quota-status");
+    }
+}

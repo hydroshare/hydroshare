@@ -89,7 +89,7 @@
                                     <hr>
                                     {# Account creation/deletion in iRODS user zone #}
                                     <div id="irods-account-container">
-                                        {% if profile.create_irods_user_account %}
+                                        {% if profile.get_user_zone_status_info %}
                                             {# an iRODS account already exists #}
                                             <a data-toggle="modal" data-target="#delete-irods-account-dialog">Delete your iRODS user account</a>
                                         {% else %}
@@ -357,6 +357,74 @@
                             </div>
 
                             <div class="col-md-5">
+                                {#        Quota      #}
+                                {% if not profile_user.is_superuser %}
+                                    {% if profile_user.id == user.id or user.is_superuser %}
+                                        <div class="panel panel-default">
+                                            <div class="panel-heading">
+                                                <h3 class="panel-title">
+                                                    <span class="fa fa-database" style="margin-right: 1.2rem">&nbsp;</span>Quota
+                                                </h3>
+                                            </div>
+                                    
+                                            <div class="panel-body">
+                                                {% with quota_data as qd %}
+                                                <div class="quota">
+                                                    {% if qd.remaining == 0 %}
+                                                        <div class="progress">
+                                                            <div class="progress-bar progress-bar-danger" 
+                                                            style="width: {%if qd.percent_over > 100%}100{%else%}{{qd.percent_over}}{%endif%}%"
+                                                                title="{{ qd.percent_over|floatformat:"1" }}% over allocated space">
+                                                                <span class="sr-only">{{ qd.percent_over|floatformat:"1" }}% over allocated space</span>
+                                                            </div>
+                                                        </div>
+                                                        <span class="text-danger">You are over your allocated quota by {{ qd.percent_over|floatformat:"1" }}%</span>
+                                                    {% else %}
+                                                        <div class="progress">
+                                                            <div class="progress-bar {%if qd.percent < 70%}progress-bar-success{%elif qd.percent < 90%}progress-bar-warning{%else%}progress-bar-danger{%endif%}"
+                                                                style="width: {{ qd.dz_percent }}%"
+                                                                title="{{ qd.dz_percent|floatformat:"1" }}% used by dataZone">
+                                                                <span class="sr-only">{{ qd.dz_percent|floatformat:"1" }}% of quota is used by dataZone</span>
+                                                            </div>
+                                                            <div class="progress-bar progress-divider"></div>
+                                                            <div class="progress-bar progress-bar-striped active {%if qd.percent < 70%}progress-bar-success{%elif qd.percent < 90%}progress-bar-warning{%else%}progress-bar-danger{%endif%}"
+                                                                style="width: {{ qd.uz_percent }}%" 
+                                                                title="{{ qd.uz_percent|floatformat:"1" }}% used by userZone">
+                                                                <span class="sr-only">{{ qd.uz_percent|floatformat:"1" }}% of quota used by userZone</span>
+                                                            </div>
+                                                        </div>
+                                                        <span>{{ qd.remaining|floatformat:"1" }} {{ qd.unit }} free of {{ qd.allocated }} {{ qd.unit }}</span>
+                                                    {% endif %}
+                                                </div>
+                                                {% endwith %}
+                                                {% if quota_message %}
+                                                    <div class="alert alert-info">
+                                                        {{ quota_message }}
+                                                        Read more about <strong><a href="https://help.hydroshare.org/about-hydroshare/policies/quota/" target="_blank">Additional Quota</a></strong>
+                                                    </div>
+                                                {% endif %}
+                                                {% if not quota_requests %}
+                                                    <button id="quota-request-storage" type="button" data-toggle="modal" data-target="#manage-quota-dialog" class="btn btn-default has-space-bottom">
+                                                        <i class="fa fa-plus" aria-hidden="true"></i> Request additional storage
+                                                    </button>
+                                                {% else %}
+                                                    <hr class="solid">
+                                                    {% for request in quota_requests %}
+                                                        <div class="request-block">
+                                                            <span class="glyphicon glyphicon-send"></span>&nbsp;
+                                                            <span>You requested a quota increase of {{ request.storage }} GB on {{ request.date_requested }}</span>
+                                                            {% if request.explanation %}
+                                                                <div class="text-muted explanation has-space-top" title="{{ request.justification }}">Justification:
+                                                                    {{ request.justification }}</div>
+                                                            {% endif %}
+                                                            <button id="revoke-quota-request" type="button" class="btn btn-default has-space-top" data-action="/act-on-quota-request/{{ request.id }}/revoke/">Cancel Request</button>
+                                                        </div>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
                                 {#        DESCRIPTION       #}
                                 {% if not user.is_anonymous %}
                                 <div class="panel panel-default">
@@ -417,12 +485,11 @@
                                             {% endif %}
                                             {% if profile_user.id == user.id or user.is_superuser %}
                                                 <br>
-                                                {% if profile.create_irods_user_account %}
+                                                {% if profile.get_user_zone_status_info %}
                                                     <div class="alert alert-success">You have created an associated iRODS account (username: <strong>{{ profile_user.username }}</strong>) in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
                                                 {% else %}
                                                     <div class="alert alert-warning">You have not created an associated iRODS account in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
                                                 {% endif %}
-                                                {% if quota_message %}<div class="alert alert-info">{{ quota_message }}</div>{% endif %}
                                             {% endif %}
                                         </div>
 
@@ -723,13 +790,13 @@
 
         {% if profile_user.id == user.id or user.is_superuser %}
             <div class="col-xs-12 col-sm-3 height-fix pull-right">
-            <button type="submit" class="btn btn-primary pull-right
-                btn-save-profile" data-page-mode="edit">
-                Save changes
-            </button>
-            <span data-page-mode="edit"
-                  class="btn btn-default pull-right btn-cancel-profile-edit">Cancel</span>
-        </div>
+                <button type="submit" class="btn btn-primary pull-right
+                    btn-save-profile" data-page-mode="edit">
+                    Save changes
+                </button>
+                <span data-page-mode="edit"
+                    class="btn btn-default pull-right btn-cancel-profile-edit">Cancel</span>
+            </div>
 
             <!-- Deactivate Account Modal -->
             <div class="modal fade" id="deactivate-account-dialog" tabindex="-1" role="dialog"
@@ -892,6 +959,45 @@
             </div>
         </form>
         {% endif %}
+        {% if profile_user.id == user.id or user.is_superuser %}
+            <!-- Manage Quota Modal -->
+            <div class="modal fade text-left" id="manage-quota-dialog" tabindex="-1" role="dialog"
+                aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                        <form role="form" action="/quota-request/" method="post">
+                            {% csrf_token %}
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal"
+                                        aria-label="Close"><span aria-hidden="true">&times;</span>
+                                </button>
+                                <h4 class="modal-title" id="myModalLabel">Request Additional HydroShare Quota</h4>
+                            </div>
+                            <div class="modal-body">
+                                <form action="{% url 'quota_request' %}" method="post">
+                                    {% csrf_token %}
+                                <div class="form-group control-group has-space-top">
+                                    <label for="id_justification">Justification for additional quota</label>    
+                                    {{ quota_form.justification }}
+                                </div>
+                                <div class="form-group control-group has-space-top">
+                                    <div class="input-group">
+                                        <span class="input-group-addon" data-toggle="tooltip" data-placement="auto" title="How much more storage do you require?">Storage</span>
+                                        {{ quota_form.storage }}
+                                        <span class="input-group-addon">GB</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                <button id="btn-create-quota-request" class="btn btn-primary" type="Submit">Submit</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
         {% endwith %}
     </div>
 {% endblock %}
@@ -911,6 +1017,23 @@
       background: #DDD;
       color: #111;
     }
+    .disabled {
+        pointer-events: all !important;
+    }
+    .progress {
+        margin-bottom: 0.5em;
+    }
+    .progress-divider {
+        width: 2px;
+        background-color: #999
+    }
+    .quota {
+        margin-bottom: 0.5em;
+    }
+    #manage-quota-dialog .modal-footer {
+        margin-top: 0;
+    }
+
   </style>
 {%  endblock %}
 

@@ -26,7 +26,7 @@ def debug_resource(request, shortkey):
         'public_AVU': resource.getAVU('isPublic'),
         'type_AVU': resource.getAVU('resourceType'),
         'modified_AVU': resource.getAVU('bag_modified'),
-        'quota_AVU': resource.getAVU('quotaUserName'),
+        'quota_holder': resource.quota_holder.username,
     }
     return HttpResponse(template.render(context, request))
 

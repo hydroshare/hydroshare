@@ -37,7 +37,7 @@ from hs_core.hydroshare.hs_bagit import (create_bag_metadata_files,
                                          create_bagit_files_by_irods)
 from hs_core.hydroshare.resource import (deposit_res_metadata_with_crossref,
                                          get_activated_doi, get_crossref_url,
-                                         get_resource_doi)
+                                         get_resource_doi, update_quota_usage,)
 from hs_core.models import BaseResource, ResourceFile, TaskNotification
 from hs_core.task_utils import get_or_create_task_notification
 from hs_file_types.models import (FileSetLogicalFile, GenericLogicalFile,
@@ -49,7 +49,6 @@ from hs_file_types.models import (FileSetLogicalFile, GenericLogicalFile,
 from hs_odm2.models import ODM2Variable
 from hydroshare.hydrocelery import app as celery_app
 from theme.models import QuotaMessage, User, UserQuota
-from theme.utils import get_quota_message
 
 FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
                  "FileSetLogicalFile": FileSetLogicalFile,
@@ -490,7 +489,17 @@ def notify_owners_of_publication_success(resource):
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
 def send_over_quota_emails():
-    # check over quota cases and send quota warning emails as needed
+    """
+    Checks over quota cases and sends quota warning emails as needed.
+
+    This function retrieves the quota message settings and user quotas from the database,
+    and sends warning emails to admin for users who have exceeded their quota limits.
+    Messages are not sent to the users themselves, as they have already been notified in UI.
+
+    Returns:
+        None
+    """
+    from hs_core.views.utils import get_default_support_user
     hs_internal_zone = "hydroshare"
     if not QuotaMessage.objects.exists():
         QuotaMessage.objects.create()
@@ -501,38 +510,18 @@ def send_over_quota_emails():
         if uq:
             used_percent = uq.used_percent
             if used_percent >= qmsg.soft_limit_percent:
-                if used_percent >= 100 and used_percent < qmsg.hard_limit_percent:
-                    if uq.remaining_grace_period < 0:
-                        # triggers grace period counting
-                        uq.remaining_grace_period = qmsg.grace_period
-                    elif uq.remaining_grace_period > 0:
-                        # reduce remaining_grace_period by one day
-                        uq.remaining_grace_period -= 1
-                elif used_percent >= qmsg.hard_limit_percent:
-                    # set grace period to 0 when user quota exceeds hard limit
-                    uq.remaining_grace_period = 0
-                uq.save()
-
-                if u.first_name and u.last_name:
-                    sal_name = '{} {}'.format(u.first_name, u.last_name)
-                elif u.first_name:
-                    sal_name = u.first_name
-                elif u.last_name:
-                    sal_name = u.last_name
-                else:
-                    sal_name = u.username
-
-                msg_str = 'Dear ' + sal_name + ':\n\n'
-
-                ori_qm = get_quota_message(u)
-                # make embedded settings.DEFAULT_SUPPORT_EMAIL clickable with subject auto-filled
-                replace_substr = "<a href='mailto:{0}?subject=Request more quota'>{0}</a>".format(
-                    settings.DEFAULT_SUPPORT_EMAIL)
-                new_qm = ori_qm.replace(settings.DEFAULT_SUPPORT_EMAIL, replace_substr)
-                msg_str += new_qm
-
-                msg_str += '\n\nHydroShare Support'
-                subject = 'Quota warning'
+                # first update the quota just to be sure that we are using the latest figures
+                update_quota_usage(u.username, notify_user=False)
+                uq.refresh_from_db()
+                if uq.used_percent < qmsg.soft_limit_percent:
+                    # quota usage has been updated and is now below the soft limit
+                    continue
+                support_user = get_default_support_user()
+                msg_str = f'Dear {support_user.first_name}{support_user.last_name}:\n\n'
+                msg_str += f'The following user (#{ u.id }) has exceeded their quota:{u.email}\n\n'
+                ori_qm = uq.get_quota_message()
+                msg_str += ori_qm
+                subject = f'Quota warning for {u.email}(id#{u.id})'
                 if settings.DEBUG or settings.DISABLE_TASK_EMAILS or not qmsg.enforce_quota:
                     logger.info("quota warning email not sent out on debug server but logged instead: "
                                 "{}".format(msg_str))
@@ -540,17 +529,73 @@ def send_over_quota_emails():
                     try:
                         # send email for people monitoring and follow-up as needed
                         send_mail(subject, '', settings.DEFAULT_FROM_EMAIL,
-                                  [u.email, settings.DEFAULT_SUPPORT_EMAIL],
+                                  [settings.DEFAULT_SUPPORT_EMAIL],
                                   html_message=msg_str)
                     except Exception as ex:
-                        logger.debug("Failed to send quota warning email: " + str(ex))
-            else:
-                if uq.remaining_grace_period >= 0:
-                    # turn grace period off now that the user is below quota soft limit
-                    uq.remaining_grace_period = -1
-                    uq.save()
+                        logger.error("Failed to send quota warning email: " + str(ex))
         else:
             logger.debug('user ' + u.username + ' does not have UserQuota foreign key relation')
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def notify_increased_usage_during_quota_enforcement(user_pk, message):
+    from hs_core.views.utils import get_default_support_user
+    user = User.objects.get(pk=user_pk)
+    support_user = get_default_support_user()
+    msg_str = f'Dear {support_user.first_name}{support_user.last_name}:\n\n'
+    msg_str += f'User (#{ user.id }, {user.email}) previously exceeded their quota.\n'
+    msg_str += 'They have continued to put data in spite of their quota being in enforcement status.\n\n'
+    msg_str += message
+    msg_str += 'Here is the quota message for the user:\n'
+    uq = user.quotas.first()
+    ori_qm = uq.get_quota_message()
+    msg_str += ori_qm
+    subject = f'Continued uploads while over quota {user.email}(id#{user.id})'
+    if settings.DEBUG or settings.DISABLE_TASK_EMAILS:
+        logger.info("quota warning email not sent out on debug server but logged instead: "
+                    "{}".format(msg_str))
+    else:
+        try:
+            # send email for people monitoring and follow-up as needed
+            send_mail(subject, '', settings.DEFAULT_FROM_EMAIL,
+                      [settings.DEFAULT_SUPPORT_EMAIL],
+                      html_message=msg_str)
+        except Exception as ex:
+            logger.error("Failed to send quota warning email: " + str(ex))
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def send_user_quota_notification(user_pk):
+    u = User.objects.get(pk=user_pk)
+    uq = u.quotas.first()
+    if u.first_name and u.last_name:
+        sal_name = '{} {}'.format(u.first_name, u.last_name)
+    elif u.first_name:
+        sal_name = u.first_name
+    elif u.last_name:
+        sal_name = u.last_name
+    else:
+        sal_name = u.username
+
+    msg_str = 'Dear ' + sal_name + ':\n\n'
+
+    ori_qm = uq.get_quota_message()
+    msg_str += ori_qm
+    msg_str += 'See https://help.hydroshare.org/about-hydroshare/policies/quota/ for more information.'
+
+    msg_str += '\n\nHydroShare Support'
+    subject = 'HydroShare Quota Notification'
+    if settings.DEBUG or settings.DISABLE_TASK_EMAILS:
+        logger.info("quota warning email not sent out on debug server but logged instead: "
+                    "{}".format(msg_str))
+    else:
+        try:
+            # send email for people monitoring and follow-up as needed
+            send_mail(subject, '', settings.DEFAULT_FROM_EMAIL,
+                      [u.email],
+                      html_message=msg_str)
+        except Exception as ex:
+            logger.debug("Failed to send quota warning email: " + str(ex))
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
@@ -851,6 +896,7 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
         the new versioned resource url as the payload
     """
     try:
+        ori_res = utils.get_resource_by_shortkey(ori_res_id)
         new_res = None
         if not new_res_id:
             new_res = create_empty_resource(ori_res_id, username)
@@ -858,7 +904,6 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
         utils.copy_resource_files_and_AVUs(ori_res_id, new_res_id)
 
         # copy metadata from source resource to target new-versioned resource except three elements
-        ori_res = utils.get_resource_by_shortkey(ori_res_id)
         if not new_res:
             new_res = utils.get_resource_by_shortkey(new_res_id)
         utils.copy_and_create_metadata(ori_res, new_res)

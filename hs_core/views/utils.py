@@ -38,10 +38,9 @@ from django_irods.storage import IrodsStorage
 from hs_access_control.models import PrivilegeCodes
 from hs_core import hydroshare
 from hs_core.enums import RelationTypes
-from hs_core.hydroshare import add_resource_files
+from hs_core.hydroshare import add_resource_files, validate_resource_file_size
 from hs_core.hydroshare import check_resource_type, delete_resource_file
-from hs_core.hydroshare.utils import check_aggregations
-from hs_core.hydroshare.utils import get_file_mime_type
+from hs_core.hydroshare.utils import check_aggregations, get_file_mime_type, validate_user_quota, QuotaException
 from hs_core.models import AbstractMetaDataElement, BaseResource, Relation, \
     ResourceFile, get_user, CoreMetaData
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
@@ -151,6 +150,13 @@ def add_url_file_to_resource(res_id, ref_url, ref_file_name, curr_path):
     urltempfile = NamedTemporaryFile()
     urlstring = '[InternetShortcut]\nURL=' + ref_url + '\n'
     urltempfile.write(urlstring.encode())
+    urltempfile.flush()  # Make sure all data is written to the file
+
+    # validate file size before adding file to resource
+    file_size = os.path.getsize(urltempfile.name)
+    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+    validate_user_quota(resource.quota_holder, file_size)
+
     fileobj = File(file=urltempfile, name=ref_file_name)
 
     filelist = add_resource_files(res_id, fileobj, folder=curr_path)
@@ -193,12 +199,13 @@ def add_reference_url_to_resource(user, res_id, ref_url, ref_name, curr_path,
     if res.raccess.published and not user.is_superuser:
         err_msg = "Only admin can add file to a published resource"
         return status.HTTP_400_BAD_REQUEST, err_msg, None
-
-    f = add_url_file_to_resource(res_id, ref_url, ref_name, curr_path)
-
-    if not f:
-        return status.HTTP_500_INTERNAL_SERVER_ERROR, 'New url file failed to be added to the ' \
-                                                      'resource', None
+    try:
+        f = add_url_file_to_resource(res_id, ref_url, ref_name, curr_path)
+        if not f:
+            return status.HTTP_500_INTERNAL_SERVER_ERROR, 'New url file failed to be added to the ' \
+                                                          'resource', None
+    except QuotaException as ex:
+        return status.HTTP_400_BAD_REQUEST, str(ex), None
 
     # make sure the new file has logical file set and is single file aggregation
     try:
@@ -758,6 +765,27 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
             f'{ request.scheme }://{ request.get_host() }/resource/{ resource.short_id }'
         )
         context['href_for_mailto_reject'] = href_for_mailto_reject
+    elif action_type == 'act_on_quota_request':
+        user_from = kwargs.get('user_from', None)
+        context['user_from'] = user_from
+        email_to = kwargs.get('email_to', user)
+        quota_request_form = kwargs.pop('quota_request_form')
+        context['quota_request_form'] = quota_request_form
+        context['user_quota'] = kwargs.pop('user_quota')
+        action_url = reverse(action_type, kwargs={
+            "action": "approve",
+            "quota_request_id": quota_request_form.id,
+            "uidb36": int_to_base36(user.id),
+            "token": without_login_date_token_generator.make_token(email_to),
+        }) + "?next=" + (next_url(request) or "/")
+        context['reject_url'] = action_url.replace("approve", "deny")
+        reject_subject = parse.quote("Quota Increase Request Rejected")
+        reject_body = parse.quote("Your Quota Increase Request was rejected. ")
+        href_for_mailto_reject = (
+            f"mailto:{user_from.email}?subject={ reject_subject }&body={ reject_body }"
+            f'{ request.scheme }://{ request.get_host() }/user/{ user_from.id }'
+        )
+        context['href_for_mailto_reject'] = href_for_mailto_reject
     else:
         email_to = kwargs.get('group_owner', user)
         action_url = reverse(action_type, kwargs={
@@ -1066,6 +1094,13 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
 
     istorage.session.run("ibun", None, '-cDzip', '-f', output_zip_full_path, res_coll_input)
     output_zip_size = istorage.size(output_zip_full_path)
+    if not bool_remove_original:
+        try:
+            validate_user_quota(resource.quota_holder, output_zip_size)
+        except QuotaException as ex:
+            # remove the zip file that was created
+            istorage.delete(output_zip_full_path)
+            raise ex
     zip_res_file = link_irods_file_to_django(resource, output_zip_full_path)
     if resource.resource_type == "CompositeResource":
         # make the newly added zip file part of an aggregation if needed
@@ -1102,6 +1137,8 @@ def zip_by_aggregation_file(user, res_id, aggregation_name, output_zip_fname):
     :param aggregation_name: short path (relative to res_id/data/contents/) of the aggregation to be zipped
     :param output_zip_fname: name of the zip file
     :return: zip file path and size of the zip file
+    :raises: ValidationError if the aggregation is not found or if the zip file name is invalid
+    :raises: QuotaException if the user's quota is exceeded
     """
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.resource_type != "CompositeResource":
@@ -1139,6 +1176,10 @@ def zip_by_aggregation_file(user, res_id, aggregation_name, output_zip_fname):
     irods_aggr_input_path = os.path.join(resource.file_path, aggregation_name)
     create_temp_zip(resource_id=res_id, input_path=irods_aggr_input_path, output_path=irods_output_path,
                     aggregation_name=aggregation_name)
+
+    # validate the size of the zip file with the user quota
+    zip_file_size = istorage.size(irods_output_path)
+    validate_user_quota(resource.quota_holder, zip_file_size)
 
     # move the zip file to the input path
     move_zip_file_to = os.path.dirname(irods_aggr_input_path)
@@ -1303,6 +1344,9 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                                     istorage.delete(override_tgt_path)
                     else:
                         istorage.delete(override_tgt_path)
+            if not bool_remove_original:
+                size = validate_resource_file_size(res_files)
+                validate_user_quota(resource.quota_holder, size)
 
             # now move each file to the destination
             for file in res_files:

@@ -1728,7 +1728,7 @@ class UserAccess(models.Model):
                     and user in access_resource.owners
                 ):
                     raise PermissionDenied("Cannot remove sole owner of resource")
-                qholder = this_resource.get_quota_holder()
+                qholder = this_resource.quota_holder
                 if qholder:
                     if qholder == user:
                         raise PermissionDenied(
@@ -1991,7 +1991,7 @@ class UserAccess(models.Model):
                 "You do not have permission to remove this sharing setting"
             )
 
-        qholder = this_resource.get_quota_holder()
+        qholder = this_resource.quota_holder
         if qholder:
             if qholder == this_user:
                 raise PermissionDenied(
@@ -2152,7 +2152,7 @@ class UserAccess(models.Model):
             raise PermissionDenied("Requesting user is not active")
 
         access_resource = this_resource.raccess
-        qholder = this_resource.get_quota_holder()
+        qholder = this_resource.quota_holder
         if self.user.is_superuser or self.owns_resource(this_resource):
             # everyone who holds this resource, minus potential sole owners
             if access_resource.owners.count() == 1:
