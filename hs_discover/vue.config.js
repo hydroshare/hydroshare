@@ -9,6 +9,5 @@ module.exports = {
   // https://cli.vuejs.org/config/#publicpath
   publicPath: process.env.VUE_APP_BUCKET_URL_PUBLIC_PATH ? process.env.VUE_APP_BUCKET_URL_PUBLIC_PATH : "/static/static",
   // https://cli.vuejs.org/config/#crossorigin
-  // TODO: figure out how to get crossorigin to work with the Django static files
   crossorigin: "anonymous",
 };
