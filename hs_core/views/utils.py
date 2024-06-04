@@ -61,6 +61,10 @@ ACTION_TO_AUTHORIZE = ActionToAuthorize(0, 1, 2, 3, 4, 5, 6, 7)
 logger = logging.getLogger(__name__)
 
 
+class HydroshareReadOnlyModeException(Exception):
+    pass
+
+
 def json_or_jsonp(r, i, code=200):
     if not isinstance(i, str):
         i = json.dumps(i)
@@ -93,6 +97,8 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
     :return: None, but the downloaded file from the iRODS will be appended to res_files list for
     uploading
     """
+    check_hs_read_only_mode(message="Hydroshare is in read only mode - iRODS file upload is disabled")
+
     irods_storage = IrodsStorage()
     irods_storage.set_user_session(username=username, password=password, host=host, port=port,
                                    zone=zone)
@@ -146,6 +152,9 @@ def add_url_file_to_resource(res_id, ref_url, ref_file_name, curr_path):
     :param curr_path: the folder path in the resource to add url file to
     :return: file object being added into resource if successful, otherwise, return None
     """
+
+    check_hs_read_only_mode(message="Hydroshare is in read only mode - URL file creation is disabled")
+
     # create URL file
     urltempfile = NamedTemporaryFile()
     urlstring = '[InternetShortcut]\nURL=' + ref_url + '\n'
@@ -181,6 +190,9 @@ def add_reference_url_to_resource(user, res_id, ref_url, ref_name, curr_path,
     :return: 200 status code, 'success' message, and file_id if it succeeds, otherwise,
     return error status code, error message, and None (for file_id).
     """
+
+    check_hs_read_only_mode(message="Hydroshare is in read only mode - URL file creation is disabled")
+
     # replace space with underline char
     ref_name = ref_name.strip().lower().replace(' ', '_')
     # strip out non-standard chars from ref_name
@@ -233,6 +245,8 @@ def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filena
     """
     if res.raccess.published and not user.is_superuser:
         return status.HTTP_400_BAD_REQUEST, "url file can be edited by admin only for a published resource"
+
+    check_hs_read_only_mode(message="Hydroshare is in read only mode - URL file editing is disabled")
 
     ref_name = url_filename.lower()
     if not ref_name.endswith('.url'):
@@ -430,6 +444,12 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
             authorized = user.uaccess.can_view_resource(res)
         elif needed_permission == ACTION_TO_AUTHORIZE.EDIT_RESOURCE_ACCESS:
             authorized = user.uaccess.can_share_resource(res, PrivilegeCodes.CHANGE)
+        if authorized and needed_permission not in (ACTION_TO_AUTHORIZE.VIEW_METADATA,
+                                                    ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+                                                    ACTION_TO_AUTHORIZE.VIEW_RESOURCE_ACCESS):
+            hs_read_only_mode = check_hs_read_only_mode(raise_exception=False)
+            authorized = not hs_read_only_mode
+
     elif needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE:
         authorized = res.raccess.public or res.raccess.allow_private_sharing
 
@@ -437,6 +457,24 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
         raise PermissionDenied
     else:
         return res, authorized, user
+
+
+def check_hs_read_only_mode(message=None, raise_exception=True):
+    """
+    Check if HydroShare is in read-only mode.
+    :param message: Optional message to raise as an exception if HydroShare is in read-only mode.
+    :param raise_exception: If True, raise a HydroshareReadOnlyModeException if HydroShare is in
+                            read-only mode. If False, return False if HydroShare is in read-only mode.
+    :return: True if HydroShare is in read-only mode, False otherwise.
+    :raises HydroshareReadOnlyModeException: If HydroShare is in read-only mode.
+    """
+    read_only = getattr(settings, 'HS_READ_ONLY_MODE', False)
+    if read_only and raise_exception:
+        if message:
+            raise HydroshareReadOnlyModeException(message)
+        else:
+            raise HydroshareReadOnlyModeException("HydroShare is currently in read-only mode.")
+    return read_only
 
 
 def validate_json(js):
@@ -1059,6 +1097,8 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     if __debug__:
         assert (input_coll_path.startswith("data/contents/"))
 
+    check_hs_read_only_mode(message="Hydroshare is in read only mode - folder zipping is disabled")
+
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.raccess.published:
         raise ValidationError("Folder zipping is not allowed for a published resource")
@@ -1140,6 +1180,8 @@ def zip_by_aggregation_file(user, res_id, aggregation_name, output_zip_fname):
     :raises: ValidationError if the aggregation is not found or if the zip file name is invalid
     :raises: QuotaException if the user's quota is exceeded
     """
+    check_hs_read_only_mode(message="Hydroshare is in read only mode - aggregation zipping is disabled")
+
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.resource_type != "CompositeResource":
         raise ValidationError(f"Aggregation zipping is not allowed for resource type:{resource.resource_type}")
@@ -1233,6 +1275,8 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
 
     if __debug__:
         assert (zip_with_rel_path.startswith("data/contents/"))
+
+    check_hs_read_only_mode(message="Hydroshare is in read only mode - file unzipping is disabled")
 
     if ingest_metadata:
         if not auto_aggregate:
@@ -1411,6 +1455,8 @@ def ingest_bag(resource, bag_file, user):
     """
     from hs_file_types.utils import identify_metadata_files, ingest_metadata_files
 
+    check_hs_read_only_mode(message="Hydroshare is in read only mode - bag ingestion is disabled")
+
     istorage = resource.get_irods_storage()
     zip_with_full_path = os.path.join(resource.file_path, bag_file.short_path)
 
@@ -1550,6 +1596,8 @@ def create_folder(res_id, folder_path, migrating_resource=False):
     if __debug__:
         assert folder_path.startswith("data/contents/")
 
+    check_hs_read_only_mode(message="Hydroshare is in read only mode - folder creation is disabled")
+
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.raccess.published and not migrating_resource:
         raise ValidationError("Folder creation is not allowed for a published resource")
@@ -1589,6 +1637,8 @@ def remove_folder(user, res_id, folder_path):
     """
     if __debug__:
         assert (folder_path.startswith("data/contents/"))
+
+    check_hs_read_only_mode(message="Hydroshare is in read only mode - folder deletion is disabled")
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.raccess.published:
@@ -1645,6 +1695,8 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     Note: this utilizes partly qualified pathnames data/contents/foo rather than just 'foo'
     """
 
+    check_hs_read_only_mode(message="Hydroshare is in read only mode - file/folder move/rename is disabled")
+
     _path_move_rename(user=user, res_id=res_id, src_path=src_path, tgt_path=tgt_path,
                       validate_move_rename=validate_move_rename)
 
@@ -1668,6 +1720,8 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
     Also, this foregoes extensive antibugging of arguments because that is done in the
     REST API.
     """
+
+    check_hs_read_only_mode(message="Hydroshare is in read only mode - file/folder rename is disabled")
 
     _path_move_rename(user=user, res_id=res_id, src_path=src_path, tgt_path=tgt_path,
                       validate_move_rename=validate_rename)
@@ -1696,6 +1750,8 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
         for s in src_paths:
             assert (s.startswith('data/contents/'))
         assert (tgt_path == 'data/contents' or tgt_path.startswith("data/contents/"))
+
+    check_hs_read_only_mode(message="Hydroshare is in read only mode - file/folder move is disabled")
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.raccess.published and not user.is_superuser:

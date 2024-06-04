@@ -879,3 +879,6 @@ if ENABLE_OIDC_AUTHENTICATION:
         DEFAULT_AUTHENTICATION_CLASSES + ("mozilla_django_oidc.contrib.drf.OIDCAuthentication",)
     REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = DEFAULT_AUTHENTICATION_CLASSES
     AUTHENTICATION_BACKENDS.append("hs_core.authentication.HydroShareOIDCAuthenticationBackend")
+
+# The following setting is used to control the read-only mode of HydroShare
+HS_READ_ONLY_MODE = False

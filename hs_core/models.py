@@ -3299,6 +3299,13 @@ class ResourceFile(ResourceFileIRODSMixin):
         """Updates checksum of the file in db.
         Retrieves the checksum from iRODS and stores it in db.
         """
+        from .views.utils import check_hs_read_only_mode
+
+        hs_read_only_mode = check_hs_read_only_mode(raise_exception=False)
+        if hs_read_only_mode:
+            # in read-only mode, we don't want to update the file checksum
+            return
+
         if resource is None:
             resource = self.resource
 
@@ -3371,6 +3378,13 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     def calculate_size(self, resource=None, save=True):
         """Reads the file size and saves to the DB"""
+        from .views.utils import check_hs_read_only_mode
+
+        hs_read_only_mode = check_hs_read_only_mode(raise_exception=False)
+        if hs_read_only_mode:
+            # in read-only mode, we don't want to update the file size
+            return
+
         if resource is None:
             resource = self.resource
 
@@ -3403,6 +3417,12 @@ class ResourceFile(ResourceFileIRODSMixin):
         """Set system metadata (size, modified time, and checksum) for a file.
         This method should be called after a file is uploaded to iRODS and registered with Django.
         """
+        from .views.utils import check_hs_read_only_mode
+
+        hs_read_only_mode = check_hs_read_only_mode(raise_exception=False)
+        if hs_read_only_mode:
+            # in read-only mode, we don't want to update the system metadata
+            return
 
         self.calculate_size(resource=resource, save=save)
         if self._size > 0:
@@ -4933,6 +4953,10 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         :param  user: user who is updating metadata
         :return:
         """
+        from .views.utils import check_hs_read_only_mode
+
+        check_hs_read_only_mode(message="Hydroshare is in read only mode - metadata update is disabled")
+
         from .forms import (AbstractValidationForm, ContributorValidationForm,
                             CreatorValidationForm, FundingAgencyValidationForm,
                             GeospatialRelationValidationForm,
@@ -5055,6 +5079,9 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
     def create_element(self, element_model_name, **kwargs):
         """Create any supported metadata element."""
+        from .views.utils import check_hs_read_only_mode
+
+        check_hs_read_only_mode(message="Hydroshare is in read only mode - metadata creation is disabled")
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         element_model_name = element_model_name.lower()
@@ -5079,6 +5106,9 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
     def update_element(self, element_model_name, element_id, **kwargs):
         """Update metadata element."""
+        from .views.utils import check_hs_read_only_mode
+
+        check_hs_read_only_mode(message="Hydroshare is in read only mode - metadata update is disabled")
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         element_model_name = element_model_name.lower()
@@ -5097,6 +5127,9 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
     def delete_element(self, element_model_name, element_id):
         """Delete Metadata element."""
+        from .views.utils import check_hs_read_only_mode
+
+        check_hs_read_only_mode(message="Hydroshare is in read only mode - metadata deletion is disabled")
         model_type = self._get_metadata_element_model_type(element_model_name)
         element_model_name = element_model_name.lower()
         resource = self.resource

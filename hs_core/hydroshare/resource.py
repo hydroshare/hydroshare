@@ -500,6 +500,9 @@ def create_resource(
 
     :return: a new resource which is an instance of BaseResource with specified resource_type.
     """
+    from hs_core.views.utils import check_hs_read_only_mode
+
+    check_hs_read_only_mode(message="HydroShare is in read-only mode - resource creation is disabled.")
 
     with transaction.atomic():
         cls = check_resource_type(resource_type)
@@ -631,6 +634,10 @@ def create_empty_resource(pk, user_or_username, action='version'):
         the empty new resource that is created as an initial new version or copy for the original
         resource which is then further populated with metadata and content in a subsequent step.
     """
+    from hs_core.views.utils import check_hs_read_only_mode
+
+    check_hs_read_only_mode(message="HydroShare is in read-only mode - resource versioning is disabled.")
+
     res = utils.get_resource_by_shortkey(pk)
     if isinstance(user_or_username, User):
         user = user_or_username
@@ -674,6 +681,9 @@ def copy_resource(ori_res, new_res, user=None):
     Returns:
         the new resource copied from the original resource
     """
+    from hs_core.views.utils import check_hs_read_only_mode
+
+    check_hs_read_only_mode(message="HydroShare is in read-only mode - resource copy is disabled.")
 
     from hs_core.tasks import copy_resource_task
     if user:
@@ -697,6 +707,10 @@ def create_new_version_resource(ori_res, new_res, user):
         the new versioned resource for the original resource and thus obsolete the original resource
 
     """
+    from hs_core.views.utils import check_hs_read_only_mode
+
+    check_hs_read_only_mode(message="HydroShare is in read-only mode - resource versioning is disabled.")
+
     from hs_core.tasks import create_new_version_resource_task
     if ori_res.locked_time:
         # cannot create new version for this resource since the resource is locked by another user
@@ -736,6 +750,10 @@ def add_resource_files(pk, *files, **kwargs):
     This does **not** handle mutability; changes to immutable resources should be denied elsewhere.
 
     """
+    from hs_core.views.utils import check_hs_read_only_mode
+
+    check_hs_read_only_mode(message="HydroShare is in read-only mode - content file operations are disabled.")
+
     from hs_core.tasks import set_resource_files_system_metadata
 
     resource = kwargs.pop("resource", None)
@@ -855,6 +873,10 @@ def update_science_metadata(pk, metadata, user):
 
     Returns:
     """
+    from hs_core.views.utils import check_hs_read_only_mode
+
+    check_hs_read_only_mode(message="HydroShare is in read-only mode - metadata update is disabled.")
+
     resource = utils.get_resource_by_shortkey(pk)
     resource.metadata.update(metadata, user)
     utils.resource_modified(resource, user, overwrite_bag=False)
@@ -889,6 +911,10 @@ def delete_resource(pk, request_username=None):
 
     Note:  Only HydroShare administrators will be able to delete formally published resource
     """
+    from hs_core.views.utils import check_hs_read_only_mode
+
+    check_hs_read_only_mode(message="HydroShare is in read-only mode - resource deletion is disabled.")
+
     from hs_core.tasks import delete_resource_task
     resource = utils.get_resource_by_shortkey(pk)
     resource.set_discoverable(False)
@@ -920,6 +946,10 @@ def delete_resource_file_only(resource, f):
         f: the ResourceFile object to be deleted
     Returns: unqualified relative path to file that has been deleted
     """
+    from hs_core.views.utils import check_hs_read_only_mode
+
+    check_hs_read_only_mode(message="HydroShare is in read-only mode - resource file deletion is disabled.")
+
     short_path = f.get_short_path(resource)
     f.delete()
     return short_path
@@ -972,6 +1002,10 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
 
     Note:  This does not handle immutability as previously intended.
     """
+    from hs_core.views.utils import check_hs_read_only_mode
+
+    check_hs_read_only_mode(message="HydroShare is in read-only mode - resource file deletion is disabled.")
+
     resource = utils.get_resource_by_shortkey(pk)
     if resource.raccess.published:
         if resource.files.count() == 1:
@@ -1121,6 +1155,9 @@ def submit_resource_for_review(pk, user):
     and other general exceptions
 
     """
+    from hs_core.views.utils import check_hs_read_only_mode
+
+    check_hs_read_only_mode(message="HydroShare is in read-only mode - resource publication is disabled.")
 
     resource = utils.get_resource_by_shortkey(pk)
     if not user.is_superuser and not user.uaccess.owns_resource(resource):
@@ -1172,6 +1209,10 @@ def publish_resource(user, pk):
 
     Note:  This is different than just giving public access to a resource via access control rule
     """
+    from hs_core.views.utils import check_hs_read_only_mode
+
+    check_hs_read_only_mode(message="HydroShare is in read-only mode - resource publication is disabled.")
+
     if not user.is_superuser:
         raise ValidationError("Resource can only be published by an admin user")
     resource = utils.get_resource_by_shortkey(pk)
@@ -1270,6 +1311,10 @@ def create_metadata_element(resource_short_id, element_model_name, **kwargs):
     require a value
     :return:
     """
+    from hs_core.views.utils import check_hs_read_only_mode
+
+    check_hs_read_only_mode(message="HydroShare is in read-only mode - resource metadata editing is disabled.")
+
     res = utils.get_resource_by_shortkey(resource_short_id)
     res.metadata.create_element(element_model_name, **kwargs)
 
@@ -1285,6 +1330,10 @@ def update_metadata_element(resource_short_id, element_model_name, element_id, *
     update
     :return:
     """
+    from hs_core.views.utils import check_hs_read_only_mode
+
+    check_hs_read_only_mode(message="HydroShare is in read-only mode - resource metadata editing is disabled.")
+
     res = utils.get_resource_by_shortkey(resource_short_id)
     res.metadata.update_element(element_model_name, element_id, **kwargs)
 
@@ -1298,5 +1347,9 @@ def delete_metadata_element(resource_short_id, element_model_name, element_id):
     :param element_id: id of the metadata element to be deleted
     :return:
     """
+    from hs_core.views.utils import check_hs_read_only_mode
+
+    check_hs_read_only_mode(message="HydroShare is in read-only mode - resource metadata editing is disabled.")
+
     res = utils.get_resource_by_shortkey(resource_short_id)
     res.metadata.delete_element(element_model_name, element_id)

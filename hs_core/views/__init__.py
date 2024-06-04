@@ -100,6 +100,7 @@ from .utils import (
     send_action_to_take_email,
     upload_from_irods,
     get_default_support_user,
+    check_hs_read_only_mode,
 )
 
 logger = logging.getLogger(__name__)
@@ -1079,6 +1080,8 @@ def list_referenced_content(request, shortkey, *args, **kwargs):
 
 
 def copy_resource(request, shortkey, *args, **kwargs):
+    check_hs_read_only_mode(message="HydroShare is in read-only mode - resource copy is disabled.")
+
     res, authorized, user = authorize(
         request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE
     )
@@ -1132,6 +1135,8 @@ def copy_resource_public(request, pk):
 
 
 def create_new_version_resource(request, shortkey, *args, **kwargs):
+    check_hs_read_only_mode(message="HydroShare is in read-only mode - resource versioning is disabled.")
+
     res, authorized, user = authorize(
         request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION
     )

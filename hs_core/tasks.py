@@ -294,6 +294,13 @@ def notify_owners_of_resource_repair(resource):
 @celery_app.task(ignore_result=True, base=HydroshareTask)
 def manage_task_hourly():
     # The hourly running task do DOI activation check
+    from hs_core.views.utils import check_hs_read_only_mode
+
+    # check if hydroshare is in read-only mode
+    if check_hs_read_only_mode(raise_exception=False):
+        # do nothing if hydroshare is in read-only mode
+        logger.info("HydroShare is in read-only mode. Skipping hourly task.")
+        return
 
     # Check DOI activation on failed and pending resources and send email.
     msg_lst = []

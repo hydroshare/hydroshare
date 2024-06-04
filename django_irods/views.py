@@ -16,6 +16,7 @@ from rest_framework.decorators import api_view
 
 from django_irods import icommands
 from hs_core.hydroshare.resource import check_resource_type
+from hs_core.views.utils import check_hs_read_only_mode
 from hs_core.signals import (pre_check_bag_flag, pre_download_file,
                              pre_download_resource)
 from hs_core.task_utils import (get_or_create_task_notification,
@@ -61,6 +62,8 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
     """
     if not settings.DEBUG:
         logger.debug("request path is {}".format(path))
+
+    check_hs_read_only_mode(message='HydroShare is in read-only mode - download is disabled')
 
     split_path_strs = path.split('/')
     while split_path_strs[-1] == '':

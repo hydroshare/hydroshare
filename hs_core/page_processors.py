@@ -4,6 +4,7 @@ import json
 
 from dateutil import parser
 from django.conf import settings
+from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.utils.html import mark_safe, escapejs
 from mezzanine.pages.page_processors import processor_for
@@ -14,7 +15,7 @@ from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STA
     res_has_web_reference
 from hs_core.models import BaseResource, Relation
 from hs_core.views.utils import show_relations_section, \
-    rights_allows_copy
+    rights_allows_copy, check_hs_read_only_mode
 from hs_odm2.models import ODM2Variable
 from .forms import ExtendedMetadataForm
 
@@ -45,6 +46,12 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                 - split into two functions: get_readonly_page_context(...) and
                 get_editable_page_context(...)
     """
+    hs_read_only_mode = check_hs_read_only_mode(raise_exception=False)
+    if resource_edit:
+        resource_edit = not hs_read_only_mode
+    if hs_read_only_mode:
+        messages.info(request, "HydroShare is in read-only mode - resource editing is disabled.")
+
     file_type_error = ''
     if request:
         file_type_error = request.session.get("file_type_error", None)
@@ -111,15 +118,14 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     keywords = json.dumps([sub.value for sub in content_model.metadata.subjects.all()])
     topics = Topic.objects.all().values_list('name', flat=True).order_by('name')
     topics = list(topics)  # force QuerySet evaluation
-    content_model.update_relation_meta()
+    if not hs_read_only_mode:
+        content_model.update_relation_meta()
     creators = content_model.metadata.creators.all()
-
-    # whether the user has permission to change the model
-    can_change = content_model.can_change(request)
 
     # user requested the resource in READONLY mode
     if not resource_edit:
-        content_model.update_view_count()
+        if not hs_read_only_mode:
+            content_model.update_view_count()
         temporal_coverage = content_model.metadata.temporal_coverage
         temporal_coverage_data_dict = {}
         if temporal_coverage:
@@ -216,6 +222,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     # user requested the resource in EDIT MODE
 
     # whether the user has permission to change the model
+    can_change = content_model.can_change(request)
     if not can_change:
         raise PermissionDenied()
 
