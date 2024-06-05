@@ -1,5 +1,4 @@
 import datetime
-import os
 import logging
 
 from django.utils import timezone
@@ -720,14 +719,15 @@ def auto_delete_file_on_change(sender, instance, **kwargs):
         )
         return
 
-    updated_profile = instance
-    if old_file_cv and old_file_cv != updated_profile.cv:
-        if os.path.isfile(old_file_cv.path):
-            os.remove(old_file_cv.path)
-    if old_file_pic and old_file_pic != updated_profile.picture:
-        if os.path.isfile(old_file_pic.path):
-            os.remove(old_file_pic.path)
-    return
+    try:
+        updated_profile = instance
+        if old_file_cv and old_file_cv != updated_profile.cv:
+            old_file_cv.delete()
+        if old_file_pic and old_file_pic != updated_profile.picture:
+            old_file_pic.delete()
+        return
+    except Exception as e:
+        logger.error(f"Error deleting profile file {old_file_cv}: {e}")
 
 
 @receiver(models.signals.post_save, sender=QuotaRequest)

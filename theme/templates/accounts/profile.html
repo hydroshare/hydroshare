@@ -662,13 +662,13 @@
                                             <tr>
                                                 <td>
                                                     {% if name == "GoogleScholarID" %}
-                                                    <img class="identifier-icon ai ai-google-scholar-square"/>
+                                                    <img class="identifier-icon ai ai-google-scholar-square" src="{% static 'img/google-scholar.svg' %}"/>
                                                     {% elif name == "ORCID" %}
-                                                    <img class="identifier-icon ai ai-orcid"/>
+                                                    <img class="identifier-icon ai ai-orcid" src="{% static 'img/orcid.logo.icon.svg' %}"/>
                                                     {% elif name == "ResearchGateID" %}
-                                                    <img class="identifier-icon ai ai-researchgate-square"/>
+                                                    <img class="identifier-icon ai ai-researchgate-square" src="{% static 'img/researchgate.png' %}"/>
                                                     {% elif name == "ResearcherID" %}
-                                                    <img class="identifier-icon ai ai-researcherid-square"/>
+                                                    <img class="identifier-icon ai ai-researcherid-square" src="{% static 'img/researcherID.png' %}"/>
                                                     {% else %}
                                                     <img class="identifier-icon fa fa-address-card"/>
                                                     {% endif %}

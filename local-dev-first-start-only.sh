@@ -86,6 +86,8 @@ docker run -i -v $HS_PATH:/hydroshare --name=nodejs node:$n_ver /bin/bash << eof
 cd hydroshare
 cd hs_discover
 npm install
+if [ -z ${VUE_APP_BUCKET_URL_PUBLIC_PATH+x} ]; then VUE_APP_BUCKET_URL_PUBLIC_PATH=/static/static ; fi
+echo "Building with VUE_APP_BUCKET_URL_PUBLIC_PATH: $VUE_APP_BUCKET_URL_PUBLIC_PATH"
 npm run build
 mkdir -p static/js
 mkdir -p static/css
@@ -98,10 +100,6 @@ echo "--------------------------------------"
 echo "----------------css-------------------"
 ls -l static/css
 echo "--------------------------------------"
-cd static/
-mv js/app.*.js js/app.js
-mv js/chunk-vendors.*.js js/chunk-vendors.js
-cd ..
 eof
 
 echo "Node Build completed ..."

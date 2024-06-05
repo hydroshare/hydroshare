@@ -95,7 +95,7 @@ class ViewTests(TestCase):
         url_redirect = app_logging.get(r)
 
         # validate response
-        self.assertTrue(type(url_redirect) == response.HttpResponseRedirect)
+        self.assertTrue(type(url_redirect) is response.HttpResponseRedirect)
         self.assertTrue(url_redirect.url == request_url)
 
         # validate logged data
@@ -150,7 +150,7 @@ class ViewTests(TestCase):
         url_redirect = app_logging.get(r)
 
         # validate response
-        self.assertTrue(type(url_redirect) == response.HttpResponseForbidden)
+        self.assertTrue(type(url_redirect) is response.HttpResponseForbidden)
 
         # validate logged data
         app_lauch_cnt = Variable.objects.filter(name='app_launch').count()
