@@ -72,7 +72,7 @@ class Command(BaseCommand):
             uz_bytes = None
             dz_bytes = None
             try:
-                uz_bytes, dz_bytes = get_quota_usage(user.username, raise_on_error=False)
+                uz_bytes, dz_bytes = get_quota_usage(user.username)
             except ValidationError as e:
                 message = f"Error getting quota usage for {user.username}, {user.id}: {e}"
                 print(message)
@@ -104,7 +104,7 @@ class Command(BaseCommand):
             if expand:
                 try:
                     quota_resources = user.uaccess.owned_resources.filter(quota_holder=user)
-                except (ValidationError, PermissionDenied) as e:
+                except PermissionDenied as e:
                     message = f"Error getting quota resources for {user.username}, {user.id}: {e}"
                     print(message)
                     errors.append(message)
