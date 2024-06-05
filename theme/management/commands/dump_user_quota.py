@@ -6,7 +6,7 @@ from hs_tools_resource.utils import convert_size
 from theme.models import UserQuota
 from django.core.management.base import BaseCommand
 from hs_core.hydroshare import current_site_url, get_quota_usage
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 
 
 class Command(BaseCommand):
@@ -62,6 +62,7 @@ class Command(BaseCommand):
             settings.IRODS_BAGIT_PATH
         )
         data = []
+        errors = []
         for uq in user_quotas:
             used = uq.used_value
             user = uq.user
@@ -71,9 +72,11 @@ class Command(BaseCommand):
             uz_bytes = None
             dz_bytes = None
             try:
-                uz_bytes, dz_bytes = get_quota_usage(user.username)
+                uz_bytes, dz_bytes = get_quota_usage(user.username, raise_on_error=False)
             except ValidationError as e:
-                print(f"Error updating quota: {e.message}")
+                message = f"Error getting quota usage for {user.username}, {user.id}: {e}"
+                print(message)
+                errors.append(message)
             if dz_bytes is None:
                 dz_bytes = 0
             dz = convert_size(int(dz_bytes))
@@ -99,7 +102,13 @@ class Command(BaseCommand):
                 uz
             ]
             if expand:
-                quota_resources = user.uaccess.owned_resources.filter(quota_holder=user)
+                try:
+                    quota_resources = user.uaccess.owned_resources.filter(quota_holder=user)
+                except (ValidationError, PermissionDenied) as e:
+                    message = f"Error getting quota resources for {user.username}, {user.id}: {e}"
+                    print(message)
+                    errors.append(message)
+                    quota_resources = []
                 total_size = 0
                 for res in quota_resources:
                     res_size = res.size
@@ -115,5 +124,10 @@ class Command(BaseCommand):
 
         df = pd.DataFrame(data, columns=fields)
         df.to_csv(output_file_name_with_path, index=False)
+        if errors:
+            print("Errors:")
+            for error in errors:
+                print(error)
+        print(f"Data written to {output_file_name_with_path}:")
         with pd.option_context('display.max_rows', None, 'display.max_columns', None):
             print(df)
