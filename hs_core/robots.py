@@ -16,7 +16,7 @@ class RobotFilter(MiddlewareMixin):
 
         This is used to filter non-human activity from the usage logs
         """
-        user_agent = request.META.get('HTTP_USER_AGENT', None)
+        user_agent = request.headers.get("user-agent", None)
         request.is_human = True
 
         if user_agent is None or robot_detection.is_robot(user_agent):

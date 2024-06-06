@@ -1,61 +1,55 @@
 import logging
-
 from json import dumps
 
-from django_comments.models import Comment
-from django_comments.views.moderation import perform_delete
-from rest_framework import status
-
 from django.contrib import messages
-from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
+from django.contrib.auth import authenticate
+from django.contrib.auth import login as auth_login
+from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib.messages import info, error
-from django.core.exceptions import (
-    ValidationError,
-    ObjectDoesNotExist,
-    MultipleObjectsReturned,
-    PermissionDenied,
-)
+from django.contrib.messages import error, info
+from django.core.exceptions import (MultipleObjectsReturned,
+                                    ObjectDoesNotExist, PermissionDenied,
+                                    ValidationError)
 from django.core.mail import send_mail
-from django.urls import reverse
 from django.db import transaction
-from django.db.models import Q, Prefetch
+from django.db.models import Prefetch, Q
 from django.db.models.query import prefetch_related_objects
-from django.http import HttpResponse, JsonResponse, HttpResponseForbidden, HttpResponseNotAllowed
-from django.http import HttpResponseRedirect
-from django.shortcuts import redirect, get_object_or_404
-from django.shortcuts import render
+from django.http import (HttpResponse, HttpResponseForbidden,
+                         HttpResponseNotAllowed, HttpResponseRedirect,
+                         JsonResponse)
+from django.shortcuts import get_object_or_404, redirect, render
 from django.template.response import TemplateResponse
+from django.urls import reverse
 from django.utils.http import int_to_base36, urlencode
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
+from django_comments.models import Comment
+from django_comments.views.moderation import perform_delete
 from mezzanine.accounts.forms import LoginForm
 from mezzanine.conf import settings
 from mezzanine.generic.views import initial_validation
 from mezzanine.utils.cache import add_cache_bypass
-from mezzanine.utils.email import (
-    send_verification_mail,
-    send_approve_mail,
-    subject_template,
-    default_token_generator,
-    send_mail_template,
-)
+from mezzanine.utils.email import (default_token_generator, send_approve_mail,
+                                   send_mail_template, send_verification_mail,
+                                   subject_template)
 from mezzanine.utils.urls import login_redirect, next_url
 from mezzanine.utils.views import is_spam
 from mozilla_django_oidc.views import OIDCLogoutView
+from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
 from hs_core.authentication import build_oidc_url
 from hs_core.hydroshare.utils import user_from_id
 from hs_core.models import Party
-from hs_core.views.utils import run_ssh_command
-from hs_dictionary.models import University, UncategorizedTerm
+from hs_core.views.utils import is_ajax, run_ssh_command
+from hs_dictionary.models import UncategorizedTerm, University
 from hs_tracking.models import Variable
-from theme.forms import RatingForm, UserProfileForm, UserForm
-from theme.forms import ThreadedCommentForm
-from theme.models import UserProfile, QuotaRequest, QuotaRequestForm, UserQuota
+from theme.forms import (RatingForm, ThreadedCommentForm, UserForm,
+                         UserProfileForm)
+from theme.models import QuotaRequest, QuotaRequestForm, UserProfile, UserQuota
+
 from .forms import SignupForm
 
 
@@ -258,7 +252,7 @@ def quota_request(request, *args, **kwargs):
             err_msg = "You don't have permission to request additional quota"
             messages.error(request, err_msg)
 
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    return HttpResponseRedirect(request.headers['referer'])
 
 
 class UserPasswordResetView(TemplateView):
@@ -301,7 +295,7 @@ def comment(request, template="generic/comments.html"):
         #     cookie_value = post_data.get(field, "")
         #     set_cookie(response, cookie_name, cookie_value)
         return response
-    elif request.is_ajax() and form.errors:
+    elif is_ajax(request) and form.errors:
         return HttpResponse(dumps({"errors": form.errors}))
     # Show errors with stand-alone comment form.
     context = {"obj": obj, "posted_comment_form": form}
@@ -385,7 +379,7 @@ def signup(request, template="accounts/account_signup.html", extra_context=None)
                 )
             else:
                 messages.error(request, str(e))
-            return HttpResponseRedirect(request.META["HTTP_REFERER"])
+            return HttpResponseRedirect(request.headers["referer"])
         else:
             if not new_user.is_active:
                 if settings.ACCOUNTS_APPROVAL_REQUIRED:
@@ -433,7 +427,7 @@ def signup(request, template="accounts/account_signup.html", extra_context=None)
     # return render(request, template, context)
 
     # This one keeps the css but not able to retained user entered data.
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    return HttpResponseRedirect(request.headers["referer"])
 
 
 def signup_verify(request, uidb36=None, token=None):
@@ -470,7 +464,7 @@ def update_user_profile(request, profile_user_id):
         identifiers = post_data_dict.get("identifiers", {})
     except Exception as ex:
         messages.error(request, "Update failed. {}".format(str(ex)))
-        return HttpResponseRedirect(request.META["HTTP_REFERER"])
+        return HttpResponseRedirect(request.headers["referer"])
 
     org_items = request.POST["organization"].split(";")
     for org_item in org_items:
@@ -551,7 +545,7 @@ def update_user_profile(request, profile_user_id):
     except Exception as ex:
         messages.error(request, str(ex))
 
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    return HttpResponseRedirect(request.headers["referer"])
 
 
 def check_organization_terms(dict_items):
@@ -580,7 +574,7 @@ def resend_verification_email(request, email):
         return redirect(reverse("login"))
     send_verification_mail(request, user, "signup_verify")
     messages.error(request, _("Resent verification email to " + user.email))
-    return redirect(request.META["HTTP_REFERER"])
+    return redirect(request.headers["referer"])
 
 
 def request_password_reset(request):
@@ -589,7 +583,7 @@ def request_password_reset(request):
         user = user_from_id(username_or_email)
     except Exception:
         messages.error(request, "No user is found for the provided username or email")
-        return HttpResponseRedirect(request.META["HTTP_REFERER"])
+        return HttpResponseRedirect(request.headers["referer"])
 
     messages.info(
         request,
@@ -605,7 +599,7 @@ def request_password_reset(request):
     # send an email to the the user notifying the password reset request
     send_verification_mail_for_password_reset(request, user)
 
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    return HttpResponseRedirect(request.headers["referer"])
 
 
 @login_required
@@ -618,18 +612,18 @@ def update_user_password(request):
     password2 = password2.strip()
     if not user.check_password(old_password):
         messages.error(request, "Your current password does not match.")
-        return HttpResponseRedirect(request.META["HTTP_REFERER"])
+        return HttpResponseRedirect(request.headers["referer"])
 
     if len(password1) < 6:
         messages.error(request, "Password must be at least 6 characters long.")
-        return HttpResponseRedirect(request.META["HTTP_REFERER"])
+        return HttpResponseRedirect(request.headers["referer"])
 
     if password1 == password2:
         user.set_password(password1)
         user.save()
     else:
         messages.error(request, "Passwords do not match.")
-        return HttpResponseRedirect(request.META["HTTP_REFERER"])
+        return HttpResponseRedirect(request.headers["referer"])
 
     messages.info(request, "Password reset was successful")
     return HttpResponseRedirect("/user/{}/".format(user.id))
@@ -645,14 +639,14 @@ def reset_user_password(request):
 
     if len(password1) < 6:
         messages.error(request, "Password must be at least 6 characters long.")
-        return HttpResponseRedirect(request.META["HTTP_REFERER"])
+        return HttpResponseRedirect(request.headers["referer"])
 
     if password1 == password2:
         user.set_password(password1)
         user.save()
     else:
         messages.error(request, "Passwords do not match.")
-        return HttpResponseRedirect(request.META["HTTP_REFERER"])
+        return HttpResponseRedirect(request.headers["referer"])
 
     messages.info(request, "Password reset was successful")
     # redirect to home page

@@ -14,6 +14,8 @@
     crossorigin=""/>
     <link rel='stylesheet' type='text/css' href="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/leaflet.fullscreen.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+    {# this loads the assets for the auto complete #}
+    {{ add_view_hs_user_form.media }}
 
 {# ======= JSON-LD Structure ======= #}
 <script id="schemaorg" type="application/ld+json">
@@ -61,7 +63,7 @@
     ],
     {% endif %}
     "creator": {{ creators | creator_json_ld_element | safe }},
-    {# There is discussion about adding more linked data fields for referenced items #} 
+    {# There is discussion about adding more linked data fields for referenced items #}
     {# https://github.com/hydroshare/hydroshare/issues/4566#issuecomment-1124283370 #}
     {% if geospatial_relations %}
     "about": [
@@ -460,7 +462,7 @@
 
             <div class="col-xs-12 content-block">
                 <h3>
-                  <span>Content</span> 
+                  <span>Content</span>
                   {% if resource_edit_mode %}
                   <a data-toggle="tooltip" data-placement="auto"
                       href="https://www.youtube.com/watch?v=wTPGJY9-k18" target="_blank"
@@ -900,7 +902,7 @@
                                             {% if max_file_size > 0 %}
                                                 <div class="fb-upload-caption">
                                                     <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;
-                                                    Upload files smaller than {{ max_file_size|floatformat:"1" }}MB in size by dragging & dropping, or click 
+                                                    Upload files smaller than {{ max_file_size|floatformat:"1" }}MB in size by dragging & dropping, or click
                                                     <a class="dz-clickable upload-toggle">here</a> to select them.
                                                 </div>
                                             {% endif %}
@@ -1048,7 +1050,7 @@
       const RES_KEYWORDS = {{ keywords|safe }};
       const RES_FUNDING_AGENCIES = [
         {% for agency in fundingagencies %}
-            {   
+            {
                 "agency_id": "{{ agency.id }}",
                 "award_number": "{{ agency.award_number }}",
                 "award_title": "{{ agency.award_title | escapejs }}",
@@ -1132,4 +1134,3 @@
     <script type="text/javascript" src="{% static 'js/generic-resource.js' %}"></script>
 
 {% endblock %}
-

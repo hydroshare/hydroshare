@@ -22,7 +22,7 @@ from hs_core.task_utils import (get_or_create_task_notification,
                                 get_resource_bag_task, get_task_notification,
                                 get_task_user_id)
 from hs_core.tasks import create_bag_by_irods, create_temp_zip, delete_zip
-from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
+from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, is_ajax
 from hs_file_types.enums import AggregationMetaFilePath
 
 logger = logging.getLogger(__name__)
@@ -265,7 +265,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
                     response = HttpResponse()
                     response.content = content_msg
                     return response
-        elif request.is_ajax():
+        elif is_ajax(request):
             task_dict = {
                 'id': datetime.datetime.today().isoformat(),
                 'name': "bag download",
@@ -326,7 +326,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
     # and reverse proxy isn't overridden by user (use_reverse_proxy=True).
 
     if use_reverse_proxy and getattr(settings, 'SENDFILE_ON', False) and \
-       'HTTP_X_DJANGO_REVERSE_PROXY' in request.META:
+       'x-django-reverse-proxy' in request.headers:
 
         # The NGINX sendfile abstraction is invoked as follows:
         # 1. The request to download a file enters this routine via the /rest_download or /download

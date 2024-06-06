@@ -4,13 +4,12 @@ import shutil
 from django.contrib.auth.models import Group
 from django.contrib.messages import get_messages
 from django.urls import reverse
-
 from rest_framework import status
 
-from hs_core.testing import ViewTestCase
 from hs_core import hydroshare
-from hs_core.views import create_user_group, update_user_group, delete_user_group, \
-    restore_user_group
+from hs_core.testing import ViewTestCase
+from hs_core.views import (create_user_group, delete_user_group,
+                           restore_user_group, update_user_group)
 
 
 class TestGroupCRUD(ViewTestCase):
@@ -62,7 +61,7 @@ class TestGroupCRUD(ViewTestCase):
         self.add_session_to_request(request)
         response = create_user_group(request)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        self.assertEqual(response['Location'], request.headers['referer'])
         flag_messages = get_messages(request)
         success_messages = [m for m in flag_messages if m.tags == 'success']
         self.assertNotEqual(len(success_messages), 0)
@@ -120,7 +119,7 @@ class TestGroupCRUD(ViewTestCase):
         self.add_session_to_request(request)
         response = update_user_group(request, group_id=new_group.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        self.assertEqual(response['Location'], request.headers['referer'])
         flag_messages = get_messages(request)
         success_messages = [m for m in flag_messages if m.tags == 'success']
         self.assertNotEqual(len(success_messages), 0)
@@ -153,7 +152,7 @@ class TestGroupCRUD(ViewTestCase):
         self.add_session_to_request(request)
         response = update_user_group(request, group_id=new_group.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        self.assertEqual(response['Location'], request.headers['referer'])
         flag_messages = get_messages(request)
         err_messages = [m for m in flag_messages if m.tags == 'error']
         self.assertNotEqual(len(err_messages), 0)
@@ -186,7 +185,7 @@ class TestGroupCRUD(ViewTestCase):
         self.add_session_to_request(request)
         response = delete_user_group(request, group_id=new_group.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        self.assertEqual(response['Location'], request.headers['referer'])
         flag_messages = get_messages(request)
         success_messages = [m for m in flag_messages if m.tags == 'success']
         self.assertNotEqual(len(success_messages), 0)
@@ -220,7 +219,7 @@ class TestGroupCRUD(ViewTestCase):
         self.add_session_to_request(request)
         response = delete_user_group(request, group_id=new_group.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        self.assertEqual(response['Location'], request.headers['referer'])
         flag_messages = get_messages(request)
         err_messages = [m for m in flag_messages if m.tags == 'error']
         self.assertNotEqual(len(err_messages), 0)
@@ -257,7 +256,7 @@ class TestGroupCRUD(ViewTestCase):
         self.add_session_to_request(request)
         response = restore_user_group(request, group_id=new_group.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        self.assertEqual(response['Location'], request.headers['referer'])
         flag_messages = get_messages(request)
         success_messages = [m for m in flag_messages if m.tags == 'success']
         self.assertNotEqual(len(success_messages), 0)
@@ -295,7 +294,7 @@ class TestGroupCRUD(ViewTestCase):
         self.add_session_to_request(request)
         response = restore_user_group(request, group_id=new_group.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        self.assertEqual(response['Location'], request.headers['referer'])
         flag_messages = get_messages(request)
         err_messages = [m for m in flag_messages if m.tags == 'error']
         self.assertNotEqual(len(err_messages), 0)
