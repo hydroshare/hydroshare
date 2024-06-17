@@ -27,8 +27,8 @@ from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from hs_core.enums import CrossRefSubmissionStatus
 
-FILE_SIZE_LIMIT = 1 * (1024 ** 3)
-FILE_SIZE_LIMIT_FOR_DISPLAY = '1G'
+FILE_SIZE_LIMIT = 30 * (1024 ** 3)
+FILE_SIZE_LIMIT_FOR_DISPLAY = '30G'
 METADATA_STATUS_SUFFICIENT = 'Sufficient to publish or make public'
 METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
 
