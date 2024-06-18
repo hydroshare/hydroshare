@@ -63,7 +63,7 @@ server {
     proxy_set_header X-Real-IP $remote_addr;
 
     charset         utf-8;
-    client_max_body_size 4096m;  # limit uploads to 4 GiB. 
+    client_max_body_size 30720m;  # limit uploads to 30 GiB. 
 
     ssl_certificate         /hs-certs/SSL_CERT_FILE;
     ssl_certificate_key     /hs-certs/SSL_KEY_FILE;

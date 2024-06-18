@@ -23,7 +23,7 @@ proxy_set_header X-Real-IP $remote_addr;
 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 proxy_set_header X-Forwarded-Proto $scheme;
 
-client_max_body_size 4096m;
+client_max_body_size 30720m;
 client_body_buffer_size 1m;
 proxy_intercept_errors on;
 proxy_buffering off;
@@ -93,7 +93,7 @@ server {
     # error_log       /var/log/nginx/system.log debug;
 
     charset         utf-8;
-    client_max_body_size 4096m;
+    client_max_body_size 30720m;
 
     ssl_certificate         /hs-certs/SSL_CERT_FILE;
     ssl_certificate_key     /hs-certs/SSL_KEY_FILE;
