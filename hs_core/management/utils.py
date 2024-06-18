@@ -763,7 +763,7 @@ class CheckJSONLD(object):
             return
 
 
-def repair_resource(resource, logger, dry_run=False, user=None):
+def repair_resource(resource, logger, dry_run=False, user=None, clean_irods=False):
 
     print("CHECKING IF RESOURCE {} NEEDS REPAIR".format(resource.short_id))
     now = timezone.now()
@@ -773,8 +773,8 @@ def repair_resource(resource, logger, dry_run=False, user=None):
                                                                            echo_errors=True,
                                                                            log_errors=True,
                                                                            return_errors=True,
-                                                                           clean_irods=False,
-                                                                           clean_django=True,
+                                                                           clean_irods=clean_irods,
+                                                                           clean_django=not clean_irods,
                                                                            sync_ispublic=True,
                                                                            dry_run=dry_run,
                                                                            user=user,

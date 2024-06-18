@@ -45,6 +45,12 @@ class Command(BaseCommand):
             help='run process without saving changes',
         )
         parser.add_argument(
+            '--clean_irods',
+            action='store_true',  # True for presence, False for absence
+            dest='clean_irods',  # value is options['dry_run']
+            help='run process with iRODS file cleanup strategy',
+        )
+        parser.add_argument(
             '--published',
             action='store_true',  # True for presence, False for absence
             dest='published',  # value is options['published']
@@ -58,6 +64,7 @@ class Command(BaseCommand):
         updated_since = options['updated_since']
         admin = options['admin']
         dry_run = options['dry_run']
+        clean_irods = options['clean_irods']
         published = options['published']
         site_url = hydroshare.utils.current_site_url()
         ignore_repaired_since = options['ignore_repaired_since']
