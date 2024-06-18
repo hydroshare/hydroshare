@@ -127,7 +127,8 @@ class Command(BaseCommand):
                 else:
                     print("Command running without --admin. Fixing a published resource raise ValidationError")
             try:
-                _, missing_in_django, dangling_in_django = repair_resource(resource, logger, dry_run=dry_run, user=user, clean_irods=clean_irods)
+                _, missing_in_django, dangling_in_django = repair_resource(resource, logger, dry_run=dry_run,
+                                                                           user=user, clean_irods=clean_irods)
             except ValidationError as ve:
                 failed_resources.append(res_url)
                 print("Exception while attempting to repair resource:")
