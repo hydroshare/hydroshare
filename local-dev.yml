@@ -133,7 +133,7 @@ services:
   #   volumes:
   #     - "./log/nginx:/var/log/nginx"
   #     - ".:/hydroshare"
-  #     - "temp_vol:/hs_tmp"
+  #     - "temp_vol:/tmp"
   #     - "share_vol:/irods/cache"
   #     - "idata_vault_vol:/irods/data"
   #     - "iuser_vault_vol:/irods/user"
@@ -156,7 +156,7 @@ services:
       RABBITMQ_PORT_5672_TCP_ADDR: rabbitmq
       SOLR_PORT_8983_TCP_ADDR: solr
       SOLR_HOST: solr
-      TMP: /hs_tmp
+      TMP: /tmp
       POSTGIS_PORT_5432_TCP_ADDR: postgis
       HS_PATH: ${PWD}
       PYTHONPATH: /hydroshare
@@ -165,7 +165,7 @@ services:
       # hydroshare repository
       - ".:/hydroshare"
       # shared location for gunicorn.sock between containers
-      - "temp_vol:/hs_tmp"
+      - "temp_vol:/tmp"
       # temp directory shared with celery workers
       - "share_vol:/shared_tmp"
     ports:

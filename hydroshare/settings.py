@@ -232,7 +232,7 @@ STATICFILES_FINDERS = (
 FILE_UPLOAD_PERMISSIONS = 0o644
 
 # Alternative tmp folder
-FILE_UPLOAD_TEMP_DIR = "/hs_tmp"
+FILE_UPLOAD_TEMP_DIR = "/tmp"
 
 FILE_UPLOAD_MAX_SIZE = 30 * 1024  # MB
 
@@ -634,7 +634,7 @@ PASSWORD_RESET_TIMEOUT = 60 * 60 * 24 * 7
 
 # customized temporary file path for large files retrieved from iRODS user zone for metadata
 # extraction
-TEMP_FILE_DIR = "/hs_tmp"
+TEMP_FILE_DIR = "/tmp"
 
 ####################
 # OAUTH TOKEN SETTINGS #
