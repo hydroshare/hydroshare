@@ -50,5 +50,8 @@ class Command(BaseCommand):
             irods_files = list_files_recursively(resource.file_path)
             res_files = ResourceFile.objects.filter(object_id=resource.id)
             unreferenced_irods_files = res_files.exclude(resource_file__in=irods_files)
-            for f in unreferenced_irods_files:
-                print(f"Resource {resource.short_id} has a file {f} in iRODS that is not in Django")
+            if not unreferenced_irods_files:
+                print(f"Resource {resource.short_id} has no unreferenced iRODS files:")
+            else:
+                for f in unreferenced_irods_files:
+                    print(f"Resource {resource.short_id} has a file {f} in iRODS that is not in Django")
