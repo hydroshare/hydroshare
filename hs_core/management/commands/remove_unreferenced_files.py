@@ -20,7 +20,7 @@ class Command(BaseCommand):
         resources = BaseResource.objects
 
         if resources_ids:  # an array of resource short_id to check.
-            print("Setting isPublic AVU for the resources provided")
+            print("Removing unreferenced files in the resources provided")
             resources = resources.filter(short_id__in=resources_ids)
         elif updated_since:
             print(f"Filtering to include resources update in the last {updated_since} days")

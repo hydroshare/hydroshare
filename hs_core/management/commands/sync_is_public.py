@@ -16,6 +16,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         resources_ids = options['resource_ids']
         updated_since = options['updated_since']
+        resources = BaseResource.objects
 
         if resources_ids:  # an array of resource short_id to check.
             print("Setting isPublic AVU for the resources provided")
@@ -26,12 +27,13 @@ class Command(BaseCommand):
             resources = resources.filter(updated__gte=cuttoff_time)
         else:
             print("Setting isPublic AVU for all resources.")
-            resources = BaseResource.objects.all()
+            resources = resources.all()
         
         for resource in resources.iterator():
             django_public = resource.raccess.public
             isPublic = "true" if django_public else "false"
             try:
                 resource.setAVU('isPublic', isPublic)
+                print(f"Set isPublic AVU for {resource.short_id} to {isPublic}")
             except SessionException as ex:
                 print(f"Failed to save isPublic AVU for {resource.short_id}: {ex.stderr}")
