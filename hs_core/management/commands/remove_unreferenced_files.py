@@ -31,27 +31,27 @@ class Command(BaseCommand):
             resources = BaseResource.objects.all()
         
         istorage = IrodsStorage()
+        def list_files_recursively(folder_path):
+            try:
+                folders, files, _ = istorage.listdir(folder_path)
+            except SessionException as ex:
+                print(f"Failed to list files in {folder_path}: {ex.stderr}")
+                return []
+            files = [f"{folder_path}/{f}" for f in files]
+            for folder in folders:
+                sub_folder_path = f"{folder_path}/{folder}"
+                subfolders, subfiles, _ = istorage.listdir(sub_folder_path)
+                files += ([f"{sub_folder_path}/{f}" for f in subfiles])
+                for subfolder in subfolders:
+                    files += list_files_recursively(f"{sub_folder_path}/{subfolder}")
+            return files
         for resource in resources.iterator():
-            def list_files_recursively(folder_path):
-                try:
-                    folders, files, _ = istorage.listdir(folder_path)
-                except SessionException as ex:
-                    print(f"Failed to list files in {folder_path}: {ex.stderr}")
-                    return []
-                files = [f"{folder_path}/{f}" for f in files]
-                for folder in folders:
-                    sub_folder_path = f"{folder_path}/{folder}"
-                    subfolders, subfiles, _ = istorage.listdir(sub_folder_path)
-                    files += ([f"{sub_folder_path}/{f}" for f in subfiles])
-                    for subfolder in subfolders:
-                        files += list_files_recursively(f"{sub_folder_path}/{subfolder}")
-                return files
 
             irods_files = list_files_recursively(resource.file_path)
+            irods_files = [f for f in irods_files if not f.endswith("_meta.xml") or f.endswith("_resmap.xml")] # exclude agg metadata files
             res_files = ResourceFile.objects.filter(object_id=resource.id)
             unreferenced_irods_files = res_files.exclude(resource_file__in=irods_files)
             if not unreferenced_irods_files:
                 print(f"Resource {resource.short_id} has no unreferenced iRODS files:")
             else:
-                for f in unreferenced_irods_files:
-                    print(f"Resource {resource.short_id} has a file {f} in iRODS that is not in Django")
+                print(f"Unreferenced files found in Resource {resource.short_id}")
