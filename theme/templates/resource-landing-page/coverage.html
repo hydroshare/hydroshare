@@ -152,139 +152,137 @@
                             </div>
                         </div>
 
-                        <fieldset>
-                            <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4">
-                                <div id="div_id_name">
-                                    <label for="id_name" class="control-label">Place/Area Name</label>
+                        <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4">
+                            <div id="div_id_name">
+                                <label for="id_name" class="control-label">Place/Area Name</label>
 
-                                    <div class="controls">
-                                        <input class="form-control input-sm textinput textInput"
-                                               id="id_name" maxlength="200" name="name" type="text"
-                                               value="{% if spatial_coverage.name %}{{ spatial_coverage.name }}{% endif %}">
-                                    </div>
+                                <div class="controls">
+                                    <input class="form-control input-sm textinput textInput"
+                                            id="id_name" maxlength="200" name="name" type="text"
+                                            value="{% if spatial_coverage.name %}{{ spatial_coverage.name }}{% endif %}">
                                 </div>
-
-                                <div class="space-bottom">
-                                    <small class="text-muted">
-                                        <div>
-                                            <i class="fa fa-globe" aria-hidden="true"></i> Coordinate
-                                            System/Geographic Projection:
-                                        </div>
-                                        <div>
-                                            <strong>{% if spatial_coverage.projection %}{{ spatial_coverage.projection }}{% else %}{{ spatial_coverage.default_projection }}{% endif %}</strong>
-                                        </div>
-                                    </small>
-                                </div>
-
-                                <div class="space-bottom">
-                                    <small class="text-muted has-space-bottom">
-                                        <div><i class="fa fa-tachometer" aria-hidden="true"></i> Coordinate Units:
-                                        </div>
-                                        <div><strong>{% if spatial_coverage.units %}{{ spatial_coverage.units }}{% else %}{{ spatial_coverage.default_units }}{% endif %}</strong></div>
-                                    </small>
-                                </div>
-
-                                <div id="div_id_north" class="control-group has-space-top">
-                                    <div class="input-group">
-                                        <span class="input-group-addon coordinates-label-addon">Latitude</span>
-                                        <input type="number" class="form-control" placeholder="-90 to 90"
-                                               id="id_north" name="north"
-                                               value="{% if spatial_coverage.north %}{{ spatial_coverage.north|floatformat:"4" }}{% endif %}">
-                                        <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
-                                              class="input-group-addon">°</span>
-                                    </div>
-                                </div>
-
-                                <div id="div_id_east" class="control-group has-space-top">
-                                    <div class="input-group">
-                                        <span class="input-group-addon coordinates-label-addon">Longitude</span>
-                                        <input type="number" class="form-control" placeholder="-180 to 180"
-                                               id="id_east" name="east"
-                                               value="{% if spatial_coverage.east %}{{ spatial_coverage.east|floatformat:"4" }}{% endif %}">
-                                        <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
-                                              class="input-group-addon">°</span>
-                                    </div>
-                                </div>
-
-                                <div id="div_id_northlimit" class="control-group has-space-bottom">
-                                    <div class="input-group">
-                                        <span class="input-group-addon coordinates-label-addon">North Latitude</span>
-                                        <input type="number" class="form-control" placeholder="-90 to 90"
-                                               id="id_northlimit" name="northlimit"
-                                               value="{% if spatial_coverage.northlimit %}{{ spatial_coverage.northlimit|floatformat:"4" }}{% endif %}">
-                                        <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
-                                              class="input-group-addon">°</span>
-                                    </div>
-                                </div>
-
-                                <div id="div_id_eastlimit" class="control-group has-space-bottom">
-                                    <div class="input-group">
-                                        <span class="input-group-addon coordinates-label-addon">East Longitude</span>
-                                        <input type="number" class="form-control" placeholder="-180 to 180"
-                                               id="id_eastlimit" name="eastlimit"
-                                               value="{% if spatial_coverage.eastlimit %}{{ spatial_coverage.eastlimit|floatformat:"4" }}{% endif %}">
-                                        <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
-                                              class="input-group-addon">°</span>
-                                    </div>
-                                </div>
-
-                                <div id="div_id_southlimit" class="control-group has-space-bottom">
-                                    <div class="input-group">
-                                        <span class="input-group-addon coordinates-label-addon">South Latitude</span>
-                                        <input type="number" class="form-control" placeholder="-90 to 90"
-                                               id="id_southlimit" name="southlimit"
-                                               value="{% if spatial_coverage.southlimit %}{{ spatial_coverage.southlimit|floatformat:"4" }}{% endif %}">
-                                        <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
-                                              class="input-group-addon">°</span>
-                                    </div>
-                                </div>
-
-                                <div id="div_id_westlimit" class="control-group">
-                                    <div class="input-group">
-                                        <span class="input-group-addon coordinates-label-addon">West Longitude</span>
-                                        <input type="number" class="form-control" placeholder="-180 to 180"
-                                               id="id_westlimit" name="westlimit"
-                                               value="{% if spatial_coverage.westlimit %}{{ spatial_coverage.westlimit|floatformat:"4" }}{% endif %}">
-                                        <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
-                                              class="input-group-addon">°</span>
-                                    </div>
-                                </div>
-
-                                {# we will show/hide this button from JS code when ever coverage element gets updated for aggregation #}
-                                {% if cm.resource_type == "CompositeResource" %}
-                                    <button id="btn-update-resource-spatial-coverage"
-                                            type="button" class="btn btn-info has-space-top"
-                                            {% if not cm.has_logical_spatial_coverage %}
-                                            style="display: none"
-                                            {% endif %}>
-                                        <i class="fa fa-calculator" aria-hidden="true"></i> Set spatial coverage from content files
-                                    </button>
-                                {% endif %}
                             </div>
 
-                            <div class="col-xs-12 col-sm-6 col-md-6 col-lg-8" id="coverage-header">
-                                <div id="div_id_type">
-                                    <label class="radio-inline">
-                                        <input type="radio"
-                                               {% if spatial_coverage.type == "point" %}checked="checked"{% endif %}
-                                               name="type" id="id_type_2"
-                                               value="point">Point
-                                    </label>
-                                    <label class="radio-inline">
-                                        <input type="radio"
-                                               {% if spatial_coverage.type == "box" %}checked="checked"{% endif %}
-                                               name="type" id="id_type_1"
-                                               value="box">Box
-                                    </label>
+                            <div class="space-bottom">
+                                <small class="text-muted">
+                                    <div>
+                                        <i class="fa fa-globe" aria-hidden="true"></i> Coordinate
+                                        System/Geographic Projection:
+                                    </div>
+                                    <div>
+                                        <strong>{% if spatial_coverage.projection %}{{ spatial_coverage.projection }}{% else %}{{ spatial_coverage.default_projection }}{% endif %}</strong>
+                                    </div>
+                                </small>
+                            </div>
+
+                            <div class="space-bottom">
+                                <small class="text-muted has-space-bottom">
+                                    <div><i class="fa fa-tachometer" aria-hidden="true"></i> Coordinate Units:
+                                    </div>
+                                    <div><strong>{% if spatial_coverage.units %}{{ spatial_coverage.units }}{% else %}{{ spatial_coverage.default_units }}{% endif %}</strong></div>
+                                </small>
+                            </div>
+
+                            <div id="div_id_north" class="control-group has-space-top">
+                                <div class="input-group">
+                                    <span class="input-group-addon coordinates-label-addon">Latitude</span>
+                                    <input type="number" class="form-control" placeholder="-90 to 90"
+                                            id="id_north" name="north"
+                                            value="{% if spatial_coverage.north %}{{ spatial_coverage.north|floatformat:"4" }}{% endif %}">
+                                    <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                            class="input-group-addon">°</span>
                                 </div>
+                            </div>
 
-                                <div id="coverageMap" style="height:350px"></div>
+                            <div id="div_id_east" class="control-group has-space-top">
+                                <div class="input-group">
+                                    <span class="input-group-addon coordinates-label-addon">Longitude</span>
+                                    <input type="number" class="form-control" placeholder="-180 to 180"
+                                            id="id_east" name="east"
+                                            value="{% if spatial_coverage.east %}{{ spatial_coverage.east|floatformat:"4" }}{% endif %}">
+                                    <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                            class="input-group-addon">°</span>
+                                </div>
+                            </div>
 
-                                <button id="spatial-coverage-save" type="button" class="btn btn-primary pull-right btn-form-submit has-space-top"
-                                        style="display: none;">Save changes
+                            <div id="div_id_northlimit" class="control-group has-space-bottom">
+                                <div class="input-group">
+                                    <span class="input-group-addon coordinates-label-addon">North Latitude</span>
+                                    <input type="number" class="form-control" placeholder="-90 to 90"
+                                            id="id_northlimit" name="northlimit"
+                                            value="{% if spatial_coverage.northlimit %}{{ spatial_coverage.northlimit|floatformat:"4" }}{% endif %}">
+                                    <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                            class="input-group-addon">°</span>
+                                </div>
+                            </div>
+
+                            <div id="div_id_eastlimit" class="control-group has-space-bottom">
+                                <div class="input-group">
+                                    <span class="input-group-addon coordinates-label-addon">East Longitude</span>
+                                    <input type="number" class="form-control" placeholder="-180 to 180"
+                                            id="id_eastlimit" name="eastlimit"
+                                            value="{% if spatial_coverage.eastlimit %}{{ spatial_coverage.eastlimit|floatformat:"4" }}{% endif %}">
+                                    <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                            class="input-group-addon">°</span>
+                                </div>
+                            </div>
+
+                            <div id="div_id_southlimit" class="control-group has-space-bottom">
+                                <div class="input-group">
+                                    <span class="input-group-addon coordinates-label-addon">South Latitude</span>
+                                    <input type="number" class="form-control" placeholder="-90 to 90"
+                                            id="id_southlimit" name="southlimit"
+                                            value="{% if spatial_coverage.southlimit %}{{ spatial_coverage.southlimit|floatformat:"4" }}{% endif %}">
+                                    <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                            class="input-group-addon">°</span>
+                                </div>
+                            </div>
+
+                            <div id="div_id_westlimit" class="control-group">
+                                <div class="input-group">
+                                    <span class="input-group-addon coordinates-label-addon">West Longitude</span>
+                                    <input type="number" class="form-control" placeholder="-180 to 180"
+                                            id="id_westlimit" name="westlimit"
+                                            value="{% if spatial_coverage.westlimit %}{{ spatial_coverage.westlimit|floatformat:"4" }}{% endif %}">
+                                    <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                            class="input-group-addon">°</span>
+                                </div>
+                            </div>
+
+                            {# we will show/hide this button from JS code when ever coverage element gets updated for aggregation #}
+                            {% if cm.resource_type == "CompositeResource" %}
+                                <button id="btn-update-resource-spatial-coverage"
+                                        type="button" class="btn btn-info has-space-top"
+                                        {% if not cm.has_logical_spatial_coverage %}
+                                        style="display: none"
+                                        {% endif %}>
+                                    <i class="fa fa-calculator" aria-hidden="true"></i> Set spatial coverage from content files
                                 </button>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-xs-12 col-sm-6 col-md-6 col-lg-8" id="coverage-header">
+                            <div id="div_id_type">
+                                <label class="radio-inline">
+                                    <input type="radio"
+                                            {% if spatial_coverage.type == "point" %}checked="checked"{% endif %}
+                                            name="type" id="id_type_2"
+                                            value="point">Point
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio"
+                                            {% if spatial_coverage.type == "box" %}checked="checked"{% endif %}
+                                            name="type" id="id_type_1"
+                                            value="box">Box
+                                </label>
                             </div>
-                        </fieldset>
+
+                            <div id="coverageMap" style="height:350px"></div>
+
+                            <button id="spatial-coverage-save" type="button" class="btn btn-primary pull-right btn-form-submit has-space-top"
+                                    style="display: none;">Save changes
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>

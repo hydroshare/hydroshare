@@ -114,7 +114,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(new_res.creator == self.user)
         self.assertTrue(new_res.short_id is not None, 'Short ID has not been created!')
         self.assertEqual(new_res.files.all().count(), 1, msg="Number of content files is not equal to 1")
-        self.assertEqual(new_res.get_quota_holder(), self.user,
+        self.assertEqual(new_res.quota_holder, self.user,
                          msg="The quota holder of the newly created resource is not the creator")
 
         if new_res:
@@ -423,7 +423,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         uquota = self.user.quotas.first()
         # make user's quota over hard limit 125%
-        uquota.used_value = uquota.allocated_value * 1.3
+        uquota.user_zone_value = uquota.allocated_value * 1.3
         uquota.save()
 
         # create_resource should raise quota exception now that the creator user is over hard

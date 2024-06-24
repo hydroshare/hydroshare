@@ -284,24 +284,25 @@
                         <span class="glyphicon glyphicon-trash icon-button btn-remove"></span>
                         <span>Delete</span>
                     </li>
+                    {% if max_file_size > 0 %}
+                        <li id="zip-separator" role="separator" class="divider"></li>
 
-                    <li id="zip-separator" role="separator" class="divider"></li>
+                        <li id="btn-zip" data-menu-name="zip" data-toggle="modal" data-fb-action="zip"
+                            data-target="#zip-folder-dialog">
+                            <span class="glyphicon glyphicon-compressed icon-blue"></span>
+                            <span>Zip folder...</span>
+                        </li>
 
-                    <li id="btn-zip" data-menu-name="zip" data-toggle="modal" data-fb-action="zip"
-                        data-target="#zip-folder-dialog">
-                        <span class="glyphicon glyphicon-compressed icon-blue"></span>
-                        <span>Zip folder...</span>
-                    </li>
+                        <li id="btn-unzip" data-menu-name="unzip" data-fb-action="unzip">
+                            <span class="fa fa-file-archive-o icon-blue"></span>
+                            <span>Unzip here</span>
+                        </li>
 
-                    <li id="btn-unzip" data-menu-name="unzip" data-fb-action="unzip">
-                        <span class="fa fa-file-archive-o icon-blue"></span>
-                        <span>Unzip here</span>
-                    </li>
-
-                    <li id="btn-unzip-to-folder" data-menu-name="unzip-to-folder" data-fb-action="unzipToFolder">
-                        <span class="fa fa-file-archive-o icon-blue"></span>
-                        <span>Unzip to folder</span>
-                    </li>
+                        <li id="btn-unzip-to-folder" data-menu-name="unzip-to-folder" data-fb-action="unzipToFolder">
+                            <span class="fa fa-file-archive-o icon-blue"></span>
+                            <span>Unzip to folder</span>
+                        </li>
+                    {% endif %}
 
                     <li role="separator" class="divider"></li>
                 {% endif %}
@@ -430,12 +431,14 @@
                             <span class="fa fa-folder icon-blue"></span>
                             <span>New folder</span>
                         </li>
-                        <li id="menu-add-reference" data-menu-name="add-reference" data-toggle="modal"
-                            data-fb-action="createFolder"
-                            data-target="#add-reference-url-dialog">
-                            <span class="fa fa-external-link icon-blue"></span>
-                            <span>Add content from the web</span>
-                        </li>
+                        {% if max_file_size > 0 %}
+                            <li id="menu-add-reference" data-menu-name="add-reference" data-toggle="modal"
+                                data-fb-action="createFolder"
+                                data-target="#add-reference-url-dialog">
+                                <span class="fa fa-external-link icon-blue"></span>
+                                <span>Add content from the web</span>
+                            </li>
+                        {% endif %}
                         <li data-menu-name="paste" data-fb-action="paste">
                             <span class="fa fa-clipboard icon-blue"></span>
                             <span>Paste</span>
@@ -504,23 +507,38 @@
                 {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                     {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
                         <div id="fb-alerts">
-                            <div class="alert alert-warning alert-dismissible" role="alert">
-                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
+                            {% if max_file_size > 0 %}
+                                <div class="alert alert-warning alert-dismissible" role="alert">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
 
-                                <div class="flex">
-                                    <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
-                                    <em>
-                                        <strong>Uploading</strong>
-                                        <ul>
-                                            <li><span id="file-types"></span></li>
-                                            <li><span id="file-multiple"></span></li>
-                                            {% block upload_message %}{% endblock %}
-                                        </ul>
-                                    </em>
+                                    <div class="flex">
+                                        <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                                        <em>
+                                            <strong>Uploading</strong>
+                                            <ul>
+                                                <li><span id="file-types"></span></li>
+                                                <li><span id="file-multiple"></span></li>
+                                                {% block upload_message %}{% endblock %}
+                                            </ul>
+                                        </em>
+                                    </div>
                                 </div>
-                            </div>
+                            {% else %}
+                                <div class="alert alert-danger alert-dismissible" role="alert">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                    <div class="flex">
+                                        <i class="fa fa-exclamation-circle" style="margin-right: 20px; margin-left: 10px;"></i>
+                                        <em>
+                                            File upload is not allowed because you have exceeded your quota.
+                                            More information can be found on your <a href="/user/{{current_user.id}}">User Profile</a> page.
+                                        </em>
+                                    </div>
+                                </div>
+                            {% endif %}
                         </div>
                    {% endif %}
                 {% endif %}
@@ -674,7 +692,7 @@
                                         <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12">
                                             {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                                                 {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
-                                                    <a type="button" data-fb-action="uploadFiles"
+                                                    <a {% if max_file_size <= 0 %}disabled{% endif %} type="button" data-fb-action="uploadFiles"
                                                        class="btn btn-success btn-xs dz-clickable upload-toggle">
                                                         <i class="fa fa-plus"></i> Add files
                                                     </a>
@@ -684,7 +702,8 @@
                                                                 class="btn btn-default btn-xs dropdown-toggle fb-space-right"
                                                                 data-toggle="dropdown" aria-haspopup="true"
                                                                 title="Add files from an iRODS server"
-                                                                aria-expanded="false">
+                                                                aria-expanded="false"
+                                                                {% if max_file_size <= 0 %}disabled{% endif %}>
                                                             <span>iRODS</span>&nbsp;<span class="caret"></span>
                                                         </button>
 
@@ -726,13 +745,15 @@
                                                             title="Create new folder">
                                                         <span class="fa fa-folder icon-blue"></span>
                                                     </button>
-                                                    <button id="fb-add-reference" class="fb-space-right"
-                                                            data-fb-action="createFolder"
-                                                            data-toggle="modal"
-                                                            data-target="#add-reference-url-dialog"
-                                                        title="Add content from the web">
-                                                    <span class="fa fa-external-link icon-blue"></span>
-                                                    </button>
+                                                    {% if max_file_size > 0 %}
+                                                        <button id="fb-add-reference" class="fb-space-right {% if max_file_size <= 0 %}disabled{% endif %}"
+                                                                data-fb-action="createFolder"
+                                                                data-toggle="modal"
+                                                                data-target="#add-reference-url-dialog"
+                                                            title="Add content from the web">
+                                                        <span class="fa fa-external-link icon-blue"></span>
+                                                        </button>
+                                                    {% endif %}
                                                     <button id="fb-cut" data-fb-action="cut"
                                                             class="disabled"
                                                             title="Cut">
@@ -754,7 +775,7 @@
                                                     </button>
                                                 {% endif %}
 
-                                                {% if cm.resource_type == "CompositeResource" %}
+                                                {% if cm.resource_type == "CompositeResource" and max_file_size > 0 %}
                                                     <button id="fb-zip" data-fb-action="zip"
                                                             class="disabled"
                                                             title="Zip folder" data-toggle="modal"
@@ -876,11 +897,13 @@
 
                                     {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                                         {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
-                                            <div class="fb-upload-caption ">
-                                                <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload files
-                                                smaller than 1GB in size by dragging & dropping, or click <a
-                                                    class="dz-clickable upload-toggle">here</a> to select them.
-                                            </div>
+                                            {% if max_file_size > 0 %}
+                                                <div class="fb-upload-caption">
+                                                    <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;
+                                                    Upload files smaller than {{ max_file_size|floatformat:"1" }}MB in size by dragging & dropping, or click 
+                                                    <a class="dz-clickable upload-toggle">here</a> to select them.
+                                                </div>
+                                            {% endif %}
                                         {% endif %}
                                     {% endif %}
                                 </div>
@@ -1012,7 +1035,7 @@
       const SHORT_ID = "{{ cm.short_id }}";
       var global_num_ext_refs = 0;
       var global_custom_citation = "{{ custom_citation }}";
-
+      const MAX_FILE_SIZE = {{ max_file_size }};
       $.ajax({
         type: "GET",
         url: '/hsapi/_internal/' + SHORT_ID + '/list-referenced-content/',

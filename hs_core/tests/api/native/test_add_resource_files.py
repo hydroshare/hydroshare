@@ -100,7 +100,7 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
 
         uquota = self.user.quotas.first()
         # make user's quota over hard limit 125%
-        uquota.used_value = uquota.allocated_value * 1.3
+        uquota.user_zone_value = uquota.allocated_value * 1.3
         uquota.save()
 
         # add files should raise quota exception now that the quota holder is over hard limit

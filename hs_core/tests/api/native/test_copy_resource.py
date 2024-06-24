@@ -12,6 +12,8 @@ from hs_access_control.models import PrivilegeCodes
 from hs_core import hydroshare
 from hs_core.models import BaseResource
 from hs_composite_resource.models import CompositeResource
+from theme.models import QuotaMessage
+from hs_core.hydroshare.utils import QuotaException
 
 from hs_file_types.models import GeoRasterLogicalFile
 
@@ -334,6 +336,31 @@ class TestCopyResource(TestCase):
             self.composite_resource.delete()
         if new_composite_resource:
             new_composite_resource.delete()
+
+    def test_copy_resource_over_quota(self):
+        """
+        Test case to ensure that copying a resource fails when the user's quota is exceeded.
+        """
+        # Set the user's quota to be over the limit
+        if not QuotaMessage.objects.exists():
+            QuotaMessage.objects.create()
+        qmsg = QuotaMessage.objects.first()
+        qmsg.enforce_quota = True
+        qmsg.save()
+        uquota = self.owner.quotas.first()
+        uquota.user_zone_value = uquota.allocated_value * 1.3
+        uquota.save()
+
+        with self.assertRaises(QuotaException):
+            hydroshare.create_empty_resource(self.res.short_id,
+                                             self.owner,
+                                             action='copy')
+        qmsg.enforce_quota = False
+        qmsg.save()
+        # QuotaException should NOT be raised now that quota is not enforced
+        hydroshare.create_empty_resource(self.res.short_id,
+                                         self.owner,
+                                         action='copy')
 
 
 def _get_relation_meta_derived_from(resource):
