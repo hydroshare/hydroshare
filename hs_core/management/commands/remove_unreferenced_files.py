@@ -13,7 +13,7 @@ class Command(BaseCommand):
         parser.add_argument('resource_ids', nargs='*', type=str)
         parser.add_argument('--updated_since', type=int, dest='updated_since',
                             help='include only resources updated in the last X days')
-        
+
     def handle(self, *args, **options):
         resources_ids = options['resource_ids']
         updated_since = options['updated_since']
@@ -29,8 +29,9 @@ class Command(BaseCommand):
         else:
             print("Setting isPublic AVU for all resources.")
             resources = BaseResource.objects.all()
-        
+
         istorage = IrodsStorage()
+
         def list_files_recursively(folder_path):
             try:
                 folders, files, _ = istorage.listdir(folder_path)
@@ -45,10 +46,10 @@ class Command(BaseCommand):
                 for subfolder in subfolders:
                     files += list_files_recursively(f"{sub_folder_path}/{subfolder}")
             return files
-        for resource in resources.iterator():
 
+        for resource in resources.iterator():
             irods_files = list_files_recursively(resource.file_path)
-            irods_files = [f for f in irods_files if not f.endswith("_meta.xml") or f.endswith("_resmap.xml")] # exclude agg metadata files
+            irods_files = [f for f in irods_files if not f.endswith("_meta.xml") or f.endswith("_resmap.xml")]
             res_files = ResourceFile.objects.filter(object_id=resource.id)
             unreferenced_irods_files = res_files.exclude(resource_file__in=irods_files)
             if not unreferenced_irods_files:

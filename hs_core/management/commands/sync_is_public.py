@@ -12,7 +12,7 @@ class Command(BaseCommand):
         parser.add_argument('resource_ids', nargs='*', type=str)
         parser.add_argument('--updated_since', type=int, dest='updated_since',
                             help='include only resources updated in the last X days')
-        
+
     def handle(self, *args, **options):
         resources_ids = options['resource_ids']
         updated_since = options['updated_since']
@@ -28,7 +28,7 @@ class Command(BaseCommand):
         else:
             print("Setting isPublic AVU for all resources.")
             resources = resources.all()
-        
+
         for resource in resources.iterator():
             django_public = resource.raccess.public
             isPublic = "true" if django_public else "false"
