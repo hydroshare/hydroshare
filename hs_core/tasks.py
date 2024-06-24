@@ -947,43 +947,6 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
 
 
 @shared_task
-def replicate_resource_bag_to_user_zone_task(res_id, request_username):
-    """
-    Task for replicating resource bag which will be created on demand if not existent already to iRODS user zone
-    Args:
-        res_id: the resource id with its bag to be replicated to iRODS user zone
-        request_username: the requesting user's username to whose user zone space the bag is copied to
-
-    Returns:
-    None, but exceptions will be raised if there is an issue with iRODS operation
-    """
-
-    res = utils.get_resource_by_shortkey(res_id)
-    res_coll = res.root_path
-    istorage = res.get_irods_storage()
-    if istorage.exists(res_coll):
-        bag_modified = res.getAVU('bag_modified')
-        if bag_modified is None or not bag_modified:
-            if not istorage.exists(res.bag_path):
-                create_bag_by_irods(res_id)
-        else:
-            create_bag_by_irods(res_id)
-
-        # do replication of the resource bag to irods user zone
-        if not res.resource_federation_path:
-            istorage.set_fed_zone_session()
-        src_file = res.bag_path
-        tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(
-            userzone=settings.HS_USER_IRODS_ZONE, username=request_username, resid=res_id)
-        fsize = istorage.size(src_file)
-        utils.validate_user_quota(request_username, fsize)
-        istorage.copyFiles(src_file, tgt_file)
-        return None
-    else:
-        raise ValidationError("Resource {} does not exist in iRODS".format(res.short_id))
-
-
-@shared_task
 def delete_resource_task(resource_id, request_username=None):
     """
     Deletes a resource managed by HydroShare. The caller must be an owner of the resource or an
