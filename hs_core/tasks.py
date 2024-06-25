@@ -175,6 +175,12 @@ def nightly_repair_resource_files():
     cuttoff_time = timezone.now() - timedelta(days=1)
     recently_updated_resources = BaseResource.objects \
         .filter(updated__gte=cuttoff_time, raccess__published=False)
+
+    # the repair_resource function sets the BaseResource.updated field if it makes changes
+    # so we need to additionally filter out any resources that have been repaired in the last day
+    # this is to prevent the list of recently_updated_resources from growing indefinitely
+    recently_updated_resources = recently_updated_resources.exclude(repaired__gte=cuttoff_time)
+
     repaired_resources = []
     try:
         for res in recently_updated_resources:
