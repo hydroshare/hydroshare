@@ -27,7 +27,7 @@ class Command(BaseCommand):
             cuttoff_time = timezone.now() - timedelta(days=updated_since)
             resources = resources.filter(updated__gte=cuttoff_time)
         else:
-            print("Setting isPublic AVU for all resources.")
+            print("Removing unreferenced files for all resources.")
             resources = BaseResource.objects.all()
 
         istorage = IrodsStorage()
