@@ -40,6 +40,7 @@ from hs_core.hydroshare.resource import (deposit_res_metadata_with_crossref,
                                          get_resource_doi, update_quota_usage,)
 from hs_core.models import BaseResource, ResourceFile, TaskNotification
 from hs_core.task_utils import get_or_create_task_notification
+from hs_core.views.utils import get_default_admin_user
 from hs_file_types.models import (FileSetLogicalFile, GenericLogicalFile,
                                   GeoFeatureLogicalFile, GeoRasterLogicalFile,
                                   ModelInstanceLogicalFile,
@@ -173,6 +174,7 @@ def nightly_repair_resource_files():
     from hs_core.management.utils import check_time, repair_resource
     start_time = time.time()
     cuttoff_time = timezone.now() - timedelta(days=1)
+    admin_user = get_default_admin_user()
     recently_updated_resources = BaseResource.objects \
         .filter(updated__gte=cuttoff_time, raccess__published=False)
 
@@ -187,7 +189,7 @@ def nightly_repair_resource_files():
             check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
             is_corrupt = False
             try:
-                _, missing_django, dangling_in_django = repair_resource(res, logger)
+                _, missing_django, dangling_in_django = repair_resource(res, logger, user=admin_user)
                 is_corrupt = missing_django > 0 or dangling_in_django > 0
             except ObjectDoesNotExist:
                 logger.info("nightly_repair_resource_files encountered dangling iRods files for a nonexistent resource")
@@ -205,7 +207,7 @@ def nightly_repair_resource_files():
             check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
             is_corrupt = False
             try:
-                _, missing_django, dangling_in_django = repair_resource(res, logger)
+                _, missing_django, dangling_in_django = repair_resource(res, logger, user=admin_user)
                 is_corrupt = missing_django > 0 or dangling_in_django > 0
             except ObjectDoesNotExist:
                 logger.info("nightly_repair_resource_files encountered dangling iRods files for a nonexistent resource")
