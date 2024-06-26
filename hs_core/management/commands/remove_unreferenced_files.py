@@ -13,7 +13,7 @@ class Command(BaseCommand):
         parser.add_argument('resource_ids', nargs='*', type=str)
         parser.add_argument('--updated_since', type=int, dest='updated_since',
                             help='include only resources updated in the last X days')
-        parser.add_argument('--dryrun', type=int, dest='dryrun',
+        parser.add_argument('--dryrun', action='store_true', dest='dryrun', default=False,
                             help='Only lists the files, does not delete them.')
 
     def handle(self, *args, **options):
@@ -39,7 +39,7 @@ class Command(BaseCommand):
             try:
                 folders, files, _ = istorage.listdir(folder_path)
             except SessionException as ex:
-                print(f"Failed to list files in {folder_path}: {ex.stderr}")
+                print(f"Failed to list files in folder path {folder_path}: {ex.stderr}")
                 return []
             files = [f"{folder_path}/{f}" for f in files]
             for folder in folders:
@@ -47,6 +47,7 @@ class Command(BaseCommand):
                 try:
                     subfolders, subfiles, _ = istorage.listdir(sub_folder_path)
                 except SessionException as ex:
+                    print(f"Failed to list files in subfolder path {sub_folder_path}: {ex.stderr}")
                     subfiles = []
                     subfolders = []
                 files += ([f"{sub_folder_path}/{f}" for f in subfiles])
@@ -62,9 +63,12 @@ class Command(BaseCommand):
             print(f"{current_resource_count}/{total_resources}")
             current_resource_count = current_resource_count + 1
             irods_files = list_files_recursively(resource.file_path)
-            irods_files = [f for f in irods_files if not f.endswith("_meta.xml") and not f.endswith("_resmap.xml") and not f.endswith("_schema.json")]
+            irods_files = [f for f in irods_files if not f.endswith("_meta.xml") and 
+                           not f.endswith("_resmap.xml") and 
+                           not f.endswith("_schema.json")]
             res_files = ResourceFile.objects.filter(object_id=resource.id)
-            res_files_with_no_file = res_files.exclude(resource_file__in=irods_files).values_list('resource_file', flat=True)
+            res_files_with_no_file = res_files.exclude(resource_file__in=irods_files).values_list('resource_file', 
+                                                                                                  flat=True)
             if res_files_with_no_file:
                 # print("Dangline resource files")
                 resources_with_dangling_rf.append(resource.short_id)
