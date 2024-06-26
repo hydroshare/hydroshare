@@ -835,16 +835,6 @@
                                                 <span class="fa fa-download icon-blue"></span>
                                             </button>
 
-                                            {% if user_zone_account_exist %}
-                                                <a id="rep-res-bag" type="button"
-                                                   title="Copy Resource Bag to iRODS User Zone"
-                                                   data-target="#rep-resource-to-irods-dialog"
-                                                   data-toggle="modal"
-                                                   data-placement="auto">
-                                                    <span class="hs-icon-irods icon-blue"></span>
-                                                </a>
-                                            {% endif %}
-
                                             <button id="btn-download-all"
                                                 title="Download all content as Zipped BagIt Archive"
                                                 {% if cm.raccess.require_download_agreement %}

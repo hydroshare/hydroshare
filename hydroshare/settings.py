@@ -851,7 +851,6 @@ TASK_NAME_LIST = [
     "hs_core.tasks.create_temp_zip",
     "hs_core.tasks.unzip_task",
     "hs_core.tasks.copy_resource_task",
-    "hs_core.tasks.replicate_resource_bag_to_user_zone_task",
     "hs_core.tasks.create_new_version_resource_task",
     "hs_core.tasks.delete_resource_task",
     "hs_core.tasks.move_aggregation_task",
