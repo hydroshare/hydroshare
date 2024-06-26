@@ -353,23 +353,6 @@ $(document).ready(function () {
        })
     });
 
-    $("#btn-replicate").on('click', function(e) {
-        e.stopImmediatePropagation();
-        $.ajax({
-            type: "POST",
-            url: "/hsapi/_internal/" + SHORT_ID + "/rep-res-bag-to-irods-user-zone/",
-            success: function (task) {
-                $('#rep-resource-to-irods-dialog').modal('hide');
-                notificationsApp.registerTask(task);
-                notificationsApp.show();
-            },
-            error: function (xhr, errmsg, err) {
-                display_error_message('Failed to copy the resource to your user zone', xhr.responseText);
-                $('#rep-resource-to-irods-dialog').modal('hide');
-            }
-        })
-    });
-
     $("#btn-delete-resource").on('click', function(e) {
         e.stopImmediatePropagation();
         // disable the delete icon to prevent users from clicking it again until it is done
