@@ -13,10 +13,13 @@ class Command(BaseCommand):
         parser.add_argument('resource_ids', nargs='*', type=str)
         parser.add_argument('--updated_since', type=int, dest='updated_since',
                             help='include only resources updated in the last X days')
+        parser.add_argument('--dryrun', type=int, dest='dryrun',
+                            help='Only lists the files, does not delete them.')
 
     def handle(self, *args, **options):
         resources_ids = options['resource_ids']
         updated_since = options['updated_since']
+        dryrun = options['dryrun']
         resources = BaseResource.objects
 
         if resources_ids:  # an array of resource short_id to check.
@@ -41,18 +44,45 @@ class Command(BaseCommand):
             files = [f"{folder_path}/{f}" for f in files]
             for folder in folders:
                 sub_folder_path = f"{folder_path}/{folder}"
-                subfolders, subfiles, _ = istorage.listdir(sub_folder_path)
+                try:
+                    subfolders, subfiles, _ = istorage.listdir(sub_folder_path)
+                except SessionException as ex:
+                    subfiles = []
+                    subfolders = []
                 files += ([f"{sub_folder_path}/{f}" for f in subfiles])
                 for subfolder in subfolders:
                     files += list_files_recursively(f"{sub_folder_path}/{subfolder}")
             return files
 
+        total_resources = resources.count()
+        current_resource_count = 1
+        resources_with_dangling_rf = []
+        resources_with_missing_rf = []
         for resource in resources.iterator():
+            print(f"{current_resource_count}/{total_resources}")
+            current_resource_count = current_resource_count + 1
             irods_files = list_files_recursively(resource.file_path)
-            irods_files = [f for f in irods_files if not f.endswith("_meta.xml") or f.endswith("_resmap.xml")]
+            irods_files = [f for f in irods_files if not f.endswith("_meta.xml") and not f.endswith("_resmap.xml") and not f.endswith("_schema.json")]
             res_files = ResourceFile.objects.filter(object_id=resource.id)
-            unreferenced_irods_files = res_files.exclude(resource_file__in=irods_files)
-            if not unreferenced_irods_files:
-                print(f"Resource {resource.short_id} has no unreferenced iRODS files:")
-            else:
-                print(f"Unreferenced files found in Resource {resource.short_id}")
+            res_files_with_no_file = res_files.exclude(resource_file__in=irods_files).values_list('resource_file', flat=True)
+            if res_files_with_no_file:
+                # print("Dangline resource files")
+                resources_with_dangling_rf.append(resource.short_id)
+                # res_files_with_no_file.delete()
+                # print(" ".join(res_files_with_no_file))
+            matched_values = res_files.filter(resource_file__in=irods_files).values_list('resource_file', flat=True)
+            unreferenced_irods_files = [f for f in irods_files if f not in list(matched_values)]
+            if unreferenced_irods_files:
+                resources_with_missing_rf.append(resource.short_id)
+                print("Unreferenced irods files")
+                print(" ".join(unreferenced_irods_files))
+                if not dryrun:
+                    for file in unreferenced_irods_files:
+                        try:
+                            istorage.delete(file)
+                        except SessionException as ex:
+                            print(f"Failed to delete {file}: {ex.stderr}")
+        print("Resources with dangling resource files")
+        print(" ".join(resources_with_dangling_rf))
+        print("Resources with missing resource files")
+        print(" ".join(resources_with_missing_rf))
