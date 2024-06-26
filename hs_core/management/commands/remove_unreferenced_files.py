@@ -55,6 +55,11 @@ class Command(BaseCommand):
                     files += list_files_recursively(f"{sub_folder_path}/{subfolder}")
             return files
 
+        def special_file(f):
+            if f.endswith("_meta.xml") or f.endswith("_resmap.xml") or f.endswith("_schema.json"):
+                return True
+            return False
+
         total_resources = resources.count()
         current_resource_count = 1
         resources_with_dangling_rf = []
@@ -63,9 +68,7 @@ class Command(BaseCommand):
             print(f"{current_resource_count}/{total_resources}")
             current_resource_count = current_resource_count + 1
             irods_files = list_files_recursively(resource.file_path)
-            irods_files = [f for f in irods_files if not f.endswith("_meta.xml") and 
-                           not f.endswith("_resmap.xml") and 
-                           not f.endswith("_schema.json")]
+            irods_files = [f for f in irods_files if not special_file(f)]
             res_files = ResourceFile.objects.filter(object_id=resource.id)
             res_files_with_no_file = res_files.exclude(resource_file__in=irods_files).values_list('resource_file', 
                                                                                                   flat=True)
