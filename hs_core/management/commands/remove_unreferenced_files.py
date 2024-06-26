@@ -86,6 +86,8 @@ class Command(BaseCommand):
                             istorage.delete(file)
                         except SessionException as ex:
                             print(f"Failed to delete {file}: {ex.stderr}")
+                        except Exception as ex:
+                            print(f"Failed to delete {file}: {ex.stderr}")
         print("Resources with dangling resource files")
         print(" ".join(resources_with_dangling_rf))
         print("Resources with missing resource files")
