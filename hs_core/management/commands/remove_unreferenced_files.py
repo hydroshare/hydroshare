@@ -70,7 +70,7 @@ class Command(BaseCommand):
             irods_files = list_files_recursively(resource.file_path)
             irods_files = [f for f in irods_files if not special_file(f)]
             res_files = ResourceFile.objects.filter(object_id=resource.id)
-            res_files_with_no_file = res_files.exclude(resource_file__in=irods_files).values_list('resource_file', 
+            res_files_with_no_file = res_files.exclude(resource_file__in=irods_files).values_list('resource_file',
                                                                                                   flat=True)
             if res_files_with_no_file:
                 # print("Dangline resource files")
