@@ -40,7 +40,6 @@ from hs_core.hydroshare.resource import (deposit_res_metadata_with_crossref,
                                          get_resource_doi, update_quota_usage,)
 from hs_core.models import BaseResource, ResourceFile, TaskNotification
 from hs_core.task_utils import get_or_create_task_notification
-from hs_core.views.utils import get_default_admin_user
 from hs_file_types.models import (FileSetLogicalFile, GenericLogicalFile,
                                   GeoFeatureLogicalFile, GeoRasterLogicalFile,
                                   ModelInstanceLogicalFile,
@@ -172,6 +171,7 @@ def nightly_repair_resource_files():
     Run repair_resource on resources updated in the last day
     """
     from hs_core.management.utils import check_time, repair_resource
+    from hs_core.views.utils import get_default_admin_user
     start_time = time.time()
     cuttoff_time = timezone.now() - timedelta(days=1)
     admin_user = get_default_admin_user()
