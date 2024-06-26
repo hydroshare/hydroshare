@@ -73,10 +73,7 @@ class Command(BaseCommand):
             res_files_with_no_file = res_files.exclude(resource_file__in=irods_files).values_list('resource_file',
                                                                                                   flat=True)
             if res_files_with_no_file:
-                # print("Dangline resource files")
                 resources_with_dangling_rf.append(resource.short_id)
-                # res_files_with_no_file.delete()
-                # print(" ".join(res_files_with_no_file))
             matched_values = res_files.filter(resource_file__in=irods_files).values_list('resource_file', flat=True)
             unreferenced_irods_files = [f for f in irods_files if f not in list(matched_values)]
             if unreferenced_irods_files:
