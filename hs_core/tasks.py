@@ -171,17 +171,25 @@ def nightly_repair_resource_files():
     Run repair_resource on resources updated in the last day
     """
     from hs_core.management.utils import check_time, repair_resource
+    from hs_core.views.utils import get_default_admin_user
     start_time = time.time()
     cuttoff_time = timezone.now() - timedelta(days=1)
+    admin_user = get_default_admin_user()
     recently_updated_resources = BaseResource.objects \
         .filter(updated__gte=cuttoff_time, raccess__published=False)
+
+    # the repair_resource function sets the BaseResource.updated field if it makes changes
+    # so we need to additionally filter out any resources that have been repaired in the last day
+    # this is to prevent the list of recently_updated_resources from growing indefinitely
+    recently_updated_resources = recently_updated_resources.exclude(repaired__gte=cuttoff_time)
+
     repaired_resources = []
     try:
         for res in recently_updated_resources:
             check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
             is_corrupt = False
             try:
-                _, missing_django, dangling_in_django = repair_resource(res, logger)
+                _, missing_django, dangling_in_django = repair_resource(res, logger, user=admin_user)
                 is_corrupt = missing_django > 0 or dangling_in_django > 0
             except ObjectDoesNotExist:
                 logger.info("nightly_repair_resource_files encountered dangling iRods files for a nonexistent resource")
@@ -199,7 +207,7 @@ def nightly_repair_resource_files():
             check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
             is_corrupt = False
             try:
-                _, missing_django, dangling_in_django = repair_resource(res, logger)
+                _, missing_django, dangling_in_django = repair_resource(res, logger, user=admin_user)
                 is_corrupt = missing_django > 0 or dangling_in_django > 0
             except ObjectDoesNotExist:
                 logger.info("nightly_repair_resource_files encountered dangling iRods files for a nonexistent resource")
