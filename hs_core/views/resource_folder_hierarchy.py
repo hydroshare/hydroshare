@@ -10,6 +10,8 @@ from rest_framework.exceptions import NotFound, status, PermissionDenied, \
     ValidationError as DRF_ValidationError
 from rest_framework.response import Response
 
+from mezzanine.conf import settings
+
 from django_irods.icommands import SessionException
 from hs_core.hydroshare import delete_resource_file
 from hs_core.hydroshare.utils import get_file_mime_type, resolve_request, QuotaException
@@ -188,6 +190,8 @@ def data_store_structure(request):
                                          resource=resource,
                                          folder_path=f_store_path
                                      ),
+                                     'valid_geoserver_projection':
+                                         res_file.logical_file.extra_data.get('valid_geoserver_proj', 'True'),
                                      'url': res_file.logical_file.url})
             logical_file = res_file.logical_file
             logical_file_type = res_file.logical_file_type_name
@@ -221,7 +225,11 @@ def data_store_structure(request):
     return_object = {'files': files,
                      'folders': dirs,
                      'aggregations': aggregations,
-                     'can_be_public': resource.can_be_public_or_discoverable}
+                     'can_be_public': resource.can_be_public_or_discoverable,
+                     'geoserver_url': (
+                        getattr(settings, 'HSWS_GEOSERVER_URL', '') +
+                        getattr(settings, 'HSWS_GEOSERVER_GET_CAPABILITIES', '')
+                     )}
 
     return HttpResponse(
         json.dumps(return_object),
