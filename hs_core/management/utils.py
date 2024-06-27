@@ -325,9 +325,13 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
                 if clean_django and not dry_run:
                     if not user:
                         user = resource.creator
-                    delete_resource_file(resource.short_id, f.short_path, user,
-                                         delete_logical_file=False)
-                    msg += " (DELETED FROM DJANGO)"
+                    try:
+                        delete_resource_file(resource.short_id, f.short_path, user,
+                                             delete_logical_file=False)
+                        msg += " (DELETED FROM DJANGO)"
+                    except Exception as ex:
+                        msg += ": (CANNOT DELETE: {})"\
+                            .format(str(ex))
                 if echo_errors:
                     print(msg)
                 if log_errors:
