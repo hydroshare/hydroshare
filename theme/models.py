@@ -642,10 +642,10 @@ class UserProfile(models.Model):
 
     create_irods_user_account = models.BooleanField(
         default=False,
-        help_text="Check to create an iRODS user account in HydroShare user "
+        help_text="Has an iRODS user account been created in HydroShare user "
         "iRODS space for staging large files (>2GB) using iRODS clients such as Cyberduck "
         "(https://cyberduck.io/) and icommands (https://docs.irods.org/master/icommands/user/)."
-        "Uncheck to delete your iRODS user account. Note that deletion of your iRODS user "
+        "Uncheck after requesting your iRODS user account be deleted. Note that deletion of your iRODS user "
         "account deletes all of your files under this account as well.",
     )
 
