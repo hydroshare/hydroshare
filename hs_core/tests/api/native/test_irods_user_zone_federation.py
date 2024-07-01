@@ -6,7 +6,6 @@ from django.contrib.auth.models import Group
 
 from hs_core.models import BaseResource
 from hs_core import hydroshare
-from hs_core.tasks import replicate_resource_bag_to_user_zone_task
 from hs_core.testing import TestCaseCommonUtilities
 
 
@@ -112,14 +111,6 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         # test original file in user test zone still exist after adding it to the resource
         self.assertTrue(self.irods_storage.exists(user_path + self.file_one))
         self.assertTrue(self.irods_storage.exists(user_path + self.file_two))
-
-        # test replication of this resource to user zone even if the bag_modified AVU for this
-        # resource is wrongly set to False when the bag for this resource does not exist and
-        # need to be recreated
-        res.setAVU('bag_modified', 'false')
-        replicate_resource_bag_to_user_zone_task(res.short_id, self.user.username)
-        self.assertTrue(self.irods_storage.exists(user_path + res.short_id + '.zip'),
-                        msg='replicated resource bag is not in the user zone')
 
         # test resource deletion
         hydroshare.resource.delete_resource(res.short_id)

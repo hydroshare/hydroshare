@@ -61,8 +61,7 @@
                                    :href="identifier" :title="identifierAttributes[key].title"
                                    class="identifier-icon" target="_blank"
                                    data-toggle="tooltip" data-placement="top">
-
-                                    <img :class="identifierAttributes[key].classes"/>
+                                    <img :class="identifierAttributes[key].classes" :src="identifierAttributes[key].src"/>
                                 </a>
 
                                 <a v-else :href="identifier" class="identifier-icon" target="_blank"

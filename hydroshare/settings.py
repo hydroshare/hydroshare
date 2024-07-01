@@ -222,7 +222,9 @@ PUBLISH_DISCOVERABLE = False
 STATICFILES_FINDERS = (
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
-    "django.contrib.staticfiles.finders.DefaultStorageFinder",
+    # "django.contrib.staticfiles.finders.DefaultStorageFinder",
+    # We disable the DefaultStorageFinder because otherwise it will search for static files in Google Cloud Storage
+    # https://docs.djangoproject.com/en/3.2/ref/settings/#staticfiles-finders
 )
 
 # The numeric mode to set newly-uploaded files to. The value should be
@@ -309,9 +311,6 @@ MEDIA_URL = "/static/media/"
 # Sorl settings for generating thumbnails
 THUMBNAIL_PRESERVE_FORMAT = True
 THUMBNAIL_QUALITY = 95
-THUMBNAIL_DUMMY = True
-THUMBNAIL_DUMMY_SOURCE = STATIC_URL + "img/home-page/step4.png"
-THUMBNAIL_DUMMY_RATIO = 1
 
 # Allow PIL to ignore imgs with lots of metadata
 
@@ -320,6 +319,44 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))
+
+# ----- START of settings for using Google Cloud Storage for static files ----- |
+ENABLE_STATIC_CLOUD_STORAGE = False
+# Whether to use Google Cloud Storage for static files
+# Settings documented here: https://django-storages.readthedocs.io/en/latest/backends/gcloud.html#settings
+# By default, this is set to False, and static files are served from the local filesystem / nginx
+# To enable Google Cloud Storage, the following settings should be added to local_settings.py
+# Additionally, a google service account json file should be placed at the root of the project
+# Service account should have permissions to write to the bucket
+# lastly, when you build the discover VUE app, you should set export the VUE_APP_BUCKET_URL_PUBLIC_PATH env var
+# this value should be the same as the STATIC_URL that you set in django local_settings.py
+
+# ENABLE_STATIC_CLOUD_STORAGE = True
+# from google.oauth2 import service_account
+# from datetime import timedelta
+# PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+# BASE_DIR = os.path.dirname(PROJECT_ROOT)
+# GS_PROJECT_ID = 'hydroshare-gc-project'
+# GS_BUCKET_NAME = 'hydroshare-static-media-bucket'
+# GS_BLOB_CHUNK_SIZE = 1024 * 256 * 40  # Needed for uploading large streams
+# GS_EXPIRATION = timedelta(minutes=5)
+# GS_SERVICE_ACCOUNT_FILENAME = 'hydroshare-gcs-sa.json'
+# # necessary to prevent RuntimeError: Max post-process passes exceeded.
+# GS_QUERYSTRING_AUTH = False
+# GS_DEFAULT_ACL = None
+# GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
+#     os.path.join(BASE_DIR, GS_SERVICE_ACCOUNT_FILENAME)
+# )
+# STATICFILES_STORAGE = 'hydroshare.storage.Static'
+# THUMBNAIL_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+# DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+# # the media is served from the root of the bucket
+# MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
+# # the static files are served from a static/ dir in the bucket
+# STATIC_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/static/'
+# MEDIA_ROOT = MEDIA_URL
+# STATIC_ROOT = STATIC_URL
+# ----- END of settings for using Google Cloud Storage for static files ----- |
 
 # Package/module name to import the root urlpatterns from for the project.
 ROOT_URLCONF = "%s.urls" % PROJECT_DIRNAME
@@ -518,7 +555,9 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 # These will be added to ``INSTALLED_APPS``, only if available.
 OPTIONAL_APPS = (
-    "debug_toolbar",
+    # "debug_toolbar",
+    # debug_toolbar disabled for GCS storage
+    # debug_toolbar calls ".path" on a storage object, which is not supported by GCS storage
     "django_extensions",
     # "compressor",
     PACKAGE_NAME_FILEBROWSER,
@@ -812,7 +851,6 @@ TASK_NAME_LIST = [
     "hs_core.tasks.create_temp_zip",
     "hs_core.tasks.unzip_task",
     "hs_core.tasks.copy_resource_task",
-    "hs_core.tasks.replicate_resource_bag_to_user_zone_task",
     "hs_core.tasks.create_new_version_resource_task",
     "hs_core.tasks.delete_resource_task",
     "hs_core.tasks.move_aggregation_task",

@@ -1,5 +1,10 @@
 FROM node:14.14.0 as node-build
 
+# Arg used by the node build for discovery app
+# This is the path to the bucket where the static files are stored
+# This should be the same as the STATIC_URL in the Django settings
+ARG VUE_APP_BUCKET_URL_PUBLIC_PATH
+
 ADD . /hydroshare
 
 WORKDIR /hydroshare/hs_discover
@@ -21,12 +26,9 @@ RUN rm -rf static templates && \
     echo "--------------------------------------" && \
     echo "----------------css-------------------" && \
     ls -l static/css && \
-    echo "--------------------------------------" && \
-    cd static/ && \
-    cp js/app.*.js js/app.js && \
-    cp js/chunk-vendors.*.js js/chunk-vendors.js
+    echo "--------------------------------------"
 
-FROM hydroshare/hs_docker_base:305f2fa
+FROM hydroshare/hs_docker_base:c30cf01
 
 COPY --from=node-build /hydroshare /hydroshare
 

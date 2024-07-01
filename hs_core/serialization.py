@@ -14,7 +14,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from hs_core.hydroshare.utils import get_resource_types
-from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetime_iso, hs_date_to_datetime_notz,\
+from hs_core.hydroshare.date_util import hs_date_to_datetime, hs_date_to_datetime_iso, hs_date_to_datetime_notz, \
     HsDateException
 
 from hs_core.hydroshare.utils import resource_pre_create_actions
