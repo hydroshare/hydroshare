@@ -69,20 +69,6 @@ docker exec ${IRODS_HOST} sh -c "apt-get install -y iproute2 jq"
 # Generate .env files for rods@${IRODS_HOST}
 printf "IRODS_HOST=${ICAT1IP}\nIRODS_PORT=${IRODS_PORT}\nIRODS_USER_NAME=rods\nIRODS_ZONE_NAME=${IRODS_ZONE}\nIRODS_PASSWORD=rods" > env-files/rods@${IRODS_HOST}.env
 
-# Federate ${IRODS_ZONE} with ${HS_USER_IRODS_ZONE}
-echo "INFO: make remote zone for each"
-echo "[rods@${IRODS_HOST}]$ iadmin mkzone ${HS_USER_IRODS_ZONE} remote ${ICAT2IP}:1247"
-sleep 1s
-docker run --rm --env-file env-files/rods@${IRODS_HOST}.env \
-    mjstealey/irods-icommands:4.2.2 \
-    iadmin mkzone ${HS_USER_IRODS_ZONE} remote ${ICAT2IP}:1247
-sleep 1s
-
-# modify /etc/irods/server_config.json
-echo "INFO: federation configuration for ${IRODS_HOST}"
-docker exec ${IRODS_HOST} sh -c "cat /tmp/tmp.json | jq '.' > /etc/irods/server_config.json && chown irods:irods /etc/irods/server_config.json && rm -f /tmp/tmp.json"
-docker exec ${IRODS_HOST} sh -c "cat /etc/irods/server_config.json | jq '.federation'"
-
 # make resource ${IRODS_DEFAULT_RESOURCE} in ${IRODS_ZONE}
 echo "[rods@${IRODS_HOST}]$ iadmin mkresc ${IRODS_DEFAULT_RESOURCE} unixfilesystem ${IRODS_HOST}:/var/lib/irods/iRODS/Vault"
 docker run --rm --env-file env-files/rods@${IRODS_HOST}.env \
