@@ -4,8 +4,8 @@
 # Federated local iRODS for HydroShare in Docker
 # Author: Michael Stealey <michael.j.stealey@gmail.com>
 
-# TODO: do we still need to federate irods zones? Likely can remove this...
-# Pull in environment variables to use for federated local iRODS
+
+# Pull in environment variables
 source env-files/use-local-irods.env
 ADD_IRODS_TO_GROUP=$(id -g ${USER})
 ADD_POSTGRES_TO_GROUP=$(id -g ${USER})

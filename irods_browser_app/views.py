@@ -123,24 +123,18 @@ def upload_add(request):
         return JsonResponse({'error': "Invalid file type: {ext}".format(ext=ext)},
                             status=status.HTTP_400_BAD_REQUEST)
     else:
-        homepath = irods_fnames_list[0]
-        # TODO: this should happen whether resource is federated or not
-        irods_federated = utils.is_federated(homepath)
-        if irods_federated:
-            source_names = irods_fnames.split(',')
-        else:
-            user = request.POST.get('irods_username')
-            password = request.POST.get("irods_password")
-            port = request.POST.get("irods_port")
-            host = request.POST.get("irods_host")
-            zone = request.POST.get("irods_zone")
-            try:
-                upload_from_irods(username=user, password=password, host=host, port=port,
-                                  zone=zone, irods_fnames=irods_fnames, res_files=res_files)
-            except SessionException as ex:
-                return JsonResponse(
-                    {"error": ex.stderr}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
+        user = request.POST.get('irods_username')
+        password = request.POST.get("irods_password")
+        port = request.POST.get("irods_port")
+        host = request.POST.get("irods_host")
+        zone = request.POST.get("irods_zone")
+        try:
+            upload_from_irods(username=user, password=password, host=host, port=port,
+                              zone=zone, irods_fnames=irods_fnames, res_files=res_files)
+        except SessionException as ex:
+            return JsonResponse(
+                {"error": ex.stderr}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,

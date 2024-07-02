@@ -935,7 +935,6 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
     except ObjectDoesNotExist:
         # src_name and tgt_name are folder names
         res_file_objs = ResourceFile.list_folder(resource=resource, folder=src_name)
-        resource_is_federated = resource.is_federated
         batch_size = settings.BULK_UPDATE_CREATE_BATCH_SIZE
         is_target_folder_aggregation = False
         if composite_file_move:
@@ -960,17 +959,10 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
             new_path = src_path.replace(src_name, tgt_name, 1)
             folder, _ = fobj.path_is_acceptable(new_path, test_exists=False)
             fobj.file_folder = folder
-            if resource_is_federated:
-                fobj.fed_resource_file = new_path
-            else:
-                fobj.resource_file = new_path
+            fobj.resource_file = new_path
 
         if res_file_objs:
-            if resource_is_federated:
-                ResourceFile.objects.bulk_update(res_file_objs, ['file_folder', 'fed_resource_file'],
-                                                 batch_size=batch_size)
-            else:
-                ResourceFile.objects.bulk_update(res_file_objs, ['file_folder', 'resource_file'], batch_size=batch_size)
+            ResourceFile.objects.bulk_update(res_file_objs, ['file_folder', 'resource_file'], batch_size=batch_size)
 
             if is_target_folder_aggregation and composite_file_move:
                 res_file_objs = ResourceFile.list_folder(resource=resource, folder=tgt_name)
