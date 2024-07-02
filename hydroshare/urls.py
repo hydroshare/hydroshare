@@ -100,16 +100,6 @@ urlpatterns += i18n_patterns(
         name="confirm_reset_password",
     ),
     url(r"^deactivate_account/$", theme.deactivate_user, name="deactivate_account"),
-    url(
-        r"^delete_irods_account/$",
-        theme.delete_irods_account,
-        name="delete_irods_account",
-    ),
-    url(
-        r"^create_irods_account/$",
-        theme.create_irods_account,
-        name="create_irods_account",
-    ),
     url(r"^landingPage/$", theme.landingPage, name="landing_page"),
     url(r"^home/$", theme.dashboard, name="dashboard"),
     url(r"^$", theme.home_router, name="home_router"),

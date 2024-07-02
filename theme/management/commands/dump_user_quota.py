@@ -1,7 +1,4 @@
-import os
 import pandas as pd
-from django_irods.storage import IrodsStorage
-from django.conf import settings
 from hs_tools_resource.utils import convert_size
 from theme.models import UserQuota
 from django.core.management.base import BaseCommand
@@ -45,7 +42,6 @@ class Command(BaseCommand):
             'Quota unit',
             'Grace period ends',
             'DataZone Bagit AVU Size (bytes)',
-            'UserZone Bagit AVU Size (bytes)',
             'DataZone Bagit AVU Converted Size',
             'UserZone Bagit AVU Converted Size',
         ]
@@ -55,12 +51,6 @@ class Command(BaseCommand):
 
         user_quotas = UserQuota.objects.all()
         user_quotas.filter(user__is_active=True).filter(user__is_superuser=False)
-        istorage = IrodsStorage()
-        uz_bagit_path = os.path.join(
-            '/', settings.HS_USER_IRODS_ZONE, 'home',
-            settings.HS_IRODS_PROXY_USER_IN_USER_ZONE,
-            settings.IRODS_BAGIT_PATH
-        )
         data = []
         errors = []
         for uq in user_quotas:
@@ -80,8 +70,7 @@ class Command(BaseCommand):
             if dz_bytes is None:
                 dz_bytes = 0
             dz = convert_size(int(dz_bytes))
-            uz_bytes = istorage.getAVU(uz_bagit_path,
-                                       f'{user.username}-usage')
+            uz_bytes = 0
             if uz_bytes is None:
                 uz_bytes = 0
             uz = convert_size(int(uz_bytes))

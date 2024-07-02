@@ -23,8 +23,6 @@ from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
 from theme.models import UserQuota
-from django_irods.icommands import SessionException
-from django_irods.storage import IrodsStorage
 from hs_core.enums import CrossRefSubmissionStatus
 
 FILE_SIZE_LIMIT = 1 * (1024 ** 3)
@@ -44,14 +42,7 @@ def get_quota_usage(username, raise_on_error=True):
     if quota usage cannot be retrieved from iRODS
     """
     uqDataZoneSize = get_data_zone_usage(username, raise_on_error=raise_on_error)
-
-    uqUserZoneSize = get_user_zone_usage(username)
-    if uqUserZoneSize < 0:
-        uqUserZoneSize = 0
-        err_msg = f'no quota size AVU for user {username} in userzone'
-        logger.error(err_msg)
-        if raise_on_error:
-            raise ValidationError(err_msg)
+    uqUserZoneSize = 0
     return uqUserZoneSize, uqDataZoneSize
 
 
@@ -87,41 +78,6 @@ def get_data_zone_usage(username, raise_on_error=True, include_published=False):
     return uqDataZoneSize if uqDataZoneSize is not None else 0
 
 
-def get_user_zone_usage(username):
-    """
-    Get the quota size for a user in the iRODS user zone.
-
-    Args:
-        username (str): The username of the user.
-
-    Returns:
-        float: The quota size for the user in the iRODS user zone. If the user does not have resources
-        in the user zone, the function returns -1.
-
-    Raises:
-        SessionException: If there is an error retrieving the quota size.
-
-    """
-    attname = username + '-usage'
-    istorage = IrodsStorage()
-    try:
-        uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE, 'home',
-                                     settings.HS_IRODS_PROXY_USER_IN_USER_ZONE,
-                                     settings.IRODS_BAGIT_PATH)
-        uqUserZoneSize = istorage.getAVU(uz_bagit_path, attname)
-        if uqUserZoneSize is None:
-            # user may not have resources in user zone, so corresponding quota size AVU may not
-            # exist for this user
-            uqUserZoneSize = -1
-        else:
-            uqUserZoneSize = float(uqUserZoneSize)
-    except SessionException:
-        # user may not have resources in user zone, so corresponding quota size AVU may not exist
-        # for this user
-        uqUserZoneSize = -1
-    return uqUserZoneSize
-
-
 def update_quota_usage(username, notify_user=False):
     """
     update quota usage by checking iRODS AVU to get the updated quota usage for the user. Note iRODS micro-service
@@ -143,7 +99,7 @@ def update_quota_usage(username, notify_user=False):
         logger.error(err_msg)
         raise ValidationError(err_msg)
 
-    uz = get_user_zone_usage(username)
+    uz = 0
 
     original_quota_data = uq.get_quota_data()
     qmsg = original_quota_data["qmsg"]

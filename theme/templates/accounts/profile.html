@@ -10,8 +10,6 @@
 {% block main %}
     <div class="container">
         {% with profile_user.userprofile as profile %}
-        <input type="hidden" id="url-create-irods-account" value="{% url 'create_irods_account' %}">
-        <input type="hidden" id="url-delete-irods-account" value="{% url 'delete_irods_account' %}">
         {% if profile_user.id == user.id or user.is_superuser %}
         <form id="profile-form" action="{% url 'update_profile' profile_user.id %}" class="account-form" method="post"
               enctype="multipart/form-data" onsubmit="return validateForm()">
@@ -91,10 +89,10 @@
                                     <div id="irods-account-container">
                                         {% if profile.get_user_zone_status_info %}
                                             {# an iRODS account already exists #}
-                                            <a data-toggle="modal" data-target="#delete-irods-account-dialog">Delete your iRODS user account</a>
+                                            <a data-toggle="modal" data-target="#delete-irods-account-dialog">Request Deletion of your iRODS user account</a>
                                         {% else %}
                                             {# an iRODS account does not exist #}
-                                            <a data-toggle="modal" data-target="#create-irods-account-dialog">Create your iRODS user account</a>
+                                            <a data-toggle="modal" data-target="#request-irods-account-dialog">Request an iRODS user account</a>
                                         {% endif %}
                                     </div>
                                 </div>
@@ -905,55 +903,48 @@
                                     <span id="icon-warning" class="glyphicon glyphicon-warning-sign"></span>
                                 </div>
                                 <div class="col-sm-10 col-xs-12">
-                                    <div><strong>WARNING</strong>: This will <strong>delete</strong> your iRODS user account in the
+                                    <div><strong>WARNING</strong>: You can request that we <strong>delete</strong> your iRODS user account in the
                                         HydroShare user zone as well as all data you have under that account. You cannot recover
-                                        your data after this action.
+                                        your data after this action. Note that your request must be sent from the email associated with your HydroShare account.
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                            <button id="btn-delete-irods-account" class="btn btn-danger">Confirm</button>
+                            <button id="btn-delete-irods-account" class="btn btn-danger">Request Delete</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Create iRODS User Account Modal -->
-            <div class="modal fade" id="create-irods-account-dialog" tabindex="-1" role="dialog"
+            <!-- Request iRODS User Account Modal -->
+            <div class="modal fade" id="request-irods-account-dialog" tabindex="-1" role="dialog"
                  aria-labelledby="myModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-sm">
                     <div class="modal-content">
-                        <form role="form" method="post">
-                            <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal"
-                                        aria-label="Close"><span aria-hidden="true">&times;</span>
-                                </button>
-                                <h4 class="modal-title" id="myModalLabel">Create your iRODS user account</h4>
-                            </div>
-                            <div class="modal-body">
-                                {% csrf_token %}
-                                <div class="row">
-                                    <div class="col-sm-10 col-xs-12">
-                                        <div>A corresponding iRODS user account with the same username <strong>{{ profile_user.username }}</strong> will be created
-                                            in the HydroShare user zone when you confirm this action. You will have to input a password below for your
-                                            iRODS user account, which does not have to be the same as your current HydroShare password. <strong>The password
-                                            is required to be composed of at least 8 characters.</strong> Please keep your iRODS user account password in a
-                                            secure place and use it to access your account in the HydroShare user zone using iRODS clients such as icommands or Cyberduck.
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="id_irods_password">Password: </label>
-                                            <input class="form-control" autocomplete="off" id="id_irods_password" name="irods_password" placeholder="Password" type="password">
-                                        </div>
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"
+                                    aria-label="Close"><span aria-hidden="true">&times;</span>
+                            </button>
+                            <h4 class="modal-title" id="myModalLabel">Request an iRODS user account</h4>
+                        </div>
+                        <div class="modal-body">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-sm-10 col-xs-12">
+                                    <div>You can request that a user account be created in the HydroShare user zone.
+                                        This account will allow you to access your data using iRODS commands and clients.
+                                        You will be able to access your data in the user zone at <strong>users.hydroshare.org</strong>.
+                                        Note that your request must be sent from the email associated with your HydroShare account.
                                     </div>
                                 </div>
                             </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <button id="btn-create-irods-account" class="btn btn-primary" disabled>Confirm</button>
-                            </div>
-                        </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button id="btn-request-irods-account" class="btn btn-primary">Email Request</button>
+                        </div>
                     </div>
                 </div>
             </div>

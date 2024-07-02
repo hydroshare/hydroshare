@@ -2936,14 +2936,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     def storage_type(self):
         if not self.is_federated:
             return 'local'
-        userpath = '/' + os.path.join(
-            getattr(settings, 'HS_USER_IRODS_ZONE', 'hydroshareuserZone'),
-            'home',
-            getattr(settings, 'HS_IRODS_PROXY_USER_IN_USER_ZONE', 'localHydroProxy'))
-        if self.resource_federation_path == userpath:
-            return 'user'
-        else:
-            return 'federated'
+        return 'federated'
 
     def is_folder(self, folder_path):
         """Determine whether a given path (relative to resource root, including /data/contents/)
