@@ -74,6 +74,7 @@ class IrodsStorage(Storage):
         userid=0,
         sess_id=None,
     ):
+        logger.error(" ----- start set_user_session ------")
         homedir = "/" + zone + "/home/" + username
         userEnv = IRodsEnv(
             pk=userid,
@@ -99,6 +100,7 @@ class IrodsStorage(Storage):
 
         self.session.run("iinit", None, self.environment.auth)
         icommands.ACTIVE_SESSION = self.session
+        logger.error(" ----- end set_user_session ------")
 
     # Set iRODS session to wwwHydroProxy for irods_storage input object for iRODS federated
     # zone direct file operations
@@ -429,6 +431,7 @@ class IrodsStorage(Storage):
         :param name: file name
         :return: the size of the file
         """
+        logger.error(f" ----- start size {name} ------")
         file_info = name.rsplit("/", 1)
         if len(file_info) < 2:
             raise ValidationError(
@@ -460,6 +463,7 @@ class IrodsStorage(Storage):
             )
         # remove potential '\n' from stdout
         size_string = stdout.replace("\n", "")
+        logger.error(f" ----- end size {name} ------")
         try:
             ret = int(float(size_string))
             return ret

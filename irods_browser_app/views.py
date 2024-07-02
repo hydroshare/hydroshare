@@ -9,6 +9,9 @@ from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.views.utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare import utils
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def search_ds(coll):
@@ -28,6 +31,7 @@ def search_ds(coll):
 
 
 def check_upload_files(resource_cls, fnames_list):
+    logger.error(" ----- start check_upload_files ------")
     file_types = resource_cls.get_supported_upload_file_types()
     valid = False
     ext = ''
@@ -44,7 +48,7 @@ def check_upload_files(resource_cls, fnames_list):
                     if file_type_str == ".*" or ext == file_type_str:
                         valid = True
                         break
-
+    logger.error(" ----- end check_upload_files ------")
     return (valid, ext)
 
 
@@ -107,6 +111,10 @@ def store(request):
 
 def upload_add(request):
     # add irods file into an existing resource
+    logger.error("*" * 300)
+    logger.error("start upload_add")
+    logger.error(request.POST)
+    logger.error("*" * 300)
     res_id = request.POST.get('res_id', '')
     resource, _, _ = authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     res_files = request.FILES.getlist('files')
@@ -165,5 +173,10 @@ def upload_add(request):
         elif ex.stderr:
             return JsonResponse({'error': ex.stderr},
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    logger.error("*" * 300)
+    logger.error("end upload_add")
+    logger.error(request.POST)
+    logger.error("*" * 300)
 
     return JsonResponse({}, status=status.HTTP_200_OK)
