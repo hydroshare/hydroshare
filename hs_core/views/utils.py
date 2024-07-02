@@ -329,6 +329,7 @@ def run_ssh_command(host, uname, exec_cmd, pwd=None, private_key_file=None):
     return output
 
 
+# TODO: can we remove this?
 # run the update script on hyrax server via ssh session for netCDF resources on demand
 # when private netCDF resources are made public so that all links of data services
 # provided by Hyrax service are instantaneously available on demand

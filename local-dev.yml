@@ -25,7 +25,6 @@ services:
       IRODS_AUTH: 'wwwHydroProxy'
       IRODS_GLOBAL_SESSION: 'True'
       REMOTE_USE_IRODS: 'True'
-      HS_IRODS_USER_ZONE_DEF_RES: 'hydroshareLocalResc'
       IRODS_ZONE_NAME: 'hydroshareZone'
       IRODS_SERVER_ZONE_KEY: 'hydroshareZone_KEY'
       IRODS_DATABASE_SERVER_HOSTNAME: 'data.local.org'
