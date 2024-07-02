@@ -71,8 +71,7 @@ ICAT1IP=$(docker exec ${IRODS_HOST} /sbin/ip -f inet -4 -o addr | grep eth | cut
 printf "IRODS_HOST=${ICAT1IP}\nIRODS_PORT=${IRODS_PORT}\nIRODS_USER_NAME=rods\nIRODS_ZONE_NAME=${IRODS_ZONE}\nIRODS_PASSWORD=rods" > env-files/rods@${IRODS_HOST}.env
 
 # modify /etc/irods/server_config.json
-docker exec ${IRODS_HOST} sh -c "cat /tmp/tmp.json | jq '.' > /etc/irods/server_config.json && chown irods:irods /etc/irods/server_config.json && rm -f /tmp/tmp.json"
-docker exec ${IRODS_HOST} sh -c "cat /etc/irods/server_config.json | jq '.federation'"
+docker exec ${IRODS_HOST} sh -c "chown irods:irods /etc/irods/server_config.json"
 
 # make resource ${IRODS_DEFAULT_RESOURCE} in ${IRODS_ZONE}
 echo "[rods@${IRODS_HOST}]$ iadmin mkresc ${IRODS_DEFAULT_RESOURCE} unixfilesystem ${IRODS_HOST}:/var/lib/irods/iRODS/Vault"
