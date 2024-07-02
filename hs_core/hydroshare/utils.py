@@ -177,25 +177,6 @@ def community_from_id(community):
     return tgt
 
 
-def get_user_zone_status_info(user):
-    """
-    This function should be called to determine whether user zone functionality should be
-    enabled or not on the web site front end
-    Args:
-        user: the requesting user
-    Returns:
-        enable_user_zone boolean indicating whether user zone functionality should be enabled or
-        not on the web site front end
-    """
-    if user is None:
-        return None
-    if not hasattr(user, 'userprofile') or user.userprofile is None:
-        return None
-
-    enable_user_zone = user.userprofile.create_irods_user_account and settings.REMOTE_USE_IRODS
-    return enable_user_zone
-
-
 def is_federated(homepath):
     """
     Check if the selected file via the iRODS browser is from a federated zone or not
@@ -238,6 +219,7 @@ def get_federated_zone_home_path(filepath):
     Returns:
         the zone name extracted from filepath
     """
+    # TODO: perhaps add HS_IRODS_PROXY_USER_IN_USER_ZONE back in
     if filepath and filepath.startswith('/'):
         split_path_strs = filepath.split('/')
         # the Zone name should follow the first slash

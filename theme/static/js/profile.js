@@ -178,13 +178,6 @@ function create_irods_account() {
     document.location = "mailto:"+email+"?subject="+subject+"&body="+emailBody;
 }
 
-function delete_irods_account() {
-    let email = 'help@cuahsi.org';
-    let subject = 'Request for deletion of iRODS account';
-    let emailBody = 'I would like to request my iRODS account be deleted.';
-    document.location = "mailto:"+email+"?subject="+subject+"&body="+emailBody;
-}
-
 function getUrlVars()
 {
     var vars = [], hash;
@@ -305,7 +298,6 @@ $(document).ready(function () {
     $("#organization").splitAndWrapWithClass(";", "organization-divider");
     
     $("#btn-request-irods-account").click(create_irods_account);
-    $("#btn-delete-irods-account").click(delete_irods_account);
 
     // File name preview for Add CV
     $('.btn-primary.btn-file :file').on('fileselect', function (event, numFiles, label) {

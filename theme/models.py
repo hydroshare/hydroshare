@@ -584,15 +584,6 @@ class UserProfile(models.Model):
     state = models.CharField(max_length=1024, null=True, blank=True)
     country = models.CharField(max_length=1024, null=True, blank=True)
 
-    create_irods_user_account = models.BooleanField(
-        default=False,
-        help_text="Has an iRODS user account been created in HydroShare user "
-        "iRODS space for staging large files (>2GB) using iRODS clients such as Cyberduck "
-        "(https://cyberduck.io/) and icommands (https://docs.irods.org/master/icommands/user/)."
-        "Uncheck after requesting your iRODS user account be deleted. Note that deletion of your iRODS user "
-        "account deletes all of your files under this account as well.",
-    )
-
     # to store one or more external identifier (Google Scholar, ResearchGate, ORCID etc)
     # each identifier is stored as a key/value pair {name:link}
     identifiers = HStoreField(default=dict, null=True, blank=True)
@@ -609,18 +600,6 @@ class UserProfile(models.Model):
         if not self.user_type:
             missing.append("User Type")
         return missing
-
-    @property
-    def get_user_zone_status_info(self):
-        """
-        This function should be called to determine whether user zone functionality should be
-        enabled or not on the web site front end
-        Returns:
-            enable_user_zone boolean indicating whether user zone functionality should be enabled or
-            not on the web site front end
-        """
-        enable_user_zone = self.create_irods_user_account and settings.REMOTE_USE_IRODS
-        return enable_user_zone
 
 
 def force_unique_emails(sender, instance, **kwargs):

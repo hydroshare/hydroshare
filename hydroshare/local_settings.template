@@ -133,6 +133,7 @@ HYRAX_SSH_PROXY_USER = ''
 HYRAX_SSH_PROXY_USER_PWD = ''
 HYRAX_SCRIPT_RUN_COMMAND = ''
 
+# TODO: unsure if we can remove HS_IRODS_USER_ZONE_DEF_RES
 # HydroShare iRODS default storage resource in the federated user zone
 HS_IRODS_USER_ZONE_DEF_RES = 'hydroshareLocalResc'
 
