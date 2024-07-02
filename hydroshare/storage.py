@@ -41,6 +41,7 @@ class ManifestGoogleCloudStorage(ForgivingManifestFilesMixin, GoogleCloudStorage
         # Here we avoid https://docs.python.org/3/library/exceptions.html#NotImplementedError by returning the name.
         return name
 
+
 class MediaGoogleCloudStorage(GoogleCloudStorage):
     '''
     Google Cloud Storage backend for Django static files. Implements methods the
