@@ -7,6 +7,10 @@ import textwrap
 from io import StringIO
 from django.conf import settings
 from collections import namedtuple
+import logging
+import time
+
+logger = logging.getLogger(__name__)
 
 
 class SessionException(Exception):
@@ -168,6 +172,8 @@ class Session(object):
         stdin = None
         if data:
             stdin = StringIO(data)
+        logger.error(f"Calling iCommand: {argList}")
+        st = time.time()
 
         proc = subprocess.Popen(
             argList,
@@ -177,6 +183,9 @@ class Session(object):
             env=myenv
         )
         stdout, stderr = proc.communicate(input=data) if stdin else proc.communicate()
+        et = time.time()
+        elapsed_time = et - st
+        logger.error(f"Elapsed time for icommand {argList} = {elapsed_time}")
 
         if proc.returncode:
             raise SessionException(proc.returncode, stdout, stderr)

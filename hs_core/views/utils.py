@@ -93,6 +93,13 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
     :return: None, but the downloaded file from the iRODS will be appended to res_files list for
     uploading
     """
+    logger.error(" ----- start upload_from_irods ------")
+    logger.error(f"username: {username}, \
+                host: {host}, \
+                port: {port}, \
+                zone: {zone}, \
+                irods_fnames: {irods_fnames}, \
+                res_files: {res_files}")
     irods_storage = IrodsStorage()
     irods_storage.set_user_session(username=username, password=password, host=host, port=port,
                                    zone=zone)
@@ -107,6 +114,7 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
 
     # delete the user session after iRODS file operations are done
     irods_storage.delete_user_session()
+    logger.error(" ----- end upload_from_irods ------")
 
 
 def validate_url(url):

@@ -206,6 +206,7 @@ def is_federated(homepath):
     Returns:
     True is the selected file indicated by homepath is from a federated zone, False if otherwise
     """
+    logger.error(f" --- start is_federated: {homepath} --- ")
     homepath = homepath.strip()
     homepath_list = homepath.split('/')
     # homepath is an iRODS logical path in the format of
@@ -224,9 +225,17 @@ def is_federated(homepath):
     else:
         irods_storage = IrodsStorage()
 
+    logger.error(f" --- start checking home path: {homepath} --- ")
+    home = irods_storage.exists(homepath)
     # if the iRODS proxy user in hydroshare zone can list homepath and the federation zone proxy
     # user path, it is federated; otherwise, it is not federated
-    return irods_storage.exists(homepath) and irods_storage.exists(fed_proxy_path)
+    logger.error(f" --- end checking home path: {homepath} --- ")
+    logger.error(f" --- start checking proxy path: {fed_proxy_path} --- ")
+    proxy = irods_storage.exists(fed_proxy_path)
+    logger.error(f" --- end checking proxy path: {fed_proxy_path} --- ")
+    result = home and proxy
+    logger.error(f" --- end is_federated: {homepath} --- ")
+    return result
 
 
 def get_federated_zone_home_path(filepath):
