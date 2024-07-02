@@ -840,10 +840,7 @@ def _extract_metadata(resource, logical_file):
 
 
 def _validate_json_file(res_json_file):
-    if res_json_file.resource_file:
-        json_file_content = res_json_file.resource_file.read()
-    else:
-        json_file_content = res_json_file.fed_resource_file.read()
+    json_file_content = res_json_file.resource_file.read()
     try:
         json_data = json.loads(json_file_content)
     except: # noqa

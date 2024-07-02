@@ -245,12 +245,6 @@ def update_resource_file(pk, filename, f):
                 # TODO: should use add_file_to_resource
                 rf.resource_file = File(f) if not isinstance(f, UploadedFile) else f
                 rf.save()
-            if rf.fed_resource_file:
-                # TODO: should use delete_resource_file
-                rf.fed_resource_file.delete()
-                # TODO: should use add_file_to_resource
-                rf.fed_resource_file = File(f) if not isinstance(f, UploadedFile) else f
-                rf.save()
             return rf
     raise ObjectDoesNotExist(filename)
 
