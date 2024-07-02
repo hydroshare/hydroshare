@@ -27,10 +27,10 @@ $ ./use-local-irods.sh
   $ cd irods
   $ ./use-local-irods.sh --persist
   ```
-  The `--persist` flag will create two new directories as `/home/${USER}/icat1` and `/home/${USER}/icat2` where iRODS vault and database files will be persisted. These directories will remain in place until the user manually destroys them.
+  The `--persist` flag will create a new directory as `/home/${USER}/icat1` where iRODS vault and database files will be persisted. These directories will remain in place until the user manually destroys them.
 
-The script will run, deploy and federate two iCAT servers, and modify the three aforementioned files to be configured to use the 
-newly created iRODS Docker servers. Once the script has completed, return back the the main `hydroshare` directory and run
+The script will run, deploy and federate an iCAT server, and modify the three aforementioned files to be configured to use the 
+newly created iRODS Docker server. Once the script has completed, return back the the main `hydroshare` directory and run
 the **hsctl** script as you normally would.
 
 ```bash
@@ -58,7 +58,6 @@ CONTAINER ID        IMAGE                               COMMAND                 
 82aefa42b4f6        makuk66/docker-solr:4.10.4          "sh -c '/bin/bash /op"   17 minutes ago      Up 17 minutes       0.0.0.0:32786->8983/tcp                                                               solr
 e67b799315ab        hydroshare/hs_postgres:9.4.7         "/docker-entrypoint.s"   17 minutes ago      Up 17 minutes       5432/tcp                                                                              postgis
 52c67ebb6b57        rabbitmq:3.5                        "/docker-entrypoint.s"   17 minutes ago      Up 17 minutes       4369/tcp, 5671-5672/tcp, 25672/tcp                                                    rabbitmq
-0b1a6c66a585        mjstealey/docker-irods-icat:4.1.8   "/irods-docker-entryp"   22 minutes ago      Up 22 minutes       1248/tcp, 5432/tcp, 20000-20199/tcp, 0.0.0.0:32785->22/tcp, 0.0.0.0:32784->1247/tcp   users.local.org
 a4d976bcdeb7        mjstealey/docker-irods-icat:4.1.8   "/irods-docker-entryp"   22 minutes ago      Up 22 minutes       1248/tcp, 5432/tcp, 20000-20199/tcp, 0.0.0.0:32783->1247/tcp                          data.local.org
 ```
 

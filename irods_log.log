@@ -1,0 +1,161 @@
+[02/Jul/2024 14:18:30] INFO [irods_browser_app.views:114] ************************************************************************************************************************************************************************************************************************************************************************************************************
+[02/Jul/2024 14:18:30] INFO [irods_browser_app.views:115] start upload_add
+[02/Jul/2024 14:18:30] INFO [irods_browser_app.views:116] <QueryDict: {'upload': ['/hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip'], 'res_id': ['41b8bccf657d4d39b6445920112d07e0'], 'irods_username': ['devin.r.cowan@dartmouth.edu'], 'irods_password': ['asdfasdf'], 'irods_host': ['users.hydroshare.org'], 'irods_port': ['1247'], 'irods_zone': ['hydroshareuserZone']}>
+[02/Jul/2024 14:18:30] INFO [irods_browser_app.views:117] ************************************************************************************************************************************************************************************************************************************************************************************************************
+[02/Jul/2024 14:18:30] INFO [irods_browser_app.views:34]  ----- start check_upload_files ------
+[02/Jul/2024 14:18:30] INFO [irods_browser_app.views:51]  ----- end check_upload_files ------
+[02/Jul/2024 14:18:30] INFO [django_irods.storage:77]  ----- start set_user_session ------
+[02/Jul/2024 14:18:30] INFO [django_irods.icommands:173] Calling iCommand: ['/usr/bin/iinit', 'RmjYVeRnKj39vqAoTcAfpm7ksnoCxseh']
+[02/Jul/2024 14:18:30] INFO [django_irods.icommands:187] Elapsed time for icommand ['/usr/bin/iinit', 'RmjYVeRnKj39vqAoTcAfpm7ksnoCxseh'] = 0.16014766693115234
+[02/Jul/2024 14:18:30] INFO [django_irods.storage:103]  ----- end set_user_session ------
+[02/Jul/2024 14:18:30] INFO [django_irods.icommands:173] Calling iCommand: ['/usr/bin/ils', '/hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip']
+[02/Jul/2024 14:19:07] DEBUG [oauthlib.oauth2.rfc6749.endpoints.resource:73] Dispatching token_type Bearer request to <oauthlib.oauth2.rfc6749.tokens.BearerToken object at 0x79da14a24a40>.
+[02/Jul/2024 14:19:30] DEBUG [oauthlib.oauth2.rfc6749.endpoints.resource:73] Dispatching token_type Bearer request to <oauthlib.oauth2.rfc6749.tokens.BearerToken object at 0x79da1481d9f0>.
+[02/Jul/2024 14:19:46] DEBUG [oauthlib.oauth2.rfc6749.endpoints.resource:73] Dispatching token_type Bearer request to <oauthlib.oauth2.rfc6749.tokens.BearerToken object at 0x79da14673ea0>.
+[02/Jul/2024 14:19:46] INFO [django_irods.icommands:173] Calling iCommand: ['/usr/bin/iquest', '%s', "select COLL_NAME where COLL_NAME = '/gcpHydroshareZone/home/wwwHydroProxy/bb2bba84e1d5424db9211a991a7e5dd8/data/contents'"]
+[02/Jul/2024 14:19:46] INFO [django_irods.icommands:187] Elapsed time for icommand ['/usr/bin/iquest', '%s', "select COLL_NAME where COLL_NAME = '/gcpHydroshareZone/home/wwwHydroProxy/bb2bba84e1d5424db9211a991a7e5dd8/data/contents'"] = 0.17171597480773926
+[02/Jul/2024 14:19:46] ERROR [django_irods.storage:347] settings.IRODS_SINGLE_RESC_FOR_QUERY not set. The resulting size might not be accurate if the file is replicated.
+[02/Jul/2024 14:19:46] INFO [django_irods.icommands:173] Calling iCommand: ['/usr/bin/iquest', '--no-page', '%s,%s', "select DATA_NAME, DATA_SIZE where DATA_REPL_STATUS = '1' AND COLL_NAME = '/gcpHydroshareZone/home/wwwHydroProxy/bb2bba84e1d5424db9211a991a7e5dd8/data/contents'"]
+[02/Jul/2024 14:19:46] INFO [django_irods.icommands:187] Elapsed time for icommand ['/usr/bin/iquest', '--no-page', '%s,%s', "select DATA_NAME, DATA_SIZE where DATA_REPL_STATUS = '1' AND COLL_NAME = '/gcpHydroshareZone/home/wwwHydroProxy/bb2bba84e1d5424db9211a991a7e5dd8/data/contents'"] = 0.15036368370056152
+[02/Jul/2024 14:19:46] INFO [django_irods.icommands:173] Calling iCommand: ['/usr/bin/iquest', '--no-page', '%s', "select COLL_NAME where COLL_PARENT_NAME = '/gcpHydroshareZone/home/wwwHydroProxy/bb2bba84e1d5424db9211a991a7e5dd8/data/contents'"]
+[02/Jul/2024 14:19:46] INFO [django_irods.icommands:187] Elapsed time for icommand ['/usr/bin/iquest', '--no-page', '%s', "select COLL_NAME where COLL_PARENT_NAME = '/gcpHydroshareZone/home/wwwHydroProxy/bb2bba84e1d5424db9211a991a7e5dd8/data/contents'"] = 0.15212082862854004
+---
+[02/Jul/2024 14:21:51] INFO [django_irods.icommands:187] Elapsed time for icommand ['/usr/bin/ils', '/hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip'] = 200.23845076560974
+[02/Jul/2024 14:21:51] INFO [hs_core.views.utils:96]  ----- start upload_from_irods ------
+[02/Jul/2024 14:21:51] INFO [hs_core.views.utils:97] username: devin.r.cowan@dartmouth.edu,                 host: users.hydroshare.org,                 port: 1247,                 zone: hydroshareuserZone,                 irods_fnames: /hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip,                 res_files: []
+[02/Jul/2024 14:21:51] INFO [django_irods.storage:77]  ----- start set_user_session ------
+[02/Jul/2024 14:21:51] INFO [django_irods.icommands:173] Calling iCommand: ['/usr/bin/iinit', 'asdfasdf']
+[02/Jul/2024 14:21:51] INFO [django_irods.icommands:187] Elapsed time for icommand ['/usr/bin/iinit', 'asdfasdf'] = 0.4114694595336914
+[02/Jul/2024 14:21:51] INFO [django_irods.storage:103]  ----- end set_user_session ------
+[02/Jul/2024 14:21:51] INFO [django_irods.storage:434]  ----- start size /hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip ------
+[02/Jul/2024 14:21:51] ERROR [django_irods.storage:448] settings.IRODS_SINGLE_RESC_FOR_QUERY not set. The resulting size might not be accurate if the file is replicated.
+[02/Jul/2024 14:21:51] INFO [django_irods.icommands:173] Calling iCommand: ['/usr/bin/iquest', '%s', "select DATA_SIZE where DATA_REPL_STATUS = '1' AND COLL_NAME = '/hydroshareuserZone/home/devin.r.cowan@dartmouth.edu' AND DATA_NAME = 'bb0a681d19d14c568d0db9f31c0e634e.zip'"]
+[02/Jul/2024 14:21:51] INFO [django_irods.icommands:187] Elapsed time for icommand ['/usr/bin/iquest', '%s', "select DATA_SIZE where DATA_REPL_STATUS = '1' AND COLL_NAME = '/hydroshareuserZone/home/devin.r.cowan@dartmouth.edu' AND DATA_NAME = 'bb0a681d19d14c568d0db9f31c0e634e.zip'"] = 0.36881566047668457
+[02/Jul/2024 14:21:51] INFO [django_irods.storage:466]  ----- end size /hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip ------
+[02/Jul/2024 14:21:51] INFO [django_irods.icommands:173] Calling iCommand: ['/usr/bin/iget', '-f', '/hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip', '/hs_tmp/tmp0sd2b6r_']
+[02/Jul/2024 14:21:52] INFO [django_irods.icommands:187] Elapsed time for icommand ['/usr/bin/iget', '-f', '/hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip', '/hs_tmp/tmp0sd2b6r_'] = 0.5475282669067383
+[02/Jul/2024 14:21:52] INFO [hs_core.views.utils:117]  ----- end upload_from_irods ------
+[02/Jul/2024 14:21:52] INFO [django_irods.icommands:173] Calling iCommand: ['/usr/bin/ils', '41b8bccf657d4d39b6445920112d07e0/data/contents/bb0a681d19d14c568d0db9f31c0e634e.zip']
+[02/Jul/2024 14:21:52] INFO [django_irods.icommands:187] Elapsed time for icommand ['/usr/bin/ils', '41b8bccf657d4d39b6445920112d07e0/data/contents/bb0a681d19d14c568d0db9f31c0e634e.zip'] = 0.14926934242248535
+[02/Jul/2024 14:21:52] INFO [django_irods.icommands:173] Calling iCommand: ['/usr/bin/imkdir', '-p', '41b8bccf657d4d39b6445920112d07e0/data/contents']
+[02/Jul/2024 14:21:52] INFO [django_irods.icommands:187] Elapsed time for icommand ['/usr/bin/imkdir', '-p', '41b8bccf657d4d39b6445920112d07e0/data/contents'] = 0.16489243507385254
+[02/Jul/2024 14:21:52] INFO [django_irods.icommands:173] Calling iCommand: ['/usr/bin/iput', '-f', '/hs_tmp/tmpbhjsw_iw', '41b8bccf657d4d39b6445920112d07e0/data/contents/bb0a681d19d14c568d0db9f31c0e634e.zip']
+[02/Jul/2024 14:21:53] INFO [django_irods.icommands:187] Elapsed time for icommand ['/usr/bin/iput', '-f', '/hs_tmp/tmpbhjsw_iw', '41b8bccf657d4d39b6445920112d07e0/data/contents/bb0a681d19d14c568d0db9f31c0e634e.zip'] = 0.2336740493774414
+[02/Jul/2024 14:21:53] DEBUG [pysolr:394] Starting request to 'http://solr:8983/solr/collection1/update/?commit=true' (post) with body '<delete><i'...
+[02/Jul/2024 14:21:53] DEBUG [urllib3.connectionpool:246] Starting new HTTP connection (1): solr:8983
+[02/Jul/2024 14:21:53] DEBUG [urllib3.connectionpool:474] http://solr:8983 "POST /solr/collection1/update/?commit=true HTTP/1.1" 200 148
+[02/Jul/2024 14:21:53] INFO [pysolr:438] Finished 'http://solr:8983/solr/collection1/update/?commit=true' (post) with body '<delete><i' in 0.022 seconds, with status 200
+[02/Jul/2024 14:21:53] INFO [django_irods.icommands:173] Calling iCommand: ['/usr/bin/imeta', 'set', '-C', '41b8bccf657d4d39b6445920112d07e0', 'bag_modified', 'true']
+[02/Jul/2024 14:21:53] INFO [django_irods.icommands:187] Elapsed time for icommand ['/usr/bin/imeta', 'set', '-C', '41b8bccf657d4d39b6445920112d07e0', 'bag_modified', 'true'] = 0.15129399299621582
+[02/Jul/2024 14:21:53] INFO [django_irods.icommands:173] Calling iCommand: ['/usr/bin/imeta', 'set', '-C', '41b8bccf657d4d39b6445920112d07e0', 'metadata_dirty', 'true']
+[02/Jul/2024 14:21:53] INFO [django_irods.icommands:187] Elapsed time for icommand ['/usr/bin/imeta', 'set', '-C', '41b8bccf657d4d39b6445920112d07e0', 'metadata_dirty', 'true'] = 0.1488502025604248
+[02/Jul/2024 14:21:53] INFO [irods_browser_app.views:177] ************************************************************************************************************************************************************************************************************************************************************************************************************
+[02/Jul/2024 14:21:53] INFO [irods_browser_app.views:178] end upload_add
+[02/Jul/2024 14:21:53] INFO [irods_browser_app.views:179] <QueryDict: {'upload': ['/hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip'], 'res_id': ['41b8bccf657d4d39b6445920112d07e0'], 'irods_username': ['devin.r.cowan@dartmouth.edu'], 'irods_password': ['asdfasdf'], 'irods_host': ['users.hydroshare.org'], 'irods_port': ['1247'], 'irods_zone': ['hydroshareuserZone']}>
+[02/Jul/2024 14:21:53] INFO [irods_browser_app.views:180] ************************************************************************************************************************************************************************************************************************************************************************************************************
+
+
+
+[02/Jul/2024 15:31:17] ERROR [django_irods.icommands:175] Calling iCommand: ['/usr/bin/imeta', 'set', '-C', '41b8bccf657d4d39b6445920112d07e0', 'bag_modified', 'true']
+[02/Jul/2024 15:31:17] ERROR [django_irods.icommands:176] Data: None
+[02/Jul/2024 15:31:17] ERROR [django_irods.icommands:177] Environment: {'RABBITMQ_PORT_5672_TCP_ADDR': 'rabbitmq', 'KUBERNETES_SERVICE_PORT_HTTPS': '443', 'SOLR_PORT_8983_TCP_PROTO': 'tcp', 'KUBERNETES_SERVICE_PORT': '443', 'POSTGIS_SERVICE_PORT': '5432', 'HYDROSHARE_PORT_1338_TCP_PORT': '1338', 'HYDROSHARE_PORT_1338_TCP_PROTO': 'tcp', 'POSTGIS_SERVICE_PORT_5432': '5432', 'POSTGIS_PASSWORD': 'postgres', 'HOSTNAME': 'hydroshare-1', 'PYTHON_VERSION': '3.9.17', 'LANGUAGE': 'en_US:en', 'RABBITMQ_PORT_5672_TCP_PORT': '5672', 'POSTGIS_USER': 'postgres', 'POSTGIS_PORT_5432_TCP_PROTO': 'tcp', 'MAINTENANCE_PORT_8000_TCP_PROTO': 'tcp', 'PGPASSWORD': 'postgres', 'HYDROSHARE_SERVICE_PORT_1338': '1338', 'POSTGIS_PORT': '5432', 'HYDROSHARE_PORT': 'tcp://34.118.234.127:1338', 'RABBITMQ_SERVICE_PORT_AMQP': '5672', 'RABBITMQ_PORT_5672_TCP_PROTO': 'tcp', 'SOLR_HOST': 'solr', 'MAINTENANCE_SERVICE_HOST': '34.118.230.181', 'PWD': '/hydroshare', 'HYDROSHARE_PORT_8000_TCP': 'tcp://34.118.234.127:8000', 'DEFAULTWORKER_SERVICE_HOST': '34.118.230.7', 'SOLR_PORT_8983_TCP': 'tcp://34.118.234.55:8983', 'HS_PATH': '/hydroshare', 'MAINTENANCE_PORT_8000_TCP_ADDR': '34.118.230.181', 'POSTGIS_PORT_5432_TCP_ADDR': 'postgis', 'RABBITMQ_SERVICE_PORT': '5672', 'PYTHON_SETUPTOOLS_VERSION': '58.1.0', 'DEFAULTWORKER_PORT_5555_TCP_PROTO': 'tcp', 'RABBITMQ_SERVICE_HOST': '34.118.229.95', 'SOLR_SERVICE_HOST': '34.118.234.55', 'NOTVISIBLE': 'in users profile', 'SOLR_PORT': 'tcp://34.118.234.55:8983', 'RABBITMQ_PORT': 'tcp://34.118.229.95:5672', 'HOME': '/root', 'LANG': 'en_US.UTF-8', 'KUBERNETES_PORT_443_TCP': 'tcp://34.118.224.1:443', 'SOLR_SERVICE_PORT_8983': '8983', 'DEFAULTWORKER_PORT_5555_TCP': 'tcp://34.118.230.7:5555', 'HYDROSHARE_PORT_8000_TCP_PORT': '8000', 'HYDROSHARE_SERVICE_PORT': '1338', 'GPG_KEY': 'E3FF2839C048B25C084DEBE9B26995E310250568', 'HYDROSHARE_SERVICE_PORT_8000': '8000', 'DJANGO_SETTINGS_MODULE': 'hydroshare.settings', 'MAINTENANCE_SERVICE_PORT': '8000', 'MAINTENANCE_PORT': 'tcp://34.118.230.181:8000', 'DEFAULTWORKER_SERVICE_PORT': '5555', 'PYTHONPATH': '/hydroshare:/hydroshare', 'DEFAULTWORKER_SERVICE_PORT_5555': '5555', 'HYDROSHARE_PORT_8000_TCP_ADDR': '34.118.234.127', 'HYDROSHARE_PORT_1338_TCP': 'tcp://34.118.234.127:1338', 'DEFAULTWORKER_PORT_5555_TCP_ADDR': '34.118.230.7', 'HYDROSHARE_PORT_1338_TCP_ADDR': '34.118.234.127', 'POSTGIS_PORT_5432_TCP_PORT': '5432', 'MAINTENANCE_PORT_8000_TCP_PORT': '8000', 'SHLVL': '1', 'PY_SAX_PARSER': 'hs_core.xmlparser', 'KUBERNETES_PORT_443_TCP_PROTO': 'tcp', 'PYTHON_PIP_VERSION': '23.0.1', 'KUBERNETES_PORT_443_TCP_ADDR': '34.118.224.1', 'SOLR_SERVICE_PORT': '8983', 'HYDROSHARE_SERVICE_HOST': '34.118.234.127', 'PYTHON_GET_PIP_SHA256': '96461deced5c2a487ddc65207ec5a9cffeca0d34e7af7ea1afc470ff0d746207', 'HYDROSHARE_PORT_8000_TCP_PROTO': 'tcp', 'RABBITMQ_PORT_5672_TCP': 'tcp://34.118.229.95:5672', 'SOLR_PORT_8983_TCP_ADDR': 'solr', 'DOCKER_HOST': 'tcp://localhost:2375', 'POSTGIS_DB': 'postgres', 'KUBERNETES_SERVICE_HOST': '34.118.224.1', 'LC_ALL': 'en_US.UTF-8', 'KUBERNETES_PORT': 'tcp://34.118.224.1:443', 'KUBERNETES_PORT_443_TCP_PORT': '443', 'PYTHON_GET_PIP_URL': 'https://github.com/pypa/get-pip/raw/0d8570dc44796f4369b652222cf176b3db6ac70e/public/get-pip.py', 'TMP': '/hs_tmp', 'POSTGIS_HOST': 'postgis', 'PATH': '/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'MAINTENANCE_PORT_8000_TCP': 'tcp://34.118.230.181:8000', 'POSTGIS_PORT_5432_TCP': 'tcp://34.118.230.224:5432', 'DEFAULTWORKER_PORT_5555_TCP_PORT': '5555', 'SOLR_PORT_8983_TCP_PORT': '8983', 'POSTGIS_SERVICE_HOST': '34.118.230.224', 'DEBIAN_FRONTEND': 'teletype', 'DEFAULTWORKER_PORT': 'tcp://34.118.230.7:5555', 'OLDPWD': '/hydroshare', 'SERVER_SOFTWARE': 'gunicorn/22.0.0', 'TZ': 'Etc/UTC', 'IRODS_ENVIRONMENT_FILE': '/tmp/default_session/irods_environment.json', 'IRODS_AUTHENTICATION_FILE': '/tmp/default_session/.irodsA'}
+
+
+
+
+
+[02/Jul/2024 16:22:10] ERROR [django_irods.icommands:187] Elapsed time for icommand ['/usr/bin/ils', '/hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip'] = 200.28728771209717
+[02/Jul/2024 16:22:10] ERROR [hs_core.views.utils:96]  ----- start upload_from_irods ------
+[02/Jul/2024 16:22:10] ERROR [hs_core.views.utils:97] username: devin.r.cowan@dartmouth.edu,                 host: users.hydroshare.org,                 port: 1247,                 zone: hydroshareuserZone,                 irods_fnames: /hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip,                 res_files: []
+[02/Jul/2024 16:22:10] ERROR [django_irods.storage:77]  ----- start set_user_session ------
+[02/Jul/2024 16:22:10] ERROR [django_irods.icommands:173] Calling iCommand: ['/usr/bin/iinit', 'asdfasdf']
+[02/Jul/2024 16:22:10] ERROR [django_irods.icommands:187] Elapsed time for icommand ['/usr/bin/iinit', 'asdfasdf'] = 0.38759922981262207
+[02/Jul/2024 16:22:10] ERROR [django_irods.storage:103]  ----- end set_user_session ------
+[02/Jul/2024 16:22:10] ERROR [django_irods.storage:434]  ----- start size /hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip ------
+[02/Jul/2024 16:22:10] ERROR [django_irods.storage:448] settings.IRODS_SINGLE_RESC_FOR_QUERY not set. The resulting size might not be accurate if the file is replicated.
+[02/Jul/2024 16:22:10] ERROR [django_irods.icommands:173] Calling iCommand: ['/usr/bin/iquest', '%s', "select DATA_SIZE where DATA_REPL_STATUS = '1' AND COLL_NAME = '/hydroshareuserZone/home/devin.r.cowan@dartmouth.edu' AND DATA_NAME = 'bb0a681d19d14c568d0db9f31c0e634e.zip'"]
+[02/Jul/2024 16:22:11] ERROR [django_irods.icommands:187] Elapsed time for icommand ['/usr/bin/iquest', '%s', "select DATA_SIZE where DATA_REPL_STATUS = '1' AND COLL_NAME = '/hydroshareuserZone/home/devin.r.cowan@dartmouth.edu' AND DATA_NAME = 'bb0a681d19d14c568d0db9f31c0e634e.zip'"] = 0.4072723388671875
+[02/Jul/2024 16:22:11] ERROR [django_irods.storage:466]  ----- end size /hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip ------
+[02/Jul/2024 16:22:11] ERROR [django_irods.icommands:173] Calling iCommand: ['/usr/bin/iget', '-f', '/hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip', '/hs_tmp/tmpqlacybfr']
+[02/Jul/2024 16:22:11] ERROR [django_irods.icommands:187] Elapsed time for icommand ['/usr/bin/iget', '-f', '/hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip', '/hs_tmp/tmpqlacybfr'] = 0.5594446659088135
+[02/Jul/2024 16:22:11] ERROR [hs_core.views.utils:117]  ----- end upload_from_irods ------
+[02/Jul/2024 16:22:11] ERROR [django_irods.icommands:173] Calling iCommand: ['/usr/bin/ils', '41b8bccf657d4d39b6445920112d07e0/data/contents/bb0a681d19d14c568d0db9f31c0e634e.zip']
+[02/Jul/2024 16:22:11] ERROR [django_irods.icommands:187] Elapsed time for icommand ['/usr/bin/ils', '41b8bccf657d4d39b6445920112d07e0/data/contents/bb0a681d19d14c568d0db9f31c0e634e.zip'] = 0.15966415405273438
+[02/Jul/2024 16:22:11] ERROR [django_irods.icommands:173] Calling iCommand: ['/usr/bin/imkdir', '-p', '41b8bccf657d4d39b6445920112d07e0/data/contents']
+[02/Jul/2024 16:22:12] ERROR [django_irods.icommands:187] Elapsed time for icommand ['/usr/bin/imkdir', '-p', '41b8bccf657d4d39b6445920112d07e0/data/contents'] = 0.17159605026245117
+[02/Jul/2024 16:22:12] ERROR [django_irods.icommands:173] Calling iCommand: ['/usr/bin/iput', '-f', '/hs_tmp/tmp25yjs_sp', '41b8bccf657d4d39b6445920112d07e0/data/contents/bb0a681d19d14c568d0db9f31c0e634e.zip']
+[02/Jul/2024 16:22:12] ERROR [django_irods.icommands:187] Elapsed time for icommand ['/usr/bin/iput', '-f', '/hs_tmp/tmp25yjs_sp', '41b8bccf657d4d39b6445920112d07e0/data/contents/bb0a681d19d14c568d0db9f31c0e634e.zip'] = 0.24151182174682617
+[02/Jul/2024 16:22:12] DEBUG [pysolr:394] Starting request to 'http://solr:8983/solr/collection1/update/?commit=true' (post) with body '<delete><i'...
+[02/Jul/2024 16:22:12] DEBUG [urllib3.connectionpool:246] Starting new HTTP connection (1): solr:8983
+[02/Jul/2024 16:22:12] DEBUG [urllib3.connectionpool:474] http://solr:8983 "POST /solr/collection1/update/?commit=true HTTP/1.1" 200 148
+[02/Jul/2024 16:22:12] INFO [pysolr:438] Finished 'http://solr:8983/solr/collection1/update/?commit=true' (post) with body '<delete><i' in 0.022 seconds, with status 200
+[02/Jul/2024 16:22:12] ERROR [django_irods.icommands:173] Calling iCommand: ['/usr/bin/imeta', 'set', '-C', '41b8bccf657d4d39b6445920112d07e0', 'bag_modified', 'true']
+[02/Jul/2024 16:22:12] ERROR [django_irods.icommands:187] Elapsed time for icommand ['/usr/bin/imeta', 'set', '-C', '41b8bccf657d4d39b6445920112d07e0', 'bag_modified', 'true'] = 0.17259788513183594
+[02/Jul/2024 16:22:12] ERROR [django_irods.icommands:173] Calling iCommand: ['/usr/bin/imeta', 'set', '-C', '41b8bccf657d4d39b6445920112d07e0', 'metadata_dirty', 'true']
+[02/Jul/2024 16:22:12] ERROR [django_irods.icommands:187] Elapsed time for icommand ['/usr/bin/imeta', 'set', '-C', '41b8bccf657d4d39b6445920112d07e0', 'metadata_dirty', 'true'] = 0.17254328727722168
+[02/Jul/2024 16:22:12] DEBUG [amqp:382] Start from server, version: 0.9, properties: {'capabilities': {'publisher_confirms': True, 'exchange_exchange_bindings': True, 'basic.nack': True, 'consumer_cancel_notify': True, 'connection.blocked': True, 'consumer_priorities': True, 'authentication_failure_close': True, 'per_consumer_qos': True, 'direct_reply_to': True}, 'cluster_name': 'rabbit@rabbitmq-6874c8d7d-q5m87', 'copyright': 'Copyright (c) 2007-2019 Pivotal Software, Inc.', 'information': 'Licensed under the MPL 1.1. Website: https://rabbitmq.com', 'platform': 'Erlang/OTP 22.2.8', 'product': 'RabbitMQ', 'version': '3.8.2'}, mechanisms: [b'PLAIN', b'AMQPLAIN'], locales: ['en_US']
+[02/Jul/2024 16:22:12] DEBUG [amqp:104] using channel_id: 1
+[02/Jul/2024 16:22:12] DEBUG [amqp:460] Channel open
+[02/Jul/2024 16:22:12] ERROR [irods_browser_app.views:177] ************************************************************************************************************************************************************************************************************************************************************************************************************
+[02/Jul/2024 16:22:12] ERROR [irods_browser_app.views:178] end upload_add
+[02/Jul/2024 16:22:12] ERROR [irods_browser_app.views:179] <QueryDict: {'upload': ['/hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip'], 'res_id': ['41b8bccf657d4d39b6445920112d07e0'], 'irods_username': ['devin.r.cowan@dartmouth.edu'], 'irods_password': ['asdfasdf'], 'irods_host': ['users.hydroshare.org'], 'irods_port': ['1247'], 'irods_zone': ['hydroshareuserZone']}>
+[02/Jul/2024 16:22:12] ERROR [irods_browser_app.views:180] ************************************************************************************************************************************************************************************************************************************************************************************************************
+
+
+
+
+
+
+
+
+
+[02/Jul/2024 16:45:07] ERROR [irods_browser_app.views:114] ************************************************************************************************************************************************************************************************************************************************************************************************************
+[02/Jul/2024 16:45:07] ERROR [irods_browser_app.views:115] start upload_add
+[02/Jul/2024 16:45:07] ERROR [irods_browser_app.views:116] <QueryDict: {'upload': ['/hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip'], 'res_id': ['41b8bccf657d4d39b6445920112d07e0'], 'irods_username': ['devin.r.cowan@dartmouth.edu'], 'irods_password': ['asdfasdf'], 'irods_host': ['users.hydroshare.org'], 'irods_port': ['1247'], 'irods_zone': ['hydroshareuserZone']}>
+[02/Jul/2024 16:45:07] ERROR [irods_browser_app.views:117] ************************************************************************************************************************************************************************************************************************************************************************************************************
+[02/Jul/2024 16:45:07] ERROR [irods_browser_app.views:34]  ----- start check_upload_files ------
+[02/Jul/2024 16:45:07] ERROR [irods_browser_app.views:51]  ----- end check_upload_files ------
+[02/Jul/2024 16:45:07] ERROR [hs_core.hydroshare.utils:209]  --- start is_federated: /hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip ---
+[02/Jul/2024 16:45:07] ERROR [django_irods.storage:77]  ----- start set_user_session ------
+[02/Jul/2024 16:45:07] ERROR [django_irods.icommands:175] Calling iCommand: ['/usr/bin/iinit', 'RmjYVeRnKj39vqAoTcAfpm7ksnoCxseh']
+[02/Jul/2024 16:45:07] ERROR [django_irods.icommands:188] Elapsed time for icommand ['/usr/bin/iinit', 'RmjYVeRnKj39vqAoTcAfpm7ksnoCxseh'] = 0.14031434059143066
+[02/Jul/2024 16:45:07] ERROR [django_irods.storage:103]  ----- end set_user_session ------
+[02/Jul/2024 16:45:07] ERROR [hs_core.hydroshare.utils:230]  --- end is_federated: /hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip ---
+[02/Jul/2024 16:45:07] ERROR [django_irods.icommands:175] Calling iCommand: ['/usr/bin/ils', '/hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip']
+---
+[02/Jul/2024 16:48:28] ERROR [django_irods.icommands:188] Elapsed time for icommand ['/usr/bin/ils', '/hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip'] = 200.43083906173706
+[02/Jul/2024 16:48:28] ERROR [hs_core.views.utils:96]  ----- start upload_from_irods ------
+[02/Jul/2024 16:48:28] ERROR [hs_core.views.utils:97] username: devin.r.cowan@dartmouth.edu,                 host: users.hydroshare.org,                 port: 1247,                 zone: hydroshareuserZone,                 irods_fnames: /hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip,                 res_files: []
+[02/Jul/2024 16:48:28] ERROR [django_irods.storage:77]  ----- start set_user_session ------
+[02/Jul/2024 16:48:28] ERROR [django_irods.icommands:175] Calling iCommand: ['/usr/bin/iinit', 'asdfasdf']
+[02/Jul/2024 16:48:28] ERROR [django_irods.icommands:188] Elapsed time for icommand ['/usr/bin/iinit', 'asdfasdf'] = 0.37940073013305664
+[02/Jul/2024 16:48:28] ERROR [django_irods.storage:103]  ----- end set_user_session ------
+[02/Jul/2024 16:48:28] ERROR [django_irods.storage:434]  ----- start size /hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip ------
+[02/Jul/2024 16:48:28] ERROR [django_irods.storage:448] settings.IRODS_SINGLE_RESC_FOR_QUERY not set. The resulting size might not be accurate if the file is replicated.
+[02/Jul/2024 16:48:28] ERROR [django_irods.icommands:175] Calling iCommand: ['/usr/bin/iquest', '%s', "select DATA_SIZE where DATA_REPL_STATUS = '1' AND COLL_NAME = '/hydroshareuserZone/home/devin.r.cowan@dartmouth.edu' AND DATA_NAME = 'bb0a681d19d14c568d0db9f31c0e634e.zip'"]
+[02/Jul/2024 16:48:28] ERROR [django_irods.icommands:188] Elapsed time for icommand ['/usr/bin/iquest', '%s', "select DATA_SIZE where DATA_REPL_STATUS = '1' AND COLL_NAME = '/hydroshareuserZone/home/devin.r.cowan@dartmouth.edu' AND DATA_NAME = 'bb0a681d19d14c568d0db9f31c0e634e.zip'"] = 0.37650442123413086
+[02/Jul/2024 16:48:28] ERROR [django_irods.storage:466]  ----- end size /hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip ------
+[02/Jul/2024 16:48:28] ERROR [django_irods.icommands:175] Calling iCommand: ['/usr/bin/iget', '-f', '/hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip', '/hs_tmp/tmpxmx0cgcs']
+[02/Jul/2024 16:48:29] ERROR [django_irods.icommands:188] Elapsed time for icommand ['/usr/bin/iget', '-f', '/hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip', '/hs_tmp/tmpxmx0cgcs'] = 0.5629990100860596
+[02/Jul/2024 16:48:29] ERROR [hs_core.views.utils:117]  ----- end upload_from_irods ------
+[02/Jul/2024 16:48:29] ERROR [django_irods.icommands:175] Calling iCommand: ['/usr/bin/ils', '41b8bccf657d4d39b6445920112d07e0/data/contents/bb0a681d19d14c568d0db9f31c0e634e.zip']
+[02/Jul/2024 16:48:29] ERROR [django_irods.icommands:188] Elapsed time for icommand ['/usr/bin/ils', '41b8bccf657d4d39b6445920112d07e0/data/contents/bb0a681d19d14c568d0db9f31c0e634e.zip'] = 0.1626753807067871
+[02/Jul/2024 16:48:29] ERROR [django_irods.icommands:175] Calling iCommand: ['/usr/bin/imkdir', '-p', '41b8bccf657d4d39b6445920112d07e0/data/contents']
+[02/Jul/2024 16:48:29] ERROR [django_irods.icommands:188] Elapsed time for icommand ['/usr/bin/imkdir', '-p', '41b8bccf657d4d39b6445920112d07e0/data/contents'] = 0.16873979568481445
+[02/Jul/2024 16:48:29] ERROR [django_irods.icommands:175] Calling iCommand: ['/usr/bin/iput', '-f', '/hs_tmp/tmpc4khmfn0', '41b8bccf657d4d39b6445920112d07e0/data/contents/bb0a681d19d14c568d0db9f31c0e634e.zip']
+[02/Jul/2024 16:48:30] ERROR [django_irods.icommands:188] Elapsed time for icommand ['/usr/bin/iput', '-f', '/hs_tmp/tmpc4khmfn0', '41b8bccf657d4d39b6445920112d07e0/data/contents/bb0a681d19d14c568d0db9f31c0e634e.zip'] = 0.2557332515716553
+[02/Jul/2024 16:48:30] DEBUG [pysolr:394] Starting request to 'http://solr:8983/solr/collection1/update/?commit=true' (post) with body '<delete><i'...
+[02/Jul/2024 16:48:30] DEBUG [urllib3.connectionpool:246] Starting new HTTP connection (1): solr:8983
+[02/Jul/2024 16:48:30] DEBUG [urllib3.connectionpool:474] http://solr:8983 "POST /solr/collection1/update/?commit=true HTTP/1.1" 200 148
+[02/Jul/2024 16:48:30] INFO [pysolr:438] Finished 'http://solr:8983/solr/collection1/update/?commit=true' (post) with body '<delete><i' in 0.021 seconds, with status 200
+[02/Jul/2024 16:48:30] ERROR [django_irods.icommands:175] Calling iCommand: ['/usr/bin/imeta', 'set', '-C', '41b8bccf657d4d39b6445920112d07e0', 'bag_modified', 'true']
+[02/Jul/2024 16:48:30] ERROR [django_irods.icommands:188] Elapsed time for icommand ['/usr/bin/imeta', 'set', '-C', '41b8bccf657d4d39b6445920112d07e0', 'bag_modified', 'true'] = 0.1785883903503418
+[02/Jul/2024 16:48:30] ERROR [django_irods.icommands:175] Calling iCommand: ['/usr/bin/imeta', 'set', '-C', '41b8bccf657d4d39b6445920112d07e0', 'metadata_dirty', 'true']
+[02/Jul/2024 16:48:30] ERROR [django_irods.icommands:188] Elapsed time for icommand ['/usr/bin/imeta', 'set', '-C', '41b8bccf657d4d39b6445920112d07e0', 'metadata_dirty', 'true'] = 0.17052483558654785
+[02/Jul/2024 16:48:30] DEBUG [amqp:382] Start from server, version: 0.9, properties: {'capabilities': {'publisher_confirms': True, 'exchange_exchange_bindings': True, 'basic.nack': True, 'consumer_cancel_notify': True, 'connection.blocked': True, 'consumer_priorities': True, 'authentication_failure_close': True, 'per_consumer_qos': True, 'direct_reply_to': True}, 'cluster_name': 'rabbit@rabbitmq-6874c8d7d-q5m87', 'copyright': 'Copyright (c) 2007-2019 Pivotal Software, Inc.', 'information': 'Licensed under the MPL 1.1. Website: https://rabbitmq.com', 'platform': 'Erlang/OTP 22.2.8', 'product': 'RabbitMQ', 'version': '3.8.2'}, mechanisms: [b'PLAIN', b'AMQPLAIN'], locales: ['en_US']
+[02/Jul/2024 16:48:30] DEBUG [amqp:104] using channel_id: 1
+[02/Jul/2024 16:48:30] DEBUG [amqp:460] Channel open
+[02/Jul/2024 16:48:30] ERROR [irods_browser_app.views:177] ************************************************************************************************************************************************************************************************************************************************************************************************************
+[02/Jul/2024 16:48:30] ERROR [irods_browser_app.views:178] end upload_add
+[02/Jul/2024 16:48:30] ERROR [irods_browser_app.views:179] <QueryDict: {'upload': ['/hydroshareuserZone/home/devin.r.cowan@dartmouth.edu/bb0a681d19d14c568d0db9f31c0e634e.zip'], 'res_id': ['41b8bccf657d4d39b6445920112d07e0'], 'irods_username': ['devin.r.cowan@dartmouth.edu'], 'irods_password': ['asdfasdf'], 'irods_host': ['users.hydroshare.org'], 'irods_port': ['1247'], 'irods_zone': ['hydroshareuserZone']}>
+[02/Jul/2024 16:48:30] ERROR [irods_browser_app.views:180] ************************************************************************************************************************************************************************************************************************************************************************************************************
