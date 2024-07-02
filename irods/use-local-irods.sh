@@ -65,6 +65,7 @@ docker exec ${IRODS_HOST} sh -c "apt-get update"
 echo "[root@${IRODS_HOST}]$ apt-get install -y iproute2 jq"
 docker exec ${IRODS_HOST} sh -c "apt-get install -y iproute2 jq"
 
+ICAT1IP=$(docker exec ${IRODS_HOST} /sbin/ip -f inet -4 -o addr | grep eth | cut -d '/' -f 1 | rev | cut -d ' ' -f 1 | rev)
 
 # Generate .env files for rods@${IRODS_HOST}
 printf "IRODS_HOST=${ICAT1IP}\nIRODS_PORT=${IRODS_PORT}\nIRODS_USER_NAME=rods\nIRODS_ZONE_NAME=${IRODS_ZONE}\nIRODS_PASSWORD=rods" > env-files/rods@${IRODS_HOST}.env
