@@ -2454,10 +2454,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         else:
             full_path = path
 
-        if self.is_federated:
-            return os.path.join(self.resource_federation_path, full_path)
-        else:
-            return full_path
+        return full_path
 
     def set_quota_holder(self, setter, new_holder):
         """Set quota holder of the resource to new_holder who must be an owner.
@@ -2828,14 +2825,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         file_path_md = os.path.join(self.file_path, 'readme.md')
         file_path_txt = os.path.join(self.file_path, 'readme.txt')
-        if self.is_federated:
-            readme_res_file = self.files.filter(fed_resource_file__iexact=file_path_md).first()
-            if readme_res_file is None:
-                readme_res_file = self.files.filter(fed_resource_file__iexact=file_path_txt).first()
-        else:
-            readme_res_file = self.files.filter(resource_file__iexact=file_path_md).first()
-            if readme_res_file is None:
-                readme_res_file = self.files.filter(resource_file__iexact=file_path_txt).first()
+        readme_res_file = self.files.filter(resource_file__iexact=file_path_md).first()
+        if readme_res_file is None:
+            readme_res_file = self.files.filter(resource_file__iexact=file_path_txt).first()
 
         return readme_res_file
 
@@ -2934,16 +2926,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     @property
     def storage_type(self):
-        if not self.is_federated:
-            return 'local'
-        userpath = '/' + os.path.join(
-            getattr(settings, 'HS_USER_IRODS_ZONE', 'hydroshareuserZone'),
-            'home',
-            getattr(settings, 'HS_IRODS_PROXY_USER_IN_USER_ZONE', 'localHydroProxy'))
-        if self.resource_federation_path == userpath:
-            return 'user'
-        else:
-            return 'federated'
+        return 'local'
 
     def is_folder(self, folder_path):
         """Determine whether a given path (relative to resource root, including /data/contents/)
@@ -2981,7 +2964,6 @@ def get_path(instance, filename, folder=''):
     :param folder: can override folder for ResourceFile instance
 
     The filename is only a single name. This routine converts it to an absolute
-    path that can be federated or local.  The instance points to the Resource record,
     which contains the federation path. The folder in the instance will be used unless
     overridden.
 
@@ -2996,14 +2978,13 @@ def get_path(instance, filename, folder=''):
 
 # TODO: make this an instance method of BaseResource.
 def get_resource_file_path(resource, filename, folder=''):
-    """Determine storage path for a FileField based upon whether resource is federated.
+    """Determine storage path for a FileField
 
     :param resource: resource containing the file.
     :param filename: name of file without folder.
     :param folder: folder of file
 
     The filename is only a single name. This routine converts it to an absolute
-    path that can be federated or local. The resource contains information on how
     to do this.
 
     """
@@ -3085,6 +3066,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                                      storage=IrodsStorage())
     # TODO: ideally we would like a unique constraint on fed_resource_file
     # due to https://code.djangoproject.com/ticket/10244 we can't set null=True and unique=True
+    # TODO: remove fed_resource_file
     fed_resource_file = models.FileField(upload_to=get_path, max_length=4096,
                                          null=True, blank=True, storage=FedStorage())
 
@@ -3112,7 +3094,6 @@ class ResourceFile(ResourceFileIRODSMixin):
     filesize_cache_updated = models.DateTimeField(null=True)
 
     def __str__(self):
-        """Return resource filename or federated resource filename for string representation."""
         if self.resource.resource_federation_path:
             return self.fed_resource_file.name
         else:
@@ -3176,12 +3157,8 @@ class ResourceFile(ResourceFileIRODSMixin):
             if not ResourceFile.is_filename_valid(filename):
                 raise SuspiciousFileOperation("Filename is not compliant with Hydroshare requirements")
 
-            if resource.is_federated:
-                kwargs['resource_file'] = None
-                kwargs['fed_resource_file'] = file
-            else:
-                kwargs['resource_file'] = file
-                kwargs['fed_resource_file'] = None
+            kwargs['resource_file'] = file
+            kwargs['fed_resource_file'] = None
 
         else:  # if file is not an open file, then it's a basename (string)
             if file is None and source is not None:
@@ -3210,12 +3187,8 @@ class ResourceFile(ResourceFileIRODSMixin):
                     "ResourceFile.create: exactly one of source or file must be specified")
 
             # we've copied or moved if necessary; now set the paths
-            if resource.is_federated:
-                kwargs['resource_file'] = None
-                kwargs['fed_resource_file'] = target
-            else:
-                kwargs['resource_file'] = target
-                kwargs['fed_resource_file'] = None
+            kwargs['resource_file'] = target
+            kwargs['fed_resource_file'] = None
 
         # Actually create the file record
         # when file is a File, the file is copied to storage in this step
@@ -3319,25 +3292,15 @@ class ResourceFile(ResourceFileIRODSMixin):
     # TODO: write unit test
     @property
     def exists(self):
-        """Check existence of files for both federated and non-federated."""
         istorage = self.resource.get_irods_storage()
-        if self.resource.is_federated:
-            if __debug__:
-                assert self.resource_file.name is None or \
-                    self.resource_file.name == ''
-            return istorage.exists(self.fed_resource_file.name)
-        else:
-            if __debug__:
-                assert self.fed_resource_file.name is None or \
-                    self.fed_resource_file.name == ''
-            return istorage.exists(self.resource_file.name)
+        if __debug__:
+            assert self.fed_resource_file.name is None or \
+                self.fed_resource_file.name == ''
+        return istorage.exists(self.resource_file.name)
 
     # TODO: write unit test
     def read(self):
-        if self.resource.is_federated:
-            return self.fed_resource_file.read()
-        else:
-            return self.resource_file.read()
+        return self.resource_file.read()
 
     @property
     def storage_path(self):
@@ -3345,7 +3308,6 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         This is a valid input to IrodsStorage for manipulating the file.
         The output depends upon whether the IrodsStorage instance is running
-        in federated mode.
 
         """
         # instance.content_object can be stale after changes.
@@ -3358,16 +3320,10 @@ class ResourceFile(ResourceFileIRODSMixin):
         Note: This is the preferred way to get the storage path for a file when we are trying to find
         the storage path for more than one file in a resource.
         """
-        if resource.is_federated:  # false if None or empty
-            if __debug__:
-                assert self.resource_file.name is None or \
-                    self.resource_file.name == ''
-            return self.fed_resource_file.name
-        else:
-            if __debug__:
-                assert self.fed_resource_file.name is None or \
-                    self.fed_resource_file.name == ''
-            return self.resource_file.name
+        if __debug__:
+            assert self.fed_resource_file.name is None or \
+                self.fed_resource_file.name == ''
+        return self.resource_file.name
 
     def calculate_size(self, resource=None, save=True):
         """Reads the file size and saves to the DB"""
@@ -3426,7 +3382,6 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         Path can be absolute or relative.
 
-            * absolute paths contain full irods path to local or federated object.
             * relative paths start with anything else and can start with optional folder
 
         :raises ValidationError: if the pathname is inconsistent with resource configuration.
@@ -3447,16 +3402,9 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         # self.content_object can be stale after changes. Re-fetch based upon key
         # bypass type system; it is not relevant
-        resource = self.resource
-
         # switch FileFields based upon federation path
-        if resource.is_federated:
-            # uses file_folder; must come after that setting.
-            self.fed_resource_file = get_path(self, base)
-            self.resource_file = None
-        else:
-            self.fed_resource_file = None
-            self.resource_file = get_path(self, base)
+        self.fed_resource_file = None
+        self.resource_file = get_path(self, base)
         self.save()
 
     @property
@@ -3485,10 +3433,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         Note: This is the preferred way to get the short path for a file when we are trying to find short path
         for more than one file in a resource.
         """
-        if resource.is_federated:
-            folder, base = self.path_is_acceptable(self.fed_resource_file.name, test_exists=False)
-        else:
-            folder, base = self.path_is_acceptable(self.resource_file.name, test_exists=False)
+        folder, base = self.path_is_acceptable(self.resource_file.name, test_exists=False)
         if folder is not None:
             return os.path.join(folder, base)
         else:
@@ -3503,12 +3448,9 @@ class ResourceFile(ResourceFileIRODSMixin):
         """
         folder, base = os.path.split(path)
         self.file_folder = folder  # must precede call to get_path
-        if self.resource.is_federated:
-            self.resource_file = None
-            self.fed_resource_file = get_path(self, base)
-        else:
-            self.resource_file = get_path(self, base)
-            self.fed_resource_file = None
+
+        self.resource_file = get_path(self, base)
+        self.fed_resource_file = None
         self.save()
 
     def parse(self):
@@ -3542,20 +3484,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             storage = resource.get_irods_storage()
         locpath = os.path.join(resource.short_id, "data", "contents") + "/"
         relpath = path
-        fedpath = resource.resource_federation_path
-        if fedpath and relpath.startswith(fedpath + '/'):
-            if test_exists and not storage.exists(path):
-                raise ValidationError("Federated path does not exist in irods")
-            plen = len(fedpath + '/')
-            relpath = relpath[plen:]  # omit fed path
-
-            # strip resource id from path
-            if relpath.startswith(locpath):
-                plen = len(locpath)
-                relpath = relpath[plen:]  # omit local path
-            else:
-                raise ValidationError("Malformed federated resource path")
-        elif path.startswith(locpath):
+        if path.startswith(locpath):
             # strip optional local path prefix
             if test_exists and not storage.exists(path):
                 raise ValidationError("Local path ({}) does not exist in irods".format(path))
@@ -3700,14 +3629,9 @@ class ResourceFile(ResourceFileIRODSMixin):
             # append trailing slash to match only this folder
             if not folder.endswith("/"):
                 folder += "/"
-            if resource.is_federated:
-                return ResourceFile.objects.filter(
-                    object_id=resource.id,
-                    fed_resource_file__startswith=folder)
-            else:
-                return ResourceFile.objects.filter(
-                    object_id=resource.id,
-                    resource_file__startswith=folder)
+            return ResourceFile.objects.filter(
+                object_id=resource.id,
+                resource_file__startswith=folder)
         else:
             return ResourceFile.objects.filter(
                 object_id=resource.id,
@@ -3818,7 +3742,6 @@ class ResourceFile(ResourceFileIRODSMixin):
     @property
     def public_path(self):
         """ return the public path (unqualified iRODS path) for a resource.
-            This corresponds to the iRODS path if the resource isn't federated.
         """
         return os.path.join(self.resource.short_id, 'data', 'contents', self.short_path)
 
@@ -3828,10 +3751,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             This consists of the resource id, /data/contents/, and the file path.
         """
 
-        if self.resource.is_federated:
-            return os.path.join(self.resource.resource_federation_path, self.public_path)
-        else:
-            return self.public_path
+        return self.public_path
 
 
 class PublicResourceManager(models.Manager):
@@ -3866,7 +3786,6 @@ class BaseResource(Page, AbstractResource):
     # this resource_federation_path is added to record where a HydroShare resource is
     # stored. The default is empty string meaning the resource is stored in HydroShare
     # zone. If a resource is stored in a fedearated zone, the field should store the
-    # federated root path in the format of /federated_zone/home/localHydroProxy
     # TODO: change to null=True, default=None to simplify logic elsewhere
     resource_federation_path = models.CharField(max_length=100, blank=True, default='')
 
@@ -3908,12 +3827,6 @@ class BaseResource(Page, AbstractResource):
         else:
             return IrodsStorage()
 
-    @property
-    def is_federated(self):
-        """Return existence of resource_federation_path."""
-        return self.resource_federation_path is not None and \
-            self.resource_federation_path != ''
-
     # Paths relative to the resource
     @property
     def root_path(self):
@@ -3922,10 +3835,7 @@ class BaseResource(Page, AbstractResource):
         Note that this folder doesn't directly contain the resource files;
         They are contained in ./data/contents/* instead.
         """
-        if self.is_federated:
-            return os.path.join(self.resource_federation_path, self.short_id)
-        else:
-            return self.short_id
+        return self.short_id
 
     @property
     def file_path(self):
@@ -3959,11 +3869,7 @@ class BaseResource(Page, AbstractResource):
         """
         bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
         bagit_postfix = getattr(settings, 'IRODS_BAGIT_POSTFIX', 'zip')
-        if self.is_federated:
-            return os.path.join(self.resource_federation_path, bagit_path,
-                                self.short_id + '.' + bagit_postfix)
-        else:
-            return os.path.join(bagit_path, self.short_id + '.' + bagit_postfix)
+        return os.path.join(bagit_path, self.short_id + '.' + bagit_postfix)
 
     @property
     def bag_url(self):

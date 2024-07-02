@@ -196,39 +196,6 @@ def get_user_zone_status_info(user):
     return enable_user_zone
 
 
-def is_federated(homepath):
-    """
-    Check if the selected file via the iRODS browser is from a federated zone or not
-    Args:
-        homepath: the logical iRODS file name with full logical path, e.g., selected from
-                  iRODS browser
-
-    Returns:
-    True is the selected file indicated by homepath is from a federated zone, False if otherwise
-    """
-    homepath = homepath.strip()
-    homepath_list = homepath.split('/')
-    # homepath is an iRODS logical path in the format of
-    # /irods_zone/home/irods_account_username/collection_relative_path, so homepath_list[1]
-    # is the irods_zone which we can use to form the fed_proxy_path to check whether
-    # fed_proxy_path exists to hold hydroshare resources in a federated zone
-    if homepath_list[1]:
-        fed_proxy_path = os.path.join(homepath_list[1], 'home',
-                                      settings.HS_IRODS_PROXY_USER_IN_USER_ZONE)
-        fed_proxy_path = '/' + fed_proxy_path
-    else:
-        # the test path input is invalid, return False meaning it is not federated
-        return False
-    if settings.REMOTE_USE_IRODS:
-        irods_storage = IrodsStorage('federated')
-    else:
-        irods_storage = IrodsStorage()
-
-    # if the iRODS proxy user in hydroshare zone can list homepath and the federation zone proxy
-    # user path, it is federated; otherwise, it is not federated
-    return irods_storage.exists(homepath) and irods_storage.exists(fed_proxy_path)
-
-
 def get_federated_zone_home_path(filepath):
     """
     Args:
@@ -260,8 +227,6 @@ def get_fed_zone_files(irods_fnames):
     Returns:
     a list of the named temp files which have been copied over to local Django server
     or raise exceptions if input parameter is wrong or iRODS operations fail
-
-    Note: application must delete these files after use.
     """
     ret_file_list = []
     if isinstance(irods_fnames, str):
@@ -444,12 +409,8 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
         tgt_storage_path = src_storage_path.replace(src_res.short_id, tgt_res.short_id)
         kwargs['content_object'] = tgt_res
         kwargs['file_folder'] = scr_file.file_folder
-        if tgt_res.is_federated:
-            kwargs['resource_file'] = None
-            kwargs['fed_resource_file'] = tgt_storage_path
-        else:
-            kwargs['resource_file'] = tgt_storage_path
-            kwargs['fed_resource_file'] = None
+        kwargs['resource_file'] = tgt_storage_path
+        kwargs['fed_resource_file'] = None
 
         if save_to_db:
             return ResourceFile.objects.create(**kwargs)
