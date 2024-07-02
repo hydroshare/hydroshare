@@ -34,7 +34,7 @@ class TestCreateResourceVersion(HSRESTTestCase):
         qmsg.enforce_quota = True
         qmsg.save()
         uquota = self.user.quotas.first()
-        uquota.user_zone_value = uquota.allocated_value * 1.3
+        uquota.data_zone_value = uquota.allocated_value * 1.3
         uquota.save()
 
         version_url = "/hsapi/resource/%s/version/" % self.pid

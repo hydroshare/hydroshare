@@ -42,8 +42,7 @@ def get_quota_usage(username, raise_on_error=True):
     if quota usage cannot be retrieved from iRODS
     """
     uqDataZoneSize = get_data_zone_usage(username, raise_on_error=raise_on_error)
-    uqUserZoneSize = 0
-    return uqUserZoneSize, uqDataZoneSize
+    return uqDataZoneSize
 
 
 def get_data_zone_usage(username, raise_on_error=True, include_published=False):
@@ -99,12 +98,9 @@ def update_quota_usage(username, notify_user=False):
         logger.error(err_msg)
         raise ValidationError(err_msg)
 
-    uz = 0
-
     original_quota_data = uq.get_quota_data()
     qmsg = original_quota_data["qmsg"]
     user = User.objects.get(username=username)
-    uq.set_userzone_used_value(uz)
     uq.save()
 
     if original_quota_data["enforce_quota"]:
@@ -129,7 +125,6 @@ def update_quota_usage(username, notify_user=False):
             # this avoids sending multiple notifications when files are changed but the status does not change
             if notify_user and (original_quota_data["status"] != updated_quota_data["status"]):
                 tasks.send_user_quota_notification.apply_async((user.pk))
-        uq.check_if_userzone_quota_enforcement_is_bypassed(original_quota_data, updated_quota_data)
 
 
 def res_has_web_reference(res):

@@ -162,7 +162,7 @@ class TestPublicZipEndpoint(HSRESTTestCase):
 
         uquota = self.user.quotas.first()
         # make user's quota over hard limit 125%
-        uquota.user_zone_value = uquota.allocated_value * 1.3
+        uquota.data_zone_value = uquota.allocated_value * 1.3
         uquota.save()
 
         # zip should raise quota exception now that the quota holder is over hard limit

@@ -171,7 +171,7 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
         qmsg.enforce_quota = True
         qmsg.save()
         uquota = self.user.quotas.first()
-        uquota.user_zone_value = uquota.allocated_value * 1.3
+        uquota.data_zone_value = uquota.allocated_value * 1.3
         uquota.save()
 
         unzip_url = "/hsapi/resource/%s/functions/unzip/test.zip/" % self.pid

@@ -423,7 +423,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         uquota = self.user.quotas.first()
         # make user's quota over hard limit 125%
-        uquota.user_zone_value = uquota.allocated_value * 1.3
+        uquota.data_zone_value = uquota.allocated_value * 1.3
         uquota.save()
 
         # create_resource should raise quota exception now that the creator user is over hard

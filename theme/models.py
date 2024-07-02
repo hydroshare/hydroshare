@@ -241,7 +241,7 @@ class QuotaMessage(models.Model):
 class UserQuota(models.Model):
     # ForeignKey relationship makes it possible to associate multiple UserQuota models to
     # a User with each UserQuota model defining quota for a set of iRODS zones. By default,
-    # the UserQuota model instance defines quota in hydroshareZone and hydroshareuserZone,
+    # the UserQuota model instance defines quota in hydroshareZone,
     # categorized as hydroshare in zone field in UserQuota model, however,
     # another UserQuota model instance could be defined in a third-party federated zone as needed.
     user = models.ForeignKey(
@@ -254,7 +254,6 @@ class UserQuota(models.Model):
     )
 
     allocated_value = models.FloatField(default=20)
-    user_zone_value = models.FloatField(default=0)
     unit = models.CharField(max_length=10, default="GB")
     zone = models.CharField(max_length=100, default="hydroshare")
     # grace_period_ends to be quota-enforced. Default is None meaning the user is below
@@ -289,8 +288,8 @@ class UserQuota(models.Model):
 
     @property
     def used_value(self):
-        uz, dz = self.get_used_value_by_zone(refresh=False)
-        return uz + dz
+        dz = self.get_used_value_by_zone(refresh=False)
+        return dz
 
     def get_used_value_by_zone(self, refresh=False):
         """
@@ -300,27 +299,15 @@ class UserQuota(models.Model):
             refresh (bool): If True, refreshes the quota usage before returning the values.
 
         Returns:
-            tuple: A tuple containing the used value for the user zone and the data zone.
+            used value in the dataZone
         """
         from hs_core.hydroshare.resource import get_quota_usage
 
         if refresh:
-            uz, dz = get_quota_usage(self.user.username, False)
-            self.set_userzone_used_value(uz)
+            dz = get_quota_usage(self.user.username, False)
         else:
-            uz = self.user_zone_value
             dz = self.data_zone_value
-        return uz, dz
-
-    def set_userzone_used_value(self, uz_size):
-        """
-        set used values in self.unit with pass in size in bytes.
-        :param uz_size: pass in size in bytes unit from userZone
-        :return:
-        """
-        from hs_core.hydroshare.utils import convert_file_size_to_unit
-        self.user_zone_value = convert_file_size_to_unit(uz_size, self.unit)
-        self.save()
+        return dz
 
     def add_to_used_value(self, size):
         """
@@ -348,45 +335,6 @@ class UserQuota(models.Model):
         self.grace_period_ends = None
         self.save()
 
-    def check_if_userzone_quota_enforcement_is_bypassed(self, original_quota_data, updated_quota_data=None):
-        """
-        Check if a user is bypassing quota enforcement in userZone by continuing to put resources
-        Notifies admin if user is continuing to upload while over quota
-        :param user: the user to check
-        :param original_quota_data: the original quota data
-        :param updated_quota_data: the updated quota data
-        :return:
-        """
-        from hs_core import tasks
-        user = self.user
-
-        if updated_quota_data is None:
-            updated_quota_data = self.get_quota_data()
-
-        uz = updated_quota_data["uz"]
-        dz = updated_quota_data["dz"]
-        updated_quota_status = updated_quota_data["status"]
-        original_quota_status = original_quota_data["status"]
-        if original_quota_status == QuotaStatus.ENFORCEMENT and updated_quota_status == QuotaStatus.ENFORCEMENT:
-            original_userzone_usage = original_quota_data["uz"]
-            original_datazone_usage = original_quota_data["dz"]
-            message = ""
-            if uz > original_userzone_usage:
-                # userZone quota usage has increased
-                message += f"""UserZone quota usage has increased from {original_userzone_usage} to {uz}.
-                It is possible for the user to continue putting resources into the userZone
-                because quota is not enforced in userZone. You are being notified to manually check this usage
-                and determine what action is appropriate. It is possible to remove the user account from the irods
-                userzone if necessary."""
-            if dz > original_datazone_usage:
-                # dataZone quota usage has increased
-                message += f"""DataZone quota usage has increased from {original_datazone_usage} to {dz}.
-                This user has exceeded quota and limitations should have been enforced. It should not have been possible
-                for the user to continue putting resources into the dataZone. This case requires manual intervention.
-                """
-            if message:
-                tasks.notify_increased_usage_during_quota_enforcement.apply_async((user.pk, message))
-
     def get_quota_data(self):
         """
         get user quota data for display on user profile page
@@ -405,10 +353,8 @@ class UserQuota(models.Model):
         grace = self.grace_period_ends
         allocated = self.allocated_value
         unit = self.unit
-        uz, dz = self.get_used_value_by_zone(refresh=False)
-        used = uz + dz
-        uzp = uz * 100.0 / allocated
-        dzp = dz * 100.0 / allocated
+        used = self.get_used_value_by_zone(refresh=False)
+        dzp = used * 100.0 / allocated
         percent = used * 100.0 / allocated
         remaining = allocated - used
 
@@ -430,9 +376,7 @@ class UserQuota(models.Model):
         uq_data = {"used": used,
                    "allocated": allocated,
                    "unit": unit,
-                   "uz": uz,
-                   "dz": dz,
-                   "uz_percent": uzp if uzp < 100 else 100,
+                   "dz": used,
                    "dz_percent": dzp if dzp < 100 else 100,
                    "percent": percent if percent < 100 else 100,
                    "remaining": 0 if remaining < 0 else remaining,
