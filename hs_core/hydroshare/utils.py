@@ -196,25 +196,6 @@ def get_user_zone_status_info(user):
     return enable_user_zone
 
 
-def get_federated_zone_home_path(filepath):
-    """
-    Args:
-        filepath: the iRODS data object file path that included zone name in the format of
-        /zone_name/home/user_name/file_path
-
-    Returns:
-        the zone name extracted from filepath
-    """
-    if filepath and filepath.startswith('/'):
-        split_path_strs = filepath.split('/')
-        # the Zone name should follow the first slash
-        zone = split_path_strs[1]
-        return '/{zone}/home/{local_proxy_user}'.format(
-            zone=zone, local_proxy_user=settings.HS_IRODS_PROXY_USER_IN_USER_ZONE)
-    else:
-        return ''
-
-
 # TODO: replace with a cache facility that has automatic cleanup
 # TODO: pass a list rather than a string to allow commas in filenames.
 def get_fed_zone_files(irods_fnames):
