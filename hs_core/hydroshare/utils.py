@@ -410,7 +410,6 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
         kwargs['content_object'] = tgt_res
         kwargs['file_folder'] = scr_file.file_folder
         kwargs['resource_file'] = tgt_storage_path
-        kwargs['fed_resource_file'] = None
 
         if save_to_db:
             return ResourceFile.objects.create(**kwargs)

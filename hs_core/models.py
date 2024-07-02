@@ -3050,7 +3050,6 @@ class ResourceFile(ResourceFileIRODSMixin):
     """
     class Meta:
         index_together = [['object_id', 'resource_file'],
-                          ['object_id', 'fed_resource_file'],
                           ]
     # A ResourceFile is a sub-object of a resource, which can have several types.
     object_id = models.PositiveIntegerField()
@@ -3064,16 +3063,6 @@ class ResourceFile(ResourceFileIRODSMixin):
     # This pair of FileFields deals with the fact that there are two kinds of storage
     resource_file = models.FileField(upload_to=get_path, max_length=4096, unique=True,
                                      storage=IrodsStorage())
-    # TODO: ideally we would like a unique constraint on fed_resource_file
-    # due to https://code.djangoproject.com/ticket/10244 we can't set null=True and unique=True
-    # TODO: remove fed_resource_file
-    fed_resource_file = models.FileField(upload_to=get_path, max_length=4096,
-                                         null=True, blank=True, storage=FedStorage())
-
-    # DEPRECATED: utilize resfile.set_storage_path(path) and resfile.storage_path.
-    # fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
-    # DEPRECATED: use native size routine
-    # fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
 
     # we are using GenericForeignKey to allow resource file to be associated with any
     # HydroShare defined LogicalFile types (e.g., GeoRasterFile, NetCdfFile etc)
@@ -3094,10 +3083,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     filesize_cache_updated = models.DateTimeField(null=True)
 
     def __str__(self):
-        if self.resource.resource_federation_path:
-            return self.fed_resource_file.name
-        else:
-            return self.resource_file.name
+        return self.resource_file.name
 
     @classmethod
     def banned_symbols(cls):
@@ -3158,7 +3144,6 @@ class ResourceFile(ResourceFileIRODSMixin):
                 raise SuspiciousFileOperation("Filename is not compliant with Hydroshare requirements")
 
             kwargs['resource_file'] = file
-            kwargs['fed_resource_file'] = None
 
         else:  # if file is not an open file, then it's a basename (string)
             if file is None and source is not None:
@@ -3188,7 +3173,6 @@ class ResourceFile(ResourceFileIRODSMixin):
 
             # we've copied or moved if necessary; now set the paths
             kwargs['resource_file'] = target
-            kwargs['fed_resource_file'] = None
 
         # Actually create the file record
         # when file is a File, the file is copied to storage in this step
@@ -3208,8 +3192,6 @@ class ResourceFile(ResourceFileIRODSMixin):
             if delete_logical_file and self.logical_file is not None:
                 # deleting logical file metadata deletes the logical file as well
                 self.logical_file.metadata.delete()
-            if self.fed_resource_file:
-                self.fed_resource_file.delete()
             if self.resource_file:
                 self.resource_file.delete()
         super(ResourceFile, self).delete()
@@ -3244,10 +3226,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         if resource is None:
             resource = self.resource
 
-        if resource.resource_federation_path:
-            file_path = self.fed_resource_file.name
-        else:
-            file_path = self.resource_file.name
+        file_path = self.resource_file.name
 
         try:
             self._modified_time = self.resource_file.storage.get_modified_time(file_path)
@@ -3275,10 +3254,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         if resource is None:
             resource = self.resource
 
-        if resource.resource_federation_path:
-            file_path = self.fed_resource_file.name
-        else:
-            file_path = self.resource_file.name
+        file_path = self.resource_file.name
 
         try:
             self._checksum = self.resource_file.storage.checksum(file_path, force_compute=False)
@@ -3293,9 +3269,6 @@ class ResourceFile(ResourceFileIRODSMixin):
     @property
     def exists(self):
         istorage = self.resource.get_irods_storage()
-        if __debug__:
-            assert self.fed_resource_file.name is None or \
-                self.fed_resource_file.name == ''
         return istorage.exists(self.resource_file.name)
 
     # TODO: write unit test
@@ -3320,9 +3293,6 @@ class ResourceFile(ResourceFileIRODSMixin):
         Note: This is the preferred way to get the storage path for a file when we are trying to find
         the storage path for more than one file in a resource.
         """
-        if __debug__:
-            assert self.fed_resource_file.name is None or \
-                self.fed_resource_file.name == ''
         return self.resource_file.name
 
     def calculate_size(self, resource=None, save=True):
@@ -3330,28 +3300,13 @@ class ResourceFile(ResourceFileIRODSMixin):
         if resource is None:
             resource = self.resource
 
-        if resource.resource_federation_path:
-            if __debug__:
-                assert self.resource_file.name is None or \
-                    self.resource_file.name == ''
-            try:
-                self._size = self.fed_resource_file.size
-                self.filesize_cache_updated = now()
-            except (SessionException, ValidationError):
-                logger = logging.getLogger(__name__)
-                logger.warning("file {} not found in iRODS".format(self.storage_path))
-                self._size = 0
-        else:
-            if __debug__:
-                assert self.fed_resource_file.name is None or \
-                    self.fed_resource_file.name == ''
-            try:
-                self._size = self.resource_file.size
-                self.filesize_cache_updated = now()
-            except (SessionException, ValidationError):
-                logger = logging.getLogger(__name__)
-                logger.warning("file {} not found in iRODS".format(self.storage_path))
-                self._size = 0
+        try:
+            self._size = self.resource_file.size
+            self.filesize_cache_updated = now()
+        except (SessionException, ValidationError):
+            logger = logging.getLogger(__name__)
+            logger.warning("file {} not found in iRODS".format(self.storage_path))
+            self._size = 0
         if save:
             self.save(update_fields=["_size", "filesize_cache_updated"])
 
@@ -3403,7 +3358,6 @@ class ResourceFile(ResourceFileIRODSMixin):
         # self.content_object can be stale after changes. Re-fetch based upon key
         # bypass type system; it is not relevant
         # switch FileFields based upon federation path
-        self.fed_resource_file = None
         self.resource_file = get_path(self, base)
         self.save()
 
@@ -3450,7 +3404,6 @@ class ResourceFile(ResourceFileIRODSMixin):
         self.file_folder = folder  # must precede call to get_path
 
         self.resource_file = get_path(self, base)
-        self.fed_resource_file = None
         self.save()
 
     def parse(self):
@@ -3598,10 +3551,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     def get(cls, resource, file, folder=''):
         """Get a ResourceFile record via its short path."""
         resource_file_path = get_resource_file_path(resource, file, folder)
-        if resource.resource_federation_path:
-            f = ResourceFile.objects.filter(object_id=resource.id, fed_resource_file=resource_file_path).first()
-        else:
-            f = ResourceFile.objects.filter(object_id=resource.id, resource_file=resource_file_path).first()
+        f = ResourceFile.objects.filter(object_id=resource.id, resource_file=resource_file_path).first()
         if f:
             return f
         else:
@@ -3783,12 +3733,6 @@ class BaseResource(Page, AbstractResource):
     # means the resource is not locked
     locked_time = models.DateTimeField(null=True, blank=True)
 
-    # this resource_federation_path is added to record where a HydroShare resource is
-    # stored. The default is empty string meaning the resource is stored in HydroShare
-    # zone. If a resource is stored in a fedearated zone, the field should store the
-    # TODO: change to null=True, default=None to simplify logic elsewhere
-    resource_federation_path = models.CharField(max_length=100, blank=True, default='')
-
     objects = PublishedManager()
     public_resources = PublicResourceManager()
     discoverable_resources = DiscoverableResourceManager()
@@ -3822,10 +3766,7 @@ class BaseResource(Page, AbstractResource):
 
     def get_irods_storage(self):
         """Return either IrodsStorage or FedStorage."""
-        if self.resource_federation_path:
-            return FedStorage()
-        else:
-            return IrodsStorage()
+        return IrodsStorage()
 
     # Paths relative to the resource
     @property
