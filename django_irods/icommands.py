@@ -173,6 +173,8 @@ class Session(object):
         if data:
             stdin = StringIO(data)
         logger.error(f"Calling iCommand: {argList}")
+        logger.error(f"Data: {data}")
+        logger.error(f"Environment: {myenv}")
         st = time.time()
 
         proc = subprocess.Popen(
