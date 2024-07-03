@@ -1,0 +1,39 @@
+name: Test HydroShare Pull Requests
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+  workflow_dispatch:
+
+jobs:
+  hydroshare-pull-request-tests:
+
+    runs-on: ubuntu-latest
+    #env:
+    #  COVERAGE_TOTAL: 10
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install Docker Compose
+      run: |
+        sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+
+    - name: Setup HydroShare
+      run: >
+        printf "%s\n" c | ./local-dev-first-start-only.sh
+
+    - name: Start HydroShare
+      run: >
+        docker-compose -f local-dev.yml up -d
+
+    - name: Wait for HydroShare to come up
+      run: >
+        sleep 60
+
+    - name: Run HydroShare Tests
+      run: >
+        docker exec hydroshare ./run-tests-jenkins
