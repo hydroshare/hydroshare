@@ -29,7 +29,7 @@ $ ./use-local-irods.sh
   ```
   The `--persist` flag will create a new directory as `/home/${USER}/icat1` where iRODS vault and database files will be persisted. These directories will remain in place until the user manually destroys them.
 
-The script will run, deploy and federate an iCAT server, and modify the three aforementioned files to be configured to use the 
+The script will run and deploy an iCAT server, and modify the three aforementioned files to be configured to use the 
 newly created iRODS Docker server. Once the script has completed, return back the the main `hydroshare` directory and run
 the **hsctl** script as you normally would.
 
