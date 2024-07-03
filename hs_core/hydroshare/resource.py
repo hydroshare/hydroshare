@@ -35,11 +35,10 @@ logger = logging.getLogger(__name__)
 
 def get_quota_usage(username, raise_on_error=True):
     """
-    Query iRODS AVU to get quota usage for a user reported in iRODS quota microservices
+    Query to get quota usage
     :param username: the user name to get quota usage for.
     :param raise_on_error: if True, raise ValidationError if quota usage cannot be retrieved from iRODS
-    :return: the quota usage from iRODS data zone and user zone; raise ValidationError
-    if quota usage cannot be retrieved from iRODS
+    :return: the quota usage from iRODS data zone; raise ValidationError if quota usage cannot be retrieved
     """
     uqDataZoneSize = get_data_zone_usage(username, raise_on_error=raise_on_error)
     return uqDataZoneSize

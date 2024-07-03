@@ -63,14 +63,15 @@ class TestChangeQuotaHolder(MockIRODSTestCaseMixin, TestCase):
         # test to make sure quota holder cannot be changed to an owner who is over-quota
         uquota = self.user1.quotas.first()
         # make user1's quota over hard limit 125%
-        uquota.data_zone_value = uquota.allocated_value * 1.3
-        uquota.save()
 
         if not QuotaMessage.objects.exists():
             QuotaMessage.objects.create()
         qmsg = QuotaMessage.objects.first()
         qmsg.enforce_quota = True
         qmsg.save()
+
+        from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit
+        set_quota_usage_over_hard_limit(uquota, qmsg)
 
         # QuotaException should be raised when attempting to change quota holder to user1 when
         # quota is enforced

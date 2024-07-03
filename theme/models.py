@@ -279,7 +279,10 @@ class UserQuota(models.Model):
 
     @property
     def used_percent(self):
-        return self.used_value * 100.0 / self.allocated_value
+        try:
+            return self.used_value * 100.0 / self.allocated_value
+        except ZeroDivisionError:
+            return float('inf')
 
     @property
     def remaining(self):

@@ -348,8 +348,8 @@ class TestCopyResource(TestCase):
         qmsg.enforce_quota = True
         qmsg.save()
         uquota = self.owner.quotas.first()
-        uquota.data_zone_value = uquota.allocated_value * 1.3
-        uquota.save()
+        from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit
+        set_quota_usage_over_hard_limit(uquota, qmsg)
 
         with self.assertRaises(QuotaException):
             hydroshare.create_empty_resource(self.res.short_id,
