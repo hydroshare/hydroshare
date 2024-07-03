@@ -26,7 +26,6 @@ docker cp env-files/rods@${IRODS_HOST}.json ${IRODS_HOST}:/root/.irods/irods_env
 docker cp env-files/rods@${IRODS_HOST}.json ${IRODS_HOST}:/home/rods/.irods/irods_environment.json
 
 echo "echo rods | iinit" | $RUN_ON_DATA
-echo "echo rods | iinit" | $RUN_ON_USER
 
 echo "------------------------------------------------------------"
 echo "INFO: make resource ${IRODS_DEFAULT_RESOURCE} in ${IRODS_ZONE}"

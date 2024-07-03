@@ -47,26 +47,6 @@ class MockIRODSTestCaseMixin(object):
 class TestCaseCommonUtilities(object):
     """Enable common utilities for iRODS testing."""
 
-    def assert_federated_irods_available(self):
-        """assert federated iRODS is available before proceeding with federation-related tests."""
-        self.assertTrue(settings.REMOTE_USE_IRODS
-                        and settings.HS_USER_ZONE_HOST == 'users.local.org'
-                        and settings.IRODS_HOST == 'data.local.org',
-                        "irods docker containers are not set up properly for federation testing")
-        self.irods_fed_storage = IrodsStorage('federated')
-        self.irods_storage = IrodsStorage()
-
-    def save_files_to_user_zone(self, file_name_to_target_name_dict):
-        """Save a list of files to iRODS user zone.
-
-        :param file_name_to_target_name_dict: a dictionary in the form of {ori_file, target_file}
-        where ori_file is the file to be save to, and the target_file is the full path file name
-        in iRODS user zone to save ori_file to
-        :return:
-        """
-        for file_name, target_name in list(file_name_to_target_name_dict.items()):
-            self.irods_fed_storage.saveFile(file_name, target_name)
-
     def check_file_exist(self, irods_path):
         """Check whether the input irods_path exist in iRODS.
 

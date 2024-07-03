@@ -78,11 +78,7 @@ def get_data_zone_usage(username, raise_on_error=True, include_published=False):
 
 def update_quota_usage(username, notify_user=False):
     """
-    update quota usage by checking iRODS AVU to get the updated quota usage for the user. Note iRODS micro-service
-    quota update only happens on HydroShare iRODS data zone and user zone independently, so the aggregation of usage
-    in both zones need to be accounted for in this function to update Django DB as an aggregated usage for hydroshare
-    internal zone.
-    This function is called by the IRODS quota micro-service to update quota usage for a user in Django DB.
+    This function is called to update quota usage for a user in Django DB.
     :param
     username: the name of the user that needs to update quota usage for.
     : param notify_user: if True, send email notification to user if the quota is exceeded.
