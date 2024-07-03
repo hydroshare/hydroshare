@@ -297,7 +297,10 @@ $(document).ready(function () {
     // Multiple orgs are a string delimited by ";" --wrap them so we can style them
     $("#organization").splitAndWrapWithClass(";", "organization-divider");
     
-    $("#btn-request-irods-account").click(create_irods_account);
+    $("#btn-request-irods-account").click(() => {
+        $('#request-irods-account-dialog').modal('hide');
+        create_irods_account();
+    });
 
     // File name preview for Add CV
     $('.btn-primary.btn-file :file').on('fileselect', function (event, numFiles, label) {
