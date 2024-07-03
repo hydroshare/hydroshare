@@ -278,14 +278,6 @@ mkdir -p log/nginx 2>/dev/null
 
 find . -name '*.hydro-bk' -exec rm -f {} \; 2>/dev/null
 
-echo "Creating .ssh directory and generating ssh key"
-echo " - rm -rf .ssh"
-rm -rf .ssh
-echo " - mkdir .ssh"
-mkdir .ssh
-echo " - ssh-keygen -t ed25519 -f .ssh/id_ed25519_hs -N ''"
-ssh-keygen -t ed25519 -f .ssh/id_ed25519_hs -N ''
-
 echo
 echo '########################################################################################################################'
 echo " Starting system"
