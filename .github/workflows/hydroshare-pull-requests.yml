@@ -56,4 +56,3 @@ jobs:
         path: |
           nosetests.xml
           pytests.xml
-          coverage.xml
