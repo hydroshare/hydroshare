@@ -46,7 +46,6 @@ jobs:
         files: |
           nosetests.xml
           pytests.xml
-          coverage.xml
     
     # archive the test results
     - name: Archive Test Results
@@ -56,3 +55,4 @@ jobs:
         path: |
           nosetests.xml
           pytests.xml
+          coverage.xml
