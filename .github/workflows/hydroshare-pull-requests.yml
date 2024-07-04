@@ -38,3 +38,22 @@ jobs:
     - name: Run HydroShare Tests
       run: >
         docker exec hydroshare ./run-tests-jenkins
+    
+    - name: Publish Test Results
+      uses: EnricoMi/publish-unit-test-result-action/linux@v2
+      if: always()
+      with:
+        files: |
+          nosetests.xml
+          pytests.xml
+          coverage.xml
+    
+    # archive the test results
+    - name: Archive Test Results
+      uses: actions/upload-artifact@v2
+      with:
+        name: test-results
+        path: |
+          nosetests.xml
+          pytests.xml
+          coverage.xml
