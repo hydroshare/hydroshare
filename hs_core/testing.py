@@ -14,7 +14,6 @@ from hs_core.hydroshare import add_file_to_resource, add_resource_files
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, zip_folder, \
     unzip_file, remove_folder
 from hs_core.tasks import FileOverrideException
-from django_irods.storage import IrodsStorage
 
 
 class MockIRODSTestCaseMixin(object):
