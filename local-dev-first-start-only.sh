@@ -249,7 +249,6 @@ cp hydroshare/local_settings.template hydroshare/local_settings.py 2>/dev/null
 mkdir -p hydroshare/static/static 2>/dev/null
 mkdir -p hydroshare/static/media 2>/dev/null
 rm -fr log .irods 2>/dev/null
-#chmod -R 777 log 2>/dev/null
 
 find . -name '*.hydro-bk' -exec rm -f {} \; 2>/dev/null
 
@@ -290,10 +289,6 @@ cd irods/
 ./partial_build.sh 
 cd ..
 sleep 2
-
-echo "Chown root items"
-echo " - exec hydroshare bash scripts/chown-root-items"
-docker exec hydroshare bash scripts/chown-root-items
 
 echo
 echo '########################################################################################################################'
