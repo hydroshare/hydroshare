@@ -11,7 +11,6 @@ Add the issues included in the release and update this document as release tasks
 - [ ] Diff RC to master to identify and manually make changes in the following files:
   * hsctl
   * config/hydroshare-config.yaml
-  * nginx/config-files/hydroshare-ssl-nginx.conf.template
   * scripts/templates/docker-compose.template
 - [ ] Changes in hydroshare/local_settings.py need to be coordinated for manual update
 - [ ] Smoke test active worker before swap, note whether maintenance will be needed (make sure that you check the active worker AFTER the db migrations have run)

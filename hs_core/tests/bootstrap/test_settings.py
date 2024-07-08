@@ -25,8 +25,6 @@ class TestGenericResourceMeta(unittest.TestCase):
         self.assertEqual(type(settings.EXTERNAL_CONFIG["HS_SERVICE_GID"]), int)
 
         # Testing deployment options
-        self.assertEqual(type(settings.EXTERNAL_CONFIG["USE_NGINX"]), bool)
-        self.assertEqual(type(settings.EXTERNAL_CONFIG["USE_SSL"]), bool)
         self.assertEqual(type(settings.EXTERNAL_CONFIG["USE_SECURITY"]), bool)
         self.assertEqual(type(settings.EXTERNAL_CONFIG["USE_HTTP_AUTH"]), bool)
 

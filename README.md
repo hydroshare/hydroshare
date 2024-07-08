@@ -56,46 +56,15 @@ cd hydroshare
  
 It’s very important that please DO NOT change the directory name after cloned. Let it be “hydroshare”
 If you are running inside a virtual machine such as HydroDev Ubuntu 18.04 from here, you need to:
-Replace all FQDN_OR_IP on the file nginx/config-files/hydroshare-local-nginx.conf.template to be your VM IP address (totally four positions need to be replaced)
 
-Add a new line into .gitignore file to make sure you will not commit your local setting to GitHub
-
-    /nginx/config-files/hydroshare-local-nginx.conf.template
-
-If you are running Windows 10, please make sure no process is listening on port 80. This maybe a pain for Windows 10 user, we found a very useful link here. However, if you can't stop the process which is listening on port 80, you need to do these steps:
-
-Change the nginx port by modify this file: local-dev.yml (change port setting from 80:80 to 8080:80 on nginx section)
-
-Replace line 26 on the file nginx/config-files/hydroshare-local-nginx.conf.template from
-
-    if ($http_host != "FQDN_OR_IP") {
-
-To
-
-    if ($http_host != "FQDN_OR_IP:8080") {
-
-Replace line 35 on the file nginx/config-files/hydroshare-local-nginx.conf.template from
-
-    rewrite ^ http://FQDN_OR_IP$request_uri permanent;
-
-To
-
-    rewrite ^ http://FQDN_OR_IP:8080$request_uri permanent;
-
-Add new two lines into .gitignore file to make sure you will not commit your local setting to GitHub
-
-    local-dev.yml
-
-    /nginx/config-files/hydroshare-local-nginx.conf.template
-
-3. Log into Docker via application and command line.
+1. Log into Docker via application and command line.
 Command line: 
     
     docker login 
     
     You will be asked to enter your username and password 
 
-4. Launch the stack
+1. Launch the stack
 
         ./local-dev-first-start-only.sh
 
@@ -165,13 +134,11 @@ The `hsctl` script is your primary tool in interacting with and running tasks ag
 
 - `loaddb`: Deletes existing database and reloads the database specified in the `hydroshare-config.yaml` file.
 - `managepy [args]`: Executes a `python manage.py [args]` call on the running hydroshare container.
-- `maint_off`: Removes the maintenance page from view (only if NGINX is being used).
-- `maint_on`: Displays the maintenance page in the browser (only if NGINX is being used).
 - `rebuild`: Stops, removes and deletes only the hydroshare docker containers and images while retaining the database contents on the subsequent build as defined in the `hydroshare-config.yaml` file
 - `rebuild --db`: Fully stops, removes and deletes any prior hydroshare docker containers, images and database contents prior to installing a clean copy of the hydroshare codebase as defined in the `hydroshare-config.yaml` file.
 - `rebuild_index`: Rebuilds the solr/haystack index in a non-interactive way.
-- `restart`: Restarts the django server only (and nginx if applicable).
-- `start`: Starts all containers as defined in the `docker-compose.yml` file (and nginx if applicable).
+- `restart`: Restarts the django server only.
+- `start`: Starts all containers as defined in the `docker-compose.yml` file.
 - `stop`: Stops all containers as defined in the `docker-compose.yml` file.
 - `update_index`: Updates the solr/haystack index in a non-interactive way.
 
@@ -192,21 +159,6 @@ You can debug via PyCharm by following the instructions [here](https://docs.goog
 ### Local iRODS
 
 Local iRODS is _not_ required for development unless you are specifically working on the iRODS integration. However,if you want to work with iRODS or you simply want to learn about it, you can enable it locally.
-
-### Local HTTPS
-
-To enable HTTPS locally:
-1. edit `config/hydroshare-config.template` and change the two values under `### Deployment Options ###` to `true` like so:
-```
-### Deployment Options ###
-USE_NGINX: true
-USE_SSL: true
-```
-
-restart local Hydroshare
-
-    docker-compose -f local-dev.yml down
-    docker-compose -f local-dev.yml up -d
 
 ## Contribute
 

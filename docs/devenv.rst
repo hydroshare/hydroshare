@@ -25,8 +25,5 @@ Running the tests
 Advanced Topics
 ---------------
 
-nginx
-`````
-
 Local IRODS
 ```````````

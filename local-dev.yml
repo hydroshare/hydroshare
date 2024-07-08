@@ -58,27 +58,6 @@ services:
     ports:
       - "8983"
     command: ["solr-foreground"]
-  # TODO: nginx container does not currently work
-  # https://github.com/hydroshare/hydroshare/issues/4980
-  # nginx:
-  #   build:
-  #     context: ./nginx
-  #     dockerfile: Dockerfile-nginx
-  #   hostname: nginx
-  #   container_name: nginx
-  #   links:
-  #     - hydroshare:hydroshare
-  #   depends_on:
-  #     - hydroshare
-  #   ports:
-  #     - "80:80"
-  #   volumes:
-  #     - "./log/nginx:/var/log/nginx"
-  #     - ".:/hydroshare"
-  #     - "temp_vol:/hs_tmp"
-  #     - "share_vol:/irods/cache"
-  #     - "idata_vault_vol:/irods/data"
-  #     - "iuser_vault_vol:/irods/user"
   hydroshare:
     build:
       context: .
