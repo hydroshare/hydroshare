@@ -16,8 +16,10 @@ from django.conf import settings
 
 def get_local_ip():
     """
-    Read the Nginx IP address from a local file, where it is stored during
-    every nginx restart. This address is dynamic and changes on every restart.
+    Returns the local IP address.
+
+    Returns:
+        str: The local IP address as a string.
     """
     return '127.0.0.1'
 
