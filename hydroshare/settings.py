@@ -349,7 +349,7 @@ ENABLE_STATIC_CLOUD_STORAGE = False
 # )
 # STATICFILES_STORAGE = 'hydroshare.storage.Static'
 # THUMBNAIL_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
-# DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+# DEFAULT_FILE_STORAGE = 'hydroshare.storage.MediaeGoogleCloudStorage'
 # # the media is served from the root of the bucket
 # MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
 # # the static files are served from a static/ dir in the bucket

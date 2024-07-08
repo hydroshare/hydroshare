@@ -306,8 +306,7 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.resWebApp.metadata.update(metadata, self.user)
         self.assertEqual(ToolIcon.objects.all().count(), 1)
         self.assertEqual(ToolIcon.objects.first().value,
-                         ('https://storage.googleapis.com/'
-                          'hydroshare-prod-static-media/static/img/logo-sm.png'))
+                         'https://storage.googleapis.com/hydroshare-prod-static-media/static/img/logo-sm.png')
 
         # test creating AppHomePageURL element
         del metadata[:]
