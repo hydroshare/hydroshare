@@ -940,22 +940,20 @@
 
                     <div class="files" id="previews"></div>
                     {% block download_bag %}
-                        {% if user_zone_account_exist %}
-                            <div>
-                                <div id='rep-alert-success' class="alert alert-success alert-dismissible"
-                                     role="alert" style="display:none">
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span></button>
-                                    <span id="rep-status-success"></span>
-                                </div>
-                                <div id='rep-alert-error' class="alert alert-danger alert-dismissible" role="alert"
-                                     style="display:none">
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span></button>
-                                    <span id="rep-status-error"></span>
-                                </div>
+                        <div>
+                            <div id='rep-alert-success' class="alert alert-success alert-dismissible"
+                                    role="alert" style="display:none">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span></button>
+                                <span id="rep-status-success"></span>
                             </div>
-                        {% endif %}
+                            <div id='rep-alert-error' class="alert alert-danger alert-dismissible" role="alert"
+                                    style="display:none">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span></button>
+                                <span id="rep-status-error"></span>
+                            </div>
+                        </div>
                     {% endblock %} {#  download_bag #}
 
                     {# ======= Readme ======= #}

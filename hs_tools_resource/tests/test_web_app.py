@@ -141,11 +141,12 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
         # no ToolIcon obj
         self.assertEqual(ToolIcon.objects.all().count(), 0)
+        logo_sm_url = 'https://storage.googleapis.com/hydroshare-prod-static-media/static/img/logo-sm.png'
 
         # create 1 ToolIcon obj with required params
         resource.create_metadata_element(self.resWebApp.short_id,
                                          'ToolIcon',
-                                         value='https://www.hydroshare.org/static/static/img/logo-sm.png')
+                                         value=logo_sm_url)
         self.assertEqual(ToolIcon.objects.all().count(), 1)
 
         # may not create additional instance of ToolIcon
@@ -153,16 +154,15 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
             resource. \
                 create_metadata_element(self.resWebApp.short_id,
                                         'ToolIcon',
-                                        value='https://www.hydroshare.org/static/static/img/logo-sm.png')
+                                        value=logo_sm_url)
         self.assertEqual(ToolIcon.objects.all().count(), 1)
 
         # update existing meta
         resource. \
             update_metadata_element(self.resWebApp.short_id, 'ToolIcon',
                                     element_id=ToolIcon.objects.first().id,
-                                    value='https://www.hydroshare.org/static/static/img/logo-sm.png')
-        self.assertEqual(ToolIcon.objects.first().value,
-                         'https://www.hydroshare.org/static/static/img/logo-sm.png')
+                                    value=logo_sm_url)
+        self.assertEqual(ToolIcon.objects.first().value, logo_sm_url)
 
         # delete ToolIcon obj
         resource.delete_metadata_element(self.resWebApp.short_id, 'ToolIcon',
@@ -300,12 +300,14 @@ class TestWebAppFeature(TestCaseCommonUtilities, TransactionTestCase):
 
         # create 1 ToolIcon obj with required params
         metadata.append(
-            {'toolicon': {'value': 'https://www.hydroshare.org/static/static/img/logo-sm.png'}})
+            {'toolicon':
+             {'value': 'https://storage.googleapis.com/hydroshare-prod-static-media/static/img/logo-sm.png'}})
         # do the bulk metadata update
         self.resWebApp.metadata.update(metadata, self.user)
         self.assertEqual(ToolIcon.objects.all().count(), 1)
         self.assertEqual(ToolIcon.objects.first().value,
-                         'https://www.hydroshare.org/static/static/img/logo-sm.png')
+                         ('https://storage.googleapis.com/'
+                          'hydroshare-prod-static-media/static/img/logo-sm.png'))
 
         # test creating AppHomePageURL element
         del metadata[:]
