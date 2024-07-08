@@ -54,7 +54,6 @@ hydroshare:
     - solr:solr
   extra_hosts:
     - "IRODS_DATA_HOSTNAME:IRODS_DATA_IP"
-    - "IRODS_USER_HOSTNAME:IRODS_USER_IP"
   command: /bin/bash init-hydroshare
 defaultworker:
   build: .
@@ -76,5 +75,4 @@ defaultworker:
     - rabbitmq:rabbitmq
   extra_hosts:
     - "IRODS_DATA_HOSTNAME:IRODS_DATA_IP"
-    - "IRODS_USER_HOSTNAME:IRODS_USER_IP"
   command: /bin/bash init-defaultworker

@@ -4,7 +4,7 @@ import pdb
 import functools
 import traceback
 
-from hs_core.hydroshare.utils import encode_resource_url, decode_resource_url
+from hs_core.hydroshare.utils import encode_resource_url, decode_resource_url, convert_file_size_to_unit
 
 
 @pytest.mark.parametrize("decoded_url,encoded_url", [
@@ -45,3 +45,9 @@ def debug_on(*exceptions):
                 pdb.post_mortem(info[2])
         return wrapper
     return decorator
+
+
+def set_quota_usage_over_hard_limit(uquota, qmsg):
+    used_in_units = convert_file_size_to_unit(uquota.used_value, uquota.unit, 'B')
+    uquota.allocated_value = used_in_units / (qmsg.hard_limit_percent + 5) * 100
+    uquota.save()

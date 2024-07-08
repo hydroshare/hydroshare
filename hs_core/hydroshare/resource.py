@@ -23,8 +23,6 @@ from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
 from theme.models import UserQuota
-from django_irods.icommands import SessionException
-from django_irods.storage import IrodsStorage
 from hs_core.enums import CrossRefSubmissionStatus
 
 FILE_SIZE_LIMIT = 1 * (1024 ** 3)
@@ -37,22 +35,13 @@ logger = logging.getLogger(__name__)
 
 def get_quota_usage(username, raise_on_error=True):
     """
-    Query iRODS AVU to get quota usage for a user reported in iRODS quota microservices
+    Query to get quota usage
     :param username: the user name to get quota usage for.
     :param raise_on_error: if True, raise ValidationError if quota usage cannot be retrieved from iRODS
-    :return: the quota usage from iRODS data zone and user zone; raise ValidationError
-    if quota usage cannot be retrieved from iRODS
+    :return: the quota usage from iRODS data zone; raise ValidationError if quota usage cannot be retrieved
     """
     uqDataZoneSize = get_data_zone_usage(username, raise_on_error=raise_on_error)
-
-    uqUserZoneSize = get_user_zone_usage(username)
-    if uqUserZoneSize < 0:
-        uqUserZoneSize = 0
-        err_msg = f'no quota size AVU for user {username} in userzone'
-        logger.error(err_msg)
-        if raise_on_error:
-            raise ValidationError(err_msg)
-    return uqUserZoneSize, uqDataZoneSize
+    return uqDataZoneSize
 
 
 def get_data_zone_usage(username, raise_on_error=True, include_published=False):
@@ -87,41 +76,6 @@ def get_data_zone_usage(username, raise_on_error=True, include_published=False):
     return uqDataZoneSize if uqDataZoneSize is not None else 0
 
 
-def get_user_zone_usage(username):
-    """
-    Get the quota size for a user in the iRODS user zone.
-
-    Args:
-        username (str): The username of the user.
-
-    Returns:
-        float: The quota size for the user in the iRODS user zone. If the user does not have resources
-        in the user zone, the function returns -1.
-
-    Raises:
-        SessionException: If there is an error retrieving the quota size.
-
-    """
-    attname = username + '-usage'
-    istorage = IrodsStorage()
-    try:
-        uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE, 'home',
-                                     settings.HS_IRODS_PROXY_USER_IN_USER_ZONE,
-                                     settings.IRODS_BAGIT_PATH)
-        uqUserZoneSize = istorage.getAVU(uz_bagit_path, attname)
-        if uqUserZoneSize is None:
-            # user may not have resources in user zone, so corresponding quota size AVU may not
-            # exist for this user
-            uqUserZoneSize = -1
-        else:
-            uqUserZoneSize = float(uqUserZoneSize)
-    except SessionException:
-        # user may not have resources in user zone, so corresponding quota size AVU may not exist
-        # for this user
-        uqUserZoneSize = -1
-    return uqUserZoneSize
-
-
 def update_quota_usage(username, notify_user=False):
     """
     update quota usage by checking iRODS AVU to get the updated quota usage for the user. Note iRODS micro-service
@@ -143,12 +97,9 @@ def update_quota_usage(username, notify_user=False):
         logger.error(err_msg)
         raise ValidationError(err_msg)
 
-    uz = get_user_zone_usage(username)
-
     original_quota_data = uq.get_quota_data()
     qmsg = original_quota_data["qmsg"]
     user = User.objects.get(username=username)
-    uq.set_userzone_used_value(uz)
     uq.save()
 
     if original_quota_data["enforce_quota"]:
@@ -173,7 +124,6 @@ def update_quota_usage(username, notify_user=False):
             # this avoids sending multiple notifications when files are changed but the status does not change
             if notify_user and (original_quota_data["status"] != updated_quota_data["status"]):
                 tasks.send_user_quota_notification.apply_async((user.pk))
-        uq.check_if_userzone_quota_enforcement_is_bypassed(original_quota_data, updated_quota_data)
 
 
 def res_has_web_reference(res):
@@ -293,12 +243,6 @@ def update_resource_file(pk, filename, f):
                 rf.resource_file.delete()
                 # TODO: should use add_file_to_resource
                 rf.resource_file = File(f) if not isinstance(f, UploadedFile) else f
-                rf.save()
-            if rf.fed_resource_file:
-                # TODO: should use delete_resource_file
-                rf.fed_resource_file.delete()
-                # TODO: should use add_file_to_resource
-                rf.fed_resource_file = File(f) if not isinstance(f, UploadedFile) else f
                 rf.save()
             return rf
     raise ObjectDoesNotExist(filename)

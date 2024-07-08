@@ -177,22 +177,16 @@ class ResourceIRODSMixin(models.Model):
                     value = line[1]
                     if key == 'collection name' or key == 'data collection':
                         output['full_path'] = value
-                        if self.is_federated:
-                            if __debug__:
-                                assert (value.startswith(self.resource_federation_path))
-                            output['long_path'] = value[len(self.resource_federation_path):]
-                            output['home_path'] = self.resource_federation_path
+                        location = value.find(self.short_id)
+                        if __debug__:
+                            assert (location >= 0)
+                        if location == 0:
+                            output['long_path'] = value
+                            output['home_path'] = self.irods_home_path
                         else:
-                            location = value.find(self.short_id)
-                            if __debug__:
-                                assert (location >= 0)
-                            if location == 0:
-                                output['long_path'] = value
-                                output['home_path'] = self.irods_home_path
-                            else:
-                                output['long_path'] = value[location:]
-                                # omit trailing slash
-                                output['home_path'] = value[:(location - 1)]
+                            output['long_path'] = value[location:]
+                            # omit trailing slash
+                            output['home_path'] = value[:(location - 1)]
 
                         if __debug__:
                             assert (output['long_path'].startswith(self.short_id))

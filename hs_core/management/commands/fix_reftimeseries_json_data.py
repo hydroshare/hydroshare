@@ -13,10 +13,7 @@ class Command(BaseCommand):
         for aggr in RefTimeseriesLogicalFile.objects.all().iterator():
             res_json_file = aggr.files.all().first()
             if res_json_file:
-                if res_json_file.resource_file:
-                    json_file_content = res_json_file.resource_file.read()
-                else:
-                    json_file_content = res_json_file.fed_resource_file.read()
+                json_file_content = res_json_file.resource_file.read()
                 aggr.metadata.json_file_content = json_file_content.decode()
                 aggr.metadata.save()
                 msg = "Saved json file data to aggregation metadata field for aggregation:"
