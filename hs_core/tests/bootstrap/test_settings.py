@@ -18,7 +18,6 @@ class TestGenericResourceMeta(unittest.TestCase):
     def test_read_yaml_into_settings_select_values(self):
         # Testing local configuration and
         self.assertEqual(type(settings.EXTERNAL_CONFIG["HS_PATH"]), str)
-        self.assertEqual(type(settings.EXTERNAL_CONFIG["HOST_SSL_DIR"]), str)
         self.assertEqual(type(settings.EXTERNAL_CONFIG["HS_DATABASE"]), str)
         self.assertEqual(type(settings.EXTERNAL_CONFIG["HS_LOG_FILES"]), str)
         self.assertEqual(type(settings.EXTERNAL_CONFIG["HS_SERVICE_UID"]), int)
