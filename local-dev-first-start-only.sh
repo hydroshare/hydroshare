@@ -56,7 +56,7 @@ function red() {
 }
 
 function getImageID() {
-    docker $DOCKER_PARAM images | grep $1 | tr -s ' ' | cut -f3 -d' '
+    docker images | grep $1 | tr -s ' ' | cut -f3 -d' '
 }
 
 ##nodejs build for discovery
@@ -297,7 +297,7 @@ COUNT=0
 SECOND=0
 while [ $COUNT -lt 2 ]
 do
-  DATA=`docker $DOCKER_PARAM logs data.local.org 2>/dev/null | grep 'iRODS is installed and running'`
+  DATA=`docker logs data.local.org 2>/dev/null | grep 'iRODS is installed and running'`
   if [ "$DATA" != "" ]; then
     COUNT=$(($COUNT + 1))
   fi
@@ -326,41 +326,41 @@ echo -e " Setting up PostgreSQL container and Importing Django DB"
 echo '########################################################################################################################'
 echo
 
-echo "  -docker $DOCKER_PARAM exec -u postgres postgis psql -c \"REVOKE CONNECT ON DATABASE postgres FROM public;\""
+echo "  -docker exec -u postgres postgis psql -c \"REVOKE CONNECT ON DATABASE postgres FROM public;\""
 echo
-docker $DOCKER_PARAM exec -u postgres postgis psql -c "REVOKE CONNECT ON DATABASE postgres FROM public;"
+docker exec -u postgres postgis psql -c "REVOKE CONNECT ON DATABASE postgres FROM public;"
 
 echo
-echo "  - docker $DOCKER_PARAM exec -u postgres postgis psql -c \"SELECT pid, pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();\""
+echo "  - docker exec -u postgres postgis psql -c \"SELECT pid, pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();\""
 echo
-docker $DOCKER_PARAM exec -u postgres postgis psql -c "SELECT pid, pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();"
+docker exec -u postgres postgis psql -c "SELECT pid, pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();"
 
 echo "  - docker exec -u hydro-service hydroshare dropdb -U postgres -h postgis postgres"
 echo
-docker $DOCKER_PARAM exec -u hydro-service hydroshare dropdb -U postgres -h postgis postgres
+docker exec -u hydro-service hydroshare dropdb -U postgres -h postgis postgres
 
 echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'"
 echo
-docker $DOCKER_PARAM exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'
+docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'
 
 echo
 echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION hstore;'"
 echo
-docker $DOCKER_PARAM exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION hstore;'
+docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION hstore;'
 
 echo
 echo "  - docker exec -u hydro-service hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template1"
 echo
-docker $DOCKER_PARAM exec -u hydro-service hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template1
+docker exec -u hydro-service hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template1
 
 echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'"
 echo
-docker $DOCKER_PARAM exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'
+docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'
 
 echo
 echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}"
 echo
-docker $DOCKER_PARAM exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}
+docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}
 sleep 2
 
 echo
@@ -402,22 +402,22 @@ docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noi
 echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py migrate sites --noinput"
 echo
-docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py migrate sites --noinput
+docker exec -u hydro-service hydroshare python manage.py migrate sites --noinput
 
 echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py migrate --fake-initial --noinput"
 echo
-docker $DOCKER_PARAM exec hydroshare python manage.py migrate --fake-initial --noinput
+docker exec hydroshare python manage.py migrate --fake-initial --noinput
 
 echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py prevent_web_crawling"
 echo
-docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py prevent_web_crawling
+docker exec -u hydro-service hydroshare python manage.py prevent_web_crawling
 
 echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py fix_permissions"
 echo
-docker $DOCKER_PARAM exec -u hydro-service hydroshare python manage.py fix_permissions
+docker exec -u hydro-service hydroshare python manage.py fix_permissions
 
 echo
 echo '########################################################################################################################'
@@ -426,29 +426,29 @@ echo '##########################################################################
 # TODO - fix hydroshare container permissions to allow use of hydro-service user
 echo
 echo " - docker exec solr bin/solr create_core -c collection1 -n basic_config"
-docker $DOCKER_PARAM exec solr bin/solr create -c collection1 -d basic_configs
+docker exec solr bin/solr create -c collection1 -d basic_configs
 
 echo
 echo "  - docker exec hydroshare python manage.py build_solr_schema -f schema.xml"
 echo
-docker $DOCKER_PARAM exec hydroshare python manage.py build_solr_schema -f schema.xml
+docker exec hydroshare python manage.py build_solr_schema -f schema.xml
 
 echo
 echo "  - docker cp schema.xml solr:/opt/solr/server/solr/collection1/conf/schema.xml"
 echo
-docker $DOCKER_PARAM cp schema.xml solr:/opt/solr/server/solr/collection1/conf/schema.xml
+docker cp schema.xml solr:/opt/solr/server/solr/collection1/conf/schema.xml
 
 echo
 echo "  - docker exec solr sed -i '/<schemaFactory class=\"ManagedIndexSchemaFactory\">/,+4d' /opt/solr/server/solr/collection1/conf/solrconfig.xml"
-docker $DOCKER_PARAM exec solr sed -i '/<schemaFactory class="ManagedIndexSchemaFactory">/,+4d' /opt/solr/server/solr/collection1/conf/solrconfig.xml
+docker exec solr sed -i '/<schemaFactory class="ManagedIndexSchemaFactory">/,+4d' /opt/solr/server/solr/collection1/conf/solrconfig.xml
 
 echo
 echo "  - docker exec solr rm /opt/solr/server/solr/collection1/conf/managed-schema"
-docker $DOCKER_PARAM exec solr rm /opt/solr/server/solr/collection1/conf/managed-schema
+docker exec solr rm /opt/solr/server/solr/collection1/conf/managed-schema
 
 echo '  - docker exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"'
 echo
-docker $DOCKER_PARAM exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
+docker exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
 
 docker-compose -f local-dev.yml down
 
