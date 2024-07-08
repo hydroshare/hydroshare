@@ -131,8 +131,6 @@ Note bracketed -d for daemon is optional and you don’t paste in the brackets
 
 CREATE NEW ACCOUNT - This is the same as it's always been in HydroShare. Ask a teammate or hack at it. Basically open a hydroshare console window then use the UI to sign up for a new account and watch the hydroshare container console (docker logs hydroshare) for a verification link and paste that into your browser and save the new account in the UI.
 
-If your develop machine is slow, the defaultworker container may not work properly because it won’t see iRODS containers alive after timeout. Please wait seconds, open new terminal window then restart this container by the command: docker  restart  defaultworker, or just only start the whole HydroShare system by this command: ./slow-start.sh (no need to run docker-compose  -f  local-dev.yml  up) but by this way, you will not have native log window.
-
 
 
 To stop HydroShare, only need to close the running windows or open a new windows then run
