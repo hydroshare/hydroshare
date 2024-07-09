@@ -38,5 +38,3 @@ echo "iadmin mkuser $IRODS_USERNAME rodsuser" | $RUN_ON_DATA
 echo " - iadmin mkuser $IRODS_USERNAME rodsuser" 
 echo "iadmin moduser $IRODS_USERNAME password $IRODS_AUTH" | $RUN_ON_DATA
 echo " - iadmin moduser $IRODS_USERNAME password $IRODS_AUTH" 
-
-docker exec ${IRODS_HOST} chown -R ${IRODS_USERNAME}:${IRODS_USERNAME} /home/${IRODS_USERNAME}/
