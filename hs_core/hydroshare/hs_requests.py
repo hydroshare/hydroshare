@@ -2,7 +2,7 @@
 
 """
 This bypasses firewalls to allow Nginx to be called from within HydroShare
-via its docker container address. Otherwise, Nginx cannot be reliably queried
+via its docker container address. Otherwise, HS cannot be reliably queried
 from within a docker container because it is advertised in DNS as an address
 on the other side of any firewall.
 
@@ -14,17 +14,14 @@ import urllib.parse
 from django.conf import settings
 
 
-def get_nginx_ip():
+def get_local_ip():
     """
-    Read the Nginx IP address from a local file, where it is stored during
-    every nginx restart. This address is dynamic and changes on every restart.
+    Returns the local IP address.
+
+    Returns:
+        str: The local IP address as a string.
     """
-    ip = None
-    with open('tmp/nginx_ip', 'r') as fd:
-        for line in fd:
-            ip = line
-            break
-    return ip.strip()
+    return '127.0.0.1'
 
 
 def localize_url(url):
@@ -40,7 +37,7 @@ def localize_url(url):
     if parsed[1] == getattr(settings, 'PROD_FQDN_OR_IP', 'www.hydroshare.org') or \
        parsed[1] == getattr(settings, 'FQDN_OR_IP', 'www.hydroshare.org'):
         # insert local IP instead of fake target
-        parsed2 = urllib.parse.ParseResult(parsed[0], get_nginx_ip(), parsed[2],
+        parsed2 = urllib.parse.ParseResult(parsed[0], get_local_ip(), parsed[2],
                                            parsed[3], parsed[4], parsed[5])
         return parsed2.geturl()
     else:
