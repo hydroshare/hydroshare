@@ -25,7 +25,7 @@ COUNT=0
 SECOND=0
 while [ $COUNT -lt 2 ]
 do
-  DATA=`docker $DOCKER_PARAM logs data.local.org 2>/dev/null | grep 'Success'`
+  DATA=`docker logs data.local.org 2>/dev/null | grep 'Success'`
   if [ "$DATA" != "" ]; then
     COUNT=$(($COUNT + 1))
   fi
