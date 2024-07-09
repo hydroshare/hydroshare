@@ -136,6 +136,7 @@ preflight_hs() {
     # Create log directory if it does not exist
     if [[ ! -d ${HS_LOG_FILES} ]]; then
         mkdir -p ${HS_LOG_FILES}
+        touch ${HS_LOG_FILES}/celery.log
         touch ${HS_LOG_FILES}/django.log
         touch ${HS_LOG_FILES}/error.log
         touch ${HS_LOG_FILES}/gunicorn.log
