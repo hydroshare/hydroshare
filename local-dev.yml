@@ -4,8 +4,6 @@ services:
     image: hydroshare/hs-irods:4.2.6-buster
     container_name: data.local.org
     hostname: data.local.org
-    links:
-      - users.local.org:users.local.org
     ports:
       - "1247:1247"
     volumes:
@@ -14,7 +12,6 @@ services:
       - "idata_pgres_vol:/var/lib/postgresql/data"
       - "idata_home_vol:/home"
     environment:
-      SHARED_NEG_KEY: 'hydroshareZonehydroshareuserZone'
       USE_IRODS: 'True'
       IRODS_ROOT: '/tmp'
       IRODS_ICOMMANDS_PATH: '/usr/bin'
@@ -28,65 +25,11 @@ services:
       IRODS_AUTH: 'wwwHydroProxy'
       IRODS_GLOBAL_SESSION: 'True'
       REMOTE_USE_IRODS: 'True'
-      HS_USER_ZONE_HOST: 'users.local.org'
-      LINUX_ADMIN_USER_FOR_HS_USER_ZONE: 'hsuserproxy'
-      LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE: 'hsuserproxy'
-      PUBLIC_KEY_FILE_FOR_HS_USER_ZONE: '/home/hsuserproxy/.ssh/authorized_keys'
-      LINUX_ADMIN_USER_CREATE_USER_IN_USER_ZONE_CMD: '/home/hsuserproxy/create_user.sh'
-      LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD: '/home/hsuserproxy/delete_user.sh'
-      HS_IRODS_PROXY_USER_IN_USER_ZONE: 'localHydroProxy'
-      HS_IRODS_USER_ZONE_DEF_RES: 'hydroshareLocalResc'
-      HS_USER_IRODS_ZONE: 'hydroshareuserZone'
       IRODS_ZONE_NAME: 'hydroshareZone'
       IRODS_SERVER_ZONE_KEY: 'hydroshareZone_KEY'
       IRODS_DATABASE_SERVER_HOSTNAME: 'data.local.org'
       IRODS_USER_NAME: 'rods'
       IRODS_PASSWORD: 'rods'
-    stdin_open: true
-    tty: true
-  users.local.org:
-    build:
-      context: .
-      dockerfile: Dockerfile-users-irods
-    container_name: users.local.org
-    hostname: users.local.org
-    volumes:
-      - "iuser_iconf_vol:/etc/irods"
-      - "iuser_vault_vol:/var/lib/irods"
-      - "iuser_pgres_vol:/var/lib/postgresql/data"
-      - "iuser_home_vol:/home/hsuserproxy"
-      - "./.ssh/id_ed25519_hs.pub:/home/hsuserproxy/.ssh/authorized_keys"
-    environment:
-      SHARED_NEG_KEY: 'hydroshareZonehydroshareuserZone'
-      USE_IRODS: 'True'
-      IRODS_ROOT: '/tmp'
-      IRODS_ICOMMANDS_PATH: '/usr/bin'
-      IRODS_HOST: 'users.local.org'
-      IRODS_PORT: '1247'
-      IRODS_DEFAULT_RESOURCE: 'hydroshareReplResc'
-      IRODS_SINGLE_RESC_FOR_QUERY: 'hydroshareReplResc'
-      IRODS_HOME_COLLECTION: '/hydroshareZone/home/wwwHydroProxy'
-      IRODS_ZONE: 'hydroshareZone'
-      IRODS_USERNAME: 'wwwHydroProxy'
-      IRODS_AUTH: 'wwwHydroProxy'
-      IRODS_GLOBAL_SESSION: 'True'
-      REMOTE_USE_IRODS: 'True'
-      HS_USER_ZONE_HOST: 'users.local.org'
-      LINUX_ADMIN_USER_FOR_HS_USER_ZONE: 'hsuserproxy'
-      LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE: 'hsuserproxy'
-      PUBLIC_KEY_FILE_FOR_HS_USER_ZONE: '/home/hsuserproxy/.ssh/authorized_keys'
-      LINUX_ADMIN_USER_CREATE_USER_IN_USER_ZONE_CMD: '/home/hsuserproxy/create_user.sh'
-      LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD: '/home/hsuserproxy/delete_user.sh'
-      HS_IRODS_PROXY_USER_IN_USER_ZONE: 'localHydroProxy'
-      HS_IRODS_USER_ZONE_DEF_RES: 'hydroshareLocalResc'
-      HS_USER_IRODS_ZONE: 'hydroshareuserZone'
-      IRODS_ZONE_NAME: 'hydroshareuserZone'
-      IRODS_SERVER_ZONE_KEY: 'hydroshareuserZone_KEY'
-      IRODS_DATABASE_SERVER_HOSTNAME: 'users.local.org'
-      IRODS_USER_NAME: 'rods'
-      IRODS_PASSWORD: 'rods'
-    ports:
-      - "22:22"
     stdin_open: true
     tty: true
   postgis:
@@ -176,13 +119,11 @@ services:
       - solr:solr
       - rabbitmq:rabbitmq
       - data.local.org:data.local.org
-      - users.local.org:users.local.org
     depends_on:
       - postgis
       - solr
       - rabbitmq
       - data.local.org
-      - users.local.org
     stdin_open: true
     tty: true
     command: /bin/bash init-hydroshare
@@ -215,14 +156,12 @@ services:
       - postgis:postgis
       - rabbitmq:rabbitmq
       - data.local.org:data.local.org
-      - users.local.org:users.local.org
     depends_on:
       - hydroshare
       - postgis
       - solr
       - rabbitmq
       - data.local.org
-      - users.local.org
     stdin_open: true
     tty: true
     command: /bin/bash init-defaultworker
