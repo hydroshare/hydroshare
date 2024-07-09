@@ -145,18 +145,6 @@ def nightly_zips_cleanup():
     istorage = IrodsStorage()
     if istorage.exists(zips_daily_date):
         istorage.delete(zips_daily_date)
-    federated_prefixes = BaseResource.objects.order_by().values_list('resource_federation_path').distinct()
-
-    for p in federated_prefixes:
-        prefix = p[0]  # strip tuple
-        if prefix != "":
-            zips_daily_date = "{prefix}/zips/{daily_date}"\
-                .format(prefix=prefix, daily_date=date_folder)
-            if __debug__:
-                logger.debug("cleaning up {}".format(zips_daily_date))
-            istorage = IrodsStorage("federated")
-            if istorage.exists(zips_daily_date):
-                istorage.delete(zips_daily_date)
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)

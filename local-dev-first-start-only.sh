@@ -169,7 +169,7 @@ else
 fi
 
 DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
-HYDROSHARE_CONTAINERS=(nginx hydroshare defaultworker data.local.org rabbitmq solr postgis users.local.org)
+HYDROSHARE_CONTAINERS=(nginx hydroshare defaultworker data.local.org rabbitmq solr postgis)
 HYDROSHARE_VOLUMES=(hydroshare_idata_iconf_vol hydroshare_idata_pgres_vol hydroshare_idata_vault_vol hydroshare_iuser_iconf_vol hydroshare_iuser_pgres_vol hydroshare_iuser_vault_vol hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol)
 HYDROSHARE_IMAGES=(hydroshare_nginx hydroshare_defaultworker hydroshare_hydroshare solr hydroshare/hs-irods hydroshare/hs_docker_base hydroshare/hs_postgres rabbitmq)
 
@@ -278,14 +278,6 @@ mkdir -p log/nginx 2>/dev/null
 
 find . -name '*.hydro-bk' -exec rm -f {} \; 2>/dev/null
 
-echo "Creating .ssh directory and generating ssh key"
-echo " - rm -rf .ssh"
-rm -rf .ssh
-echo " - mkdir .ssh"
-mkdir .ssh
-echo " - ssh-keygen -t ed25519 -f .ssh/id_ed25519_hs -N ''"
-ssh-keygen -t ed25519 -f .ssh/id_ed25519_hs -N ''
-
 echo
 echo '########################################################################################################################'
 echo " Starting system"
@@ -307,10 +299,6 @@ while [ $COUNT -lt 2 ]
 do
   DATA=`docker $DOCKER_PARAM logs data.local.org 2>/dev/null | grep 'iRODS is installed and running'`
   if [ "$DATA" != "" ]; then
-    COUNT=$(($COUNT + 1))
-  fi
-  USER=`docker $DOCKER_PARAM logs users.local.org 2>/dev/null | grep 'iRODS is installed and running'`
-  if [ "$USER" != "" ]; then
     COUNT=$(($COUNT + 1))
   fi
   SECOND=$(($SECOND + 1))

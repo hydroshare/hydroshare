@@ -17,9 +17,4 @@ SSL_CERT_DIR: /home/hydro/hydroshare/nginx/cert-files
 SSL_CERT_FILE: hydrodev-vb.example.org.cert
 SSL_KEY_FILE: hydrodev-vb.example.org.key
 
-### Irods Userzone Keys
-HOST_PK_FOR_HS_USER_ZONE: /opt/.ssh/id_ed25519_hs
-# Following should match the value set in local_settings.py
-PRIVATE_KEY_FILE_FOR_HS_USER_ZONE: /hydroshare/.ssh/id_ed25519_hs
-
 ### REQUIRES BLANK LINE AFTER LAST VARIABLE DEFINITION ###

@@ -6,14 +6,14 @@ The HS quota system relies on cooperation between iRods storage zones (two at th
 
 ### Django Quota System
 
-The quota system relies on resource sizes (for files in the dataZone) and irods AVUs (for files in the userZone).
+The quota system relies on resource sizes.
 Resource sizes are calculated as a sum of cached ResourceFile sizes.
 
 Django signals are used to update the stored UserQuota values in the database.
 
 The configuration for the quota system within django is done via the admin panel. The [QuotaMessage](theme/models.py) model contains the configurable messages as well as default grace period and soft/hard limits.
 
-Quota is enforced at all points of ingestion as well as during file processes that can result in more storage being used (for instance unzipping). Enforcement for the iRods UserZone would necessarily be accomplished at the iRods level. An example stubbing-out of how this could be accomplished can be found in [set_userzone_quota.sh](irods/set_userzone_quota.sh). However, ideally such an implementation would rely either on the quota system embedded in iRods, or perhaps using policy/rule enforcement with more microservices specific to the UserZone.
+Quota is enforced at all points of ingestion as well as during file processes that can result in more storage being used (for instance unzipping).
 
 Users can request additional quota allocation from within their profile. Such a request notifies **DEFAULT_SUPPORT_EMAIL** and the request can be approved/denied from within the sent email or within the HydroShare amdin panel.
 
