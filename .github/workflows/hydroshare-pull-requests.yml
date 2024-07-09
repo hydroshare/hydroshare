@@ -2,7 +2,7 @@ name: Test HydroShare Pull Requests
 
 on:
   push:
-    branches: [ develop ]
+    branches: [ deployment-config-cleanup2 ]
   pull_request:
     branches: 
       - '**'
