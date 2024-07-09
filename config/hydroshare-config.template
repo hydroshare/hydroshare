@@ -4,17 +4,4 @@ HOST_SSL_DIR: /home/hydro/hs-certs
 HS_DATABASE: pg.development.sql
 HS_LOG_FILES: /home/hydro/hydroshare/log
 
-### Deployment Options ###
-USE_NGINX: false
-USE_SSL: false
-
-### nginx Configuration Variables ###
-FQDN_OR_IP: localhost
-NGINX_DIR: /home/hydro/hydroshare/nginx
-
-### SSL Configuration Variables ###
-SSL_CERT_DIR: /home/hydro/hydroshare/nginx/cert-files
-SSL_CERT_FILE: hydrodev-vb.example.org.cert
-SSL_KEY_FILE: hydrodev-vb.example.org.key
-
 ### REQUIRES BLANK LINE AFTER LAST VARIABLE DEFINITION ###
