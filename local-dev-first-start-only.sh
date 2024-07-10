@@ -107,7 +107,6 @@ echo
 echo "Removing node container"
 docker container rm nodejs
 cd $HS_PATH
-sleep 1
 
 }
 
@@ -288,11 +287,27 @@ docker-compose -f local-dev.yml up -d $REBUILD_IMAGE
 
 echo
 echo '########################################################################################################################'
-echo " Waiting for iRODS containers up"
+echo " Starting backround tasks..."
 echo '########################################################################################################################'
 echo
 
+echo
+echo "Building Node for Discovery in background"
+# This is a little risky but in testing the node build completes before the collectstatic
+( node_build > /dev/null 2>&1 & )
 
+echo
+echo "Chown root items in background"
+( docker exec hydroshare bash scripts/chown-root-items > /dev/null 2>&1 & )
+
+
+echo
+echo '########################################################################################################################'
+echo -e " Setting up iRODS"
+echo '########################################################################################################################'
+echo
+
+echo "Waiting for iRODS containers to come up..."
 COUNT=0
 SECOND=0
 while [ $COUNT -lt 2 ]
@@ -305,20 +320,9 @@ do
   echo -ne "$SECOND ...\033[0K\r" && sleep 1;
 done
 
-echo
-echo '########################################################################################################################'
-echo -e " Setting up iRODS"
-echo '########################################################################################################################'
-echo
-
 cd irods/
 ./partial_build.sh 
 cd ..
-sleep 2
-
-# echo "Chown root items"
-# echo " - exec hydroshare bash scripts/chown-root-items"
-# docker exec hydroshare bash scripts/chown-root-items
 
 echo
 echo '########################################################################################################################'
@@ -361,43 +365,13 @@ echo
 echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}"
 echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}
-sleep 2
 
-# echo
-# echo '########################################################################################################################'
-# echo " Restarting hydroshare and defaultworker containers and wait them up for 10 seconds"
-# echo '########################################################################################################################'
-# echo
-# docker restart hydroshare defaultworker
-
-# COUNT=0
-# SECOND=0
-# while [ $SECOND -lt 10 ]
-# do
-#   SECOND=$(($SECOND + 1))
-#   echo -ne "$SECOND ...\033[0K\r" && sleep 1;
-# done
-# echo
-
-echo
-echo '########################################################################################################################'
-echo " Building Node for Discovery"
-echo '########################################################################################################################'
-echo
-
-# node_build
 
 echo
 echo '########################################################################################################################'
 echo " Migrating data"
 echo '########################################################################################################################'
 echo
-
-# docker exec hydroshare bash scripts/chown-root-items
-
-echo "  -docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput"
-echo
-docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput
 
 echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py migrate sites --noinput"
@@ -423,7 +397,7 @@ echo
 echo '########################################################################################################################'
 echo " Reindexing SOLR"
 echo '########################################################################################################################'
-# TODO - fix hydroshare container permissions to allow use of hydro-service user
+
 echo
 echo " - docker exec solr bin/solr create_core -c collection1 -n basic_config"
 docker $DOCKER_PARAM exec solr bin/solr create -c collection1 -d basic_configs
@@ -450,11 +424,24 @@ echo '  - docker exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cor
 echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
 
-docker-compose -f local-dev.yml down
+echo
+echo '########################################################################################################################'
+echo " Collect static files"
+echo '########################################################################################################################'
 
+# check to see if the node container is still running
+# if it is, wait until it is removed
+while [ 1 -eq 1 ]
+do
+  NODE_CONTAINER=`docker ps -a | grep nodejs`
+  if [ "$NODE_CONTAINER" == "" ]; then
+    break
+  fi
+  echo "."
+  sleep 1
+done
+
+echo "  -docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput"
 echo
-echo '########################################################################################################################'
-echo -e " All done, run `green '\"docker-compose -f local-dev.yml up\"'` to start HydroShare"
-echo '########################################################################################################################'
-echo
+docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput
 
