@@ -316,9 +316,9 @@ cd irods/
 cd ..
 sleep 2
 
-echo "Chown root items"
-echo " - exec hydroshare bash scripts/chown-root-items"
-docker exec hydroshare bash scripts/chown-root-items
+# echo "Chown root items"
+# echo " - exec hydroshare bash scripts/chown-root-items"
+# docker exec hydroshare bash scripts/chown-root-items
 
 echo
 echo '########################################################################################################################'
@@ -363,21 +363,21 @@ echo
 docker $DOCKER_PARAM exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}
 sleep 2
 
-echo
-echo '########################################################################################################################'
-echo " Restarting hydroshare and defaultworker containers and wait them up for 10 seconds"
-echo '########################################################################################################################'
-echo
-docker restart hydroshare defaultworker
+# echo
+# echo '########################################################################################################################'
+# echo " Restarting hydroshare and defaultworker containers and wait them up for 10 seconds"
+# echo '########################################################################################################################'
+# echo
+# docker restart hydroshare defaultworker
 
-COUNT=0
-SECOND=0
-while [ $SECOND -lt 10 ]
-do
-  SECOND=$(($SECOND + 1))
-  echo -ne "$SECOND ...\033[0K\r" && sleep 1;
-done
-echo
+# COUNT=0
+# SECOND=0
+# while [ $SECOND -lt 10 ]
+# do
+#   SECOND=$(($SECOND + 1))
+#   echo -ne "$SECOND ...\033[0K\r" && sleep 1;
+# done
+# echo
 
 echo
 echo '########################################################################################################################'
@@ -385,7 +385,7 @@ echo " Building Node for Discovery"
 echo '########################################################################################################################'
 echo
 
-node_build
+# node_build
 
 echo
 echo '########################################################################################################################'
@@ -393,7 +393,7 @@ echo " Migrating data"
 echo '########################################################################################################################'
 echo
 
-docker exec hydroshare bash scripts/chown-root-items
+# docker exec hydroshare bash scripts/chown-root-items
 
 echo "  -docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput"
 echo
