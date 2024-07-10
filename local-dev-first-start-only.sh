@@ -259,10 +259,6 @@ echo " - building Node for Discovery in background"
 node_build > /dev/null 2>&1 &
 
 echo
-echo " - chown root items in background"
-docker exec -d hydroshare bash scripts/chown-root-items
-
-echo
 echo '########################################################################################################################'
 echo -e " Setting up iRODS"
 echo '########################################################################################################################'
@@ -309,6 +305,10 @@ do
   echo -n "."
   sleep 1
 done
+
+echo
+echo " - chown root items"
+docker exec hydroshare bash scripts/chown-root-items
 
 echo "  - docker exec -u hydro-service hydroshare dropdb -U postgres -h postgis postgres"
 echo
