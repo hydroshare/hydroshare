@@ -445,3 +445,9 @@ echo "  -docker exec -u hydro-service hydroshare python manage.py collectstatic 
 echo
 docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput
 
+echo
+echo '########################################################################################################################'
+echo -e " All done, run `green '\"docker-compose -f local-dev.yml restart\"'` to restart HydroShare"
+echo '########################################################################################################################'
+echo
+
