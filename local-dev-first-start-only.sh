@@ -171,6 +171,7 @@ DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
 HYDROSHARE_CONTAINERS=(hydroshare defaultworker data.local.org rabbitmq solr postgis)
 HYDROSHARE_VOLUMES=(hydroshare_idata_iconf_vol hydroshare_idata_pgres_vol hydroshare_idata_vault_vol hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_solr_data_vol)
 HYDROSHARE_IMAGES=(hydroshare_defaultworker hydroshare_hydroshare solr hydroshare/hs-irods hydroshare/hs_docker_base hydroshare/hs_postgres rabbitmq)
+HS_CONTAINER_RUNNING=`docker ps --format '{{.Names}}' | grep hydroshare`
 
 if [ "$REMOVE_CONTAINER" == "YES" ]; then
   echo "  Removing HydroShare container..."
@@ -244,6 +245,7 @@ echo " Starting system"
 echo '########################################################################################################################'
 echo
 
+echo "  - docker-compose -f ${DOCKER_COMPOSER_YAML_FILE} up -d ${REBUILD_IMAGE}"
 docker-compose -f $DOCKER_COMPOSER_YAML_FILE up -d $REBUILD_IMAGE
 
 echo
@@ -253,14 +255,12 @@ echo '##########################################################################
 echo
 
 echo
-echo "Building Node for Discovery in background"
-# This is a little risky but in testing the node build completes before the collectstatic
-( node_build > /dev/null 2>&1 & )
+echo " - building Node for Discovery in background"
+node_build > /dev/null 2>&1 &
 
 echo
-echo "Chown root items in background"
-( docker exec hydroshare bash scripts/chown-root-items > /dev/null 2>&1 & )
-
+echo " - chown root items in background"
+docker exec -d hydroshare bash scripts/chown-root-items
 
 echo
 echo '########################################################################################################################'
@@ -268,7 +268,7 @@ echo -e " Setting up iRODS"
 echo '########################################################################################################################'
 echo
 
-echo "Waiting for iRODS containers to come up..."
+echo " - waiting for iRODS containers to come up..."
 COUNT=0
 SECOND=0
 while [ $COUNT -lt 2 ]
@@ -291,7 +291,7 @@ echo -e " Setting up PostgreSQL container and Importing Django DB"
 echo '########################################################################################################################'
 echo
 
-echo "  -docker exec -u postgres postgis psql -c \"REVOKE CONNECT ON DATABASE postgres FROM public;\""
+echo " - docker exec -u postgres postgis psql -c \"REVOKE CONNECT ON DATABASE postgres FROM public;\""
 echo
 docker exec -u postgres postgis psql -c "REVOKE CONNECT ON DATABASE postgres FROM public;"
 
@@ -299,6 +299,16 @@ echo
 echo "  - docker exec -u postgres postgis psql -c \"SELECT pid, pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();\""
 echo
 docker exec -u postgres postgis psql -c "SELECT pid, pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();"
+
+echo " - wait for the hydroshare container to be up..."
+while [ 1 -eq 1 ]
+do
+  if [ "$HS_CONTAINER_RUNNING" != "" ]; then
+    break
+  fi
+  echo -n "."
+  sleep 1
+done
 
 echo "  - docker exec -u hydro-service hydroshare dropdb -U postgres -h postgis postgres"
 echo
@@ -392,13 +402,14 @@ echo '##########################################################################
 
 # check to see if the node container is still running
 # if it is, wait until it is removed
+echo "Waiting for nodejs container to be removed..."
 while [ 1 -eq 1 ]
 do
   NODE_CONTAINER=`docker ps -a | grep nodejs`
   if [ "$NODE_CONTAINER" == "" ]; then
     break
   fi
-  echo "."
+  echo -n "."
   sleep 1
 done
 
