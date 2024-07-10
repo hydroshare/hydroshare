@@ -170,7 +170,7 @@ fi
 
 DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
 HYDROSHARE_CONTAINERS=(hydroshare defaultworker data.local.org rabbitmq solr postgis)
-HYDROSHARE_VOLUMES=(hydroshare_idata_iconf_vol hydroshare_idata_pgres_vol hydroshare_idata_vault_vol hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol)
+HYDROSHARE_VOLUMES=(hydroshare_idata_iconf_vol hydroshare_idata_pgres_vol hydroshare_idata_vault_vol hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_solr_data_vol)
 HYDROSHARE_IMAGES=(hydroshare_defaultworker hydroshare_hydroshare solr hydroshare/hs-irods hydroshare/hs_docker_base hydroshare/hs_postgres rabbitmq)
 
 if [ "$REMOVE_CONTAINER" == "YES" ]; then
@@ -217,12 +217,6 @@ echo '##########################################################################
 echo " Preparing"                                                                                            
 echo '###############################################################################################################'
 
-#grep -v CMD Dockerfile > Dockerfile-defaultworker
-#grep -v CMD Dockerfile > Dockerfile-hydroshare
-
-#cat Dockerfile-defaultworker.template >> Dockerfile-defaultworker
-#cat Dockerfile-hydroshare.template >> Dockerfile-hydroshare
-
 echo "Creating init scripts"
 cp scripts/templates/init-defaultworker.template init-defaultworker
 cp scripts/templates/init-hydroshare.template init-hydroshare
@@ -232,17 +226,10 @@ sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g init-hydroshare
 
 sed -i $SED_EXT s/HS_SSH_SERVER//g init-hydroshare
 sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"python manage.py runserver 0.0.0.0:8000"'!g' init-hydroshare                  
-#sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"/usr/bin/supervisord -n"'!g' init-hydroshare                  
 
 sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g init-defaultworker
 sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g init-defaultworker
 sed -i $SED_EXT s/CELERY_CONCURRENCY/$CELERY_CONCURRENCY/g init-defaultworker
-
-#sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g Dockerfile-hydroshare
-#sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g Dockerfile-hydroshare
-
-#sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g Dockerfile-defaultworker
-#sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g Dockerfile-defaultworker
 
 echo "Creating django settings and static directories"
 cp hydroshare/local_settings.template hydroshare/local_settings.py 2>/dev/null
@@ -258,7 +245,7 @@ echo " Starting system"
 echo '########################################################################################################################'
 echo
 
-docker-compose -f local-dev.yml up -d $REBUILD_IMAGE
+docker-compose -f $DOCKER_COMPOSER_YAML_FILE up -d $REBUILD_IMAGE
 
 echo
 echo '########################################################################################################################'
@@ -393,7 +380,7 @@ echo
 echo '########################################################################################################################'
 echo " Reindexing SOLR"
 echo '########################################################################################################################'
-# TODO - fix hydroshare container permissions to allow use of hydro-service user
+
 echo
 echo " - docker exec solr bin/solr create_core -c collection1 -n basic_config"
 docker exec solr bin/solr create -c collection1 -d basic_configs
@@ -420,7 +407,7 @@ echo '  - docker exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cor
 echo
 docker exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
 
-docker-compose -f local-dev.yml down
+docker-compose -f $DOCKER_COMPOSER_YAML_FILE down
 
 echo
 echo '########################################################################################################################'
