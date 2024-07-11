@@ -172,6 +172,7 @@ HYDROSHARE_CONTAINERS=(hydroshare defaultworker data.local.org rabbitmq solr pos
 HYDROSHARE_VOLUMES=(hydroshare_idata_iconf_vol hydroshare_idata_pgres_vol hydroshare_idata_vault_vol hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol)
 HYDROSHARE_IMAGES=(hydroshare_defaultworker hydroshare_hydroshare solr hydroshare/hs-irods hydroshare/hs_docker_base hydroshare/hs_postgres rabbitmq)
 
+HS_CONTAINER_RUNNING=`docker ps --format '{{.Names}}' | grep hydroshare`
 NODE_CONTAINER_RUNNING=`docker ps -a | grep nodejs`
 
 if [ "$REMOVE_CONTAINER" == "YES" ]; then
@@ -220,14 +221,13 @@ echo '##########################################################################
 
 echo "Creating init scripts"
 cp scripts/templates/init-defaultworker.template init-defaultworker
-cp scripts/templates/init-hydroshare.template    init-hydroshare
+cp scripts/templates/init-hydroshare.template init-hydroshare
 
 sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g init-hydroshare
 sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g init-hydroshare
 
 sed -i $SED_EXT s/HS_SSH_SERVER//g init-hydroshare
 sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"python manage.py runserver 0.0.0.0:8000"'!g' init-hydroshare                  
-#sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"/usr/bin/supervisord -n"'!g' init-hydroshare                  
 
 sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g init-defaultworker
 sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g init-defaultworker
@@ -239,7 +239,6 @@ mkdir -p hydroshare/static/static 2>/dev/null
 mkdir -p hydroshare/static/media 2>/dev/null
 rm -fr log .irods 2>/dev/null
 mkdir -p log/nginx 2>/dev/null
-#chmod -R 777 log 2>/dev/null
 
 find . -name '*.hydro-bk' -exec rm -f {} \; 2>/dev/null
 
@@ -284,11 +283,20 @@ done
 cd irods/
 ./partial_build.sh 
 cd ..
-sleep 2
 
-echo "Chown root items"
-echo " - exec hydroshare bash scripts/chown-root-items"
-docker exec hydroshare bash scripts/chown-root-items
+echo " - wait for the hydroshare container to be up..."
+while [ 1 -eq 1 ]
+do
+  if [ "$HS_CONTAINER_RUNNING" != "" ]; then
+    break
+  fi
+  echo -n "."
+  sleep 1
+done
+
+echo
+echo " - chown root items in background"
+docker exec -d hydroshare bash scripts/chown-root-items
 
 echo
 echo '########################################################################################################################'
@@ -338,12 +346,6 @@ echo " Migrating data"
 echo '########################################################################################################################'
 echo
 
-docker exec hydroshare bash scripts/chown-root-items
-
-echo "  -docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput"
-echo
-docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput
-
 echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py migrate sites --noinput"
 echo
@@ -368,7 +370,7 @@ echo
 echo '########################################################################################################################'
 echo " Reindexing SOLR"
 echo '########################################################################################################################'
-# TODO - fix hydroshare container permissions to allow use of hydro-service user
+
 echo
 echo " - docker exec solr bin/solr create_core -c collection1 -n basic_config"
 docker exec solr bin/solr create -c collection1 -d basic_configs
