@@ -173,6 +173,8 @@ HYDROSHARE_CONTAINERS=(hydroshare defaultworker data.local.org rabbitmq solr pos
 HYDROSHARE_VOLUMES=(hydroshare_idata_iconf_vol hydroshare_idata_pgres_vol hydroshare_idata_vault_vol hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol)
 HYDROSHARE_IMAGES=(hydroshare_defaultworker hydroshare_hydroshare solr hydroshare/hs-irods hydroshare/hs_docker_base hydroshare/hs_postgres rabbitmq)
 
+NODE_CONTAINER_RUNNING=`docker ps -a | grep nodejs`
+
 if [ "$REMOVE_CONTAINER" == "YES" ]; then
   echo "  Removing HydroShare container..."
   for i in "${HYDROSHARE_CONTAINERS[@]}"; do
@@ -253,11 +255,21 @@ docker-compose -f $DOCKER_COMPOSER_YAML_FILE up -d $REBUILD_IMAGE
 
 echo
 echo '########################################################################################################################'
-echo " Waiting for iRODS containers up"
+echo " Starting backround tasks..."
 echo '########################################################################################################################'
 echo
 
+echo
+echo " - building Node for Discovery in background"
+node_build > /dev/null 2>&1 &
 
+echo
+echo '########################################################################################################################'
+echo -e " Setting up iRODS"
+echo '########################################################################################################################'
+echo
+
+echo " - waiting for iRODS containers to come up..."
 COUNT=0
 SECOND=0
 while [ $COUNT -lt 2 ]
@@ -269,12 +281,6 @@ do
   SECOND=$(($SECOND + 1))
   echo -ne "$SECOND ...\033[0K\r" && sleep 1;
 done
-
-echo
-echo '########################################################################################################################'
-echo -e " Setting up iRODS"
-echo '########################################################################################################################'
-echo
 
 cd irods/
 ./partial_build.sh 
@@ -390,11 +396,30 @@ echo '  - docker exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cor
 echo
 docker exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
 
-docker-compose -f local-dev.yml down
+echo
+echo '########################################################################################################################'
+echo " Collect static files"
+echo '########################################################################################################################'
+
+# check to see if the node container is still running
+# if it is, wait until it is removed
+echo "Waiting for nodejs container to be removed..."
+while [ 1 -eq 1 ]
+do
+  if [ "$NODE_CONTAINER_RUNNING" == "" ]; then
+    break
+  fi
+  echo -n "."
+  sleep 1
+done
+
+echo "  -docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput"
+echo
+docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput
 
 echo
 echo '########################################################################################################################'
-echo -e " All done, run `green '\"docker-compose -f local-dev.yml up\"'` to start HydroShare"
+echo -e " All done, run `green '\"docker-compose -f local-dev.yml restart\"'` to restart HydroShare"
 echo '########################################################################################################################'
 echo
 
