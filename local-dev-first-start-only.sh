@@ -107,7 +107,6 @@ echo
 echo "Removing node container"
 docker container rm nodejs
 cd $HS_PATH
-sleep 1
 
 }
 
