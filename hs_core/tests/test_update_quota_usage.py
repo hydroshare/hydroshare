@@ -101,7 +101,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertNotEqual(user_quota.data_zone_value, 0)
 
         # Assert that the used values have been updated correctly
-        self.assertEqual(user_quota.user_zone_value, 0)
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertAlmostEqual(dz, expected, places=5)
 

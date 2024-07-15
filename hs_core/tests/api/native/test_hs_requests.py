@@ -9,21 +9,21 @@ class TestRewrite(TestCase):
     def setUp(self):
         self.prod_fqdn = getattr(settings, "PROD_FQDN_OR_IP", "www.hydroshare.org")
         self.fqdn = getattr(settings, "FQDN_OR_IP", "www.hydroshare.org")
-        self.nginx_ip = hs_requests.get_nginx_ip()
+        self.hs_ip = hs_requests.get_local_ip()
 
     def test_localize_outer(self):
         """ rewrite requests to outer host"""
         self.assertEqual(hs_requests.localize_url("https://{}/foo/bar/".format(self.fqdn)),
-                         "https://{}/foo/bar/".format(self.nginx_ip))
+                         "https://{}/foo/bar/".format(self.hs_ip))
         self.assertEqual(hs_requests.localize_url("http://{}/foo/bar/".format(self.fqdn)),
-                         "http://{}/foo/bar/".format(self.nginx_ip))
+                         "http://{}/foo/bar/".format(self.hs_ip))
 
     def test_localize_www(self):
         """ rewrite requests to production host"""
         self.assertEqual(hs_requests.localize_url("https://{}/foo/bar/".format(self.prod_fqdn)),
-                         "https://{}/foo/bar/".format(self.nginx_ip))
+                         "https://{}/foo/bar/".format(self.hs_ip))
         self.assertEqual(hs_requests.localize_url("http://{}/foo/bar/".format(self.prod_fqdn)),
-                         "http://{}/foo/bar/".format(self.nginx_ip))
+                         "http://{}/foo/bar/".format(self.hs_ip))
 
     def test_do_not_localize_others(self):
         """ don't rewrite other host addresses """

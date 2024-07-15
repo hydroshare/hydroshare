@@ -21,7 +21,7 @@ class UserQuotaForm(forms.ModelForm):
     class Meta:
         model = UserQuota
         fields = ['allocated_value',]
-        readonly_fields = ['zone', 'unit', 'user_zone_value', 'data_zone_value',]
+        readonly_fields = ['zone', 'unit', 'data_zone_value',]
 
     def save(self, *args, **kwargs):
         instance = super(UserQuotaForm, self).save(commit=False)
@@ -53,10 +53,10 @@ class QuotaRequestAdmin(admin.ModelAdmin):
 class QuotaAdmin(admin.ModelAdmin):
     model = UserQuota
 
-    list_display = ('user', 'allocated_value', 'used_value', 'user_zone_value', 'data_zone_value', 'unit', 'zone')
+    list_display = ('user', 'allocated_value', 'used_value', 'data_zone_value', 'unit', 'zone')
     list_filter = ('zone',)
 
-    readonly_fields = ('user', 'user_zone_value', 'data_zone_value',)
+    readonly_fields = ('user', 'data_zone_value',)
     search_fields = ('user__username',)
 
     def get_form(self, request, obj=None, **kwargs):

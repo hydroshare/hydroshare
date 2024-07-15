@@ -77,7 +77,6 @@ from hs_core.tasks import (
     copy_resource_task,
     create_new_version_resource_task,
     delete_resource_task,
-    replicate_resource_bag_to_user_zone_task,
 )
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 from theme.models import UserProfile
@@ -1024,44 +1023,6 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
             return HttpResponseRedirect(request.META["HTTP_REFERER"])
 
 
-def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
-    """
-    This function needs to be called via AJAX. The function replicates resource bag to iRODS user zone on
-    users.hydroshare.org which is federated with hydroshare zone under the iRODS user account corresponding to a
-    HydroShare user. This function should only be called or exposed to be called from web interface when a
-    corresponding iRODS user account on hydroshare user Zone exists. The purpose of this function is to allow
-    HydroShare resource bag that a HydroShare user has access to be copied to HydroShare user's iRODS space in
-    HydroShare user zone so that users can do analysis or computations on the resource
-    Args:
-        request: an AJAX request
-        shortkey: UUID of the resource to be copied to the login user's iRODS user space
-
-    Returns:
-        JSON list that indicates status of resource replication, i.e., success or error
-    """
-
-    res, authorized, user = authorize(
-        request,
-        shortkey,
-        needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
-        raises_exception=False,
-    )
-    if not authorized:
-        return JsonResponse(
-            {"error": "You are not authorized to replicate this resource."},
-            status=status.HTTP_401_UNAUTHORIZED,
-        )
-
-    task = replicate_resource_bag_to_user_zone_task.apply_async(
-        (shortkey, user.username)
-    )
-    task_id = task.task_id
-    task_dict = get_or_create_task_notification(
-        task_id, name="resource copy to user zone", username=user.username
-    )
-    return JsonResponse(task_dict)
-
-
 def list_referenced_content(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(
         request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE
@@ -1680,8 +1641,6 @@ class PatchedChoiceWidget(autocomplete_light.ChoiceWidget):
 
 @processor_for(BaseResource)
 def add_generic_context(request, page):
-    user = request.user
-    user_zone_account_exist = hydroshare.utils.get_user_zone_status_info(user)
 
     class AddUserForm(forms.Form):
         user = forms.ModelChoiceField(
@@ -1731,7 +1690,6 @@ def add_generic_context(request, page):
         # Reuse the same class AddGroupForm() leads to duplicated IDs.
         "add_view_group_form": AddGroupForm(),
         "add_edit_group_form": AddGroupForm(),
-        "user_zone_account_exist": user_zone_account_exist,
     }
 
 

@@ -349,7 +349,7 @@ ENABLE_STATIC_CLOUD_STORAGE = False
 # )
 # STATICFILES_STORAGE = 'hydroshare.storage.Static'
 # THUMBNAIL_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
-# DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+# DEFAULT_FILE_STORAGE = 'hydroshare.storage.MediaeGoogleCloudStorage'
 # # the media is served from the root of the bucket
 # MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
 # # the static files are served from a static/ dir in the bucket
@@ -851,7 +851,6 @@ TASK_NAME_LIST = [
     "hs_core.tasks.create_temp_zip",
     "hs_core.tasks.unzip_task",
     "hs_core.tasks.copy_resource_task",
-    "hs_core.tasks.replicate_resource_bag_to_user_zone_task",
     "hs_core.tasks.create_new_version_resource_task",
     "hs_core.tasks.delete_resource_task",
     "hs_core.tasks.move_aggregation_task",

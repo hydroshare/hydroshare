@@ -835,16 +835,6 @@
                                                 <span class="fa fa-download icon-blue"></span>
                                             </button>
 
-                                            {% if user_zone_account_exist %}
-                                                <a id="rep-res-bag" type="button"
-                                                   title="Copy Resource Bag to iRODS User Zone"
-                                                   data-target="#rep-resource-to-irods-dialog"
-                                                   data-toggle="modal"
-                                                   data-placement="auto">
-                                                    <span class="hs-icon-irods icon-blue"></span>
-                                                </a>
-                                            {% endif %}
-
                                             <button id="btn-download-all"
                                                 title="Download all content as Zipped BagIt Archive"
                                                 {% if cm.raccess.require_download_agreement %}
@@ -950,22 +940,20 @@
 
                     <div class="files" id="previews"></div>
                     {% block download_bag %}
-                        {% if user_zone_account_exist %}
-                            <div>
-                                <div id='rep-alert-success' class="alert alert-success alert-dismissible"
-                                     role="alert" style="display:none">
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span></button>
-                                    <span id="rep-status-success"></span>
-                                </div>
-                                <div id='rep-alert-error' class="alert alert-danger alert-dismissible" role="alert"
-                                     style="display:none">
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span></button>
-                                    <span id="rep-status-error"></span>
-                                </div>
+                        <div>
+                            <div id='rep-alert-success' class="alert alert-success alert-dismissible"
+                                    role="alert" style="display:none">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span></button>
+                                <span id="rep-status-success"></span>
                             </div>
-                        {% endif %}
+                            <div id='rep-alert-error' class="alert alert-danger alert-dismissible" role="alert"
+                                    style="display:none">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span></button>
+                                <span id="rep-status-error"></span>
+                            </div>
+                        </div>
                     {% endblock %} {#  download_bag #}
 
                     {# ======= Readme ======= #}

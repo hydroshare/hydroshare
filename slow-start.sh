@@ -29,10 +29,6 @@ do
   if [ "$DATA" != "" ]; then
     COUNT=$(($COUNT + 1))
   fi
-  USER=`docker $DOCKER_PARAM logs users.local.org 2>/dev/null | grep 'Success'`
-  if [ "$USER" != "" ]; then
-    COUNT=$(($COUNT + 1))
-  fi
   SECOND=$(($SECOND + 1))
   echo -ne "$SECOND ...\033[0K\r" && sleep 1;
 done
