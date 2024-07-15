@@ -17,12 +17,9 @@ class Migration(migrations.Migration):
             database_operations=[
                 migrations.RunSQL(
                     sql='ALTER TABLE "theme_userquota" DROP COLUMN "user_zone_value" CASCADE;',
-                    reverse_sql='ALTER TABLE "theme_userquota" ADD COLUMN "user_zone_value" varchar(255) NULL;',
                 ),
                 migrations.RunSQL(
                     sql='ALTER TABLE "theme_userprofile" DROP COLUMN "create_irods_user_account" CASCADE;',
-                    reverse_sql=('ALTER TABLE "theme_userprofile" '
-                                 'ADD COLUMN "create_irods_user_account" boolean NOT NULL;'),
                 ),
             ]
         )
