@@ -25,8 +25,8 @@ from hs_labels.models import ResourceLabels
 from theme.models import UserQuota
 from hs_core.enums import CrossRefSubmissionStatus
 
-FILE_SIZE_LIMIT = 1 * (1024 ** 3)
-FILE_SIZE_LIMIT_FOR_DISPLAY = '1G'
+FILE_SIZE_LIMIT = 5 * (1024 ** 3)
+FILE_SIZE_LIMIT_FOR_DISPLAY = '5G'
 METADATA_STATUS_SUFFICIENT = 'Sufficient to publish or make public'
 METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
 
