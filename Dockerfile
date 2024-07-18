@@ -1,4 +1,5 @@
-FROM hydroshare/hs_docker_base:c30cf01
+FROM hydroshare/hs_docker_base:2b61baf
+# make sure to update multistage-node dockerfile as well if you update this base image
 
 # Set the locale. TODO - remove once we have a better alternative worked out
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
