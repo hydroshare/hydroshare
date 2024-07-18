@@ -1,7 +1,7 @@
 version: '3'
 services:
   data.local.org:
-    image: hydroshare/hs-irods:4.2.11-pg13.4-buster
+    image: hydroshare/hs-irods:2e7929c
     container_name: data.local.org
     hostname: data.local.org
     ports:

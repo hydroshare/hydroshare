@@ -1,4 +1,4 @@
-FROM hydroshare/hs-irods:4.2.11-pg13.4-buster
+FROM hydroshare/hs-irods:2e7929c
 
 RUN mkdir -p /home/hsuserproxy/.irods
 COPY ./irods/delete_user.sh /home/hsuserproxy/delete_user.sh
