@@ -7,8 +7,10 @@ from typing import Optional, List
 import pandas as pd
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.template import Template, Context
 from pydantic import BaseModel
 from pydantic import ValidationError as PydanticValidationError
+from dominate import tags as html_tags
 
 from hs_core.signals import post_add_csv_aggregation
 from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
@@ -46,10 +48,140 @@ class CSVFileMetaData(AbstractFileMetaData):
         return CSVMetaSchemaModel(**self.tableSchema)
 
     def get_html(self, include_extra_metadata=True, **kwargs):
-        raise NotImplementedError("Method get_html must be implemented in a subclass")
+        """overrides the base class function to generate html needed to display metadata
+        in view mode"""
+
+        html_string = super(CSVFileMetaData, self).get_html()
+        if self.tableSchema:
+            table_schema_model = self.get_table_schema_model()
+            root_div = html_tags.div(cls="content-block")
+            with root_div:
+                html_tags.h3("CSV Metadata")
+                html_tags.p(f"Number of data rows: {table_schema_model.rows}", cls="font-weight-bold")
+                with html_tags.div():
+                    html_tags.legend("Column Properties:")
+                    for col_no, col in enumerate(table_schema_model.columns):
+                        html_tags.legend(f"Column {col_no + 1}", csl="w-auto", style="font-size: 1.2em;")
+                        col_title = col.titles if col.titles else ""
+                        html_tags.p(f"Title: {col_title}")
+                        col_desc = col.description if col.description else ""
+                        html_tags.p(f"Description: {col_desc}")
+                        html_tags.p(f"Data type: {col.datatype}")
+                        # unit_code = col.unitCode if col.unitCode else ""
+                        # html_tags.p(f"Unit code: {unit_code}")
+                        html_tags.hr()
+
+            html_string += root_div.render()
+
+        template = Template(html_string)
+        context = Context({})
+        return template.render(context)
 
     def get_html_forms(self, dataset_name_form=True, temporal_coverage=True, **kwargs):
-        raise NotImplementedError("Method get_html_forms must be implemented in a subclass")
+        root_div = html_tags.div("{% load crispy_forms_tags %}")
+        with root_div:
+            super(CSVFileMetaData, self).get_html_forms()
+            with html_tags.div():
+                with html_tags.form(id="id-coverage-spatial-filetype", action="{{ spatial_form.action }}",
+                                    method="post", enctype="multipart/form-data", cls='hs-coordinates-picker',
+                                    data_coordinates_type="point"):
+                    html_tags.div("{% crispy spatial_form %}")
+                    with html_tags.div(cls="row", style="margin-top:10px;"):
+                        with html_tags.div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
+                            html_tags.button("Save changes", type="button",
+                                             cls="btn btn-primary pull-right btn-form-submit",
+                                             style="display: none;")
+            with html_tags.div(cls="content-block"):
+                with html_tags.div():
+                    html_tags.legend("CSV File Properties:")
+                    table_schema_model = self.get_table_schema_model()
+                    form_action = f"/hsapi/_internal/{self.logical_file.id}/update-csv-table-schema/"
+                    with html_tags.form(id="id-csv-metadata", action=form_action, method="post",
+                                        encrtype="multipart/form-data"):
+                        # html_tags.div("{% crispy temp_form %}")
+                        column_input_cls = "form-control input-sm textinput textInput"
+                        row_div = html_tags.div(cls="control-group", id="id-csv-metadata-row-count")
+                        with row_div:
+                            html_tags.label("Number of data rows:", fr="id-csv-metadata-rows", cls="control-label")
+                            with html_tags.div(cls="controls"):
+                                html_tags.input(type="text", id="id-csv-metadata-rows", name="rows", readonly="readonly",
+                                                value=table_schema_model.rows,
+                                                cls=column_input_cls)
+                        col_div = html_tags.div(cls="control-group", id="id-csv-metadata-columns")
+                        with col_div:
+                            # html_tags.label("Columns:", fr="id-csv-metadata-columns", cls="control-label")
+                            with html_tags.div():
+                                html_tags.legend("Column Properties:", style="font-size: 1.2em;")
+                                for col_no, col in enumerate(table_schema_model.columns):
+                                    with html_tags.fieldset(cls="border p-2"):
+                                        html_tags.legend(f"Column {col_no + 1}", csl="w-auto")
+                                        titles_id = f"id-csv-metadata-column-{col_no}-titles"
+                                        html_tags.label(f"Title", fr=titles_id,)
+                                        html_tags.input(type="text", id=titles_id, name=f"column-{col_no}-titles",
+                                                        value=col.titles, cls=column_input_cls)
+
+                                        desc_id = f"id-csv-metadata-column-{col_no}-description"
+                                        html_tags.label(f"Description", fr=desc_id)
+                                        html_tags.input(type="text", id=desc_id, name=f"column-{col_no}-description",
+                                                        value=col.description, cls=column_input_cls)
+
+                                        datatype_id = f"id-csv-metadata-column-{col_no}-datatype"
+                                        html_tags.label(f"Data type", fr=datatype_id)
+                                        html_tags.input(type="text", id=datatype_id, name=f"column-{col_no}-datatype",
+                                                        readonly="readonly", value=col.datatype, cls=column_input_cls)
+
+                                        # unit_code_id = f"id-csv-metadata-column-{col_no}-unitCode"
+                                        # html_tags.label(f"Unit code", fr=unit_code_id)
+                                        # html_tags.input(type="text", id=unit_code_id, name=f"column-{col_no}-unitCode",
+                                        #                 value=col.unitCode, cls=column_input_cls)
+                        with html_tags.div(cls="row", style="margin-top:10px;"):
+                            with html_tags.div(cls="col-md-offset-10 col-xs-offset-6 " "col-md-2 col-xs-6"):
+                                html_tags.button(
+                                    "Save changes",
+                                    type="button",
+                                    cls="btn btn-primary pull-right",
+                                    style="display: none;",
+                                )
+
+        temp_cov_form = self.get_temporal_coverage_form()
+        temporal_coverage = self.temporal_coverage
+        spatial_cov_form = self.get_spatial_coverage_form(allow_edit=True)
+        spatial_coverage = self.spatial_coverage
+        logical_file_class_name = self.logical_file.__class__.__name__
+
+        update_action = (
+            "/hsapi/_internal/CSVLogicalFile/{0}/{1}/{2}/update-file-metadata/"
+        )
+        create_action = "/hsapi/_internal/CSVLogicalFile/{0}/{1}/add-file-metadata/"
+        if temporal_coverage or spatial_coverage:
+            if temporal_coverage:
+                temp_action = update_action.format(
+                    self.logical_file.id, "coverage", temporal_coverage.id
+                )
+                temp_cov_form.action = temp_action
+            else:
+                temp_action = create_action.format(self.logical_file.id, "coverage")
+                temp_cov_form.action = temp_action
+
+            if spatial_coverage:
+                spatial_action = update_action.format(
+                    self.logical_file.id, "coverage", spatial_coverage.id
+                )
+                spatial_cov_form.action = spatial_action
+            else:
+                spatial_action = create_action.format(self.logical_file.id, "coverage")
+                spatial_cov_form.action = spatial_action
+        else:
+            action = create_action.format(logical_file_class_name, self.logical_file.id, "coverage")
+            temp_cov_form.action = action
+            spatial_cov_form.action = action
+
+        context_dict = dict()
+        context_dict["temp_form"] = temp_cov_form
+        context_dict["spatial_form"] = spatial_cov_form
+        template = Template(root_div.render())
+        context = Context(context_dict)
+        return template.render(context)
 
 
 class CSVLogicalFile(AbstractLogicalFile):
@@ -569,7 +701,3 @@ class CSVLogicalFile(AbstractLogicalFile):
         self.metadata.is_dirty = False
         self.metadata.save()
 
-    @classmethod
-    def get_main_file_type(cls):
-        # a single file extension in the group which is considered the main file
-        return ".csv"

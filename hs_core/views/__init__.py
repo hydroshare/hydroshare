@@ -337,7 +337,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     if file_folder == "data/contents":
         file_folder = ""
     elif file_folder.startswith("data/contents/"):
-        file_folder = file_folder[len("data/contents/") :]
+        file_folder = file_folder[len("data/contents/"):]
 
     try:
         hydroshare.utils.resource_file_add_pre_process(

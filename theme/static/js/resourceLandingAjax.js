@@ -790,7 +790,8 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $.each(files, function (i, file) {
                 // Check if the file belongs to an aggregation. Exclude FileSets and their files.
                 if (file['logical_file_id'] && file['logical_type'] !== "GenericLogicalFile" && file['logical_type'] !== "FileSetLogicalFile"
-                    && file['logical_type'] !== "ModelProgramLogicalFile" && file['logical_type'] !== "ModelInstanceLogicalFile") {
+                    && file['logical_type'] !== "ModelProgramLogicalFile" && file['logical_type'] !== "ModelInstanceLogicalFile"
+                    && file['logical_type'] !== "CSVLogicalFile") {
                     let selectedAgg = currentAggregations.filter(function (agg) {
                         return agg.logical_file_id === file['logical_file_id'] && agg.logical_type === file['logical_type'];
                     })[0];
