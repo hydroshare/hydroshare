@@ -40,12 +40,18 @@ from hs_core.hydroshare.resource import (deposit_res_metadata_with_crossref,
                                          get_resource_doi, update_quota_usage,)
 from hs_core.models import BaseResource, ResourceFile, TaskNotification
 from hs_core.task_utils import get_or_create_task_notification
-from hs_file_types.models import (FileSetLogicalFile, GenericLogicalFile,
-                                  GeoFeatureLogicalFile, GeoRasterLogicalFile,
-                                  ModelInstanceLogicalFile,
-                                  ModelProgramLogicalFile, NetCDFLogicalFile,
-                                  RefTimeseriesLogicalFile,
-                                  TimeSeriesLogicalFile)
+from hs_file_types.models import (
+    FileSetLogicalFile,
+    GenericLogicalFile,
+    GeoFeatureLogicalFile,
+    GeoRasterLogicalFile,
+    ModelInstanceLogicalFile,
+    ModelProgramLogicalFile,
+    NetCDFLogicalFile,
+    RefTimeseriesLogicalFile,
+    TimeSeriesLogicalFile,
+    CSVLogicalFile,
+)
 from hs_odm2.models import ODM2Variable
 from hydroshare.hydrocelery import app as celery_app
 from theme.models import QuotaMessage, User, UserQuota
@@ -58,7 +64,8 @@ FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
                  "RefTimeseriesLogicalFile": RefTimeseriesLogicalFile,
                  "TimeSeriesLogicalFile": TimeSeriesLogicalFile,
                  "ModelProgramLogicalFile": ModelProgramLogicalFile,
-                 "ModelInstanceLogicalFile": ModelInstanceLogicalFile
+                 "ModelInstanceLogicalFile": ModelInstanceLogicalFile,
+                 "CSVLogicalFile": CSVLogicalFile,
                  }
 
 # Pass 'django' into getLogger instead of __name__
