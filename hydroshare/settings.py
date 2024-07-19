@@ -649,6 +649,16 @@ OAUTH2_PROVIDER = {
 # LOGGING SETTINGS #
 ####################
 
+# Using Google Cloud Logging will format logs in a structured way that can be parsed by Google Cloud Logging
+USE_CLOUD_LOGGING = False
+
+if USE_CLOUD_LOGGING:
+    import google.cloud.logging as gcloud_logging
+
+    client = gcloud_logging.Client()
+    handler = gcloud_logging.handlers.StructuredLogHandler(client)
+    client.setup_logging(handler)
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
