@@ -654,10 +654,11 @@ USE_CLOUD_LOGGING = False
 
 if USE_CLOUD_LOGGING:
     import google.cloud.logging as gcloud_logging
+    from google.cloud.logging_v2.handlers import setup_logging
 
     client = gcloud_logging.Client()
-    handler = gcloud_logging.handlers.StructuredLogHandler(client)
-    client.setup_logging(handler)
+    handler = gcloud_logging.handlers.StructuredLogHandler()
+    setup_logging(handler)
 
 LOGGING = {
     "version": 1,
