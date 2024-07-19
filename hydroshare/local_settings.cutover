@@ -64,7 +64,7 @@ DOCKER_URL = 'unix://docker.sock/'
 DOCKER_API_VERSION = '1.12'
 
 # CartoCSS settings
-CARTO_HOME = '/hs_tmp/node_modules/carto'
+CARTO_HOME = '/tmp/node_modules/carto'
 
 USE_SOUTH = False
 SITE_TITLE = "CUAHSI HydroShare"

@@ -1,7 +1,7 @@
 version: '3'
 services:
   data.local.org:
-    image: hydroshare/hs-irods:4.2.6-buster
+    image: hydroshare/hs-irods:2e7929c
     container_name: data.local.org
     hostname: data.local.org
     ports:
@@ -77,7 +77,7 @@ services:
       RABBITMQ_PORT_5672_TCP_ADDR: rabbitmq
       SOLR_PORT_8983_TCP_ADDR: solr
       SOLR_HOST: solr
-      TMP: /hs_tmp
+      TMP: /tmp
       POSTGIS_PORT_5432_TCP_ADDR: postgis
       HS_PATH: ${PWD}
       PYTHONPATH: /hydroshare
@@ -86,7 +86,7 @@ services:
       # hydroshare repository
       - ".:/hydroshare"
       # shared location for gunicorn.sock between containers
-      - "temp_vol:/hs_tmp"
+      - "temp_vol:/tmp"
       # temp directory shared with celery workers
       - "share_vol:/shared_tmp"
     ports:
