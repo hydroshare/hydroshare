@@ -63,8 +63,8 @@ def test_create_csv_aggregation_1(composite_resource):
 
     # check column data types
     for col_number, col in enumerate(csv_meta_schema_model.columns, start=1):
-        assert col.description is None
-        assert col.unitCode is None
+        assert not col.description
+        assert not col.unitCode
         if col_number in (5, 6, 11, 12, 13, 14, 17):
             assert col.datatype == "number"
         else:
@@ -108,10 +108,10 @@ def test_create_csv_aggregation_2(composite_resource):
     # check column properties
     for col_number, col in enumerate(csv_meta_schema_model.columns, start=1):
         # check that the column headers are missing
-        assert col.titles is None
+        assert not col.titles
 
-        assert col.description is None
-        assert col.unitCode is None
+        assert not col.description
+        assert not col.unitCode
         if col_number in (1, 3):
             assert col.datatype == "string"
         elif col_number == 2:
@@ -169,8 +169,72 @@ def test_create_csv_aggregation_column_data_types(composite_resource, use_csv_wi
         # check that the column headers are there
         assert col.titles == f"Col-{col_number}"
 
-        assert col.description is None
-        assert col.unitCode is None
+        assert not col.description
+        assert not col.unitCode
+        if col_number in (1, 3):
+            assert col.datatype == "string"
+        elif col_number == 2:
+            assert col.datatype == "number"
+        elif col_number == 4:
+            assert col.datatype == "datetime"
+        else:
+            assert col.datatype == "boolean"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize("csv_file", [
+    "csv_boolean_column_TRUE_and_FALSE.csv",
+    "csv_boolean_column_True_and_False_.csv",
+    "csv_boolean_column_true_false.csv",
+    "csv_boolean_column_T_and_F.csv",
+    "csv_boolean_column_Yes_and_No_.csv",
+    "csv_boolean_column_yes_no.csv",
+    "csv_boolean_column_YES_NO_.csv",
+    "csv_boolean_column_Y_and_N.csv",
+])
+def test_create_csv_aggregation_boolean_data_type(composite_resource, csv_file):
+    # here we are testing that we can create a CSV file type aggregation from a csv file that
+    # is part of a resource
+    # test param: use_csv_with_missing_data == True: here we are using a csv file that has headers and
+    # data missing in some cells - should still be able to find data type for all columns (all 4 data types)
+    # test param: use_csv_with_missing_data == False: here we are using a csv file that has headers and data
+    # in all cells - should be able to find data type for all columns (all 4 data types)
+
+    res, user = composite_resource
+
+    # upload a csv file to the resource
+    file_path = f'pytest/assets/{csv_file}'
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'), name=os.path.basename(file_path))
+    upload_folder = ""
+    res_file = add_file_to_resource(
+        res, file_to_upload, folder=upload_folder, check_target_folder=True
+    )
+
+    # check there are no CSV file type logical files
+    assert CSVLogicalFile.objects.count() == 0
+
+    # set the uploaded csv file to be part of a csv aggregation
+    CSVLogicalFile.set_file_type(res, user, res_file.id)
+
+    # test that we have one logical file of type CSV
+    assert CSVLogicalFile.objects.count() == 1
+    csv_aggr = CSVLogicalFile.objects.first()
+
+    # check extracted metadata
+    metadata = csv_aggr.metadata
+    assert metadata.tableSchema is not None
+    table_schema = metadata.tableSchema
+    csv_meta_schema_model = CSVMetaSchemaModel(**table_schema)
+    assert csv_meta_schema_model.rows == 6
+    assert len(csv_meta_schema_model.columns) == 5
+
+    # check column properties
+    for col_number, col in enumerate(csv_meta_schema_model.columns, start=1):
+        # check that the column headers are there
+        assert col.titles == f"Col-{col_number}"
+
+        assert not col.description
+        assert not col.unitCode
         if col_number in (1, 3):
             assert col.datatype == "string"
         elif col_number == 2:
