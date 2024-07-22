@@ -1693,6 +1693,19 @@ def add_generic_context(request, page):
     }
 
 
+class DemoClientView(TemplateView):
+    template_name = "tus.html"
+
+
+class UppyView(TemplateView):
+    template_name = "uppy.html"
+
+    def get_context_data(self, **kwargs):
+        return {
+            "data_upload_max": settings.DATA_UPLOAD_MAX_MEMORY_SIZE,
+        }
+
+
 @login_required
 def create_resource(request, *args, **kwargs):
     # Note: This view function must be called by ajax

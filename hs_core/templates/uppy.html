@@ -1,0 +1,42 @@
+{% load static %}
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Uppy + tus-js-client demo - File Upload</title>
+    <link href="https://releases.transloadit.com/uppy/v4.0.5/uppy.min.css" rel="stylesheet">
+  </head>
+  <body>
+    <div id="uppy"></div>
+  </body>
+  <script type="module">
+    import { Uppy, Dashboard, Tus } from "https://releases.transloadit.com/uppy/v4.0.5/uppy.min.mjs"
+    // import { GoogleDrive } from "https://releases.transloadit.com/uppy/v4.0.5/uppy.min.mjs"
+    // import Uppy from '@uppy/core';
+    // import Dashboard from '@uppy/dashboard';
+    // import Tus from '@uppy/tus';
+
+    // import '@uppy/core/dist/style.min.css';
+    // import '@uppy/dashboard/dist/style.min.css';
+
+    const MAX = {{ data_upload_max|default:5242880 }};
+
+    new Uppy()
+
+      .use(Dashboard, { inline: true, target: '#uppy' })
+      .use(Tus, { 
+        endpoint: '/upload/',
+        chunkSize: MAX,
+        // limit: 0,
+        // onBeforeUpload: (files) => {
+        //   console.log('onBeforeUpload', files)
+        //   return files
+        // },
+        // onBeforeSend: (request) => {
+        //   console.log('onBeforeSend', request)
+        //   return request
+        // },
+      })
+      // .use(GoogleDrive, { target: Dashboard, companionUrl: 'https://companion.uppy.io' })
+  </script>
+</html>

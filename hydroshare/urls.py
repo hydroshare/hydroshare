@@ -169,6 +169,19 @@ urlpatterns += i18n_patterns(
     url(r"^apps/$", hs_core_views.apps.AppsView.as_view(), name="apps"),
 )
 
+from django_tus.views import TusUpload
+from django.urls import path
+# https://github.com/alican/django-tus-example/blob/master/django_tus_example/urls.py
+
+urlpatterns += [
+    path("uppy/", hs_core_views.UppyView.as_view(), name='uppy_client'),
+    path("no_uppy/", hs_core_views.DemoClientView.as_view(), name='demo_client'),
+    path("upload/", TusUpload.as_view(), name='tus_upload'),
+    path("upload/<uuid:resource_id>", TusUpload.as_view(), name='tus_upload_chunks'),
+]
+# from django.conf.urls.static import static
+# static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 # Filebrowser admin media library.
 if getattr(settings, "PACKAGE_NAME_FILEBROWSER") in settings.INSTALLED_APPS:
     urlpatterns += i18n_patterns(
