@@ -17,12 +17,7 @@ def test_create_csv_aggregation_1(composite_resource):
     res, user = composite_resource
 
     # upload a csv file to the resource
-    file_path = 'pytest/assets/csv_with_header_and_data.csv'
-    file_to_upload = UploadedFile(file=open(file_path, 'rb'), name=os.path.basename(file_path))
-    upload_folder = ""
-    res_file = add_file_to_resource(
-        res, file_to_upload, folder=upload_folder, check_target_folder=True
-    )
+    res_file = _upload_csv_file(res, 'csv_with_header_and_data.csv')
 
     # check there are no CSV file type logical files
     assert CSVLogicalFile.objects.count() == 0
@@ -80,12 +75,7 @@ def test_create_csv_aggregation_2(composite_resource):
     res, user = composite_resource
 
     # upload a csv file to the resource
-    file_path = 'pytest/assets/csv_with_no_header.csv'
-    file_to_upload = UploadedFile(file=open(file_path, 'rb'), name=os.path.basename(file_path))
-    upload_folder = ""
-    res_file = add_file_to_resource(
-        res, file_to_upload, folder=upload_folder, check_target_folder=True
-    )
+    res_file = _upload_csv_file(res, 'csv_with_no_header.csv')
 
     # check there are no CSV file type logical files
     assert CSVLogicalFile.objects.count() == 0
@@ -136,15 +126,11 @@ def test_create_csv_aggregation_column_data_types(composite_resource, use_csv_wi
 
     # upload a csv file to the resource
     if use_csv_with_missing_data:
-        file_path = 'pytest/assets/csv_with_missing_data.csv'
+        csv_file = 'csv_with_missing_data.csv'
     else:
-        file_path = 'pytest/assets/csv_with_header_and_all_data_types.csv'
+        csv_file = 'csv_with_header_and_all_data_types.csv'
 
-    file_to_upload = UploadedFile(file=open(file_path, 'rb'), name=os.path.basename(file_path))
-    upload_folder = ""
-    res_file = add_file_to_resource(
-        res, file_to_upload, folder=upload_folder, check_target_folder=True
-    )
+    res_file = _upload_csv_file(res, csv_file)
 
     # check there are no CSV file type logical files
     assert CSVLogicalFile.objects.count() == 0
@@ -182,6 +168,44 @@ def test_create_csv_aggregation_column_data_types(composite_resource, use_csv_wi
 
 
 @pytest.mark.django_db(transaction=True)
+def test_create_csv_aggregation_from_one_data_column_file(composite_resource):
+    # here we are testing that we can create a CSV file type aggregation from a csv file that
+    # is part of a resource
+    # here we are using a csv file that has only one column with data
+
+    res, user = composite_resource
+
+    # upload a csv file to the resource
+    res_file = _upload_csv_file(res, 'csv_with_one_column_data.csv')
+
+    # check there are no CSV file type logical files
+    assert CSVLogicalFile.objects.count() == 0
+
+    # set the uploaded csv file to be part of a csv aggregation
+    CSVLogicalFile.set_file_type(res, user, res_file.id)
+
+    # test that we have one logical file of type CSV
+    assert CSVLogicalFile.objects.count() == 1
+    csv_aggr = CSVLogicalFile.objects.first()
+
+    # check extracted metadata
+    metadata = csv_aggr.metadata
+    assert metadata.tableSchema is not None
+    table_schema = metadata.tableSchema
+    csv_meta_schema_model = CSVMetaSchemaModel(**table_schema)
+    assert csv_meta_schema_model.rows == 6
+    assert len(csv_meta_schema_model.columns) == 1
+
+    # check column properties
+    col = csv_meta_schema_model.columns[0]
+    assert col.titles == "Col-1"
+
+    assert not col.description
+    assert not col.unitCode
+    assert col.datatype == "number"
+
+
+@pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize("csv_file", [
     "csv_boolean_column_TRUE_and_FALSE.csv",
     "csv_boolean_column_True_and_False_.csv",
@@ -203,12 +227,7 @@ def test_create_csv_aggregation_boolean_data_type(composite_resource, csv_file):
     res, user = composite_resource
 
     # upload a csv file to the resource
-    file_path = f'pytest/assets/{csv_file}'
-    file_to_upload = UploadedFile(file=open(file_path, 'rb'), name=os.path.basename(file_path))
-    upload_folder = ""
-    res_file = add_file_to_resource(
-        res, file_to_upload, folder=upload_folder, check_target_folder=True
-    )
+    res_file = _upload_csv_file(res, csv_file)
 
     # check there are no CSV file type logical files
     assert CSVLogicalFile.objects.count() == 0
@@ -247,20 +266,20 @@ def test_create_csv_aggregation_boolean_data_type(composite_resource, csv_file):
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize("invalid_csv_file",
-                         ['csv_with_additional_data_columns_invalid.csv', 'csv_no_data_rows_invalid.csv',
-                          'csv_with_invalid_file_extension.txt'])
+                         ['csv_with_additional_data_columns_invalid.csv',
+                          'csv_no_data_rows_invalid.csv',
+                          'csv_missing_data_rows_invalid.csv',
+                          'csv_with_invalid_file_extension.txt',
+                          'csv_column_with_comment_character_invalid.csv',
+                          'csv_with_non_comment_line_invalid.csv',
+                          'csv_space_delimiter_invalid.csv',])
 def test_create_csv_aggregation_with_invalid_file(composite_resource, invalid_csv_file):
     # here we are testing that trying to create a CSV file type aggregation from an invalid csv file should fail
 
     res, user = composite_resource
 
     # upload  a csv file
-    file_path = f'pytest/assets/{invalid_csv_file}'
-    file_to_upload = UploadedFile(file=open(file_path, 'rb'), name=os.path.basename(file_path))
-    upload_folder = ""
-    res_file = add_file_to_resource(
-        res, file_to_upload, folder=upload_folder, check_target_folder=True
-    )
+    res_file = _upload_csv_file(res, invalid_csv_file)
 
     # check there are no CSV file type logical files
     assert CSVLogicalFile.objects.count() == 0
@@ -271,3 +290,14 @@ def test_create_csv_aggregation_with_invalid_file(composite_resource, invalid_cs
 
     # test that we did not create a logical file of type CSV
     assert CSVLogicalFile.objects.count() == 0
+
+
+def _upload_csv_file(resource, csv_file):
+    # upload a csv file to the resource
+    file_path = f'pytest/assets/{csv_file}'
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'), name=os.path.basename(file_path))
+    upload_folder = ""
+    res_file = add_file_to_resource(
+        resource, file_to_upload, folder=upload_folder, check_target_folder=True
+    )
+    return res_file
