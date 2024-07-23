@@ -438,7 +438,7 @@ INSTALLED_APPS = (
 )
 
 TUS_UPLOAD_DIR = os.path.join(BASE_DIR, 'tus_upload')
-TUS_DESTINATION_DIR = TUS_UPLOAD_DIR
+TUS_DESTINATION_DIR = os.path.join(BASE_DIR, 'tus_complete')
 TUS_FILE_NAME_FORMAT = 'increment'  # Other options are: 'random-suffix', 'random', 'keep'
 TUS_EXISTING_FILE = 'error'  # Other options are: 'overwrite',  'error', 'rename'
 

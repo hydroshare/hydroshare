@@ -1693,7 +1693,6 @@ def add_generic_context(request, page):
     }
 
 
-
 @login_required
 def create_resource(request, *args, **kwargs):
     # Note: This view function must be called by ajax

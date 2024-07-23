@@ -100,7 +100,7 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
     for ifname in ifnames:
         size = irods_storage.size(ifname)
         tmpFile = irods_storage.download(ifname)
-        fname = os.path.basename(ifname.rstrip(os.sep))
+        fname = os.path.basename(ifname.rstrip(os.sep))        
         fileobj = File(file=tmpFile, name=fname)
         fileobj.size = size
         res_files.append(fileobj)

@@ -16,20 +16,30 @@
 
     const MAX = {{ max_chunk_size|default:5242880 }};
 
-    new Uppy()
+    new Uppy({
+      id: 'uppy', 
+      // autoProceed: true,
+      // debug: true,
+      withCredentials: true,
+      onBeforeUpload: (files) => {
+        const updatedFiles = Object.assign({}, files)
+        Object.keys(updatedFiles).forEach(fileId => {
+          updatedFiles[fileId].meta = 
+          { 
+            resource_id: "{{ cm.short_id }}",
+            original_file_name: updatedFiles[fileId].name,
+          }
+        })
+        return updatedFiles
+        // TODO: check quota? etc
+      }
+    })
 
       .use(Dashboard, { inline: true, target: '#uppy' })
       .use(Tus, { 
         endpoint: `/hsapi/resource/${SHORT_ID}/uppy/`,
         chunkSize: MAX,
 
-        // TODO: check quota? etc
-
-        // limit: 0,
-        // onBeforeUpload: (files) => {
-        //   console.log('onBeforeUpload', files)
-        //   return files
-        // },
         // onBeforeSend: (request) => {
         //   console.log('onBeforeSend', request)
         //   return request

@@ -428,7 +428,6 @@ def page_permissions_page_processor(request, page):
     if hasattr(settings, 'DATA_UPLOAD_MAX_MEMORY_SIZE'):
         max_chunk_size = settings.DATA_UPLOAD_MAX_MEMORY_SIZE
 
-
     return {
         'resource_type': cm._meta.verbose_name,
         "users_json": users_json,
@@ -5113,24 +5112,48 @@ def tus_upload_finished_handler(sender, **kwargs):
     """Handle the tus upload finished signal.
 
     Ingest the files from the TUS_DESTINATION_DIR into the resource.
+
+    https://github.com/alican/django-tus/blob/master/django_tus/signals.py
+    This signal provides the following keyword arguments:
+    metadata
+    filename
+    upload_file_path
+    file_size
+    upload_url
+    destination_folder
     """
+    from hs_core import hydroshare
+    metadata = kwargs['metadata']
+    destination_folder = kwargs['destination_folder']
+    resource_id = metadata['resource_id']
+    original_filename = metadata['original_file_name']
 
-    # https://github.com/alican/django-tus/blob/master/django_tus/signals.py
-    # This signal provides the following keyword arguments:
-    # metadata
-    # filename
-    # upload_file_path
-    # file_size
-    # upload_url
-    # destination_folder
+    file_path = os.path.join(destination_folder, original_filename)
 
-    # from hydroshare.utils import resource_file_add_pre_process
+    if original_filename != kwargs['filename']:
+        # rename the file
+        chunk_file_path = os.path.join(destination_folder, kwargs['filename'])
+        os.rename(chunk_file_path, file_path)
 
-    upload_file_path = kwargs['upload_file_path']
+    file_folder = ""
+    # TODO: eventually could upload to a specific folder
+    # https://github.com/alican/django-tus/issues/2
+    # create a file object for the uploaded file
+    file_obj = File(open(file_path, 'rb'), name=original_filename)
 
-    # TODO: ingest the files into irods
+    resource = hydroshare.utils.get_resource_by_shortkey(resource_id)
 
-    # get the resource object from the metadata
+    # TODO: get the request object to check the user and validate
 
-    # create file objects for each file uploaded and use the resource_file_add_pre_process to ingest
-    # the file into the resource
+    hydroshare.utils.resource_file_add_pre_process(
+        resource=resource,
+        files=[file_obj],
+        user=resource.creator,
+        folder=file_folder,
+    )
+    hydroshare.utils.resource_file_add_process(
+        resource=resource,
+        files=[file_obj],
+        user=resource.creator,
+        folder=file_folder,
+    )
