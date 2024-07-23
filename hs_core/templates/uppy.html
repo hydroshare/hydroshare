@@ -1,32 +1,30 @@
 {% load static %}
-<!doctype html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Uppy + tus-js-client demo - File Upload</title>
+
+{% block extra_head %}
     <link href="https://releases.transloadit.com/uppy/v4.0.5/uppy.min.css" rel="stylesheet">
-  </head>
-  <body>
-    <div id="uppy"></div>
-  </body>
+{% endblock %}
+
+{% block main %}
+  <h1>Upload to {{ cm.short_id }}</h1>
+  <p>Data max chunk size: {{ max_chunk_size }}</p>
+  <div id="uppy"></div>
+{% endblock %}
+
+{% block extra_js %}
   <script type="module">
     import { Uppy, Dashboard, Tus } from "https://releases.transloadit.com/uppy/v4.0.5/uppy.min.mjs"
-    // import { GoogleDrive } from "https://releases.transloadit.com/uppy/v4.0.5/uppy.min.mjs"
-    // import Uppy from '@uppy/core';
-    // import Dashboard from '@uppy/dashboard';
-    // import Tus from '@uppy/tus';
 
-    // import '@uppy/core/dist/style.min.css';
-    // import '@uppy/dashboard/dist/style.min.css';
-
-    const MAX = {{ data_upload_max|default:5242880 }};
+    const MAX = {{ max_chunk_size|default:5242880 }};
 
     new Uppy()
 
       .use(Dashboard, { inline: true, target: '#uppy' })
       .use(Tus, { 
-        endpoint: '/upload/',
+        endpoint: `/hsapi/resource/${SHORT_ID}/uppy/`,
         chunkSize: MAX,
+
+        // TODO: check quota? etc
+
         // limit: 0,
         // onBeforeUpload: (files) => {
         //   console.log('onBeforeUpload', files)
@@ -37,6 +35,5 @@
         //   return request
         // },
       })
-      // .use(GoogleDrive, { target: Dashboard, companionUrl: 'https://companion.uppy.io' })
   </script>
-</html>
+{% endblock %}

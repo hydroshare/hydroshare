@@ -244,7 +244,9 @@
         {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or resource_edit_mode %}
             {% include "resource-landing-page/coverage.html" %}
         {% endif %}
-
+        
+        {% include "uppy.html" %}
+        
         {% block content_block %}
         {# ======= Content (code moved here because django does not render blocks inside included templates) ======= #}
         {% if cm.resource_type != "ToolResource" %}

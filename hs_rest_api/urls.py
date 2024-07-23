@@ -1,4 +1,5 @@
 from django.conf.urls import url, include
+from django_tus.views import TusUpload
 
 from hs_dictionary import views as dict_views
 from hs_core import views as core_views
@@ -126,6 +127,14 @@ urlpatterns = [
     url(r'^resource/(?P<pk>[0-9a-f-]+)/ingest_metadata/$',
         ingest_metadata_files,
         name='ingest_metadata_files'),
+
+    url(r'^resource/(?P<pk>[A-z0-9]+)/uppy/$',
+        TusUpload.as_view(),
+        name='tus_upload'),
+
+    url(r'^resource/(?P<pk>[A-z0-9]+)/uppy/(?P<resource_id>[0-9a-f-]+)$',
+        TusUpload.as_view(),
+        name='tus_upload_chunks'),
 
     url(r'^resource/data-store-add-reference/$',
         data_store_add_reference_public),

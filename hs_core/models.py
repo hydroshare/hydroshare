@@ -54,6 +54,8 @@ from .hs_rdf import (HSTERMS, RDFS1, RDF_MetaData_Mixin, RDF_Term_MixIn,
                      rdf_terms)
 from .languages_iso import languages as iso_languages
 
+from django_tus.signals import tus_upload_finished_signal
+
 
 def clean_abstract(original_string):
     """Clean abstract for XML inclusion.
@@ -422,6 +424,11 @@ def page_permissions_page_processor(request, page):
     if remaining_quota is not None:
         max_file_size = min(max_file_size, remaining_quota)
 
+    max_chunk_size = max_file_size = 5 * 1024 * 1024  # 5MB
+    if hasattr(settings, 'DATA_UPLOAD_MAX_MEMORY_SIZE'):
+        max_chunk_size = settings.DATA_UPLOAD_MAX_MEMORY_SIZE
+
+
     return {
         'resource_type': cm._meta.verbose_name,
         "users_json": users_json,
@@ -435,6 +442,7 @@ def page_permissions_page_processor(request, page):
         "last_changed_by": last_changed_by,
         "max_file_size": max_file_size,
         "max_file_size_for_display": convert_file_size_to_unit(max_file_size, "GB", "MB"),
+        "max_chunk_size": max_chunk_size,
     }
 
 
@@ -5098,3 +5106,31 @@ def resource_creation_signal_handler(sender, instance, created, **kwargs):
 def resource_update_signal_handler(sender, instance, created, **kwargs):
     """Do nothing (noop)."""
     pass
+
+
+@receiver(tus_upload_finished_signal)
+def tus_upload_finished_handler(sender, **kwargs):
+    """Handle the tus upload finished signal.
+
+    Ingest the files from the TUS_DESTINATION_DIR into the resource.
+    """
+
+    # https://github.com/alican/django-tus/blob/master/django_tus/signals.py
+    # This signal provides the following keyword arguments:
+    # metadata
+    # filename
+    # upload_file_path
+    # file_size
+    # upload_url
+    # destination_folder
+
+    # from hydroshare.utils import resource_file_add_pre_process
+
+    upload_file_path = kwargs['upload_file_path']
+
+    # TODO: ingest the files into irods
+
+    # get the resource object from the metadata
+
+    # create file objects for each file uploaded and use the resource_file_add_pre_process to ingest
+    # the file into the resource
