@@ -169,7 +169,6 @@ urlpatterns += i18n_patterns(
     url(r"^apps/$", hs_core_views.apps.AppsView.as_view(), name="apps"),
 )
 
-
 # Filebrowser admin media library.
 if getattr(settings, "PACKAGE_NAME_FILEBROWSER") in settings.INSTALLED_APPS:
     urlpatterns += i18n_patterns(
