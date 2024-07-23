@@ -145,6 +145,8 @@ class CSVFileMetaData(AbstractFileMetaData):
                                     style="display: none;",
                                 )
 
+            self._get_preview_data_html()
+
         temp_cov_form = self.get_temporal_coverage_form()
         temporal_coverage = self.temporal_coverage
         spatial_cov_form = self.get_spatial_coverage_form(allow_edit=True)
@@ -184,6 +186,15 @@ class CSVFileMetaData(AbstractFileMetaData):
         template = Template(root_div.render())
         context = Context(context_dict)
         return template.render(context)
+
+    def _get_preview_data_html(self):
+        preview_div = html_tags.div(style="clear: both;")
+        with preview_div:
+            html_tags.h3("CSV Preview Data")
+            logical_file = self.logical_file
+            html_tags.textarea(logical_file.preview_data, rows=10, readonly="readonly",
+                               style="min-width: 100%; resize: vertical;")
+        return preview_div
 
 
 class CSVLogicalFile(AbstractLogicalFile):
