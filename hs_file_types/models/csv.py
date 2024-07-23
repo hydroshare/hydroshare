@@ -71,6 +71,8 @@ class CSVFileMetaData(AbstractFileMetaData):
                         # html_tags.p(f"Unit code: {unit_code}")
                         html_tags.hr()
 
+                self._get_preview_data_html()
+
             html_string += root_div.render()
 
         template = Template(html_string)
@@ -186,8 +188,8 @@ class CSVFileMetaData(AbstractFileMetaData):
 
 class CSVLogicalFile(AbstractLogicalFile):
     metadata = models.OneToOneField(CSVFileMetaData, on_delete=models.CASCADE, related_name="logical_file")
+    preview_data = models.TextField(null=False, blank=False)
     data_type = "CSV"
-
     @classmethod
     def create(cls, resource):
         # this custom method MUST be used to create an instance of this class
@@ -278,6 +280,9 @@ class CSVLogicalFile(AbstractLogicalFile):
                                                   new_files_to_upload=[],
                                                   folder_path=upload_folder)
 
+            preview_data = cls._get_preview_data(csv_temp_file)
+            logical_file.preview_data = preview_data
+            logical_file.save()
             logical_file.metadata.tableSchema = metadata
             logical_file.metadata.save()
             ft_ctx.logical_file = logical_file
