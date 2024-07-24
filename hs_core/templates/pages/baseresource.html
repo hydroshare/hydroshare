@@ -861,6 +861,9 @@
                             </div>
                             <div class="fb-content-wrapper">
                                 <div class="fb-dropzone-wrapper{% if cm.resource_type == "CompositeResource" %} ui-resizable{% endif %}">
+                                    <!-- TODO: could we have this upload be chunked with Tus protocol? -->
+                                    <!-- Dropzone allows chunking https://docs.dropzone.dev/configuration/basics/configuration-options -->
+                                    <!-- Could use https://github.com/tus/tus-js-client/blob/main/demos/browser/demo.js#L38 -->
                                     <form id="hsDropzone"
                                         class="files-container h-100 ui-widget-content {% if page.perms.change and resource_edit_mode and not cm.raccess.published_or_review_pending or current_user.is_superuser %}dropzone{% endif %}"
                                         action="/hsapi/_internal/{{ cm.short_id }}/add-files-to-resource/"

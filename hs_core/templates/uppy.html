@@ -34,7 +34,6 @@
         // TODO: check quota? etc
       }
     })
-
       .use(Dashboard, { inline: true, target: '#uppy' })
       .use(Tus, { 
         endpoint: `/hsapi/resource/${SHORT_ID}/uppy/`,
@@ -44,6 +43,10 @@
         //   console.log('onBeforeSend', request)
         //   return request
         // },
+      })
+      .on('upload-success', (file, response) => {
+        // refresh the file browser to show the file
+        refreshFileBrowser()
       })
   </script>
 {% endblock %}

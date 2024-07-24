@@ -5123,6 +5123,7 @@ def tus_upload_finished_handler(sender, **kwargs):
     destination_folder
     """
     from hs_core import hydroshare
+    logger = logging.getLogger(__name__)
     metadata = kwargs['metadata']
     destination_folder = kwargs['destination_folder']
     resource_id = metadata['resource_id']
@@ -5145,15 +5146,22 @@ def tus_upload_finished_handler(sender, **kwargs):
 
     # TODO: get the request object to check the user and validate
 
-    hydroshare.utils.resource_file_add_pre_process(
-        resource=resource,
-        files=[file_obj],
-        user=resource.creator,
-        folder=file_folder,
-    )
-    hydroshare.utils.resource_file_add_process(
-        resource=resource,
-        files=[file_obj],
-        user=resource.creator,
-        folder=file_folder,
-    )
+    try:
+        hydroshare.utils.resource_file_add_pre_process(
+            resource=resource,
+            files=[file_obj],
+            user=resource.creator,
+            folder=file_folder,
+        )
+        hydroshare.utils.resource_file_add_process(
+            resource=resource,
+            files=[file_obj],
+            user=resource.creator,
+            folder=file_folder,
+        )
+        # remove the uploaded file
+        os.remove(file_path)
+    except (hydroshare.utils.ResourceFileSizeException,
+            hydroshare.utils.ResourceFileValidationException,
+            Exception) as ex:
+        logger.error(ex)
