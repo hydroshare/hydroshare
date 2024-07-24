@@ -245,9 +245,6 @@
             {% include "resource-landing-page/coverage.html" %}
         {% endif %}
         
-        <!-- TODO: embed this in a modal or similar -->
-        {% include "uppy.html" %}
-        
         {% block content_block %}
         {# ======= Content (code moved here because django does not render blocks inside included templates) ======= #}
         {% if cm.resource_type != "ToolResource" %}
@@ -896,8 +893,12 @@
                                             {% if max_file_size > 0 %}
                                                 <div class="fb-upload-caption">
                                                     <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;
-                                                    Upload files smaller than {{ max_file_size_for_display|floatformat:"0" }}GB in size by dragging & dropping, or click 
-                                                    <a class="dz-clickable upload-toggle">here</a> to select them. Uploads > 1GB are still in beta. Uploads are not resumable.
+                                                    Upload files smaller than {{ max_file_size_for_display|floatformat:"0" }}GB in size by dragging & dropping. Uploads > 1GB are still in beta.
+                                                    <br>
+                                                    Alternatively, you can conduct a resumable upload using
+                                                    <a type="button" data-toggle="modal" data-dismiss="modal" data-target="#uppy-modal"
+                                                    class="btn btn-success btn-xs dz-clickable">Uppy
+                                                 </a>
                                                 </div>
                                             {% endif %}
                                         {% endif %}
@@ -973,6 +974,9 @@
             </div>
         {% endif %}
         {% endblock %} {# content_block #}
+            
+        {# ======= Uppy for large file upload ======= #}
+        {% include "uppy.html" %}
 
         {# ======= Data Services ======= #}
         {% if data_services_urls.wms_url or data_services_urls.wfs_url or data_services_urls.wcs_url or data_services_urls.thredds_url %}
