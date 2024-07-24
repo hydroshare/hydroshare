@@ -649,71 +649,82 @@ OAUTH2_PROVIDER = {
 # LOGGING SETTINGS #
 ####################
 
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "verbose": {
-            "format": "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
-            "datefmt": "%d/%b/%Y %H:%M:%S",
+# Using Google Cloud Logging will format logs in a structured way that can be parsed by Google Cloud Logging
+USE_CLOUD_LOGGING = False
+
+if USE_CLOUD_LOGGING:
+    import google.cloud.logging as gcloud_logging
+    from google.cloud.logging_v2.handlers import setup_logging
+
+    client = gcloud_logging.Client()
+    handler = gcloud_logging.handlers.StructuredLogHandler()
+    setup_logging(handler)
+else:
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "verbose": {
+                "format": "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+                "datefmt": "%d/%b/%Y %H:%M:%S",
+            },
+            "simple": {
+                "format": "[%(asctime)s] %(levelname)s %(message)s",
+                "datefmt": "%d/%b/%Y %H:%M:%S",
+            },
         },
-        "simple": {
-            "format": "[%(asctime)s] %(levelname)s %(message)s",
-            "datefmt": "%d/%b/%Y %H:%M:%S",
+        "handlers": {
+            "djangolog": {
+                "level": "DEBUG",
+                "class": "logging.handlers.RotatingFileHandler",
+                "filename": "/hydroshare/log/django.log",
+                "formatter": "verbose",
+                "maxBytes": 1024 * 1024 * 15,  # 15MB
+                "backupCount": 10,
+            },
+            "hydrosharelog": {
+                "level": "DEBUG",
+                "class": "logging.handlers.RotatingFileHandler",
+                "filename": "/hydroshare/log/hydroshare.log",
+                "formatter": "verbose",
+                "maxBytes": 1024 * 1024 * 15,  # 15MB
+                "backupCount": 10,
+            },
+            "celerylog": {
+                "level": "DEBUG",
+                "class": "logging.handlers.RotatingFileHandler",
+                "filename": "/hydroshare/log/celery.log",
+                "formatter": "verbose",
+                "maxBytes": 1024 * 1024 * 15,  # 15MB
+                "backupCount": 10,
+            },
         },
-    },
-    "handlers": {
-        "djangolog": {
-            "level": "DEBUG",
-            "class": "logging.handlers.RotatingFileHandler",
-            "filename": "/hydroshare/log/django.log",
-            "formatter": "verbose",
-            "maxBytes": 1024 * 1024 * 15,  # 15MB
-            "backupCount": 10,
+        "loggers": {
+            "django": {
+                "handlers": ["djangolog"],
+                "propagate": False,
+                "level": "DEBUG",
+            },
+            # https://docs.djangoproject.com/en/1.11/topics/logging/#django-template
+            "django.template": {
+                "handlers": ["djangolog"],
+                "level": "INFO",
+                "propagate": False,
+            },
+            "django.db.backends": {
+                "handlers": ["djangolog"],
+                "level": "WARNING",
+                "propagate": False,
+            },
+            "celery": {
+                "handlers": ["celerylog"],
+                "level": "WARNING",
+                "propagate": False,
+            },
+            # Catch-all logger for HydroShare apps
+            "": {"handlers": ["hydrosharelog"], "propagate": False, "level": "DEBUG"},
         },
-        "hydrosharelog": {
-            "level": "DEBUG",
-            "class": "logging.handlers.RotatingFileHandler",
-            "filename": "/hydroshare/log/hydroshare.log",
-            "formatter": "verbose",
-            "maxBytes": 1024 * 1024 * 15,  # 15MB
-            "backupCount": 10,
-        },
-        "celerylog": {
-            "level": "DEBUG",
-            "class": "logging.handlers.RotatingFileHandler",
-            "filename": "/hydroshare/log/celery.log",
-            "formatter": "verbose",
-            "maxBytes": 1024 * 1024 * 15,  # 15MB
-            "backupCount": 10,
-        },
-    },
-    "loggers": {
-        "django": {
-            "handlers": ["djangolog"],
-            "propagate": False,
-            "level": "DEBUG",
-        },
-        # https://docs.djangoproject.com/en/1.11/topics/logging/#django-template
-        "django.template": {
-            "handlers": ["djangolog"],
-            "level": "INFO",
-            "propagate": False,
-        },
-        "django.db.backends": {
-            "handlers": ["djangolog"],
-            "level": "WARNING",
-            "propagate": False,
-        },
-        "celery": {
-            "handlers": ["celerylog"],
-            "level": "WARNING",
-            "propagate": False,
-        },
-        # Catch-all logger for HydroShare apps
-        "": {"handlers": ["hydrosharelog"], "propagate": False, "level": "DEBUG"},
-    },
-}
+    }
 
 # hs_tracking settings
 TRACKING_SESSION_TIMEOUT = 60 * 15

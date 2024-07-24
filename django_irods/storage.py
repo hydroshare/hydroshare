@@ -324,7 +324,7 @@ class IrodsStorage(Storage):
             resc_query = " AND DATA_RESC_NAME = '{}'".format(single_resc_for_query)
         else:
             resc_query = ""
-            logger.error(
+            logger.warning(
                 "settings.IRODS_SINGLE_RESC_FOR_QUERY not set. "
                 "The resulting size might not be accurate if the file is replicated."
             )
@@ -424,7 +424,7 @@ class IrodsStorage(Storage):
             resc_query = " AND DATA_RESC_NAME = '{}'".format(single_resc_for_query)
         else:
             resc_query = ""
-            logger.error(
+            logger.warning(
                 "settings.IRODS_SINGLE_RESC_FOR_QUERY not set. "
                 "The resulting size might not be accurate if the file is replicated."
             )
