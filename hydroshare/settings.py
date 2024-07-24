@@ -324,7 +324,7 @@ MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))
 ENABLE_STATIC_CLOUD_STORAGE = False
 # Whether to use Google Cloud Storage for static files
 # Settings documented here: https://django-storages.readthedocs.io/en/latest/backends/gcloud.html#settings
-# By default, this is set to False, and static files are served from the local filesystem / nginx
+# By default, this is set to False, and static files are served from the local filesystem
 # To enable Google Cloud Storage, the following settings should be added to local_settings.py
 # Additionally, a google service account json file should be placed at the root of the project
 # Service account should have permissions to write to the bucket
@@ -737,9 +737,6 @@ TRACKING_PROFILE_FIELDS = [
     "country",
 ]
 TRACKING_USER_FIELDS = ["username", "email", "first_name", "last_name"]
-
-# info django that a reverse proxy sever (nginx) is handling ssl/https for it
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 # Content Security Policy

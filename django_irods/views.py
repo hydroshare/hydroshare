@@ -28,14 +28,13 @@ from hs_file_types.enums import AggregationMetaFilePath
 logger = logging.getLogger(__name__)
 
 
-def download(request, path, use_async=True, use_reverse_proxy=True,
+def download(request, path, use_async=True,
              *args, **kwargs):
     """ perform a download request, either asynchronously or synchronously
 
     :param request: the request object.
     :param path: the path of the thing to be downloaded.
     :param use_async: True means to utilize asynchronous creation of objects to download.
-    :param use_reverse_proxy: True means to utilize NGINX reverse proxy for streaming.
 
     The following variables are computed:
 
@@ -320,46 +319,6 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
                                download_file_name=download_file_name,
                                file_size=flen,
                                request=request)
-
-    # Allow reverse proxy if request was forwarded by nginx (HTTP_X_DJANGO_REVERSE_PROXY='true')
-    # and reverse proxy is possible according to configuration (SENDFILE_ON=True)
-    # and reverse proxy isn't overridden by user (use_reverse_proxy=True).
-
-    if use_reverse_proxy and getattr(settings, 'SENDFILE_ON', False) and \
-       'HTTP_X_DJANGO_REVERSE_PROXY' in request.META:
-
-        # The NGINX sendfile abstraction is invoked as follows:
-        # 1. The request to download a file enters this routine via the /rest_download or /download
-        #    url in ./urls.py. It is redirected here from Django. The URI contains either the
-        #    unqualified resource path or the federated resource path, depending upon whether
-        #    the request is local or federated.
-        # 2. This deals with unfederated resources by redirecting them to the uri
-        #    /irods-data/{resource-id}/... on nginx. This URI is configured to read the file
-        #    directly from the iRODS vault via NFS, and does not work for direct access to the
-        #    vault due to the 'internal;' declaration in NGINX.
-        # 3. If there is no vault available for the resource, the file is transferred without
-        #    NGINX, exactly as it was transferred previously.
-
-        # stop NGINX targets that are non-existent from hanging forever.
-        if not istorage.exists(irods_output_path):
-            content_msg = "file path {} does not exist in iRODS".format(output_path)
-            response = HttpResponse(status=404)
-            response.content = content_msg
-            return response
-
-        # track download count
-        res.update_download_count()
-        # invoke X-Accel-Redirect on physical vault file in nginx
-        response = HttpResponse(content_type=mtype)
-        filename = output_path.split('/')[-1]
-        filename = urllib.parse.quote(filename)
-        response['Content-Disposition'] = 'attachment; filename="{name}"'.format(name=filename)
-        response['Content-Length'] = flen
-        response['X-Accel-Redirect'] = '/'.join([
-            getattr(settings, 'IRODS_DATA_URI', '/irods-data'), output_path])
-        if not settings.DEBUG:
-            logger.debug("Reverse proxying local {}".format(response['X-Accel-Redirect']))
-        return response
 
     # if we get here, none of the above conditions are true
     # if reverse proxy is enabled, then this is because the resource is remote and federated
