@@ -49,6 +49,9 @@
       })
       .use(Tus, { 
         endpoint: '/hsapi/tus/',
+        // https://uppy.io/docs/tus/#chunksize
+        // it is not recommended to set the chunk size
+        // however in testing it seems to improve resumability
         chunkSize: MAX_CHUNK, // in bytes
 
         // onBeforeSend: (request) => {
