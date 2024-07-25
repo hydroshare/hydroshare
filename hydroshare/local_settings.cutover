@@ -100,7 +100,6 @@ IRODS_ICOMMANDS_PATH = '/usr/bin'
 IRODS_HOST = 'hydrotest41.renci.org'
 IRODS_PORT = '1247'
 IRODS_DEFAULT_RESOURCE = 'hydrotest41Resc'
-IRODS_SINGLE_RESC_FOR_QUERY='hydrotest41Resc'
 IRODS_HOME_COLLECTION = '/hydrotest41Zone/home/hsproxy'
 IRODS_CWD = '/hydrotest41Zone/home/hsproxy'
 IRODS_ZONE = 'hydrotest41Zone'
@@ -154,9 +153,6 @@ TIME_ZONE = "Etc/UTC"
 MAILCHIMP_ACTIVE_SUBSCRIBERS = "e210a70864"
 MAILCHIMP_SUBSCRIBERS = "f0c27254e3"
 
-# sendfile support for large files
-# These must match settings in nginx
-SENDFILE_ON = False
 # IRODS_USER_URI = "/irods-user"
 IRODS_DATA_URI = "/irods-data"
 LOCAL_CACHE_URI = "/local-cache"

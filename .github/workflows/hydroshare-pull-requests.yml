@@ -32,10 +32,6 @@ jobs:
       run: |
         printf "%s\n" c | ./local-dev-first-start-only.sh
 
-    - name: Start HydroShare
-      run: |
-        docker-compose -f local-dev.yml up -d
-        sleep 60
 
     - name: Run HydroShare Tests
       run: |
