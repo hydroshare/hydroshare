@@ -236,6 +236,9 @@ FILE_UPLOAD_TEMP_DIR = "/tmp"
 
 FILE_UPLOAD_MAX_SIZE = 10 * 1024  # MB
 
+# https://docs.djangoproject.com/en/3.2/ref/settings/#data-upload-max-memory-size
+DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # Bytes
+
 #############
 # DATABASES #
 #############

@@ -424,9 +424,10 @@ def page_permissions_page_processor(request, page):
     if remaining_quota is not None:
         max_file_size = min(max_file_size, remaining_quota)
 
-    max_chunk_size = max_file_size  # in MB
+    # https://docs.djangoproject.com/en/3.2/ref/settings/#data-upload-max-memory-size
+    max_chunk_size_mb = 2.5  # mb
     if hasattr(settings, 'DATA_UPLOAD_MAX_MEMORY_SIZE'):
-        max_chunk_size = settings.DATA_UPLOAD_MAX_MEMORY_SIZE
+        max_chunk_size_mb = settings.DATA_UPLOAD_MAX_MEMORY_SIZE / 1024 / 1024  # convert to MB
 
     return {
         'resource_type': cm._meta.verbose_name,
@@ -441,7 +442,7 @@ def page_permissions_page_processor(request, page):
         "last_changed_by": last_changed_by,
         "max_file_size": max_file_size,
         "max_file_size_for_display": convert_file_size_to_unit(max_file_size, "GB", "MB"),
-        "max_chunk_size": max_chunk_size,
+        "max_chunk_size_mb": max_chunk_size_mb,
     }
 
 
