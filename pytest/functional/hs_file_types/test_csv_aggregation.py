@@ -113,6 +113,60 @@ def test_create_csv_aggregation_2(composite_resource):
 
 
 @pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize("delimiter", ["comma", "tab", "semi-colon"])
+def test_create_csv_aggregation_3(composite_resource, delimiter):
+    # here we are testing that we can create a CSV file type aggregation from a csv file that
+    # is part of a resource
+    # the csv file has one of the three types of supported delimiters and has all 4 types of data
+
+    res, user = composite_resource
+
+    if delimiter == "comma":
+        file_name = "csv_comma_separated_with_all_data_types.csv"
+    elif delimiter == "tab":
+        file_name = "csv_tab_separated_with_all_data_types.csv"
+    else:
+        file_name = "csv_semicolon_separated_with_all_data_types.csv"
+
+    # upload a csv file to the resource
+    res_file = _upload_csv_file(res, file_name)
+
+    # check there are no CSV file type logical files
+    assert CSVLogicalFile.objects.count() == 0
+
+    # set the uploaded csv file to be part of a csv aggregation
+    CSVLogicalFile.set_file_type(res, user, res_file.id)
+
+    # test that we have one logical file of type CSV
+    assert CSVLogicalFile.objects.count() == 1
+    csv_aggr = CSVLogicalFile.objects.first()
+
+    # check extracted metadata
+    metadata = csv_aggr.metadata
+    assert metadata.tableSchema is not None
+    table_schema = metadata.tableSchema
+    csv_meta_schema_model = CSVMetaSchemaModel(**table_schema)
+    assert csv_meta_schema_model.rows == 6
+    assert len(csv_meta_schema_model.columns) == 5
+
+    # check column properties
+    for col_number, col in enumerate(csv_meta_schema_model.columns, start=1):
+        # check that the column headers are there
+        assert col.titles
+
+        assert not col.description
+        assert not col.unitCode
+        if col_number == 1:
+            assert col.datatype == "string"
+        elif col_number in (3, 4):
+            assert col.datatype == "number"
+        elif col_number == 2:
+            assert col.datatype == "datetime"
+        else:
+            assert col.datatype == "boolean"
+
+
+@pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize("use_csv_with_missing_data", [True, False])
 def test_create_csv_aggregation_column_data_types(composite_resource, use_csv_with_missing_data):
     # here we are testing that we can create a CSV file type aggregation from a csv file that

@@ -201,6 +201,7 @@ class CSVLogicalFile(AbstractLogicalFile):
     metadata = models.OneToOneField(CSVFileMetaData, on_delete=models.CASCADE, related_name="logical_file")
     preview_data = models.TextField(null=False, blank=False)
     data_type = "CSV"
+
     @classmethod
     def create(cls, resource):
         # this custom method MUST be used to create an instance of this class
@@ -248,8 +249,8 @@ class CSVLogicalFile(AbstractLogicalFile):
 
     @staticmethod
     def get_csv_allowed_delimiters():
-        # only comma or semi-colon as delimiter is considered a valid csv file
-        return [',', ';']
+        # only comma, tab or semi-colon as delimiter is considered a valid csv file
+        return ['\t', ',', ';']
 
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path=''):
@@ -323,26 +324,27 @@ class CSVLogicalFile(AbstractLogicalFile):
     @classmethod
     def _get_rows_count(cls, csv_file_path: str) -> tuple[int, str]:
         # we have to read the whole file chunk by chunk to get the total number of rows
-        # reading the whole file at once may cause memory issues if the file is large
+        # reading the whole file at once may cause memory issues if the file is too big
         # for finding the number of rows, we could have just loaded the first column for the chunk instead of all
         # the columns. However, to detect parsing errors (to detect invalid csv file), we have to load data
         # for all columns.
 
         def check_for_non_comment_text(delimiter=','):
             # check if there is non-comment text line (line that doesn't start with #) in the file
-            assert delimiter in cls.get_csv_allowed_delimiters()
 
             with open(csv_file_path, 'r') as csv_file:
                 reader = csv.reader(csv_file, delimiter=delimiter)
                 # to handle the edge case when there is only one column in the csv file
-                one_column_data = False
+                _one_column_data = False
 
                 line_count = 0
                 _MAX_LINES_TO_READ = 5
-                has_matching_delimiter = False
+                _has_matching_delimiter = False
+                maybe_invalid_csv = False
+
                 for row in reader:
                     # skip line starting with # or empty line
-                    if (len(row) == 1 and row[0].startswith("#")) or len(row) == 0:
+                    if row[0].startswith("#") or len(row) == 0:
                         continue
                     line_count += 1
 
@@ -351,32 +353,41 @@ class CSVLogicalFile(AbstractLogicalFile):
                     # if there is a comment character in the row, pandas will drop anything after the
                     # comment character for that row - this will mess up the whole dataframe structure
                     # resulting very bad metadata as part of the metadata extraction
-                    for col in row:
-                        if "#" in col:
-                            raise pd.errors.ParserError(
-                                "Invalid CSV file. Found comment character '#' in a non-comment row"
-                            )
+                    if any(col for col in row if "#" in col):
+                        raise pd.errors.ParserError(
+                            "Invalid CSV file. Found comment character '#' in a non-comment row"
+                        )
 
-                    if len(row) > 1 and one_column_data:
+                    if len(row) > 1 and _one_column_data:
                         raise pd.errors.ParserError("Invalid CSV file. Contains non-comment text")
                     elif len(row) == 1:
-                        has_matching_delimiter = False
+                        _has_matching_delimiter = False
                         if len(row[0].split()) > 1:
-                            _error_msg = ("Invalid CSV file. Contains non-comment text - possibly space delimiter"
-                                          " used instead of comma or semicolon")
-                            raise pd.errors.ParserError(_error_msg)
-                        one_column_data = True
+                            maybe_invalid_csv = True
+                        else:
+                            _one_column_data = True
                     elif len(row) > 1:
-                        has_matching_delimiter = True
+                        _has_matching_delimiter = True
 
                     if line_count > _MAX_LINES_TO_READ:
                         break
-            return has_matching_delimiter
 
-        has_comma_delimiter = check_for_non_comment_text()
-        if not has_comma_delimiter:
-            # try using semicolon
-            check_for_non_comment_text(delimiter=';')
+            if maybe_invalid_csv and _has_matching_delimiter:
+                _err_msg = ("Invalid CSV file. Contains non-comment text - possibly space delimiter"
+                            " used instead of comma, semicolon, or tab")
+                raise pd.errors.ParserError(_err_msg)
+
+            return _has_matching_delimiter, _one_column_data
+
+        for _delimiter in cls.get_csv_allowed_delimiters():
+            has_matching_delimiter, one_column_data = check_for_non_comment_text(delimiter=_delimiter)
+            if has_matching_delimiter:
+                break
+            if _delimiter == ';' and one_column_data:
+                break
+        else:
+            err_msg = "Invalid CSV file. No matching delimiter found - comma, semicolon, or tab"
+            raise pd.errors.ParserError(err_msg)
 
         # number of rows to read at one time
         _CHUNK_SIZE = 1000
@@ -463,17 +474,15 @@ class CSVLogicalFile(AbstractLogicalFile):
             _MAX_LINES_TO_READ = 10
             line = csvfile.readline()
             line_count = 1
-            while line:
+            while line and line_count < _MAX_LINES_TO_READ:
                 if not line.startswith("#") and ''.join(line).strip():
                     position = csvfile.tell() - len(line) - 1  # Adjust for the newline character
                     break
 
                 line = csvfile.readline()
                 line_count += 1
-                if line_count > _MAX_LINES_TO_READ:
-                    break
 
-            if line and line_count <= _MAX_LINES_TO_READ:
+            if line:
                 if position < 0:
                     position = 0
                 csvfile.seek(position)
@@ -510,6 +519,7 @@ class CSVLogicalFile(AbstractLogicalFile):
         """
         assert data_type in ("unknown", "string", "number", "boolean", "datetime")
 
+        _DELIMITER = '|'.join(cls.get_csv_allowed_delimiters())
         passed_data_type = data_type
         if data_type in ("unknown", "string"):
             return
@@ -520,7 +530,7 @@ class CSVLogicalFile(AbstractLogicalFile):
         elif data_type == "datetime":
             data_type = pd.to_datetime
 
-        df = pd.read_csv(csv_file_path, comment='#', usecols=[column_index], engine='python')
+        df = pd.read_csv(csv_file_path, comment='#', usecols=[column_index], engine='python', sep=_DELIMITER)
 
         # drop any rows with null values in the column
         df = df.dropna(how='all')
@@ -554,7 +564,8 @@ class CSVLogicalFile(AbstractLogicalFile):
             # this can raise ValueError if the data type is not valid for all data in the column
             print(f">> Applying data type: {passed_data_type} to column: {column_index}", flush=True)
             if passed_data_type == "datetime":
-                df.iloc[:, 0] = pd.to_datetime(df.iloc[:, 0], errors='raise', infer_datetime_format=True)
+                df.iloc[:, 0] = pd.to_datetime(df.iloc[:, 0], errors='raise', infer_datetime_format=True,
+                                               format='mixed')
             else:
                 df.iloc[:, 0] = df.iloc[:, 0].apply(data_type)
 
@@ -693,7 +704,7 @@ class CSVLogicalFile(AbstractLogicalFile):
             csv_preview_data = ""
 
             line = csvfile.readline()
-            while line:
+            while line and line_count <= _MAX_LINES_TO_READ:
                 csv_preview_data += line
                 if not line.startswith("#") and ''.join(line).strip():
                     data_line_count += 1
@@ -701,8 +712,6 @@ class CSVLogicalFile(AbstractLogicalFile):
                         break
                 line = csvfile.readline()
                 line_count += 1
-                if line_count > _MAX_LINES_TO_READ:
-                    break
 
             return csv_preview_data
 
