@@ -1,5 +1,5 @@
 from django.conf.urls import url, include
-from django_tus.views import TusUpload
+from django.urls import path
 
 from hs_dictionary import views as dict_views
 from hs_core import views as core_views
@@ -128,14 +128,6 @@ urlpatterns = [
         ingest_metadata_files,
         name='ingest_metadata_files'),
 
-    url(r'^resource/(?P<pk>[A-z0-9]+)/uppy/$',
-        TusUpload.as_view(),
-        name='tus_upload'),
-
-    url(r'^resource/(?P<pk>[A-z0-9]+)/uppy/(?P<resource_id>[0-9a-f-]+)$',
-        TusUpload.as_view(),
-        name='tus_upload_chunks'),
-
     url(r'^resource/data-store-add-reference/$',
         data_store_add_reference_public),
 
@@ -261,4 +253,6 @@ urlpatterns = [
     url(r'^resource/(?P<resource_id>[0-9a-f]+)/modelinstance/meta/(?P<aggregation_path>.*)$',
         file_type_views.model_instance_metadata_in_json,
         name='model_instance_metadata_in_json'),
+    path("tus/", core_views.resource_rest_api.CustomTusUpload.as_view(), name='tus_upload'),
+    path("tus/<uuid:resource_id>", core_views.resource_rest_api.CustomTusUpload.as_view(), name='tus_upload_chunks'),
 ]

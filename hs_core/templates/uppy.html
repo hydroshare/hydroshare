@@ -37,7 +37,7 @@
         Object.keys(updatedFiles).forEach(fileId => {
           updatedFiles[fileId].meta = 
           { 
-            resource_id: "{{ cm.short_id }}",
+            hs_res_id: "{{ cm.short_id }}",
             original_file_name: updatedFiles[fileId].name,
           }
         })
@@ -47,7 +47,7 @@
     })
       .use(Dashboard, { inline: true, target: '#uppy' })
       .use(Tus, { 
-        endpoint: `/hsapi/resource/${SHORT_ID}/uppy/`,
+        endpoint: '/hsapi/tus/',
         chunkSize: MAX,
 
         // onBeforeSend: (request) => {

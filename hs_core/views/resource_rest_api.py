@@ -21,6 +21,7 @@ from rest_framework.request import Request
 from rest_framework.exceptions import ValidationError, NotAuthenticated, PermissionDenied, NotFound
 
 from django_irods.icommands import SessionException
+from django_tus.views import TusUpload
 from hs_core import hydroshare
 from hs_core.models import AbstractResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_types, \
@@ -881,3 +882,8 @@ def _validate_metadata(metadata_list):
         if k.lower() in ('title', 'subject', 'description', 'publisher', 'format', 'date', 'type'):
             err_message = err_message.format(k.lower())
             raise ValidationError(detail=err_message)
+
+
+class CustomTusUpload(TusUpload):
+    # TODO: check auth for these endpoints
+    pass

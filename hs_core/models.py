@@ -5126,7 +5126,7 @@ def tus_upload_finished_handler(sender, **kwargs):
     logger = logging.getLogger(__name__)
     metadata = kwargs['metadata']
     destination_folder = kwargs['destination_folder']
-    resource_id = metadata['resource_id']
+    hs_res_id = metadata['hs_res_id']
     original_filename = metadata['original_file_name']
 
     file_path = os.path.join(destination_folder, original_filename)
@@ -5142,7 +5142,7 @@ def tus_upload_finished_handler(sender, **kwargs):
     # create a file object for the uploaded file
     file_obj = File(open(file_path, 'rb'), name=original_filename)
 
-    resource = hydroshare.utils.get_resource_by_shortkey(resource_id)
+    resource = hydroshare.utils.get_resource_by_shortkey(hs_res_id)
 
     # TODO: get the request object to check the user and validate
 
