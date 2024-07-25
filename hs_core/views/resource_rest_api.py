@@ -9,7 +9,7 @@ import json
 from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousFileOperation
 from django.core.exceptions import ValidationError as CoreValidationError
-from django.http import HttpResponseRedirect, HttpResponseForbidden
+from django.http import HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotFound
 from django.shortcuts import redirect
 from django.contrib.sites.models import Site
 from django.views.decorators.csrf import csrf_exempt
@@ -896,9 +896,16 @@ class CustomTusUpload(TusUpload):
         if not metadata:
             # get the tus resource_id from the request
             tus_resource_id = self.kwargs['resource_id']
-            tus_file = TusFile(str(tus_resource_id))
-            # get the resource id from the tus metadata
-            metadata = tus_file.metadata
+            try:
+                tus_file = TusFile(str(tus_resource_id))
+                # get the resource id from the tus metadata
+                metadata = tus_file.metadata
+            except Exception as ex:
+                err_msg = f"Error in getting metadata for the tus upload: {str(ex)}"
+                logger.error(err_msg)
+                # https://tus.io/protocols/resumable-upload#head
+                # return a 404 not found response
+                return HttpResponseNotFound(err_msg)
 
         # get the hydroshare resource id from the metadata
         hs_res_id = metadata.get('hs_res_id')
@@ -911,4 +918,3 @@ class CustomTusUpload(TusUpload):
             return HttpResponseForbidden()
 
         return super(CustomTusUpload, self).dispatch(*args, **kwargs)
-    pass
