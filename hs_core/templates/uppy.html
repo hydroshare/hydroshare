@@ -5,20 +5,7 @@
 {% endblock %}
 
 {% block main %}
-  <div class="modal fade" id="uppy-modal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title">Upload to {{ cm.short_id }}</h4>
-            </div>
-            <div class="modal-body">
-              <p>Data max chunk size: {{ max_chunk_size }}</p>
-              <div id="uppy"></div>
-            </div>
-        </div>
-    </div>
-  </div>
+  <div id="uppy"></div>
 {% endblock %}
 
 {% block extra_js %}
@@ -33,19 +20,15 @@
       // debug: true,
       withCredentials: true,
       onBeforeUpload: (files) => {
-        const updatedFiles = Object.assign({}, files)
-        Object.keys(updatedFiles).forEach(fileId => {
-          updatedFiles[fileId].meta = 
-          { 
-            hs_res_id: "{{ cm.short_id }}",
-            original_file_name: updatedFiles[fileId].name,
-          }
+        Object.keys(files).forEach(fileId => {
+          files[fileId].meta.hs_res_id = "{{ cm.short_id }}"
+          files[fileId].meta.original_file_name = files[fileId].name
         })
-        return updatedFiles
+        return files
         // TODO: check quota? etc
       }
     })
-      .use(Dashboard, { inline: true, target: '#uppy' })
+      .use(Dashboard, { inline: false, target: '#uppy', trigger: '#uppy-modal-trigger' })
       .use(Tus, { 
         endpoint: '/hsapi/tus/',
         chunkSize: MAX,
