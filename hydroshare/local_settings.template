@@ -208,13 +208,3 @@ DEFAULT_AUTHENTICATION_CLASSES = (
 # the user will be redirected to auth.cuahsi.io to choose if they want to logout of SSO
 # OIDC_OP_LOGOUT_URL_METHOD = 'hs_core.authentication.provider_logout'
 # OIDC_STORE_ID_TOKEN = True
-
-FILE_UPLOAD_MAX_SIZE = 10 * 1024  # MB
-
-# https://docs.djangoproject.com/en/3.2/ref/settings/#data-upload-max-memory-size
-DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # Bytes
-
-TUS_UPLOAD_DIR = os.path.join(BASE_DIR, 'tus_upload')
-TUS_DESTINATION_DIR = os.path.join(BASE_DIR, 'tus_complete')
-TUS_FILE_NAME_FORMAT = 'increment'  # Other options are: 'random-suffix', 'random', 'keep'
-TUS_EXISTING_FILE = 'error'  # Other options are: 'overwrite',  'error', 'rename'
