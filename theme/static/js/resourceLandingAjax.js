@@ -777,6 +777,8 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
         },
         success: function (result) {
             var files = result.files;
+            // export the files to the global scope for use in other functions
+            window.fbFiles = files;
             var folders = result.folders;
             var can_be_public = result.can_be_public;
             const mode = $("#hs-file-browser").attr("data-mode");

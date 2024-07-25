@@ -23,7 +23,7 @@
       MAX_CHUNK = MAX_FILE_SIZE;
     }
 
-    new Uppy({
+    let uppy = new Uppy({
       id: 'uppy', 
       // autoProceed: true,
       // debug: true,
@@ -37,7 +37,19 @@
           files[fileId].meta.original_file_name = files[fileId].name
         })
         return files
-      }
+      },
+      onBeforeFileAdded: (currentFile, files) => {
+        // https://uppy.io/docs/uppy/#onbeforefileaddedfile-files
+        // check for existing files before adding to the resource
+        // window.fbFiles is set in the file_browser.html template
+        if (window.fbFiles) {
+          const existingFiles = window.fbFiles.map(f => f.name)
+          if (existingFiles.includes(currentFile.name)) {
+            uppy.info(`File ${currentFile.name} already exists in the resource. Remove or rename.`)
+            return false
+          }
+        }
+      },
     })
       .use(Dashboard, { 
         inline: false,
@@ -53,11 +65,6 @@
         // it is not recommended to set the chunk size
         // however in testing it seems to improve resumability
         chunkSize: MAX_CHUNK, // in bytes
-
-        // onBeforeSend: (request) => {
-        //   console.log('onBeforeSend', request)
-        //   return request
-        // },
       })
       .on('upload-success', (file, response) => {
         // refresh the file browser to show the file
