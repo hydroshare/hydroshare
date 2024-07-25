@@ -12,12 +12,24 @@
   <script type="module">
     import { Uppy, Dashboard, Tus } from "https://releases.transloadit.com/uppy/v4.0.5/uppy.min.mjs"
 
-    const MAX = {{ max_chunk_size|default:5242880 }};
+    const MAX_CHUNK_MB = {{ max_chunk_size|default:10240 }};
+    const MAX_FILE_SIZE_MB = {{ max_file_size|default:10240 }};
+
+    let MAX_CHUNK = MAX_CHUNK_MB * 1024 * 1024; // in bytes
+    const MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024; // in bytes
+
+    // Make sure the chunk size is not larger than the max file size
+    if (MAX_CHUNK > MAX_FILE_SIZE) {
+      MAX_CHUNK = MAX_FILE_SIZE;
+    }
 
     new Uppy({
       id: 'uppy', 
       // autoProceed: true,
       // debug: true,
+      restrictions: {
+        maxFileSize: MAX_FILE_SIZE,
+      },
       withCredentials: true,
       onBeforeUpload: (files) => {
         Object.keys(files).forEach(fileId => {
@@ -25,13 +37,19 @@
           files[fileId].meta.original_file_name = files[fileId].name
         })
         return files
-        // TODO: check quota? etc
       }
     })
-      .use(Dashboard, { inline: false, target: '#uppy', trigger: '#uppy-modal-trigger' })
+      .use(Dashboard, { 
+        inline: false,
+        closeModalOnClickOutside: true,
+        fileManagerSelectionType: 'both',
+        target: '#uppy',
+        trigger: '#uppy-modal-trigger',
+        note: `Max file size: ${MAX_FILE_SIZE_MB / 1024 } GB`,
+      })
       .use(Tus, { 
         endpoint: '/hsapi/tus/',
-        chunkSize: MAX,
+        chunkSize: MAX_CHUNK,
 
         // onBeforeSend: (request) => {
         //   console.log('onBeforeSend', request)

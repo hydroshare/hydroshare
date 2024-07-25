@@ -893,9 +893,9 @@
                                             {% if max_file_size > 0 %}
                                                 <div class="fb-upload-caption">
                                                     <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;
-                                                    Upload files smaller than {{ max_file_size_for_display|floatformat:"0" }}GB in size by dragging & dropping. Uploads > 1GB are still in beta.
+                                                    Upload files up to {{ max_file_size_for_display|floatformat:"0" }}GB in size by dragging & dropping.
                                                     <br>
-                                                    Alternatively, you can conduct a resumable upload using
+                                                    For large files, or if your connection is slow, you can conduct a resumable upload using
                                                     <a type="button" id="uppy-modal-trigger" class="btn btn-success btn-xs dz-clickable">Uppy
                                                  </a>
                                                 </div>

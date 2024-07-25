@@ -419,12 +419,12 @@ def page_permissions_page_processor(request, page):
     if hasattr(settings, 'FILE_UPLOAD_MAX_SIZE'):
         max_file_size = settings.FILE_UPLOAD_MAX_SIZE
     else:
-        max_file_size = 5120  # default to 5MB
+        max_file_size = 10240  # default to 10GB
     remaining_quota = get_remaining_user_quota(cm.quota_holder, "MB")
     if remaining_quota is not None:
         max_file_size = min(max_file_size, remaining_quota)
 
-    max_chunk_size = max_file_size = 5 * 1024 * 1024  # 5MB
+    max_chunk_size = max_file_size  # in MB
     if hasattr(settings, 'DATA_UPLOAD_MAX_MEMORY_SIZE'):
         max_chunk_size = settings.DATA_UPLOAD_MAX_MEMORY_SIZE
 
@@ -5143,8 +5143,6 @@ def tus_upload_finished_handler(sender, **kwargs):
     file_obj = File(open(file_path, 'rb'), name=original_filename)
 
     resource = hydroshare.utils.get_resource_by_shortkey(hs_res_id)
-
-    # TODO: get the request object to check the user and validate
 
     try:
         hydroshare.utils.resource_file_add_pre_process(
