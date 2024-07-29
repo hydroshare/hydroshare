@@ -1,16 +1,16 @@
+import concurrent.futures
 import csv
 import logging
 import os
-import time
 from typing import Optional, List
 
 import pandas as pd
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.template import Template, Context
+from dominate import tags as html_tags
 from pydantic import BaseModel
 from pydantic import ValidationError as PydanticValidationError
-from dominate import tags as html_tags
 
 from hs_core.signals import post_add_csv_aggregation
 from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
@@ -309,25 +309,33 @@ class CSVLogicalFile(AbstractLogicalFile):
         :return: a dictionary of extracted metadata
         """
 
-        rows_count, err_msg = cls._get_rows_count(csv_file_path)
+        try:
+            rows_count = cls._get_rows_count(csv_file_path)
+        except pd.errors.ParserError as ex:
+            raise ValidationError(f"Error parsing CSV file: {str(ex)}")
         if rows_count == 0:
-            if not err_msg:
-                err_msg = "No data rows found in the CSV file"
+            err_msg = "No data rows found in the CSV file"
             raise ValidationError(err_msg)
 
         columns, has_header = cls._get_column_data_types(csv_file_path)
-        if not has_header:
-            rows_count += 1
+        if has_header:
+            rows_count -= 1
+            if rows_count <= 0:
+                err_msg = "No data rows found in the CSV file"
+                raise ValidationError(err_msg)
+
         csv_meta_schema = CSVMetaSchemaModel(rows=rows_count, columns=columns)
         return csv_meta_schema.model_dump()
 
     @classmethod
-    def _get_rows_count(cls, csv_file_path: str) -> tuple[int, str]:
-        # we have to read the whole file chunk by chunk to get the total number of rows
-        # reading the whole file at once may cause memory issues if the file is too big
-        # for finding the number of rows, we could have just loaded the first column for the chunk instead of all
-        # the columns. However, to detect parsing errors (to detect invalid csv file), we have to load data
-        # for all columns.
+    def _get_rows_count(cls, csv_file_path: str) -> int:
+        # get the number of rows/records in the csv file - includes header row
+        # as part of finding the number of rows, doing some validation of the csv file
+
+        def is_data_row(row):
+            if not row:
+                return False
+            return not row[0].startswith("#")
 
         def check_for_non_comment_text(delimiter=','):
             # check if there is non-comment text line (line that doesn't start with #) in the file
@@ -337,16 +345,16 @@ class CSVLogicalFile(AbstractLogicalFile):
                 # to handle the edge case when there is only one column in the csv file
                 _one_column_data = False
 
-                line_count = 0
-                _MAX_LINES_TO_READ = 5
+                data_row_count = 0
+                _MAX_DATA_ROWS_TO_READ = 5
                 _has_matching_delimiter = False
                 maybe_invalid_csv = False
 
                 for row in reader:
-                    # skip line starting with # or empty line
-                    if row[0].startswith("#") or len(row) == 0:
+                    # skip line starting with # (comment line) or empty line
+                    if len(row) == 0 or row[0].startswith("#"):
                         continue
-                    line_count += 1
+                    data_row_count += 1
 
                     # check if there is comment character '#' in the row
                     # since we are using pandas to load the csv file passing the parameter comment set to #,
@@ -369,7 +377,7 @@ class CSVLogicalFile(AbstractLogicalFile):
                     elif len(row) > 1:
                         _has_matching_delimiter = True
 
-                    if line_count > _MAX_LINES_TO_READ:
+                    if data_row_count > _MAX_DATA_ROWS_TO_READ:
                         break
 
             if maybe_invalid_csv and _has_matching_delimiter:
@@ -383,30 +391,18 @@ class CSVLogicalFile(AbstractLogicalFile):
             has_matching_delimiter, one_column_data = check_for_non_comment_text(delimiter=_delimiter)
             if has_matching_delimiter:
                 break
+
+            # delimiter semicolon is the last one we tried
             if _delimiter == ';' and one_column_data:
                 break
         else:
             err_msg = "Invalid CSV file. No matching delimiter found - comma, semicolon, or tab"
             raise pd.errors.ParserError(err_msg)
 
-        # number of rows to read at one time
-        _CHUNK_SIZE = 1000
-
-        _DELIMITER = '|'.join(cls.get_csv_allowed_delimiters())
-        data_rows_count = 0
-        err_msg = ""
-        try:
-            for df in pd.read_csv(csv_file_path, comment='#', chunksize=_CHUNK_SIZE, sep=_DELIMITER,
-                                  engine='python', iterator=True, skip_blank_lines=True):
-
-                data_rows_count += len(df.index)
-            return data_rows_count, err_msg
-        except pd.errors.EmptyDataError:
-            err_msg = "Invalid CSV file. No data rows found"
-            return 0, err_msg
-        except pd.errors.ParserError as err:
-            err_msg = f"Invalid CSV file. Error: {str(err)}"
-            return 0, err_msg
+        with open(csv_file_path, 'r') as file:
+            # using csv.reader to efficiently count the rows instead of using pandas
+            row_count = sum(1 for _row in csv.reader(file) if is_data_row(_row))
+            return row_count
 
     @classmethod
     def _get_pd_data_types(cls, csv_file_path: str) -> dict:
@@ -414,8 +410,43 @@ class CSVLogicalFile(AbstractLogicalFile):
         the data frame based on this limited number of data rows.
         """
 
-        # number of rows to read
-        _CHUNK_SIZE = 100
+        def apply_column_data_type(_df, col_index, dt_types):
+
+            # get the dataframe column by index
+            column = _df.iloc[:, col_index]
+
+            # drop null values
+            column = column.dropna()
+            if column.empty:
+                return
+
+            column_copy = column.copy()
+
+            # apply data type
+            column = column.astype('object')
+            column = column.apply(str)
+            bool_tf_options = [['true', 'false'], ['True', 'False'], ['TRUE', 'FALSE'], ['T', 'F']]
+            bool_yn_options = [['yes', 'no'], ['Yes', 'No'], ['YES', 'NO'], ['Y', 'N']]
+
+            for tf_options in bool_tf_options:
+                if column.isin(tf_options).all():
+                    dt_types[col_index] = "boolean"
+                    return
+
+            for yn_options in bool_yn_options:
+                if column.isin(yn_options).all():
+                    dt_types[col_index] = "boolean"
+                    return
+
+            try:
+                pd.to_datetime(column_copy, errors='raise', format='mixed')
+                dt_types[col_index] = "datetime"
+                return
+            except ValueError:
+                pass
+
+        # number of rows to read - column data types are computed based on data in those rows
+        _CHUNK_SIZE = 1000
         _DELIMITER = '|'.join(cls.get_csv_allowed_delimiters())
         pd_data_types = {}
 
@@ -429,6 +460,7 @@ class CSVLogicalFile(AbstractLogicalFile):
 
         col_counter = 0
         for _, dtype in df.dtypes.items():
+            # pandas sets the data type of a column to boolean if the column contains 'True' or 'False'
             if pd.api.types.is_bool_dtype(dtype):
                 pd_data_types[col_counter] = "boolean"
             elif pd.api.types.is_numeric_dtype(dtype):
@@ -436,6 +468,14 @@ class CSVLogicalFile(AbstractLogicalFile):
             else:
                 pd_data_types[col_counter] = "string"
             col_counter += 1
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = []
+            for col, data_type in pd_data_types.items():
+                if data_type == "string":
+                    futures.append(executor.submit(apply_column_data_type, df, col, pd_data_types))
+                    for future in concurrent.futures.as_completed(futures):
+                        future.result()
 
         return pd_data_types
 
@@ -513,63 +553,6 @@ class CSVLogicalFile(AbstractLogicalFile):
             return False
 
     @classmethod
-    def _apply_column_data_type(cls, csv_file_path: str, column_index: int, data_type: str) -> None:
-        """
-        Apply data type to the column to verify that the column does not have mixed data types
-        """
-        assert data_type in ("unknown", "string", "number", "boolean", "datetime")
-
-        _DELIMITER = '|'.join(cls.get_csv_allowed_delimiters())
-        passed_data_type = data_type
-        if data_type in ("unknown", "string"):
-            return
-        if data_type == "number":
-            data_type = pd.to_numeric
-        elif data_type == "boolean":
-            data_type = bool
-        elif data_type == "datetime":
-            data_type = pd.to_datetime
-
-        df = pd.read_csv(csv_file_path, comment='#', usecols=[column_index], engine='python', sep=_DELIMITER)
-
-        # drop any rows with null values in the column
-        df = df.dropna(how='all')
-        if df.empty:
-            # empty column - no need to apply data type
-            return
-
-        if data_type == bool:
-            # convert the column to string type
-            df.iloc[:, 0] = df.iloc[:, 0].astype('object')
-            df.iloc[:, 0] = df.iloc[:, 0].apply(str)
-
-            bool_tf_options = [['true', 'false'], ['True', 'False'], ['TRUE', 'FALSE'], ['T', 'F']]
-            bool_yn_options = [['yes', 'no'], ['Yes', 'No'], ['YES', 'NO'], ['Y', 'N']]
-
-            # filter out(note the ~ for exclude operation) based on the above options
-            for tf_options in bool_tf_options:
-                df_tf = df[~df.iloc[:, 0].isin(tf_options)]
-                if df_tf.empty:
-                    break
-            else:
-                for yn_options in bool_yn_options:
-                    df_yn = df[~df.iloc[:, 0].isin(yn_options)]
-                    if df_yn.empty:
-                        break
-                else:
-                    raise ValueError("Invalid boolean values found")
-
-        else:
-            # apply the data type to the column - excluding the null values
-            # this can raise ValueError if the data type is not valid for all data in the column
-            print(f">> Applying data type: {passed_data_type} to column: {column_index}", flush=True)
-            if passed_data_type == "datetime":
-                df.iloc[:, 0] = pd.to_datetime(df.iloc[:, 0], errors='raise', infer_datetime_format=True,
-                                               format='mixed')
-            else:
-                df.iloc[:, 0] = df.iloc[:, 0].apply(data_type)
-
-    @classmethod
     def _get_column_data_types(cls, csv_file_path: str) -> tuple[List[_CSVColumnSchema], bool]:
         """
         Compute the data type of each column in the csv file
@@ -587,8 +570,6 @@ class CSVLogicalFile(AbstractLogicalFile):
             engine='python',
             on_bad_lines='skip'
         )
-        print(">> Reading first few rows of data", flush=True)
-        print(df)
 
         has_header = cls._has_header_row(csv_file_path, df)
         if has_header:
@@ -609,82 +590,13 @@ class CSVLogicalFile(AbstractLogicalFile):
                 col_name = ""
                 headers.append(col_name)
 
-        # skip any data rows with null values in any of the columns so that we can possibly can get the first row
-        # with data in all columns - we need data in all columns to determine the data type of the column
-        data_row_index = 0
-
-        # NOTE: df.dropna() returns a new data frame with the rows with null values in all columns removed
-        df = df.dropna(how='all')
-
-        # NOTE: df.dropna() returns a new data frame with the rows with null values in any column removed
-        df_with_no_null = df.dropna(how='any')
-
-        if df_with_no_null.empty:
-            print("No data rows found with not having no null values")
-
-            # using these two fill methods to get a row with data in all columns
-
-            # fill the df empty cell with previous cell data
-            df = df.ffill()
-
-            # file the df empty cell with next cell data
-            df = df.bfill()
-
-            # get the first row with data in all columns
-            while df.iloc[data_row_index].isnull().any():
-                data_row_index += 1
-
-                if data_row_index >= df.shape[0]:
-                    # no data row found with data in all columns - will just use the first row data
-                    data_row_index = 0
-                    break
-            first_row = df.iloc[data_row_index, :]
-        else:
-            first_row = df_with_no_null.iloc[data_row_index, :]
-
         pd_data_types = cls._get_pd_data_types(csv_file_path)
 
-        if has_header:
-            enumerator = enumerate(first_row)
-        else:
-            enumerator = enumerate(first_row.index)
-
         csv_column_models = []
-
-        for index, value in enumerator:
-            value_type = "string"
-            if pd_data_types[index] == "number":
-                value_type = "number"
-            elif pd.isnull(value) or value.startswith("Unnamed:") or value == "":
-                if pd_data_types[index] == "number":
-                    value_type = "number"
-            else:
-                if value.lower() in ('true', 'false', 'yes', 'no', 't', 'f', 'y', 'n'):
-                    value_type = "boolean"
-                else:
-                    try:
-                        pd.to_datetime(value)
-                        value_type = "datetime"
-                    except ValueError:
-                        pass
-            col_name = headers[index]
-            print(f"Applying data type:{value_type} for column:{index + 1}", flush=True)
-            # time the call to apply_column_data_type
-            start_time = time.time()
-
-            try:
-                cls._apply_column_data_type(csv_file_path, index, value_type)
-            except ValueError as e:
-                # assume that the column has mixed data types so make it string
-                value_type = "string"
-                print(f"Error applying data type:{value_type} for column:{index + 1}, error: {str(e)}")
-
-            end_time = time.time()
-            print(f"Time taken to apply data type for column:{index + 1} is: {end_time - start_time} secs",
-                  flush=True)
-            csv_column_model = _CSVColumnSchema(titles=col_name, datatype=value_type)
+        for col_no, data_type in pd_data_types.items():
+            col_name = headers[col_no]
+            csv_column_model = _CSVColumnSchema(titles=col_name, datatype=data_type)
             csv_column_models.append(csv_column_model)
-            print(f"Data type for column:{index + 1} of value: {value}, is of type: {value_type}")
 
         return csv_column_models, has_header
 
