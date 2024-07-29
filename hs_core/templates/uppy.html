@@ -11,6 +11,7 @@
 {% block extra_js %}
   <script type="module">
     import { Uppy, Dashboard, Tus } from "https://releases.transloadit.com/uppy/v4.0.5/uppy.min.mjs"
+    // import { GoogleDrive } from "https://releases.transloadit.com/uppy/v4.0.5/uppy.min.mjs"
     
     const MAX_CHUNK_MB = {{ max_chunk_size_mb|default:2.5 }};
     const MAX_FILE_SIZE_MB = {{ max_file_size|default:10240 }};
@@ -54,7 +55,7 @@
       .use(Dashboard, { 
         inline: false,
         closeModalOnClickOutside: true,
-        fileManagerSelectionType: 'both',
+        fileManagerSelectionType: 'files', // files only
         target: '#uppy',
         trigger: '#uppy-modal-trigger',
         note: `Max file size: ${MAX_FILE_SIZE_MB / 1024 } GB. \nFiles will be uploaded in ${MAX_CHUNK_MB} MB chunks.`,
@@ -70,5 +71,6 @@
         // refresh the file browser to show the file
         refreshFileBrowser()
       })
+      // .use(GoogleDrive, { target: Dashboard, companionUrl: 'https://companion.uppy.io' })
   </script>
 {% endblock %}
