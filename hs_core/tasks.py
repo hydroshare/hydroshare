@@ -715,13 +715,6 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
 
 
 @shared_task
-def delete_zip(zip_path):
-    istorage = IrodsStorage()
-    if istorage.exists(zip_path):
-        istorage.delete(zip_path)
-
-
-@shared_task
 def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None, sf_zip=False, download_path='',
                     request_username=None):
     """ Create temporary zip file from input_path and store in output_path

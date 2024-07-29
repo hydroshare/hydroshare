@@ -21,7 +21,7 @@ from hs_core.signals import (pre_check_bag_flag, pre_download_file,
 from hs_core.task_utils import (get_or_create_task_notification,
                                 get_resource_bag_task, get_task_notification,
                                 get_task_user_id)
-from hs_core.tasks import create_bag_by_irods, create_temp_zip, delete_zip
+from hs_core.tasks import create_bag_by_irods, create_temp_zip
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
 from hs_file_types.enums import AggregationMetaFilePath
 
@@ -175,8 +175,6 @@ def download(request, path, use_async=True,
             task = create_temp_zip.apply_async((res_id, irods_path, irods_output_path,
                                                 aggregation_name, is_sf_request, download_path, user_id))
             task_id = task.task_id
-            delete_zip.apply_async((irods_output_path,),
-                                   countdown=(60 * 60 * 24))  # delete after 24 hours
             if api_request:
                 return JsonResponse({
                     'zip_status': 'Not ready',
@@ -192,8 +190,6 @@ def download(request, path, use_async=True,
             ret_status = create_temp_zip(res_id, irods_path, irods_output_path,
                                          aggregation_name=aggregation_name, sf_zip=is_sf_request,
                                          download_path=download_path)
-            delete_zip.apply_async((irods_output_path, ),
-                                   countdown=(60 * 60 * 24))  # delete after 24 hours
             if not ret_status:
                 content_msg = "Zip could not be created."
                 response = HttpResponse()
