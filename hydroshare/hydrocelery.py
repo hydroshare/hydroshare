@@ -15,6 +15,15 @@ app = Celery('hydroshare', backend='rpc://', broker=settings.BROKER_URL)
 app.config_from_object('django.conf:settings')
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
+# https://docs.celeryq.dev/en/v5.2.7/userguide/routing.html#routing-automatic
+app.conf.task_default_queue = 'default'
+app.conf.task_create_missing_queues = True
+
+# create router for celery tasks, to separate periodic tasks from other tasks
+app.conf.task_routes = {
+    'hydroshare.tasks.periodic': {'queue': 'periodic'},
+}
+
 
 @app.task(bind=True)
 def debug_task(self):
