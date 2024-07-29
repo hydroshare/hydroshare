@@ -171,6 +171,12 @@ function getFileIcons() {
         "<i class='fa fa-file-o fa-stack-2x'></i>" +
         "<i class='fa fa-external-link fa-stack-1x'></i>" +
         "</span>";
+
+    fileIcons.CSV_LOGICAL =
+        "<span class='fb-aggregation-icon'>" +
+        "<img src='" + `${STATIC_URL}img/resource-icons/filetype-csv.svg' ` +
+        "alt='CSV Aggregation Icon'/></span>";
+
     // This is for any single file associated with ModelProgramLogicalFile. Note "MP" is not a file extension
     fileIcons.MP =
         "<span class='fb-aggregation-icon'>" +
