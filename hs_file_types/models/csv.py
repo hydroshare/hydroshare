@@ -11,7 +11,9 @@ from django.template import Template, Context
 from dominate import tags as html_tags
 from pydantic import BaseModel
 from pydantic import ValidationError as PydanticValidationError
+from rdflib import Literal, BNode
 
+from hs_core.hs_rdf import HSTERMS, DC
 from hs_core.signals import post_add_csv_aggregation
 from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
 
@@ -46,6 +48,27 @@ class CSVFileMetaData(AbstractFileMetaData):
 
     def get_table_schema_model(self):
         return CSVMetaSchemaModel(**self.tableSchema)
+
+    def get_rdf_graph(self):
+        graph = super(CSVFileMetaData, self).get_rdf_graph()
+        subject = self.rdf_subject()
+        csv_meta_model = self.get_table_schema_model()
+        tableSchema = BNode()
+        graph.add((subject, HSTERMS.tableSchema, tableSchema))
+        graph.add((tableSchema, HSTERMS.numberOfRows, Literal(csv_meta_model.rows)))
+        columns = BNode()
+        graph.add((tableSchema, HSTERMS.columns, columns))
+        for col in csv_meta_model.columns:
+            column = BNode()
+            graph.add((columns, HSTERMS.column, column))
+            if col.titles:
+                graph.add((column, DC.title, Literal(col.titles)))
+            if col.description:
+                graph.add((column, DC.description, Literal(col.description)))
+            if col.datatype:
+                graph.add((column, HSTERMS.dataType, Literal(col.datatype)))
+
+        return graph
 
     def get_html(self, include_extra_metadata=True, **kwargs):
         """overrides the base class function to generate html needed to display metadata

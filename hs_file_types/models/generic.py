@@ -281,6 +281,6 @@ class GenericLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def get_main_file_type(cls):
-        # a singel file extension in the group which is considered the main file
+        # a single file extension in the group which is considered the main file
         # - subclass needs to override this
         return ".*"
