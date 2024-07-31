@@ -333,14 +333,14 @@ class CSVLogicalFile(AbstractLogicalFile):
         """
 
         try:
-            rows_count = cls._get_rows_count(csv_file_path)
+            rows_count, delimiter = cls._get_rows_count(csv_file_path)
         except pd.errors.ParserError as ex:
             raise ValidationError(f"Error parsing CSV file: {str(ex)}")
         if rows_count == 0:
             err_msg = "No data rows found in the CSV file"
             raise ValidationError(err_msg)
 
-        columns, has_header = cls._get_column_data_types(csv_file_path)
+        columns, has_header = cls._get_column_data_types(csv_file_path, delimiter)
         if has_header:
             rows_count -= 1
             if rows_count <= 0:
@@ -351,14 +351,19 @@ class CSVLogicalFile(AbstractLogicalFile):
         return csv_meta_schema.model_dump()
 
     @classmethod
-    def _get_rows_count(cls, csv_file_path: str) -> int:
-        # get the number of rows/records in the csv file - includes header row
+    def _get_rows_count(cls, csv_file_path: str) -> tuple[int, str]:
+        # get the number of rows/records in the csv file (includes header row) and the delimiter
         # as part of finding the number of rows, doing some validation of the csv file
 
         def is_data_row(row):
             if not row:
                 return False
-            return not row[0].startswith("#")
+            if not row[0].startswith("#"):
+                if len(row) > number_of_columns:
+                    raise pd.errors.ParserError("Invalid CSV file. Parsing error - number of data "
+                                                "columns more than number of header columns.")
+                return True
+            return False
 
         def check_for_non_comment_text(delimiter=','):
             # check if there is non-comment text line (line that doesn't start with #) in the file
@@ -372,6 +377,7 @@ class CSVLogicalFile(AbstractLogicalFile):
                 _MAX_DATA_ROWS_TO_READ = 5
                 _has_matching_delimiter = False
                 maybe_invalid_csv = False
+                _number_of_columns = 1
 
                 for row in reader:
                     # skip line starting with # (comment line) or empty line
@@ -392,31 +398,41 @@ class CSVLogicalFile(AbstractLogicalFile):
                     if len(row) > 1 and _one_column_data:
                         raise pd.errors.ParserError("Invalid CSV file. Contains non-comment text")
                     elif len(row) == 1:
-                        _has_matching_delimiter = False
                         if len(row[0].split()) > 1:
                             maybe_invalid_csv = True
-                        else:
+                        elif _number_of_columns == 1:
                             _one_column_data = True
                     elif len(row) > 1:
                         _has_matching_delimiter = True
+                        if _number_of_columns == 1:
+                            _number_of_columns = len(row)
+                        elif len(row) > _number_of_columns:
+                            raise pd.errors.ParserError("Invalid CSV file. Parsing error - number of data "
+                                                        "columns more than number of header columns.")
 
                     if data_row_count > _MAX_DATA_ROWS_TO_READ:
                         break
 
-            if maybe_invalid_csv and _has_matching_delimiter:
-                _err_msg = ("Invalid CSV file. Contains non-comment text - possibly space delimiter"
-                            " used instead of comma, semicolon, or tab")
-                raise pd.errors.ParserError(_err_msg)
+            if maybe_invalid_csv:
+                if _has_matching_delimiter or delimiter == ';':
+                    _err_msg = ("Invalid CSV file. Contains non-comment text - possibly space delimiter"
+                                " used instead of comma, semicolon, or tab")
+                    raise pd.errors.ParserError(_err_msg)
 
-            return _has_matching_delimiter, _one_column_data
+            return _has_matching_delimiter, _number_of_columns
 
+        default_delimiter = ','
         for _delimiter in cls.get_csv_allowed_delimiters():
-            has_matching_delimiter, one_column_data = check_for_non_comment_text(delimiter=_delimiter)
+            has_matching_delimiter, number_of_columns = check_for_non_comment_text(delimiter=_delimiter)
+            one_column_data = number_of_columns == 1
             if has_matching_delimiter:
+                matching_delimiter = _delimiter
                 break
 
             # delimiter semicolon is the last one we tried
             if _delimiter == ';' and one_column_data:
+                # if there is only one data column in the csv file, use comma as the delimiter
+                matching_delimiter = default_delimiter
                 break
         else:
             err_msg = "Invalid CSV file. No matching delimiter found - comma, semicolon, or tab"
@@ -424,11 +440,11 @@ class CSVLogicalFile(AbstractLogicalFile):
 
         with open(csv_file_path, 'r') as file:
             # using csv.reader to efficiently count the rows instead of using pandas
-            row_count = sum(1 for _row in csv.reader(file) if is_data_row(_row))
-            return row_count
+            row_count = sum(1 for _row in csv.reader(file, delimiter=matching_delimiter) if is_data_row(_row))
+            return row_count, matching_delimiter
 
     @classmethod
-    def _get_pd_data_types(cls, csv_file_path: str) -> dict:
+    def _get_pd_data_types(cls, csv_file_path: str, delimiter: str) -> dict:
         """Load the first chunk of the file to pandas dataframe and get the initial data type of each column in
         the data frame based on this limited number of data rows.
         """
@@ -470,14 +486,13 @@ class CSVLogicalFile(AbstractLogicalFile):
 
         # number of rows to read - column data types are computed based on data in those rows
         _CHUNK_SIZE = 1000
-        _DELIMITER = '|'.join(cls.get_csv_allowed_delimiters())
         pd_data_types = {}
 
         df = pd.read_csv(
             csv_file_path,
             comment='#',
             nrows=_CHUNK_SIZE,
-            sep=_DELIMITER,
+            sep=delimiter,
             engine='python'
         )
 
@@ -576,19 +591,18 @@ class CSVLogicalFile(AbstractLogicalFile):
             return False
 
     @classmethod
-    def _get_column_data_types(cls, csv_file_path: str) -> tuple[List[_CSVColumnSchema], bool]:
+    def _get_column_data_types(cls, csv_file_path: str, delimiter: str) -> tuple[List[_CSVColumnSchema], bool]:
         """
         Compute the data type of each column in the csv file
         """
 
         # read the first 100 rows of data of the file to estimate column data type based on the data
         _CHUNK_SIZE = 100
-        _DELIMITER = "|".join(cls.get_csv_allowed_delimiters())
         df = pd.read_csv(
             csv_file_path,
             comment='#',
             nrows=_CHUNK_SIZE,
-            sep=_DELIMITER,
+            sep=delimiter,
             dtype='string',
             engine='python',
             on_bad_lines='skip'
@@ -613,7 +627,7 @@ class CSVLogicalFile(AbstractLogicalFile):
                 col_name = ""
                 headers.append(col_name)
 
-        pd_data_types = cls._get_pd_data_types(csv_file_path)
+        pd_data_types = cls._get_pd_data_types(csv_file_path, delimiter)
 
         csv_column_models = []
         for col_no, data_type in pd_data_types.items():
