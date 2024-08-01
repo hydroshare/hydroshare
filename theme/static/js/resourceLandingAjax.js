@@ -261,7 +261,8 @@ function metadata_update_ajax_submit(form_id){
 
                 if (json_response.element_name.toLowerCase() === 'coverage' &&
                     (json_response.logical_file_type === "FileSetLogicalFile" ||
-                    json_response.logical_file_type === "GenericLogicalFile")) {
+                    json_response.logical_file_type === "GenericLogicalFile" ||
+                    json_response.logical_file_type === "CSVLogicalFile")) {
                     var bindCoordinatesPicker = false;
                     var logical_type = json_response.logical_file_type;
                     setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicker);
@@ -1543,7 +1544,7 @@ function setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicke
         var $id_type_filetype_div = $("#id_type_filetype");
 
         if (logical_type !== "GenericLogicalFile" && logical_type !== "FileSetLogicalFile" &&
-            logical_type !== "ModelInstanceLogicalFile") {
+            logical_type !== "ModelInstanceLogicalFile" && logical_type !== "CSVLogicalFile") {
             // don't allow changing coverage type if aggregation type is not GenericLogicalFile or
             // FileSetLogicalFile or ModelInstanceLogicalFile
             $id_type_filetype_div.parent().closest("div").css('pointer-events', 'none');
@@ -1624,9 +1625,10 @@ function setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicke
 
         // #id_type_1 is the box radio button
         if ($id_type_filetype_div.find(radioBoxSelector).attr("checked") === "checked" ||
-            (logical_type !== 'GeoFeatureLogicalFile' && logical_type !== 'RefTimeseriesLogicalFile' &&
-                logical_type !== 'GenericLogicalFile' && logical_type !== "FileSetLogicalFile"
-                && logical_type !== "ModelProgramLogicalFile" && logical_type !== "ModelInstanceLogicalFile")) {
+            (logical_type !== 'GeoFeatureLogicalFile' && logical_type !== 'RefTimeseriesLogicalFile'
+                && logical_type !== 'GenericLogicalFile' && logical_type !== "FileSetLogicalFile"
+                && logical_type !== "ModelProgramLogicalFile" && logical_type !== "ModelInstanceLogicalFile"
+                && logical_type !== "CSVLogicalFile")) {
             // coverage type is box or logical file type is either NetCDF or TimeSeries
             $("#id_north_filetype").parent().closest("#div_id_north").hide();
             $("#id_east_filetype").parent().closest("#div_id_east").hide();
@@ -1724,7 +1726,7 @@ function setFileTypeTemporalCoverageDeleteOption(logicalFileType) {
 
         var $formTemporalCoverage = $btnDeleteTemporalCoverage.closest('form');
         if (logicalFileType === 'GenericLogicalFile' || logicalFileType === 'FileSetLogicalFile' ||
-            logicalFileType === 'ModelInstanceLogicalFile') {
+            logicalFileType === 'ModelInstanceLogicalFile' || logicalFileType === 'CSVLogicalFile') {
             var url = $formTemporalCoverage.attr('action');
             if (url.indexOf('update-file-metadata') !== -1) {
                 url = url.replace('update-file-metadata', 'delete-file-coverage');
