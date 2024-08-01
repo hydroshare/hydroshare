@@ -1440,22 +1440,23 @@ def update_csv_table_schema_metadata(request, file_type_id, **kwargs):
     print(request.POST.dict(), flush=True)
     post_table_schema_data = request.POST.dict()
     table_schema_model = metadata.get_table_schema_model()
-    header_missing = any(col.titles == "" for col in table_schema_model.columns)
     for col_no, col in enumerate(table_schema_model.columns):
         col.titles = post_table_schema_data[f"column-{col_no}-titles"].strip()
         col.description = post_table_schema_data[f"column-{col_no}-description"].strip()
-        # col.unitCode = post_table_schema_data[f"column-{col_no}-unitCode"]
 
     # validate that there is value for titles for all columns or no value for all column. it is not allowed to have
     # some columns with titles and some without titles
-    columns_wth_titles = [col.titles for col in table_schema_model.columns if col.titles]
-    if 0 < len(columns_wth_titles) < len(table_schema_model.columns):
+    columns_with_titles = [col.titles for col in table_schema_model.columns if col.titles]
+    if 0 < len(columns_with_titles) < len(table_schema_model.columns):
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
                               'message': "Some column titles are missing"}
         return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
     metadata.tableSchema = table_schema_model.model_dump()
+    metadata.is_dirty = True
     metadata.save()
+    resource = logical_file.resource
+    resource_modified(resource, request.user, overwrite_bag=False)
 
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                           'element_name': 'multiple-elements', 'refresh_metadata': False,
