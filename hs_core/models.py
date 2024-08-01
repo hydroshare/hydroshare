@@ -54,6 +54,8 @@ from .hs_rdf import (HSTERMS, RDFS1, RDF_MetaData_Mixin, RDF_Term_MixIn,
                      rdf_terms)
 from .languages_iso import languages as iso_languages
 
+from django_tus.signals import tus_upload_finished_signal
+
 
 def clean_abstract(original_string):
     """Clean abstract for XML inclusion.
@@ -417,10 +419,15 @@ def page_permissions_page_processor(request, page):
     if hasattr(settings, 'FILE_UPLOAD_MAX_SIZE'):
         max_file_size = settings.FILE_UPLOAD_MAX_SIZE
     else:
-        max_file_size = 5120  # default to 5MB
+        max_file_size = 10240  # default to 10GB
     remaining_quota = get_remaining_user_quota(cm.quota_holder, "MB")
     if remaining_quota is not None:
         max_file_size = min(max_file_size, remaining_quota)
+
+    # https://docs.djangoproject.com/en/3.2/ref/settings/#data-upload-max-memory-size
+    max_chunk_size_mb = 2.5  # mb
+    if hasattr(settings, 'DATA_UPLOAD_MAX_MEMORY_SIZE'):
+        max_chunk_size_mb = settings.DATA_UPLOAD_MAX_MEMORY_SIZE / 1024 / 1024  # convert to MB
 
     return {
         'resource_type': cm._meta.verbose_name,
@@ -435,6 +442,7 @@ def page_permissions_page_processor(request, page):
         "last_changed_by": last_changed_by,
         "max_file_size": max_file_size,
         "max_file_size_for_display": convert_file_size_to_unit(max_file_size, "GB", "MB"),
+        "max_chunk_size_mb": max_chunk_size_mb,
     }
 
 
@@ -5098,3 +5106,61 @@ def resource_creation_signal_handler(sender, instance, created, **kwargs):
 def resource_update_signal_handler(sender, instance, created, **kwargs):
     """Do nothing (noop)."""
     pass
+
+
+@receiver(tus_upload_finished_signal)
+def tus_upload_finished_handler(sender, **kwargs):
+    """Handle the tus upload finished signal.
+
+    Ingest the files from the TUS_DESTINATION_DIR into the resource.
+
+    https://github.com/alican/django-tus/blob/master/django_tus/signals.py
+    This signal provides the following keyword arguments:
+    metadata
+    filename
+    upload_file_path
+    file_size
+    upload_url
+    destination_folder
+    """
+    from hs_core import hydroshare
+    logger = logging.getLogger(__name__)
+    metadata = kwargs['metadata']
+    destination_folder = kwargs['destination_folder']
+    hs_res_id = metadata['hs_res_id']
+    original_filename = metadata['original_file_name']
+
+    file_path = os.path.join(destination_folder, original_filename)
+
+    if original_filename != kwargs['filename']:
+        # rename the file
+        chunk_file_path = os.path.join(destination_folder, kwargs['filename'])
+        os.rename(chunk_file_path, file_path)
+
+    file_folder = ""
+    # TODO: eventually could upload to a specific folder
+    # https://github.com/alican/django-tus/issues/2
+    # create a file object for the uploaded file
+    file_obj = File(open(file_path, 'rb'), name=original_filename)
+
+    resource = hydroshare.utils.get_resource_by_shortkey(hs_res_id)
+
+    try:
+        hydroshare.utils.resource_file_add_pre_process(
+            resource=resource,
+            files=[file_obj],
+            user=resource.creator,
+            folder=file_folder,
+        )
+        hydroshare.utils.resource_file_add_process(
+            resource=resource,
+            files=[file_obj],
+            user=resource.creator,
+            folder=file_folder,
+        )
+        # remove the uploaded file
+        os.remove(file_path)
+    except (hydroshare.utils.ResourceFileSizeException,
+            hydroshare.utils.ResourceFileValidationException,
+            Exception) as ex:
+        logger.error(ex)

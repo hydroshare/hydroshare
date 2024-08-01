@@ -1,0 +1,76 @@
+{% load static %}
+
+{% block extra_head %}
+    <link href="https://releases.transloadit.com/uppy/v4.0.5/uppy.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block main %}
+  <div id="uppy"></div>
+{% endblock %}
+
+{% block extra_js %}
+  <script type="module">
+    import { Uppy, Dashboard, Tus } from "https://releases.transloadit.com/uppy/v4.0.5/uppy.min.mjs"
+    // import { GoogleDrive } from "https://releases.transloadit.com/uppy/v4.0.5/uppy.min.mjs"
+    
+    const MAX_CHUNK_MB = {{ max_chunk_size_mb|default:2.5 }};
+    const MAX_FILE_SIZE_MB = {{ max_file_size|default:10240 }};
+
+    let MAX_CHUNK = MAX_CHUNK_MB * 1024 * 1024; // in bytes
+    const MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024; // in bytes
+
+    // Make sure the chunk size is not larger than the max file size
+    if (MAX_CHUNK > MAX_FILE_SIZE) {
+      MAX_CHUNK = MAX_FILE_SIZE;
+    }
+
+    let uppy = new Uppy({
+      id: 'uppy', 
+      // autoProceed: true,
+      // debug: true,
+      restrictions: {
+        maxFileSize: MAX_FILE_SIZE,
+      },
+      withCredentials: true,
+      onBeforeUpload: (files) => {
+        Object.keys(files).forEach(fileId => {
+          files[fileId].meta.hs_res_id = "{{ cm.short_id }}"
+          files[fileId].meta.original_file_name = files[fileId].name
+        })
+        return files
+      },
+      onBeforeFileAdded: (currentFile, files) => {
+        // https://uppy.io/docs/uppy/#onbeforefileaddedfile-files
+        // check for existing files before adding to the resource
+        // window.fbFiles is set in the file_browser.html template
+        if (window.fbFiles) {
+          const existingFiles = window.fbFiles.map(f => f.name)
+          if (existingFiles.includes(currentFile.name)) {
+            uppy.info(`File ${currentFile.name} already exists in the resource. Remove or rename.`)
+            return false
+          }
+        }
+      },
+    })
+      .use(Dashboard, { 
+        inline: false,
+        closeModalOnClickOutside: true,
+        fileManagerSelectionType: 'files', // files only
+        target: '#uppy',
+        trigger: '#uppy-modal-trigger',
+        note: `Max file size: ${MAX_FILE_SIZE_MB / 1024 } GB. \nFiles will be uploaded in ${MAX_CHUNK_MB} MB chunks.`,
+      })
+      .use(Tus, { 
+        endpoint: '/hsapi/tus/',
+        // https://uppy.io/docs/tus/#chunksize
+        // it is not recommended to set the chunk size
+        // however in testing it seems to improve resumability
+        chunkSize: MAX_CHUNK, // in bytes
+      })
+      .on('upload-success', (file, response) => {
+        // refresh the file browser to show the file
+        refreshFileBrowser()
+      })
+      // .use(GoogleDrive, { target: Dashboard, companionUrl: 'https://companion.uppy.io' })
+  </script>
+{% endblock %}

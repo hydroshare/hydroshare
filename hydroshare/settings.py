@@ -234,7 +234,10 @@ FILE_UPLOAD_PERMISSIONS = 0o644
 # Alternative tmp folder
 FILE_UPLOAD_TEMP_DIR = "/tmp"
 
-FILE_UPLOAD_MAX_SIZE = 5 * 1024  # MB
+FILE_UPLOAD_MAX_SIZE = 10 * 1024  # MB
+
+# https://docs.djangoproject.com/en/3.2/ref/settings/#data-upload-max-memory-size
+DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # Bytes
 
 #############
 # DATABASES #
@@ -434,7 +437,13 @@ INSTALLED_APPS = (
     "health_check.contrib.psutil",
     "health_check.contrib.rabbitmq",
     "mozilla_django_oidc",
+    'django_tus',
 )
+
+TUS_UPLOAD_DIR = '/tmp/tus_upload'
+TUS_DESTINATION_DIR = '/tmp/tus_completed'
+TUS_FILE_NAME_FORMAT = 'increment'  # Other options are: 'random-suffix', 'random', 'keep'
+TUS_EXISTING_FILE = 'error'  # Other options are: 'overwrite',  'error', 'rename'
 
 SWAGGER_SETTINGS = {
     "DEFAULT_GENERATOR_CLASS": "hs_rest_api2.serializers.NestedSchemaGenerator"

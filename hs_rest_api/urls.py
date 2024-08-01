@@ -1,4 +1,5 @@
 from django.conf.urls import url, include
+from django.urls import path
 
 from hs_dictionary import views as dict_views
 from hs_core import views as core_views
@@ -252,4 +253,6 @@ urlpatterns = [
     url(r'^resource/(?P<resource_id>[0-9a-f]+)/modelinstance/meta/(?P<aggregation_path>.*)$',
         file_type_views.model_instance_metadata_in_json,
         name='model_instance_metadata_in_json'),
+    path("tus/", core_views.resource_rest_api.CustomTusUpload.as_view(), name='tus_upload'),
+    path("tus/<uuid:resource_id>", core_views.resource_rest_api.CustomTusUpload.as_view(), name='tus_upload_chunks'),
 ]
