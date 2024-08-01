@@ -245,8 +245,6 @@ class CSVLogicalFile(AbstractLogicalFile):
             csv_temp_file = ft_ctx.temp_file
             try:
                 metadata = cls._extract_metadata(csv_temp_file)
-                print(">> Extracted Metadata", flush=True)
-                print(metadata, flush=True)
             except Exception as ex:
                 log.exception(f"Error extracting metadata from CSV file: {str(ex)}")
                 raise ValidationError(f"Error extracting metadata from CSV file: {str(ex)}")
@@ -443,7 +441,7 @@ class CSVLogicalFile(AbstractLogicalFile):
 
         col_counter = 0
         for _, dtype in df.dtypes.items():
-            # pandas sets the data type of a column to boolean if the column contains 'True' or 'False'
+            # pandas sets the data type of column to boolean if the column contains 'True' or 'False'
             if pd.api.types.is_bool_dtype(dtype):
                 pd_data_types[col_counter] = "boolean"
             elif pd.api.types.is_numeric_dtype(dtype):
@@ -496,19 +494,22 @@ class CSVLogicalFile(AbstractLogicalFile):
         with open(csv_file_path, 'r') as csvfile:
             _MAX_LINES_TO_READ = 10
             line = csvfile.readline()
-            line_count = 1
+            line_count = 0
+            seek_position = 0
             while line and line_count < _MAX_LINES_TO_READ:
+                if line.startswith("#") or not ''.join(line).strip():
+                    line = csvfile.readline()
+                    continue
                 if not line.startswith("#") and ''.join(line).strip():
-                    position = csvfile.tell() - len(line) - 1  # Adjust for the newline character
+                    seek_position = csvfile.tell() - len(line) - 1  # adjust for the newline character
                     break
-
-                line = csvfile.readline()
                 line_count += 1
+                line = csvfile.readline()
 
             if line:
-                if position < 0:
-                    position = 0
-                csvfile.seek(position)
+                if seek_position < 0:
+                    seek_position = 0
+                csvfile.seek(seek_position)
 
                 # feed the first 5 non-empty lines into the csv Sniffer
                 csv_data = ""
@@ -520,8 +521,6 @@ class CSVLogicalFile(AbstractLogicalFile):
                     csv_data += line
                     line_count += 1
 
-                print(f"First 5 data rows of the file: {csv_data}", flush=True)
-
                 sniffer = csv.Sniffer()
                 try:
                     has_header = sniffer.has_header(csv_data)
@@ -529,7 +528,6 @@ class CSVLogicalFile(AbstractLogicalFile):
                     has_header = False
 
                 if not has_header:
-                    print(">> csv module Sniffer did not detect header row", flush=True)
                     # try custom check for header row
                     has_header = is_header_row()
                 return has_header
@@ -554,23 +552,16 @@ class CSVLogicalFile(AbstractLogicalFile):
         )
 
         has_header = cls._has_header_row(csv_file_path, df)
-        if has_header:
-            print(">> Header row is present", flush=True)
-        else:
-            print(">> Header row is missing", flush=True)
 
         # collect the column names
         headers = []
         if has_header:
-            for index, column_name in enumerate(df.columns, start=1):
-                print(f"Column # {index}: {column_name}")
+            for column_name in df.columns:
                 # remove any leading and trailing quotes from the column name
                 column_name = column_name.strip("\"")
                 headers.append(column_name)
         else:
-            for col in range(len(df.columns)):
-                col_name = ""
-                headers.append(col_name)
+            headers = ["" for _ in range(len(df.columns))]
 
         pd_data_types = cls._get_pd_data_types(csv_file_path, delimiter)
 
