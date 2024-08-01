@@ -18,6 +18,7 @@ userdel hydro-service \
 celery -A hydroshare beat  -s /hydroshare/celery/celerybeat-schedule &
 
 # Start worker with autoscale and two queues
-celery -A hydroshare worker -E -Q default,periodic --autoscale=7,1 &
+celery -A hydroshare worker -E -Q default --autoscale=4,1 &
+celery -A hydroshare worker -E -Q periodic --autoscale=3,1 &
 celery -A hydroshare flower --address=0.0.0.0 --broker=amqp://guest:guest@rabbitmq:5672//
 
