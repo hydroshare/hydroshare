@@ -165,7 +165,6 @@ preflight_hs() {
     cp -rf ${HS_PATH}/scripts/templates/init-defaultworker.template ${HS_PATH}/init-defaultworker
     sed -i $SED_EXT 's!HS_SERVICE_UID!'${HS_SERVICE_UID}'!g' ${HS_PATH}/init-defaultworker
     sed -i $SED_EXT 's!HS_SERVICE_GID!'${HS_SERVICE_GID}'!g' ${HS_PATH}/init-defaultworker
-    sed -i $SED_EXT 's!CELERY_CONCURRENCY!'${CELERY_CONCURRENCY}'!g' ${HS_PATH}/init-defaultworker
     # Check security settings
     if [ "${USE_SECURITY}" = true ]; then
         sed -i $SED_EXT 's/\<USE_SECURITY = False\>/USE_SECURITY = True/g' ${HS_PATH}/hydroshare/settings.py
