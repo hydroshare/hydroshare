@@ -98,7 +98,6 @@ IRODS_ICOMMANDS_PATH = '/usr/bin'
 IRODS_HOST = 'data.local.org'
 IRODS_PORT = '1247'
 IRODS_DEFAULT_RESOURCE = 'hydroshareReplResc'
-IRODS_SINGLE_RESC_FOR_QUERY = 'hydroshareReplResc'
 IRODS_HOME_COLLECTION = '/hydroshareZone/home/wwwHydroProxy'
 IRODS_CWD = '/hydroshareZone/home/wwwHydroProxy'
 IRODS_ZONE = 'hydroshareZone'
@@ -150,9 +149,6 @@ HYDROSHARE_SHARED_TEMP = '/shared_tmp'
 MAILCHIMP_ACTIVE_SUBSCRIBERS = "e210a70864"
 MAILCHIMP_SUBSCRIBERS = "f0c27254e3"
 
-# sendfile support for large files
-# These must match settings in nginx
-SENDFILE_ON = True
 # IRODS_USER_URI = "/irods-user"
 IRODS_DATA_URI = "/irods-data"
 LOCAL_CACHE_URI = "/local-cache"

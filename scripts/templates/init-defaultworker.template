@@ -8,7 +8,17 @@ userdel hydro-service \
  && chown -R hydro-service:storage-hydro /hydroshare /tmp /shared_tmp /tmp \
  && chmod -R 3777 /tmp /shared_tmp /tmp 
 
+# we should be wary of setting concurrency on k8s
+# as it may not be the best way to scale celery workers
+# https://docs.celeryq.dev/en/v5.2.7/userguide/workers.html#autoscaling
+# autoscale values are hard coded here but should be tuned for production
+# based on number of nodes and the cpu limits set in the helm chart
+# https://github.com/CUAHSI/platform-recipes/blob/main/hydroshare/chart/values.yaml#L49-L56
+
 celery -A hydroshare beat  -s /hydroshare/celery/celerybeat-schedule &
-celery -A hydroshare worker -E -Q default --concurrency=CELERY_CONCURRENCY &
+
+# Start workers with autoscale and one queue per worker
+celery -A hydroshare worker -E -Q default --autoscale=4,1 &
+celery -A hydroshare worker -E -Q periodic --autoscale=3,1 &
 celery -A hydroshare flower --address=0.0.0.0 --broker=amqp://guest:guest@rabbitmq:5672//
 

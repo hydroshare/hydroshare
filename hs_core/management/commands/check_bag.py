@@ -10,7 +10,6 @@ import requests
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
-from hs_core.hydroshare import hs_requests
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 from hs_core.tasks import create_bag_by_irods
 from django_irods.icommands import SessionException
@@ -154,9 +153,9 @@ def check_bag(rid, options):
                     server = getattr(settings, 'FQDN_OR_IP', 'www.hydroshare.org')
                     uri = "https://{}/hsapi/resource/{}/".format(server, rid)
                     print("download uri is {}".format(uri))
-                    r = hs_requests.get(uri, verify=False, stream=True,
-                                        auth=requests.auth.HTTPBasicAuth(options['login'],
-                                                                         options['password']))
+                    r = requests.get(uri, verify=False, stream=True,
+                                     auth=requests.auth.HTTPBasicAuth(options['login'],
+                                                                      options['password']))
                     print("download return status is {}".format(str(r.status_code)))
                     print("redirects:")
                     for thing in r.history:
@@ -173,9 +172,9 @@ def check_bag(rid, options):
                     server = getattr(settings, 'FQDN_OR_IP', 'www.hydroshare.org')
                     uri = "https://{}/hsapi/resource/{}/".format(server, rid)
                     print("download uri is {}".format(uri))
-                    r = hs_requests.get(uri, verify=False, stream=True,
-                                        auth=requests.auth.HTTPBasicAuth(options['login'],
-                                                                         options['password']))
+                    r = requests.get(uri, verify=False, stream=True,
+                                     auth=requests.auth.HTTPBasicAuth(options['login'],
+                                                                      options['password']))
                     print("download return status is {}".format(str(r.status_code)))
                     print("redirects:")
                     for thing in r.history:

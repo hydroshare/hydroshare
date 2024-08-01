@@ -59,7 +59,7 @@ function red() {
 }
 
 function getImageID() {
-    docker $DOCKER_PARAM images | grep $1 | tr -s ' ' | cut -f3 -d' '
+    docker images | grep $1 | tr -s ' ' | cut -f3 -d' '
 }
 
 ##nodejs build for discovery

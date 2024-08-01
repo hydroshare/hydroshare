@@ -1,7 +1,7 @@
 version: '3'
 services:
   data.local.org:
-    image: hydroshare/hs-irods:4.2.6-buster
+    image: hydroshare/hs-irods:2e7929c
     container_name: data.local.org
     hostname: data.local.org
     ports:
@@ -18,7 +18,6 @@ services:
       IRODS_HOST: 'data.local.org'
       IRODS_PORT: '1247'
       IRODS_DEFAULT_RESOURCE: 'hydroshareReplResc'
-      IRODS_SINGLE_RESC_FOR_QUERY: 'hydroshareReplResc'
       IRODS_HOME_COLLECTION: '/hydroshareZone/home/wwwHydroProxy'
       IRODS_ZONE: 'hydroshareZone'
       IRODS_USERNAME: 'wwwHydroProxy'
@@ -59,27 +58,6 @@ services:
     ports:
       - "8983"
     command: ["solr-foreground"]
-  # TODO: nginx container does not currently work
-  # https://github.com/hydroshare/hydroshare/issues/4980
-  # nginx:
-  #   build:
-  #     context: ./nginx
-  #     dockerfile: Dockerfile-nginx
-  #   hostname: nginx
-  #   container_name: nginx
-  #   links:
-  #     - hydroshare:hydroshare
-  #   depends_on:
-  #     - hydroshare
-  #   ports:
-  #     - "80:80"
-  #   volumes:
-  #     - "./log/nginx:/var/log/nginx"
-  #     - ".:/hydroshare"
-  #     - "temp_vol:/tmp"
-  #     - "share_vol:/irods/cache"
-  #     - "idata_vault_vol:/irods/data"
-  #     - "iuser_vault_vol:/irods/user"
   hydroshare:
     build:
       context: .
@@ -170,10 +148,6 @@ volumes:
   idata_vault_vol:
   idata_pgres_vol:
   idata_home_vol:
-  iuser_iconf_vol:
-  iuser_vault_vol:
-  iuser_pgres_vol:
-  iuser_home_vol:
   postgis_data_vol:
   solr_data_vol:
   temp_vol:
