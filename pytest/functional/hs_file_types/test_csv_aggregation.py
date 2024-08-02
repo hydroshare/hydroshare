@@ -70,7 +70,7 @@ def test_create_csv_aggregation_1(composite_resource):
 def test_create_csv_aggregation_2(composite_resource):
     # here we are testing that we can create a CSV file type aggregation from a csv file that
     # is part of a resource
-    # here we are using a csv file that has no headers and data in all columns
+    # here we are using a csv file that has no headers and has data in all columns
 
     res, user = composite_resource
 
@@ -306,6 +306,51 @@ def test_create_csv_aggregation_from_uneven_data_columns_file(composite_resource
 
 
 @pytest.mark.django_db(transaction=True)
+def test_create_csv_aggregation_from_data_columns_with_comment_character_file(composite_resource):
+    # here we are testing that we can create a CSV file type aggregation from a csv file that
+    # is part of a resource
+    # here we are using a csv file in which the comment character '#' is part of the data value of column headers
+
+    res, user = composite_resource
+
+    # upload a csv file to the resource
+    res_file = _upload_csv_file(res, 'csv_column_with_comment_character.csv')
+
+    # check there are no CSV file type logical files
+    assert CSVLogicalFile.objects.count() == 0
+
+    # set the uploaded csv file to be part of a csv aggregation
+    CSVLogicalFile.set_file_type(res, user, res_file.id)
+
+    # test that we have one logical file of type CSV
+    assert CSVLogicalFile.objects.count() == 1
+    csv_aggr = CSVLogicalFile.objects.first()
+
+    # check extracted metadata
+    metadata = csv_aggr.metadata
+    assert metadata.tableSchema is not None
+    table_schema = metadata.tableSchema
+    csv_meta_schema_model = CSVMetaSchemaModel(**table_schema)
+    assert csv_meta_schema_model.rows == 29
+    assert len(csv_meta_schema_model.columns) == 8
+
+    # check column properties
+    for col_number, col in enumerate(csv_meta_schema_model.columns, start=1):
+        # check that the column headers are there
+        assert col.titles
+
+        assert not col.description
+        assert not col.unitCode
+        if col_number in (1, 2, 5, 6, 7, 8):
+            assert col.datatype == "string"
+        elif col_number == 3:
+            assert col.datatype == "datetime"
+        else:
+            assert col_number == 4
+            assert col.datatype == "number"
+
+
+@pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize("csv_file", [
     "csv_boolean_column_TRUE_and_FALSE.csv",
     "csv_boolean_column_True_and_False_.csv",
@@ -370,7 +415,6 @@ def test_create_csv_aggregation_boolean_data_type(composite_resource, csv_file):
                           'csv_no_data_rows_invalid.csv',
                           'csv_missing_data_rows_invalid.csv',
                           'csv_with_invalid_file_extension.txt',
-                          'csv_column_with_comment_character_invalid.csv',
                           'csv_with_non_comment_line_invalid.csv',
                           'csv_space_delimiter_invalid.csv',])
 def test_create_csv_aggregation_with_invalid_file(composite_resource, invalid_csv_file):
