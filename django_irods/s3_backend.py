@@ -8,6 +8,7 @@ import warnings
 from datetime import datetime
 from datetime import timedelta
 from urllib.parse import urlencode
+from .utils import bucket_and_key
 
 from django.contrib.staticfiles.storage import ManifestFilesMixin
 from django.core.exceptions import ImproperlyConfigured
@@ -120,9 +121,10 @@ class S3File(CompressedFileMixin, File):
         if "r" in mode and "w" in mode:
             raise ValueError("Can't combine 'r' and 'w' in mode.")
         self._storage = storage
+        bucket, name = bucket_and_key(name)
         self.name = name[len(self._storage.location) :].lstrip("/")
         self._mode = mode
-        self.obj = storage.bucket.Object(name)
+        self.obj = storage.bucket(bucket).Object(name)
         if "w" not in mode:
             # Force early RAII-style exception if object does not exist
             params = _filter_download_params(
@@ -328,7 +330,6 @@ class S3Storage(CompressStorageMixin, BaseStorage):
                 "AWS_S3_SECRET_ACCESS_KEY/secret_key"
             )
 
-        self._bucket = None
         self._connections = threading.local()
         self._unsigned_connections = threading.local()
 
@@ -408,7 +409,6 @@ class S3Storage(CompressStorageMixin, BaseStorage):
             ),
             "file_overwrite": setting("AWS_S3_FILE_OVERWRITE", True),
             "object_parameters": setting("AWS_S3_OBJECT_PARAMETERS", {}),
-            "bucket_name": setting("AWS_STORAGE_BUCKET_NAME"),
             "querystring_auth": setting("AWS_QUERYSTRING_AUTH", True),
             "querystring_expire": setting("AWS_QUERYSTRING_EXPIRE", 3600),
             "signature_version": setting("AWS_S3_SIGNATURE_VERSION"),
@@ -446,13 +446,11 @@ class S3Storage(CompressStorageMixin, BaseStorage):
         state = self.__dict__.copy()
         state.pop("_connections", None)
         state.pop("_unsigned_connections", None)
-        state.pop("_bucket", None)
         return state
 
     def __setstate__(self, state):
         state["_connections"] = threading.local()
         state["_unsigned_connections"] = threading.local()
-        state["_bucket"] = None
         self.__dict__ = state
 
     @property
@@ -504,15 +502,11 @@ class S3Storage(CompressStorageMixin, BaseStorage):
             )
         return session
 
-    @property
-    def bucket(self):
+    def bucket(self, name):
         """
-        Get the current bucket. If there is no current bucket object
-        create it.
+        Get a bucket by name.
         """
-        if self._bucket is None:
-            self._bucket = self.connection.Bucket(self.bucket_name)
-        return self._bucket
+        return self.connection.Bucket(name)
 
     def _normalize_name(self, name):
         """
@@ -536,6 +530,7 @@ class S3Storage(CompressStorageMixin, BaseStorage):
         return f
 
     def _save(self, name, content):
+        bucket, name = bucket_and_key(name)
         cleaned_name = clean_name(name)
         name = self._normalize_name(cleaned_name)
         params = self._get_write_parameters(name, content)
@@ -555,7 +550,7 @@ class S3Storage(CompressStorageMixin, BaseStorage):
             content = self._compress_content(content)
             params["ContentEncoding"] = "gzip"
 
-        obj = self.bucket.Object(name)
+        obj = self.bucket(bucket).Object(name)
 
         # Workaround file being closed errantly see: https://github.com/boto/s3transfer/issues/80
         original_close = content.close
@@ -568,8 +563,9 @@ class S3Storage(CompressStorageMixin, BaseStorage):
 
     def delete(self, name):
         try:
+            bucket, name = bucket_and_key(name)
             name = self._normalize_name(clean_name(name))
-            self.bucket.Object(name).delete()
+            self.bucket(bucket).Object(name).delete()
         except ClientError as err:
             if err.response["ResponseMetadata"]["HTTPStatusCode"] == 404:
                 # Not an error to delete something that does not exist
@@ -582,9 +578,10 @@ class S3Storage(CompressStorageMixin, BaseStorage):
         if self.file_overwrite:
             return False
 
+        bucket, name = bucket_and_key(name)
         name = self._normalize_name(clean_name(name))
         try:
-            self.connection.meta.client.head_object(Bucket=self.bucket_name, Key=name)
+            self.connection.meta.client.head_object(Bucket=bucket, Key=name)
             return True
         except ClientError as err:
             if err.response["ResponseMetadata"]["HTTPStatusCode"] == 404:
@@ -594,6 +591,7 @@ class S3Storage(CompressStorageMixin, BaseStorage):
             raise
 
     def listdir(self, name):
+        bucket, name = bucket_and_key(name)
         path = self._normalize_name(clean_name(name))
         # The path needs to end with a slash, but if the root is empty, leave it.
         if path and not path.endswith("/"):
@@ -602,7 +600,7 @@ class S3Storage(CompressStorageMixin, BaseStorage):
         directories = []
         files = []
         paginator = self.connection.meta.client.get_paginator("list_objects")
-        pages = paginator.paginate(Bucket=self.bucket_name, Delimiter="/", Prefix=path)
+        pages = paginator.paginate(Bucket=bucket, Delimiter="/", Prefix=path)
         for page in pages:
             directories += [
                 posixpath.relpath(entry["Prefix"], path)
@@ -615,9 +613,10 @@ class S3Storage(CompressStorageMixin, BaseStorage):
         return directories, files
 
     def size(self, name):
+        bucket, name = bucket_and_key(name)
         name = self._normalize_name(clean_name(name))
         try:
-            return self.bucket.Object(name).content_length
+            return self.bucket(bucket).Object(name).content_length
         except ClientError as err:
             if err.response["ResponseMetadata"]["HTTPStatusCode"] == 404:
                 raise FileNotFoundError("File does not exist: %s" % name)
@@ -656,8 +655,9 @@ class S3Storage(CompressStorageMixin, BaseStorage):
         Returns an (aware) datetime object containing the last modified time if
         USE_TZ is True, otherwise returns a naive datetime in the local timezone.
         """
+        bucket, name = bucket_and_key(name)
         name = self._normalize_name(clean_name(name))
-        entry = self.bucket.Object(name)
+        entry = self.bucket(bucket).Object(name)
         if setting("USE_TZ"):
             # boto3 returns TZ aware timestamps
             return entry.last_modified
@@ -666,6 +666,7 @@ class S3Storage(CompressStorageMixin, BaseStorage):
 
     def url(self, name, parameters=None, expire=None, http_method=None):
         # Preserve the trailing slash after normalizing the path.
+        bucket, name = bucket_and_key(name)
         name = self._normalize_name(clean_name(name))
         params = parameters.copy() if parameters else {}
         if expire is None:
@@ -687,7 +688,7 @@ class S3Storage(CompressStorageMixin, BaseStorage):
 
             return url
 
-        params["Bucket"] = self.bucket.name
+        params["Bucket"] = bucket
         params["Key"] = name
 
         connection = (
