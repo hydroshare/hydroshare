@@ -75,40 +75,6 @@ def json_or_jsonp(r, i, code=200):
         return HttpResponse(i, content_type='application/json', status=code)
 
 
-# Since an SessionException will be raised for all irods-related operations from django_irods
-# module, there is no need to raise iRODS SessionException from within this function
-def upload_from_irods(username, password, host, port, zone, irods_fnames, res_files):
-    """
-    use iget to transfer selected data object from irods zone to local as a NamedTemporaryFile
-    :param username: iRODS login account username used to download irods data object for uploading
-    :param password: iRODS login account password used to download irods data object for uploading
-    :param host: iRODS login host used to download irods data object for uploading
-    :param port: iRODS login port used to download irods data object for uploading
-    :param zone: iRODS login zone used to download irods data object for uploading
-    :param irods_fnames: the data object file name to download to local for uploading
-    :param res_files: list of files for uploading to create resources
-    :raises SessionException(proc.returncode, stdout, stderr) defined in django_irods/icommands.py
-            to capture iRODS exceptions raised from iRODS icommand subprocess run triggered from
-            any method calls from IrodsStorage() if an error or exception ever occurs
-    :return: None, but the downloaded file from the iRODS will be appended to res_files list for
-    uploading
-    """
-    irods_storage = IrodsStorage()
-    irods_storage.set_user_session(username=username, password=password, host=host, port=port,
-                                   zone=zone)
-    ifnames = irods_fnames.split(',')
-    for ifname in ifnames:
-        size = irods_storage.size(ifname)
-        tmpFile = irods_storage.download(ifname)
-        fname = os.path.basename(ifname.rstrip(os.sep))
-        fileobj = File(file=tmpFile, name=fname)
-        fileobj.size = size
-        res_files.append(fileobj)
-
-    # delete the user session after iRODS file operations are done
-    irods_storage.delete_user_session()
-
-
 def validate_url(url):
     """
     Validate URL

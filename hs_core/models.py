@@ -44,7 +44,6 @@ from rdflib import BNode, Literal, URIRef
 from rdflib.namespace import DC, DCTERMS, RDF
 from spam_patterns.worst_patterns_re import patterns
 
-from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from hs_core.enums import (CrossRefSubmissionStatus, CrossRefUpdate,
                            RelationTypes)
@@ -2458,6 +2457,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         return full_path
 
     def set_quota_holder(self, setter, new_holder):
+        # TODO this requires a movement of files to the quota holders bucket now
         """Set quota holder of the resource to new_holder who must be an owner.
 
         setter is the requesting user to transfer quota holder and setter must also be an owner
@@ -2477,16 +2477,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         self.quota_holder = new_holder
         self.save()
 
-    def removeAVU(self, attribute, value):
-        """Remove an AVU at the resource level.
-
-        This avoids mistakes in setting AVUs by assuring that the appropriate root path
-        is alway used.
-        """
-        istorage = self.get_irods_storage()
-        root_path = self.root_path
-        istorage.session.run("imeta", None, 'rm', '-C', root_path, attribute, value)
-
     def setAVU(self, attribute, value):
         """Set an AVU at the resource level.
 
@@ -2497,11 +2487,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             value = str(value).lower()  # normalize boolean values to strings
         istorage = self.get_irods_storage()
         root_path = self.root_path
-        # has to create the resource collection directory if it does not exist already due to
-        # the need for setting quota holder on the resource collection before adding files into
-        # the resource collection in order for the real-time iRODS quota micro-services to work
-        if not istorage.exists(root_path):
-            istorage.session.run("imkdir", None, '-p', root_path)
         istorage.setAVU(root_path, attribute, value)
 
     def getAVU(self, attribute):
@@ -3031,18 +3016,6 @@ def path_is_allowed(path):
         raise SuspiciousFileOperation("File paths cannot contain '/./'")
 
 
-class FedStorage(IrodsStorage):
-    """Define wrapper class to fix Django storage object limitations for iRODS.
-
-    The constructor of a Django storage object must have no arguments.
-    This simple workaround accomplishes that.
-    """
-
-    def __init__(self):
-        """Initialize method with no arguments for federated storage."""
-        super(FedStorage, self).__init__("federated")
-
-
 # TODO: revise path logic for rename_resource_file_in_django for proper path.
 # TODO: utilize antibugging to check that paths are coherent after each operation.
 class ResourceFile(ResourceFileIRODSMixin):
@@ -3258,7 +3231,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         file_path = self.resource_file.name
 
         try:
-            self._checksum = self.resource_file.storage.checksum(file_path, force_compute=False)
+            self._checksum = self.resource_file.storage.checksum(file_path)
         except (SessionException, ValidationError):
             logger = logging.getLogger(__name__)
             logger.warning("file {} not found in iRODS".format(self.storage_path))
@@ -3764,7 +3737,7 @@ class BaseResource(Page, AbstractResource):
         return AbstractResource.can_view(self, request)
 
     def get_irods_storage(self):
-        """Return either IrodsStorage or FedStorage."""
+        """Return IrodsStorage."""
         return IrodsStorage()
 
     # Paths relative to the resource

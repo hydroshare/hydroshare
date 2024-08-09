@@ -8,7 +8,7 @@ import warnings
 from datetime import datetime
 from datetime import timedelta
 from urllib.parse import urlencode
-from .utils import bucket_and_key
+from .utils import bucket_and_name
 
 from django.contrib.staticfiles.storage import ManifestFilesMixin
 from django.core.exceptions import ImproperlyConfigured
@@ -121,8 +121,9 @@ class S3File(CompressedFileMixin, File):
         if "r" in mode and "w" in mode:
             raise ValueError("Can't combine 'r' and 'w' in mode.")
         self._storage = storage
-        bucket, name = bucket_and_key(name)
-        self.name = name[len(self._storage.location) :].lstrip("/")
+        bucket, name = bucket_and_name(name)
+        #self.name = name[len(self._storage.location) :].lstrip("/")
+        self.name = name
         self._mode = mode
         self.obj = storage.bucket(bucket).Object(name)
         if "w" not in mode:
@@ -515,7 +516,8 @@ class S3Storage(CompressStorageMixin, BaseStorage):
         the directory specified by the LOCATION setting.
         """
         try:
-            return safe_join(self.location, name)
+            #return safe_join(self.location, name)
+            return name
         except ValueError:
             raise SuspiciousOperation("Attempted access to '%s' denied." % name)
 
@@ -530,7 +532,7 @@ class S3Storage(CompressStorageMixin, BaseStorage):
         return f
 
     def _save(self, name, content):
-        bucket, name = bucket_and_key(name)
+        bucket, name = bucket_and_name(name)
         cleaned_name = clean_name(name)
         name = self._normalize_name(cleaned_name)
         params = self._get_write_parameters(name, content)
@@ -563,7 +565,7 @@ class S3Storage(CompressStorageMixin, BaseStorage):
 
     def delete(self, name):
         try:
-            bucket, name = bucket_and_key(name)
+            bucket, name = bucket_and_name(name)
             name = self._normalize_name(clean_name(name))
             self.bucket(bucket).Object(name).delete()
         except ClientError as err:
@@ -575,10 +577,10 @@ class S3Storage(CompressStorageMixin, BaseStorage):
             raise
 
     def exists(self, name):
-        if self.file_overwrite:
-            return False
+        #if self.file_overwrite:
+        #    return False
 
-        bucket, name = bucket_and_key(name)
+        bucket, name = bucket_and_name(name)
         name = self._normalize_name(clean_name(name))
         try:
             self.connection.meta.client.head_object(Bucket=bucket, Key=name)
@@ -591,7 +593,7 @@ class S3Storage(CompressStorageMixin, BaseStorage):
             raise
 
     def listdir(self, name):
-        bucket, name = bucket_and_key(name)
+        bucket, name = bucket_and_name(name)
         path = self._normalize_name(clean_name(name))
         # The path needs to end with a slash, but if the root is empty, leave it.
         if path and not path.endswith("/"):
@@ -613,7 +615,7 @@ class S3Storage(CompressStorageMixin, BaseStorage):
         return directories, files
 
     def size(self, name):
-        bucket, name = bucket_and_key(name)
+        bucket, name = bucket_and_name(name)
         name = self._normalize_name(clean_name(name))
         try:
             return self.bucket(bucket).Object(name).content_length
@@ -655,7 +657,7 @@ class S3Storage(CompressStorageMixin, BaseStorage):
         Returns an (aware) datetime object containing the last modified time if
         USE_TZ is True, otherwise returns a naive datetime in the local timezone.
         """
-        bucket, name = bucket_and_key(name)
+        bucket, name = bucket_and_name(name)
         name = self._normalize_name(clean_name(name))
         entry = self.bucket(bucket).Object(name)
         if setting("USE_TZ"):
@@ -666,7 +668,8 @@ class S3Storage(CompressStorageMixin, BaseStorage):
 
     def url(self, name, parameters=None, expire=None, http_method=None):
         # Preserve the trailing slash after normalizing the path.
-        bucket, name = bucket_and_key(name)
+
+        bucket, name = bucket_and_name(name)
         name = self._normalize_name(clean_name(name))
         params = parameters.copy() if parameters else {}
         if expire is None:

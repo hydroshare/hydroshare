@@ -137,21 +137,6 @@ urlpatterns = [
         core_views.resource_folder_rest_api.ResourceFolders.as_view(),
         name='list_manipulate_folders'),
 
-    # iRODS tickets
-    # write disabled;change (?P<op>read) to (?P<op>read|write) when ready
-
-    url(r'^resource/(?P<pk>[0-9a-f-]+)/ticket/(?P<op>read)/(?P<pathname>.*)/$',
-        core_views.resource_ticket_rest_api.CreateResourceTicket.as_view(),
-        name='create_ticket'),
-
-    url(r'^resource/(?P<pk>[0-9a-f-]+)/ticket/bag/$',
-        core_views.resource_ticket_rest_api.CreateBagTicket.as_view(),
-        name='create_bag_ticket'),
-
-    url(r'^resource/(?P<pk>[0-9a-f-]+)/ticket/(?P<ticket>.*)/$',
-        core_views.resource_ticket_rest_api.ManageResourceTicket.as_view(),
-        name='manage_ticket'),
-
     # public unzip endpoint
     url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/unzip/(?P<pathname>.*)/$',
         core_views.resource_folder_hierarchy.data_store_folder_unzip_public),

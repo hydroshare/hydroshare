@@ -1,36 +1,5 @@
 version: '3'
 services:
-  data.local.org:
-    image: hydroshare/hs-irods:2e7929c
-    container_name: data.local.org
-    hostname: data.local.org
-    ports:
-      - "1247:1247"
-    volumes:
-      - "idata_iconf_vol:/etc/irods"
-      - "idata_vault_vol:/var/lib/irods"
-      - "idata_pgres_vol:/var/lib/postgresql/data"
-      - "idata_home_vol:/home"
-    environment:
-      USE_IRODS: 'True'
-      IRODS_ROOT: '/tmp'
-      IRODS_ICOMMANDS_PATH: '/usr/bin'
-      IRODS_HOST: 'data.local.org'
-      IRODS_PORT: '1247'
-      IRODS_DEFAULT_RESOURCE: 'hydroshareReplResc'
-      IRODS_HOME_COLLECTION: '/hydroshareZone/home/wwwHydroProxy'
-      IRODS_ZONE: 'hydroshareZone'
-      IRODS_USERNAME: 'wwwHydroProxy'
-      IRODS_AUTH: 'wwwHydroProxy'
-      IRODS_GLOBAL_SESSION: 'True'
-      REMOTE_USE_IRODS: 'True'
-      IRODS_ZONE_NAME: 'hydroshareZone'
-      IRODS_SERVER_ZONE_KEY: 'hydroshareZone_KEY'
-      IRODS_DATABASE_SERVER_HOSTNAME: 'data.local.org'
-      IRODS_USER_NAME: 'rods'
-      IRODS_PASSWORD: 'rods'
-    stdin_open: true
-    tty: true
   postgis:
     image: postgis/postgis:15-3.3
     environment:
@@ -96,12 +65,10 @@ services:
       - postgis:postgis
       - solr:solr
       - rabbitmq:rabbitmq
-      - data.local.org:data.local.org
     depends_on:
       - postgis
       - solr
       - rabbitmq
-      - data.local.org
     stdin_open: true
     tty: true
     command: /bin/bash init-hydroshare
@@ -133,13 +100,11 @@ services:
     links:
       - postgis:postgis
       - rabbitmq:rabbitmq
-      - data.local.org:data.local.org
     depends_on:
       - hydroshare
       - postgis
       - solr
       - rabbitmq
-      - data.local.org
     stdin_open: true
     tty: true
     command: /bin/bash init-defaultworker

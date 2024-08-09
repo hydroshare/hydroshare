@@ -102,7 +102,7 @@ def create_bagit_files_by_irods(res, istorage):
         if not is_bagit_readme_exist:
             from_file_name = getattr(settings, 'HS_BAGIT_README_FILE_WITH_PATH',
                                      'docs/bagit/readme.txt')
-            istorage.saveFile(from_file_name, bagit_readme_file, True)
+            istorage.saveFile(from_file_name, bagit_readme_file)
 
         # call iRODS bagit rule here
         bagit_rule_file = getattr(settings, 'IRODS_BAGIT_RULE',
@@ -150,7 +150,7 @@ def save_resource_metadata_xml(resource):
         # write resource level metadata
         out.write(resource.get_metadata_xml())
     to_file_name = os.path.join(resource.root_path, 'data', 'resourcemetadata.xml')
-    istorage.saveFile(from_file_name, to_file_name, True)
+    istorage.saveFile(from_file_name, to_file_name)
 
 
 def create_bag_metadata_files(resource):
@@ -298,7 +298,7 @@ def create_bag_metadata_files(resource):
     with open(from_file_name, 'w') as out:
         out.write(xml_string)
     to_file_name = os.path.join(resource.root_path, 'data', 'resourcemap.xml')
-    istorage.saveFile(from_file_name, to_file_name, False)
+    istorage.saveFile(from_file_name, to_file_name)
 
     # if the resource is a composite resource generate aggregation meta files (res map, metadata xml and schema json)
     # files
