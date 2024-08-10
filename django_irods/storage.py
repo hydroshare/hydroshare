@@ -46,7 +46,7 @@ class IrodsStorage(S3Storage):
         directories, files = super().listdir(path)
         file_sizes = []
         for f in files:
-            #file_sizes.append(self.connection.Object(*bucket_and_name(f)).content_length)
+            # TODO get file size
             file_sizes.append(0)
         return (directories, files, file_sizes)
 
@@ -200,12 +200,16 @@ class IrodsStorage(S3Storage):
         #}
         #return reverse_url + "?" + urlencode(query_params)
 
-    def isFile(self, path):
-        try:
-            self.listdir(path)
-            return False
-        except Exception:
-            return True
-
     def isDir(self, path):
-        return not self.isFile(path)
+        dir_prefix = os.path.join(path, "")
+        _, files, _ = self.listdir(dir_prefix)
+        return  len(files) > 0
+
+    def isFile(self, path):
+        src_bucket, src_name = bucket_and_name(path)
+        try:
+            self.connection.Object(src_bucket, src_name).load()
+            return True
+        except:
+            #TODO check if something went wrong vs not found
+            return False
