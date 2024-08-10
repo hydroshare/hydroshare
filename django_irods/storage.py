@@ -135,45 +135,22 @@ class IrodsStorage(S3Storage):
         delete_src: delete the source file after copying when set to True. Default is False
         """
         src_bucket, src_name = bucket_and_name(src_path)
-        dest_bucket, dest_name = bucket_and_name(dest_path)
-        # https://stackoverflow.com/questions/37178584/recursively-copying-content-from-one-path-to-another-of-s3-buckets-using-boto-in
-        more_objects=True
-        found_token = True
-        while more_objects :
-            if found_token :
-                response= self.connection.list_objects_v2(
-                Bucket=src_bucket, 
-                Prefix=src_name,
-                Delimiter="/")
-            else:   
-                response= self.connection.list_objects_v2(
-                Bucket=src_bucket,
-                ContinuationToken=found_token,
-                Prefix=src_name,
-                Delimiter="/")
-            # use copy_object or copy_from
-            for source in response["Contents"]:
-                src_file_path = source["Key"]#.split("/")[-1] 
-                src_name_length = len(src_name)
-                src_file_relative_path = src_file_path[:-src_name_length]
-                dst_file_path = os.path.join(src_file_relative_path, dest_name)
-
-                self.connection.Bucket(dest_bucket).copy_object(
-                    {
-                        "Bucket": src_bucket,
-                        "Key": src_file_path,
-                    },
-                    dst_file_path,
-                )
-                if delete_src:
-                    self.connection.Bucket(src_bucket).delete_object(Key=src_file_path)
-                # Now check there is more objects to list
-                if "NextContinuationToken" in response:
-                    found_token = response["NextContinuationToken"]
-                    more_objects = True
-                else:
-                    more_objects = False
-
+        dst_bucket, dest_name = bucket_and_name(dest_path)
+        bucket = self.connection.Bucket(src_bucket)
+        for file in bucket.objects.filter(Prefix=src_name):
+            src_file_path = file.key
+            src_name_length = len(src_name)
+            src_file_relative_path = src_file_path[:-src_name_length]
+            dst_file_path = os.path.join(src_file_relative_path, dest_name)
+            self.connection.Bucket(dst_bucket).copy(
+                {
+                    "Bucket": src_bucket,
+                    "Key": src_file_path,
+                },
+                dst_file_path,
+            )
+            if delete_src:
+                self.connection.Object(src_bucket, src_file_path).delete()
 
     def moveFile(self, src_path, dest_path):
         """
