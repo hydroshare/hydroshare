@@ -1,6 +1,7 @@
 import datetime
 import json
 import logging
+import uuid
 
 from autocomplete_light import shortcuts as autocomplete_light
 from dateutil import tz
@@ -855,8 +856,8 @@ def file_download_url_mapper(request, shortkey):
 
     path_split = request.path.split("/")[2:]  # strip /resource/
     public_file_path = "/".join(path_split)
+    public_file_path = public_file_path.strip("/")
 
-    istorage = res.get_irods_storage()
     url_download = (
         True if request.GET.get("url_download", "false").lower() == "true" else False
     )
@@ -864,8 +865,18 @@ def file_download_url_mapper(request, shortkey):
     aggregation = (
         True if request.GET.get("aggregation", "false").lower() == "true" else False
     )
+
+    istorage = res.get_irods_storage()
+    if aggregation:
+        #TODO handle the aggrgation nonsense download
+        # for now just zip the folder
+        public_file_path = "/".join(public_file_path.split("/")[:-1])
+    if zipped:
+        zip_path = f"tmp/{uuid.uuid4()}.zip"
+        istorage.zipup(public_file_path, zip_path)
+        public_file_path = zip_path
     return HttpResponseRedirect(
-        istorage.url(public_file_path, url_download, zipped, aggregation)
+        istorage.url(public_file_path)
     )
 
 

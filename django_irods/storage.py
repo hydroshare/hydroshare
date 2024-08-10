@@ -1,4 +1,6 @@
+from io import BytesIO
 import os
+import zipfile
 
 from . import models as m
 from .utils import bucket_and_name
@@ -70,10 +72,22 @@ class IrodsStorage(S3Storage):
         :param out_name: the output zipped file name
         :return: None
         """
-        #self.session.run("imkdir", None, "-p", out_name.rsplit("/", 1)[0])
-        #self.session.run("ibun", None, "-cDzip", "-f", out_name, in_name)
-        pass #TODO
+        in_bucket, in_name = bucket_and_name(in_name)
+        out_bucket, out_name = bucket_and_name(out_name)
+        in_bucket = self.connection.Bucket(in_bucket)
+
         # Stream zip https://stackoverflow.com/a/69136133
+        filesCollection = in_bucket.objects.filter(Prefix=in_name).all()
+        archive = BytesIO()
+
+        with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
+            for file in filesCollection:
+                with zip_archive.open(file.key, 'w') as file1:
+                    file1.write(file.get()['Body'].read())
+
+        archive.seek(0)
+        self.connection.Object(out_bucket, out_name).upload_fileobj(archive)
+        archive.close()
 
     def unzip(self, zip_file_path, unzipped_folder=""):
         """
@@ -199,8 +213,9 @@ class IrodsStorage(S3Storage):
         bucket, name = bucket_and_name(s3_bucket_name)
         self.connection.Bucket(bucket).download_file(name, local_file_path)
 
-    def url(self, name, url_download=False, zipped=False, aggregation=False):
-        return super().url(name.strip("/"))
+    def url(self, name):
+        super_url = super().url(name.strip("/"))
+        return super_url
         # TODO work out zipped downloads
         #reverse_url = reverse("rest_download", kwargs={"path": name})
         #query_params = {

@@ -1,9 +1,13 @@
+import uuid
 from django.db import connection
 
 
 def bucket_and_name(path):
     if path.startswith("bags/"):
         path = path.split("/")[-1].strip(".zip")
+    elif path.startswith("tmp/"):
+        bucket_and_path = path.split("/")
+        return bucket_and_path[0], bucket_and_path[1]
     res_id = "/".join(path.split("/")[:1])
     resource_query = f'SELECT "pages_page"."id", "pages_page"."_order", "hs_core_genericresource"."short_id", \
                         "hs_core_genericresource"."quota_holder_id", "hs_core_genericresource"."page_ptr_id" \
@@ -14,6 +18,8 @@ def bucket_and_name(path):
     with connection.cursor() as cursor:
         cursor.execute(resource_query)
         row = cursor.fetchone()
+        if row is None:
+            raise Exception(f"Resource with short_id {res_id} not found")
         owner_id = row[3]
         owner_username_query = f'SELECT "auth_user"."id", "auth_user"."username" \
                                  FROM "auth_user" WHERE "auth_user"."id" = {owner_id}'
