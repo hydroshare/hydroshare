@@ -193,7 +193,23 @@ def get_file_from_irods(resource, file_path, temp_dir=None):
     """
 
     istorage = resource.get_irods_storage()
-    return istorage._open(file_path)
+
+    file_name = os.path.basename(file_path)
+
+    if temp_dir is not None:
+        if not temp_dir.startswith(settings.TEMP_FILE_DIR):
+            raise ValueError("Specified temp directory is not valid")
+        elif not os.path.exists(temp_dir):
+            raise ValueError("Specified temp directory doesn't exist")
+
+        tmpdir = temp_dir
+    else:
+        tmpdir = get_temp_dir()
+    tmpfile = os.path.join(tmpdir, file_name)
+
+    istorage.download_file(file_path, tmpfile)
+
+    return tmpfile
 
 
 def get_temp_dir():

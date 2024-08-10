@@ -189,6 +189,16 @@ class IrodsStorage(S3Storage):
         s3_object = self.connection.Object(bucket, name)
         return s3_object.e_tag.strip('"')
     
+    def download_file(self, s3_bucket_name, local_file_path):
+        """
+        Download file from S3 bucket to local file path
+        :param s3_bucket_name: the data object name with full collection path in order to locate data object from current
+        working directory
+        :param local_file_path: the local file path to download the file to
+        """
+        bucket, name = bucket_and_name(s3_bucket_name)
+        self.connection.Bucket(bucket).download_file(name, local_file_path)
+
     def url(self, name, url_download=False, zipped=False, aggregation=False):
         return super().url(name.strip("/"))
         # TODO work out zipped downloads
