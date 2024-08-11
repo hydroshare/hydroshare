@@ -1527,6 +1527,7 @@ def create_folder(res_id, folder_path, migrating_resource=False):
             err_msg = f"{err_msg}Prohibited characters are: {folder_banned_chars}"
             raise SuspiciousFileOperation(err_msg)
 
+    istorage.create_folder(resource.short_id, coll_path)
     #istorage.session.run("imkdir", None, '-p', coll_path)
 
 
@@ -1552,7 +1553,7 @@ def remove_folder(user, res_id, folder_path):
 
     # Seems safest to delete from irods before removing from Django
     # istorage command is the longest-running and most likely to get interrupted
-    istorage.delete(coll_path)
+    istorage.delete_folder(resource.short_id, coll_path)
     remove_irods_folder_in_django(resource, coll_path, user)
 
     resource.update_public_and_discoverable()  # make private if required

@@ -46,7 +46,12 @@ class IrodsStorage(S3Storage):
         :return: a list of files in the directory
         """
         directories, files = super().listdir(path)
+        resource_id = "/".join(path.split("/")[:1])
+        additional_directories = self._empty_folders(resource_id, path)
+        # TODO this is chicken shits
+        additional_directories = [d[len(path) + 1:] for d in additional_directories if d[len(path) + 1:] and "/" not in d[len(path) + 1:]]
         file_sizes = []
+        directories = list(set(directories + additional_directories))
         for f in files:
             # TODO get file size
             file_sizes.append(0)
@@ -136,6 +141,47 @@ class IrodsStorage(S3Storage):
         attVal: the attribute value to set
         """
         return m.AVU.objects.get(name=name, attName=attName).attVal
+
+    def _empty_folders(self, resource_id, filter=None):
+        try:
+            folders = self.getAVU(resource_id, "empty_folders").split(",")
+        except Exception:
+            print(f"no avu found {resource_id}")
+            # TODO handle exception specific to empty matching AVU not found
+            return []
+        if filter:
+            folders = [f for f in folders if f.startswith(filter)]
+        return folders
+
+    def exists(self, name):
+        if super().exists(name):
+            return True
+
+        bucket_name, key = bucket_and_name(name)
+        bucket = self.connection.Bucket(bucket_name)
+        for f in bucket.objects.filter(Prefix=key):
+            return True
+
+        resource_id_and_relative_path = key.split("/data/contents/")
+        resource_id = resource_id_and_relative_path[0]
+        empty_dirs = self._empty_folders(resource_id)
+        if name in empty_dirs:
+            return True
+
+        return False
+
+    def create_folder(self, coll_path, path):
+        folders = self._empty_folders(coll_path)
+        folders.append(path)
+        self.setAVU(coll_path, "empty_folders", ",".join(folders))
+
+    def remove_folder(self, coll_path, path):
+        folders = self._empty_folders(coll_path)
+        if path in folders:
+            folders.remove(path)
+        self.setAVU(coll_path, "empty_folders", ",".join(folders))
+        src_bucket, src_name = bucket_and_name(path)
+        self.connection.Object(src_bucket, src_name).delete()
 
     def copyFiles(self, src_path, dest_path, delete_src=False):
         """

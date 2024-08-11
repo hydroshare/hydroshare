@@ -9,6 +9,7 @@ def bucket_and_name(path):
         bucket_and_path = path.split("/")
         return bucket_and_path[0], bucket_and_path[1]
     res_id = "/".join(path.split("/")[:1])
+    print("res_id: ", res_id)
     resource_query = f'SELECT "pages_page"."id", "pages_page"."_order", "hs_core_genericresource"."short_id", \
                         "hs_core_genericresource"."quota_holder_id", "hs_core_genericresource"."page_ptr_id" \
                         FROM "hs_core_genericresource" \
