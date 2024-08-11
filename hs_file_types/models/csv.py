@@ -76,7 +76,7 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
         csv_meta_model = self.get_table_schema_model()
         tableSchema = BNode()
         graph.add((subject, HSTERMS.tableSchema, tableSchema))
-        graph.add((tableSchema, HSTERMS.numberOfRows, Literal(csv_meta_model.rows)))
+        graph.add((tableSchema, HSTERMS.numberOfDataRows, Literal(csv_meta_model.rows)))
         columns = BNode()
         graph.add((tableSchema, HSTERMS.columns, columns))
         for col in csv_meta_model.columns:
@@ -134,9 +134,11 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
                         column_input_cls = "form-control input-sm textinput textInput"
                         row_div = html_tags.div(cls="control-group", id="id-csv-metadata-row-count")
                         with row_div:
-                            html_tags.label("Number of data rows:", fr="id-csv-metadata-rows", cls="control-label")
+                            html_tags.label("Number of data rows:", fr="id-csv-metadata-rows",
+                                            cls="control-label")
                             with html_tags.div(cls="controls"):
-                                html_tags.input(type="text", id="id-csv-metadata-rows", name="rows", readonly="readonly",
+                                html_tags.input(type="text", id="id-csv-metadata-rows", name="rows",
+                                                readonly="readonly",
                                                 value=table_schema_model.rows,
                                                 cls=column_input_cls)
                         col_div = html_tags.div(cls="control-group", id="id-csv-metadata-columns")
