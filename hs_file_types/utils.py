@@ -500,7 +500,7 @@ def set_logical_file_type(
         # Some aggregations use the folder name for the aggregation name
         folder_path = folder_path.rstrip("/") if folder_path else folder_path
         if extra_data:
-            return logical_file_type_class.set_file_type(
+            logicalfile = logical_file_type_class.set_file_type(
                 resource=res,
                 user=user,
                 file_id=file_id,
@@ -508,10 +508,12 @@ def set_logical_file_type(
                 extra_data=extra_data,
             )
         else:
-            return logical_file_type_class.set_file_type(
+            logicalfile = logical_file_type_class.set_file_type(
                 resource=res, user=user, file_id=file_id, folder_path=folder_path
             )
     except: # noqa
         if fail_feedback:
             raise
         return None
+    logicalfile.create_aggregation_xml_documents()
+    return logicalfile
