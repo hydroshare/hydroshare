@@ -3,13 +3,14 @@ import csv
 import logging
 import os
 from typing import Optional, List
+from typing import Literal as TypeLiteral
 
 import pandas as pd
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.template import Template, Context
 from dominate import tags as html_tags
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from pydantic import ValidationError as PydanticValidationError
 from rdflib import Literal, BNode
 
@@ -22,7 +23,7 @@ from .generic import GenericFileMetaDataMixin
 class _CSVColumnSchema(BaseModel):
     titles: Optional[str] = ""
     description: Optional[str] = ""
-    datatype: str
+    datatype: TypeLiteral["string", "number", "datetime", "boolean"]
     # TODO: we do not need to store the unitCode - so remove it
     unitCode: Optional[str] = ""
 
@@ -30,6 +31,25 @@ class _CSVColumnSchema(BaseModel):
 class CSVMetaSchemaModel(BaseModel):
     rows: int = 0
     columns: List[_CSVColumnSchema]
+
+    @field_validator("rows")
+    def rows_validator(cls, v: int) -> int:
+        if v < 1:
+            raise ValueError("rows must be a positive integer")
+        return v
+
+    @field_validator("columns")
+    def columns_validator(cls, v: List[_CSVColumnSchema]) -> List[_CSVColumnSchema]:
+        # check either all titles are empty or no title is empty
+        titles = [col.titles for col in v]
+        if all(title == "" for title in titles):
+            return v
+        if any(title == "" for title in titles):
+            raise ValueError("All column titles must be empty or no column title must be empty")
+        # check each column title is unique
+        if len(titles) != len(set(titles)):
+            raise ValueError("Column titles must be unique")
+        return v
 
 
 class CSVFileMetaData(GenericFileMetaDataMixin):
