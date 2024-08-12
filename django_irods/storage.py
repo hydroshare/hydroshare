@@ -146,7 +146,6 @@ class IrodsStorage(S3Storage):
         try:
             folders = self.getAVU(resource_id, "empty_folders").split(",")
         except Exception:
-            print(f"no avu found {resource_id}")
             # TODO handle exception specific to empty matching AVU not found
             return []
         if filter:
@@ -197,11 +196,25 @@ class IrodsStorage(S3Storage):
         src_bucket, src_name = bucket_and_name(src_path)
         dst_bucket, dest_name = bucket_and_name(dest_path)
         bucket = self.connection.Bucket(src_bucket)
+
+        # update empty_folders AVU
+        if not self.isFile(src_name):
+            dst_file_path = src_name.replace(src_name, dest_name)
+            res_id = "/".join(dst_file_path.split("/")[:1])
+            for empty_folder in self._empty_folders(res_id, filter=src_name):
+                new_folder = empty_folder.replace(src_name, dest_name)
+                self.remove_folder(res_id, empty_folder)
+                self.create_folder(res_id, new_folder)
+
+        # copy files
         for file in bucket.objects.filter(Prefix=src_name):
             src_file_path = file.key
-            src_name_length = len(src_name)
-            src_file_relative_path = src_file_path[:-src_name_length]
-            dst_file_path = os.path.join(src_file_relative_path, dest_name)
+            if not self.isFile(src_name):
+                dst_file_path = src_file_path.replace(src_name, dest_name)
+            else:
+                src_name_length = len(src_name)
+                src_file_relative_path = src_file_path[:-src_name_length]
+                dst_file_path = os.path.join(src_file_relative_path, dest_name)
             self.connection.Bucket(dst_bucket).copy(
                 {
                     "Bucket": src_bucket,
