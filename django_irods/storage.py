@@ -253,6 +253,23 @@ class IrodsStorage(S3Storage):
         """
         self.copyFiles(src_path, dest_path, delete_src=True)
 
+    def save_md5_manifest(self, resource_id):
+        """
+        save md5 manifest file for the resource
+        :param resource_id: the resource id
+        """
+        bucket_name, path_name = bucket_and_name(resource_id)
+        bucket = self.connection.Bucket(bucket_name)
+        checksums = []
+        strip_length = len(resource_id + "/")
+        for file in bucket.objects.filter(Prefix=os.path.join(path_name, "data")):
+            checksums.append({file.key[strip_length:]: file.e_tag.strip('"')})
+        with tempfile.NamedTemporaryFile() as f:
+            for checksum in checksums:
+                f.write(f"{list(checksum.values())[0]}    {list(checksum.keys())[0]}\n".encode())
+            f.flush()
+            self.saveFile(f.name, f"{resource_id}/manifest-md5.txt")
+
     def saveFile(self, src_local_file, dest_s3_bucket_path):
         """
 
