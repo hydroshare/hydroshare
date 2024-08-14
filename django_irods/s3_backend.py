@@ -26,7 +26,6 @@ from storages.utils import check_location
 from storages.utils import clean_name
 from storages.utils import is_seekable
 from storages.utils import lookup_env
-from storages.utils import safe_join
 from storages.utils import setting
 from storages.utils import to_bytes
 
@@ -122,7 +121,7 @@ class S3File(CompressedFileMixin, File):
             raise ValueError("Can't combine 'r' and 'w' in mode.")
         self._storage = storage
         bucket, name = bucket_and_name(name)
-        #self.name = name[len(self._storage.location) :].lstrip("/")
+        # self.name = name[len(self._storage.location) :].lstrip("/")
         self.name = name
         self._mode = mode
         self.obj = storage.bucket(bucket).Object(name)
@@ -516,7 +515,7 @@ class S3Storage(CompressStorageMixin, BaseStorage):
         the directory specified by the LOCATION setting.
         """
         try:
-            #return safe_join(self.location, name)
+            # return safe_join(self.location, name)
             return name
         except ValueError:
             raise SuspiciousOperation("Attempted access to '%s' denied." % name)
@@ -577,7 +576,7 @@ class S3Storage(CompressStorageMixin, BaseStorage):
             raise
 
     def exists(self, name):
-        #if self.file_overwrite:
+        # if self.file_overwrite:
         #    return False
 
         bucket, name = bucket_and_name(name)

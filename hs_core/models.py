@@ -29,6 +29,7 @@ from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from django.urls import reverse
 from django.utils.timezone import now
+from django_irods.icommands import SessionException
 from dominate.tags import div, h4, legend, table, tbody, td, th, tr
 from lxml import etree
 from markdown import markdown

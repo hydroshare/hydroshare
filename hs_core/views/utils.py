@@ -34,7 +34,6 @@ from rest_framework import status
 from rest_framework.exceptions import NotFound, ValidationError
 
 from django_irods.icommands import SessionException
-from django_irods.storage import IrodsStorage
 from hs_access_control.models import PrivilegeCodes
 from hs_core import hydroshare
 from hs_core.enums import RelationTypes

@@ -1,5 +1,6 @@
 from django.db import models as m
 
+
 class AVU(m.Model):
     name = m.TextField()
     attName = m.TextField()

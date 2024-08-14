@@ -1,6 +1,5 @@
 import asyncio
 import copy
-import errno
 import logging
 import mimetypes
 import os
@@ -936,12 +935,6 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
                                                auto_aggregate=auto_aggregate, user=user)
     resource.refresh_from_db()
     return resource_file_objects
-
-
-# TODO: move this to BaseResource
-def create_empty_contents_directory(resource):
-    res_contents_dir = resource.file_path
-    istorage = resource.get_irods_storage()
 
 
 def add_file_to_resource(resource, f, folder='', source_name='',

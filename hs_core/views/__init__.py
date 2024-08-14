@@ -858,9 +858,6 @@ def file_download_url_mapper(request, shortkey):
     public_file_path = "/".join(path_split)
     public_file_path = public_file_path.strip("/")
 
-    url_download = (
-        True if request.GET.get("url_download", "false").lower() == "true" else False
-    )
     zipped = True if request.GET.get("zipped", "false").lower() == "true" else False
     aggregation = (
         True if request.GET.get("aggregation", "false").lower() == "true" else False

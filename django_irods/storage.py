@@ -8,8 +8,6 @@ from . import models as m
 from .utils import bucket_and_name
 
 from uuid import uuid4
-from django.urls import reverse
-from urllib.parse import urlencode
 
 from django.utils.deconstruct import deconstructible
 from .s3_backend import S3Storage
@@ -277,7 +275,6 @@ class IrodsStorage(S3Storage):
         working directory
         :return: checksum of the file object
         """
-        # https://stackoverflow.com/questions/16872679/how-to-programmatically-get-the-md5-checksum-of-amazon-s3-file-using-boto
         bucket, name = bucket_and_name(s3_bucket_name)
         s3_object = self.connection.Object(bucket, name)
         return s3_object.e_tag.strip('"')
@@ -285,8 +282,8 @@ class IrodsStorage(S3Storage):
     def download_file(self, s3_bucket_name, local_file_path):
         """
         Download file from S3 bucket to local file path
-        :param s3_bucket_name: the data object name with full collection path in order to locate data object from current
-        working directory
+        :param s3_bucket_name: the data object name with full collection path in order to locate data object from
+        current working directory
         :param local_file_path: the local file path to download the file to
         """
         bucket, name = bucket_and_name(s3_bucket_name)
@@ -314,6 +311,6 @@ class IrodsStorage(S3Storage):
         try:
             self.connection.Object(src_bucket, src_name).load()
             return True
-        except:
+        except Exception:
             # TODO check if something went wrong vs not found
             return False
