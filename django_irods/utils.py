@@ -7,7 +7,7 @@ def bucket_and_name(path):
         path = path.split("/")[-1].strip(".zip")
     elif path.startswith("tmp/"):
         bucket_and_path = path.split("/")
-        return bucket_and_path[0], bucket_and_path[1]
+        return bucket_and_path[0], path
     res_id = "/".join(path.split("/")[:1])
     print("res_id: ", res_id)
     resource_query = f'SELECT "pages_page"."id", "pages_page"."_order", "hs_core_genericresource"."short_id", \

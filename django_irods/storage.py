@@ -1,5 +1,7 @@
 from io import BytesIO
 import os
+from pathlib import Path
+import tempfile
 import zipfile
 
 from . import models as m
@@ -46,6 +48,11 @@ class IrodsStorage(S3Storage):
         :return: a list of files in the directory
         """
         directories, files = super().listdir(path)
+        print("path: ", path)
+        print("directories: ", directories)
+        directories = [d for d in directories if d != os.path.basename(path)]
+
+        print("directories: ", directories)
         resource_id = "/".join(path.split("/")[:1])
         additional_directories = self._empty_folders(resource_id, path)
         # TODO this is chicken shits
@@ -94,7 +101,8 @@ class IrodsStorage(S3Storage):
         self.connection.Object(out_bucket, out_name).upload_fileobj(archive)
         archive.close()
 
-    def unzip(self, zip_file_path, unzipped_folder=""):
+
+    def unzip(self, zip_file_path, unzipped_folder):
         """
         run iRODS ibun command to unzip files into a new folder
         :param zip_file_path: path of the zipped file to be unzipped
@@ -102,18 +110,35 @@ class IrodsStorage(S3Storage):
         provided.  The folder to unzip to.
         :return: the folder files were unzipped to
         """
+        print("zip_file_path: ", zip_file_path)
+        zip_bucket, zip_name  = bucket_and_name(zip_file_path)
+        print("zip_bucket: ", zip_bucket)
+        print("zip_name: ", zip_name)
+        unzipped_bucket, unzipped_path = bucket_and_name(unzipped_folder)
+        print("unzipped_bucket: ", unzipped_bucket)
+        print("unzipped_path: ", unzipped_path)
 
-        #abs_path = os.path.dirname(zip_file_path)
-        #if not unzipped_folder:
-        #    unzipped_folder = abs_path
-        #else:
-        #    unzipped_folder = self._get_nonexistant_path(
-        #        os.path.join(abs_path, unzipped_folder)
-        #    )
 
+        bucket = self.connection.Bucket(zip_bucket)
+        filebytes = BytesIO()
+        bucket.download_fileobj(zip_name, filebytes)
+        with tempfile.TemporaryDirectory() as extracted_folder:
+            with zipfile.ZipFile(filebytes, "r") as zip_ref:
+                zip_ref.extractall(extracted_folder)
+            for path in Path(extracted_folder).rglob("*"):
+                if path.is_dir():
+                    continue
+
+                print("path: ", path)
+                #unzipped_file_path = os.path.join(unzipped_path, path)
+                unzipped_file_path = os.path.relpath(path, extracted_folder)
+                print("unzipped_file_path: ", unzipped_file_path)
+                file_unzipped_path = os.path.join(unzipped_path, unzipped_file_path)
+                print("file_unzipped_path: ", file_unzipped_path)
+                self.connection.Bucket(unzipped_bucket).upload_file(path, file_unzipped_path)
         #self.session.run("ibun", None, "-xDzip", zip_file_path, unzipped_folder)
-        #return unzipped_folder
-        pass #TODO
+        #return os.path.join(unzipped_bucket, unzipped_path)
+        return unzipped_folder
 
     def setAVU(self, name, attName, attVal):
         """
@@ -159,7 +184,8 @@ class IrodsStorage(S3Storage):
         bucket_name, key = bucket_and_name(name)
         bucket = self.connection.Bucket(bucket_name)
         for f in bucket.objects.filter(Prefix=key):
-            return True
+            if f.key == key:
+                return True
 
         resource_id_and_relative_path = key.split("/data/contents/")
         resource_id = resource_id_and_relative_path[0]

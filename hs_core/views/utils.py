@@ -1208,7 +1208,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
     unzip_temp_folder = ''
     try:
         # unzip to a temporary folder first to validate contents of the zip file
-        unzip_temp_folder = uuid4().hex
+        unzip_temp_folder = os.path.join("tmp", uuid4().hex)
         # Note: unzipping using the irods 'ibun' command seems to fail if the zip file contains files that have
         # non-english characters.
         unzip_path_temp = istorage.unzip(zip_with_full_path, unzipped_folder=unzip_temp_folder)
@@ -1239,7 +1239,8 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
             # unzip to the subfolder with zip file base name as the subfolder name. If the subfolder name already
             # exists, a sequential number is appended to the subfolder name to make sure the subfolder name is unique
             unzip_folder = os.path.splitext(os.path.basename(zip_with_full_path))[0].strip()
-            unzip_to_folder_path = istorage.unzip(zip_with_full_path, unzipped_folder=unzip_folder)
+            unzip_folder_path = zip_with_full_path.replace(os.path.basename(zip_with_full_path), unzip_folder)
+            unzip_to_folder_path = istorage.unzip(zip_with_full_path, unzipped_folder=unzip_folder_path)
             res_files = link_irods_folder_to_django(resource, istorage, unzip_to_folder_path, auto_aggregate)
             if resource.resource_type == 'CompositeResource':
                 # make the newly added files part of an aggregation if needed
@@ -1263,7 +1264,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                 res_files, meta_files, map_files = identify_metadata_files(res_files)
 
             for file in res_files:
-                destination_file = _get_destination_filename(file.name, unzip_temp_folder)
+                destination_file = _get_destination_filename(file.name, unzip_temp_folder, zip_with_full_path)
                 if istorage.exists(destination_file):
                     override_tgt_paths.append(destination_file)
 
@@ -1302,12 +1303,12 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
 
             # now move each file to the destination
             for file in res_files:
-                destination_file = _get_destination_filename(file.name, unzip_temp_folder)
+                destination_file = _get_destination_filename(file.name, unzip_temp_folder, zip_with_full_path)
                 istorage.moveFile(file.name, destination_file)
             # and now link them to the resource
             added_resource_files = []
             for file in res_files:
-                destination_file = _get_destination_filename(file.name, unzip_temp_folder)
+                destination_file = _get_destination_filename(file.name, unzip_temp_folder, zip_with_full_path)
                 destination_file = destination_file.replace(res_id + "/", "", 1)
                 destination_file = resource.get_irods_path(destination_file)
                 res_file = link_irods_file_to_django(resource, destination_file)
@@ -1438,7 +1439,7 @@ def ingest_bag(resource, bag_file, user):
     resource.save()
 
 
-def _get_destination_filename(file, unzipped_foldername):
+def _get_destination_filename(file, unzipped_foldername, zip_with_full_path):
     """
     Returns the destination file path by removing the temp unzipped_foldername from the file path.
     Useful for moving files from a temporary unzipped folder to the resource outside of the
@@ -1447,9 +1448,10 @@ def _get_destination_filename(file, unzipped_foldername):
     :param unzipped_foldername: the name of the
     :return:
     """
-    split = file.split("/" + unzipped_foldername + "/", 1)
+    split = file.split(unzipped_foldername.strip("/"), 1)
     destination_file = os.path.join(split[0], split[1])
-    return destination_file
+    destination_file_path = zip_with_full_path.replace(os.path.basename(zip_with_full_path), destination_file.strip("/"))
+    return destination_file_path
 
 
 def listfiles_recursively(istorage, path):
