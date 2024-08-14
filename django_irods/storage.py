@@ -271,8 +271,8 @@ class IrodsStorage(S3Storage):
     def checksum(self, s3_bucket_name):
         """
         Compute/Update checksum of file object and return the checksum
-        :param s3_bucket_name: the data object name with full collection path in order to locate data object from current
-        working directory
+        :param s3_bucket_name: the data object name with full collection path in order to locate
+        data object from current working directory
         :return: checksum of the file object
         """
         bucket, name = bucket_and_name(s3_bucket_name)

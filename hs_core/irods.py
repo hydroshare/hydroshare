@@ -1,9 +1,6 @@
 import os
 
-from datetime import datetime, timedelta
-
 from django.db import models
-from django.core.exceptions import PermissionDenied, ValidationError
 from mezzanine.conf import settings
 
 from hs_core.signals import pre_check_bag_flag
