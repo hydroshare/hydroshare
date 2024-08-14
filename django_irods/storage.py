@@ -15,21 +15,20 @@ from django.utils.deconstruct import deconstructible
 from .s3_backend import S3Storage
 
 # TODO check for usage of these imports elsewhere for cleanup
-#from django_irods import icommands
-#from .icommands import (
+# from django_irods import icommands
+# from .icommands import (
 #    Session,
 #    GLOBAL_SESSION,
 #    GLOBAL_ENVIRONMENT,
 #    SessionException,
 #    IRodsEnv,
-#)
+# )
 
 
 @deconstructible
 class IrodsStorage(S3Storage):
     def __init__(self, **settings):
         super().__init__(**settings)
-        pass #TODO
 
     @property
     def getUniqueTmpPath(self):
@@ -40,7 +39,7 @@ class IrodsStorage(S3Storage):
 
     def download(self, name):
         return self.open(name, mode="rb")
-    
+
     def listdir(self, path):
         """
         list the contents of the directory
@@ -53,7 +52,8 @@ class IrodsStorage(S3Storage):
         resource_id = "/".join(path.split("/")[:1])
         additional_directories = self._empty_folders(resource_id, path)
         # TODO this is chicken shits
-        additional_directories = [d[len(path) + 1:] for d in additional_directories if d[len(path) + 1:] and "/" not in d[len(path) + 1:]]
+        additional_directories = [d[len(path) + 1:]
+                                  for d in additional_directories if d[len(path) + 1:] and "/" not in d[len(path) + 1:]]
         file_sizes = []
         directories = list(set(directories + additional_directories))
         for f in files:
@@ -71,8 +71,8 @@ class IrodsStorage(S3Storage):
         to store generated bag files
         :return: None
         """
-        #self.session.run("irule", None, "-F", rule_name, input_path, input_resource)
-        pass #TODO
+        # self.session.run("irule", None, "-F", rule_name, input_path, input_resource)
+        pass  # TODO
 
     def zipup(self, in_name, out_name):
         """
@@ -105,7 +105,6 @@ class IrodsStorage(S3Storage):
         self.connection.Object(out_bucket, out_name).upload_fileobj(archive)
         archive.close()
 
-
     def unzip(self, zip_file_path, unzipped_folder):
         """
         run iRODS ibun command to unzip files into a new folder
@@ -114,7 +113,7 @@ class IrodsStorage(S3Storage):
         provided.  The folder to unzip to.
         :return: the folder files were unzipped to
         """
-        zip_bucket, zip_name  = bucket_and_name(zip_file_path)
+        zip_bucket, zip_name = bucket_and_name(zip_file_path)
         unzipped_bucket, unzipped_path = bucket_and_name(unzipped_folder)
 
         bucket = self.connection.Bucket(zip_bucket)
@@ -144,7 +143,6 @@ class IrodsStorage(S3Storage):
         attVal: the attribute value to set
         """
         m.AVU.objects.update_or_create(name=name, attName=attName, defaults={'attVal': attVal})
-        #m.AVU(name=name, attName=attName, attVal=attVal).save()
 
     def getAVU(self, name, attName):
         """
@@ -283,7 +281,7 @@ class IrodsStorage(S3Storage):
         bucket, name = bucket_and_name(s3_bucket_name)
         s3_object = self.connection.Object(bucket, name)
         return s3_object.e_tag.strip('"')
-    
+
     def download_file(self, s3_bucket_name, local_file_path):
         """
         Download file from S3 bucket to local file path
@@ -298,18 +296,18 @@ class IrodsStorage(S3Storage):
         super_url = super().url(name.strip("/"))
         return super_url
         # TODO work out zipped downloads
-        #reverse_url = reverse("rest_download", kwargs={"path": name})
-        #query_params = {
+        # reverse_url = reverse("rest_download", kwargs={"path": name})
+        # query_params = {
         #    "url_download": url_download,
         #    "zipped": zipped,
         #    "aggregation": aggregation,
-        #}
-        #return reverse_url + "?" + urlencode(query_params)
+        # }
+        # return reverse_url + "?" + urlencode(query_params)
 
     def isDir(self, path):
         dir_prefix = os.path.join(path, "")
         _, files, _ = self.listdir(dir_prefix)
-        return  len(files) > 0
+        return len(files) > 0
 
     def isFile(self, path):
         src_bucket, src_name = bucket_and_name(path)
@@ -317,5 +315,5 @@ class IrodsStorage(S3Storage):
             self.connection.Object(src_bucket, src_name).load()
             return True
         except:
-            #TODO check if something went wrong vs not found
+            # TODO check if something went wrong vs not found
             return False

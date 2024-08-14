@@ -868,7 +868,7 @@ def file_download_url_mapper(request, shortkey):
 
     istorage = res.get_irods_storage()
     if aggregation:
-        #TODO handle the aggrgation nonsense download
+        # TODO handle the aggrgation nonsense download
         # for now just zip the folder
         public_file_path = "/".join(public_file_path.split("/")[:-1])
     if zipped:
@@ -1525,7 +1525,7 @@ go to http://{domain}/verify/{token}/ and verify your account.
 
         context = {"is_email_sent": True}
         return render(request, "pages/verify-account.html", context)
-    except: # noqa
+    except:  # noqa
         pass  # FIXME should log this instead of ignoring it.
 
 

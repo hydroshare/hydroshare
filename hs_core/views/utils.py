@@ -1450,7 +1450,8 @@ def _get_destination_filename(file, unzipped_foldername, zip_with_full_path):
     """
     split = file.split(unzipped_foldername.strip("/"), 1)
     destination_file = os.path.join(split[0], split[1])
-    destination_file_path = zip_with_full_path.replace(os.path.basename(zip_with_full_path), destination_file.strip("/"))
+    destination_file_path = zip_with_full_path.replace(
+        os.path.basename(zip_with_full_path), destination_file.strip("/"))
     return destination_file_path
 
 
@@ -1530,7 +1531,7 @@ def create_folder(res_id, folder_path, migrating_resource=False):
             raise SuspiciousFileOperation(err_msg)
 
     istorage.create_folder(resource.short_id, coll_path)
-    #istorage.session.run("imkdir", None, '-p', coll_path)
+    # istorage.session.run("imkdir", None, '-p', coll_path)
 
 
 def remove_folder(user, res_id, folder_path):

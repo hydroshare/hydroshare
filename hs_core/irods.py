@@ -80,6 +80,7 @@ class ResourceIRODSMixin(models.Model):
             create_bag_metadata_files(self)
             self.setAVU('metadata_dirty', False)
 
+
 class ResourceFileIRODSMixin(models.Model):
     """ This contains iRODS functions related to resource files """
     class Meta:
