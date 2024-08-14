@@ -48,11 +48,8 @@ class IrodsStorage(S3Storage):
         :return: a list of files in the directory
         """
         directories, files = super().listdir(path)
-        print("path: ", path)
-        print("directories: ", directories)
         directories = [d for d in directories if d != os.path.basename(path)]
 
-        print("directories: ", directories)
         resource_id = "/".join(path.split("/")[:1])
         additional_directories = self._empty_folders(resource_id, path)
         # TODO this is chicken shits
@@ -110,14 +107,8 @@ class IrodsStorage(S3Storage):
         provided.  The folder to unzip to.
         :return: the folder files were unzipped to
         """
-        print("zip_file_path: ", zip_file_path)
         zip_bucket, zip_name  = bucket_and_name(zip_file_path)
-        print("zip_bucket: ", zip_bucket)
-        print("zip_name: ", zip_name)
         unzipped_bucket, unzipped_path = bucket_and_name(unzipped_folder)
-        print("unzipped_bucket: ", unzipped_bucket)
-        print("unzipped_path: ", unzipped_path)
-
 
         bucket = self.connection.Bucket(zip_bucket)
         filebytes = BytesIO()
@@ -129,15 +120,9 @@ class IrodsStorage(S3Storage):
                 if path.is_dir():
                     continue
 
-                print("path: ", path)
-                #unzipped_file_path = os.path.join(unzipped_path, path)
                 unzipped_file_path = os.path.relpath(path, extracted_folder)
-                print("unzipped_file_path: ", unzipped_file_path)
                 file_unzipped_path = os.path.join(unzipped_path, unzipped_file_path)
-                print("file_unzipped_path: ", file_unzipped_path)
                 self.connection.Bucket(unzipped_bucket).upload_file(path, file_unzipped_path)
-        #self.session.run("ibun", None, "-xDzip", zip_file_path, unzipped_folder)
-        #return os.path.join(unzipped_bucket, unzipped_path)
         return unzipped_folder
 
     def setAVU(self, name, attName, attVal):
@@ -177,14 +162,17 @@ class IrodsStorage(S3Storage):
             folders = [f for f in folders if f.startswith(filter)]
         return folders
 
-    def exists(self, name):
+    def exists(self, name, folder=False):
         if super().exists(name):
             return True
 
         bucket_name, key = bucket_and_name(name)
         bucket = self.connection.Bucket(bucket_name)
         for f in bucket.objects.filter(Prefix=key):
-            if f.key == key:
+            if not folder:
+                if f.key == key:
+                    return True
+            else:
                 return True
 
         resource_id_and_relative_path = key.split("/data/contents/")
@@ -206,7 +194,8 @@ class IrodsStorage(S3Storage):
             folders.remove(path)
         self.setAVU(coll_path, "empty_folders", ",".join(folders))
         src_bucket, src_name = bucket_and_name(path)
-        self.connection.Object(src_bucket, src_name).delete()
+        for file in self.connection.Bucket(src_bucket).objects.filter(Prefix=src_name):
+            self.connection.Object(src_bucket, file.key).delete()
 
     def copyFiles(self, src_path, dest_path, delete_src=False):
         """
