@@ -170,7 +170,7 @@ fi
 DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
 HYDROSHARE_CONTAINERS=(hydroshare defaultworker data.local.org rabbitmq solr postgis)
 HYDROSHARE_VOLUMES=(hydroshare_idata_iconf_vol hydroshare_idata_pgres_vol hydroshare_idata_vault_vol hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol)
-HYDROSHARE_IMAGES=(hydroshare_defaultworker hydroshare_hydroshare solr hydroshare/hs-irods hydroshare/hs_docker_base hydroshare/hs_postgres rabbitmq)
+HYDROSHARE_IMAGES=(hydroshare_defaultworker hydroshare_hydroshare solr hydroshare/hs_docker_base hydroshare/hs_postgres rabbitmq)
 
 NODE_CONTAINER_RUNNING=`docker ps -a | grep nodejs`
 
@@ -236,7 +236,6 @@ echo "Creating django settings and static directories"
 cp hydroshare/local_settings.template hydroshare/local_settings.py 2>/dev/null
 mkdir -p hydroshare/static/static 2>/dev/null
 mkdir -p hydroshare/static/media 2>/dev/null
-rm -fr log .irods 2>/dev/null
 mkdir -p log/nginx 2>/dev/null
 #chmod -R 777 log 2>/dev/null
 
@@ -260,34 +259,6 @@ echo
 echo
 echo " - building Node for Discovery in background"
 node_build > /dev/null 2>&1 &
-
-echo
-echo '########################################################################################################################'
-echo -e " Setting up iRODS"
-echo '########################################################################################################################'
-echo
-
-echo " - waiting for iRODS containers to come up..."
-COUNT=0
-SECOND=0
-while [ $COUNT -lt 2 ]
-do
-  DATA=`docker logs data.local.org 2>/dev/null | grep 'iRODS is installed and running'`
-  if [ "$DATA" != "" ]; then
-    COUNT=$(($COUNT + 1))
-  fi
-  SECOND=$(($SECOND + 1))
-  echo -ne "$SECOND ...\033[0K\r" && sleep 1;
-done
-
-cd irods/
-./partial_build.sh 
-cd ..
-sleep 2
-
-echo "Chown root items"
-echo " - exec hydroshare bash scripts/chown-root-items"
-docker exec hydroshare bash scripts/chown-root-items
 
 echo
 echo '########################################################################################################################'

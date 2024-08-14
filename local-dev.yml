@@ -109,10 +109,6 @@ services:
     tty: true
     command: /bin/bash init-defaultworker
 volumes:
-  idata_iconf_vol:
-  idata_vault_vol:
-  idata_pgres_vol:
-  idata_home_vol:
   postgis_data_vol:
   solr_data_vol:
   temp_vol:
