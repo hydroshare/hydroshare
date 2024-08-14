@@ -917,6 +917,12 @@ MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
 
 BULK_UPDATE_CREATE_BATCH_SIZE = 1000
 
+
+AWS_STORAGE_BUCKET_NAME = 'blah'
+AWS_S3_ACCESS_KEY_ID = 'minioadmin'
+AWS_S3_SECRET_ACCESS_KEY = 'minioadmin'
+AWS_S3_ENDPOINT_URL = 'http://nginx:9000'
+
 if ENABLE_OIDC_AUTHENTICATION:
     # The order of the authentication classes is important. The OIDC authentication class
     # see this issue: https://github.com/encode/django-rest-framework/issues/5865
