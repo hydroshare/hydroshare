@@ -260,6 +260,10 @@ echo
 echo " - building Node for Discovery in background"
 node_build > /dev/null 2>&1 &
 
+echo "Chown root items"
+echo " - exec hydroshare bash scripts/chown-root-items"
+docker exec hydroshare bash scripts/chown-root-items
+
 echo
 echo '########################################################################################################################'
 echo -e " Setting up PostgreSQL container and Importing Django DB"
