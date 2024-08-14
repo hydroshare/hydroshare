@@ -261,6 +261,8 @@ echo
 echo " - building Node for Discovery in background"
 node_build > /dev/null 2>&1 &
 
+sleep 2
+
 echo "Chown root items"
 echo " - exec hydroshare bash scripts/chown-root-items"
 docker exec hydroshare bash scripts/chown-root-items
