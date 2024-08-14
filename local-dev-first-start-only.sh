@@ -169,7 +169,7 @@ fi
 
 DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
 HYDROSHARE_CONTAINERS=(hydroshare defaultworker data.local.org rabbitmq solr postgis)
-HYDROSHARE_VOLUMES=(hydroshare_idata_iconf_vol hydroshare_idata_pgres_vol hydroshare_idata_vault_vol hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol)
+HYDROSHARE_VOLUMES=(hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol)
 HYDROSHARE_IMAGES=(hydroshare_defaultworker hydroshare_hydroshare solr hydroshare/hs_docker_base hydroshare/hs_postgres rabbitmq)
 
 NODE_CONTAINER_RUNNING=`docker ps -a | grep nodejs`
@@ -236,6 +236,7 @@ echo "Creating django settings and static directories"
 cp hydroshare/local_settings.template hydroshare/local_settings.py 2>/dev/null
 mkdir -p hydroshare/static/static 2>/dev/null
 mkdir -p hydroshare/static/media 2>/dev/null
+rm -fr log .irods 2>/dev/null
 mkdir -p log/nginx 2>/dev/null
 #chmod -R 777 log 2>/dev/null
 
