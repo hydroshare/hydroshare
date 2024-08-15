@@ -869,30 +869,13 @@ def file_download_url_mapper(request, shortkey):
         zipped = True
     aggregation_name = None
     if aggregation:
-        # TODO handle the aggrgation nonsense download
-        # for now just zip the folder
-        print("public_file_path", public_file_path)
-        #public_file_path = "/".join(public_file_path.split("/")[:-1])
-        #print("public_file_path", public_file_path)
-        
         aggregation_name = public_file_path.split("/")[-1]
-        print("aggregation_name", aggregation_name)
-        #aggregation = res.get_aggregation_by_aggregation_name(aggregation_name)
-        # point to the main file path
-        # path = aggregation.get_main_file.storage_path
         zipped = True
     if zipped:
         zip_path = f"tmp/{uuid.uuid4()}.zip"
-        print("zip_path", zip_path)
-        #istorage.zipup(public_file_path, zip_path)
-
         user_id = get_task_user_id(request)
-        print("user_id", user_id)
         is_single_file = istorage.exists(public_file_path)
-        print("is_single_file", is_single_file)
         task = create_temp_zip.apply_async((res.short_id, public_file_path, zip_path, aggregation_name, is_single_file))
-        #create_temp_zip(res.short_id, public_file_path, zip_path, aggregation_name, is_single_file)
-        print("zip_path", zip_path)
         api_request = request.META.get('CSRF_COOKIE', None) is None
         if api_request:
             return JsonResponse({
@@ -901,7 +884,8 @@ def file_download_url_mapper(request, shortkey):
                 'download_path': zip_path})
         else:
             # return status to the task notification App AJAX call
-            task_dict = get_or_create_task_notification(task.task_id, name='zip download', payload=zip_path, username=user_id)
+            task_dict = get_or_create_task_notification(
+                task.task_id, name='zip download', payload=zip_path, username=user_id)
             return JsonResponse(task_dict)
     return HttpResponseRedirect(
         istorage.url(public_file_path)

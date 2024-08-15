@@ -762,26 +762,31 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
 
         if aggregation:
             try:
-                istorage.copyFiles(aggregation.map_file_path, os.path.join(temp_folder_name, os.path.basename(aggregation.map_file_path)))
+                istorage.copyFiles(aggregation.map_file_path,
+                                   os.path.join(temp_folder_name, os.path.basename(aggregation.map_file_path)))
             except SessionException:
                 logger.error("cannot copy {}".format(aggregation.map_file_path))
             try:
-                istorage.copyFiles(aggregation.metadata_file_path, os.path.join(temp_folder_name, os.path.basename(aggregation.metadata_file_path)))
+                istorage.copyFiles(aggregation.metadata_file_path,
+                                   os.path.join(temp_folder_name, os.path.basename(aggregation.metadata_file_path)))
             except SessionException:
                 logger.error("cannot copy {}".format(aggregation.metadata_file_path))
             if aggregation.is_model_program or aggregation.is_model_instance:
                 try:
-                    istorage.copyFiles(aggregation.schema_file_path, os.path.join(temp_folder_name, os.path.basename(aggregation.schema_file_path)))
+                    istorage.copyFiles(aggregation.schema_file_path,
+                                       os.path.join(temp_folder_name, os.path.basename(aggregation.schema_file_path)))
                 except SessionException:
                     logger.error("cannot copy {}".format(aggregation.schema_file_path))
                 if aggregation.is_model_instance:
                     try:
-                        istorage.copyFiles(aggregation.schema_values_file_path, os.path.join(temp_folder_name, os.path.basename(aggregation.schema_values_file_path)))
+                        istorage.copyFiles(aggregation.schema_values_file_path,
+                                           os.path.join(temp_folder_name, os.path.basename(aggregation.schema_values_file_path)))
                     except SessionException:
                         logger.error("cannot copy {}".format(aggregation.schema_values_file_path))
             for file in aggregation.files.all():
                 try:
-                    istorage.copyFiles(file.storage_path, os.path.join(temp_folder_name, os.path.basename(file.storage_path)))
+                    istorage.copyFiles(file.storage_path,
+                                       os.path.join(temp_folder_name, os.path.basename(file.storage_path)))
                 except SessionException:
                     logger.error("cannot copy {}".format(file.storage_path))
         istorage.zipup(temp_folder_name, output_path)

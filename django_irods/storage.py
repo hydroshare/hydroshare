@@ -303,17 +303,9 @@ class IrodsStorage(S3Storage):
 
     def url(self, name):
         super_url = super().url(name.strip("/"))
-        if super_url.startswith("http://minio:9000"): #TODO make this based on DEBUG setting? Or alternate setting?
+        if super_url.startswith("http://minio:9000"):  # TODO make this based on DEBUG setting?
             return super_url.replace("http://minio:9000", "http://localhost:9000")
         return super_url
-        # TODO work out zipped downloads
-        # reverse_url = reverse("rest_download", kwargs={"path": name})
-        # query_params = {
-        #    "url_download": url_download,
-        #    "zipped": zipped,
-        #    "aggregation": aggregation,
-        # }
-        # return reverse_url + "?" + urlencode(query_params)
 
     def isDir(self, path):
         dirs, files, _ = self.listdir(path)
