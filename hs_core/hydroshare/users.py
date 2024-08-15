@@ -8,6 +8,7 @@ from django.core.exceptions import PermissionDenied, ObjectDoesNotExist, Validat
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.db.models import Q
+from django_irods.storage import IrodsStorage
 
 from hs_core.models import (
     BaseResource,
@@ -144,6 +145,7 @@ def create_account(
         user_profile.save()
     # create default UserQuota object for the new user
     UserQuota.objects.create(user=u)
+    IrodsStorage().create_bucket(u.username)
     return u
 
 

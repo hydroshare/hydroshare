@@ -331,3 +331,6 @@ class IrodsStorage(S3Storage):
         except Exception:
             # TODO check if something went wrong vs not found
             return False
+
+    def create_bucket(self, bucket_name):
+        self.connection.create_bucket(Bucket=bucket_name)
