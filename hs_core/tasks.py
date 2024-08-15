@@ -779,8 +779,9 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
                     logger.error("cannot copy {}".format(aggregation.schema_file_path))
                 if aggregation.is_model_instance:
                     try:
+                        basename = os.path.basename(aggregation.schema_values_file_path)
                         istorage.copyFiles(aggregation.schema_values_file_path,
-                                           os.path.join(temp_folder_name, os.path.basename(aggregation.schema_values_file_path)))
+                                           os.path.join(temp_folder_name, basename))
                     except SessionException:
                         logger.error("cannot copy {}".format(aggregation.schema_values_file_path))
             for file in aggregation.files.all():
