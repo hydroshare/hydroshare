@@ -600,6 +600,7 @@ class S3Storage(CompressStorageMixin, BaseStorage):
 
         directories = []
         files = []
+        file_sizes = []
         paginator = self.connection.meta.client.get_paginator("list_objects")
         pages = paginator.paginate(Bucket=bucket, Delimiter="/", Prefix=path)
         for page in pages:
@@ -611,7 +612,8 @@ class S3Storage(CompressStorageMixin, BaseStorage):
                 key = entry["Key"]
                 if key != path:
                     files.append(posixpath.relpath(key, path))
-        return directories, files
+                    file_sizes.append(entry["Size"])
+        return directories, files, file_sizes
 
     def size(self, name):
         bucket, name = bucket_and_name(name)

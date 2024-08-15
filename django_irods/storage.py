@@ -44,7 +44,7 @@ class IrodsStorage(S3Storage):
         :param path: the directory path to list
         :return: a list of files in the directory
         """
-        directories, files = super().listdir(path)
+        directories, files, file_sizes = super().listdir(path)
         directories = [d for d in directories if d != os.path.basename(path)]
 
         resource_id = "/".join(path.split("/")[:1])
@@ -52,11 +52,7 @@ class IrodsStorage(S3Storage):
         # TODO this is chicken shits
         additional_directories = [d[len(path) + 1:]
                                   for d in additional_directories if d[len(path) + 1:] and "/" not in d[len(path) + 1:]]
-        file_sizes = []
         directories = list(set(directories + additional_directories))
-        for f in files:
-            # TODO get file size
-            file_sizes.append(0)
         return (directories, files, file_sizes)
 
     def runBagitRule(self, rule_name, input_path, input_resource):
