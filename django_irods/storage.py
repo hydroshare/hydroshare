@@ -75,28 +75,22 @@ class IrodsStorage(S3Storage):
         :param out_name: the output zipped file name
         :return: None
         """
-        in_bucket, in_name = bucket_and_name(in_name)
-        out_bucket, out_name = bucket_and_name(out_name)
+        in_bucket, in_path = bucket_and_name(in_name)
+        out_bucket, out_path = bucket_and_name(out_name)
         in_bucket = self.connection.Bucket(in_bucket)
 
         # Stream zip https://stackoverflow.com/a/69136133
-        single_file = False
-        if self.isFile(in_name):
-            single_file = True
-        filesCollection = in_bucket.objects.filter(Prefix=in_name).all()
+        filesCollection = in_bucket.objects.filter(Prefix=in_path).all()
         archive = BytesIO()
 
         with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
             for file in filesCollection:
-                if single_file:
-                    relative_path = os.path.basename(in_name)
-                else:
-                    relative_path = file.key[len(in_name):]
+                relative_path = file.key[len(in_path):]
                 with zip_archive.open(relative_path, 'w') as file1:
                     file1.write(file.get()['Body'].read())
 
         archive.seek(0)
-        self.connection.Object(out_bucket, out_name).upload_fileobj(archive)
+        self.connection.Object(out_bucket, out_path).upload_fileobj(archive)
         archive.close()
 
     def unzip(self, zip_file_path, unzipped_folder):
@@ -161,17 +155,15 @@ class IrodsStorage(S3Storage):
             folders = [f for f in folders if f.startswith(filter)]
         return folders
 
-    def exists(self, name, folder=False):
+    def exists(self, name):
         if super().exists(name):
             return True
-
         bucket_name, key = bucket_and_name(name)
         bucket = self.connection.Bucket(bucket_name)
         for f in bucket.objects.filter(Prefix=key):
-            if not folder:
-                if f.key == key:
-                    return True
-            else:
+            if f.key == key:
+                return True
+            elif f.key.startswith(key.strip("/") + "/"):
                 return True
 
         resource_id_and_relative_path = key.split("/data/contents/")
@@ -187,14 +179,16 @@ class IrodsStorage(S3Storage):
         folders.append(path)
         self.setAVU(coll_path, "empty_folders", ",".join(folders))
 
-    def remove_folder(self, coll_path, path):
-        folders = self._empty_folders(coll_path)
-        if path in folders:
-            folders.remove(path)
-        self.setAVU(coll_path, "empty_folders", ",".join(folders))
-        src_bucket, src_name = bucket_and_name(path)
-        for file in self.connection.Bucket(src_bucket).objects.filter(Prefix=src_name):
-            self.connection.Object(src_bucket, file.key).delete()
+    def remove_folder(self, res_id, path, AVU_only=False):
+        folders = self._empty_folders(res_id)
+        for folder in folders:
+            if folder.startswith(path):
+                folders.remove(folder)
+        self.setAVU(res_id, "empty_folders", ",".join(folders))
+        if not AVU_only:
+            src_bucket, src_name = bucket_and_name(path)
+            for file in self.connection.Bucket(src_bucket).objects.filter(Prefix=src_name):
+                self.connection.Object(src_bucket, file.key).delete()
 
     def copyFiles(self, src_path, dest_path, delete_src=False):
         """
@@ -211,33 +205,38 @@ class IrodsStorage(S3Storage):
         dst_bucket, dest_name = bucket_and_name(dest_path)
         bucket = self.connection.Bucket(src_bucket)
 
-        # update empty_folders AVU
-        if not self.isFile(src_name):
-            dst_file_path = src_name.replace(src_name, dest_name)
-            res_id = "/".join(dst_file_path.split("/")[:1])
-            for empty_folder in self._empty_folders(res_id, filter=src_name):
-                new_folder = empty_folder.replace(src_name, dest_name)
-                self.remove_folder(res_id, empty_folder)
-                self.create_folder(res_id, new_folder)
-
-        # copy files
-        for file in bucket.objects.filter(Prefix=src_name):
-            src_file_path = file.key
-            if not self.isFile(src_name):
-                dst_file_path = src_file_path.replace(src_name, dest_name)
-            else:
-                src_name_length = len(src_name)
-                src_file_relative_path = src_file_path[:-src_name_length]
-                dst_file_path = os.path.join(src_file_relative_path, dest_name)
+        if self.isFile(src_path):
             self.connection.Bucket(dst_bucket).copy(
                 {
                     "Bucket": src_bucket,
-                    "Key": src_file_path,
+                    "Key": src_name,
                 },
-                dst_file_path,
+                dest_name,
             )
             if delete_src:
-                self.connection.Object(src_bucket, src_file_path).delete()
+                self.connection.Object(src_bucket, src_name).delete()
+        else:
+            # copy files
+            for file in bucket.objects.filter(Prefix=src_name):
+                src_file_path = file.key
+                dst_file_path = file.key.replace(src_name, dest_name)
+                self.connection.Bucket(dst_bucket).copy(
+                    {
+                        "Bucket": src_bucket,
+                        "Key": src_file_path,
+                    },
+                    dst_file_path,
+                )
+                if delete_src:
+                    self.connection.Object(src_bucket, src_file_path).delete()
+
+                # update empty_folders AVU
+                dst_file_path = src_name.replace(src_name, dest_name)
+                res_id = "/".join(dst_file_path.split("/")[:1])
+                for empty_folder in self._empty_folders(res_id, filter=src_name):
+                    new_folder = empty_folder.replace(src_name, dest_name)
+                    self.remove_folder(res_id, empty_folder, AVU_only=True)
+                    self.create_folder(res_id, new_folder)
 
     def moveFile(self, src_path, dest_path):
         """
@@ -317,9 +316,8 @@ class IrodsStorage(S3Storage):
         # return reverse_url + "?" + urlencode(query_params)
 
     def isDir(self, path):
-        dir_prefix = os.path.join(path, "")
-        _, files, _ = self.listdir(dir_prefix)
-        return len(files) > 0
+        dirs, files, _ = self.listdir(path)
+        return len(files) > 0 or len(dirs) > 0
 
     def isFile(self, path):
         src_bucket, src_name = bucket_and_name(path)
