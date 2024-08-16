@@ -655,3 +655,15 @@ class CSVLogicalFile(AbstractLogicalFile):
         self.metadata.is_dirty = False
         self.metadata.save()
 
+    def get_copy(self, copied_resource):
+        """Overrides the base class method"""
+
+        copy_of_logical_file = super(CSVLogicalFile, self).get_copy(copied_resource)
+        copy_of_logical_file.metadata.tableSchema = self.metadata.tableSchema
+        copy_of_logical_file.metadata.save()
+        copy_of_logical_file.preview_data = self.preview_data
+        copy_of_logical_file.save()
+
+        return copy_of_logical_file
+
+

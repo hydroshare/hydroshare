@@ -2761,6 +2761,10 @@ class CompositeResourceTest(
         )
         self.assertEqual(new_composite_resource.files.count(), 1)
         self.assertEqual(CSVLogicalFile.objects.count(), 2)
+        csv_logical_files = CSVLogicalFile.objects.all()
+        self.assertEqual(csv_logical_files[0].metadata.tableSchema, csv_logical_files[1].metadata.tableSchema)
+        # compare preview_data
+        self.assertEqual(csv_logical_files[0].preview_data, csv_logical_files[1].preview_data)
 
     def test_copy_resource_with_file_set_aggregation_1(self):
         """Here we are testing that we can create a copy of a composite resource that contains one
@@ -3192,6 +3196,10 @@ class CompositeResourceTest(
         )
         self.assertEqual(new_composite_resource.files.count(), 1)
         self.assertEqual(CSVLogicalFile.objects.count(), 2)
+        csv_logical_files = CSVLogicalFile.objects.all()
+        self.assertEqual(csv_logical_files[0].metadata.tableSchema, csv_logical_files[1].metadata.tableSchema)
+        # compare preview_data
+        self.assertEqual(csv_logical_files[0].preview_data, csv_logical_files[1].preview_data)
 
     def test_version_resource_with_file_set_aggregation_1(self):
         """Here we are testing that we can create a new version of a composite resource that contains one
