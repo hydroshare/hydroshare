@@ -295,7 +295,7 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
 
     # skip resources that do not exist in iRODS
     if not istorage.exists(resource.root_path):
-        if resource.files.all().count() > 0: # s3 does not have folders so no folder if no files
+        if resource.files.all().count() > 0:  # s3 does not have folders so no folder if no files
             msg = "root path {} does not exist in iRODS".format(resource.root_path)
             ecount += 1
             if echo_errors:
