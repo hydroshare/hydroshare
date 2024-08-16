@@ -4,6 +4,8 @@ from pathlib import Path
 import tempfile
 import zipfile
 
+from django_irods.icommands import SessionException
+
 from . import models as m
 from .utils import bucket_and_name
 
@@ -44,11 +46,14 @@ class IrodsStorage(S3Storage):
         :param path: the directory path to list
         :return: a list of files in the directory
         """
-        directories, files, file_sizes = super().listdir(path)
+        folder_path = path.strip("/") + "/" # ensure a folder is matched
+        directories, files, file_sizes = super().listdir(folder_path)
         directories = [d for d in directories if d != os.path.basename(path)]
 
         resource_id = "/".join(path.split("/")[:1])
         additional_directories = self._empty_folders(resource_id, path)
+        if not directories and not files and not additional_directories:
+            raise SessionException(f"Path {path} does not exist")
         # TODO this is chicken shits
         additional_directories = [d[len(path) + 1:]
                                   for d in additional_directories if d[len(path) + 1:] and "/" not in d[len(path) + 1:]]
@@ -187,6 +192,7 @@ class IrodsStorage(S3Storage):
         self.setAVU(res_id, "empty_folders", ",".join(folders))
         if not AVU_only:
             src_bucket, src_name = bucket_and_name(path)
+            src_name = src_name.strip("/") + "/"
             for file in self.connection.Bucket(src_bucket).objects.filter(Prefix=src_name):
                 self.connection.Object(src_bucket, file.key).delete()
 
@@ -308,8 +314,11 @@ class IrodsStorage(S3Storage):
         return super_url
 
     def isDir(self, path):
-        dirs, files, _ = self.listdir(path)
-        return len(files) > 0 or len(dirs) > 0
+        try:
+            self.listdir(path)
+        except SessionException:
+            return False
+        return True
 
     def isFile(self, path):
         src_bucket, src_name = bucket_and_name(path)
@@ -321,4 +330,13 @@ class IrodsStorage(S3Storage):
             return False
 
     def create_bucket(self, bucket_name):
-        self.connection.create_bucket(Bucket=bucket_name)
+        try:
+            self.connection.create_bucket(Bucket=bucket_name)
+        except Exception:
+            pass
+
+    def delete_bucket(self, bucket_name):
+        try:
+            self.connection.delete_bucket(Bucket=bucket_name)
+        except Exception:
+            pass
