@@ -210,8 +210,8 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
         with preview_div:
             html_tags.h3("CSV Data Preview")
             logical_file = self.logical_file
-            html_tags.textarea(logical_file.preview_data, rows=10, readonly="readonly",
-                               style="min-width: 100%; resize: vertical;")
+            html_tags.textarea(logical_file.preview_data, rows=10, readonly="readonly", wrap="soft",
+                               style="min-width: 100%; resize: vertical; overflow-x: auto; white-space: pre;")
         return preview_div
 
 
