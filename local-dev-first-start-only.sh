@@ -261,7 +261,7 @@ echo
 echo " - building Node for Discovery in background"
 node_build > /dev/null 2>&1 &
 
-sleep 2
+sleep 180
 
 echo "Chown root items"
 echo " - exec hydroshare bash scripts/chown-root-items"
@@ -388,6 +388,10 @@ do
   echo -n "."
   sleep 1
 done
+
+echo "  -docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput"
+echo
+docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput
 
 echo "  -docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput"
 echo

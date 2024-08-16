@@ -5,6 +5,9 @@ services:
     ports:
       - "9000:9000"
       - "9001:9001"
+    expose:
+      - "9000"
+      - "9001"
     volumes:
       - minio_data_vol:/data
     environment:
@@ -76,6 +79,7 @@ services:
       - postgis:postgis
       - solr:solr
       - rabbitmq:rabbitmq
+      - minio:minio
     depends_on:
       - postgis
       - solr
