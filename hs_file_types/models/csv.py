@@ -57,25 +57,6 @@ class CSVMetaSchemaModel(BaseModel):
     rows: PositiveInt = 1
     table: _CSVColumnsSchema
 
-    @field_validator("rows")
-    def rows_validator(cls, v: int) -> int:
-        if v < 1:
-            raise ValueError("rows must be a positive integer")
-        return v
-
-    @field_validator("columns")
-    def columns_validator(cls, v: List[_CSVColumnSchema]) -> List[_CSVColumnSchema]:
-        # check either all titles are empty or no title is empty
-        titles = [col.titles for col in v]
-        if all(title == "" for title in titles):
-            return v
-        if any(title == "" for title in titles):
-            raise ValueError("All column titles must be empty or no column title must be empty")
-        # check each column title is unique
-        if len(titles) != len(set(titles)):
-            raise ValueError("Column titles must be unique")
-        return v
-
 
 class CSVFileMetaData(GenericFileMetaDataMixin):
     # this field is used for storing the extracted CSV metadata
