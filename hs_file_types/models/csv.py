@@ -10,7 +10,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.template import Template, Context
 from dominate import tags as html_tags
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, PositiveInt
 from pydantic import ValidationError as PydanticValidationError
 from rdflib import Literal, BNode
 
@@ -21,16 +21,41 @@ from .generic import GenericFileMetaDataMixin
 
 
 class _CSVColumnSchema(BaseModel):
-    titles: Optional[str] = ""
-    description: Optional[str] = ""
+    column_number: PositiveInt
+    titles: Optional[str] = None
+    description: Optional[str] = None
     datatype: TypeLiteral["string", "number", "datetime", "boolean"]
-    # TODO: we do not need to store the unitCode - so remove it
-    unitCode: Optional[str] = ""
+
+
+class _CSVColumnsSchema(BaseModel):
+    columns: List[_CSVColumnSchema]
+
+    @field_validator("columns")
+    def columns_validator(cls, v: List[_CSVColumnSchema]) -> List[_CSVColumnSchema]:
+        # check either all titles are empty or no title is empty
+        for col in v:
+            if col.titles == "":
+                col.titles = None
+        titles = [col.titles for col in v]
+        if not all(title is None for title in titles):
+            if any(title is None for title in titles):
+                raise ValueError("All column titles must be empty or no column title must be empty")
+            # check each column title is unique
+            if len(titles) != len(set(titles)):
+                raise ValueError("Column titles must be unique")
+        # validate column_number values
+        column_numbers = [col.column_number for col in v]
+        if any(cn < 1 or cn > len(v) for cn in column_numbers):
+            raise ValueError("column_number values must be between 1 and number of columns")
+        # check for duplicate column numbers
+        if len(column_numbers) != len(set(column_numbers)):
+            raise ValueError("column_number values must be unique")
+        return v
 
 
 class CSVMetaSchemaModel(BaseModel):
-    rows: int = 0
-    columns: List[_CSVColumnSchema]
+    rows: PositiveInt = 1
+    table: _CSVColumnsSchema
 
     @field_validator("rows")
     def rows_validator(cls, v: int) -> int:
@@ -79,15 +104,16 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
         graph.add((tableSchema, HSTERMS.numberOfDataRows, Literal(csv_meta_model.rows)))
         columns = BNode()
         graph.add((tableSchema, HSTERMS.columns, columns))
-        for col in csv_meta_model.columns:
+        for col_number, col in enumerate(csv_meta_model.table.columns, start=1):
             column = BNode()
             graph.add((columns, HSTERMS.column, column))
+            graph.add((column, HSTERMS.columnNumber, Literal(col_number)))
             if col.titles:
                 graph.add((column, DC.title, Literal(col.titles)))
             if col.description:
                 graph.add((column, DC.description, Literal(col.description)))
-            if col.datatype:
-                graph.add((column, HSTERMS.dataType, Literal(col.datatype)))
+
+            graph.add((column, HSTERMS.dataType, Literal(col.datatype)))
 
         return graph
 
@@ -104,7 +130,7 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
                 html_tags.p(f"Number of data rows: {table_schema_model.rows}", cls="font-weight-bold")
                 with html_tags.div():
                     html_tags.legend("Column Properties:")
-                    for col_no, col in enumerate(table_schema_model.columns):
+                    for col_no, col in enumerate(table_schema_model.table.columns):
                         html_tags.legend(f"Column {col_no + 1}", csl="w-auto", style="font-size: 1.2em;")
                         col_title = col.titles if col.titles else ""
                         html_tags.p(f"Title: {col_title}")
@@ -145,18 +171,20 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
                         with col_div:
                             with html_tags.div():
                                 html_tags.legend("Column Properties:", style="font-size: 1.2em;")
-                                for col_no, col in enumerate(table_schema_model.columns):
+                                for col_no, col in enumerate(table_schema_model.table.columns):
                                     with html_tags.fieldset(cls="border p-2"):
                                         html_tags.legend(f"Column {col_no + 1}", csl="w-auto")
                                         titles_id = f"id-csv-metadata-column-{col_no}-titles"
                                         html_tags.label(f"Title", fr=titles_id,)
+                                        col_title = col.titles if col.titles else ""
                                         html_tags.input(type="text", id=titles_id, name=f"column-{col_no}-titles",
-                                                        value=col.titles, cls=column_input_cls)
+                                                        value=col_title, cls=column_input_cls)
 
                                         desc_id = f"id-csv-metadata-column-{col_no}-description"
                                         html_tags.label(f"Description", fr=desc_id)
+                                        col_description = col.description if col.description else ""
                                         html_tags.input(type="text", id=desc_id, name=f"column-{col_no}-description",
-                                                        value=col.description, cls=column_input_cls)
+                                                        value=col_description, cls=column_input_cls)
 
                                         datatype_id = f"id-csv-metadata-column-{col_no}-datatype"
                                         html_tags.label(f"Data type", fr=datatype_id)
@@ -218,11 +246,11 @@ class CSVLogicalFile(AbstractLogicalFile):
 
     @staticmethod
     def get_aggregation_term_label():
-        return "CSV Aggregation"
+        return "CSV File Aggregation"
 
     @staticmethod
     def get_aggregation_type_name():
-        return "CSVAggregation"
+        return "CSVFileAggregation"
 
     # used in discovery faceting to aggregate native and composite content types
     @staticmethod
@@ -312,7 +340,8 @@ class CSVLogicalFile(AbstractLogicalFile):
                 err_msg = "No data rows found in the CSV file"
                 raise ValidationError(err_msg)
 
-        csv_meta_schema = CSVMetaSchemaModel(rows=rows_count, columns=columns)
+        table = _CSVColumnsSchema(columns=columns)
+        csv_meta_schema = CSVMetaSchemaModel(rows=rows_count, table=table)
         return csv_meta_schema.model_dump()
 
     @classmethod
@@ -575,14 +604,15 @@ class CSVLogicalFile(AbstractLogicalFile):
                 column_name = column_name.strip("\"")
                 headers.append(column_name)
         else:
-            headers = ["" for _ in range(len(df.columns))]
+            headers = [None for _ in range(len(df.columns))]
 
         pd_data_types = cls._get_pd_data_types(csv_file_path, delimiter, skip_rows=skip_rows)
 
         csv_column_models = []
         for col_no, data_type in pd_data_types.items():
             col_name = headers[col_no]
-            csv_column_model = _CSVColumnSchema(titles=col_name, datatype=data_type)
+            col_no += 1
+            csv_column_model = _CSVColumnSchema(titles=col_name, datatype=data_type, column_number=col_no)
             csv_column_models.append(csv_column_model)
 
         return csv_column_models, has_header

@@ -1440,13 +1440,17 @@ def update_csv_table_schema_metadata(request, file_type_id, **kwargs):
     print(request.POST.dict(), flush=True)
     post_table_schema_data = request.POST.dict()
     table_schema_model = metadata.get_table_schema_model()
-    for col_no, col in enumerate(table_schema_model.columns):
+    for col_no, col in enumerate(table_schema_model.table.columns):
         col.titles = post_table_schema_data[f"column-{col_no}-titles"].strip()
+        if col.titles == '':
+            col.titles = None
         col.description = post_table_schema_data[f"column-{col_no}-description"].strip()
+        if col.description == '':
+            col.description = None
 
     # it is not allowed to have some columns with titles and some without titles
-    columns_with_titles = [col.titles for col in table_schema_model.columns if col.titles]
-    if 0 < len(columns_with_titles) < len(table_schema_model.columns):
+    columns_with_titles = [col.titles for col in table_schema_model.table.columns if col.titles]
+    if 0 < len(columns_with_titles) < len(table_schema_model.table.columns):
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
                               'message': "Some column titles are missing"}
         return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)

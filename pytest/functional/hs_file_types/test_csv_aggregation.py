@@ -35,35 +35,35 @@ def test_create_csv_aggregation_1(composite_resource):
     table_schema = metadata.tableSchema
     csv_meta_schema_model = CSVMetaSchemaModel(**table_schema)
     assert csv_meta_schema_model.rows == 9
-    assert len(csv_meta_schema_model.columns) == 17
+    assert len(csv_meta_schema_model.table.columns) == 17
 
     # check that the column names are correctly set - the csv file has headers
-    assert csv_meta_schema_model.columns[0].titles == "VIN (1-10)"
-    assert csv_meta_schema_model.columns[1].titles == "County"
-    assert csv_meta_schema_model.columns[2].titles == "City"
-    assert csv_meta_schema_model.columns[3].titles == "State"
-    assert csv_meta_schema_model.columns[4].titles == "Postal Code"
-    assert csv_meta_schema_model.columns[5].titles == "Model Year"
-    assert csv_meta_schema_model.columns[6].titles == "Make"
-    assert csv_meta_schema_model.columns[7].titles == "Model"
-    assert csv_meta_schema_model.columns[8].titles == "Electric Vehicle Type"
-    assert csv_meta_schema_model.columns[9].titles == "Clean Alternative Fuel Vehicle (CAFV) Eligibility"
-    assert csv_meta_schema_model.columns[10].titles == "Electric Range"
-    assert csv_meta_schema_model.columns[11].titles == "Base MSRP"
-    assert csv_meta_schema_model.columns[12].titles == "Legislative District"
-    assert csv_meta_schema_model.columns[13].titles == "DOL Vehicle ID"
-    assert csv_meta_schema_model.columns[14].titles == "Vehicle Location"
-    assert csv_meta_schema_model.columns[15].titles == "Electric Utility"
-    assert csv_meta_schema_model.columns[16].titles == "2020 Census Tract"
+    assert csv_meta_schema_model.table.columns[0].titles == "VIN (1-10)"
+    assert csv_meta_schema_model.table.columns[1].titles == "County"
+    assert csv_meta_schema_model.table.columns[2].titles == "City"
+    assert csv_meta_schema_model.table.columns[3].titles == "State"
+    assert csv_meta_schema_model.table.columns[4].titles == "Postal Code"
+    assert csv_meta_schema_model.table.columns[5].titles == "Model Year"
+    assert csv_meta_schema_model.table.columns[6].titles == "Make"
+    assert csv_meta_schema_model.table.columns[7].titles == "Model"
+    assert csv_meta_schema_model.table.columns[8].titles == "Electric Vehicle Type"
+    assert csv_meta_schema_model.table.columns[9].titles == "Clean Alternative Fuel Vehicle (CAFV) Eligibility"
+    assert csv_meta_schema_model.table.columns[10].titles == "Electric Range"
+    assert csv_meta_schema_model.table.columns[11].titles == "Base MSRP"
+    assert csv_meta_schema_model.table.columns[12].titles == "Legislative District"
+    assert csv_meta_schema_model.table.columns[13].titles == "DOL Vehicle ID"
+    assert csv_meta_schema_model.table.columns[14].titles == "Vehicle Location"
+    assert csv_meta_schema_model.table.columns[15].titles == "Electric Utility"
+    assert csv_meta_schema_model.table.columns[16].titles == "2020 Census Tract"
 
-    # check column data types
-    for col_number, col in enumerate(csv_meta_schema_model.columns, start=1):
-        assert not col.description
-        assert not col.unitCode
+    # check column data types and column order
+    for col_number, col in enumerate(csv_meta_schema_model.table.columns, start=1):
+        assert col.description is None
         if col_number in (5, 6, 11, 12, 13, 14, 17):
             assert col.datatype == "number"
         else:
             assert col.datatype == "string"
+        assert col.column_number == col_number
 
 
 @pytest.mark.django_db(transaction=True)
@@ -93,15 +93,14 @@ def test_create_csv_aggregation_2(composite_resource):
     table_schema = metadata.tableSchema
     csv_meta_schema_model = CSVMetaSchemaModel(**table_schema)
     assert csv_meta_schema_model.rows == 6
-    assert len(csv_meta_schema_model.columns) == 5
+    assert len(csv_meta_schema_model.table.columns) == 5
 
     # check column properties
-    for col_number, col in enumerate(csv_meta_schema_model.columns, start=1):
+    for col_number, col in enumerate(csv_meta_schema_model.table.columns, start=1):
         # check that the column headers are missing
-        assert not col.titles
+        assert col.titles is None
 
-        assert not col.description
-        assert not col.unitCode
+        assert col.description is None
         if col_number in (1, 3):
             assert col.datatype == "string"
         elif col_number == 2:
@@ -110,6 +109,8 @@ def test_create_csv_aggregation_2(composite_resource):
             assert col.datatype == "datetime"
         else:
             assert col.datatype == "boolean"
+
+        assert col.column_number == col_number
 
 
 @pytest.mark.django_db(transaction=True)
@@ -147,15 +148,14 @@ def test_create_csv_aggregation_3(composite_resource, delimiter):
     table_schema = metadata.tableSchema
     csv_meta_schema_model = CSVMetaSchemaModel(**table_schema)
     assert csv_meta_schema_model.rows == 6
-    assert len(csv_meta_schema_model.columns) == 5
+    assert len(csv_meta_schema_model.table.columns) == 5
 
     # check column properties
-    for col_number, col in enumerate(csv_meta_schema_model.columns, start=1):
+    for col_number, col in enumerate(csv_meta_schema_model.table.columns, start=1):
         # check that the column headers are there
         assert col.titles
 
-        assert not col.description
-        assert not col.unitCode
+        assert col.description is None
         if col_number == 1:
             assert col.datatype == "string"
         elif col_number in (3, 4):
@@ -164,6 +164,8 @@ def test_create_csv_aggregation_3(composite_resource, delimiter):
             assert col.datatype == "datetime"
         else:
             assert col.datatype == "boolean"
+
+        assert col.column_number == col_number
 
 
 @pytest.mark.django_db(transaction=True)
@@ -202,15 +204,14 @@ def test_create_csv_aggregation_column_data_types(composite_resource, use_csv_wi
     table_schema = metadata.tableSchema
     csv_meta_schema_model = CSVMetaSchemaModel(**table_schema)
     assert csv_meta_schema_model.rows == 6
-    assert len(csv_meta_schema_model.columns) == 5
+    assert len(csv_meta_schema_model.table.columns) == 5
 
     # check column properties
-    for col_number, col in enumerate(csv_meta_schema_model.columns, start=1):
+    for col_number, col in enumerate(csv_meta_schema_model.table.columns, start=1):
         # check that the column headers are there
         assert col.titles == f"Col-{col_number}"
 
-        assert not col.description
-        assert not col.unitCode
+        assert col.description is None
         if col_number in (1, 3):
             assert col.datatype == "string"
         elif col_number == 2:
@@ -219,6 +220,8 @@ def test_create_csv_aggregation_column_data_types(composite_resource, use_csv_wi
             assert col.datatype == "datetime"
         else:
             assert col.datatype == "boolean"
+
+        assert col.column_number == col_number
 
 
 @pytest.mark.django_db(transaction=True)
@@ -248,15 +251,15 @@ def test_create_csv_aggregation_from_one_data_column_file(composite_resource):
     table_schema = metadata.tableSchema
     csv_meta_schema_model = CSVMetaSchemaModel(**table_schema)
     assert csv_meta_schema_model.rows == 6
-    assert len(csv_meta_schema_model.columns) == 1
+    assert len(csv_meta_schema_model.table.columns) == 1
 
     # check column properties
-    col = csv_meta_schema_model.columns[0]
+    col = csv_meta_schema_model.table.columns[0]
     assert col.titles == "Col-1"
 
-    assert not col.description
-    assert not col.unitCode
+    assert col.description is None
     assert col.datatype == "number"
+    assert col.column_number == 1
 
 
 @pytest.mark.django_db(transaction=True)
@@ -286,15 +289,14 @@ def test_create_csv_aggregation_from_uneven_data_columns_file(composite_resource
     table_schema = metadata.tableSchema
     csv_meta_schema_model = CSVMetaSchemaModel(**table_schema)
     assert csv_meta_schema_model.rows == 4
-    assert len(csv_meta_schema_model.columns) == 5
+    assert len(csv_meta_schema_model.table.columns) == 5
 
     # check column properties
-    for col_number, col in enumerate(csv_meta_schema_model.columns, start=1):
+    for col_number, col in enumerate(csv_meta_schema_model.table.columns, start=1):
         # check that the column headers are there
         assert col.titles == f"Column-{col_number}"
 
-        assert not col.description
-        assert not col.unitCode
+        assert col.description is None
         if col_number in (1, 2):
             assert col.datatype == "string"
         elif col_number == 3:
@@ -303,6 +305,8 @@ def test_create_csv_aggregation_from_uneven_data_columns_file(composite_resource
             assert col.datatype == "datetime"
         else:
             assert col.datatype == "boolean"
+
+        assert col.column_number == col_number
 
 
 @pytest.mark.django_db(transaction=True)
@@ -332,15 +336,14 @@ def test_create_csv_aggregation_from_data_columns_with_comment_character_file(co
     table_schema = metadata.tableSchema
     csv_meta_schema_model = CSVMetaSchemaModel(**table_schema)
     assert csv_meta_schema_model.rows == 29
-    assert len(csv_meta_schema_model.columns) == 8
+    assert len(csv_meta_schema_model.table.columns) == 8
 
     # check column properties
-    for col_number, col in enumerate(csv_meta_schema_model.columns, start=1):
+    for col_number, col in enumerate(csv_meta_schema_model.table.columns, start=1):
         # check that the column headers are there
         assert col.titles
 
-        assert not col.description
-        assert not col.unitCode
+        assert col.description is None
         if col_number in (1, 2, 5, 6, 7, 8):
             assert col.datatype == "string"
         elif col_number == 3:
@@ -348,6 +351,8 @@ def test_create_csv_aggregation_from_data_columns_with_comment_character_file(co
         else:
             assert col_number == 4
             assert col.datatype == "number"
+
+        assert col.column_number == col_number
 
 
 @pytest.mark.django_db(transaction=True)
@@ -390,15 +395,14 @@ def test_create_csv_aggregation_boolean_data_type(composite_resource, csv_file):
     table_schema = metadata.tableSchema
     csv_meta_schema_model = CSVMetaSchemaModel(**table_schema)
     assert csv_meta_schema_model.rows == 6
-    assert len(csv_meta_schema_model.columns) == 5
+    assert len(csv_meta_schema_model.table.columns) == 5
 
     # check column properties
-    for col_number, col in enumerate(csv_meta_schema_model.columns, start=1):
+    for col_number, col in enumerate(csv_meta_schema_model.table.columns, start=1):
         # check that the column headers are there
         assert col.titles == f"Col-{col_number}"
 
-        assert not col.description
-        assert not col.unitCode
+        assert col.description is None
         if col_number in (1, 3):
             assert col.datatype == "string"
         elif col_number == 2:
@@ -407,6 +411,8 @@ def test_create_csv_aggregation_boolean_data_type(composite_resource, csv_file):
             assert col.datatype == "datetime"
         else:
             assert col.datatype == "boolean"
+
+        assert col.column_number == col_number
 
 
 @pytest.mark.django_db(transaction=True)
