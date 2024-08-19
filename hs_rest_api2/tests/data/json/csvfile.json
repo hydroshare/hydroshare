@@ -1,0 +1,61 @@
+{
+  "type": "CSV",
+  "url": "http://www.hydroshare.org/resource/0fdbb27857844644bacc274882601598/data/contents/csv_test_modified_resmap.xml#aggregation",
+  "title": "csv_test_modified",
+  "subjects": [
+    "csv",
+    "json"
+  ],
+  "language": "eng",
+  "additional_metadata": {
+    "key1": "value1",
+    "key2": "value2"
+  },
+  "spatial_coverage": {
+    "type": "point",
+    "name": "point coverage",
+    "east": -92.3961,
+    "north": 38.3556,
+    "units": "Decimal degrees",
+    "projection": "WGS 84 EPSG:4326"
+  },
+  "period_coverage": {
+    "start": "2020-11-03T00:00:00",
+    "end": "2020-11-19T00:00:00"
+  },
+  "tableSchema": {
+    "rows": 10,
+    "table": {
+      "columns": [
+        {
+          "column_number": 1,
+          "title": "Precipitation",
+          "datatype": "number",
+          "description": "Precipitation in inches per month"
+        },
+        {
+          "column_number": 2,
+          "title": "Month",
+          "datatype": "string",
+          "description": "Month name"
+        },
+        {
+          "column_number": 3,
+          "title": "Year",
+          "datatype": "number",
+          "description": "Year in which data was collected"
+        },
+        {
+          "column_number": 4,
+          "title": "Data entry date",
+          "datatype": "datetime",
+          "description": "Date on which data was entered into the system"
+        }
+      ]
+    }
+  },
+  "rights": {
+    "statement": "my rights statement",
+    "url": "http://studio.bakajo.com/"
+  }
+}

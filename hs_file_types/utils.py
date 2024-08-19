@@ -306,7 +306,7 @@ def get_logical_file(agg_type_name):
         "TimeSeriesAggregation": TimeSeriesLogicalFile,
         "ModelProgramAggregation": ModelProgramLogicalFile,
         "ModelInstanceAggregation": ModelInstanceLogicalFile,
-        "CSVAggregation": CSVLogicalFile,
+        "CSVFileAggregation": CSVLogicalFile,
     }
     return file_type_map[agg_type_name]
 
@@ -411,7 +411,7 @@ def ingest_logical_file_metadata(graph, resource, map_files=[], unzip_temp_folde
         raise Exception("Could not derive aggregation type from {}".format(graph))
 
     subject = None
-    for s, _, _ in graph.triples((None, DC.title, None)):
+    for s, _, _ in graph.triples((None, DC.rights, None)):
         subject = s.split("/resource/", 1)[1].split("#")[0]
         break
     if not subject:
