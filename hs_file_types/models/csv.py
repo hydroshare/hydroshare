@@ -12,7 +12,7 @@ from django.template import Template, Context
 from dominate import tags as html_tags
 from pydantic import BaseModel, field_validator, PositiveInt
 from pydantic import ValidationError as PydanticValidationError
-from rdflib import Literal, BNode
+from rdflib import Literal, BNode, Graph
 
 from hs_core.hs_rdf import HSTERMS, DC
 from hs_core.signals import post_add_csv_aggregation
@@ -32,6 +32,9 @@ class _CSVColumnsSchema(BaseModel):
 
     @field_validator("columns")
     def columns_validator(cls, v: List[_CSVColumnSchema]) -> List[_CSVColumnSchema]:
+        if not v:
+            raise ValueError("list of columns must not be empty")
+
         # check either all titles are empty or no title is empty
         for col in v:
             if col.titles == "":
@@ -40,14 +43,11 @@ class _CSVColumnsSchema(BaseModel):
         if not all(title is None for title in titles):
             if any(title is None for title in titles):
                 raise ValueError("All column titles must be empty or no column title must be empty")
-            # check each column title is unique
             if len(titles) != len(set(titles)):
                 raise ValueError("Column titles must be unique")
-        # validate column_number values
         column_numbers = [col.column_number for col in v]
         if any(cn < 1 or cn > len(v) for cn in column_numbers):
             raise ValueError("column_number values must be between 1 and number of columns")
-        # check for duplicate column numbers
         if len(column_numbers) != len(set(column_numbers)):
             raise ValueError("column_number values must be unique")
         return v
@@ -75,6 +75,73 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
 
     def get_table_schema_model(self):
         return CSVMetaSchemaModel(**self.tableSchema)
+
+    def ingest_metadata(self, graph):
+        # remove the tableSchema node and its children from the graph before passing to base ingest_metadata
+        # needed to do this because of dc:title in tableSchema that would conflict with dc:title at the graph root level
+        table_schema_node = None
+        subject = None
+        for s, p, o in graph.triples((None, HSTERMS.tableSchema, None)):
+            table_schema_node = o
+            subject = s
+
+        table_schema_graph = Graph()
+        if table_schema_node:
+            table_schema_graph.add((subject, HSTERMS.tableSchema, table_schema_node))
+            for s, p, o in graph.triples((table_schema_node, None, None)):
+                # adding the columns node to the table schema node
+                table_schema_graph.add((s, p, o))
+                for ss, pp, oo in graph.triples((o, None, None)):
+                    # adding the column node to the columns node
+                    table_schema_graph.add((ss, pp, oo))
+                    for sss, ppp, ooo in graph.triples((oo, None, None)):
+                        # adding the children of the column node to the column node
+                        table_schema_graph.add((sss, ppp, ooo))
+                        graph.remove((sss, ppp, ooo))
+                    graph.remove((ss, pp, oo))
+                graph.remove((s, p, o))
+            graph.remove((None, HSTERMS.tableSchema, table_schema_node))
+
+        super(CSVFileMetaData, self).ingest_metadata(graph)
+
+        # extract all columns from the graph
+        columns = []
+        for _, _, column_node in table_schema_graph.triples((None, HSTERMS.column, None)):
+            column_name = table_schema_graph.value(column_node, DC.title)
+            if not column_name:
+                column_name = None
+            else:
+                column_name = str(column_name.toPython())
+            description = table_schema_graph.value(column_node, DC.description)
+            if not description:
+                description = None
+            else:
+                description = str(description.toPython())
+            column_number = table_schema_graph.value(column_node, HSTERMS.columnNumber)
+            column_number = int(column_number.toPython())
+            datatype = table_schema_graph.value(column_node, HSTERMS.dataType)
+            datatype = str(datatype.toPython())
+            column_model = _CSVColumnSchema(titles=column_name, datatype=datatype, column_number=column_number,
+                                            description=description)
+            columns.append(column_model)
+
+        # check the number of columns have not changed
+        if len(columns) != len(self.tableSchema["table"]["columns"]):
+            raise ValueError("Number of data columns can't be changed")
+
+        # sort columns by column number
+        columns.sort(key=lambda x: x.column_number)
+        columns_model = _CSVColumnsSchema(columns=columns)
+
+        rows = None
+        for s, p, o in table_schema_graph.triples((None, HSTERMS.numberOfDataRows, None)):
+            rows = o.toPython()
+            break
+        if rows is None:
+            raise ValueError("Could not find number of rows")
+        csv_meta_model_instance = CSVMetaSchemaModel(rows=rows, table=columns_model)
+        self.tableSchema = csv_meta_model_instance.model_dump()
+        self.save()
 
     def get_rdf_graph(self):
         graph = super(CSVFileMetaData, self).get_rdf_graph()
