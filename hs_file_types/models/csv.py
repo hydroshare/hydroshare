@@ -42,14 +42,16 @@ class _CSVColumnsSchema(BaseModel):
         titles = [col.titles for col in v]
         if not all(title is None for title in titles):
             if any(title is None for title in titles):
-                raise ValueError("All column titles must be empty or no column title must be empty")
+                raise ValueError("All column titles maybe empty/null or no column title must be empty/null")
             if len(titles) != len(set(titles)):
                 raise ValueError("Column titles must be unique")
         column_numbers = [col.column_number for col in v]
         if any(cn < 1 or cn > len(v) for cn in column_numbers):
-            raise ValueError("column_number values must be between 1 and number of columns")
+            raise ValueError("column_number value must be between 1 and number of columns")
         if len(column_numbers) != len(set(column_numbers)):
             raise ValueError("column_number values must be unique")
+        # order columns by column_number
+        v.sort(key=lambda _col: _col.column_number)
         return v
 
 
@@ -129,8 +131,6 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
         if len(columns) != len(self.tableSchema["table"]["columns"]):
             raise ValueError("Number of data columns can't be changed")
 
-        # sort columns by column number
-        columns.sort(key=lambda x: x.column_number)
         columns_model = _CSVColumnsSchema(columns=columns)
 
         rows = None
