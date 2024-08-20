@@ -16,21 +16,21 @@
     <rdfs1:isDefinedBy>http://www.openarchives.org/ore/terms/</rdfs1:isDefinedBy>
     <rdfs1:label>ResourceMap</rdfs1:label>
   </rdf:Description>
-  <rdf:Description rdf:about="http://www.hydroshare.org/resource/57cdb3245a214d6d9063255619b726c9/data/contents/csv_test_modified_resmap.xml#aggregation">
+  <rdf:Description rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/csv_test_modified_resmap.xml#aggregation">
     <rdf:type rdf:resource="http://www.openarchives.org/ore/terms/Aggregation"/>
-    <ore:aggregates rdf:resource="http://www.hydroshare.org/resource/57cdb3245a214d6d9063255619b726c9/data/contents/csv_test_modified.csv"/>
+    <ore:aggregates rdf:resource="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/csv_test_modified.csv"/>
     <dcterms:type rdf:resource="http://www.hydroshare.org/terms/CSVFileAggregation"/>
-    <ore:aggregates rdf:resource="http://www.hydroshare.org/resource/57cdb3245a214d6d9063255619b726c9/data/contents/csv_test_modified_meta.xml"/>
+    <ore:aggregates rdf:resource="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/csv_test_modified_meta.xml"/>
     <dc:title>csv_test_modified</dc:title>
-        <ore:isDescribedBy>http://www.hydroshare.org/resource/57cdb3245a214d6d9063255619b726c9/data/contents/csv_test_modified_resmap.xml</ore:isDescribedBy>
-    <citoterms:isDocumentedBy>http://www.hydroshare.org/resource/57cdb3245a214d6d9063255619b726c9/data/contents/csv_test_modified_meta.xml</citoterms:isDocumentedBy>
+        <ore:isDescribedBy>http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/csv_test_modified_resmap.xml</ore:isDescribedBy>
+    <citoterms:isDocumentedBy>http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/csv_test_modified_meta.xml</citoterms:isDocumentedBy>
   </rdf:Description>
-  <rdf:Description rdf:about="http://www.hydroshare.org/resource/57cdb3245a214d6d9063255619b726c9/data/contents/csv_test_modified.csv">
+  <rdf:Description rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/csv_test_modified.csv">
     <dc:format>text/csv</dc:format>
-    <ore:isAggregatedBy>http://www.hydroshare.org/resource/57cdb3245a214d6d9063255619b726c9/data/contents/csv_test_modified_resmap.xml#aggregation</ore:isAggregatedBy>
+    <ore:isAggregatedBy>http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/csv_test_modified_resmap.xml#aggregation</ore:isAggregatedBy>
   </rdf:Description>
-  <rdf:Description rdf:about="http://www.hydroshare.org/resource/57cdb3245a214d6d9063255619b726c9/data/contents/csv_test_modified_resmap.xml">
-    <ore:describes rdf:resource="http://www.hydroshare.org/resource/57cdb3245a214d6d9063255619b726c9/data/contents/csv_test_modified_resmap.xml#aggregation"/>
+  <rdf:Description rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/csv_test_modified_resmap.xml">
+    <ore:describes rdf:resource="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/csv_test_modified_resmap.xml#aggregation"/>
     <dc:format>application/rdf+xml</dc:format>
     <dcterms:created>2024-08-19T02:31:20Z</dcterms:created>
     <dcterms:modified>2024-08-19T02:31:20Z</dcterms:modified>
@@ -41,9 +41,9 @@
     <rdfs1:isDefinedBy>http://www.openarchives.org/ore/terms/</rdfs1:isDefinedBy>
     <rdfs1:label>Aggregation</rdfs1:label>
   </rdf:Description>
-  <rdf:Description rdf:about="http://www.hydroshare.org/resource/57cdb3245a214d6d9063255619b726c9/data/contents/csv_test_modified_meta.xml">
-    <citoterms:documents>http://www.hydroshare.org/resource/57cdb3245a214d6d9063255619b726c9/data/contents/csv_test_modified_resmap.xml#aggregation</citoterms:documents>
-    <ore:isAggregatedBy>http://www.hydroshare.org/resource/57cdb3245a214d6d9063255619b726c9/data/contents/csv_test_modified_resmap.xml#aggregation</ore:isAggregatedBy>
+  <rdf:Description rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/csv_test_modified_meta.xml">
+    <citoterms:documents>http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/csv_test_modified_resmap.xml#aggregation</citoterms:documents>
+    <ore:isAggregatedBy>http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/csv_test_modified_resmap.xml#aggregation</ore:isAggregatedBy>
     <dc:format>application/rdf+xml</dc:format>
   </rdf:Description>
   <rdf:Description rdf:about="http://foresite-toolkit.googlecode.com/#pythonAgent">

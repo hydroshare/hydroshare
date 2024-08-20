@@ -6,7 +6,7 @@
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns:dcterms="http://purl.org/dc/terms/"
 >
-  <hsterms:CSVFileAggregation rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/csv_test_modified_resmap.xml#aggregation">
+  <hsterms:CSVFileAggregation rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/csv_file_folder/csv_test_modified_resmap.xml#aggregation">
     <dc:subject>xml-encoding</dc:subject>
     <dc:language>eng</dc:language>
     <dc:title>csv_test_modified</dc:title>
