@@ -84,6 +84,7 @@ services:
       - postgis
       - solr
       - rabbitmq
+      - minio
     stdin_open: true
     tty: true
     command: /bin/bash init-hydroshare

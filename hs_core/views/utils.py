@@ -1043,7 +1043,8 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     if resource.resource_type == "CompositeResource":
         resource.create_aggregation_meta_files()
 
-    istorage.session.run("ibun", None, '-cDzip', '-f', output_zip_full_path, res_coll_input)
+    #istorage.session.run("ibun", None, '-cDzip', '-f', output_zip_full_path, res_coll_input)
+    istorage.zipup(res_coll_input, output_zip_full_path)
     output_zip_size = istorage.size(output_zip_full_path)
     if not bool_remove_original:
         try:
@@ -1235,21 +1236,10 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                 raise SuspiciousFileOperation(err_msg)
 
         if unzip_to_folder:
-            def _get_nonexistant_path(istorage, path):
-                if not istorage.exists(path):
-                    return path
-                i = 1
-                new_path = "{}-{}".format(path, i)
-                while istorage.exists(new_path):
-                    i += 1
-                    new_path = "{}-{}".format(path, i)
-                return new_path
             # unzip to the subfolder with zip file base name as the subfolder name. If the subfolder name already
             # exists, a sequential number is appended to the subfolder name to make sure the subfolder name is unique
             unzip_folder = os.path.splitext(os.path.basename(zip_with_full_path))[0].strip()
-            unzip_folder_path = zip_with_full_path.replace(os.path.basename(zip_with_full_path), unzip_folder)
-            unzip_folder_path = _get_nonexistant_path(istorage, unzip_folder_path)
-            unzip_to_folder_path = istorage.unzip(zip_with_full_path, unzipped_folder=unzip_folder_path)
+            unzip_to_folder_path = istorage.unzip(zip_with_full_path, unzipped_folder=unzip_folder)
             res_files = link_irods_folder_to_django(resource, istorage, unzip_to_folder_path, auto_aggregate)
             if resource.resource_type == 'CompositeResource':
                 # make the newly added files part of an aggregation if needed
