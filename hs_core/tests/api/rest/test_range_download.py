@@ -45,13 +45,9 @@ class TestRangeDownload(HSRESTTestCase):
         self.client.post(url2, params)
 
         self.prefix = f"/django_irods/rest_download/{self.pid}/data/contents/"
-        file_download_url = f"{self.prefix}{self.txt_file_name}"
+        url = f"{self.prefix}{self.txt_file_name}/"
         params = {'url_download': False, 'zipped': False, 'aggregation': False}
-        file_download_url += urllib.parse.urlencode(params)
-        self.file_download_url = file_download_url
-
-    def test_url_matches(self):
-        self.assertEqual(self.file_download_url, f"/django_irods/rest_download/{self.pid}/data/contents/?url_download=False&zipped=False&aggregation=False")
+        self.file_download_url = url + '?' + urllib.parse.urlencode(params)
 
     def test_accept_ranges(self):
         response = self.client.get(self.file_download_url)
