@@ -44,12 +44,18 @@ class TestRangeDownload(HSRESTTestCase):
                            'text/plain')}
         self.client.post(url2, params)
 
-        self.prefix = f"/django_irods/rest_download/{self.pid}/data/contents/"
+        self.prefix = f"/django_irods/rest_download/{self.pid}/data/contents/foo/"
         url = f"{self.prefix}{self.txt_file_name}/"
         params = {'url_download': False, 'zipped': False, 'aggregation': False}
         self.file_download_url = url + '?' + urllib.parse.urlencode(params)
 
     def test_accept_ranges(self):
+        """
+        Test case to verify if the server supports range requests.
+
+        This test sends a GET request to the file download URL and checks if the 'Accept-Ranges' header is present.
+        It also verifies that the value of the 'Accept-Ranges' header is set to 'bytes'.
+        """
         response = self.client.get(self.file_download_url)
         self.assertIn('Accept-Ranges', response.headers)
         self.assertEqual(response.headers['Accept-Ranges'], 'bytes')
@@ -63,7 +69,7 @@ class TestRangeDownload(HSRESTTestCase):
         invalid = ["megabytes=1-2", "bytes=", "bytes=3-2", "bytes=--5", "units", "bytes=-,"]
         for range_ in invalid:
             response = self.client.get(self.file_download_url, HTTP_RANGE=range_)
-            self.assertEqual(content, b''.join(response))
+            self.assertEqual(content, b''.join(response).decode('utf-8'))
 
     def test_unsatisfiable_range(self):
         """Test that an unsatisfiable range results in a 416 HTTP status code"""
@@ -90,7 +96,7 @@ class TestRangeDownload(HSRESTTestCase):
         }
         for range_, (expected_result, byte_positions) in ranges.items():
             response = self.client.get(self.file_download_url, HTTP_RANGE=range_)
-            self.assertEqual(expected_result, b''.join(response))
+            self.assertEqual(expected_result, b''.join(response).decode('utf-8'))
             self.assertEqual(int(response['Content-Length']), len(expected_result))
             self.assertEqual(response['Content-Range'], "bytes %d-%d/%d" % (byte_positions + (len(content),)))
 
@@ -100,24 +106,23 @@ class TestRangeDownload(HSRESTTestCase):
         """
         Test case for checking that downloads are resumable using the Range header.
         """
-        file_download_url = self.file_download_url
 
         # start a download and pause it partway through
-        response = self.client.get(file_download_url, HTTP_RANGE='bytes=0-5')
+        response = self.client.get(self.file_download_url, HTTP_RANGE='bytes=0-5')
         self.assertEqual(response.status_code, status.HTTP_206_PARTIAL_CONTENT)
         self.assertEqual(response['Content-Length'], '6')
         self.assertEqual(response['Content-Range'], 'bytes 0-5/12')
-        self.assertEqual(response.content, b'Hello ')
+        self.assertEqual(b''.join(response), b'Hello ')
 
         # resume the download
-        response = self.client.get(file_download_url, HTTP_RANGE='bytes=6-')
+        response = self.client.get(self.file_download_url, HTTP_RANGE='bytes=6-')
         self.assertEqual(response.status_code, status.HTTP_206_PARTIAL_CONTENT)
         self.assertEqual(response['Content-Length'], '6')
         self.assertEqual(response['Content-Range'], 'bytes 6-11/12')
-        self.assertEqual(response.content, b'World\n')
+        self.assertEqual(b''.join(response), b'World\n')
 
         # download the file in one go
-        response = self.client.get(file_download_url)
+        response = self.client.get(self.file_download_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response['Content-Length'], '12')
-        self.assertEqual(response.content, b'Hello World\n')
+        self.assertEqual(b''.join(response), b'Hello World\n')
