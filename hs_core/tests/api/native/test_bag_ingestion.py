@@ -226,12 +226,18 @@ class TestIngestMetadata(MockIRODSTestCaseMixin, TestCase):
         compare_metadatas(self, self.res.short_id,
                           self.res.get_logical_files(CSVLogicalFile.type_name())[0].metadata.get_xml(),
                           "csv_file/csv_test_modified_meta.xml")
+        self.assertEqual(CSVLogicalFile.objects.count(), 1)
+        csv_logical_file = CSVLogicalFile.objects.first()
+        self.assertGreater(len(csv_logical_file.preview_data.strip()), 0)
 
     def test_csv_ingestion_at_folder(self):
         prepare_resource(self, "csv_file_folder", upload_to="csv_file_folder")
         compare_metadatas(self, self.res.short_id,
                           self.res.get_logical_files(CSVLogicalFile.type_name())[0].metadata.get_xml(),
                           "csv_file_folder/csv_test_modified_meta.xml")
+        self.assertEqual(CSVLogicalFile.objects.count(), 1)
+        csv_logical_file = CSVLogicalFile.objects.first()
+        self.assertGreater(len(csv_logical_file.preview_data.strip()), 0)
 
     def test_fileset_ingestion(self):
         prepare_resource(self, "file_set")
