@@ -252,7 +252,7 @@ def test_update_model_instance_metadata_json(composite_resource_with_mi_mp_aggre
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('move_aggr_cls', [NetCDFLogicalFile, GeoRasterLogicalFile, TimeSeriesLogicalFile,
-                                           GeoFeatureLogicalFile])
+                                           GeoFeatureLogicalFile, CSVLogicalFile])
 def test_move_aggr_into_model_instance_aggr(composite_resource_with_mi_aggregation_folder, move_aggr_cls, mock_irods):
     """test that we can move any of the following aggregations into a folder that represents a
     model instance aggregation
@@ -260,6 +260,7 @@ def test_move_aggr_into_model_instance_aggr(composite_resource_with_mi_aggregati
     2- GeoFeature aggr
     3- Raster aggr
     4- Timeseries aggr
+    5- CSV aggr
     """
 
     res, user = composite_resource_with_mi_aggregation_folder
@@ -281,17 +282,26 @@ def test_move_aggr_into_model_instance_aggr(composite_resource_with_mi_aggregati
         file_name = 'ODM2_Multi_Site_One_Variable.sqlite'
         expected_aggr_name = file_name
         aggr_class_name = "TimeSeriesLogicalFile"
-    else:
+    elif move_aggr_cls == GeoFeatureLogicalFile:
         file_name = 'states.shp'
         expected_aggr_name = file_name
         aggr_class_name = "GeoFeatureLogicalFile"
+    else:
+        file_name = 'csv_with_header_and_data.csv'
+        expected_aggr_name = file_name
+        aggr_class_name = "CSVLogicalFile"
 
-    if move_aggr_cls in (TimeSeriesLogicalFile, GeoFeatureLogicalFile):
+    if move_aggr_cls in (TimeSeriesLogicalFile, GeoFeatureLogicalFile, CSVLogicalFile):
         files_to_upload = []
-        for shp_file in (file_name, 'states.shx', 'states.dbf', 'states.prj'):
-            upload_file_path = 'hs_file_types/tests/data/{}'.format(shp_file)
-            file_to_upload = UploadedFile(file=open(upload_file_path, 'rb'), name=os.path.basename(upload_file_path))
-            files_to_upload.append(file_to_upload)
+        if move_aggr_cls == GeoFeatureLogicalFile:
+            for shp_file in (file_name, 'states.shx', 'states.dbf', 'states.prj'):
+                upload_file_path = 'hs_file_types/tests/data/{}'.format(shp_file)
+                file_to_upload = UploadedFile(file=open(upload_file_path, 'rb'), name=os.path.basename(upload_file_path))
+                files_to_upload.append(file_to_upload)
+        else:
+            upload_file_path = 'hs_file_types/tests/data/{}'.format(file_name)
+            files_to_upload.append(UploadedFile(file=open(upload_file_path, 'rb'), name=os.path.basename(upload_file_path)))
+
     else:
         upload_file_path = 'hs_file_types/tests/{}'.format(file_name)
         files_to_upload = [UploadedFile(file=open(upload_file_path, 'rb'), name=os.path.basename(upload_file_path))]
