@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 
 from hs_core.hydroshare import add_file_to_resource
-from hs_file_types.models import CSVLogicalFile, CSVMetaSchemaModel
+from hs_file_types.models import CSVLogicalFile, CSVMetaSchemaModel, CSVFileMetaData
 
 
 @pytest.mark.django_db(transaction=True)
@@ -440,6 +440,36 @@ def test_create_csv_aggregation_with_invalid_file(composite_resource, invalid_cs
 
     # test that we did not create a logical file of type CSV
     assert CSVLogicalFile.objects.count() == 0
+
+
+@pytest.mark.django_db(transaction=True)
+def test_remove_aggregation(composite_resource):
+    # here we are testing that we can remove csv aggregation which deletes the aggregation record and
+    # associated metadata but does not delete the csv file that was part of the aggregation
+
+    res, user = composite_resource
+    assert res.files.count() == 0
+    # upload a csv file to the resource
+    res_file = _upload_csv_file(res, 'csv_with_header_and_data.csv')
+    assert res.files.count() == 1
+    # check there are no CSV aggregation
+    assert CSVLogicalFile.objects.count() == 0
+
+    # set the uploaded csv file to be part of a csv aggregation
+    CSVLogicalFile.set_file_type(res, user, res_file.id)
+
+    # test that we have one aggregation of type CSV
+    assert CSVLogicalFile.objects.count() == 1
+    csv_aggr = CSVLogicalFile.objects.first()
+    assert CSVFileMetaData.objects.count() == 1
+    # delete the aggregation (logical file) object using the remove_aggregation function
+    csv_aggr.remove_aggregation()
+    # test there is no CSVLogicalFile object
+    assert CSVLogicalFile.objects.count() == 0
+    # test there is no CSVFileMetaData object
+    assert CSVFileMetaData.objects.count() == 0
+    # csv file should not be deleted
+    assert res.files.count() == 1
 
 
 def _upload_csv_file(resource, csv_file):
