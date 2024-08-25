@@ -1436,8 +1436,6 @@ def update_csv_table_schema_metadata(request, file_type_id, **kwargs):
     # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
     logical_file = kwargs['logical_file']
     metadata = logical_file.metadata
-    print("Posted Form Data:", flush=True)
-    print(request.POST.dict(), flush=True)
     post_table_schema_data = request.POST.dict()
     table_schema_model = metadata.get_table_schema_model()
     for col_no, col in enumerate(table_schema_model.table.columns):
