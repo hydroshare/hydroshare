@@ -33,17 +33,16 @@ hydroshare:
     POSTGIS_USER: postgres
     PGPASSWORD: postgres
     SOLR_HOST: solr
-    TMP: /hs_tmp
+    TMP: /tmp
   volumes:
     # hydroshare repository
     - "HS_PATH:/hydroshare"
-    - "${HOST_PK_FOR_HS_USER_ZONE:-/opt/.ssh/id_ed25519_hs}:${PRIVATE_KEY_FILE_FOR_HS_USER_ZONE:-/hydroshare/.ssh/id_ed25519_hs}
     # pycharm debugging
     # - "/home/hydro/pycharm-debug:/pycharm-debug"
     # log files
     - "HS_LOG_FILES:/hydroshare/log"
     # shared location for gunicorn.sock between containers
-    - "/hs_tmp"
+    - "/tmp"
     # temp directory shared with celery workers
     - "/shared_tmp"
     - "/irods/hydroshare:/irods/hydroshare"

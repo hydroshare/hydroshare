@@ -62,7 +62,7 @@ DOCKER_URL = 'unix://docker.sock/'
 DOCKER_API_VERSION = '1.12'
 
 # CartoCSS settings
-CARTO_HOME = '/hs_tmp/node_modules/carto'
+CARTO_HOME = '/tmp/node_modules/carto'
 
 USE_SOUTH = False
 SITE_TITLE = "CUAHSI HydroShare"
@@ -91,8 +91,6 @@ DATABASES = {
 }
 POSTGIS_VERSION = (2, 1, 1)
 
-SHARED_NEG_KEY = 'hydroshareZonehydroshareuserZone'
-
 # Native Docker iRODS developer local
 USE_IRODS = True
 IRODS_ROOT = '/tmp'
@@ -100,7 +98,6 @@ IRODS_ICOMMANDS_PATH = '/usr/bin'
 IRODS_HOST = 'data.local.org'
 IRODS_PORT = '1247'
 IRODS_DEFAULT_RESOURCE = 'hydroshareReplResc'
-IRODS_SINGLE_RESC_FOR_QUERY = 'hydroshareReplResc'
 IRODS_HOME_COLLECTION = '/hydroshareZone/home/wwwHydroProxy'
 IRODS_CWD = '/hydroshareZone/home/wwwHydroProxy'
 IRODS_ZONE = 'hydroshareZone'
@@ -135,22 +132,6 @@ HYRAX_SSH_PROXY_USER = ''
 HYRAX_SSH_PROXY_USER_PWD = ''
 HYRAX_SCRIPT_RUN_COMMAND = ''
 
-# hsuserproxy system user configuration used to create hydroshare iRODS users on-demand
-HS_USER_ZONE_HOST = 'users.local.org'
-LINUX_ADMIN_USER_FOR_HS_USER_ZONE = 'hsuserproxy'
-LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE = 'hsuserproxy'
-PRIVATE_KEY_FILE_FOR_HS_USER_ZONE = '/hydroshare/.ssh/id_ed25519_hs'
-LINUX_ADMIN_USER_CREATE_USER_IN_USER_ZONE_CMD = '/home/hsuserproxy/create_user.sh'
-LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD = '/home/hsuserproxy/delete_user.sh'
-LINUX_ADMIN_USER_SET_QUOTA_IN_USER_ZONE_CMD = '/home/hsuserproxy/set_userzone_quota.sh'
-
-# HydroShare iRODS proxy user in the federated user zone
-HS_IRODS_PROXY_USER_IN_USER_ZONE = 'localHydroProxy'
-# HydroShare iRODS default storage resource in the federated user zone
-HS_IRODS_USER_ZONE_DEF_RES = 'hydroshareLocalResc'
-# HydroShare iRODS federated user zone name
-HS_USER_IRODS_ZONE = 'hydroshareuserZone'
-
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_HOST_USER = ''
@@ -168,9 +149,6 @@ HYDROSHARE_SHARED_TEMP = '/shared_tmp'
 MAILCHIMP_ACTIVE_SUBSCRIBERS = "e210a70864"
 MAILCHIMP_SUBSCRIBERS = "f0c27254e3"
 
-# sendfile support for large files
-# These must match settings in nginx
-SENDFILE_ON = True
 # IRODS_USER_URI = "/irods-user"
 IRODS_DATA_URI = "/irods-data"
 LOCAL_CACHE_URI = "/local-cache"

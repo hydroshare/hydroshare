@@ -14,7 +14,6 @@ More tests are left for later.
 * Optional argument --log instead logs output to system log.
 """
 
-from django.conf import settings
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
 
@@ -32,47 +31,37 @@ def check_django_metadata(self, stop_on_error=False,
     errors = []
     ecount = 0
 
-    # skip federated resources if not configured to handle these
-    if self.is_federated and not settings.REMOTE_USE_IRODS:
-        msg = "check_django_metadata: skipping check of federated resource {} in unfederated mode"\
-            .format(self.short_id)
+    # flag non-existent resources in iRODS
+    if not istorage.exists(self.root_path):
+        msg = "root path {} does not exist in iRODS".format(self.root_path)
+        ecount += 1
         if echo_errors:
             print(msg)
         if log_errors:
-            logger.info(msg)
+            logger.error(msg)
+        if return_errors:
+            errors.append(msg)
 
-    # flag non-existent resources in iRODS
-    else:
-        if not istorage.exists(self.root_path):
-            msg = "root path {} does not exist in iRODS".format(self.root_path)
-            ecount += 1
-            if echo_errors:
-                print(msg)
-            if log_errors:
-                logger.error(msg)
-            if return_errors:
-                errors.append(msg)
+    # basic check: metadata exists
+    if self.metadata is None:
+        msg = "metadata for {} does not exist".format(self.short_id)
+        ecount += 1
+        if echo_errors:
+            print(msg)
+        if log_errors:
+            logger.error(msg)
+        if return_errors:
+            errors.append(msg)
 
-        # basic check: metadata exists
-        if self.metadata is None:
-            msg = "metadata for {} does not exist".format(self.short_id)
-            ecount += 1
-            if echo_errors:
-                print(msg)
-            if log_errors:
-                logger.error(msg)
-            if return_errors:
-                errors.append(msg)
-
-        elif self.metadata.title is None:
-            msg = "{} has no title".format(self.short_id)
-            ecount += 1
-            if echo_errors:
-                print(msg)
-            if log_errors:
-                logger.error(msg)
-            if return_errors:
-                errors.append(msg)
+    elif self.metadata.title is None:
+        msg = "{} has no title".format(self.short_id)
+        ecount += 1
+        if echo_errors:
+            print(msg)
+        if log_errors:
+            logger.error(msg)
+        if return_errors:
+            errors.append(msg)
 
     return errors, ecount
 

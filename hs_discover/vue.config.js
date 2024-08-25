@@ -1,6 +1,6 @@
 module.exports = {
   devServer: {
-    disableHostCheck: true,
+    allowedHosts: 'all',
   },
   outputDir: "templates/hs_discover/",
   // Here profiding the ability to override the publicPath via an environment variable

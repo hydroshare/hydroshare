@@ -126,8 +126,6 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
             path = os.path.dirname(path)
 
         irods_path = dir_path
-        if resource.is_federated:
-            irods_path = os.path.join(resource.resource_federation_path, irods_path)
 
         files_in_path = ResourceFile.list_folder(resource, folder=irods_path, sub_folders=True)
         # if there are any files in the dir_path, we can set the folder to fileset aggregation

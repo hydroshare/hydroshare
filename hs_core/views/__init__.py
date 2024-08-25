@@ -1641,8 +1641,6 @@ class PatchedChoiceWidget(autocomplete_light.ChoiceWidget):
 
 @processor_for(BaseResource)
 def add_generic_context(request, page):
-    user = request.user
-    user_zone_account_exist = hydroshare.utils.get_user_zone_status_info(user)
 
     class AddUserForm(forms.Form):
         user = forms.ModelChoiceField(
@@ -1692,7 +1690,6 @@ def add_generic_context(request, page):
         # Reuse the same class AddGroupForm() leads to duplicated IDs.
         "add_view_group_form": AddGroupForm(),
         "add_edit_group_form": AddGroupForm(),
-        "user_zone_account_exist": user_zone_account_exist,
     }
 
 

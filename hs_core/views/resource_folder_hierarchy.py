@@ -135,17 +135,11 @@ def data_store_structure(request):
                      'folder_aggregation_appkey': folder_aggregation_appkey,
                      })
 
-    is_federated = resource.is_federated
     for index, fname in enumerate(store[1]):  # files
         f_store_path = os.path.join(store_path, fname)
         file_in_irods = resource.get_irods_path(f_store_path)
-
-        if is_federated:
-            res_file = ResourceFile.objects.filter(object_id=resource.id,
-                                                   fed_resource_file=file_in_irods).first()
-        else:
-            res_file = ResourceFile.objects.filter(object_id=resource.id,
-                                                   resource_file=file_in_irods).first()
+        res_file = ResourceFile.objects.filter(object_id=resource.id,
+                                               resource_file=file_in_irods).first()
 
         if not res_file:
             # skip metadata files

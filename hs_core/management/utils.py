@@ -293,17 +293,8 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
     dangling_in_django = 0
     missing_in_django = 0
 
-    # skip federated resources if not configured to handle these
-    if resource.is_federated and not settings.REMOTE_USE_IRODS:
-        msg = "check_irods_files: skipping check of federated resource {} in unfederated mode"\
-            .format(resource.short_id)
-        if echo_errors:
-            print(msg)
-        if log_errors:
-            logger.info(msg)
-
     # skip resources that do not exist in iRODS
-    elif not istorage.exists(resource.root_path):
+    if not istorage.exists(resource.root_path):
         msg = "root path {} does not exist in iRODS".format(resource.root_path)
         ecount += 1
         if echo_errors:
@@ -540,47 +531,36 @@ def ingest_irods_files(resource,
     istorage = resource.get_irods_storage()
     errors = []
     ecount = 0
-
-    # skip federated resources if not configured to handle these
-    if resource.is_federated and not settings.REMOTE_USE_IRODS:
-        msg = "ingest_irods_files: skipping ingest of federated resource {} in unfederated mode"\
-            .format(resource.short_id)
+    # flag non-existent resources in iRODS
+    if not istorage.exists(resource.root_path):
+        msg = "root path {} does not exist in iRODS".format(resource.root_path)
+        ecount += 1
         if echo_errors:
             print(msg)
         if log_errors:
-            logger.info(msg)
+            logger.error(msg)
+        if return_errors:
+            errors.append(msg)
+
+    # flag non-existent file paths in iRODS
+    elif not istorage.exists(resource.file_path):
+        msg = "file path {} does not exist in iRODS".format(resource.file_path)
+        ecount += 1
+        if echo_errors:
+            print(msg)
+        if log_errors:
+            logger.error(msg)
+        if return_errors:
+            errors.append(msg)
 
     else:
-        # flag non-existent resources in iRODS
-        if not istorage.exists(resource.root_path):
-            msg = "root path {} does not exist in iRODS".format(resource.root_path)
-            ecount += 1
-            if echo_errors:
-                print(msg)
-            if log_errors:
-                logger.error(msg)
-            if return_errors:
-                errors.append(msg)
-
-        # flag non-existent file paths in iRODS
-        elif not istorage.exists(resource.file_path):
-            msg = "file path {} does not exist in iRODS".format(resource.file_path)
-            ecount += 1
-            if echo_errors:
-                print(msg)
-            if log_errors:
-                logger.error(msg)
-            if return_errors:
-                errors.append(msg)
-
-        else:
-            return __ingest_irods_directory(resource,
-                                            resource.file_path,
-                                            logger,
-                                            stop_on_error=False,
-                                            echo_errors=True,
-                                            log_errors=False,
-                                            return_errors=False)
+        return __ingest_irods_directory(resource,
+                                        resource.file_path,
+                                        logger,
+                                        stop_on_error=False,
+                                        echo_errors=True,
+                                        log_errors=False,
+                                        return_errors=False)
 
     return errors, ecount
 
@@ -828,12 +808,6 @@ class CheckResource(object):
         except BaseResource.DoesNotExist:
             print("{} does not exist in Django".format(self.short_id))
             return
-
-        # skip federated resources if not configured to handle these
-        if self.resource.is_federated and not settings.REMOTE_USE_IRODS:
-            msg = "check_resource: skipping check of federated resource {} in unfederated mode"\
-                .format(self.resource.short_id)
-            print(msg)
 
         istorage = self.resource.get_irods_storage()
 

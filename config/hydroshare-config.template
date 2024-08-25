@@ -1,25 +1,6 @@
 ### Local Configuration Variables ###
 HS_PATH: /home/hydro/hydroshare
-HOST_SSL_DIR: /home/hydro/hs-certs
 HS_DATABASE: pg.development.sql
 HS_LOG_FILES: /home/hydro/hydroshare/log
-
-### Deployment Options ###
-USE_NGINX: false
-USE_SSL: false
-
-### nginx Configuration Variables ###
-FQDN_OR_IP: localhost
-NGINX_DIR: /home/hydro/hydroshare/nginx
-
-### SSL Configuration Variables ###
-SSL_CERT_DIR: /home/hydro/hydroshare/nginx/cert-files
-SSL_CERT_FILE: hydrodev-vb.example.org.cert
-SSL_KEY_FILE: hydrodev-vb.example.org.key
-
-### Irods Userzone Keys
-HOST_PK_FOR_HS_USER_ZONE: /opt/.ssh/id_ed25519_hs
-# Following should match the value set in local_settings.py
-PRIVATE_KEY_FILE_FOR_HS_USER_ZONE: /hydroshare/.ssh/id_ed25519_hs
 
 ### REQUIRES BLANK LINE AFTER LAST VARIABLE DEFINITION ###
