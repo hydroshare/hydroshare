@@ -24,7 +24,7 @@ class _CSVColumnSchema(BaseModel):
     column_number: PositiveInt
     titles: Optional[str] = None
     description: Optional[str] = None
-    datatype: TypeLiteral["string", "number", "datetime", "boolean"]
+    datatype: TypeLiteral["string", "number", "datetime", "boolean"]    # noqa: F821
 
 
 class _CSVColumnsSchema(BaseModel):
@@ -223,19 +223,19 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
                                     with html_tags.fieldset(cls="border p-2"):
                                         html_tags.legend(f"Column {col_no + 1}", csl="w-auto")
                                         titles_id = f"id-csv-metadata-column-{col_no}-titles"
-                                        html_tags.label(f"Title", fr=titles_id,)
+                                        html_tags.label("Title", fr=titles_id,)
                                         col_title = col.titles if col.titles else ""
                                         html_tags.input(type="text", id=titles_id, name=f"column-{col_no}-titles",
                                                         value=col_title, cls=column_input_cls)
 
                                         desc_id = f"id-csv-metadata-column-{col_no}-description"
-                                        html_tags.label(f"Description", fr=desc_id)
+                                        html_tags.label("Description", fr=desc_id)
                                         col_description = col.description if col.description else ""
                                         html_tags.input(type="text", id=desc_id, name=f"column-{col_no}-description",
                                                         value=col_description, cls=column_input_cls)
 
                                         datatype_id = f"id-csv-metadata-column-{col_no}-datatype"
-                                        html_tags.label(f"Data type", fr=datatype_id)
+                                        html_tags.label("Data type", fr=datatype_id)
                                         html_tags.input(type="text", id=datatype_id, name=f"column-{col_no}-datatype",
                                                         readonly="readonly", value=col.datatype, cls=column_input_cls)
 
@@ -713,5 +713,3 @@ class CSVLogicalFile(AbstractLogicalFile):
         copy_of_logical_file.save()
 
         return copy_of_logical_file
-
-

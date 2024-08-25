@@ -314,4 +314,3 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
         self.assertEqual(0, TimeSeriesLogicalFile.objects.count())
         # should create a CSV aggregation
         self.assertEqual(1, CSVLogicalFile.objects.count())
-

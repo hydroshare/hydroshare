@@ -296,11 +296,13 @@ def test_move_aggr_into_model_instance_aggr(composite_resource_with_mi_aggregati
         if move_aggr_cls == GeoFeatureLogicalFile:
             for shp_file in (file_name, 'states.shx', 'states.dbf', 'states.prj'):
                 upload_file_path = 'hs_file_types/tests/data/{}'.format(shp_file)
-                file_to_upload = UploadedFile(file=open(upload_file_path, 'rb'), name=os.path.basename(upload_file_path))
+                file_to_upload = UploadedFile(file=open(upload_file_path, 'rb'),
+                                              name=os.path.basename(upload_file_path))
                 files_to_upload.append(file_to_upload)
         else:
             upload_file_path = 'hs_file_types/tests/data/{}'.format(file_name)
-            files_to_upload.append(UploadedFile(file=open(upload_file_path, 'rb'), name=os.path.basename(upload_file_path)))
+            files_to_upload.append(UploadedFile(file=open(upload_file_path, 'rb'),
+                                                name=os.path.basename(upload_file_path)))
 
     else:
         upload_file_path = 'hs_file_types/tests/{}'.format(file_name)
