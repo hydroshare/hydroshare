@@ -174,8 +174,9 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
             table_schema_model = self.get_table_schema_model()
             root_div = html_tags.div(cls="content-block")
             with root_div:
-                html_tags.h3("CSV Metadata")
-                html_tags.p(f"Number of data rows: {table_schema_model.rows}", cls="font-weight-bold")
+                html_tags.h3("CSV File Properties")
+                html_tags.p(f"Number of data rows: {table_schema_model.rows}", cls="font-weight-bold",
+                            style="padding-top: 10px; font-size: 1.3em;")
                 with html_tags.div():
                     html_tags.legend("Column Properties:")
                     for col_no, col in enumerate(table_schema_model.table.columns):
@@ -186,8 +187,6 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
                         html_tags.p(f"Description: {col_desc}")
                         html_tags.p(f"Data type: {col.datatype}")
                         html_tags.hr()
-
-                self._get_preview_data_html()
 
             html_string += root_div.render()
 
@@ -248,19 +247,20 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
                                     style="display: none;",
                                 )
 
-            self._get_preview_data_html()
-
         template = Template(root_div.render())
         return template.render(context)
 
-    def _get_preview_data_html(self):
-        preview_div = html_tags.div(style="clear: both;")
-        with preview_div:
-            html_tags.h3("CSV Data Preview")
-            logical_file = self.logical_file
-            html_tags.textarea(logical_file.preview_data, rows=10, readonly="readonly", wrap="soft",
-                               style="min-width: 100%; resize: vertical; overflow-x: auto; white-space: pre;")
-        return preview_div
+    def get_preview_data_html(self):
+        toggle_preview_div = html_tags.div(style="clear: both;")
+        with toggle_preview_div:
+            html_tags.button("Preview CSV Data", type="button", cls="btn btn-info", data_toggle="collapse",
+                             data_target="#preview-data", style="margin-bottom: 10px;")
+            preview_div = html_tags.div(style="clear: both; padding-bottom: 10px;", id="preview-data", cls="collapse")
+            with preview_div:
+                logical_file = self.logical_file
+                html_tags.textarea(logical_file.preview_data, rows=10, readonly="readonly", wrap="soft",
+                                   style="min-width: 100%; resize: vertical; overflow-x: auto; white-space: pre;")
+        return toggle_preview_div
 
 
 class CSVLogicalFile(AbstractLogicalFile):
