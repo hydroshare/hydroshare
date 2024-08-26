@@ -423,7 +423,7 @@ class CSVLogicalFile(AbstractLogicalFile):
                 _skip_rows = 0
                 for row in reader:
                     # skip line starting with # (comment line) or empty line
-                    if len(row) == 0 or row[0].startswith("#"):
+                    if len(row) == 0 or row[0].startswith("#") or not ''.join(row).strip():
                         _skip_rows += 1
                         continue
                     data_row_count += 1
@@ -446,6 +446,8 @@ class CSVLogicalFile(AbstractLogicalFile):
                     if data_row_count > _MAX_DATA_ROWS_TO_READ:
                         break
 
+            if data_row_count == 0:
+                raise pd.errors.ParserError("Invalid CSV file. No data rows found")
             if maybe_invalid_csv:
                 if _has_matching_delimiter or delimiter == ';':
                     _err_msg = ("Invalid CSV file. Contains non-comment text - possibly space delimiter"
