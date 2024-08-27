@@ -106,13 +106,6 @@ class IrodsStorage(S3Storage):
         provided.  The folder to unzip to.
         :return: the folder files were unzipped to
         """
-        abs_path = os.path.dirname(zip_file_path)
-        if not unzipped_folder:
-            unzipped_folder = abs_path
-        else:
-            unzipped_folder = self._get_nonexistant_path(
-                os.path.join(abs_path, unzipped_folder)
-            )
 
         zip_bucket, zip_name = bucket_and_name(zip_file_path)
         unzipped_bucket, unzipped_path = bucket_and_name(unzipped_folder)
@@ -131,16 +124,6 @@ class IrodsStorage(S3Storage):
                 file_unzipped_path = os.path.join(unzipped_path, unzipped_file_path)
                 self.connection.Bucket(unzipped_bucket).upload_file(path, file_unzipped_path)
         return unzipped_folder
-
-    def _get_nonexistant_path(self, path):
-        if not self.exists(path):
-            return path
-        i = 1
-        new_path = "{}-{}".format(path, i)
-        while self.exists(new_path):
-            i += 1
-            new_path = "{}-{}".format(path, i)
-        return new_path
 
     def setAVU(self, name, attName, attVal):
         """

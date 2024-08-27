@@ -465,7 +465,6 @@ def data_store_folder_unzip(request, **kwargs):
             unzip_file(user, res_id, zip_with_rel_path, remove_original_zip, overwrite, auto_aggregate,
                        ingest_metadata, unzip_to_folder)
         except SessionException as ex:
-            raise
             specific_msg = "iRODS error resulted in unzip being cancelled. This may be due to " \
                            "protection from overwriting existing files. Unzip in a different " \
                            "location (e.g., folder) or move or rename the file being overwritten. " \
@@ -473,11 +472,9 @@ def data_store_folder_unzip(request, **kwargs):
             err_msg = specific_msg + ex.stderr
             return JsonResponse({"error": err_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except (DRF_ValidationError, SuspiciousFileOperation, FileOverrideException, QuotaException) as ex:
-            raise
             err_msg = ex.detail if isinstance(ex, DRF_ValidationError) else str(ex)
             return JsonResponse({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as ex:
-            raise
             err_msg = str(ex)
             return JsonResponse({"error": err_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
