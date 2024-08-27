@@ -98,7 +98,7 @@ class IrodsStorage(S3Storage):
         self.connection.Object(out_bucket, out_path).upload_fileobj(archive)
         archive.close()
 
-    def unzip(self, zip_file_path, unzipped_folder = ""):
+    def unzip(self, zip_file_path, unzipped_folder=""):
         """
         run iRODS ibun command to unzip files into a new folder
         :param zip_file_path: path of the zipped file to be unzipped

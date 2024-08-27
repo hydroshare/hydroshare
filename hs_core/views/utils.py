@@ -1043,7 +1043,6 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     if resource.resource_type == "CompositeResource":
         resource.create_aggregation_meta_files()
 
-    #istorage.session.run("ibun", None, '-cDzip', '-f', output_zip_full_path, res_coll_input)
     istorage.zipup(res_coll_input, output_zip_full_path)
     output_zip_size = istorage.size(output_zip_full_path)
     if not bool_remove_original:
