@@ -55,8 +55,9 @@ class IrodsStorage(S3Storage):
         if not directories and not files and not additional_directories:
             raise SessionException(f"Path {path} does not exist")
         # TODO this is chicken shits
-        additional_directories = [d[len(path) + 1:]
-                                  for d in additional_directories if d[len(path) + 1:] and "/" not in d[len(path) + 1:]]
+        additional_directories = [d[len(path.strip("/") + "/"):]
+                                  for d in additional_directories
+                                  if d[len(path.strip("/") + "/"):] and "/" not in d[len(path.strip("/") + "/"):]]
         directories = list(set(directories + additional_directories))
         return (directories, files, file_sizes)
 
@@ -149,13 +150,14 @@ class IrodsStorage(S3Storage):
         attName: the attribute name to set
         attVal: the attribute value to set
         """
-        return m.AVU.objects.get(name=name, attName=attName).attVal
+        try:
+            return m.AVU.objects.get(name=name, attName=attName).attVal
+        except m.AVU.DoesNotExist:
+            return ""
 
     def _empty_folders(self, resource_id, filter=None):
-        try:
-            folders = self.getAVU(resource_id, "empty_folders").split(",")
-        except Exception:
-            # TODO handle exception specific to empty matching AVU not found
+        folders = self.getAVU(resource_id, "empty_folders").split(",")
+        if not folders:
             return []
         if filter:
             folders = [f for f in folders if f.startswith(filter)]
@@ -237,13 +239,13 @@ class IrodsStorage(S3Storage):
                 if delete_src:
                     self.connection.Object(src_bucket, src_file_path).delete()
 
-                # update empty_folders AVU
-                dst_file_path = src_name.replace(src_name, dest_name)
-                res_id = "/".join(dst_file_path.split("/")[:1])
-                for empty_folder in self._empty_folders(res_id, filter=src_name):
-                    new_folder = empty_folder.replace(src_name, dest_name)
-                    self.remove_folder(res_id, empty_folder, AVU_only=True)
-                    self.create_folder(res_id, new_folder)
+            # update empty_folders AVU
+            dst_file_path = src_name.replace(src_name, dest_name)
+            res_id = "/".join(dst_file_path.split("/")[:1])
+            for empty_folder in self._empty_folders(res_id, filter=src_name):
+                new_folder = empty_folder.replace(src_name, dest_name)
+                self.remove_folder(res_id, empty_folder, AVU_only=True)
+                self.create_folder(res_id, new_folder)
 
     def moveFile(self, src_path, dest_path):
         """
