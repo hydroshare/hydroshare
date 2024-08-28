@@ -22,8 +22,6 @@ from hs_core.tasks import create_bag_by_irods
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
 from hs_file_types.enums import AggregationMetaFilePath
 
-from hs_core.task_utils import get_task_notification
-
 logger = logging.getLogger(__name__)
 
 
@@ -65,7 +63,6 @@ def download(request, path, use_async=True,
     is_aggregation_request = request.GET.get('aggregation', "False").lower() == "true"
     api_request = request.META.get('CSRF_COOKIE', None) is None
     aggregation_name = None
-    is_sf_request = False
 
     if split_path_strs[0] == 'bags':
         is_bag_download = True
