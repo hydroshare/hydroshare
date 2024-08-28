@@ -3793,9 +3793,8 @@ class BaseResource(Page, AbstractResource):
         bag_path = "{path}/{resource_id}.{postfix}".format(path=bagit_path,
                                                            resource_id=self.short_id,
                                                            postfix=bagit_postfix)
-        istorage = self.get_irods_storage()
-        bag_url = istorage.url(bag_path)
-        return bag_url
+        reverse_url = reverse("django_irods_download", kwargs={"path": bag_path})
+        return reverse_url
 
     @property
     def bag_checksum(self):

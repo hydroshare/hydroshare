@@ -5,6 +5,8 @@ import tempfile
 import zipfile
 
 from django_irods.icommands import SessionException
+from django.urls import reverse
+from urllib.parse import urlencode
 
 from . import models as m
 from .utils import bucket_and_name
@@ -310,11 +312,20 @@ class IrodsStorage(S3Storage):
         bucket, name = bucket_and_name(s3_bucket_name)
         self.connection.Bucket(bucket).download_file(name, local_file_path)
 
-    def url(self, name):
+    def signed_url(self, name):
         super_url = super().url(name.strip("/"))
         if super_url.startswith("http://minio:9000"):  # TODO make this based on DEBUG setting?
             return super_url.replace("http://minio:9000", "http://localhost:9000")
         return super_url
+
+    def url(self, name, url_download=False, zipped=False, aggregation=False):
+        reverse_url = reverse("rest_download", kwargs={"path": name})
+        query_params = {
+            "url_download": url_download,
+            "zipped": zipped,
+            "aggregation": aggregation,
+        }
+        return reverse_url + "?" + urlencode(query_params)
 
     def isDir(self, path):
         try:
