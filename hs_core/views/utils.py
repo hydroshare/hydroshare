@@ -1460,8 +1460,9 @@ def _get_destination_filename(file, unzipped_foldername, zip_with_full_path):
     """
     split = file.split(unzipped_foldername.strip("/"), 1)
     destination_file = os.path.join(split[0], split[1])
+    zip_name = os.path.basename(zip_with_full_path)
     destination_file_path = zip_with_full_path.replace(
-        os.path.basename(zip_with_full_path), destination_file.strip("/"))
+        zip_name, destination_file.strip("/"))
     return destination_file_path
 
 
