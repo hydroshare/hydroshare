@@ -1,5 +1,6 @@
 import socket
 import json
+import requests
 
 from django.contrib.auth.models import Group
 from django.urls import reverse
@@ -87,14 +88,14 @@ class HSRESTTestCase(APITestCase):
         return self._get_file_irods(url, exhaust_stream)
 
     def _get_file_irods(self, url, exhaust_stream=True):
-        response = self.client.get(url, follow=True)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # Exhaust the file stream so that WSGI doesn't get upset (this causes the Docker container to exit)
-        if exhaust_stream and hasattr(response, "streaming_content"):
-            for line in response.streaming_content:
-                pass
+        # follow the redirects to minio url and then use requests to get the file
+        # rest_framwork.tests.APIClient doesn't work for the file download
+        response = self.client.get(url)
+        response2 = self.client.get(response.url)
+        response3 = self.client.get(response2.url)
+        minio_response = requests.get(response3.url)
 
-        return response
+        return minio_response
 
     def getScienceMetadata(self, res_id, exhaust_stream=True):
         """Get sciencematadata.xml from iRODS, following redirects
