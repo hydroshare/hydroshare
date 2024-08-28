@@ -155,12 +155,13 @@ class IrodsStorage(S3Storage):
         try:
             return m.AVU.objects.get(name=name, attName=attName).attVal
         except m.AVU.DoesNotExist:
-            return ""
+            return None
 
     def _empty_folders(self, resource_id, filter=None):
-        folders = self.getAVU(resource_id, "empty_folders").split(",")
+        folders = self.getAVU(resource_id, "empty_folders")
         if not folders:
             return []
+        folders = folders.split(",")
         if filter:
             folders = [f for f in folders if f.startswith(filter)]
         return folders
@@ -314,8 +315,8 @@ class IrodsStorage(S3Storage):
 
     def signed_url(self, name):
         super_url = super().url(name.strip("/"))
-        if super_url.startswith("http://minio:9000"):  # TODO make this based on DEBUG setting?
-            return super_url.replace("http://minio:9000", "http://localhost:9000")
+        #if super_url.startswith("http://minio:9000"):  # TODO make this based on DEBUG setting?
+        #    return super_url.replace("http://minio:9000", "http://localhost:9000")
         return super_url
 
     def url(self, name, url_download=False, zipped=False, aggregation=False):
