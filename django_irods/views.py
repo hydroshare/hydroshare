@@ -221,7 +221,6 @@ def download(request, path, use_async=True,
                     # create the bag
                     task = create_bag_by_irods.apply_async((res_id, ))
                     task_id = task.task_id
-                    bag_path = os.path.join("bags", res_id + ".zip")
                     if api_request:
                         return JsonResponse({
                             'bag_status': 'Not ready',

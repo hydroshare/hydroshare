@@ -315,7 +315,7 @@ class IrodsStorage(S3Storage):
 
     def signed_url(self, name):
         super_url = super().url(name.strip("/"))
-        #if super_url.startswith("http://minio:9000"):  # TODO make this based on DEBUG setting?
+        # if super_url.startswith("http://minio:9000"):  # TODO make this based on DEBUG setting?
         #    return super_url.replace("http://minio:9000", "http://localhost:9000")
         return super_url
 
