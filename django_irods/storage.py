@@ -16,16 +16,8 @@ from uuid import uuid4
 from django.utils.deconstruct import deconstructible
 from .s3_backend import S3Storage
 
-# TODO check for usage of these imports elsewhere for cleanup
-# from django_irods import icommands
-# from .icommands import (
-#    Session,
-#    GLOBAL_SESSION,
-#    GLOBAL_ENVIRONMENT,
-#    SessionException,
-#    IRodsEnv,
-# )
 
+folder_delimiter = "|||||||"
 
 @deconstructible
 class IrodsStorage(S3Storage):
@@ -56,25 +48,12 @@ class IrodsStorage(S3Storage):
         additional_directories = self._empty_folders(resource_id, path)
         if not directories and not files and not additional_directories:
             raise SessionException(f"Path {path} does not exist")
-        # TODO this is chicken shits
-        additional_directories = [d[len(path.strip("/") + "/"):]
+        path = path.strip("/")
+        additional_directories = [d[len(path):].strip("/").split("/")[0]
                                   for d in additional_directories
-                                  if d[len(path.strip("/") + "/"):] and "/" not in d[len(path.strip("/") + "/"):]]
+                                  if d[len(path):].strip("/")]
         directories = list(set(directories + additional_directories))
         return (directories, files, file_sizes)
-
-    def runBagitRule(self, rule_name, input_path, input_resource):
-        """
-        run iRODS bagit rule which generated bag-releated files without bundling
-        :param rule_name: the iRODS rule name to run
-        :param input_path: input parameter to the rule that indicates the collection path to
-        create bag for
-        :param input_resource: input parameter to the rule that indicates the default resource
-        to store generated bag files
-        :return: None
-        """
-        # self.session.run("irule", None, "-F", rule_name, input_path, input_resource)
-        pass  # TODO
 
     def zipup(self, in_name, out_name):
         """
@@ -161,7 +140,7 @@ class IrodsStorage(S3Storage):
         folders = self.getAVU(resource_id, "empty_folders")
         if not folders:
             return []
-        folders = folders.split(",")
+        folders = folders.split(folder_delimiter)
         if filter:
             folders = [f for f in folders if f.startswith(filter)]
         return folders
@@ -187,15 +166,15 @@ class IrodsStorage(S3Storage):
 
     def create_folder(self, coll_path, path):
         folders = self._empty_folders(coll_path)
-        folders.append(path)
-        self.setAVU(coll_path, "empty_folders", ",".join(folders))
+        folders.append(path.strip("/"))
+        self.setAVU(coll_path, "empty_folders", folder_delimiter.join(folders))
 
     def remove_folder(self, res_id, path, AVU_only=False):
         folders = self._empty_folders(res_id)
         for folder in folders:
             if folder.startswith(path):
                 folders.remove(folder)
-        self.setAVU(res_id, "empty_folders", ",".join(folders))
+        self.setAVU(res_id, "empty_folders", folder_delimiter.join(folders))
         if not AVU_only:
             src_bucket, src_name = bucket_and_name(path)
             src_name = src_name.strip("/") + "/"
