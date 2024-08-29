@@ -1414,6 +1414,7 @@ def ingest_bag(resource, bag_file, user):
     data_contents_dir = os.path.join("data", "contents")
     res_files = [res_file for res_file in res_files if res_file.name.count(data_contents_dir) > 0]
     # now move each file to the destination
+
     def destination_filename(resource, file):
         """Parses the temporary filename to the destination filename"""
         return os.path.join(resource.file_path, file.split(data_contents_dir, 1)[1].strip("/"))
