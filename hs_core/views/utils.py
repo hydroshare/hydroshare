@@ -1379,7 +1379,8 @@ def ingest_bag(resource, bag_file, user):
     zip_with_full_path = os.path.join(resource.file_path, bag_file.short_path)
 
     # unzip to a temporary folder
-    unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=uuid4().hex)
+    tmp_folder = os.path.join("tmp", uuid4().hex)
+    unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=tmp_folder)
     delete_resource_file(resource.short_id, bag_file.id, user)
 
     # list all files to be moved into the resource
@@ -1409,17 +1410,13 @@ def ingest_bag(resource, bag_file, user):
             raise SuspiciousFileOperation(err_msg)
         res_files.append(IrodsFile(unzipped_file, istorage))
     res_files, meta_files, map_files = identify_metadata_files(res_files)
-
     # filter res_files to only files in the data/contents directory
     data_contents_dir = os.path.join("data", "contents")
-    res_files = [res_file for res_file in res_files if res_file.name.count(data_contents_dir) > 1]
-
+    res_files = [res_file for res_file in res_files if res_file.name.count(data_contents_dir) > 0]
     # now move each file to the destination
     def destination_filename(resource, file):
         """Parses the temporary filename to the destination filename"""
-        dc_dir = os.path.join("data", "contents")
-        relative_path = dc_dir.join(file.split(dc_dir, 2)[2:])
-        return os.path.join(resource.file_path, relative_path.strip("/"))
+        return os.path.join(resource.file_path, file.split(data_contents_dir, 1)[1].strip("/"))
 
     added_resource_files = []
     for file in res_files:
