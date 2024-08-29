@@ -1207,7 +1207,8 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
     unzip_temp_folder = ''
     try:
         # unzip to a temporary folder first to validate contents of the zip file
-        unzip_temp_folder = os.path.join("tmp", uuid4().hex)
+        relative_path = os.path.dirname(zip_with_rel_path.split('data/contents/')[1])
+        unzip_temp_folder = os.path.join("tmp", uuid4().hex, relative_path)
         # Note: unzipping using the irods 'ibun' command seems to fail if the zip file contains files that have
         # non-english characters.
         unzip_path_temp = istorage.unzip(zip_with_full_path, unzipped_folder=unzip_temp_folder)
@@ -1455,7 +1456,8 @@ def _get_destination_filename(file, unzipped_foldername, zip_with_full_path):
     Useful for moving files from a temporary unzipped folder to the resource outside of the
     temporary folder.
     :param file: path to a file
-    :param unzipped_foldername: the name of the
+    :param unzipped_foldername: the name of the unzipped folder
+    :param zip_with_full_path: the full path of the zip file
     :return:
     """
     split = file.split(unzipped_foldername.strip("/"), 1)
