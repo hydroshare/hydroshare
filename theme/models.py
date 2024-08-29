@@ -1,5 +1,6 @@
 import datetime
 import logging
+import re
 
 from django.utils import timezone
 from django.dispatch import receiver
@@ -603,6 +604,10 @@ class UserProfile(models.Model):
         if not self.user_type:
             missing.append("User Type")
         return missing
+
+    @property
+    def bucket_name(self):
+        return re.sub("[^A-Za-z0-9\.-]", "", re.sub("[@]", ".at.", self.user.username.lower()))
 
 
 def force_unique_emails(sender, instance, **kwargs):
