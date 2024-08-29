@@ -1133,9 +1133,9 @@ def zip_by_aggregation_file(user, res_id, aggregation_name, output_zip_fname):
     validate_user_quota(resource.quota_holder, zip_file_size)
 
     # move the zip file to the input path
-    move_zip_file_to = os.path.dirname(irods_aggr_input_path)
-    istorage.moveFile(irods_output_path, move_zip_file_to)
-    zip_file_path = os.path.join(move_zip_file_to, os.path.basename(irods_output_path))
+    basepath = os.path.dirname(irods_aggr_input_path)
+    zip_file_path = os.path.join(basepath, os.path.basename(irods_output_path))
+    istorage.moveFile(irods_output_path, zip_file_path)
 
     # register the zip file in Django
     zip_res_file = link_irods_file_to_django(resource, zip_file_path)

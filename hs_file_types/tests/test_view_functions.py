@@ -1767,7 +1767,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.add_session_to_request(request)
         response = download(request, path=meta_file_storage_path)
         # check that the download request was successful
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
         # download aggregation resmap xml file
         # compute resmap  storage path
@@ -1781,7 +1781,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.add_session_to_request(request)
         response = download(request, path=meta_file_storage_path)
         # check that the download request was successful
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
     def test_model_program_schema_json_file_download(self):
         # here we are testing that we can download schema json file for a model program aggregation
@@ -1816,7 +1816,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.add_session_to_request(request)
         response = download(request, path=meta_file_storage_path)
         # check that the download request was successful
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
     def test_fileset_meta_xml_file_download(self):
         # here we are testing that we can download meta xml file for a folder based aggregation
@@ -1846,7 +1846,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.add_session_to_request(request)
         response = download(request, path=meta_file_storage_path)
         # check that the download request was successful
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
         # download aggregation resmap xml file
         # compute resmap  storage path
@@ -1861,7 +1861,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.add_session_to_request(request)
         response = download(request, path=meta_file_storage_path)
         # check that the download request was successful
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
     @staticmethod
     def add_session_to_request(request):

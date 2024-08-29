@@ -48,11 +48,11 @@ class TestCreateResource(HSRESTTestCase):
                 if status_content['status']:
                     # bag creation task succeeds, get bag again
                     response = self.getResourceBag(res_id)
-                    self.assertEqual(response['Content-Type'], 'application/zip')
-                    self.assertGreater(int(response['Content-Length']), 0)
+                    # check for presigned s3 urls
+                    self.assertTrue(response.url.startswith('http://minio:9000'))
         else:
-            self.assertEqual(response['Content-Type'], 'application/zip')
-            self.assertGreater(int(response['Content-Length']), 0)
+            # check for presigned s3 urls
+            self.assertTrue(response.url.startswith('http://minio:9000'))
 
     def test_post_resource_get_sysmeta(self):
         rtype = 'CompositeResource'

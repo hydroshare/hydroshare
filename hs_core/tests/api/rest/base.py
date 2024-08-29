@@ -93,8 +93,11 @@ class HSRESTTestCase(APITestCase):
         response = self.client.get(url)
         response2 = self.client.get(response.url)
         response3 = self.client.get(response2.url)
-        minio_response = requests.get(response3.url)
+        if response3['Content-Type'] == 'application/json':
+            # async task
+            return response3
 
+        minio_response = requests.get(response3.url)
         return minio_response
 
     def getScienceMetadata(self, res_id, exhaust_stream=True):
