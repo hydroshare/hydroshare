@@ -1,3 +1,4 @@
+import re
 from django.db import connection
 
 
@@ -29,4 +30,9 @@ def bucket_and_name(path):
         cursor.execute(owner_username_query)
         row = cursor.fetchone()
         owner_username = row[1]
-    return owner_username, path
+    return _normalized_bucket_name(owner_username), path
+
+def _normalized_bucket_name(username):
+    # duplicate of theme.models.UserProfile.bucket_name property method
+    # Cannot import theme.models.UserProfile due to circular import
+    return re.sub("[^A-Za-z0-9\.-]", "", re.sub("[@]", ".at.", username.lower()))
