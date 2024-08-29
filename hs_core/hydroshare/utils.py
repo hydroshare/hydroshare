@@ -296,9 +296,8 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
     istorage = src_res.get_irods_storage()
 
     # This makes an exact copy of all physical files.
-    src_files = os.path.join(src_res.root_path, 'data')
-    # This has to be one segment short of the source because it is a target directory.
-    dest_files = tgt_res.root_path
+    src_files = os.path.join(src_res.root_path, 'data', 'contents')
+    dest_files = os.path.join(tgt_res.root_path, 'data', 'contents')
     istorage.copyFiles(src_files, dest_files)
 
     src_coll = src_res.root_path

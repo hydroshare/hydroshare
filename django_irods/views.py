@@ -145,7 +145,7 @@ def download(request, path, use_async=True,
 
             if is_zip_request:
                 daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
-                output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
+                output_path = "tmp/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
                 irods_output_path = res.get_irods_path(output_path, prepend_short_id=False)
 
     # After this point, we have valid path, irods_path, output_path, and irods_output_path
@@ -164,7 +164,7 @@ def download(request, path, use_async=True,
         if use_async:
             user_id = get_task_user_id(request)
             task = create_temp_zip.apply_async((res_id, irods_path, irods_output_path,
-                                                aggregation_name, is_sf_request, download_path, user_id))
+                                                aggregation_name, is_sf_request))
             task_id = task.task_id
             if api_request:
                 return JsonResponse({
@@ -179,8 +179,7 @@ def download(request, path, use_async=True,
 
         else:  # synchronous creation of download
             ret_status = create_temp_zip(res_id, irods_path, irods_output_path,
-                                         aggregation_name=aggregation_name, sf_zip=is_sf_request,
-                                         download_path=download_path)
+                                         aggregation_name=aggregation_name, sf_zip=is_sf_request)
             if not ret_status:
                 content_msg = "Zip could not be created."
                 response = HttpResponse()
