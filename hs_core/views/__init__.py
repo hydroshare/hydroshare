@@ -2270,6 +2270,48 @@ def hsapi_get_user(request, user_identifier):
 
 @swagger_auto_schema(
     method="post",
+    operation_description="Check user S3 authorization",
+    responses={200: "User S3 Authorization"},
+    manual_parameters=[uid]
+)
+@api_view(["POST"])
+def hsapi_user_s3_authorization(request):
+    # request body example https://min.io/docs/minio/linux/administration/identity-access-management/pluggable-authorization.html#id5
+
+    def wrap_result(authorized: bool):
+        return { "result" : { "allow" : authorized } }
+
+    auth_request = json.loads(request.body.decode('utf-8'))["input"]
+    bucket = auth_request["bucket"]
+    action: str = auth_request["action"] # "s3:"
+    username: str = auth_request["username"]
+    conditions: dict = auth_request["conditions"]
+    prefix: list[str] = conditions["prefix"]
+    user: User = hydroshare.utils.user_from_id(username)
+    res = None
+
+    # Break this down into just view and edit for now.
+    # Later on we could share the metadata files only or allow resource deletion.
+    # We will also need to figure out owners at some point
+
+    # List of actions https://docs.aws.amazon.com/AmazonS3/latest/API/API_Operations.html
+
+    view_permissions = ["s3:GetObject", "s3:ListObjects", "s3:ListObjjectsV2"]
+    edit_permissions = ["s3:DeleteObject", "s3:DeleteObjects" "s3:PutObject", "s3:UploadPart"]
+
+    if action in view_permissions:
+        if res.raccess.discoverable and action != "s3:GetObject":
+            return wrap_result(True)
+        if res.raccess.public or res.raccess.allow_private_sharing:
+            return wrap_result(True)
+        return user.uaccess.can_view_resources(res)
+    if action in edit_permissions:
+        return user.uaccess.can_change_resource(resource_metadata_rest_api)
+    return wrap_result(False)
+
+
+@swagger_auto_schema(
+    method="post",
     operation_description="Check user password for Keycloak Migration",
     responses={200: "Password is valid", 400: "Password is invalid"},
     manual_parameters=[uid],
