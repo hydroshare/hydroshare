@@ -7,7 +7,7 @@ from autocomplete_light import shortcuts as autocomplete_light
 from dateutil import tz
 from django import forms
 from django.contrib import messages
-from django.contrib.auth import authenticate, login as auth_login
+jango.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
@@ -2276,17 +2276,18 @@ def hsapi_get_user(request, user_identifier):
 )
 @api_view(["POST"])
 def hsapi_user_s3_authorization(request):
-    # request body example https://min.io/docs/minio/linux/administration/identity-access-management/pluggable-authorization.html#id5
+    # request body example
+    # https://min.io/docs/minio/linux/administration/identity-access-management/pluggable-authorization.html#id5
 
     def wrap_result(authorized: bool):
-        return { "result" : { "allow" : authorized } }
+        return {"result" : {"allow": authorized}}
 
     auth_request = json.loads(request.body.decode('utf-8'))["input"]
-    bucket = auth_request["bucket"]
-    action: str = auth_request["action"] # "s3:"
+    # bucket = auth_request["bucket"]
+    action: str = auth_request["action"]  # "s3:"
     username: str = auth_request["username"]
     conditions: dict = auth_request["conditions"]
-    prefix: list[str] = conditions["prefix"]
+    # prefix: list[str] = conditions["prefix"]
     user: User = hydroshare.utils.user_from_id(username)
     res = None
 
