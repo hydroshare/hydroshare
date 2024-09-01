@@ -7,7 +7,7 @@ from autocomplete_light import shortcuts as autocomplete_light
 from dateutil import tz
 from django import forms
 from django.contrib import messages
-jango.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
