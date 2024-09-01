@@ -2286,7 +2286,7 @@ def hsapi_user_s3_authorization(request):
     # bucket = auth_request["bucket"]
     action: str = auth_request["action"]  # "s3:"
     username: str = auth_request["username"]
-    conditions: dict = auth_request["conditions"]
+    # conditions: dict = auth_request["conditions"]
     # prefix: list[str] = conditions["prefix"]
     user: User = hydroshare.utils.user_from_id(username)
     res = None
