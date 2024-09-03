@@ -285,10 +285,6 @@ cd irods/
 cd ..
 sleep 2
 
-echo "Chown root items"
-echo " - exec hydroshare bash scripts/chown-root-items"
-docker exec hydroshare bash scripts/chown-root-items
-
 echo
 echo '########################################################################################################################'
 echo -e " Setting up PostgreSQL container and Importing Django DB"
@@ -336,8 +332,6 @@ echo '##########################################################################
 echo " Migrating data"
 echo '########################################################################################################################'
 echo
-
-docker exec hydroshare bash scripts/chown-root-items
 
 echo "  -docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput"
 echo
