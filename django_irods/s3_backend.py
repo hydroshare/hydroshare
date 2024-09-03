@@ -5,7 +5,7 @@ from datetime import timedelta
 from urllib.parse import urlencode
 from .utils import bucket_and_name
 
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, SuspiciousOperation
 from django.utils.deconstruct import deconstructible
 from django.utils.encoding import filepath_to_uri
 from django.utils.timezone import make_naive
@@ -66,6 +66,17 @@ class S3Storage(s3.S3Storage):
         """
         return self.connection.Bucket(name)
 
+    def _normalize_name(self, name):
+        """
+        Normalizes the name so that paths like /path/to/ignored/../something.txt
+        work. We check to make sure that the path pointed to is not outside
+        the directory specified by the LOCATION setting.
+        """
+        try:
+            return name
+        except ValueError:
+            raise SuspiciousOperation("Attempted access to '%s' denied." % name)
+
     def _save(self, name, content):
         bucket, name = bucket_and_name(name)
         cleaned_name = clean_name(name)
@@ -112,9 +123,6 @@ class S3Storage(s3.S3Storage):
             raise
 
     def exists(self, name):
-        # if self.file_overwrite:
-        #    return False
-
         bucket, name = bucket_and_name(name)
         name = self._normalize_name(clean_name(name))
         try:
