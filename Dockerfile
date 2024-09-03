@@ -17,6 +17,7 @@ RUN wget -O /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem https://cacerts.digice
     cat /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem >> $(python -c "import requests; print(requests.certs.where())")
 
 RUN pip install boto3
+RUN pip install --upgrade django-storages
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
