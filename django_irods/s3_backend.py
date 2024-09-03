@@ -39,7 +39,7 @@ class S3File(s3.S3File):
         self.obj = storage.bucket(bucket).Object(name)
         if "w" not in mode:
             # Force early RAII-style exception if object does not exist
-            params = s3._filter_download_params(
+            params = _filter_download_params(
                 self._storage.get_object_parameters(self.name)
             )
             self.obj.load(**params)
