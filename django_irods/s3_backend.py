@@ -60,6 +60,7 @@ class S3Storage(s3.S3Storage):
     Extends storages.backends.s3.S3torage to support files across buckets
     """
 
+    @property
     def bucket(self, name):
         """
         Get a bucket by name.
