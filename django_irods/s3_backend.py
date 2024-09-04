@@ -60,7 +60,6 @@ class S3Storage(s3.S3Storage):
     Extends storages.backends.s3.S3torage to support files across buckets
     """
 
-    @property
     def bucket(self, name):
         """
         Get a bucket by name.
@@ -77,6 +76,16 @@ class S3Storage(s3.S3Storage):
             return name
         except ValueError:
             raise SuspiciousOperation("Attempted access to '%s' denied." % name)
+    
+    def _open(self, name, mode="rb"):
+        name = self._normalize_name(clean_name(name))
+        try:
+            f = S3File(name, mode, self)
+        except ClientError as err:
+            if err.response["ResponseMetadata"]["HTTPStatusCode"] == 404:
+                raise FileNotFoundError("File does not exist: %s" % name)
+            raise  # Let it bubble up if it was some other error
+        return f
 
     def _save(self, name, content):
         bucket, name = bucket_and_name(name)
