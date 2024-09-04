@@ -35,6 +35,7 @@ def test_create_csv_aggregation_1(composite_resource):
     table_schema = metadata.tableSchema
     csv_meta_schema_model = CSVMetaSchemaModel(**table_schema)
     assert csv_meta_schema_model.rows == 9
+    assert csv_meta_schema_model.delimiter == ","
     assert len(csv_meta_schema_model.table.columns) == 17
 
     # check that the column names are correctly set - the csv file has headers
@@ -93,6 +94,7 @@ def test_create_csv_aggregation_2(composite_resource):
     table_schema = metadata.tableSchema
     csv_meta_schema_model = CSVMetaSchemaModel(**table_schema)
     assert csv_meta_schema_model.rows == 6
+    assert csv_meta_schema_model.delimiter == ","
     assert len(csv_meta_schema_model.table.columns) == 5
 
     # check column properties
@@ -148,6 +150,13 @@ def test_create_csv_aggregation_3(composite_resource, delimiter):
     table_schema = metadata.tableSchema
     csv_meta_schema_model = CSVMetaSchemaModel(**table_schema)
     assert csv_meta_schema_model.rows == 6
+    if delimiter == "comma":
+        assert csv_meta_schema_model.delimiter == ","
+    elif delimiter == "tab":
+        assert csv_meta_schema_model.delimiter == "\t"
+    else:
+        assert csv_meta_schema_model.delimiter == ";"
+
     assert len(csv_meta_schema_model.table.columns) == 5
 
     # check column properties
@@ -336,6 +345,7 @@ def test_create_csv_aggregation_from_data_columns_with_comment_character_file(co
     table_schema = metadata.tableSchema
     csv_meta_schema_model = CSVMetaSchemaModel(**table_schema)
     assert csv_meta_schema_model.rows == 29
+    assert csv_meta_schema_model.delimiter == ","
     assert len(csv_meta_schema_model.table.columns) == 8
 
     # check column properties
@@ -395,6 +405,7 @@ def test_create_csv_aggregation_boolean_data_type(composite_resource, csv_file):
     table_schema = metadata.tableSchema
     csv_meta_schema_model = CSVMetaSchemaModel(**table_schema)
     assert csv_meta_schema_model.rows == 6
+    assert csv_meta_schema_model.delimiter == ","
     assert len(csv_meta_schema_model.table.columns) == 5
 
     # check column properties

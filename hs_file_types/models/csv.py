@@ -57,6 +57,7 @@ class _CSVColumnsSchema(BaseModel):
 
 class CSVMetaSchemaModel(BaseModel):
     rows: PositiveInt = 1
+    delimiter: TypeLiteral[",", ";", "\t"]
     table: _CSVColumnsSchema
 
 
@@ -139,7 +140,15 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
             break
         if rows is None:
             raise ValueError("Could not find number of rows")
-        csv_meta_model_instance = CSVMetaSchemaModel(rows=rows, table=columns_model)
+
+        delimiter = None
+        for s, p, o in table_schema_graph.triples((None, HSTERMS.delimiter, None)):
+            delimiter = o.toPython()
+            break
+        if delimiter is None:
+            raise ValueError("Could not find delimiter")
+
+        csv_meta_model_instance = CSVMetaSchemaModel(rows=rows, delimiter=delimiter, table=columns_model)
         self.tableSchema = csv_meta_model_instance.model_dump()
         self.save()
 
@@ -150,6 +159,7 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
         tableSchema = BNode()
         graph.add((subject, HSTERMS.tableSchema, tableSchema))
         graph.add((tableSchema, HSTERMS.numberOfDataRows, Literal(csv_meta_model.rows)))
+        graph.add((tableSchema, HSTERMS.delimiter, Literal(csv_meta_model.delimiter)))
         columns = BNode()
         graph.add((tableSchema, HSTERMS.columns, columns))
         for col_number, col in enumerate(csv_meta_model.table.columns, start=1):
@@ -176,6 +186,8 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
             with root_div:
                 html_tags.h3("CSV File Properties")
                 html_tags.p(f"Number of data rows: {table_schema_model.rows}", cls="font-weight-bold",
+                            style="padding-top: 10px; font-size: 1.3em;")
+                html_tags.p(f"Delimiter: {table_schema_model.delimiter}",
                             style="padding-top: 10px; font-size: 1.3em;")
                 with html_tags.div():
                     html_tags.legend("Column Properties:")
@@ -213,6 +225,15 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
                                 html_tags.input(type="text", id="id-csv-metadata-rows", name="rows",
                                                 readonly="readonly",
                                                 value=table_schema_model.rows,
+                                                cls=column_input_cls)
+                        delimiter_div = html_tags.div(cls="control-group", id="id-csv-metadata-row-count")
+                        with delimiter_div:
+                            html_tags.label("Delimiter:", fr="id-csv-metadata-delimiter",
+                                            cls="control-label")
+                            with html_tags.div(cls="controls"):
+                                html_tags.input(type="text", id="id-csv-metadata-delimiter", name="rows",
+                                                readonly="readonly",
+                                                value=table_schema_model.delimiter,
                                                 cls=column_input_cls)
                         col_div = html_tags.div(cls="control-group", id="id-csv-metadata-columns")
                         with col_div:
@@ -389,7 +410,7 @@ class CSVLogicalFile(AbstractLogicalFile):
                 raise ValidationError(err_msg)
 
         table = _CSVColumnsSchema(columns=columns)
-        csv_meta_schema = CSVMetaSchemaModel(rows=rows_count, table=table)
+        csv_meta_schema = CSVMetaSchemaModel(rows=rows_count, delimiter=delimiter, table=table)
         return csv_meta_schema.model_dump()
 
     @classmethod
@@ -546,6 +567,7 @@ class CSVLogicalFile(AbstractLogicalFile):
             futures = []
             for col, data_type in pd_data_types.items():
                 if data_type == "string":
+                    # further checking if the column actually contains datetime or boolean data type
                     futures.append(executor.submit(apply_column_data_type, df, col, pd_data_types))
                     for future in concurrent.futures.as_completed(futures):
                         future.result()

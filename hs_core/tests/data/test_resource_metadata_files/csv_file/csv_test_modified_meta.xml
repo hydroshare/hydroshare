@@ -53,6 +53,7 @@
           </rdf:Description>
         </hsterms:columns>
         <hsterms:numberOfDataRows rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</hsterms:numberOfDataRows>
+        <hsterms:delimiter>,</hsterms:delimiter>
       </rdf:Description>
     </hsterms:tableSchema>
     <dc:coverage>
