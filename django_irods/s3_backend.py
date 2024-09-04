@@ -76,7 +76,7 @@ class S3Storage(s3.S3Storage):
             return name
         except ValueError:
             raise SuspiciousOperation("Attempted access to '%s' denied." % name)
-    
+
     def _open(self, name, mode="rb"):
         name = self._normalize_name(clean_name(name))
         try:
