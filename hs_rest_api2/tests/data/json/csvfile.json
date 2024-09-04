@@ -25,6 +25,7 @@
   },
   "tableSchema": {
     "rows": 10,
+    "delimiter": ",",
     "table": {
       "columns": [
         {
