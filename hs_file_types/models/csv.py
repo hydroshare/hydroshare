@@ -57,7 +57,7 @@ class _CSVColumnsSchema(BaseModel):
 
 class CSVMetaSchemaModel(BaseModel):
     rows: PositiveInt = 1
-    delimiter: TypeLiteral[",", ";", "\t"]
+    delimiter: TypeLiteral[",", ";", "\t"]  # noqa: F722
     table: _CSVColumnsSchema
 
 
