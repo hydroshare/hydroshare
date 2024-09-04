@@ -336,7 +336,7 @@ class CSVLogicalFile(AbstractLogicalFile):
 
     @staticmethod
     def get_csv_allowed_delimiters():
-        # only comma, tab or semi-colon as delimiter is considered a valid csv file
+        # only comma, tab or semicolon as a CSV delimiter is supported
         return ['\t', ',', ';']
 
     @classmethod
@@ -358,7 +358,6 @@ class CSVLogicalFile(AbstractLogicalFile):
                              post_aggr_signal=post_add_csv_aggregation,
                              is_temp_file=True) as ft_ctx:
             res_file = ft_ctx.res_file
-            # check file extension is .csv
             if res_file.extension.lower() != '.csv':
                 raise ValidationError("File extension should be .csv")
             csv_temp_file = ft_ctx.temp_file
@@ -415,8 +414,9 @@ class CSVLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def _get_rows_count(cls, csv_file_path: str) -> tuple[int, str, int]:
-        # get the number of rows/records in the csv file (includes header row) and the delimiter
-        # as part of finding the number of rows, doing some validation of the csv file
+        """Get the number of rows/records in the csv file (includes header row), the delimiter, and number of rows
+        to skip (to find the header row or first data row).
+        As part of finding the number of rows, also doing validation of the csv file"""
 
         def is_data_row(row):
             if not row:
@@ -429,7 +429,7 @@ class CSVLogicalFile(AbstractLogicalFile):
             return False
 
         def check_for_non_comment_text(delimiter=','):
-            # check if there is non-comment text line (line that doesn't start with #) in the file
+            """Checks if there is any non-comment text line (line that doesn't start with #) in the file"""
 
             with open(csv_file_path, 'r') as csv_file:
                 reader = csv.reader(csv_file, delimiter=delimiter)
@@ -491,7 +491,7 @@ class CSVLogicalFile(AbstractLogicalFile):
                 matching_delimiter = default_delimiter
                 break
         else:
-            err_msg = "Invalid CSV file. No matching delimiter found - comma, semicolon, or tab"
+            err_msg = "Invalid CSV file. No supported delimiter found - comma, semicolon, or tab"
             raise pd.errors.ParserError(err_msg)
 
         with open(csv_file_path, 'r') as file:
@@ -501,15 +501,14 @@ class CSVLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def _get_pd_data_types(cls, csv_file_path: str, delimiter: str, skip_rows: int) -> dict:
-        """Load the first chunk of the file to pandas dataframe and get the initial data type of each column in
-        the data frame based on this limited number of data rows.
+        """Loads the first chunk of the file to pandas dataframe and get the initial data type of each column in
+        the data frame based on the limited number of data rows.
         """
 
         def apply_column_data_type(_df, col_index, dt_types):
+            # check if the given column is of datetime or boolean type
 
-            # get the dataframe column by index
             column = _df.iloc[:, col_index]
-
             # drop null values
             column = column.dropna()
             if column.empty:
@@ -517,7 +516,6 @@ class CSVLogicalFile(AbstractLogicalFile):
 
             column_copy = column.copy()
 
-            # apply data type
             column = column.astype('object')
             column = column.apply(str)
             bool_tf_options = [['true', 'false'], ['True', 'False'], ['TRUE', 'FALSE'], ['T', 'F']]
@@ -538,12 +536,15 @@ class CSVLogicalFile(AbstractLogicalFile):
                 dt_types[col_index] = "datetime"
                 return
             except ValueError:
+                # column data type is string as originally determined by pandas
                 pass
 
-        # number of rows to read - column data types are computed based on data in those rows
+        # number of rows to read - column data types are computed based on data in those sample data rows only
+        # using all data rows to compute column data type can be slow and cause memory issues in case of very large
+        # file
         _CHUNK_SIZE = 1000
-        pd_data_types = {}
 
+        pd_data_types = {}
         df = pd.read_csv(
             csv_file_path,
             skiprows=skip_rows,
@@ -654,7 +655,7 @@ class CSVLogicalFile(AbstractLogicalFile):
         Compute the data type of each column in the csv file
         """
 
-        # read the first 100 rows of data of the file to estimate column data type based on the data
+        # read the first few rows of the file to estimate column headers
         _CHUNK_SIZE = 100
         df = pd.read_csv(
             csv_file_path,
@@ -672,7 +673,6 @@ class CSVLogicalFile(AbstractLogicalFile):
         headers = []
         if has_header:
             for column_name in df.columns:
-                # remove any leading and trailing quotes from the column name
                 column_name = column_name.strip("\"")
                 headers.append(column_name)
         else:
