@@ -1,3 +1,4 @@
+import binascii
 import re
 from django.db import connection
 
@@ -36,4 +37,4 @@ def bucket_and_name(path):
 def _normalized_bucket_name(username):
     # duplicate of theme.models.UserProfile.bucket_name property method
     # Cannot import theme.models.UserProfile due to circular import
-    return re.sub(r"[^A-Za-z0-9\.-]", "", re.sub("[@]", ".at.", username.lower()))
+    return binascii.hexlify(username.encode())
