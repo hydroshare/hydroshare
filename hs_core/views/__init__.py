@@ -2322,7 +2322,7 @@ def hsapi_user_s3_authorization(request):
     view_permissions = ["s3:GetObject", "s3:ListObjects", "s3:ListObjjectsV2"]
     # edit_permissions = ["s3:DeleteObject", "s3:DeleteObjects" "s3:PutObject", "s3:UploadPart"]
 
-    if action in view_permissions  and action != "s3:GetObject":
+    if action in view_permissions and action != "s3:GetObject":
         all_viewable = all([res.raccess.discoverable
                             or res.raccess.public
                             or res.raccess.allow_private_sharing for res in resources])
