@@ -5,7 +5,7 @@
 
 NAME="hydroshare_app"                               # Name of the application
 DJANGODIR=/hydroshare                               # Django project directory
-SOCKFILE=/hs_tmp/gunicorn.sock              # we will communicate using this unix socket
+SOCKFILE=/tmp/gunicorn.sock              # we will communicate using this unix socket
 USER=hydro-service                                  # the user to run as
 GROUP=storage-hydro                                 # the group to run as
 NUM_WORKERS=$(python -c "exec(\"import multiprocessing\nprint( multiprocessing.cpu_count() * 2 + 1)\")")

@@ -325,7 +325,7 @@ class UserProfileForm(forms.ModelForm):
 
     class Meta:
         model = UserProfile
-        exclude = ['user', 'public', 'create_irods_user_account']
+        exclude = ['user', 'public']
 
     def clean_organization(self):
         data = self.cleaned_data['organization']

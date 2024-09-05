@@ -79,17 +79,11 @@ def create_bagit_files_by_irods(res, istorage):
     # check to see if bagit readme.txt file exists or not
     bagit_readme_file = res.get_irods_path('readme.txt')
     is_bagit_readme_exist = istorage.exists(bagit_readme_file)
-    if irods_bagit_input_path.startswith(resource_id):
-        # resource is in data zone, need to append the full path for iRODS bagit rule execution
-        irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
-        irods_bagit_input_path = os.path.join(irods_dest_prefix, resource_id)
-        bagit_input_resource = "*DESTRESC='{def_res}'".format(
-            def_res=settings.IRODS_DEFAULT_RESOURCE)
-    else:
-        # this will need to be changed with the default resource in whatever federated zone the
-        # resource is stored in when we have such use cases to support
-        bagit_input_resource = "*DESTRESC='{def_res}'".format(
-            def_res=settings.HS_IRODS_USER_ZONE_DEF_RES)
+    # resource is in data zone, need to append the full path for iRODS bagit rule execution
+    irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
+    irods_bagit_input_path = os.path.join(irods_dest_prefix, resource_id)
+    bagit_input_resource = "*DESTRESC='{def_res}'".format(
+        def_res=settings.IRODS_DEFAULT_RESOURCE)
 
     bagit_input_path = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
 

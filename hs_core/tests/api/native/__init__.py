@@ -16,7 +16,6 @@ from .test_get_resource import *
 from .test_get_resource_types import *
 from .test_group_from_id import *
 from .test_hstore_extra_metadata import *
-from .test_irods_user_zone_federation import *
 from .test_publish_resource import *
 from .test_resolve_doi import *
 from .test_resource_file_folder_operations import *

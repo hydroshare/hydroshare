@@ -10,8 +10,6 @@
 {% block main %}
     <div class="container">
         {% with profile_user.userprofile as profile %}
-        <input type="hidden" id="url-create-irods-account" value="{% url 'create_irods_account' %}">
-        <input type="hidden" id="url-delete-irods-account" value="{% url 'delete_irods_account' %}">
         {% if profile_user.id == user.id or user.is_superuser %}
         <form id="profile-form" action="{% url 'update_profile' profile_user.id %}" class="account-form" method="post"
               enctype="multipart/form-data" onsubmit="return validateForm()">
@@ -86,17 +84,6 @@
 
                                     {#        Account deactivation       #}
                                     <div><a data-toggle="modal" data-target="#deactivate-account-dialog">Deactivate HydroShare account</a></div>
-                                    <hr>
-                                    {# Account creation/deletion in iRODS user zone #}
-                                    <div id="irods-account-container">
-                                        {% if profile.get_user_zone_status_info %}
-                                            {# an iRODS account already exists #}
-                                            <a data-toggle="modal" data-target="#delete-irods-account-dialog">Delete your iRODS user account</a>
-                                        {% else %}
-                                            {# an iRODS account does not exist #}
-                                            <a data-toggle="modal" data-target="#create-irods-account-dialog">Create your iRODS user account</a>
-                                        {% endif %}
-                                    </div>
                                 </div>
                             </div>
                             {% endif %}
@@ -386,12 +373,6 @@
                                                                 title="{{ qd.dz_percent|floatformat:"1" }}% used by dataZone">
                                                                 <span class="sr-only">{{ qd.dz_percent|floatformat:"1" }}% of quota is used by dataZone</span>
                                                             </div>
-                                                            <div class="progress-bar progress-divider"></div>
-                                                            <div class="progress-bar progress-bar-striped active {%if qd.percent < 70%}progress-bar-success{%elif qd.percent < 90%}progress-bar-warning{%else%}progress-bar-danger{%endif%}"
-                                                                style="width: {{ qd.uz_percent }}%" 
-                                                                title="{{ qd.uz_percent|floatformat:"1" }}% used by userZone">
-                                                                <span class="sr-only">{{ qd.uz_percent|floatformat:"1" }}% of quota used by userZone</span>
-                                                            </div>
                                                         </div>
                                                         <span>{{ qd.remaining|floatformat:"1" }} {{ qd.unit }} free of {{ qd.allocated }} {{ qd.unit }}</span>
                                                     {% endif %}
@@ -482,14 +463,6 @@
                                                         </a>
                                                     </div>
                                                 </div>
-                                            {% endif %}
-                                            {% if profile_user.id == user.id or user.is_superuser %}
-                                                <br>
-                                                {% if profile.get_user_zone_status_info %}
-                                                    <div class="alert alert-success">You have created an associated iRODS account (username: <strong>{{ profile_user.username }}</strong>) in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
-                                                {% else %}
-                                                    <div class="alert alert-warning">You have not created an associated iRODS account in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
-                                                {% endif %}
                                             {% endif %}
                                         </div>
 
@@ -662,13 +635,13 @@
                                             <tr>
                                                 <td>
                                                     {% if name == "GoogleScholarID" %}
-                                                    <img class="identifier-icon ai ai-google-scholar-square"/>
+                                                    <img class="identifier-icon ai ai-google-scholar-square" src="{% static 'img/google-scholar.svg' %}"/>
                                                     {% elif name == "ORCID" %}
-                                                    <img class="identifier-icon ai ai-orcid"/>
+                                                    <img class="identifier-icon ai ai-orcid" src="{% static 'img/orcid.logo.icon.svg' %}"/>
                                                     {% elif name == "ResearchGateID" %}
-                                                    <img class="identifier-icon ai ai-researchgate-square"/>
+                                                    <img class="identifier-icon ai ai-researchgate-square" src="{% static 'img/researchgate.png' %}"/>
                                                     {% elif name == "ResearcherID" %}
-                                                    <img class="identifier-icon ai ai-researcherid-square"/>
+                                                    <img class="identifier-icon ai ai-researcherid-square" src="{% static 'img/researcherID.png' %}"/>
                                                     {% else %}
                                                     <img class="identifier-icon fa fa-address-card"/>
                                                     {% endif %}
@@ -884,76 +857,6 @@
                                     value="clear">Confirm
                             </button>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Delete iRODS User Account Modal -->
-            <div class="modal fade" id="delete-irods-account-dialog" tabindex="-1" role="dialog"
-                 aria-labelledby="Create iRODS user account">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal"
-                                    aria-label="Close"><span aria-hidden="true">&times;</span>
-                            </button>
-                            <h4 class="modal-title" id="myModalLabel">Delete your iRODS user account</h4>
-                        </div>
-                        <div class="modal-body">
-                            <div class="row">
-                                <div class="col-sm-2 col-xs-12 text-center">
-                                    <span id="icon-warning" class="glyphicon glyphicon-warning-sign"></span>
-                                </div>
-                                <div class="col-sm-10 col-xs-12">
-                                    <div><strong>WARNING</strong>: This will <strong>delete</strong> your iRODS user account in the
-                                        HydroShare user zone as well as all data you have under that account. You cannot recover
-                                        your data after this action.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                            <button id="btn-delete-irods-account" class="btn btn-danger">Confirm</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Create iRODS User Account Modal -->
-            <div class="modal fade" id="create-irods-account-dialog" tabindex="-1" role="dialog"
-                 aria-labelledby="myModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-sm">
-                    <div class="modal-content">
-                        <form role="form" method="post">
-                            <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal"
-                                        aria-label="Close"><span aria-hidden="true">&times;</span>
-                                </button>
-                                <h4 class="modal-title" id="myModalLabel">Create your iRODS user account</h4>
-                            </div>
-                            <div class="modal-body">
-                                {% csrf_token %}
-                                <div class="row">
-                                    <div class="col-sm-10 col-xs-12">
-                                        <div>A corresponding iRODS user account with the same username <strong>{{ profile_user.username }}</strong> will be created
-                                            in the HydroShare user zone when you confirm this action. You will have to input a password below for your
-                                            iRODS user account, which does not have to be the same as your current HydroShare password. <strong>The password
-                                            is required to be composed of at least 8 characters.</strong> Please keep your iRODS user account password in a
-                                            secure place and use it to access your account in the HydroShare user zone using iRODS clients such as icommands or Cyberduck.
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="id_irods_password">Password: </label>
-                                            <input class="form-control" autocomplete="off" id="id_irods_password" name="irods_password" placeholder="Password" type="password">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <button id="btn-create-irods-account" class="btn btn-primary" disabled>Confirm</button>
-                            </div>
-                        </form>
                     </div>
                 </div>
             </div>

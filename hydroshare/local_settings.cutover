@@ -34,6 +34,12 @@ POSTGIS_DB = os.environ.get('POSTGIS_DB', 'postgres')
 POSTGIS_PASSWORD = os.environ.get('POSTGIS_PASSWORD', 'postgres')
 POSTGIS_USER = os.environ.get('POSTGIS_USER', 'postgres')
 
+# number of seconds database connections should persist
+# https://docs.djangoproject.com/en/3.2/ref/settings/#std-setting-CONN_MAX_AGE
+# this must be shorter than the database's timeout 
+# https://www.postgresql.org/docs/11/runtime-config-client.html#GUC-IDLE-IN-TRANSACTION-SESSION-TIMEOUT
+CONN_MAX_AGE = 60
+
 IPYTHON_SETTINGS = []
 IPYTHON_BASE = '/hydroshare/static/media/ipython-notebook'
 IPYTHON_HOST = '127.0.0.1'
@@ -64,7 +70,7 @@ DOCKER_URL = 'unix://docker.sock/'
 DOCKER_API_VERSION = '1.12'
 
 # CartoCSS settings
-CARTO_HOME = '/hs_tmp/node_modules/carto'
+CARTO_HOME = '/tmp/node_modules/carto'
 
 USE_SOUTH = False
 SITE_TITLE = "CUAHSI HydroShare"
@@ -100,7 +106,6 @@ IRODS_ICOMMANDS_PATH = '/usr/bin'
 IRODS_HOST = 'hydrotest41.renci.org'
 IRODS_PORT = '1247'
 IRODS_DEFAULT_RESOURCE = 'hydrotest41Resc'
-IRODS_SINGLE_RESC_FOR_QUERY='hydrotest41Resc'
 IRODS_HOME_COLLECTION = '/hydrotest41Zone/home/hsproxy'
 IRODS_CWD = '/hydrotest41Zone/home/hsproxy'
 IRODS_ZONE = 'hydrotest41Zone'
@@ -135,21 +140,6 @@ HYRAX_SSH_PROXY_USER = ''
 HYRAX_SSH_PROXY_USER_PWD = ''
 HYRAX_SCRIPT_RUN_COMMAND = ''
 
-# hsuserproxy system user configuration used to create hydroshare iRODS users on-demand
-HS_USER_ZONE_HOST = ''
-LINUX_ADMIN_USER_FOR_HS_USER_ZONE = ''
-LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE = ''
-PRIVATE_KEY_FILE_FOR_HS_USER_ZONE = ''
-LINUX_ADMIN_USER_CREATE_USER_IN_USER_ZONE_CMD = ''
-LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD = ''
-
-# the HydroShare iRODS proxy user in the federated user zone
-HS_IRODS_PROXY_USER_IN_USER_ZONE = 'localTestHydroProxy'
-# HydroShare iRODS default storage resource in the federated user zone
-HS_IRODS_USER_ZONE_DEF_RES = 'hydroshareLocalResc'
-# HydroShare iRODS federated user zone name
-HS_USER_IRODS_ZONE = 'hydroshareuserZone'
-
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_HOST_USER = ''
@@ -169,9 +159,6 @@ TIME_ZONE = "Etc/UTC"
 MAILCHIMP_ACTIVE_SUBSCRIBERS = "e210a70864"
 MAILCHIMP_SUBSCRIBERS = "f0c27254e3"
 
-# sendfile support for large files
-# These must match settings in nginx
-SENDFILE_ON = False
 # IRODS_USER_URI = "/irods-user"
 IRODS_DATA_URI = "/irods-data"
 LOCAL_CACHE_URI = "/local-cache"

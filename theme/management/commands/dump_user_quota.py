@@ -1,12 +1,9 @@
-import os
 import pandas as pd
-from django_irods.storage import IrodsStorage
-from django.conf import settings
 from hs_tools_resource.utils import convert_size
 from theme.models import UserQuota
 from django.core.management.base import BaseCommand
 from hs_core.hydroshare import current_site_url, get_quota_usage
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 
 
 class Command(BaseCommand):
@@ -38,16 +35,13 @@ class Command(BaseCommand):
             'User name',
             'User email',
             'Allocated quota value',
-            'Used quota value (uz+dz)',
+            'Used quota value (dz)',
             'Remaining quota value',
-            'Django UserQuota model UserZone value',
             'Django UserQuota model DataZone value',
             'Quota unit',
             'Grace period ends',
             'DataZone Bagit AVU Size (bytes)',
-            'UserZone Bagit AVU Size (bytes)',
             'DataZone Bagit AVU Converted Size',
-            'UserZone Bagit AVU Converted Size',
         ]
         if expand:
             fields.append('Total size of held resources (quota holder)')
@@ -55,33 +49,24 @@ class Command(BaseCommand):
 
         user_quotas = UserQuota.objects.all()
         user_quotas.filter(user__is_active=True).filter(user__is_superuser=False)
-        istorage = IrodsStorage()
-        uz_bagit_path = os.path.join(
-            '/', settings.HS_USER_IRODS_ZONE, 'home',
-            settings.HS_IRODS_PROXY_USER_IN_USER_ZONE,
-            settings.IRODS_BAGIT_PATH
-        )
         data = []
+        errors = []
         for uq in user_quotas:
             used = uq.used_value
             user = uq.user
             allocated = uq.allocated_value
             if exceeded and used < allocated:
                 continue
-            uz_bytes = None
             dz_bytes = None
             try:
-                uz_bytes, dz_bytes = get_quota_usage(user.username)
+                dz_bytes = get_quota_usage(user.username)
             except ValidationError as e:
-                print(f"Error updating quota: {e.message}")
+                message = f"Error getting quota usage for {user.username}, {user.id}: {e}"
+                print(message)
+                errors.append(message)
             if dz_bytes is None:
                 dz_bytes = 0
             dz = convert_size(int(dz_bytes))
-            uz_bytes = istorage.getAVU(uz_bagit_path,
-                                       f'{user.username}-usage')
-            if uz_bytes is None:
-                uz_bytes = 0
-            uz = convert_size(int(uz_bytes))
             values = [
                 user.id,
                 user.username,
@@ -89,17 +74,20 @@ class Command(BaseCommand):
                 allocated,
                 used,
                 uq.remaining,
-                uq.user_zone_value,
                 uq.data_zone_value,
                 uq.unit,
                 uq.grace_period_ends,
                 dz_bytes,
-                uz_bytes,
                 dz,
-                uz
             ]
             if expand:
-                quota_resources = user.uaccess.owned_resources.filter(quota_holder=user)
+                try:
+                    quota_resources = user.uaccess.owned_resources.filter(quota_holder=user)
+                except PermissionDenied as e:
+                    message = f"Error getting quota resources for {user.username}, {user.id}: {e}"
+                    print(message)
+                    errors.append(message)
+                    quota_resources = []
                 total_size = 0
                 for res in quota_resources:
                     res_size = res.size
@@ -115,5 +103,10 @@ class Command(BaseCommand):
 
         df = pd.DataFrame(data, columns=fields)
         df.to_csv(output_file_name_with_path, index=False)
+        if errors:
+            print("Errors:")
+            for error in errors:
+                print(error)
+        print(f"Data written to {output_file_name_with_path}:")
         with pd.option_context('display.max_rows', None, 'display.max_columns', None):
             print(df)

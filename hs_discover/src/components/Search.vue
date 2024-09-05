@@ -59,9 +59,11 @@
                             <ul class="list-group" id="list-group-creator">
                                 <li class="list-group-item" v-for="(author) in orderedFilter(countAuthors)"
                                     v-bind:key="author">
-                                    <span class="badge">{{author[1]}}</span><label class="checkbox noselect" :for="'author-'+author[0]">{{author[0]}}
-                                    <input type="checkbox" :value="author[0]" class="faceted-selections"
-                                        v-model.lazy="authorFilter" :id="'author-'+author[0]" @change="searchClick">
+                                    <span class="badge">{{author[1]}}</span>
+                                    <label class="checkbox noselect" :for="'author-'+author[0]">
+                                      <input type="checkbox" :value="author[0]" class="faceted-selections"
+                                          v-model.lazy="authorFilter" :id="'author-'+author[0]" @change="searchClick">
+                                      {{author[0]}}
                                     </label>
                                 </li>
                             </ul>
@@ -81,9 +83,11 @@
                                 <li class="list-group-item" v-for="(owner) in orderedFilter(countOwners)"
                                     v-bind:key="owner">
                                     <span class="badge">{{owner[1]}}</span>
-                                    <label class="checkbox noselect" :for="'owner-'+owner[0]">{{owner[0]}}
+                                    <label class="checkbox noselect" :for="'owner-'+owner[0]">
                                         <input type="checkbox" class="faceted-selections" :value=owner[0]
-                                            v-model.lazy="ownerFilter" :id="'owner-'+owner[0]" @change="searchClick">
+                                            v-model.lazy="ownerFilter" :id="'owner-'+owner[0]" @change="searchClick"
+                                        >
+                                      {{owner[0]}}
                                     </label>
                                 </li>
                             </ul>
@@ -103,9 +107,10 @@
                                 <li class="list-group-item" v-for="(subject) in orderedFilter(countSubjects)"
                                     v-bind:key="subject">
                                     <span class="badge">{{subject[1]}}</span>
-                                    <label class="checkbox noselect" :for="'subj-'+subject[0]">{{subject[0]}}
+                                    <label class="checkbox noselect" :for="'subj-'+subject[0]">
                                         <input type="checkbox" class="faceted-selections" :value=escJS(subject[0])
                                            v-model.lazy="subjectFilter" :id="'subj-'+subject[0]" @change="searchClick">
+                                      {{subject[0]}}
                                     </label>
                                 </li>
                             </ul>
@@ -125,9 +130,10 @@
                                 <li class="list-group-item" v-for="(contributor) in orderedFilter(countContributors)"
                                     v-bind:key="contributor">
                                     <span class="badge">{{contributor[1]}}</span>
-                                    <label class="checkbox noselect" :for="'contrib-'+contributor[0]">{{contributor[0]}}
+                                    <label class="checkbox noselect" :for="'contrib-'+contributor[0]">
                                         <input type="checkbox" class="faceted-selections" :value=contributor[0]
                                             v-model.lazy="contributorFilter" :id="'contrib-'+contributor[0]" @change="searchClick">
+                                      {{contributor[0]}}
                                     </label>
                                 </li>
                             </ul>
@@ -147,9 +153,10 @@
                                 <li class="list-group-item" v-for="(type) in orderedFilter(countTypes)"
                                     v-bind:key="type">
                                     <span class="badge">{{type[1]}}</span>
-                                    <label class="checkbox noselect" :for="'type-'+type[0]">{{type[0]}}
+                                    <label class="checkbox noselect" :for="'type-'+type[0]">
                                         <input type="checkbox" class="faceted-selections" :value=type[0]
                                             v-model.lazy="typeFilter" :id="'type-'+type[0]" @change="searchClick">
+                                      {{type[0]}}
                                     </label>
                                 </li>
                             </ul>
@@ -171,9 +178,9 @@
                                     v-bind:key="availability">
                                     <span class="badge">{{availability[1]}}</span>
                                     <label class="checkbox noselect" :for="'avail-'+availability[0]">
-                                      {{availability[0].charAt(0).toUpperCase()+availability[0].slice(1)}}
                                         <input type="checkbox" class="faceted-selections" :value=availability[0]
                                             v-model.lazy="availabilityFilter" :id="'avail-'+availability[0]" @change="searchClick">
+                                      {{availability[0].charAt(0).toUpperCase()+availability[0].slice(1)}}
                                     </label>
                                 </li>
                             </ul>
@@ -220,7 +227,7 @@
                                 :title="entry.type" :alt="entry.type" height="30" width="30">
                             <img :src="entry.availabilityurl" v-b-tooltip.hover
                                 :title="(entry.availability.toString().charAt(0).toUpperCase() + entry.availability.toString().slice(1))" :alt="entry.availability" :key="entry">
-                            <img v-if="entry.geo" src="/static/static/img/Globe-Green.png" height="25" width="25" v-b-tooltip.hover title="Contains Spatial Coverage">
+                            <img v-if="entry.geo" :src="geoImage" height="25" width="25" v-b-tooltip.hover title="Contains Spatial Coverage">
                             </span>
                         </td>
                         <td class="tbl-col-title">
@@ -255,6 +262,11 @@
 import DatePick from 'vue-date-pick';
 import 'vue-date-pick/dist/vueDatePick.css';
 import axios from 'axios'; // css font-size overridden in hs_discover/index.html to enforce 1em
+
+let publicPath = process.env.VUE_APP_BUCKET_URL_PUBLIC_PATH;
+if (publicPath == null) {
+  publicPath = '/static/static/';
+}
 
 export default {
   data() {
@@ -293,9 +305,9 @@ export default {
       countAvailabilities: {},
       availabilityFilter: [],
       resIconName: {
-        Resource: '/static/static/img/resource-icons/composite48x48.png',
-        Collection: '/static/static/img/resource-icons/collection48x48.png',
-        'App Connector': '/static/static/img/resource-icons/webapp48x48.png',
+        Resource: `${publicPath}img/resource-icons/composite48x48.png`,
+        Collection: `${publicPath}img/resource-icons/collection48x48.png`,
+        'App Connector': `${publicPath}img/resource-icons/webapp48x48.png`,
       },
       sortMap: {
         'First Author': 'author',
@@ -307,6 +319,8 @@ export default {
         'Date Created': 'created',
         'Last Modified': 'modified',
       },
+      publicPath,
+      geoImage: `${publicPath}img/Globe-Green.png`,
     };
   },
   name: 'Resources',

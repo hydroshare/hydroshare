@@ -57,9 +57,7 @@ urlpatterns += i18n_patterns(
         name="tracking-report-history",
     ),
     path("tracking/", tracking.UseTrackingView.as_view(), name="tracking"),
-    re_path(
-        r"^tracking/applaunch/", tracking.AppLaunch.as_view(), name="tracking-applaunch"
-    ),
+    path("tracking/applaunch/", tracking.AppLaunch.as_view(), name="tracking-applaunch"),
     path("user/", theme.UserProfileView.as_view()),
     re_path(r"^user/(?P<user>.*)/", theme.UserProfileView.as_view()),
     path("comment/", theme.comment),
@@ -102,16 +100,6 @@ urlpatterns += i18n_patterns(
         name="confirm_reset_password",
     ),
     path("deactivate_account/", theme.deactivate_user, name="deactivate_account"),
-    path(
-        "delete_irods_account/",
-        theme.delete_irods_account,
-        name="delete_irods_account",
-    ),
-    path(
-        "create_irods_account/",
-        theme.create_irods_account,
-        name="create_irods_account",
-    ),
     path("landingPage/", theme.landingPage, name="landing_page"),
     path("home/", theme.dashboard, name="dashboard"),
     path("", theme.home_router, name="home_router"),
@@ -137,7 +125,7 @@ urlpatterns += i18n_patterns(
     ),
     path("sitemap/", sitemap, name="sitemap"),
     path("sitemap", include("hs_sitemap.urls")),
-    re_path(r"^groups", hs_core_views.FindGroupsView.as_view(), name="groups"),
+    path("groups", hs_core_views.FindGroupsView.as_view(), name="groups"),
     path(
         "communities/",
         hs_communities.views.communities.FindCommunitiesView.as_view(),
@@ -206,11 +194,12 @@ urlpatterns += [
 
 # robots.txt URLs for django-robots
 urlpatterns += [
-    re_path(r"^robots\.txt", include("robots.urls")),
+    path("robots\.txt", include("robots.urls")),
 ]
 from django.views.static import serve  # noqa
 
-if settings.DEBUG is False:  # if DEBUG is True it will be served automatically
+if settings.DEBUG is False and not settings.ENABLE_STATIC_CLOUD_STORAGE:
+    # if DEBUG is True it will be served automatically
     urlpatterns += [
         re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}),
     ]

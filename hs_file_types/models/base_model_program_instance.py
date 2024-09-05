@@ -494,8 +494,6 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
 
         # check the first parent folder that represents an aggregation
         irods_path = dir_path
-        if resource.is_federated:
-            irods_path = os.path.join(resource.resource_federation_path, irods_path)
 
         # get the parent folder path
         path = os.path.dirname(dir_path)

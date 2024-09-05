@@ -1,22 +1,19 @@
 """Test cases and utilities for hs_core module. See also ./tests folder."""
 
-import os
-import tempfile
-
 from dateutil import parser
-from django.conf import settings
-from django.contrib.messages.storage.fallback import FallbackStorage
-from django.contrib.sessions.middleware import SessionMiddleware
-from django.core.files.uploadedfile import UploadedFile
-from django.test import RequestFactory, TestCase
+import tempfile
+import os
 
-from django_irods.storage import IrodsStorage
+from django.conf import settings
+from django.contrib.sessions.middleware import SessionMiddleware
+from django.contrib.messages.storage.fallback import FallbackStorage
+from django.core.files.uploadedfile import UploadedFile
+from django.test import TestCase, RequestFactory
+
 from hs_core.hydroshare import add_file_to_resource, add_resource_files
+from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, zip_folder, \
+    unzip_file, remove_folder
 from hs_core.tasks import FileOverrideException
-from hs_core.views.utils import (create_folder, move_or_rename_file_or_folder,
-                                 remove_folder, run_ssh_command, unzip_file,
-                                 zip_folder)
-from theme.models import UserProfile
 
 
 class MockIRODSTestCaseMixin(object):
@@ -49,82 +46,6 @@ class MockIRODSTestCaseMixin(object):
 class TestCaseCommonUtilities(object):
     """Enable common utilities for iRODS testing."""
 
-    def assert_federated_irods_available(self):
-        """assert federated iRODS is available before proceeding with federation-related tests."""
-        self.assertTrue(settings.REMOTE_USE_IRODS
-                        and settings.HS_USER_ZONE_HOST == 'users.local.org'
-                        and settings.IRODS_HOST == 'data.local.org',
-                        "irods docker containers are not set up properly for federation testing")
-        self.irods_fed_storage = IrodsStorage('federated')
-        self.irods_storage = IrodsStorage()
-
-    def create_irods_user_in_user_zone(self):
-        """Create corresponding irods account in user zone."""
-        try:
-            exec_cmd = "{0} {1} {2}".format(settings.LINUX_ADMIN_USER_CREATE_USER_IN_USER_ZONE_CMD,
-                                            self.user.username, self.user.username)
-            pwd = None
-            pk = None
-            if hasattr(settings, 'LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE'):
-                pwd = settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE
-            if hasattr(settings, 'PRIVATE_KEY_FILE_FOR_HS_USER_ZONE'):
-                pk = settings.PRIVATE_KEY_FILE_FOR_HS_USER_ZONE
-            output = run_ssh_command(host=settings.HS_USER_ZONE_HOST,
-                                     uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
-                                     pwd=pwd,
-                                     private_key_file=pk,
-                                     exec_cmd=exec_cmd)
-            for out_str in output:
-                if 'ERROR:' in out_str.upper():
-                    # irods account failed to create
-                    self.fail(out_str)
-
-            user_profile = UserProfile.objects.filter(user=self.user).first()
-            user_profile.create_irods_user_account = True
-            user_profile.save()
-        except Exception as ex:
-            self.fail(str(ex))
-
-    def delete_irods_user_in_user_zone(self):
-        """Delete irods test user in user zone."""
-        try:
-            exec_cmd = "{0} {1}".format(settings.LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD,
-                                        self.user.username)
-            pwd = None
-            pk = None
-            if hasattr(settings, 'LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE'):
-                pwd = settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE
-            if hasattr(settings, 'PRIVATE_KEY_FILE_FOR_HS_USER_ZONE'):
-                pk = settings.PRIVATE_KEY_FILE_FOR_HS_USER_ZONE
-            output = run_ssh_command(host=settings.HS_USER_ZONE_HOST,
-                                     uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
-                                     pwd=pwd,
-                                     private_key_file=pk,
-                                     exec_cmd=exec_cmd)
-            if output:
-                for out_str in output:
-                    if 'ERROR:' in out_str.upper():
-                        # there is an error from icommand run, report the error
-                        self.fail(out_str)
-
-            user_profile = UserProfile.objects.filter(user=self.user).first()
-            user_profile.create_irods_user_account = False
-            user_profile.save()
-        except Exception as ex:
-            # there is an error from icommand run, report the error
-            self.fail(str(ex))
-
-    def save_files_to_user_zone(self, file_name_to_target_name_dict):
-        """Save a list of files to iRODS user zone.
-
-        :param file_name_to_target_name_dict: a dictionary in the form of {ori_file, target_file}
-        where ori_file is the file to be save to, and the target_file is the full path file name
-        in iRODS user zone to save ori_file to
-        :return:
-        """
-        for file_name, target_name in list(file_name_to_target_name_dict.items()):
-            self.irods_fed_storage.saveFile(file_name, target_name)
-
     def check_file_exist(self, irods_path):
         """Check whether the input irods_path exist in iRODS.
 
@@ -139,27 +60,6 @@ class TestCaseCommonUtilities(object):
         :return:
         """
         self.irods_fed_storage.delete(irods_path)
-
-    def verify_user_quota_usage_avu_in_user_zone(self, attname, qsize):
-        '''
-        Have to use LINUX_ADMIN_USER_FOR_HS_USER_ZONE with rodsadmin role to get user type AVU
-        in user zone and verify its quota usage is set correctly
-        :param attname: quota usage attribute name set on iRODS proxy user in user zone
-        :param qsize: quota size (type string) to be verified to equal to the value set for attname.
-        '''
-        istorage = IrodsStorage()
-        istorage.set_user_session(username=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
-                                  password=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
-                                  host=settings.HS_USER_ZONE_HOST,
-                                  port=settings.IRODS_PORT,
-                                  zone=settings.HS_USER_IRODS_ZONE,
-                                  sess_id='user_proxy_session')
-
-        uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE, 'home',
-                                     settings.HS_IRODS_PROXY_USER_IN_USER_ZONE,
-                                     settings.IRODS_BAGIT_PATH)
-        get_qsize = istorage.getAVU(uz_bagit_path, attname)
-        self.assertEqual(qsize, get_qsize)
 
     def resource_file_oprs(self):
         """Test common iRODS file operations.

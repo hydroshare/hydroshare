@@ -153,6 +153,8 @@ class Command(BaseCommand):
             'resource id',
             'publication date',
             'bag last downloaded date',
+            'resource updated date',
+            'last updated by user id'
         ]
         w.writerow(fields)
         failed_resource_ids = []
@@ -168,6 +170,12 @@ class Command(BaseCommand):
                     last_downloaded = last_downloaded.strftime("%m/%d/%Y %H:%M:%S.%f")
                 else:
                     last_downloaded = None
+                last_changed_by = r.last_changed_by
+                if last_changed_by:
+                    last_changed_by = last_changed_by.id
+                else:
+                    last_changed_by = None
+                updated_date = r.updated.strftime("%m/%d/%Y %H:%M:%S.%f")
                 values = [
                     r.metadata.dates.get(type="created").
                     start_date.strftime("%m/%d/%Y %H:%M:%S.%f"),
@@ -180,6 +188,8 @@ class Command(BaseCommand):
                     r.short_id,
                     pub_date,
                     last_downloaded,
+                    updated_date,
+                    last_changed_by
                 ]
                 w.writerow([str(v) for v in values])
 

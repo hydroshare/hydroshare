@@ -1,55 +1,61 @@
 import logging
+
 from json import dumps
 
+from django_comments.models import Comment
+from django_comments.views.moderation import perform_delete
+from rest_framework import status
+
 from django.contrib import messages
-from django.contrib.auth import authenticate
-from django.contrib.auth import login as auth_login
-from django.contrib.auth import logout as auth_logout
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib.messages import error, info
-from django.core.exceptions import (MultipleObjectsReturned,
-                                    ObjectDoesNotExist, PermissionDenied,
-                                    ValidationError)
+from django.contrib.messages import info, error
+from django.core.exceptions import (
+    ValidationError,
+    ObjectDoesNotExist,
+    MultipleObjectsReturned,
+    PermissionDenied,
+)
 from django.core.mail import send_mail
-from django.db import transaction
-from django.db.models import Prefetch, Q
-from django.db.models.query import prefetch_related_objects
-from django.http import (HttpResponse, HttpResponseForbidden,
-                         HttpResponseNotAllowed, HttpResponseRedirect,
-                         JsonResponse)
-from django.shortcuts import get_object_or_404, redirect, render
-from django.template.response import TemplateResponse
 from django.urls import reverse
+from django.db import transaction
+from django.db.models import Q, Prefetch
+from django.db.models.query import prefetch_related_objects
+from django.http import HttpResponse, JsonResponse, HttpResponseForbidden, HttpResponseNotAllowed
+from django.http import HttpResponseRedirect
+from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import render
+from django.template.response import TemplateResponse
 from django.utils.http import int_to_base36, urlencode
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
-from django_comments.models import Comment
-from django_comments.views.moderation import perform_delete
 from mezzanine.accounts.forms import LoginForm
 from mezzanine.conf import settings
 from mezzanine.generic.views import initial_validation
 from mezzanine.utils.cache import add_cache_bypass
-from mezzanine.utils.email import (default_token_generator, send_approve_mail,
-                                   send_mail_template, send_verification_mail,
-                                   subject_template)
+from mezzanine.utils.email import (
+    send_verification_mail,
+    send_approve_mail,
+    subject_template,
+    default_token_generator,
+    send_mail_template,
+)
 from mezzanine.utils.urls import login_redirect, next_url
 from mezzanine.utils.views import is_spam
 from mozilla_django_oidc.views import OIDCLogoutView
-from rest_framework import status
 
 from hs_access_control.models import GroupMembershipRequest
 from hs_core.authentication import build_oidc_url
 from hs_core.hydroshare.utils import user_from_id
 from hs_core.models import Party
-from hs_core.views.utils import is_ajax, run_ssh_command
-from hs_dictionary.models import UncategorizedTerm, University
+from hs_core.views.utils import is_ajax
+from hs_dictionary.models import University, UncategorizedTerm
 from hs_tracking.models import Variable
-from theme.forms import (RatingForm, ThreadedCommentForm, UserForm,
-                         UserProfileForm)
-from theme.models import QuotaRequest, QuotaRequestForm, UserProfile, UserQuota
-
+from theme.forms import RatingForm, UserProfileForm, UserForm
+from theme.forms import ThreadedCommentForm
+from theme.models import UserProfile, QuotaRequest, QuotaRequestForm, UserQuota
 from .forms import SignupForm
 
 
@@ -873,126 +879,3 @@ def deactivate_user(request):
     user.save()
     messages.success(request, "Your account has been successfully deactivated.")
     return HttpResponseRedirect("/accounts/logout/")
-
-
-@login_required
-def delete_irods_account(request):
-    if request.method == "POST":
-        user = request.user
-        try:
-            exec_cmd = "{0} {1}".format(
-                settings.LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD, user.username
-            )
-            pwd = None
-            pk = None
-            if hasattr(settings, 'LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE'):
-                pwd = settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE
-            if hasattr(settings, 'PRIVATE_KEY_FILE_FOR_HS_USER_ZONE'):
-                pk = settings.PRIVATE_KEY_FILE_FOR_HS_USER_ZONE
-            output = run_ssh_command(
-                host=settings.HS_USER_ZONE_HOST,
-                uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
-                pwd=pwd,
-                private_key_file=pk,
-                exec_cmd=exec_cmd,
-            )
-            for out_str in output:
-                if "ERROR:" in out_str.upper():
-                    # there is an error from icommand run, report the error
-                    return JsonResponse(
-                        {
-                            "error": "iRODS server failed to delete this iRODS account {0}. "
-                            "If this issue persists, please notify help@cuahsi.org.".format(
-                                user.username
-                            )
-                        },
-                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    )
-
-            user_profile = UserProfile.objects.filter(user=user).first()
-            user_profile.create_irods_user_account = False
-            user_profile.save()
-            return JsonResponse(
-                {
-                    "success": "iRODS account {0} is deleted successfully".format(
-                        user.username
-                    )
-                },
-                status=status.HTTP_200_OK,
-            )
-        except Exception as ex:
-            return JsonResponse(
-                {
-                    "error": str(ex)
-                    + " - iRODS server failed to delete this iRODS account. "
-                    "If this issue persists, please notify help@cuahsi.org."
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
-
-@login_required
-def create_irods_account(request):
-    if request.method == "POST":
-        try:
-            user = request.user
-            pwd = str(request.POST.get("password"))
-            exec_cmd = "{0} {1} {2}".format(
-                settings.LINUX_ADMIN_USER_CREATE_USER_IN_USER_ZONE_CMD,
-                user.username,
-                pwd,
-            )
-            pwd = None
-            pk = None
-            if hasattr(settings, 'LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE'):
-                pwd = settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE
-            if hasattr(settings, 'PRIVATE_KEY_FILE_FOR_HS_USER_ZONE'):
-                pk = settings.PRIVATE_KEY_FILE_FOR_HS_USER_ZONE
-            output = run_ssh_command(
-                host=settings.HS_USER_ZONE_HOST,
-                uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
-                pwd=pwd,
-                private_key_file=pk,
-                exec_cmd=exec_cmd,
-            )
-            for out_str in output:
-                if "bash:" in out_str or (
-                    "ERROR:" in out_str.upper()
-                    and "CATALOG_ALREADY_HAS_ITEM_BY_THAT_NAME" not in out_str.upper()
-                ):
-                    # there is an error from icommand run which is not about the fact
-                    # that the user already exists, report the error
-                    return JsonResponse(
-                        {
-                            "error": "iRODS server failed to create this iRODS account {0}. "
-                            "If this issue persists, please notify help@cuahsi.org. More details: {1}".format(
-                                user.username, out_str
-                            )
-                        },
-                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    )
-
-            user_profile = UserProfile.objects.filter(user=user).first()
-            user_profile.create_irods_user_account = True
-            user_profile.save()
-            return JsonResponse(
-                {
-                    "success": "iRODS account {0} was created successfully".format(
-                        user.username
-                    )
-                },
-                status=status.HTTP_200_OK,
-            )
-        except Exception as ex:
-            return JsonResponse(
-                {
-                    "error": str(ex)
-                    + " - iRODS server failed to create this iRODS account. "
-                    "If this issue persists, please notify help@cuahsi.org."
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-    else:
-        return JsonResponse(
-            {"error": "Not POST request"}, status=status.HTTP_400_BAD_REQUEST
-        )

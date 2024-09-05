@@ -81,11 +81,6 @@ urlpatterns = [
         name="list_referenced_content",
     ),
     re_path(
-        r"^_internal/(?P<shortkey>[0-9a-f-]+)/rep-res-bag-to-irods-user-zone/$",
-        views.rep_res_bag_to_irods_user_zone,
-        name="replicate_bag_user_zone",
-    ),
-    re_path(
         r"^_internal/(?P<shortkey>[0-9a-f-]+)/set-resource-flag/$",
         views.set_resource_flag,
         name="set_resource_flag",

@@ -160,78 +160,6 @@ function onFormRequiredChange() {
     }
 }
 
-function irods_account_link(data_target, text) {
-    return "<a data-toggle='modal' data-target='" + data_target + "'>" + text + "</a>";
-}
-
-function irods_status_info(alert_type, status, title) {
-    return "<div class=\"col-sm-12\">" +
-            "<div class=\"alert " + alert_type + " alert-dismissible\" role=\"alert\">" +
-            "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>" +
-            "<strong>" + title + "</strong><div>" + status + "</div></div></div>"
-}
-
-function create_irods_account() {
-    var url = $("#url-create-irods-account").val();
-
-    $.ajax({
-        url: url,
-        type: "POST",
-        data: {
-            password: $('#id_irods_password').val()
-        },
-        success: function(json) {
-            if(json.success) {
-                $('#create-irods-account-dialog').modal('hide');
-                var irodsContainer = $("#irods-account-container");
-                irodsContainer.empty();
-                irodsContainer.append(irods_account_link("#delete-irods-account-dialog", "Delete your iRODS user account"));
-                irodsContainer.append(irods_status_info('alert-success', json.success, 'Success'));
-            }
-            if(json.error) {
-                $('#create-irods-account-dialog').modal('hide');
-                var irodsContainer = $("#irods-account-container");
-                irodsContainer.append(irods_status_info('alert-danger', json.error, 'Failure'));
-            }
-        },
-        error: function(xhr, errmsg, err) {
-            $('#create-irods-account-dialog').modal('hide');
-            var irodsContainer = $("#irods-account-container");
-            const errorText = JSON.parse(xhr.responseText).error
-            errorText && irodsContainer.append(irods_status_info('alert-danger', errorText , 'Failure'));
-        }
-    });
-    return false;
-}
-
-function delete_irods_account() {
-    var url = $("#url-delete-irods-account").val();
-    $.ajax({
-        url: url,
-        type: "POST",
-        data: {},
-        success: function(json) {
-            var irodsContainer = $("#irods-account-container");
-            if(json.success) {
-                irodsContainer.empty();
-                irodsContainer.append(irods_account_link("#create-irods-account-dialog", "Create your iRODS user account"));
-                irodsContainer.append(irods_status_info('alert-success', json.success, 'Success'));
-            }
-            if(json.error) {
-                irodsContainer.append(irods_status_info('alert-warning', json.error, 'Failure'));
-            }
-            $('#delete-irods-account-dialog').modal('hide');
-        },
-        error: function(xhr, errmsg, err) {
-            $('#delete-irods-account-dialog').modal('hide');
-            var irodsContainer = $("#irods-account-container");
-            const errorText = JSON.parse(xhr.responseText).error
-            errorText && irodsContainer.append(irods_status_info('alert-warning', errorText, 'Failure'));
-        }
-    });
-    return false;
-}
-
 function getUrlVars()
 {
     var vars = [], hash;
@@ -351,17 +279,6 @@ $(document).ready(function () {
     // Multiple orgs are a string delimited by ";" --wrap them so we can style them
     $("#organization").splitAndWrapWithClass(";", "organization-divider");
     
-    $("#btn-create-irods-account").click(create_irods_account);
-    $("#btn-delete-irods-account").click(delete_irods_account);
-
-    // Only enable Confirm button when input password is longer than 8 characters
-    $("#id_irods_password").keyup(function () {
-        var pwdlen = $("input#id_irods_password").val().length;
-        if (pwdlen >= 8)
-            $('#btn-create-irods-account').removeAttr('disabled');
-        else
-            $('#btn-create-irods-account').attr('disabled', 'disabled');
-    });
 
     // File name preview for Add CV
     $('.btn-primary.btn-file :file').on('fileselect', function (event, numFiles, label) {

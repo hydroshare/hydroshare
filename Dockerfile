@@ -1,4 +1,5 @@
-FROM hydroshare/hs_docker_base:305f2fa
+FROM hydroshare/hs_docker_base:262c2ca
+# make sure to update multistage-node dockerfile as well if you update this base image
 
 # Set the locale. TODO - remove once we have a better alternative worked out
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
@@ -16,13 +17,10 @@ RUN pip install django-crispy-forms==2.1
 RUN pip install crispy-bootstrap3==2024.1
 RUN pip install Mezzanine==6.0.0
 
-RUN pip install google-cloud-pubsub
-RUN pip install pandas
-
 # https://www.digicert.com/kb/digicert-root-certificates.htm
 # Get the .pem file from digicert and add it to the bundle used by certifi
 # Could also use the REQUESTS_CA_BUNDLE environment variable to point to the .pem file
-# This was needed beacause the certifi release
+# This was needed beacause the certifi release 
 # 2024.02.02 https://github.com/certifi/python-certifi/releases/tag/2024.02.02
 # does not include the GeoTrust TLS RSA CA G1 certificate at the time of this writing
 # More info: https://requests.readthedocs.io/en/latest/user/advanced/#ca-certificates

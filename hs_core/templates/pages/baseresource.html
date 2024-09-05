@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css"
     integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14="
     crossorigin=""/>
-    <link rel="stylesheet" href="{% static 'css/Leaflet.fullscreen.min.css' %}" />
+    <link rel='stylesheet' type='text/css' href="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/leaflet.fullscreen.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
     {# this loads the assets for the auto complete #}
     {{ add_view_hs_user_form.media }}
@@ -837,16 +837,6 @@
                                                 <span class="fa fa-download icon-blue"></span>
                                             </button>
 
-                                            {% if user_zone_account_exist %}
-                                                <a id="rep-res-bag" type="button"
-                                                   title="Copy Resource Bag to iRODS User Zone"
-                                                   data-target="#rep-resource-to-irods-dialog"
-                                                   data-toggle="modal"
-                                                   data-placement="auto">
-                                                    <span class="hs-icon-irods icon-blue"></span>
-                                                </a>
-                                            {% endif %}
-
                                             <button id="btn-download-all"
                                                 title="Download all content as Zipped BagIt Archive"
                                                 {% if cm.raccess.require_download_agreement %}
@@ -902,8 +892,8 @@
                                             {% if max_file_size > 0 %}
                                                 <div class="fb-upload-caption">
                                                     <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;
-                                                    Upload files smaller than {{ max_file_size|floatformat:"1" }}MB in size by dragging & dropping, or click
-                                                    <a class="dz-clickable upload-toggle">here</a> to select them.
+                                                    Upload files smaller than {{ max_file_size_for_display|floatformat:"0" }}GB in size by dragging & dropping, or click
+                                                    <a class="dz-clickable upload-toggle">here</a> to select them. Uploads > 1GB are still in beta. Uploads are not resumable.
                                                 </div>
                                             {% endif %}
                                         {% endif %}
@@ -952,22 +942,20 @@
 
                     <div class="files" id="previews"></div>
                     {% block download_bag %}
-                        {% if user_zone_account_exist %}
-                            <div>
-                                <div id='rep-alert-success' class="alert alert-success alert-dismissible"
-                                     role="alert" style="display:none">
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span></button>
-                                    <span id="rep-status-success"></span>
-                                </div>
-                                <div id='rep-alert-error' class="alert alert-danger alert-dismissible" role="alert"
-                                     style="display:none">
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span></button>
-                                    <span id="rep-status-error"></span>
-                                </div>
+                        <div>
+                            <div id='rep-alert-success' class="alert alert-success alert-dismissible"
+                                    role="alert" style="display:none">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span></button>
+                                <span id="rep-status-success"></span>
                             </div>
-                        {% endif %}
+                            <div id='rep-alert-error' class="alert alert-danger alert-dismissible" role="alert"
+                                    style="display:none">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span></button>
+                                <span id="rep-status-error"></span>
+                            </div>
+                        </div>
                     {% endblock %} {#  download_bag #}
 
                     {# ======= Readme ======= #}
@@ -1068,7 +1056,7 @@
       const RESOURCE_MODE = "{% if resource_edit_mode %}Edit{% else %}View{% endif %}";
       const RESOURCE_PUBLISHED_OR_UNDER_REVIEW = "{{ cm.raccess.published_or_review_pending }}" === "True";
       const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
-      const STATIC_URL = "{{ STATIC_URL }}";
+      let STATIC_URL = "{{ STATIC_URL }}";
       const USERS_JSON = {{ users_json|safe }};
       const AUTHORS = [
           {% for author in creators %}
@@ -1122,7 +1110,7 @@
         integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg="
         crossorigin="">
     </script>
-    <script src="{% static 'js/hs-vue/Leaflet.fullscreen.min.js' %}"></script>
+    <script src="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/Leaflet.fullscreen.min.js" crossorigin=""></script>
     <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     <script type="text/javascript" src="{% static 'js/coverageMap.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/dropzone.js' %}"></script>

@@ -6,21 +6,23 @@ from dal import autocomplete as dal_autocomplete
 from dateutil import tz
 from django import forms
 from django.contrib import messages
-from django.contrib.auth import authenticate
-from django.contrib.auth import login as auth_login
+from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
 from django.core import signing
-from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
-                                    ValidationError)
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
 from django.core.mail import send_mail
 from django.db import Error, IntegrityError
 from django.db.models import Q
 from django.forms.models import model_to_dict
-from django.http import (HttpResponse, HttpResponseBadRequest,
-                         HttpResponseForbidden, HttpResponseRedirect,
-                         JsonResponse)
+from django.http import (
+    HttpResponse,
+    HttpResponseBadRequest,
+    HttpResponseForbidden,
+    HttpResponseRedirect,
+    JsonResponse,
+)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
@@ -32,50 +34,72 @@ from mezzanine.pages.page_processors import processor_for
 from mezzanine.utils.email import send_mail_template, subject_template
 from rest_framework import status
 from rest_framework.decorators import api_view
-from sorl.thumbnail import ImageField as ThumbnailImageField
-from sorl.thumbnail import get_thumbnail
+from sorl.thumbnail import ImageField as ThumbnailImageField, get_thumbnail
 
 from django_irods.icommands import SessionException
 from hs_access_control.emails import CommunityRequestEmailNotification
 from hs_access_control.enums import CommunityRequestEvents
-from hs_access_control.forms import (RequestNewCommunityForm,
-                                     UpdateCommunityForm)
-from hs_access_control.models import (Community, GroupCommunityRequest,
-                                      GroupMembershipRequest,
-                                      GroupResourcePrivilege, PrivilegeCodes,
-                                      UserGroupPrivilege)
-from hs_access_control.views import (community_json,
-                                     group_community_request_json)
-from hs_core import hydroshare, signals
+from hs_access_control.forms import RequestNewCommunityForm, UpdateCommunityForm
+from hs_access_control.models import Community, GroupCommunityRequest, UserGroupPrivilege
+from hs_access_control.models import GroupMembershipRequest, GroupResourcePrivilege, PrivilegeCodes
+from hs_access_control.views import community_json, group_community_request_json
+from hs_core import hydroshare
+from hs_core import signals
 from hs_core.enums import RelationTypes
-from hs_core.hydroshare.resource import (METADATA_STATUS_INSUFFICIENT,
-                                         METADATA_STATUS_SUFFICIENT)
-from hs_core.hydroshare.resource import \
-    update_quota_usage as update_quota_usage_utility
-from hs_core.hydroshare.utils import (get_resource_by_shortkey,
-                                      resolve_request, resource_modified)
-from hs_core.models import (BaseResource, CoreMetaData, PartyValidationError,
-                            Subject, TaskNotification, resource_processor)
-from hs_core.task_utils import (dismiss_task_by_id, get_all_tasks,
-                                get_or_create_task_notification,
-                                get_resource_delete_task, get_task_user_id,
-                                revoke_task_by_id, set_task_delivered_by_id)
-from hs_core.tasks import (copy_resource_task,
-                           create_new_version_resource_task,
-                           delete_resource_task,
-                           replicate_resource_bag_to_user_zone_task)
+from hs_core.hydroshare.resource import (
+    METADATA_STATUS_INSUFFICIENT,
+    METADATA_STATUS_SUFFICIENT,
+    update_quota_usage as update_quota_usage_utility,
+)
+from hs_core.hydroshare.utils import (
+    resolve_request,
+    resource_modified,
+)
+from hs_core.models import (
+    BaseResource,
+    CoreMetaData,
+    Subject,
+    TaskNotification,
+    resource_processor,
+    PartyValidationError,
+)
+from hs_core.task_utils import (
+    dismiss_task_by_id,
+    get_all_tasks,
+    get_or_create_task_notification,
+    get_resource_delete_task,
+    get_task_user_id,
+    revoke_task_by_id,
+    set_task_delivered_by_id,
+)
+from hs_core.tasks import (
+    copy_resource_task,
+    create_new_version_resource_task,
+    delete_resource_task,
+)
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 from theme.models import UserProfile
-
-from . import (apps, debug_resource_view, resource_access_api,
-               resource_folder_hierarchy, resource_folder_rest_api,
-               resource_metadata_rest_api, resource_rest_api,
-               resource_ticket_rest_api, user_rest_api)
-from .utils import (ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict,
-                    get_default_support_user, get_my_resources_filter_counts,
-                    get_my_resources_list, is_ajax,
-                    run_script_to_update_hyrax_input_files,
-                    send_action_to_take_email, upload_from_irods)
+from . import apps
+from . import debug_resource_view
+from . import resource_access_api
+from . import resource_folder_hierarchy
+from . import resource_folder_rest_api
+from . import resource_metadata_rest_api
+from . import resource_rest_api
+from . import resource_ticket_rest_api
+from . import user_rest_api
+from .utils import (
+    ACTION_TO_AUTHORIZE,
+    authorize,
+    get_coverage_data_dict,
+    get_my_resources_filter_counts,
+    get_my_resources_list,
+    run_script_to_update_hyrax_input_files,
+    send_action_to_take_email,
+    upload_from_irods,
+    get_default_support_user,
+    is_ajax,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -999,44 +1023,6 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
             return HttpResponseRedirect(request.headers["referer"])
 
 
-def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
-    """
-    This function needs to be called via AJAX. The function replicates resource bag to iRODS user zone on
-    users.hydroshare.org which is federated with hydroshare zone under the iRODS user account corresponding to a
-    HydroShare user. This function should only be called or exposed to be called from web interface when a
-    corresponding iRODS user account on hydroshare user Zone exists. The purpose of this function is to allow
-    HydroShare resource bag that a HydroShare user has access to be copied to HydroShare user's iRODS space in
-    HydroShare user zone so that users can do analysis or computations on the resource
-    Args:
-        request: an AJAX request
-        shortkey: UUID of the resource to be copied to the login user's iRODS user space
-
-    Returns:
-        JSON list that indicates status of resource replication, i.e., success or error
-    """
-
-    res, authorized, user = authorize(
-        request,
-        shortkey,
-        needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
-        raises_exception=False,
-    )
-    if not authorized:
-        return JsonResponse(
-            {"error": "You are not authorized to replicate this resource."},
-            status=status.HTTP_401_UNAUTHORIZED,
-        )
-
-    task = replicate_resource_bag_to_user_zone_task.apply_async(
-        (shortkey, user.username)
-    )
-    task_id = task.task_id
-    task_dict = get_or_create_task_notification(
-        task_id, name="resource copy to user zone", username=user.username
-    )
-    return JsonResponse(task_dict)
-
-
 def list_referenced_content(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(
         request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE
@@ -1621,12 +1607,6 @@ class GroupUpdateForm(GroupForm):
 
 @processor_for(BaseResource)
 def add_generic_context(request, page):
-    # each of the following auto complete forms should have a unique form field name for the ModelChoiceField widget
-    # to work properly. if a page has more than one auto complete form, the form field name should be unique across all
-    # forms on the page. The form field name is used to generate the id for the input field in the form. if the form
-    # id is duplicate, the auto complete widget will not work properly.
-    user = request.user
-    user_zone_account_exist = hydroshare.utils.get_user_zone_status_info(user)
     user_widget = dal_autocomplete.ModelSelect2(
         url="user-autocomplete",
         attrs={
@@ -1687,7 +1667,6 @@ def add_generic_context(request, page):
         "add_view_group_form": AddGroupForm(),
         # TODO: the following form is not used in any template - should be deleted
         "add_edit_group_form": AddGroupForm(),
-        "user_zone_account_exist": user_zone_account_exist,
     }
 
 
