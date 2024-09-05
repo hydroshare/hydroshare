@@ -1,5 +1,4 @@
 import binascii
-import re
 from django.db import connection
 
 
