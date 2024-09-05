@@ -11,7 +11,7 @@ RUN pip install djangorestframework==3.14.*
 RUN pip install django-haystack==3.2.*
 RUN pip install drf-yasg==1.21.*
 RUN pip install django-robots==6.1
-RUN pip install django-autocomplete-light==3.9.*
+RUN pip install django-autocomplete-light==3.11.*
 RUN pip install django-widget-tweaks==1.5.*
 RUN pip install django-crispy-forms==2.1
 RUN pip install crispy-bootstrap3==2024.1
