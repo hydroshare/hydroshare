@@ -2279,6 +2279,7 @@ def user_from_bucket_name(bucket_name: str) -> User:
     username = binascii.unhexlify(bucket_name).decode("utf-8")
     return User.objects.get(username=username)
 
+
 @swagger_auto_schema(
     method="post",
     operation_description="Check user S3 authorization",
@@ -2306,7 +2307,7 @@ def hsapi_user_s3_authorization(request):
         resource_id = prefix.split("/")[0]
         try:
             resource = hydroshare.utils.get_resource_by_shortkey(resource_id, False)
-        except BaseResource.DoesNotExist as e:
+        except BaseResource.DoesNotExist:
             return wrap_result(False)  # resource not found for a prefix
         assert resource.quota_holder == bucket_owner
         resources.append(resource)
@@ -2321,11 +2322,10 @@ def hsapi_user_s3_authorization(request):
     view_permissions = ["s3:GetObject", "s3:ListObjects", "s3:ListObjjectsV2"]
     # edit_permissions = ["s3:DeleteObject", "s3:DeleteObjects" "s3:PutObject", "s3:UploadPart"]
 
-    
     if action in view_permissions  and action != "s3:GetObject":
-        all_viewable = all([res.raccess.discoverable or 
-                            res.raccess.public or 
-                            res.raccess.allow_private_sharing for res in resources])
+        all_viewable = all([res.raccess.discoverable
+                            or res.raccess.public
+                            or res.raccess.allow_private_sharing for res in resources])
         if all_viewable:
             return wrap_result(True)
 
@@ -2340,7 +2340,6 @@ def hsapi_user_s3_authorization(request):
     #             return wrap_result(True)
 
     return wrap_result(False)
-
 
 
 @swagger_auto_schema(

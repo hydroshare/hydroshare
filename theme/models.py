@@ -1,7 +1,6 @@
 import binascii
 import datetime
 import logging
-import re
 
 from django.utils import timezone
 from django.dispatch import receiver
