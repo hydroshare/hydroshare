@@ -1,3 +1,4 @@
+import binascii
 import datetime
 import json
 import logging
@@ -2268,6 +2269,16 @@ def hsapi_get_user(request, user_identifier):
     return get_user_or_group_data(request, user_identifier, "false")
 
 
+def user_from_bucket_name(bucket_name: str) -> User:
+    """
+    Get the user from the bucket name
+    :param bucket_name: the name of the bucket
+    :return: the user
+    :raises: User.DoesNotExist if the user does not exist
+    """
+    username = binascii.unhexlify(bucket_name).decode("utf-8")
+    return User.objects.get(username=username)
+
 @swagger_auto_schema(
     method="post",
     operation_description="Check user S3 authorization",
@@ -2283,32 +2294,53 @@ def hsapi_user_s3_authorization(request):
         return {"result" : {"allow": authorized}}
 
     auth_request = json.loads(request.body.decode('utf-8'))["input"]
-    # bucket = auth_request["bucket"]
+    bucket = auth_request["bucket"]
+    bucket_owner = user_from_bucket_name(bucket)
     action: str = auth_request["action"]  # "s3:"
     username: str = auth_request["username"]
-    # conditions: dict = auth_request["conditions"]
-    # prefix: list[str] = conditions["prefix"]
+    conditions: dict = auth_request["conditions"]
+    prefixes: list[str] = conditions["prefix"]
     user: User = hydroshare.utils.user_from_id(username)
-    res = None
+    resources: list[BaseResource] = []
+    for prefix in prefixes:
+        resource_id = prefix.split("/")[0]
+        try:
+            resource = hydroshare.utils.get_resource_by_shortkey(resource_id, False)
+        except BaseResource.DoesNotExist as e:
+            return wrap_result(False)  # resource not found for a prefix
+        assert resource.quota_holder == bucket_owner
+        resources.append(resource)
 
     # Break this down into just view and edit for now.
+    # HydroShare does not conusme changes made through S3 API yet so edit check is not active
     # Later on we could share the metadata files only or allow resource deletion.
     # We will also need to figure out owners at some point
 
     # List of actions https://docs.aws.amazon.com/AmazonS3/latest/API/API_Operations.html
 
     view_permissions = ["s3:GetObject", "s3:ListObjects", "s3:ListObjjectsV2"]
-    edit_permissions = ["s3:DeleteObject", "s3:DeleteObjects" "s3:PutObject", "s3:UploadPart"]
+    # edit_permissions = ["s3:DeleteObject", "s3:DeleteObjects" "s3:PutObject", "s3:UploadPart"]
+
+    
+    if action in view_permissions  and action != "s3:GetObject":
+        all_viewable = all([res.raccess.discoverable or 
+                            res.raccess.public or 
+                            res.raccess.allow_private_sharing for res in resources])
+        if all_viewable:
+            return wrap_result(True)
 
     if action in view_permissions:
-        if res.raccess.discoverable and action != "s3:GetObject":
+        all_viewable = all([user.uaccess.can_view_resource(res) for res in resources])
+        if all_viewable:
             return wrap_result(True)
-        if res.raccess.public or res.raccess.allow_private_sharing:
-            return wrap_result(True)
-        return user.uaccess.can_view_resources(res)
-    if action in edit_permissions:
-        return user.uaccess.can_change_resource(resource_metadata_rest_api)
+
+    # elif action in edit_permissions:
+    #         all_editable = all([user.uaccess.can_change_resource(res) for res in resources])
+    #         if all_editable:
+    #             return wrap_result(True)
+
     return wrap_result(False)
+
 
 
 @swagger_auto_schema(

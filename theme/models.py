@@ -1,3 +1,4 @@
+import binascii
 import datetime
 import logging
 import re
@@ -607,7 +608,7 @@ class UserProfile(models.Model):
 
     @property
     def bucket_name(self):
-        return re.sub(r"[^A-Za-z0-9\.-]", "", re.sub("[@]", ".at.", self.user.username.lower()))
+        return binascii.hexlify(self.user.username.encode())
 
 
 def force_unique_emails(sender, instance, **kwargs):
