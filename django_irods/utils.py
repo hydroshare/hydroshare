@@ -36,4 +36,4 @@ def bucket_and_name(path):
 def _normalized_bucket_name(username):
     # duplicate of theme.models.UserProfile.bucket_name property method
     # Cannot import theme.models.UserProfile due to circular import
-    return binascii.hexlify(username.encode())
+    return binascii.hexlify(username.encode()).decode('utf-8')

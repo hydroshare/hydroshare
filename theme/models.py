@@ -607,7 +607,7 @@ class UserProfile(models.Model):
 
     @property
     def bucket_name(self):
-        return binascii.hexlify(self.user.username.encode())
+        return binascii.hexlify(self.user.username.encode()).decode('utf-8')
 
 
 def force_unique_emails(sender, instance, **kwargs):
