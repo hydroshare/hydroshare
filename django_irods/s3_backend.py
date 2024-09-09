@@ -5,7 +5,7 @@ from datetime import timedelta
 from urllib.parse import urlencode
 from .utils import bucket_and_name
 
-from django.core.exceptions import ImproperlyConfigured, SuspiciousOperation
+from django.core.exceptions import ImproperlyConfigured
 from django.utils.deconstruct import deconstructible
 from django.utils.encoding import filepath_to_uri
 from django.utils.timezone import make_naive
