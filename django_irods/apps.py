@@ -1,7 +1,7 @@
 from django.apps import AppConfig
 
 
-class CompositeResourceAppConfig(AppConfig):
+class DjangoIrodsAppConfig(AppConfig):
     name = "django_irods"
 
     def ready(self):

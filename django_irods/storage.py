@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import tempfile
 import zipfile
+import logging
 
 from django_irods.icommands import SessionException
 from django.urls import reverse
@@ -18,6 +19,7 @@ from .s3_backend import S3Storage
 
 
 folder_delimiter = "|||||||"
+logger = logging.getLogger(__name__)
 
 
 @deconstructible
@@ -259,11 +261,6 @@ class IrodsStorage(S3Storage):
 
     def saveFile(self, src_local_file, dest_s3_bucket_path):
         """
-
-        TODO validate this is true
-        Note if only directory needs to be created without saving a file, from_name should be empty
-        and to_name should have "/" as the last character
-
         Parameters:
         :param
         src_local_file: the temporary file name in local disk to be uploaded from.
@@ -327,11 +324,11 @@ class IrodsStorage(S3Storage):
     def create_bucket(self, bucket_name):
         try:
             self.connection.create_bucket(Bucket=bucket_name)
-        except Exception:
-            pass
+        except Exception as ex:
+            logger.exception(f"Failed to create bucket {bucket_name}", ex)
 
     def delete_bucket(self, bucket_name):
         try:
             self.connection.delete_bucket(Bucket=bucket_name)
         except Exception:
-            pass
+            logger.exception(f"Failed to delete bucket {bucket_name}", ex)

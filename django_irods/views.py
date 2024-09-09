@@ -70,7 +70,7 @@ def download(request, path, use_async=True,
     is_aggregation_request = request.GET.get('aggregation', "False").lower() == "true"
     api_request = request.META.get('CSRF_COOKIE', None) is None
     aggregation_name = None
-    is_sf_request = True
+    is_sf_request = False
 
     if split_path_strs[0] == 'bags':
         is_bag_download = True

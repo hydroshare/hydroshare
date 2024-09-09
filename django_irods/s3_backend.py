@@ -72,10 +72,7 @@ class S3Storage(s3.S3Storage):
         work. We check to make sure that the path pointed to is not outside
         the directory specified by the LOCATION setting.
         """
-        try:
-            return name
-        except ValueError:
-            raise SuspiciousOperation("Attempted access to '%s' denied." % name)
+        return name
 
     def _open(self, name, mode="rb"):
         name = self._normalize_name(clean_name(name))

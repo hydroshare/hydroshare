@@ -4,6 +4,7 @@ import logging
 import os
 import shutil
 import string
+import binascii
 from collections import namedtuple
 from datetime import datetime
 from tempfile import NamedTemporaryFile
@@ -1840,3 +1841,14 @@ def _path_move_rename(user, res_id, src_path, tgt_path, validate_move_rename=Tru
         resource.set_flag_to_recreate_aggregation_meta_files(orig_path=src_full_path, new_path=tgt_full_path)
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
+
+
+def user_from_bucket_name(bucket_name: str) -> User:
+    """
+    Get the user from the bucket name
+    :param bucket_name: the name of the bucket
+    :return: the user
+    :raises: User.DoesNotExist if the user does not exist
+    """
+    username = binascii.unhexlify(bucket_name).decode("utf-8")
+    return User.objects.get(username=username)

@@ -1,4 +1,3 @@
-import binascii
 import datetime
 import json
 import logging
@@ -99,6 +98,7 @@ from .utils import (
     get_my_resources_list,
     send_action_to_take_email,
     get_default_support_user,
+    user_from_bucket_name,
 )
 
 logger = logging.getLogger(__name__)
@@ -2267,17 +2267,6 @@ def hsapi_get_user(request, user_identifier):
     :return: JsonResponse containing user data
     """
     return get_user_or_group_data(request, user_identifier, "false")
-
-
-def user_from_bucket_name(bucket_name: str) -> User:
-    """
-    Get the user from the bucket name
-    :param bucket_name: the name of the bucket
-    :return: the user
-    :raises: User.DoesNotExist if the user does not exist
-    """
-    username = binascii.unhexlify(bucket_name).decode("utf-8")
-    return User.objects.get(username=username)
 
 
 @swagger_auto_schema(
