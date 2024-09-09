@@ -324,11 +324,11 @@ class IrodsStorage(S3Storage):
     def create_bucket(self, bucket_name):
         try:
             self.connection.create_bucket(Bucket=bucket_name)
-        except Exception as ex:
+        except Exception:
             logger.exception(f"Failed to create bucket {bucket_name}")
 
     def delete_bucket(self, bucket_name):
         try:
             self.connection.delete_bucket(Bucket=bucket_name)
-        except Exception as ex:
+        except Exception:
             logger.exception(f"Failed to delete bucket {bucket_name}")
