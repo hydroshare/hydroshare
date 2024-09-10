@@ -3126,6 +3126,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             kwargs['resource_file'] = file
 
         else:  # if file is not an open file, then it's a basename (string)
+            filename = file
             if file is None and source is not None:
                 if __debug__:
                     assert (isinstance(source, str))
@@ -3152,9 +3153,9 @@ class ResourceFile(ResourceFileIRODSMixin):
 
             # we've copied or moved if necessary; now set the paths
             kwargs['resource_file'] = target
-        if istorage.exists(os.path.join(resource.file_path, folder, filename)):
+        if ResourceFile.objects.filter(resource_file=kwargs['resource_file']).exists():
             raise ValidationError("ResourceFile.create: file {} already exists"
-                                  .format(os.path.join(folder, filename)))
+                                  .format(kwargs['resource_file']))
 
         # Actually create the file record
         # when file is a File, the file is copied to storage in this step

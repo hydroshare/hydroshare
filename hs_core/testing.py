@@ -130,19 +130,17 @@ class TestCaseCommonUtilities(object):
         # since the folder is zipped into sub_test_dir.zip with the folder deleted
         self.assertEqual(res.files.all().count(), 2, msg="resource file count didn't match-")
 
-        unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', bool_remove_original=False)
         # >> testing folder name collision upon unzip
         # unzip should fail due to previous unzip collision
         with self.assertRaises(FileOverrideException):
             unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', bool_remove_original=False)
 
         # remove the conflicting folder (sub_test_dir) to test that unzip should work after that
-        for rf in res.files.all():
-            if not rf.short_path.endswith('sub_test_dir.zip'):
-                rf.delete()
+        remove_folder(user, res.short_id, 'data/contents/sub_test_dir')
         # unzip should work now
         unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', bool_remove_original=False)
 
+        remove_folder(user, res.short_id, 'data/contents/sub_test_dir')
         for rf in res.files.all():
             rf.delete()
 
@@ -181,8 +179,6 @@ class TestCaseCommonUtilities(object):
         # remove all files in sub_test_dir created by unzip, and then create an empty sub_test_dir
         for rf in res.files.all():
             rf.delete()
-        # deleting files with minio does not delete manually created folders
-        # create_folder(res.short_id, 'data/contents/sub_test_dir')
 
         # add 2 files to the root folder
         add_resource_files(res.short_id, self.test_file_1, self.test_file_3)
