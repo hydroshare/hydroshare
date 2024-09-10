@@ -170,6 +170,8 @@ class IrodsStorage(S3Storage):
     def create_folder(self, coll_path, path):
         folders = self._empty_folders(coll_path)
         folders.append(path.strip("/"))
+        # remove duplicates
+        folders = list(set(folders))
         self.setAVU(coll_path, "empty_folders", folder_delimiter.join(folders))
 
     def remove_folder(self, res_id, path, AVU_only=False):
@@ -225,8 +227,7 @@ class IrodsStorage(S3Storage):
                     self.connection.Object(src_bucket, src_file_path).delete()
 
             # update empty_folders AVU
-            dst_file_path = src_name.replace(src_name, dest_name)
-            res_id = "/".join(dst_file_path.split("/")[:1])
+            res_id = "/".join(dest_name.split("/")[:1])
             for empty_folder in self._empty_folders(res_id, filter=src_name):
                 new_folder = empty_folder.replace(src_name, dest_name)
                 self.remove_folder(res_id, empty_folder, AVU_only=True)
