@@ -1445,6 +1445,7 @@ def update_csv_table_schema_metadata(request, file_type_id, **kwargs):
         col.description = post_table_schema_data[f"column-{col_no}-description"].strip()
         if col.description == '':
             col.description = None
+        col.datatype = post_table_schema_data[f"column-{col_no}-datatype"].strip()
 
     # it is not allowed to have some columns with titles and some without titles
     columns_with_titles = [col.titles for col in table_schema_model.table.columns if col.titles]

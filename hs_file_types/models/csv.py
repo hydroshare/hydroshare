@@ -187,7 +187,8 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
                 html_tags.h3("CSV File Properties")
                 html_tags.p(f"Number of data rows: {table_schema_model.rows}", cls="font-weight-bold",
                             style="padding-top: 10px; font-size: 1.3em;")
-                html_tags.p(f"Delimiter: {table_schema_model.delimiter}",
+                delimiter = self._get_delimiter_name(table_schema_model.delimiter)
+                html_tags.p(f"Delimiter: {delimiter}",
                             style="padding-top: 10px; font-size: 1.3em;")
                 with html_tags.div():
                     html_tags.legend("Column Properties:")
@@ -228,12 +229,13 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
                                                 cls=column_input_cls)
                         delimiter_div = html_tags.div(cls="control-group", id="id-csv-metadata-row-count")
                         with delimiter_div:
+                            delimiter = self._get_delimiter_name(table_schema_model.delimiter)
                             html_tags.label("Delimiter:", fr="id-csv-metadata-delimiter",
                                             cls="control-label")
                             with html_tags.div(cls="controls"):
                                 html_tags.input(type="text", id="id-csv-metadata-delimiter", name="rows",
                                                 readonly="readonly",
-                                                value=table_schema_model.delimiter,
+                                                value=delimiter,
                                                 cls=column_input_cls)
                         col_div = html_tags.div(cls="control-group", id="id-csv-metadata-columns")
                         with col_div:
@@ -256,8 +258,13 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
 
                                         datatype_id = f"id-csv-metadata-column-{col_no}-datatype"
                                         html_tags.label("Data type", fr=datatype_id)
-                                        html_tags.input(type="text", id=datatype_id, name=f"column-{col_no}-datatype",
-                                                        readonly="readonly", value=col.datatype, cls=column_input_cls)
+                                        with html_tags.select(cls='form-control', id=datatype_id,
+                                                              name=f"column-{col_no}-datatype"):
+                                            for dt in ('string', 'number', 'datetime', 'boolean'):
+                                                if col.datatype == dt:
+                                                    html_tags.option(dt, selected="selected")
+                                                else:
+                                                    html_tags.option(dt)
 
                         with html_tags.div(cls="row", style="margin-top:10px;"):
                             with html_tags.div(cls="col-md-offset-10 col-xs-offset-6 " "col-md-2 col-xs-6"):
@@ -274,7 +281,8 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
     def get_preview_data_html(self):
         toggle_preview_div = html_tags.div(style="clear: both;")
         with toggle_preview_div:
-            html_tags.button("Preview CSV Data", type="button", cls="btn btn-info", data_toggle="collapse",
+            html_tags.button("Preview CSV Data (First 10 data rows only)", type="button", cls="btn btn-info",
+                             data_toggle="collapse",
                              data_target="#preview-data", style="margin-bottom: 10px;")
             preview_div = html_tags.div(style="clear: both; padding-bottom: 10px;", id="preview-data", cls="collapse")
             with preview_div:
@@ -282,6 +290,11 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
                 html_tags.textarea(logical_file.preview_data, rows=10, readonly="readonly", wrap="soft",
                                    style="min-width: 100%; resize: vertical; overflow-x: auto; white-space: pre;")
         return toggle_preview_div
+
+    @staticmethod
+    def _get_delimiter_name(delimiter):
+        delimiters = {',': 'comma', ';': 'semicolon', '\t': 'tab'}
+        return delimiters[delimiter]
 
 
 class CSVLogicalFile(AbstractLogicalFile):
