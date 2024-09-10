@@ -72,10 +72,10 @@ class IrodsStorage(S3Storage):
         # Stream zip https://stackoverflow.com/a/69136133
         filesCollection = in_bucket.objects.filter(Prefix=in_path).all()
         archive = BytesIO()
-
+        in_prefix = os.path.dirname(in_path) if self.isDir(in_name) else in_path
         with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
             for file in filesCollection:
-                relative_path = file.key[len(in_path):]
+                relative_path = file.key[len(in_prefix):]
                 with zip_archive.open(relative_path, 'w') as file1:
                     file1.write(file.get()['Body'].read())
 
