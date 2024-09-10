@@ -3112,6 +3112,8 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         kwargs['file_folder'] = folder
 
+        istorage = resource.get_irods_storage()
+
         # if file is an open file, use native copy by setting appropriate variables
         if isinstance(file, File):
             filename = os.path.basename(file.name)
@@ -3128,7 +3130,6 @@ class ResourceFile(ResourceFileIRODSMixin):
                 root, newfile = os.path.split(source)  # take file from source path
                 # newfile is where it should be copied to.
                 target = get_resource_file_path(resource, newfile, folder=folder)
-                istorage = resource.get_irods_storage()
                 if not istorage.exists(source):
                     raise ValidationError("ResourceFile.create: source {} of copy not found"
                                           .format(source))
@@ -3148,6 +3149,9 @@ class ResourceFile(ResourceFileIRODSMixin):
 
             # we've copied or moved if necessary; now set the paths
             kwargs['resource_file'] = target
+        if istorage.exists(os.path.join(resource.file_path, folder, filename)):
+            raise ValidationError("ResourceFile.create: file {} already exists"
+                                  .format(os.path.join(folder, filename)))
 
         # Actually create the file record
         # when file is a File, the file is copied to storage in this step
