@@ -2458,7 +2458,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         return full_path
 
     def set_quota_holder(self, setter, new_holder):
-        # TODO this requires a movement of files to the quota holders bucket now
         """Set quota holder of the resource to new_holder who must be an owner.
 
         setter is the requesting user to transfer quota holder and setter must also be an owner
@@ -2475,6 +2474,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         # QuotaException will be raised if new_holder does not have enough quota to hold this
         # new resource, in which case, set_quota_holder to the new user fails
         validate_user_quota(new_holder, self.size)
+
+        if self.quota_holder:
+            self.get_irods_storage().new_quota_holder(self.short_id, new_holder.username)
+
         self.quota_holder = new_holder
         self.save()
 

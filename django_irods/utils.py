@@ -30,10 +30,10 @@ def bucket_and_name(path):
         cursor.execute(owner_username_query)
         row = cursor.fetchone()
         owner_username = row[1]
-    return _normalized_bucket_name(owner_username), path
+    return normalized_bucket_name(owner_username), path
 
 
-def _normalized_bucket_name(username):
+def normalized_bucket_name(username):
     # duplicate of theme.models.UserProfile.bucket_name property method
     # Cannot import theme.models.UserProfile due to circular import
     return binascii.hexlify(username.encode()).decode('utf-8')

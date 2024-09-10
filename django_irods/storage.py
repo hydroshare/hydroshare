@@ -10,7 +10,7 @@ from django.urls import reverse
 from urllib.parse import urlencode
 
 from . import models as m
-from .utils import bucket_and_name
+from .utils import bucket_and_name, normalized_bucket_name
 
 from uuid import uuid4
 
@@ -332,3 +332,29 @@ class IrodsStorage(S3Storage):
             self.connection.delete_bucket(Bucket=bucket_name)
         except Exception:
             logger.exception(f"Failed to delete bucket {bucket_name}")
+
+    def new_quota_holder(self, resource_id, new_quota_holder_id):
+        """
+        Create a new bucket for the resource
+        :param resource_id: the resource id
+        """
+        src_bucket, src_name = bucket_and_name(resource_id)
+        dst_bucket = normalized_bucket_name(new_quota_holder_id)
+        dest_name = src_name
+
+        bucket = self.connection.Bucket(src_bucket)
+        files_to_delete = []
+        for file in bucket.objects.filter(Prefix=src_name):
+            src_file_path = file.key
+            dst_file_path = file.key.replace(src_name, dest_name)
+            self.connection.Bucket(dst_bucket).copy(
+                {
+                    "Bucket": src_bucket,
+                    "Key": src_file_path,
+                },
+                dst_file_path,
+            )
+            files_to_delete.append(src_file_path)
+
+        for src_file_path in files_to_delete:
+            self.connection.Object(src_bucket, src_file_path).delete()
