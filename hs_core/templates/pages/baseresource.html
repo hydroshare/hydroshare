@@ -15,7 +15,8 @@
     <link rel='stylesheet' type='text/css' href="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/leaflet.fullscreen.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
     {# this loads the assets for the auto complete #}
-    {{ add_view_hs_user_form.media }}
+    <!-- {{ add_view_hs_user_form.media }} -->
+    <!-- {{ add_view_resource_permission_form.media }} -->
 
 {# ======= JSON-LD Structure ======= #}
 <script id="schemaorg" type="application/ld+json">
@@ -1120,5 +1121,5 @@
     <script type="text/javascript" charset="utf8" src="{% static 'js/jquery.dataTables.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/copyToClipboard.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/generic-resource.js' %}"></script>
-
+    {{ add_view_resource_permission_form.media }}
 {% endblock %}

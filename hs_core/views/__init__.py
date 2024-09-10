@@ -1607,6 +1607,7 @@ class GroupUpdateForm(GroupForm):
 
 @processor_for(BaseResource)
 def add_generic_context(request, page):
+    # 'data-html': True
     user_widget = dal_autocomplete.ModelSelect2(
         url="user-autocomplete",
         attrs={
@@ -1636,8 +1637,16 @@ def add_generic_context(request, page):
     class AddUserResourcePermissionForm(forms.Form):
         user_resource_permission = forms.ModelChoiceField(
             queryset=User.objects.none(),
-            widget=user_widget,
+            widget=dal_autocomplete.ModelSelect2(url="user-autocomplete")
         )
+
+    # class AddUserResourcePermissionForm(forms.ModelForm):
+    #     class Meta:
+    #         model = User
+    #         fields = ["username"]
+    #         widgets = {
+    #             "username": user_widget,
+    #         }
 
     class AddUserHSForm(forms.Form):
         author = forms.ModelChoiceField(

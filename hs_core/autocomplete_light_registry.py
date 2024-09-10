@@ -8,6 +8,7 @@ class UserAutocompleteView(autocomplete.Select2QuerySetView):
 
     def get_queryset(self):
         qs = User.objects.filter(is_active=True)
+        return User.objects.all()
 
         if self.q:
             qs = qs.filter(
