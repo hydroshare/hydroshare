@@ -17,7 +17,7 @@ class UserAutocompleteView(autocomplete.Select2QuerySetView):
             )
             return qs
 
-        return qs.none()
+        return qs
 
     def get_result_label(self, item):
         label = " ".join(
@@ -49,4 +49,4 @@ class GroupAutocompleteView(autocomplete.Select2QuerySetView):
             qs = qs.filter(name__istartswith=self.q)
             return qs
 
-        return qs.none()
+        return qs
