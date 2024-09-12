@@ -7,8 +7,6 @@ from django.core import exceptions
 from django.core.exceptions import PermissionDenied, ObjectDoesNotExist, ValidationError
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
-from django.db.models import Q
-from django_irods.storage import IrodsStorage
 
 from hs_core.models import (
     BaseResource,

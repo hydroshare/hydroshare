@@ -37,6 +37,6 @@ def bucket_and_name(path):
 def normalized_bucket_name(username):
     # duplicate of theme.models.UserProfile.bucket_name property method
     # Cannot import theme.models.UserProfile due to circular import
-    safe_username = re.sub("[^A-Za-z0-9\.-]", "", re.sub("[@]", ".at.", self.user.username.lower()))
-    encoded_username = binascii.hexlify(self.user.username.encode()).decode('utf-8')
+    safe_username = re.sub(r"[^A-Za-z0-9\.-]", "", re.sub("[@]", ".at.", username.lower()))
+    encoded_username = binascii.hexlify(username.encode()).decode('utf-8')
     return f"{safe_username}-{encoded_username}"

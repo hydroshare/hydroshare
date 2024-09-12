@@ -463,7 +463,7 @@ def create_resource(
             **kwargs
         )
 
-        resource.get_irods_storage().create_bucket(user.userprofile.bucket_name)
+        resource.get_irods_storage().create_bucket(owner.userprofile.bucket_name)
         resource.resource_type = resource_type
 
         # by default make resource private

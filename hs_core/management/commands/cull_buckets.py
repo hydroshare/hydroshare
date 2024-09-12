@@ -15,16 +15,16 @@ class Command(BaseCommand):
         # a list of user id's, or none to check all users
         parser.add_argument('usernames', nargs='*', type=str)
 
-
     def handle(self, *args, **options):
         istorage = IrodsStorage()
-        
+
         if len(options['usernames']) > 0:  # an array of resource short_id to check.
             for username in options['usernames']:
                 cull_bucket(username, istorage)
         else:
             for user in User.objects.all():
                 cull_bucket(user.username, istorage)
+
 
 def cull_bucket(username, istorage):
     user = User.objects.get(username=username)
