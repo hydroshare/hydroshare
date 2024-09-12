@@ -1,9 +1,10 @@
 import binascii
+import re
 from django.db import connection
 
 
 def bucket_and_name(path):
-    res_id = "/".join(path.split("/")[:1])
+    res_id = path.split("/")[:1] if "/" in path else path
     if path.startswith("bags/"):
         path = path.split("/")[-1]
         return "bags", path
@@ -30,10 +31,12 @@ def bucket_and_name(path):
         cursor.execute(owner_username_query)
         row = cursor.fetchone()
         owner_username = row[1]
-    return normalized_bucket_name(owner_username), path
+    return normalized_bucket_name(owner_username), path if "/" in path else ""
 
 
 def normalized_bucket_name(username):
     # duplicate of theme.models.UserProfile.bucket_name property method
     # Cannot import theme.models.UserProfile due to circular import
-    return binascii.hexlify(username.encode()).decode('utf-8')
+    safe_username = re.sub("[^A-Za-z0-9\.-]", "", re.sub("[@]", ".at.", self.user.username.lower()))
+    encoded_username = binascii.hexlify(self.user.username.encode()).decode('utf-8')
+    return f"{safe_username}-{encoded_username}"

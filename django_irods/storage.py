@@ -326,13 +326,15 @@ class IrodsStorage(S3Storage):
         try:
             self.connection.create_bucket(Bucket=bucket_name)
         except Exception:
-            logger.exception(f"Failed to create bucket {bucket_name}")
+            pass
+            # logger.exception(f"Failed to create bucket {bucket_name}")
 
     def delete_bucket(self, bucket_name):
         try:
-            self.connection.delete_bucket(Bucket=bucket_name)
+            self.connection.meta.client.delete_bucket(Bucket=bucket_name)
         except Exception:
-            logger.exception(f"Failed to delete bucket {bucket_name}")
+            pass
+            # logger.exception(f"Failed to delete bucket {bucket_name}")
 
     def new_quota_holder(self, resource_id, new_quota_holder_id):
         """

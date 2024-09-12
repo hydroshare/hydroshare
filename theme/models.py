@@ -1,6 +1,7 @@
 import binascii
 import datetime
 import logging
+import re
 
 from django.utils import timezone
 from django.dispatch import receiver
@@ -607,7 +608,9 @@ class UserProfile(models.Model):
 
     @property
     def bucket_name(self):
-        return binascii.hexlify(self.user.username.encode()).decode('utf-8')
+        safe_username = re.sub("[^A-Za-z0-9\.-]", "", re.sub("[@]", ".at.", self.user.username.lower()))
+        encoded_username = binascii.hexlify(self.user.username.encode()).decode('utf-8')
+        return f"{safe_username}-{encoded_username}"
 
 
 def force_unique_emails(sender, instance, **kwargs):

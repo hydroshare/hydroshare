@@ -145,7 +145,6 @@ def create_account(
         user_profile.save()
     # create default UserQuota object for the new user
     UserQuota.objects.create(user=u)
-    IrodsStorage().create_bucket(u.userprofile.bucket_name)
     return u
 
 
