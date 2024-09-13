@@ -315,6 +315,11 @@ class CSVLogicalFile(AbstractLogicalFile):
         return CSVFileMetaData
 
     @classmethod
+    def get_main_file_type(cls):
+        """The main file type for this aggregation"""
+        return ".csv"
+
+    @classmethod
     def get_allowed_uploaded_file_types(cls):
         return [".csv"]
 
