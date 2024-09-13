@@ -168,10 +168,11 @@ def data_store_structure(request):
                 main_extension = ""
 
             _, file_extension = os.path.splitext(fname)
-            if file_extension and main_extension.endswith(file_extension):
+            if file_extension and main_extension.endswith(file_extension) and main_extension != ".csv":
                 if not hasattr(res_file.logical_file, 'folder') or res_file.logical_file.folder is None:
                     aggregation_appkey = res_file.logical_file.metadata.extra_metadata.get(_APPKEY, '')
 
+                # these aggregations will be shown in the UI as virtual folders
                 aggregations.append({'logical_file_id': res_file.logical_file.id,
                                      'name': res_file.logical_file.dataset_name,
                                      'logical_type': res_file.logical_file.get_aggregation_class_name(),
