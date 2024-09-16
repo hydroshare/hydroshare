@@ -7,6 +7,7 @@ import logging
 import json
 
 from django.urls import reverse
+from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousFileOperation
 from django.core.exceptions import ValidationError as CoreValidationError
 from django.http import HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotFound
@@ -887,8 +888,22 @@ def _validate_metadata(metadata_list):
             raise ValidationError(detail=err_message)
 
 
-class CustomTusUpload(TusUpload):
+class HydroshareTusFile(TusFile):
+    # override the __init__ function from django_tus
+    def __init__(self, resource_id):
+        cached_size = cache.get("tus-uploads/{}/file_size".format(resource_id))
+        if cached_size:
+            self.file_size = int(cached_size)
+        else:
+            self.file_size = None
 
+        self.resource_id = resource_id
+        self.filename = cache.get("tus-uploads/{}/filename".format(resource_id))
+        self.metadata = cache.get("tus-uploads/{}/metadata".format(resource_id))
+        self.offset = cache.get("tus-uploads/{}/offset".format(resource_id))
+
+
+class CustomTusUpload(TusUpload):
     @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):
         # check that the user has permission to upload a file to the resource
@@ -897,7 +912,7 @@ class CustomTusUpload(TusUpload):
             # get the tus resource_id from the request
             tus_resource_id = self.kwargs['resource_id']
             try:
-                tus_file = TusFile(str(tus_resource_id))
+                tus_file = HydroshareTusFile(str(tus_resource_id))
                 # get the resource id from the tus metadata
                 metadata = tus_file.metadata
             except Exception as ex:
