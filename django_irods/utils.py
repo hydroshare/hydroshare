@@ -4,7 +4,7 @@ from django.db import connection
 
 
 def bucket_and_name(path):
-    res_id = path.split("/")[:1] if "/" in path else path
+    res_id = path.split("/")[0] if "/" in path else path
     if path.startswith("bags/"):
         path = path.split("/")[-1]
         return "bags", path
