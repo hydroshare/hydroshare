@@ -31,7 +31,7 @@ def bucket_and_name(path):
         cursor.execute(owner_username_query)
         row = cursor.fetchone()
         owner_username = row[1]
-    return normalized_bucket_name(owner_username), path if "/" in path else ""
+    return normalized_bucket_name(owner_username), path
 
 
 def normalized_bucket_name(username):
