@@ -3126,7 +3126,6 @@ class ResourceFile(ResourceFileIRODSMixin):
             kwargs['resource_file'] = file
 
         else:  # if file is not an open file, then it's a basename (string)
-            filename = file
             if file is None and source is not None:
                 if __debug__:
                     assert (isinstance(source, str))
