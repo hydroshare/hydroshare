@@ -1777,4 +1777,9 @@
 {% block extra_js %}
     <script type="text/javascript" src="{% static 'js/modals.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/identifiers-form.js' %}"></script>
+    <script>
+        // https://github.com/select2/select2/issues/1436#issuecomment-21028474
+        // incompatibility between Select2 and Bootstrap modals
+        $.fn.modal.Constructor.prototype.enforceFocus = function() {};
+    </script>
 {% endblock %}
