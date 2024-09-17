@@ -2,7 +2,7 @@ function group_invite_ajax_submit() {
   // get the value of the selet from id_user_invite_to_group
   let share_with = $("#id_user_invite_to_group").find(':selected').val();
   // if no user is selected, ignore the request
-  if (!selected.val()) {
+  if (!share_with) {
     return false;
   }
   var form = $("#invite-to-group");
