@@ -1665,8 +1665,6 @@ def add_generic_context(request, page):
         "add_view_resource_permission_form": AddUserResourcePermissionForm(),
         # Reuse the same class AddGroupForm() leads to duplicated IDs.
         "add_view_group_form": AddGroupForm(),
-        # TODO: the following form is not used in any template - should be deleted
-        "add_edit_group_form": AddGroupForm(),
     }
 
 
