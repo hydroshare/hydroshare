@@ -4,7 +4,6 @@ from django.db import connection
 
 
 def bucket_and_name(path):
-    res_id = path.split("/")[0] if "/" in path else path
     if path.startswith("bags/"):
         path = path.split("/")[-1]
         return "bags", path
@@ -14,6 +13,7 @@ def bucket_and_name(path):
     elif path.startswith("zips/"):
         bucket_and_path = path.split("/")
         return bucket_and_path[0], "/".join(bucket_and_path[1:])
+    res_id = path.split("/")[0] if "/" in path else path
     resource_query = f'SELECT "pages_page"."id", "pages_page"."_order", "hs_core_genericresource"."short_id", \
                         "hs_core_genericresource"."quota_holder_id", "hs_core_genericresource"."page_ptr_id" \
                         FROM "hs_core_genericresource" \
