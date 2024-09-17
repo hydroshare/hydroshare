@@ -333,6 +333,10 @@ echo " Migrating data"
 echo '########################################################################################################################'
 echo
 
+echo "  - docker exec hydroshare chown -R hydro-service:storage-hydro /tmp /shared_tmp"
+docker exec hydroshare chown -R hydro-service:storage-hydro /tmp /shared_tmp
+echo
+
 echo "  -docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput"
 echo
 docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput
