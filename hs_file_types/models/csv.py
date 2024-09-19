@@ -11,7 +11,6 @@ from django.db import models
 from django.template import Template, Context
 from dominate import tags as html_tags
 from pydantic import BaseModel, field_validator, PositiveInt
-from pydantic import ValidationError as PydanticValidationError
 from rdflib import Literal, BNode, Graph
 
 from hs_core.hs_rdf import HSTERMS, DC
