@@ -65,17 +65,6 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
     # this field is used for storing the extracted CSV metadata
     tableSchema = models.JSONField(default=dict)
 
-    @staticmethod
-    def validate_table_schema(table_schema: dict):
-        # TODO: this validation function is currently not used - may remove it
-        err = None
-        try:
-            schem_model = CSVMetaSchemaModel(**table_schema)
-            return schem_model.model_dump(), err
-        except PydanticValidationError as e:
-            err = str(e)
-            return None, err
-
     def get_table_schema_model(self):
         return CSVMetaSchemaModel(**self.tableSchema)
 
