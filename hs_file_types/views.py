@@ -1451,7 +1451,7 @@ def update_csv_table_schema_metadata(request, file_type_id, **kwargs):
     columns_with_titles = [col.titles for col in table_schema_model.table.columns if col.titles]
     if 0 < len(columns_with_titles) < len(table_schema_model.table.columns):
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
-                              'message': "Some column titles are missing"}
+                              'message': "The title for one or more columns is missing."}
         return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
     columns_with_duplicate_titles = set([title.lower() for title in columns_with_titles])
