@@ -316,7 +316,13 @@ function metadata_update_ajax_submit(form_id){
                 responseMessage = JSON.parse(XMLHttpRequest.responseText).message;
             } catch (Error){
             }
-            var errMessage = "Metadata failed to update " + JSON.stringify(responseMessage);
+            var errMessage = "Metadata failed to update - ";
+            if (typeof responseMessage === "string"){
+                errMessage = errMessage + responseMessage;
+            }
+            else {
+                errMessage = errMessage + JSON.stringify(responseMessage);
+            }
             $alert_error = $alert_error.replace("Metadata failed to update.", errMessage);
             $('#' + form_id).before($alert_error);
             $(".alert-error").fadeTo(2000, 500).slideUp(1000, function(){
