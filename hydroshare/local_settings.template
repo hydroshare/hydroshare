@@ -32,6 +32,12 @@ POSTGIS_DB = os.environ.get('POSTGIS_DB', 'postgres')
 POSTGIS_PASSWORD = os.environ.get('POSTGIS_PASSWORD', 'postgres')
 POSTGIS_USER = os.environ.get('POSTGIS_USER', 'postgres')
 
+# number of seconds database connections should persist
+# https://docs.djangoproject.com/en/3.2/ref/settings/#std-setting-CONN_MAX_AGE
+# this must be shorter than the database's timeout 
+# https://www.postgresql.org/docs/11/runtime-config-client.html#GUC-IDLE-IN-TRANSACTION-SESSION-TIMEOUT
+CONN_MAX_AGE = 60
+
 IPYTHON_SETTINGS = []
 IPYTHON_BASE = '/hydroshare/static/media/ipython-notebook'
 IPYTHON_HOST = '127.0.0.1'
