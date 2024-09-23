@@ -165,7 +165,6 @@ preflight_hs() {
     cp -rf ${HS_PATH}/scripts/templates/init-defaultworker.template ${HS_PATH}/init-defaultworker
     sed -i $SED_EXT 's!HS_SERVICE_UID!'${HS_SERVICE_UID}'!g' ${HS_PATH}/init-defaultworker
     sed -i $SED_EXT 's!HS_SERVICE_GID!'${HS_SERVICE_GID}'!g' ${HS_PATH}/init-defaultworker
-    sed -i $SED_EXT 's!CELERY_CONCURRENCY!'${CELERY_CONCURRENCY}'!g' ${HS_PATH}/init-defaultworker
     # Check security settings
     if [ "${USE_SECURITY}" = true ]; then
         sed -i $SED_EXT 's/\<USE_SECURITY = False\>/USE_SECURITY = True/g' ${HS_PATH}/hydroshare/settings.py
@@ -189,6 +188,8 @@ loaddb_hs() {
     docker exec -u hydro-service hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template1
     echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'"
     docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'
+    echo " - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET idle_in_transaction_session_timeout TO 70000;'"
+    docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET idle_in_transaction_session_timeout TO 70000;'
     echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}"
     docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}
 }

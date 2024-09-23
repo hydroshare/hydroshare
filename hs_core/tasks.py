@@ -101,6 +101,8 @@ class HydroshareTask(Task):
     retry_backoff = True
     retry_backoff_max = 600
     retry_jitter = True
+    # soft_time_limit = 60 * 60 * 2  # 2 hours
+    time_limit = 60 * 60 * 2  # 2 hours
 
 
 @celery_app.on_after_finalize.connect
@@ -109,27 +111,35 @@ def setup_periodic_tasks(sender, **kwargs):
         logger.debug("Periodic tasks are disabled in SETTINGS")
     else:
         # Hourly
-        sender.add_periodic_task(crontab(minute=45), manage_task_hourly.s())
+        sender.add_periodic_task(crontab(minute=45), manage_task_hourly.s(), options={'queue': 'periodic'})
 
         # Daily (times in UTC)
         sender.add_periodic_task(crontab(minute=0, hour=3), nightly_metadata_review_reminder.s())
-        sender.add_periodic_task(crontab(minute=30, hour=3), nightly_zips_cleanup.s())
-        sender.add_periodic_task(crontab(minute=0, hour=4), daily_odm2_sync.s())
-        sender.add_periodic_task(crontab(minute=30, hour=4), daily_innactive_group_requests_cleanup.s())
-        sender.add_periodic_task(crontab(minute=0, hour=5), check_geoserver_registrations.s())
-        sender.add_periodic_task(crontab(minute=30, hour=5), nightly_repair_resource_files.s())
-        sender.add_periodic_task(crontab(minute=0, hour=6), nightly_cache_file_system_metadata.s())
-        sender.add_periodic_task(crontab(minute=30, hour=6), nightly_periodic_task_check.s())
+        sender.add_periodic_task(crontab(minute=30, hour=3), nightly_zips_cleanup.s(), options={'queue': 'periodic'})
+        sender.add_periodic_task(crontab(minute=0, hour=4), daily_odm2_sync.s(), options={'queue': 'periodic'})
+        sender.add_periodic_task(crontab(minute=30, hour=4), daily_innactive_group_requests_cleanup.s(),
+                                 options={'queue': 'periodic'})
+        sender.add_periodic_task(crontab(minute=0, hour=5), check_geoserver_registrations.s(),
+                                 options={'queue': 'periodic'})
+        sender.add_periodic_task(crontab(minute=30, hour=5), nightly_repair_resource_files.s(),
+                                 options={'queue': 'periodic'})
+        sender.add_periodic_task(crontab(minute=0, hour=6), nightly_cache_file_system_metadata.s(),
+                                 options={'queue': 'periodic'})
+        sender.add_periodic_task(crontab(minute=30, hour=6), nightly_periodic_task_check.s(),
+                                 options={'queue': 'periodic'})
 
         # Weekly
-        sender.add_periodic_task(crontab(minute=0, hour=7, day_of_week=1), task_notification_cleanup.s())
+        sender.add_periodic_task(crontab(minute=0, hour=7, day_of_week=1), task_notification_cleanup.s(),
+                                 options={'queue': 'periodic'})
 
         # Monthly
-        sender.add_periodic_task(crontab(minute=30, hour=7, day_of_month=1), update_from_geoconnex_task.s())
+        sender.add_periodic_task(crontab(minute=30, hour=7, day_of_month=1), update_from_geoconnex_task.s(),
+                                 options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=0, hour=8, day_of_week=1, day_of_month='1-7'),
-                                 send_over_quota_emails.s())
+                                 send_over_quota_emails.s(), options={'queue': 'periodic'})
         sender.add_periodic_task(
-            crontab(minute=30, hour=8, day_of_month=1), monthly_group_membership_requests_cleanup.s())
+            crontab(minute=30, hour=8, day_of_month=1), monthly_group_membership_requests_cleanup.s(),
+            options={'queue': 'periodic'})
 
 
 # Currently there are two different cleanups scheduled.
@@ -702,13 +712,6 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
     finally:
         # Delete upload file
         os.unlink(zip_file_path)
-
-
-@shared_task
-def delete_zip(zip_path):
-    istorage = IrodsStorage()
-    if istorage.exists(zip_path):
-        istorage.delete(zip_path)
 
 
 @shared_task
