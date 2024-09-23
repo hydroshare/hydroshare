@@ -922,14 +922,15 @@ class CustomTusUpload(TusUpload):
                 # return a 404 not found response
                 return HttpResponseNotFound(err_msg)
 
-        # get the hydroshare resource id from the metadata
-        hs_res_id = metadata.get('hs_res_id')
+        if metadata:
+            # get the hydroshare resource id from the metadata
+            hs_res_id = metadata.get('hs_res_id')
 
-        # check that the user has permission to upload a file to the resource
-        try:
-            view_utils.authorize(self.request, hs_res_id,
-                                 needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-        except PermissionDenied:
-            return HttpResponseForbidden()
+            # check that the user has permission to upload a file to the resource
+            try:
+                view_utils.authorize(self.request, hs_res_id,
+                                    needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+            except PermissionDenied:
+                return HttpResponseForbidden()
 
         return super(CustomTusUpload, self).dispatch(*args, **kwargs)
