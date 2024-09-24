@@ -5,6 +5,7 @@ from hs_core import views as core_views
 from hs_file_types import views as file_type_views
 from hs_core.views.resource_folder_hierarchy import data_store_add_reference_public, \
     data_store_edit_reference_url_public, ingest_metadata_files
+from .resources.quota_holder import get_quota_holder_bucket
 
 from .resources.file_metadata import FileMetaDataRetrieveUpdateDestroy
 
@@ -240,4 +241,6 @@ urlpatterns = [
     url(r'^resource/(?P<resource_id>[0-9a-f]+)/modelinstance/meta/(?P<aggregation_path>.*)$',
         file_type_views.model_instance_metadata_in_json,
         name='model_instance_metadata_in_json'),
+
+    url(r'^resource/(?P<resource_id>[0-9a-f]+)/quota_holder_bucket_name/$', get_quota_holder_bucket),
 ]
