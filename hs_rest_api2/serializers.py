@@ -198,7 +198,7 @@ class NestedSchemaGenerator(OpenAPISchemaGenerator):
         swagger = super(NestedSchemaGenerator, self).get_schema(request, public)
         for model in [ResourceMetadata, GeographicFeatureMetadata, GeographicRasterMetadata, MultidimensionalMetadata,
                       SingleFileMetadata, FileSetMetadata, TimeSeriesMetadata, ReferencedTimeSeriesMetadata,
-                      ModelProgramMetadata]:
+                      ModelProgramMetadata, CSVFileMetadata]:
             schema = model.model_json_schema()
             schema = get_schema_open_api_v2(schema)
 
