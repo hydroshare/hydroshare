@@ -26,17 +26,29 @@ def bucket_and_name(path):
         if row is None:
             raise Exception(f"Resource with short_id {res_id} not found")
         owner_id = row[3]
-        owner_username_query = f'SELECT "auth_user"."id", "auth_user"."username" \
-                                 FROM "auth_user" WHERE "auth_user"."id" = {owner_id}'
+        owner_username_query = f'SELECT "theme_userprofile"."_bucket_name" \
+                                FROM "theme_userprofile" \
+                                WHERE "theme_userprofile"."user_id" = {owner_id}'
         cursor.execute(owner_username_query)
         row = cursor.fetchone()
-        owner_username = row[1]
-    return normalized_bucket_name(owner_username), path
+        bucket_name = row[0]
+    return bucket_name, path
 
 
 def normalized_bucket_name(username):
-    # duplicate of theme.models.UserProfile.bucket_name property method
-    # Cannot import theme.models.UserProfile due to circular import
-    safe_username = re.sub(r"[^A-Za-z0-9\.-]", "", re.sub("[@]", ".at.", username.lower()))
-    encoded_username = binascii.hexlify(username.encode()).decode('utf-8')
-    return f"{safe_username}-{encoded_username}"
+    with connection.cursor() as cursor:
+        user_id_from_username_query = f'SELECT "auth_user"."id" \
+                                        FROM "auth_user" \
+                                        WHERE "auth_user"."username" = {username}'
+        cursor.execute(user_id_from_username_query)
+        row = cursor.fetchone()
+        if row is None:
+            raise Exception(f"User with username {username} not found")
+        owner_id = row[0]
+        owner_username_query = f'SELECT "theme_userprofile"."_bucket_name" \
+                                FROM "theme_userprofile" \
+                                WHERE "theme_userprofile"."user_id" = {owner_id}'
+        cursor.execute(owner_username_query)
+        row = cursor.fetchone()
+        bucket_name = row[0]
+        return bucket_name

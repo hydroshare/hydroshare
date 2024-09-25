@@ -515,12 +515,6 @@ class QuotaRequestForm(ModelForm):
             visible.field.widget.attrs['class'] = 'form-control'
 
 
-def bucket_name(self):
-    safe_username = re.sub(r"[^A-Za-z0-9\.-]", "", self.user.username.lower())
-    unique_id = uuid4.hex()
-    return f"{safe_username[:30]}-{unique_id}"
-
-
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     picture = ThumbnailImageField(
@@ -619,7 +613,7 @@ class UserProfile(models.Model):
     def bucket_name(self):
         if not self._bucket_name:
             safe_username = re.sub(r"[^A-Za-z0-9\.-]", "", self.user.username.lower())
-            unique_id = uuid4.hex()
+            unique_id = uuid4().hex
             self._bucket_name = f"{safe_username[:30]}-{unique_id}"
             self.save()
         return self._bucket_name
