@@ -5125,6 +5125,7 @@ def tus_upload_finished_handler(sender, **kwargs):
     """
     from hs_core import hydroshare
     logger = logging.getLogger(__name__)
+    logger.error("DRC - tus_upload_finished_handler started")
     metadata = kwargs['metadata']
     destination_folder = kwargs['destination_folder']
     hs_res_id = metadata['hs_res_id']
@@ -5141,17 +5142,20 @@ def tus_upload_finished_handler(sender, **kwargs):
     # TODO: eventually could upload to a specific folder
     # https://github.com/alican/django-tus/issues/2
     # create a file object for the uploaded file
+    logger.error("DRC - tus_upload_finished_handler - creating file object")
     file_obj = File(open(file_path, 'rb'), name=original_filename)
 
     resource = hydroshare.utils.get_resource_by_shortkey(hs_res_id)
 
     try:
+        logger.error("DRC - tus_upload_finished_handler - starting resource_file_add_pre_process")
         hydroshare.utils.resource_file_add_pre_process(
             resource=resource,
             files=[file_obj],
             user=resource.creator,
             folder=file_folder,
         )
+        logger.error("DRC - tus_upload_finished_handler - starting resource_file_add_process")
         hydroshare.utils.resource_file_add_process(
             resource=resource,
             files=[file_obj],
