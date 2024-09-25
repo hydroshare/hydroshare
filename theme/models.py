@@ -28,6 +28,7 @@ from mezzanine.utils.models import upload_to
 from sorl.thumbnail import ImageField as ThumbnailImageField
 from theme.utils import get_upload_path_userprofile
 from theme.enums import QuotaStatus
+from uuid import uuid4
 
 
 DEFAULT_COPYRIGHT = '&copy; {% now "Y" %} {{ settings.SITE_TITLE }}'
@@ -514,6 +515,12 @@ class QuotaRequestForm(ModelForm):
             visible.field.widget.attrs['class'] = 'form-control'
 
 
+def bucket_name(self):
+    safe_username = re.sub(r"[^A-Za-z0-9\.-]", "", self.user.username.lower())
+    unique_id = uuid4.hex()
+    return f"{safe_username[:30]}-{unique_id}"
+
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     picture = ThumbnailImageField(
@@ -595,6 +602,8 @@ class UserProfile(models.Model):
 
     email_opt_out = models.BooleanField(default=False)
 
+    _bucket_name = models.CharField(max_length=63, null=True)
+
     @property
     def profile_is_missing(self):
         missing = []
@@ -608,9 +617,12 @@ class UserProfile(models.Model):
 
     @property
     def bucket_name(self):
-        safe_username = re.sub(r"[^A-Za-z0-9\.-]", "", re.sub("[@]", ".at.", self.user.username.lower()))
-        encoded_username = binascii.hexlify(self.user.username.encode()).decode('utf-8')
-        return f"{safe_username}-{encoded_username}"
+        if not self._bucket_name:
+            safe_username = re.sub(r"[^A-Za-z0-9\.-]", "", self.user.username.lower())
+            unique_id = uuid4.hex()
+            self._bucket_name = f"{safe_username[:30]}-{unique_id}"
+            self.save()
+        return self._bucket_name
 
 
 def force_unique_emails(sender, instance, **kwargs):
