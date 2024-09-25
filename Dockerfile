@@ -16,9 +16,7 @@ RUN wget -O /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem https://cacerts.digice
     update-ca-certificates && \
     cat /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem >> $(python -c "import requests; print(requests.certs.where())")
 
-# TODO: For now we use the hsmodels branch that has support for csv content type - once this worked is merged and released
-#  we can remove this install
-RUN pip install git+https://github.com/hydroshare/hsmodels.git@49-csv-content-type
+RUN pip install hsmodels==1.0.4
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
