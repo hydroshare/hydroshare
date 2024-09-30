@@ -1171,8 +1171,6 @@ def publish_resource(user, pk):
     md_args = {'name': 'doi',
                'url': get_activated_doi(resource.doi)}
     resource.metadata.create_element('Identifier', **md_args)
-
-
     return pk
 
 
