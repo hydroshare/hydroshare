@@ -2291,6 +2291,8 @@ def hsapi_user_s3_authorization(request):
     conditions: dict = auth_request["conditions"]
     prefixes: list[str] = conditions["prefix"]
     user: User = hydroshare.utils.user_from_id(username)
+    if user.is_superuser:
+        return wrap_result(True)
     resources: list[BaseResource] = []
     for prefix in prefixes:
         resource_id = prefix.split("/")[0]
