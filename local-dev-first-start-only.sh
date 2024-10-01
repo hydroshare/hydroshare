@@ -59,6 +59,51 @@ function getImageID() {
     docker images | grep $1 | tr -s ' ' | cut -f3 -d' '
 }
 
+##nodejs build for discovery
+
+node_build() {
+
+HS_PATH=`pwd`
+
+echo '####################################################################################################'
+echo "Starting Discover Build .... "
+echo '####################################################################################################'
+
+### Create Directory structure outside to maintain correct permissions
+cd hs_discover
+rm -rf static templates
+mkdir static templates
+mkdir templates/hs_discover
+mkdir static/js
+mkdir static/css
+
+# Start Docker container
+docker run -i --name=discover hydroshare/hs_discover:7134d5d /bin/bash << eof
+
+cd /dist
+echo "----------------js--------------------"
+ls -l js
+echo "--------------------------------------"
+echo "----------------css-------------------"
+ls -l css
+echo "--------------------------------------"
+eof
+
+# Copy the files from the container to the host
+docker cp discover:/dist/js/ ./static/
+docker cp discover:/dist/css/ ./static/
+# copy all files from within the dist dir into the templates/hs_discover dir
+docker cp discover:/dist/. ./templates/hs_discover/
+
+echo "Node Build completed ..."
+echo
+echo "Removing node container"
+docker container rm discover
+cd $HS_PATH
+
+}
+
+
 ### Clean-up | Setup hydroshare environment
 
 REMOVE_CONTAINER=YES
@@ -120,7 +165,7 @@ HYDROSHARE_CONTAINERS=(hydroshare defaultworker data.local.org rabbitmq solr pos
 HYDROSHARE_VOLUMES=(hydroshare_idata_iconf_vol hydroshare_idata_pgres_vol hydroshare_idata_vault_vol hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol)
 HYDROSHARE_IMAGES=(hydroshare_defaultworker hydroshare_hydroshare solr hydroshare/hs-irods hydroshare/hs_docker_base hydroshare/hs_postgres rabbitmq)
 
-NODE_CONTAINER_RUNNING=`docker ps -a | grep nodejs`
+DISCOVER_CONTAINER_RUNNING=`docker ps -a | grep discover`
 
 if [ "$REMOVE_CONTAINER" == "YES" ]; then
   echo "  Removing HydroShare container..."
@@ -199,11 +244,10 @@ echo
 echo "  - docker-compose -f ${DOCKER_COMPOSER_YAML_FILE} up -d ${REBUILD_IMAGE}"
 docker-compose -f $DOCKER_COMPOSER_YAML_FILE up -d $REBUILD_IMAGE
 
+
 echo
-echo '########################################################################################################################'
-echo " Starting backround tasks..."
-echo '########################################################################################################################'
-echo
+echo " - building Discovery"
+node_build
 
 echo
 echo '########################################################################################################################'
@@ -339,10 +383,10 @@ echo '##########################################################################
 
 # check to see if the node container is still running
 # if it is, wait until it is removed
-echo "Waiting for nodejs container to be removed..."
+echo "Waiting for discover container to be removed..."
 while [ 1 -eq 1 ]
 do
-  if [ "$NODE_CONTAINER_RUNNING" == "" ]; then
+  if [ "$DISCOVER_CONTAINER_RUNNING" == "" ]; then
     break
   fi
   echo -n "."
