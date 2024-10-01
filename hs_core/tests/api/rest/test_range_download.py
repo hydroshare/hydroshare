@@ -89,6 +89,7 @@ class TestRangeDownload(HSRESTTestCase):
         # values of the content-range header byte positions
         ranges = {
             "bytes=0-10": (content[0:11], (0, 10)),
+            "bytes=2-3": (content[2:4], (2, 3)),
             "bytes=9-9": (content[9:10], (9, 9)),
             "bytes=-5": (content[len(content) - 5:], (len(content) - 5, len(content) - 1)),
             "bytes=3-": (content[3:], (3, len(content) - 1)),

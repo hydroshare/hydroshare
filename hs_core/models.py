@@ -3719,7 +3719,18 @@ class RangedFileReader:
         self.stop = stop
 
     def __iter__(self):
-        self.f.seek(self.start)
+        # self.f proc.stdout is an _io.BufferedReader object
+        # so it will not have a seek method
+        if self.f.seekable():
+            self.f.seek(self.start)
+        else:
+            # if the file is not seekable, we read and discard
+            # until we reach the start position
+            remaining_to_dump = self.start
+            while remaining_to_dump > 0:
+                read_size = min(self.block_size, remaining_to_dump)
+                self.f.read(read_size)
+                remaining_to_dump -= read_size
         position = self.start
         while position < self.stop:
             data = self.f.read(min(self.block_size, self.stop - position))

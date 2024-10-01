@@ -2,7 +2,6 @@ import datetime
 import logging
 import mimetypes
 import os
-import io
 import urllib
 from uuid import uuid4
 
@@ -329,8 +328,8 @@ def download(request, path, use_async=True,
     # track download count
     res.update_download_count()
     proc = session.run_safe('iget', None, irods_output_path, *options)
-    bytes_io = io.BytesIO(proc.stdout.read())
-    ranged_file = RangedFileReader(bytes_io)
+    # proc.stdout is an _io.BufferedReader object
+    ranged_file = RangedFileReader(proc.stdout)
     response = FileResponse(ranged_file, content_type=mtype)
     filename = output_path.split('/')[-1]
     filename = urllib.parse.quote(filename)
