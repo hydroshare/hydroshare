@@ -59,26 +59,6 @@ function getImageID() {
     docker images | grep $1 | tr -s ' ' | cut -f3 -d' '
 }
 
-##nodejs build for discovery
-
-node_build() {
-
-HS_PATH=`pwd`
-#### Set version pin variable ####
-#n_ver="15.0.0"
-n_ver="14.14.0"
-
-echo '####################################################################################################'
-echo "Starting Node Build .... "
-echo '####################################################################################################'
-
-### Create Directory structure outside to maintain correct permissions
-cd hs_discover
-# TODO: wire in hs_discover
-
-}
-
-
 ### Clean-up | Setup hydroshare environment
 
 REMOVE_CONTAINER=YES
@@ -224,10 +204,6 @@ echo '##########################################################################
 echo " Starting backround tasks..."
 echo '########################################################################################################################'
 echo
-
-echo
-echo " - building Node for Discovery in background"
-node_build > /dev/null 2>&1 &
 
 echo
 echo '########################################################################################################################'
