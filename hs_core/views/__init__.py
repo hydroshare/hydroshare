@@ -2272,8 +2272,7 @@ def hsapi_get_user(request, user_identifier):
 @swagger_auto_schema(
     method="post",
     operation_description="Check user S3 authorization",
-    responses={200: "User S3 Authorization"},
-    manual_parameters=[uid]
+    responses={200: "User S3 Authorization"}
 )
 @api_view(["POST"])
 def hsapi_user_s3_authorization(request):
@@ -2287,9 +2286,9 @@ def hsapi_user_s3_authorization(request):
     bucket = auth_request["bucket"]
     bucket_owner = user_from_bucket_name(bucket)
     action: str = auth_request["action"]  # "s3:"
-    username: str = auth_request["username"]
     conditions: dict = auth_request["conditions"]
-    prefixes: list[str] = conditions["prefix"]
+    username: str = auth_request["username"]
+    prefixes: list[str] = conditions["Prefix"]
     user: User = hydroshare.utils.user_from_id(username)
     if user.is_superuser:
         return wrap_result(True)

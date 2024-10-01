@@ -4,7 +4,6 @@ import logging
 import os
 import shutil
 import string
-import binascii
 from collections import namedtuple
 from datetime import datetime
 from tempfile import NamedTemporaryFile
@@ -1850,5 +1849,4 @@ def user_from_bucket_name(bucket_name: str) -> User:
     :return: the user
     :raises: User.DoesNotExist if the user does not exist
     """
-    username = binascii.unhexlify(bucket_name).decode("utf-8")
-    return User.objects.get(username=username)
+    return User.objects.get(userprofile___bucket_name=bucket_name)
