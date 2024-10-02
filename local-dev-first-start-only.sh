@@ -59,17 +59,14 @@ function getImageID() {
     docker images | grep $1 | tr -s ' ' | cut -f3 -d' '
 }
 
-##nodejs build for discovery
+##copy the static files from the discover container to the hydroshare container
 
-node_build() {
+build_discover() {
 
 HS_PATH=`pwd`
-#### Set version pin variable ####
-#n_ver="15.0.0"
-n_ver="14.14.0"
 
 echo '####################################################################################################'
-echo "Starting Node Build .... "
+echo "Starting Discover Build .... "
 echo '####################################################################################################'
 
 ### Create Directory structure outside to maintain correct permissions
@@ -80,32 +77,28 @@ mkdir templates/hs_discover
 mkdir static/js
 mkdir static/css
 
-# Start Docker container and Run build
-docker run -i -v $HS_PATH:/hydroshare --name=nodejs node:$n_ver /bin/bash << eof
+# Start Docker container
+docker run -i --name=discover hydroshare/hs_discover:fbe15a5 /bin/bash << eof
 
-cd hydroshare
-cd hs_discover
-npm install
-if [ -z ${VUE_APP_BUCKET_URL_PUBLIC_PATH+x} ]; then VUE_APP_BUCKET_URL_PUBLIC_PATH=/static/static ; fi
-echo "Building with VUE_APP_BUCKET_URL_PUBLIC_PATH: $VUE_APP_BUCKET_URL_PUBLIC_PATH"
-npm run build
-mkdir -p static/js
-mkdir -p static/css
-cp -rp templates/hs_discover/js static/
-cp -rp templates/hs_discover/css static/
-cp -p templates/hs_discover/map.js static/js/
+cd /dist
 echo "----------------js--------------------"
-ls -l static/js
+ls -l js
 echo "--------------------------------------"
 echo "----------------css-------------------"
-ls -l static/css
+ls -l css
 echo "--------------------------------------"
 eof
 
-echo "Node Build completed ..."
+# Copy the files from the container to the host
+docker cp discover:/dist/js/ ./static/
+docker cp discover:/dist/css/ ./static/
+# copy all files from within the dist dir into the templates/hs_discover dir
+docker cp discover:/dist/. ./templates/hs_discover/
+
+echo "Discover Build completed ..."
 echo
-echo "Removing node container"
-docker container rm nodejs
+echo "Removing discover container"
+docker container rm discover
 cd $HS_PATH
 
 }
@@ -172,7 +165,7 @@ HYDROSHARE_CONTAINERS=(hydroshare defaultworker data.local.org rabbitmq solr pos
 HYDROSHARE_VOLUMES=(hydroshare_idata_iconf_vol hydroshare_idata_pgres_vol hydroshare_idata_vault_vol hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol)
 HYDROSHARE_IMAGES=(hydroshare_defaultworker hydroshare_hydroshare solr hydroshare/hs-irods hydroshare/hs_docker_base hydroshare/hs_postgres rabbitmq)
 
-NODE_CONTAINER_RUNNING=`docker ps -a | grep nodejs`
+DISCOVER_CONTAINER_RUNNING=`docker ps -a | grep discover`
 
 if [ "$REMOVE_CONTAINER" == "YES" ]; then
   echo "  Removing HydroShare container..."
@@ -251,15 +244,10 @@ echo
 echo "  - docker-compose -f ${DOCKER_COMPOSER_YAML_FILE} up -d ${REBUILD_IMAGE}"
 docker-compose -f $DOCKER_COMPOSER_YAML_FILE up -d $REBUILD_IMAGE
 
-echo
-echo '########################################################################################################################'
-echo " Starting backround tasks..."
-echo '########################################################################################################################'
-echo
 
 echo
-echo " - building Node for Discovery in background"
-node_build > /dev/null 2>&1 &
+echo " - building Discovery"
+build_discover
 
 echo
 echo '########################################################################################################################'
@@ -395,10 +383,10 @@ echo '##########################################################################
 
 # check to see if the node container is still running
 # if it is, wait until it is removed
-echo "Waiting for nodejs container to be removed..."
+echo "Waiting for discover container to be removed..."
 while [ 1 -eq 1 ]
 do
-  if [ "$NODE_CONTAINER_RUNNING" == "" ]; then
+  if [ "$DISCOVER_CONTAINER_RUNNING" == "" ]; then
     break
   fi
   echo -n "."

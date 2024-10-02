@@ -1,5 +1,8 @@
 FROM hydroshare/hs_docker_base:262c2ca
-# make sure to update multistage-node dockerfile as well if you update this base image
+
+COPY --from=hydroshare/hs_discover:fbe15a5 /dist/js /hydroshare/hs_discover/static/
+COPY --from=hydroshare/hs_discover:fbe15a5 /dist/css /hydroshare/hs_discover/static/
+COPY --from=hydroshare/hs_discover:fbe15a5 /dist/. /hydroshare/hs_discover/templates/hs_discover/
 
 # Set the locale. TODO - remove once we have a better alternative worked out
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
