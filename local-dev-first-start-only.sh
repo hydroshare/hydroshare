@@ -59,9 +59,9 @@ function getImageID() {
     docker images | grep $1 | tr -s ' ' | cut -f3 -d' '
 }
 
-##nodejs build for discovery
+##copy the static files from the discover container to the hydroshare container
 
-node_build() {
+build_discover() {
 
 HS_PATH=`pwd`
 
@@ -95,9 +95,9 @@ docker cp discover:/dist/css/ ./static/
 # copy all files from within the dist dir into the templates/hs_discover dir
 docker cp discover:/dist/. ./templates/hs_discover/
 
-echo "Node Build completed ..."
+echo "Discover Build completed ..."
 echo
-echo "Removing node container"
+echo "Removing discover container"
 docker container rm discover
 cd $HS_PATH
 
@@ -247,7 +247,7 @@ docker-compose -f $DOCKER_COMPOSER_YAML_FILE up -d $REBUILD_IMAGE
 
 echo
 echo " - building Discovery"
-node_build
+build_discover
 
 echo
 echo '########################################################################################################################'

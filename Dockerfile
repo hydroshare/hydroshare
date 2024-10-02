@@ -1,5 +1,4 @@
 FROM hydroshare/hs_docker_base:262c2ca
-# make sure to update multistage-node dockerfile as well if you update this base image
 
 COPY --from=hydroshare/hs_discover:3d1683e /dist/js /hydroshare/hs_discover/static/
 COPY --from=hydroshare/hs_discover:3d1683e /dist/css /hydroshare/hs_discover/static/
