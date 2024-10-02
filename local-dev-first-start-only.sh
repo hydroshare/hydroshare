@@ -78,7 +78,7 @@ mkdir static/js
 mkdir static/css
 
 # Start Docker container
-docker run -i --name=discover hydroshare/hs_discover:3d1683e /bin/bash << eof
+docker run -i --name=discover hydroshare/hs_discover:f6a4a78 /bin/bash << eof
 
 cd /dist
 echo "----------------js--------------------"
