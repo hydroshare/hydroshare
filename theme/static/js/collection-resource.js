@@ -285,6 +285,7 @@ function add_collection_item_ajax() {
         type: "POST",
         url: $form.attr('action'),
         dataType: "json",
+        traditional: true,
         data: {"resource_id_list": resource_id_list, "update_type": "add"},
         success: function(result) {
             /* The div contains now the updated form */
