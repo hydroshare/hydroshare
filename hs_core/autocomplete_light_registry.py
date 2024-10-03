@@ -10,11 +10,20 @@ class UserAutocompleteView(autocomplete.Select2QuerySetView):
         qs = User.objects.filter(is_active=True)
 
         if self.q:
-            qs = qs.filter(
-                Q(username__istartswith=self.q)
-                | Q(first_name__istartswith=self.q)
-                | Q(last_name__istartswith=self.q)
-            )
+            name_parts = self.q.split(" ", 1)
+            name_part_one = name_parts[0]
+            name_part_two = name_parts[1] if len(name_parts) > 1 else ""
+            if name_part_two:
+                qs = qs.filter(
+                    Q(username__icontains=self.q)
+                    | Q(first_name__icontains=name_part_one, last_name__icontains=name_part_two)
+                )
+            else:
+                qs = qs.filter(
+                    Q(username__icontains=self.q)
+                    | Q(first_name__icontains=name_part_one)
+                    | Q(last_name__icontains=name_part_one)
+                )
             return qs
 
         return qs
@@ -46,7 +55,7 @@ class GroupAutocompleteView(autocomplete.Select2QuerySetView):
         qs = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
 
         if self.q:
-            qs = qs.filter(name__istartswith=self.q)
+            qs = qs.filter(name__icontains=self.q)
             return qs
 
         return qs
