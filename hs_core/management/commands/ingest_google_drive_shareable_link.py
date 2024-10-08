@@ -17,7 +17,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         shareable_link = options['shareable_link']
         resource_file_path = options['resource_file_path']
-        with tempfile.TemporaryDirectory() as temp_dir:         
+        with tempfile.TemporaryDirectory() as temp_dir:
             file_id = shareable_link.split('/')[-1].split('?')[0]
             dfile = os.path.join(temp_dir, file_id)
             gdown.download(url=shareable_link, output=dfile, fuzzy=True)
