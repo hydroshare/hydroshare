@@ -1258,3 +1258,25 @@ def _update_crossref_deposit(resource):
         logger.error(err_msg)
         resource.doi = get_resource_doi(resource.short_id, CrossRefSubmissionStatus.UPDATE_FAILURE)
         resource.save()
+
+@shared_task
+def download_and_ingest_drive_file(shareable_link, resource_file_path):
+    """
+    Download a file from Google Drive and ingest it into a HydroShare resource
+    :param shareable_link: A publicly available link to a file on Google Drive
+    :param resource_file_path: the resource file path to ingest the file into
+    :return: the url of the resource after the file has been ingested
+    """
+
+    resource_id = resource_file_path.split('/')[0]
+    resource = BaseResource.objects.get(short_id=resource_id)
+    import tempfile
+    import gdown
+    from hs_core.management.utils import ingest_irods_files
+    with tempfile.TemporaryDirectory() as temp_dir:
+        file_id = shareable_link.split('/')[-1].split('?')[0]
+        dfile = os.path.join(temp_dir, file_id)
+        gdown.download(url=shareable_link, output=dfile, fuzzy=True)
+        istorage = IrodsStorage()
+        istorage.saveFile(dfile, resource_file_path)
+        ingest_irods_files(resource, None)

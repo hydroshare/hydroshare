@@ -13,6 +13,7 @@ from drf_yasg import openapi
 from rest_framework import permissions
 
 from .views.resource_share import ShareResourceGroup, ShareResourceUser
+from .views.large_file_gdrive import LargeFileGDrive
 from .discovery import DiscoverSearchView
 
 
@@ -75,6 +76,9 @@ urlpatterns = [
 
     url(r'^resource/(?P<pk>[0-9a-f-]+)/share/(?P<privilege>[a-z]+)/group/(?P<group_id>[\w.@+-]+)/$',
         ShareResourceGroup.as_view(), name='share_resource_group_public'),
+
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/large-file-gdrive/$',
+        LargeFileGDrive.as_view(), name='large_file_gdrive'),
 
     url(r'^resource/(?P<pk>[0-9a-f-]+)/share/(?P<privilege>[a-z]+)/user/(?P<user_id>[\w.@+-]+)/$',
         ShareResourceUser.as_view(), name='share_resource_user_public'),
