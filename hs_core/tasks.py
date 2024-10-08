@@ -127,6 +127,8 @@ def setup_periodic_tasks(sender, **kwargs):
                                  options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=30, hour=6), nightly_periodic_task_check.s(),
                                  options={'queue': 'periodic'})
+        sender.add_periodic_task(crontab(minute=0, hour=7), daily_cleanup_tus_uploads.s(),
+                                 options={'queue': 'periodic'})
 
         # Weekly
         sender.add_periodic_task(crontab(minute=0, hour=7, day_of_week=1), task_notification_cleanup.s(),
@@ -140,6 +142,21 @@ def setup_periodic_tasks(sender, **kwargs):
         sender.add_periodic_task(
             crontab(minute=30, hour=8, day_of_month=1), monthly_group_membership_requests_cleanup.s(),
             options={'queue': 'periodic'})
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def daily_cleanup_tus_uploads():
+    """Periodic task to cleanup partial TUS uploads that remain in TUS_UPLOAD_DIR.
+    """
+    # remove all files from the TUS_UPLOAD_DIR that are older than 24 hours
+    tus_upload_dir = settings.TUS_UPLOAD_DIR
+    if os.path.exists(tus_upload_dir):
+        for f in os.listdir(tus_upload_dir):
+            file_path = os.path.join(tus_upload_dir, f)
+            if os.path.isfile(file_path):
+                file_time = os.path.getmtime(file_path)
+                if (time.time() - file_time) > 86400:  # 24 hours in seconds
+                    os.remove(file_path)
 
 
 # Currently there are two different cleanups scheduled.
