@@ -1867,7 +1867,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
     def add_session_to_request(request):
         """Use SessionMiddleware to add a session to the request."""
         """Annotate a request object with a session"""
-        middleware = SessionMiddleware()
+        middleware = SessionMiddleware(request)
         middleware.process_request(request)
         request.session.save()
 

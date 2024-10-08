@@ -1,10 +1,11 @@
-from django.test import TestCase
-from django.contrib.auth.models import Group
-from hs_tracking.models import Variable
-from hs_core import hydroshare
-from rest_framework import status
 import socket
-from django.test import Client
+
+from django.contrib.auth.models import Group
+from django.test import Client, TestCase
+from rest_framework import status
+
+from hs_core import hydroshare
+from hs_tracking.models import Variable
 
 
 class TestDashboard(TestCase):
@@ -12,7 +13,7 @@ class TestDashboard(TestCase):
     def setUp(self):
         self.hostname = socket.gethostname()
         self.resource_url = "/resource/{res_id}/"
-        self.client = Client(HTTP_USER_AGENT='Mozilla/5.0')  # fake use of a real browser
+        self.client = Client(headers={"user-agent": 'Mozilla/5.0'})  # fake use of a real browser
 
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
 

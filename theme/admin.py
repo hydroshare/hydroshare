@@ -1,11 +1,11 @@
-from django.contrib import admin
 from django import forms
+from django.contrib import admin
 from django.contrib.auth.models import User
-
 from mezzanine.core.admin import TabularDynamicInlineAdmin
 from mezzanine.utils.admin import SingletonAdmin
 
-from .models import SiteConfiguration, HomePage, IconBox, UserQuota, QuotaMessage, QuotaRequest
+from .models import (HomePage, IconBox, QuotaMessage, QuotaRequest,
+                     SiteConfiguration, UserQuota)
 
 
 class IconBoxInline(TabularDynamicInlineAdmin):
