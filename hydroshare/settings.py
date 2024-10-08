@@ -1,8 +1,9 @@
 # TEST_RUNNER='django_nose.NoseTestSuiteRunner'
+import os
 import sys
 
 from PIL import ImageFile
-import os
+
 TEST_RUNNER = "hs_core.tests.runner.CustomTestSuiteRunner"
 TEST_WITHOUT_MIGRATIONS_COMMAND = "django_nose.management.commands.test.Command"
 
@@ -299,7 +300,14 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, STATIC_URL.strip("/"))
 # using this storage class might cause issues for future tests
 # The documentation suggests using the default storage backend when testing
 # https://docs.djangoproject.com/en/1.11/ref/contrib/staticfiles/#django.contrib.staticfiles.storage.ManifestStaticFilesStorage.manifest_strict
-STATICFILES_STORAGE = "hydroshare.storage.ForgivingManifestStaticFilesStorage"
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "hydroshare.storage.ForgivingManifestStaticFilesStorage",
+    },
+}
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -370,7 +378,8 @@ INPLACE_SAVE_URL = "/hsapi/save_inline/"
 
 INSTALLED_APPS = (
     "test_without_migrations",
-    "autocomplete_light",
+    "dal",
+    "dal_select2",
     "django.contrib.admin",
     "django.contrib.auth",
     "oauth2_provider",
@@ -399,6 +408,7 @@ INSTALLED_APPS = (
     "mezzanine.pages",
     "mezzanine.galleries",
     "crispy_forms",
+    "crispy_bootstrap3",
     "mezzanine.accounts",
     "haystack",
     "rest_framework",
@@ -593,7 +603,7 @@ DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
 
 
 ACCOUNTS_PROFILE_MODEL = "theme.UserProfile"
-CRISPY_TEMPLATE_PACK = "bootstrap"
+CRISPY_TEMPLATE_PACK = "bootstrap3"
 
 DEFAULT_AUTHENTICATION_CLASSES = (
     "rest_framework.authentication.BasicAuthentication",
