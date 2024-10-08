@@ -223,6 +223,7 @@ def data_store_structure(request):
     if found_unreferenced_files:
         from hs_core.management.utils import ingest_irods_files
         ingest_irods_files(resource, None)
+        return data_store_structure(request)
 
     return HttpResponse(
         json.dumps(return_object),
