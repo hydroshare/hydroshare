@@ -1,8 +1,10 @@
 function group_invite_ajax_submit() {
-  if (!$("#id_user-deck > .hilight").length) {
-    return false; // If no user selected, ignore the request
+  // get the value of the selet from id_user_invite_to_group
+  let share_with = $("#id_user_invite_to_group").find(':selected').val();
+  // if no user is selected, ignore the request
+  if (!share_with) {
+    return false;
   }
-  var share_with = $("#id_user-deck > .hilight")[0].getAttribute("data-value");
   var form = $("#invite-to-group");
   var datastring = form.serialize();
   var url = form.attr("action") + share_with + "/";
