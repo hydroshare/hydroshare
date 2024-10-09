@@ -11,6 +11,7 @@ let manageAccessApp = new Vue({
             return user;
         }),
         currentUser: CURRENT_USER_ID,
+        targetUserId: null,
         selfAccessLevel: SELF_ACCESS_LEVEL,
         quotaHolder: USERS_JSON.find(function(user) {
             return user.id === QUOTA_HOLDER_PK;
@@ -265,26 +266,12 @@ let manageAccessApp = new Vue({
             });
         },
         grantAccess: function () {
-            let targetUserId;
-
+            let targetUserId = this.targetUserId;
             if (this.isInviteUsers) {
-                if ($("#user-deck > .hilight").length > 0) {
-                    targetUserId = parseInt($("#user-deck > .hilight")[0].getAttribute("data-value"));
-                }
-                else {
-                    return false;   // No user selected
-                }
             }
             else {
-                if ($("#id_group-deck > .hilight").length > 0) {
-                    targetUserId = parseInt($("#id_group-deck > .hilight")[0].getAttribute("data-value"));
-                }
-                else {
-                    return false;   // No group selected
-                }
             }
 
-            $(".hilight > span").click(); // Clear the autocomplete
             this.error = "";
             let vue = this;
 
@@ -337,6 +324,9 @@ let manageAccessApp = new Vue({
                         newUserAccess.loading = false;
                         vue.users.push(newUserAccess);
                     }
+                    // clear the select
+                    $('#id_user_resource_permission').val(null).trigger('change');
+                    $('#id_group').val(null).trigger('change');
                 }
                 else {
                     vue.error = resp.error_msg;
@@ -500,4 +490,22 @@ let manageAccessApp = new Vue({
             this.cardPosition.top = el.position().top + 30;
         }
     },
+});
+
+$(document).ready(function() {
+    // initialize the select2 event listeners
+    $('#id_user_resource_permission').on('select2:select', function (e) {
+        let userId = e.params.data.id;
+        manageAccessApp.targetUserId = userId;
+    });
+    $('#id_user_resource_permission').on('select2:unselect', function (e) {
+        manageAccessApp.targetUserId = null;
+    });
+    $('#id_group').on('select2:select', function (e) {
+        let groupId = e.params.data.id;
+        manageAccessApp.targetUserId = groupId;
+    });
+    $('#id_group').on('select2:unselect', function (e) {
+        manageAccessApp.targetUserId = null;
+    });
 });

@@ -7,9 +7,9 @@ import string
 from collections import namedtuple
 from datetime import datetime
 from tempfile import NamedTemporaryFile
+from urllib import parse
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
-from urllib import parse
 from uuid import uuid4
 
 import paramiko
@@ -17,18 +17,18 @@ from dateutil import parser
 from django.apps import apps
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
-from django.core.exceptions import SuspiciousFileOperation
+from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
+                                    SuspiciousFileOperation)
 from django.core.files.base import File
-from django.urls import reverse
 from django.core.validators import URLValidator
-from django.db.models import When, Case, Value, BooleanField, Prefetch
+from django.db.models import BooleanField, Case, Prefetch, Value, When
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse, QueryDict
-from django.utils.http import int_to_base36, urlsafe_base64_encode
+from django.urls import reverse
 from django.utils.encoding import force_bytes
+from django.utils.http import int_to_base36, urlsafe_base64_encode
 from mezzanine.conf import settings
-from mezzanine.utils.email import subject_template, send_mail_template
+from mezzanine.utils.email import send_mail_template, subject_template
 from mezzanine.utils.urls import next_url
 from rest_framework import status
 from rest_framework.exceptions import NotFound, ValidationError
@@ -37,13 +37,16 @@ from django_irods.icommands import SessionException
 from hs_access_control.models import PrivilegeCodes
 from hs_core import hydroshare
 from hs_core.enums import RelationTypes
-from hs_core.hydroshare import add_resource_files, validate_resource_file_size
-from hs_core.hydroshare import check_resource_type, delete_resource_file
-from hs_core.hydroshare.utils import check_aggregations, get_file_mime_type, validate_user_quota, QuotaException
-from hs_core.models import AbstractMetaDataElement, BaseResource, Relation, \
-    ResourceFile, get_user, CoreMetaData
-from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
-from hs_core.tasks import create_temp_zip, FileOverrideException
+from hs_core.hydroshare import (add_resource_files, check_resource_type,
+                                delete_resource_file,
+                                validate_resource_file_size)
+from hs_core.hydroshare.utils import (QuotaException, check_aggregations,
+                                      get_file_mime_type, validate_user_quota)
+from hs_core.models import (AbstractMetaDataElement, BaseResource,
+                            CoreMetaData, Relation, ResourceFile, get_user)
+from hs_core.signals import (post_delete_file_from_resource,
+                             pre_metadata_element_create)
+from hs_core.tasks import FileOverrideException, create_temp_zip
 from hs_file_types.utils import set_logical_file_type
 from theme.backends import without_login_date_token_generator
 
@@ -1373,7 +1376,8 @@ def ingest_bag(resource, bag_file, user):
     :param bag_file: The ResourceFile of the zipped bag in the resource
     :param user: The HydroShare user object to do the action as
     """
-    from hs_file_types.utils import identify_metadata_files, ingest_metadata_files
+    from hs_file_types.utils import (identify_metadata_files,
+                                     ingest_metadata_files)
 
     istorage = resource.get_irods_storage()
     zip_with_full_path = os.path.join(resource.file_path, bag_file.short_path)
@@ -1850,3 +1854,6 @@ def user_from_bucket_name(bucket_name: str) -> User:
     :raises: User.DoesNotExist if the user does not exist
     """
     return User.objects.get(userprofile___bucket_name=bucket_name)
+
+def is_ajax(request):
+    return request.headers.get('x-requested-with') == 'XMLHttpRequest'

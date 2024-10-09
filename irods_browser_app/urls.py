@@ -1,7 +1,9 @@
-from django.conf.urls import url
+from django.urls import path
+
 from irods_browser_app import views
 
 urlpatterns = [
-    url(r'^login/$', views.login, name='irods_login'),
-    url(r'^store/$', views.store, name='irods_store'),
+    path('login/', views.login, name='irods_login'),
+    path('store/', views.store, name='irods_store'),
+    path('upload_add/', views.upload_add, name='irods_upload_add'),
 ]

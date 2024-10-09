@@ -3,7 +3,7 @@ import json
 import logging
 import uuid
 
-from autocomplete_light import shortcuts as autocomplete_light
+from dal import autocomplete as dal_autocomplete
 from dateutil import tz
 from django import forms
 from django.contrib import messages
@@ -54,7 +54,6 @@ from hs_core.hydroshare.resource import (
 )
 from hs_core.tasks import create_bag_by_irods, create_temp_zip
 from hs_core.hydroshare.utils import (
-    get_resource_by_shortkey,
     resolve_request,
     resource_modified,
 )
@@ -99,6 +98,7 @@ from .utils import (
     send_action_to_take_email,
     get_default_support_user,
     user_from_bucket_name,
+    is_ajax,
 )
 
 logger = logging.getLogger(__name__)
@@ -428,26 +428,26 @@ def _get_resource_sender(element_name, resource):
 
 def get_supported_file_types_for_resource_type(request, resource_type, *args, **kwargs):
     resource_cls = hydroshare.check_resource_type(resource_type)
-    if request.is_ajax:
+    if is_ajax(request):
         # TODO: use try catch
         ajax_response_data = {
             "file_types": json.dumps(resource_cls.get_supported_upload_file_types())
         }
         return HttpResponse(json.dumps(ajax_response_data))
     else:
-        return HttpResponseRedirect(request.META["HTTP_REFERER"])
+        return HttpResponseRedirect(request.headers["referer"])
 
 
 def is_multiple_file_upload_allowed(request, resource_type, *args, **kwargs):
     resource_cls = hydroshare.check_resource_type(resource_type)
-    if request.is_ajax:
+    if is_ajax(request):
         # TODO: use try catch
         ajax_response_data = {
             "allow_multiple_file": resource_cls.allow_multiple_file_upload()
         }
         return HttpResponse(json.dumps(ajax_response_data))
     else:
-        return HttpResponseRedirect(request.META["HTTP_REFERER"])
+        return HttpResponseRedirect(request.headers["referer"])
 
 
 def get_relevant_tools(request, shortkey, *args, **kwargs):
@@ -488,7 +488,7 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
         res_metadata = res.metadata
         res_metadata.set_dirty(True)
 
-    if request.is_ajax():
+    if is_ajax(request):
         if is_update_success:
             ajax_response_data = {
                 "status": "success",
@@ -508,7 +508,7 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
     else:
         messages.error(request, err_message)
 
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    return HttpResponseRedirect(request.headers["referer"])
 
 
 res_id = openapi.Parameter(
@@ -650,7 +650,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                 elif "errors" in response:
                     err_msg = err_msg.format(element_name, response["errors"])
 
-    if request.is_ajax():
+    if is_ajax(request):
         if is_add_success:
             res_public_status = "public" if res.raccess.public else "not public"
             res_discoverable_status = (
@@ -697,7 +697,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
     if "resource-mode" in request.POST:
         request.session["resource-mode"] = "edit"
 
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    return HttpResponseRedirect(request.headers["referer"])
 
 
 def get_resource_metadata(request, shortkey, *args, **kwargs):
@@ -786,7 +786,7 @@ def update_metadata_element(
             elif "errors" in response:
                 err_msg = err_msg.format(element_name, response["errors"])
 
-    if request.is_ajax():
+    if is_ajax(request):
         if is_update_success:
             res_public_status = "public" if res.raccess.public else "not public"
             res_discoverable_status = (
@@ -835,7 +835,7 @@ def update_metadata_element(
     if "resource-mode" in request.POST:
         request.session["resource-mode"] = "edit"
 
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    return HttpResponseRedirect(request.headers["referer"])
 
 
 @swagger_auto_schema(method="get", auto_schema=None)
@@ -905,7 +905,7 @@ def delete_metadata_element(
     res.update_public_and_discoverable()
     resource_modified(res, request.user, overwrite_bag=False)
     request.session["resource-mode"] = "edit"
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    return HttpResponseRedirect(request.headers["referer"])
 
 
 def delete_author(request, shortkey, element_id, *args, **kwargs):
@@ -941,7 +941,7 @@ def delete_file(request, shortkey, f, *args, **kwargs):
     else:
         request.session["meta-status"] = METADATA_STATUS_INSUFFICIENT
 
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    return HttpResponseRedirect(request.headers["referer"])
 
 
 def delete_multiple_files(request, shortkey, *args, **kwargs):
@@ -961,7 +961,7 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
             request.session["resource-mode"] = "edit"
             request.session["validation_error"] = str(err)
             logger.warning(str(err))
-            return HttpResponseRedirect(request.META["HTTP_REFERER"])
+            return HttpResponseRedirect(request.headers["referer"])
         except ObjectDoesNotExist as ex:
             # Since some specific resource types such as feature resource type delete all other
             # dependent content files together when one file is deleted, we make this specific
@@ -977,7 +977,7 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
     else:
         request.session["meta-status"] = METADATA_STATUS_INSUFFICIENT
 
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    return HttpResponseRedirect(request.headers["referer"])
 
 
 def delete_resource(request, shortkey, usertext, *args, **kwargs):
@@ -996,7 +996,7 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
         )
 
     res_title = res.metadata.title
-    if request.is_ajax():
+    if is_ajax(request):
         task_id = get_resource_delete_task(shortkey)
         if not task_id:
             # make resource being deleted not discoverable to inform solr to remove this resource from solr index
@@ -1041,7 +1041,7 @@ def delete_resource(request, shortkey, usertext, *args, **kwargs):
         except ValidationError as ex:
             request.session["validation_error"] = str(ex)
             logger.warning(str(ex))
-            return HttpResponseRedirect(request.META["HTTP_REFERER"])
+            return HttpResponseRedirect(request.headers["referer"])
 
 
 def list_referenced_content(request, shortkey, *args, **kwargs):
@@ -1064,7 +1064,7 @@ def copy_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(
         request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE
     )
-    if request.is_ajax():
+    if is_ajax(request):
         task = copy_resource_task.apply_async((shortkey, None, user.username))
         task_id = task.task_id
         task_dict = get_or_create_task_notification(
@@ -1131,7 +1131,7 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
     # obsoleted resource is allowed
     res.locked_time = datetime.datetime.now(tz.UTC)
     res.save()
-    if request.is_ajax():
+    if is_ajax(request):
         task = create_new_version_resource_task.apply_async((shortkey, user.username))
         task_id = task.task_id
         task_dict = get_or_create_task_notification(
@@ -1187,7 +1187,7 @@ def publish(request, shortkey, *args, **kwargs):
     except ValidationError as exp:
         request.session["validation_error"] = str(exp)
         logger.warning(str(exp))
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    return HttpResponseRedirect(request.headers["referer"])
 
 
 def submit_for_review(request, shortkey, *args, **kwargs):
@@ -1202,7 +1202,7 @@ def submit_for_review(request, shortkey, *args, **kwargs):
                 and adherence to community guidelines. {' '.join(missing)}
                 """
         messages.error(request, message)
-        return HttpResponseRedirect(request.META["HTTP_REFERER"])
+        return HttpResponseRedirect(request.headers["referer"])
 
     try:
         hydroshare.submit_resource_for_review(shortkey, request.user)
@@ -1221,7 +1221,7 @@ def submit_for_review(request, shortkey, *args, **kwargs):
                 If you decide that you no longer wish to have this resource reviewed for publication,
                 please contact help@cuahsi.org"""
         messages.success(request, message)
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    return HttpResponseRedirect(request.headers["referer"])
 
 
 def set_resource_flag(request, shortkey, *args, **kwargs):
@@ -1626,81 +1626,56 @@ class GroupUpdateForm(GroupForm):
         self._set_privacy_level(group_to_update, privacy_level)
 
 
-class PatchedChoiceWidget(autocomplete_light.ChoiceWidget):
-    """Patching the render() function of ChoiceWidget class to work with Django 3.2"""
-
-    def __init__(
-        self,
-        autocomplete=None,
-        widget_js_attributes=None,
-        autocomplete_js_attributes=None,
-        extra_context=None,
-        registry=None,
-        widget_template=None,
-        widget_attrs=None,
-        *args,
-        **kwargs,
-    ):
-        super(PatchedChoiceWidget, self).__init__(
-            autocomplete,
-            widget_js_attributes,
-            autocomplete_js_attributes,
-            extra_context,
-            registry,
-            widget_template,
-            widget_attrs,
-            *args,
-            **kwargs,
-        )
-
-    def render(self, name, value, attrs=None, renderer=None):
-        """Adding the 'renderer' parameter to fix the exception
-        'render() got an unexpected keyword argument 'renderer'"""
-
-        return super(PatchedChoiceWidget, self).render(name, value, attrs)
-
-
 @processor_for(BaseResource)
 def add_generic_context(request, page):
+    user_widget = dal_autocomplete.ModelSelect2(
+        url="user-autocomplete",
+        attrs={
+            "data-placeholder": "Search by name or username",
+            'data-minimum-input-length': 3
+        },
+    )
 
     class AddUserForm(forms.Form):
-        user = forms.ModelChoiceField(
-            User.objects.filter(is_active=True).all(),
-            widget=PatchedChoiceWidget(
-                autocomplete="UserAutocomplete", attrs={"id": "user"}
-            ),
+        user_invite_to_group = forms.ModelChoiceField(
+            queryset=User.objects.none(),
+            widget=user_widget,
         )
 
     class AddUserContriForm(forms.Form):
-        user = forms.ModelChoiceField(
-            User.objects.filter(is_active=True).all(),
-            widget=PatchedChoiceWidget(
-                autocomplete="UserAutocomplete", attrs={"id": "user"}
-            ),
+        contributor = forms.ModelChoiceField(
+            queryset=User.objects.none(),
+            widget=user_widget,
         )
 
     class AddUserInviteForm(forms.Form):
         user = forms.ModelChoiceField(
-            User.objects.filter(is_active=True).all(),
-            widget=PatchedChoiceWidget(
-                autocomplete="UserAutocomplete", attrs={"id": "user"}
-            ),
+            queryset=User.objects.none(),
+            widget=user_widget,
+        )
+
+    class AddUserResourcePermissionForm(forms.Form):
+        user_resource_permission = forms.ModelChoiceField(
+            queryset=User.objects.none(),
+            widget=user_widget,
         )
 
     class AddUserHSForm(forms.Form):
-        user = forms.ModelChoiceField(
-            User.objects.filter(is_active=True).all(),
-            widget=PatchedChoiceWidget(
-                autocomplete="UserAutocomplete", attrs={"id": "user"}
-            ),
+        author = forms.ModelChoiceField(
+            queryset=User.objects.none(),
+            widget=user_widget,
         )
 
     class AddGroupForm(forms.Form):
         group = forms.ModelChoiceField(
-            Group.objects.filter(gaccess__active=True)
-            .exclude(name="Hydroshare Author")
-            .all(),
-            widget=PatchedChoiceWidget(autocomplete="GroupAutocomplete"),
+            queryset=Group.objects.none(),
+            widget=dal_autocomplete.ModelSelect2(
+                url="group-autocomplete",
+                attrs={
+                    "data-placeholder": "Search by name",
+                    'data-minimum-input-length': 3
+                }
+            ),
         )
 
     return {
@@ -1708,9 +1683,9 @@ def add_generic_context(request, page):
         "add_view_invite_user_form": AddUserInviteForm(),
         "add_view_hs_user_form": AddUserHSForm(),
         "add_view_user_form": AddUserForm(),
+        "add_view_resource_permission_form": AddUserResourcePermissionForm(),
         # Reuse the same class AddGroupForm() leads to duplicated IDs.
         "add_view_group_form": AddGroupForm(),
-        "add_edit_group_form": AddGroupForm(),
     }
 
 
@@ -1816,7 +1791,7 @@ def create_user_group(request, *args, **kwargs):
             request, "Group creation errors:{}.".format(group_form.errors.as_json)
         )
 
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    return HttpResponseRedirect(request.headers["referer"])
 
 
 @login_required
@@ -1839,7 +1814,7 @@ def update_user_community(request, community_id, *args, **kwargs):
     else:
         messages.error(request, "Community update errors:{}.".format(community_form.errors.as_json))
 
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    return HttpResponseRedirect(request.headers["referer"])
 
 
 @login_required
@@ -1871,7 +1846,7 @@ def update_user_group(request, group_id, *args, **kwargs):
             "Group update errors: You don't have permission to update this group",
         )
 
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    return HttpResponseRedirect(request.headers["referer"])
 
 
 @login_required
@@ -1887,7 +1862,7 @@ def delete_user_group(request, group_id, *args, **kwargs):
             "Group delete errors: You don't have permission to delete" " this group.",
         )
 
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    return HttpResponseRedirect(request.headers["referer"])
 
 
 @login_required
@@ -1902,7 +1877,7 @@ def restore_user_group(request, group_id, *args, **kwargs):
             "Group restore errors: You don't have permission to restore" " this group.",
         )
 
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    return HttpResponseRedirect(request.headers["referer"])
 
 
 @login_required
@@ -1933,7 +1908,7 @@ def share_group_with_user(request, group_id, user_id, privilege, *args, **kwargs
     else:
         messages.error(request, "Invalid privilege for sharing group with user")
 
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    return HttpResponseRedirect(request.headers["referer"])
 
 
 @login_required
@@ -1965,7 +1940,7 @@ def unshare_group_with_user(request, group_id, user_id, *args, **kwargs):
     if requesting_user == user_to_unshare_with:
         return HttpResponseRedirect(reverse("my_groups"))
     else:
-        return HttpResponseRedirect(request.META["HTTP_REFERER"])
+        return HttpResponseRedirect(request.headers["referer"])
 
 
 @login_required
@@ -2223,7 +2198,7 @@ def act_on_group_membership_request(
         else:
             messages.error(request, "Group is not active")
 
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    return HttpResponseRedirect(request.headers["referer"])
 
 
 @login_required
@@ -2764,8 +2739,16 @@ class MyGroupsView(TemplateView):
 
 
 class AddUserForm(forms.Form):
-    user = forms.ModelChoiceField(
-        User.objects.all(), widget=PatchedChoiceWidget("UserAutocomplete")
+    user_widget = dal_autocomplete.ModelSelect2(
+        url="user-autocomplete",
+        attrs={
+            "data-placeholder": "Search by name or username",
+            'data-minimum-input-length': 3
+        },
+    )
+    user_invite_to_group = forms.ModelChoiceField(
+        queryset=User.objects.none(),
+        widget=user_widget,
     )
 
 
@@ -2793,7 +2776,7 @@ def request_new_community(request, *args, **kwargs):
     else:
         messages.error(request, "Community request errors:{}.".format(community_form.errors.as_json))
 
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    return HttpResponseRedirect(request.headers["referer"])
 
 
 # Any HydroShare user (whether authenticated or not) can access the landing page for a public or discoverable Group.
@@ -2955,7 +2938,7 @@ def my_resources(request, *args, **kwargs):
     Renders either a full my-resources page, or just a table of new resources
     """
 
-    if not request.is_ajax():
+    if not is_ajax(request):
         filter = request.GET.getlist("f", default=[])
     else:
         filter = [request.GET["new_filter"]]
@@ -2974,7 +2957,7 @@ def my_resources(request, *args, **kwargs):
 
     context = {"collection": resource_collection}
 
-    if not request.is_ajax():
+    if not is_ajax(request):
         return render(request, "pages/my-resources.html", context)
     else:
         from django.template.loader import render_to_string
