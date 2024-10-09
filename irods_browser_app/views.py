@@ -5,11 +5,6 @@ from rest_framework import status
 from irods.session import iRODSSession
 from irods.exception import CollectionDoesNotExist
 
-from django_irods.icommands import SessionException
-from hs_core import hydroshare
-from hs_core.views.utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE
-from hs_core.hydroshare import utils
-
 
 def search_ds(coll):
     store = {}
@@ -103,61 +98,3 @@ def store(request):
     return_object['folder'] = store['folder']
     irods_sess.cleanup()
     return JsonResponse(return_object, status=status.HTTP_200_OK)
-
-
-def upload_add(request):
-    # add irods file into an existing resource
-    res_id = request.POST.get('res_id', '')
-    resource, _, _ = authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    res_files = request.FILES.getlist('files')
-    extract_metadata = request.POST.get('extract-metadata', 'No')
-    extract_metadata = True if extract_metadata.lower() == 'yes' else False
-    irods_fnames = request.POST.get('upload', '')
-    irods_fnames_list = irods_fnames.split(',')
-    res_cls = resource.__class__
-
-    # TODO: read resource type from resource, not from input file
-    valid, ext = check_upload_files(res_cls, irods_fnames_list)
-    source_names = []
-    if not valid:
-        return JsonResponse({'error': "Invalid file type: {ext}".format(ext=ext)},
-                            status=status.HTTP_400_BAD_REQUEST)
-    else:
-        user = request.POST.get('irods_username')
-        password = request.POST.get("irods_password")
-        port = request.POST.get("irods_port")
-        host = request.POST.get("irods_host")
-        zone = request.POST.get("irods_zone")
-        try:
-            upload_from_irods(username=user, password=password, host=host, port=port,
-                              zone=zone, irods_fnames=irods_fnames, res_files=res_files)
-        except SessionException as ex:
-            return JsonResponse(
-                {"error": ex.stderr}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-    try:
-        utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
-                                            extract_metadata=extract_metadata,
-                                            source_names=source_names, folder='')
-    except hydroshare.utils.ResourceFileSizeException as ex:
-        return JsonResponse({'error': str(ex)}, status=status.HTTP_400_BAD_REQUEST)
-
-    except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        return JsonResponse({'error': str(ex)}, status=status.HTTP_400_BAD_REQUEST)
-
-    try:
-        hydroshare.utils.resource_file_add_process(resource=resource, files=res_files,
-                                                   user=request.user,
-                                                   extract_metadata=extract_metadata,
-                                                   source_names=source_names, folder='')
-
-    except (hydroshare.utils.ResourceFileValidationException, SessionException) as ex:
-        if str(ex):
-            return JsonResponse({'error': str(ex)},
-                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        elif ex.stderr:
-            return JsonResponse({'error': ex.stderr},
-                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    return JsonResponse({}, status=status.HTTP_200_OK)

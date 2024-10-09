@@ -33,8 +33,7 @@ class TestScienceMetadata(SciMetaTestCase):
             response = self.getScienceMetadata(self.pid, exhaust_stream=False)
             sci_meta_orig = os.path.join(tmp_dir, self.RESOURCE_METADATA_OLD)
             with open(sci_meta_orig, "wb") as f:
-                for line in response.streaming_content:
-                    f.write(line)
+                f.write(response.content)
 
             scimeta = etree.parse(sci_meta_orig)
             self.getAbstract(
@@ -66,8 +65,7 @@ class TestScienceMetadata(SciMetaTestCase):
             response = self.getScienceMetadata(self.pid, exhaust_stream=False)
             sci_meta_updated = os.path.join(tmp_dir, self.RESOURCE_METADATA_UPDATED)
             with open(sci_meta_updated, "wb") as f:
-                for line in response.streaming_content:
-                    f.write(line)
+                f.write(response.content)
 
             scimeta = etree.parse(sci_meta_updated)
             abstract = self.getAbstract(scimeta, rdf_type="hsterms:CompositeResource")

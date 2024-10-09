@@ -11,15 +11,6 @@ Effected files:
 
 Generate a `local_settings.py` file by copying `hydroshare/local_settings.template` to `hydroshare/local_settings.py`
 
-From within the `irods` directory, run the script named **partial_build.sh**
-
-**NOTE:** This script requires that package `jq` be installed on the host from which the script is being run. If it's not present it can be installed by invoking `sudo apt-get install jq` in Ubuntu (or similar) environments. 
-
-```bash
-$ cd irods
-$ ./partial_build.sh
-```
-
 The script will run and deploy an iCAT server, and modify the three aforementioned files to be configured to use the 
 newly created iRODS Docker server. Once the script has completed, return back the the main `hydroshare` directory and run
 the **hsctl** script as you normally would.
@@ -59,8 +50,6 @@ It can be useful to retain the system state after all containers have been stopp
 A normal initial deployment would look like this.
 
 ```bash
-$ cd irods
-$ ./partial_build.sh
 $ cd ../
 $ ./hsctl rebuild --db
 ```
@@ -72,8 +61,6 @@ $ docker stop $(docker ps -a -q)
 To bring all containers back up, and to have the state of the local iRODS containers persisited, the user would do the following.
 
 ```bash
-$ cd irods
-$ ./partial_build.sh
 $ cd ../
 $ ./hsctl start
 ```

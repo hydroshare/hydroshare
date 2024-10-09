@@ -449,7 +449,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
                 json_schema = json.dumps(self.metadata_schema_json, indent=4)
                 out.write(json_schema)
             to_file_name = self.schema_file_path
-            istorage.saveFile(json_from_file_name, to_file_name, True)
+            istorage.saveFile(json_from_file_name, to_file_name)
         finally:
             shutil.rmtree(tmpdir)
 

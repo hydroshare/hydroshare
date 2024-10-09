@@ -1,0 +1,11 @@
+FROM nginx:1.19
+MAINTAINER Phuong Doan <phuongdm79@gmail.com>
+
+COPY . /tmp
+
+RUN cp /tmp/config-files/hs-nginx.conf /etc/nginx/conf.d/default.conf \
+    && cp /tmp/config-files/nginx.conf-default /etc/nginx/nginx.conf \
+    && groupadd -g 998 irods \
+    && echo 'irods:x:998:998::/home/irods:/bin/bash' >> /etc/passwd
+
+CMD ["nginx", "-g", "daemon off;"]

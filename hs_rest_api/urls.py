@@ -9,6 +9,7 @@ from hs_core.views.resource_folder_hierarchy import (
     ingest_metadata_files)
 from hs_dictionary import views as dict_views
 from hs_file_types import views as file_type_views
+from .resources.quota_holder import get_quota_holder_bucket
 
 from .discovery import DiscoverSearchView
 from .resources.file_metadata import FileMetaDataRetrieveUpdateDestroy
@@ -135,21 +136,6 @@ urlpatterns = [
             core_views.resource_folder_rest_api.ResourceFolders.as_view(),
             name='list_manipulate_folders'),
 
-    # iRODS tickets
-    # write disabled;change (?P<op>read) to (?P<op>read|write) when ready
-
-    re_path(r'^resource/(?P<pk>[0-9a-f-]+)/ticket/(?P<op>read)/(?P<pathname>.*)/$',
-            core_views.resource_ticket_rest_api.CreateResourceTicket.as_view(),
-            name='create_ticket'),
-
-    re_path(r'^resource/(?P<pk>[0-9a-f-]+)/ticket/bag/$',
-            core_views.resource_ticket_rest_api.CreateBagTicket.as_view(),
-            name='create_bag_ticket'),
-
-    re_path(r'^resource/(?P<pk>[0-9a-f-]+)/ticket/(?P<ticket>.*)/$',
-            core_views.resource_ticket_rest_api.ManageResourceTicket.as_view(),
-            name='manage_ticket'),
-
     # public unzip endpoint
     re_path(r'^resource/(?P<pk>[0-9a-f-]+)/functions/unzip/(?P<pathname>.*)/$',
             core_views.resource_folder_hierarchy.data_store_folder_unzip_public),
@@ -207,8 +193,11 @@ urlpatterns = [
     path('userKeycloak/<path:user_identifier>',
          core_views.hsapi_get_user_for_keycloak, name='get_user_for_keycloak'),
 
-    path('dictionary/universities/',
-         dict_views.ListUniversities.as_view(), name="get_dictionary"),
+    url(r'^userS3Authorization/$',
+        core_views.hsapi_user_s3_authorization, name='user_s3_authorization'),
+
+    url(r'^dictionary/universities/$',
+        dict_views.ListUniversities.as_view(), name="get_dictionary"),
 
     path('dictionary/subject_areas/',
          dict_views.ListSubjectAreas.as_view(), name="get_subject_areas"),
@@ -250,4 +239,10 @@ urlpatterns = [
     re_path(r'^resource/(?P<resource_id>[0-9a-f]+)/modelinstance/meta/(?P<aggregation_path>.*)$',
             file_type_views.model_instance_metadata_in_json,
             name='model_instance_metadata_in_json'),
+
+    url(r'^resource/(?P<resource_id>[0-9a-f]+)/modelinstance/meta/(?P<aggregation_path>.*)$',
+        file_type_views.model_instance_metadata_in_json,
+        name='model_instance_metadata_in_json'),
+
+    url(r'^resource/(?P<resource_id>[0-9a-f]+)/quota_holder_bucket_name/$', get_quota_holder_bucket),
 ]
