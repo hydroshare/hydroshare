@@ -416,7 +416,7 @@ def page_permissions_page_processor(request, page):
     if is_owner or (cm.raccess.shareable and (is_view or is_edit)):
         show_manage_access = True
 
-    max_file_size = getattr(settings, 'FILE_UPLOAD_MAX_SIZE', 1024 * 15)
+    max_file_size = getattr(settings, 'FILE_UPLOAD_MAX_SIZE', 1024 * 25)
     remaining_quota = get_remaining_user_quota(cm.quota_holder, "MB")
     if remaining_quota is not None:
         max_file_size = min(max_file_size, remaining_quota)
