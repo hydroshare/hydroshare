@@ -3710,7 +3710,8 @@ class RangedFileReader:
     from the starting position, up to, but not including the stop point.
     https://github.com/satchamo/django/commit/2ce75c5c4bee2a858c0214d136bfcd351fcde11d
     """
-    block_size = 4096
+    block_size = getattr(settings, 'RANGED_FILE_READER_BLOCK_SIZE', 1024 * 1024)
+    dump_size = getattr(settings, 'RANGED_FILE_READER_DUMP_SIZE', 1024 * 1024 * 1024)
 
     def __init__(self, file_like, start=0, stop=float("inf"), block_size=None):
         self.f = file_like
@@ -3728,7 +3729,7 @@ class RangedFileReader:
             # until we reach the start position
             remaining_to_dump = self.start
             while remaining_to_dump > 0:
-                read_size = min(self.block_size, remaining_to_dump)
+                read_size = min(self.dump_size, remaining_to_dump)
                 self.f.read(read_size)
                 remaining_to_dump -= read_size
         position = self.start
