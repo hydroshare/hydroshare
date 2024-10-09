@@ -9,7 +9,7 @@ from django_irods.storage import IrodsStorage
 
 
 class Command(BaseCommand):
-    help = "Download and ingest a production bag into a resource"
+    help = "Remove buckets from inactive users and active users with no resources"
 
     def add_arguments(self, parser):
         # a list of user id's, or none to check all users

@@ -2269,6 +2269,39 @@ def hsapi_get_user(request, user_identifier):
     return get_user_or_group_data(request, user_identifier, "false")
 
 
+def check_user(user: User, resource: BaseResource, action: str)->bool:
+    # Break this down into just view and edit for now.
+    # HydroShare does not conusme changes made through S3 API yet so edit check is not active
+    # Later on we could share the metadata files only or allow resource deletion.
+    # We will also need to figure out owners at some point
+
+    # List of actions https://docs.aws.amazon.com/AmazonS3/latest/API/API_Operations.html
+
+    view_permissions = ["s3:GetObject", "s3:ListObjects", "s3:ListObjjectsV2"] +["s3:PutObject"]
+    # edit_permissions = ["s3:DeleteObject", "s3:DeleteObjects" "s3:PutObject", "s3:UploadPart"]
+
+    r = resource.raccess
+    u = user.uaccess
+    # view actions
+    if action is "s3:GetObject":
+        return r.public or r.allow_private_sharing or u.can_view_resource(resource)
+    # view and discoverable actions
+    if actionis== "s3:ListObjects" or action is "s3:ListObjjectsV2":
+        return r.public or r.allow_private_sharing or r.discoverable or u.can_view_resource(resource)
+
+    # edit actions
+    if action is "s3:PutObject":
+        return u.can_change_resource(resource)
+    if action is "s3:DeleteObject":
+        return u.can_change_resource(resource)
+    if action is "s3:DeleteObjects":
+        return u.can_change_resource(resource)
+    if action is "s3:UploadPart":
+        return u.can_change_resource(resource)
+
+    return False
+
+
 @swagger_auto_schema(
     method="post",
     operation_description="Check user S3 authorization",
@@ -2278,58 +2311,67 @@ def hsapi_get_user(request, user_identifier):
 def hsapi_user_s3_authorization(request):
     # request body example
     # https://min.io/docs/minio/linux/administration/identity-access-management/pluggable-authorization.html#id5
-
-    def wrap_result(authorized: bool):
-        return {"result" : {"allow": authorized}}
-
     auth_request = json.loads(request.body.decode('utf-8'))["input"]
-    bucket = auth_request["bucket"]
-    bucket_owner = user_from_bucket_name(bucket)
-    action: str = auth_request["action"]  # "s3:"
+    #print(json.dumps(auth_request, indent=2))
     conditions: dict = auth_request["conditions"]
-    username: str = auth_request["username"]
-    prefixes: list[str] = conditions["Prefix"]
-    user: User = hydroshare.utils.user_from_id(username)
+
+    # https://min.io/docs/minio/linux/administration/identity-access-management/policy-based-access-control.html
+    action: str = auth_request["action"]  # "s3:"
+    bucket = auth_request["bucket"]
+
+    # preferred_username is the hydroshare username
+    # username is a guid when logged in through SSO
+    if "preferred_username" in conditions:
+        usernames: list[str] = conditions["preferred_username"]
+    else:
+        usernames: list[str] = conditions["username"]
+
+    # only one username should be present
+    if len(usernames) != 1:
+        print("Not sure what to do with usernames length != 1", usernames)
+        return JsonResponse({"result" : {"allow": False}})
+    username = usernames[0]
+
+    # admin account for minio
+    if username == "minioadmin":
+        return JsonResponse({"result" : {"allow": True}})
+    user: User = User.objects.get(username=username)
+    # admin hydroshare account
     if user.is_superuser:
-        return wrap_result(True)
-    resources: list[BaseResource] = []
-    for prefix in prefixes:
-        resource_id = prefix.split("/")[0]
-        try:
-            resource = hydroshare.utils.get_resource_by_shortkey(resource_id, False)
-        except BaseResource.DoesNotExist:
-            return wrap_result(False)  # resource not found for a prefix
-        assert resource.quota_holder == bucket_owner
-        resources.append(resource)
+        return JsonResponse({"result" : {"allow": True}})
 
-    # Break this down into just view and edit for now.
-    # HydroShare does not conusme changes made through S3 API yet so edit check is not active
-    # Later on we could share the metadata files only or allow resource deletion.
-    # We will also need to figure out owners at some point
+    # prefixes are paths to (folders/set of) objects in the bucket
+    prefixes: list[str] = [prefix for prefix in conditions["Prefix"] if prefix]
+    if not prefixes:
+        # only owners of the bucket can do actions without prefixes
+        bucket_owner: User = user_from_bucket_name(bucket)
+        if bucket_owner == user:
+            print("Owner", username, bucket, action)
+            return JsonResponse({"result" : {"allow": True}})
+        return JsonResponse({"result" : {"allow": False}})
 
-    # List of actions https://docs.aws.amazon.com/AmazonS3/latest/API/API_Operations.html
+    # the root of the prefix (folder) is the resource id
+    resource_ids = [prefix.split("/")[0] for prefix in prefixes]
+    try:
+        resources: list[BaseResource] = [get_resource_by_shortkey(resource_id, False) for resource_id in resource_ids]
+    except BaseResource.DoesNotExist:
+        print(f"resource {resource_id} not found")
+        return False  # resource not found for a prefix
 
-    view_permissions = ["s3:GetObject", "s3:ListObjects", "s3:ListObjjectsV2"]
-    # edit_permissions = ["s3:DeleteObject", "s3:DeleteObjects" "s3:PutObject", "s3:UploadPart"]
+    # users access the objects in these buckets through presigned urls, admins are approved above
+    if bucket in ["zips", "tmp", "bags"]:
+        return JsonResponse({"result" : {"allow": False}})
 
-    if action in view_permissions and action != "s3:GetObject":
-        all_viewable = all([res.raccess.discoverable
-                            or res.raccess.public
-                            or res.raccess.allow_private_sharing for res in resources])
-        if all_viewable:
-            return wrap_result(True)
-
-    if action in view_permissions:
-        all_viewable = all([user.uaccess.can_view_resource(res) for res in resources])
-        if all_viewable:
-            return wrap_result(True)
-
-    # elif action in edit_permissions:
-    #         all_editable = all([user.uaccess.can_change_resource(res) for res in resources])
-    #         if all_editable:
-    #             return wrap_result(True)
-
-    return wrap_result(False)
+    # check the user against and each resource against the action
+    for resource in resources:
+        if not check_user(user, resource, action):
+            print("Denied", username, resource.short_id, action)
+            return JsonResponse({"result" : {"allow": False}})
+        else:
+            print("Approved", username, resource.short_id, action)
+    if resources:
+        return JsonResponse({"result" : {"allow": True}})
+    return JsonResponse({"result" : {"allow": False}})
 
 
 @swagger_auto_schema(
