@@ -38,6 +38,9 @@ let fundingAgenciesApp = new Vue({
     filteredWords: [],
   },
   mounted() {
+    if (this.resourceMode === 'Edit' && (this.selfAccessLevel === 'owner' || this.selfAccessLevel === 'editor') && this.resPublished) {
+      this.checkFunderNamesExistInCrossref(this.fundingAgencies);
+    }
   },
   methods: {
     checkFunderNamesExistInCrossref: async function (funders) {
