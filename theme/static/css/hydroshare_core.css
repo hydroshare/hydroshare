@@ -4559,8 +4559,13 @@ span.caption-file-type {
 }
 
 
-.btn-remove {
+.btn-remove-fa {
 	font-size: 14px;
+	
+}
+
+.btn-remove {
+	font-size: 18px;
 	
 }
 

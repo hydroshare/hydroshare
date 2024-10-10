@@ -21,7 +21,7 @@
                     {% if comment.user == user or user.is_superuser or self_access_level == 'owner' %}
                     <a comment-id="{{ comment.id }}" class="btn-confirm-delete-comment" style="text-decoration: none; cursor: pointer;">    
                         <span 
-                                  class="glyphicon glyphicon-trash btn-remove small-red-trash"
+                                  class="glyphicon glyphicon-trash btn-remove-fa small-red-trash"
                                  title="Delete Reply"></span> <span class="delete-text">{% trans "Delete" %}</span> </a>
                     {% endif %}
                 {% endif %}

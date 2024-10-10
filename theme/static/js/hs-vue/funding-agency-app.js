@@ -38,9 +38,6 @@ let fundingAgenciesApp = new Vue({
     filteredWords: [],
   },
   mounted() {
-    if (this.resourceMode === 'Edit' && (this.selfAccessLevel === 'owner' || this.selfAccessLevel === 'editor') && this.resPublished) {
-    this.checkFunderNamesExistInCrossref(this.fundingAgencies);
-  }
   },
   methods: {
     checkFunderNamesExistInCrossref: async function (funders) {
@@ -56,9 +53,6 @@ let fundingAgenciesApp = new Vue({
         for (let umatch of unmatched) {
           this.unmatchedFunders.push(umatch.funderName);
         }
-    
-        console.log("Unmatched Funders:", this.unmatchedFunders); // Add this to debug
-    
         if (unmatched.length > 0) {
           this.showFundersAlert();
         }
@@ -235,6 +229,7 @@ let fundingAgenciesApp = new Vue({
       this.currentlyEditing = { ...editingFundingAgency };
       this.startedEditing = { ...editingFundingAgency };
       this.agencyNameInput = this.currentlyEditing.agency_name;
+      // open source bug https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19
       this.$refs.agencyNameInput.inputValue = this.currentlyEditing.agency_name;
     
       // Only check funder names when editing the resource
