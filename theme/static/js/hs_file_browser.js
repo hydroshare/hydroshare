@@ -131,7 +131,9 @@ function getFileTemplateInstance(file) {
     else {
         var title = '' + file.name + "&#13;Type: " + file.type + "&#13;Size: " +
             formatBytes(parseInt(file.size));
-    }
+    } 
+  const fileName = ellipsisFileName(file.name);
+
     return "<li data-pk='" + file.pk + "' data-url='" + file.url + "' data-ref-url='" +
         file.reference_url + "' data-logical-file-id='" + file.logical_file_id +
         "' class='fb-file draggable' title='" + title + "' is-single-file-aggregation='" +
@@ -139,13 +141,24 @@ function getFileTemplateInstance(file) {
         file.has_model_program_aggr_folder + "' data-has-model-instance-aggr-folder='" +
         file.has_model_instance_aggr_folder + "' data-aggregation-appkey='" + file.aggregation_appkey  + "'>" +
         iconTemplate +
-        "<span class='fb-file-name'>" + file.name + "</span>" +
+        "<span class='fb-file-name'>" + fileName + "</span>" +
         "<span class='fb-file-type'>" + file.type + " File</span>" +
         "<span class='fb-logical-file-type' data-logical-file-type='" + file.logical_type + "' data-logical-file-id='" +
         file.logical_file_id +  "'>" + file.aggregation_name + "</span>" +
         "<span class='fb-file-size' data-file-size=" + file.size + ">" + formatBytes(parseInt(file.size)) +
         "</span></li>"
 }
+
+
+function ellipsisFileName(fileName){
+    var fileEllipsisName = fileName;
+    if(fileName.length > 15)
+    {
+        fileEllipsisName = `${fileName.substring(0, 14)}...${fileName.substring(fileName.length - 9)}`
+    }
+    return fileEllipsisName ;
+}
+
 
 function formatBytes(bytes) {
     if(bytes < 1024) return bytes + " Bytes";

@@ -3911,7 +3911,7 @@ form#covereage-search-fields {
 	height: 100px;
 	margin: 10px;
 	border: 1px solid transparent;
-	float: left;
+	float: left;	
 	overflow: hidden;
 	text-overflow: ellipsis;
 	-webkit-user-select: none; /* Chrome/Safari */
@@ -4246,9 +4246,8 @@ div.fb-upload-caption a {
 
 .fb-view-grid .fb-file-name {
     display: block;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    margin-top: 6px;
+	word-break: break-word;
+	margin-top: 6px;
     line-height: 1.5em;
     max-height: 3em;
 }
@@ -4560,7 +4559,7 @@ span.caption-file-type {
 
 
 .btn-remove {
-	font-size: 18px;
+	font-size: 18px;	
 }
 
 .dz-details .fa-file-o {
