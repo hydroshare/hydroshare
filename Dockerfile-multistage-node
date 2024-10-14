@@ -48,6 +48,7 @@ RUN pip install django-crispy-forms==2.1
 RUN pip install crispy-bootstrap3==2024.1
 RUN pip install Mezzanine==6.0.0
 RUN pip install git+https://github.com/CUAHSI/django-tus.git@2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8
+RUN pip install hsmodels==1.0.4
 
 # https://www.digicert.com/kb/digicert-root-certificates.htm
 # Get the .pem file from digicert and add it to the bundle used by certifi
