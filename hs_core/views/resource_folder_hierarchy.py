@@ -45,6 +45,7 @@ def data_store_structure(request):
     where store_path is the relative path to res_id/data/contents
     """
     res_id = request.POST.get('res_id', None)
+    found_unreferenced_files = False   # flag to trigger ingest of unreferenced files
     if res_id is None:
         logger.error("no resource id in request")
         return HttpResponse('Bad request - resource id is not included',
@@ -146,6 +147,8 @@ def data_store_structure(request):
 
         if not res_file:
             # skip metadata files
+            if not resource.is_metadata_xml_file(f_store_path):
+                found_unreferenced_files = True
             continue
 
         size = store[2][index]
@@ -220,6 +223,11 @@ def data_store_structure(request):
                      'folders': dirs,
                      'aggregations': aggregations,
                      'can_be_public': resource.can_be_public_or_discoverable}
+
+    if found_unreferenced_files:
+        from hs_core.management.utils import ingest_irods_files
+        ingest_irods_files(resource, None)
+        return data_store_structure(request)
 
     return HttpResponse(
         json.dumps(return_object),
