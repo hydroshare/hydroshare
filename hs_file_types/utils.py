@@ -20,6 +20,7 @@ from .models import (
     FileSetLogicalFile,
     ModelProgramLogicalFile,
     ModelInstanceLogicalFile,
+    CSVLogicalFile,
 )
 
 
@@ -247,6 +248,7 @@ def get_logical_file_type(res, file_id, hs_file_type=None, fail_feedback=True):
             ".shp": "GeoFeature",
             ".json": "RefTimeseries",
             ".sqlite": "TimeSeries",
+            ".csv": "CSV",
         }
         file_name = str(res_file)
         root, ext = os.path.splitext(file_name)
@@ -279,6 +281,7 @@ def get_logical_file_type(res, file_id, hs_file_type=None, fail_feedback=True):
         "TimeSeries": TimeSeriesLogicalFile,
         "ModelProgram": ModelProgramLogicalFile,
         "ModelInstance": ModelInstanceLogicalFile,
+        "CSV": CSVLogicalFile,
     }
 
     if hs_file_type not in file_type_map:
@@ -303,6 +306,7 @@ def get_logical_file(agg_type_name):
         "TimeSeriesAggregation": TimeSeriesLogicalFile,
         "ModelProgramAggregation": ModelProgramLogicalFile,
         "ModelInstanceAggregation": ModelInstanceLogicalFile,
+        "CSVFileAggregation": CSVLogicalFile,
     }
     return file_type_map[agg_type_name]
 
@@ -407,7 +411,7 @@ def ingest_logical_file_metadata(graph, resource, map_files=[], unzip_temp_folde
         raise Exception("Could not derive aggregation type from {}".format(graph))
 
     subject = None
-    for s, _, _ in graph.triples((None, DC.title, None)):
+    for s, _, _ in graph.triples((None, DC.rights, None)):
         subject = s.split("/resource/", 1)[1].split("#")[0]
         break
     if not subject:

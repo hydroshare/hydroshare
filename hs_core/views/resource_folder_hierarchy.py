@@ -100,7 +100,7 @@ def data_store_structure(request):
             # find if this folder *dir_path* represents (contains) an aggregation object
             aggregation_object = resource.get_folder_aggregation_object(dir_path, aggregations=res_aggregations)
             # folder aggregation type is not relevant for single file aggregation types - which
-            # are: GenericLogicalFile, and RefTimeseriesLogicalFile
+            # are: GenericLogicalFile, RefTimeseriesLogicalFile, and CSVLogicalFile
             if aggregation_object is not None:
                 folder_aggregation_type = aggregation_object.get_aggregation_class_name()
                 folder_aggregation_name = aggregation_object.get_aggregation_display_name()
@@ -170,11 +170,12 @@ def data_store_structure(request):
                 # accept any extension
                 main_extension = ""
 
-            _ , file_extension = os.path.splitext(fname)
-            if file_extension and main_extension.endswith(file_extension):
+            _, file_extension = os.path.splitext(fname)
+            if file_extension and main_extension.endswith(file_extension) and main_extension != ".csv":
                 if not hasattr(res_file.logical_file, 'folder') or res_file.logical_file.folder is None:
                     aggregation_appkey = res_file.logical_file.metadata.extra_metadata.get(_APPKEY, '')
 
+                # these aggregations will be shown in the UI as virtual folders
                 aggregations.append({'logical_file_id': res_file.logical_file.id,
                                      'name': res_file.logical_file.dataset_name,
                                      'logical_type': res_file.logical_file.get_aggregation_class_name(),

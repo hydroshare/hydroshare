@@ -18,7 +18,8 @@ class TestContentTypes(APITestCase):
                               'TimeSeriesLogicalFile',
                               'FileSetLogicalFile',
                               'ModelProgramLogicalFile',
-                              'ModelInstanceLogicalFile'}
+                              'ModelInstanceLogicalFile',
+                              'CSVLogicalFile'}
 
     def test_content_typelist(self):
         response = self.client.get('/hsapi/resource/content_types/', format='json')
