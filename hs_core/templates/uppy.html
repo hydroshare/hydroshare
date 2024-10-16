@@ -1,7 +1,7 @@
 {% load static %}
 
 {% block extra_head %}
-    <link href="https://releases.transloadit.com/uppy/v4.0.5/uppy.min.css" rel="stylesheet">
+    <link href="https://releases.transloadit.com/uppy/v4.4.0/uppy.min.css" rel="stylesheet">
 {% endblock %}
 
 {% block main %}
@@ -10,7 +10,7 @@
 
 {% block extra_js %}
   <script type="module">
-    import { Uppy, Dashboard, Tus, GoldenRetriever } from "https://releases.transloadit.com/uppy/v4.0.5/uppy.min.mjs"
+    import { Uppy, Dashboard, Tus, GoldenRetriever } from "https://releases.transloadit.com/uppy/v4.4.0/uppy.min.mjs"
     // import { GoogleDrive } from "https://releases.transloadit.com/uppy/v4.0.5/uppy.min.mjs"
     
     const MAX_CHUNK_MB = {{ max_chunk_size_mb|default:2.5 }};
@@ -56,10 +56,11 @@
       .use(Dashboard, { 
         inline: false,
         closeModalOnClickOutside: true,
-        fileManagerSelectionType: 'files', // files only
+        fileManagerSelectionType: 'both', // files and folders
         target: '#uppy',
+        showProgressDetails: true,
         trigger: '#uppy-modal-trigger',
-        note: `If you loose your connection partway through, add files again to resume. Max file size: ${MAX_FILE_SIZE_MB / 1024 } GB. \nFiles will be uploaded in ${MAX_CHUNK_MB} MB chunks.`,
+        note: `If you loose your connection partway through, select the files again to resume. Max file size: ${MAX_FILE_SIZE_MB / 1024 } GB. \nFiles will be uploaded in ${MAX_CHUNK_MB} MB chunks.`,
         // https://uppy.io/docs/dashboard/#locale
         locale: {
           strings: {
@@ -67,6 +68,7 @@
           }
         }
       })
+      // .use(DragDrop, { target: '#hsDropzone' })
       .use(Tus, { 
         endpoint: '/hsapi/tus/',
         // https://uppy.io/docs/tus/#chunksize
@@ -74,27 +76,17 @@
         // however in testing it seems to improve resumability
         chunkSize: MAX_CHUNK, // in bytes
       })
-      .on('upload-success', (file, response) => {
-        // refresh the file browser to show the file
-        refreshFileBrowser()
-      })
+      // https://uppy.io/docs/uppy/#events
       .on('dashboard:modal-closed', () => {
         // if there are pending uploads, show an alert that they will continue in the background
-        console.log(uppy.getState())
         if (Object.keys(uppy.getState().currentUploads).length > 0) {
           customAlert("Pending Downloads", 'Your files will continue to upload in the background.', "info", 5000, true);
         }
       })
-      .on('upload-progress', (file, progress) => {
-        // when the progress nears 100%, show a message that the file will be ingested into HydroShare after upload
-        // file: { id, name, type, ... }
-        // progress: { uploader, bytesUploaded, bytesTotal }
-        if (progress.bytesUploaded === progress.bytesTotal) {
-          const message = 'Uploading is complete. Adding files to HydroShare...'
-          uppy.locale.strings.uploadingXFiles = { 0: message, 1: message}
-          uppy.info(`File ${file.name} was transferered successfully. Adding into HydroShare can take a few minutes after all files are uploaded.`)
-        }
-      });
-      // .use(GoogleDrive, { target: Dashboard, companionUrl: 'https://companion.uppy.io' })
+      .on('upload-success', (file, response) => {
+        uppy.info(`File ${file.name} was transferered successfully. Adding into HydroShare...`)
+        onUploadSuccess(file, response)
+        refreshFileBrowser()
+      })
   </script>
 {% endblock %}

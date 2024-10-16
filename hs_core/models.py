@@ -5107,6 +5107,8 @@ def resource_update_signal_handler(sender, instance, created, **kwargs):
 
 @receiver(tus_upload_finished_signal)
 def tus_upload_finished_handler(sender, **kwargs):
+    from hs_core.views.utils import create_folder
+    from rest_framework.exceptions import ValidationError as DRFValidationError
     """Handle the tus upload finished signal.
 
     Ingest the files from the TUS_DESTINATION_DIR into the resource.
@@ -5134,26 +5136,42 @@ def tus_upload_finished_handler(sender, **kwargs):
         chunk_file_path = os.path.join(destination_folder, kwargs['filename'])
         os.rename(chunk_file_path, file_path)
 
-    file_folder = ""
     # TODO: eventually could upload to a specific folder
     # https://github.com/alican/django-tus/issues/2
+    # perhaps we can store the current location in the FB within the file metadata and append it here
+    # so that clicking on "add files" when navigated to a subdirectory within the resource causes uploaded files to land in that subdir
+
     # create a file object for the uploaded file
     file_obj = File(open(file_path, 'rb'), name=original_filename)
 
     resource = hydroshare.utils.get_resource_by_shortkey(hs_res_id)
+
+    # use the metadata.relativePath to rebuild the folder structure if folders were uploaded
+    path_within_resource_contents = metadata.get('relativePath', '')
+    # path_within_resource_contents will include the name of the file, so we need to remove it
+    relative_file_folder = os.path.dirname(path_within_resource_contents)
+
+    # create the file folder if it does not exist
+    if relative_file_folder:
+        # add data/contents to the path
+        file_folder = f'data/contents/{relative_file_folder}' if relative_file_folder else 'data/contents'
+        try:
+            create_folder(res_id=hs_res_id, folder_path=file_folder)
+        except DRFValidationError as ex:
+            logger.info(f"Folder {file_folder} already exists for resource {hs_res_id}: {str(ex)}")
 
     try:
         hydroshare.utils.resource_file_add_pre_process(
             resource=resource,
             files=[file_obj],
             user=resource.creator,
-            folder=file_folder,
+            folder=relative_file_folder,
         )
         hydroshare.utils.resource_file_add_process(
             resource=resource,
             files=[file_obj],
             user=resource.creator,
-            folder=file_folder,
+            folder=relative_file_folder,
         )
         # remove the uploaded file
         os.remove(file_path)
