@@ -30,6 +30,8 @@
       // debug: true,
       restrictions: {
         maxFileSize: MAX_FILE_SIZE,
+        // restrict uploading a FOLDER with a total size larger than the max file size
+        maxTotalFileSize: MAX_FILE_SIZE,
       },
       withCredentials: true,
       onBeforeUpload: (files) => {
