@@ -4563,8 +4563,23 @@ span.caption-file-type {
 }
 
 
+.btn-remove-fa {
+	font-size: 14px;
+	
+}
+
 .btn-remove {
 	font-size: 18px;
+	
+}
+
+.small-red-trash { 
+	color: red; font-size: 14px;  }
+
+.delete-text {
+	font-size: 14px;
+	margin-left: 1px;
+	color: red;
 }
 
 .dz-details .fa-file-o {
