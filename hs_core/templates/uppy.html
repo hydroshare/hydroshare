@@ -10,7 +10,7 @@
 
 {% block extra_js %}
   <script type="module">
-    import { Uppy, Dashboard, Tus, GoldenRetriever } from "https://releases.transloadit.com/uppy/v4.4.0/uppy.min.mjs"
+    import { Uppy, Dashboard, Tus, GoldenRetriever, DropTarget } from "https://releases.transloadit.com/uppy/v4.4.0/uppy.min.mjs"
     // import { GoogleDrive } from "https://releases.transloadit.com/uppy/v4.0.5/uppy.min.mjs"
     
     const MAX_CHUNK_MB = {{ max_chunk_size_mb|default:2.5 }};
@@ -68,7 +68,19 @@
           }
         }
       })
-      // .use(DragDrop, { target: '#hsDropzone' })
+      .use(DropTarget, 
+        { target: '#hsDropzone',
+          onDrop: (event) =>{
+            // open the dashboard when files are dropped
+            uppy.getPlugin('Dashboard').openModal()
+          },
+          onDragOver: (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            // TODO: add a visual cue that the dropzone is active
+          },
+        }
+      )
       .use(Tus, { 
         endpoint: '/hsapi/tus/',
         // https://uppy.io/docs/tus/#chunksize
