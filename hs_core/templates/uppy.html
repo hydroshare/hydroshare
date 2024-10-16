@@ -34,8 +34,10 @@
       withCredentials: true,
       onBeforeUpload: (files) => {
         Object.keys(files).forEach(fileId => {
+          // add metadata to the file
           files[fileId].meta.hs_res_id = "{{ cm.short_id }}"
           files[fileId].meta.original_file_name = files[fileId].name
+          files[fileId].meta.existing_path_in_resource = JSON.stringify(getCurrentPath())
         })
         return files
       },
@@ -43,6 +45,7 @@
         // https://uppy.io/docs/uppy/#onbeforefileaddedfile-files
         // check for existing files before adding to the resource
         // window.fbFiles is set in the file_browser.html template
+        // TODO: not sure that this will work when adding a folder with same name as an existing dir in the resource...
         if (window.fbFiles) {
           const existingFiles = window.fbFiles.map(f => f.name)
           if (existingFiles.includes(currentFile.name)) {

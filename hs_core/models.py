@@ -5125,36 +5125,45 @@ def tus_upload_finished_handler(sender, **kwargs):
     from hs_core import hydroshare
     logger = logging.getLogger(__name__)
     metadata = kwargs['metadata']
-    destination_folder = kwargs['destination_folder']
+    tus_destination_folder = kwargs['destination_folder']
     hs_res_id = metadata['hs_res_id']
     original_filename = metadata['original_file_name']
 
-    file_path = os.path.join(destination_folder, original_filename)
+    where_tus_put_it = os.path.join(tus_destination_folder, original_filename)
 
     if original_filename != kwargs['filename']:
         # rename the file
-        chunk_file_path = os.path.join(destination_folder, kwargs['filename'])
-        os.rename(chunk_file_path, file_path)
-
-    # TODO: eventually could upload to a specific folder
-    # https://github.com/alican/django-tus/issues/2
-    # perhaps we can store the current location in the FB within the file metadata and append it here
-    # so that clicking on "add files" when navigated to a subdirectory within the resource causes uploaded files to land in that subdir
+        chunk_file_path = os.path.join(tus_destination_folder, kwargs['filename'])
+        os.rename(chunk_file_path, where_tus_put_it)
 
     # create a file object for the uploaded file
-    file_obj = File(open(file_path, 'rb'), name=original_filename)
+    file_obj = File(open(where_tus_put_it, 'rb'), name=original_filename)
 
     resource = hydroshare.utils.get_resource_by_shortkey(hs_res_id)
 
-    # use the metadata.relativePath to rebuild the folder structure if folders were uploaded
-    path_within_resource_contents = metadata.get('relativePath', '')
-    # path_within_resource_contents will include the name of the file, so we need to remove it
-    relative_file_folder = os.path.dirname(path_within_resource_contents)
+    eventual_relative_path = ''
 
-    # create the file folder if it does not exist
-    if relative_file_folder:
-        # add data/contents to the path
-        file_folder = f'data/contents/{relative_file_folder}' if relative_file_folder else 'data/contents'
+    try:
+        # see if there is a path within data/contents that the file should be uploaded to
+        existing_path_in_resource = metadata.get('existing_path_in_resource', '')
+        existing_path_in_resource = json.loads(existing_path_in_resource).get("path")
+        if existing_path_in_resource:
+            # in this case, we are uploading to an existing folder in the resource
+            # existing_path_in_resource is a list of folder names
+            # append them into a path
+            for folder in existing_path_in_resource:
+                eventual_relative_path += folder + '/'
+    except Exception as ex:
+        logger.info(f"Existing path in resource not found: {str(ex)}")
+
+    # handle the case that a folder was uploaded instead of a single file
+    # use the metadata.relativePath to rebuild the folder structure
+    path_within_uploaded_folder = metadata.get('relativePath', '')
+    # path_within_resource_contents will include the name of the file, so we need to remove it
+    path_within_uploaded_folder = os.path.dirname(path_within_uploaded_folder)
+    if path_within_uploaded_folder:
+        eventual_relative_path += path_within_uploaded_folder
+        file_folder = f'data/contents/{eventual_relative_path}'
         try:
             create_folder(res_id=hs_res_id, folder_path=file_folder)
         except DRFValidationError as ex:
@@ -5165,16 +5174,16 @@ def tus_upload_finished_handler(sender, **kwargs):
             resource=resource,
             files=[file_obj],
             user=resource.creator,
-            folder=relative_file_folder,
+            folder=eventual_relative_path,
         )
         hydroshare.utils.resource_file_add_process(
             resource=resource,
             files=[file_obj],
             user=resource.creator,
-            folder=relative_file_folder,
+            folder=eventual_relative_path,
         )
         # remove the uploaded file
-        os.remove(file_path)
+        os.remove(where_tus_put_it)
     except (hydroshare.utils.ResourceFileSizeException,
             hydroshare.utils.ResourceFileValidationException,
             Exception) as ex:
