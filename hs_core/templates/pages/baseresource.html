@@ -693,7 +693,7 @@
                                         <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12">
                                             {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                                                 {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
-                                                    <a {% if max_file_size <= 0 %}disabled{% endif %} type="button" data-fb-action="uploadFiles"
+                                                    <a {% if max_file_size <= 0 %}disabled{% endif %} id="uppy-modal-trigger" type="button" data-fb-action="uploadFiles"
                                                        class="btn btn-success btn-xs dz-clickable upload-toggle">
                                                         <i class="fa fa-plus"></i> Add files
                                                     </a>
@@ -899,9 +899,6 @@
                                                 <div class="fb-upload-caption">
                                                     <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;
                                                     Upload files up to {{ max_file_size_for_display|floatformat:"0" }}GB in size by dragging & dropping.
-                                                    <br>
-                                                    For large files, or if your connection is slow, you can
-                                                    <a type="button" id="uppy-modal-trigger" class="btn btn-success btn-xs dz-clickable">conduct a resumable upload</a>
                                                 </div>
                                             {% endif %}
                                         {% endif %}
@@ -1123,7 +1120,7 @@
     <script src="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/Leaflet.fullscreen.min.js" crossorigin=""></script>
     <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     <script type="text/javascript" src="{% static 'js/coverageMap.js' %}"></script>
-    <script type="text/javascript" src="{% static 'js/dropzone.js' %}"></script>
+    <!-- <script type="text/javascript" src="{% static 'js/dropzone.js' %}"></script> -->
     <script type="text/javascript" src="{% static 'js/hs-file-icons.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/hs_file_browser.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/resourceLandingAjax.js' %}"></script>

@@ -80,8 +80,13 @@
           onDragOver: (event) => {
             event.preventDefault();
             event.stopPropagation();
-            // TODO: add a visual cue that the dropzone is active
+            $(".fb-drag-flag").show();
+            $("#hsDropzone").toggleClass("glow-blue", true);
           },
+          ondragleave: (event) => {
+            $(".fb-drag-flag").hide();
+            $("#hsDropzone").toggleClass("glow-blue", false);
+          }
         }
       )
       .use(Tus, { 
@@ -92,6 +97,28 @@
         chunkSize: MAX_CHUNK, // in bytes
       })
       // https://uppy.io/docs/uppy/#events
+      .on('file-added', (file) => {
+        if (getCurrentPath().hasOwnProperty("aggregation")) {
+          // Remove the file from the upload list
+          uppy.removeFile(file.id);
+          // Display an error here
+          $("#fb-alerts .upload-failed-alert").remove();
+          $("#hsDropzone").toggleClass("glow-blue", false);
+
+          $("#fb-alerts").append(
+              '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
+                  '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                      '<span aria-hidden="true">&times;</span></button>' +
+                  '<div>' +
+                      '<strong>File Upload Failed</strong>'+
+                  '</div>'+
+                  '<div>'+
+                      '<span>File upload is not allowed. Target folder seems to contain aggregation(s).</span>' +
+                  '</div>'+
+              '</div>').fadeIn(200);
+          }
+          $(".fb-drag-flag").hide();
+      })
       .on('dashboard:modal-closed', () => {
         // if there are pending uploads, show an alert that they will continue in the background
         if (Object.keys(uppy.getState().currentUploads).length > 0) {
@@ -102,6 +129,61 @@
         uppy.info(`File ${file.name} was transferered successfully. Adding into HydroShare...`)
         onUploadSuccess(file, response)
         refreshFileBrowser()
+      })
+      .on('complete', (result) => {
+        let resourceType = $("#resource-type").val();
+        // Remove further paths from the log
+        let range = pathLog.length - pathLogIndex;
+        pathLog.splice(pathLogIndex + 1, range);
+        pathLog.push(JSON.parse(sessionStorage.currentBrowsepath));
+        pathLogIndex = pathLog.length - 1;
+
+        if (resourceType === 'Resource') {
+            sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
+            refreshFileBrowser();
+        }
+        else {
+            refreshFileBrowser();
+            $("#previews").empty();
+        }
+      })
+      .on('error', (error) => {
+        let errorMsg = "";
+        if (typeof errorMessage === 'object'){
+            for (const [key, value] of Object.entries(errorMessage)) {
+                errorMsg += `${key}: ${value}`;
+              }
+        }else{
+            errorMsg = JSON.stringify(errorMessage);
+        }
+        try {
+            let errorMessageJSON = JSON.parse(errorMessage);
+            if (errorMessageJSON.hasOwnProperty("validation_error")) {
+                errorMsg = errorMessageJSON.validation_error;
+            }
+            else if(errorMessageJSON.hasOwnProperty("file_size_error")) {
+                errorMsg = errorMessageJSON.file_size_error;
+            }
+        } catch (e) {
+
+        }
+
+        $("#fb-alerts .upload-failed-alert").remove();
+        $("#hsDropzone").toggleClass("glow-blue", false);
+        $("#fb-alerts").append(
+                '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
+                    '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                        '<span aria-hidden="true">&times;</span></button>' +
+                    '<div>' +
+                        '<strong>File Upload Failed</strong>'+
+                    '</div>'+
+                    '<div>'+
+                        '<span>' + errorMsg + '</span>' +
+                    '</div>'+
+                '</div>').fadeIn(200);
+      })
+      .on('progress', (progress) => {
+        $("#upload-progress").text( `${progress}%`);
       })
   </script>
 {% endblock %}
