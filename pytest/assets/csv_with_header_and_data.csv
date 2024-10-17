@@ -1,0 +1,10 @@
+VIN (1-10),County,City,State,Postal Code,Model Year,Make,Model,Electric Vehicle Type,Clean Alternative Fuel Vehicle (CAFV) Eligibility,Electric Range,Base MSRP,Legislative District,DOL Vehicle ID,Vehicle Location,Electric Utility,2020 Census Tract
+5YJSA1E22K,King,Seattle,WA,98112,2019,TESLA,MODEL S,Battery Electric Vehicle (BEV),Clean Alternative Fuel Vehicle Eligible,270,0,43,202233958,POINT (-122.300312 47.629782),CITY OF SEATTLE - (WA)|CITY OF TACOMA - (WA),53033006500
+3MW39FS05R,Yakima,Zillah,WA,98953,2024,BMW,330E,Plug-in Hybrid Electric Vehicle (PHEV),Not eligible due to low battery range,20,0,15,264425178,POINT (-120.2658133 46.4063477),PACIFICORP,53077002201
+1N4AZ0CP0F,King,Kent,WA,98031,2015,NISSAN,LEAF,Battery Electric Vehicle (BEV),Clean Alternative Fuel Vehicle Eligible,84,0,11,114962025,POINT (-122.201564 47.402358),PUGET SOUND ENERGY INC||CITY OF TACOMA - (WA),53033029306
+5YJSA1H20F,Snohomish,Bothell,WA,98012,2015,TESLA,MODEL S,Battery Electric Vehicle (BEV),Clean Alternative Fuel Vehicle Eligible,208,0,1,232724670,POINT (-122.206146 47.839957),PUGET SOUND ENERGY INC,53061052107
+JTMAB3FV1N,Yakima,Yakima,WA,98908,2022,TOYOTA,RAV4 PRIME,Plug-in Hybrid Electric Vehicle (PHEV),Clean Alternative Fuel Vehicle Eligible,42,0,14,221023589,POINT (-120.611068 46.596645),PACIFICORP,53077000902
+5YJ3E1EB6K,King,Redmond,WA,98052,2019,TESLA,MODEL 3,Battery Electric Vehicle (BEV),Clean Alternative Fuel Vehicle Eligible,220,0,48,296777442,POINT (-122.1207376 47.6705374),PUGET SOUND ENERGY INC||CITY OF TACOMA - (WA),53033022606
+5YJ3E1EB0J,Thurston,Yelm,WA,98597,2018,TESLA,MODEL 3,Battery Electric Vehicle (BEV),Clean Alternative Fuel Vehicle Eligible,215,0,2,311913577,POINT (-122.5715761 46.9095798),PUGET SOUND ENERGY INC,53067012422
+3FA6P0SU8D,Kitsap,Poulsbo,WA,98370,2013,FORD,FUSION,Plug-in Hybrid Electric Vehicle (PHEV),Not eligible due to low battery range,19,0,23,136752115,POINT (-122.6368884 47.7469547),PUGET SOUND ENERGY INC,53035090400
+5YJSA1E21H,King,Redmond,WA,98052,2017,TESLA,MODEL S,Battery Electric Vehicle (BEV),Clean Alternative Fuel Vehicle

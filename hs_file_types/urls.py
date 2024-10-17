@@ -108,6 +108,11 @@ urlpatterns = [
          views.update_model_instance_meta_schema,
          name="update_modelinstance_meta_schema"),
 
+    re_path(r'^_internal/(?P<file_type_id>[0-9]+)/'
+            r'update-csv-table-schema/$',
+            views.update_csv_table_schema_metadata,
+            name="update_csv_table_schema"),
+
     path('_internal/<int:file_type_id>/update-netcdf-file/',
          views.update_netcdf_file,
          name="update_netcdf_file"),

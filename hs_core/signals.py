@@ -21,6 +21,7 @@ pre_move_or_rename_file_or_folder = django.dispatch.Signal()
 
 post_remove_file_aggregation = django.dispatch.Signal()
 post_add_generic_aggregation = django.dispatch.Signal()
+post_add_csv_aggregation = django.dispatch.Signal()
 post_add_geofeature_aggregation = django.dispatch.Signal()
 post_add_netcdf_aggregation = django.dispatch.Signal()
 post_add_raster_aggregation = django.dispatch.Signal()
