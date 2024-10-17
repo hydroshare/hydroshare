@@ -126,6 +126,12 @@
         if (Object.keys(uppy.getState().currentUploads).length > 0) {
           customAlert("Pending Downloads", 'Your files will continue to upload in the background.', "info", 5000, true);
         }
+        $(".fb-drag-flag").hide();
+        $("#hsDropzone").toggleClass("glow-blue", false);
+      })
+      .on('dashboard:modal-open', () => {
+        $(".fb-drag-flag").show();
+        $("#hsDropzone").toggleClass("glow-blue", true);
       })
       .on('upload-success', (file, response) => {
         uppy.info(`File ${file.name} was transferered successfully. Adding into HydroShare...`)
