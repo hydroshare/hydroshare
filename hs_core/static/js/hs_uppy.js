@@ -73,6 +73,31 @@ let uppy = new Uppy({
     target: "#hsDropzone",
     onDrop: (event) => {
       // open the dashboard when files are dropped
+      if (getCurrentPath().hasOwnProperty("aggregation")) {
+        // get the file from the event and remove it from the files list
+        let file = event.dataTransfer.files[0];
+        uppy.removeFile(file.id);
+        // Display an error here
+        $("#fb-alerts .upload-failed-alert").remove();
+        $("#hsDropzone").toggleClass("glow-blue", false);
+
+        $("#fb-alerts")
+          .append(
+            '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
+              '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                '<span aria-hidden="true">&times;</span></button>' +
+              "<div>" +
+                "<strong>File Upload Failed</strong>" +
+              "</div>" +
+              "<div>" +
+                "<span>File upload is not allowed. Target folder seems to contain aggregation(s).</span>" +
+              "</div>" +
+            "</div>"
+          )
+          .fadeIn(200);
+        $(".fb-drag-flag").hide();
+        return
+      }
       uppy.getPlugin("Dashboard").openModal();
     },
     onDragOver: (event) => {
@@ -81,7 +106,7 @@ let uppy = new Uppy({
       $(".fb-drag-flag").show();
       $("#hsDropzone").toggleClass("glow-blue", true);
     },
-    ondragleave: (event) => {
+    onDragLeave: (event) => {
       $(".fb-drag-flag").hide();
       $("#hsDropzone").toggleClass("glow-blue", false);
     },
@@ -98,37 +123,26 @@ let uppy = new Uppy({
     if (getCurrentPath().hasOwnProperty("aggregation")) {
       // Remove the file from the upload list
       uppy.removeFile(file.id);
-      // Display an error here
-      $("#fb-alerts .upload-failed-alert").remove();
-      $("#hsDropzone").toggleClass("glow-blue", false);
-
-      $("#fb-alerts")
-        .append(
-          '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
-            '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-            '<span aria-hidden="true">&times;</span></button>' +
-            "<div>" +
-            "<strong>File Upload Failed</strong>" +
-            "</div>" +
-            "<div>" +
-            "<span>File upload is not allowed. Target folder seems to contain aggregation(s).</span>" +
-            "</div>" +
-            "</div>"
-        )
-        .fadeIn(200);
+      uppy.info("File upload is not allowed. Target folder seems to contain aggregation(s).", "error");
     }
-    $(".fb-drag-flag").hide();
   })
   .on("dashboard:modal-closed", () => {
     // if there are pending uploads, show an alert that they will continue in the background
     if (Object.keys(uppy.getState().currentUploads).length > 0) {
-      customAlert(
-        "Pending Downloads",
-        "Your files will continue to upload in the background.",
-        "info",
-        5000,
-        true
-      );
+      $("#fb-alerts")
+          .append(
+            '<div class="alert alert-info alert-dismissible upload-continue-alert" role="alert">' +
+              '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                '<span aria-hidden="true">&times;</span></button>' +
+              "<div>" +
+                "<strong>Files Uploading</strong>" +
+              "</div>" +
+              "<div>" +
+                "<span>Your files will continue to upload in the background.</span>" +
+              "</div>" +
+            "</div>"
+          )
+          .fadeIn(200);
     }
     $(".fb-drag-flag").hide();
     $("#hsDropzone").toggleClass("glow-blue", false);
@@ -136,6 +150,7 @@ let uppy = new Uppy({
   .on("dashboard:modal-open", () => {
     $(".fb-drag-flag").show();
     $("#hsDropzone").toggleClass("glow-blue", true);
+    $("#fb-alerts .upload-continue-alert").remove();
   })
   .on("upload-success", (file, response) => {
     uppy.info(
