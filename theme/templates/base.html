@@ -64,7 +64,7 @@
 </script>
 {% endif %}
 <script>
-    const STATIC_URL = "{% static '' clean=True %}" || "/static/static/";
+    const STATIC_URL = "{{ STATIC_URL }}" || "/static/static/";
 </script>
 </head>
 
