@@ -1,13 +1,14 @@
 from django import forms
 from django.contrib import messages
+from django.contrib.admin.actions import \
+    delete_selected as django_delete_selected
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
-from django.contrib.admin.actions import delete_selected as django_delete_selected
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.gis import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
+from django.contrib.gis import admin
 from django.utils.translation import gettext_lazy as _
 
-from .models import ResourceFile, User, BaseResource, Creator
+from .models import BaseResource, Creator, ResourceFile, User
 
 
 class UserAdmin(DjangoUserAdmin):
@@ -29,6 +30,7 @@ class UserAdmin(DjangoUserAdmin):
         else:
             return super(UserAdmin, self).delete_model(request, obj)
 
+    @admin.action(description=django_delete_selected.short_description)
     def delete_selected(self, request, queryset):
         # prevent user delete if user is an owner/author on a published resource
         user_no_del = []
@@ -46,7 +48,6 @@ class UserAdmin(DjangoUserAdmin):
             self.message_user(request, message, messages.ERROR)
         if queryset.count():
             return django_delete_selected(self, request, queryset)
-    delete_selected.short_description = django_delete_selected.short_description
 
 
 class UserCreationFormExtended(UserCreationForm):

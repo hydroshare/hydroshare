@@ -1,7 +1,8 @@
-from django.conf.urls import url
+from django.urls import path, re_path
+
 from hs_labels import views
 
 urlpatterns = [
-    url(r'^_internal/(?P<shortkey>[A-z0-9]+)/label-resource-action/$', views.resource_labeling_action),
-    url(r'^_internal/label-resource-action/$', views.resource_labeling_action),
+    re_path(r'^_internal/(?P<shortkey>[A-z0-9]+)/label-resource-action/$', views.resource_labeling_action),
+    path('_internal/label-resource-action/', views.resource_labeling_action),
 ]

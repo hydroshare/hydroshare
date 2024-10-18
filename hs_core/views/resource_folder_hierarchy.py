@@ -2,32 +2,35 @@ import json
 import logging
 import os
 
-from django.core.exceptions import SuspiciousFileOperation, ValidationError, ObjectDoesNotExist
-from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
-
+from django.core.exceptions import (ObjectDoesNotExist,
+                                    SuspiciousFileOperation, ValidationError)
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
-from rest_framework.exceptions import NotFound, status, PermissionDenied, \
-    ValidationError as DRF_ValidationError
+from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.exceptions import ValidationError as DRF_ValidationError
+from rest_framework.exceptions import status
 from rest_framework.response import Response
 
 from django_irods.icommands import SessionException
 from hs_core.hydroshare import delete_resource_file
-from hs_core.hydroshare.utils import get_file_mime_type, resolve_request, QuotaException
+from hs_core.hydroshare.utils import (QuotaException, get_file_mime_type,
+                                      resolve_request)
 from hs_core.models import ResourceFile
 from hs_core.task_utils import get_or_create_task_notification
 from hs_core.tasks import FileOverrideException, unzip_task
 from hs_core.views import utils as view_utils
-
-from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
-    create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
-    rename_file_or_folder, irods_path_is_directory, \
-    add_reference_url_to_resource, edit_reference_url_in_resource, zip_by_aggregation_file
-
-from hs_file_types.models import FileSetLogicalFile, ModelInstanceLogicalFile, ModelProgramLogicalFile
-
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-
+from hs_core.views.utils import (ACTION_TO_AUTHORIZE,
+                                 add_reference_url_to_resource, authorize,
+                                 create_folder, edit_reference_url_in_resource,
+                                 irods_path_is_directory, is_ajax,
+                                 move_or_rename_file_or_folder, move_to_folder,
+                                 remove_folder, rename_file_or_folder,
+                                 unzip_file, zip_by_aggregation_file,
+                                 zip_folder)
+from hs_file_types.models import (FileSetLogicalFile, ModelInstanceLogicalFile,
+                                  ModelProgramLogicalFile)
 
 logger = logging.getLogger(__name__)
 
@@ -453,7 +456,7 @@ def data_store_folder_unzip(request, **kwargs):
     remove_original_zip = request.POST.get('remove_original_zip', 'true').lower() == 'true'
     unzip_to_folder = request.POST.get('unzip_to_folder', 'false').lower() == 'true'
 
-    if request.is_ajax():
+    if is_ajax(request):
         task = unzip_task.apply_async((user.pk, res_id, zip_with_rel_path, remove_original_zip, overwrite,
                                        auto_aggregate, ingest_metadata, unzip_to_folder))
         task_id = task.task_id

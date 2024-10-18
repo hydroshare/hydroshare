@@ -77,7 +77,7 @@
 
                         <div class="row">
                             <div v-show="isInviteUsers" class="add-view-user-form col-xs-12">
-                                {{ add_view_invite_user_form.user }}
+                                {{ add_view_resource_permission_form.user_resource_permission }}
                             </div>
 
                             <div v-show="!isInviteUsers" class="add-view-group-form col-xs-12">
@@ -159,8 +159,8 @@
                                             @click="setResourceAccess('make_public')"
                                             :class="{active: resAccess.isPublic}"
                                             class="btn btn-default"
-                                            id="btn-public" data-toggle="tooltip" data-placement="auto" 
-                                            :title="!canChangeResourceFlags ? this.accessDeniedTitle : 'Can be viewed and downloaded by anyone.'" 
+                                            id="btn-public" data-toggle="tooltip" data-placement="auto"
+                                            :title="!canChangeResourceFlags ? this.accessDeniedTitle : 'Can be viewed and downloaded by anyone.'"
                                             type="button">
                                             Public
                                         </button>
@@ -170,7 +170,7 @@
                                                 @click="setResourceAccess('make_discoverable')"
                                                 :class="{active: resAccess.isDiscoverable && !resAccess.isPublic}"
                                                 class="btn btn-default"
-                                                id="btn-discoverable" data-toggle="tooltip" data-placement="auto" 
+                                                id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
                                                 :title="!canChangeResourceFlags ? this.accessDeniedTitle : 'Metadata is public but data are protected.'"
                                                 type="button">
                                             Discoverable

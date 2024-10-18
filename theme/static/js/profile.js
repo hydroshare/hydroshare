@@ -160,24 +160,6 @@ function onFormRequiredChange() {
     }
 }
 
-function irods_account_link(data_target, text) {
-    return "<a data-toggle='modal' data-target='" + data_target + "'>" + text + "</a>";
-}
-
-function irods_status_info(alert_type, status, title) {
-    return "<div class=\"col-sm-12\">" +
-            "<div class=\"alert " + alert_type + " alert-dismissible\" role=\"alert\">" +
-            "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>" +
-            "<strong>" + title + "</strong><div>" + status + "</div></div></div>"
-}
-
-function create_irods_account() {
-    let email = 'help@cuahsi.org';
-    let subject = 'Request for new iRODS account';
-    let emailBody = 'I would like to request an iRODS account.';
-    document.location = "mailto:"+email+"?subject="+subject+"&body="+emailBody;
-}
-
 function getUrlVars()
 {
     var vars = [], hash;
@@ -297,10 +279,6 @@ $(document).ready(function () {
     // Multiple orgs are a string delimited by ";" --wrap them so we can style them
     $("#organization").splitAndWrapWithClass(";", "organization-divider");
     
-    $("#btn-request-irods-account").click(() => {
-        $('#request-irods-account-dialog').modal('hide');
-        create_irods_account();
-    });
 
     // File name preview for Add CV
     $('.btn-primary.btn-file :file').on('fileselect', function (event, numFiles, label) {

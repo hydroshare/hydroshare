@@ -22,7 +22,7 @@ from hs_core.task_utils import (get_or_create_task_notification,
                                 get_resource_bag_task, get_task_notification,
                                 get_task_user_id)
 from hs_core.tasks import create_bag_by_irods, create_temp_zip
-from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
+from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, is_ajax
 from hs_file_types.enums import AggregationMetaFilePath
 
 logger = logging.getLogger(__name__)
@@ -260,7 +260,7 @@ def download(request, path, use_async=True,
                     response = HttpResponse()
                     response.content = content_msg
                     return response
-        elif request.is_ajax():
+        elif is_ajax(request):
             task_dict = {
                 'id': datetime.datetime.today().isoformat(),
                 'name': "bag download",

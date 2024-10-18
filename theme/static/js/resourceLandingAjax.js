@@ -626,12 +626,10 @@ function update_sqlite_file_ajax_submit() {
 }
 
 function get_user_info_ajax_submit(url, obj) {
-    var entry = $(obj).closest("div[data-contributor-type]").find("#user-deck > .hilight");
-    if (entry.length < 1) {
+    let userID = $("#id_contributor").find(':selected').val();
+    if (!userID) {
         return false;
     }
-
-    var userID = entry[0].getAttribute("data-value");
     url = url + userID + "/false";
 
     $.ajax({

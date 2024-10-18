@@ -5,6 +5,18 @@ FROM hydroshare/hs_docker_base:262c2ca
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen
 
+RUN pip install psycopg==3.1.*
+RUN pip install django==4.2.*
+RUN pip install djangorestframework==3.14.*
+RUN pip install django-haystack==3.2.*
+RUN pip install drf-yasg==1.21.*
+RUN pip install django-robots==6.1
+RUN pip install django-autocomplete-light==3.11.*
+RUN pip install django-widget-tweaks==1.5.*
+RUN pip install django-crispy-forms==2.1
+RUN pip install crispy-bootstrap3==2024.1
+RUN pip install Mezzanine==6.0.0
+
 # https://www.digicert.com/kb/digicert-root-certificates.htm
 # Get the .pem file from digicert and add it to the bundle used by certifi
 # Could also use the REQUESTS_CA_BUNDLE environment variable to point to the .pem file

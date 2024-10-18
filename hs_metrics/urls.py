@@ -1,9 +1,10 @@
-from django.conf.urls import url
+from django.urls import path
+
 from hs_metrics import views
 
 urlpatterns = [
     # users API
 
-    url(r'^metrics/$', views.HydroshareSiteMetrics.as_view()),
+    path('metrics/', views.HydroshareSiteMetrics.as_view()),
 
 ]

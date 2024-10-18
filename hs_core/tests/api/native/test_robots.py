@@ -1,5 +1,6 @@
 
 from unittest import TestCase
+
 from hs_core.robots import RobotFilter
 
 
@@ -38,9 +39,9 @@ class TestRobots(TestCase):
         ]
 
     def test_is_human(self):
-        self.robot = RobotFilter()
         request = MockRequest()
+        self.robot = RobotFilter(request)
         for agent, is_human in self.agents:
-            request.META['HTTP_USER_AGENT'] = agent
+            request.headers = {'user-agent': agent}
             self.robot.process_request(request)
             self.assertTrue(request.is_human == is_human)

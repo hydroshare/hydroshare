@@ -84,11 +84,6 @@
 
                                     {#        Account deactivation       #}
                                     <div><a data-toggle="modal" data-target="#deactivate-account-dialog">Deactivate HydroShare account</a></div>
-                                    <hr>
-                                    {# Account creation/deletion in iRODS user zone #}
-                                    <div id="irods-account-container">
-                                        <a data-toggle="modal" data-target="#request-irods-account-dialog">Request an iRODS user account</a>
-                                    </div>
                                 </div>
                             </div>
                             {% endif %}
@@ -861,37 +856,6 @@
                                     title="Delete CV"
                                     value="clear">Confirm
                             </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Request iRODS User Account Modal -->
-            <div class="modal fade" id="request-irods-account-dialog" tabindex="-1" role="dialog"
-                 aria-labelledby="myModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-sm">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal"
-                                    aria-label="Close"><span aria-hidden="true">&times;</span>
-                            </button>
-                            <h4 class="modal-title" id="myModalLabel">Request an iRODS user account</h4>
-                        </div>
-                        <div class="modal-body">
-                            {% csrf_token %}
-                            <div class="row">
-                                <div class="col-sm-10 col-xs-12">
-                                    <div>You can request that a user account be created in the HydroShare user zone.
-                                        This account will allow you to access your data using iRODS commands and clients.
-                                        You will be able to access your data in the user zone at <strong>users.hydroshare.org</strong>.
-                                        Note that your request must be sent from the email associated with your HydroShare account.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                            <button id="btn-request-irods-account" class="btn btn-primary" type="button">Email Request</button>
                         </div>
                     </div>
                 </div>

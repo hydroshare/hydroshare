@@ -1,23 +1,18 @@
 from django.contrib import admin
-from .models import University, UncategorizedTerm, SubjectArea
+
+from .models import SubjectArea, UncategorizedTerm, University
 
 
+@admin.register(University)
 class UniversityAdmin(admin.ModelAdmin):
     list_display = ['name']
 
 
-admin.site.register(University, UniversityAdmin)
-
-
+@admin.register(UncategorizedTerm)
 class UncategorizedTermAdmin(admin.ModelAdmin):
     pass
 
 
-admin.site.register(UncategorizedTerm, UncategorizedTermAdmin)
-
-
+@admin.register(SubjectArea)
 class SubjectAreaAdmin(admin.ModelAdmin):
     list_display = ['name']
-
-
-admin.site.register(SubjectArea, SubjectAreaAdmin)
