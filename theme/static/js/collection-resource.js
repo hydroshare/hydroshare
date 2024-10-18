@@ -197,6 +197,7 @@ function remove_collection_item_ajax(res_id, move_to_candidate_list) {
         type: "POST",
         url: $form.attr('action'),
         dataType: "json",
+        traditional: true,
         data: {"resource_id_list": resource_id_list, "update_type": "remove"},
         success: function(result) {
             /* The div contains now the updated form */
@@ -285,6 +286,7 @@ function add_collection_item_ajax() {
         type: "POST",
         url: $form.attr('action'),
         dataType: "json",
+        traditional: true,
         data: {"resource_id_list": resource_id_list, "update_type": "add"},
         success: function(result) {
             /* The div contains now the updated form */
