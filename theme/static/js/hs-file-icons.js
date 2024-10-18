@@ -2,7 +2,8 @@
 * Created by Mauriel on 3/18/2017.
 */
 function getFolderIcons() {
-    const RESOURCE_ICON_URL = `${STATIC_URL}img/resource-icons/`;
+    const TEMP_STATIC_URL = 'https://storage.googleapis.com/hydroshare-prod-static-media/static/';
+    const RESOURCE_ICON_URL = `${TEMP_STATIC_URL}img/resource-icons/`;
     var folderIcons = {};
     folderIcons.GeoRasterLogicalFile =
         "<span class='fb-aggregation-icon'>" +
@@ -32,13 +33,13 @@ function getFolderIcons() {
     folderIcons.ModelProgramLogicalFile =
         "<span class='fa-stack fb-stack fb-stack-mp'>" +
         "<i class='fb-file-icon fa fa-folder fa-stack-2x fb-folder-mp' aria-hidden='true'></i>" +
-        "<img src=" + `'${STATIC_URL}img/model-program-overlay.png' ` +
+        "<img src=" + `'${TEMP_STATIC_URL}img/model-program-overlay.png' ` +
         "alt='Model Program Aggregation Icon'/></span>";
 
     folderIcons.ModelInstanceLogicalFile =
         "<span class='fa-stack fb-stack fb-stack-mi'>" +
         "<i class='fb-file-icon fa fa-folder fa-stack-2x fb-folder-mi' aria-hidden='true'></i>" +
-        "<img src=" + `'${STATIC_URL}img/model-instance-overlay.png' ` +
+        "<img src=" + `'${TEMP_STATIC_URL}img/model-instance-overlay.png' ` +
         "alt='Model Instance Aggregation Icon'/></span>";
 
     folderIcons.DEFAULT =
@@ -174,13 +175,13 @@ function getFileIcons() {
     // This is for any single file associated with ModelProgramLogicalFile. Note "MP" is not a file extension
     fileIcons.MP =
         "<span class='fb-aggregation-icon'>" +
-        "<img src='" + `${STATIC_URL}img/resource-icons/modelprogram48x48.png' ` +
+        "<img src='" + `${TEMP_STATIC_URL}img/resource-icons/modelprogram48x48.png' ` +
         "alt='Model Program Aggregation Icon'/></span>";
 
     // This is for any single file associated with ModelInstanceLogicalFile. Note "MI" is not a file extension
     fileIcons.MI =
         "<span class='fb-aggregation-icon'>" +
-        "<img src='" + `${STATIC_URL}img/resource-icons/modelinstance48x48.png' ` +
+        "<img src='" + `${TEMP_STATIC_URL}img/resource-icons/modelinstance48x48.png' ` +
         "alt='Model Instance Aggregation Icon'/></span>";
 
     fileIcons.DEFAULT =
