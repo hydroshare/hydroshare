@@ -59,13 +59,11 @@ let uppy = new Uppy({
     target: "#uppy",
     showProgressDetails: true,
     trigger: "#uppy-modal-trigger",
-    note: `If you loose your connection partway through, select the files again to resume. Max file size: ${
-      MAX_FILE_SIZE_MB / 1024
-    } GB. \nFiles will be uploaded in ${MAX_CHUNK_MB} MB chunks.`,
+    note: `Max file size: ${MAX_FILE_SIZE_MB / 1024} GB. \nFiles will be uploaded in ${MAX_CHUNK_MB} MB chunks.`,
     // https://uppy.io/docs/dashboard/#locale
     locale: {
       strings: {
-        dropPasteFiles: "Drop files here or %{browseFiles}.",
+        dropPasteFiles: `Drop files here or %{browseFiles} to upload to ${getCurrentPath()}.`,
       },
     },
   })
