@@ -1,17 +1,18 @@
 from django.urls import include, path, re_path
-from drf_yasg import openapi
+
+from hs_dictionary import views as dict_views
+from hs_core import views as core_views
+from hs_file_types import views as file_type_views
+from hs_core.views.resource_folder_hierarchy import data_store_add_reference_public, \
+    data_store_edit_reference_url_public, ingest_metadata_files
+
+from .resources.file_metadata import FileMetaDataRetrieveUpdateDestroy
+
 from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
 from rest_framework import permissions
 
-from hs_core import views as core_views
-from hs_core.views.resource_folder_hierarchy import (
-    data_store_add_reference_public, data_store_edit_reference_url_public,
-    ingest_metadata_files)
-from hs_dictionary import views as dict_views
-from hs_file_types import views as file_type_views
-
 from .discovery import DiscoverSearchView
-from .resources.file_metadata import FileMetaDataRetrieveUpdateDestroy
 from .views.resource_share import ShareResourceGroup, ShareResourceUser
 
 hsapi_urlpatterns = [
@@ -250,4 +251,6 @@ urlpatterns = [
     re_path(r'^resource/(?P<resource_id>[0-9a-f]+)/modelinstance/meta/(?P<aggregation_path>.*)$',
             file_type_views.model_instance_metadata_in_json,
             name='model_instance_metadata_in_json'),
+    path("tus/", core_views.resource_rest_api.CustomTusUpload.as_view(), name='tus_upload'),
+    path("tus/<uuid:resource_id>", core_views.resource_rest_api.CustomTusUpload.as_view(), name='tus_upload_chunks'),
 ]
