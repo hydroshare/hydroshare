@@ -519,11 +519,10 @@ function updateSelectionMenuContext() {
         if (resourceType === 'Resource') {
             $("#fb-files-container").find('span.fb-logical-file-type').each(function () {
                 const logicalFileType = $(this).attr("data-logical-file-type");
-                //disable folder creation in aggregation folders
+                //disable folder creation and upload files in aggregation folders
                 //NOTE: this needs to be updated when new aggregations are added...
                 if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
-                    logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile" ||
-                    logicalFileType === "CSVLogicalFile") {
+                    logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
                     if ($(this).parent().hasClass("fb-file")) {
                         uiActionStates.createFolder.disabled = true;
                         uiActionStates.paste.disabled = true;
