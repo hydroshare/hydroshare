@@ -11,6 +11,8 @@ from django.core.exceptions import ObjectDoesNotExist, SuspiciousFileOperation
 from django.core.exceptions import ValidationError as CoreValidationError
 from django.http import HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotFound
 from django.shortcuts import redirect
+from django.contrib.sessions.models import Session
+from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -24,7 +26,8 @@ from rest_framework.exceptions import ValidationError, NotAuthenticated, Permiss
 
 from django_irods.icommands import SessionException
 from django_tus.views import TusUpload
-from django_tus.tusfile import TusFile
+from django_tus.tusfile import TusFile, TusChunk
+from django_tus.response import TusResponse
 from hs_core import hydroshare
 from hs_core.models import AbstractResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_types, \
@@ -910,6 +913,18 @@ class CustomTusUpload(TusUpload):
         # get the hydroshare resource id from the metadata
         hs_res_id = metadata.get('hs_res_id')
 
+        hs_cookie_string = self.request.headers.get('Hs-Cookie', None)
+        hs_cookie = json.loads(hs_cookie_string) if hs_cookie_string else None
+
+        # use the cookie to get the django session and user
+        if hs_cookie:
+            sessionid = hs_cookie['sessionid']
+            # get the user from the session
+            session = Session.objects.get(session_key=sessionid)
+            user_id = session.get_decoded().get('_auth_user_id')
+            user = User.objects.get(pk=user_id)
+            self.request.user = user
+
         # check that the user has permission to upload a file to the resource
         try:
             view_utils.authorize(self.request, hs_res_id,
@@ -918,3 +933,30 @@ class CustomTusUpload(TusUpload):
             return HttpResponseForbidden()
 
         return super(CustomTusUpload, self).dispatch(*args, **kwargs)
+
+    def patch(self, request, resource_id, *args, **kwargs):
+
+        tus_file = TusFile.get_tusfile_or_404(str(resource_id))
+        chunk = TusChunk(request)
+
+        if not tus_file.is_valid():
+            return TusResponse(status=410)
+
+        if chunk.offset != tus_file.offset:
+            return TusResponse(status=409)
+
+        # here we modify from django_tus in the case that the file_size is 0
+        if chunk.offset > tus_file.file_size and tus_file.file_size > 0:
+            return TusResponse(status=413)
+
+        tus_file.write_chunk(chunk=chunk)
+
+        if tus_file.is_complete():
+            # file transfer complete, rename from resource id to actual filename
+            tus_file.rename()
+            tus_file.clean()
+
+            self.send_signal(tus_file)
+            self.finished()
+
+        return TusResponse(status=204, extra_headers={'Upload-Offset': tus_file.offset})
