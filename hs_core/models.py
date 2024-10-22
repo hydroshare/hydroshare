@@ -426,6 +426,16 @@ def page_permissions_page_processor(request, page):
     if hasattr(settings, 'DATA_UPLOAD_MAX_MEMORY_SIZE'):
         max_chunk_size_mb = settings.DATA_UPLOAD_MAX_MEMORY_SIZE / 1024 / 1024  # convert to MB
 
+    companion_url = getattr(settings, 'COMPANION_URL', 'https://companion.hydroshare.org/')
+    uppy_upload_endpoint = getattr(settings, 'UPPY_UPLOAD_ENDPOINT', 'https://hydroshare.org/hsapi/tus/')
+
+    # get the session id for the current user
+    if request.user.is_authenticated:
+        try:
+            session = request.session.session_key
+        except SessionException:
+            session = None
+
     return {
         'resource_type': cm._meta.verbose_name,
         "users_json": users_json,
@@ -440,6 +450,9 @@ def page_permissions_page_processor(request, page):
         "max_file_size": max_file_size,
         "max_file_size_for_display": convert_file_size_to_unit(max_file_size, "GB", "MB"),
         "max_chunk_size_mb": max_chunk_size_mb,
+        "companion_url": companion_url,
+        "uppy_upload_endpoint": uppy_upload_endpoint,
+        "hs_s_id": session
     }
 
 
