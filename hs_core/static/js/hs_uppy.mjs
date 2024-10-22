@@ -16,7 +16,7 @@ if (MAX_CHUNK > MAX_FILE_SIZE) {
 }
 
 const headers = {
-  hs_s_id: HS_S_ID
+  "HS-SID": HS_S_ID
 };
 
 let uppy = new Uppy({

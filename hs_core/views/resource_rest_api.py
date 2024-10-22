@@ -915,7 +915,7 @@ class CustomTusUpload(TusUpload):
         hs_res_id = metadata.get('hs_res_id')
 
         if not self.request.user.is_authenticated:
-            sessionid = self.request.headers.get('hs_s_id', None)
+            sessionid = self.request.headers.get('HS-SID', None)
             # use the cookie to get the django session and user
             if sessionid:
                 try:
