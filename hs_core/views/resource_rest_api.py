@@ -895,6 +895,7 @@ class CustomTusUpload(TusUpload):
     @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):
         # check that the user has permission to upload a file to the resource
+        from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
         metadata = self.get_metadata(self.request)
         if not metadata:
             # get the tus resource_id from the request
@@ -913,23 +914,21 @@ class CustomTusUpload(TusUpload):
         # get the hydroshare resource id from the metadata
         hs_res_id = metadata.get('hs_res_id')
 
-        hs_cookie_string = self.request.headers.get('Hs-Cookie', None)
-        hs_cookie = json.loads(hs_cookie_string) if hs_cookie_string else None
-
-        # use the cookie to get the django session and user
-        if hs_cookie:
-            sessionid = hs_cookie['sessionid']
-            # get the user from the session
-            session = Session.objects.get(session_key=sessionid)
-            user_id = session.get_decoded().get('_auth_user_id')
-            user = User.objects.get(pk=user_id)
-            self.request.user = user
+        if not self.request.user:
+            sessionid = self.request.headers.get('hs_s_id', None)
+            # use the cookie to get the django session and user
+            if sessionid:
+                # get the user from the session
+                session = Session.objects.get(session_key=sessionid)
+                user_id = session.get_decoded().get('_auth_user_id')
+                user = User.objects.get(pk=user_id)
+                self.request.user = user
 
         # check that the user has permission to upload a file to the resource
         try:
             view_utils.authorize(self.request, hs_res_id,
                                  needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-        except PermissionDenied:
+        except DjangoPermissionDenied:
             return HttpResponseForbidden()
 
         return super(CustomTusUpload, self).dispatch(*args, **kwargs)
