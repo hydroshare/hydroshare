@@ -29,6 +29,7 @@ class ForgivingManifestFilesMixin(ManifestFilesMixin):
 
 class ForgivingManifestStaticFilesStorage(ForgivingManifestFilesMixin, ManifestStaticFilesStorage):
 
+    # https://docs.djangoproject.com/en/4.2/ref/contrib/staticfiles/#django.contrib.staticfiles.storage.ManifestStaticFilesStorage
     support_js_module_import_aggregation = True
 
 
