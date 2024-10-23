@@ -36,10 +36,12 @@ let fundingAgenciesApp = new Vue({
     crossreffApiDown: false, // if we are having trouble reaching the crossref api
     removeCharsFromQuery: ["."], // characters to be removed from search
     filteredWords: [],
+    ROR_API_URL: "https://api.ror.org/v2/organizations"
   },
   mounted() {
-    if (this.selfAccessLevel === "owner" && this.resPublished) {
-      this.checkFunderNamesExistInCrossref(this.fundingAgencies);
+    if (this.resourceMode === 'Edit' && (this.selfAccessLevel === 'owner' || this.selfAccessLevel === 'editor') ) {
+      // this.checkFunderNamesExistInCrossref(this.fundingAgencies);
+      this.checkFunderNamesExistInROR(this.fundingAgencies);
     }
   },
   methods: {
@@ -49,6 +51,27 @@ let fundingAgenciesApp = new Vue({
         for (const funder of funders) {
           promises.push(
             this.singleFunderNameExistsInCrossref(funder.agency_name)
+          );
+        }
+        const results = await Promise.all(promises);
+        const unmatched = results.filter((r) => !r.match);
+        for (let umatch of unmatched) {
+          this.unmatchedFunders.push(umatch.funderName);
+        }
+        if (unmatched.length > 0) {
+          // In addition to a static warning in the Funding Agencies section for edit mode, also alert for resource owners regardles of view/edit mode
+          this.showFundersAlert();
+        }
+      } catch (e) {
+        console.error("Error while checking funder names in Crossref", e);
+      }
+    },
+    checkFunderNamesExistInROR: async function (funders) {
+      try {
+        const promises = [];
+        for (const funder of funders) {
+          promises.push(
+            this.singleFunderNameExistsInROR(funder.agency_name)
           );
         }
         const results = await Promise.all(promises);
@@ -81,6 +104,18 @@ let fundingAgenciesApp = new Vue({
         if (funder.name.toLowerCase() == lowerFunderName) match = true;
         for (let alt in funder["alt-names"]) {
           if (alt == lowerFunderName) match = true;
+        }
+      }
+      return { funderName, match: match };
+    },
+    singleFunderNameExistsInROR: async function (funderName) {
+      let match = false;
+      const lowerFunderName = funderName.toLowerCase();
+      const funders = await this.fetchFromRORList(funderName);
+      for (let funder of funders) {
+        if(funder["alt-names"].includes(lowerFunderName)) {
+          match = true;
+          break;
         }
       }
       return { funderName, match: match };
@@ -120,12 +155,57 @@ let fundingAgenciesApp = new Vue({
       }
       return null;
     },
+    fetchFromRORList: async function (funderName) {
+      try {
+        let words = funderName.split(" ");
+        words = words.map((w) => encodeURIComponent(w));
+        this.filteredWords = [];
+        words = words.filter((word) => {
+          for (let char of this.removeCharsFromQuery) {
+            if (word.includes(char)) {
+              this.filteredWords.push(word);
+              return false;
+            }
+          }
+          return true;
+        });
+
+        let url = this.ROR_API_URL;
+        const params = new URLSearchParams({
+          query: words.join(" "),
+        })
+        if (this.LIMIT_US) {
+          params.append("filter", "country.country_code:US");
+        }
+        url = `${url}?${params.toString()}`;
+        const res = await fetch(url);
+        const result = await res.json();
+        result.items.forEach(item => {
+          item["alt-names"] = [];
+          item.names.forEach(nameItem => {
+            item["alt-names"].push(nameItem.value.toLowerCase());
+            if (nameItem.types.includes('ror_display')) {
+              item.name = nameItem.value;
+            }
+          });
+          item.url = item.id;
+        });
+        const funders = result.items;
+        this.crossreffApiDown = false;
+        return funders;
+      } catch (e) {
+        console.error(`Error querying Crossref API: ${e}`);
+        this.crossreffApiDown = true;
+      }
+      return null;
+    },
+
     initCrossrefFundersSearch: async function (funderName) {
       if (funderName === "" || this.notifications.error) {
         return;
       }
       this.isPending = true;
-      this.crossrefFunders = await this.fetchFromCrossrefAPIFunderList(
+      this.crossrefFunders = await this.fetchFromRORList(
         funderName
       );
       if (this.crossrefFunders !== null) {
@@ -205,7 +285,7 @@ let fundingAgenciesApp = new Vue({
       this.isPending = false;
       this.crossrefSelected = true;
       this.currentlyEditing.agency_name = event.name;
-      this.currentlyEditing.agency_url = event.uri;
+      this.currentlyEditing.agency_url = event.id;
       this.checkAgencyName();
     },
     clearSelectedAgency: function () {
