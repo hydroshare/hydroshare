@@ -2045,7 +2045,7 @@ class FundingAgency(AbstractMetaDataElement):
                             agency_name_new = [n['value'] for n in item['names'] if 'ror_display' in n['types']][0]
                             if agency is not None:
                                 logger.debug(f'Updating funding agency with {agency_url}, {agency_name_new}')
-                                funding_agency_model.objects.filter(id=agency.id).update(agency_url=item['id'], 
+                                funding_agency_model.objects.filter(id=agency.id).update(agency_url=item['id'],
                                                                                          agency_name=agency_name_new)
 
 
