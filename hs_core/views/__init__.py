@@ -2252,26 +2252,23 @@ def check_user(user: User, resource: BaseResource, action: str)->bool:
 
     # List of actions https://docs.aws.amazon.com/AmazonS3/latest/API/API_Operations.html
 
-    view_permissions = ["s3:GetObject", "s3:ListObjects", "s3:ListObjjectsV2"] +["s3:PutObject"]
-    # edit_permissions = ["s3:DeleteObject", "s3:DeleteObjects" "s3:PutObject", "s3:UploadPart"]
-
     r = resource.raccess
     u = user.uaccess
     # view actions
-    if action is "s3:GetObject":
+    if action == "s3:GetObject":
         return r.public or r.allow_private_sharing or u.can_view_resource(resource)
     # view and discoverable actions
-    if actionis== "s3:ListObjects" or action is "s3:ListObjjectsV2":
+    if action == "s3:ListObjects" or action == "s3:ListObjjectsV2" or action == "s3:ListBucket":
         return r.public or r.allow_private_sharing or r.discoverable or u.can_view_resource(resource)
 
     # edit actions
-    if action is "s3:PutObject":
+    if action == "s3:PutObject":
         return u.can_change_resource(resource)
-    if action is "s3:DeleteObject":
+    if action == "s3:DeleteObject":
         return u.can_change_resource(resource)
-    if action is "s3:DeleteObjects":
+    if action == "s3:DeleteObjects":
         return u.can_change_resource(resource)
-    if action is "s3:UploadPart":
+    if action == "s3:UploadPart":
         return u.can_change_resource(resource)
 
     return False
@@ -2287,11 +2284,16 @@ def hsapi_user_s3_authorization(request):
     # request body example
     # https://min.io/docs/minio/linux/administration/identity-access-management/pluggable-authorization.html#id5
     auth_request = json.loads(request.body.decode('utf-8'))["input"]
-    #print(json.dumps(auth_request, indent=2))
+    print(json.dumps(auth_request, indent=2))
     conditions: dict = auth_request["conditions"]
 
     # https://min.io/docs/minio/linux/administration/identity-access-management/policy-based-access-control.html
     action: str = auth_request["action"]  # "s3:"
+
+    if action in ["s3:GetBucketLocation"]:
+        # This is needed by mc to list buckets and does not contain a prefix
+        JsonResponse({"result" : {"allow": True}})
+
     bucket = auth_request["bucket"]
 
     # preferred_username is the hydroshare username
@@ -2303,12 +2305,13 @@ def hsapi_user_s3_authorization(request):
 
     # only one username should be present
     if len(usernames) != 1:
-        print("Not sure what to do with usernames length != 1", usernames)
+        logger.warning(f"Usernames length != 1 {usernames}")
         return JsonResponse({"result" : {"allow": False}})
     username = usernames[0]
+    logger.info(f"Checking {username} {bucket} {action}")
 
     # admin account for minio
-    if username == "minioadmin":
+    if username == "minioadmin" or username == "cuahsi":
         return JsonResponse({"result" : {"allow": True}})
     user: User = User.objects.get(username=username)
     # admin hydroshare account
@@ -2316,21 +2319,28 @@ def hsapi_user_s3_authorization(request):
         return JsonResponse({"result" : {"allow": True}})
 
     # prefixes are paths to (folders/set of) objects in the bucket
-    prefixes: list[str] = [prefix for prefix in conditions["Prefix"] if prefix]
+    # checking both Prefix and prefix as the case is not consistent
+    if "Prefix" in conditions:
+        prefixes: list[str] = [prefix for prefix in conditions["Prefix"] if prefix]
+    elif "prefix" in conditions:
+        prefixes: list[str] = [prefix for prefix in conditions["prefix"] if prefix]
+    else:
+        prefixes = []
     if not prefixes:
         # only owners of the bucket can do actions without prefixes
         bucket_owner: User = user_from_bucket_name(bucket)
         if bucket_owner == user:
-            print("Owner", username, bucket, action)
+            logger.info("Owner", username, bucket, action)
             return JsonResponse({"result" : {"allow": True}})
+        logger.warning(f"Not owner with no prefixes {username} {bucket} {action}")
         return JsonResponse({"result" : {"allow": False}})
-
+    logger.info("Checking", username, prefixes, action)
     # the root of the prefix (folder) is the resource id
     resource_ids = [prefix.split("/")[0] for prefix in prefixes]
     try:
         resources: list[BaseResource] = [get_resource_by_shortkey(resource_id, False) for resource_id in resource_ids]
     except BaseResource.DoesNotExist:
-        print(f"resource {resource_id} not found")
+        logger.warning(f"resource {resource_id} not found")
         return False  # resource not found for a prefix
 
     # users access the objects in these buckets through presigned urls, admins are approved above
@@ -2340,12 +2350,13 @@ def hsapi_user_s3_authorization(request):
     # check the user against and each resource against the action
     for resource in resources:
         if not check_user(user, resource, action):
-            print("Denied", username, resource.short_id, action)
+            logger.info(f"Denied {username} {resource.short_id} {action}")
             return JsonResponse({"result" : {"allow": False}})
         else:
-            print("Approved", username, resource.short_id, action)
+            logger.info(f"Approved {username} {resource.short_id} {action}")
     if resources:
         return JsonResponse({"result" : {"allow": True}})
+    logger.info(f"No resources found for {username} {prefixes}")
     return JsonResponse({"result" : {"allow": False}})
 
 
