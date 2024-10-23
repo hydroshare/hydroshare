@@ -1155,6 +1155,11 @@ def publish_resource(user, pk):
                'url': 'https://www.cuahsi.org'}
     resource.metadata.create_element('Publisher', **md_args)
 
+    # Here we publish the resource on behalf of the last_changed_by user
+    # This ensures that the modified date closely matches the date that the metadata are submitted to Crossref
+    last_modified = resource.last_changed_by
+    utils.resource_modified(resource, by_user=last_modified, overwrite_bag=False)
+
     # create published date
     resource.metadata.create_element('date', type='published', start_date=resource.updated)
 
@@ -1162,12 +1167,6 @@ def publish_resource(user, pk):
     md_args = {'name': 'doi',
                'url': get_activated_doi(resource.doi)}
     resource.metadata.create_element('Identifier', **md_args)
-
-    # Here we publish the resource on behalf of the last_changed_by user
-    # This ensures that the modified date closely matches the date that the metadata are submitted to Crossref
-    last_modified = resource.last_changed_by
-    utils.resource_modified(resource, by_user=last_modified, overwrite_bag=False)
-
     return pk
 
 

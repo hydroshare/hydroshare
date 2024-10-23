@@ -17,6 +17,11 @@ RUN pip install django-crispy-forms==2.1
 RUN pip install crispy-bootstrap3==2024.1
 RUN pip install Mezzanine==6.0.0
 
+# intentionally keep bleach at https://github.com/mozilla/bleach/releases/tag/v5.0.1
+# due to issue with mezzanine 6.0.0
+# https://github.com/stephenmcd/mezzanine/issues/2054
+RUN pip install bleach==5.0.1
+
 # https://www.digicert.com/kb/digicert-root-certificates.htm
 # Get the .pem file from digicert and add it to the bundle used by certifi
 # Could also use the REQUESTS_CA_BUNDLE environment variable to point to the .pem file
@@ -30,6 +35,7 @@ RUN wget -O /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem https://cacerts.digice
 
 RUN pip install boto3
 RUN pip install --upgrade django-storages
+RUN pip install hsmodels==1.0.4
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en

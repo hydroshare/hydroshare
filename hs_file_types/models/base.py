@@ -129,6 +129,9 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         root_div = div()
         with root_div:
             h3("{} Content Metadata".format(self.logical_file.data_type), style="margin-bottom: 20px;")
+            if self.logical_file.data_type == "CSV":
+                csv_metadata = self.logical_file.metadata
+                csv_metadata.get_preview_data_html()
 
         if self.logical_file.dataset_name:
             root_div.add(self.get_dataset_name_html())
@@ -194,6 +197,9 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         root_div = div()
         with root_div:
             h3("{} Content Metadata".format(self.logical_file.data_type), style="margin-bottom: 20px;")
+            if self.logical_file.data_type == "CSV":
+                csv_metadata = self.logical_file.metadata
+                csv_metadata.get_preview_data_html()
             if dataset_name_form:
                 self.get_dataset_name_form()
 

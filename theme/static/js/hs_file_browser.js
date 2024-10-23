@@ -111,6 +111,9 @@ function getFileTemplateInstance(file) {
     if (file['logical_type'] === "ModelInstanceLogicalFile" && !file.has_model_instance_aggr_folder) {
         fileTypeExt = "MI";
     }
+    if (file['logical_type'] === "CSVLogicalFile") {
+        fileTypeExt = "CSV_LOGICAL";
+    }
     var iconTemplate;
     var fileIcons = getFileIcons();
 
@@ -205,6 +208,7 @@ function updateSelectionMenuContext() {
         "setTimeseriesFileType",
         "setModelProgramFileType",
         "setModelInstanceFileType",
+        "setCSVFileType",
         "subMenuSetContentType",
         "unzip",
         "unzipToFolder",
@@ -270,6 +274,7 @@ function updateSelectionMenuContext() {
         uiActionStates.setTimeseriesFileType.disabled = true;
         uiActionStates.setModelProgramFileType.disabled = true;
         uiActionStates.setModelInstanceFileType.disabled = true;
+        uiActionStates.setCSVFileType.disabled = true;
 
         const foldersSelected = $("#fb-files-container li.fb-folder.ui-selected");
         if(resourceType === 'Resource' && foldersSelected.length > 1) {
@@ -370,7 +375,7 @@ function updateSelectionMenuContext() {
 
             if (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile") {
                 // The file is already part of an aggregation
-                if (logicalFileType === "GenericLogicalFile") {
+                if (logicalFileType === "GenericLogicalFile" || logicalFileType === "CSVLogicalFile") {
                     uiActionStates.setGenericFileType.disabled = true;
                     uiActionStates.setGenericFileType.fileMenu.hidden = true;
                 }
@@ -402,6 +407,11 @@ function updateSelectionMenuContext() {
                 logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile" &&
                 logicalFileType !== "ModelInstanceLogicalFile") {
                 uiActionStates.setGeoRasterFileType.disabled = true;
+            }
+            if (!fileName.toUpperCase().endsWith(".CSV") ||
+                logicalFileType !== "" && logicalFileType !== "CSVLogicalFile" &&
+                logicalFileType !== "CSVLogicalFile") {
+                uiActionStates.setCSVFileType.disabled = true;
             }
 
             if (!fileName.toUpperCase().endsWith(".NC") ||
@@ -459,8 +469,11 @@ function updateSelectionMenuContext() {
             }
             else {
                 // The selected file is part of a logical file type
-                if (logicalFileType !== 'RefTimeseriesLogicalFile' && logicalFileType !== "GenericLogicalFile"
-                    && logicalFileType !== "ModelProgramLogicalFile" && logicalFileType !== "ModelInstanceLogicalFile") {
+                if (logicalFileType !== 'RefTimeseriesLogicalFile'
+                    && logicalFileType !== "GenericLogicalFile"
+                    && logicalFileType !== "ModelProgramLogicalFile"
+                    && logicalFileType !== "ModelInstanceLogicalFile"
+                    && logicalFileType !== "CSVLogicalFile") {
                     // if the selected file is not part of the RefTimeseriesLogical or GenericLogicalFile file (aggregation)
                     // ModelInstanceLogicalFile or ModelProgramLogicalFile don't show the Remove Aggregation option
                     uiActionStates.removeAggregation.disabled = true;
@@ -500,15 +513,17 @@ function updateSelectionMenuContext() {
         uiActionStates.setTimeseriesFileType.disabled = true;
         uiActionStates.setModelProgramFileType.disabled = true;
         uiActionStates.setModelInstanceFileType.disabled = true;
+        uiActionStates.setCSVFileType.disabled = true;
         uiActionStates.preview.disabled = true;
 
         if (resourceType === 'Resource') {
             $("#fb-files-container").find('span.fb-logical-file-type').each(function () {
                 const logicalFileType = $(this).attr("data-logical-file-type");
                 //disable folder creation in aggregation folders
-                //TODO this needs to be updated when new aggregations are added...
+                //NOTE: this needs to be updated when new aggregations are added...
                 if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
-                    logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
+                    logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile" ||
+                    logicalFileType === "CSVLogicalFile") {
                     if ($(this).parent().hasClass("fb-file")) {
                         uiActionStates.createFolder.disabled = true;
                         uiActionStates.paste.disabled = true;
@@ -560,6 +575,9 @@ function updateSelectionMenuContext() {
 
         uiActionStates.setFileSetFileType.disabled = true;
         uiActionStates.setFileSetFileType.fileMenu.hidden = true;
+
+        uiActionStates.setCSVFileType.disabled = true;
+        uiActionStates.setCSVFileType.fileMenu.hidden = true;
 
         uiActionStates.uploadFiles.disabled = true;
 
@@ -2782,6 +2800,12 @@ $(document).ready(function () {
     $("#btn-set-model-instance-file-type").click(function () {
         setFileType("ModelInstance");
     });
+
+    // set CSV file type method
+    $("#btn-set-csv-file-type").click(function () {
+        setFileType("CSV");
+    });
+
     // set remove aggregation (file type) method
     $("#btnRemoveAggregation").click(function () {
         removeAggregation();

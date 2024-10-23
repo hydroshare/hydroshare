@@ -1,0 +1,9 @@
+# This is a semicolon delimited CSV file - a test file for the CSV parser
+# another comment - the following line is a header - the rest are data
+Column1;Column2;Column3;Column4;Column5
+Data1-1;1/1/2024;100.10;10;True
+Data2-1;1/2/2024;200.20;20;False
+Data3-1;1/3/2024;300.30;30;False
+Data4-1;1/4/2024;400.40;40;True
+Data5-1;1/5/2024;500.50;50;True
+Data6-1;1/6/2024;60.60;60;False
