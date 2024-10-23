@@ -7,7 +7,7 @@ from ..models import FundingAgency
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0084_remove_federation_from_db'),
+        ('hs_core', '0085_alter_baseresource_creator_and_more'),
     ]
 
     operations = [
