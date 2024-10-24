@@ -317,6 +317,7 @@ function updateSelectionMenuContext() {
             uiActionStates.setGeoRasterFileType.disabled = true;
             uiActionStates.setNetCDFFileType.disabled = true;
             uiActionStates.setGeoFeatureFileType.disabled = true;
+            uiActionStates.setCSVFileType.disabled = true;
             if (!selected.children('span.fb-logical-file-type').attr("data-logical-file-type") ||
                 !!selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set")) {
                 uiActionStates.removeAggregation.disabled = true;
