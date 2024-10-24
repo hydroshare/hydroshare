@@ -410,8 +410,8 @@ function updateSelectionMenuContext() {
                 uiActionStates.setGeoRasterFileType.disabled = true;
             }
             if (!fileName.toUpperCase().endsWith(".CSV") ||
-                logicalFileType !== "" && logicalFileType !== "CSVLogicalFile" &&
-                logicalFileType !== "CSVLogicalFile") {
+                logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile" &&
+                logicalFileType !== "ModelInstanceLogicalFile") {
                 uiActionStates.setCSVFileType.disabled = true;
             }
 
