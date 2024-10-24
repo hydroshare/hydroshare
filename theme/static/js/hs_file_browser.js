@@ -317,6 +317,7 @@ function updateSelectionMenuContext() {
             uiActionStates.setGeoRasterFileType.disabled = true;
             uiActionStates.setNetCDFFileType.disabled = true;
             uiActionStates.setGeoFeatureFileType.disabled = true;
+            uiActionStates.setCSVFileType.disabled = true;
             if (!selected.children('span.fb-logical-file-type').attr("data-logical-file-type") ||
                 !!selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set")) {
                 uiActionStates.removeAggregation.disabled = true;
@@ -409,8 +410,8 @@ function updateSelectionMenuContext() {
                 uiActionStates.setGeoRasterFileType.disabled = true;
             }
             if (!fileName.toUpperCase().endsWith(".CSV") ||
-                logicalFileType !== "" && logicalFileType !== "CSVLogicalFile" &&
-                logicalFileType !== "CSVLogicalFile") {
+                logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile" &&
+                logicalFileType !== "ModelInstanceLogicalFile") {
                 uiActionStates.setCSVFileType.disabled = true;
             }
 
@@ -519,11 +520,10 @@ function updateSelectionMenuContext() {
         if (resourceType === 'Resource') {
             $("#fb-files-container").find('span.fb-logical-file-type').each(function () {
                 const logicalFileType = $(this).attr("data-logical-file-type");
-                //disable folder creation in aggregation folders
+                //disable folder creation and upload files in aggregation folders
                 //NOTE: this needs to be updated when new aggregations are added...
                 if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
-                    logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile" ||
-                    logicalFileType === "CSVLogicalFile") {
+                    logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
                     if ($(this).parent().hasClass("fb-file")) {
                         uiActionStates.createFolder.disabled = true;
                         uiActionStates.paste.disabled = true;
