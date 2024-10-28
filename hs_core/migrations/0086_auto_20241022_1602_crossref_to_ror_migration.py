@@ -11,5 +11,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(FundingAgency.migrate_from_crossref_ror)
+        migrations.RunPython(FundingAgency.migrate_from_crossref_to_ror)
     ]
