@@ -1,4 +1,5 @@
 """Declare critical models for Hydroshare hs_core app."""
+import asyncio
 import copy
 import json
 import logging
@@ -2007,46 +2008,41 @@ class FundingAgency(AbstractMetaDataElement):
 
         super(FundingAgency, cls).update(element_id, **kwargs)
 
-    @classmethod
-    def migrate_from_crossref_ror(cls, apps, schema_editor):
-        """Migrate from CrossRef to ROR"""
-        logger = logging.getLogger(__name__)
 
-        for page in range(1, 500):
-            url = f"https://api.ror.org/v2/organizations?page={page}&filter=types:funder"
-            response = requests.get(url, verify=False)
-            if response.status_code == 200:
-                response_json = response.json()
-                logger.debug(f"Number of items: {response_json.get('number_of_results', None)}")
-                items = response_json.get('items', None)
-                if not items:
-                    break
-                logger.debug('Iterating through ROR items.')
-                for item in items:
-                    logger.debug(f"ROR ID : {item['id']}")
-                    if item['types'] and 'funder' in item['types']:
-                        external_ids = item['external_ids']
-                        if external_ids:
-                            fundrefs = [x_id for x_id in external_ids if x_id['type'] == 'fundref']
-                            if len(fundrefs) == 0:
-                                continue
-                            fundref = fundrefs[0]
-                            fundref_id = ''
-                            if fundref['preferred']:
-                                fundref_id = fundref['preferred']
-                            else:
-                                fundref_id = fundref['all'][0]
+    async def get_funder_records(self, apps, schema_editor):
+        """ Async method to get funder records from ROR """
+        funding_records = apps.get_model('hs_core', 'FundingAgency').all();
 
-                            agency_url_prefix = 'http://dx.doi.org/10.13039/'
-                            agency_url = agency_url_prefix + fundref_id
-
-                            funding_agency_model = apps.get_model('hs_core', 'FundingAgency')
-                            agency = funding_agency_model.objects.filter(agency_url=agency_url).first()
+        async def update_record(record):
+            logger = logging.getLogger(__name__)
+            logger.debug(f"Checking funder record {record.id}")
+            
+            if record.agency_url is not None:
+                doi_prefix = 'http://dx.doi.org/10.13039/'
+                doi_id_parts = record.agency_url.split(doi_prefix)
+                if len(doi_id_parts) == 2:
+                    fundref_id = record.agency_url.split(doi_prefix)[1]
+                    url = f"https://api.ror.org/v2/organizations?query=%22{fundref_id}%22"
+                    response = await requests.get(url, verify=False)
+                    if response.status_code == 200:
+                        response_json = response.json()
+                        items = response_json.get('items', None)
+                        if items:
+                            item = items[0]
+                            logger.debug(f"Replacing old funder id {record.agency_url} with new id {item['id']}")
                             agency_name_new = [n['value'] for n in item['names'] if 'ror_display' in n['types']][0]
-                            if agency is not None:
-                                logger.debug(f'Updating funding agency with {agency_url}, {agency_name_new}')
-                                funding_agency_model.objects.filter(id=agency.id).update(agency_url=item['id'],
-                                                                                         agency_name=agency_name_new)
+                            record.agency_name = agency_name_new
+                            record.agent_url = item['id']
+                            record.save()
+            
+        await asyncio.gather(*[update_record(record) for record in funding_records])
+
+    @classmethod
+    def migrate_from_crossref_to_ror(cls, apps, schema_editor):
+        """Migrate from CrossRef to ROR asynchrounously"""
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(cls.get_funder_records(apps, schema_editor))
 
 
 @rdf_terms(DC.subject)
