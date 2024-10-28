@@ -2009,7 +2009,6 @@ class FundingAgency(AbstractMetaDataElement):
 
         super(FundingAgency, cls).update(element_id, **kwargs)
 
-
     @sync_to_async
     def get_funding_records(self, apps):
         FundingAgency = apps.get_model('hs_core', 'FundingAgency')
@@ -2019,7 +2018,6 @@ class FundingAgency(AbstractMetaDataElement):
     async def update_record(self, record):
         logger = logging.getLogger(__name__)
         logger.debug(f"Checking funder record {record.id}")
-        
         if record.agency_url is not None:
             doi_prefix = 'http://dx.doi.org/10.13039/'
             doi_id_parts = record.agency_url.split(doi_prefix)
