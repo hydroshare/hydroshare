@@ -12,9 +12,9 @@ let fundingAgenciesApp = new Vue({
     resourceMode: RESOURCE_MODE, // edit/view
     selfAccessLevel: SELF_ACCESS_LEVEL, // user's access level on resource
     resPublished: RESOURCE_PUBLISHED_OR_UNDER_REVIEW,
-    crossrefFunders: [], // array of funders to be filled from crossref api
-    crossrefFundersNames: [],
-    crossrefSelected: false,
+    rorList: [], // array of funders to be filled from crossref api
+    rorNames: [],
+    rorSelected: false,
     HELP_EMAIL: "help@cuahsi.org",
     CROSSREF_API_URL: "https://api.crossref.org/funders",
     LIMIT_US: true, // limit to US funders
@@ -39,33 +39,11 @@ let fundingAgenciesApp = new Vue({
     ROR_API_URL: "https://api.ror.org/v2/organizations"
   },
   mounted() {
-    if (this.resourceMode === 'Edit' && (this.selfAccessLevel === 'owner' || this.selfAccessLevel === 'editor') ) {
-      // this.checkFunderNamesExistInCrossref(this.fundingAgencies);
+    if (this.resourceMode === 'Edit' && (this.selfAccessLevel === 'owner' || this.selfAccessLevel === 'editor') && this.resPublished) {
       this.checkFunderNamesExistInROR(this.fundingAgencies);
     }
   },
   methods: {
-    checkFunderNamesExistInCrossref: async function (funders) {
-      try {
-        const promises = [];
-        for (const funder of funders) {
-          promises.push(
-            this.singleFunderNameExistsInCrossref(funder.agency_name)
-          );
-        }
-        const results = await Promise.all(promises);
-        const unmatched = results.filter((r) => !r.match);
-        for (let umatch of unmatched) {
-          this.unmatchedFunders.push(umatch.funderName);
-        }
-        if (unmatched.length > 0) {
-          // In addition to a static warning in the Funding Agencies section for edit mode, also alert for resource owners regardles of view/edit mode
-          this.showFundersAlert();
-        }
-      } catch (e) {
-        console.error("Error while checking funder names in Crossref", e);
-      }
-    },
     checkFunderNamesExistInROR: async function (funders) {
       try {
         const promises = [];
@@ -200,17 +178,17 @@ let fundingAgenciesApp = new Vue({
       return null;
     },
 
-    initCrossrefFundersSearch: async function (funderName) {
+    initRORSearch: async function (funderName) {
       if (funderName === "" || this.notifications.error) {
         return;
       }
       this.isPending = true;
-      this.crossrefFunders = await this.fetchFromRORList(
+      this.rorList = await this.fetchFromRORList(
         funderName
       );
-      if (this.crossrefFunders !== null) {
-        this.crossrefFundersNames = this.crossrefFundersNames.concat(
-          this.crossrefFunders.map((f) => f.name)
+      if (this.rorList !== null) {
+        this.rorNames = this.rorNames.concat(
+          this.rorList.map((f) => f.name)
         );
       }
       this.isPending = false;
@@ -262,7 +240,7 @@ let fundingAgenciesApp = new Vue({
       }
     },
     isNameFromCrossref: function (name) {
-      return this.crossrefFundersNames.includes(name);
+      return this.rorNames.includes(name);
     },
     isDuplicateFunder: function (funderToCheck) {
       funderToCheck.agency_name = funderToCheck.agency_name || "";
@@ -283,13 +261,13 @@ let fundingAgenciesApp = new Vue({
     },
     selectAgency: function (event) {
       this.isPending = false;
-      this.crossrefSelected = true;
+      this.rorSelected = true;
       this.currentlyEditing.agency_name = event.name;
       this.currentlyEditing.agency_url = event.id;
       this.checkAgencyName();
     },
     clearSelectedAgency: function () {
-      this.crossrefSelected = false;
+      this.rorSelected = false;
     },
     openAddModal() {
       this.mode = "Add";
@@ -334,14 +312,14 @@ let fundingAgenciesApp = new Vue({
   watch: {
     agencyNameInput: function (funder) {
       this.currentlyEditing.agency_name = funder;
-      if (funder.length < this.MIN_SEARCH_LEN || this.crossrefSelected) {
-        this.crossrefSelected = false; // reset
+      if (funder.length < this.MIN_SEARCH_LEN || this.rorSelected) {
+        this.rorSelected = false; // reset
         return;
       }
       this.checkAgencyName();
       if (this.timeout) clearTimeout(this.timeout);
       this.timeout = setTimeout(() => {
-        this.initCrossrefFundersSearch(funder).then(() => {
+        this.initRORSearch(funder).then(() => {
           this.checkAgencyName();
         });
       }, this.DEBOUNCE_API_MS);
