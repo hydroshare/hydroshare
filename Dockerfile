@@ -16,6 +16,9 @@ RUN pip install django-widget-tweaks==1.5.*
 RUN pip install django-crispy-forms==2.1
 RUN pip install crispy-bootstrap3==2024.1
 RUN pip install Mezzanine==6.0.0
+RUN pip install opentelemetry-instrumentation-django==0.48b0
+RUN pip install opentelemetry-exporter-gcp-trace==1.7.0
+RUN pip install opentelemetry-instrumentation-celery==0.48b0
 
 # https://www.digicert.com/kb/digicert-root-certificates.htm
 # Get the .pem file from digicert and add it to the bundle used by certifi
