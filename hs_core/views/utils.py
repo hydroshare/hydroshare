@@ -1855,5 +1855,6 @@ def user_from_bucket_name(bucket_name: str) -> User:
     """
     return User.objects.get(userprofile___bucket_name=bucket_name)
 
+
 def is_ajax(request):
     return request.headers.get('x-requested-with') == 'XMLHttpRequest'

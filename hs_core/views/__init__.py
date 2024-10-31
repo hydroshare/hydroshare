@@ -99,6 +99,7 @@ from .utils import (
     get_default_support_user,
     user_from_bucket_name,
     is_ajax,
+    get_resource_by_shortkey,
 )
 
 logger = logging.getLogger(__name__)
@@ -2340,7 +2341,7 @@ def hsapi_user_s3_authorization(request):
     try:
         resources: list[BaseResource] = [get_resource_by_shortkey(resource_id, False) for resource_id in resource_ids]
     except BaseResource.DoesNotExist:
-        logger.warning(f"resource {resource_id} not found")
+        logger.warning(f"at least one resource {resource_ids} not found")
         return False  # resource not found for a prefix
 
     # users access the objects in these buckets through presigned urls, admins are approved above
