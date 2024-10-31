@@ -56,6 +56,7 @@ from hs_core.tasks import create_bag_by_irods, create_temp_zip
 from hs_core.hydroshare.utils import (
     resolve_request,
     resource_modified,
+    get_resource_by_shortkey,
 )
 from hs_core.models import (
     BaseResource,
@@ -99,7 +100,6 @@ from .utils import (
     get_default_support_user,
     user_from_bucket_name,
     is_ajax,
-    get_resource_by_shortkey,
 )
 
 logger = logging.getLogger(__name__)
