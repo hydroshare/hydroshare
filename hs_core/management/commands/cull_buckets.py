@@ -40,3 +40,4 @@ def cull_bucket(username, istorage):
     else:
         istorage.delete_bucket(bucket_name)
         print(f"deleted inactive {user.username} bucket {bucket_name}")
+

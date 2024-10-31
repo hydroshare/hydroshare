@@ -193,10 +193,10 @@ urlpatterns = [
     path('userKeycloak/<path:user_identifier>',
          core_views.hsapi_get_user_for_keycloak, name='get_user_for_keycloak'),
 
-    url(r'^userS3Authorization/$',
+    path('userS3Authorization/$',
         core_views.hsapi_user_s3_authorization, name='user_s3_authorization'),
 
-    url(r'^dictionary/universities/$',
+    path('dictionary/universities/$',
         dict_views.ListUniversities.as_view(), name="get_dictionary"),
 
     path('dictionary/subject_areas/',
@@ -240,9 +240,5 @@ urlpatterns = [
             file_type_views.model_instance_metadata_in_json,
             name='model_instance_metadata_in_json'),
 
-    url(r'^resource/(?P<resource_id>[0-9a-f]+)/modelinstance/meta/(?P<aggregation_path>.*)$',
-        file_type_views.model_instance_metadata_in_json,
-        name='model_instance_metadata_in_json'),
-
-    url(r'^resource/(?P<resource_id>[0-9a-f]+)/quota_holder_bucket_name/$', get_quota_holder_bucket),
+    re_path(r'^resource/(?P<resource_id>[0-9a-f]+)/quota_holder_bucket_name/$', get_quota_holder_bucket),
 ]

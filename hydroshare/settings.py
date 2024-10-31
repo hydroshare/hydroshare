@@ -418,7 +418,6 @@ INSTALLED_APPS = (
     "hs_access_control",
     "hs_labels",
     "hs_metrics",
-    "irods_browser_app",
     "widget_tweaks",
     "hs_tools_resource",
     "hs_sitemap",
