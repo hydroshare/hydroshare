@@ -2245,7 +2245,7 @@ def hsapi_get_user(request, user_identifier):
     return get_user_or_group_data(request, user_identifier, "false")
 
 
-def check_user(user: User, resource: BaseResource, action: str)->bool:
+def check_user(user: User, resource: BaseResource, action: str):
     # Break this down into just view and edit for now.
     # HydroShare does not conusme changes made through S3 API yet so edit check is not active
     # Later on we could share the metadata files only or allow resource deletion.
