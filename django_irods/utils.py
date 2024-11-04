@@ -37,7 +37,7 @@ def normalized_bucket_name(username):
     with connection.cursor() as cursor:
         user_id_from_username_query = f'SELECT "auth_user"."id" \
                                         FROM "auth_user" \
-                                        WHERE "auth_user"."username" = {username}'
+                                        WHERE "auth_user"."username" = \'{username}\''
         cursor.execute(user_id_from_username_query)
         row = cursor.fetchone()
         if row is None:
