@@ -193,9 +193,9 @@ urlpatterns = [
     path('userKeycloak/<path:user_identifier>',
          core_views.hsapi_get_user_for_keycloak, name='get_user_for_keycloak'),
 
-    path('userS3Authorization/$', core_views.hsapi_user_s3_authorization, name='user_s3_authorization'),
+    path('userS3Authorization/', core_views.hsapi_user_s3_authorization, name='user_s3_authorization'),
 
-    path('dictionary/universities/$', dict_views.ListUniversities.as_view(), name="get_dictionary"),
+    path('dictionary/universities/', dict_views.ListUniversities.as_view(), name="get_dictionary"),
 
     path('dictionary/subject_areas/',
          dict_views.ListSubjectAreas.as_view(), name="get_subject_areas"),
