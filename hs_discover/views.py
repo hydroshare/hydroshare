@@ -9,6 +9,8 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.generic import TemplateView
+from itertools import groupby
+from operator import itemgetter
 from haystack.query import SearchQuerySet, SQ
 from haystack.inputs import Exact
 from rest_framework.views import APIView
@@ -163,24 +165,33 @@ class SearchAPI(APIView):
                 availability = [x for x in availability if x[1] > 0]
             filterdata = [authors, owners, subjects, contributors, types, availability]
 
+
+        # Filter out the old resources.
+        resources_list = list(sqs.all())
+
+        # Group the results by `title`
+        grouped_resources = groupby(sorted(resources_list, key=lambda x: x.title), key=lambda x: x.title)
+
+        latest_resources = []
+        for title, group in grouped_resources:
+            # Get the latest version by picking the one with the latest `created` date
+            latest_version = max(group, key=lambda x: x.created) 
+            latest_resources.append(latest_version)
+
+        # Sort the resources by the requested field or default.
         sort = 'modified'
         if request.GET.get('sort'):
             sort = request.GET.get('sort')
             # protect against ludicrous sort orders
             if sort != 'title' and sort != 'author' and sort != 'modified' and sort != 'created':
                 sort = 'modified'
-
         asc = '-1'
         if request.GET.get('asc'):
             asc = request.GET.get('asc')
+        latest_resources = sorted(latest_resources, key=lambda x: getattr(x, sort), reverse=(asc == '-1'))
 
-        sort = sort if asc == '1' else '-{}'.format(sort)
-
-        sqs = sqs.order_by(sort)
-
-        resources = []
-
-        p = Paginator(sqs, self.perpage)
+        # Apply pagination
+        p = Paginator(latest_resources, self.perpage)
 
         if request.GET.get('pnum'):
             pnum = request.GET.get('pnum')
@@ -196,11 +207,11 @@ class SearchAPI(APIView):
                 }, status=200)
         else:
             pnum = 1  # page number not specified, implies page 1
-            pnum = min(pnum, p.num_pages)
+            pnum = min(pnum, p.num_pages)                
 
+        resources = []
         geodata = []
-
-        for result in p.page(pnum):
+        for result in p.get_page(pnum).object_list:
             contributor = 'None'  # contributor is actually a list and can have multiple values
             owner = 'None'  # owner is actually a list and can have multiple values
             author_link = None  # Send None to avoid anchor render
