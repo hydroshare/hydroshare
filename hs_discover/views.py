@@ -10,7 +10,6 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.generic import TemplateView
 from itertools import groupby
-from operator import itemgetter
 from haystack.query import SearchQuerySet, SQ
 from haystack.inputs import Exact
 from rest_framework.views import APIView
@@ -165,7 +164,6 @@ class SearchAPI(APIView):
                 availability = [x for x in availability if x[1] > 0]
             filterdata = [authors, owners, subjects, contributors, types, availability]
 
-
         # Filter out the old resources.
         resources_list = list(sqs.all())
 
@@ -175,7 +173,7 @@ class SearchAPI(APIView):
         latest_resources = []
         for title, group in grouped_resources:
             # Get the latest version by picking the one with the latest `created` date
-            latest_version = max(group, key=lambda x: x.created) 
+            latest_version = max(group, key=lambda x: x.created)
             latest_resources.append(latest_version)
 
         # Sort the resources by the requested field or default.
@@ -207,7 +205,7 @@ class SearchAPI(APIView):
                 }, status=200)
         else:
             pnum = 1  # page number not specified, implies page 1
-            pnum = min(pnum, p.num_pages)                
+            pnum = min(pnum, p.num_pages)              
 
         resources = []
         geodata = []
