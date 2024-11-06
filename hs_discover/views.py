@@ -205,7 +205,7 @@ class SearchAPI(APIView):
                 }, status=200)
         else:
             pnum = 1  # page number not specified, implies page 1
-            pnum = min(pnum, p.num_pages)              
+            pnum = min(pnum, p.num_pages)
 
         resources = []
         geodata = []
