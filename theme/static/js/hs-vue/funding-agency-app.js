@@ -54,7 +54,8 @@ let fundingAgenciesApp = new Vue({
         const results = await Promise.all(promises);
         const unmatched = results.filter((r) => !r.match);
         for (let umatch of unmatched) {
-          this.unmatchedFunders.push(umatch.funderName);
+          if(this.unmatchedFunders.includes(umatch.funderName)) continue;
+            this.unmatchedFunders.push(umatch.funderName);
         }
         if (unmatched.length > 0) {
           this.showFundersAlert();
