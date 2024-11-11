@@ -38,11 +38,30 @@ let uppy = new Uppy({
   onBeforeFileAdded: (currentFile, files) => {
     // https://uppy.io/docs/uppy/#onbeforefileaddedfile-files
     // check for existing files before adding to the resource
-    // window.fbFiles is set in the file_browser.html template
-    // TODO: not sure that this will work when adding a folder with same name as an existing dir in the resource...
+    // window.fbFiles and fbFolders are set in the file_browser.html template
+
+    let path = currentFile?.meta?.relativePath
+
+    // check existing dirs if uploading a folder
+    if (window.fbFolders){
+      // strip the filename from the currentFile.meta.relativePath
+      // we only check the first level directory
+      if (path) {
+        path = path.split("/")[0];
+        const existingFolders = window.fbFolders.map((folder) => folder.name);
+        if (existingFolders.includes(path)) {
+          uppy.info(
+            `Folder ${path} already exists in the resource. Remove or rename.`
+          );
+          return false;
+        }
+      }
+    }
+
+    // check existing files
     if (window.fbFiles) {
       const existingFiles = window.fbFiles.map((f) => f.name);
-      if (existingFiles.includes(currentFile.name)) {
+      if (existingFiles.includes(currentFile.name) && !path) {
         uppy.info(
           `File ${currentFile.name} already exists in the resource. Remove or rename.`
         );
