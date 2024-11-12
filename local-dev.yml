@@ -143,6 +143,42 @@ services:
     stdin_open: true
     tty: true
     command: /bin/bash init-defaultworker
+  companion:
+  # https://github.com/transloadit/uppy/blob/main/packages/%40uppy/companion/KUBERNETES.md
+    image:  docker.io/transloadit/companion:latest
+    container_name: companion
+    hostname: companion
+    environment:
+      COMPANION_PORT: '3020'
+      COMPANION_CLIENT_ORIGINS_REGEX: 'http://localhost:8000'
+      COMPANION_UPLOAD_URLS: 'http://hydroshare:8000/hsapi/tus/*'
+      COMPANION_DATADIR: '/mnt/companion-data'
+      COMPANION_DOMAIN: 'localhost:3020'
+      COMPANION_ALLOW_LOCAL_URLS: 'true'
+      COMPANION_PROTOCOL: 'http'
+      COMPANION_REDIS_URL: 'redis://:superSecretPassword@redis:6379'
+      COMPANION_CHUNK_SIZE: '100000000'  # ~72MB
+      # COMPANION_PREAUTH_SECRET: 'another secret'
+      # For 3rd party services like google drive to work locally, you need to set the following:
+      COMPANION_SECRET: 'SECRET'
+      COMPANION_GOOGLE_KEY: 'KEY'
+      COMPANION_GOOGLE_SECRET: 'SECRET'
+    ports:
+      - "3020:3020"
+    volumes:
+      - "companion_vol:/mnt/companion-data"
+    depends_on:
+      - redis
+  redis:
+    image: redis:latest
+    container_name: redis
+    hostname: redis
+    environment:
+      REDIS_PASSWORD: 'superSecretPassword'
+    ports:
+      - "6379:6379"
+    volumes:
+      - "redis_data_vol:/data"
 volumes:
   idata_iconf_vol:
   idata_vault_vol:
@@ -153,3 +189,5 @@ volumes:
   temp_vol:
   share_vol:
   rabbitmq_data_vol:
+  redis_data_vol:
+  companion_vol:

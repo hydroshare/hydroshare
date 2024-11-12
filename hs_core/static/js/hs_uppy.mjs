@@ -137,7 +137,9 @@ let uppy = new Uppy({
     },
   })
   .use(Tus, {
-    endpoint: `${origin}/hsapi/tus/`,
+    // TODO: make the endpoint configurable
+    // endpoint: `${origin}/hsapi/tus/`,
+    endpoint: `http://hydroshare:8000/hsapi/tus/`,
     withCredentials: true,
     // https://uppy.io/docs/tus/#headers
     headers: headers,
