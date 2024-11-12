@@ -23,6 +23,7 @@ from hs_core.task_utils import (get_or_create_task_notification,
                                 get_task_user_id)
 from hs_core.tasks import create_bag_by_irods, create_temp_zip
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, is_ajax
+from hs_core.models import RangedFileReader
 from hs_file_types.enums import AggregationMetaFilePath
 
 logger = logging.getLogger(__name__)
@@ -327,11 +328,33 @@ def download(request, path, use_async=True,
     # track download count
     res.update_download_count()
     proc = session.run_safe('iget', None, irods_output_path, *options)
-    response = FileResponse(proc.stdout, content_type=mtype)
+    # proc.stdout is an _io.BufferedReader object
+    ranged_file = RangedFileReader(proc.stdout)
+    response = FileResponse(ranged_file, content_type=mtype)
     filename = output_path.split('/')[-1]
     filename = urllib.parse.quote(filename)
     response['Content-Disposition'] = 'attachment; filename="{name}"'.format(name=filename)
     response['Content-Length'] = flen
+
+    response["Accept-Ranges"] = "bytes"
+    # Respect the Range header.
+    if "HTTP_RANGE" in request.META:
+        try:
+            ranges = RangedFileReader.parse_range_header(request.META['HTTP_RANGE'], flen)
+        except ValueError:
+            ranges = None
+        # only handle syntactically valid headers, that are simple (no
+        # multipart byteranges)
+        if ranges is not None and len(ranges) == 1:
+            start, stop = ranges[0]
+            if stop > flen:
+                # requested range not satisfiable
+                return HttpResponse(status=416)
+            ranged_file.start = start
+            ranged_file.stop = stop
+            response["Content-Range"] = "bytes %d-%d/%d" % (start, stop - 1, flen)
+            response["Content-Length"] = stop - start
+            response.status_code = 206
     return response
 
 
