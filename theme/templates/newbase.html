@@ -107,7 +107,7 @@
         </script>
     {% endif %}
     <script>
-        const STATIC_URL = "{% static '' %}" || "/static/static/";
+        const STATIC_URL = "{{ STATIC_URL }}" || "/static/static/";
     </script>
 </head>
 

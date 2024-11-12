@@ -55,7 +55,8 @@ let fundingAgenciesApp = new Vue({
         const results = await Promise.all(promises);
         const unmatched = results.filter((r) => !r.match);
         for (let umatch of unmatched) {
-          this.unmatchedFunders.push(umatch.funderName);
+          if(this.unmatchedFunders.includes(umatch.funderName)) continue;
+            this.unmatchedFunders.push(umatch.funderName);
         }
         if (unmatched.length > 0) {
           // In addition to a static warning in the Funding Agencies section for edit mode, also alert for resource owners regardles of view/edit mode
