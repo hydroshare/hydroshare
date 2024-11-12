@@ -463,7 +463,7 @@ TUS_EXISTING_FILE = 'error'  # Other options are: 'overwrite',  'error', 'rename
 
 # the url for the uppy companion server
 # https://uppy.io/docs/companion/
-COMPANION_URL = 'https://companion.cuahsi.org/'
+COMPANION_URL = 'https://companion.hydroshare.org/'
 
 SWAGGER_SETTINGS = {
     "DEFAULT_GENERATOR_CLASS": "hs_rest_api2.serializers.NestedSchemaGenerator"
