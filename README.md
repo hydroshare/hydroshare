@@ -70,7 +70,7 @@ Run the following command on completion to launch Hydroshare:
 
     Some WARNINGs are normal. 
 
-    HydroShare is available in your browser at http://localhost:800 or http://host.docker.internal:8000 (for 3rd party oauth)
+    HydroShare is available in your browser at http://localhost:8000 or http://host.docker.internal:8000 (for 3rd party oauth)
 
     The default admin page is http://localhost:8000/admin
 
