@@ -914,15 +914,20 @@ class CustomTusUpload(TusUpload):
         # get the hydroshare resource id from the metadata
         hs_res_id = metadata.get('hs_res_id')
 
-        if not self.request.user:
+        if not self.request.user.is_authenticated:
             sessionid = self.request.headers.get('hs_s_id', None)
             # use the cookie to get the django session and user
             if sessionid:
-                # get the user from the session
-                session = Session.objects.get(session_key=sessionid)
-                user_id = session.get_decoded().get('_auth_user_id')
-                user = User.objects.get(pk=user_id)
-                self.request.user = user
+                try:
+                    # get the user from the session
+                    session = Session.objects.get(session_key=sessionid)
+                    user_id = session.get_decoded().get('_auth_user_id')
+                    user = User.objects.get(pk=user_id)
+                    self.request.user = user
+                except Exception as ex:
+                    err_msg = f"Error in getting user from session: {str(ex)}"
+                    logger.error(err_msg)
+                    return HttpResponseForbidden(err_msg)
 
         # check that the user has permission to upload a file to the resource
         try:
