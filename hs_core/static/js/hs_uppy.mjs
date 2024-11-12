@@ -144,7 +144,7 @@ let uppy = new Uppy({
   let UPPY_UPLOAD_ENDPOINT = 'https://localhost/hsapi/tus/'
   uppy
   .use(Tus, {
-    endpoint: `${origin}/hsapi/tus/`,
+    endpoint: `http://host.docker.internal:8000/hsapi/tus/`,
     // TODO: add some documentation for testing gdrive connection locally
     // above works for direct upload without companion
     // below works for gdrive from companion:
