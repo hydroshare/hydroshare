@@ -15,9 +15,6 @@ if (MAX_CHUNK > MAX_FILE_SIZE) {
   MAX_CHUNK = MAX_FILE_SIZE;
 }
 
-// get the origin of the current page
-const origin = window.location.origin;
-
 const headers = {
   "HS-SID": HS_S_ID
 };
@@ -139,12 +136,7 @@ let uppy = new Uppy({
   });
   uppy
   .use(Tus, {
-    // TODO: this endpoint needs to be set based on the origin vs local dev
-    endpoint: `http://host.docker.internal:8000/hsapi/tus/`,
-    // TODO: add some documentation for testing gdrive connection locally
-    // above works for direct upload without companion
-    // below works for gdrive from companion:
-    // endpoint: 'http://hydroshare:8000/hsapi/tus/',
+    endpoint: UPPY_UPLOAD_ENDPOINT,
     withCredentials: true,
     // https://uppy.io/docs/tus/#headers
     headers: headers,
