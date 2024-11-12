@@ -955,7 +955,11 @@ class CustomTusUpload(TusUpload):
 
         tus_file.write_chunk(chunk=chunk)
 
-        if tus_file.is_complete():
+        # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/tusfile.py#L151-L152
+        # here we modify from django_tus to allow for the file to be marked as complete
+        # even when the file_size is incorrectly set to 0
+        file_size = tus_file.file_size
+        if tus_file.is_complete() or (file_size == 0 and tus_file.offset > tus_file.file_size):
             # file transfer complete, rename from resource id to actual filename
             tus_file.rename()
             tus_file.clean()
