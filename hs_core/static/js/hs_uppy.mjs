@@ -136,9 +136,14 @@ let uppy = new Uppy({
       $(".fb-drag-flag").hide();
       $("#hsDropzone").toggleClass("glow-blue", false);
     },
-  })
+  });
+  uppy
   .use(Tus, {
     endpoint: `${origin}/hsapi/tus/`,
+    // TODO: add some documentation for testing gdrive connection locally
+    // above works for direct upload without companion
+    // below works for gdrive from companion:
+    // endpoint: 'http://hydroshare:8000/hsapi/tus/',
     withCredentials: true,
     // https://uppy.io/docs/tus/#headers
     headers: headers,
