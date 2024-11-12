@@ -426,6 +426,8 @@ def page_permissions_page_processor(request, page):
     if hasattr(settings, 'DATA_UPLOAD_MAX_MEMORY_SIZE'):
         max_chunk_size_mb = settings.DATA_UPLOAD_MAX_MEMORY_SIZE / 1024 / 1024  # convert to MB
 
+    companion_url = getattr(settings, 'COMPANION_URL', 'https://companion.cuahsi.org/')
+
     return {
         'resource_type': cm._meta.verbose_name,
         "users_json": users_json,
@@ -440,6 +442,7 @@ def page_permissions_page_processor(request, page):
         "max_file_size": max_file_size,
         "max_file_size_for_display": convert_file_size_to_unit(max_file_size, "GB", "MB"),
         "max_chunk_size_mb": max_chunk_size_mb,
+        "companion_url": companion_url
     }
 
 
