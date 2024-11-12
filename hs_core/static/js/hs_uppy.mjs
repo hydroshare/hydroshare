@@ -26,7 +26,7 @@ const cookies = document.cookie.split(";").reduce((acc, cookie) => {
 }, {});
 
 const headers = {
-  "HS-COOKIE": JSON.stringify(cookies),
+  hs_s_id: SESSION
 };
 
 let uppy = new Uppy({
