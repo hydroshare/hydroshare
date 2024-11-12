@@ -426,8 +426,8 @@ def page_permissions_page_processor(request, page):
     if hasattr(settings, 'DATA_UPLOAD_MAX_MEMORY_SIZE'):
         max_chunk_size_mb = settings.DATA_UPLOAD_MAX_MEMORY_SIZE / 1024 / 1024  # convert to MB
 
-    companion_url = getattr(settings, 'COMPANION_URL', 'http://localhost:3020')
-    uppy_upload_endpoint = getattr(settings, 'UPPY_UPLOAD_ENDPOINT', 'http://localhost:8000/hsapi/tus/')
+    companion_url = getattr(settings, 'COMPANION_URL', 'https://companion.hydroshare.org/')
+    uppy_upload_endpoint = getattr(settings, 'UPPY_UPLOAD_ENDPOINT', 'https://hydroshare.org/hsapi/tus/')
 
     # get the session id for the current user
     if request.user.is_authenticated:
