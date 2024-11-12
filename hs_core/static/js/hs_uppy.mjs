@@ -36,6 +36,8 @@ let uppy = new Uppy({
       files[fileId].meta.existing_path_in_resource = JSON.stringify(
         getCurrentPath()
       );
+      // add the file size to the metadata
+      files[fileId].meta.file_size = files[fileId].data.size;
     });
     return files;
   },

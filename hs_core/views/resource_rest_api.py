@@ -1,5 +1,6 @@
 import os
 import mimetypes
+import base64
 import copy
 import tempfile
 import shutil
@@ -7,6 +8,7 @@ import logging
 import json
 
 from django.urls import reverse
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousFileOperation
 from django.core.exceptions import ValidationError as CoreValidationError
 from django.http import HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotFound
@@ -949,17 +951,14 @@ class CustomTusUpload(TusUpload):
         if chunk.offset != tus_file.offset:
             return TusResponse(status=409)
 
-        # here we modify from django_tus in the case that the file_size is 0
-        if chunk.offset > tus_file.file_size and tus_file.file_size > 0:
+        if chunk.offset > tus_file.file_size:
             return TusResponse(status=413)
 
         tus_file.write_chunk(chunk=chunk)
 
         # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/tusfile.py#L151-L152
         # here we modify from django_tus to allow for the file to be marked as complete
-        # even when the file_size is incorrectly set to 0
-        file_size = tus_file.file_size
-        if tus_file.is_complete() or (file_size == 0 and tus_file.offset > tus_file.file_size):
+        if tus_file.is_complete() or tus_file.offset > tus_file.file_size:
             # file transfer complete, rename from resource id to actual filename
             tus_file.rename()
             tus_file.clean()
@@ -968,3 +967,33 @@ class CustomTusUpload(TusUpload):
             self.finished()
 
         return TusResponse(status=204, extra_headers={'Upload-Offset': tus_file.offset})
+
+    def post(self, request, *args, **kwargs):
+        # adapted from django_tus TusUpload.post
+        # in order to handle missing HTTP_UPLOAD_LENGTH header
+        # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/views.py#L56-L75
+
+        metadata = self.get_metadata(request)
+
+        metadata["filename"] = self.validate_filename(metadata)
+
+        message_id = request.META.get("HTTP_MESSAGE_ID")
+        if message_id:
+            metadata["message_id"] = base64.b64decode(message_id)
+
+        existing = TusFile.check_existing_file(metadata.get("filename", False))
+
+        if settings.TUS_EXISTING_FILE == 'error' and settings.TUS_FILE_NAME_FORMAT == 'keep' and existing:
+            return TusResponse(status=409, reason="File = with same name already exists")
+
+        # set the filesize from HTTP header if it exists, otherwise set it from the metadata
+        file_size = int(request.META.get("HTTP_UPLOAD_LENGTH", "0"))
+        meta_file_size = metadata.get("file_size", None)
+        if meta_file_size:
+            file_size = meta_file_size
+
+        tus_file = TusFile.create_initial_file(metadata, file_size)
+
+        return TusResponse(
+            status=201,
+            extra_headers={'Location': '{}{}'.format(request.build_absolute_uri(), tus_file.resource_id)})
