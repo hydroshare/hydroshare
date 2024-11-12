@@ -3,6 +3,7 @@ import {
   Dashboard,
   Tus,
   GoldenRetriever,
+  GoogleDrive,
   DropTarget,
 } from "https://releases.transloadit.com/uppy/v4.4.0/uppy.min.mjs";
 
@@ -13,6 +14,20 @@ const MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024; // in bytes
 if (MAX_CHUNK > MAX_FILE_SIZE) {
   MAX_CHUNK = MAX_FILE_SIZE;
 }
+
+// get the origin of the current page
+const origin = window.location.origin;
+// add a header for the CSRF token and the sessionid cookie
+// convert the document.cookie cookie string to an object
+const cookies = document.cookie.split(";").reduce((acc, cookie) => {
+  const [name, value] = cookie.split("=").map((c) => c.trim());
+  acc[name] = value;
+  return acc;
+}, {});
+
+const headers = {
+  "HS-COOKIE": JSON.stringify(cookies),
+};
 
 let uppy = new Uppy({
   id: "uppy",
@@ -129,7 +144,10 @@ let uppy = new Uppy({
     },
   })
   .use(Tus, {
-    endpoint: `/hsapi/tus/`,
+    endpoint: `${origin}/hsapi/tus/`,
+    withCredentials: true,
+    // https://uppy.io/docs/tus/#headers
+    headers: headers,
     // https://uppy.io/docs/tus/#chunksize
     // it is not recommended to set the chunk size
     // however in testing it seems to improve resumability
@@ -216,17 +234,28 @@ let uppy = new Uppy({
       .append(
         '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
           '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-            '<span aria-hidden="true">&times;</span></button>' +
+          '<span aria-hidden="true">&times;</span></button>' +
           "<div>" +
-            "<strong>File Upload Failed</strong>" +
+          "<strong>File Upload Failed</strong>" +
           "</div>" +
           "<div>" +
-            "<span>" + errorMsg + "</span>" +
+          "<span>" +
+          errorMsg +
+          "</span>" +
           "</div>" +
-        "</div>"
+          "</div>"
       )
       .fadeIn(200);
   })
   .on("progress", (progress) => {
     $("#upload-progress").text(`${progress}%`);
+  })
+  .use(GoogleDrive, {
+    target: Dashboard,
+    companionUrl: COMPANION_URL,
+    // https://github.com/transloadit/uppy/issues/2241
+    // https://uppy.io/docs/google-drive/#companioncookiesrule
+    companionCookiesRule: "include",
+    withCredentials: "true",
+    // companionHeaders: headers
   });
