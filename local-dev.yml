@@ -150,7 +150,8 @@ services:
     hostname: companion
     environment:
       COMPANION_PORT: '3020'
-      COMPANION_CLIENT_ORIGINS: 'http://localhost:8000'
+      COMPANION_CLIENT_ORIGINS: 'http://localhost:8000,http://host.docker.internal:8000'
+      # when testing 3rd party services like google drive, you will access hydroshare at http://host.docker.internal:8000
       COMPANION_UPLOAD_URLS: 'http://host.docker.internal:8000/hsapi/tus/*'
       COMPANION_DATADIR: '/mnt/companion-data'
       COMPANION_DOMAIN: 'localhost:3020'

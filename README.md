@@ -70,13 +70,13 @@ Run the following command on completion to launch Hydroshare:
 
     Some WARNINGs are normal. 
 
-    HydroShare is available in your browser at http://localhost or http://localhost:8080  in case you are running inside a VM
+    HydroShare is available in your browser at http://localhost:800 or http://host.docker.internal:8000 (for 3rd party oauth)
 
-    The default admin page is http://localhost/admin
+    The default admin page is http://localhost:8000/admin
 
     The default admin account is admin:default
 
-    Swagger API docs http://localhost/hsapi/
+    Swagger API docs http://localhost:8000/hsapi/
 
 6. Start & Stop & Log
 
