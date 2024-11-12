@@ -3,15 +3,19 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
-from .views.metadata import (file_set_metadata_json,
-                             geographic_feature_metadata_json,
-                             geographic_raster_metadata_json,
-                             model_instance_metadata_json,
-                             model_program_metadata_json,
-                             multidimensional_metadata_json,
-                             referenced_time_series_metadata_json,
-                             resource_metadata_json, single_file_metadata_json,
-                             time_series_metadata_json)
+from .views.metadata import (
+    file_set_metadata_json,
+    geographic_feature_metadata_json,
+    geographic_raster_metadata_json,
+    model_instance_metadata_json,
+    model_program_metadata_json,
+    multidimensional_metadata_json,
+    referenced_time_series_metadata_json,
+    resource_metadata_json,
+    single_file_metadata_json,
+    time_series_metadata_json,
+    csv_file_metadata_json
+)
 
 app_name = "hsapi2"
 hsapi2_urlpatterns = [
@@ -70,6 +74,10 @@ urlpatterns = [
     re_path(r'^resource/(?P<pk>[0-9a-f-]+)/json/SingleFile/(?P<aggregation_path>.*)$',
             single_file_metadata_json,
             name='single_file_metadata_json'),
+
+    re_path(r'^resource/(?P<pk>[0-9a-f-]+)/json/CSVFile/(?P<aggregation_path>.*)$',
+            csv_file_metadata_json,
+            name='csv_file_metadata_json'),
 
     re_path(r'^resource/(?P<pk>[0-9a-f-]+)/json/ModelInstance/(?P<aggregation_path>.*)$',
             model_instance_metadata_json,

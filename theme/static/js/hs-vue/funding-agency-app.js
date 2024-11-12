@@ -38,7 +38,7 @@ let fundingAgenciesApp = new Vue({
     filteredWords: [],
   },
   mounted() {
-    if (this.selfAccessLevel === "owner" && this.resPublished) {
+    if (this.resourceMode === 'Edit' && (this.selfAccessLevel === 'owner' || this.selfAccessLevel === 'editor') && this.resPublished) {
       this.checkFunderNamesExistInCrossref(this.fundingAgencies);
     }
   },
@@ -54,16 +54,17 @@ let fundingAgenciesApp = new Vue({
         const results = await Promise.all(promises);
         const unmatched = results.filter((r) => !r.match);
         for (let umatch of unmatched) {
-          this.unmatchedFunders.push(umatch.funderName);
+          if(this.unmatchedFunders.includes(umatch.funderName)) continue;
+            this.unmatchedFunders.push(umatch.funderName);
         }
         if (unmatched.length > 0) {
-          // In addition to a static warning in the Funding Agencies section for edit mode, also alert for resource owners regardles of view/edit mode
           this.showFundersAlert();
         }
       } catch (e) {
         console.error("Error while checking funder names in Crossref", e);
       }
     },
+    // In addition to a static warning in the Funding Agencies section for edit mode, also alert for resource owners regardles of view/edit mode
     showFundersAlert: function () {
       const message = `This resource contains funders (listed below) that do not exist in the <a href="https://www.crossref.org/services/funder-registry" target="_blank">Open Funder Registry</a>:
         <br><ul><strong><li>${this.unmatchedFunders.join(
@@ -71,7 +72,7 @@ let fundingAgenciesApp = new Vue({
         )}</strong></ul><br>
         We recommend updating the funders to conform to the <a href="https://www.crossref.org/services/funder-registry" target="_blank">Open Funder Registry</a> to ensure consistency and ease of reporting.
       `;
-      customAlert("Nonconforming Funders", message, "info", 10000, true);
+      customAlert("Nonconforming Funders", message, "info", 5000, true);
     },
     singleFunderNameExistsInCrossref: async function (funderName) {
       let match = false;
@@ -224,14 +225,25 @@ let fundingAgenciesApp = new Vue({
       this.mode = "Edit";
       this.notifications = [];
       this.filteredWords = [];
+      
       const editingFundingAgency = this.fundingAgencies.filter((agency) => {
         return agency.agency_id == id;
       })[0];
+      
       this.currentlyEditing = { ...editingFundingAgency };
       this.startedEditing = { ...editingFundingAgency };
       this.agencyNameInput = this.currentlyEditing.agency_name;
       // open source bug https://github.com/alexurquhart/vue-bootstrap-typeahead/issues/19
       this.$refs.agencyNameInput.inputValue = this.currentlyEditing.agency_name;
+    
+      // Only check funder names when editing the resource
+      if (this.selfAccessLevel === "owner" && this.resPublished) {
+        this.checkFunderNamesExistInCrossref(this.fundingAgencies).then(() => {
+          if (this.unmatchedFunders.length > 0) {
+            this.showFundersAlert(); // Show alert if unmatched funders are found
+          }
+        });
+      } 
     },
     openDeleteModal(id) {
       this.currentlyDeleting = this.fundingAgencies.filter((agency) => {

@@ -14,14 +14,16 @@ from hs_file_types.models import (
     NetCDFLogicalFile,
     GeoRasterLogicalFile,
     TimeSeriesLogicalFile,
-    GeoFeatureLogicalFile
+    GeoFeatureLogicalFile,
+    CSVLogicalFile,
 )
 from hs_file_types.views import (
     set_file_type,
     update_model_program_metadata,
     update_model_instance_metadata,
     update_model_instance_metadata_json,
-    move_aggregation
+    move_aggregation,
+    update_csv_table_schema_metadata,
 )
 
 
@@ -94,6 +96,58 @@ def test_create_model_aggregation_from_folder(composite_resource, aggr_type, moc
     response = set_file_type(request, resource_id=res.short_id, hs_file_type=hs_file_type)
     assert response.status_code == status.HTTP_201_CREATED
     assert aggr_class.objects.count() == 1
+    assert not res.dangling_aggregations_exist()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_update_csv_aggregation_table_schema(composite_resource, mock_irods):
+    res, user = composite_resource
+    file_path = 'pytest/assets/csv_with_header_and_data.csv'
+    upload_folder = ''
+    assert CSVLogicalFile.objects.count() == 0
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+    res_file = add_file_to_resource(
+        res, file_to_upload, folder=upload_folder, check_target_folder=True
+    )
+    assert res.files.count() == 1
+    assert CSVLogicalFile.objects.count() == 0
+
+    # create a CSV aggregation
+    CSVLogicalFile.set_file_type(res, user, res_file.id)
+    # there should be a CSV aggregation now
+    assert CSVLogicalFile.objects.count() == 1
+    csv_aggr = CSVLogicalFile.objects.first()
+    csv_metadata = csv_aggr.metadata
+    table_schema_model = csv_metadata.get_table_schema_model()
+    url_params = {'file_type_id': csv_aggr.id}
+    url = reverse('update_csv_table_schema', kwargs=url_params)
+    post_data = {}
+    for col_no, col in enumerate(table_schema_model.table.columns):
+        col_title_key = f"column-{col_no}-titles"
+        post_data[col_title_key] = col.titles
+        col_data_type_key = f"column-{col_no}-datatype"
+        post_data[col_data_type_key] = col.datatype
+        col_desc_key = f"column-{col_no}-description"
+        post_data[col_desc_key] = f"description for column {col_no}"
+
+    factory = RequestFactory()
+    request = factory.post(url, data=post_data)
+    request.user = user
+    # this is the view function we are testing
+    response = update_csv_table_schema_metadata(request, file_type_id=csv_aggr.id)
+    assert response.status_code == status.HTTP_200_OK
+    csv_aggr.metadata.refresh_from_db()
+    csv_metadata = csv_aggr.metadata
+    table_schema_model = csv_metadata.get_table_schema_model()
+    # check that the table schema was updated
+    for col_no, col in enumerate(table_schema_model.table.columns):
+        assert col.titles == post_data[f"column-{col_no}-titles"]
+        assert col.datatype == post_data[f"column-{col_no}-datatype"]
+        assert col.description == f"description for column {col_no}"
+
+    csv_aggr.refresh_from_db()
+    assert csv_aggr.metadata.is_dirty
     assert not res.dangling_aggregations_exist()
 
 
@@ -198,7 +252,7 @@ def test_update_model_instance_metadata_json(composite_resource_with_mi_mp_aggre
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('move_aggr_cls', [NetCDFLogicalFile, GeoRasterLogicalFile, TimeSeriesLogicalFile,
-                                           GeoFeatureLogicalFile])
+                                           GeoFeatureLogicalFile, CSVLogicalFile])
 def test_move_aggr_into_model_instance_aggr(composite_resource_with_mi_aggregation_folder, move_aggr_cls, mock_irods):
     """test that we can move any of the following aggregations into a folder that represents a
     model instance aggregation
@@ -206,6 +260,7 @@ def test_move_aggr_into_model_instance_aggr(composite_resource_with_mi_aggregati
     2- GeoFeature aggr
     3- Raster aggr
     4- Timeseries aggr
+    5- CSV aggr
     """
 
     res, user = composite_resource_with_mi_aggregation_folder
@@ -227,17 +282,28 @@ def test_move_aggr_into_model_instance_aggr(composite_resource_with_mi_aggregati
         file_name = 'ODM2_Multi_Site_One_Variable.sqlite'
         expected_aggr_name = file_name
         aggr_class_name = "TimeSeriesLogicalFile"
-    else:
+    elif move_aggr_cls == GeoFeatureLogicalFile:
         file_name = 'states.shp'
         expected_aggr_name = file_name
         aggr_class_name = "GeoFeatureLogicalFile"
+    else:
+        file_name = 'csv_with_header_and_data.csv'
+        expected_aggr_name = file_name
+        aggr_class_name = "CSVLogicalFile"
 
-    if move_aggr_cls in (TimeSeriesLogicalFile, GeoFeatureLogicalFile):
+    if move_aggr_cls in (TimeSeriesLogicalFile, GeoFeatureLogicalFile, CSVLogicalFile):
         files_to_upload = []
-        for shp_file in (file_name, 'states.shx', 'states.dbf', 'states.prj'):
-            upload_file_path = 'hs_file_types/tests/data/{}'.format(shp_file)
-            file_to_upload = UploadedFile(file=open(upload_file_path, 'rb'), name=os.path.basename(upload_file_path))
-            files_to_upload.append(file_to_upload)
+        if move_aggr_cls == GeoFeatureLogicalFile:
+            for shp_file in (file_name, 'states.shx', 'states.dbf', 'states.prj'):
+                upload_file_path = 'hs_file_types/tests/data/{}'.format(shp_file)
+                file_to_upload = UploadedFile(file=open(upload_file_path, 'rb'),
+                                              name=os.path.basename(upload_file_path))
+                files_to_upload.append(file_to_upload)
+        else:
+            upload_file_path = 'hs_file_types/tests/data/{}'.format(file_name)
+            files_to_upload.append(UploadedFile(file=open(upload_file_path, 'rb'),
+                                                name=os.path.basename(upload_file_path)))
+
     else:
         upload_file_path = 'hs_file_types/tests/{}'.format(file_name)
         files_to_upload = [UploadedFile(file=open(upload_file_path, 'rb'), name=os.path.basename(upload_file_path))]

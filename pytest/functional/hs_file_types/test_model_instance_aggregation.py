@@ -16,7 +16,8 @@ from hs_file_types.models import (
     GenericLogicalFile,
     TimeSeriesLogicalFile,
     RefTimeseriesLogicalFile,
-    FileSetLogicalFile
+    FileSetLogicalFile,
+    CSVLogicalFile,
 )
 
 
@@ -356,6 +357,35 @@ def test_auto_timeseries_aggregation_creation(composite_resource_with_mi_aggrega
     assert ModelInstanceLogicalFile.objects.first().files.count() == 1
     # the timeseries aggregation should contain 1 file
     assert TimeSeriesLogicalFile.objects.first().files.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    assert mi_aggr.metadata.is_dirty
+    assert not resource.dangling_aggregations_exist()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_auto_csv_aggregation_creation(composite_resource_with_mi_aggregation_folder, mock_irods):
+    """Test that when a csv file is uploaded to a folder that represents a model instance aggregation,
+    a csv aggregation is created automatically"""
+
+    resource, _ = composite_resource_with_mi_aggregation_folder
+    mi_aggr_path = ModelInstanceLogicalFile.objects.first().aggregation_name
+    assert CSVLogicalFile.objects.count() == 0
+    # upload a csv file to the mi_aggr_path - folder that represents the model instance aggregation
+    csv_file_name = 'csv_with_header_and_data.csv'
+    csv_file_path = 'hs_file_types/tests/data/{}'.format(csv_file_name)
+    _add_files_to_resource(resource=resource, files_to_add=[csv_file_path], upload_folder=mi_aggr_path)
+
+    # there should be 2 resource files
+    assert resource.files.all().count() == 2
+    # the csv file added to the model instance folder should be part of a new csv aggregation
+    csv_res_file = ResourceFile.get(resource=resource,
+                                    file=csv_file_name, folder=mi_aggr_path)
+    assert csv_res_file.has_logical_file
+    # the csv aggregation should contain 1 file
+    assert CSVLogicalFile.objects.count() == 1
+    assert CSVLogicalFile.objects.first().files.count() == 1
+
+    assert ModelInstanceLogicalFile.objects.first().files.count() == 1
     mi_aggr = ModelInstanceLogicalFile.objects.first()
     assert mi_aggr.metadata.is_dirty
     assert not resource.dangling_aggregations_exist()

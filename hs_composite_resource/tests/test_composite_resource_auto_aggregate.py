@@ -8,8 +8,14 @@ from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import resource_file_add_process
 
-from hs_file_types.models import GeoRasterLogicalFile, NetCDFLogicalFile, \
-    RefTimeseriesLogicalFile, GeoFeatureLogicalFile, TimeSeriesLogicalFile
+from hs_file_types.models import (
+    GeoRasterLogicalFile,
+    NetCDFLogicalFile,
+    RefTimeseriesLogicalFile,
+    GeoFeatureLogicalFile,
+    TimeSeriesLogicalFile,
+    CSVLogicalFile,
+)
 from hs_file_types.tests.utils import CompositeResourceTestMixin
 
 
@@ -275,12 +281,14 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
         self.assertEqual(0, len(storage_paths))
 
     def test_auto_aggregate_csv_file_add_to_root(self):
-        """test adding a csv file to root folder should not create a timeseries aggregation"""
+        """test adding a csv file to root folder should not create a timeseries aggregation, but should create
+        a CSV aggregation"""
 
         self._test_csv_file_add()
 
     def test_auto_aggregate_csv_file_add_to_folder(self):
-        """test adding a csv file to a folder should not create a timeseries aggregation"""
+        """test adding a csv file to a folder should not create a timeseries aggregation, but should create a
+        CSV aggregation"""
 
         self._test_csv_file_add(new_folder="csv_folder")
 
@@ -304,3 +312,5 @@ class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTest
         self.assertEqual(csv_res_file.file_folder, new_folder)
         # no timeseries aggregation after adding the scv file to a folder
         self.assertEqual(0, TimeSeriesLogicalFile.objects.count())
+        # should create a CSV aggregation
+        self.assertEqual(1, CSVLogicalFile.objects.count())

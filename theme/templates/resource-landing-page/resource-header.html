@@ -112,15 +112,24 @@
                 </tr>
                 <tr>
                     <th>Last updated:</th>
-                    <td> {{ cm.last_updated|date:"M d, Y" }} at {{ cm.last_updated|time }}
+                    <td>
+                        {{ cm.last_updated|date:"M d, Y" }} at {{ cm.last_updated|time }}
+                        {% if cm.raccess.published and cm.last_updated > cm|published_date and cm.last_updated != cm|published_date %}
+                            <span>(Metadata update)</span>
+                        {% endif %}
                     </td>
                 </tr>
+                
                 {% if cm.raccess.published %}
+                <tr>
+                    <th>Published date:</th>
+                    <td> {{ cm|published_date|date:"M d, Y" }} at {{ cm|published_date|time }}</td>
+                </tr>
                 <tr>
                     <th>DOI:</th>
                     <td>10.4211/hs.{{ cm.short_id }}</td>
                 </tr>
-                {% endif %}
+                {% endif %}               
                 <tr>
                     <th>Citation:</th>
                     <td><a href="#citation">See how to cite this resource</a></td>

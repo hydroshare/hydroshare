@@ -16,7 +16,8 @@ from hs_file_types.models import (
     ModelProgramResourceFileType,
     NetCDFLogicalFile,
     RefTimeseriesLogicalFile,
-    TimeSeriesLogicalFile
+    TimeSeriesLogicalFile,
+    CSVLogicalFile,
 )
 from hs_file_types.enums import AggregationMetaFilePath
 from hs_file_types.utils import update_target_spatial_coverage, update_target_temporal_coverage
@@ -32,7 +33,8 @@ AggregationType = Union[
     ModelInstanceLogicalFile,
     NetCDFLogicalFile,
     RefTimeseriesLogicalFile,
-    TimeSeriesLogicalFile
+    TimeSeriesLogicalFile,
+    CSVLogicalFile,
 ]
 
 
@@ -92,6 +94,8 @@ class CompositeResource(BaseResource):
             yield lf
         for lf in self.modelinstancelogicalfile_set.all():
             yield lf
+        for lf in self.csvlogicalfile_set.all():
+            yield lf
 
     @property
     def aggregation_types(self):
@@ -117,7 +121,8 @@ class CompositeResource(BaseResource):
             ModelProgramLogicalFile.type_name(): self.modelprogramlogicalfile_set.all(),
             NetCDFLogicalFile.type_name(): self.netcdflogicalfile_set.all(),
             TimeSeriesLogicalFile.type_name(): self.timeserieslogicalfile_set.all(),
-            RefTimeseriesLogicalFile.type_name(): self.reftimeserieslogicalfile_set.all()
+            RefTimeseriesLogicalFile.type_name(): self.reftimeserieslogicalfile_set.all(),
+            CSVLogicalFile.type_name(): self.csvlogicalfile_set.all(),
         }
 
         if logical_file_class_name in class_name_to_query_mappings:
