@@ -137,13 +137,9 @@ let uppy = new Uppy({
       $("#hsDropzone").toggleClass("glow-blue", false);
     },
   });
-  // this works for gdrive from companion
-  // let UPPY_UPLOAD_ENDPOINT = 'http://hydroshare:8000/hsapi/tus/'
-  // this works for direct upload without companion
-  // let UPPY_UPLOAD_ENDPOINT = 'http://localhost:8000/hsapi/tus/'
-  let UPPY_UPLOAD_ENDPOINT = 'https://localhost/hsapi/tus/'
   uppy
   .use(Tus, {
+    // TODO: this endpoint needs to be set based on the origin vs local dev
     endpoint: `http://host.docker.internal:8000/hsapi/tus/`,
     // TODO: add some documentation for testing gdrive connection locally
     // above works for direct upload without companion
