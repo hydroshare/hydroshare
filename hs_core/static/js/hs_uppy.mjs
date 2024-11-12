@@ -17,16 +17,9 @@ if (MAX_CHUNK > MAX_FILE_SIZE) {
 
 // get the origin of the current page
 const origin = window.location.origin;
-// add a header for the CSRF token and the sessionid cookie
-// convert the document.cookie cookie string to an object
-const cookies = document.cookie.split(";").reduce((acc, cookie) => {
-  const [name, value] = cookie.split("=").map((c) => c.trim());
-  acc[name] = value;
-  return acc;
-}, {});
 
 const headers = {
-  hs_s_id: SESSION
+  hs_s_id: HS_S_ID
 };
 
 let uppy = new Uppy({
@@ -38,7 +31,7 @@ let uppy = new Uppy({
     // restrict uploading a FOLDER with a total size larger than the max file size
     maxTotalFileSize: MAX_FILE_SIZE,
   },
-  withCredentials: true,
+  // withCredentials: true,
   onBeforeUpload: (files) => {
     Object.keys(files).forEach((fileId) => {
       // add metadata to the file
@@ -255,7 +248,7 @@ let uppy = new Uppy({
     companionUrl: COMPANION_URL,
     // https://github.com/transloadit/uppy/issues/2241
     // https://uppy.io/docs/google-drive/#companioncookiesrule
-    companionCookiesRule: "include",
-    withCredentials: "true",
+    // companionCookiesRule: "include",
+    // withCredentials: "true",
     // companionHeaders: headers
   });

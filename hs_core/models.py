@@ -428,6 +428,13 @@ def page_permissions_page_processor(request, page):
 
     companion_url = getattr(settings, 'COMPANION_URL', 'https://companion.hydroshare.org/')
 
+    # get the session id for the current user
+    if request.user.is_authenticated:
+        try:
+            session = request.session.session_key
+        except SessionException:
+            session = None
+
     return {
         'resource_type': cm._meta.verbose_name,
         "users_json": users_json,
@@ -442,7 +449,8 @@ def page_permissions_page_processor(request, page):
         "max_file_size": max_file_size,
         "max_file_size_for_display": convert_file_size_to_unit(max_file_size, "GB", "MB"),
         "max_chunk_size_mb": max_chunk_size_mb,
-        "companion_url": companion_url
+        "companion_url": companion_url,
+        "hs_s_id": session
     }
 
 
