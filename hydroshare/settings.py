@@ -864,9 +864,6 @@ SECURE_HSTS_SECONDS = 31536000
 SESSION_COOKIE_SECURE = USE_SECURITY
 CSRF_COOKIE_SECURE = USE_SECURITY
 
-# TODO: ideally we can avoid setting this to False
-# perhaps by moving companion server to the same domain
-SESSION_COOKIE_HTTPONLY = True
 
 # Categorization in discovery of content types
 # according to file extension of otherwise unaggregated files.
