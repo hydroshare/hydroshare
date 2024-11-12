@@ -15,6 +15,9 @@ if (MAX_CHUNK > MAX_FILE_SIZE) {
   MAX_CHUNK = MAX_FILE_SIZE;
 }
 
+// get the origin of the current page
+const origin = window.location.origin;
+
 const headers = {
   "HS-SID": HS_S_ID
 };
@@ -135,9 +138,7 @@ let uppy = new Uppy({
     },
   })
   .use(Tus, {
-    // TODO: make the endpoint configurable
-    // endpoint: `${origin}/hsapi/tus/`,
-    endpoint: UPPY_UPLOAD_ENDPOINT,
+    endpoint: `${origin}/hsapi/tus/`,
     withCredentials: true,
     // https://uppy.io/docs/tus/#headers
     headers: headers,
