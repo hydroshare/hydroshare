@@ -1,5 +1,5 @@
 from storages.backends.gcloud import GoogleCloudStorage
-from django.contrib.staticfiles.storage import ManifestFilesMixin
+from django.contrib.staticfiles.storage import ManifestFilesMixin, ManifestStaticFilesStorage
 import logging
 
 
@@ -27,8 +27,12 @@ class ForgivingManifestFilesMixin(ManifestFilesMixin):
         return result
 
 
-class ManifestGoogleCloudStorage(ForgivingManifestFilesMixin, GoogleCloudStorage):
+class ForgivingManifestStaticFilesStorage(ForgivingManifestFilesMixin, ManifestStaticFilesStorage):
 
+    support_js_module_import_aggregation = True
+
+
+class ManifestGoogleCloudStorage(ForgivingManifestFilesMixin, GoogleCloudStorage):
     support_js_module_import_aggregation = True
 
     def path(self, name):
