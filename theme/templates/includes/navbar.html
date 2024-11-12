@@ -494,7 +494,8 @@
         });
     }
 
-        const checkDelay = 1000; // ms
+    const checkDelay = 10000; // ms
+    // TODO: this hard ping rate could be modified to check more frequently when the tasks are newer
 
     $('#notifications-dropdown').on('show.bs.dropdown', function () {
         notificationsApp.fetchTasks();
@@ -703,7 +704,7 @@
                 if (vue.someInProgress && !vue.isCheckingStatus) {
                     vue.isCheckingStatus = true;
 
-                    // check in 1s
+                    // check in 10s
                     setTimeout(function() {
                         vue.checkStatus();
                     }, checkDelay);
@@ -712,7 +713,7 @@
                     vue.isCheckingStatus = false;
                 }
             },
-            // Checks every 1s for every task in progress
+            // Checks every 10s for every task in progress
             checkStatus: function () {
                 let vue = this;
 

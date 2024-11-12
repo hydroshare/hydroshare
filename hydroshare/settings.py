@@ -174,6 +174,12 @@ INTERNAL_IPS = ("127.0.0.1",)
 # is not that great for our project use case
 FILE_UPLOAD_MAX_MEMORY_SIZE = 0
 
+# the size that a file will be chunked for resumable download
+RANGED_FILE_READER_BLOCK_SIZE = 1024 * 1024  # 1MB
+
+# the size of the buffer that will be used when dumping unneeded bytes from head of a resumed file
+RANGED_FILE_READER_DUMP_SIZE = 1024 * 1024 * 1024  # 1GB
+
 # TODO remove MezzanineBackend after conflicting users have been removed
 AUTHENTICATION_BACKENDS = [
     "theme.backends.CaseInsensitiveMezzanineBackend",

@@ -136,9 +136,7 @@ def setup_periodic_tasks(sender, **kwargs):
                                  options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=0, hour=7), daily_cleanup_tus_uploads.s(),
                                  options={'queue': 'periodic'})
-
-        # Weekly
-        sender.add_periodic_task(crontab(minute=0, hour=7, day_of_week=1), task_notification_cleanup.s(),
+        sender.add_periodic_task(crontab(minute=30, hour=7), task_notification_cleanup.s(),
                                  options={'queue': 'periodic'})
 
         # Monthly
@@ -1252,10 +1250,10 @@ def update_task_notification(sender=None, task_id=None, task=None, state=None, r
 @celery_app.task(ignore_result=True, base=HydroshareTask)
 def task_notification_cleanup():
     """
-    Delete expired task notifications each week
+    Delete expired task notifications every day
     """
-    week_ago = datetime.today() - timedelta(days=7)
-    TaskNotification.objects.filter(created__lte=week_ago).delete()
+    day_ago = datetime.today() - timedelta(days=1)
+    TaskNotification.objects.filter(created__lte=day_ago).delete()
 
 
 @shared_task
