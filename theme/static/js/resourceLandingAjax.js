@@ -881,8 +881,6 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                     $(".fb-upload-caption").toggleClass("hidden", false);
                     $(".upload-toggle").toggleClass("hidden", false);
                     $("#irods-group").toggleClass("hidden", false);
-                    // TODO: figure out what this does
-                    // Dropzone.forElement("#hsDropzone").files = [];
                 }
             }
 
