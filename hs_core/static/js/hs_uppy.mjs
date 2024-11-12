@@ -28,7 +28,8 @@ let uppy = new Uppy({
     // restrict uploading a FOLDER with a total size larger than the max file size
     maxTotalFileSize: MAX_FILE_SIZE,
   },
-  withCredentials: true,
+  // TODO: figure out how to set the withCredentials option
+  // withCredentials: true,
   onBeforeUpload: (files) => {
     Object.keys(files).forEach((fileId) => {
       // add metadata to the file
@@ -248,6 +249,7 @@ let uppy = new Uppy({
     // https://github.com/transloadit/uppy/issues/2241
     // https://uppy.io/docs/google-drive/#companioncookiesrule
     // companionCookiesRule: "include",
-    withCredentials: "true",
+    // TODO: figure out how to set the withCredentials option
+    // withCredentials: "true",
     // companionHeaders: headers
   });
