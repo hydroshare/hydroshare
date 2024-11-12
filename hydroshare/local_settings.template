@@ -181,6 +181,8 @@ using a OneToOneField.
 """
 # SILENCED_SYSTEM_CHECKS = ["mezzanine.core.W03", "fields.W342"]
 
+COMPANION_URL = 'http://localhost:3020'
+
 ENABLE_OIDC_AUTHENTICATION = False
 # If OIDC is enabled, the following additional settings should be defined in local_settings
 # OIDC_OP_AUTHORIZATION_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/auth"
