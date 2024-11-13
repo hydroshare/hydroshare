@@ -1,0 +1,19 @@
+{% load static %}
+
+{% block extra_head %}
+    <link href="https://releases.transloadit.com/uppy/v4.4.0/uppy.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block main %}
+  <div id="uppy"></div>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    const MAX_CHUNK_MB = {{ max_chunk_size_mb|default:2.5 }};
+    const MAX_FILE_SIZE_MB = {{ max_file_size|default:10240 }};
+    const COMPANION_URL = "{{ companion_url }}";
+    const RES_ID = "{{ cm.short_id }}";
+  </script>
+  <script type="module" src="{% static 'js/hs_uppy.mjs' %}"></script>
+{% endblock %}

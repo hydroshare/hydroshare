@@ -54,6 +54,8 @@ from .hs_rdf import (HSTERMS, RDFS1, RDF_MetaData_Mixin, RDF_Term_MixIn,
                      rdf_terms)
 from .languages_iso import languages as iso_languages
 
+from django_tus.signals import tus_upload_finished_signal
+
 
 def clean_abstract(original_string):
     """Clean abstract for XML inclusion.
@@ -414,13 +416,15 @@ def page_permissions_page_processor(request, page):
     if is_owner or (cm.raccess.shareable and (is_view or is_edit)):
         show_manage_access = True
 
-    if hasattr(settings, 'FILE_UPLOAD_MAX_SIZE'):
-        max_file_size = settings.FILE_UPLOAD_MAX_SIZE
-    else:
-        max_file_size = 5120  # default to 5MB
+    max_file_size = getattr(settings, 'FILE_UPLOAD_MAX_SIZE', 1024 * 25)
     remaining_quota = get_remaining_user_quota(cm.quota_holder, "MB")
     if remaining_quota is not None:
         max_file_size = min(max_file_size, remaining_quota)
+
+    # https://docs.djangoproject.com/en/3.2/ref/settings/#data-upload-max-memory-size
+    max_chunk_size_mb = 2.5  # mb
+    if hasattr(settings, 'DATA_UPLOAD_MAX_MEMORY_SIZE'):
+        max_chunk_size_mb = settings.DATA_UPLOAD_MAX_MEMORY_SIZE / 1024 / 1024  # convert to MB
 
     return {
         'resource_type': cm._meta.verbose_name,
@@ -435,6 +439,7 @@ def page_permissions_page_processor(request, page):
         "last_changed_by": last_changed_by,
         "max_file_size": max_file_size,
         "max_file_size_for_display": convert_file_size_to_unit(max_file_size, "GB", "MB"),
+        "max_chunk_size_mb": max_chunk_size_mb,
     }
 
 
@@ -5181,3 +5186,88 @@ def resource_creation_signal_handler(sender, instance, created, **kwargs):
 def resource_update_signal_handler(sender, instance, created, **kwargs):
     """Do nothing (noop)."""
     pass
+
+
+@receiver(tus_upload_finished_signal)
+def tus_upload_finished_handler(sender, **kwargs):
+    from hs_core.views.utils import create_folder
+    from rest_framework.exceptions import ValidationError as DRFValidationError
+    """Handle the tus upload finished signal.
+
+    Ingest the files from the TUS_DESTINATION_DIR into the resource.
+
+    https://github.com/alican/django-tus/blob/master/django_tus/signals.py
+    This signal provides the following keyword arguments:
+    metadata
+    filename
+    upload_file_path
+    file_size
+    upload_url
+    destination_folder
+    """
+    from hs_core import hydroshare
+    logger = logging.getLogger(__name__)
+    metadata = kwargs['metadata']
+    tus_destination_folder = kwargs['destination_folder']
+    hs_res_id = metadata['hs_res_id']
+    original_filename = metadata['original_file_name']
+
+    where_tus_put_it = os.path.join(tus_destination_folder, original_filename)
+
+    if original_filename != kwargs['filename']:
+        # rename the file
+        chunk_file_path = os.path.join(tus_destination_folder, kwargs['filename'])
+        os.rename(chunk_file_path, where_tus_put_it)
+
+    # create a file object for the uploaded file
+    file_obj = File(open(where_tus_put_it, 'rb'), name=original_filename)
+
+    resource = hydroshare.utils.get_resource_by_shortkey(hs_res_id)
+
+    eventual_relative_path = ''
+
+    try:
+        # see if there is a path within data/contents that the file should be uploaded to
+        existing_path_in_resource = metadata.get('existing_path_in_resource', '')
+        existing_path_in_resource = json.loads(existing_path_in_resource).get("path")
+        if existing_path_in_resource:
+            # in this case, we are uploading to an existing folder in the resource
+            # existing_path_in_resource is a list of folder names
+            # append them into a path
+            for folder in existing_path_in_resource:
+                eventual_relative_path += folder + '/'
+    except Exception as ex:
+        logger.info(f"Existing path in resource not found: {str(ex)}")
+
+    # handle the case that a folder was uploaded instead of a single file
+    # use the metadata.relativePath to rebuild the folder structure
+    path_within_uploaded_folder = metadata.get('relativePath', '')
+    # path_within_resource_contents will include the name of the file, so we need to remove it
+    path_within_uploaded_folder = os.path.dirname(path_within_uploaded_folder)
+    if path_within_uploaded_folder:
+        eventual_relative_path += path_within_uploaded_folder
+        file_folder = f'data/contents/{eventual_relative_path}'
+        try:
+            create_folder(res_id=hs_res_id, folder_path=file_folder)
+        except DRFValidationError as ex:
+            logger.info(f"Folder {file_folder} already exists for resource {hs_res_id}: {str(ex)}")
+
+    try:
+        hydroshare.utils.resource_file_add_pre_process(
+            resource=resource,
+            files=[file_obj],
+            user=resource.creator,
+            folder=eventual_relative_path,
+        )
+        hydroshare.utils.resource_file_add_process(
+            resource=resource,
+            files=[file_obj],
+            user=resource.creator,
+            folder=eventual_relative_path,
+        )
+        # remove the uploaded file
+        os.remove(where_tus_put_it)
+    except (hydroshare.utils.ResourceFileSizeException,
+            hydroshare.utils.ResourceFileValidationException,
+            Exception) as ex:
+        logger.error(ex)

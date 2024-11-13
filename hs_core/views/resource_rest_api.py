@@ -9,9 +9,11 @@ import json
 from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousFileOperation
 from django.core.exceptions import ValidationError as CoreValidationError
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotFound
 from django.shortcuts import redirect
 from django.contrib.sites.models import Site
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
@@ -21,6 +23,8 @@ from rest_framework.request import Request
 from rest_framework.exceptions import ValidationError, NotAuthenticated, PermissionDenied, NotFound
 
 from django_irods.icommands import SessionException
+from django_tus.views import TusUpload
+from django_tus.tusfile import TusFile
 from hs_core import hydroshare
 from hs_core.models import AbstractResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_types, \
@@ -881,3 +885,36 @@ def _validate_metadata(metadata_list):
         if k.lower() in ('title', 'subject', 'description', 'publisher', 'format', 'date', 'type'):
             err_message = err_message.format(k.lower())
             raise ValidationError(detail=err_message)
+
+
+class CustomTusUpload(TusUpload):
+
+    @method_decorator(csrf_exempt)
+    def dispatch(self, *args, **kwargs):
+        # check that the user has permission to upload a file to the resource
+        metadata = self.get_metadata(self.request)
+        if not metadata:
+            # get the tus resource_id from the request
+            tus_resource_id = self.kwargs['resource_id']
+            try:
+                tus_file = TusFile(str(tus_resource_id))
+                # get the resource id from the tus metadata
+                metadata = tus_file.metadata
+            except Exception as ex:
+                err_msg = f"Error in getting metadata for the tus upload: {str(ex)}"
+                logger.error(err_msg)
+                # https://tus.io/protocols/resumable-upload#head
+                # return a 404 not found response
+                return HttpResponseNotFound(err_msg)
+
+        # get the hydroshare resource id from the metadata
+        hs_res_id = metadata.get('hs_res_id')
+
+        # check that the user has permission to upload a file to the resource
+        try:
+            view_utils.authorize(self.request, hs_res_id,
+                                 needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+        except PermissionDenied:
+            return HttpResponseForbidden()
+
+        return super(CustomTusUpload, self).dispatch(*args, **kwargs)

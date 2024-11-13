@@ -17,7 +17,6 @@ Add the issues included in the release and update this document as release tasks
 - [ ] Deployed to Beta
 - [ ] Review the search and discovery pages
 - [ ] Create a new user and update profile
-- [ ] Create iROD account, test connection and delete iROD account
 - [ ] Create a new resource, check sharing/permission settings, delete new resource
 - [ ] Developers test around issues
 - [ ] Hsclient tests pass when targeting beta
@@ -30,7 +29,6 @@ Add the issues included in the release and update this document as release tasks
   * Make manual changes to files identified in Beta Deployment
 - [ ] Review the search and discovery pages
 - [ ] Create a new user and update profile
-- [ ] Create iROD account, test connection and delete iROD account
 - [ ] Create a new resource, check sharing/permission settings, delete new resource
 - [ ] Developers test around issue
 
