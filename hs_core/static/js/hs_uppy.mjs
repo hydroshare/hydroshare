@@ -3,6 +3,7 @@ import {
   Dashboard,
   Tus,
   GoldenRetriever,
+  GoogleDrive,
   DropTarget,
 } from "https://releases.transloadit.com/uppy/v4.4.0/uppy.min.mjs";
 
@@ -14,6 +15,10 @@ if (MAX_CHUNK > MAX_FILE_SIZE) {
   MAX_CHUNK = MAX_FILE_SIZE;
 }
 
+const headers = {
+  "HS-SID": HS_S_ID
+};
+
 let uppy = new Uppy({
   id: "uppy",
   // autoProceed: true,
@@ -23,7 +28,6 @@ let uppy = new Uppy({
     // restrict uploading a FOLDER with a total size larger than the max file size
     maxTotalFileSize: MAX_FILE_SIZE,
   },
-  withCredentials: true,
   onBeforeUpload: (files) => {
     Object.keys(files).forEach((fileId) => {
       // add metadata to the file
@@ -32,6 +36,8 @@ let uppy = new Uppy({
       files[fileId].meta.existing_path_in_resource = JSON.stringify(
         getCurrentPath()
       );
+      // add the file size to the metadata
+      files[fileId].meta.file_size = files[fileId].data.size;
     });
     return files;
   },
@@ -127,9 +133,12 @@ let uppy = new Uppy({
       $(".fb-drag-flag").hide();
       $("#hsDropzone").toggleClass("glow-blue", false);
     },
-  })
+  });
+  uppy
   .use(Tus, {
-    endpoint: `/hsapi/tus/`,
+    endpoint: UPPY_UPLOAD_ENDPOINT,
+    // https://uppy.io/docs/tus/#headers
+    headers: headers,
     // https://uppy.io/docs/tus/#chunksize
     // it is not recommended to set the chunk size
     // however in testing it seems to improve resumability
@@ -216,17 +225,23 @@ let uppy = new Uppy({
       .append(
         '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
           '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-            '<span aria-hidden="true">&times;</span></button>' +
+          '<span aria-hidden="true">&times;</span></button>' +
           "<div>" +
-            "<strong>File Upload Failed</strong>" +
+          "<strong>File Upload Failed</strong>" +
           "</div>" +
           "<div>" +
-            "<span>" + errorMsg + "</span>" +
+          "<span>" +
+          errorMsg +
+          "</span>" +
           "</div>" +
-        "</div>"
+          "</div>"
       )
       .fadeIn(200);
   })
   .on("progress", (progress) => {
     $("#upload-progress").text(`${progress}%`);
+  })
+  .use(GoogleDrive, {
+    target: Dashboard,
+    companionUrl: COMPANION_URL,
   });

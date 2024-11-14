@@ -1,5 +1,6 @@
 import os
 import mimetypes
+import base64
 import copy
 import tempfile
 import shutil
@@ -7,10 +8,13 @@ import logging
 import json
 
 from django.urls import reverse
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousFileOperation
 from django.core.exceptions import ValidationError as CoreValidationError
 from django.http import HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotFound
 from django.shortcuts import redirect
+from django.contrib.sessions.models import Session
+from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -24,7 +28,8 @@ from rest_framework.exceptions import ValidationError, NotAuthenticated, Permiss
 
 from django_irods.icommands import SessionException
 from django_tus.views import TusUpload
-from django_tus.tusfile import TusFile
+from django_tus.tusfile import TusFile, TusChunk
+from django_tus.response import TusResponse
 from hs_core import hydroshare
 from hs_core.models import AbstractResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_types, \
@@ -892,6 +897,7 @@ class CustomTusUpload(TusUpload):
     @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):
         # check that the user has permission to upload a file to the resource
+        from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
         metadata = self.get_metadata(self.request)
         if not metadata:
             # get the tus resource_id from the request
@@ -910,11 +916,84 @@ class CustomTusUpload(TusUpload):
         # get the hydroshare resource id from the metadata
         hs_res_id = metadata.get('hs_res_id')
 
+        if not self.request.user.is_authenticated:
+            sessionid = self.request.headers.get('HS-SID', None)
+            # use the cookie to get the django session and user
+            if sessionid:
+                try:
+                    # get the user from the session
+                    session = Session.objects.get(session_key=sessionid)
+                    user_id = session.get_decoded().get('_auth_user_id')
+                    user = User.objects.get(pk=user_id)
+                    self.request.user = user
+                except Exception as ex:
+                    err_msg = f"Error in getting user from session: {str(ex)}"
+                    logger.error(err_msg)
+                    return HttpResponseForbidden(err_msg)
+
         # check that the user has permission to upload a file to the resource
         try:
             view_utils.authorize(self.request, hs_res_id,
                                  needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-        except PermissionDenied:
+        except DjangoPermissionDenied:
             return HttpResponseForbidden()
 
         return super(CustomTusUpload, self).dispatch(*args, **kwargs)
+
+    def patch(self, request, resource_id, *args, **kwargs):
+
+        tus_file = TusFile.get_tusfile_or_404(str(resource_id))
+        chunk = TusChunk(request)
+
+        if not tus_file.is_valid():
+            return TusResponse(status=410)
+
+        if chunk.offset != tus_file.offset:
+            return TusResponse(status=409)
+
+        if chunk.offset > tus_file.file_size:
+            return TusResponse(status=413)
+
+        tus_file.write_chunk(chunk=chunk)
+
+        # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/tusfile.py#L151-L152
+        # here we modify from django_tus to allow for the file to be marked as complete
+        if tus_file.is_complete() or tus_file.offset > tus_file.file_size:
+            # file transfer complete, rename from resource id to actual filename
+            tus_file.rename()
+            tus_file.clean()
+
+            self.send_signal(tus_file)
+            self.finished()
+
+        return TusResponse(status=204, extra_headers={'Upload-Offset': tus_file.offset})
+
+    def post(self, request, *args, **kwargs):
+        # adapted from django_tus TusUpload.post
+        # in order to handle missing HTTP_UPLOAD_LENGTH header
+        # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/views.py#L56-L75
+
+        metadata = self.get_metadata(request)
+
+        metadata["filename"] = self.validate_filename(metadata)
+
+        message_id = request.META.get("HTTP_MESSAGE_ID")
+        if message_id:
+            metadata["message_id"] = base64.b64decode(message_id)
+
+        existing = TusFile.check_existing_file(metadata.get("filename", False))
+
+        if settings.TUS_EXISTING_FILE == 'error' and settings.TUS_FILE_NAME_FORMAT == 'keep' and existing:
+            return TusResponse(status=409, reason="File = with same name already exists")
+
+        # set the filesize from HTTP header if it exists, otherwise set it from the metadata
+        file_size = int(request.META.get("HTTP_UPLOAD_LENGTH", "0"))
+        meta_file_size = metadata.get("file_size", None)
+        if meta_file_size:
+            file_size = meta_file_size
+
+        tus_file = TusFile.create_initial_file(metadata, file_size)
+
+        return TusResponse(
+            status=201,
+            extra_headers={'Location': '{}{}'.format(request.build_absolute_uri(), tus_file.resource_id)})

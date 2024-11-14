@@ -461,6 +461,11 @@ TUS_DESTINATION_DIR = '/tmp/tus_completed'
 TUS_FILE_NAME_FORMAT = 'increment'  # Other options are: 'random-suffix', 'random', 'keep'
 TUS_EXISTING_FILE = 'error'  # Other options are: 'overwrite',  'error', 'rename'
 
+# the url for the uppy companion server
+# https://uppy.io/docs/companion/
+COMPANION_URL = 'https://companion.hydroshare.org/'
+UPPY_UPLOAD_ENDPOINT = 'https://hydroshare.org/hsapi/tus/'
+
 SWAGGER_SETTINGS = {
     "DEFAULT_GENERATOR_CLASS": "hs_rest_api2.serializers.NestedSchemaGenerator"
 }
@@ -859,6 +864,7 @@ SECURE_HSTS_SECONDS = 31536000
 # Cookie Stuff
 SESSION_COOKIE_SECURE = USE_SECURITY
 CSRF_COOKIE_SECURE = USE_SECURITY
+
 
 # Categorization in discovery of content types
 # according to file extension of otherwise unaggregated files.
