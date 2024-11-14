@@ -43,8 +43,9 @@ function clearSourcePaths() {
     $("#fb-files-container li").removeClass("fb-cutting");
 }
 
+const hint = "&#9432; Right-click for more options &#13;";
+
 function getFolderTemplateInstance(folder) {
-    var hint = "&#9432; Right-click for more options &#13;&#13;";
     if (folder['folder_aggregation_type'] === "FileSetLogicalFile" || folder['folder_aggregation_type'] === "ModelProgramLogicalFile"
         || folder['folder_aggregation_type'] === "ModelInstanceLogicalFile") {
         var folderIcons = getFolderIcons();
@@ -91,7 +92,7 @@ function getVirtualFolderTemplateInstance(agg) {
 
     return "<li class='fb-folder droppable draggable' data-url='" + agg.url +
       "' data-logical-file-id='" + agg.logical_file_id + "' title='" +
-      agg.name + "&#13;" + agg.aggregation_name + "' data-main-file='" + agg.main_file +
+      hint + " "+agg.name + "&#13;" + agg.aggregation_name + "' data-main-file='" + agg.main_file +
       "' data-aggregation-appkey='" + agg.aggregation_appkey  + "' >" +
       iconTemplate +
       "<span class='fb-file-name'>" + agg.name + "</span>" +
@@ -127,7 +128,6 @@ function getFileTemplateInstance(file) {
         iconTemplate = fileIcons.DEFAULT;
     }
 
-    var hint = "&#9432; Right-click for more options &#13;";
     if (file.logical_type.length > 0){
         var title = hint + file.name + "&#13;Type: " + file.type + "&#13;Size: " +
             formatBytes(parseInt(file.size)) + "&#13;" + (file.aggregation_name || "");
