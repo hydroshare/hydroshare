@@ -103,7 +103,6 @@ function getVirtualFolderTemplateInstance(agg) {
       "</li>";
 }
 
-// Associates file icons with file extensions. Could be improved with a dictionary.
 function getFileTemplateInstance(file) {
     var fileTypeExt = file.name.substr(file.name.lastIndexOf(".") + 1, file.name.length);
     if (file['logical_type'] === "ModelProgramLogicalFile" && !file.has_model_program_aggr_folder) {
@@ -131,10 +130,10 @@ function getFileTemplateInstance(file) {
     var hint = "&#9432; Right-click for more options &#13;";
     if (file.logical_type.length > 0){
         var title = hint + file.name + "&#13;Type: " + file.type + "&#13;Size: " +
-            formatBytes(parseInt(file.size)) + "&#13;" + file.aggregation_name;
+            formatBytes(parseInt(file.size)) + "&#13;" + (file.aggregation_name || "");
     }
     else {
-        var title = hint +'&#13;&#13;' + file.name + "&#13;Type: " + file.type + "&#13;Size: " +
+        var title = hint + file.name + "&#13;Type: " + file.type + "&#13;Size: " +
             formatBytes(parseInt(file.size));
     }
     
