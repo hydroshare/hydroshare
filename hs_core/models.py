@@ -2010,12 +2010,12 @@ class FundingAgency(AbstractMetaDataElement):
         super(FundingAgency, cls).update(element_id, **kwargs)
 
     @sync_to_async
-    def get_funding_records(self, apps):
+    def get_funding_records(cls, apps):
         FundingAgency = apps.get_model('hs_core', 'FundingAgency')
         return list(FundingAgency.objects.all())
 
     @classmethod
-    async def update_record(self, record):
+    async def update_record(cls, record):
         from hs_core.tasks import update_crossref_meta_deposit
         logger = logging.getLogger(__name__)
         logger.debug(f"Checking funder record {record.id}")
@@ -2036,18 +2036,22 @@ class FundingAgency(AbstractMetaDataElement):
                         record.agency_name = agency_name_new
                         record.agency_url = item['id']
                         await sync_to_async(record.save)()
-                        await update_crossref_meta_deposit.apply_async((self.short_id,))
+                        metadata = record.metadata
+                        if metadata:
+                            resource = metadata.resource
+                            if resource:
+                                await update_crossref_meta_deposit.apply_async((resource.short_id,))
 
     @classmethod
-    async def get_funder_records(self, apps):
-        funding_records = await self.get_funding_records(apps)
-        await asyncio.gather(*(self.update_record(record) for record in funding_records))
+    async def get_funder_records(cls, apps):
+        funding_records = await cls.get_funding_records(apps)
+        await asyncio.gather(*(cls.update_record(record) for record in funding_records))
 
     @classmethod
-    def migrate_from_crossref_to_ror(self, apps, schema_editor):
+    def migrate_from_crossref_to_ror(cls, apps, schema_editor):
         """Migrate from CrossRef to ROR asynchronously"""
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.get_funder_records(apps))
+        loop.run_until_complete(cls.get_funder_records(apps))
 
 
 @rdf_terms(DC.subject)
