@@ -2016,6 +2016,7 @@ class FundingAgency(AbstractMetaDataElement):
 
     @classmethod
     async def update_record(self, record):
+        from hs_core.tasks import update_crossref_meta_deposit
         logger = logging.getLogger(__name__)
         logger.debug(f"Checking funder record {record.id}")
         if record.agency_url is not None:
@@ -2035,6 +2036,7 @@ class FundingAgency(AbstractMetaDataElement):
                         record.agency_name = agency_name_new
                         record.agency_url = item['id']
                         await sync_to_async(record.save)()
+                        await update_crossref_meta_deposit.apply_async((self.short_id,))
 
     @classmethod
     async def get_funder_records(self, apps):
