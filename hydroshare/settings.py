@@ -286,6 +286,15 @@ PROJECT_DIRNAME = PROJECT_ROOT.split(os.sep)[-1]
 # project specific.
 CACHE_MIDDLEWARE_KEY_PREFIX = PROJECT_DIRNAME
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': '/shared/django_cache',
+    }
+}
+# TODO: might need vary_on_cookie
+# https://docs.djangoproject.com/en/4.2/topics/http/decorators/#django.views.decorators.vary.vary_on_cookie
+
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
 
