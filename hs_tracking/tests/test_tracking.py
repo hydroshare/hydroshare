@@ -1,22 +1,22 @@
-from datetime import datetime, timedelta
 import csv
-from io import StringIO
-
-from django.test import TestCase
-from django.contrib.auth.models import User, Group
-from django.test import Client
-from django.http import HttpRequest, QueryDict, response
-from mock import patch, Mock
-
-from hs_tracking.models import Variable, Session, Visitor, SESSION_TIMEOUT, VISITOR_FIELDS
-from hs_core import hydroshare
-from hs_tracking.views import AppLaunch
-import hs_tracking.utils as utils
-from hs_tools_resource.models import RequestUrlBase
-import urllib.request
-import urllib.parse
 import urllib.error
+import urllib.parse
+import urllib.request
+from datetime import datetime, timedelta
+from io import StringIO
 from pprint import pprint
+
+from django.contrib.auth.models import Group, User
+from django.http import HttpRequest, QueryDict, response
+from django.test import Client, TestCase
+from mock import Mock, patch
+
+import hs_tracking.utils as utils
+from hs_core import hydroshare
+from hs_tools_resource.models import RequestUrlBase
+from hs_tracking.models import (SESSION_TIMEOUT, VISITOR_FIELDS, Session,
+                                Variable, Visitor)
+from hs_tracking.views import AppLaunch
 
 
 class ViewTests(TestCase):
@@ -51,6 +51,7 @@ class ViewTests(TestCase):
 
     def createRequest(self, user=None):
         self.request = Mock()
+        self.request.headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '}
         if user is not None:
             self.request.user = user
 
@@ -95,7 +96,7 @@ class ViewTests(TestCase):
         url_redirect = app_logging.get(r)
 
         # validate response
-        self.assertTrue(type(url_redirect) == response.HttpResponseRedirect)
+        self.assertTrue(type(url_redirect) is response.HttpResponseRedirect)
         self.assertTrue(url_redirect.url == request_url)
 
         # validate logged data
@@ -107,6 +108,7 @@ class ViewTests(TestCase):
         self.assertTrue('res_type' in list(values.keys()))
         self.assertTrue('name' in list(values.keys()))
         self.assertTrue('user_email_domain' in list(values.keys()))
+        self.assertTrue('user_email_domain_full' in list(values.keys()))
         self.assertTrue('user_type' in list(values.keys()))
         self.assertTrue('user_ip' in list(values.keys()))
         self.assertTrue('res_id' in list(values.keys()))
@@ -114,6 +116,7 @@ class ViewTests(TestCase):
         self.assertTrue(values['res_type'] == res_type)
         self.assertTrue(values['name'] == app_name)
         self.assertTrue(values['user_email_domain'] == self.user.email[-3:])
+        self.assertTrue(values['user_email_domain_full'] == self.user.email.split('@')[-1])
         self.assertTrue(values['user_type'] == 'Unspecified')
         self.assertTrue(values['user_ip'] == '198.84.193.157')
         self.assertTrue(values['res_id'] == res_id)
@@ -148,7 +151,7 @@ class ViewTests(TestCase):
         url_redirect = app_logging.get(r)
 
         # validate response
-        self.assertTrue(type(url_redirect) == response.HttpResponseForbidden)
+        self.assertTrue(type(url_redirect) is response.HttpResponseForbidden)
 
         # validate logged data
         app_lauch_cnt = Variable.objects.filter(name='app_launch').count()
@@ -174,6 +177,7 @@ class TrackingTests(TestCase):
 
     def createRequest(self, user=None):
         request = Mock()
+        request.headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '}
         if user is not None:
             request.user = user
 
@@ -321,11 +325,11 @@ class TrackingTests(TestCase):
 
         kvp = dict(tuple(pair.split('=')) for pair in var1.value.split('|'))
         self.assertEqual(var1.name, 'begin_session')
-        self.assertEqual(len(list(kvp.keys())), 3)
+        self.assertEqual(len(list(kvp.keys())), 6)
 
         kvp = dict(tuple(pair.split('=')) for pair in var2.value.split('|'))
         self.assertEqual(var2.name, 'login')
-        self.assertEqual(len(list(kvp.keys())), 3)
+        self.assertEqual(len(list(kvp.keys())), 6)
 
         client.logout()
 
@@ -333,7 +337,7 @@ class TrackingTests(TestCase):
         var = Variable.objects.latest('timestamp')
         kvp = dict(tuple(pair.split('=')) for pair in var.value.split('|'))
         self.assertEqual(var.name, 'logout')
-        self.assertEqual(len(list(kvp.keys())), 3)
+        self.assertEqual(len(list(kvp.keys())), 6)
 
     def test_activity_parsing(self):
 
@@ -345,7 +349,7 @@ class TrackingTests(TestCase):
 
         kvp = dict(tuple(pair.split('=')) for pair in var1.value.split('|'))
         self.assertEqual(var1.name, 'begin_session')
-        self.assertEqual(len(list(kvp.keys())), 3)
+        self.assertEqual(len(list(kvp.keys())), 6)
 
         client.logout()
 
@@ -375,10 +379,11 @@ class UtilsTests(TestCase):
     def test_std_log_fields(self):
 
         log_fields = utils.get_std_log_fields(self.request, self.session)
-        self.assertTrue(len(list(log_fields.keys())) == 3)
+        self.assertTrue(len(list(log_fields.keys())) == 6)
         self.assertTrue('user_ip' in log_fields)
         self.assertTrue('user_type' in log_fields)
         self.assertTrue('user_email_domain' in log_fields)
+        self.assertTrue('user_email_domain_full' in log_fields)
 
     def test_ishuman(self):
 
@@ -426,8 +431,8 @@ class UtilsTests(TestCase):
             visitor = Visitor.objects.create()
             visitor.user = user
             session = Session.objects.create(visitor=visitor)
-            emaildom = utils.get_user_email_domain(session)
-            self.assertTrue(emaildom == dom)
+            emailtld = utils.get_user_email_tld(session)
+            self.assertTrue(emailtld == dom)
             user.delete()
 
     def test_client_ip(self):

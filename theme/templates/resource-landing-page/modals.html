@@ -64,7 +64,7 @@
                         {#  Existing HydroShare User  #}
                         <div v-show="authorType === authorTypes.EXISTING_HS_USER">
                             <div class="modal-body">
-                                {{ add_view_hs_user_form.user }}
+                                {{ add_view_hs_user_form.author }}
 
                                 <div v-if="addAuthorError" class="alert alert-danger has-space-top">
                                     ${addAuthorError}
@@ -427,7 +427,7 @@
                 {% with "user-type-hs-user" as div_id %}
                 <div data-contributor-type="hs_user">
                     <div class="modal-body">
-                        {{ add_view_contrib_user_form.user }}
+                        {{ add_view_contrib_user_form.contributor }}
                     </div>
 
                     <form action="/hsapi/_internal/{{ cm.short_id }}/contributor/add-metadata/" method="POST"
@@ -613,7 +613,7 @@
                     <input name="resource-mode" type="hidden" value="edit">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                        <h4 class="modal-title" id="extra_meta_title"> Add/Edit Extended Metadata </h4>
+                        <h4 class="modal-title" id="extra_meta_title"> Add/Edit Additional Metadata </h4>
                     </div>
                     <div class="modal-body">
                         <div class="form-group">
@@ -653,7 +653,7 @@
                     <input name="resource-mode" type="hidden" value="edit">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                        <h4 class="modal-title" id="extra_meta_title"> Delete Extended Metadata </h4>
+                        <h4 class="modal-title" id="extra_meta_title"> Delete Additional Metadata </h4>
                     </div>
                     <div class="modal-body">
                         <div class="form-group">
@@ -922,167 +922,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Add credit source Modal -->
-    <div class="modal fade" id="add-funding-agency" tabindex="-1" role="dialog" aria-labelledby="add-funding-label" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form action="/hsapi/_internal/{{ cm.short_id }}/fundingagency/add-metadata/" method="POST"
-                      enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <input name="resource-mode" type="hidden" value="edit">
-
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                        <h4 class="modal-title" id="add-funding-label"> Add Funding Agency</h4></div>
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <fieldset>
-                                {# Agency Name (Required) #}
-                                <div id="div_id_agency_name" class="control-group">
-                                    <label for="agency_name" class="control-label requiredField">
-                                        Agency Name<span class="asteriskField">*</span>
-                                    </label>
-
-                                    <div class="controls">
-                                        <input class="form-control input-sm textInput"
-                                               maxlength="250" name="agency_name" required="required" type="text">
-                                    </div>
-                                </div>
-
-                                {# Award Title #}
-                                <div id="div_id_award_title" class="control-group">
-                                    <label for="award_title" class="control-label">Award Title</label>
-                                    <div class="controls">
-                                        <input class="form-control input-sm" maxlength="250"
-                                               name="award_title">
-                                    </div>
-                                </div>
-
-                                {# Award Number #}
-                                <div id="div_id_award_number" class="control-group">
-                                    <label for="award_number" class="control-label">Award Number</label>
-                                    <div class="controls">
-                                        <input class="form-control input-sm textinput textInput" maxlength="100"
-                                               name="award_number" type="text">
-                                    </div>
-                                </div>
-
-                                {# Agency URL #}
-                                <div id="div_id_agency_url" class="control-group">
-                                    <label for="agency_url" class="control-label">Agency URL</label>
-
-                                    <div class="controls">
-                                        <input class="form-control input-sm urlinput" maxlength="200"
-                                               name="agency_url" type="url">
-                                    </div>
-                                </div>
-
-                            </fieldset>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary btn-save-funding-agency btn-disable-after-valid">Save changes</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit credit source Modal -->
-    {% for agency in fundingagencies %}
-        <div class="modal fade" id="edit-funding-agency-{{ agency.id }}" tabindex="-1" role="dialog"
-             aria-labelledby="add-funding-label" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <form data-index="{{ forloop.counter0 }}" action="/hsapi/_internal/{{ cm.short_id }}/fundingagency/{{ agency.id }}/update-metadata/"
-                          method="POST" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <input name="resource-mode" type="hidden" value="edit">
-
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                            <h4 class="modal-title" id="add-funding-label"> Edit Funding Agency</h4>
-                        </div>
-
-                        <div class="modal-body">
-                            <div class="form-group">
-                                <fieldset>
-                                    {# Agency Name (Required) #}
-                                    <div id="div_id_agency_name" class="control-group">
-                                        <label for="agency_name" class="control-label requiredField">Agency Name<span
-                                                class="asteriskField">*</span></label>
-
-                                        <div class="controls"><input class="form-control input-sm textInput" maxlength="250" name="agency_name"
-                                                                     required="required" type="text"
-                                                                     value="{{ agency.agency_name }}"></div>
-                                    </div>
-
-                                    {# Award Title #}
-                                    <div id="div_id_award_title" class="control-group">
-                                        <label for="award_title" class="control-label">Award Title</label>
-
-                                        <div class="controls"><input class="form-control input-sm" maxlength="250"
-                                                                     name="award_title" value="{{ agency.award_title }}">
-                                        </div>
-                                    </div>
-
-                                    {# Award Number #}
-                                    <div id="div_id_award_number" class="control-group">
-                                        <label for="award_number" class="control-label">Award Number</label>
-
-                                        <div class="controls"><input class="form-control input-sm textinput textInput" maxlength="100"
-                                                                     name="award_number" type="text"
-                                                                     value="{{ agency.award_number }}"></div>
-                                    </div>
-
-                                    {# Agency URL #}
-                                    <div id="div_id_agency_url" class="control-group">
-                                        <label for="agency_url" class="control-label">Agency URL</label>
-
-                                        <div class="controls">
-                                            <input class="form-control input-sm urlinput" maxlength="200"
-                                                   name="agency_url" type="url" value="{{ agency.agency_url }}">
-                                        </div>
-                                    </div>
-
-                                </fieldset>
-                            </div>
-                        </div>
-
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary btn-save-funding-agency btn-disable-after-valid"
-                                    data-index="{{ forloop.counter0 }}">Save changes
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade in" id="delete-funding-agency-{{ agency.id }}" tabindex="-1" role="dialog"
-             aria-labelledby="delete-source" aria-hidden="false">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                        <h4 class="modal-title" id="delete-funding-agency">Delete Funding Agency</h4>
-                    </div>
-
-                    <div class="modal-body"><strong>Are you sure you want to delete this entry?</strong></div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                        <a type="button" class="btn btn-danger btn-disable-after"
-                           href="/hsapi/_internal/{{ cm.short_id }}/fundingagency/{{ agency.id }}/delete-metadata/">Delete</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    {% endfor %}
 
     {% for source in sources %}
     <div class="modal fade in" id="delete-source-element-dialog{{ source.id }}" tabindex="-1" role="dialog"
@@ -1622,7 +1461,7 @@
                                 <p>
                                     This resource doesn't meet the
                                     <a href="https://help.hydroshare.org/publishing-in-hydroshare/minimum-metadata-requirements-for-publishing-in-hydroshare/" target="_blank">minimum metadata standards</a>
-                                    for publication and adherence to 
+                                    for publication and adherence to
                                     <a href="https://help.hydroshare.org/publishing-in-hydroshare/terms-of-use-and-community-guidelines/" target="_blank">community guidelines</a>:
                                     <ul>
                                         {% for missing in missing_metadata_elements_for_publication %}
@@ -1824,26 +1663,6 @@
     </div>
 </div>
 
-{% if cm.resource_type != "ToolResource" %}
-    <div class="modal fade" id="rep-resource-to-irods-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title" id="rep-res-to-irods-title">Copy resource bag to your iRODS user zone</h4>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to copy this resource bag to your iRODS user zone?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <a id="btn-replicate" class="btn btn-success">Copy</a>
-                </div>
-            </div>
-        </div>
-    </div>
-{% endif %}
-
 {% block wait-for-process-to-complete %}
     <div id="wait-to-complete" title="Processing ..." style="display: none;">
         <p><span style="float:left; margin:12px 12px 50px 0;"></span>
@@ -1916,7 +1735,7 @@
                                     <p class="discoverable">
                                         You have requested the URL for a file that is within a Discoverable resource.
                                         Only you and other HydroShare users who have been granted at least "view" permission will be able to access this URL.
-                                        If you want this URL to be publicly available, 
+                                        If you want this URL to be publicly available,
                                         change the sharing status of your resource to "public" or enable Private Link Sharing.
                                     </p>
                                     <p class="private_sharing">
@@ -1958,4 +1777,9 @@
 {% block extra_js %}
     <script type="text/javascript" src="{% static 'js/modals.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/identifiers-form.js' %}"></script>
+    <script>
+        // https://github.com/select2/select2/issues/1436#issuecomment-21028474
+        // incompatibility between Select2 and Bootstrap modals
+        $.fn.modal.Constructor.prototype.enforceFocus = function() {};
+    </script>
 {% endblock %}

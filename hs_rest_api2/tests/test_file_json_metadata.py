@@ -6,7 +6,7 @@ from django.urls import reverse
 from hsmodels.schemas.resource import ResourceMetadataIn
 from hsmodels.schemas.aggregations import GeographicFeatureMetadataIn, GeographicRasterMetadataIn, \
     MultidimensionalMetadataIn, SingleFileMetadataIn, FileSetMetadataIn, TimeSeriesMetadataIn, \
-    ReferencedTimeSeriesMetadataIn, ModelProgramMetadataIn, ModelInstanceMetadataIn
+    ReferencedTimeSeriesMetadataIn, ModelProgramMetadataIn, ModelInstanceMetadataIn, CSVFileMetadataIn
 from rest_framework import status
 
 from hs_core.hydroshare import resource, current_site_url
@@ -75,6 +75,7 @@ class TestFileBasedJSON(HSRESTTestCase):
                 # overwrite system metadata fields for comparison
                 result_json['modified'] = expected_json['modified']
                 result_json['created'] = expected_json['created']
+                result_json['review_started'] = expected_json['review_started']
                 result_json['creators'][0]['hydroshare_user_id'] = expected_json['creators'][0]['hydroshare_user_id']
 
             self.assertEqual(sorting(result_json), sorting(expected_json))
@@ -87,16 +88,16 @@ class TestFileBasedJSON(HSRESTTestCase):
 
         with open(os.path.join(self.base_dir, json_put_file), "r") as f:
             expected_json = json.loads(normalize_metadata(f.read(), self.res.short_id))
-        schema_in_instance = schema_in(**expected_json)
-        in_json = schema_in_instance.dict(exclude_defaults=True)
 
         # for hydroshare_user_id, use id of an existing user
-        if 'creators' in in_json:
-            for creator in in_json['creators']:
+        if 'creators' in expected_json:
+            for creator in expected_json['creators']:
                 if 'hydroshare_user_id' in creator:
                     creator['hydroshare_user_id'] = self.user.id
+        schema_in_instance = schema_in(**expected_json)
+        in_json = schema_in_instance.model_dump_json(exclude_defaults=True)
 
-        put_response = self.client.put(reverse(endpoint, kwargs=kwargs), data=in_json, format="json")
+        put_response = self.client.put(reverse(endpoint, kwargs=kwargs), data=in_json, content_type='application/json')
         self.assertEqual(put_response.status_code, status.HTTP_200_OK)
         put_response_json = json.loads(put_response.content.decode())
         compare_response(put_response_json, expected_json)
@@ -110,7 +111,7 @@ class TestFileBasedJSON(HSRESTTestCase):
         prepare_resource(self, "resource")
         self._test_metadata_update_retrieve("hsapi2:resource_metadata_json", ResourceMetadataIn, "resource.json")
 
-    def test_reference_timerseries_metadata_update_retrieve(self):
+    def test_reference_timeseries_metadata_update_retrieve(self):
         prepare_resource(self, "reference_timeseries")
         self._test_metadata_update_retrieve("hsapi2:referenced_time_series_metadata_json",
                                             ReferencedTimeSeriesMetadataIn, "referencedtimeseries.refts.json",
@@ -146,6 +147,11 @@ class TestFileBasedJSON(HSRESTTestCase):
         self._test_metadata_update_retrieve("hsapi2:single_file_metadata_json", SingleFileMetadataIn,
                                             "singlefile.json", "test.xml")
 
+    def test_csv_file_metadata_update_retrieve(self):
+        prepare_resource(self, "csv_file")
+        self._test_metadata_update_retrieve("hsapi2:csv_file_metadata_json", CSVFileMetadataIn,
+                                            "csvfile.json", "csv_test_modified.csv")
+
     def test_model_program_metadata_update_retrieve(self):
         prepare_resource(self, "model_program")
         self._test_metadata_update_retrieve("hsapi2:model_program_metadata_json", ModelProgramMetadataIn,
@@ -165,7 +171,8 @@ class TestFileBasedJSON(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         in_resource_json = {'bad_title': 'this better not work!'}
-        response = self.client.put(reverse(endpoint, kwargs=kwargs), data=in_resource_json, format="json")
+        response = self.client.put(reverse(endpoint, kwargs=kwargs), data=in_resource_json,
+                                   content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_resource_metadata_update_unknown_field(self):
@@ -218,9 +225,10 @@ class TestFileBasedJSON(HSRESTTestCase):
         with open(os.path.join(self.base_dir, "resource.json"), "r") as f:
             expected_json = json.loads(normalize_metadata(f.read(), self.res.short_id))
         schema_in_instance = ResourceMetadataIn(**expected_json)
-        in_json = schema_in_instance.dict(exclude_defaults=True)
+        in_json = schema_in_instance.model_dump_json(exclude_defaults=True)
         kwargs = {"pk": self.res.short_id}
-        response = self.client.put(reverse("hsapi2:resource_metadata_json", kwargs=kwargs), data=in_json, format="json")
+        response = self.client.put(reverse("hsapi2:resource_metadata_json", kwargs=kwargs), data=in_json,
+                                   content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_aggregation_metadata_update_published(self):
@@ -230,8 +238,8 @@ class TestFileBasedJSON(HSRESTTestCase):
         with open(os.path.join(self.base_dir, "referencedtimeseries.refts.json"), "r") as f:
             expected_json = json.loads(normalize_metadata(f.read(), self.res.short_id))
         schema_in_instance = ReferencedTimeSeriesMetadataIn(**expected_json)
-        in_json = schema_in_instance.dict(exclude_defaults=True)
+        in_json = schema_in_instance.model_dump_json(exclude_defaults=True)
         kwargs = {"pk": self.res.short_id, "aggregation_path": "msf_version.refts.json"}
         response = self.client.put(reverse("hsapi2:referenced_time_series_metadata_json",
-                                           kwargs=kwargs), data=in_json, format="json")
+                                           kwargs=kwargs), data=in_json, content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

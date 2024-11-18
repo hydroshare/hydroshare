@@ -1,3 +1,5 @@
+import logging
+
 from json import dumps
 
 from django_comments.models import Comment
@@ -5,7 +7,7 @@ from django_comments.views.moderation import perform_delete
 from rest_framework import status
 
 from django.contrib import messages
-from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.messages import info, error
@@ -13,18 +15,20 @@ from django.core.exceptions import (
     ValidationError,
     ObjectDoesNotExist,
     MultipleObjectsReturned,
+    PermissionDenied,
 )
 from django.core.mail import send_mail
 from django.urls import reverse
 from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.db.models.query import prefetch_related_objects
-from django.http import HttpResponse, JsonResponse, HttpResponseForbidden
+from django.http import HttpResponse, JsonResponse, HttpResponseForbidden, HttpResponseNotAllowed
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, get_object_or_404
 from django.shortcuts import render
 from django.template.response import TemplateResponse
-from django.utils.http import int_to_base36
+from django.utils.http import int_to_base36, urlencode
+from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
 from mezzanine.accounts.forms import LoginForm
@@ -40,17 +44,18 @@ from mezzanine.utils.email import (
 )
 from mezzanine.utils.urls import login_redirect, next_url
 from mezzanine.utils.views import is_spam
+from mozilla_django_oidc.views import OIDCLogoutView
 
 from hs_access_control.models import GroupMembershipRequest
+from hs_core.authentication import build_oidc_url
 from hs_core.hydroshare.utils import user_from_id
 from hs_core.models import Party
-from hs_core.views.utils import run_ssh_command
+from hs_core.views.utils import is_ajax
 from hs_dictionary.models import University, UncategorizedTerm
 from hs_tracking.models import Variable
 from theme.forms import RatingForm, UserProfileForm, UserForm
 from theme.forms import ThreadedCommentForm
-from theme.models import UserProfile
-from theme.utils import get_quota_message
+from theme.models import UserProfile, QuotaRequest, QuotaRequestForm, UserQuota
 from .forms import SignupForm
 
 
@@ -103,6 +108,10 @@ class UserProfileView(TemplateView):
                     Q(raccess__public=True) | Q(raccess__discoverable=True)
                 )
 
+        oidc_change_password_url = None
+        if hasattr(settings, 'OIDC_CHANGE_PASSWORD_URL'):
+            oidc_change_password_url = settings.OIDC_CHANGE_PASSWORD_URL
+
         # get resource attributes used in profile page
         resources = resources.only("title", "resource_type", "created")
         prefetch_related_objects(
@@ -111,13 +120,145 @@ class UserProfileView(TemplateView):
             Prefetch("content_object___description"),
             Prefetch("content_object___title"),
         )
+        quota_requests = QuotaRequest.objects.filter(
+            request_from=u,
+            status="pending"
+        ).all()
+        if self.request.method == "POST":
+            quota_form = QuotaRequestForm(self.request.POST)
+            if quota_form.is_valid():
+                try:
+                    quota_form = quota_form.save(self.request)
+                    msg = "New quota request was successful."
+                    messages.success(self.request, msg)
+                except PermissionDenied:
+                    err_msg = "You don't have permission to request additional quota"
+                    messages.error(self.request, err_msg)
+
+            else:
+                messages.error(self.request, f"Quota request errors: {quota_form.errors.as_json}.")
+
+        else:
+            quota_form = QuotaRequestForm()
+        uq = UserQuota.objects.filter(user=u).first()
+        message = ""
+        quota_data = {}
+        if uq:
+            quota_data = uq.get_quota_data()
+            message = uq.get_quota_message(quota_data, include_quota_usage_info=False)
         return {
             "profile_user": u,
             "resources": resources,
-            "quota_message": get_quota_message(u),
+            "quota_message": message,
+            "quota_data": quota_data,
+            "quota_requests": quota_requests,
+            "quota_form": quota_form,
             "group_membership_requests": group_membership_requests,
-            "data_upload_max": settings.DATA_UPLOAD_MAX_MEMORY_SIZE
+            "data_upload_max": settings.DATA_UPLOAD_MAX_MEMORY_SIZE,
+            "oidc_change_password_url": oidc_change_password_url
         }
+
+
+def act_on_quota_request(request, quota_request_id, action, uidb36=None, token=None, **kwargs):
+    """
+    Take action (accept or decline) on quota request
+
+    :param request: requesting user is either owner of the quota request or an admin approving the request
+    :param quota_request_id: id of the quota request object to act on
+    :param action: need to have a value of either 'revoke', 'approve', or 'deny'
+    :return:
+    """
+
+    if not uidb36:
+        # Revoke requests are made by the user via ajax
+        if action != "revoke":
+            return JsonResponse({"message": "Invalid action"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            quota_request = QuotaRequest.objects.get(
+                pk=quota_request_id
+            )
+        except ObjectDoesNotExist:
+            return JsonResponse({"message": "No matching quota request was found"}, status=status.HTTP_400_BAD_REQUEST)
+        if request.user != quota_request.request_from:
+            return JsonResponse({"message": f"You are not authorized to {action} this quota"},
+                                status=status.HTTP_401_UNAUTHORIZED)
+        if quota_request.status != "pending":
+            return JsonResponse({"message": "Quota request not revoked because it is not pending"},
+                                status=status.HTTP_400_BAD_REQUEST)
+        quota_request.status = "revoked"
+        quota_request.save()
+        return JsonResponse({"message": "Quota request revoked"}, status=status.HTTP_200_OK)
+
+    # approve and deny requests are made via clickable links in email to admin
+    try:
+        if uidb36:
+            user = authenticate(uidb36=uidb36, token=token, is_active=True)
+            if user is None:
+                raise ValidationError("The link you clicked has expired.")
+        else:
+            user = request.user
+        if not user:
+            raise ValidationError("Invalid user.")
+        try:
+            quota_request = QuotaRequest.objects.get(
+                pk=quota_request_id
+            )
+        except ObjectDoesNotExist:
+            raise ValidationError("No matching quota request was found.")
+        if not user.is_superuser:
+            raise PermissionDenied("Invalid user.")
+
+        if quota_request.status == "pending":
+            if action == "approve":
+                quota_request.status = "approved"
+            elif action == "deny":
+                quota_request.status = "denied"
+            else:
+                raise ValidationError(f"Requested action '{action}' is not valid.")
+        else:
+            raise ValidationError("Request already redeemed.")
+    except Exception as ex:
+        messages.error(request, str(ex))
+    else:
+        quota_request.save()
+        messages.success(request, f"Quota {action} request successful")
+    return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+
+
+@login_required
+def quota_request(request, *args, **kwargs):
+    """ A view function for quota request """
+    if request.method == "POST":
+        try:
+            user = request.user
+            if user.is_superuser:
+                raise ObjectDoesNotExist("Admin users don't have quota")
+            up = UserProfile.objects.filter(user=user).first()
+            missing = up.profile_is_missing
+            if missing:
+                raise ValidationError(f"Your profile must be complete before you can request more quota. \
+                                      Your profile is missing the following: {', '.join(missing)}")
+            uq = UserQuota.objects.filter(user=user).first()
+            if not uq:
+                raise ObjectDoesNotExist(f"No quota found for {user.username}")
+            quota_form = QuotaRequestForm(request.POST)
+            if quota_form.is_valid():
+                quota_form = quota_form.save(commit=False)
+                quota_form.request_from = user
+                quota_form.quota = uq
+                quota_form.save()
+                msg = "New quota request was successful."
+                messages.success(request, msg)
+                notify_of_quota_request(request, uq, quota_form)
+            else:
+                for k, v in quota_form.errors.items():
+                    messages.error(request, f"Invalid {k}: {v[0]}")
+        except PermissionDenied:
+            err_msg = "You don't have permission to request additional quota"
+            messages.error(request, err_msg)
+
+    return HttpResponseRedirect(request.headers['referer'])
 
 
 class UserPasswordResetView(TemplateView):
@@ -160,7 +301,7 @@ def comment(request, template="generic/comments.html"):
         #     cookie_value = post_data.get(field, "")
         #     set_cookie(response, cookie_name, cookie_value)
         return response
-    elif request.is_ajax() and form.errors:
+    elif is_ajax(request) and form.errors:
         return HttpResponse(dumps({"errors": form.errors}))
     # Show errors with stand-alone comment form.
     context = {"obj": obj, "posted_comment_form": form}
@@ -190,6 +331,40 @@ def rating(request, template="generic/rating.html"):
     return response
 
 
+def oidc_signup(request):
+    oidc_url = build_oidc_url(request).replace('/auth?', '/registrations?')
+    return redirect(oidc_url)
+
+
+class LogoutView(OIDCLogoutView):
+    def get(self, request):
+        """Log out the user."""
+        if self.get_settings("ALLOW_LOGOUT_GET_METHOD", False):
+            return self.post(request)
+        return HttpResponseNotAllowed(["POST"])
+
+    def post(self, request):
+        """Log out the user."""
+        redirect_url = settings.LOGOUT_REDIRECT_URL
+
+        if request.user.is_authenticated:
+            # Check if a method exists to build the URL to log out the user
+            # from the OP.
+            logout_from_op = self.get_settings("OIDC_OP_LOGOUT_URL_METHOD", "")
+            if logout_from_op:
+                redirect_url = import_string(logout_from_op)(request)
+            else:
+                logout_url = settings.OIDC_OP_LOGOUT_ENDPOINT
+                return_to_url = request.build_absolute_uri(settings.LOGOUT_REDIRECT_URL)
+                redirect_url = logout_url + '?' \
+                    + urlencode({'returnTo': return_to_url, 'client_id': settings.OIDC_RP_CLIENT_ID})
+
+            # Log out the Django user if they were logged in.
+            auth_logout(request)
+
+        return HttpResponseRedirect(redirect_url)
+
+
 def signup(request, template="accounts/account_signup.html", extra_context=None):
     """
     Signup form. Overriding mezzanine's view function for signup submit
@@ -210,7 +385,7 @@ def signup(request, template="accounts/account_signup.html", extra_context=None)
                 )
             else:
                 messages.error(request, str(e))
-            return HttpResponseRedirect(request.META["HTTP_REFERER"])
+            return HttpResponseRedirect(request.headers["referer"])
         else:
             if not new_user.is_active:
                 if settings.ACCOUNTS_APPROVAL_REQUIRED:
@@ -258,7 +433,7 @@ def signup(request, template="accounts/account_signup.html", extra_context=None)
     # return render(request, template, context)
 
     # This one keeps the css but not able to retained user entered data.
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    return HttpResponseRedirect(request.headers["referer"])
 
 
 def signup_verify(request, uidb36=None, token=None):
@@ -295,7 +470,7 @@ def update_user_profile(request, profile_user_id):
         identifiers = post_data_dict.get("identifiers", {})
     except Exception as ex:
         messages.error(request, "Update failed. {}".format(str(ex)))
-        return HttpResponseRedirect(request.META["HTTP_REFERER"])
+        return HttpResponseRedirect(request.headers["referer"])
 
     org_items = request.POST["organization"].split(";")
     for org_item in org_items:
@@ -376,7 +551,19 @@ def update_user_profile(request, profile_user_id):
     except Exception as ex:
         messages.error(request, str(ex))
 
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    return HttpResponseRedirect(request.headers["referer"])
+
+
+def check_organization_terms(dict_items):
+    for dict_item in dict_items:
+        # Update Dictionaries
+        try:
+            University.objects.get(name=dict_item)
+        except ObjectDoesNotExist:
+            new_term = UncategorizedTerm(name=dict_item)
+            new_term.save()
+        except MultipleObjectsReturned:
+            pass
 
 
 def resend_verification_email(request, email):
@@ -393,7 +580,7 @@ def resend_verification_email(request, email):
         return redirect(reverse("login"))
     send_verification_mail(request, user, "signup_verify")
     messages.error(request, _("Resent verification email to " + user.email))
-    return redirect(request.META["HTTP_REFERER"])
+    return redirect(request.headers["referer"])
 
 
 def request_password_reset(request):
@@ -402,7 +589,7 @@ def request_password_reset(request):
         user = user_from_id(username_or_email)
     except Exception:
         messages.error(request, "No user is found for the provided username or email")
-        return HttpResponseRedirect(request.META["HTTP_REFERER"])
+        return HttpResponseRedirect(request.headers["referer"])
 
     messages.info(
         request,
@@ -418,7 +605,7 @@ def request_password_reset(request):
     # send an email to the the user notifying the password reset request
     send_verification_mail_for_password_reset(request, user)
 
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    return HttpResponseRedirect(request.headers["referer"])
 
 
 @login_required
@@ -431,18 +618,18 @@ def update_user_password(request):
     password2 = password2.strip()
     if not user.check_password(old_password):
         messages.error(request, "Your current password does not match.")
-        return HttpResponseRedirect(request.META["HTTP_REFERER"])
+        return HttpResponseRedirect(request.headers["referer"])
 
     if len(password1) < 6:
         messages.error(request, "Password must be at least 6 characters long.")
-        return HttpResponseRedirect(request.META["HTTP_REFERER"])
+        return HttpResponseRedirect(request.headers["referer"])
 
     if password1 == password2:
         user.set_password(password1)
         user.save()
     else:
         messages.error(request, "Passwords do not match.")
-        return HttpResponseRedirect(request.META["HTTP_REFERER"])
+        return HttpResponseRedirect(request.headers["referer"])
 
     messages.info(request, "Password reset was successful")
     return HttpResponseRedirect("/user/{}/".format(user.id))
@@ -458,14 +645,14 @@ def reset_user_password(request):
 
     if len(password1) < 6:
         messages.error(request, "Password must be at least 6 characters long.")
-        return HttpResponseRedirect(request.META["HTTP_REFERER"])
+        return HttpResponseRedirect(request.headers["referer"])
 
     if password1 == password2:
         user.set_password(password1)
         user.save()
     else:
         messages.error(request, "Passwords do not match.")
-        return HttpResponseRedirect(request.META["HTTP_REFERER"])
+        return HttpResponseRedirect(request.headers["referer"])
 
     messages.info(request, "Password reset was successful")
     # redirect to home page
@@ -546,6 +733,25 @@ def send_verification_mail_for_password_reset(request, user):
     )
 
 
+def notify_of_quota_request(request, user_quota, quota_request_form):
+    """
+    Notifies the support admin user of a quota request.
+
+    Parameters:
+        user_quota - quota object that will be updated by the request
+        quota_request_form - the form request submitted by the quota holder
+    """
+    from hs_core.views.utils import get_default_support_user
+
+    user_to = get_default_support_user()
+    from hs_core.views.utils import send_action_to_take_email
+    send_action_to_take_email(request, user=user_to,
+                              user_from=request.user,
+                              action_type='act_on_quota_request',
+                              user_quota=user_quota,
+                              quota_request_form=quota_request_form,)
+
+
 def home_router(request):
     if request.user.is_authenticated:
         return redirect("dashboard")
@@ -577,7 +783,8 @@ def login(
     if request.method == "POST" and form.is_valid():
         login_msg = "Successfully logged in"
         authenticated_user = form.save()
-        add_msg = get_quota_message(authenticated_user)
+        uq = authenticated_user.quotas.first()
+        add_msg = uq.get_quota_message()
         if add_msg:
             login_msg += " - " + add_msg
         info(request, _(login_msg))
@@ -600,6 +807,13 @@ def email_verify(request, new_email, uidb36=None, token=None):
     if user is not None:
         user.email = new_email
         user.save()
+        if settings.ENABLE_OIDC_AUTHENTICATION:
+            from hs_core.authentication import KEYCLOAK_ADMIN
+            try:
+                keycloak_id = KEYCLOAK_ADMIN.get_user_id(user.get_username())
+                KEYCLOAK_ADMIN.update_user(keycloak_id, payload={"email": new_email})
+            except Exception:
+                logging.exception("Failed to sync the email change to Keycloak")
         auth_login(request, user)
         messages.info(request, _("Successfully updated email"))
         # redirect to user profile page
@@ -665,112 +879,3 @@ def deactivate_user(request):
     user.save()
     messages.success(request, "Your account has been successfully deactivated.")
     return HttpResponseRedirect("/accounts/logout/")
-
-
-@login_required
-def delete_irods_account(request):
-    if request.method == "POST":
-        user = request.user
-        try:
-            exec_cmd = "{0} {1}".format(
-                settings.LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD, user.username
-            )
-            output = run_ssh_command(
-                host=settings.HS_USER_ZONE_HOST,
-                uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
-                pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
-                exec_cmd=exec_cmd,
-            )
-            for out_str in output:
-                if "ERROR:" in out_str.upper():
-                    # there is an error from icommand run, report the error
-                    return JsonResponse(
-                        {
-                            "error": "iRODS server failed to delete this iRODS account {0}. "
-                            "If this issue persists, please notify help@cuahsi.org.".format(
-                                user.username
-                            )
-                        },
-                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    )
-
-            user_profile = UserProfile.objects.filter(user=user).first()
-            user_profile.create_irods_user_account = False
-            user_profile.save()
-            return JsonResponse(
-                {
-                    "success": "iRODS account {0} is deleted successfully".format(
-                        user.username
-                    )
-                },
-                status=status.HTTP_200_OK,
-            )
-        except Exception as ex:
-            return JsonResponse(
-                {
-                    "error": str(ex)
-                    + " - iRODS server failed to delete this iRODS account. "
-                    "If this issue persists, please notify help@cuahsi.org."
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
-
-@login_required
-def create_irods_account(request):
-    if request.method == "POST":
-        try:
-            user = request.user
-            pwd = str(request.POST.get("password"))
-            exec_cmd = "{0} {1} {2}".format(
-                settings.LINUX_ADMIN_USER_CREATE_USER_IN_USER_ZONE_CMD,
-                user.username,
-                pwd,
-            )
-            output = run_ssh_command(
-                host=settings.HS_USER_ZONE_HOST,
-                uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
-                pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
-                exec_cmd=exec_cmd,
-            )
-            for out_str in output:
-                if "bash:" in out_str or (
-                    "ERROR:" in out_str.upper()
-                    and "CATALOG_ALREADY_HAS_ITEM_BY_THAT_NAME" not in out_str.upper()
-                ):
-                    # there is an error from icommand run which is not about the fact
-                    # that the user already exists, report the error
-                    return JsonResponse(
-                        {
-                            "error": "iRODS server failed to create this iRODS account {0}. "
-                            "If this issue persists, please notify help@cuahsi.org.".format(
-                                user.username
-                            )
-                        },
-                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    )
-
-            user_profile = UserProfile.objects.filter(user=user).first()
-            user_profile.create_irods_user_account = True
-            user_profile.save()
-            return JsonResponse(
-                {
-                    "success": "iRODS account {0} was created successfully".format(
-                        user.username
-                    )
-                },
-                status=status.HTTP_200_OK,
-            )
-        except Exception as ex:
-            return JsonResponse(
-                {
-                    "error": str(ex)
-                    + " - iRODS server failed to create this iRODS account. "
-                    "If this issue persists, please notify help@cuahsi.org."
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-    else:
-        return JsonResponse(
-            {"error": "Not POST request"}, status=status.HTTP_400_BAD_REQUEST
-        )

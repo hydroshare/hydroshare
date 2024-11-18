@@ -94,12 +94,13 @@ Click this button to add a relationship to another resource, external website, o
             </thead>
             <tbody>
             {% for res in belongs_to_collections %}
+                {% with res|user_permission:request.user.pk as res_permission %}
                 <tr id="{{ res.short_id }}">
                     <td>
-                        {% if res|user_permission:request.user.pk|lower == "none" %}
+                        {% if res_permission|lower == "none" %}
                             <strong>{{ res.metadata.title }}</strong>
                         {% else %}
-                            <strong><a href="{{ res.get_absolute_url }}"
+                            <strong><a href="{{ res.absolute_url }}"
                                        target="_blank">{{ res.metadata.title }}</a></strong>
                         {% endif %}
                     </td>
@@ -139,15 +140,16 @@ Click this button to add a relationship to another resource, external website, o
                         {% endif %}
                     </td>
                     <td>
-                        {% if res|user_permission:request.user.pk|lower == "none" %}
-                            <strong class="label-private">{{ res|user_permission:request.user.pk }}</strong>
-                        {% elif res|user_permission:request.user.pk|lower == "open access" %}
-                            <strong class="label-public">{{ res|user_permission:request.user.pk }}</strong>
+                        {% if res_permission|lower == "none" %}
+                            <strong class="label-private">{{ res_permission }}</strong>
+                        {% elif res_permission|lower == "open access" %}
+                            <strong class="label-public">{{ res_permission }}</strong>
                         {% else %}
-                            {{ res|user_permission:request.user.pk }}
+                            {{ res_permission }}
                         {% endif %}
                     </td>
                 </tr>
+                {% endwith %}
             {% endfor %}
             </tbody>
         </table>

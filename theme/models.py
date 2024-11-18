@@ -1,17 +1,20 @@
 import datetime
-import os
 import logging
 
 from django.utils import timezone
 from django.dispatch import receiver
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
+from django.forms import ModelForm
 from django.contrib.postgres.fields import ArrayField
 from django.db.models.signals import pre_save
 from django.template import RequestContext, Template, TemplateSyntaxError
 from django.utils.translation import gettext_lazy as _
 from django.utils.html import strip_tags
 from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
+from django.core.validators import MinValueValidator, MaxValueValidator, MinLengthValidator, MaxLengthValidator
 from django.contrib.postgres.fields import HStoreField
 
 from mezzanine.core.fields import FileField, RichTextField
@@ -22,6 +25,7 @@ from mezzanine.utils.models import upload_to
 
 from sorl.thumbnail import ImageField as ThumbnailImageField
 from theme.utils import get_upload_path_userprofile
+from theme.enums import QuotaStatus
 
 
 DEFAULT_COPYRIGHT = '&copy; {% now "Y" %} {{ settings.SITE_TITLE }}'
@@ -189,21 +193,13 @@ class QuotaMessage(models.Model):
     # enforce_content_prepend prepends the content to form an enforcement message to inform users
     # after grace period or when they are over hard limit quota
     warning_content_prepend = models.TextField(
-        default="Your quota for HydroShare resources is "
-        "{allocated}{unit} in {zone} zone. You "
-        "currently have resources that consume "
-        "{used}{unit}, {percent}% of your quota. "
-        "Once your quota reaches 100% you will no "
+        default="Once your quota reaches 100% you will no "
         "longer be able to create new resources in "
         "HydroShare. "
     )
     grace_period_content_prepend = models.TextField(
         default="You have exceeded your HydroShare "
-        "quota. Your quota for HydroShare "
-        "resources is {allocated}{unit} in "
-        "{zone} zone. You currently have "
-        "resources that consume {used}{unit}, "
-        "{percent}% of your quota. You have a "
+        "quota. You have a "
         "grace period until {cut_off_date} to "
         "reduce your use to below your quota, "
         "or to acquire additional quota, after "
@@ -211,26 +207,30 @@ class QuotaMessage(models.Model):
         "create new resources in HydroShare. "
     )
     enforce_content_prepend = models.TextField(
-        default="Your action "
-        "was refused because you have exceeded your "
-        "quota. Your quota for HydroShare resources "
-        "is {allocated}{unit} in {zone} zone. You "
-        "currently have resources that consume "
-        "{used}{unit}, {percent}% of your quota. "
+        default="You can not take further action "
+        "because you have exceeded your "
+        "quota. "
+    )
+    quota_usage_info = models.TextField(
+        default="Your quota for HydroShare resources is {allocated}{unit}. "
+        "You currently have resources that consume {used}{unit}, {percent}% of your quota. "
     )
     content = models.TextField(
-        default="To request additional quota, please contact "
-        "help@cuahsi.org. We will try to accommodate "
+        default="You can request additional quota, from your "
+        "User Profile. We will try to accommodate "
         "reasonable requests for additional quota. If you have a "
         "large quota request you may need to contribute toward the "
-        "costs of providing the additional space you need. See "
-        "https://help.hydroshare.org/about-hydroshare/policies/"
-        "quota/ for more information about the quota policy."
+        "costs of providing the additional space you need. "
     )
     # quota soft limit percent value for starting to show quota usage warning. Default is 80%
     soft_limit_percent = models.IntegerField(default=80)
     # quota hard limit percent value for hard quota enforcement. Default is 125%
     hard_limit_percent = models.IntegerField(default=125)
+    # percent that published resources should count toward quota
+    # Default=0 -> published resources aren't counted toward quota
+    published_resource_percent = models.IntegerField(
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        default=0)
     # grace period, default is 7 days
     grace_period = models.IntegerField(default=7)
     # whether to enforce quota or not. Default is False, which can be changed to true from
@@ -241,7 +241,7 @@ class QuotaMessage(models.Model):
 class UserQuota(models.Model):
     # ForeignKey relationship makes it possible to associate multiple UserQuota models to
     # a User with each UserQuota model defining quota for a set of iRODS zones. By default,
-    # the UserQuota model instance defines quota in hydroshareZone and hydroshareuserZone,
+    # the UserQuota model instance defines quota in hydroshareZone,
     # categorized as hydroshare in zone field in UserQuota model, however,
     # another UserQuota model instance could be defined in a third-party federated zone as needed.
     user = models.ForeignKey(
@@ -254,13 +254,16 @@ class UserQuota(models.Model):
     )
 
     allocated_value = models.FloatField(default=20)
-    used_value = models.FloatField(default=0)
     unit = models.CharField(max_length=10, default="GB")
     zone = models.CharField(max_length=100, default="hydroshare")
-    # remaining_grace_period to be quota-enforced. Default is -1 meaning the user is below
-    # soft quota limit and thus grace period has not started. When grace period is 0, quota
+    # grace_period_ends to be quota-enforced. Default is None meaning the user is below
+    # soft quota limit and thus grace period has not started. When today=grace_period_ends, quota
     # enforcement takes place
-    remaining_grace_period = models.IntegerField(default=-1)
+    grace_period_ends = models.DateField(verbose_name='Grace Period Ends',
+                                         null=True,
+                                         blank=True,
+                                         help_text='The date that Grace Period will end for this User Quota',
+                                         default=None)
 
     class Meta:
         verbose_name = _("User quota")
@@ -268,19 +271,46 @@ class UserQuota(models.Model):
         unique_together = ("user", "zone")
 
     @property
-    def used_percent(self):
-        return self.used_value * 100.0 / self.allocated_value
-
-    def update_used_value(self, size):
-        """
-        set self.used_value in self.unit with pass in size in bytes.
-        :param size: pass in size in bytes unit
-        :return:
-        """
+    def data_zone_value(self):
+        from hs_core.hydroshare.resource import get_data_zone_usage
         from hs_core.hydroshare.utils import convert_file_size_to_unit
+        dz = get_data_zone_usage(self.user.username)
+        return convert_file_size_to_unit(dz, self.unit)
 
-        self.used_value = convert_file_size_to_unit(size, self.unit)
-        self.save()
+    @property
+    def used_percent(self):
+        try:
+            return self.used_value * 100.0 / self.allocated_value
+        except ZeroDivisionError:
+            return float('inf')
+
+    @property
+    def remaining(self):
+        delta = self.allocated_value - self.used_value
+        return delta if delta > 0 else 0
+
+    @property
+    def used_value(self):
+        dz = self.get_used_value_by_zone(refresh=False)
+        return dz
+
+    def get_used_value_by_zone(self, refresh=False):
+        """
+        Get the used value by zone.
+
+        Parameters:
+            refresh (bool): If True, refreshes the quota usage before returning the values.
+
+        Returns:
+            used value in the dataZone
+        """
+        from hs_core.hydroshare.resource import get_quota_usage
+
+        if refresh:
+            dz = get_quota_usage(self.user.username, False)
+        else:
+            dz = self.data_zone_value
+        return dz
 
     def add_to_used_value(self, size):
         """
@@ -292,6 +322,194 @@ class UserQuota(models.Model):
         from hs_core.hydroshare.utils import convert_file_size_to_unit
 
         return self.used_value + convert_file_size_to_unit(size, self.unit)
+
+    def start_grace_period(self, qmsg_days=7):
+        """
+        start grace period for this user quota
+        :param qmsg_days: number of days for grace period
+        """
+        self.grace_period_ends = datetime.date.today() + datetime.timedelta(days=qmsg_days)
+        self.save()
+
+    def reset_grace_period(self):
+        """
+        reset grace period for this user quota
+        """
+        self.grace_period_ends = None
+        self.save()
+
+    def get_quota_data(self):
+        """
+        get user quota data for display on user profile page
+        :return: dictionary containing quota data
+
+        Note that percents are in the range 0 to 100
+        """
+        qmsg = QuotaMessage.objects.first()
+        if qmsg is None:
+            qmsg = QuotaMessage.objects.create()
+
+        enforce_quota = qmsg.enforce_quota
+        soft_limit = qmsg.soft_limit_percent
+        hard_limit = qmsg.hard_limit_percent
+        today = datetime.date.today()
+        grace = self.grace_period_ends
+        allocated = self.allocated_value
+        unit = self.unit
+        used = self.get_used_value_by_zone(refresh=False)
+        dzp = used * 100.0 / allocated
+        percent = used * 100.0 / allocated
+        remaining = allocated - used
+
+        if percent >= 100 and not grace:
+            # This would indicate that the grace period has not been set even though the user went over quota.
+            # This can only happen in a race condition where the quota microservice is still in the process of updating
+            self.start_grace_period(qmsg.grace_period)
+            grace = self.grace_period_ends
+            logger.error(f"User {self.user.username} went over quota but grace period was not set.")
+
+        status = QuotaStatus.INFO
+        if percent >= hard_limit or (percent >= 100 and grace <= today):
+            status = QuotaStatus.ENFORCEMENT
+        elif percent >= 100 and grace > today:
+            status = QuotaStatus.GRACE_PERIOD
+        elif percent >= soft_limit:
+            status = QuotaStatus.WARNING
+
+        uq_data = {"used": used,
+                   "allocated": allocated,
+                   "unit": unit,
+                   "dz": used,
+                   "dz_percent": dzp if dzp < 100 else 100,
+                   "percent": percent if percent < 100 else 100,
+                   "remaining": 0 if remaining < 0 else remaining,
+                   "percent_over": 0 if percent < 100 else percent - 100,
+                   "grace_period_ends": grace,
+                   "enforce_quota": enforce_quota,
+                   "status": status,
+                   "qmsg": qmsg,
+                   }
+        return uq_data
+
+    def get_quota_message(self, quota_data=None, include_quota_usage_info=True):
+        """
+        get quota warning, grace period, or enforcement message to email users and display
+        when the user logins in and display on user profile page
+        :param quota_data: dictionary containing quota data
+        :return: quota message string
+        """
+        return_msg = ''
+        if not quota_data:
+            quota_data = self.get_quota_data()
+        qmsg = quota_data["qmsg"]
+        allocated = quota_data["allocated"]
+        used = quota_data["used"]
+        grace = quota_data["grace_period_ends"]
+        quota_status = quota_data["status"]
+        percent = used * 100.0 / allocated
+        rounded_percent = round(percent, 2)
+        rounded_used_val = round(used, 4)
+
+        if quota_status == QuotaStatus.ENFORCEMENT:
+            # return quota enforcement message
+            if include_quota_usage_info:
+                msg_template_str = f'{qmsg.enforce_content_prepend} {qmsg.quota_usage_info} {qmsg.content}\n'
+            else:
+                msg_template_str = f'{qmsg.enforce_content_prepend} {qmsg.content}\n'
+            return_msg += msg_template_str.format(used=rounded_used_val,
+                                                  unit=self.unit,
+                                                  allocated=self.allocated_value,
+                                                  zone=self.zone,
+                                                  percent=rounded_percent)
+        elif quota_status == QuotaStatus.GRACE_PERIOD:
+            # return quota grace period message
+            if include_quota_usage_info:
+                msg_template_str = f'{qmsg.grace_period_content_prepend} {qmsg.quota_usage_info} {qmsg.content}\n'
+            else:
+                msg_template_str = f'{qmsg.grace_period_content_prepend} {qmsg.content}\n'
+            return_msg += msg_template_str.format(used=rounded_used_val,
+                                                  unit=self.unit,
+                                                  allocated=self.allocated_value,
+                                                  zone=self.zone,
+                                                  percent=rounded_percent,
+                                                  cut_off_date=grace)
+        elif quota_status == QuotaStatus.WARNING:
+            # return quota warning message
+            if include_quota_usage_info:
+                msg_template_str = f'{qmsg.quota_usage_info} {qmsg.warning_content_prepend} {qmsg.content}\n'
+            else:
+                msg_template_str = f'{qmsg.warning_content_prepend} {qmsg.content}\n'
+            return_msg += msg_template_str.format(used=rounded_used_val,
+                                                  unit=self.unit,
+                                                  allocated=self.allocated_value,
+                                                  zone=self.zone,
+                                                  percent=rounded_percent)
+        else:
+            # return quota informational message
+            if include_quota_usage_info:
+                msg_template_str = f'{qmsg.quota_usage_info} {qmsg.warning_content_prepend}\n'
+            else:
+                msg_template_str = f'{qmsg.warning_content_prepend}\n'
+            return_msg += msg_template_str.format(allocated=self.allocated_value,
+                                                  unit=self.unit,
+                                                  used=rounded_used_val,
+                                                  zone=self.zone,
+                                                  percent=rounded_percent)
+        return return_msg
+
+
+class QuotaRequest(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'pending'),
+        ('denied', 'denied'),
+        ('approved', 'approved'),
+        ('revoked', 'revoked'),
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    request_from = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ru2qrequest')
+    quota = models.ForeignKey(UserQuota, on_delete=models.CASCADE, related_name='g2qrequest')
+    date_requested = models.DateTimeField(editable=False, auto_now_add=True)
+    justification = models.TextField(validators=[MinLengthValidator(15, 'must contain at least 15 characters'),
+                                                 MaxLengthValidator(300, 'maximum 300 characters')], null=True)
+    storage = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(100)], default=1)
+
+    def notify_user_of_quota_action(self, send_on_deny=False):
+        """
+        Sends email notification to user on approval/denial of thie quota request
+
+        :param send_on_deny: whether emails should be sent on denial. default is to only send emails on quota approval
+        :return:
+        """
+
+        if self.status != 'approved' and not send_on_deny:
+            return
+
+        date = self.date_requested.strftime("%m/%d/%Y, %H:%M:%S")
+        email_msg = f'''Dear Hydroshare User,
+        <p>On { date }, you requested { self.storage } GB increase in quota.</p>
+        <p>Here is the justification you provided: <strong>'{ self.justification }'</strong></p>
+
+        <p>Your request for Quota increase has been reviewed and { self.status }.</p>
+
+        <p>Thank you,</p>
+        <p>The HydroShare Team</p>
+        '''
+        send_mail(subject=f"HydroShare request for Quota increase { self.status }",
+                  message=email_msg,
+                  html_message=email_msg,
+                  from_email=settings.DEFAULT_FROM_EMAIL,
+                  recipient_list=[self.request_from.email])
+
+
+class QuotaRequestForm(ModelForm):
+    class Meta:
+        model = QuotaRequest
+        fields = ["justification", "storage"]
+
+    def __init__(self, *args, **kwargs):
+        super(QuotaRequestForm, self).__init__(*args, **kwargs)
+        for visible in self.visible_fields():
+            visible.field.widget.attrs['class'] = 'form-control'
 
 
 class UserProfile(models.Model):
@@ -369,20 +587,22 @@ class UserProfile(models.Model):
     state = models.CharField(max_length=1024, null=True, blank=True)
     country = models.CharField(max_length=1024, null=True, blank=True)
 
-    create_irods_user_account = models.BooleanField(
-        default=False,
-        help_text="Check to create an iRODS user account in HydroShare user "
-        "iRODS space for staging large files (>2GB) using iRODS clients such as Cyberduck "
-        "(https://cyberduck.io/) and icommands (https://docs.irods.org/master/icommands/user/)."
-        "Uncheck to delete your iRODS user account. Note that deletion of your iRODS user "
-        "account deletes all of your files under this account as well.",
-    )
-
     # to store one or more external identifier (Google Scholar, ResearchGate, ORCID etc)
     # each identifier is stored as a key/value pair {name:link}
     identifiers = HStoreField(default=dict, null=True, blank=True)
 
     email_opt_out = models.BooleanField(default=False)
+
+    @property
+    def profile_is_missing(self):
+        missing = []
+        if not self.country:
+            missing.append("Country")
+        if not self.organization:
+            missing.append("Organization")
+        if not self.user_type:
+            missing.append("User Type")
+        return missing
 
 
 def force_unique_emails(sender, instance, **kwargs):
@@ -425,11 +645,74 @@ def auto_delete_file_on_change(sender, instance, **kwargs):
         )
         return
 
-    updated_profile = instance
-    if old_file_cv and old_file_cv != updated_profile.cv:
-        if os.path.isfile(old_file_cv.path):
-            os.remove(old_file_cv.path)
-    if old_file_pic and old_file_pic != updated_profile.picture:
-        if os.path.isfile(old_file_pic.path):
-            os.remove(old_file_pic.path)
-    return
+    try:
+        updated_profile = instance
+        if old_file_cv and old_file_cv != updated_profile.cv:
+            old_file_cv.delete()
+        if old_file_pic and old_file_pic != updated_profile.picture:
+            old_file_pic.delete()
+        return
+    except Exception as e:
+        logger.error(f"Error deleting profile file {old_file_cv}: {e}")
+
+
+@receiver(models.signals.post_save, sender=QuotaRequest)
+def update_user_quota_on_quota_request(sender, instance, **kwargs):
+    """
+    Increment the allocated_value for a UserQuota object uppon approval of a QuotaRequest
+    """
+    if kwargs.get('created'):
+        # it is a new QuotaRequest instance, no need to check further
+        return
+    if instance.status != 'approved':
+        return
+
+    try:
+        qr = QuotaRequest.objects.select_related("quota").get(pk=instance.pk)
+        qr.quota.allocated_value += qr.storage
+
+        # approving a quota request will also reset the grace period
+        # this is done by the reset_grace_period_on_allocation_change signal
+
+        qr.quota.save()
+        qr.notify_user_of_quota_action()
+    except QuotaRequest.DoesNotExist:
+        logger.warning(
+            f"QuotaRequest for {instance.pk} does not exist when trying to update it"
+        )
+
+
+@receiver(models.signals.pre_save, sender=UserQuota)
+def reset_grace_period_on_allocation_change(sender, instance, **kwargs):
+    """
+    Reset the pending UserQuota grace period when the allocated_value is modified in the UserQuota
+    """
+    if instance.id is None:  # new object will be created
+        pass
+    else:
+        previous = UserQuota.objects.get(id=instance.id)
+        if previous.allocated_value != instance.allocated_value:
+            # allocated_value is being updated
+            instance.grace_period_ends = None
+
+
+@receiver(models.signals.pre_save, sender=QuotaMessage)
+def update_user_quota_on_grace_period_change(sender, instance, **kwargs):
+    """
+    Adjust the pending UserQuota grace periods when the grace period setting is modified in the QuotaMessage
+    """
+    if instance.id is None:  # new object will be created
+        pass
+    else:
+        previous = QuotaMessage.objects.get(id=instance.id)
+        if previous.grace_period != instance.grace_period:
+            # grace_period is being updated
+            grace_delta = instance.grace_period - previous.grace_period
+            cuttoff_date = datetime.date.today()
+            if grace_delta < 0:
+                # we don't want to force pending quotas "into the past"
+                cuttoff_date = datetime.date.today() - datetime.timedelta(days=grace_delta)
+            pending_quotas = UserQuota.objects.filter(grace_period_ends__gt=cuttoff_date)
+            # add grace_delta to each of the pending grace periods
+            pending_quotas.update(grace_period_ends=models.F('grace_period_ends')
+                                  + datetime.timedelta(days=grace_delta))

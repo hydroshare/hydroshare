@@ -893,6 +893,10 @@ table.info-table > tbody > tr > td {
     background-color: #708a97;
 }
 
+.res-header .agg-csv_content {
+    background-color: #757683;
+}
+
 table.info-table {
 	margin-bottom: 20px;
 	word-break: break-word;
@@ -3009,6 +3013,21 @@ span.you-flag {
 	word-wrap: break-word;
 }
 
+/* modify radio and checkbox labels
+https://github.com/twbs/bootstrap/issues/13548 */
+label.checkbox-inline {
+	word-wrap: break-word;
+}
+
+.radio,
+.checkbox {
+    padding-left: 20px;
+}
+.radio label,
+.checkbox label {
+    display: inline;
+    padding: 0;
+}
 .noselect {
 	-webkit-touch-callout: none;
 	-webkit-user-select: none;
@@ -3754,6 +3773,11 @@ input.no-style {
 #discover-map {
 	height:650px;
 	border: 1px solid #DDD;
+}
+
+
+#map-view .gm-style-iw a {
+	outline: none;
 }
 
 #discover-map-legend {
@@ -4539,8 +4563,23 @@ span.caption-file-type {
 }
 
 
+.btn-remove-fa {
+	font-size: 14px;
+	
+}
+
 .btn-remove {
 	font-size: 18px;
+	
+}
+
+.small-red-trash { 
+	color: red; font-size: 14px;  }
+
+.delete-text {
+	font-size: 14px;
+	margin-left: 1px;
+	color: red;
 }
 
 .dz-details .fa-file-o {
@@ -4762,6 +4801,11 @@ a[data-toggle="modal"] {
 
 .border-gray {
 	border: 1px solid #DDD;
+}
+
+.text-break {
+	word-break: break-word;
+	overflow-wrap: break-word;
 }
 
 .c-pointer {

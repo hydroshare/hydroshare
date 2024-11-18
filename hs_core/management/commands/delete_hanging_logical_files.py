@@ -13,6 +13,7 @@ from hs_file_types.models.timeseries import TimeSeriesLogicalFile
 from hs_file_types.models.model_instance import ModelInstanceLogicalFile
 from hs_file_types.models.model_program import ModelProgramLogicalFile
 from hs_file_types.models.fileset import FileSetLogicalFile
+from hs_file_types.models.csv import CSVLogicalFile
 
 
 def delete_hanging_logical_files(logical_files):
@@ -55,3 +56,5 @@ class Command(BaseCommand):
         print(">> {} ModelProgramLogicalFile deleted".format(count))
         count = delete_hanging_logical_files(FileSetLogicalFile.objects.all())
         print(">> {} FileSetLogicalFile deleted".format(count))
+        count = delete_hanging_logical_files(CSVLogicalFile.objects.all())
+        print(">> {} CSVLogicalFile deleted".format(count))

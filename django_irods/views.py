@@ -1,40 +1,41 @@
 import datetime
+import logging
 import mimetypes
 import os
 import urllib
 from uuid import uuid4
 
+from dateutil import tz
 from django.conf import settings
-from django.http import HttpResponse, FileResponse, HttpResponseRedirect, JsonResponse
-from rest_framework.decorators import api_view
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import (FileResponse, HttpResponse, HttpResponseRedirect,
+                         JsonResponse)
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
+from rest_framework.decorators import api_view
 
 from django_irods import icommands
 from hs_core.hydroshare.resource import check_resource_type
-from hs_core.task_utils import (
-    get_resource_bag_task,
-    get_or_create_task_notification,
-    get_task_user_id,
-    get_task_notification
-)
+from hs_core.signals import (pre_check_bag_flag, pre_download_file,
+                             pre_download_resource)
+from hs_core.task_utils import (get_or_create_task_notification,
+                                get_resource_bag_task, get_task_notification,
+                                get_task_user_id)
+from hs_core.tasks import create_bag_by_irods, create_temp_zip
+from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, is_ajax
+from hs_core.models import RangedFileReader
+from hs_file_types.enums import AggregationMetaFilePath
 
-from hs_core.signals import pre_download_file, pre_check_bag_flag
-from hs_core.tasks import create_bag_by_irods, create_temp_zip, delete_zip
-from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
-from drf_yasg.utils import swagger_auto_schema
-
-import logging
 logger = logging.getLogger(__name__)
 
 
-def download(request, path, use_async=True, use_reverse_proxy=True,
+def download(request, path, use_async=True,
              *args, **kwargs):
     """ perform a download request, either asynchronously or synchronously
 
     :param request: the request object.
     :param path: the path of the thing to be downloaded.
     :param use_async: True means to utilize asynchronous creation of objects to download.
-    :param use_reverse_proxy: True means to utilize NGINX reverse proxy for streaming.
 
     The following variables are computed:
 
@@ -175,8 +176,6 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
             task = create_temp_zip.apply_async((res_id, irods_path, irods_output_path,
                                                 aggregation_name, is_sf_request, download_path, user_id))
             task_id = task.task_id
-            delete_zip.apply_async((irods_output_path,),
-                                   countdown=(60 * 60 * 24))  # delete after 24 hours
             if api_request:
                 return JsonResponse({
                     'zip_status': 'Not ready',
@@ -192,8 +191,6 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
             ret_status = create_temp_zip(res_id, irods_path, irods_output_path,
                                          aggregation_name=aggregation_name, sf_zip=is_sf_request,
                                          download_path=download_path)
-            delete_zip.apply_async((irods_output_path, ),
-                                   countdown=(60 * 60 * 24))  # delete after 24 hours
             if not ret_status:
                 content_msg = "Zip could not be created."
                 response = HttpResponse()
@@ -203,6 +200,9 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
             # to be streamed below
 
     elif is_bag_download:
+        now = datetime.datetime.now(tz.UTC)
+        res.bag_last_downloaded = now
+        res.save()
         # Shorten request if it contains extra junk at the end
         bag_file_name = res_id + '.zip'
         output_path = os.path.join('bags', bag_file_name)
@@ -261,7 +261,7 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
                     response = HttpResponse()
                     response.content = content_msg
                     return response
-        elif request.is_ajax():
+        elif is_ajax(request):
             task_dict = {
                 'id': datetime.datetime.today().isoformat(),
                 'name': "bag download",
@@ -280,15 +280,16 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
             bag_modified = res.getAVU("bag_modified")
             if bag_modified is None or bag_modified or not istorage.exists(irods_output_path):
                 res.setAVU("bag_modified", True)  # ensure bag_modified is set when irods_output_path does not exist
-                create_bag_by_irods(res_id, False)
+                create_bag_by_irods(res_id, create_zip=False)
+        elif any([path.endswith(suffix) for suffix in AggregationMetaFilePath]):
+            # download aggregation meta xml/json schema file
+            try:
+                aggregation = res.get_aggregation_by_meta_file(path)
+            except ObjectDoesNotExist:
+                aggregation = None
 
-        # send signal for pre download file
-        # TODO: does not contain subdirectory information: duplicate refreshes possible
-        download_file_name = split_path_strs[-1]  # end of path
-        # this logs the download request in the tracking system
-        pre_download_file.send(sender=resource_cls, resource=res,
-                               download_file_name=download_file_name,
-                               request=request)
+            if aggregation is not None and aggregation.metadata.is_dirty:
+                aggregation.create_aggregation_xml_documents()
 
     # If we get this far,
     # * path and irods_path point to true input
@@ -304,46 +305,17 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
     # TODO: standardize this to make it less brittle
     stdout = session.run("ils", None, "-l", irods_output_path)[0].split()
     flen = int(stdout[3])
-
-    # Allow reverse proxy if request was forwarded by nginx (HTTP_X_DJANGO_REVERSE_PROXY='true')
-    # and reverse proxy is possible according to configuration (SENDFILE_ON=True)
-    # and reverse proxy isn't overridden by user (use_reverse_proxy=True).
-
-    if use_reverse_proxy and getattr(settings, 'SENDFILE_ON', False) and \
-       'HTTP_X_DJANGO_REVERSE_PROXY' in request.META:
-
-        # The NGINX sendfile abstraction is invoked as follows:
-        # 1. The request to download a file enters this routine via the /rest_download or /download
-        #    url in ./urls.py. It is redirected here from Django. The URI contains either the
-        #    unqualified resource path or the federated resource path, depending upon whether
-        #    the request is local or federated.
-        # 2. This deals with unfederated resources by redirecting them to the uri
-        #    /irods-data/{resource-id}/... on nginx. This URI is configured to read the file
-        #    directly from the iRODS vault via NFS, and does not work for direct access to the
-        #    vault due to the 'internal;' declaration in NGINX.
-        # 3. If there is no vault available for the resource, the file is transferred without
-        #    NGINX, exactly as it was transferred previously.
-
-        # stop NGINX targets that are non-existent from hanging forever.
-        if not istorage.exists(irods_output_path):
-            content_msg = "file path {} does not exist in iRODS".format(output_path)
-            response = HttpResponse(status=404)
-            response.content = content_msg
-            return response
-
-        # track download count
-        res.update_download_count()
-        # invoke X-Accel-Redirect on physical vault file in nginx
-        response = HttpResponse(content_type=mtype)
-        filename = output_path.split('/')[-1]
-        filename = urllib.parse.quote(filename)
-        response['Content-Disposition'] = 'attachment; filename="{name}"'.format(name=filename)
-        response['Content-Length'] = flen
-        response['X-Accel-Redirect'] = '/'.join([
-            getattr(settings, 'IRODS_DATA_URI', '/irods-data'), output_path])
-        if not settings.DEBUG:
-            logger.debug("Reverse proxying local {}".format(response['X-Accel-Redirect']))
-        return response
+    # this logs the download request in the tracking system
+    if is_bag_download:
+        pre_download_resource.send(sender=resource_cls, resource=res, request=request)
+    else:
+        download_file_name = split_path_strs[-1]
+        # send signal for pre download file
+        # TODO: does not contain subdirectory information: duplicate refreshes possible
+        pre_download_file.send(sender=resource_cls, resource=res,
+                               download_file_name=download_file_name,
+                               file_size=flen,
+                               request=request)
 
     # if we get here, none of the above conditions are true
     # if reverse proxy is enabled, then this is because the resource is remote and federated
@@ -356,11 +328,33 @@ def download(request, path, use_async=True, use_reverse_proxy=True,
     # track download count
     res.update_download_count()
     proc = session.run_safe('iget', None, irods_output_path, *options)
-    response = FileResponse(proc.stdout, content_type=mtype)
+    # proc.stdout is an _io.BufferedReader object
+    ranged_file = RangedFileReader(proc.stdout)
+    response = FileResponse(ranged_file, content_type=mtype)
     filename = output_path.split('/')[-1]
     filename = urllib.parse.quote(filename)
     response['Content-Disposition'] = 'attachment; filename="{name}"'.format(name=filename)
     response['Content-Length'] = flen
+
+    response["Accept-Ranges"] = "bytes"
+    # Respect the Range header.
+    if "HTTP_RANGE" in request.META:
+        try:
+            ranges = RangedFileReader.parse_range_header(request.META['HTTP_RANGE'], flen)
+        except ValueError:
+            ranges = None
+        # only handle syntactically valid headers, that are simple (no
+        # multipart byteranges)
+        if ranges is not None and len(ranges) == 1:
+            start, stop = ranges[0]
+            if stop > flen:
+                # requested range not satisfiable
+                return HttpResponse(status=416)
+            ranged_file.start = start
+            ranged_file.stop = stop
+            response["Content-Range"] = "bytes %d-%d/%d" % (start, stop - 1, flen)
+            response["Content-Length"] = stop - start
+            response.status_code = 206
     return response
 
 

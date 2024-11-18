@@ -461,7 +461,7 @@
         customAlert(alertTitle, "Please wait...", "success", -1); // Persistent alert
         $("html").css("cursor", "progress");
 
-        const errorMsg = "Failed to create " + contentType + ".";
+        let errorMsg = "Failed to create " + contentType + ".";
 
         $.ajax({
             type: "POST",
@@ -475,8 +475,11 @@
                 }
                 else {
                     console.log(response);
+                    if (response.hasOwnProperty('message')) {
+                        errorMsg = `${errorMsg} ${response.message}`;
+                    }
                     $(".custom-alert").alert('close');  // Dismiss previous alert
-                    customAlert("Error", errorMsg, "error", 6000);
+                    customAlert("Error", errorMsg, "error", -1, dismissable=true);
                     $("html").css("cursor", "initial");
                     $(".navbar-inverse .res-dropdown").toggleClass("disabled", false);
                 }
@@ -491,7 +494,8 @@
         });
     }
 
-        const checkDelay = 1000; // ms
+    const checkDelay = 10000; // ms
+    // TODO: this hard ping rate could be modified to check more frequently when the tasks are newer
 
     $('#notifications-dropdown').on('show.bs.dropdown', function () {
         notificationsApp.fetchTasks();
@@ -546,16 +550,6 @@
                     title: "Resource versioning",
                     status: {
                         "progress": "In progress...",
-                        "completed": "Completed",
-                        "failed": "Failed",
-                        "delivered": "Delivered"
-                    }
-                },
-                "resource copy to user zone": {
-                    title: "Resource copy to user zone",
-                    status: {
-                        "progress": "In progress...",
-                        "aborted": "Aborted",
                         "completed": "Completed",
                         "failed": "Failed",
                         "delivered": "Delivered"
@@ -710,7 +704,7 @@
                 if (vue.someInProgress && !vue.isCheckingStatus) {
                     vue.isCheckingStatus = true;
 
-                    // check in 1s
+                    // check in 10s
                     setTimeout(function() {
                         vue.checkStatus();
                     }, checkDelay);
@@ -719,7 +713,7 @@
                     vue.isCheckingStatus = false;
                 }
             },
-            // Checks every 1s for every task in progress
+            // Checks every 10s for every task in progress
             checkStatus: function () {
                 let vue = this;
 
@@ -790,11 +784,6 @@
                         break;
                     case "resource version":
                         if (task.status === "completed" && task.payload) {
-                            vue.deliverTask(task);
-                        }
-                        break;
-                    case "resource copy to user zone":
-                        if (task.status === "completed") {
                             vue.deliverTask(task);
                         }
                         break;

@@ -43,7 +43,7 @@ class TestChangeQuotaHolder(MockIRODSTestCaseMixin, TestCase):
         )
 
         self.assertTrue(res.creator == self.user1)
-        self.assertTrue(res.get_quota_holder() == self.user1)
+        self.assertTrue(res.quota_holder == self.user1)
         self.assertFalse(res.raccess.public)
         self.assertFalse(res.raccess.discoverable)
 
@@ -53,8 +53,8 @@ class TestChangeQuotaHolder(MockIRODSTestCaseMixin, TestCase):
         # test to make sure one owner can transfer quota holder to another owner
         self.user1.uaccess.share_resource_with_user(res, self.user2, PrivilegeCodes.OWNER)
         res.set_quota_holder(self.user1, self.user2)
-        self.assertTrue(res.get_quota_holder() == self.user2)
-        self.assertFalse(res.get_quota_holder() == self.user1)
+        self.assertTrue(res.quota_holder == self.user2)
+        self.assertFalse(res.quota_holder == self.user1)
 
         # test to make sure quota holder cannot be removed from ownership
         with self.assertRaises(PermissionDenied):
@@ -63,14 +63,15 @@ class TestChangeQuotaHolder(MockIRODSTestCaseMixin, TestCase):
         # test to make sure quota holder cannot be changed to an owner who is over-quota
         uquota = self.user1.quotas.first()
         # make user1's quota over hard limit 125%
-        uquota.used_value = uquota.allocated_value * 1.3
-        uquota.save()
 
         if not QuotaMessage.objects.exists():
             QuotaMessage.objects.create()
         qmsg = QuotaMessage.objects.first()
         qmsg.enforce_quota = True
         qmsg.save()
+
+        from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit
+        set_quota_usage_over_hard_limit(uquota, qmsg)
 
         # QuotaException should be raised when attempting to change quota holder to user1 when
         # quota is enforced

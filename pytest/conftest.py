@@ -56,8 +56,8 @@ def base_sample_resource(username='admin', title=str(uuid.uuid4()), contributor=
     con_address = "11 River Drive, Logan UT-84321, USA"
     con_phone = '435-567-0989'
     con_homepage = 'http://usu.edu/homepage/001'
-    con_identifiers = {'ORCID': 'https://orcid.org/mike_s',
-                       'ResearchGateID': 'https://www.researchgate.net/mike_s'}
+    con_identifiers = {'ORCID': 'https://orcid.org/0000-0003-4621-0559',
+                       'ResearchGateID': 'https://www.researchgate.net/profile/mike_s'}
     metadata.append({'contributor': {'name': con_name,
                                      'organization': con_org, 'email': con_email,
                                      'address': con_address, 'phone': con_phone,
@@ -71,8 +71,8 @@ def base_sample_resource(username='admin', title=str(uuid.uuid4()), contributor=
     cr_address = "101 Clarson Ave, Provo UT-84321, USA"
     cr_phone = '801-567=9090'
     cr_homepage = 'http://byu.edu/homepage/002'
-    cr_identifiers = {'ORCID': 'https://orcid.org/john_smith',
-                      'ResearchGateID': 'https://www.researchgate.net/john_smith'}
+    cr_identifiers = {'ORCID': 'https://orcid.org/0000-0003-4621-0559',
+                      'ResearchGateID': 'https://www.researchgate.net/profile/john_smith'}
     metadata.append({'creator': {'name': cr_name, 'organization': cr_org,
                                  'email': cr_email, 'address': cr_address,
                                  'phone': cr_phone, 'homepage': cr_homepage,

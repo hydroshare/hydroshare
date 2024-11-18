@@ -12,8 +12,9 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css"
     integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14="
     crossorigin=""/>
-    <link rel="stylesheet" href="{% static 'css/Leaflet.fullscreen.min.css' %}" />
+    <link rel='stylesheet' type='text/css' href="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/leaflet.fullscreen.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+
 
 {# ======= JSON-LD Structure ======= #}
 <script id="schemaorg" type="application/ld+json">
@@ -61,7 +62,7 @@
     ],
     {% endif %}
     "creator": {{ creators | creator_json_ld_element | safe }},
-    {# There is discussion about adding more linked data fields for referenced items #} 
+    {# There is discussion about adding more linked data fields for referenced items #}
     {# https://github.com/hydroshare/hydroshare/issues/4566#issuecomment-1124283370 #}
     {% if geospatial_relations %}
     "about": [
@@ -284,24 +285,25 @@
                         <span class="glyphicon glyphicon-trash icon-button btn-remove"></span>
                         <span>Delete</span>
                     </li>
+                    {% if max_file_size > 0 %}
+                        <li id="zip-separator" role="separator" class="divider"></li>
 
-                    <li id="zip-separator" role="separator" class="divider"></li>
+                        <li id="btn-zip" data-menu-name="zip" data-toggle="modal" data-fb-action="zip"
+                            data-target="#zip-folder-dialog">
+                            <span class="glyphicon glyphicon-compressed icon-blue"></span>
+                            <span>Zip folder...</span>
+                        </li>
 
-                    <li id="btn-zip" data-menu-name="zip" data-toggle="modal" data-fb-action="zip"
-                        data-target="#zip-folder-dialog">
-                        <span class="glyphicon glyphicon-compressed icon-blue"></span>
-                        <span>Zip folder...</span>
-                    </li>
+                        <li id="btn-unzip" data-menu-name="unzip" data-fb-action="unzip">
+                            <span class="fa fa-file-archive-o icon-blue"></span>
+                            <span>Unzip here</span>
+                        </li>
 
-                    <li id="btn-unzip" data-menu-name="unzip" data-fb-action="unzip">
-                        <span class="fa fa-file-archive-o icon-blue"></span>
-                        <span>Unzip here</span>
-                    </li>
-
-                    <li id="btn-unzip-to-folder" data-menu-name="unzip-to-folder" data-fb-action="unzipToFolder">
-                        <span class="fa fa-file-archive-o icon-blue"></span>
-                        <span>Unzip to folder</span>
-                    </li>
+                        <li id="btn-unzip-to-folder" data-menu-name="unzip-to-folder" data-fb-action="unzipToFolder">
+                            <span class="fa fa-file-archive-o icon-blue"></span>
+                            <span>Unzip to folder</span>
+                        </li>
+                    {% endif %}
 
                     <li role="separator" class="divider"></li>
                 {% endif %}
@@ -405,6 +407,13 @@
                                  alt="Model Instance Aggregation Icon" class="resource-type-icon"/>
                                 <span>Model Instance</span>
                             </li>
+                            <li id="btn-set-csv-file-type" data-menu-name="setcsvfiletype"
+                                data-toggle="tooltip" data-placement="right" data-fb-action="setCSVFileType"
+                                title="Convert to a CSV dataset to which you can add metadata">
+                                <img src="{% static 'img/resource-icons/filetype-csv.svg' %}"
+                                 alt="CSV Aggregation Icon" class="resource-type-icon" width="25" height="20"/>
+                                <span>CSV</span>
+                            </li>
                         </ul>
                     </li>
                     <li data-fb-action="removeAggregation"
@@ -430,12 +439,14 @@
                             <span class="fa fa-folder icon-blue"></span>
                             <span>New folder</span>
                         </li>
-                        <li id="menu-add-reference" data-menu-name="add-reference" data-toggle="modal"
-                            data-fb-action="createFolder"
-                            data-target="#add-reference-url-dialog">
-                            <span class="fa fa-external-link icon-blue"></span>
-                            <span>Add content from the web</span>
-                        </li>
+                        {% if max_file_size > 0 %}
+                            <li id="menu-add-reference" data-menu-name="add-reference" data-toggle="modal"
+                                data-fb-action="createFolder"
+                                data-target="#add-reference-url-dialog">
+                                <span class="fa fa-external-link icon-blue"></span>
+                                <span>Add content from the web</span>
+                            </li>
+                        {% endif %}
                         <li data-menu-name="paste" data-fb-action="paste">
                             <span class="fa fa-clipboard icon-blue"></span>
                             <span>Paste</span>
@@ -457,7 +468,7 @@
 
             <div class="col-xs-12 content-block">
                 <h3>
-                  <span>Content</span> 
+                  <span>Content</span>
                   {% if resource_edit_mode %}
                   <a data-toggle="tooltip" data-placement="auto"
                       href="https://www.youtube.com/watch?v=wTPGJY9-k18" target="_blank"
@@ -504,23 +515,38 @@
                 {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                     {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
                         <div id="fb-alerts">
-                            <div class="alert alert-warning alert-dismissible" role="alert">
-                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
+                            {% if max_file_size > 0 %}
+                                <div class="alert alert-warning alert-dismissible" role="alert">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
 
-                                <div class="flex">
-                                    <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
-                                    <em>
-                                        <strong>Uploading</strong>
-                                        <ul>
-                                            <li><span id="file-types"></span></li>
-                                            <li><span id="file-multiple"></span></li>
-                                            {% block upload_message %}{% endblock %}
-                                        </ul>
-                                    </em>
+                                    <div class="flex">
+                                        <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                                        <em>
+                                            <strong>Uploading</strong>
+                                            <ul>
+                                                <li><span id="file-types"></span></li>
+                                                <li><span id="file-multiple"></span></li>
+                                                {% block upload_message %}{% endblock %}
+                                            </ul>
+                                        </em>
+                                    </div>
                                 </div>
-                            </div>
+                            {% else %}
+                                <div class="alert alert-danger alert-dismissible" role="alert">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                    <div class="flex">
+                                        <i class="fa fa-exclamation-circle" style="margin-right: 20px; margin-left: 10px;"></i>
+                                        <em>
+                                            File upload is not allowed because you have exceeded your quota.
+                                            More information can be found on your <a href="/user/{{current_user.id}}">User Profile</a> page.
+                                        </em>
+                                    </div>
+                                </div>
+                            {% endif %}
                         </div>
                    {% endif %}
                 {% endif %}
@@ -674,7 +700,7 @@
                                         <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12">
                                             {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                                                 {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
-                                                    <a type="button" data-fb-action="uploadFiles"
+                                                    <a {% if max_file_size <= 0 %}disabled{% endif %} id="uppy-modal-trigger" type="button" data-fb-action="uploadFiles"
                                                        class="btn btn-success btn-xs dz-clickable upload-toggle">
                                                         <i class="fa fa-plus"></i> Add files
                                                     </a>
@@ -684,7 +710,8 @@
                                                                 class="btn btn-default btn-xs dropdown-toggle fb-space-right"
                                                                 data-toggle="dropdown" aria-haspopup="true"
                                                                 title="Add files from an iRODS server"
-                                                                aria-expanded="false">
+                                                                aria-expanded="false"
+                                                                {% if max_file_size <= 0 %}disabled{% endif %}>
                                                             <span>iRODS</span>&nbsp;<span class="caret"></span>
                                                         </button>
 
@@ -726,13 +753,15 @@
                                                             title="Create new folder">
                                                         <span class="fa fa-folder icon-blue"></span>
                                                     </button>
-                                                    <button id="fb-add-reference" class="fb-space-right"
-                                                            data-fb-action="createFolder"
-                                                            data-toggle="modal"
-                                                            data-target="#add-reference-url-dialog"
-                                                        title="Add content from the web">
-                                                    <span class="fa fa-external-link icon-blue"></span>
-                                                    </button>
+                                                    {% if max_file_size > 0 %}
+                                                        <button id="fb-add-reference" class="fb-space-right {% if max_file_size <= 0 %}disabled{% endif %}"
+                                                                data-fb-action="createFolder"
+                                                                data-toggle="modal"
+                                                                data-target="#add-reference-url-dialog"
+                                                            title="Add content from the web">
+                                                        <span class="fa fa-external-link icon-blue"></span>
+                                                        </button>
+                                                    {% endif %}
                                                     <button id="fb-cut" data-fb-action="cut"
                                                             class="disabled"
                                                             title="Cut">
@@ -754,7 +783,7 @@
                                                     </button>
                                                 {% endif %}
 
-                                                {% if cm.resource_type == "CompositeResource" %}
+                                                {% if cm.resource_type == "CompositeResource" and max_file_size > 0 %}
                                                     <button id="fb-zip" data-fb-action="zip"
                                                             class="disabled"
                                                             title="Zip folder" data-toggle="modal"
@@ -814,16 +843,6 @@
                                                 <span class="fa fa-download icon-blue"></span>
                                             </button>
 
-                                            {% if user_zone_account_exist %}
-                                                <a id="rep-res-bag" type="button"
-                                                   title="Copy Resource Bag to iRODS User Zone"
-                                                   data-target="#rep-resource-to-irods-dialog"
-                                                   data-toggle="modal"
-                                                   data-placement="auto">
-                                                    <span class="hs-icon-irods icon-blue"></span>
-                                                </a>
-                                            {% endif %}
-
                                             <button id="btn-download-all"
                                                 title="Download all content as Zipped BagIt Archive"
                                                 {% if cm.raccess.require_download_agreement %}
@@ -847,6 +866,13 @@
                             </div>
                             <div class="fb-content-wrapper">
                                 <div class="fb-dropzone-wrapper{% if cm.resource_type == "CompositeResource" %} ui-resizable{% endif %}">
+                                    {% comment %}
+                                        This upload could be chunked with Tus protocol
+                                        Dropzone allows chunking https://docs.dropzone.dev/configuration/basics/configuration-options
+                                        However not using TUS protocol. 
+                                        So could use the tus-js-client library to implement chunking but do so within the Dropzone event handlers.
+                                        https://github.com/tus/tus-js-client/blob/main/demos/browser/demo.js#L38.
+                                    {% endcomment %}
                                     <form id="hsDropzone"
                                         class="files-container h-100 ui-widget-content {% if page.perms.change and resource_edit_mode and not cm.raccess.published_or_review_pending or current_user.is_superuser %}dropzone{% endif %}"
                                         action="/hsapi/_internal/{{ cm.short_id }}/add-files-to-resource/"
@@ -876,11 +902,12 @@
 
                                     {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                                         {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
-                                            <div class="fb-upload-caption ">
-                                                <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload files
-                                                smaller than 1GB in size by dragging & dropping, or click <a
-                                                    class="dz-clickable upload-toggle">here</a> to select them.
-                                            </div>
+                                            {% if max_file_size > 0 %}
+                                                <div class="fb-upload-caption">
+                                                    <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;
+                                                    Upload files up to {{ max_file_size_for_display|floatformat:"0" }}GB in size by dragging & dropping.
+                                                </div>
+                                            {% endif %}
                                         {% endif %}
                                     {% endif %}
                                 </div>
@@ -927,22 +954,20 @@
 
                     <div class="files" id="previews"></div>
                     {% block download_bag %}
-                        {% if user_zone_account_exist %}
-                            <div>
-                                <div id='rep-alert-success' class="alert alert-success alert-dismissible"
-                                     role="alert" style="display:none">
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span></button>
-                                    <span id="rep-status-success"></span>
-                                </div>
-                                <div id='rep-alert-error' class="alert alert-danger alert-dismissible" role="alert"
-                                     style="display:none">
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span></button>
-                                    <span id="rep-status-error"></span>
-                                </div>
+                        <div>
+                            <div id='rep-alert-success' class="alert alert-success alert-dismissible"
+                                    role="alert" style="display:none">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span></button>
+                                <span id="rep-status-success"></span>
                             </div>
-                        {% endif %}
+                            <div id='rep-alert-error' class="alert alert-danger alert-dismissible" role="alert"
+                                    style="display:none">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span></button>
+                                <span id="rep-status-error"></span>
+                            </div>
+                        </div>
                     {% endblock %} {#  download_bag #}
 
                     {# ======= Readme ======= #}
@@ -956,6 +981,9 @@
             </div>
         {% endif %}
         {% endblock %} {# content_block #}
+            
+        {# ======= Uppy for large file upload ======= #}
+        {% include "uppy.html" %}
 
         {# ======= Data Services ======= #}
         {% if data_services_urls.wms_url or data_services_urls.wfs_url or data_services_urls.wcs_url or data_services_urls.thredds_url %}
@@ -1012,7 +1040,7 @@
       const SHORT_ID = "{{ cm.short_id }}";
       var global_num_ext_refs = 0;
       var global_custom_citation = "{{ custom_citation }}";
-
+      const MAX_FILE_SIZE = {{ max_file_size }};
       $.ajax({
         type: "GET",
         url: '/hsapi/_internal/' + SHORT_ID + '/list-referenced-content/',
@@ -1023,6 +1051,17 @@
       });
       const CITATION_ID = "{{ citation_id }}";
       const RES_KEYWORDS = {{ keywords|safe }};
+      const RES_FUNDING_AGENCIES = [
+        {% for agency in fundingagencies %}
+            {
+                "agency_id": "{{ agency.id }}",
+                "award_number": "{{ agency.award_number }}",
+                "award_title": "{{ agency.award_title | escapejs }}",
+                "agency_name": "{{ agency.agency_name | escapejs }}",
+                "agency_url": "{{ agency.agency_url }}"
+            },
+        {% endfor %}
+      ];
       const SELF_ACCESS_LEVEL = "{{ self_access_level }}";
       const CAN_CHANGE = "{{ page.perms.change }}" === "True";
       const RES_TYPE = "{{ cm|resource_type }}";
@@ -1032,9 +1071,7 @@
       const RESOURCE_MODE = "{% if resource_edit_mode %}Edit{% else %}View{% endif %}";
       const RESOURCE_PUBLISHED_OR_UNDER_REVIEW = "{{ cm.raccess.published_or_review_pending }}" === "True";
       const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
-      const STATIC_URL = "{{ STATIC_URL }}";
       const USERS_JSON = {{ users_json|safe }};
-      const LAST_CHANGED_BY = {{ last_changed_by|safe }};
       const AUTHORS = [
           {% for author in creators %}
             {
@@ -1087,16 +1124,15 @@
         integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg="
         crossorigin="">
     </script>
-    <script src="{% static 'js/hs-vue/Leaflet.fullscreen.min.js' %}"></script>
+    <script src="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/Leaflet.fullscreen.min.js" crossorigin=""></script>
     <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     <script type="text/javascript" src="{% static 'js/coverageMap.js' %}"></script>
-    <script type="text/javascript" src="{% static 'js/dropzone.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/hs-file-icons.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/hs_file_browser.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/resourceLandingAjax.js' %}"></script>
     <script type="text/javascript" charset="utf8" src="{% static 'js/jquery.dataTables.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/copyToClipboard.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/generic-resource.js' %}"></script>
-
+    {#the following loads the asset for the DAL autocomplete#}
+    {{ add_view_resource_permission_form.media }}
 {% endblock %}
-

@@ -5,6 +5,7 @@ import zipfile
 from rest_framework import status
 
 from hs_core.hydroshare import resource
+from theme.models import QuotaMessage
 from hs_core.tests.api.utils import MyTemporaryUploadedFile
 from .base import HSRESTTestCase
 
@@ -154,3 +155,29 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
         unzip_url = "/hsapi/resource/%s/functions/unzip/badpath/" % self.pid
         response = self.client.post(unzip_url, data={})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_unzip_over_quota(self):
+        """
+        Test case for unzipping a file when the user is over their quota.
+
+        This test verifies that when a user attempts to unzip a file and they are already over their quota,
+        the appropriate error response is returned.
+
+        """
+        # Set the user's quota to be over the limit
+        if not QuotaMessage.objects.exists():
+            QuotaMessage.objects.create()
+        qmsg = QuotaMessage.objects.first()
+        qmsg.enforce_quota = True
+        qmsg.save()
+        uquota = self.user.quotas.first()
+        from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit
+        set_quota_usage_over_hard_limit(uquota, qmsg)
+        uquota.save()
+
+        unzip_url = "/hsapi/resource/%s/functions/unzip/test.zip/" % self.pid
+        response = self.client.post(unzip_url, data={"remove_original_zip": "false"})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = self.client.post(unzip_url, data={"remove_original_zip": "true"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

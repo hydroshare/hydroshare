@@ -196,7 +196,8 @@ function metadata_update_ajax_submit(form_id){
                 if ((json_response.element_name.toLowerCase() === 'site' && resourceType === 'Time Series') ||
                     ((json_response.element_name.toLowerCase() === 'coverage' ||
                     json_response.element_name.toLowerCase() === 'site') && resourceType === 'Resource')){
-                    if (json_response.hasOwnProperty('temporal_coverage')){
+                    const element_type = json_response.element_type?.toLowerCase() || '';
+                    if (element_type === 'period' && json_response.hasOwnProperty('temporal_coverage')){
                         var temporalCoverage = json_response.temporal_coverage;
                         updateResourceTemporalCoverage(temporalCoverage);
                         // show/hide delete option for resource temporal coverage
@@ -210,7 +211,7 @@ function metadata_update_ajax_submit(form_id){
                         }
                     }
 
-                    if (json_response.hasOwnProperty('spatial_coverage')) {
+                    if (['box', 'point'].includes(element_type) && json_response.hasOwnProperty('spatial_coverage')) {
                         var spatialCoverage = json_response.spatial_coverage;
                         updateResourceSpatialCoverage(spatialCoverage);
                         if(resourceType === 'Resource' && json_response.has_logical_spatial_coverage) {
@@ -260,7 +261,8 @@ function metadata_update_ajax_submit(form_id){
 
                 if (json_response.element_name.toLowerCase() === 'coverage' &&
                     (json_response.logical_file_type === "FileSetLogicalFile" ||
-                    json_response.logical_file_type === "GenericLogicalFile")) {
+                    json_response.logical_file_type === "GenericLogicalFile" ||
+                    json_response.logical_file_type === "CSVLogicalFile")) {
                     var bindCoordinatesPicker = false;
                     var logical_type = json_response.logical_file_type;
                     setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicker);
@@ -314,7 +316,13 @@ function metadata_update_ajax_submit(form_id){
                 responseMessage = JSON.parse(XMLHttpRequest.responseText).message;
             } catch (Error){
             }
-            var errMessage = "Metadata failed to update " + JSON.stringify(responseMessage);
+            var errMessage = "Metadata failed to update - ";
+            if (typeof responseMessage === "string"){
+                errMessage = errMessage + responseMessage;
+            }
+            else {
+                errMessage = errMessage + JSON.stringify(responseMessage);
+            }
             $alert_error = $alert_error.replace("Metadata failed to update.", errMessage);
             $('#' + form_id).before($alert_error);
             $(".alert-error").fadeTo(2000, 500).slideUp(1000, function(){
@@ -625,12 +633,10 @@ function update_sqlite_file_ajax_submit() {
 }
 
 function get_user_info_ajax_submit(url, obj) {
-    var entry = $(obj).closest("div[data-contributor-type]").find("#user-deck > .hilight");
-    if (entry.length < 1) {
+    let userID = $("#id_contributor").find(':selected').val();
+    if (!userID) {
         return false;
     }
-
-    var userID = entry[0].getAttribute("data-value");
     url = url + userID + "/false";
 
     $.ajax({
@@ -725,6 +731,7 @@ function delete_virtual_folder_ajax_submit(hs_file_type, file_type_id) {
 function resetAfterFBDelete() {
     refreshFileBrowser();
     $("#fb-files-container li.ui-selected").css("cursor", "auto").removeClass("deleting");
+    $(".file-browser-container, #fb-files-container").css("cursor", "auto");
     $(".fb-cust-spinner").remove();
 }
 
@@ -775,7 +782,10 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
         },
         success: function (result) {
             var files = result.files;
+            // export the files to the global scope for use in other functions
+            window.fbFiles = files;
             var folders = result.folders;
+            window.fbFolders = folders;
             var can_be_public = result.can_be_public;
             const mode = $("#hs-file-browser").attr("data-mode");
 
@@ -788,7 +798,8 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $.each(files, function (i, file) {
                 // Check if the file belongs to an aggregation. Exclude FileSets and their files.
                 if (file['logical_file_id'] && file['logical_type'] !== "GenericLogicalFile" && file['logical_type'] !== "FileSetLogicalFile"
-                    && file['logical_type'] !== "ModelProgramLogicalFile" && file['logical_type'] !== "ModelInstanceLogicalFile") {
+                    && file['logical_type'] !== "ModelProgramLogicalFile" && file['logical_type'] !== "ModelInstanceLogicalFile"
+                    && file['logical_type'] !== "CSVLogicalFile") {
                     let selectedAgg = currentAggregations.filter(function (agg) {
                         return agg.logical_file_id === file['logical_file_id'] && agg.logical_type === file['logical_type'];
                     })[0];
@@ -817,15 +828,27 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             // Default display message for empty directories
             if (!files.length && !folders.length) {
                 if (mode === "edit") {
-                    $('#fb-files-container').append(
-                        '<div>' +
-                            '<span class="text-muted fb-empty-dir has-space-bottom">This directory is empty</span>' +
-                            '<div class="hs-upload-indicator text-center">' +
-                                '<i class="fa fa-file" aria-hidden="true"></i>' +
-                                '<h4>Drop files here or click "Add files" to upload</h4>' +
-                            '</div>' +
-                        '</div>'
-                    );
+                    if (MAX_FILE_SIZE > 0) {
+                        $('#fb-files-container').append(
+                            '<div>' +
+                                '<span class="text-muted fb-empty-dir has-space-bottom">This directory is empty</span>' +
+                                '<div class="hs-upload-indicator text-center">' +
+                                    '<i class="fa fa-file" aria-hidden="true"></i>' +
+                                    '<h4>Drop files here or click "Add files" to upload</h4>' +
+                                '</div>' +
+                            '</div>'
+                        );
+                    }
+                    else {
+                        $('#fb-files-container').append(
+                            '<div>' +
+                                '<span class="text-muted fb-empty-dir has-space-bottom">This directory is empty</span>' +
+                                '<div class="hs-upload-indicator text-center">' +
+                                    '<h4>File upload disabled due to your storage being over quota.</h4>' +
+                                '</div>' +
+                            '</div>'
+                        );
+                    }
                 }
                 else {
                     $('#fb-files-container').append(
@@ -858,7 +881,6 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                     $(".fb-upload-caption").toggleClass("hidden", false);
                     $(".upload-toggle").toggleClass("hidden", false);
                     $("#irods-group").toggleClass("hidden", false);
-                    Dropzone.forElement("#hsDropzone").files = [];
                 }
             }
 
@@ -867,16 +889,6 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $(".selection-menu").hide();
             $("#flag-uploading").remove();
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
-
-            if (mode === "edit" && result.hasOwnProperty('spatial_coverage')){
-                var spatialCoverage = result.spatial_coverage;
-                updateResourceSpatialCoverage(spatialCoverage);
-            }
-
-            if (mode == "edit" && result.hasOwnProperty('temporal_coverage')){
-                var temporalCoverage = result.temporal_coverage;
-                updateResourceTemporalCoverage(temporalCoverage);
-            }
         },
         error: function(xhr, errmsg, err){
             $(".selection-menu").hide();
@@ -1024,6 +1036,7 @@ function add_ref_content_ajax_submit(res_id, curr_path, ref_name, ref_url, valid
             else {
                 // Response text is not yet user friendly enough to display in UI
                 display_error_message('Error', "Failed to add reference content.");
+                console.error(`Failed to add reference content: ${xhr.responseText}`);
                 $('#add-reference-url-dialog').modal('hide');
                 $('#validate-reference-url-dialog').modal('hide');
             }
@@ -1537,7 +1550,7 @@ function setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicke
         var $id_type_filetype_div = $("#id_type_filetype");
 
         if (logical_type !== "GenericLogicalFile" && logical_type !== "FileSetLogicalFile" &&
-            logical_type !== "ModelInstanceLogicalFile") {
+            logical_type !== "ModelInstanceLogicalFile" && logical_type !== "CSVLogicalFile") {
             // don't allow changing coverage type if aggregation type is not GenericLogicalFile or
             // FileSetLogicalFile or ModelInstanceLogicalFile
             $id_type_filetype_div.parent().closest("div").css('pointer-events', 'none');
@@ -1618,9 +1631,10 @@ function setFileTypeSpatialCoverageFormFields(logical_type, bindCoordinatesPicke
 
         // #id_type_1 is the box radio button
         if ($id_type_filetype_div.find(radioBoxSelector).attr("checked") === "checked" ||
-            (logical_type !== 'GeoFeatureLogicalFile' && logical_type !== 'RefTimeseriesLogicalFile' &&
-                logical_type !== 'GenericLogicalFile' && logical_type !== "FileSetLogicalFile"
-                && logical_type !== "ModelProgramLogicalFile" && logical_type !== "ModelInstanceLogicalFile")) {
+            (logical_type !== 'GeoFeatureLogicalFile' && logical_type !== 'RefTimeseriesLogicalFile'
+                && logical_type !== 'GenericLogicalFile' && logical_type !== "FileSetLogicalFile"
+                && logical_type !== "ModelProgramLogicalFile" && logical_type !== "ModelInstanceLogicalFile"
+                && logical_type !== "CSVLogicalFile")) {
             // coverage type is box or logical file type is either NetCDF or TimeSeries
             $("#id_north_filetype").parent().closest("#div_id_north").hide();
             $("#id_east_filetype").parent().closest("#div_id_east").hide();
@@ -1718,7 +1732,7 @@ function setFileTypeTemporalCoverageDeleteOption(logicalFileType) {
 
         var $formTemporalCoverage = $btnDeleteTemporalCoverage.closest('form');
         if (logicalFileType === 'GenericLogicalFile' || logicalFileType === 'FileSetLogicalFile' ||
-            logicalFileType === 'ModelInstanceLogicalFile') {
+            logicalFileType === 'ModelInstanceLogicalFile' || logicalFileType === 'CSVLogicalFile') {
             var url = $formTemporalCoverage.attr('action');
             if (url.indexOf('update-file-metadata') !== -1) {
                 url = url.replace('update-file-metadata', 'delete-file-coverage');

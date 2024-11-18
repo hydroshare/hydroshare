@@ -2410,7 +2410,7 @@ def copy_cv_terms(src_metadata, tgt_metadata):
                                     term=cv_term.term,
                                     is_dirty=cv_term.is_dirty)
 
-    if type(src_metadata) != type(tgt_metadata):
+    if type(src_metadata) is not type(tgt_metadata):
         raise ValidationError("Source metadata and target metadata objects must be of the "
                               "same type")
 
@@ -2600,7 +2600,7 @@ def add_blank_sqlite_file(resource, upload_folder):
     try:
         uploaded_file = UploadedFile(file=open(_ODM2_SQLITE_FILE_PATH, 'rb'), name=odm2_sqlite_file_name)
         new_res_file = utils.add_file_to_resource(
-            resource, uploaded_file, folder=upload_folder
+            resource, uploaded_file, folder=upload_folder, save_file_system_metadata=True
         )
 
         log.info("Blank SQLite file was added.")
@@ -2689,7 +2689,7 @@ def extract_metadata(resource, sqlite_file_name, logical_file=None):
             # extract coverage data
             _extract_coverage_metadata(resource, cur, logical_file)
 
-            # extract extended metadata
+            # extract additional metadata
             cur.execute("SELECT * FROM Sites")
             sites = cur.fetchall()
             is_create_multiple_site_elements = len(sites) > 1

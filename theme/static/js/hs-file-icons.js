@@ -2,42 +2,43 @@
 * Created by Mauriel on 3/18/2017.
 */
 function getFolderIcons() {
+    const RESOURCE_ICON_URL = `${STATIC_URL}img/resource-icons/`;
     var folderIcons = {};
     folderIcons.GeoRasterLogicalFile =
         "<span class='fb-aggregation-icon'>" +
-        "<img src='/static/static/img/resource-icons/geographicraster48x48.png' " +
+        "<img src=" + `'${RESOURCE_ICON_URL}geographicraster48x48.png' ` +
         "alt='Geographic Raster Aggregation Icon'/></span>";
 
     folderIcons.NetCDFLogicalFile =
         "<span class='fb-aggregation-icon'>" +
-        "<img src='/static/static/img/resource-icons/multidimensional48x48.png' " +
+        "<img src=" + `'${RESOURCE_ICON_URL}multidimensional48x48.png' ` +
         "alt='MultiDimensional (NetCDF) Aggregation Icon'/></span>";
 
     folderIcons.TimeSeriesLogicalFile =
         "<span class='fb-aggregation-icon'>" +
-        "<img src='/static/static/img/resource-icons/timeseries48x48.png' " +
+        "<img src=" + `'${RESOURCE_ICON_URL}timeseries48x48.png' ` +
         "alt='Time Series Aggregation Icon'/></span>";
 
     folderIcons.RefTimeseriesLogicalFile =
         "<span class='fb-aggregation-icon'>" +
-        "<img src='/static/static/img/resource-icons/his48x48.png' " +
+        "<img src=" + `'${RESOURCE_ICON_URL}his48x48.png' ` +
         "alt='HIS Referenced Time Series Aggregation Icon'/></span>";
 
     folderIcons.GeoFeatureLogicalFile =
         "<span class='fb-aggregation-icon'>" +
-        "<img src='/static/static/img/resource-icons/geographicfeature48x48.png' " +
+        "<img src=" + `'${RESOURCE_ICON_URL}geographicfeature48x48.png' ` +
         "alt='Geographic Feature Aggregation Icon'/></span>";
 
     folderIcons.ModelProgramLogicalFile =
         "<span class='fa-stack fb-stack fb-stack-mp'>" +
         "<i class='fb-file-icon fa fa-folder fa-stack-2x fb-folder-mp' aria-hidden='true'></i>" +
-        "<img src='/static/static/img/model-program-overlay.png' " +
+        "<img src=" + `'${STATIC_URL}img/model-program-overlay.png' ` +
         "alt='Model Program Aggregation Icon'/></span>";
 
     folderIcons.ModelInstanceLogicalFile =
         "<span class='fa-stack fb-stack fb-stack-mi'>" +
         "<i class='fb-file-icon fa fa-folder fa-stack-2x fb-folder-mi' aria-hidden='true'></i>" +
-        "<img src='/static/static/img/model-instance-overlay.png' " +
+        "<img src=" + `'${STATIC_URL}img/model-instance-overlay.png' ` +
         "alt='Model Instance Aggregation Icon'/></span>";
 
     folderIcons.DEFAULT =
@@ -170,16 +171,22 @@ function getFileIcons() {
         "<i class='fa fa-file-o fa-stack-2x'></i>" +
         "<i class='fa fa-external-link fa-stack-1x'></i>" +
         "</span>";
+
+    fileIcons.CSV_LOGICAL =
+        "<span class='fb-aggregation-icon'>" +
+        "<img src='" + `${STATIC_URL}img/resource-icons/filetype-csv.svg' ` +
+        "alt='CSV Aggregation Icon'/></span>";
+
     // This is for any single file associated with ModelProgramLogicalFile. Note "MP" is not a file extension
     fileIcons.MP =
         "<span class='fb-aggregation-icon'>" +
-        "<img src='/static/static/img/resource-icons/modelprogram48x48.png' " +
+        "<img src='" + `${STATIC_URL}img/resource-icons/modelprogram48x48.png' ` +
         "alt='Model Program Aggregation Icon'/></span>";
 
     // This is for any single file associated with ModelInstanceLogicalFile. Note "MI" is not a file extension
     fileIcons.MI =
         "<span class='fb-aggregation-icon'>" +
-        "<img src='/static/static/img/resource-icons/modelinstance48x48.png' " +
+        "<img src='" + `${STATIC_URL}img/resource-icons/modelinstance48x48.png' ` +
         "alt='Model Instance Aggregation Icon'/></span>";
 
     fileIcons.DEFAULT =

@@ -38,7 +38,7 @@ def get_collectable_resources_modal(request, shortkey, *args, **kwargs):
         collectable_resource_ids = [r.short_id for r in collectable_resources]
         urp_qs = UserResourcePrivilege.objects \
             .filter(resource__short_id__in=collectable_resource_ids, privilege=PrivilegeCodes.OWNER)\
-            .select_related("user", "resource") \
+            .select_related("user", "resource", "resource__raccess") \
             .order_by("resource__title", "resource__short_id") \
             .distinct("resource__title", "resource__short_id")
 

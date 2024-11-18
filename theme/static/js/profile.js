@@ -160,78 +160,6 @@ function onFormRequiredChange() {
     }
 }
 
-function irods_account_link(data_target, text) {
-    return "<a data-toggle='modal' data-target='" + data_target + "'>" + text + "</a>";
-}
-
-function irods_status_info(alert_type, status, title) {
-    return "<div class=\"col-sm-12\">" +
-            "<div class=\"alert " + alert_type + " alert-dismissible\" role=\"alert\">" +
-            "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>" +
-            "<strong>" + title + "</strong><div>" + status + "</div></div></div>"
-}
-
-function create_irods_account() {
-    var url = $("#url-create-irods-account").val();
-
-    $.ajax({
-        url: url,
-        type: "POST",
-        data: {
-            password: $('#id_irods_password').val()
-        },
-        success: function(json) {
-            if(json.success) {
-                $('#create-irods-account-dialog').modal('hide');
-                var irodsContainer = $("#irods-account-container");
-                irodsContainer.empty();
-                irodsContainer.append(irods_account_link("#delete-irods-account-dialog", "Delete your iRODS user account"));
-                irodsContainer.append(irods_status_info('alert-success', json.success, 'Success'));
-            }
-            if(json.error) {
-                $('#create-irods-account-dialog').modal('hide');
-                var irodsContainer = $("#irods-account-container");
-                irodsContainer.append(irods_status_info('alert-danger', json.error, 'Failure'));
-            }
-        },
-        error: function(xhr, errmsg, err) {
-            $('#create-irods-account-dialog').modal('hide');
-            var irodsContainer = $("#irods-account-container");
-            const errorText = JSON.parse(xhr.responseText).error
-            errorText && irodsContainer.append(irods_status_info('alert-danger', errorText , 'Failure'));
-        }
-    });
-    return false;
-}
-
-function delete_irods_account() {
-    var url = $("#url-delete-irods-account").val();
-    $.ajax({
-        url: url,
-        type: "POST",
-        data: {},
-        success: function(json) {
-            var irodsContainer = $("#irods-account-container");
-            if(json.success) {
-                irodsContainer.empty();
-                irodsContainer.append(irods_account_link("#create-irods-account-dialog", "Create your iRODS user account"));
-                irodsContainer.append(irods_status_info('alert-success', json.success, 'Success'));
-            }
-            if(json.error) {
-                irodsContainer.append(irods_status_info('alert-warning', json.error, 'Failure'));
-            }
-            $('#delete-irods-account-dialog').modal('hide');
-        },
-        error: function(xhr, errmsg, err) {
-            $('#delete-irods-account-dialog').modal('hide');
-            var irodsContainer = $("#irods-account-container");
-            const errorText = JSON.parse(xhr.responseText).error
-            errorText && irodsContainer.append(irods_status_info('alert-warning', errorText, 'Failure'));
-        }
-    });
-    return false;
-}
-
 function getUrlVars()
 {
     var vars = [], hash;
@@ -351,17 +279,6 @@ $(document).ready(function () {
     // Multiple orgs are a string delimited by ";" --wrap them so we can style them
     $("#organization").splitAndWrapWithClass(";", "organization-divider");
     
-    $("#btn-create-irods-account").click(create_irods_account);
-    $("#btn-delete-irods-account").click(delete_irods_account);
-
-    // Only enable Confirm button when input password is longer than 8 characters
-    $("#id_irods_password").keyup(function () {
-        var pwdlen = $("input#id_irods_password").val().length;
-        if (pwdlen >= 8)
-            $('#btn-create-irods-account').removeAttr('disabled');
-        else
-            $('#btn-create-irods-account').attr('disabled', 'disabled');
-    });
 
     // File name preview for Add CV
     $('.btn-primary.btn-file :file').on('fileselect', function (event, numFiles, label) {
@@ -478,13 +395,13 @@ $(document).ready(function () {
 
     $('.ui-autocomplete-input').on('blur', function(e) {
       e.preventDefault();
-      $('.ui-autocomplete-input').trigger(jQuery.Event('keypress', { which: 13 }));
+      $(this).trigger(jQuery.Event('keypress', { which: $.ui.keyCode.ENTER }));
     });
 
     $('.ui-autocomplete-input').on('keydown', function(e) {
       if(e.keyCode === 9 && $(this).val() !== '') {
         e.preventDefault();
-        $(this).trigger(jQuery.Event('keypress', { which: 13 }));
+        $(this).trigger(jQuery.Event('keypress', { which: $.ui.keyCode.ENTER }));
       }
     });
 
@@ -509,4 +426,64 @@ $(document).ready(function () {
     resetPhoneValues();
     checkForInvalidPhones();
     checkForInvalidStates();
+
+    $('#revoke-quota-request').click(function(e){
+        revokeQuota($(this).data("action"))
+    });
+    let profileMissing = localStorage.getItem('missing-profile-fields')
+    let profileUser = localStorage.getItem('profile-user')
+    if (!profileUser){
+        checkProfileComplete().then(([user, missing])=>{
+            profileMissing = missing.join(', ');
+            profileUser = user;
+            updateQuotaMessage(profileMissing);
+        });
+    }else{
+        profileMissing = profileMissing.split(',').join(', ')
+        updateQuotaMessage(profileMissing);
+    }
+    function updateQuotaMessage(profileMissing){
+        if (profileMissing){
+            const button = $('#quota-request-storage');
+            button.prop("disabled",true);
+            button.after(
+                "<br><div class='alert alert-warning' style='margin-top: 20px;'>" +
+                    "You can request additional quota once your profile is complete. " +
+                    `Your profile is missing: ${profileMissing}.` +
+                "</div>")
+        }
+    }
+    checkQuotaStatus();
 });
+
+async function revokeQuota(url) {
+    // workaround to handle embeded forms in profile.html template
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      }
+    });
+
+    if (response.ok) {
+        localStorage.setItem("quota-status", "revoked");
+        let data = await response.json();
+        localStorage.setItem("quota-status", "revoked");
+        location.reload();
+    }
+    else {
+        let data = await response.json()
+        if ( data?.message ) {
+            customAlert("Quota Request", data.message, "error", 6000, true);
+        }
+    }
+    this.isApproving = false
+}
+
+function checkQuotaStatus() {
+    const status = localStorage.getItem("quota-status")
+    if(status !== null ) {
+        customAlert("Quota Request", `Your quota request was successfully ${status}.`, "success", 6000, true);
+        localStorage.removeItem("quota-status");
+    }
+}

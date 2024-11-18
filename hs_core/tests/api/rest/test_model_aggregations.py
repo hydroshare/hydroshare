@@ -6,6 +6,7 @@ from dateutil import parser
 from django.conf import settings
 from django.core.files.uploadedfile import UploadedFile
 from rest_framework import status
+from rest_framework.test import APIClient
 
 from hs_core import hydroshare
 from hs_core.hydroshare import add_file_to_resource
@@ -14,14 +15,14 @@ from hs_core.tests.api.rest.base import HSRESTTestCase
 from hs_file_types.models import ModelInstanceLogicalFile, ModelProgramLogicalFile, ModelProgramResourceFileType
 
 
-class TestModelProgramTemplateSchema(HSRESTTestCase):
+class TestModelAggregation(HSRESTTestCase):
 
     def setUp(self):
-        super(TestModelProgramTemplateSchema, self).setUp()
+        super(TestModelAggregation, self).setUp()
         self.res = hydroshare.create_resource(
             resource_type='CompositeResource',
             owner=self.user,
-            title='Testing Model Aggregation Template Related Endpoints',
+            title='Testing Model Aggregation Related Endpoints',
             keywords=['kw1', 'kw2']
         )
 
@@ -32,8 +33,10 @@ class TestModelProgramTemplateSchema(HSRESTTestCase):
             template_file_name = os.path.basename(schema_template)
             self.schema_templates.append(template_file_name)
 
+        self.unauthorized_client = APIClient()
+
     def tearDown(self):
-        super(TestModelProgramTemplateSchema, self).tearDown()
+        super(TestModelAggregation, self).tearDown()
         self.res.delete()
 
     def test_list_template_schemas(self):
@@ -109,6 +112,32 @@ class TestModelProgramTemplateSchema(HSRESTTestCase):
             mp_program_file_types.append({"file_type": file_type, "file_path": file_path})
         self.assertEqual(mp_program_file_types, metadata_json['program_file_types'])
 
+    def test_update_metadata_model_program_unauthorized(self):
+        """Test that an unauthorized user can't update metadata for a model program aggregation."""
+
+        self.assertEqual(self.res.raccess.public, False)
+        mp_aggr = self._create_model_program_aggregation(expected_file_count=1)
+        base_file_path = 'hs_core/tests/data/{}'
+        json_file_path = base_file_path.format('model_program_meta.json')
+        mp_aggr_path = mp_aggr.aggregation_name
+        url = f"/hsapi/resource/{self.res.short_id}/modelprogram/meta/{mp_aggr_path}"
+        with open(json_file_path) as file_obj:
+            metadata_json = json.loads(file_obj.read())
+        # test for private resource - not allowed
+        response = self.unauthorized_client.put(url, data=metadata_json, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        # test for public resource - not allowed
+        self.res.raccess.public = True
+        self.res.raccess.save()
+        response = self.unauthorized_client.put(url, data=metadata_json, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.res.raccess.public = False
+        self.res.raccess.discoverable = True
+        self.res.raccess.save()
+        # test for discoverable resource - not allowed
+        response = self.unauthorized_client.put(url, data=metadata_json, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_get_metadata_model_program(self):
         """Test that we can retrieve all metadata for a model program aggregation."""
 
@@ -143,6 +172,37 @@ class TestModelProgramTemplateSchema(HSRESTTestCase):
         self.assertEqual(response_json['program_schema_json'], metadata_json['program_schema_json'])
         self.assertEqual(response_json['program_file_types'], metadata_json['program_file_types'])
 
+    def test_get_metadata_model_program_unauthorized(self):
+        """Test that an unauthorized user can retrieve all metadata for a model program aggregation
+        when the resource is public or discoverable."""
+
+        mp_aggr = self._create_model_program_aggregation(expected_file_count=1)
+        # ingest some metadata to the model program aggregation
+        base_file_path = 'hs_core/tests/data/{}'
+        json_file_path = base_file_path.format('model_program_meta.json')
+        mp_aggr_path = mp_aggr.aggregation_name
+        url = f"/hsapi/resource/{self.res.short_id}/modelprogram/meta/{mp_aggr_path}"
+        with open(json_file_path) as file_obj:
+            metadata_json = json.loads(file_obj.read())
+        response = self.client.put(url, data=metadata_json, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # retrieve model program metadata - this is the endpoint we are testing for unauthorized user
+        # test for private resource - not allowed
+        self.assertEqual(self.res.raccess.public, False)
+        response = self.unauthorized_client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        # test for public resource - should be allowed
+        self.res.raccess.public = True
+        self.res.raccess.save()
+        response = self.unauthorized_client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # test for discoverable resource - should be allowed
+        self.res.raccess.public = False
+        self.res.raccess.discoverable = True
+        self.res.raccess.save()
+        response = self.unauthorized_client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
     def test_update_model_instance_meta_schema(self):
         """Test that we can update the metadata schema in a model instance using the schema from the linked
         model program aggregation."""
@@ -172,6 +232,39 @@ class TestModelProgramTemplateSchema(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         mi_aggr = ModelInstanceLogicalFile.objects.first()
         self.assertTrue(mi_aggr.metadata_schema_json)
+
+    def test_update_model_instance_meta_schema_unauthorized(self):
+        """Test that an unauthorized user can't update the metadata schema in a model instance using the schema
+        from the linked model program aggregation."""
+
+        mp_aggr = self._create_model_program_aggregation(expected_file_count=1, upload_folder='mp-folder')
+        mi_aggr = self._create_model_instance_aggregation(expected_file_count=2)
+        # link the mi aggr to mp aggregation (executed_by)
+        self.assertEqual(mi_aggr.metadata.executed_by, None)
+        mi_aggr.metadata.executed_by = mp_aggr
+        mi_aggr.metadata.save()
+        # set the metadata schema for the mp aggregation
+        self.assertFalse(mp_aggr.metadata_schema_json)
+        mp_aggr_path = mp_aggr.aggregation_name
+        template_schema_filename = self.schema_templates[0]
+        url = f"/hsapi/resource/{self.res.short_id}/modelprogram/template/meta/schema/{mp_aggr_path}/" \
+              f"{template_schema_filename}"
+
+        # test for private resource - not allowed
+        self.assertEqual(self.res.raccess.public, False)
+        response = self.unauthorized_client.put(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        # test for public resource - not allowed
+        self.res.raccess.public = True
+        self.res.raccess.save()
+        response = self.unauthorized_client.put(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        # test for discoverable resource - not allowed
+        self.res.raccess.public = False
+        self.res.raccess.discoverable = True
+        self.res.raccess.save()
+        response = self.unauthorized_client.put(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_metadata_model_instance(self):
         """Test that we can retrieve all metadata for a model instance aggregation."""
@@ -233,6 +326,61 @@ class TestModelProgramTemplateSchema(HSRESTTestCase):
         response_json['spatial_coverage'].pop('projection')
         self.assertEqual(response_json['spatial_coverage'], metadata_json['spatial_coverage'])
 
+    def test_get_metadata_model_instance_unauthorized(self):
+        """Test that an unauthorized user can retrieve all metadata for a model instance aggregation for
+        a resource that is either public or discoverable."""
+
+        mp_aggr = self._create_model_program_aggregation(expected_file_count=1, upload_folder='mp-folder')
+        mi_aggr = self._create_model_instance_aggregation(expected_file_count=2)
+        # ingest some metadata to the model instance
+
+        # first set the schema for the mp aggregation
+        self.assertFalse(mp_aggr.metadata_schema_json)
+        mp_aggr_path = mp_aggr.aggregation_name
+        for template_schema_filename in self.schema_templates:
+            if template_schema_filename.startswith("SWAT"):
+                url = f"/hsapi/resource/{self.res.short_id}/modelprogram/template/meta/schema/{mp_aggr_path}/" \
+                      f"{template_schema_filename}"
+                response = self.client.put(url, format='json')
+                self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+                break
+        mp_aggr = ModelProgramLogicalFile.objects.first()
+        self.assertTrue(mp_aggr.metadata_schema_json)
+
+        base_file_path = 'hs_core/tests/data/{}'
+        json_file_path = base_file_path.format('model_instance_meta.json')
+        mi_aggr_path = mi_aggr.aggregation_name
+        url = f"/hsapi/resource/{self.res.short_id}/modelinstance/meta/{mi_aggr_path}"
+        # first just update the executed_by for the model instance aggregation
+        mi_aggr = ModelInstanceLogicalFile.objects.first()
+        self.assertEqual(mi_aggr.metadata.executed_by, None)
+        response = self.client.put(url, data={"executed_by": mp_aggr.aggregation_name}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mi_aggr = ModelInstanceLogicalFile.objects.first()
+        self.assertNotEqual(mi_aggr.metadata.executed_by, None)
+        # now update all metadata for the model instance aggregation including the metadata based on the schema
+        with open(json_file_path) as file_obj:
+            metadata_json = json.loads(file_obj.read())
+            metadata_json['executed_by'] = mp_aggr.aggregation_name
+        response = self.client.put(url, data=metadata_json, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # retrieve metadata of the model instance aggregation - this is the endpoint we are testing
+        # test for private resource - should return 403
+        self.assertEqual(self.res.raccess.public, False)
+        response = self.unauthorized_client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        # test for public resource - should return 200
+        self.res.raccess.public = True
+        self.res.raccess.save()
+        response = self.unauthorized_client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # test for discoverable resource - should return 200
+        self.res.raccess.discoverable = True
+        self.res.raccess.save()
+        response = self.unauthorized_client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
     def test_update_metadata_model_instance(self):
         """Test that we can update all metadata for a model instance aggregation."""
 
@@ -289,6 +437,44 @@ class TestModelProgramTemplateSchema(HSRESTTestCase):
         input_cove_type = metadata_json['spatial_coverage'].pop('type')
         self.assertEqual(spatial_coverage, metadata_json['spatial_coverage'])
         self.assertEqual(mi_aggr.metadata.spatial_coverage.type, input_cove_type)
+
+    def test_update_metadata_model_instance_unauthorized(self):
+        """Test that an unauthorized user can't update metadata for a model instance aggregation."""
+
+        mp_aggr = self._create_model_program_aggregation(expected_file_count=1, upload_folder='mp-folder')
+        mi_aggr = self._create_model_instance_aggregation(expected_file_count=2)
+        # first set the schema for the mp aggregation
+        self.assertFalse(mp_aggr.metadata_schema_json)
+        mp_aggr_path = mp_aggr.aggregation_name
+        for template_schema_filename in self.schema_templates:
+            if template_schema_filename.startswith("SWAT"):
+                url = f"/hsapi/resource/{self.res.short_id}/modelprogram/template/meta/schema/{mp_aggr_path}/" \
+                      f"{template_schema_filename}"
+                response = self.client.put(url, format='json')
+                self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+                break
+        mp_aggr = ModelProgramLogicalFile.objects.first()
+        self.assertTrue(mp_aggr.metadata_schema_json)
+
+        mi_aggr_path = mi_aggr.aggregation_name
+        url = f"/hsapi/resource/{self.res.short_id}/modelinstance/meta/{mi_aggr_path}"
+        # first just update the executed_by for the model instance aggregation
+        mi_aggr = ModelInstanceLogicalFile.objects.first()
+        self.assertEqual(mi_aggr.metadata.executed_by, None)
+        # test for private resource - not allowed
+        self.assertEqual(self.res.raccess.public, False)
+        response = self.unauthorized_client.put(url, data={"executed_by": mp_aggr.aggregation_name}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        # test for public resource - not allowed
+        self.res.raccess.public = True
+        self.res.raccess.save()
+        response = self.unauthorized_client.put(url, data={"executed_by": mp_aggr.aggregation_name}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        # test for discoverable resource - not allowed
+        self.res.raccess.discoverable = True
+        self.res.raccess.save()
+        response = self.unauthorized_client.put(url, data={"executed_by": mp_aggr.aggregation_name}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def _create_model_program_aggregation(self, expected_file_count, upload_folder=""):
         base_file_path = 'hs_core/tests/data/{}'

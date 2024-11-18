@@ -56,10 +56,10 @@ function showAddEditExtraMetaPopup(edit, row_id_str) {
         $("#old_extra_meta_name").val(oldname);
         $("#extra_meta_name_input").val(oldname);
         $("#extra_meta_value_input").val(oldvalue);
-        $("#extra_meta_title").text("Edit Extended Metadata");
+        $("#extra_meta_title").text("Edit Additional Metadata");
     }
     else {
-        $("#extra_meta_title").text("Add Extended Metadata");
+        $("#extra_meta_title").text("Add Additional Metadata");
     }
     $('#extraMetaDialog').modal('show');
 }
@@ -219,8 +219,8 @@ function foundDuplicatedName(table, newName, except_row_id) {
 }
 
 function saveExtraMetadata() {
-    var successMsg = "Extended metadata updated.";
-    var errorMsg = "Extended metadata failed to update.";
+    var successMsg = "Additional metadata updated.";
+    var errorMsg = "Additional metadata failed to update.";
 
     var json_obj = {};
     var t = $('#extraMetaTable').DataTable();
@@ -351,23 +351,6 @@ $(document).ready(function () {
                 $('#new-version-resource-dialog').modal('hide');
             }
        })
-    });
-
-    $("#btn-replicate").on('click', function(e) {
-        e.stopImmediatePropagation();
-        $.ajax({
-            type: "POST",
-            url: "/hsapi/_internal/" + SHORT_ID + "/rep-res-bag-to-irods-user-zone/",
-            success: function (task) {
-                $('#rep-resource-to-irods-dialog').modal('hide');
-                notificationsApp.registerTask(task);
-                notificationsApp.show();
-            },
-            error: function (xhr, errmsg, err) {
-                display_error_message('Failed to copy the resource to your user zone', xhr.responseText);
-                $('#rep-resource-to-irods-dialog').modal('hide');
-            }
-        })
     });
 
     $("#btn-delete-resource").on('click', function(e) {
@@ -594,7 +577,7 @@ $(document).ready(function () {
         "info": false,
         "bFilter": false,
         "bInfo": false,
-        "language": {"emptyTable": "No Extended Metadata"}
+        "language": {"emptyTable": "No Additional Metadata"}
     });
 
     $("#btn-add-new-entry").click(function() {

@@ -1,0 +1,9 @@
+# This is a test file for the CSV parser
+# another comment - has headers
+Col-1,Col-2,Col-3,Col-4,Col-5
+Row1Value1,123.5,CA,2024-06-15,true
+Row2Value1,123.5,VA,2024-06-16,false
+Row3Value1,123.5,MA,2024-06-17,true
+Row4Value1,123.5,WA,2024-06-18,false
+Row5Value1,123.5,MN,2024-06-19,true
+Row6Value1,123.5,CA,2024-06-20,true

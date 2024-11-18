@@ -51,8 +51,8 @@
     {% endspaceless %}
 
     <p><a href="{{ request.scheme }}://{{ request.get_host }}{{ action_url }}">Click here to accept this request.</a></p>
-    <p><a href="{{ request.scheme }}://{{ request.get_host }}{{ reject_url }}">Click here to reject this request.</a>
-    If rejecting this request, please also <a href="{{ href_for_mailto_reject }}">email the requestor</a></p>
+    <p><a href="{{ request.scheme }}://{{ request.get_host }}{{ reject_url }}">Click here to reject this request.</a></p>
+    <p>If rejecting this request, please also <a href="{{ href_for_mailto_reject }}">email the requester</a></p>
 
         <p>{% trans "Thanks, The HydroShare Team" %}</p>
 {% endblock %}

@@ -9,7 +9,7 @@ from django.core.management.base import BaseCommand
 from django.db.models import Q
 from django.utils import timezone
 import zoneinfo
-from hs_core.models import BaseResource
+from hs_core.models import BaseResource, Date
 from theme.models import UserProfile
 
 from ... import models as hs_tracking
@@ -149,12 +149,33 @@ class Command(BaseCommand):
             'size',
             'publication status',
             'user type',
-            'user id'
+            'user id',
+            'resource id',
+            'publication date',
+            'bag last downloaded date',
+            'resource updated date',
+            'last updated by user id'
         ]
         w.writerow(fields)
         failed_resource_ids = []
         for r in BaseResource.objects.all():
             try:
+                pub_date = r.metadata.dates.get(type='published')\
+                    .start_date.strftime("%m/%d/%Y %H:%M:%S.%f")
+            except Date.DoesNotExist:
+                pub_date = None
+            try:
+                last_downloaded = r.bag_last_downloaded
+                if last_downloaded:
+                    last_downloaded = last_downloaded.strftime("%m/%d/%Y %H:%M:%S.%f")
+                else:
+                    last_downloaded = None
+                last_changed_by = r.last_changed_by
+                if last_changed_by:
+                    last_changed_by = last_changed_by.id
+                else:
+                    last_changed_by = None
+                updated_date = r.updated.strftime("%m/%d/%Y %H:%M:%S.%f")
                 values = [
                     r.metadata.dates.get(type="created").
                     start_date.strftime("%m/%d/%Y %H:%M:%S.%f"),
@@ -163,7 +184,12 @@ class Command(BaseCommand):
                     r.size,
                     r.raccess.sharing_status,
                     r.user.userprofile.user_type,
-                    r.user_id
+                    r.user_id,
+                    r.short_id,
+                    pub_date,
+                    last_downloaded,
+                    updated_date,
+                    last_changed_by
                 ]
                 w.writerow([str(v) for v in values])
 

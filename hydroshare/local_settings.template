@@ -32,6 +32,12 @@ POSTGIS_DB = os.environ.get('POSTGIS_DB', 'postgres')
 POSTGIS_PASSWORD = os.environ.get('POSTGIS_PASSWORD', 'postgres')
 POSTGIS_USER = os.environ.get('POSTGIS_USER', 'postgres')
 
+# number of seconds database connections should persist
+# https://docs.djangoproject.com/en/3.2/ref/settings/#std-setting-CONN_MAX_AGE
+# this must be shorter than the database's timeout 
+# https://www.postgresql.org/docs/11/runtime-config-client.html#GUC-IDLE-IN-TRANSACTION-SESSION-TIMEOUT
+CONN_MAX_AGE = 60
+
 IPYTHON_SETTINGS = []
 IPYTHON_BASE = '/hydroshare/static/media/ipython-notebook'
 IPYTHON_HOST = '127.0.0.1'
@@ -62,7 +68,7 @@ DOCKER_URL = 'unix://docker.sock/'
 DOCKER_API_VERSION = '1.12'
 
 # CartoCSS settings
-CARTO_HOME = '/hs_tmp/node_modules/carto'
+CARTO_HOME = '/tmp/node_modules/carto'
 
 USE_SOUTH = False
 SITE_TITLE = "CUAHSI HydroShare"
@@ -91,8 +97,6 @@ DATABASES = {
 }
 DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = True
 POSTGIS_VERSION = (2, 1, 1)
-
-SHARED_NEG_KEY = 'hydroshareZonehydroshareuserZone'
 
 # Native Docker iRODS developer local
 USE_IRODS = True
@@ -135,20 +139,6 @@ HYRAX_SSH_PROXY_USER = ''
 HYRAX_SSH_PROXY_USER_PWD = ''
 HYRAX_SCRIPT_RUN_COMMAND = ''
 
-# hsuserproxy system user configuration used to create hydroshare iRODS users on-demand
-HS_USER_ZONE_HOST = 'users.local.org'
-LINUX_ADMIN_USER_FOR_HS_USER_ZONE = 'hsuserproxy'
-LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE = 'hsuserproxy'
-LINUX_ADMIN_USER_CREATE_USER_IN_USER_ZONE_CMD = '/home/hsuserproxy/create_user.sh'
-LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD = '/home/hsuserproxy/delete_user.sh'
-
-# HydroShare iRODS proxy user in the federated user zone
-HS_IRODS_PROXY_USER_IN_USER_ZONE = 'localHydroProxy'
-# HydroShare iRODS default storage resource in the federated user zone
-HS_IRODS_USER_ZONE_DEF_RES = 'hydroshareLocalResc'
-# HydroShare iRODS federated user zone name
-HS_USER_IRODS_ZONE = 'hydroshareuserZone'
-
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_HOST_USER = ''
@@ -158,6 +148,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_USE_TLS = True
 # DEFAULT_FROM_EMAIL = ''
 # DEFAULT_SUPPORT_EMAIL=''
+# DEFAULT_DEVELOPER_EMAIL=''
 
 HYDROSHARE_SHARED_TEMP = '/shared_tmp'
 
@@ -165,10 +156,7 @@ HYDROSHARE_SHARED_TEMP = '/shared_tmp'
 MAILCHIMP_ACTIVE_SUBSCRIBERS = "e210a70864"
 MAILCHIMP_SUBSCRIBERS = "f0c27254e3"
 
-# sendfile support for large files
-# These must match settings in nginx
-SENDFILE_ON = True
-IRODS_USER_URI = "/irods-user"
+# IRODS_USER_URI = "/irods-user"
 IRODS_DATA_URI = "/irods-data"
 LOCAL_CACHE_URI = "/local-cache"
 
@@ -193,3 +181,36 @@ hydroshare | security.PasswordExpiry.user: (fields.W342) Setting unique=True on 
 using a OneToOneField.
 """
 # SILENCED_SYSTEM_CHECKS = ["mezzanine.core.W03", "fields.W342"]
+
+COMPANION_URL = 'http://localhost:3020'
+UPPY_UPLOAD_ENDPOINT = 'http://host.docker.internal:8000/hsapi/tus/'
+
+ENABLE_OIDC_AUTHENTICATION = False
+# If OIDC is enabled, the following additional settings should be defined in local_settings
+# OIDC_OP_AUTHORIZATION_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/auth"
+# OIDC_OP_TOKEN_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/token"
+# OIDC_OP_USER_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/userinfo"
+# OIDC_RP_SIGN_ALGO = "RS256"
+# OIDC_OP_JWKS_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/certs"
+# OIDC_RP_CLIENT_ID = 'hydroshare'
+# OIDC_RP_CLIENT_SECRET = 'Ya4GzskPjEmvkX6cL8w3X0sQPNW6CwkM'
+# LOGIN_REDIRECT_URL = '/home/'
+# LOGIN_URL = '/oidc/authenticate/'
+# OIDC_CHANGE_PASSWORD_URL = "https://auth.cuahsi.io/realms/CUAHSI/account?#/security/signingin"
+# ALLOW_LOGOUT_GET_METHOD = True
+# LOGOUT_REDIRECT_URL = '/'
+# OIDC_OP_LOGOUT_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/logout"
+# OIDC_KEYCLOAK_URL = "https://auth.cuahsi.org/"
+# OIDC_KEYCLOAK_REALM = "CUAHSI"
+
+DEFAULT_AUTHENTICATION_CLASSES = (
+    "rest_framework.authentication.BasicAuthentication",
+    "rest_framework.authentication.SessionAuthentication",
+    "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
+)
+
+# The following two settings will logout of OIDC during signout
+# If these two settings are not enabled, 
+# the user will be redirected to auth.cuahsi.io to choose if they want to logout of SSO
+# OIDC_OP_LOGOUT_URL_METHOD = 'hs_core.authentication.provider_logout'
+# OIDC_STORE_ID_TOKEN = True

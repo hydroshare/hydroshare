@@ -4,32 +4,32 @@ import json
 import logging
 import os.path
 import re
+import sys
 import unicodedata
 import urllib.parse
 from uuid import uuid4
-import arrow
-from dateutil import parser
 
+import arrow
+import requests
+from dateutil import parser
 from django.conf import settings
-from django.contrib.auth.models import User, Group
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.auth.models import Group, User
+from django.contrib.contenttypes.fields import (GenericForeignKey,
+                                                GenericRelation)
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import HStoreField
-from django.core.exceptions import ObjectDoesNotExist, ValidationError, \
-    SuspiciousFileOperation, PermissionDenied
+from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
+                                    SuspiciousFileOperation, ValidationError)
 from django.core.files import File
-from django.urls import reverse
 from django.core.validators import URLValidator
-from django.db import models
-from django.db import transaction
+from django.db import models, transaction
 from django.db.models import Q, Sum
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
+from django.urls import reverse
 from django.utils.timezone import now
-
-from dominate.tags import div, legend, table, tbody, tr, th, td, h4
+from dominate.tags import div, h4, legend, table, tbody, td, th, tr
 from lxml import etree
 from markdown import markdown
 from mezzanine.conf import settings as s
@@ -38,16 +38,63 @@ from mezzanine.core.models import Ownable
 from mezzanine.generic.fields import CommentsField, RatingField
 from mezzanine.pages.managers import PageManager
 from mezzanine.pages.models import Page
+from nameparser import HumanName
 from pyld import jsonld
-from rdflib import Literal, BNode, URIRef
+from rdflib import BNode, Literal, URIRef
 from rdflib.namespace import DC, DCTERMS, RDF
+from spam_patterns.worst_patterns_re import patterns
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
-from hs_core.enums import RelationTypes
-from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
-from .hs_rdf import HSTERMS, RDF_Term_MixIn, RDF_MetaData_Mixin, rdf_terms, RDFS1
+from hs_core.enums import (CrossRefSubmissionStatus, CrossRefUpdate,
+                           RelationTypes)
+from hs_core.irods import ResourceFileIRODSMixin, ResourceIRODSMixin
+
+from .hs_rdf import (HSTERMS, RDFS1, RDF_MetaData_Mixin, RDF_Term_MixIn,
+                     rdf_terms)
 from .languages_iso import languages as iso_languages
+
+from django_tus.signals import tus_upload_finished_signal
+
+
+def clean_abstract(original_string):
+    """Clean abstract for XML inclusion.
+
+    This function takes an original string and removes any illegal XML characters
+    from it. It uses regular expressions to identify and remove the illegal characters.
+
+    Args:
+        original_string (str): The original string to be cleaned.
+
+    Returns:
+        str: The cleaned string with illegal XML characters removed.
+
+    Raises:
+        ValidationError: If there is an error cleaning the abstract.
+
+    """
+    # https://stackoverflow.com/a/64570125
+    try:
+        illegal_unichrs = [(0x00, 0x08), (0x0B, 0x0C), (0x0E, 0x1F),
+                           (0x7F, 0x84), (0x86, 0x9F),
+                           (0xFDD0, 0xFDDF), (0xFFFE, 0xFFFF)]
+        if sys.maxunicode >= 0x10000:  # not narrow build
+            illegal_unichrs.extend([(0x1FFFE, 0x1FFFF), (0x2FFFE, 0x2FFFF),
+                                    (0x3FFFE, 0x3FFFF), (0x4FFFE, 0x4FFFF),
+                                    (0x5FFFE, 0x5FFFF), (0x6FFFE, 0x6FFFF),
+                                    (0x7FFFE, 0x7FFFF), (0x8FFFE, 0x8FFFF),
+                                    (0x9FFFE, 0x9FFFF), (0xAFFFE, 0xAFFFF),
+                                    (0xBFFFE, 0xBFFFF), (0xCFFFE, 0xCFFFF),
+                                    (0xDFFFE, 0xDFFFF), (0xEFFFE, 0xEFFFF),
+                                    (0xFFFFE, 0xFFFFF), (0x10FFFE, 0x10FFFF)])
+
+        illegal_ranges = [fr'{chr(low)}-{chr(high)}' for (low, high) in illegal_unichrs]
+        xml_illegal_character_regex = '[' + ''.join(illegal_ranges) + ']'
+        illegal_xml_chars_re = re.compile(xml_illegal_character_regex)
+        filtered_string = illegal_xml_chars_re.sub('', original_string)
+        return filtered_string
+    except (KeyError, TypeError) as ex:
+        raise ValidationError(f"Error cleaning abstract: {ex}")
 
 
 def clean_for_xml(s):
@@ -60,6 +107,7 @@ def clean_for_xml(s):
     * Space-pad paragraph and NL symbols as necessary
 
     """
+    # https://www.w3.org/TR/REC-xml/#sec-line-ends
     CR = chr(0x23CE)  # carriage return unicode SYMBOL
     PARA = chr(0xB6)  # paragraph mark unicode SYMBOL
     output = ''
@@ -122,6 +170,10 @@ def get_user(request):
         return request.user
 
 
+class UserValidationError(ValidationError):
+    pass
+
+
 def validate_hydroshare_user_id(value):
     """Validate that a hydroshare_user_id is valid for a hydroshare user."""
     err_message = '%s is not a valid id for hydroshare user' % value
@@ -133,7 +185,7 @@ def validate_hydroshare_user_id(value):
 
         # check the user exists for the provided user id
         if not User.objects.filter(pk=value).exists():
-            raise ValidationError(err_message)
+            raise UserValidationError(err_message)
 
 
 def validate_user_url(value):
@@ -181,7 +233,7 @@ class ResourcePermissionsMixin(Ownable):
     def can_delete(self, request):
         """Use utils.authorize method to determine if user can delete a resource."""
         # have to do import locally to avoid circular import
-        from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
+        from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
         return authorize(request, self,
                          needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE,
                          raises_exception=False)[1]
@@ -189,7 +241,7 @@ class ResourcePermissionsMixin(Ownable):
     def can_change(self, request):
         """Use utils.authorize method to determine if user can change a resource."""
         # have to do import locally to avoid circular import
-        from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
+        from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
         return authorize(request, self,
                          needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                          raises_exception=False)[1]
@@ -197,7 +249,7 @@ class ResourcePermissionsMixin(Ownable):
     def can_view(self, request):
         """Use utils.authorize method to determine if user can view a resource."""
         # have to do import locally to avoid circular import
-        from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
+        from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
         return authorize(request, self,
                          needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA,
                          raises_exception=False)[1]
@@ -228,7 +280,6 @@ def get_access_object(user, user_type, user_access):
             "email": user.email,
             "organization": user.userprofile.organization,
             "title": user.userprofile.title,
-            "contributions": len(user.uaccess.owned_resources) if user.is_active else None,
             "viewable_contributions": user.viewable_contributions if user.is_active else None,
             "subject_areas": user.userprofile.subject_areas,
             "identifiers": user.userprofile.identifiers,
@@ -257,6 +308,7 @@ def get_access_object(user, user_type, user_access):
 def page_permissions_page_processor(request, page):
     """Return a dict describing permissions for current user."""
     from hs_access_control.models.privilege import PrivilegeCodes
+    from hs_core.hydroshare.utils import get_remaining_user_quota, convert_file_size_to_unit
 
     cm = page.get_content_model()
     can_change_resource_flags = False
@@ -346,7 +398,6 @@ def page_permissions_page_processor(request, page):
     else:
         lcb_access_level = 'none'
 
-    # last_changed_by.can_undo = False
     last_changed_by = json.dumps(get_access_object(last_changed_by, "user", lcb_access_level))
 
     users_json = json.dumps(users_json)
@@ -365,6 +416,26 @@ def page_permissions_page_processor(request, page):
     if is_owner or (cm.raccess.shareable and (is_view or is_edit)):
         show_manage_access = True
 
+    max_file_size = getattr(settings, 'FILE_UPLOAD_MAX_SIZE', 1024 * 25)
+    remaining_quota = get_remaining_user_quota(cm.quota_holder, "MB")
+    if remaining_quota is not None:
+        max_file_size = min(max_file_size, remaining_quota)
+
+    # https://docs.djangoproject.com/en/3.2/ref/settings/#data-upload-max-memory-size
+    max_chunk_size_mb = 2.5  # mb
+    if hasattr(settings, 'DATA_UPLOAD_MAX_MEMORY_SIZE'):
+        max_chunk_size_mb = settings.DATA_UPLOAD_MAX_MEMORY_SIZE / 1024 / 1024  # convert to MB
+
+    companion_url = getattr(settings, 'COMPANION_URL', 'https://companion.hydroshare.org/')
+    uppy_upload_endpoint = getattr(settings, 'UPPY_UPLOAD_ENDPOINT', 'https://hydroshare.org/hsapi/tus/')
+
+    # get the session id for the current user
+    if request.user.is_authenticated:
+        try:
+            session = request.session.session_key
+        except SessionException:
+            session = None
+
     return {
         'resource_type': cm._meta.verbose_name,
         "users_json": users_json,
@@ -375,7 +446,13 @@ def page_permissions_page_processor(request, page):
         "is_replaced_by": is_replaced_by,
         "is_version_of": is_version_of,
         "show_manage_access": show_manage_access,
-        "last_changed_by": last_changed_by
+        "last_changed_by": last_changed_by,
+        "max_file_size": max_file_size,
+        "max_file_size_for_display": convert_file_size_to_unit(max_file_size, "GB", "MB"),
+        "max_chunk_size_mb": max_chunk_size_mb,
+        "companion_url": companion_url,
+        "uppy_upload_endpoint": uppy_upload_endpoint,
+        "hs_s_id": session
     }
 
 
@@ -446,6 +523,10 @@ class HSAdaptorEditInline(object):
         return cm.can_change(adaptor_field.request)
 
 
+class PartyValidationError(ValidationError):
+    pass
+
+
 class Party(AbstractMetaDataElement):
     """Define party model to define a person."""
 
@@ -465,11 +546,15 @@ class Party(AbstractMetaDataElement):
     # each identifier is stored as a key/value pair {name:link}
     identifiers = HStoreField(default=dict)
 
-    # list of identifier currently supported
-    supported_identifiers = {'ResearchGateID': 'https://www.researchgate.net/',
-                             'ORCID': 'https://orcid.org/',
-                             'GoogleScholarID': 'https://scholar.google.com/',
-                             'ResearcherID': 'https://www.researcherid.com/'}
+    # list of identifiers currently supported
+    supported_identifiers = {'ResearchGateID':
+                             re.compile(r'^https:\/\/www\.researchgate\.net\/profile\/[^\s]+$'),
+                             'ORCID':
+                             re.compile(r'^https:\/\/orcid\.org\/[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}$'),
+                             'GoogleScholarID':
+                             re.compile(r'^https:\/\/scholar\.google\.com\/citations\?.*user=[^\s]+$'),
+                             'ResearcherID':
+                             'https://www.researcherid.com/'}
 
     def __unicode__(self):
         """Return name field for unicode representation."""
@@ -562,14 +647,14 @@ class Party(AbstractMetaDataElement):
 
             if ('name' not in kwargs or kwargs['name'] is None) and \
                     ('organization' not in kwargs or kwargs['organization'] is None):
-                raise ValidationError(
+                raise PartyValidationError(
                     "Either an organization or name is required for a creator element")
 
             if 'name' in kwargs and kwargs['name'] is not None:
                 if len(kwargs['name'].strip()) == 0:
                     if 'organization' in kwargs and kwargs['organization'] is not None:
                         if len(kwargs['organization'].strip()) == 0:
-                            raise ValidationError(
+                            raise PartyValidationError(
                                 "Either the name or organization must not be blank for the creator "
                                 "element")
 
@@ -593,7 +678,7 @@ class Party(AbstractMetaDataElement):
             party = cls.objects.get(id=element_id)
             if party.hydroshare_user_id is not None and kwargs['hydroshare_user_id'] is not None:
                 if party.hydroshare_user_id != kwargs['hydroshare_user_id']:
-                    raise ValidationError("HydroShare user identifier can't be changed.")
+                    raise PartyValidationError("HydroShare user identifier can't be changed.")
 
         if 'order' in kwargs and element_name == 'Creator':
             creator_order = kwargs['order']
@@ -655,7 +740,7 @@ class Party(AbstractMetaDataElement):
         if isinstance(party, Creator):
             if Creator.objects.filter(object_id=party.object_id,
                                       content_type__pk=party.content_type.id).count() == 1:
-                raise ValidationError("The only creator of the resource can't be deleted.")
+                raise PartyValidationError("The only creator of the resource can't be deleted.")
 
             creators_to_update = Creator.objects.filter(
                 object_id=party.object_id,
@@ -681,41 +766,42 @@ class Party(AbstractMetaDataElement):
                 try:
                     identifiers = json.loads(identifiers)
                 except ValueError:
-                    raise ValidationError("Value for identifiers not in the correct format")
+                    raise PartyValidationError("Value for identifiers not in the correct format")
         # identifiers = kwargs['identifiers']
         if identifiers:
             # validate the identifiers are one of the supported ones
             for name in identifiers:
                 if name not in cls.supported_identifiers:
-                    raise ValidationError("Invalid data found for identifiers. "
-                                          "{} not a supported identifier.". format(name))
+                    raise PartyValidationError("Invalid data found for identifiers. "
+                                               "{} not a supported identifier.". format(name))
             # validate identifier values - check for duplicate links
             links = [link.lower() for link in list(identifiers.values())]
             if len(links) != len(set(links)):
-                raise ValidationError("Invalid data found for identifiers. "
-                                      "Duplicate identifier links found.")
+                raise PartyValidationError("Invalid data found for identifiers. "
+                                           "Duplicate identifier links found.")
 
             for link in links:
                 validator = URLValidator()
                 try:
                     validator(link)
                 except ValidationError:
-                    raise ValidationError("Invalid data found for identifiers. "
-                                          "Identifier link must be a URL.")
+                    raise PartyValidationError("Invalid data found for identifiers. "
+                                               "Identifier link must be a URL.")
 
             # validate identifier keys - check for duplicate names
             names = [n.lower() for n in list(identifiers.keys())]
             if len(names) != len(set(names)):
-                raise ValidationError("Invalid data found for identifiers. "
-                                      "Duplicate identifier names found")
+                raise PartyValidationError("Invalid data found for identifiers. "
+                                           "Duplicate identifier names found")
 
             # validate that the links for the known identifiers are valid
             for id_name in cls.supported_identifiers:
                 id_link = identifiers.get(id_name, '')
                 if id_link:
-                    if not id_link.startswith(cls.supported_identifiers[id_name]) \
-                            or len(id_link) <= len(cls.supported_identifiers[id_name]):
-                        raise ValidationError("URL for {} is invalid".format(id_name))
+                    regex = cls.supported_identifiers[id_name]
+                    if not re.match(regex, id_link):
+                        raise PartyValidationError("Invalid data found for identifiers. "
+                                                   f"\'{id_link}\' is not a valid {id_name}.")
         return identifiers
 
 
@@ -739,12 +825,36 @@ class Creator(Party):
         ordering = ['order']
 
 
+def validate_abstract(value):
+    """
+    Validates the abstract value by ensuring it can serialize as XML.
+
+    Args:
+        value (str): The abstract value to be validated.
+
+    Raises:
+        ValidationError: If there is an error parsing the abstract as XML.
+
+    Returns:
+        None
+    """
+    err_message = 'Error parsing abstract as XML.'
+    if value:
+        try:
+            ROOT = etree.Element('root')
+            body_node = etree.SubElement(ROOT, 'body')
+            c_abstract = clean_abstract(value)
+            etree.SubElement(body_node, 'description').text = c_abstract
+        except Exception as ex:
+            raise ValidationError(f'{err_message}, more info: {ex}')
+
+
 @rdf_terms(DC.description, abstract=DCTERMS.abstract)
 class Description(AbstractMetaDataElement):
     """Define Description metadata element model."""
 
     term = 'Description'
-    abstract = models.TextField()
+    abstract = models.TextField(validators=[validate_abstract])
 
     def __unicode__(self):
         """Return abstract field for unicode representation."""
@@ -754,6 +864,18 @@ class Description(AbstractMetaDataElement):
         """Define meta properties for Description model."""
 
         unique_together = ("content_type", "object_id")
+
+    @classmethod
+    def create(cls, **kwargs):
+        """Define custom update method for Description model."""
+        kwargs['abstract'] = clean_abstract(kwargs['abstract'])
+        return super(Description, cls).create(**kwargs)
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        """Define custom update method for Description model."""
+        kwargs['abstract'] = clean_abstract(kwargs['abstract'])
+        super(Description, cls).update(element_id, **kwargs)
 
     @classmethod
     def remove(cls, element_id):
@@ -872,7 +994,7 @@ class Date(AbstractMetaDataElement):
     )
     HS_DATE_TYPE_CHOICES = (
         ('reviewStarted', 'Review Started'),
-        ('published', 'Published')
+        ('published', 'Published'),
     )
     DATE_TYPE_CHOICES = DC_DATE_TYPE_CHOICES + HS_DATE_TYPE_CHOICES
 
@@ -1328,6 +1450,8 @@ class Publisher(AbstractMetaDataElement):
         metadata_obj = kwargs['content_object']
         # get matching resource
         resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
+        if not resource:
+            raise ValidationError("Resource not found")
         if not resource.raccess.published:
             raise ValidationError("Publisher element can't be created for a resource that "
                                   "is not yet published.")
@@ -1349,13 +1473,14 @@ class Publisher(AbstractMetaDataElement):
             kwargs['url'] = 'https://www.cuahsi.org'
         else:
             # make sure we are not setting CUAHSI as publisher for a resource
-            # that has no content files
-            if 'name' in kwargs:
-                if kwargs['name'].lower() == publisher_CUAHSI.lower():
-                    raise ValidationError("Invalid publisher name")
-            if 'url' in kwargs:
-                if kwargs['url'].lower() == 'https://www.cuahsi.org':
-                    raise ValidationError("Invalid publisher URL")
+            # that has no content files, unless it is a Collection
+            if resource.resource_type.lower() != "collectionresource":
+                if 'name' in kwargs:
+                    if kwargs['name'].lower() == publisher_CUAHSI.lower():
+                        raise ValidationError("Invalid publisher name")
+                if 'url' in kwargs:
+                    if kwargs['url'].lower() == 'https://www.cuahsi.org':
+                        raise ValidationError("Invalid publisher URL")
 
         return super(Publisher, cls).create(**kwargs)
 
@@ -2050,6 +2175,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
     content_object = GenericForeignKey('content_type', 'object_id')
 
+    # key/value metadata (additional metadata)
     extra_metadata = HStoreField(default=dict)
 
     # this field is for resources to store extra key:value pairs as needed, e.g., bag checksum is stored as
@@ -2060,8 +2186,19 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     # for tracking number of times resource and its files have been downloaded
     download_count = models.PositiveIntegerField(default=0)
+    bag_last_downloaded = models.DateTimeField(null=True, blank=True)
     # for tracking number of times resource has been viewed
     view_count = models.PositiveIntegerField(default=0)
+
+    # for tracking when resourceFiles were last compared with irods
+    files_checked = models.DateTimeField(null=True)
+    repaired = models.DateTimeField(null=True)
+
+    # allow resource that contains spam_patterns to be discoverable/public
+    spam_allowlisted = models.BooleanField(default=False)
+
+    quota_holder = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                     related_name='quota_holder')
 
     def update_view_count(self):
         self.view_count += 1
@@ -2082,7 +2219,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     @property
     def last_updated(self):
         """Return the last updated date stored in metadata"""
-        return self.metadata.dates.all().filter(type='modified')[0].start_date
+        for dt in self.metadata.dates.all():
+            if dt.type == 'modified':
+                return dt.start_date
 
     @property
     def has_required_metadata(self):
@@ -2179,8 +2318,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         invalidated outside of the control of a specific user. In this case, user can be None
         """
         # avoid import loop
-        from hs_core.views.utils import run_script_to_update_hyrax_input_files
         from hs_core.signals import post_raccess_change
+        from hs_core.views.utils import run_script_to_update_hyrax_input_files
 
         # access control is separate from validation logic
         if user is not None and not user.uaccess.can_change_resource_flags(self):
@@ -2234,6 +2373,23 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
                 if value and settings.RUN_HYRAX_UPDATE and is_netcdf_to_public:
                     run_script_to_update_hyrax_input_files(self.short_id)
+
+    def set_published(self, value):
+        """Set the published flag for a resource.
+
+        :param value: True or False
+
+        This sets the published flag (self.raccess.published)
+        """
+        from hs_core.signals import post_raccess_change
+
+        self.raccess.published = value
+        self.raccess.immutable = value
+        if value:  # can't be published without being public
+            self.raccess.public = value
+        self.raccess.save()
+        post_raccess_change.send(sender=self, resource=self)
+        self.update_index()
 
     def update_index(self):
         """updates previous versions of a resource (self) in index"""
@@ -2317,10 +2473,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         else:
             full_path = path
 
-        if self.is_federated:
-            return os.path.join(self.resource_federation_path, full_path)
-        else:
-            return full_path
+        return full_path
 
     def set_quota_holder(self, setter, new_holder):
         """Set quota holder of the resource to new_holder who must be an owner.
@@ -2339,34 +2492,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         # QuotaException will be raised if new_holder does not have enough quota to hold this
         # new resource, in which case, set_quota_holder to the new user fails
         validate_user_quota(new_holder, self.size)
-        attname = "quotaUserName"
-
-        if setter.username != new_holder.username:
-            # this condition check is needed to make sure attname exists as AVU before getting it
-            oldqu = self.getAVU(attname)
-            if oldqu:
-                # have to remove the old AVU first before setting to the new one in order to trigger
-                # quota micro-service PEP msiRemoveQuotaHolder so quota for old quota
-                # holder will be reduced as a result of setting quota holder to a different user
-                self.removeAVU(attname, oldqu)
-        self.setAVU(attname, new_holder.username)
-
-    def get_quota_holder(self):
-        """Get quota holder of the resource.
-
-        return User instance of the quota holder for the resource or None if it does not exist
-        """
-        try:
-            uname = self.getAVU("quotaUserName")
-        except SessionException:
-            # quotaUserName AVU does not exist, return None
-            return None
-
-        if uname:
-            return User.objects.filter(username=uname).first()
-        else:
-            # quotaUserName AVU does not exist, return None
-            return None
+        self.quota_holder = new_holder
+        self.save()
 
     def removeAVU(self, attribute, value):
         """Remove an AVU at the resource level.
@@ -2487,6 +2614,38 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         return self.metadata.get_xml(pretty_print=pretty_print,
                                      include_format_elements=include_format_elements)
 
+    def is_schema_json_file(self, file_path):
+        """Determine whether a given file is a schema.json file.
+        Note: this will return true for any file that ends with the schema.json ending
+        We are taking the risk that user might create a file with the same filename ending
+        """
+        from hs_file_types.enums import AggregationMetaFilePath
+
+        if file_path.endswith(AggregationMetaFilePath.SCHEMA_JSON_FILE_ENDSWITH):
+            return True
+        return False
+
+    def is_collection_list_csv(self, file_path):
+        """Determine if a given file is an internally-generated collection list
+        """
+        from hs_collection_resource.utils import CSV_FULL_NAME_TEMPLATE
+        collection_list_filename = CSV_FULL_NAME_TEMPLATE.format(self.short_id)
+        if collection_list_filename in file_path:
+            return True
+        return False
+
+    def is_metadata_xml_file(self, file_path):
+        """Determine whether a given file is metadata.
+        Note: this will return true for any file that ends with the metadata endings
+        We are taking the risk that user might create a file with the same filename ending
+        """
+        from hs_file_types.enums import AggregationMetaFilePath
+
+        if not (file_path.endswith(AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
+                or file_path.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)):
+            return False
+        return True
+
     def is_aggregation_xml_file(self, file_path):
         """Checks if the file path *file_path* is one of the aggregation related xml file paths
 
@@ -2602,7 +2761,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
         if doi and not forceHydroshareURI:
             hs_identifier = doi[0]
-            if self.doi.find('pending') >= 0 or self.doi.find('failure') >= 0:
+            if (self.doi.find(CrossRefSubmissionStatus.PENDING) >= 0
+                    or self.doi.find(CrossRefSubmissionStatus.FAILURE) >= 0):
                 isPendingActivation = True
         else:
             hs_identifier = [idn for idn in identifiers if idn.name == "hydroShareIdentifier"]
@@ -2678,21 +2838,17 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         'readme.txt' or 'readme.md' (filename is case insensitive). If no such file then None
         is returned. If both files exist then resource file for readme.md is returned"""
 
-        res_files_at_root = self.files.filter(file_folder='')
-        readme_txt_file = None
-        readme_md_file = None
-        for res_file in res_files_at_root:
-            if res_file.file_name.lower() == 'readme.md':
-                readme_md_file = res_file
-            elif res_file.file_name.lower() == 'readme.txt':
-                readme_txt_file = res_file
-            if readme_md_file is not None:
-                break
+        if self.files.filter(file_folder='').count() == 0:
+            # no files exist at the root of the resource path - no need to check for readme file
+            return None
 
-        if readme_md_file is not None:
-            return readme_md_file
-        else:
-            return readme_txt_file
+        file_path_md = os.path.join(self.file_path, 'readme.md')
+        file_path_txt = os.path.join(self.file_path, 'readme.txt')
+        readme_res_file = self.files.filter(resource_file__iexact=file_path_md).first()
+        if readme_res_file is None:
+            readme_res_file = self.files.filter(resource_file__iexact=file_path_txt).first()
+
+        return readme_res_file
 
     def get_readme_file_content(self):
         """Gets the content of the readme file. If both a readme.md and a readme.txt file exist,
@@ -2789,16 +2945,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     @property
     def storage_type(self):
-        if not self.is_federated:
-            return 'local'
-        userpath = '/' + os.path.join(
-            getattr(settings, 'HS_USER_IRODS_ZONE', 'hydroshareuserZone'),
-            'home',
-            getattr(settings, 'HS_IRODS_PROXY_USER_IN_USER_ZONE', 'localHydroProxy'))
-        if self.resource_federation_path == userpath:
-            return 'user'
-        else:
-            return 'federated'
+        return 'local'
 
     def is_folder(self, folder_path):
         """Determine whether a given path (relative to resource root, including /data/contents/)
@@ -2836,7 +2983,6 @@ def get_path(instance, filename, folder=''):
     :param folder: can override folder for ResourceFile instance
 
     The filename is only a single name. This routine converts it to an absolute
-    path that can be federated or local.  The instance points to the Resource record,
     which contains the federation path. The folder in the instance will be used unless
     overridden.
 
@@ -2851,14 +2997,13 @@ def get_path(instance, filename, folder=''):
 
 # TODO: make this an instance method of BaseResource.
 def get_resource_file_path(resource, filename, folder=''):
-    """Determine storage path for a FileField based upon whether resource is federated.
+    """Determine storage path for a FileField
 
     :param resource: resource containing the file.
     :param filename: name of file without folder.
     :param folder: folder of file
 
     The filename is only a single name. This routine converts it to an absolute
-    path that can be federated or local. The resource contains information on how
     to do this.
 
     """
@@ -2924,7 +3069,6 @@ class ResourceFile(ResourceFileIRODSMixin):
     """
     class Meta:
         index_together = [['object_id', 'resource_file'],
-                          ['object_id', 'fed_resource_file'],
                           ]
     # A ResourceFile is a sub-object of a resource, which can have several types.
     object_id = models.PositiveIntegerField()
@@ -2936,15 +3080,8 @@ class ResourceFile(ResourceFileIRODSMixin):
     file_folder = models.CharField(max_length=4096, null=False, default="")
 
     # This pair of FileFields deals with the fact that there are two kinds of storage
-    resource_file = models.FileField(upload_to=get_path, max_length=4096,
-                                     null=True, blank=True, storage=IrodsStorage())
-    fed_resource_file = models.FileField(upload_to=get_path, max_length=4096,
-                                         null=True, blank=True, storage=FedStorage())
-
-    # DEPRECATED: utilize resfile.set_storage_path(path) and resfile.storage_path.
-    # fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
-    # DEPRECATED: use native size routine
-    # fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
+    resource_file = models.FileField(upload_to=get_path, max_length=4096, unique=True,
+                                     storage=IrodsStorage())
 
     # we are using GenericForeignKey to allow resource file to be associated with any
     # HydroShare defined LogicalFile types (e.g., GeoRasterFile, NetCdfFile etc)
@@ -2954,19 +3091,28 @@ class ResourceFile(ResourceFileIRODSMixin):
                                                   related_name="files")
     logical_file_content_object = GenericForeignKey('logical_file_content_type',
                                                     'logical_file_object_id')
+
+    # these file metadata (size, modified_time, and checksum) values are retrieved from iRODS and stored in db
+    # for performance reason so that we don't have to query iRODS for these values every time we need them
     _size = models.BigIntegerField(default=-1)
+    _modified_time = models.DateTimeField(null=True, blank=True)
+    _checksum = models.CharField(max_length=255, null=True, blank=True)
+
+    # for tracking when size was last compared with irods
+    filesize_cache_updated = models.DateTimeField(null=True)
 
     def __str__(self):
-        """Return resource filename or federated resource filename for string representation."""
-        if self.resource.resource_federation_path:
-            return self.fed_resource_file.name
-        else:
-            return self.resource_file.name
+        return self.resource_file.name
 
     @classmethod
     def banned_symbols(cls):
         """returns a list of banned characters for file/folder name"""
         return r'\/:*?"<>|'
+
+    @classmethod
+    def system_meta_fields(cls):
+        """returns a list of system metadata fields"""
+        return ['_size', '_modified_time', '_checksum', 'filesize_cache_updated']
 
     @classmethod
     def create(cls, resource, file, folder='', source=None):
@@ -3016,12 +3162,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             if not ResourceFile.is_filename_valid(filename):
                 raise SuspiciousFileOperation("Filename is not compliant with Hydroshare requirements")
 
-            if resource.is_federated:
-                kwargs['resource_file'] = None
-                kwargs['fed_resource_file'] = file
-            else:
-                kwargs['resource_file'] = file
-                kwargs['fed_resource_file'] = None
+            kwargs['resource_file'] = file
 
         else:  # if file is not an open file, then it's a basename (string)
             if file is None and source is not None:
@@ -3050,12 +3191,7 @@ class ResourceFile(ResourceFileIRODSMixin):
                     "ResourceFile.create: exactly one of source or file must be specified")
 
             # we've copied or moved if necessary; now set the paths
-            if resource.is_federated:
-                kwargs['resource_file'] = None
-                kwargs['fed_resource_file'] = target
-            else:
-                kwargs['resource_file'] = target
-                kwargs['fed_resource_file'] = None
+            kwargs['resource_file'] = target
 
         # Actually create the file record
         # when file is a File, the file is copied to storage in this step
@@ -3075,8 +3211,6 @@ class ResourceFile(ResourceFileIRODSMixin):
             if delete_logical_file and self.logical_file is not None:
                 # deleting logical file metadata deletes the logical file as well
                 self.logical_file.metadata.delete()
-            if self.fed_resource_file:
-                self.fed_resource_file.delete()
             if self.resource_file:
                 self.resource_file.delete()
         super(ResourceFile, self).delete()
@@ -3096,34 +3230,69 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     @property
     def modified_time(self):
-        return self.resource_file.storage.get_modified_time(self.resource_file.name)
+        """Return modified time of the file.
+        If the modified time is not already set, then it is first retrieved from iRODS and stored in db.
+        """
+        # self._size != 0 -> file exists, or we have not set the size yet
+        if not self._modified_time and self._size != 0:
+            self.calculate_modified_time()
+        return self._modified_time
+
+    def calculate_modified_time(self, resource=None, save=True):
+        """Updates modified time of the file in db.
+        Retrieves the modified time from iRODS and stores it in db.
+        """
+        if resource is None:
+            resource = self.resource
+
+        file_path = self.resource_file.name
+
+        try:
+            self._modified_time = self.resource_file.storage.get_modified_time(file_path)
+        except (SessionException, ValidationError):
+            logger = logging.getLogger(__name__)
+            logger.warning("file {} not found in iRODS".format(self.storage_path))
+            self._modified_time = None
+        if save:
+            self.save(update_fields=["_modified_time"])
 
     @property
     def checksum(self):
-        return self.resource_file.storage.checksum(self.resource_file.name, force_compute=False)
+        """Return checksum of the file.
+        If the checksum is not already set, then it is first retrieved from iRODS and stored in db.
+        """
+        # self._size != 0 -> file exists, or we have not set the size yet
+        if not self._checksum and self._size != 0:
+            self.calculate_checksum()
+        return self._checksum
+
+    def calculate_checksum(self, resource=None, save=True):
+        """Updates checksum of the file in db.
+        Retrieves the checksum from iRODS and stores it in db.
+        """
+        if resource is None:
+            resource = self.resource
+
+        file_path = self.resource_file.name
+
+        try:
+            self._checksum = self.resource_file.storage.checksum(file_path, force_compute=False)
+        except (SessionException, ValidationError):
+            logger = logging.getLogger(__name__)
+            logger.warning("file {} not found in iRODS".format(self.storage_path))
+            self._checksum = None
+        if save:
+            self.save(update_fields=["_checksum"])
 
     # TODO: write unit test
     @property
     def exists(self):
-        """Check existence of files for both federated and non-federated."""
         istorage = self.resource.get_irods_storage()
-        if self.resource.is_federated:
-            if __debug__:
-                assert self.resource_file.name is None or \
-                    self.resource_file.name == ''
-            return istorage.exists(self.fed_resource_file.name)
-        else:
-            if __debug__:
-                assert self.fed_resource_file.name is None or \
-                    self.fed_resource_file.name == ''
-            return istorage.exists(self.resource_file.name)
+        return istorage.exists(self.resource_file.name)
 
     # TODO: write unit test
     def read(self):
-        if self.resource.is_federated:
-            return self.fed_resource_file.read()
-        else:
-            return self.resource_file.read()
+        return self.resource_file.read()
 
     @property
     def storage_path(self):
@@ -3131,46 +3300,52 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         This is a valid input to IrodsStorage for manipulating the file.
         The output depends upon whether the IrodsStorage instance is running
-        in federated mode.
 
         """
         # instance.content_object can be stale after changes.
         # Re-fetch based upon key; bypass type system; it is not relevant
         resource = self.resource
-        if resource.is_federated:  # false if None or empty
-            if __debug__:
-                assert self.resource_file.name is None or \
-                    self.resource_file.name == ''
-            return self.fed_resource_file.name
-        else:
-            if __debug__:
-                assert self.fed_resource_file.name is None or \
-                    self.fed_resource_file.name == ''
-            return self.resource_file.name
+        return self.get_storage_path(resource)
 
-    def calculate_size(self):
+    def get_storage_path(self, resource):
+        """Return the qualified name for a file in the storage hierarchy.
+        Note: This is the preferred way to get the storage path for a file when we are trying to find
+        the storage path for more than one file in a resource.
+        """
+        return self.resource_file.name
+
+    def calculate_size(self, resource=None, save=True):
         """Reads the file size and saves to the DB"""
-        if self.resource.resource_federation_path:
-            if __debug__:
-                assert self.resource_file.name is None or \
-                    self.resource_file.name == ''
-            try:
-                self._size = self.fed_resource_file.size
-            except (SessionException, ValidationError):
-                logger = logging.getLogger(__name__)
-                logger.warning("file {} not found".format(self.storage_path))
-                self._size = 0
+        if resource is None:
+            resource = self.resource
+
+        try:
+            self._size = self.resource_file.size
+            self.filesize_cache_updated = now()
+        except (SessionException, ValidationError):
+            logger = logging.getLogger(__name__)
+            logger.warning("file {} not found in iRODS".format(self.storage_path))
+            self._size = 0
+        if save:
+            self.save(update_fields=["_size", "filesize_cache_updated"])
+
+    def set_system_metadata(self, resource=None, save=True):
+        """Set system metadata (size, modified time, and checksum) for a file.
+        This method should be called after a file is uploaded to iRODS and registered with Django.
+        """
+
+        self.calculate_size(resource=resource, save=save)
+        if self._size > 0:
+            # file exists in iRODS - get modified time and checksum
+            self.calculate_modified_time(resource=resource, save=save)
+            self.calculate_checksum(resource=resource, save=save)
         else:
-            if __debug__:
-                assert self.fed_resource_file.name is None or \
-                    self.fed_resource_file.name == ''
-            try:
-                self._size = self.resource_file.size
-            except (SessionException, ValidationError):
-                logger = logging.getLogger(__name__)
-                logger.warning("file {} not found".format(self.storage_path))
-                self._size = 0
-        self.save(update_fields=["_size"])
+            # file was not found in iRODS
+            self._size = 0
+            self._modified_time = None
+            self._checksum = None
+        if save:
+            self.save(update_fields=self.system_meta_fields())
 
     # ResourceFile API handles file operations
     def set_storage_path(self, path, test_exists=True):
@@ -3181,7 +3356,6 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         Path can be absolute or relative.
 
-            * absolute paths contain full irods path to local or federated object.
             * relative paths start with anything else and can start with optional folder
 
         :raises ValidationError: if the pathname is inconsistent with resource configuration.
@@ -3199,20 +3373,9 @@ class ResourceFile(ResourceFileIRODSMixin):
         """
         folder, base = self.path_is_acceptable(path, test_exists=test_exists)
         self.file_folder = folder
-        self.save()
-
-        # self.content_object can be stale after changes. Re-fetch based upon key
-        # bypass type system; it is not relevant
-        resource = self.resource
 
         # switch FileFields based upon federation path
-        if resource.is_federated:
-            # uses file_folder; must come after that setting.
-            self.fed_resource_file = get_path(self, base)
-            self.resource_file = None
-        else:
-            self.fed_resource_file = None
-            self.resource_file = get_path(self, base)
+        self.resource_file = get_path(self, base)
         self.save()
 
     @property
@@ -3225,10 +3388,23 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         This is the path that should be used as a key to index things such as file type.
         """
-        if self.resource.is_federated:
-            folder, base = self.path_is_acceptable(self.fed_resource_file.name, test_exists=False)
-        else:
-            folder, base = self.path_is_acceptable(self.resource_file.name, test_exists=False)
+
+        # use of self.resource generates a query
+        return self.get_short_path(self.resource)
+
+    def get_short_path(self, resource):
+        """Return the unqualified path to the file object.
+
+        * This path is invariant of where the object is stored.
+
+        * Thus, it does not change if the resource is moved.
+
+        This is the path that should be used as a key to index things such as file type.
+        :param resource: the resource to which the file (self) belongs
+        Note: This is the preferred way to get the short path for a file when we are trying to find short path
+        for more than one file in a resource.
+        """
+        folder, base = self.path_is_acceptable(self.resource_file.name, test_exists=False)
         if folder is not None:
             return os.path.join(folder, base)
         else:
@@ -3243,12 +3419,8 @@ class ResourceFile(ResourceFileIRODSMixin):
         """
         folder, base = os.path.split(path)
         self.file_folder = folder  # must precede call to get_path
-        if self.resource.is_federated:
-            self.resource_file = None
-            self.fed_resource_file = get_path(self, base)
-        else:
-            self.resource_file = get_path(self, base)
-            self.fed_resource_file = None
+
+        self.resource_file = get_path(self, base)
         self.save()
 
     def parse(self):
@@ -3282,20 +3454,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             storage = resource.get_irods_storage()
         locpath = os.path.join(resource.short_id, "data", "contents") + "/"
         relpath = path
-        fedpath = resource.resource_federation_path
-        if fedpath and relpath.startswith(fedpath + '/'):
-            if test_exists and not storage.exists(path):
-                raise ValidationError("Federated path does not exist in irods")
-            plen = len(fedpath + '/')
-            relpath = relpath[plen:]  # omit fed path
-
-            # strip resource id from path
-            if relpath.startswith(locpath):
-                plen = len(locpath)
-                relpath = relpath[plen:]  # omit local path
-            else:
-                raise ValidationError("Malformed federated resource path")
-        elif path.startswith(locpath):
+        if path.startswith(locpath):
             # strip optional local path prefix
             if test_exists and not storage.exists(path):
                 raise ValidationError("Local path ({}) does not exist in irods".format(path))
@@ -3408,16 +3567,12 @@ class ResourceFile(ResourceFileIRODSMixin):
     @classmethod
     def get(cls, resource, file, folder=''):
         """Get a ResourceFile record via its short path."""
-        if resource.resource_federation_path:
-            return ResourceFile.objects.get(object_id=resource.id,
-                                            fed_resource_file=get_resource_file_path(resource,
-                                                                                     file,
-                                                                                     folder))
+        resource_file_path = get_resource_file_path(resource, file, folder)
+        f = ResourceFile.objects.filter(object_id=resource.id, resource_file=resource_file_path).first()
+        if f:
+            return f
         else:
-            return ResourceFile.objects.get(object_id=resource.id,
-                                            resource_file=get_resource_file_path(resource,
-                                                                                 file,
-                                                                                 folder))
+            raise ObjectDoesNotExist(f'ResourceFile {resource_file_path} does not exist.')
 
     # TODO: move to BaseResource as instance method
     @classmethod
@@ -3441,14 +3596,9 @@ class ResourceFile(ResourceFileIRODSMixin):
             # append trailing slash to match only this folder
             if not folder.endswith("/"):
                 folder += "/"
-            if resource.is_federated:
-                return ResourceFile.objects.filter(
-                    object_id=resource.id,
-                    fed_resource_file__startswith=folder)
-            else:
-                return ResourceFile.objects.filter(
-                    object_id=resource.id,
-                    resource_file__startswith=folder)
+            return ResourceFile.objects.filter(
+                object_id=resource.id,
+                resource_file__startswith=folder)
         else:
             return ResourceFile.objects.filter(
                 object_id=resource.id,
@@ -3478,7 +3628,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     @property
     def has_logical_file(self):
         """Check existence of logical file."""
-        return self.logical_file is not None
+        return self.logical_file_object_id is not None
 
     @property
     def logical_file(self):
@@ -3503,7 +3653,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     @property
     def metadata(self):
         """Return logical file metadata."""
-        if self.logical_file is not None:
+        if self.has_logical_file:
             return self.logical_file.metadata
         return None
 
@@ -3559,7 +3709,6 @@ class ResourceFile(ResourceFileIRODSMixin):
     @property
     def public_path(self):
         """ return the public path (unqualified iRODS path) for a resource.
-            This corresponds to the iRODS path if the resource isn't federated.
         """
         return os.path.join(self.resource.short_id, 'data', 'contents', self.short_path)
 
@@ -3569,10 +3718,90 @@ class ResourceFile(ResourceFileIRODSMixin):
             This consists of the resource id, /data/contents/, and the file path.
         """
 
-        if self.resource.is_federated:
-            return os.path.join(self.resource.resource_federation_path, self.public_path)
+        return self.public_path
+
+
+class RangedFileReader:
+    """
+    Wraps a file like object with an iterator that runs over part (or all) of
+    the file defined by start and stop. Blocks of block_size will be returned
+    from the starting position, up to, but not including the stop point.
+    https://github.com/satchamo/django/commit/2ce75c5c4bee2a858c0214d136bfcd351fcde11d
+    """
+    block_size = getattr(settings, 'RANGED_FILE_READER_BLOCK_SIZE', 1024 * 1024)
+    dump_size = getattr(settings, 'RANGED_FILE_READER_DUMP_SIZE', 1024 * 1024 * 1024)
+
+    def __init__(self, file_like, start=0, stop=float("inf"), block_size=None):
+        self.f = file_like
+        self.block_size = block_size or self.block_size
+        self.start = start
+        self.stop = stop
+
+    def __iter__(self):
+        # self.f proc.stdout is an _io.BufferedReader object
+        # so it will not have a seek method
+        if self.f.seekable():
+            self.f.seek(self.start)
         else:
-            return self.public_path
+            # if the file is not seekable, we read and discard
+            # until we reach the start position
+            remaining_to_dump = self.start
+            while remaining_to_dump > 0:
+                read_size = min(self.dump_size, remaining_to_dump)
+                self.f.read(read_size)
+                remaining_to_dump -= read_size
+        position = self.start
+        while position < self.stop:
+            data = self.f.read(min(self.block_size, self.stop - position))
+            if not data:
+                break
+
+            yield data
+            position += self.block_size
+
+    @staticmethod
+    def parse_range_header(header, resource_size):
+        """
+        Parses a range header into a list of two-tuples (start, stop) where `start`
+        is the starting byte of the range (inclusive) and `stop` is the ending byte
+        position of the range (exclusive).
+        Returns None if the value of the header is not syntatically valid.
+        """
+        if not header or '=' not in header:
+            return None
+
+        ranges = []
+        units, range_ = header.split('=', 1)
+        units = units.strip().lower()
+
+        if units != "bytes":
+            return None
+
+        for val in range_.split(","):
+            val = val.strip()
+            if '-' not in val:
+                return None
+
+            if val.startswith("-"):
+                # suffix-byte-range-spec: this form specifies the last N bytes of an
+                # entity-body
+                start = resource_size + int(val)
+                if start < 0:
+                    start = 0
+                stop = resource_size
+            else:
+                # byte-range-spec: first-byte-pos "-" [last-byte-pos]
+                start, stop = val.split("-", 1)
+                start = int(start)
+                # the +1 is here since we want the stopping point to be exclusive, whereas in
+                # the HTTP spec, the last-byte-pos is inclusive
+                stop = int(stop) + 1 if stop else resource_size
+                if start >= stop:
+                    return None
+
+            ranges.append((start, stop))
+
+        return ranges
 
 
 class PublicResourceManager(models.Manager):
@@ -3603,13 +3832,6 @@ class BaseResource(Page, AbstractResource):
     # the time when the resource is locked for a new version action. A value of null
     # means the resource is not locked
     locked_time = models.DateTimeField(null=True, blank=True)
-
-    # this resource_federation_path is added to record where a HydroShare resource is
-    # stored. The default is empty string meaning the resource is stored in HydroShare
-    # zone. If a resource is stored in a fedearated zone, the field should store the
-    # federated root path in the format of /federated_zone/home/localHydroProxy
-    # TODO: change to null=True, default=None to simplify logic elsewhere
-    resource_federation_path = models.CharField(max_length=100, blank=True, default='')
 
     objects = PublishedManager()
     public_resources = PublicResourceManager()
@@ -3644,16 +3866,7 @@ class BaseResource(Page, AbstractResource):
 
     def get_irods_storage(self):
         """Return either IrodsStorage or FedStorage."""
-        if self.resource_federation_path:
-            return FedStorage()
-        else:
-            return IrodsStorage()
-
-    @property
-    def is_federated(self):
-        """Return existence of resource_federation_path."""
-        return self.resource_federation_path is not None and \
-            self.resource_federation_path != ''
+        return IrodsStorage()
 
     # Paths relative to the resource
     @property
@@ -3663,10 +3876,7 @@ class BaseResource(Page, AbstractResource):
         Note that this folder doesn't directly contain the resource files;
         They are contained in ./data/contents/* instead.
         """
-        if self.is_federated:
-            return os.path.join(self.resource_federation_path, self.short_id)
-        else:
-            return self.short_id
+        return self.short_id
 
     @property
     def file_path(self):
@@ -3700,11 +3910,7 @@ class BaseResource(Page, AbstractResource):
         """
         bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
         bagit_postfix = getattr(settings, 'IRODS_BAGIT_POSTFIX', 'zip')
-        if self.is_federated:
-            return os.path.join(self.resource_federation_path, bagit_path,
-                                self.short_id + '.' + bagit_postfix)
-        else:
-            return os.path.join(bagit_path, self.short_id + '.' + bagit_postfix)
+        return os.path.join(bagit_path, self.short_id + '.' + bagit_postfix)
 
     @property
     def bag_url(self):
@@ -3768,56 +3974,199 @@ class BaseResource(Page, AbstractResource):
 
     # create crossref deposit xml for resource publication
     def get_crossref_deposit_xml(self, pretty_print=True):
-        """Return XML structure describing crossref deposit."""
+        """Return XML structure describing crossref deposit.
+        The mapping of hydroshare resource metadata to crossref metadata has been implemented here as per
+        the specification in this repo: https://github.com/hydroshare/hs_doi_deposit_metadata
+        """
         # importing here to avoid circular import problem
         from .hydroshare.resource import get_activated_doi
 
+        logger = logging.getLogger(__name__)
+
+        def get_funder_id(funder_name):
+            """Return funder_id for a given funder_name from Crossref funders registry.
+            Crossref API Documentation: https://api.crossref.org/swagger-ui/index.html#/Funders/get_funders
+            """
+
+            # url encode the funder name for the query parameter
+            words = funder_name.split()
+            # filter out words that contain the char '.'
+            words = [word for word in words if '.' not in word]
+            encoded_words = [urllib.parse.quote(word) for word in words]
+            # match all words in the funder name
+            query = "+".join(encoded_words)
+            # if we can't find a match in first 50 search records then we are not going to find a match
+            max_record_count = 50
+            email = settings.DEFAULT_DEVELOPER_EMAIL
+            url = f"https://api.crossref.org/funders?query={query}&rows={max_record_count}&mailto={email}"
+            funder_name = funder_name.lower()
+            response = requests.get(url, verify=False)
+            if response.status_code == 200:
+                response_json = response.json()
+                if response_json['status'] == 'ok':
+                    items = response_json['message']['items']
+                    for item in items:
+                        if item['name'].lower() == funder_name:
+                            return item['uri']
+                        for alt_name in item['alt-names']:
+                            if alt_name.lower() == funder_name:
+                                return item['uri']
+                    return ''
+                return ''
+            else:
+                msg = "Failed to get funder_id for funder_name: '{}' from Crossref funders registry. " \
+                      "Status code: {} for resource id: {}"
+                msg = msg.format(funder_name, response.status_code, self.short_id)
+                logger.error(msg)
+                return ''
+
+        def parse_creator_name(_creator):
+            creator_name = _creator.name.strip()
+            name = HumanName(creator_name)
+            # both first name ane last name are required for crossref deposit
+            if not name.first or not name.last:
+                name_parts = creator_name.split()
+                if not name.first:
+                    name.first = name_parts[0]
+                if not name.last:
+                    name.last = name_parts[-1]
+            return name.first, name.last
+
+        def create_contributor_node(_creator, sequence="additional"):
+            if _creator.name:
+                first_name, last_name = parse_creator_name(_creator)
+                creator_node = etree.SubElement(contributors_node, 'person_name', contributor_role="author",
+                                                sequence=sequence)
+                etree.SubElement(creator_node, 'given_name').text = first_name
+                etree.SubElement(creator_node, 'surname').text = last_name
+                orcid = _creator.identifiers.get('ORCID', "")
+                if orcid:
+                    etree.SubElement(creator_node, 'ORCID').text = orcid
+            else:
+                org = etree.SubElement(contributors_node, 'organization', contributor_role="author",
+                                       sequence=sequence)
+                org.text = _creator.organization
+
+        def create_date_node(date, date_type):
+            date_node = etree.SubElement(database_dates_node, date_type)
+            etree.SubElement(date_node, 'month').text = str(date.month)
+            etree.SubElement(date_node, 'day').text = str(date.day)
+            etree.SubElement(date_node, 'year').text = str(date.year)
+
         xsi = "http://www.w3.org/2001/XMLSchema-instance"
-        schemaLocation = 'http://www.crossref.org/schema/4.3.6 ' \
-                         'http://www.crossref.org/schemas/crossref4.3.6.xsd'
-        ns = "http://www.crossref.org/schema/4.3.6"
-        ROOT = etree.Element('{%s}doi_batch' % ns, version="4.3.6", nsmap={None: ns},
+        schemaLocation = 'http://www.crossref.org/schema/5.3.1 ' \
+                         'http://www.crossref.org/schemas/crossref5.3.1.xsd'
+        ns = "http://www.crossref.org/schema/5.3.1"
+        fr = "http://www.crossref.org/fundref.xsd"
+        ai = "http://www.crossref.org/AccessIndicators.xsd"
+        ROOT = etree.Element('{%s}doi_batch' % ns, version="5.3.1", nsmap={None: ns, "xsi": xsi, "fr": fr, "ai": ai},
                              attrib={"{%s}schemaLocation" % xsi: schemaLocation})
 
         # get the resource object associated with this metadata container object - needed
         # to get the verbose_name
 
         # create the head sub element
-        head = etree.SubElement(ROOT, 'head')
-        etree.SubElement(head, 'doi_batch_id').text = self.short_id
-        etree.SubElement(head, 'timestamp').text = arrow.get(self.updated)\
-            .format("YYYYMMDDHHmmss")
-        depositor = etree.SubElement(head, 'depositor')
-        etree.SubElement(depositor, 'depositor_name').text = 'HydroShare'
-        etree.SubElement(depositor, 'email_address').text = settings.DEFAULT_SUPPORT_EMAIL
+        head_node = etree.SubElement(ROOT, 'head')
+        etree.SubElement(head_node, 'doi_batch_id').text = self.short_id
+        etree.SubElement(head_node, 'timestamp').text = arrow.now().format("YYYYMMDDHHmmss")
+        depositor_node = etree.SubElement(head_node, 'depositor')
+        etree.SubElement(depositor_node, 'depositor_name').text = 'HydroShare'
+        etree.SubElement(depositor_node, 'email_address').text = settings.DEFAULT_SUPPORT_EMAIL
         # The organization that owns the information being registered.
-        etree.SubElement(head, 'registrant').text = 'Consortium of Universities for the ' \
-                                                    'Advancement of Hydrologic Science, Inc. ' \
-                                                    '(CUAHSI)'
+        organization = 'Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)'
+        etree.SubElement(head_node, 'registrant').text = organization
 
         # create the body sub element
-        body = etree.SubElement(ROOT, 'body')
+        body_node = etree.SubElement(ROOT, 'body')
         # create the database sub element
-        db = etree.SubElement(body, 'database')
+        db_node = etree.SubElement(body_node, 'database')
         # create the database_metadata sub element
-        db_md = etree.SubElement(db, 'database_metadata', language="en")
+        db_md_node = etree.SubElement(db_node, 'database_metadata', language="en")
         # titles is required element for database_metadata
-        titles = etree.SubElement(db_md, 'titles')
-        etree.SubElement(titles, 'title').text = "HydroShare Resources"
+        titles_node = etree.SubElement(db_md_node, 'titles')
+        etree.SubElement(titles_node, 'title').text = "HydroShare Resources"
+        # add publisher element to database_metadata
+        pub_node = etree.SubElement(db_md_node, 'publisher')
+        etree.SubElement(pub_node, 'publisher_name').text = "HydroShare"
+
         # create the dataset sub element, dataset_type can be record or collection, set it to
         # collection for HydroShare resources
-        dataset = etree.SubElement(db, 'dataset', dataset_type="collection")
-        ds_titles = etree.SubElement(dataset, 'titles')
-        etree.SubElement(ds_titles, 'title').text = self.metadata.title.value
+        dataset_node = etree.SubElement(db_node, 'dataset', dataset_type="record")
+        # create contributors sub element
+        contributors_node = etree.SubElement(dataset_node, 'contributors')
+        # creators are required element for contributors
+        creators = self.metadata.creators.all()
+        first_author = [cr for cr in creators if cr.order == 1][0]
+        create_contributor_node(first_author, sequence="first")
+        other_authors = [cr for cr in creators if cr.order > 1]
+        for auth in other_authors:
+            create_contributor_node(auth, sequence="additional")
+
+        # create dataset title
+        dataset_titles_node = etree.SubElement(dataset_node, 'titles')
+        etree.SubElement(dataset_titles_node, 'title').text = self.metadata.title.value
+        # create dataset date sub element
+        database_dates_node = etree.SubElement(dataset_node, 'database_date')
+        # create creation_date sub element
+        create_date_node(date=self.created, date_type="creation_date")
+        # create a publication_date sub element
+        pub_date_meta = self.metadata.dates.all().filter(type='published').first()
+        if pub_date_meta:
+            # this is a published resource - generating crossref xml for updating crossref deposit
+            pub_date = pub_date_meta.start_date
+        else:
+            # generating crossref xml for registering a new resource in crossref
+            pub_date = self.updated
+
+        create_date_node(date=pub_date, date_type="publication_date")
+        # create update_date sub element
+        create_date_node(date=self.updated, date_type="update_date")
+        # create dataset description sub element
+        c_abstract = clean_abstract(self.metadata.description.abstract)
+        etree.SubElement(dataset_node, 'description').text = c_abstract
+        # funder related elements
+        funders = self.metadata.funding_agencies.all()
+        if funders:
+            funding_references = etree.SubElement(dataset_node, '{%s}program' % fr, name="fundref")
+            for funder in funders:
+                funder_group_node = etree.SubElement(funding_references, '{%s}assertion' % fr, name="fundgroup")
+                funder_name_node = etree.SubElement(funder_group_node, '{%s}assertion' % fr, name="funder_name")
+                funder_name_node.text = funder.agency_name
+                # get funder_id from Crossref funders registry
+                funder_id = get_funder_id(funder.agency_name)
+                if not funder_id:
+                    logger.warning(f"Funder id was not found in Crossref funder registry "
+                                   f"for funder name: {funder.agency_name} for resource: {self.short_id}")
+                if funder_id or funder.agency_url:
+                    id_node = etree.SubElement(funder_name_node, '{%s}assertion' % fr, name="funder_identifier")
+                    if funder_id:
+                        id_node.text = funder_id
+                    else:
+                        id_node.text = funder.agency_url
+                if funder.award_number:
+                    award_node = etree.SubElement(funder_group_node, '{%s}assertion' % fr, name='award_number')
+                    award_node.text = funder.award_number
+
+        # create dataset license sub element
+        dataset_licenses_node = etree.SubElement(dataset_node, '{%s}program' % ai, name="AccessIndicators")
+        pub_date_str = pub_date.strftime("%Y-%m-%d")
+        rights = self.metadata.rights
+        license_node = etree.SubElement(dataset_licenses_node, '{%s}license_ref' % ai, applies_to="vor",
+                                        start_date=pub_date_str)
+        if rights.url:
+            license_node.text = rights.url
+        else:
+            license_node.text = rights.statement
+
         # doi_data is required element for dataset
-        doi_data = etree.SubElement(dataset, 'doi_data')
+        doi_data_node = etree.SubElement(dataset_node, 'doi_data')
         res_doi = get_activated_doi(self.doi)
         idx = res_doi.find('10.4211')
         if idx >= 0:
             res_doi = res_doi[idx:]
-        etree.SubElement(doi_data, 'doi').text = res_doi
-        etree.SubElement(doi_data, 'resource').text = self.metadata.identifiers.all().filter(
-            name='hydroShareIdentifier')[0].url
+        etree.SubElement(doi_data_node, 'doi').text = res_doi
+        res_url = self.metadata.identifiers.all().filter(name='hydroShareIdentifier')[0].url
+        etree.SubElement(doi_data_node, 'resource').text = res_url
 
         return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(
             ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
@@ -3952,6 +4301,42 @@ class BaseResource(Page, AbstractResource):
             return ''
 
     @property
+    def spam_patterns(self):
+        # Compile a single regular expression that will match any individual
+        # pattern from a given list of patterns, case-insensitive.
+        # ( '|' is a special character in regular expressions. An expression
+        # 'A|B' will match either 'A' or 'B' ).
+        full_pattern = re.compile("|".join(patterns), re.IGNORECASE)
+
+        if self.metadata:
+            try:
+                match = re.search(full_pattern, self.metadata.title.value)
+                if match is not None:
+                    return match
+            except AttributeError:
+                # no title
+                pass
+
+            try:
+                for sub in self.metadata.subjects.all():
+                    match = re.search(full_pattern, sub.value)
+                    if match is not None:
+                        return match
+            except AttributeError:
+                # no keywords
+                pass
+
+            try:
+                match = re.search(full_pattern, self.metadata.description.abstract)
+                if match is not None:
+                    return match
+            except AttributeError:
+                # no abstract
+                pass
+
+        return None
+
+    @property
     def show_in_discover(self):
         """
         return True if a resource should be exhibited
@@ -3965,6 +4350,11 @@ class BaseResource(Page, AbstractResource):
         if any([res.raccess.discoverable for res in replaced_by_resources]):
             # there is a newer discoverable resource - so this resource should not be shown in discover
             return False
+
+        if not self.spam_allowlisted and not self.raccess.published:
+            if self.spam_patterns:
+                return False
+
         return True
 
     def update_relation_meta(self):
@@ -4041,6 +4431,37 @@ class BaseResource(Page, AbstractResource):
         find_non_preferred_folder_paths(self.file_path)
         return not_preferred_paths
 
+    def get_relative_path(self, dir_path):
+        if dir_path.startswith(self.file_path):
+            dir_path = dir_path[len(self.file_path) + 1:]
+        return dir_path
+
+    def update_crossref_deposit(self):
+        """
+        Update crossref deposit xml file for this published resource
+        Used when metadata (abstract or funding agency) for a published resource is updated
+        """
+        from hs_core.tasks import update_crossref_meta_deposit
+
+        if not self.raccess.published:
+            err_msg = "Crossref deposit can be updated only for a published resource. "
+            err_msg += f"Resource {self.short_id} is not a published resource."
+            raise ValidationError(err_msg)
+
+        if self.doi.endswith(self.short_id):
+            # doi has no crossref status
+            self.extra_data[CrossRefUpdate.UPDATE.value] = 'False'
+            update_crossref_meta_deposit.apply_async((self.short_id,))
+
+        # check for both 'pending' and 'update_pending' status in doi
+        if CrossRefSubmissionStatus.PENDING in self.doi:
+            # setting this flag will update the crossref deposit when the hourly celery task runs
+            self.extra_data[CrossRefUpdate.UPDATE.value] = 'True'
+
+        # if the resource crossref deposit is in a 'failure' or 'update_failure' state, then update of the
+        # crossref deposit will be attempted when the hourly celery task runs
+        self.save()
+
 
 old_get_content_model = Page.get_content_model
 
@@ -4098,7 +4519,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     @property
     def title(self):
         """Return the first title object from metadata."""
-        return self._title.all().first()
+        return self._title.all()[0]
 
     @property
     def description(self):
@@ -4423,6 +4844,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
     def copy_all_elements_from(self, src_md, exclude_elements=None):
         """Copy all metadata elements from another resource."""
+        logger = logging.getLogger(__name__)
         md_type = ContentType.objects.get_for_model(src_md)
         supported_element_names = src_md.get_supported_element_names()
         for element_name in supported_element_names:
@@ -4434,10 +4856,16 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 element_args.pop('content_type')
                 element_args.pop('id')
                 element_args.pop('object_id')
-                if exclude_elements:
-                    if not element_name.lower() in exclude_elements:
+                try:
+                    if exclude_elements:
+                        if not element_name.lower() in exclude_elements:
+                            self.create_element(element_name, **element_args)
+                    else:
                         self.create_element(element_name, **element_args)
-                else:
+                except UserValidationError as uve:
+                    logger.error(f"Error copying {element}: {str(uve)}")
+                    element_args["hydroshare_user_id"] = None
+                    del element_args["is_active_user"]
                     self.create_element(element_name, **element_args)
 
     # this method needs to be overriden by any subclass of this class
@@ -4452,9 +4880,11 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         :param  user: user who is updating metadata
         :return:
         """
-        from .forms import TitleValidationForm, AbstractValidationForm, LanguageValidationForm, \
-            RightsValidationForm, CreatorValidationForm, ContributorValidationForm, \
-            RelationValidationForm, GeospatialRelationValidationForm, FundingAgencyValidationForm
+        from .forms import (AbstractValidationForm, ContributorValidationForm,
+                            CreatorValidationForm, FundingAgencyValidationForm,
+                            GeospatialRelationValidationForm,
+                            LanguageValidationForm, RelationValidationForm,
+                            RightsValidationForm, TitleValidationForm)
 
         validation_forms_mapping = {'title': TitleValidationForm,
                                     'description': AbstractValidationForm,
@@ -4575,7 +5005,8 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         element_model_name = element_model_name.lower()
-        if self.resource.raccess.published:
+        resource = self.resource
+        if resource.raccess.published:
             if element_model_name == 'creator':
                 raise ValidationError("{} can't be created for a published resource".format(element_model_name))
             elif element_model_name == 'identifier':
@@ -4588,6 +5019,9 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 if date_type and date_type not in ('modified', 'published'):
                     raise ValidationError("{} date can't be created for a published resource".format(date_type))
         element = model_type.model_class().create(**kwargs)
+        if resource.raccess.published:
+            if element_model_name in ('fundingagency',):
+                resource.update_crossref_deposit()
         return element
 
     def update_element(self, element_model_name, element_id, **kwargs):
@@ -4595,7 +5029,8 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         element_model_name = element_model_name.lower()
-        if self.resource.raccess.published:
+        resource = self.resource
+        if resource.raccess.published:
             if element_model_name in ('title', 'creator', 'rights', 'identifier', 'format', 'publisher'):
                 raise ValidationError("{} can't be updated for a published resource".format(element_model_name))
             elif element_model_name == 'date':
@@ -4603,15 +5038,22 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 if date_type and date_type != 'modified':
                     raise ValidationError("{} date can't be updated for a published resource".format(date_type))
         model_type.model_class().update(element_id, **kwargs)
+        if resource.raccess.published:
+            if element_model_name in ('description', 'fundingagency',):
+                resource.update_crossref_deposit()
 
     def delete_element(self, element_model_name, element_id):
         """Delete Metadata element."""
         model_type = self._get_metadata_element_model_type(element_model_name)
         element_model_name = element_model_name.lower()
-        if self.resource.raccess.published:
+        resource = self.resource
+        if resource.raccess.published:
             if element_model_name not in ('subject', 'contributor', 'source', 'relation', 'fundingagency', 'format'):
                 raise ValidationError("{} can't be deleted for a published resource".format(element_model_name))
         model_type.model_class().remove(element_id)
+        if resource.raccess.published:
+            if element_model_name in ('fundingagency',):
+                resource.update_crossref_deposit()
 
     def _get_metadata_element_model_type(self, element_model_name):
         """Get type of metadata element based on model type."""
@@ -4757,3 +5199,88 @@ def resource_creation_signal_handler(sender, instance, created, **kwargs):
 def resource_update_signal_handler(sender, instance, created, **kwargs):
     """Do nothing (noop)."""
     pass
+
+
+@receiver(tus_upload_finished_signal)
+def tus_upload_finished_handler(sender, **kwargs):
+    from hs_core.views.utils import create_folder
+    from rest_framework.exceptions import ValidationError as DRFValidationError
+    """Handle the tus upload finished signal.
+
+    Ingest the files from the TUS_DESTINATION_DIR into the resource.
+
+    https://github.com/alican/django-tus/blob/master/django_tus/signals.py
+    This signal provides the following keyword arguments:
+    metadata
+    filename
+    upload_file_path
+    file_size
+    upload_url
+    destination_folder
+    """
+    from hs_core import hydroshare
+    logger = logging.getLogger(__name__)
+    metadata = kwargs['metadata']
+    tus_destination_folder = kwargs['destination_folder']
+    hs_res_id = metadata['hs_res_id']
+    original_filename = metadata['original_file_name']
+
+    where_tus_put_it = os.path.join(tus_destination_folder, original_filename)
+
+    if original_filename != kwargs['filename']:
+        # rename the file
+        chunk_file_path = os.path.join(tus_destination_folder, kwargs['filename'])
+        os.rename(chunk_file_path, where_tus_put_it)
+
+    # create a file object for the uploaded file
+    file_obj = File(open(where_tus_put_it, 'rb'), name=original_filename)
+
+    resource = hydroshare.utils.get_resource_by_shortkey(hs_res_id)
+
+    eventual_relative_path = ''
+
+    try:
+        # see if there is a path within data/contents that the file should be uploaded to
+        existing_path_in_resource = metadata.get('existing_path_in_resource', '')
+        existing_path_in_resource = json.loads(existing_path_in_resource).get("path")
+        if existing_path_in_resource:
+            # in this case, we are uploading to an existing folder in the resource
+            # existing_path_in_resource is a list of folder names
+            # append them into a path
+            for folder in existing_path_in_resource:
+                eventual_relative_path += folder + '/'
+    except Exception as ex:
+        logger.info(f"Existing path in resource not found: {str(ex)}")
+
+    # handle the case that a folder was uploaded instead of a single file
+    # use the metadata.relativePath to rebuild the folder structure
+    path_within_uploaded_folder = metadata.get('relativePath', '')
+    # path_within_resource_contents will include the name of the file, so we need to remove it
+    path_within_uploaded_folder = os.path.dirname(path_within_uploaded_folder)
+    if path_within_uploaded_folder:
+        eventual_relative_path += path_within_uploaded_folder
+        file_folder = f'data/contents/{eventual_relative_path}'
+        try:
+            create_folder(res_id=hs_res_id, folder_path=file_folder)
+        except DRFValidationError as ex:
+            logger.info(f"Folder {file_folder} already exists for resource {hs_res_id}: {str(ex)}")
+
+    try:
+        hydroshare.utils.resource_file_add_pre_process(
+            resource=resource,
+            files=[file_obj],
+            user=resource.creator,
+            folder=eventual_relative_path,
+        )
+        hydroshare.utils.resource_file_add_process(
+            resource=resource,
+            files=[file_obj],
+            user=resource.creator,
+            folder=eventual_relative_path,
+        )
+        # remove the uploaded file
+        os.remove(where_tus_put_it)
+    except (hydroshare.utils.ResourceFileSizeException,
+            hydroshare.utils.ResourceFileValidationException,
+            Exception) as ex:
+        logger.error(ex)

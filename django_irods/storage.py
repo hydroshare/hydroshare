@@ -25,13 +25,9 @@ from .icommands import (
 @deconstructible
 class IrodsStorage(Storage):
     def __init__(self, option=None):
-        if option == "federated":
-            # resource should be saved in federated zone
-            self.set_fed_zone_session()
-        else:
-            self.session = GLOBAL_SESSION
-            self.environment = GLOBAL_ENVIRONMENT
-            icommands.ACTIVE_SESSION = self.session
+        self.session = GLOBAL_SESSION
+        self.environment = GLOBAL_ENVIRONMENT
+        icommands.ACTIVE_SESSION = self.session
 
     @property
     def getUniqueTmpPath(self):
@@ -96,20 +92,6 @@ class IrodsStorage(Storage):
 
         self.session.run("iinit", None, self.environment.auth)
         icommands.ACTIVE_SESSION = self.session
-
-    # Set iRODS session to wwwHydroProxy for irods_storage input object for iRODS federated
-    # zone direct file operations
-    def set_fed_zone_session(self):
-        if settings.REMOTE_USE_IRODS:
-            self.set_user_session(
-                username=settings.IRODS_USERNAME,
-                password=settings.IRODS_AUTH,
-                host=settings.IRODS_HOST,
-                port=settings.IRODS_PORT,
-                def_res=settings.HS_IRODS_USER_ZONE_DEF_RES,
-                zone=settings.IRODS_ZONE,
-                sess_id="federated_session",
-            )
 
     def delete_user_session(self):
         if self.session != GLOBAL_SESSION and self.session.session_file_exists():
@@ -337,7 +319,7 @@ class IrodsStorage(Storage):
         # the query below returns name and size (separated in comma) of all data
         # objects/files under the path collection/directory
         qrystr = (
-            "select DATA_NAME, DATA_SIZE where DATA_REPL_STATUS != '0' "
+            "select DATA_NAME, DATA_SIZE where DATA_REPL_STATUS = '1' "
             "AND {}".format(IrodsStorage.get_absolute_path_query(path))
         )
         stdout = self.session.run("iquest", None, "--no-page", "%s,%s", qrystr)[
@@ -425,7 +407,7 @@ class IrodsStorage(Storage):
         coll_name = file_info[0]
         file_name = file_info[1]
         qrystr = (
-            "select DATA_SIZE where DATA_REPL_STATUS != '0' AND "
+            "select DATA_SIZE where DATA_REPL_STATUS = '1' AND "
             "{} AND DATA_NAME = '{}'".format(
                 IrodsStorage.get_absolute_path_query(coll_name), file_name
             )
@@ -436,7 +418,13 @@ class IrodsStorage(Storage):
             raise ValidationError(
                 "{} cannot be found in iRODS to retrieve " "file size".format(name)
             )
-        return int(float(stdout))
+        # remove potential '\n' from stdout
+        size_string = stdout.replace("\n", "")
+        try:
+            ret = int(float(size_string))
+            return ret
+        except ValueError:
+            return 0
 
     def checksum(self, full_name, force_compute=True):
         """

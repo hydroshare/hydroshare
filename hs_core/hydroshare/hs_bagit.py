@@ -39,12 +39,29 @@ def delete_files_and_bag(resource):
         logger = logging.getLogger(__name__)
         logger.error("cannot remove {}: {}".format(resource.root_path, e))
 
+    delete_bag(resource, istorage)
+
+
+def delete_bag(resource, istorage=None, raise_on_exception=False):
+    """
+    delete the resource bag.
+
+    Parameters:
+    :param resource: the resource to delete the bag for.
+    :param istorage: An IrodsStorage instance
+    :return: none
+    """
+    if istorage is None:
+        istorage = resource.get_irods_storage()
+
     try:
         if istorage.exists(resource.bag_path):
             istorage.delete(resource.bag_path)
     except Exception as e:
         logger = logging.getLogger(__name__)
         logger.error("cannot remove {}: {}".format(resource.bag_path, e))
+        if raise_on_exception:
+            raise HsBagitException("failed to remove {}: {}".format(resource.bag_path, e))
 
 
 def create_bagit_files_by_irods(res, istorage):
@@ -62,17 +79,11 @@ def create_bagit_files_by_irods(res, istorage):
     # check to see if bagit readme.txt file exists or not
     bagit_readme_file = res.get_irods_path('readme.txt')
     is_bagit_readme_exist = istorage.exists(bagit_readme_file)
-    if irods_bagit_input_path.startswith(resource_id):
-        # resource is in data zone, need to append the full path for iRODS bagit rule execution
-        irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
-        irods_bagit_input_path = os.path.join(irods_dest_prefix, resource_id)
-        bagit_input_resource = "*DESTRESC='{def_res}'".format(
-            def_res=settings.IRODS_DEFAULT_RESOURCE)
-    else:
-        # this will need to be changed with the default resource in whatever federated zone the
-        # resource is stored in when we have such use cases to support
-        bagit_input_resource = "*DESTRESC='{def_res}'".format(
-            def_res=settings.HS_IRODS_USER_ZONE_DEF_RES)
+    # resource is in data zone, need to append the full path for iRODS bagit rule execution
+    irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
+    irods_bagit_input_path = os.path.join(irods_dest_prefix, resource_id)
+    bagit_input_resource = "*DESTRESC='{def_res}'".format(
+        def_res=settings.IRODS_DEFAULT_RESOURCE)
 
     bagit_input_path = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
 
@@ -222,14 +233,15 @@ def create_bag_metadata_files(resource):
         # only the files that are not part of file type aggregation (logical file)
         # should be added to the resource level map xml file
         if f.logical_file is None:
+            short_path = f.get_short_path(resource=resource)
             res_uri = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
                 hs_url=current_site_url,
                 res_id=resource.short_id,
-                file_name=f.short_path)
+                file_name=short_path)
             res_uri = encode_resource_url(res_uri)
             ar = AggregatedResource(res_uri)
             ar._ore.isAggregatedBy = ag_url
-            ar._dc.format = get_file_mime_type(os.path.basename(f.short_path))
+            ar._dc.format = get_file_mime_type(os.path.basename(short_path))
             a.add_resource(ar)
 
     # handle collection resource type

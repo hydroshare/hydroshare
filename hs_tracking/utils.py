@@ -1,7 +1,11 @@
+from urllib.parse import urlparse
+
 import robot_detection
 from ipware.ip import get_ip
-from hs_tools_resource.models import RequestUrlBase, RequestUrlBaseAggregation, RequestUrlBaseFile
-from urllib.parse import urlparse
+
+from hs_tools_resource.models import (RequestUrlBase,
+                                      RequestUrlBaseAggregation,
+                                      RequestUrlBaseFile)
 
 
 def get_client_ip(request):
@@ -21,14 +25,24 @@ def get_user_email_domain(session):
     try:
         user = session.visitor.user
         emaildomain = user.email.split('@')[-1]
-        shortdomain = '.'.join(emaildomain.split('.')[1:])
     except AttributeError:
-        shortdomain = None
-    return shortdomain
+        emaildomain = None
+    return emaildomain
+
+
+def get_user_email_tld(session, emaildomain=None):
+    try:
+        if not emaildomain:
+            emaildomain = get_user_email_domain(session)
+        if emaildomain:
+            shortdomain = '.'.join(emaildomain.split('.')[1:])
+            return shortdomain
+    except AttributeError:
+        return None
 
 
 def is_human(user_agent):
-    if robot_detection.is_robot(user_agent):
+    if robot_detection.is_robot(str(user_agent)):
         return False
     return True
 
@@ -37,16 +51,27 @@ def get_std_log_fields(request, session=None):
     """ returns a standard set of metadata that to each receiver function.
     This ensures that all activities are reporting a consistent set of metrics
     """
+    try:
+        user_agent = request.headers['user-agent']
+        human = is_human(user_agent)
+    except KeyError:
+        user_agent = None
+        human = None
     user_type = None
-    user_email = None
+    user_email_tld = None
+    full_domain = None
     if session is not None:
         user_type = get_user_type(session)
-        user_email = get_user_email_domain(session)
+        full_domain = get_user_email_domain(session)
+        user_email_tld = get_user_email_tld(session, full_domain)
 
     return {
         'user_ip': get_client_ip(request),
         'user_type': user_type,
-        'user_email_domain': user_email,
+        'user_email_domain': user_email_tld,
+        'user_email_domain_full': full_domain,
+        'is_human': human,
+        'user_agent': user_agent
     }
 
 

@@ -2,11 +2,11 @@
 
 
 from django.db import migrations
-from theme.models import UserProfile
 from django.db.models import F, Func, Value
 
 
 def backwards(apps, schema_editor):
+    UserProfile = apps.get_model('theme', 'UserProfile')
     UserProfile.objects.filter(organization__icontains=',').update(
         organization=Func(
             F('organization'),
@@ -17,6 +17,7 @@ def backwards(apps, schema_editor):
 
 
 def forwards(apps, schema_editor):
+    UserProfile = apps.get_model('theme', 'UserProfile')
     UserProfile.objects.filter(organization__icontains=',').update(
         organization=Func(
             F('organization'),

@@ -236,16 +236,7 @@ $(document).ready(function () {
         this.$set(this.isRemovingOwner, userId, false)
       },
       addOwner: async function () {
-        let userId;
-
-        if ($("#user-deck > .hilight").length > 0) {
-          userId = parseInt($("#user-deck > .hilight")[0].getAttribute("data-value"));
-        }
-        else {
-          return false;   // No user selected
-        }
-
-        $(".hilight > span").click(); // Clear the autocomplete
+        let userId = $("#id_user").find(':selected').val();
 
         const url = `/access/_internal/community/${this.community.id}/owner/${userId}/add`
         try {
@@ -253,6 +244,8 @@ $(document).ready(function () {
           if (response.community) {
             this.community.owners = response.community.owners
             customAlert('Add Community Owner', 'User has been added as an owner of this Community', 'success', 6000, true);
+            // close the modal
+            $("#community-settings-add-owner").modal('hide')
           }
         }
         catch (e) {
@@ -278,5 +271,11 @@ $(document).ready(function () {
         this.selectedBanner = label
       }
     }
+  });
+
+  // prevent default form submission
+  let button = $("#community-settings-add-owner-btn");
+  button.click(function (e) {
+    e.preventDefault();
   });
 });

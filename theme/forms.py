@@ -1,28 +1,27 @@
 import requests
-
 from django import forms
-from django.utils.translation import gettext, gettext_lazy as _
-from django_comments.signals import comment_was_posted
+from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
+from django.utils import timezone
+from django.utils.encoding import force_str
+from django.utils.translation import gettext
+from django.utils.translation import gettext_lazy as _
 from django_comments.forms import CommentSecurityForm
 from django_comments.models import Comment
-from django.contrib.contenttypes.models import ContentType
-from django.utils.encoding import force_text
-from django.utils import timezone
-from django.contrib.auth.models import User
-
-from mezzanine.core.forms import Html5Mixin
-from mezzanine.generic.models import ThreadedComment, Rating
-from mezzanine.utils.views import ip_for_request
-from mezzanine.utils.email import split_addresses, send_mail_template
-from mezzanine.utils.cache import add_cache_bypass
+from django_comments.signals import comment_was_posted
 from mezzanine.conf import settings
+from mezzanine.core.forms import Html5Mixin
+from mezzanine.generic.models import Rating, ThreadedComment
+from mezzanine.utils.cache import add_cache_bypass
+from mezzanine.utils.email import send_mail_template, split_addresses
+from mezzanine.utils.views import ip_for_request
+
+from hs_core.hydroshare.users import create_account
+from hs_core.models import Party
+from hs_core.templatetags.hydroshare_tags import best_name
+from hydroshare import settings as hydroshare_settings
 
 from .models import UserProfile
-from hs_core.hydroshare.users import create_account
-from hs_core.templatetags.hydroshare_tags import best_name
-from hs_core.models import Party
-
-from hydroshare import settings as hydroshare_settings
 
 COMMENT_MAX_LENGTH = getattr(settings, 'COMMENT_MAX_LENGTH', 3000)
 
@@ -72,7 +71,7 @@ class CommentDetailsForm(CommentSecurityForm):
         """
         return dict(
             content_type=ContentType.objects.get_for_model(self.target_object),
-            object_pk=force_text(self.target_object._get_pk_val()),
+            object_pk=force_str(self.target_object._get_pk_val()),
             comment=self.cleaned_data["comment"],
             submit_date=timezone.now(),
             site_id=settings.SITE_ID,
@@ -326,7 +325,7 @@ class UserProfileForm(forms.ModelForm):
 
     class Meta:
         model = UserProfile
-        exclude = ['user', 'public', 'create_irods_user_account']
+        exclude = ['user', 'public']
 
     def clean_organization(self):
         data = self.cleaned_data['organization']

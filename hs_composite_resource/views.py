@@ -1,9 +1,9 @@
-from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-
+from django.http import JsonResponse
 from rest_framework import status
 
-from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict
+from hs_core.views.utils import (ACTION_TO_AUTHORIZE, authorize,
+                                 get_coverage_data_dict)
 
 
 @login_required
@@ -28,6 +28,51 @@ def delete_resource_coverage(request, resource_id, coverage_type, **kwargs):
     :return an instance of JsonResponse type
     """
     return _process_resource_coverage_action(request, resource_id, coverage_type, action='delete')
+
+
+def check_aggregation_files_to_sync(request, resource_id, **kwargs):
+    """
+    Checks if there are files in netcdf or timeseries aggregations that need to be updated due to metadata changes by
+    the user
+    :param  request: an instance of HttpRequest
+    :param  resource_id: id of resource for which files in netcdf or timeseries aggregations need to be checked
+    :return an instance of JsonResponse type with data containing the list of files (file paths) that need to be updated
+    """
+
+    resource, authorized, _ = authorize(request, resource_id,
+                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                        raises_exception=False)
+    if not authorized:
+        response_data = {"status": "ERROR", "error": "Permission denied"}
+        return JsonResponse(response_data, status=status.HTTP_401_UNAUTHORIZED)
+
+    file_paths = {"nc_files": [], "ts_files": []}
+    if resource.resource_type != "CompositeResource":
+        response_data = {"status": "ERROR", "error": "Resource is not a composite resource"}
+        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    if resource.raccess.published or resource.raccess.review_pending:
+        # if resource is published or in review, no need to check for files to sync as the user cannot update the files
+        data = {"status": "SUCCESS", "files_to_sync": file_paths}
+        return JsonResponse(data)
+
+    # check netcdf aggregations
+    nc_file_paths = []
+    netcdf_logical_files = resource.get_logical_files('NetCDFLogicalFile')
+    for lf in netcdf_logical_files:
+        if lf.metadata.is_update_file:
+            nc_file_paths.append(lf.aggregation_name)
+    file_paths["nc_files"] = nc_file_paths
+    # check time series aggregations
+    ts_file_paths = []
+    timeseries_logical_files = resource.get_logical_files('TimeSeriesLogicalFile')
+    for lf in timeseries_logical_files:
+        if lf.metadata.is_update_file:
+            ts_file_paths.append(lf.aggregation_name)
+    file_paths["ts_files"] = ts_file_paths
+
+    data = {"status": "SUCCESS", "files_to_sync": file_paths}
+    return JsonResponse(data)
 
 
 def _process_resource_coverage_action(request, resource_id, coverage_type, action):

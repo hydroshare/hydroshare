@@ -13,7 +13,8 @@ from hs_file_types.models import (
     TimeSeriesLogicalFile,
     RefTimeseriesLogicalFile,
     ModelProgramLogicalFile,
-    ModelInstanceLogicalFile
+    ModelInstanceLogicalFile,
+    CSVLogicalFile,
 )
 
 
@@ -42,7 +43,8 @@ class Command(BaseCommand):
                             TimeSeriesLogicalFile.type_name(): TimeSeriesLogicalFile,
                             RefTimeseriesLogicalFile.type_name(): RefTimeseriesLogicalFile,
                             ModelProgramLogicalFile.type_name(): ModelProgramLogicalFile,
-                            ModelInstanceLogicalFile.type_name(): ModelInstanceLogicalFile
+                            ModelInstanceLogicalFile.type_name(): ModelInstanceLogicalFile,
+                            CSVLogicalFile.type_name(): CSVLogicalFile
                             }
         res = None
         if options['resource_id']:

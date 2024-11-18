@@ -18,7 +18,8 @@ class CompositeResourceTestMixin(object):
                                       name=os.path.basename(file_to_add))
 
         new_res_file = add_file_to_resource(
-            self.composite_resource, file_to_upload, folder=upload_folder, check_target_folder=True
+            self.composite_resource, file_to_upload, folder=upload_folder, check_target_folder=True,
+            save_file_system_metadata=True
         )
         return new_res_file
 
@@ -124,7 +125,7 @@ def assert_raster_file_type_metadata(self, aggr_folder_path):
     self.assertAlmostEqual(float(box_coverage.value['westlimit']), expected_wlimit,
                            places=get_number_of_decimal_places(expected_wlimit))
 
-    # testing extended metadata element: original coverage
+    # testing additional metadata element: original coverage
     ori_coverage = logical_file.metadata.originalCoverage
     self.assertNotEqual(ori_coverage, None)
     expected_nlimit = 4655492.446916306
@@ -143,7 +144,7 @@ def assert_raster_file_type_metadata(self, aggr_folder_path):
     self.assertEqual(ori_coverage.value['projection'],
                      'NAD83 / UTM zone 12N')
 
-    # testing extended metadata element: cell information
+    # testing additional metadata element: cell information
     cell_info = logical_file.metadata.cellInformation
     self.assertEqual(cell_info.rows, 230)
     self.assertEqual(cell_info.columns, 329)
@@ -151,7 +152,7 @@ def assert_raster_file_type_metadata(self, aggr_folder_path):
     self.assertEqual(cell_info.cellSizeYValue, 30.0)
     self.assertEqual(cell_info.cellDataType, 'Float32')
 
-    # testing extended metadata element: band information
+    # testing additional metadata element: band information
     self.assertEqual(logical_file.metadata.bandInformations.count(), 1)
     band_info = logical_file.metadata.bandInformations.first()
     self.assertEqual(band_info.noDataValue, '-3.4028234663852886e+38')
@@ -263,7 +264,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     dataset_title = "Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010"
     self.assertEqual(logical_file.dataset_name, dataset_title)
 
-    # testing extended metadata element: original coverage
+    # testing additional metadata element: original coverage
     ori_coverage = logical_file.metadata.originalCoverage
     self.assertNotEqual(ori_coverage, None)
     self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
@@ -276,7 +277,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     self.assertEqual(ori_coverage.value['units'], 'Meter')
     self.assertEqual(ori_coverage.value['projection'], 'transverse_mercator')
 
-    # testing extended metadata element: spatial coverage (computed from original coverage as part of
+    # testing additional metadata element: spatial coverage (computed from original coverage as part of
     # metadata extraction)
     spatial_coverage = logical_file.metadata.coverages.filter(type='box').first()
     self.assertIsNotNone(spatial_coverage)
@@ -298,7 +299,7 @@ def assert_netcdf_file_type_metadata(self, title, aggr_folder):
     self.assertEqual(spatial_coverage.value['units'], "Decimal degrees")
     self.assertEqual(spatial_coverage.value['projection'], "WGS 84 EPSG:4326")
 
-    # testing extended metadata element: variables
+    # testing additional metadata element: variables
     self.assertEqual(logical_file.metadata.variables.all().count(), 5)
 
     # test time variable
@@ -585,7 +586,7 @@ def assert_time_series_file_type_metadata(self, expected_file_folder):
     # there should be a total of 7 timeseries
     self.assertEqual(logical_file.metadata.time_series_results.all().count(), 7)
 
-    # testing extended metadata elements
+    # testing additional metadata elements
 
     # test title/dataset name
     self.assertEqual(logical_file.dataset_name, extracted_title)

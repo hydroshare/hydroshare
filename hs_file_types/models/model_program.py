@@ -1,21 +1,22 @@
 import glob
 import json
 import os
+from urllib.parse import urlparse
 
 import jsonschema
-from urllib.parse import urlparse
+from dateutil import parser
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
-from django.template import Template, Context
+from django.template import Context, Template
 from dominate import tags as dom_tags
 from rdflib import Literal, URIRef
-from dateutil import parser
 
 from hs_core.hs_rdf import HSTERMS
 from hs_core.hydroshare import current_site_url
 from hs_core.models import ResourceFile
+
 from .base_model_program_instance import AbstractModelLogicalFile
 from .generic import GenericFileMetaDataMixin
 
@@ -123,7 +124,14 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         can be regenerated for those linked model instance aggregations"""
 
         mp_aggr = self.logical_file
-        for mi_metadata in mp_aggr.mi_metadata_objects.all():
+        try:
+            # this query using reverse relation will raise ValueError if there are no related mi metadata objects
+            # this seems to be a problem in django 4.2
+            mi_metadata_objects = list(mp_aggr.mi_metadata_objects.all())
+        except ValueError:
+            mi_metadata_objects = []
+
+        for mi_metadata in mi_metadata_objects:
             mi_metadata.is_dirty = True
             mi_metadata.save(update_fields=["is_dirty"])
 
@@ -202,7 +210,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                     file = self.logical_file.files.get(resource_file__endswith=filename)
                     if not ModelProgramResourceFileType.objects.filter(res_file=file).exists():
                         ModelProgramResourceFileType.create(file_type=mp_file_type, res_file=file, mp_metadata=self)
-                except ResourceFile.DoesNotExist:
+                except ObjectDoesNotExist:
                     pass
 
         schema_file = graph.value(subject=subject, predicate=HSTERMS.modelProgramSchema)
@@ -485,8 +493,14 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         """Overriding the base model delete() method to set any associated
         model instance aggregation metadata to dirty so that xml metadata file
         can be regenerated"""
+        try:
+            # this query using reverse relation will raise ValueError if there are no related mi metadata objects
+            # this seems to be a problem in django 4.2
+            mi_metadata_objects = list(self.mi_metadata_objects.all())
+        except ValueError:
+            mi_metadata_objects = []
 
-        for mi_metadata in self.mi_metadata_objects.all():
+        for mi_metadata in mi_metadata_objects:
             mi_metadata.is_dirty = True
             mi_metadata.save(update_fields=["is_dirty"])
 
@@ -661,6 +675,30 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
             if mp_res_file:
                 ModelProgramResourceFileType.objects.create(file_type=mp_file_type.file_type, res_file=mp_res_file,
                                                             mp_metadata=tgt_logical_file.metadata)
+
+    def add_resource_files_in_folder(self, resource, folder):
+        """
+        A helper for creating aggregation. Makes all resource files in a given folder and its
+        sub folders as part of the aggregation/logical file type
+        :param  resource:  an instance of CompositeResource
+        :param  folder: folder from which all files need to be made part of this aggregation
+        """
+
+        # get all resource files that in folder *folder* and all its sub folders
+        res_files = ResourceFile.list_folder(resource=resource, folder=folder, sub_folders=True)
+
+        for res_file in res_files:
+            if not res_file.has_logical_file:
+                self.add_resource_file(res_file, set_metadata_dirty=False)
+            else:
+                # if the file is already part of another aggregation, we need to remove it from that
+                # as nested aggregation is not allowed in a model program aggregation
+                res_file.logical_file_content_object = None
+                self.add_resource_file(res_file, set_metadata_dirty=False)
+        if res_files:
+            self.set_metadata_dirty()
+            resource.cleanup_aggregations()
+        return res_files
 
     def get_copy(self, copied_resource):
         """Overrides the base class method"""

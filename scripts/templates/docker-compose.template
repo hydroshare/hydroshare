@@ -48,7 +48,7 @@ hydroshare:
     POSTGIS_USER: postgres
     PGPASSWORD: postgres
     SOLR_HOST: solr
-    TMP: /hs_tmp
+    TMP: /tmp
   volumes:
     # hydroshare repository
     - "HS_PATH:/hydroshare"
@@ -57,11 +57,11 @@ hydroshare:
     # log files
     - "HS_LOG_FILES:/hydroshare/log"
     # shared location for gunicorn.sock between containers
-    - "/hs_tmp"
+    - "/tmp"
     # temp directory shared with celery workers
     - "/shared_tmp"
     - "/irods/hydroshare:/irods/hydroshare"
-    - "/irods/hydroshare_vault:/irods/hydroshare_vault"
+    # - "/irods/hydroshare_vault:/irods/hydroshare_vault"
   ports:
     - "1338:2022"
     - "8000:8000"

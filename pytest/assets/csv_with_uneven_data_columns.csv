@@ -1,0 +1,7 @@
+# This is a test file for the CSV parser
+# another comment - the following line is a header - the rest are data - data delimiter is a comma
+Column-1,Column-2,Column-3,Column-4,Column-5
+Row1Value1,Row1Value2,100.10,1/1/2024,True
+Row2Value1
+Row3Value1,Row3Value2,300.30,1/3/2024,False
+Row4Value1,Row4Value2

@@ -1,0 +1,250 @@
+<div id="funding-agency-app">
+    {# ADD/EDIT FUNDING AGENCY MODAL #}
+    <div class="modal fade" id="funding-agency-modal" tabindex="-1" role="dialog" aria-labelledby="add-funding-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form :action="actionUri"
+                    enctype="multipart/form-data" method="POST">
+                    {% csrf_token %}
+                    <input name="resource-mode" type="hidden" value="edit">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title" id="add-funding-label"> ${mode} Funding Agency</h4></div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <fieldset>
+                                {# Agency Name (Required) #}
+                                <div id="div_id_agency_name" class="agency-full-width control-group">
+                                    <label for="agency_name" class="control-label requiredField">
+                                        Agency Name<span class="asteriskField">*</span>
+                                    </label>
+                                    <div id="add-agency-wrapper"
+                                        class="input-group"
+                                        @focusin="clearSelectedAgency"
+                                        tabindex="0"
+                                    >
+                                        {# https://github.com/alexurquhart/vue-bootstrap-typeahead #}
+                                        <vue-bootstrap-typeahead
+                                            :data="crossrefFunders"
+                                            :serializer="s => s.name"
+                                            v-model="agencyNameInput"
+                                            ref="agencyNameInput"
+                                            input-class="typeahead-search-input form-control input-sm textInput"
+                                            @hit="selectAgency($event)"
+                                            placeholder="Example: National Science Foundation"
+                                            :maxMatches="MAX_MATCHES"
+                                            :minMatchingChars="MIN_SEARCH_LEN"
+                                        >
+                                        <template slot="append">
+                                            <div v-if="isPending && !crossreffApiDown">
+                                                <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
+                                                Searching known funders
+                                            </div>
+                                            <div class="text-info small" v-if="crossreffApiDown">
+                                                We are having trouble reaching the Open Funder Registry. To add funders from the registry, please try again later.
+                                            </div>
+                                        </template>
+                                        </vue-bootstrap-typeahead>
+                                        <div class="text-muted small" v-if="filteredWords.length > 0">Words not included in Funder Registry Search: <strong v-for="word in filteredWords">${word}</strong></div>
+                                    </div>
+                                </div>
+                                <input v-model="agencyNameInput" maxlength="250" name="agency_name" type="hidden" required>
+
+                                {# Award Title #}
+                                <div id="div_id_award_title" class="control-group">
+                                    <label for="award_title" class="control-label">Award Title</label>
+                                    <div class="controls">
+                                        <input class="form-control input-sm" maxlength="250"
+                                            name="award_title" v-model="currentlyEditing.award_title" @keyup="checkAgencyName">
+                                    </div>
+                                </div>
+
+                                {# Award Number #}
+                                <div id="div_id_award_number" class="control-group">
+                                    <label for="award_number" class="control-label">Award Number</label>
+                                    <div class="controls">
+                                        <input class="form-control input-sm textinput textInput" maxlength="100"
+                                            name="award_number" type="text" v-model="currentlyEditing.award_number" @keyup="checkAgencyName">
+                                    </div>
+                                </div>
+
+                                {# Agency URL #}
+                                <div id="div_id_agency_url" class="control-group">
+                                    <label for="agency_url" class="control-label">Agency URL</label>
+
+                                    <div class="controls">
+                                        <input class="form-control input-sm urlinput" maxlength="200"
+                                            name="agency_url" type="url" v-model="currentlyEditing.agency_url" @keyup="checkAgencyName">
+                                    </div>
+                                </div>
+
+                            </fieldset>
+                        </div>
+                        <div id="agency-inline-notification">
+                            <p class="text-danger" v-for="error in errorNotifications"> 
+                                <i class="glyphicon glyphicon-info-sign" style="margin-right: 5px;"></i>${ error.error }
+                            </p>
+                            <p class="text-info" v-for="info in infoNotifications"> 
+                                <i class="glyphicon glyphicon-info-sign" style="margin-right: 5px;"></i>${ info.info }
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button :disabled="!allowSubmit" type="submit" class="btn btn-primary btn-save-funding-agency btn-disable-after-valid">Save changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {# DELETE FUNDING AGENCY MODAL #}
+    <div class="modal fade in" id="delete-funding-agency-modal" tabindex="-1" role="dialog"
+        aria-labelledby="delete-source" aria-hidden="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="delete-funding-agency">Delete Funding Agency</h4>
+                </div>
+
+                <div class="modal-body">
+                    <strong>Are you sure you want to delete this funder?</strong>
+                    <div v-if="currentlyDeleting.agency_url">Name: <a :href="currentlyDeleting.agency_url">${currentlyDeleting.agency_name}</a></div>
+                    <div v-else>Name: ${currentlyDeleting.agency_name}</div>
+                    <div v-show="currentlyDeleting.award_number">Number: ${currentlyDeleting.award_number}</div>
+                    <div v-show="currentlyDeleting.award_title">Title: ${currentlyDeleting.award_title}</div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a type="button" class="btn btn-danger btn-disable-after"
+                    :href="deleteUrl">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# FUNDING AGENCY TABLE #}
+    {% if not resource_edit_mode %}
+        {% if fundingagencies %}
+            <div class="col-sm-12 content-block">
+                <h4>Funding Agencies</h4>
+                <h5>This resource was created using funding from the following sources:</h5>
+                <table class="table hs-table funding-agencies-table">
+                    <thead>
+                    <tr class="header-row">
+                        <th>Agency Name</th>
+                        <th>Award Title</th>
+                        <th>Award Number</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for agency in fundingagencies %}
+                        <tr data-index="{{ forloop.counter0 }}">
+                            <td>
+                                <strong>
+                                {% if agency.agency_url %}
+                                    <a href="{{ agency.agency_url }}" target="_blank">{{ agency.agency_name }}</a>
+                                {% else %}
+                                    <span>{{ agency.agency_name }}</span>
+                                {% endif %}
+                                </strong>
+                            </td>
+                            <td>{{ agency.award_title }}</td>
+                            <td>{{ agency.award_number }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="col-sm-12 content-block">
+            <h4>Funding Agencies
+                <a id="btn-add-funding-agency" type="button" class="btn btn-success btn-xs" data-toggle="modal"
+                title="Add Funding Agency" data-target="#funding-agency-modal" @click="openAddModal">
+                    <span class="glyphicon glyphicon-plus"></span>
+                </a>
+            </h4>
+            <div v-if="unmatchedFunders.length > 0" class="alert alert-info alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <div class="flex">
+                    <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
+                    <em style="padding-right:20px;">
+                        This resource contains funders (listed below) that do not exist in the <a href="https://www.crossref.org/services/funder-registry" target="_blank">Open Funder Registry</a>:
+                        <ul>
+                            <li v-for="funder in unmatchedFunders">${funder}</li>
+                        </ul>
+                        We recommend updating the funders to conform to the <a href="https://www.crossref.org/services/funder-registry" target="_blank">Open Funder Registry</a> to ensure consistency and ease of reporting.
+                    </em>
+                </div>
+            </div>
+            <p><i>This resource was created using funding from the following sources:</i></p>
+            {% if fundingagencies %}
+                <table class="table hs-table table-striped funding-agencies-table">
+                    <tbody>
+                        <tr class="header-row">
+                            <th>Agency Name</th>
+                            <th>Award Title</th>
+                            <th>Award Number</th>
+                            <th></th>
+                        </tr>
+                        <tr v-for="agency in fundingAgencies">
+                            <td>
+                                <strong>
+                                    <a v-if="agency.agency_url" :href="agency.agency_url" target="_blank">${ agency.agency_name }</a>
+                                    <span v-else >${ agency.agency_name }</span>
+                                    <span v-if="unmatchedFunders.includes(agency.agency_name)" style="color:red">*</span>
+                                </strong>
+                            </td>
+                            <td>${ agency.award_title }</td>
+                            <td>${ agency.award_number }</td>
+                            <td>
+                                <span data-toggle="modal" data-placement="auto" title="Edit"
+                                    class="glyphicon glyphicon-pencil icon-button icon-blue table-icon"
+                                    data-target="#funding-agency-modal" @click="openEditModal(agency.agency_id)"></span>
+                                <span data-toggle="modal" data-placement="auto" title="Remove"
+                                    class="glyphicon glyphicon-trash icon-button btn-remove table-icon"
+                                    data-target="#delete-funding-agency-modal" @click="openDeleteModal(agency.agency_id)"></span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="small text-muted">No funding agencies have been added.</p>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+{% block extra_css %}
+    <!-- <link href="https://unpkg.com/vue-bootstrap-typeahead/dist/VueBootstrapTypeahead.css" rel="stylesheet"> -->
+    <link href="{% static 'css/vue-bootstrap-typeahead.0.2.6.css' %}" rel="stylesheet">
+    <style>
+        .agency-full-width {
+            width: 100%;
+        }
+
+        .agency-full-width .input-group {
+            width: 100%;
+        }
+
+        .vbt-autcomplete-list {
+            max-height: 350px;
+            overflow-y: auto;
+            padding-top: 5px;
+            position: absolute;
+            z-index: 999
+        }
+    </style>
+{% endblock %}
+
+{% block extra_js %}
+    <script type="text/javascript" src="{% static 'js/vue-bootstrap-typeahead.0.2.6.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/hs-vue/funding-agency-app.js' %}"></script>
+{% endblock %}
+

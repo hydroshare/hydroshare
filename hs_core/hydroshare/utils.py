@@ -1,42 +1,39 @@
+import asyncio
+import copy
+import errno
+import logging
 import mimetypes
 import os
-import tempfile
-import logging
 import shutil
-import copy
-from uuid import uuid4
-from urllib.parse import quote
-import errno
+import tempfile
 import urllib
-import aiohttp
-import asyncio
-from asgiref.sync import sync_to_async
-
+from urllib.parse import quote
 from urllib.request import pathname2url, url2pathname
+from uuid import uuid4
 
+import aiohttp
+from asgiref.sync import sync_to_async
+from datetime import date
 from django.apps import apps
+from django.contrib.auth.models import Group, User
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.files import File
+from django.core.files.storage import DefaultStorage
+from django.core.files.uploadedfile import UploadedFile
+from django.core.validators import URLValidator, validate_email
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.contrib.auth.models import User, Group
-from django.core.files import File
-from django.core.files.uploadedfile import UploadedFile
-from django.core.files.storage import DefaultStorage
-from django.core.validators import validate_email, URLValidator
-from hs_access_control.models.community import Community
-
 from mezzanine.conf import settings
-
-from hs_core.signals import pre_create_resource, post_create_resource, pre_add_files_to_resource, \
-    post_add_files_to_resource
-from hs_core.models import AbstractResource, BaseResource, ResourceFile, GeospatialRelation
-from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
+from hs_access_control.models.community import Community
+from hs_access_control.models.privilege import PrivilegeCodes
+from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
+from hs_core.models import AbstractResource, BaseResource, GeospatialRelation, ResourceFile
+from hs_core.signals import post_create_resource, pre_add_files_to_resource, pre_create_resource
 from theme.models import QuotaMessage
-
 
 logger = logging.getLogger(__name__)
 
@@ -178,77 +175,6 @@ def community_from_id(community):
         except ObjectDoesNotExist:
             raise Http404('Community not found')
     return tgt
-
-
-def get_user_zone_status_info(user):
-    """
-    This function should be called to determine whether user zone functionality should be
-    enabled or not on the web site front end
-    Args:
-        user: the requesting user
-    Returns:
-        enable_user_zone boolean indicating whether user zone functionality should be enabled or
-        not on the web site front end
-    """
-    if user is None:
-        return None
-    if not hasattr(user, 'userprofile') or user.userprofile is None:
-        return None
-
-    enable_user_zone = user.userprofile.create_irods_user_account and settings.REMOTE_USE_IRODS
-    return enable_user_zone
-
-
-def is_federated(homepath):
-    """
-    Check if the selected file via the iRODS browser is from a federated zone or not
-    Args:
-        homepath: the logical iRODS file name with full logical path, e.g., selected from
-                  iRODS browser
-
-    Returns:
-    True is the selected file indicated by homepath is from a federated zone, False if otherwise
-    """
-    homepath = homepath.strip()
-    homepath_list = homepath.split('/')
-    # homepath is an iRODS logical path in the format of
-    # /irods_zone/home/irods_account_username/collection_relative_path, so homepath_list[1]
-    # is the irods_zone which we can use to form the fed_proxy_path to check whether
-    # fed_proxy_path exists to hold hydroshare resources in a federated zone
-    if homepath_list[1]:
-        fed_proxy_path = os.path.join(homepath_list[1], 'home',
-                                      settings.HS_IRODS_PROXY_USER_IN_USER_ZONE)
-        fed_proxy_path = '/' + fed_proxy_path
-    else:
-        # the test path input is invalid, return False meaning it is not federated
-        return False
-    if settings.REMOTE_USE_IRODS:
-        irods_storage = IrodsStorage('federated')
-    else:
-        irods_storage = IrodsStorage()
-
-    # if the iRODS proxy user in hydroshare zone can list homepath and the federation zone proxy
-    # user path, it is federated; otherwise, it is not federated
-    return irods_storage.exists(homepath) and irods_storage.exists(fed_proxy_path)
-
-
-def get_federated_zone_home_path(filepath):
-    """
-    Args:
-        filepath: the iRODS data object file path that included zone name in the format of
-        /zone_name/home/user_name/file_path
-
-    Returns:
-        the zone name extracted from filepath
-    """
-    if filepath and filepath.startswith('/'):
-        split_path_strs = filepath.split('/')
-        # the Zone name should follow the first slash
-        zone = split_path_strs[1]
-        return '/{zone}/home/{local_proxy_user}'.format(
-            zone=zone, local_proxy_user=settings.HS_IRODS_PROXY_USER_IN_USER_ZONE)
-    else:
-        return ''
 
 
 # TODO: replace with a cache facility that has automatic cleanup
@@ -441,15 +367,44 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
     for src_logical_file in src_res.logical_files:
         map_logical_files[src_logical_file] = src_logical_file.get_copy(tgt_res)
 
-    for n, f in enumerate(files):
-        folder, base = os.path.split(f.short_path)  # strips object information.
-        new_resource_file = ResourceFile.create(tgt_res, base, folder=folder)
+    def copy_file_to_target_resource(scr_file, save_to_db=True):
+        kwargs = {}
+        src_storage_path = scr_file.get_storage_path(resource=src_res)
+        tgt_storage_path = src_storage_path.replace(src_res.short_id, tgt_res.short_id)
+        kwargs['content_object'] = tgt_res
+        kwargs['file_folder'] = scr_file.file_folder
+        kwargs['resource_file'] = tgt_storage_path
 
-        # if the original file is part of a logical file, then
-        # add the corresponding new resource file to the copy of that logical file
-        if f.has_logical_file:
-            tgt_logical_file = map_logical_files[f.logical_file]
-            tgt_logical_file.add_resource_file(new_resource_file)
+        if save_to_db:
+            return ResourceFile.objects.create(**kwargs)
+        else:
+            return ResourceFile(**kwargs)
+
+    # use bulk_create for files without logical file to copy all files at once
+    files_bulk_create = []
+    files_without_logical_file = files.filter(logical_file_object_id__isnull=True)
+    for f in files_without_logical_file:
+        file_to_save = copy_file_to_target_resource(f, save_to_db=False)
+        files_bulk_create.append(file_to_save)
+
+    if files_bulk_create:
+        ResourceFile.objects.bulk_create(files_bulk_create, batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
+
+    # copy files with logical file one at a time
+    files_with_logical_file = files\
+        .filter(logical_file_object_id__isnull=False)\
+        .select_related('logical_file_content_type')
+
+    seen_logical_files = {}
+    for f in files_with_logical_file:
+        if (f.logical_file_object_id, f.logical_file_content_type.id) not in seen_logical_files:
+            # accessing logical_file for each file (f.logical_file) generates one database query
+            seen_logical_files[(f.logical_file_object_id, f.logical_file_content_type.id)] = f.logical_file
+
+        logical_file = seen_logical_files[(f.logical_file_object_id, f.logical_file_content_type.id)]
+        new_resource_file = copy_file_to_target_resource(f)
+        tgt_logical_file = map_logical_files[logical_file]
+        tgt_logical_file.add_resource_file(new_resource_file)
 
     for lf in map_logical_files:
         if lf.type_name() == 'ModelProgramLogicalFile':
@@ -554,7 +509,7 @@ def copy_and_create_metadata(src_res, dest_res):
 
 
 # TODO: should be BaseResource.mark_as_modified.
-def resource_modified(resource, by_user=None, overwrite_bag=True):
+def resource_modified(resource, by_user, overwrite_bag=True):
     """
     Set an AVU flag that forces the bag to be recreated before fetch.
 
@@ -562,6 +517,7 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
 
     """
 
+    error_message = ""
     if not by_user:
         user = None
     else:
@@ -572,16 +528,27 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
                 user = User.objects.get(username=by_user)
             except User.DoesNotExist:
                 user = None
+                error_message = f"Resource cannot be modified by nonexistent user '{by_user}'"
     if user:
-        resource.last_changed_by = user
+        # user can only mark modified if they are an owner/editor of the resource
+        # this prevents the last_changed_by getting set to an admin user that edits a resource
+        user_privilege = resource.raccess.get_effective_user_privilege(user, ignore_superuser=True)
 
-    resource.updated = now().isoformat()
+        if user_privilege > PrivilegeCodes.CHANGE:
+            error_message = "User does not have adequate privilege to modify resource."
+        else:
+            resource.last_changed_by = user
+
+            resource.updated = now().isoformat()
+            res_modified_date = resource.metadata.dates.all().filter(type='modified').first()
+            if res_modified_date:
+                resource.metadata.update_element('date', res_modified_date.id)
+            else:
+                resource.metadata.create_element('date', type='modified', start_date=resource.updated)
+
     # seems this is the best place to sync resource title with metadata title
     resource.title = resource.metadata.title.value
     resource.save()
-    res_modified_date = resource.metadata.dates.all().filter(type='modified').first()
-    if res_modified_date:
-        resource.metadata.update_element('date', res_modified_date.id)
 
     if overwrite_bag:
         create_bag_metadata_files(resource)
@@ -589,6 +556,9 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
     # set bag_modified-true AVU pair for the modified resource in iRODS to indicate
     # the resource is modified for on-demand bagging.
     set_dirty_bag_flag(resource)
+
+    if error_message:
+        logger.error(error_message)
 
 
 # TODO: should be part of BaseResource
@@ -672,51 +642,45 @@ def validate_resource_file_size(resource_files):
     return size
 
 
-def validate_resource_file_type(resource_cls, files):
-    supported_file_types = resource_cls.get_supported_upload_file_types()
-    # see if file type checking is needed
-    if '.*' in supported_file_types:
-        # all file types are supported
-        return
-
-    supported_file_types = [x.lower() for x in supported_file_types]
-    for f in files:
-        file_ext = os.path.splitext(f.name)[1]
-        if file_ext.lower() not in supported_file_types:
-            err_msg = "{file_name} is not a supported file type for {res_type} resource"
-            err_msg = err_msg.format(file_name=f.name, res_type=resource_cls)
-            raise ResourceFileValidationException(err_msg)
-
-
-def validate_resource_file_count(resource_cls, files, resource=None):
+def validate_resource_file_count(resource_cls, files):
     if len(files) > 0:
-        if len(resource_cls.get_supported_upload_file_types()) == 0:
+        resource_type = resource_cls.__name__
+        if resource_type != "CompositeResource":
             err_msg = "Content files are not allowed in {res_type} resource"
             err_msg = err_msg.format(res_type=resource_cls)
             raise ResourceFileValidationException(err_msg)
 
-        err_msg = "Multiple content files are not supported in {res_type} resource"
-        err_msg = err_msg.format(res_type=resource_cls)
-        if len(files) > 1:
-            if not resource_cls.allow_multiple_file_upload():
-                raise ResourceFileValidationException(err_msg)
 
-        if resource is not None and resource.files.all().count() > 0:
-            if not resource_cls.can_have_multiple_files():
-                raise ResourceFileValidationException(err_msg)
-
-
-def convert_file_size_to_unit(size, unit):
+def convert_file_size_to_unit(size, to_unit, from_unit='B'):
     """
     Convert file size to unit for quota comparison
-    :param size: in byte unit
-    :param unit: should be one of the four: 'KB', 'MB', 'GB', or 'TB'
+    :param size: the size to be converted
+    :param to_unit: should be one of the four: 'KB', 'MB', 'GB', or 'TB'
+    :param from_unit: should be one of the five: 'B', 'KB', 'MB', 'GB', or 'TB'
     :return: the size converted to the pass-in unit
     """
-    unit = unit.lower()
+    unit = to_unit.lower()
     if unit not in ('kb', 'mb', 'gb', 'tb'):
         raise ValidationError('Pass-in unit for file size conversion must be one of KB, MB, GB, '
                               'or TB')
+    from_unit = from_unit.lower()
+    if from_unit not in ('b', 'kb', 'mb', 'gb', 'tb'):
+        raise ValidationError('Starting unit for file size conversion must be one of B, KB, MB, GB, '
+                              'or TB')
+    # First convert to byte unit
+    if from_unit == 'b':
+        factor = 0
+    elif from_unit == 'kb':
+        factor = 1
+    elif from_unit == 'mb':
+        factor = 2
+    elif from_unit == 'gb':
+        factor = 3
+    else:
+        factor = 4
+    size = size * 1024**factor
+
+    # Now convert to the pass-in unit
     factor = 1024.0
     kbsize = size / factor
     if unit == 'kb':
@@ -765,7 +729,9 @@ def validate_user_quota(user_or_username, size):
                 used_percent = uq.used_percent
                 rounded_percent = round(used_percent, 2)
                 rounded_used_val = round(used_size, 4)
-                if used_percent >= hard_limit or uq.remaining_grace_period == 0:
+                grace_ends = uq.grace_period_ends
+                past_grace_period = grace_ends < date.today() if grace_ends else False
+                if used_percent >= hard_limit or past_grace_period:
                     msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
                                                          qmsg.content)
                     msg_str = msg_template_str.format(used=rounded_used_val,
@@ -774,6 +740,36 @@ def validate_user_quota(user_or_username, size):
                                                       zone=uq.zone,
                                                       percent=rounded_percent)
                     raise QuotaException(msg_str)
+
+
+def get_remaining_user_quota(user_or_username, units='MB'):
+    """
+    get the remaining quota for the user
+    :param user_or_username: the user to be validated
+    :param units: the units for the quota to be returned. It should be one of the four: 'kb', 'mb', 'gb', 'tb'
+    :return: the remaining quota for the user, or None if the quota is not enforced
+    """
+    if user_or_username:
+        if isinstance(user_or_username, User):
+            user = user_or_username
+        else:
+            try:
+                user = User.objects.get(username=user_or_username)
+            except User.DoesNotExist:
+                user = None
+    else:
+        user = None
+
+    if user and user.is_active:
+        uq = user.quotas.filter(zone='hydroshare').first()
+        if uq:
+            qmsg = QuotaMessage.objects.first()
+            enforce_flag = qmsg.enforce_quota
+            if enforce_flag:
+                remaining = uq.allocated_value - uq.used_value
+                remaining = convert_file_size_to_unit(remaining, to_unit=units, from_unit=uq.unit)
+                return max(remaining, 0)
+    return None
 
 
 def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key,
@@ -793,7 +789,6 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
     if len(files) > 0:
         size = validate_resource_file_size(files)
         validate_resource_file_count(resource_cls, files)
-        validate_resource_file_type(resource_cls, files)
         # validate it is within quota hard limit
         validate_user_quota(requesting_user, size)
 
@@ -950,9 +945,8 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
     resource_cls = resource.__class__
     if len(files) > 0:
         size = validate_resource_file_size(files)
-        validate_user_quota(resource.get_quota_holder(), size)
-        validate_resource_file_type(resource_cls, files)
-        validate_resource_file_count(resource_cls, files, resource)
+        validate_user_quota(resource.quota_holder, size)
+        validate_resource_file_count(resource_cls, files)
 
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     pre_add_files_to_resource.send(sender=resource_cls, files=files, resource=resource, user=user,
@@ -981,19 +975,6 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
                                                source_names=source_names, full_paths=full_paths,
                                                auto_aggregate=auto_aggregate, user=user)
     resource.refresh_from_db()
-    # receivers need to change the values of this dict if file validation fails
-    # in case of file validation failure it is assumed the resource type also deleted the file
-    file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
-    post_add_files_to_resource.send(sender=resource.__class__, files=files,
-                                    source_names=source_names,
-                                    resource=resource, user=user,
-                                    validate_files=file_validation_dict,
-                                    extract_metadata=extract_metadata,
-                                    res_files=resource_file_objects, **kwargs)
-
-    check_file_dict_for_error(file_validation_dict)
-
-    resource_modified(resource, user, overwrite_bag=False)
     return resource_file_objects
 
 
@@ -1006,7 +987,8 @@ def create_empty_contents_directory(resource):
 
 
 def add_file_to_resource(resource, f, folder='', source_name='',
-                         check_target_folder=False, add_to_aggregation=True, user=None):
+                         check_target_folder=False, add_to_aggregation=True, user=None,
+                         save_file_system_metadata=False):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
     :param  resource: Resource to which file should be added
@@ -1026,6 +1008,7 @@ def add_file_to_resource(resource, f, folder='', source_name='',
     being added to the resource also will be added to a fileset aggregation if such an aggregation
     exists in the file path
     :param  user: user who is adding file to the resource
+    :param  save_file_system_metadata: if True, file system metadata will be retrieved from iRODS and saved in DB
     :return: The identifier of the ResourceFile added.
     """
 
@@ -1079,7 +1062,8 @@ def add_file_to_resource(resource, f, folder='', source_name='',
     # TODO: generate this from data in ResourceFile rather than extension
     if not resource.metadata.formats.filter(value=file_format_type).exists():
         resource.metadata.create_element('format', value=file_format_type)
-    ret.calculate_size()
+    if save_file_system_metadata:
+        ret.set_system_metadata(resource=resource)
 
     return ret
 

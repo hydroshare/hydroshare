@@ -1,104 +1,91 @@
-import os
-import zipfile
-import shutil
-import logging
-import requests
 import datetime
-from dateutil import tz
+import logging
+import os
+import shutil
+import zipfile
 
+import requests
+from dateutil import tz
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.models import User
+from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
+                                    ValidationError)
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
-from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
-from django.contrib.auth.models import User
-
+from django.db.models import Sum
 from rest_framework import status
 
 from hs_core.hydroshare import hs_bagit
-from hs_core.models import ResourceFile
+from hs_core.models import ResourceFile, BaseResource
 from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
 from theme.models import UserQuota
-from django_irods.icommands import SessionException
-from django_irods.storage import IrodsStorage
+from hs_core.enums import CrossRefSubmissionStatus
 
-
-FILE_SIZE_LIMIT = 1 * (1024 ** 3)
-FILE_SIZE_LIMIT_FOR_DISPLAY = '1G'
+FILE_UPLOAD_MAX_SIZE = getattr(settings, 'FILE_UPLOAD_MAX_SIZE', 25 * 1024)  # FILE_UPLOAD_MAX_SIZE is in MB
+FILE_SIZE_LIMIT = FILE_UPLOAD_MAX_SIZE * 1024 ** 2  # FILE_SIZE_LIMIT is in bytes
+FILE_SIZE_LIMIT_FOR_DISPLAY = f"{ round(FILE_UPLOAD_MAX_SIZE / 1024) }GB"
 METADATA_STATUS_SUFFICIENT = 'Sufficient to publish or make public'
 METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
 
 logger = logging.getLogger(__name__)
 
 
-def get_quota_usage_from_irods(username):
+def get_quota_usage(username, raise_on_error=True):
     """
-    Query iRODS AVU to get quota usage for a user reported in iRODS quota microservices
+    Query to get quota usage
     :param username: the user name to get quota usage for.
-    :return: the combined quota usage from iRODS data zone and user zone; raise ValidationError
-    if quota usage cannot be retrieved from iRODS
+    :param raise_on_error: if True, raise ValidationError if quota usage cannot be retrieved from iRODS
+    :return: the quota usage from iRODS data zone; raise ValidationError if quota usage cannot be retrieved
     """
-    attname = username + '-usage'
-    istorage = IrodsStorage()
-    # get quota size for user in iRODS data zone by retrieving AVU set on irods bagit path
-    # collection
-    try:
-        uqDataZoneSize = istorage.getAVU(settings.IRODS_BAGIT_PATH, attname)
-        if uqDataZoneSize is None:
-            # user may not have resources in data zone, so corresponding quota size AVU may not
-            # exist for this user
-            uqDataZoneSize = -1
-        else:
-            uqDataZoneSize = float(uqDataZoneSize)
-    except SessionException:
-        # user may not have resources in data zone, so corresponding quota size AVU may not exist
-        # for this user
-        uqDataZoneSize = -1
-
-    # get quota size for the user in iRODS user zone
-    try:
-        uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE, 'home',
-                                     settings.HS_IRODS_PROXY_USER_IN_USER_ZONE,
-                                     settings.IRODS_BAGIT_PATH)
-        uqUserZoneSize = istorage.getAVU(uz_bagit_path, attname)
-        if uqUserZoneSize is None:
-            # user may not have resources in user zone, so corresponding quota size AVU may not
-            # exist for this user
-            uqUserZoneSize = -1
-        else:
-            uqUserZoneSize = float(uqUserZoneSize)
-    except SessionException:
-        # user may not have resources in user zone, so corresponding quota size AVU may not exist
-        # for this user
-        uqUserZoneSize = -1
-
-    if uqDataZoneSize < 0 and uqUserZoneSize < 0:
-        err_msg = 'no quota size AVU in data zone and user zone for user {}'.format(username)
-        logger.error(err_msg)
-        raise ValidationError(err_msg)
-    elif uqUserZoneSize < 0:
-        used_val = uqDataZoneSize
-    elif uqDataZoneSize < 0:
-        used_val = uqUserZoneSize
-    else:
-        used_val = uqDataZoneSize + uqUserZoneSize
-    return used_val
+    uqDataZoneSize = get_data_zone_usage(username, raise_on_error=raise_on_error)
+    return uqDataZoneSize
 
 
-def update_quota_usage(username):
+def get_data_zone_usage(username, raise_on_error=True, include_published=False):
     """
-    update quota usage by checking iRODS AVU to get the updated quota usage for the user. Note iRODS micro-service
-    quota update only happens on HydroShare iRODS data zone and user zone independently, so the aggregation of usage
-    in both zones need to be accounted for in this function to update Django DB as an aggregated usage for hydroshare
-    internal zone.
+    Calculate the data zone usage for a given user.
+
+    Args:
+        username (str): The username of the user.
+        raise_on_error (bool, optional): Whether to raise an error if the user does not exist. Defaults to True.
+        include_published (bool, optional): Whether to include published resources in the calculation. Default False.
+
+    Returns:
+        int: The data zone usage in bytes.
+
+    Raises:
+        ValidationError: If the user does not exist and `raise_on_error` is True.
+    """
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        logger.error(f'User {username} does not exist')
+        if raise_on_error:
+            raise ValidationError(f'User {username} does not exist')
+        return 0
+    uqDataZoneSize = 0
+    qh_resources = BaseResource.objects.filter(quota_holder=user)
+    if not include_published:
+        qh_resources = qh_resources.exclude(raccess__published=True)
+    qh_resource_ids = qh_resources.values_list('id', flat=True)
+    uqDataZoneSize = ResourceFile.objects.filter(object_id__in=qh_resource_ids).aggregate(Sum('_size'))["_size__sum"]
+
+    return uqDataZoneSize if uqDataZoneSize is not None else 0
+
+
+def update_quota_usage(username, notify_user=False):
+    """
+    This function is called to update quota usage for a user in Django DB.
     :param
     username: the name of the user that needs to update quota usage for.
+    : param notify_user: if True, send email notification to user if the quota is exceeded.
     :return: raise ValidationError if quota cannot be updated.
     """
+    from hs_core import tasks
     hs_internal_zone = "hydroshare"
     uq = UserQuota.objects.filter(user__username=username, zone=hs_internal_zone).first()
     if uq is None:
@@ -107,8 +94,33 @@ def update_quota_usage(username):
         logger.error(err_msg)
         raise ValidationError(err_msg)
 
-    used_val = get_quota_usage_from_irods(username)
-    uq.update_used_value(used_val)
+    original_quota_data = uq.get_quota_data()
+    qmsg = original_quota_data["qmsg"]
+    user = User.objects.get(username=username)
+    uq.save()
+
+    if original_quota_data["enforce_quota"]:
+        updated_quota_data = uq.get_quota_data()
+        # if enforcing quota, take steps to send messages
+        percent = updated_quota_data["percent"]
+        if percent < 100:
+            if uq.grace_period_ends:
+                # reset grace period now that the user is below allocation
+                uq.reset_grace_period()
+            return
+        else:
+            if percent < qmsg.hard_limit_percent:
+                if not uq.grace_period_ends:
+                    # triggers grace period counting
+                    uq.start_grace_period(qmsg_days=qmsg.grace_period)
+            elif percent >= qmsg.hard_limit_percent:
+                # reset grace period when user quota exceeds hard limit
+                uq.reset_grace_period()
+            # send notification to user in the cases of exceeding soft limit or hard limit
+            # only send notificaiton if the quota status changed
+            # this avoids sending multiple notifications when files are changed but the status does not change
+            if notify_user and (original_quota_data["status"] != updated_quota_data["status"]):
+                tasks.send_user_quota_notification.apply_async((user.pk))
 
 
 def res_has_web_reference(res):
@@ -120,10 +132,9 @@ def res_has_web_reference(res):
     if res.resource_type != "CompositeResource":
         return False
 
-    for f in ResourceFile.objects.filter(object_id=res.id):
-        if f.has_logical_file:
-            if 'url' in f.logical_file.extra_data:
-                return True
+    for lf in res.get_logical_files('GenericLogicalFile'):
+        if 'url' in lf.extra_data:
+            return True
     return False
 
 
@@ -229,12 +240,6 @@ def update_resource_file(pk, filename, f):
                 rf.resource_file.delete()
                 # TODO: should use add_file_to_resource
                 rf.resource_file = File(f) if not isinstance(f, UploadedFile) else f
-                rf.save()
-            if rf.fed_resource_file:
-                # TODO: should use delete_resource_file
-                rf.fed_resource_file.delete()
-                # TODO: should use add_file_to_resource
-                rf.fed_resource_file = File(f) if not isinstance(f, UploadedFile) else f
                 rf.save()
             return rf
     raise ObjectDoesNotExist(filename)
@@ -672,10 +677,12 @@ def add_resource_files(pk, *files, **kwargs):
     This does **not** handle mutability; changes to immutable resources should be denied elsewhere.
 
     """
+    from hs_core.tasks import set_resource_files_system_metadata
+
     resource = kwargs.pop("resource", None)
     if resource is None:
         resource = utils.get_resource_by_shortkey(pk)
-    ret = []
+    uploaded_res_files = []
     source_names = kwargs.pop('source_names', [])
     full_paths = kwargs.pop('full_paths', {})
     auto_aggregate = kwargs.pop('auto_aggregate', True)
@@ -710,21 +717,45 @@ def add_resource_files(pk, *files, **kwargs):
             dir_name = os.path.dirname(full_path)
             # Only do join if dir_name is not empty, otherwise, it'd result in a trailing slash
             full_dir = os.path.join(base_dir, dir_name) if dir_name else base_dir
-        ret.append(utils.add_file_to_resource(resource, f, folder=full_dir, user=user))
+        res_file = utils.add_file_to_resource(resource, f, folder=full_dir, user=user, add_to_aggregation=False,
+                                              save_file_system_metadata=False)
+        uploaded_res_files.append(res_file)
 
     for ifname in source_names:
-        ret.append(utils.add_file_to_resource(resource, None,
-                                              folder=folder,
-                                              source_name=ifname, user=user))
+        res_file = utils.add_file_to_resource(resource, None, folder=folder, source_name=ifname, user=user,
+                                              add_to_aggregation=False,
+                                              save_file_system_metadata=False)
+        uploaded_res_files.append(res_file)
 
-    if not ret:
+    if not uploaded_res_files:
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)
     else:
-        if resource.resource_type == "CompositeResource" and auto_aggregate:
-            utils.check_aggregations(resource, ret)
+        if resource.resource_type == "CompositeResource":
+            upload_to_folder = base_dir
+            if upload_to_folder:
+                aggregations = list(resource.logical_files)
+                # check if there is folder based model program or model instance aggregation in the upload path
+                aggregation = resource.get_model_aggregation_in_path(upload_to_folder, aggregations=aggregations)
+                if aggregation is None:
+                    # check if there is a fileset aggregation in the upload path
+                    aggregation = resource.get_fileset_aggregation_in_path(upload_to_folder, aggregations=aggregations)
+                if aggregation:
+                    # Note: we can't use bulk_update here because we need to update the logical_file_content_object
+                    # which is not a concrete field in the ResourceFile model
+                    for res_file in uploaded_res_files:
+                        aggregation.add_resource_file(res_file, set_metadata_dirty=False)
 
-    return ret
+                    aggregation.set_metadata_dirty()
+            if auto_aggregate:
+                utils.check_aggregations(resource, uploaded_res_files)
+
+        utils.resource_modified(resource, user, overwrite_bag=False)
+
+        # store file level system metadata in Django DB (async task)
+        set_resource_files_system_metadata.apply_async((resource.short_id,))
+
+    return uploaded_res_files
 
 
 def update_science_metadata(pk, metadata, user):
@@ -830,7 +861,7 @@ def delete_resource_file_only(resource, f):
         f: the ResourceFile object to be deleted
     Returns: unqualified relative path to file that has been deleted
     """
-    short_path = f.short_path
+    short_path = f.get_short_path(resource)
     f.delete()
     return short_path
 
@@ -847,12 +878,10 @@ def delete_format_metadata_after_delete_file(resource, file_name):
 
     # if there is no other resource file with the same extension as the
     # file just deleted then delete the matching format metadata element for the resource
-    resource_file_extensions = [os.path.splitext(get_resource_file_name(f))[1] for f in
-                                resource.files.all()]
+    resource_file_extensions = {os.path.splitext(f.get_short_path(resource))[1] for f in
+                                resource.files.all()}
     if delete_file_extension not in resource_file_extensions:
-        format_element = resource.metadata.formats.filter(value=delete_file_mime_type).first()
-        if format_element:
-            resource.metadata.delete_element(format_element.term, format_element.id)
+        resource.metadata.formats.filter(value=delete_file_mime_type).delete()
 
 
 # TODO: Remove option for file id, not needed since names are unique.
@@ -942,6 +971,8 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
 def get_resource_doi(res_id, flag=''):
     doi_str = "https://doi.org/10.4211/hs.{shortkey}".format(shortkey=res_id)
     if flag:
+        if flag not in CrossRefSubmissionStatus:
+            raise ValidationError("Invalid flag value: {}".format(flag))
         return "{doi}{append_flag}".format(doi=doi_str, append_flag=flag)
     else:
         return doi_str
@@ -949,12 +980,16 @@ def get_resource_doi(res_id, flag=''):
 
 def get_activated_doi(doi):
     """
-    Get activated DOI with flags removed. The following two flags are appended
+    Get activated DOI with flags removed. The following four flags are appended
     to the DOI string to indicate publication status for internal use:
-    'pending' flag indicates the metadata deposition with CrossRef succeeds, but
+    'pending' flag indicates the metadata deposition with CrossRef succeeds when the resource is published, but
      pending activation with CrossRef for DOI to take effect.
     'failure' flag indicates the metadata deposition failed with CrossRef due to
-    network or system issues with CrossRef
+    network or system issues with CrossRef when the resource is published.
+    'update_pending' flag indicates the metadata update with CrossRef succeeds when the resource metadata is updated,
+    but pending to take effect.
+    'update_failure' flag indicates the metadata update failed with CrossRef due to
+    network or system issues with CrossRef when the resource metadata is updated.
 
     Args:
         doi: the DOI string with possible status flags appended
@@ -962,14 +997,16 @@ def get_activated_doi(doi):
     Returns:
         the activated DOI with all flags removed if any
     """
-    idx1 = doi.find('pending')
-    idx2 = doi.find('failure')
-    if idx1 >= 0:
-        return doi[:idx1]
-    elif idx2 >= 0:
-        return doi[:idx2]
-    else:
-        return doi
+
+    if doi.endswith(CrossRefSubmissionStatus.UPDATE_PENDING):
+        return doi[:-len(CrossRefSubmissionStatus.UPDATE_PENDING)]
+    if doi.endswith(CrossRefSubmissionStatus.UPDATE_FAILURE):
+        return doi[:-len(CrossRefSubmissionStatus.UPDATE_FAILURE)]
+    if doi.endswith(CrossRefSubmissionStatus.PENDING):
+        return doi[:-len(CrossRefSubmissionStatus.PENDING)]
+    if doi.endswith(CrossRefSubmissionStatus.FAILURE):
+        return doi[:-len(CrossRefSubmissionStatus.FAILURE)]
+    return doi
 
 
 def get_crossref_url():
@@ -1005,7 +1042,7 @@ def deposit_res_metadata_with_crossref(res):
     return response
 
 
-def submit_resource_for_review(request, pk):
+def submit_resource_for_review(pk, user):
     """
     Submits a resource for minimum metadata review, prior to publishing.
     The user must be an owner of a resource or an administrator to perform this action.
@@ -1025,9 +1062,10 @@ def submit_resource_for_review(request, pk):
     and other general exceptions
 
     """
-    from hs_core.views.utils import get_default_support_user
 
     resource = utils.get_resource_by_shortkey(pk)
+    if not user.is_superuser and not user.uaccess.owns_resource(resource):
+        raise PermissionDenied('Only resource owners or admins can submit a resource for review')
     if resource.raccess.published:
         raise ValidationError("This resource is already published")
 
@@ -1039,18 +1077,18 @@ def submit_resource_for_review(request, pk):
                               "it does not have required metadata or content files, or it contains "
                               "reference content, or this resource type is not allowed for publication.")
 
-    user_to = get_default_support_user()
-    from hs_core.views.utils import send_action_to_take_email
-    send_action_to_take_email(request, user=user_to, user_from=request.user,
-                              action_type='metadata_review', resource=resource)
-
     # create review date -- must be before review_pending = True
     resource.metadata.dates.all().filter(type='reviewStarted').delete()
     resource.metadata.create_element('date', type='reviewStarted', start_date=datetime.datetime.now(tz.UTC))
 
-    resource.raccess.review_pending = True
-    resource.raccess.immutable = True
-    resource.raccess.save()
+    resource.raccess.alter_review_pending_flags(initiating_review=True)
+
+    # set resource modified before attempting repair
+    utils.resource_modified(resource, user, overwrite_bag=False)
+
+    # Repair resource and email support user if there are issues
+    from hs_core.tasks import repair_resource_before_publication
+    repair_resource_before_publication.apply_async((resource.short_id,))
 
 
 def publish_resource(user, pk):
@@ -1060,7 +1098,7 @@ def publish_resource(user, pk):
     be an owner of a resource or an administrator to perform this action.
 
     Parameters:
-        user - requesting user to publish the resource who must be one of the owners of the resource
+        user - requesting user to publish the resource who must be an admin
         pk - Unique HydroShare identifier for the resource to be formally published.
 
     Returns:    The id of the resource that was published
@@ -1075,10 +1113,13 @@ def publish_resource(user, pk):
 
     Note:  This is different than just giving public access to a resource via access control rule
     """
+    if not user.is_superuser:
+        raise ValidationError("Resource can only be published by an admin user")
     resource = utils.get_resource_by_shortkey(pk)
     if resource.raccess.published:
         raise ValidationError("This resource is already published")
-
+    resource.raccess.alter_review_pending_flags(initiating_review=False)
+    resource.raccess.save()
     # TODO: whether a resource can be published is not considered in can_be_submitted_for_metadata_review
     # TODO: can_be_submitted_for_metadata_review is currently an alias for can_be_public_or_discoverable
     if not resource.can_be_submitted_for_metadata_review:
@@ -1088,21 +1129,29 @@ def publish_resource(user, pk):
 
     # append pending to the doi field to indicate DOI is not activated yet. Upon successful
     # activation, "pending" will be removed from DOI field
-    resource.doi = get_resource_doi(pk, 'pending')
+    resource.doi = get_resource_doi(pk, CrossRefSubmissionStatus.PENDING)
     resource.save()
-
-    if not settings.DEBUG:
-        # only in production environment submit doi request to crossref
+    if settings.DEBUG:
+        # in debug mode, making sure we are using the test CrossRef service
+        assert settings.USE_CROSSREF_TEST is True
+    try:
         response = deposit_res_metadata_with_crossref(resource)
-        if not response.status_code == status.HTTP_200_OK:
-            # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
-            # crontab celery task
-            logger.error(f"Received a {response.status_code} from Crossref while depositing metadata for res id {pk}")
-            resource.doi = get_resource_doi(pk, 'failure')
-            resource.save()
+    except ValueError as v:
+        logger.error(f"Failed depositing XML {v} with Crossref for res id {pk}")
+        resource.doi = get_resource_doi(pk)
+        resource.save()
+        # set the resource back into review_pending
+        resource.raccess.alter_review_pending_flags(initiating_review=True)
+        raise
+    if not response.status_code == status.HTTP_200_OK:
+        # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
+        # crontab celery task
+        logger.error(f"Received a {response.status_code} from Crossref while depositing metadata for res id {pk}")
+        resource.doi = get_resource_doi(pk, CrossRefSubmissionStatus.FAILURE)
+        resource.save()
 
     resource.set_public(True)  # also sets discoverable to True
-    resource.raccess.published = True
+    resource.set_published(True)
     resource.raccess.save()
 
     # change "Publisher" element of science metadata to CUAHSI
@@ -1111,6 +1160,11 @@ def publish_resource(user, pk):
                'url': 'https://www.cuahsi.org'}
     resource.metadata.create_element('Publisher', **md_args)
 
+    # Here we publish the resource on behalf of the last_changed_by user
+    # This ensures that the modified date closely matches the date that the metadata are submitted to Crossref
+    last_modified = resource.last_changed_by
+    utils.resource_modified(resource, by_user=last_modified, overwrite_bag=False)
+
     # create published date
     resource.metadata.create_element('date', type='published', start_date=resource.updated)
 
@@ -1118,9 +1172,6 @@ def publish_resource(user, pk):
     md_args = {'name': 'doi',
                'url': get_activated_doi(resource.doi)}
     resource.metadata.create_element('Identifier', **md_args)
-
-    utils.resource_modified(resource, user, overwrite_bag=False)
-
     return pk
 
 

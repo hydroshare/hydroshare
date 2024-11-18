@@ -53,6 +53,10 @@ class TestIngestBag(MockIRODSTestCaseMixin, TestCase):
         assert res.files.all().count() == 1
         readme = res.files.all().first()
         assert readme.file_name == "README.md"
+        # check file level system metadata
+        assert readme._size > 0
+        assert len(readme._checksum) > 0
+        assert readme._modified_time is not None
 
     def test_bag_ingestion_command_overwrite(self):
         assert CompositeResource.objects.all().count() == 0

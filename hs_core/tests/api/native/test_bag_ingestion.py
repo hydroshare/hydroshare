@@ -23,6 +23,7 @@ from hs_file_types.models import (
     TimeSeriesLogicalFile,
     ModelProgramLogicalFile,
     ModelInstanceLogicalFile,
+    CSVLogicalFile,
 )
 
 
@@ -217,6 +218,26 @@ class TestIngestMetadata(MockIRODSTestCaseMixin, TestCase):
         compare_metadatas(self, self.res.short_id,
                           self.res.get_logical_files(GenericLogicalFile.type_name())[0].metadata.get_xml(),
                           "single_file_folder/test_meta.xml")
+
+    # write test for CSVLogicalFile
+
+    def test_csv_ingestion_at_root(self):
+        prepare_resource(self, "csv_file")
+        compare_metadatas(self, self.res.short_id,
+                          self.res.get_logical_files(CSVLogicalFile.type_name())[0].metadata.get_xml(),
+                          "csv_file/csv_test_modified_meta.xml")
+        self.assertEqual(CSVLogicalFile.objects.count(), 1)
+        csv_logical_file = CSVLogicalFile.objects.first()
+        self.assertGreater(len(csv_logical_file.preview_data.strip()), 0)
+
+    def test_csv_ingestion_at_folder(self):
+        prepare_resource(self, "csv_file_folder", upload_to="csv_file_folder")
+        compare_metadatas(self, self.res.short_id,
+                          self.res.get_logical_files(CSVLogicalFile.type_name())[0].metadata.get_xml(),
+                          "csv_file_folder/csv_test_modified_meta.xml")
+        self.assertEqual(CSVLogicalFile.objects.count(), 1)
+        csv_logical_file = CSVLogicalFile.objects.first()
+        self.assertGreater(len(csv_logical_file.preview_data.strip()), 0)
 
     def test_fileset_ingestion(self):
         prepare_resource(self, "file_set")

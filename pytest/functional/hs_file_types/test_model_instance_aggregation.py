@@ -16,7 +16,8 @@ from hs_file_types.models import (
     GenericLogicalFile,
     TimeSeriesLogicalFile,
     RefTimeseriesLogicalFile,
-    FileSetLogicalFile
+    FileSetLogicalFile,
+    CSVLogicalFile,
 )
 
 
@@ -362,6 +363,35 @@ def test_auto_timeseries_aggregation_creation(composite_resource_with_mi_aggrega
 
 
 @pytest.mark.django_db(transaction=True)
+def test_auto_csv_aggregation_creation(composite_resource_with_mi_aggregation_folder, mock_irods):
+    """Test that when a csv file is uploaded to a folder that represents a model instance aggregation,
+    a csv aggregation is created automatically"""
+
+    resource, _ = composite_resource_with_mi_aggregation_folder
+    mi_aggr_path = ModelInstanceLogicalFile.objects.first().aggregation_name
+    assert CSVLogicalFile.objects.count() == 0
+    # upload a csv file to the mi_aggr_path - folder that represents the model instance aggregation
+    csv_file_name = 'csv_with_header_and_data.csv'
+    csv_file_path = 'hs_file_types/tests/data/{}'.format(csv_file_name)
+    _add_files_to_resource(resource=resource, files_to_add=[csv_file_path], upload_folder=mi_aggr_path)
+
+    # there should be 2 resource files
+    assert resource.files.all().count() == 2
+    # the csv file added to the model instance folder should be part of a new csv aggregation
+    csv_res_file = ResourceFile.get(resource=resource,
+                                    file=csv_file_name, folder=mi_aggr_path)
+    assert csv_res_file.has_logical_file
+    # the csv aggregation should contain 1 file
+    assert CSVLogicalFile.objects.count() == 1
+    assert CSVLogicalFile.objects.first().files.count() == 1
+
+    assert ModelInstanceLogicalFile.objects.first().files.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    assert mi_aggr.metadata.is_dirty
+    assert not resource.dangling_aggregations_exist()
+
+
+@pytest.mark.django_db(transaction=True)
 def test_auto_ref_timeseries_aggregation_creation(composite_resource_with_mi_aggregation_folder, mock_irods):
     """Test that when a ref timeseries json file is uploaded to a folder that
     represents a model instance aggregation, a ref timeseries aggregation is created automatically
@@ -472,6 +502,198 @@ def test_move_single_file_aggr_into_model_instance_aggregation(composite_resourc
 
     move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
     mi_aggr = ModelInstanceLogicalFile.objects.first()
+    assert mi_aggr.metadata.is_dirty
+    assert not res.dangling_aggregations_exist()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_move_single_file_into_model_instance_aggregation(composite_resource, mock_irods):
+    """ test that we move a single file into a folder that represents a
+    model instance aggregation the moved file becomes part of the model instance aggregation"""
+
+    res, user = composite_resource
+    file_path = 'pytest/assets/generic_file.txt'
+    mi_folder = 'mi_folder'
+    ResourceFile.create_folder(res, mi_folder)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=mi_folder, check_target_folder=True)
+    assert res.files.count() == 1
+    # at this point there should not be any model instance aggregation
+    assert ModelInstanceLogicalFile.objects.count() == 0
+    # set folder to model instance aggregation type
+    ModelInstanceLogicalFile.set_file_type(resource=res, user=user, folder_path=mi_folder)
+    res_file = res.files.first()
+    assert res_file.has_logical_file
+    # file has folder
+    assert res_file.file_folder == mi_folder
+    assert ModelInstanceLogicalFile.objects.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    assert mi_aggr.files.count() == 1
+    # upload another file to the resource
+    single_file_name = 'logan.vrt'
+    file_path = 'pytest/assets/{}'.format(single_file_name)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, check_target_folder=True)
+    assert res.files.count() == 2
+    # moving the logan.vrt file into mi_folder
+    src_path = 'data/contents/{}'.format(single_file_name)
+    tgt_path = 'data/contents/{}/{}'.format(mi_folder, single_file_name)
+
+    move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
+    assert res.files.count() == 2
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    assert mi_aggr.files.count() == 2
+    assert mi_aggr.metadata.is_dirty
+    assert not res.dangling_aggregations_exist()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_move_single_file_out_of_model_instance_aggregation(composite_resource, mock_irods):
+    """ test that when we move a file out of a folder that represents a
+    model instance aggregation the moved file is no more part of the model instance aggregation"""
+
+    res, user = composite_resource
+    file_path = 'pytest/assets/generic_file.txt'
+    mi_folder = 'mi_folder'
+    ResourceFile.create_folder(res, mi_folder)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=mi_folder, check_target_folder=True)
+    assert res.files.count() == 1
+    # upload another file to the resource
+    single_file_name = 'logan.vrt'
+    file_path = 'pytest/assets/{}'.format(single_file_name)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=mi_folder, check_target_folder=True)
+    assert res.files.count() == 2
+
+    # at this point there should not be any model instance aggregation
+    assert ModelInstanceLogicalFile.objects.count() == 0
+    # set folder to model instance aggregation type
+    ModelInstanceLogicalFile.set_file_type(resource=res, user=user, folder_path=mi_folder)
+    for res_file in res.files.all():
+        assert res_file.has_logical_file
+        # file has folder
+        assert res_file.file_folder == mi_folder
+    assert ModelInstanceLogicalFile.objects.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    # aggregation should have two files
+    assert mi_aggr.files.count() == 2
+
+    # moving the logan.vrt file out from mi_folder to the root of the resource
+    src_path = 'data/contents/{}/{}'.format(mi_folder, single_file_name)
+    tgt_path = 'data/contents/{}'.format(single_file_name)
+
+    move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
+    assert res.files.count() == 2
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    # aggregation should have only one file
+    assert mi_aggr.files.count() == 1
+    assert mi_aggr.metadata.is_dirty
+    assert not res.dangling_aggregations_exist()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_move_folder_into_model_instance_aggregation(composite_resource, mock_irods):
+    """ test that when we move a folder into a folder that represents a
+    model instance aggregation the files in the moved folder become part of the model instance aggregation"""
+
+    res, user = composite_resource
+    file_path = 'pytest/assets/generic_file.txt'
+    mi_folder = 'mi_folder'
+    ResourceFile.create_folder(res, mi_folder)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=mi_folder, check_target_folder=True)
+    assert res.files.count() == 1
+    # at this point there should not be any model instance aggregation
+    assert ModelInstanceLogicalFile.objects.count() == 0
+    # set folder to model instance aggregation type
+    ModelInstanceLogicalFile.set_file_type(resource=res, user=user, folder_path=mi_folder)
+    res_file = res.files.first()
+    assert res_file.has_logical_file
+    # file has folder
+    assert res_file.file_folder == mi_folder
+    assert ModelInstanceLogicalFile.objects.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    assert mi_aggr.files.count() == 1
+    # upload another file to the resource to a different folder
+    normal_folder = 'normal_folder'
+    ResourceFile.create_folder(res, normal_folder)
+    single_file_name = 'logan.vrt'
+    file_path = 'pytest/assets/{}'.format(single_file_name)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=normal_folder, check_target_folder=True)
+    assert res.files.count() == 2
+    # moving normal_folder into mi_folder
+    src_path = 'data/contents/{}'.format(normal_folder)
+    tgt_path = 'data/contents/{}/{}'.format(mi_folder, normal_folder)
+
+    move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
+    assert res.files.count() == 2
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    assert mi_aggr.files.count() == 2
+    assert mi_aggr.metadata.is_dirty
+    assert not res.dangling_aggregations_exist()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_move_folder_out_of_model_instance_aggregation(composite_resource, mock_irods):
+    """ test that when we move a folder out of a folder that represents a
+    model instance aggregation the files in the moved folder are no mare part of the model instance aggregation"""
+
+    res, user = composite_resource
+    file_path = 'pytest/assets/generic_file.txt'
+    mi_folder = 'mi_folder'
+    ResourceFile.create_folder(res, mi_folder)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=mi_folder, check_target_folder=True)
+    # upload another file to the resource to a different folder
+    normal_folder = 'normal_folder'
+    sub_folder_path = os.path.join(mi_folder, normal_folder)
+    ResourceFile.create_folder(res, sub_folder_path)
+    single_file_name = 'logan.vrt'
+    file_path = 'pytest/assets/{}'.format(single_file_name)
+    file_to_upload = UploadedFile(file=open(file_path, 'rb'),
+                                  name=os.path.basename(file_path))
+
+    add_file_to_resource(res, file_to_upload, folder=sub_folder_path, check_target_folder=True)
+    assert res.files.count() == 2
+    # at this point there should not be any model instance aggregation
+    assert ModelInstanceLogicalFile.objects.count() == 0
+    # set folder to model instance aggregation type
+    ModelInstanceLogicalFile.set_file_type(resource=res, user=user, folder_path=mi_folder)
+    for res_file in res.files.all():
+        assert res_file.has_logical_file
+        # file has folder
+        assert res_file.file_folder != ""
+
+    assert ModelInstanceLogicalFile.objects.count() == 1
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    # aggregation should have two files
+    assert mi_aggr.files.count() == 2
+
+    # moving normal_folder out of mi_folder
+    src_path = 'data/contents/{}/{}'.format(mi_folder, normal_folder)
+    tgt_path = 'data/contents/{}'.format(normal_folder)
+
+    move_or_rename_file_or_folder(user, res.short_id, src_path, tgt_path)
+    assert res.files.count() == 2
+    mi_aggr = ModelInstanceLogicalFile.objects.first()
+    # check that the aggregation has only one file
+    assert mi_aggr.files.count() == 1
     assert mi_aggr.metadata.is_dirty
     assert not res.dangling_aggregations_exist()
 

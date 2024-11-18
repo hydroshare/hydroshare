@@ -54,22 +54,30 @@ i.identifier-icon {
     margin-right: 12px;
 }
 
-img.identifier-icon {
+img.identifier-icon, .identifier-icon img.ai {
     width: 36px;
     height: 36px;
     margin-right: 12px;
+    object-fit: contain;
+    border-radius: 4px;
+    padding: 2px;
+    margin-top: 0;
 }
 
-i.identifier-icon.ai-orcid, .identifier-icon .ai-orcid {
+img.identifier-icon.ai-orcid, .identifier-icon .ai-orcid {
     color: #a6ce39;
 }
 
-i.identifier-icon.ai-google-scholar-square, .identifier-icon .ai-google-scholar-square {
+img.identifier-icon.ai-google-scholar-square, .identifier-icon .ai-google-scholar-square {
     color: #367df3;
 }
 
-i.identifier-icon.ai-researchgate-square, .identifier-icon .ai-researchgate-square {
+img.identifier-icon.ai-researchgate-square, .identifier-icon .ai-researchgate-square {
     color: #00CCBB;
+}
+
+img.identifier-icon.ai-researcherid-square, .identifier-icon .ai-researcherid-square {
+    color: #b7b7b7;
 }
 
 i.identifier-icon.fa-address-card, .identifier-icon .fa-address-card {

@@ -1,4 +1,4 @@
-from .privilege import PrivilegeCodes,\
+from .privilege import PrivilegeCodes, \
     UserResourcePrivilege, UserGroupPrivilege, GroupResourcePrivilege, \
     UserCommunityPrivilege, GroupCommunityPrivilege, CommunityResourcePrivilege
 from .provenance import UserResourceProvenance, UserGroupProvenance, GroupResourceProvenance, \

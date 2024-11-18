@@ -13,10 +13,7 @@ from django.test import TestCase, RequestFactory
 from hs_core.hydroshare import add_file_to_resource, add_resource_files
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, zip_folder, \
     unzip_file, remove_folder
-from hs_core.views.utils import run_ssh_command
 from hs_core.tasks import FileOverrideException
-from theme.models import UserProfile
-from django_irods.storage import IrodsStorage
 
 
 class MockIRODSTestCaseMixin(object):
@@ -49,68 +46,6 @@ class MockIRODSTestCaseMixin(object):
 class TestCaseCommonUtilities(object):
     """Enable common utilities for iRODS testing."""
 
-    def assert_federated_irods_available(self):
-        """assert federated iRODS is available before proceeding with federation-related tests."""
-        self.assertTrue(settings.REMOTE_USE_IRODS
-                        and settings.HS_USER_ZONE_HOST == 'users.local.org'
-                        and settings.IRODS_HOST == 'data.local.org',
-                        "irods docker containers are not set up properly for federation testing")
-        self.irods_fed_storage = IrodsStorage('federated')
-        self.irods_storage = IrodsStorage()
-
-    def create_irods_user_in_user_zone(self):
-        """Create corresponding irods account in user zone."""
-        try:
-            exec_cmd = "{0} {1} {2}".format(settings.LINUX_ADMIN_USER_CREATE_USER_IN_USER_ZONE_CMD,
-                                            self.user.username, self.user.username)
-            output = run_ssh_command(host=settings.HS_USER_ZONE_HOST,
-                                     uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
-                                     pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
-                                     exec_cmd=exec_cmd)
-            for out_str in output:
-                if 'ERROR:' in out_str.upper():
-                    # irods account failed to create
-                    self.fail(out_str)
-
-            user_profile = UserProfile.objects.filter(user=self.user).first()
-            user_profile.create_irods_user_account = True
-            user_profile.save()
-        except Exception as ex:
-            self.fail(str(ex))
-
-    def delete_irods_user_in_user_zone(self):
-        """Delete irods test user in user zone."""
-        try:
-            exec_cmd = "{0} {1}".format(settings.LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD,
-                                        self.user.username)
-            output = run_ssh_command(host=settings.HS_USER_ZONE_HOST,
-                                     uname=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
-                                     pwd=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
-                                     exec_cmd=exec_cmd)
-            if output:
-                for out_str in output:
-                    if 'ERROR:' in out_str.upper():
-                        # there is an error from icommand run, report the error
-                        self.fail(out_str)
-
-            user_profile = UserProfile.objects.filter(user=self.user).first()
-            user_profile.create_irods_user_account = False
-            user_profile.save()
-        except Exception as ex:
-            # there is an error from icommand run, report the error
-            self.fail(str(ex))
-
-    def save_files_to_user_zone(self, file_name_to_target_name_dict):
-        """Save a list of files to iRODS user zone.
-
-        :param file_name_to_target_name_dict: a dictionary in the form of {ori_file, target_file}
-        where ori_file is the file to be save to, and the target_file is the full path file name
-        in iRODS user zone to save ori_file to
-        :return:
-        """
-        for file_name, target_name in list(file_name_to_target_name_dict.items()):
-            self.irods_fed_storage.saveFile(file_name, target_name)
-
     def check_file_exist(self, irods_path):
         """Check whether the input irods_path exist in iRODS.
 
@@ -125,27 +60,6 @@ class TestCaseCommonUtilities(object):
         :return:
         """
         self.irods_fed_storage.delete(irods_path)
-
-    def verify_user_quota_usage_avu_in_user_zone(self, attname, qsize):
-        '''
-        Have to use LINUX_ADMIN_USER_FOR_HS_USER_ZONE with rodsadmin role to get user type AVU
-        in user zone and verify its quota usage is set correctly
-        :param attname: quota usage attribute name set on iRODS proxy user in user zone
-        :param qsize: quota size (type string) to be verified to equal to the value set for attname.
-        '''
-        istorage = IrodsStorage()
-        istorage.set_user_session(username=settings.LINUX_ADMIN_USER_FOR_HS_USER_ZONE,
-                                  password=settings.LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE,
-                                  host=settings.HS_USER_ZONE_HOST,
-                                  port=settings.IRODS_PORT,
-                                  zone=settings.HS_USER_IRODS_ZONE,
-                                  sess_id='user_proxy_session')
-
-        uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE, 'home',
-                                     settings.HS_IRODS_PROXY_USER_IN_USER_ZONE,
-                                     settings.IRODS_BAGIT_PATH)
-        get_qsize = istorage.getAVU(uz_bagit_path, attname)
-        self.assertEqual(qsize, get_qsize)
 
     def resource_file_oprs(self):
         """Test common iRODS file operations.
@@ -369,7 +283,7 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(self.resRaster.metadata.formats.all().filter(
             value='image/tiff').count(), 1)
 
-        # testing extended metadata element: original coverage
+        # testing additional metadata element: original coverage
         ori_coverage = self.resRaster.metadata.originalCoverage
         self.assertNotEqual(ori_coverage, None)
         self.assertEqual(float(ori_coverage.value['northlimit']), 4662392.446916306)
@@ -396,7 +310,7 @@ class TestCaseCommonUtilities(object):
                             'NORTH],AUTHORITY["EPSG","26912"]]'
         self.assertEqual(ori_coverage.value['projection_string'], projection_string)
 
-        # testing extended metadata element: cell information
+        # testing additional metadata element: cell information
         cell_info = self.resRaster.metadata.cellInformation
         self.assertEqual(cell_info.rows, 1660)
         self.assertEqual(cell_info.columns, 985)
@@ -404,7 +318,7 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(cell_info.cellSizeYValue, 30.0)
         self.assertEqual(cell_info.cellDataType, 'Float32')
 
-        # testing extended metadata element: band information
+        # testing additional metadata element: band information
         self.assertEqual(self.resRaster.metadata.bandInformations.count(), 1)
         band_info = self.resRaster.metadata.bandInformations.first()
         self.assertEqual(band_info.noDataValue, '-3.4028234663852886e+38')
@@ -482,7 +396,7 @@ class TestCaseCommonUtilities(object):
         subj_element = self.resNetcdf.metadata.subjects.all().first()
         self.assertEqual(subj_element.value, 'Snow water equivalent')
 
-        # testing extended metadata element: original coverage
+        # testing additional metadata element: original coverage
         ori_coverage = self.resNetcdf.metadata.ori_coverage.all().first()
         self.assertNotEqual(ori_coverage, None)
         self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
@@ -495,7 +409,7 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(ori_coverage.value['units'], 'Meter')
         self.assertEqual(ori_coverage.value['projection'], 'transverse_mercator')
 
-        # testing extended metadata element: variables
+        # testing additional metadata element: variables
         self.assertEqual(self.resNetcdf.metadata.variables.all().count(), 5)
 
         # test time variable
@@ -604,7 +518,7 @@ class TestCaseCommonUtilities(object):
         # there should be a total of 7 timeseries
         self.assertEqual(self.resTimeSeries.metadata.time_series_results.all().count(), 7)
 
-        # testing extended metadata elements
+        # testing additional metadata elements
 
         # test 'site' - there should be 7 sites
         self.assertEqual(self.resTimeSeries.metadata.sites.all().count(), 7)
@@ -733,6 +647,6 @@ class ViewTestCase(TestCase):
     def add_session_to_request(request):
         """Use SessionMiddleware to add a session to the request."""
         """Annotate a request object with a session"""
-        middleware = SessionMiddleware()
+        middleware = SessionMiddleware(request)
         middleware.process_request(request)
         request.session.save()

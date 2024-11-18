@@ -3,6 +3,7 @@ import os
 
 from django.core.files.uploadedfile import UploadedFile
 from rest_framework import status
+from unittest import skip
 
 from hs_core.hydroshare import resource
 from hs_file_types.models import GenericLogicalFile, GenericFileMetaData
@@ -149,6 +150,7 @@ class TestResourceList(HSRESTTestCase):
         self.assertIn(gen_res_one.short_id, result_res_id_list,
                       msg='obsoleted resource id is not included in returned resource list')
 
+    @skip("re-enable after resolution of https://github.com/hydroshare/hydroshare/issues/5240")
     def test_resource_list_by_bounding_box(self):
         metadata_dict_one = [{'coverage': {'type': 'point', 'value': {'north': '70',
                                                                       'east': '70',

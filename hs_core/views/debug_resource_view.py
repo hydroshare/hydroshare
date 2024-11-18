@@ -26,7 +26,7 @@ def debug_resource(request, shortkey):
         'public_AVU': resource.getAVU('isPublic'),
         'type_AVU': resource.getAVU('resourceType'),
         'modified_AVU': resource.getAVU('bag_modified'),
-        'quota_AVU': resource.getAVU('quotaUserName'),
+        'quota_holder': resource.quota_holder.username,
     }
     return HttpResponse(template.render(context, request))
 
@@ -45,7 +45,7 @@ def check_task_status(request, task_id=None, *args, **kwargs):
     if resource_debug.AsyncResult(task_id).ready():
         status = "SUCCESS"
         try:
-            irods_issues, irods_errors = AsyncResult(task_id).get()
+            irods_issues, irods_errors, _ = AsyncResult(task_id).get()
         except Exception as e:
             status = "ERROR - {}".format(e)
         context = {

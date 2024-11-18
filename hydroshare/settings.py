@@ -1,8 +1,9 @@
 # TEST_RUNNER='django_nose.NoseTestSuiteRunner'
+import os
 import sys
 
 from PIL import ImageFile
-import os
+
 TEST_RUNNER = "hs_core.tests.runner.CustomTestSuiteRunner"
 TEST_WITHOUT_MIGRATIONS_COMMAND = "django_nose.management.commands.test.Command"
 
@@ -138,6 +139,19 @@ DEBUG = False
 # Best set to ``True`` in local_settings.py
 DISABLE_TASK_EMAILS = False
 
+DEFAULT_FROM_EMAIL = 'hydro@hydroshare.org'
+DEFAULT_SUPPORT_EMAIL = 'support@hydroshare.org'
+DEFAULT_DEVELOPER_EMAIL = 'developer@hydroshare.org'
+
+# Integer seconds that worker should allocate every night to repair_resource file discrepancies
+NIGHTLY_RESOURCE_REPAIR_DURATION = 60 * 60
+
+# Integer seconds that worker should allocate every night to generating filesystem metadata
+NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION = 60 * 60 * 4  # 4 hours
+
+# Should resource owners be notified of automated resource repair?
+NOTIFY_OWNERS_AFTER_RESOURCE_REPAIR = False
+
 # Whether a user's session cookie expires when the Web browser is closed.
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
@@ -160,15 +174,64 @@ INTERNAL_IPS = ("127.0.0.1",)
 # is not that great for our project use case
 FILE_UPLOAD_MAX_MEMORY_SIZE = 0
 
+# the size that a file will be chunked for resumable download
+RANGED_FILE_READER_BLOCK_SIZE = 1024 * 1024  # 1MB
+
+# the size of the buffer that will be used when dumping unneeded bytes from head of a resumed file
+RANGED_FILE_READER_DUMP_SIZE = 1024 * 1024 * 1024  # 1GB
+
 # TODO remove MezzanineBackend after conflicting users have been removed
-AUTHENTICATION_BACKENDS = ("theme.backends.CaseInsensitiveMezzanineBackend",)
+AUTHENTICATION_BACKENDS = [
+    "theme.backends.CaseInsensitiveMezzanineBackend",
+]
+
+# Wether to enable OIDC auth via mozilla_django_oidc
+# Default false to enable local development
+# Set to true in local_settings if desired for specific deployment
+ENABLE_OIDC_AUTHENTICATION = False
+
+# If OIDC is enabled, the following additional settings should be defined in local_settings
+# OIDC_OP_AUTHORIZATION_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/auth"
+# OIDC_OP_TOKEN_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/token"
+# OIDC_OP_USER_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/userinfo"
+# OIDC_RP_SIGN_ALGO = "RS256"
+# OIDC_OP_JWKS_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/certs"
+OIDC_RP_CLIENT_ID = 'hydroshare'
+OIDC_RP_CLIENT_SECRET = 'blah'
+KEYCLOAK_ADMIN_USERNAME = 'blah'
+KEYCLOAK_ADMIN_PASSWORD = 'blah'
+# LOGIN_REDIRECT_URL = '/home/'
+# LOGIN_URL = '/oidc/authenticate/'
+# OIDC_CHANGE_PASSWORD_URL = "https://auth.cuahsi.io/realms/CUAHSI/account?#/security/signingin"
+# ALLOW_LOGOUT_GET_METHOD = True
+# LOGOUT_REDIRECT_URL = '/'
+# OIDC_OP_LOGOUT_ENDPOINT = "https://auth.cuahsi.io/realms/CUAHSI/protocol/openid-connect/logout"
+
+# The following two settings will logout of OIDC during signout
+# If these two settings are not enabled,
+# the user will be redirected to auth.cuahsi.io to choose if they want to logout of SSO
+# OIDC_OP_LOGOUT_URL_METHOD = 'hs_core.authentication.provider_logout'
+# OIDC_STORE_ID_TOKEN = True
+
+# Whether or not the OIDC provider should verify SSL certificates from the identity provider
+# OIDC_VERIFY_SSL = True
+
+OIDC_KEYCLOAK_URL = "https://auth.cuahsi.org/"
+OIDC_KEYCLOAK_REALM = "CUAHSI"
+
+# Enables publishing discoverable resources to Google PubSub (hs_core/pubsub_discovery_processor.py)
+# Requires a service account json file with PubSub permissions to be placed at the root of the
+# project with the name service-account-pubsub.json
+PUBLISH_DISCOVERABLE = False
 
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
-    "django.contrib.staticfiles.finders.DefaultStorageFinder",
+    # "django.contrib.staticfiles.finders.DefaultStorageFinder",
+    # We disable the DefaultStorageFinder because otherwise it will search for static files in Google Cloud Storage
+    # https://docs.djangoproject.com/en/3.2/ref/settings/#staticfiles-finders
 )
 
 # The numeric mode to set newly-uploaded files to. The value should be
@@ -176,12 +239,12 @@ STATICFILES_FINDERS = (
 FILE_UPLOAD_PERMISSIONS = 0o644
 
 # Alternative tmp folder
-FILE_UPLOAD_TEMP_DIR = "/hs_tmp"
+FILE_UPLOAD_TEMP_DIR = "/tmp"
 
-# Sitemap for robots
-ROBOTS_SITEMAP_URLS = [
-    "http://localhost:8000/sitemap/",
-]
+FILE_UPLOAD_MAX_SIZE = 25 * 1024  # 25GB in MB
+
+# https://docs.djangoproject.com/en/3.2/ref/settings/#data-upload-max-memory-size
+DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100 MB in Bytes
 
 #############
 # DATABASES #
@@ -247,7 +310,14 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, STATIC_URL.strip("/"))
 # using this storage class might cause issues for future tests
 # The documentation suggests using the default storage backend when testing
 # https://docs.djangoproject.com/en/1.11/ref/contrib/staticfiles/#django.contrib.staticfiles.storage.ManifestStaticFilesStorage.manifest_strict
-STATICFILES_STORAGE = "hydroshare.storage.ForgivingManifestStaticFilesStorage"
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "hydroshare.storage.ForgivingManifestStaticFilesStorage",
+    },
+}
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -259,9 +329,6 @@ MEDIA_URL = "/static/media/"
 # Sorl settings for generating thumbnails
 THUMBNAIL_PRESERVE_FORMAT = True
 THUMBNAIL_QUALITY = 95
-THUMBNAIL_DUMMY = True
-THUMBNAIL_DUMMY_SOURCE = STATIC_URL + "img/home-page/step4.png"
-THUMBNAIL_DUMMY_RATIO = 1
 
 # Allow PIL to ignore imgs with lots of metadata
 
@@ -270,6 +337,44 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))
+
+# ----- START of settings for using Google Cloud Storage for static files ----- |
+ENABLE_STATIC_CLOUD_STORAGE = False
+# Whether to use Google Cloud Storage for static files
+# Settings documented here: https://django-storages.readthedocs.io/en/latest/backends/gcloud.html#settings
+# By default, this is set to False, and static files are served from the local filesystem
+# To enable Google Cloud Storage, the following settings should be added to local_settings.py
+# Additionally, a google service account json file should be placed at the root of the project
+# Service account should have permissions to write to the bucket
+# lastly, when you build the discover VUE app, you should set export the VUE_APP_BUCKET_URL_PUBLIC_PATH env var
+# this value should be the same as the STATIC_URL that you set in django local_settings.py
+
+# ENABLE_STATIC_CLOUD_STORAGE = True
+# from google.oauth2 import service_account
+# from datetime import timedelta
+# PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+# BASE_DIR = os.path.dirname(PROJECT_ROOT)
+# GS_PROJECT_ID = 'hydroshare-gc-project'
+# GS_BUCKET_NAME = 'hydroshare-static-media-bucket'
+# GS_BLOB_CHUNK_SIZE = 1024 * 256 * 40  # Needed for uploading large streams
+# GS_EXPIRATION = timedelta(minutes=5)
+# GS_SERVICE_ACCOUNT_FILENAME = 'hydroshare-gcs-sa.json'
+# # necessary to prevent RuntimeError: Max post-process passes exceeded.
+# GS_QUERYSTRING_AUTH = False
+# GS_DEFAULT_ACL = None
+# GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
+#     os.path.join(BASE_DIR, GS_SERVICE_ACCOUNT_FILENAME)
+# )
+# STATICFILES_STORAGE = 'hydroshare.storage.Static'
+# THUMBNAIL_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+# DEFAULT_FILE_STORAGE = 'hydroshare.storage.MediaeGoogleCloudStorage'
+# # the media is served from the root of the bucket
+# MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
+# # the static files are served from a static/ dir in the bucket
+# STATIC_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/static/'
+# MEDIA_ROOT = MEDIA_URL
+# STATIC_ROOT = STATIC_URL
+# ----- END of settings for using Google Cloud Storage for static files ----- |
 
 # Package/module name to import the root urlpatterns from for the project.
 ROOT_URLCONF = "%s.urls" % PROJECT_DIRNAME
@@ -283,7 +388,8 @@ INPLACE_SAVE_URL = "/hsapi/save_inline/"
 
 INSTALLED_APPS = (
     "test_without_migrations",
-    "autocomplete_light",
+    "dal",
+    "dal_select2",
     "django.contrib.admin",
     "django.contrib.auth",
     "oauth2_provider",
@@ -312,6 +418,7 @@ INSTALLED_APPS = (
     "mezzanine.pages",
     "mezzanine.galleries",
     "crispy_forms",
+    "crispy_bootstrap3",
     "mezzanine.accounts",
     "haystack",
     "rest_framework",
@@ -346,7 +453,19 @@ INSTALLED_APPS = (
     "health_check.contrib.celery_ping",
     "health_check.contrib.psutil",
     "health_check.contrib.rabbitmq",
+    "mozilla_django_oidc",
+    'django_tus',
 )
+
+TUS_UPLOAD_DIR = '/tmp/tus_upload'
+TUS_DESTINATION_DIR = '/tmp/tus_completed'
+TUS_FILE_NAME_FORMAT = 'increment'  # Other options are: 'random-suffix', 'random', 'keep'
+TUS_EXISTING_FILE = 'error'  # Other options are: 'overwrite',  'error', 'rename'
+
+# the url for the uppy companion server
+# https://uppy.io/docs/companion/
+COMPANION_URL = 'https://companion.hydroshare.org/'
+UPPY_UPLOAD_ENDPOINT = 'https://hydroshare.org/hsapi/tus/'
 
 SWAGGER_SETTINGS = {
     "DEFAULT_GENERATOR_CLASS": "hs_rest_api2.serializers.NestedSchemaGenerator"
@@ -467,7 +586,9 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 # These will be added to ``INSTALLED_APPS``, only if available.
 OPTIONAL_APPS = (
-    "debug_toolbar",
+    # "debug_toolbar",
+    # debug_toolbar disabled for GCS storage
+    # debug_toolbar calls ".path" on a storage object, which is not supported by GCS storage
     "django_extensions",
     # "compressor",
     PACKAGE_NAME_FILEBROWSER,
@@ -503,17 +624,20 @@ DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
 
 
 ACCOUNTS_PROFILE_MODEL = "theme.UserProfile"
-CRISPY_TEMPLATE_PACK = "bootstrap"
+CRISPY_TEMPLATE_PACK = "bootstrap3"
+
+DEFAULT_AUTHENTICATION_CLASSES = (
+    "rest_framework.authentication.BasicAuthentication",
+    "rest_framework.authentication.SessionAuthentication",
+    "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
+)
+
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 100,
     "PAGE_SIZE_QUERY_PARAM": "PAGE_SIZE",
     "EXCEPTION_HANDLER": "rest_framework.views.exception_handler",
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework.authentication.BasicAuthentication",
-        "rest_framework.authentication.SessionAuthentication",
-        "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
-    ),
+    "DEFAULT_AUTHENTICATION_CLASSES": DEFAULT_AUTHENTICATION_CLASSES,
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.NamespaceVersioning",
 }
 
@@ -541,7 +665,7 @@ PASSWORD_RESET_TIMEOUT = 60 * 60 * 24 * 7
 
 # customized temporary file path for large files retrieved from iRODS user zone for metadata
 # extraction
-TEMP_FILE_DIR = "/hs_tmp"
+TEMP_FILE_DIR = "/tmp"
 
 ####################
 # OAUTH TOKEN SETTINGS #
@@ -556,71 +680,82 @@ OAUTH2_PROVIDER = {
 # LOGGING SETTINGS #
 ####################
 
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "verbose": {
-            "format": "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
-            "datefmt": "%d/%b/%Y %H:%M:%S",
+# Using Google Cloud Logging will format logs in a structured way that can be parsed by Google Cloud Logging
+USE_CLOUD_LOGGING = False
+
+if USE_CLOUD_LOGGING:
+    import google.cloud.logging as gcloud_logging
+    from google.cloud.logging_v2.handlers import setup_logging
+
+    client = gcloud_logging.Client()
+    handler = gcloud_logging.handlers.StructuredLogHandler()
+    setup_logging(handler)
+else:
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "verbose": {
+                "format": "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+                "datefmt": "%d/%b/%Y %H:%M:%S",
+            },
+            "simple": {
+                "format": "[%(asctime)s] %(levelname)s %(message)s",
+                "datefmt": "%d/%b/%Y %H:%M:%S",
+            },
         },
-        "simple": {
-            "format": "[%(asctime)s] %(levelname)s %(message)s",
-            "datefmt": "%d/%b/%Y %H:%M:%S",
+        "handlers": {
+            "djangolog": {
+                "level": "DEBUG",
+                "class": "logging.handlers.RotatingFileHandler",
+                "filename": "/hydroshare/log/django.log",
+                "formatter": "verbose",
+                "maxBytes": 1024 * 1024 * 15,  # 15MB
+                "backupCount": 10,
+            },
+            "hydrosharelog": {
+                "level": "DEBUG",
+                "class": "logging.handlers.RotatingFileHandler",
+                "filename": "/hydroshare/log/hydroshare.log",
+                "formatter": "verbose",
+                "maxBytes": 1024 * 1024 * 15,  # 15MB
+                "backupCount": 10,
+            },
+            "celerylog": {
+                "level": "DEBUG",
+                "class": "logging.handlers.RotatingFileHandler",
+                "filename": "/hydroshare/log/celery.log",
+                "formatter": "verbose",
+                "maxBytes": 1024 * 1024 * 15,  # 15MB
+                "backupCount": 10,
+            },
         },
-    },
-    "handlers": {
-        "djangolog": {
-            "level": "DEBUG",
-            "class": "logging.handlers.RotatingFileHandler",
-            "filename": "/hydroshare/log/django.log",
-            "formatter": "verbose",
-            "maxBytes": 1024 * 1024 * 15,  # 15MB
-            "backupCount": 10,
+        "loggers": {
+            "django": {
+                "handlers": ["djangolog"],
+                "propagate": False,
+                "level": "DEBUG",
+            },
+            # https://docs.djangoproject.com/en/1.11/topics/logging/#django-template
+            "django.template": {
+                "handlers": ["djangolog"],
+                "level": "INFO",
+                "propagate": False,
+            },
+            "django.db.backends": {
+                "handlers": ["djangolog"],
+                "level": "WARNING",
+                "propagate": False,
+            },
+            "celery": {
+                "handlers": ["celerylog"],
+                "level": "WARNING",
+                "propagate": False,
+            },
+            # Catch-all logger for HydroShare apps
+            "": {"handlers": ["hydrosharelog"], "propagate": False, "level": "DEBUG"},
         },
-        "hydrosharelog": {
-            "level": "DEBUG",
-            "class": "logging.handlers.RotatingFileHandler",
-            "filename": "/hydroshare/log/hydroshare.log",
-            "formatter": "verbose",
-            "maxBytes": 1024 * 1024 * 15,  # 15MB
-            "backupCount": 10,
-        },
-        "celerylog": {
-            "level": "DEBUG",
-            "class": "logging.handlers.RotatingFileHandler",
-            "filename": "/hydroshare/log/celery.log",
-            "formatter": "verbose",
-            "maxBytes": 1024 * 1024 * 15,  # 15MB
-            "backupCount": 10,
-        },
-    },
-    "loggers": {
-        "django": {
-            "handlers": ["djangolog"],
-            "propagate": False,
-            "level": "DEBUG",
-        },
-        # https://docs.djangoproject.com/en/1.11/topics/logging/#django-template
-        "django.template": {
-            "handlers": ["djangolog"],
-            "level": "INFO",
-            "propagate": False,
-        },
-        "django.db.backends": {
-            "handlers": ["djangolog"],
-            "level": "WARNING",
-            "propagate": False,
-        },
-        "celery": {
-            "handlers": ["celerylog"],
-            "level": "WARNING",
-            "propagate": False,
-        },
-        # Catch-all logger for HydroShare apps
-        "": {"handlers": ["hydrosharelog"], "propagate": False, "level": "DEBUG"},
-    },
-}
+    }
 
 # hs_tracking settings
 TRACKING_SESSION_TIMEOUT = 60 * 15
@@ -633,9 +768,6 @@ TRACKING_PROFILE_FIELDS = [
     "country",
 ]
 TRACKING_USER_FIELDS = ["username", "email", "first_name", "last_name"]
-
-# info django that a reverse proxy sever (nginx) is handling ssl/https for it
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 # Content Security Policy
@@ -734,6 +866,7 @@ SECURE_HSTS_SECONDS = 31536000
 SESSION_COOKIE_SECURE = USE_SECURITY
 CSRF_COOKIE_SECURE = USE_SECURITY
 
+
 # Categorization in discovery of content types
 # according to file extension of otherwise unaggregated files.
 DISCOVERY_EXTENSION_CONTENT_TYPES = {
@@ -758,7 +891,6 @@ TASK_NAME_LIST = [
     "hs_core.tasks.create_temp_zip",
     "hs_core.tasks.unzip_task",
     "hs_core.tasks.copy_resource_task",
-    "hs_core.tasks.replicate_resource_bag_to_user_zone_task",
     "hs_core.tasks.create_new_version_resource_task",
     "hs_core.tasks.delete_resource_task",
     "hs_core.tasks.move_aggregation_task",
@@ -783,7 +915,6 @@ if 'test' in sys.argv:
     import logging
 
     logging.disable(logging.CRITICAL)
-    DISABLE_HAYSTACK = True
     PASSWORD_HASHERS = [
         'django.contrib.auth.hashers.MD5PasswordHasher',
     ]
@@ -815,3 +946,14 @@ else:
 MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
     "/hydroshare/hs_file_types/model_meta_schema_templates"
 )
+
+BULK_UPDATE_CREATE_BATCH_SIZE = 1000
+
+if ENABLE_OIDC_AUTHENTICATION:
+    # The order of the authentication classes is important. The OIDC authentication class
+    # see this issue: https://github.com/encode/django-rest-framework/issues/5865
+    # The basic auth classes come first, then the session auth classes, then the OIDC and OAuth2 classes
+    DEFAULT_AUTHENTICATION_CLASSES = ("hs_core.authentication.BasicOIDCAuthentication",) + \
+        DEFAULT_AUTHENTICATION_CLASSES + ("mozilla_django_oidc.contrib.drf.OIDCAuthentication",)
+    REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = DEFAULT_AUTHENTICATION_CLASSES
+    AUTHENTICATION_BACKENDS.append("hs_core.authentication.HydroShareOIDCAuthenticationBackend")

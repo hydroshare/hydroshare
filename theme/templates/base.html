@@ -21,7 +21,7 @@
 
 {% compress css %}
 <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
-<link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.3.0.2.min.css' %}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 <link rel="stylesheet" type="text/css" href="{% static 'css/elements.css' %}">
 <link rel='stylesheet' type='text/css' href="{% static 'css/jquery-ui/smoothness/jquery-ui.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'css/hydroshare_core.css' %}">
@@ -33,13 +33,18 @@
 {% endcompress %}
 
 {% compress js %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<!-- https://jquery.com/upgrade-guide/1.9/#jquery-browser-removed -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-migrate/1.4.1/jquery-migrate.min.js" integrity="sha512-t0ovA8ZOiDuaNN5DaQQpMn37SqIwp6avyoFQoW49hOmEYSRf8mTCY2jZkEVizDT+IZ9x+VHTZPpcaMA5t2d2zQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script type="text/javascript" src="{% static 'js/custom.js' %}"></script>
-<script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+
+{# vue 2.7.16-beta.1 will break typeahead https://github.com/vuejs/vue/blob/main/CHANGELOG.md #}
+<script src="https://cdn.jsdelivr.net/npm/vue@2.7.15"></script>
+
 <script type="text/javascript" src="{% static 'js/scrolltopcontrol.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/jqcsrf.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/jquery-ui.js' %}"></script>
-<script type="text/javascript" src="{% static 'js/bootstrap.3.0.2.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 <script type="text/javascript" src="{% static 'js/bootstrap-extras.js' %}"></script>
 
 {% block extra_js %}
@@ -49,7 +54,7 @@
 {% endblock %}
 
 {% endcompress %}
-{% include 'autocomplete_light/static.html' %}
+{#{% include 'autocomplete_light/static.html' %}#}
 
 {% block extra_head %}{% endblock %}
 {% if not page|is_debug %}
@@ -58,6 +63,9 @@
       heap.load("1320547260");
 </script>
 {% endif %}
+<script>
+    const STATIC_URL = "{{ STATIC_URL }}" || "/static/static/";
+</script>
 </head>
 
 <body id="{% block body_id %}body{% endblock %}">

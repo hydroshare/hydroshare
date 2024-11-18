@@ -1,3 +1,4 @@
+{% load hydroshare_tags %}
 <table id="table-stats" class="info-table">
     <tr>
         <th>Sharing Status:</th>
@@ -24,7 +25,26 @@
             {% endif %}
         </td>
     </tr>
-    {% if "pending" in cm.doi or "failure" in cm.doi or cm.raccess.review_pending %}
+    {% if user.is_superuser %}
+        <tr>
+            {% if not cm.spam_allowlisted %}
+                <a id="spam_allowlist" href="/hsapi/_internal/spam_allowlist/{{ cm.short_id }}/allow/">
+                    <button
+                        class="btn btn-info btn-xs">
+                        Allow in Discover even if spam patterns
+                    </button>
+                </a>
+            {% else %}
+                <a id="spam_disallowlist" href="/hsapi/_internal/spam_allowlist/{{ cm.short_id }}/disallow/">
+                    <button
+                        class="btn btn-warning btn-xs">
+                        Remove from spam allowlist
+                    </button>
+                </a>
+            {% endif %}
+        </tr>
+    {% endif %}
+    {% if cm|show_publication_status %}
             <tr>
                 <th>Publication Status: </th>
                 <td>
@@ -45,9 +65,9 @@
                         </a>
                         {% else %}
                         <div class="small text-muted">
-                            This resource is under review for 
-                            <a href="https://help.hydroshare.org/publishing-in-hydroshare/minimum-metadata-requirements-for-publishing-in-hydroshare/" target="_blank">minimum metadata</a> 
-                            and to ensure that it adheres to 
+                            This resource is under review for
+                            <a href="https://help.hydroshare.org/publishing-in-hydroshare/minimum-metadata-requirements-for-publishing-in-hydroshare/" target="_blank">minimum metadata</a>
+                            and to ensure that it adheres to
                             <a href="https://help.hydroshare.org/publishing-in-hydroshare/terms-of-use-and-community-guidelines/" target="_blank">community guidelines</a>.
                         </div>
                         {% endif %}

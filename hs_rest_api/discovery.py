@@ -13,6 +13,7 @@ class DiscoveryResourceSerializer(HaystackSerializer):
     class Meta:
         index_classes = [BaseResourceIndex]
         fields = [
+            "short_id",
             "title",
             "author",
             "contributor",

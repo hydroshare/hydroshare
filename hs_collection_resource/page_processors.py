@@ -12,7 +12,7 @@ def landing_page(request, page):
     edit_resource = page_processors.check_resource_mode(request)
 
     # current contained resources list
-    collection_items_list = list(content_model.resources.all())
+    collection_items_list = list(content_model.resources.all().select_related('raccess'))
 
     # get the context from hs_core
     context = page_processors.get_page_context(page, request.user,

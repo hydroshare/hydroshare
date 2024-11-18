@@ -2,32 +2,35 @@ import json
 import logging
 import os
 
-from django.core.exceptions import SuspiciousFileOperation, ValidationError
-from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
-
+from django.core.exceptions import (ObjectDoesNotExist,
+                                    SuspiciousFileOperation, ValidationError)
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
-from rest_framework.exceptions import NotFound, status, PermissionDenied, \
-    ValidationError as DRF_ValidationError
+from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.exceptions import ValidationError as DRF_ValidationError
+from rest_framework.exceptions import status
 from rest_framework.response import Response
 
 from django_irods.icommands import SessionException
 from hs_core.hydroshare import delete_resource_file
-from hs_core.hydroshare.utils import get_file_mime_type, resolve_request
+from hs_core.hydroshare.utils import (QuotaException, get_file_mime_type,
+                                      resolve_request)
 from hs_core.models import ResourceFile
 from hs_core.task_utils import get_or_create_task_notification
 from hs_core.tasks import FileOverrideException, unzip_task
 from hs_core.views import utils as view_utils
-
-from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
-    create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
-    rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory, \
-    add_reference_url_to_resource, edit_reference_url_in_resource, zip_by_aggregation_file
-
-from hs_file_types.models import FileSetLogicalFile, ModelInstanceLogicalFile, ModelProgramLogicalFile
-
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-
+from hs_core.views.utils import (ACTION_TO_AUTHORIZE,
+                                 add_reference_url_to_resource, authorize,
+                                 create_folder, edit_reference_url_in_resource,
+                                 irods_path_is_directory, is_ajax,
+                                 move_or_rename_file_or_folder, move_to_folder,
+                                 remove_folder, rename_file_or_folder,
+                                 unzip_file, zip_by_aggregation_file,
+                                 zip_folder)
+from hs_file_types.models import (FileSetLogicalFile, ModelInstanceLogicalFile,
+                                  ModelProgramLogicalFile)
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +45,7 @@ def data_store_structure(request):
     where store_path is the relative path to res_id/data/contents
     """
     res_id = request.POST.get('res_id', None)
+    found_unreferenced_files = False   # flag to trigger ingest of unreferenced files
     if res_id is None:
         logger.error("no resource id in request")
         return HttpResponse('Bad request - resource id is not included',
@@ -97,14 +101,15 @@ def data_store_structure(request):
             # find if this folder *dir_path* represents (contains) an aggregation object
             aggregation_object = resource.get_folder_aggregation_object(dir_path, aggregations=res_aggregations)
             # folder aggregation type is not relevant for single file aggregation types - which
-            # are: GenericLogicalFile, and RefTimeseriesLogicalFile
+            # are: GenericLogicalFile, RefTimeseriesLogicalFile, and CSVLogicalFile
             if aggregation_object is not None:
                 folder_aggregation_type = aggregation_object.get_aggregation_class_name()
                 folder_aggregation_name = aggregation_object.get_aggregation_display_name()
                 folder_aggregation_id = aggregation_object.id
                 folder_aggregation_appkey = aggregation_object.metadata.extra_metadata.get(_APPKEY, '')
-                if aggregation_object.get_main_file is not None:
-                    main_file = aggregation_object.get_main_file.file_name
+                aggr_main_file = aggregation_object.get_main_file
+                if aggr_main_file is not None:
+                    main_file = aggr_main_file.file_name
             else:
                 # check first if ModelProgram/ModelInstance aggregation type can be created from this folder
                 can_set_model_instance = ModelInstanceLogicalFile.can_set_folder_to_aggregation(
@@ -134,26 +139,23 @@ def data_store_structure(request):
                      'folder_aggregation_appkey': folder_aggregation_appkey,
                      })
 
-    is_federated = resource.is_federated
     for index, fname in enumerate(store[1]):  # files
         f_store_path = os.path.join(store_path, fname)
         file_in_irods = resource.get_irods_path(f_store_path)
+        res_file = ResourceFile.objects.filter(object_id=resource.id,
+                                               resource_file=file_in_irods).first()
+
+        if not res_file:
+            # skip metadata files
+            if not resource.is_metadata_xml_file(f_store_path):
+                found_unreferenced_files = True
+            continue
+
         size = store[2][index]
         mtype = get_file_mime_type(fname)
         idx = mtype.find('/')
         if idx >= 0:
             mtype = mtype[idx + 1:]
-
-        if is_federated:
-            f = ResourceFile.objects.filter(object_id=resource.id,
-                                            fed_resource_file=file_in_irods).first()
-        else:
-            f = ResourceFile.objects.filter(object_id=resource.id,
-                                            resource_file=file_in_irods).first()
-
-        if not f:
-            # skip metadata files
-            continue
 
         f_ref_url = ''
         logical_file_type = ''
@@ -165,47 +167,50 @@ def data_store_structure(request):
         has_model_program_aggr_folder = False
         has_model_instance_aggr_folder = False
         aggregation_appkey = ''
-        if f.has_logical_file:
-            main_extension = f.logical_file.get_main_file_type()
+        if res_file.has_logical_file:
+            main_extension = res_file.logical_file.get_main_file_type()
             if not main_extension:
                 # accept any extension
                 main_extension = ""
-            if f.extension and main_extension.endswith(f.extension):
-                if not hasattr(f.logical_file, 'folder') or f.logical_file.folder is None:
-                    aggregation_appkey = f.logical_file.metadata.extra_metadata.get(_APPKEY, '')
 
-                aggregations.append({'logical_file_id': f.logical_file.id,
-                                     'name': f.logical_file.dataset_name,
-                                     'logical_type': f.logical_file.get_aggregation_class_name(),
-                                     'aggregation_name': f.logical_file.get_aggregation_display_name(),
+            _, file_extension = os.path.splitext(fname)
+            if file_extension and main_extension.endswith(file_extension) and main_extension != ".csv":
+                if not hasattr(res_file.logical_file, 'folder') or res_file.logical_file.folder is None:
+                    aggregation_appkey = res_file.logical_file.metadata.extra_metadata.get(_APPKEY, '')
+
+                # these aggregations will be shown in the UI as virtual folders
+                aggregations.append({'logical_file_id': res_file.logical_file.id,
+                                     'name': res_file.logical_file.dataset_name,
+                                     'logical_type': res_file.logical_file.get_aggregation_class_name(),
+                                     'aggregation_name': res_file.logical_file.get_aggregation_display_name(),
                                      'aggregation_appkey': aggregation_appkey,
-                                     'main_file': f.logical_file.get_main_file.file_name,
-                                     'preview_data_url': f.logical_file.metadata.get_preview_data_url(
+                                     'main_file': res_file.logical_file.get_main_file.file_name,
+                                     'preview_data_url': res_file.logical_file.metadata.get_preview_data_url(
                                          resource=resource,
                                          folder_path=f_store_path
                                      ),
-                                     'url': f.logical_file.url})
-            logical_file = f.logical_file
-            logical_file_type = f.logical_file_type_name
+                                     'url': res_file.logical_file.url})
+            logical_file = res_file.logical_file
+            logical_file_type = res_file.logical_file_type_name
             logical_file_id = logical_file.id
-            aggregation_name = f.aggregation_display_name
+            aggregation_name = res_file.aggregation_display_name
             aggregation_appkey = ''
             if not hasattr(logical_file, 'folder') or logical_file.folder is None:
                 aggregation_appkey = logical_file.metadata.extra_metadata.get(_APPKEY, '')
-            if 'url' in f.logical_file.extra_data:
-                f_ref_url = f.logical_file.extra_data['url']
+            if 'url' in res_file.logical_file.extra_data:
+                f_ref_url = res_file.logical_file.extra_data['url']
 
             # check if this file (f) is part of a model program folder aggregation
             if logical_file_type == "ModelProgramLogicalFile":
-                if f.file_folder is not None and f.logical_file.folder is not None:
-                    if f.file_folder.startswith(f.logical_file.folder):
+                if res_file.file_folder is not None and res_file.logical_file.folder is not None:
+                    if res_file.file_folder.startswith(res_file.logical_file.folder):
                         has_model_program_aggr_folder = True
             elif logical_file_type == "ModelInstanceLogicalFile":
-                if f.file_folder is not None and f.logical_file.folder is not None:
-                    if f.file_folder.startswith(f.logical_file.folder):
+                if res_file.file_folder is not None and res_file.logical_file.folder is not None:
+                    if res_file.file_folder.startswith(res_file.logical_file.folder):
                         has_model_instance_aggr_folder = True
 
-        files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f.pk, 'url': f.url,
+        files.append({'name': fname, 'size': size, 'type': mtype, 'pk': res_file.pk, 'url': res_file.url,
                       'reference_url': f_ref_url,
                       'aggregation_name': aggregation_name,
                       'logical_type': logical_file_type,
@@ -219,10 +224,11 @@ def data_store_structure(request):
                      'aggregations': aggregations,
                      'can_be_public': resource.can_be_public_or_discoverable}
 
-    if resource.resource_type == "CompositeResource":
-        return_object['spatial_coverage'] = get_coverage_data_dict(resource)
-        return_object['temporal_coverage'] = get_coverage_data_dict(resource,
-                                                                    coverage_type='temporal')
+    if found_unreferenced_files:
+        from hs_core.management.utils import ingest_irods_files
+        ingest_irods_files(resource, None)
+        return data_store_structure(request)
+
     return HttpResponse(
         json.dumps(return_object),
         content_type="application/json"
@@ -232,7 +238,7 @@ def data_store_structure(request):
 def to_external_url(url):
     """
     Convert an internal download file/folder url to the external url.  This should eventually be
-    replaced with with a reverse method that gets the correct mapping.
+    replaced with a reverse method that gets the correct mapping.
     """
     return url.replace("django_irods/download", "resource", 1)
 
@@ -290,6 +296,8 @@ def data_store_folder_zip(request, res_id=None):
         return JsonResponse({"error": ex.stderr}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except DRF_ValidationError as ex:
         return JsonResponse({"error": ex.detail}, status=status.HTTP_400_BAD_REQUEST)
+    except (QuotaException) as ex:
+        return JsonResponse({"error": str(ex)}, status=status.HTTP_400_BAD_REQUEST)
 
     return_data = {"name": output_zip_fname, "size": size, "type": "zip"}
     return JsonResponse(return_data)
@@ -341,6 +349,8 @@ def zip_aggregation_file(request, res_id=None):
         return JsonResponse({"error": ex.stderr}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except DRF_ValidationError as ex:
         return JsonResponse({"error": ex.detail}, status=status.HTTP_400_BAD_REQUEST)
+    except (QuotaException) as ex:
+        return JsonResponse({"error": str(ex)}, status=status.HTTP_400_BAD_REQUEST)
 
     return_data = {"name": output_zip_fname, "size": size, "type": "zip"}
     return JsonResponse(return_data)
@@ -455,7 +465,7 @@ def data_store_folder_unzip(request, **kwargs):
     remove_original_zip = request.POST.get('remove_original_zip', 'true').lower() == 'true'
     unzip_to_folder = request.POST.get('unzip_to_folder', 'false').lower() == 'true'
 
-    if request.is_ajax():
+    if is_ajax(request):
         task = unzip_task.apply_async((user.pk, res_id, zip_with_rel_path, remove_original_zip, overwrite,
                                        auto_aggregate, ingest_metadata, unzip_to_folder))
         task_id = task.task_id
@@ -473,7 +483,7 @@ def data_store_folder_unzip(request, **kwargs):
                            "iRODS error follows: "
             err_msg = specific_msg + ex.stderr
             return JsonResponse({"error": err_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        except (DRF_ValidationError, SuspiciousFileOperation, FileOverrideException) as ex:
+        except (DRF_ValidationError, SuspiciousFileOperation, FileOverrideException, QuotaException) as ex:
             err_msg = ex.detail if isinstance(ex, DRF_ValidationError) else str(ex)
             return JsonResponse({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as ex:
@@ -903,7 +913,7 @@ def data_store_move_to_folder(request, pk=None):
         if not irods_path_is_directory(istorage, src_storage_path):  # there is django record
             try:
                 ResourceFile.get(resource, file, folder=folder)
-            except ResourceFile.DoesNotExist:
+            except ObjectDoesNotExist:
                 return HttpResponse('Source file {} does not exist'.format(src_short_path),
                                     status=status.HTTP_400_BAD_REQUEST)
 
@@ -1007,7 +1017,7 @@ def data_store_rename_file_or_folder(request, pk=None):
     if not irods_path_is_directory(istorage, src_storage_path):
         try:  # Django record should exist for each file
             ResourceFile.get(resource, base, folder=folder)
-        except ResourceFile.DoesNotExist:
+        except ObjectDoesNotExist:
             return JsonResponse({"error": "Path to be renamed does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
     # check that the target doesn't exist
@@ -1029,7 +1039,7 @@ def data_store_rename_file_or_folder(request, pk=None):
         err_msg = f"Desired name ({tgt_short_path}) already in use"
         return JsonResponse({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
 
-    except ResourceFile.DoesNotExist:
+    except ObjectDoesNotExist:
         pass  # correct response
 
     try:

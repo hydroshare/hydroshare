@@ -114,7 +114,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(new_res.creator == self.user)
         self.assertTrue(new_res.short_id is not None, 'Short ID has not been created!')
         self.assertEqual(new_res.files.all().count(), 1, msg="Number of content files is not equal to 1")
-        self.assertEqual(new_res.get_quota_holder(), self.user,
+        self.assertEqual(new_res.quota_holder, self.user,
                          msg="The quota holder of the newly created resource is not the creator")
 
         if new_res:
@@ -147,8 +147,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             {'creator': {'name': 'Lisa Molley', 'email': 'lmolley@gmail.com'}},
             {'contributor': {'name': 'Kelvin Marshal', 'email': 'kmarshal@yahoo.com',
                              'organization': 'Utah State University',
-                             'identifiers': {'ORCID': 'https://orcid.org/john',
-                                             'ResearchGateID': 'https://www.researchgate.net/john'}}},
+                             'identifiers': {'ORCID': 'https://orcid.org/0000-0003-4621-0559',
+                                             'ResearchGateID': 'https://www.researchgate.net/profile/john'}}},
             {'coverage': {'type': 'period', 'value': {'name': 'Name for period coverage', 'start': '1/1/2000',
                                                       'end': '12/12/2012'}}},
             {'coverage': {'type': 'point', 'value': {'name': 'Name for point coverage', 'east': '56.45678',
@@ -423,8 +423,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         uquota = self.user.quotas.first()
         # make user's quota over hard limit 125%
-        uquota.used_value = uquota.allocated_value * 1.3
-        uquota.save()
+        from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit
+        set_quota_usage_over_hard_limit(uquota, qmsg)
 
         # create_resource should raise quota exception now that the creator user is over hard
         # limit and enforce quota flag is set to True

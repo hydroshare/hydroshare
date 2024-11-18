@@ -1,6 +1,11 @@
 import os
 from uuid import uuid4
+
 from datetime import date, timedelta
+from django.db.models import Q
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 def _get_upload_path(folder_name, name, filename):
@@ -82,3 +87,19 @@ def get_quota_message(user):
                                                               zone=uq.zone,
                                                               percent=rounded_percent)
         return return_msg
+
+
+def get_user_from_username_or_email(username_or_email, **kwargs):
+    """
+    Get a user object from a username or email address
+    :param username_or_email: username or email address
+    :return: a user object, or None if no user is found
+    """
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    try:
+        return User.objects.get(
+            Q(username__iexact=username_or_email)
+            | Q(email__iexact=username_or_email), **kwargs)
+    except User.DoesNotExist:
+        return None

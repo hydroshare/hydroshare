@@ -1,18 +1,19 @@
-from django.conf.urls import url
-
 from django.contrib.sitemaps import views
-from mezzanine.core.sitemaps import DisplayableSitemap
+from django.urls import re_path
 
-from .sitemaps import PagesSitemap
+from .sitemaps import (CommunitiesSitemap, GroupsSitemap, PagesSitemap,
+                       ResourcesSitemap)
 
 sitemaps = {
-    "resources": DisplayableSitemap,
-    "pages": PagesSitemap
+    "resources": ResourcesSitemap,
+    "pages": PagesSitemap,
+    "communities": CommunitiesSitemap,
+    "groups": GroupsSitemap
 }
 sitemap_view = 'django.contrib.sitemaps.views.sitemap'
 
 
 urlpatterns = [
-    url(r'^\.xml$', views.index, {'sitemaps': sitemaps}),
-    url(r'^-(?P<section>.+)\.xml$', views.sitemap, {'sitemaps': sitemaps}, name=sitemap_view),
+    re_path(r'^\.xml$', views.index, {'sitemaps': sitemaps}),
+    re_path(r'^-(?P<section>.+)\.xml$', views.sitemap, {'sitemaps': sitemaps}, name=sitemap_view),
 ]

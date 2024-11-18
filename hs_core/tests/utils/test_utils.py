@@ -1,6 +1,10 @@
 import pytest
+import sys
+import pdb
+import functools
+import traceback
 
-from hs_core.hydroshare.utils import encode_resource_url, decode_resource_url
+from hs_core.hydroshare.utils import encode_resource_url, decode_resource_url, convert_file_size_to_unit
 
 
 @pytest.mark.parametrize("decoded_url,encoded_url", [
@@ -19,3 +23,31 @@ def test_encode_decode_resource_url(decoded_url, encoded_url):
     """
     assert encode_resource_url(decoded_url) == encoded_url
     assert decode_resource_url(encoded_url) == decoded_url
+
+
+def debug_on(*exceptions):
+    """Utility decorator for debugging within unittest runs
+
+    Returns:
+        decorator: To decorate unittest functions
+    """
+    if not exceptions:
+        exceptions = (AssertionError, )
+
+    def decorator(f):
+        @functools.wraps(f)
+        def wrapper(*args, **kwargs):
+            try:
+                return f(*args, **kwargs)
+            except exceptions:
+                info = sys.exc_info()
+                traceback.print_exception(*info)
+                pdb.post_mortem(info[2])
+        return wrapper
+    return decorator
+
+
+def set_quota_usage_over_hard_limit(uquota, qmsg):
+    used_in_units = convert_file_size_to_unit(uquota.used_value, uquota.unit, 'B')
+    uquota.allocated_value = used_in_units / (qmsg.hard_limit_percent + 5) * 100
+    uquota.save()

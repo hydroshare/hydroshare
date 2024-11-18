@@ -4,10 +4,9 @@
 
 from django.db import migrations
 
-from hs_communities.models import Topic
-
 
 def populate_topics(apps, schema_editor):
+    Topic = apps.get_model('hs_communities', 'Topic')
     topics = ["Air Temperature", "Barometric Pressure", "Chlorophyll", "Climate", "Diatoms",
               "Digital Elevation Model (DEM)",
               "Dissolved Organic Matter (DOM)", "Ecosystem model", "Electrical Conductivity",

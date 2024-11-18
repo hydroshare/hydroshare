@@ -1,5 +1,6 @@
 from hs_core.models import get_user
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
+from hs_file_types.utils import get_aggregation_types
 from hs_tools_resource.app_keys import tool_app_key
 from hs_tools_resource.models import ToolResource
 from hs_tools_resource.utils import parse_app_url_template, get_SupportedResTypes_choices
@@ -58,7 +59,7 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
     :param tool_res_obj: web tool app resource object
     :param open_with: Default is False, meaning check has to be done to see whether
                       the web app resource should show on the resource's open with list;
-                      if open_with is True, e.g., appkey extended metadata name-value pair
+                      if open_with is True, e.g., appkey additional metadata name-value pair
                       exists that associated this resource with the web app resource, no check
                       is needed, and this web app tool resource will show on this resource's
                       open with list
@@ -82,8 +83,13 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
         if tool_metadata.app_icon else "raise-img-error"
 
     url_key_values = get_app_dict(request_obj.user, resource_obj, tool_res_obj)
+    tool_url_resource_new = None
+    if tool_app_key in resource_obj.extra_metadata and tool_app_key in tool_res_obj.extra_metadata:
+        if resource_obj.extra_metadata[tool_app_key] == tool_res_obj.extra_metadata[tool_app_key]:
+            tool_url_resource_new = parse_app_url_template(tool_url_resource, url_key_values)
+    elif tool_app_key not in tool_res_obj.extra_metadata:
+        tool_url_resource_new = parse_app_url_template(tool_url_resource, url_key_values)
 
-    tool_url_resource_new = parse_app_url_template(tool_url_resource, url_key_values)
     tool_url_agg_new = parse_app_url_template(tool_url_aggregation, url_key_values)
     tool_url_file_new = parse_app_url_template(tool_url_file, url_key_values)
 
@@ -94,6 +100,11 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
     if supported_aggr_types is not None:
         agg_types = supported_aggr_types.get_supported_agg_types_str()
         tool_appkey = tool_res_obj.extra_metadata.get(tool_app_key, '')
+
+    if tool_url_agg_new is not None and not agg_types:
+        # make the tool available for all aggregation types
+        agg_type_cls_names = [agg_type.__name__ for agg_type in get_aggregation_types()]
+        agg_types = ",".join(agg_type_cls_names)
 
     supported_file_extensions = tool_metadata.supported_file_extensions
     if supported_file_extensions:
@@ -125,7 +136,7 @@ def get_app_dict(user, resource, web_app_resource):
     hs_term_dict_file["HS_AGG_PATH"] = "HS_JS_AGG_KEY"
     hs_term_dict_file["HS_FILE_PATH"] = "HS_JS_FILE_KEY"
     hs_term_dict_file["HS_MAIN_FILE"] = "HS_JS_MAIN_FILE_KEY"
-    default_resource_term_dict = web_app_resource.extra_metadata
+    default_resource_term_dict = web_app_resource.extra_metadata.copy()
     default_resource_term_dict.update(resource.get_hs_term_dict())
     return [default_resource_term_dict, hs_term_dict_user, hs_term_dict_file]
 

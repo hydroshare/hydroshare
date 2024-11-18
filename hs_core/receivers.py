@@ -1,12 +1,12 @@
 """Signal receivers for the hs_core app."""
 from django.contrib.auth.models import User
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update, \
     pre_delete_resource, post_add_geofeature_aggregation, post_add_generic_aggregation, \
     post_add_netcdf_aggregation, post_add_raster_aggregation, post_add_timeseries_aggregation, \
     post_add_reftimeseries_aggregation, post_remove_file_aggregation, post_raccess_change, \
-    post_delete_file_from_resource
+    post_delete_file_from_resource, post_add_csv_aggregation
 from hs_core.tasks import update_web_services
 from hs_core.models import BaseResource, Creator, Contributor, Party
 from django.conf import settings
@@ -15,6 +15,9 @@ from .forms import SubjectsForm, AbstractValidationForm, CreatorValidationForm, 
     LanguageValidationForm, ValidDateValidationForm, FundingAgencyValidationForm, \
     CoverageSpatialForm, CoverageTemporalForm, IdentifierForm, TitleValidationForm, \
     GeospatialRelationValidationForm
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=User)
@@ -176,6 +179,7 @@ def metadata_element_pre_update_handler(sender, **kwargs):
 
 
 @receiver(post_add_generic_aggregation)
+@receiver(post_add_csv_aggregation)
 @receiver(post_add_geofeature_aggregation)
 @receiver(post_add_raster_aggregation)
 @receiver(post_add_netcdf_aggregation)
@@ -202,3 +206,20 @@ def hs_update_web_services(sender, **kwargs):
                 settings.HSWS_PUBLISH_URLS,
                 rid
             ), countdown=1)
+
+
+@receiver(pre_delete, sender=User)
+def pre_delete_user_handler(sender, instance, **kwargs):
+    # before delete the user, update the quota holder for all of the user's resources
+    user = instance
+    for res in BaseResource.objects.filter(quota_holder=user):
+        other_owners = None
+        if hasattr(res, 'raccess') and res.raccess is not None:
+            other_owners = res.raccess.owners.exclude(pk=user.pk)
+        if other_owners:
+            res.quota_holder = other_owners.first()
+        else:
+            logger.error("Resource:{} has no owner after deleting user:{}".format(res.short_id,
+                                                                                  user.username))
+            res.quota_holder = None
+        res.save()

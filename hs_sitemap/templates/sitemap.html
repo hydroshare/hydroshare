@@ -21,7 +21,7 @@
             <h3>{{ name }}</h3>
 
             {% for res in rt.resources %}
-                <h4><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></h4>
+                <h4><a href="{{ res.absolute_url }}">{{ res.title }}</a></h4>
             {% endfor %}
         {% endif %}
     {% endfor %}

@@ -8,7 +8,9 @@
 {% endblock %}
 
 {% block meta_title %}{{ group.name|default:"Group" }}{% endblock %}
-
+{%  block extra_head %}
+    {{ add_view_user_form.media }}
+{% endblock %}
 {% block main %}
 {% include 'includes/groups-nav.html' with active='my_groups' %}
 
@@ -51,8 +53,7 @@
                 </div>
                 {% endif %}
             </div>
-
-            <div class="flex-grow-1 full-width">
+            <div class="flex-grow-1 full-width text-break">
                 <div class="group-title-container flex justify-space-between align-flex-start">
                     <h2 class="group-title is-marginless">{{ group.name }}</h2>
 
@@ -311,7 +312,7 @@
                                     <label>Privacy *</label>
                                     <div class="radio">
                                         <label>
-                                            <input type="radio" name="privacy_level" value="public" 
+                                            <input type="radio" name="privacy_level" value="public"
                                                 {% if group.gaccess.public and group.gaccess.discoverable %}checked{% endif%}>Public
                                             <div class="text-muted">Other users can find the group and see who has
                                                 membership.
@@ -388,7 +389,7 @@
                 <div class="modal-body">
                     <div id="div-invite-people" class="flex">
                         {% csrf_token %}
-                        {{ add_view_user_form.user }}
+                        {{ add_view_user_form.user_invite_to_group }}
                         <form action="">
                             <a id="btn-group-invite"
                                 class="btn btn-add-access btn-success glyphicon glyphicon-send has-space-left"><span
@@ -588,7 +589,7 @@
 <script type="text/javascript" src="{% static 'js/group.js' %}"></script>
 <script type="text/javascript">
   var resourceTable;
-  
+
   var ACTIONS_COL = 0;
   var RESOURCE_TYPE_COL = 1;
   var TITLE_COL = 2;
@@ -604,7 +605,7 @@
   var SHARING_STATUS_COL = 12;
   var DATE_CREATED_SORT_COL = 13;
   var ACCESS_GRANTOR_COL = 14;
-  
+
   var colDefs = [
   {
     targets: [ACTIONS_COL], // Row selector and controls
@@ -675,5 +676,9 @@
   },
 ];
 </script>
-
+<script>
+    // https://github.com/select2/select2/issues/1436#issuecomment-21028474
+    // incompatibility between Select2 and Bootstrap modals
+    $.fn.modal.Constructor.prototype.enforceFocus = function() {};
+</script>
 {% endblock %}

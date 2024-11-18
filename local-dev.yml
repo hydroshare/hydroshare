@@ -1,19 +1,17 @@
 version: '3'
 services:
   data.local.org:
-    image: hydroshare/hs-irods:4.2.6-buster
+    image: hydroshare/hs-irods:2e7929c
     container_name: data.local.org
     hostname: data.local.org
-    links:
-      - users.local.org:users.local.org
     ports:
       - "1247:1247"
     volumes:
       - "idata_iconf_vol:/etc/irods"
       - "idata_vault_vol:/var/lib/irods"
       - "idata_pgres_vol:/var/lib/postgresql/data"
+      - "idata_home_vol:/home"
     environment:
-      SHARED_NEG_KEY: 'hydroshareZonehydroshareuserZone'
       USE_IRODS: 'True'
       IRODS_ROOT: '/tmp'
       IRODS_ICOMMANDS_PATH: '/usr/bin'
@@ -26,55 +24,9 @@ services:
       IRODS_AUTH: 'wwwHydroProxy'
       IRODS_GLOBAL_SESSION: 'True'
       REMOTE_USE_IRODS: 'True'
-      HS_USER_ZONE_HOST: 'users.local.org'
-      LINUX_ADMIN_USER_FOR_HS_USER_ZONE: 'hsuserproxy'
-      LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE: 'hsuserproxy'
-      LINUX_ADMIN_USER_CREATE_USER_IN_USER_ZONE_CMD: '/home/hsuserproxy/create_user.sh'
-      LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD: '/home/hsuserproxy/delete_user.sh'
-      HS_IRODS_PROXY_USER_IN_USER_ZONE: 'localHydroProxy'
-      HS_IRODS_USER_ZONE_DEF_RES: 'hydroshareLocalResc'
-      IRODS_ZONE: 'hydroshareZone'
-      HS_USER_IRODS_ZONE: 'hydroshareuserZone'
       IRODS_ZONE_NAME: 'hydroshareZone'
       IRODS_SERVER_ZONE_KEY: 'hydroshareZone_KEY'
       IRODS_DATABASE_SERVER_HOSTNAME: 'data.local.org'
-      IRODS_USER_NAME: 'rods'
-      IRODS_PASSWORD: 'rods'
-    stdin_open: true
-    tty: true
-  users.local.org:
-    image: hydroshare/hs-irods:4.2.6-buster
-    container_name: users.local.org
-    hostname: users.local.org
-    volumes:
-      - "iuser_iconf_vol:/etc/irods"
-      - "iuser_vault_vol:/var/lib/irods"
-      - "iuser_pgres_vol:/var/lib/postgresql/data"
-    environment:
-      SHARED_NEG_KEY: 'hydroshareZonehydroshareuserZone'
-      USE_IRODS: 'True'
-      IRODS_ROOT: '/tmp'
-      IRODS_ICOMMANDS_PATH: '/usr/bin'
-      IRODS_HOST: 'users.local.org'
-      IRODS_PORT: '1247'
-      IRODS_DEFAULT_RESOURCE: 'hydroshareReplResc'
-      IRODS_HOME_COLLECTION: '/hydroshareZone/home/wwwHydroProxy'
-      IRODS_ZONE: 'hydroshareZone'
-      IRODS_USERNAME: 'wwwHydroProxy'
-      IRODS_AUTH: 'wwwHydroProxy'
-      IRODS_GLOBAL_SESSION: 'True'
-      REMOTE_USE_IRODS: 'True'
-      HS_USER_ZONE_HOST: 'users.local.org'
-      LINUX_ADMIN_USER_FOR_HS_USER_ZONE: 'hsuserproxy'
-      LINUX_ADMIN_USER_PWD_FOR_HS_USER_ZONE: 'hsuserproxy'
-      LINUX_ADMIN_USER_CREATE_USER_IN_USER_ZONE_CMD: '/home/hsuserproxy/create_user.sh'
-      LINUX_ADMIN_USER_DELETE_USER_IN_USER_ZONE_CMD: '/home/hsuserproxy/delete_user.sh'
-      HS_IRODS_PROXY_USER_IN_USER_ZONE: 'localHydroProxy'
-      HS_IRODS_USER_ZONE_DEF_RES: 'hydroshareLocalResc'
-      HS_USER_IRODS_ZONE: 'hydroshareuserZone'
-      IRODS_ZONE_NAME: 'hydroshareuserZone'
-      IRODS_SERVER_ZONE_KEY: 'hydroshareuserZone_KEY'
-      IRODS_DATABASE_SERVER_HOSTNAME: 'users.local.org'
       IRODS_USER_NAME: 'rods'
       IRODS_PASSWORD: 'rods'
     stdin_open: true
@@ -125,25 +77,6 @@ services:
     ports:
       - "8983"
     command: ["solr-foreground"]
-  nginx:
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile-nginx
-    hostname: nginx
-    container_name: nginx
-    links:
-      - hydroshare:hydroshare
-    depends_on:
-      - hydroshare
-    ports:
-      - "80:80"
-    volumes:
-      - "./log/nginx:/var/log/nginx"
-      - ".:/hydroshare"
-      - "temp_vol:/hs_tmp"
-      - "share_vol:/irods/cache"
-      - "idata_vault_vol:/irods/data"
-      - "iuser_vault_vol:/irods/user"
   hydroshare:
     build:
       context: .
@@ -163,7 +96,7 @@ services:
       RABBITMQ_PORT_5672_TCP_ADDR: rabbitmq
       SOLR_PORT_8983_TCP_ADDR: solr
       SOLR_HOST: solr
-      TMP: /hs_tmp
+      TMP: /tmp
       POSTGIS_PORT_5432_TCP_ADDR: 'pgbouncer'
       HS_PATH: ${PWD}
       PYTHONPATH: /hydroshare
@@ -172,7 +105,7 @@ services:
       # hydroshare repository
       - ".:/hydroshare"
       # shared location for gunicorn.sock between containers
-      - "temp_vol:/hs_tmp"
+      - "temp_vol:/tmp"
       # temp directory shared with celery workers
       - "share_vol:/shared_tmp"
     ports:
@@ -183,14 +116,12 @@ services:
       - solr:solr
       - rabbitmq:rabbitmq
       - data.local.org:data.local.org
-      - users.local.org:users.local.org
     depends_on:
       - postgis
       - pgbouncer
       - solr
       - rabbitmq
       - data.local.org
-      - users.local.org
     stdin_open: true
     tty: true
     command: /bin/bash init-hydroshare
@@ -223,26 +154,61 @@ services:
       - postgis:postgis
       - rabbitmq:rabbitmq
       - data.local.org:data.local.org
-      - users.local.org:users.local.org
     depends_on:
       - hydroshare
       - postgis
       - solr
       - rabbitmq
       - data.local.org
-      - users.local.org
     stdin_open: true
     tty: true
     command: /bin/bash init-defaultworker
+  companion:
+  # https://github.com/transloadit/uppy/blob/main/packages/%40uppy/companion/KUBERNETES.md
+    image:  docker.io/transloadit/companion:latest
+    container_name: companion
+    hostname: companion
+    environment:
+      COMPANION_PORT: '3020'
+      COMPANION_CLIENT_ORIGINS: 'http://localhost:8000,http://host.docker.internal:8000'
+      # when testing 3rd party services like google drive, you will access hydroshare at http://host.docker.internal:8000
+      COMPANION_UPLOAD_URLS: 'http://host.docker.internal:8000/hsapi/tus/*'
+      COMPANION_DATADIR: '/mnt/companion-data'
+      COMPANION_DOMAIN: 'localhost:3020'
+      COMPANION_ALLOW_LOCAL_URLS: 'true'
+      COMPANION_PROTOCOL: 'http'
+      COMPANION_REDIS_URL: 'redis://:superSecretPassword@redis:6379'
+      COMPANION_CHUNK_SIZE: '100000000'  # ~72MB
+      # COMPANION_PREAUTH_SECRET: 'another secret'
+      # For 3rd party services like google drive to work locally, you need to set the following:
+      COMPANION_SECRET: 'SECRET'
+      COMPANION_GOOGLE_KEY: 'KEY'
+      COMPANION_GOOGLE_SECRET: 'SECRET'
+    ports:
+      - "3020:3020"
+    volumes:
+      - "companion_vol:/mnt/companion-data"
+    depends_on:
+      - redis
+  redis:
+    image: redis:latest
+    container_name: redis
+    hostname: redis
+    environment:
+      REDIS_PASSWORD: 'superSecretPassword'
+    ports:
+      - "6379:6379"
+    volumes:
+      - "redis_data_vol:/data"
 volumes:
   idata_iconf_vol:
   idata_vault_vol:
   idata_pgres_vol:
-  iuser_iconf_vol:
-  iuser_vault_vol:
-  iuser_pgres_vol:
+  idata_home_vol:
   postgis_data_vol:
   solr_data_vol:
   temp_vol:
   share_vol:
   rabbitmq_data_vol:
+  redis_data_vol:
+  companion_vol:

@@ -2,30 +2,6 @@
 * Created by Mauriel on 3/9/2017.
 */
 
-function rep_res_to_irods_user_zone_ajax_submit(res_id) {
-    $.ajax({
-        url: "/hsapi/_internal/" + res_id + "/rep-res-bag-to-irods-user-zone/",
-        type: "POST",
-        data: {},
-        success: function(json) {
-            if (json.success) {
-                $("#rep-alert-success").show();
-                $("#rep-status-success").text(json.success);
-            }
-            if (json.error) {
-                $("#rep-alert-error").show();
-                $("#rep-status-error").text(json.error);
-            }
-            $('#rep-resource-to-irods-dialog').modal('hide');
-        },
-        error: function(xhr, errmsg, err) {
-            status_error = xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg;
-            console.log(status_error);
-            $("#rep-status-error").text(status_error);
-            $('#rep-resource-to-irods-dialog').modal('hide');
-        }
-    });
-}
 
 // These event bindings will work even for elements created dynamically
 $(document).on('click', '.btn-unshare-resource', function () {
@@ -61,10 +37,6 @@ $(document).ready(function() {
         btn.text(btnDisabledTexts[buttonText] !== null ? btnDisabledTexts[buttonText] : "Saving Changes...");
         btn.addClass("disabled");
     }
-
-    $("#btn-replicate").click(function() {
-        rep_res_to_irods_user_zone_ajax_submit(resID);
-    });
 
     $("#download-bag-btn").click(function() {
         $("#license-agree-dialog-bag").modal('hide');

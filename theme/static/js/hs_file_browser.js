@@ -33,7 +33,6 @@ var loading_metadata_alert =
         '<span class="sr-only">Loading...</span>' +
     '</div>';
 
-const MAX_FILE_SIZE = 1024; // MB
 
 function getCurrentPath() {
     return pathLog[pathLogIndex];
@@ -111,6 +110,9 @@ function getFileTemplateInstance(file) {
     }
     if (file['logical_type'] === "ModelInstanceLogicalFile" && !file.has_model_instance_aggr_folder) {
         fileTypeExt = "MI";
+    }
+    if (file['logical_type'] === "CSVLogicalFile") {
+        fileTypeExt = "CSV_LOGICAL";
     }
     var iconTemplate;
     var fileIcons = getFileIcons();
@@ -206,6 +208,7 @@ function updateSelectionMenuContext() {
         "setTimeseriesFileType",
         "setModelProgramFileType",
         "setModelInstanceFileType",
+        "setCSVFileType",
         "subMenuSetContentType",
         "unzip",
         "unzipToFolder",
@@ -219,8 +222,6 @@ function updateSelectionMenuContext() {
     $.each(uiActions, function (i, val) {
         uiActionStates[val] = $.extend(true, {}, initActionState);  // Deep copy
     });
-
-    var maxSize = MAX_FILE_SIZE * 1024 * 1024; // convert MB to Bytes
 
     if (selected.length > 1) {
         //  ------------- Multiple files selected -------------
@@ -273,6 +274,7 @@ function updateSelectionMenuContext() {
         uiActionStates.setTimeseriesFileType.disabled = true;
         uiActionStates.setModelProgramFileType.disabled = true;
         uiActionStates.setModelInstanceFileType.disabled = true;
+        uiActionStates.setCSVFileType.disabled = true;
 
         const foldersSelected = $("#fb-files-container li.fb-folder.ui-selected");
         if(resourceType === 'Resource' && foldersSelected.length > 1) {
@@ -315,6 +317,7 @@ function updateSelectionMenuContext() {
             uiActionStates.setGeoRasterFileType.disabled = true;
             uiActionStates.setNetCDFFileType.disabled = true;
             uiActionStates.setGeoFeatureFileType.disabled = true;
+            uiActionStates.setCSVFileType.disabled = true;
             if (!selected.children('span.fb-logical-file-type').attr("data-logical-file-type") ||
                 !!selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set")) {
                 uiActionStates.removeAggregation.disabled = true;
@@ -373,7 +376,7 @@ function updateSelectionMenuContext() {
 
             if (logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile") {
                 // The file is already part of an aggregation
-                if (logicalFileType === "GenericLogicalFile") {
+                if (logicalFileType === "GenericLogicalFile" || logicalFileType === "CSVLogicalFile") {
                     uiActionStates.setGenericFileType.disabled = true;
                     uiActionStates.setGenericFileType.fileMenu.hidden = true;
                 }
@@ -405,6 +408,11 @@ function updateSelectionMenuContext() {
                 logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile" &&
                 logicalFileType !== "ModelInstanceLogicalFile") {
                 uiActionStates.setGeoRasterFileType.disabled = true;
+            }
+            if (!fileName.toUpperCase().endsWith(".CSV") ||
+                logicalFileType !== "" && logicalFileType !== "FileSetLogicalFile" &&
+                logicalFileType !== "ModelInstanceLogicalFile") {
+                uiActionStates.setCSVFileType.disabled = true;
             }
 
             if (!fileName.toUpperCase().endsWith(".NC") ||
@@ -462,8 +470,11 @@ function updateSelectionMenuContext() {
             }
             else {
                 // The selected file is part of a logical file type
-                if (logicalFileType !== 'RefTimeseriesLogicalFile' && logicalFileType !== "GenericLogicalFile"
-                    && logicalFileType !== "ModelProgramLogicalFile" && logicalFileType !== "ModelInstanceLogicalFile") {
+                if (logicalFileType !== 'RefTimeseriesLogicalFile'
+                    && logicalFileType !== "GenericLogicalFile"
+                    && logicalFileType !== "ModelProgramLogicalFile"
+                    && logicalFileType !== "ModelInstanceLogicalFile"
+                    && logicalFileType !== "CSVLogicalFile") {
                     // if the selected file is not part of the RefTimeseriesLogical or GenericLogicalFile file (aggregation)
                     // ModelInstanceLogicalFile or ModelProgramLogicalFile don't show the Remove Aggregation option
                     uiActionStates.removeAggregation.disabled = true;
@@ -503,13 +514,14 @@ function updateSelectionMenuContext() {
         uiActionStates.setTimeseriesFileType.disabled = true;
         uiActionStates.setModelProgramFileType.disabled = true;
         uiActionStates.setModelInstanceFileType.disabled = true;
+        uiActionStates.setCSVFileType.disabled = true;
         uiActionStates.preview.disabled = true;
 
         if (resourceType === 'Resource') {
             $("#fb-files-container").find('span.fb-logical-file-type').each(function () {
                 const logicalFileType = $(this).attr("data-logical-file-type");
-                //disable folder creation in aggregation folders
-                //TODO this needs to be updated when new aggregations are added...
+                //disable folder creation and upload files in aggregation folders
+                //NOTE: this needs to be updated when new aggregations are added...
                 if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
                     logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
                     if ($(this).parent().hasClass("fb-file")) {
@@ -563,6 +575,9 @@ function updateSelectionMenuContext() {
 
         uiActionStates.setFileSetFileType.disabled = true;
         uiActionStates.setFileSetFileType.fileMenu.hidden = true;
+
+        uiActionStates.setCSVFileType.disabled = true;
+        uiActionStates.setCSVFileType.fileMenu.hidden = true;
 
         uiActionStates.uploadFiles.disabled = true;
 
@@ -873,6 +888,7 @@ function bindFileBrowserItemEvents() {
                 // when aggregation type of the aggregation matches with the aggregation type supported by the tool
                 // matches, this will be set to true
                 let aggrApp = false;
+
                 let toolExtensions = '';
                 let toolAppKey = '';
                 if (fileSelected) {
@@ -885,9 +901,37 @@ function bindFileBrowserItemEvents() {
                                 break;
                             }
                         }
+                        if (extensionApp) {
+                            // check for appkey match
+                            if ($(this).attr("data-tool-appkey")) {
+                                toolAppKey = $(this).attr("data-tool-appkey");
+                            }
+                            if (aggrAppKey && toolAppKey) {
+                                // selected file is part of an aggregation and the aggregation has an appkey
+                                // tool appkey and aggregation appkey must match for the tool to be available
+                                if (aggrAppKey !== toolAppKey) {
+                                    extensionApp = false;
+                                }
+                            }
+                            else if (toolAppKey) {
+                                // tool has appkey but there is no aggregation appkey for the selected file
+                                // tool is not applicable/viewable for the selected file
+                                extensionApp = false;
+                            }
+                            else if (fileAggType) {
+                                // check for aggregation type match
+                                if ($(this).attr("data-agg-types")) {
+                                    aggrApp = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
+                                    extensionApp = aggrApp;
+                                }
+                            }
+                            else if ($(this).attr("data-agg-types")) {
+                                // tool has restricted aggregation types but the selected file is not an aggregation
+                                // tool is not applicable/viewable for the selected file
+                                extensionApp = false;
+                            }
+                        }
                     }
-                }
-                if (fileSelected) {
                     if (!extensionApp) {
                         // file extension and tool supported extension didn't match - now check for appkey match
                         if (!aggrFolderBased) {
@@ -902,6 +946,8 @@ function bindFileBrowserItemEvents() {
                         }
 
                         if (aggrAppKey && toolAppKey) {
+                            // both the tool and aggregation have appkey restriction
+                            // both app keys must match for the tool to be available
                             if (aggrAppKey === toolAppKey) {
                                 appKeyApp = true;
                             }
@@ -916,7 +962,14 @@ function bindFileBrowserItemEvents() {
                              else if ($(this).attr("data-url-file")) {
                                 aggrApp = $.inArray(fileAggType, $(this).attr("data-agg-types").split(",")) !== -1;
                             }
-                            if (toolAppKey && !appKeyApp) {
+                            if (toolAppKey && aggrAppKey) {
+                                // both the tool and aggregation have appkey restriction
+                                // both app keys must match for the tool to be available
+                                if (aggrAppKey !== toolAppKey) {
+                                    aggrApp = false;
+                                }
+                            }
+                            else if (toolAppKey) {
                                 aggrApp = false;
                             }
                             if (!aggrApp) {
@@ -931,6 +984,8 @@ function bindFileBrowserItemEvents() {
                         toolAppKey = $(this).attr("data-tool-appkey");
                     }
                     if (aggrAppKey && toolAppKey) {
+                        // both the tool and aggregation have appkey restriction
+                        // both app keys must match for the tool to be available
                         if (aggrAppKey === toolAppKey) {
                             appKeyApp = true;
                         }
@@ -944,6 +999,11 @@ function bindFileBrowserItemEvents() {
                         if (!aggrApp) {
                             appKeyApp = false;
                         }
+                    }
+                    if ($(this).attr("data-file-extensions")) {
+                        // tool has restricted file extensions - so tool is not available for folder based aggregation
+                        appKeyApp = false;
+                        aggrApp = false;
                     }
                 }
 
@@ -1778,7 +1838,7 @@ function warnExternalContent(shortId) {
 function onUploadSuccess(file, response) {
     // uploaded files can affect metadata in composite resource.
     // Use the json data returned from backend to update UI
-    if (RES_TYPE === 'Resource') {
+    if (RES_TYPE === 'Resource' && response.number_new_aggregations > 0) {
         updateResourceUI();
     }
     showCompletedMessage(response);
@@ -1887,153 +1947,6 @@ $(document).ready(function () {
         if (acceptedFiles === ".*") {
             acceptedFiles = null; // Dropzone default to accept all files
         }
-
-        Dropzone.options.hsDropzone = {
-            paramName: "files", // The name that will be used to transfer the file
-            clickable: ".upload-toggle",
-            previewsContainer: "#previews", // Define the container to display the previews
-            maxFilesize: MAX_FILE_SIZE, // MB
-            acceptedFiles: acceptedFiles,
-            maxFiles: allowMultiple,
-            autoProcessQueue: true,
-            uploadMultiple: true,
-            parallelUploads : 10,
-            error: function (file, response) {
-                // console.log(response);
-            },
-            success: onUploadSuccess,
-            successmultiple: onUploadSuccess,
-            init: function () {
-                // The user dragged a file onto the Dropzone
-                this.on("dragenter", function (file) {
-                    $(".fb-drag-flag").show();
-                    $("#hsDropzone").toggleClass("glow-blue", true);
-                });
-
-                this.on("drop", function (event) {
-                    var myDropzone = this;
-                    myDropzone.options.autoProcessQueue = false;    // Disable autoProcess queue so we can wait for the files to reach the queue before processing.
-
-                    (function () {
-                        // Wait for the files to reach the queue from the drop event. Check every 200 milliseconds
-                        if (myDropzone.files.length > 0) {
-                            myDropzone.processQueue();
-                            myDropzone.options.autoProcessQueue = true; // Restore autoprocess
-                            return;
-                        }
-                        setTimeout(arguments.callee, 200);
-                    })();
-                });
-
-                // The user dragged a file out of the Dropzone
-                this.on("dragleave", function (event) {
-                    $(".fb-drag-flag").hide();
-                    $("#hsDropzone").toggleClass("glow-blue", false);
-                });
-
-                // When a file is added to the list
-                this.on("addedfile", function (file) {
-                    var myDropzone = this;
-                    if (getCurrentPath().hasOwnProperty("aggregation")) {
-                        myDropzone.removeFile(file);
-                        // Display an error here
-                        $("#fb-alerts .upload-failed-alert").remove();
-                        $("#hsDropzone").toggleClass("glow-blue", false);
-
-                        $("#fb-alerts").append(
-                            '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
-                                '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-                                    '<span aria-hidden="true">&times;</span></button>' +
-                                '<div>' +
-                                    '<strong>File Upload Failed</strong>'+
-                                '</div>'+
-                                '<div>'+
-                                    '<span>File upload is not allowed. Target folder seems to contain aggregation(s).</span>' +
-                                '</div>'+
-                            '</div>').fadeIn(200);
-                        }
-
-                    $(".fb-drag-flag").hide();
-                });
-
-                // When a file gets processed
-                this.on("processing", function (file) {
-                    if (!$("#flag-uploading").length) {
-                        $("#root-path").text(getCurrentPath().path.length > 0 ? "contents/" : "contents");  // TODO assess for bugs
-                        $("#fb-inner-controls").append(previewNode);
-                    }
-                    $("#hsDropzone").toggleClass("glow-blue", false);
-                });
-
-                // Called when all files in the queue finish uploading.
-                this.on("queuecomplete", function () {
-                    let resourceType = $("#resource-type").val();
-                    // Remove further paths from the log
-                    let range = pathLog.length - pathLogIndex;
-                    pathLog.splice(pathLogIndex + 1, range);
-                    pathLog.push(JSON.parse(sessionStorage.currentBrowsepath));
-                    pathLogIndex = pathLog.length - 1;
-
-                    if (resourceType === 'Resource') {
-                        sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
-                        refreshFileBrowser();
-                    }
-                    else {
-                        refreshFileBrowser();
-                        $("#previews").empty();
-                    }
-                });
-
-                // An error occured. Receives the errorMessage as second parameter and if the error was due to the XMLHttpRequest the xhr object as third.
-                this.on("error", function (error, errorMessage) {
-                    let errorMsg = JSON.stringify(errorMessage);
-                    try {
-                        let errorMessageJSON = JSON.parse(errorMessage);
-                        if (errorMessageJSON.hasOwnProperty("validation_error")) {
-                            errorMsg = errorMessageJSON.validation_error;
-                        }
-                        else if(errorMessageJSON.hasOwnProperty("file_size_error")) {
-                            errorMsg = errorMessageJSON.file_size_error;
-                        }
-                    } catch (e) {
-
-                    }
-
-                    $("#fb-alerts .upload-failed-alert").remove();
-                    $("#hsDropzone").toggleClass("glow-blue", false);
-
-                    $("#fb-alerts").append(
-                            '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
-                                '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-                                    '<span aria-hidden="true">&times;</span></button>' +
-                                '<div>' +
-                                    '<strong>File Upload Failed</strong>'+
-                                '</div>'+
-                                '<div>'+
-                                    '<span>' + errorMsg + '</span>' +
-                                '</div>'+
-                            '</div>').fadeIn(200);
-                });
-
-                // Called with the total uploadProgress (0-100), the totalBytes and the totalBytesSent
-                this.on("totaluploadprogress", function (uploadProgress, totalBytes , totalBytesSent) {
-                    $("#upload-progress").text(formatBytes(totalBytesSent) + " / " +  formatBytes(totalBytes) + " (" + parseInt(uploadProgress) + "%)" );
-                });
-
-                this.on('sending', function (file, xhr, formData) {
-                    formData.append('file_folder', getCurrentPath().path.join('/'));
-                });
-
-                // Applies allowing upload of multiple files to OS upload dialog
-                if (allowMultiple) {
-                    this.hiddenFileInput.removeAttribute('multiple');
-                    var fileCount = parseInt($("#hs-file-browser").attr("data-initial-file-count"));
-                    if (fileCount > 0) {
-                        $('.dz-input').hide();
-                    }
-                }
-            }
-        };
     }
 
     // Toggle between grid and list view
@@ -2734,6 +2647,12 @@ $(document).ready(function () {
     $("#btn-set-model-instance-file-type").click(function () {
         setFileType("ModelInstance");
     });
+
+    // set CSV file type method
+    $("#btn-set-csv-file-type").click(function () {
+        setFileType("CSV");
+    });
+
     // set remove aggregation (file type) method
     $("#btnRemoveAggregation").click(function () {
         removeAggregation();

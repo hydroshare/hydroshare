@@ -29,19 +29,23 @@ Vue.component('profile-card', {
             identifierAttributes: {
                 ORCID: {
                     classes: "ai ai-orcid hover-shadow",
-                    title: "ORCID"
+                    title: "ORCID",
+                    src: STATIC_URL + "img/orcid.logo.icon.svg",
                 },
                 ResearchGateID: {
                     classes: "ai ai-researchgate-square hover-shadow",
-                    title: "ResearchGate"
+                    title: "ResearchGate",
+                    src: STATIC_URL + "img/researchgate.png"
                 },
                 ResearcherID: {
-                    classes: "",
-                    title: "ResearcherID"
+                    classes: "ai ai-researcherid-square hover-shadow",
+                    title: "ResearcherID",
+                    src: STATIC_URL + "img/researcherID.png"
                 },
                 GoogleScholarID: {
                     classes: "ai ai-google-scholar-square hover-shadow",
-                    title: "Google Scholar"
+                    title: "Google Scholar",
+                    src: STATIC_URL + "img/google-scholar.svg"
                 }
             },
         }

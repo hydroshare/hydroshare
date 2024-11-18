@@ -5,14 +5,14 @@ import shutil
 from django.contrib.auth.models import Group
 from django.contrib.messages import get_messages
 from django.urls import reverse
-
 from rest_framework import status
 
-from hs_core.testing import ViewTestCase
-from hs_core import hydroshare
-from hs_core.views import share_group_with_user, unshare_group_with_user, \
-    make_group_membership_request, act_on_group_membership_request
 from hs_access_control.models import PrivilegeCodes
+from hs_core import hydroshare
+from hs_core.testing import ViewTestCase
+from hs_core.views import (act_on_group_membership_request,
+                           make_group_membership_request,
+                           share_group_with_user, unshare_group_with_user)
 
 
 class TestShareGroup(ViewTestCase):
@@ -106,7 +106,7 @@ class TestShareGroup(ViewTestCase):
         response = share_group_with_user(request, group_id=self.test_group.id,
                                          privilege=privilege, user_id=self.mike.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        self.assertEqual(response['Location'], request.headers['referer'])
         flag_messages = get_messages(request)
         success_messages = [m for m in flag_messages if m.tags == 'error']
         self.assertNotEqual(len(success_messages), 0)
@@ -137,7 +137,7 @@ class TestShareGroup(ViewTestCase):
         response = unshare_group_with_user(request, group_id=self.test_group.id,
                                            user_id=self.mike.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        self.assertEqual(response['Location'], request.headers['referer'])
         flag_messages = get_messages(request)
         success_messages = [m for m in flag_messages if m.tags == 'success']
         self.assertNotEqual(len(success_messages), 0)
@@ -168,7 +168,7 @@ class TestShareGroup(ViewTestCase):
         response = unshare_group_with_user(request, group_id=self.test_group.id,
                                            user_id=self.john.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        self.assertEqual(response['Location'], request.headers['referer'])
         flag_messages = get_messages(request)
         err_messages = [m for m in flag_messages if m.tags == 'error']
         self.assertNotEqual(len(err_messages), 0)
@@ -376,7 +376,7 @@ class TestShareGroup(ViewTestCase):
         response = share_group_with_user(request, group_id=self.test_group.id,
                                          privilege=privilege, user_id=self.mike.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        self.assertEqual(response['Location'], request.headers['referer'])
         flag_messages = get_messages(request)
         success_messages = [m for m in flag_messages if m.tags == 'success']
         self.assertNotEqual(len(success_messages), 0)
@@ -427,7 +427,7 @@ class TestShareGroup(ViewTestCase):
                                                    membership_request_id=membership_request.id,
                                                    action=action)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        self.assertEqual(response['Location'], request.headers['referer'])
         flag_messages = get_messages(request)
         tag = 'success' if success else 'error'
         session_messages = [m for m in flag_messages if m.tags == tag]

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+  xmlns:hsterms="https://www.hydroshare.org/terms/"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+>
+  <hsterms:CSVFileAggregation rdf:about="http://www.hydroshare.org/resource/97523bdb7b174901b3fc2d89813458f1/data/contents/csv_file_folder/csv_test_modified_resmap.xml#aggregation">
+    <dc:subject>xml-encoding</dc:subject>
+    <dc:language>eng</dc:language>
+    <dc:title>csv_test_modified</dc:title>
+    <dc:coverage>
+      <dcterms:point>
+        <rdf:value>projection=WGS 84 EPSG:4326; east=-91.0547; north=40.9799; units=Decimal degrees</rdf:value>
+      </dcterms:point>
+    </dc:coverage>
+    <dc:subject>csv-aggregation</dc:subject>
+    <dc:type rdf:resource="https://www.hydroshare.org/terms/CSVFileAggregation"/>
+    <hsterms:tableSchema>
+      <rdf:Description>
+        <hsterms:columns>
+          <rdf:Description>
+            <hsterms:column>
+              <rdf:Description>
+                <hsterms:dataType>string</hsterms:dataType>
+                <hsterms:columnNumber rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</hsterms:columnNumber>
+                <dc:title>Site Name</dc:title>
+              </rdf:Description>
+            </hsterms:column>
+            <hsterms:column>
+              <rdf:Description>
+                <hsterms:dataType>number</hsterms:dataType>
+                <dc:title>Site #</dc:title>
+                <hsterms:columnNumber rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</hsterms:columnNumber>
+              </rdf:Description>
+            </hsterms:column>
+            <hsterms:column>
+              <rdf:Description>
+                <hsterms:columnNumber rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</hsterms:columnNumber>
+                <hsterms:dataType>boolean</hsterms:dataType>
+                <dc:title>Auto Recorded</dc:title>
+              </rdf:Description>
+            </hsterms:column>
+            <hsterms:column>
+              <rdf:Description>
+                <dc:description>Date of measurement</dc:description>
+                <hsterms:columnNumber rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</hsterms:columnNumber>
+                <dc:title>Date</dc:title>
+                <hsterms:dataType>datetime</hsterms:dataType>
+              </rdf:Description>
+            </hsterms:column>
+          </rdf:Description>
+        </hsterms:columns>
+        <hsterms:numberOfDataRows rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</hsterms:numberOfDataRows>
+        <hsterms:delimiter>,</hsterms:delimiter>
+      </rdf:Description>
+    </hsterms:tableSchema>
+    <dc:coverage>
+      <dcterms:period>
+        <rdf:value>start=2024-08-01T00:00:00; end=2024-08-15T00:00:00</rdf:value>
+      </dcterms:period>
+    </dc:coverage>
+    <hsterms:extendedMetadata>
+      <rdf:Description>
+        <hsterms:key>content-type</hsterms:key>
+        <hsterms:value>CSV</hsterms:value>
+      </rdf:Description>
+    </hsterms:extendedMetadata>
+    <dc:rights>
+      <rdf:Description>
+        <hsterms:rightsStatement>This resource is shared under the Creative Commons Attribution CC BY.</hsterms:rightsStatement>
+        <hsterms:URL rdf:resource="http://creativecommons.org/licenses/by/4.0/"/>
+      </rdf:Description>
+    </dc:rights>
+  </hsterms:CSVFileAggregation>
+  <rdf:Description rdf:about="http://www.hydroshare.org/terms/CSVFileAggregation">
+    <rdfs:label>CSV Content: One CSV file with specific metadata</rdfs:label>
+    <rdfs:isDefinedBy rdf:resource="https://www.hydroshare.org/terms/"/>
+  </rdf:Description>
+</rdf:RDF>

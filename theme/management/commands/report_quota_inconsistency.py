@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 
 from hs_core.hydroshare import convert_file_size_to_unit
 from theme.models import UserQuota
-from hs_core.hydroshare.resource import get_quota_usage_from_irods
+from hs_core.hydroshare.resource import get_quota_usage
 
 
 class Command(BaseCommand):
@@ -20,8 +20,10 @@ class Command(BaseCommand):
         for uq in UserQuota.objects.filter(
                 user__is_active=True).filter(user__is_superuser=False):
             used_value = 0.0
+            dz = 0.0
             try:
-                used_value = get_quota_usage_from_irods(uq.user.username)
+                dz = get_quota_usage(uq.user.username)
+                used_value = dz
             except ValidationError:
                 pass
             used_value = convert_file_size_to_unit(used_value, "gb")
@@ -30,7 +32,8 @@ class Command(BaseCommand):
                 report_dict = {
                     'user': uq.user.username,
                     'django': uq.used_value,
-                    'irods': used_value}
+                    'irods': used_value,
+                }
                 quota_report_list.append(report_dict)
                 print('quota incosistency: {} reported in django vs {} reported in iRODS for user {}'.format(
                     uq.used_value, used_value, uq.user.username), flush=True)

@@ -16,12 +16,6 @@ __pycache__/
 /config/hydroshare-config.yaml
 /hydroshare/static
 /log
-/nginx/.htpasswd
-/nginx/htpasswd
-/nginx/Dockerfile
-/nginx/Dockerfile-nginx
-/nginx/config-files/hs-nginx.conf
-/nginx/config-files/nginx.conf-default
 /static
 /tmp
 Dockerfile-defaultworker
@@ -39,9 +33,9 @@ schema.xml
 celerybeat.pid
 .config
 .c9
-/nginx/cert*
 pg.deploy.sql
 pylint.out
+.ssh
 
 # Frontend
 node_modules/
@@ -49,3 +43,6 @@ hs_discover/templates/
 hs_discover/static
 hs_resource_landing/templates/
 hs_resource_landing/static
+
+# Credentials
+*.json
