@@ -2010,7 +2010,7 @@ class FundingAgency(AbstractMetaDataElement):
         super(FundingAgency, cls).update(element_id, **kwargs)
 
     @sync_to_async
-    def get_funding_records(cls, apps):
+    def get_funding_records(self, apps):
         FundingAgency = apps.get_model('hs_core', 'FundingAgency')
         return list(FundingAgency.objects.all())
 
@@ -2036,7 +2036,9 @@ class FundingAgency(AbstractMetaDataElement):
                         record.agency_name = agency_name_new
                         record.agency_url = item['id']
                         await sync_to_async(record.save)()
-                        metadata = record.metadata
+                        # Update metadata.
+                        funding_agency = await sync_to_async(FundingAgency.objects.filter(id=record.id).first())
+                        metadata = funding_agency.metadata
                         if metadata:
                             resource = metadata.resource
                             if resource:
