@@ -54,6 +54,8 @@ from .hs_rdf import (HSTERMS, RDFS1, RDF_MetaData_Mixin, RDF_Term_MixIn,
                      rdf_terms)
 from .languages_iso import languages as iso_languages
 
+from django_tus.signals import tus_upload_finished_signal
+
 
 def clean_abstract(original_string):
     """Clean abstract for XML inclusion.
@@ -414,13 +416,25 @@ def page_permissions_page_processor(request, page):
     if is_owner or (cm.raccess.shareable and (is_view or is_edit)):
         show_manage_access = True
 
-    if hasattr(settings, 'FILE_UPLOAD_MAX_SIZE'):
-        max_file_size = settings.FILE_UPLOAD_MAX_SIZE
-    else:
-        max_file_size = 5120  # default to 5MB
+    max_file_size = getattr(settings, 'FILE_UPLOAD_MAX_SIZE', 1024 * 25)
     remaining_quota = get_remaining_user_quota(cm.quota_holder, "MB")
     if remaining_quota is not None:
         max_file_size = min(max_file_size, remaining_quota)
+
+    # https://docs.djangoproject.com/en/3.2/ref/settings/#data-upload-max-memory-size
+    max_chunk_size_mb = 2.5  # mb
+    if hasattr(settings, 'DATA_UPLOAD_MAX_MEMORY_SIZE'):
+        max_chunk_size_mb = settings.DATA_UPLOAD_MAX_MEMORY_SIZE / 1024 / 1024  # convert to MB
+
+    companion_url = getattr(settings, 'COMPANION_URL', 'https://companion.hydroshare.org/')
+    uppy_upload_endpoint = getattr(settings, 'UPPY_UPLOAD_ENDPOINT', 'https://hydroshare.org/hsapi/tus/')
+
+    # get the session id for the current user
+    if request.user.is_authenticated:
+        try:
+            session = request.session.session_key
+        except SessionException:
+            session = None
 
     return {
         'resource_type': cm._meta.verbose_name,
@@ -435,6 +449,10 @@ def page_permissions_page_processor(request, page):
         "last_changed_by": last_changed_by,
         "max_file_size": max_file_size,
         "max_file_size_for_display": convert_file_size_to_unit(max_file_size, "GB", "MB"),
+        "max_chunk_size_mb": max_chunk_size_mb,
+        "companion_url": companion_url,
+        "uppy_upload_endpoint": uppy_upload_endpoint,
+        "hs_s_id": session
     }
 
 
@@ -3687,6 +3705,89 @@ class ResourceFile(ResourceFileIRODSMixin):
         return self.public_path
 
 
+class RangedFileReader:
+    """
+    Wraps a file like object with an iterator that runs over part (or all) of
+    the file defined by start and stop. Blocks of block_size will be returned
+    from the starting position, up to, but not including the stop point.
+    https://github.com/satchamo/django/commit/2ce75c5c4bee2a858c0214d136bfcd351fcde11d
+    """
+    block_size = getattr(settings, 'RANGED_FILE_READER_BLOCK_SIZE', 1024 * 1024)
+    dump_size = getattr(settings, 'RANGED_FILE_READER_DUMP_SIZE', 1024 * 1024 * 1024)
+
+    def __init__(self, file_like, start=0, stop=float("inf"), block_size=None):
+        self.f = file_like
+        self.block_size = block_size or self.block_size
+        self.start = start
+        self.stop = stop
+
+    def __iter__(self):
+        # self.f proc.stdout is an _io.BufferedReader object
+        # so it will not have a seek method
+        if self.f.seekable():
+            self.f.seek(self.start)
+        else:
+            # if the file is not seekable, we read and discard
+            # until we reach the start position
+            remaining_to_dump = self.start
+            while remaining_to_dump > 0:
+                read_size = min(self.dump_size, remaining_to_dump)
+                self.f.read(read_size)
+                remaining_to_dump -= read_size
+        position = self.start
+        while position < self.stop:
+            data = self.f.read(min(self.block_size, self.stop - position))
+            if not data:
+                break
+
+            yield data
+            position += self.block_size
+
+    @staticmethod
+    def parse_range_header(header, resource_size):
+        """
+        Parses a range header into a list of two-tuples (start, stop) where `start`
+        is the starting byte of the range (inclusive) and `stop` is the ending byte
+        position of the range (exclusive).
+        Returns None if the value of the header is not syntatically valid.
+        """
+        if not header or '=' not in header:
+            return None
+
+        ranges = []
+        units, range_ = header.split('=', 1)
+        units = units.strip().lower()
+
+        if units != "bytes":
+            return None
+
+        for val in range_.split(","):
+            val = val.strip()
+            if '-' not in val:
+                return None
+
+            if val.startswith("-"):
+                # suffix-byte-range-spec: this form specifies the last N bytes of an
+                # entity-body
+                start = resource_size + int(val)
+                if start < 0:
+                    start = 0
+                stop = resource_size
+            else:
+                # byte-range-spec: first-byte-pos "-" [last-byte-pos]
+                start, stop = val.split("-", 1)
+                start = int(start)
+                # the +1 is here since we want the stopping point to be exclusive, whereas in
+                # the HTTP spec, the last-byte-pos is inclusive
+                stop = int(stop) + 1 if stop else resource_size
+                if start >= stop:
+                    return None
+
+            ranges.append((start, stop))
+
+        return ranges
+
+
 class PublicResourceManager(models.Manager):
     """Extend Django model Manager to allow for public resource access."""
 
@@ -5081,3 +5182,88 @@ def resource_creation_signal_handler(sender, instance, created, **kwargs):
 def resource_update_signal_handler(sender, instance, created, **kwargs):
     """Do nothing (noop)."""
     pass
+
+
+@receiver(tus_upload_finished_signal)
+def tus_upload_finished_handler(sender, **kwargs):
+    from hs_core.views.utils import create_folder
+    from rest_framework.exceptions import ValidationError as DRFValidationError
+    """Handle the tus upload finished signal.
+
+    Ingest the files from the TUS_DESTINATION_DIR into the resource.
+
+    https://github.com/alican/django-tus/blob/master/django_tus/signals.py
+    This signal provides the following keyword arguments:
+    metadata
+    filename
+    upload_file_path
+    file_size
+    upload_url
+    destination_folder
+    """
+    from hs_core import hydroshare
+    logger = logging.getLogger(__name__)
+    metadata = kwargs['metadata']
+    tus_destination_folder = kwargs['destination_folder']
+    hs_res_id = metadata['hs_res_id']
+    original_filename = metadata['original_file_name']
+
+    where_tus_put_it = os.path.join(tus_destination_folder, original_filename)
+
+    if original_filename != kwargs['filename']:
+        # rename the file
+        chunk_file_path = os.path.join(tus_destination_folder, kwargs['filename'])
+        os.rename(chunk_file_path, where_tus_put_it)
+
+    # create a file object for the uploaded file
+    file_obj = File(open(where_tus_put_it, 'rb'), name=original_filename)
+
+    resource = hydroshare.utils.get_resource_by_shortkey(hs_res_id)
+
+    eventual_relative_path = ''
+
+    try:
+        # see if there is a path within data/contents that the file should be uploaded to
+        existing_path_in_resource = metadata.get('existing_path_in_resource', '')
+        existing_path_in_resource = json.loads(existing_path_in_resource).get("path")
+        if existing_path_in_resource:
+            # in this case, we are uploading to an existing folder in the resource
+            # existing_path_in_resource is a list of folder names
+            # append them into a path
+            for folder in existing_path_in_resource:
+                eventual_relative_path += folder + '/'
+    except Exception as ex:
+        logger.info(f"Existing path in resource not found: {str(ex)}")
+
+    # handle the case that a folder was uploaded instead of a single file
+    # use the metadata.relativePath to rebuild the folder structure
+    path_within_uploaded_folder = metadata.get('relativePath', '')
+    # path_within_resource_contents will include the name of the file, so we need to remove it
+    path_within_uploaded_folder = os.path.dirname(path_within_uploaded_folder)
+    if path_within_uploaded_folder:
+        eventual_relative_path += path_within_uploaded_folder
+        file_folder = f'data/contents/{eventual_relative_path}'
+        try:
+            create_folder(res_id=hs_res_id, folder_path=file_folder)
+        except DRFValidationError as ex:
+            logger.info(f"Folder {file_folder} already exists for resource {hs_res_id}: {str(ex)}")
+
+    try:
+        hydroshare.utils.resource_file_add_pre_process(
+            resource=resource,
+            files=[file_obj],
+            user=resource.creator,
+            folder=eventual_relative_path,
+        )
+        hydroshare.utils.resource_file_add_process(
+            resource=resource,
+            files=[file_obj],
+            user=resource.creator,
+            folder=eventual_relative_path,
+        )
+        # remove the uploaded file
+        os.remove(where_tus_put_it)
+    except (hydroshare.utils.ResourceFileSizeException,
+            hydroshare.utils.ResourceFileValidationException,
+            Exception) as ex:
+        logger.error(ex)

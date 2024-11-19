@@ -20,6 +20,7 @@ from hs_core.task_utils import (get_or_create_task_notification,
                                 get_task_user_id)
 from hs_core.tasks import create_bag_by_irods, create_temp_zip
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, is_ajax
+from hs_core.models import RangedFileReader
 from hs_file_types.enums import AggregationMetaFilePath
 
 logger = logging.getLogger(__name__)

@@ -174,6 +174,12 @@ INTERNAL_IPS = ("127.0.0.1",)
 # is not that great for our project use case
 FILE_UPLOAD_MAX_MEMORY_SIZE = 0
 
+# the size that a file will be chunked for resumable download
+RANGED_FILE_READER_BLOCK_SIZE = 1024 * 1024  # 1MB
+
+# the size of the buffer that will be used when dumping unneeded bytes from head of a resumed file
+RANGED_FILE_READER_DUMP_SIZE = 1024 * 1024 * 1024  # 1GB
+
 # TODO remove MezzanineBackend after conflicting users have been removed
 AUTHENTICATION_BACKENDS = [
     "theme.backends.CaseInsensitiveMezzanineBackend",
@@ -235,7 +241,10 @@ FILE_UPLOAD_PERMISSIONS = 0o644
 # Alternative tmp folder
 FILE_UPLOAD_TEMP_DIR = "/tmp"
 
-FILE_UPLOAD_MAX_SIZE = 5 * 1024  # MB
+FILE_UPLOAD_MAX_SIZE = 25 * 1024  # 25GB in MB
+
+# https://docs.djangoproject.com/en/3.2/ref/settings/#data-upload-max-memory-size
+DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100 MB in Bytes
 
 #############
 # DATABASES #
@@ -443,7 +452,18 @@ INSTALLED_APPS = (
     "health_check.contrib.psutil",
     "health_check.contrib.rabbitmq",
     "mozilla_django_oidc",
+    'django_tus',
 )
+
+TUS_UPLOAD_DIR = '/tmp/tus_upload'
+TUS_DESTINATION_DIR = '/tmp/tus_completed'
+TUS_FILE_NAME_FORMAT = 'increment'  # Other options are: 'random-suffix', 'random', 'keep'
+TUS_EXISTING_FILE = 'error'  # Other options are: 'overwrite',  'error', 'rename'
+
+# the url for the uppy companion server
+# https://uppy.io/docs/companion/
+COMPANION_URL = 'https://companion.hydroshare.org/'
+UPPY_UPLOAD_ENDPOINT = 'https://hydroshare.org/hsapi/tus/'
 
 SWAGGER_SETTINGS = {
     "DEFAULT_GENERATOR_CLASS": "hs_rest_api2.serializers.NestedSchemaGenerator"
@@ -843,6 +863,7 @@ SECURE_HSTS_SECONDS = 31536000
 # Cookie Stuff
 SESSION_COOKIE_SECURE = USE_SECURITY
 CSRF_COOKIE_SECURE = USE_SECURITY
+
 
 # Categorization in discovery of content types
 # according to file extension of otherwise unaggregated files.

@@ -700,7 +700,7 @@
                                         <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12">
                                             {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                                                 {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
-                                                    <a {% if max_file_size <= 0 %}disabled{% endif %} type="button" data-fb-action="uploadFiles"
+                                                    <a {% if max_file_size <= 0 %}disabled{% endif %} id="uppy-modal-trigger" type="button" data-fb-action="uploadFiles"
                                                        class="btn btn-success btn-xs dz-clickable upload-toggle">
                                                         <i class="fa fa-plus"></i> Add files
                                                     </a>
@@ -866,6 +866,13 @@
                             </div>
                             <div class="fb-content-wrapper">
                                 <div class="fb-dropzone-wrapper{% if cm.resource_type == "CompositeResource" %} ui-resizable{% endif %}">
+                                    {% comment %}
+                                        This upload could be chunked with Tus protocol
+                                        Dropzone allows chunking https://docs.dropzone.dev/configuration/basics/configuration-options
+                                        However not using TUS protocol. 
+                                        So could use the tus-js-client library to implement chunking but do so within the Dropzone event handlers.
+                                        https://github.com/tus/tus-js-client/blob/main/demos/browser/demo.js#L38.
+                                    {% endcomment %}
                                     <form id="hsDropzone"
                                         class="files-container h-100 ui-widget-content {% if page.perms.change and resource_edit_mode and not cm.raccess.published_or_review_pending or current_user.is_superuser %}dropzone{% endif %}"
                                         action="/hsapi/_internal/{{ cm.short_id }}/add-files-to-resource/"
@@ -898,8 +905,7 @@
                                             {% if max_file_size > 0 %}
                                                 <div class="fb-upload-caption">
                                                     <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;
-                                                    Upload files smaller than {{ max_file_size_for_display|floatformat:"0" }}GB in size by dragging & dropping, or click
-                                                    <a class="dz-clickable upload-toggle">here</a> to select them. Uploads > 1GB are still in beta. Uploads are not resumable.
+                                                    Upload files up to {{ max_file_size_for_display|floatformat:"0" }}GB in size by dragging & dropping.
                                                 </div>
                                             {% endif %}
                                         {% endif %}
@@ -975,6 +981,9 @@
             </div>
         {% endif %}
         {% endblock %} {# content_block #}
+            
+        {# ======= Uppy for large file upload ======= #}
+        {% include "uppy.html" %}
 
         {# ======= Data Services ======= #}
         {% if data_services_urls.wms_url or data_services_urls.wfs_url or data_services_urls.wcs_url or data_services_urls.thredds_url %}
@@ -1118,7 +1127,6 @@
     <script src="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/Leaflet.fullscreen.min.js" crossorigin=""></script>
     <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     <script type="text/javascript" src="{% static 'js/coverageMap.js' %}"></script>
-    <script type="text/javascript" src="{% static 'js/dropzone.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/hs-file-icons.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/hs_file_browser.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/resourceLandingAjax.js' %}"></script>
