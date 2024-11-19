@@ -20,7 +20,7 @@ from hs_core.signals import (pre_check_bag_flag, pre_download_file,
                              pre_download_resource)
 from hs_core.task_utils import (get_or_create_task_notification,
                                 get_resource_bag_task, get_task_notification,
-                                get_task_user_id)
+                                get_task_user_id, zip_download_task_in_progress)
 from hs_core.tasks import create_bag_by_irods, create_temp_zip
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, is_ajax
 from hs_core.models import RangedFileReader
@@ -173,6 +173,10 @@ def download(request, path, use_async=True,
         download_path = '/django_irods/rest_download/' + output_path
         if use_async:
             user_id = get_task_user_id(request)
+
+            if zip_download_task_in_progress(resource_id=res_id, username=user_id):
+                return HttpResponse("A download task is already in progress for this resource, please allow the" \
+                                    " download to finish before making another request.", status=409)
             task = create_temp_zip.apply_async((res_id, irods_path, irods_output_path,
                                                 aggregation_name, is_sf_request, download_path, user_id))
             task_id = task.task_id

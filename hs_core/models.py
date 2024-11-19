@@ -5172,6 +5172,7 @@ class TaskNotification(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     username = models.CharField(max_length=150, blank=True, db_index=True)
     task_id = models.CharField(max_length=50, unique=True)
+    resource_id = models.CharField(max_length=50, blank=True)
     name = models.CharField(max_length=1000, blank=True)
     payload = models.CharField(max_length=1000, blank=True)
     status = models.CharField(max_length=20, choices=TASK_STATUS_CHOICES, default='progress')

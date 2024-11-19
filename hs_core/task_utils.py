@@ -61,6 +61,19 @@ def get_task_user_id(request):
     return ""
 
 
+def zip_download_task_in_progress(resource_id: str, username: str):
+    '''
+    Parameters:
+    resource_id (str): The ID of the resource.
+    username (str): The username of the person who created the task.
+    Returns:
+    bool:
+        - If a task exists and is in progress for the username and resource_id, returns True
+        - All other cases return False
+    '''
+    return TaskNotification.objects.exists(resource_id=resource_id, username=username, status='progress')
+
+
 def get_or_create_task_notification(task_id, status='progress', name='', payload='', username=''):
     with transaction.atomic():
         obj, created = TaskNotification.objects.get_or_create(task_id=task_id,
