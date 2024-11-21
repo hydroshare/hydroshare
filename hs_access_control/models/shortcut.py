@@ -45,6 +45,17 @@ def get_user_resource_privilege(email, short_id):
         privilege = [PrivilegeCodes.NONE]
 
     # user access
+    privilege.extend(get_explicit_user_resource_privilege(email, short_id))
+
+    if len(privilege) > 0:
+        return min(privilege)  # min of a list
+    else:
+        return PrivilegeCodes.NONE
+
+def get_explicit_user_resource_privilege(email, short_id):
+    privilege = [PrivilegeCodes.NONE]
+
+    # user access
     privilege.extend(UserResourcePrivilege.objects.filter(
         user__email=email,
         resource__short_id=short_id).values_list('privilege', flat=True))
@@ -84,15 +95,15 @@ def zone_of_influence(send=True, **kwargs):
         raise PolymorphismError("Too few arguments")
     if 'resource' in kwargs:
         if 'user' in kwargs:
-            users = [(kwargs['user'].email, kwargs['user'].username)]
+            users = [(kwargs['user'].email, kwargs['user'].username, kwargs['user'].is_superuser)]
             resources = [kwargs['resource'].short_id]
         elif 'group' in kwargs:
             users = list(User.objects
                              .filter(u2ugp__group=kwargs['group'])
-                             .values_list('username', flat=True))
+                             .values_list('username', 'email', 'is_superuser'))
             resources = [kwargs['resource'].short_id]
     elif 'user' in kwargs and 'group' in kwargs:
-        users = [(kwargs['user'].email, kwargs['user'].username)]
+        users = [(kwargs['user'].email, kwargs['user'].username, kwargs['user'].is_superuser)]
         resources = list(BaseResource.objects
                                      .filter(r2grp__group=kwargs['group'])
                                      .values_list('short_id', flat=True))
@@ -132,15 +143,15 @@ def access_changed(sender, **kwargs):
         resource_json["allow_private_sharing"] = res.raccess.allow_private_sharing
         resource_json["discoverable"] = res.raccess.discoverable
         resource_json["user_access"] = []
-        for email, username in kwargs['users']:
-            user_privilege_code = get_user_resource_privilege(email, resource_id)
+        for email, username, is_superuser in kwargs['users']:
+            user_privilege_code = get_explicit_user_resource_privilege(email, resource_id)
             if user_privilege_code < 3:
                 user_privilege = "EDIT"
             elif user_privilege_code == 3:
                 user_privilege = "VIEW"
             else:
                 user_privilege = "NONE"
-            user_json = {"username": username, "access": user_privilege}
+            user_json = {"username": username, "access": user_privilege, "is_superuser": is_superuser}
             resource_json["user_access"].append(user_json)
         response_json["resources"].append(resource_json)
     try:
