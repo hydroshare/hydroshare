@@ -8,6 +8,9 @@ from hs_core.models import BaseResource
 import hs_access_control.signals
 from django.dispatch import receiver
 import logging
+import requests
+from hs_core.hydroshare.utils import get_resource_by_shortkey
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +84,7 @@ def zone_of_influence(send=True, **kwargs):
         raise PolymorphismError("Too few arguments")
     if 'resource' in kwargs:
         if 'user' in kwargs:
-            users = [kwargs['user'].username]
+            users = [(kwargs['user'].email, kwargs['user'].username)]
             resources = [kwargs['resource'].short_id]
         elif 'group' in kwargs:
             users = list(User.objects
@@ -89,7 +92,7 @@ def zone_of_influence(send=True, **kwargs):
                              .values_list('username', flat=True))
             resources = [kwargs['resource'].short_id]
     elif 'user' in kwargs and 'group' in kwargs:
-        users = [kwargs['user'].username]
+        users = [(kwargs['user'].email, kwargs['user'].username)]
         resources = list(BaseResource.objects
                                      .filter(r2grp__group=kwargs['group'])
                                      .values_list('short_id', flat=True))
@@ -121,4 +124,26 @@ def zone_of_publicity(send=True, **kwargs):
 
 @receiver(hs_access_control.signals.access_changed, sender=PrivilegeBase)
 def access_changed(sender, **kwargs):
-    print("access_changed: users: {} resources: {}".format(kwargs['users'], kwargs['resources']))
+    response_json = {"resources": []}
+    for resource_id in kwargs['resources']:
+        res = get_resource_by_shortkey(resource_id)
+        resource_json = {"id": resource_id}
+        resource_json["public"] = res.raccess.public
+        resource_json["allow_private_sharing"] = res.raccess.allow_private_sharing
+        resource_json["discoverable"] = res.raccess.discoverable
+        resource_json["user_access"] = []
+        for email, username in kwargs['users']:
+            user_privilege_code = get_user_resource_privilege(email, resource_id)
+            if user_privilege_code < 3:
+                user_privilege = "EDIT"
+            elif user_privilege_code == 3:
+                user_privilege = "VIEW"
+            else:
+                user_privilege = "NONE"
+            user_json = {"username": username, "access": user_privilege}
+            resource_json["user_access"].append(user_json)
+        response_json["resources"].append(resource_json)
+    try:
+        requests.post(settings.ACCESS_CONTROL_CHANGE_ENDPOINT, json=response_json)
+    except Exception as e:
+        logger.warning("Error in sending access change notification: {}".format(str(e)))
