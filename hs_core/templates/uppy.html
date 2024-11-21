@@ -12,7 +12,7 @@
   <script>
     const MAX_CHUNK_MB = {{ max_chunk_size_mb|default:2.5 }};
     const MAX_FILE_SIZE_MB = {{ max_file_size|default:10240 }};
-    const MAX_NUMBER_OF_FILES = {{ max_number_of_files|default:50 }};
+    const MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD = {{ max_number_of_files_in_single_local_upload|default:50 }};
     const COMPANION_URL = "{{ companion_url }}";
     const UPPY_UPLOAD_ENDPOINT = "{{ uppy_upload_endpoint }}";
     const RES_ID = "{{ cm.short_id }}";
