@@ -84,7 +84,7 @@ let uppy = new Uppy({
     target: "#uppy",
     showProgressDetails: true,
     trigger: "#uppy-modal-trigger",
-    note: `Max file size: ${MAX_FILE_SIZE_MB / 1024} GB. \nFiles will be uploaded in ${MAX_CHUNK_MB} MB chunks.`,
+    note: `Max file size: ${(MAX_FILE_SIZE_MB / 1024).toFixed(2)} GB`,
     // https://uppy.io/docs/dashboard/#locale
     locale: {
       strings: {
@@ -179,11 +179,10 @@ let uppy = new Uppy({
     $("#fb-alerts .upload-continue-alert").remove();
   })
   .on("upload-success", (file, response) => {
-    uppy.info(
-      `File ${file.name} was transferered successfully. Adding into HydroShare...`
-    );
-    onUploadSuccess(file, response);
-    refreshFileBrowser();
+    // handle when a single file is uploaded, for example:
+    // uppy.info(
+    //   `File ${file.name} was transferered successfully. Adding into HydroShare...`
+    // );
   })
   .on("complete", (result) => {
     let resourceType = $("#resource-type").val();
@@ -193,6 +192,7 @@ let uppy = new Uppy({
     pathLog.push(JSON.parse(sessionStorage.currentBrowsepath));
     pathLogIndex = pathLog.length - 1;
 
+    // updateResourceUI() appears not to be needed here
     if (resourceType === "Resource") {
       sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
       refreshFileBrowser();
