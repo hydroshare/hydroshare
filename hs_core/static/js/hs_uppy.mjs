@@ -27,6 +27,7 @@ let uppy = new Uppy({
     maxFileSize: MAX_FILE_SIZE,
     // restrict uploading a FOLDER with a total size larger than the max file size
     maxTotalFileSize: MAX_FILE_SIZE,
+    // maxNumberOfFiles: MAX_NUMBER_OF_FILES,
   },
   onBeforeUpload: (files) => {
     Object.keys(files).forEach((fileId) => {
@@ -150,6 +151,20 @@ let uppy = new Uppy({
       // Remove the file from the upload list
       uppy.removeFile(file.id);
       uppy.info("File upload is not allowed. Target folder seems to contain aggregation(s).", "error");
+    }
+    
+    // if the file source is "local" then impose the file number limit
+    // this is because local uploads are more resource intensive than remote (ex google drive) uploads
+    if (!file.isRemote ) {
+      // count the total number of files that are not isRemote thus far and make sure it is less than MAX_NUMBER_OF_FILES
+      const localFiles = uppy.getFiles().filter((f) => !f.isRemote);
+      if (localFiles.length > MAX_NUMBER_OF_FILES) {
+        uppy.removeFile(file.id);
+        uppy.info(
+          `The number of files added exceeds the limit of ${MAX_NUMBER_OF_FILES}.`,
+          "error"
+        );
+      }
     }
   })
   .on("dashboard:modal-closed", () => {

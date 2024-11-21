@@ -426,6 +426,8 @@ def page_permissions_page_processor(request, page):
     if hasattr(settings, 'DATA_UPLOAD_MAX_MEMORY_SIZE'):
         max_chunk_size_mb = settings.DATA_UPLOAD_MAX_MEMORY_SIZE / 1024 / 1024  # convert to MB
 
+    max_number_of_files = getattr(settings, 'MAX_NUMBER_OF_FILES', 50)
+
     companion_url = getattr(settings, 'COMPANION_URL', 'https://companion.hydroshare.org/')
     uppy_upload_endpoint = getattr(settings, 'UPPY_UPLOAD_ENDPOINT', 'https://hydroshare.org/hsapi/tus/')
 
@@ -450,6 +452,7 @@ def page_permissions_page_processor(request, page):
         "max_file_size": max_file_size,
         "max_file_size_for_display": convert_file_size_to_unit(max_file_size, "GB", "MB"),
         "max_chunk_size_mb": max_chunk_size_mb,
+        "max_number_of_files": max_number_of_files,
         "companion_url": companion_url,
         "uppy_upload_endpoint": uppy_upload_endpoint,
         "hs_s_id": session

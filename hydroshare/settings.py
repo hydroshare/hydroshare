@@ -472,6 +472,7 @@ TUS_EXISTING_FILE = 'error'  # Other options are: 'overwrite',  'error', 'rename
 # https://uppy.io/docs/companion/
 COMPANION_URL = 'https://companion.hydroshare.org/'
 UPPY_UPLOAD_ENDPOINT = 'https://hydroshare.org/hsapi/tus/'
+MAX_NUMBER_OF_FILES = 50
 
 SWAGGER_SETTINGS = {
     "DEFAULT_GENERATOR_CLASS": "hs_rest_api2.serializers.NestedSchemaGenerator"
