@@ -111,6 +111,7 @@ class PrivilegeBase(models.Model):
         Only use this routine if you wish to completely bypass access control.
         Note also that using this routine directly breaks provenance and disables undo.
         """
+        from hs_access_control.models.shortcut import zone_of_influence
         grantor = kwargs['grantor']
         privilege = kwargs.get('privilege', None)
         if privilege is not None and privilege < PrivilegeCodes.NONE:
@@ -131,6 +132,13 @@ class PrivilegeBase(models.Model):
             del kwargs['grantor']
             cls.objects.filter(**kwargs) \
                .delete()
+
+        # notify cache of changes in privilege 
+        if 'privilege' in kwargs: 
+            del kwargs['privilege']
+        if 'grantor' in kwargs: 
+            del kwargs['grantor']
+        zone_of_influence(**kwargs)
 
     @classmethod
     def share(cls, **kwargs):
@@ -163,11 +171,11 @@ class PrivilegeBase(models.Model):
         This works for any pair of attributes that together, form a key, along with shared
         parameter `grantor`.  Examples include:
 
-            * UserResourcePrivilege.share(user={X}, resource={Y}, grantor={W})
-            * GroupResourcePrivilege.share(group={X}, resource={Y}, grantor={W})
-            * UserGroupPrivilege.share(user={X}, group={Y}, grantor={W})
-            * UserCommunityPrivilege.share(user={X}, community={Y}, grantor={W})
-            * GroupCommunityPrivilege.share(group={X}, community={Y}, grantor={W})
+            * UserResourcePrivilege.unshare(user={X}, resource={Y}, grantor={W})
+            * GroupResourcePrivilege.unshare(group={X}, resource={Y}, grantor={W})
+            * UserGroupPrivilege.unshare(user={X}, group={Y}, grantor={W})
+            * UserCommunityPrivilege.unshare(user={X}, community={Y}, grantor={W})
+            * GroupCommunityPrivilege.unshare(group={X}, community={Y}, grantor={W})
 
         An unshare operation is just an update operation with privilege=PrivilegeCodes.NONE.
 
@@ -293,6 +301,7 @@ class UserGroupPrivilege(PrivilegeBase):
             assert len(kwargs) == 3
         cls.update(privilege=PrivilegeCodes.NONE, **kwargs)
         UserGroupProvenance.update(privilege=PrivilegeCodes.NONE, **kwargs)
+        del kwargs['grantor']
 
     @classmethod
     def undo_share(cls, **kwargs):
