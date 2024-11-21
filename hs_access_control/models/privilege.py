@@ -133,10 +133,10 @@ class PrivilegeBase(models.Model):
             cls.objects.filter(**kwargs) \
                .delete()
 
-        # notify cache of changes in privilege 
-        if 'privilege' in kwargs: 
+        # notify cache of changes in privilege
+        if 'privilege' in kwargs:
             del kwargs['privilege']
-        if 'grantor' in kwargs: 
+        if 'grantor' in kwargs:
             del kwargs['grantor']
         zone_of_influence(**kwargs)
 

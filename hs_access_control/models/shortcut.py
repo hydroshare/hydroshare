@@ -52,6 +52,7 @@ def get_user_resource_privilege(email, short_id):
     else:
         return PrivilegeCodes.NONE
 
+
 def get_explicit_user_resource_privilege(email, short_id):
     privilege = [PrivilegeCodes.NONE]
 
