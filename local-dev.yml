@@ -2,6 +2,7 @@ version: '3'
 services:
   minio:
     image: minio/minio
+    platform: linux/amd64
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -16,6 +17,7 @@ services:
     command: server --console-address ":9001" /data
   postgis:
     image: postgis/postgis:15-3.3
+    platform: linux/amd64
     environment:
       POSTGRES_PASSWORD: 'postgres'
     container_name: postgis
@@ -28,11 +30,13 @@ services:
     tty: true
   rabbitmq:
     image: rabbitmq:3.8.2
+    platform: linux/amd64
     container_name: rabbitmq
     volumes:
       - "rabbitmq_data_vol:/var/lib/rabbitmq"
   solr:
     image: solr:6.6
+    platform: linux/amd64
     container_name: solr
     volumes:
       # hydroshare repository
@@ -42,6 +46,7 @@ services:
       - "8983"
     command: ["solr-foreground"]
   hydroshare:
+    platform: linux/amd64
     build:
       context: .
       dockerfile: Dockerfile
@@ -93,6 +98,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: defaultworker
+    platform: linux/amd64
     hostname: defaultworker
     environment:
       POSTGIS_HOST: postgis
@@ -127,6 +133,7 @@ services:
   companion:
   # https://github.com/transloadit/uppy/blob/main/packages/%40uppy/companion/KUBERNETES.md
     image:  docker.io/transloadit/companion:latest
+    platform: linux/amd64
     container_name: companion
     hostname: companion
     environment:
@@ -153,6 +160,7 @@ services:
       - redis
   redis:
     image: redis:latest
+    platform: linux/amd64
     container_name: redis
     hostname: redis
     environment:
