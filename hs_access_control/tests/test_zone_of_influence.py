@@ -79,15 +79,16 @@ class T05ShareResource(TestCase):
         dog = self.dog
 
         (foo, bar) = zone_of_influence(send=False, user=dog, resource=holes)
-        self.assertTrue(is_equal_to_as_set(foo, [dog.username]))
+        self.assertTrue(is_equal_to_as_set(foo, [(dog.email, dog.username, dog.is_superuser)]))
         self.assertTrue(is_equal_to_as_set(bar, [holes.short_id]))
 
         (foo, bar) = zone_of_influence(send=False, user=dog, group=meowers)
-        self.assertTrue(is_equal_to_as_set(foo, [dog.username]))
+        self.assertTrue(is_equal_to_as_set(foo, [(dog.email, dog.username, dog.is_superuser)]))
         self.assertTrue(is_equal_to_as_set(bar, []))
 
         (foo, bar) = zone_of_influence(send=False, group=meowers, resource=posts)
-        self.assertTrue(is_equal_to_as_set(foo, [cat.username]))
+
+        self.assertTrue(is_equal_to_as_set(foo, [(cat.email, cat.username, cat.is_superuser)]))
         self.assertTrue(is_equal_to_as_set(bar, [posts.short_id]))
 
         cat.uaccess.share_resource_with_group(
@@ -97,11 +98,11 @@ class T05ShareResource(TestCase):
             posts, meowers, PrivilegeCodes.CHANGE)
 
         (foo, bar) = zone_of_influence(send=False, user=dog, group=meowers)
-        self.assertTrue(is_equal_to_as_set(foo, [dog.username]))
+        self.assertTrue(is_equal_to_as_set(foo, [(dog.email, dog.username, dog.is_superuser)]))
         self.assertTrue(is_equal_to_as_set(bar, [holes.short_id, posts.short_id]))
 
         (foo, bar) = zone_of_influence(send=False, group=meowers, resource=posts)
-        self.assertTrue(is_equal_to_as_set(foo, [cat.username]))
+        self.assertTrue(is_equal_to_as_set(foo, [(cat.email, cat.username, cat.is_superuser)]))
         self.assertTrue(is_equal_to_as_set(bar, [posts.short_id]))
 
     def test_02_polymorphism_error(self):
