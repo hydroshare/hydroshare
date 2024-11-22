@@ -94,6 +94,8 @@ def zone_of_influence(send=True, **kwargs):
         raise PolymorphismError("Too many arguments")
     if len(kwargs) < 2:
         raise PolymorphismError("Too few arguments")
+    users = []
+    resources = []
     if 'resource' in kwargs:
         if 'user' in kwargs:
             users = [(kwargs['user'].email, kwargs['user'].username, kwargs['user'].is_superuser)]
@@ -108,7 +110,7 @@ def zone_of_influence(send=True, **kwargs):
         resources = list(BaseResource.objects
                                      .filter(r2grp__group=kwargs['group'])
                                      .values_list('short_id', flat=True))
-    if send:
+    if send and (users or resources):
         hs_access_control.signals.access_changed.send(
             sender=PrivilegeBase, users=users, resources=resources)
     else:
