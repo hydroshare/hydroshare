@@ -45,7 +45,7 @@ def get_user_resource_privilege(email, short_id):
         privilege = [PrivilegeCodes.NONE]
 
     # user access
-    privilege.extend(get_explicit_user_resource_privilege(email, short_id))
+    privilege.append(get_explicit_user_resource_privilege(email, short_id))
 
     if len(privilege) > 0:
         return min(privilege)  # min of a list
