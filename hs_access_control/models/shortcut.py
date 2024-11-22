@@ -88,6 +88,8 @@ def get_explicit_user_resource_privilege(email, short_id):
 # this sends signal access_changed.
 
 def zone_of_influence(send=True, **kwargs):
+    if "exhibit" in kwargs:
+        del kwargs["exhibit"]
     for k in kwargs:
         print("{}: {}".format(k, kwargs[k]))
     if len(kwargs) > 2:
