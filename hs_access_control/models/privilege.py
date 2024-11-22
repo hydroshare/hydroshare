@@ -138,6 +138,8 @@ class PrivilegeBase(models.Model):
             del kwargs['privilege']
         if 'grantor' in kwargs:
             del kwargs['grantor']
+        if 'exhibit' in kwargs:
+            del kwargs['exhibit']
         zone_of_influence(**kwargs)
 
     @classmethod
