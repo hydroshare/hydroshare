@@ -87,6 +87,17 @@
                         {% endif %}
                     {% endif %}
                 {% endif %}
+
+                <button id="btn-download-all" class="tr-download-button"
+                    title="Download all content as Zipped BagIt Archive"
+                    {% if cm.raccess.require_download_agreement %}
+                    data-target="#license-agree-dialog-bag" data-toggle="modal"
+                    data-placement="auto"
+                    {% endif %}
+                    data-bag-url="{{ cm.bag_url }}">
+                    <span class="fa fa-briefcase icon-blue"></span>
+                </button>
+
                 {% if page.perms.change or self_access_level == 'owner' and cm.raccess.published %}
                     <form action="{{ cm.absolute_url }}" method="post">
                         {% csrf_token %}
