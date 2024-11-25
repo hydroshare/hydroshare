@@ -416,17 +416,15 @@ def page_permissions_page_processor(request, page):
     if is_owner or (cm.raccess.shareable and (is_view or is_edit)):
         show_manage_access = True
 
-    max_file_size = getattr(settings, 'FILE_UPLOAD_MAX_SIZE', 1024 * 25)
+    max_file_size = getattr(settings, 'FILE_UPLOAD_MAX_SIZE', 25 * 1024**3)
     remaining_quota = get_remaining_user_quota(cm.quota_holder, "MB")
-    if remaining_quota is not None:
-        max_file_size = min(max_file_size, remaining_quota)
+    remaining_quota = remaining_quota * 1024**2 if remaining_quota else 0
 
     # https://docs.djangoproject.com/en/3.2/ref/settings/#data-upload-max-memory-size
-    max_chunk_size_mb = 2.5  # mb
-    if hasattr(settings, 'DATA_UPLOAD_MAX_MEMORY_SIZE'):
-        max_chunk_size_mb = settings.DATA_UPLOAD_MAX_MEMORY_SIZE / 1024 / 1024  # convert to MB
+    max_chunk_size = getattr(settings, 'DATA_UPLOAD_MAX_MEMORY_SIZE', 2.5 * 1024**2)
 
     max_number_of_files_in_single_local_upload = getattr(settings, 'MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD', 50)
+    parallel_uploads_limit = getattr(settings, 'PARALLEL_UPLOADS_LIMIT', 10)
 
     companion_url = getattr(settings, 'COMPANION_URL', 'https://companion.hydroshare.org/')
     uppy_upload_endpoint = getattr(settings, 'UPPY_UPLOAD_ENDPOINT', 'https://hydroshare.org/hsapi/tus/')
@@ -449,10 +447,11 @@ def page_permissions_page_processor(request, page):
         "is_version_of": is_version_of,
         "show_manage_access": show_manage_access,
         "last_changed_by": last_changed_by,
+        "remaining_quota": remaining_quota,
         "max_file_size": max_file_size,
-        "max_file_size_for_display": convert_file_size_to_unit(max_file_size, "GB", "MB"),
-        "max_chunk_size_mb": max_chunk_size_mb,
+        "max_chunk_size": max_chunk_size,
         "max_number_of_files_in_single_local_upload": max_number_of_files_in_single_local_upload,
+        "parallel_uploads_limit": parallel_uploads_limit,
         "companion_url": companion_url,
         "uppy_upload_endpoint": uppy_upload_endpoint,
         "hs_s_id": session

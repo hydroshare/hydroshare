@@ -7,13 +7,15 @@ import {
   DropTarget,
 } from "https://releases.transloadit.com/uppy/v4.4.0/uppy.min.mjs";
 
-let MAX_CHUNK = MAX_CHUNK_MB * 1024 * 1024; // in bytes
-const MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024; // in bytes
+let MAX_CHUNK = MAX_CHUNK_SIZE; // in bytes
 
 // Make sure the chunk size is not larger than the max file size
 if (MAX_CHUNK > MAX_FILE_SIZE) {
   MAX_CHUNK = MAX_FILE_SIZE;
 }
+
+// get the least size between max file size and remaining quota
+const RESTRICTED_SIZE = Math.min(MAX_FILE_SIZE, REMAINING_QUOTA);
 
 const headers = {
   "HS-SID": HS_S_ID
@@ -24,9 +26,9 @@ let uppy = new Uppy({
   // autoProceed: true,
   // debug: true,
   restrictions: {
-    maxFileSize: MAX_FILE_SIZE,
+    maxFileSize: RESTRICTED_SIZE,
     // restrict uploading a FOLDER with a total size larger than the max file size
-    maxTotalFileSize: MAX_FILE_SIZE,
+    maxTotalFileSize: RESTRICTED_SIZE,
     // maxNumberOfFiles: MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD,
   },
   onBeforeUpload: (files) => {
@@ -85,7 +87,7 @@ let uppy = new Uppy({
     target: "#uppy",
     showProgressDetails: true,
     trigger: "#uppy-modal-trigger",
-    note: `Max file size: ${(MAX_FILE_SIZE_MB / 1024).toFixed(2)} GB`,
+    note: `Remaining Quota: ${formatBytes(parseInt(REMAINING_QUOTA))}. Max file size: ${formatBytes(parseInt(MAX_FILE_SIZE))}`,
     // https://uppy.io/docs/dashboard/#locale
     locale: {
       strings: {
@@ -144,6 +146,8 @@ let uppy = new Uppy({
     // it is not recommended to set the chunk size
     // however in testing it seems to improve resumability
     chunkSize: MAX_CHUNK, // in bytes
+    // https://uppy.io/docs/tus/#limit
+    limit: PARALLEL_UPLOADS_LIMIT || 10,
   })
   // https://uppy.io/docs/uppy/#events
   .on("file-added", (file) => {

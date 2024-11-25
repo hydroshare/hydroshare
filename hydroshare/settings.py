@@ -241,7 +241,7 @@ FILE_UPLOAD_PERMISSIONS = 0o644
 # Alternative tmp folder
 FILE_UPLOAD_TEMP_DIR = "/tmp"
 
-FILE_UPLOAD_MAX_SIZE = 25 * 1024  # 25GB in MB
+FILE_UPLOAD_MAX_SIZE = 25 * 1024 ** 3  # 25GB in BYTES
 
 # https://docs.djangoproject.com/en/3.2/ref/settings/#data-upload-max-memory-size
 DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100 MB in Bytes
@@ -473,6 +473,7 @@ TUS_EXISTING_FILE = 'error'  # Other options are: 'overwrite',  'error', 'rename
 COMPANION_URL = 'https://companion.hydroshare.org/'
 UPPY_UPLOAD_ENDPOINT = 'https://hydroshare.org/hsapi/tus/'
 MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD = 50
+PARALLEL_UPLOADS_LIMIT = 10
 
 SWAGGER_SETTINGS = {
     "DEFAULT_GENERATOR_CLASS": "hs_rest_api2.serializers.NestedSchemaGenerator"
