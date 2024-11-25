@@ -92,6 +92,8 @@ let uppy = new Uppy({
     locale: {
       strings: {
         dropPasteFiles: `Drop files here or %{browseFiles} to upload to ${getCurrentPath()}.`,
+        // Used as the screen reader label for buttons that remove a file.
+        removeFile: "Remove file from upload queue",
       },
     },
   })
@@ -264,3 +266,31 @@ let uppy = new Uppy({
     target: Dashboard,
     companionUrl: COMPANION_URL,
   });
+
+  // on page load, check the uppy state to see if there were pending uploads
+  // https://uppy.io/docs/uppy/#getstate
+  const recoveredFiles = uppy.getState()?.recoveredState?.files
+  if (recoveredFiles && Object.keys(recoveredFiles).length > 0) {
+    // check if the recovered files have the same meta.hs_res_id as the current resource
+    let recoveredFilesInCurrentResource = {};
+    Object.keys(recoveredFiles).forEach((fileId) => {
+      if (recoveredFiles[fileId].meta.hs_res_id === RES_ID) {
+        recoveredFilesInCurrentResource[fileId] = recoveredFiles[fileId];
+      }
+    });
+    if (Object.keys(recoveredFilesInCurrentResource).length > 0) {
+      let message = 'It looks like your upload request got interrupted: \n<ul>';
+      Object.keys(recoveredFilesInCurrentResource).forEach((fileId) => {
+        message += `<li>${recoveredFilesInCurrentResource[fileId].name}</li>`
+      });
+      message += '</ul>';
+      message +=
+      '<a href="#" id="resume-uploads">Click here to resume.</a>';
+      customAlert("Recovered Uploads", message, "error", 10000, true);
+      document.getElementById("resume-uploads").addEventListener("click", (event) => {
+        event.preventDefault();
+        uppy.getPlugin("Dashboard").openModal();
+      }); 
+    }
+  }
+  console.log(uppy.getState())
