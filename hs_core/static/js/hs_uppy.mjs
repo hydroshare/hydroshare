@@ -279,11 +279,16 @@ let uppy = new Uppy({
       }
     });
     if (Object.keys(recoveredFilesInCurrentResource).length > 0) {
-      let message = 'It looks like your upload request got interrupted: \n<ul>';
-      Object.keys(recoveredFilesInCurrentResource).forEach((fileId) => {
-        message += `<li>${recoveredFilesInCurrentResource[fileId].name}</li>`
-      });
-      message += '</ul>';
+      let message = 'It looks like your upload request got interrupted. \n';
+      if (Object.keys(recoveredFilesInCurrentResource).length < 10) {
+        message += 'The following files were being uploaded: \n<ul>';
+        Object.keys(recoveredFilesInCurrentResource).forEach((fileId) => {
+          message += `<li>${recoveredFilesInCurrentResource[fileId].name}</li>`
+        });
+        message += '</ul>';
+      }else{
+        message += `A total of ${Object.keys(recoveredFilesInCurrentResource).length} files were being uploaded.\n`
+      }
       message +=
       '<a href="#" id="resume-uploads">Click here to resume.</a>';
       customAlert("Recovered Uploads", message, "error", 10000, true);
