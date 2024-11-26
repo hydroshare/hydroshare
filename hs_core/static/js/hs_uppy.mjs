@@ -95,6 +95,7 @@ let uppy = new Uppy({
         dropPasteFiles: `Drop files here or %{browseFiles} to upload to ${getCurrentPath()}.`,
         // Used as the screen reader label for buttons that remove a file.
         // removeFile: "Remove file from upload queue",
+        // cancel: 'Cancel',
       },
     },
   })
@@ -199,6 +200,31 @@ let uppy = new Uppy({
     $(".fb-drag-flag").show();
     $("#hsDropzone").toggleClass("glow-blue", true);
     $("#fb-alerts .upload-continue-alert").remove();
+
+    // check if there are uploads files added with different resource_id
+    // this is to prevent the case that the user stages files for upload into one resource and then switches to another resource
+    // and unwittingly uploads the staged files into the new resource
+    let files = uppy.getFiles();
+    if (files) {
+      let otherFiles = files.filter((file) => {
+        let res_id = file.meta.hs_res_id
+        if ( res_id && res_id !== RES_ID) {
+          // uppy.removeFile(file.id);
+          return file;
+        }else{
+          return false;
+        }
+      });
+      if (otherFiles.length > 0) {
+        let message = `We recovered files that were orignally staged for upload to a different resource. ` +
+        'Please ensure that you are uploading to the intended resource.'
+        uppy.info(
+          message,
+          "error",
+          5000
+        );
+      }
+    }
   })
   .on("upload-success", (file, response) => {
     // handle when a single file is uploaded, for example:
