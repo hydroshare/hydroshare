@@ -93,7 +93,7 @@ let uppy = new Uppy({
       strings: {
         dropPasteFiles: `Drop files here or %{browseFiles} to upload to ${getCurrentPath()}.`,
         // Used as the screen reader label for buttons that remove a file.
-        removeFile: "Remove file from upload queue",
+        // removeFile: "Remove file from upload queue",
       },
     },
   })
