@@ -308,7 +308,7 @@ def get_access_object(user, user_type, user_access):
 def page_permissions_page_processor(request, page):
     """Return a dict describing permissions for current user."""
     from hs_access_control.models.privilege import PrivilegeCodes
-    from hs_core.hydroshare.utils import get_remaining_user_quota, convert_file_size_to_unit
+    from hs_core.hydroshare.utils import get_remaining_user_quota
 
     cm = page.get_content_model()
     can_change_resource_flags = False
