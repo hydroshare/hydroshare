@@ -35,6 +35,7 @@ let uppy = new Uppy({
     Object.keys(files).forEach((fileId) => {
       // add metadata to the file
       files[fileId].meta.hs_res_id = RES_ID;
+      files[fileId].meta.hs_res_title = RES_TITLE;
       files[fileId].meta.original_file_name = files[fileId].name;
       files[fileId].meta.existing_path_in_resource = JSON.stringify(
         getCurrentPath()
@@ -273,9 +274,16 @@ let uppy = new Uppy({
   if (recoveredFiles && Object.keys(recoveredFiles).length > 0) {
     // check if the recovered files have the same meta.hs_res_id as the current resource
     let recoveredFilesInCurrentResource = {};
+    let recoveredFilesInOtherResource = {};
     Object.keys(recoveredFiles).forEach((fileId) => {
-      if (recoveredFiles[fileId].meta.hs_res_id === RES_ID) {
+      let file_res_id = recoveredFiles[fileId].meta.hs_res_id
+      let file_res_title = recoveredFiles[fileId].meta.hs_res_title
+      if ( file_res_id === RES_ID) {
         recoveredFilesInCurrentResource[fileId] = recoveredFiles[fileId];
+      }else{
+        if (file_res_id && file_res_title) {
+          recoveredFilesInOtherResource[fileId] = recoveredFiles[fileId];
+        }
       }
     });
     if (Object.keys(recoveredFilesInCurrentResource).length > 0) {
@@ -290,12 +298,38 @@ let uppy = new Uppy({
         message += `A total of ${Object.keys(recoveredFilesInCurrentResource).length} files were being uploaded.\n`
       }
       message +=
-      '<a href="#" id="resume-uploads">Click here to resume.</a>';
-      customAlert("Recovered Uploads", message, "error", 10000, true);
+      '<a href="#" id="resume-uploads">Click here to resume or cancel uploads.</a>';
+      customAlert("Recovered Uploads", message, "error", 100000, true);
       document.getElementById("resume-uploads").addEventListener("click", (event) => {
         event.preventDefault();
         uppy.getPlugin("Dashboard").openModal();
       }); 
     }
+    if (Object.keys(recoveredFilesInOtherResource).length > 0) {
+      let message = 'It looks like your upload request got interrupted. \n';
+      if (Object.keys(recoveredFilesInOtherResource).length < 10) {
+        message += 'The following files were being uploaded to other resources: \n<ul>';
+        Object.keys(recoveredFilesInOtherResource).forEach((fileId) => {
+          let res_id = recoveredFilesInOtherResource[fileId].meta.hs_res_id;
+          let res_title = recoveredFilesInOtherResource[fileId].meta.hs_res_title;
+          message += `<li>${recoveredFilesInOtherResource[fileId].name} in <a href="/resource/${res_id}"> ${res_title}</a></li>`
+        });
+        message += '</ul>';
+      }else{
+        message += `A total of ${Object.keys(recoveredFilesInOtherResource).length} files were being uploaded to other resources.\n`
+      }
+      message += "\nPlease go to the respective resources to resume the uploads."
+      message += '\nOr <a href="#" id="cancel-uploads">click here to cancel all recovered uploads.</a>';
+      customAlert("Recovered Uploads", message, "error", 100000, true);
+      document.getElementById("cancel-uploads").addEventListener("click", (event) => {
+        event.preventDefault();
+        try{
+          uppy.cancelAll()
+        }
+        catch(e){
+          console.error(`Error cancelling uploads: ${e}`);
+        }
+        $(".custom-alert").hide()
+      });
+    }
   }
-  console.log(uppy.getState())
