@@ -72,6 +72,9 @@ Run the following command on completion to launch Hydroshare:
 
     HydroShare is available in your browser at http://localhost:8000 or http://host.docker.internal:8000 (for 3rd party oauth)
 
+    Add a line for host.docker.internal to your /etc/hosts file
+    `127.0.0.1 host.docker.internal`
+
     The default admin page is http://localhost:8000/admin
 
     The default admin account is admin:default
