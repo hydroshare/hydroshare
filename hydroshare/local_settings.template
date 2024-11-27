@@ -27,10 +27,11 @@ RABBITMQ_HOST = os.environ.get('RABBITMQ_PORT_5672_TCP_ADDR', 'localhost')
 RABBITMQ_PORT = '5672'
 
 POSTGIS_HOST = os.environ.get('POSTGIS_PORT_5432_TCP_ADDR', 'localhost')
-POSTGIS_PORT = 5432
+POSTGIS_PORT = os.environ.get('POSTGIS_PORT', 5432)
 POSTGIS_DB = os.environ.get('POSTGIS_DB', 'postgres')
 POSTGIS_PASSWORD = os.environ.get('POSTGIS_PASSWORD', 'postgres')
 POSTGIS_USER = os.environ.get('POSTGIS_USER', 'postgres')
+POSTGIS_TIMEZONE = os.environ.get('POSTGIS_TIMEZONE', 'UTC')
 
 # number of seconds database connections should persist
 # https://docs.djangoproject.com/en/3.2/ref/settings/#std-setting-CONN_MAX_AGE
@@ -93,6 +94,11 @@ DATABASES = {
         "HOST": POSTGIS_HOST,
         # Set to empty string for default. Not used with sqlite3.
         "PORT": POSTGIS_PORT,
+        "DISABLE_SERVER_SIDE_CURSORS": POSTGIS_DISABLE_SERVER_SIDE_CURSORS,
+        "CLIENT_ENCODING": POSGIS_CLIENT_ENCODING,
+        "DEFAULT_TRANSACTION_ISOLATION": POSTGIS_DEFAULT_TRANSACTION_ISOLATION,
+        "USE_TZ": POSTGIS_USE_TZ,
+        "TIMEZONE": POSTGIS_TIMEZONE
     }
 }
 POSTGIS_VERSION = (2, 1, 1)
