@@ -26,6 +26,21 @@ services:
       - "54322:5432"
     stdin_open: true
     tty: true
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: pgbouncer
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: postgis
+      DB_PORT: 54322
+      DB_NAME: postgres
+    ports:
+      - "6432:6432"
+    depends_on:
+      - postgis
+    volumes:
+      - ./pgbouncer-config:/etc/pgbouncer
   rabbitmq:
     image: rabbitmq:3.8.2
     container_name: rabbitmq
@@ -51,8 +66,8 @@ services:
       - "/dev/fuse"
     privileged: true
     environment:
-      POSTGIS_HOST: postgis
-      POSTGIS_PORT: 5432
+      POSTGIS_HOST: pgbouncer
+      POSTGIS_PORT: 6432
       POSTGIS_PASSWORD: postgres
       POSTGIS_DB: postgres
       POSTGIS_USER: postgres
@@ -82,6 +97,7 @@ services:
       - minio:minio
     depends_on:
       - postgis
+      - pgbouncer
       - solr
       - rabbitmq
       - minio
