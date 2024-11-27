@@ -7,80 +7,86 @@ import {
   DropTarget,
 } from "https://releases.transloadit.com/uppy/v4.4.0/uppy.min.mjs";
 
-let MAX_CHUNK = MAX_CHUNK_SIZE; // in bytes
-
-// Make sure the chunk size is not larger than the max file size
-if (MAX_CHUNK > MAX_FILE_SIZE) {
-  MAX_CHUNK = MAX_FILE_SIZE;
+let uppy = null;
+if (HS_S_ID === "") {
+  uppy = new Uppy({
+    id: "uppy",
+  })
 }
+else{
+  let MAX_CHUNK = MAX_CHUNK_SIZE; // in bytes
 
-// get the least size between max file size and remaining quota
-const RESTRICTED_SIZE = Math.min(MAX_FILE_SIZE, REMAINING_QUOTA);
+  // Make sure the chunk size is not larger than the max file size
+  if (MAX_CHUNK > MAX_FILE_SIZE) {
+    MAX_CHUNK = MAX_FILE_SIZE;
+  }
 
-const headers = {
-  "HS-SID": HS_S_ID
-};
+  // get the least size between max file size and remaining quota
+  const RESTRICTED_SIZE = Math.min(MAX_FILE_SIZE, REMAINING_QUOTA);
 
-let uppy = new Uppy({
-  id: "uppy",
-  // autoProceed: true,
-  // debug: true,
-  restrictions: {
-    maxFileSize: RESTRICTED_SIZE,
-    // restrict uploading a FOLDER with a total size larger than the max file size
-    maxTotalFileSize: RESTRICTED_SIZE,
-    // maxNumberOfFiles: MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD,
-  },
-  onBeforeUpload: (files) => {
-    Object.keys(files).forEach((fileId) => {
-      // add metadata to the file
-      files[fileId].meta.hs_res_id = RES_ID;
-      files[fileId].meta.hs_res_title = RES_TITLE;
-      files[fileId].meta.original_file_name = files[fileId].name;
-      files[fileId].meta.existing_path_in_resource = JSON.stringify(
-        getCurrentPath()
-      );
-      // add the file size to the metadata
-      files[fileId].meta.file_size = files[fileId].data.size;
-    });
-    return files;
-  },
-  onBeforeFileAdded: (currentFile, files) => {
-    // https://uppy.io/docs/uppy/#onbeforefileaddedfile-files
-    // check for existing files before adding to the resource
-    // window.fbFiles and fbFolders are set in the file_browser.html template
+  const headers = {
+    "HS-SID": HS_S_ID
+  };
 
-    let path = currentFile?.meta?.relativePath
+  uppy = new Uppy({
+    id: "uppy",
+    // autoProceed: true,
+    // debug: true,
+    restrictions: {
+      maxFileSize: RESTRICTED_SIZE,
+      // restrict uploading a FOLDER with a total size larger than the max file size
+      maxTotalFileSize: RESTRICTED_SIZE,
+      // maxNumberOfFiles: MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD,
+    },
+    onBeforeUpload: (files) => {
+      Object.keys(files).forEach((fileId) => {
+        // add metadata to the file
+        files[fileId].meta.hs_res_id = RES_ID;
+        files[fileId].meta.hs_res_title = RES_TITLE;
+        files[fileId].meta.original_file_name = files[fileId].name;
+        files[fileId].meta.existing_path_in_resource = JSON.stringify(
+          getCurrentPath()
+        );
+        // add the file size to the metadata
+        files[fileId].meta.file_size = files[fileId].data.size;
+      });
+      return files;
+    },
+    onBeforeFileAdded: (currentFile, files) => {
+      // https://uppy.io/docs/uppy/#onbeforefileaddedfile-files
+      // check for existing files before adding to the resource
+      // window.fbFiles and fbFolders are set in the file_browser.html template
 
-    // check existing dirs if uploading a folder
-    if (window.fbFolders){
-      // strip the filename from the currentFile.meta.relativePath
-      // we only check the first level directory
-      if (path) {
-        path = path.split("/")[0];
-        const existingFolders = window.fbFolders.map((folder) => folder.name);
-        if (existingFolders.includes(path)) {
+      let path = currentFile?.meta?.relativePath
+
+      // check existing dirs if uploading a folder
+      if (window.fbFolders){
+        // strip the filename from the currentFile.meta.relativePath
+        // we only check the first level directory
+        if (path) {
+          path = path.split("/")[0];
+          const existingFolders = window.fbFolders.map((folder) => folder.name);
+          if (existingFolders.includes(path)) {
+            uppy.info(
+              `Folder ${path} already exists in the resource. Remove or rename.`
+            );
+            return false;
+          }
+        }
+      }
+
+      // check existing files
+      if (window.fbFiles) {
+        const existingFiles = window.fbFiles.map((f) => f.name);
+        if (existingFiles.includes(currentFile.name) && !path) {
           uppy.info(
-            `Folder ${path} already exists in the resource. Remove or rename.`
+            `File ${currentFile.name} already exists in the resource. Remove or rename.`
           );
           return false;
         }
       }
-    }
-
-    // check existing files
-    if (window.fbFiles) {
-      const existingFiles = window.fbFiles.map((f) => f.name);
-      if (existingFiles.includes(currentFile.name) && !path) {
-        uppy.info(
-          `File ${currentFile.name} already exists in the resource. Remove or rename.`
-        );
-        return false;
-      }
-    }
-  },
-})
-  .use(GoldenRetriever)
+    },
+  })
   .use(Dashboard, {
     inline: false,
     closeModalOnClickOutside: true,
@@ -293,69 +299,71 @@ let uppy = new Uppy({
     target: Dashboard,
     companionUrl: COMPANION_URL,
   });
+}
 
-  // on page load, check the uppy state to see if there were pending uploads
-  // https://uppy.io/docs/uppy/#getstate
-  const recoveredFiles = uppy.getState()?.recoveredState?.files
-  if (recoveredFiles && Object.keys(recoveredFiles).length > 0) {
-    // check if the recovered files have the same meta.hs_res_id as the current resource
-    let recoveredFilesInCurrentResource = {};
-    let recoveredFilesInOtherResource = {};
-    Object.keys(recoveredFiles).forEach((fileId) => {
-      let file_res_id = recoveredFiles[fileId].meta.hs_res_id
-      let file_res_title = recoveredFiles[fileId].meta.hs_res_title
-      if ( file_res_id === RES_ID) {
-        recoveredFilesInCurrentResource[fileId] = recoveredFiles[fileId];
-      }else{
-        if (file_res_id && file_res_title) {
-          recoveredFilesInOtherResource[fileId] = recoveredFiles[fileId];
-        }
+uppy.use(GoldenRetriever)
+// on page load, check the uppy state to see if there were pending uploads
+// https://uppy.io/docs/uppy/#getstate
+const recoveredFiles = uppy.getState()?.recoveredState?.files
+if (recoveredFiles && Object.keys(recoveredFiles).length > 0) {
+  // check if the recovered files have the same meta.hs_res_id as the current resource
+  let recoveredFilesInCurrentResource = {};
+  let recoveredFilesInOtherResource = {};
+  Object.keys(recoveredFiles).forEach((fileId) => {
+    let file_res_id = recoveredFiles[fileId].meta.hs_res_id
+    let file_res_title = recoveredFiles[fileId].meta.hs_res_title
+    if ( file_res_id === RES_ID) {
+      recoveredFilesInCurrentResource[fileId] = recoveredFiles[fileId];
+    }else{
+      if (file_res_id && file_res_title) {
+        recoveredFilesInOtherResource[fileId] = recoveredFiles[fileId];
       }
-    });
-    if (Object.keys(recoveredFilesInCurrentResource).length > 0) {
-      let message = 'It looks like your upload request got interrupted. \n';
-      if (Object.keys(recoveredFilesInCurrentResource).length < 10) {
-        message += 'The following files were being uploaded: \n<ul>';
-        Object.keys(recoveredFilesInCurrentResource).forEach((fileId) => {
-          message += `<li>${recoveredFilesInCurrentResource[fileId].name}</li>`
-        });
-        message += '</ul>';
-      }else{
-        message += `A total of ${Object.keys(recoveredFilesInCurrentResource).length} files were being uploaded.\n`
-      }
-      message +=
-      '<a href="#" id="resume-uploads">Click here to resume or cancel uploads.</a>';
-      customAlert("Recovered Uploads", message, "error", 100000, true);
-      document.getElementById("resume-uploads").addEventListener("click", (event) => {
-        event.preventDefault();
-        uppy.getPlugin("Dashboard").openModal();
-      }); 
     }
-    if (Object.keys(recoveredFilesInOtherResource).length > 0) {
-      let message = 'It looks like your upload request got interrupted. \n';
-      if (Object.keys(recoveredFilesInOtherResource).length < 10) {
-        message += 'The following files were being uploaded to other resources: \n<ul>';
-        Object.keys(recoveredFilesInOtherResource).forEach((fileId) => {
-          let res_id = recoveredFilesInOtherResource[fileId].meta.hs_res_id;
-          let res_title = recoveredFilesInOtherResource[fileId].meta.hs_res_title;
-          message += `<li>${recoveredFilesInOtherResource[fileId].name} in <a href="/resource/${res_id}"> ${res_title}</a></li>`
-        });
-        message += '</ul>';
-      }else{
-        message += `A total of ${Object.keys(recoveredFilesInOtherResource).length} files were being uploaded to other resources.\n`
-      }
-      message += "\nPlease go to the respective resources to resume the uploads."
-      message += '\nOr <a href="#" id="cancel-uploads">click here to cancel all recovered uploads.</a>';
-      customAlert("Recovered Uploads", message, "error", 100000, true);
-      document.getElementById("cancel-uploads").addEventListener("click", (event) => {
-        event.preventDefault();
-        try{
-          uppy.cancelAll()
-        }
-        catch(e){
-          console.error(`Error cancelling uploads: ${e}`);
-        }
-        $(".custom-alert").hide()
+  });
+  if (Object.keys(recoveredFilesInCurrentResource).length > 0) {
+    let message = 'It looks like your upload request got interrupted. \n';
+    if (Object.keys(recoveredFilesInCurrentResource).length < 10) {
+      message += 'The following files were being uploaded: \n<ul>';
+      Object.keys(recoveredFilesInCurrentResource).forEach((fileId) => {
+        message += `<li>${recoveredFilesInCurrentResource[fileId].name}</li>`
       });
+      message += '</ul>';
+    }else{
+      message += `A total of ${Object.keys(recoveredFilesInCurrentResource).length} files were being uploaded.\n`
     }
+    message +=
+    '<a href="#" id="resume-uploads">Click here to resume or cancel uploads.</a>';
+    customAlert("Recovered Uploads", message, "error", 100000, true);
+    document.getElementById("resume-uploads").addEventListener("click", (event) => {
+      event.preventDefault();
+      uppy.getPlugin("Dashboard").openModal();
+    }); 
   }
+  if (Object.keys(recoveredFilesInOtherResource).length > 0) {
+    let message = 'It looks like your upload request got interrupted. \n';
+    if (Object.keys(recoveredFilesInOtherResource).length < 10) {
+      message += 'The following files were being uploaded to other resources: \n<ul>';
+      Object.keys(recoveredFilesInOtherResource).forEach((fileId) => {
+        let res_id = recoveredFilesInOtherResource[fileId].meta.hs_res_id;
+        let res_title = recoveredFilesInOtherResource[fileId].meta.hs_res_title;
+        message += `<li>${recoveredFilesInOtherResource[fileId].name} in <a href="/resource/${res_id}"> ${res_title}</a></li>`
+      });
+      message += '</ul>';
+    }else{
+      message += `A total of ${Object.keys(recoveredFilesInOtherResource).length} files were being uploaded to other resources.\n`
+    }
+    message += "\nPlease go to the respective resources to resume the uploads."
+    message += '\nOr <a href="#" id="cancel-uploads">click here to cancel all recovered uploads.</a>';
+    customAlert("Recovered Uploads", message, "error", 100000, true);
+    document.getElementById("cancel-uploads").addEventListener("click", (event) => {
+      event.preventDefault();
+      try{
+        uppy.cancelAll()
+      }
+      catch(e){
+        console.error(`Error cancelling uploads: ${e}`);
+      }
+      $(".custom-alert").hide()
+    });
+  }
+}
