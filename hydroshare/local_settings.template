@@ -31,6 +31,10 @@ POSTGIS_PORT = os.environ.get('POSTGIS_PORT', 5432)
 POSTGIS_DB = os.environ.get('POSTGIS_DB', 'postgres')
 POSTGIS_PASSWORD = os.environ.get('POSTGIS_PASSWORD', 'postgres')
 POSTGIS_USER = os.environ.get('POSTGIS_USER', 'postgres')
+POSTGIS_DISABLE_SERVER_SIDE_CURSORS = os.environ.get('POSTGIS_DISABLE_SERVER_SIDE_CURSORS', 'True')
+POSGIS_CLIENT_ENCODING = os.environ.get('POSTGIS_CLIENT_ENCODING', 'UTF8')
+POSTGIS_DEFAULT_TRANSACTION_ISOLATION = os.environ.get('POSTGIS_DEFAULT_TRANSACTION_ISOLATION', 'read committed')
+POSTGIS_USE_TZ = os.environ.get('POSTGIS_USE_TZ', 'True')
 POSTGIS_TIMEZONE = os.environ.get('POSTGIS_TIMEZONE', 'UTC')
 
 # number of seconds database connections should persist
