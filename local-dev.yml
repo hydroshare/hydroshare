@@ -99,7 +99,7 @@ services:
       SOLR_HOST: solr
       TMP: /tmp
       POSTGIS_PORT_5432_TCP_ADDR: pgbouncer
-      POSTGIS_DISABLE_SERVER_SIDE_CURSORS: True
+      POSTGIS_DISABLE_SERVER_SIDE_CURSORS: "True"
       HS_PATH: ${PWD}
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
