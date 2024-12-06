@@ -98,15 +98,15 @@ def zone_of_influence(send=True, **kwargs):
     resources = []
     if 'resource' in kwargs:
         if 'user' in kwargs:
-            users = [(kwargs['user'].email, kwargs['user'].username, kwargs['user'].is_superuser)]
+            users = [(kwargs['user'].email, kwargs['user'].username, kwargs['user'].is_superuser, kwargs['user'].id)]
             resources = [kwargs['resource'].short_id]
         elif 'group' in kwargs:
             users = list(User.objects
                              .filter(u2ugp__group=kwargs['group'])
-                             .values_list('email', 'username', 'is_superuser'))
+                             .values_list('email', 'username', 'is_superuser', 'id'))
             resources = [kwargs['resource'].short_id]
     elif 'user' in kwargs and 'group' in kwargs:
-        users = [(kwargs['user'].email, kwargs['user'].username, kwargs['user'].is_superuser)]
+        users = [(kwargs['user'].email, kwargs['user'].username, kwargs['user'].is_superuser, kwargs['user'].id)]
         resources = list(BaseResource.objects
                                      .filter(r2grp__group=kwargs['group'])
                                      .values_list('short_id', flat=True))
