@@ -146,6 +146,11 @@ def access_changed(sender, **kwargs):
         resource_json["allow_private_sharing"] = res.raccess.allow_private_sharing
         resource_json["discoverable"] = res.raccess.discoverable
         resource_json["user_access"] = []
+        if res.quota_holder is None:
+            return # initial resource creation doesn't have a quota holder
+        quota_holder = res.quota_holder
+        bucket_name = quota_holder.userprofile.bucket_name
+        resource_json["bucket_name"] = bucket_name
         for email, username, is_superuser, id in kwargs['users']:
             user_privilege_code = get_explicit_user_resource_privilege(email, resource_id)
             if user_privilege_code < 3:
