@@ -146,7 +146,7 @@ def access_changed(sender, **kwargs):
         resource_json["allow_private_sharing"] = res.raccess.allow_private_sharing
         resource_json["discoverable"] = res.raccess.discoverable
         resource_json["user_access"] = []
-        for email, username, is_superuser in kwargs['users']:
+        for email, username, is_superuser, id in kwargs['users']:
             user_privilege_code = get_explicit_user_resource_privilege(email, resource_id)
             if user_privilege_code < 3:
                 user_privilege = "EDIT"
@@ -154,7 +154,7 @@ def access_changed(sender, **kwargs):
                 user_privilege = "VIEW"
             else:
                 user_privilege = "NONE"
-            user_json = {"username": username, "access": user_privilege, "is_superuser": is_superuser}
+            user_json = {"username": username, "access": user_privilege, "is_superuser": is_superuser, "id": id}
             resource_json["user_access"].append(user_json)
         response_json["resources"].append(resource_json)
     try:
