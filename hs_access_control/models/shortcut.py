@@ -147,7 +147,7 @@ def access_changed(sender, **kwargs):
         resource_json["discoverable"] = res.raccess.discoverable
         resource_json["user_access"] = []
         if res.quota_holder is None:
-            return # initial resource creation doesn't have a quota holder
+            return  # initial resource creation doesn't have a quota holder
         quota_holder = res.quota_holder
         bucket_name = quota_holder.userprofile.bucket_name
         resource_json["bucket_name"] = bucket_name
