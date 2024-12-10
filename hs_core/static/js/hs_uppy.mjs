@@ -28,6 +28,12 @@ else{
     "HS-SID": HS_S_ID
   };
 
+  let quotaNote = `Max file size: ${formatBytes(parseInt(MAX_FILE_SIZE))}.`;
+  if (REMAINING_QUOTA > 0) {
+    // `Remaining Quota: ${formatBytes(parseInt(REMAINING_QUOTA))}.
+    quotaNote += ` Remaining Quota: ${formatBytes(parseInt(REMAINING_QUOTA))}.`;
+  }
+
   uppy = new Uppy({
     id: "uppy",
     // autoProceed: true,
@@ -94,7 +100,7 @@ else{
     target: "#uppy",
     showProgressDetails: true,
     trigger: "#uppy-modal-trigger",
-    note: `Remaining Quota: ${formatBytes(parseInt(REMAINING_QUOTA))}. Max file size: ${formatBytes(parseInt(MAX_FILE_SIZE))}`,
+    note: quotaNote,
     // https://uppy.io/docs/dashboard/#locale
     locale: {
       strings: {

@@ -418,7 +418,8 @@ def page_permissions_page_processor(request, page):
 
     max_file_size = getattr(settings, 'FILE_UPLOAD_MAX_SIZE', 25 * 1024**3)
     remaining_quota = get_remaining_user_quota(cm.quota_holder, "MB")
-    remaining_quota = remaining_quota * 1024**2 if remaining_quota else 0
+    if remaining_quota is not None:
+        remaining_quota = remaining_quota * 1024**2
 
     # https://docs.djangoproject.com/en/3.2/ref/settings/#data-upload-max-memory-size
     max_chunk_size = getattr(settings, 'DATA_UPLOAD_MAX_MEMORY_SIZE', 2.5 * 1024**2)

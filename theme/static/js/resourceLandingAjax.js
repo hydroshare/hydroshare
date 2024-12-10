@@ -828,7 +828,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             // Default display message for empty directories
             if (!files.length && !folders.length) {
                 if (mode === "edit") {
-                    if (REMAINING_QUOTA > 0) {
+                    if (REMAINING_QUOTA > 0 || REMAINING_QUOTA === null) {
                         $('#fb-files-container').append(
                             '<div>' +
                                 '<span class="text-muted fb-empty-dir has-space-bottom">This directory is empty</span>' +
