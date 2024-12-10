@@ -4042,7 +4042,7 @@ class BaseResource(Page, AbstractResource):
             # encoded_words = [urllib.parse.quote(word) for word in words]
             # # match all words in the funder name
             # query = "+".join(encoded_words)
-            url = f"https://api.ror.org/v2/organizations?filter=types:funder"
+            url = "https://api.ror.org/v2/organizations?filter=types:funder"
             funder_name = funder_name.lower()
             response = requests.get(url, verify=False)
             if response.status_code == 200:
