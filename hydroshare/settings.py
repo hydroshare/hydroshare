@@ -289,7 +289,7 @@ CACHE_MIDDLEWARE_KEY_PREFIX = PROJECT_DIRNAME
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': '/shared/django_cache',
+        'LOCATION': 'django_cache',
     }
 }
 
