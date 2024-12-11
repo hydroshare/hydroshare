@@ -4047,13 +4047,11 @@ class BaseResource(Page, AbstractResource):
             response = requests.get(url, verify=False)
             if response.status_code == 200:
                 response_json = response.json()
-                if response_json['status'] == 'ok':
-                    items = response_json['items']
-                    for item in items:
-                        for name in item['names']:
-                            if 'ror_display' in name['types'] and name['value'].lower() == funder_name:
-                                return item['id']
-                    return ''
+                items = response_json['items']
+                for item in items:
+                    for name in item['names']:
+                        if 'ror_display' in name['types'] and name['value'].lower() == funder_name:
+                            return item['id']
                 return ''
             else:
                 msg = "Failed to get funder_id for funder_name: '{}' from ror funders registry. " \
