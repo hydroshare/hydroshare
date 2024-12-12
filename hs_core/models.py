@@ -4051,7 +4051,15 @@ class BaseResource(Page, AbstractResource):
                 for item in items:
                     for name in item['names']:
                         if 'ror_display' in name['types'] and name['value'].lower() == funder_name:
-                            return item['id']
+                            doi_prefix = "https://doi.org/10.13039/"
+                            for external_id in item['external_ids']:
+                                if external_id['type'] == "fundref":
+                                    if external_id['preferred']:
+                                        return doi_prefix + external_id['preferred']
+                                    else:
+                                        all_ids = external_id['all']
+                                        if all_ids:
+                                            return doi_prefix + all_ids[0]
                 return ''
             else:
                 msg = "Failed to get funder_id for funder_name: '{}' from ror funders registry. " \
