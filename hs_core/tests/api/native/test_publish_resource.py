@@ -459,6 +459,8 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
 
         freezer.stop()
 
+        print(expected_xml)
+        print(crossref_xml)
         self.assertTrue(len(crossref_xml) == len(expected_xml))
         match_ratio = difflib.SequenceMatcher(None, crossref_xml.splitlines(), expected_xml.splitlines()).ratio()
         self.assertTrue(match_ratio == 1.0, msg="crossref xml is not as expected")

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doi_batch xmlns="http://www.crossref.org/schema/5.3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:fr="http://www.crossref.org/fundref.xsd" xmlns:ai="http://www.crossref.org/AccessIndicators.xsd" version="5.3.1" xsi:schemaLocation="http://www.crossref.org/schema/5.3.1 http://www.crossref.org/schemas/crossref5.3.1.xsd">
+  <head>
+    <doi_batch_id>4e6d1b69062c468d9730f2d29bd7eaaa</doi_batch_id>
+    <timestamp>20241212143125</timestamp>
+    <depositor>
+      <depositor_name>HydroShare</depositor_name>
+      <email_address>support@hydroshare.org</email_address>
+    </depositor>
+    <registrant>Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)</registrant>
+  </head>
+  <body>
+    <database>
+      <database_metadata language="en">
+        <titles>
+          <title>HydroShare Resources</title>
+        </titles>
+        <publisher>
+          <publisher_name>HydroShare</publisher_name>
+        </publisher>
+      </database_metadata>
+      <dataset dataset_type="record">
+        <contributors>
+          <person_name contributor_role="author" sequence="first">
+            <given_name>Creator_FirstName</given_name>
+            <surname>Creator_LastName</surname>
+          </person_name>
+          <organization contributor_role="author" sequence="additional">Utah State University</organization>
+          <person_name contributor_role="author" sequence="additional">
+            <given_name>John</given_name>
+            <surname>Smith</surname>
+            <ORCID>https://orcid.org/0000-0002-1825-0097</ORCID>
+          </person_name>
+        </contributors>
+        <titles>
+          <title>Test Resource</title>
+        </titles>
+        <database_date>
+          <creation_date>
+            <month>12</month>
+            <day>12</day>
+            <year>2024</year>
+          </creation_date>
+          <publication_date>
+            <month>12</month>
+            <day>12</day>
+            <year>2024</year>
+          </publication_date>
+          <update_date>
+            <month>12</month>
+            <day>12</day>
+            <year>2024</year>
+          </update_date>
+        </database_date>
+        <description>This is a test abstract</description>
+        <fr:program name="fundref">
+          <fr:assertion name="fundgroup">
+            <fr:assertion name="funder_name">National Science Foundation<fr:assertion name="funder_identifier">https://nsf.gov</fr:assertion></fr:assertion>
+            <fr:assertion name="award_number">12345</fr:assertion>
+          </fr:assertion>
+          <fr:assertion name="fundgroup">
+            <fr:assertion name="funder_name">Utah Water Research Laboratory</fr:assertion>
+          </fr:assertion>
+        </fr:program>
+        <ai:program name="AccessIndicators">
+          <ai:license_ref applies_to="vor" start_date="2024-12-12">http://creativecommons.org/licenses/by/4.0/</ai:license_ref>
+        </ai:program>
+        <doi_data>
+          <doi>10.4211/hs.4e6d1b69062c468d9730f2d29bd7eaaa</doi>
+          <resource>http://localhost:8000/resource/4e6d1b69062c468d9730f2d29bd7eaaa</resource>
+        </doi_data>
+      </dataset>
+    </database>
+  </body>
+</doi_batch>
