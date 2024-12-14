@@ -456,12 +456,6 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
                                                        published_date=published_date, site_url=site_url,
                                                        support_email=support_email)
         expected_xml = expected_xml.strip()
-        file_name = 'excepionCompare.txt'
-        with open(file_name, 'a') as file:
-            file.write('EXPECTED\n')  
-            file.write(expected_xml)
-            file.write('CROSSREF\n')  
-            file.write(crossref_xml)
 
         freezer.stop()
 
