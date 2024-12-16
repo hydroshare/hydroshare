@@ -12,12 +12,6 @@ if (HS_S_ID === "") {
   uppy = new Uppy({
     id: "uppy",
     // https://github.com/transloadit/uppy/issues/5542
-    locale: {
-      strings: {
-        pluginNameGoogleDrive: 'Google Drive',
-        pluginNameGooglePhotos: 'Google Photos'
-      }
-    }
   })
 }
 else{
@@ -50,6 +44,11 @@ else{
       // restrict uploading a FOLDER with a total size larger than the max file size
       maxTotalFileSize: RESTRICTED_SIZE,
       // maxNumberOfFiles: MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD,
+    },
+    locale: {
+      strings: {
+        pluginNameGoogleDrive: 'Google Drive',
+      }
     },
     onBeforeUpload: (files) => {
       Object.keys(files).forEach((fileId) => {
@@ -120,9 +119,6 @@ else{
         // Used as the screen reader label for buttons that remove a file.
         // removeFile: "Remove file from upload queue",
         // cancel: 'Cancel',
-        // https://github.com/transloadit/uppy/issues/5542
-        pluginNameGoogleDrive: 'Google Drive',
-        pluginNameGooglePhotos: 'Google Photos'
       },
     },
   })
@@ -325,12 +321,6 @@ else{
   //   clientId: GOOGLE_PICKER_CLIENT_ID,
   //   apiKey: GOOGLE_PICKER_API_KEY,
   //   appId: GOOGLE_PICKER_APP_ID,
-  //   locale: {
-  //     strings: {
-  //       pluginNameGoogleDrive: 'Google Drive',
-  //       pluginNameGooglePhotos: 'Google Photos'
-  //     }
-  //   }
   // });
 }
 
