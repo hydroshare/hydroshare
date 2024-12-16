@@ -59,12 +59,6 @@ else{
         files[fileId].meta.existing_path_in_resource = JSON.stringify(
           getCurrentPath()
         );
-        // add the file size to the metadata
-        // TODO: file size not set by picker...
-        let remoteFileSize = files[fileId].data.size;
-        if (!remoteFileSize) {
-          remoteFileSize = files[fileId].progress.bytesTotal;
-        }
         files[fileId].meta.file_size = files[fileId].data.size;
       });
       return files;
