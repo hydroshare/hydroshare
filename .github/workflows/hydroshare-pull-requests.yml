@@ -12,8 +12,37 @@ jobs:
   hydroshare-pull-request-tests:
 
     runs-on: ubuntu-latest
-    #env:
-    #  COVERAGE_TOTAL: 10
+
+    services:
+      postgres:
+        image: postgres:15  # Replace with the version you are using
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd="pg_isready -U test_user -d test_db"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      pgbouncer:
+        image: edoburu/pgbouncer:latest
+        ports:
+          - 6432:6432
+        env:
+          DB_USER: test_user
+          DB_PASSWORD: test_password
+          DB_HOST: postgres
+          DB_PORT: 5432
+          DB_DATABASE: test_db
+        options: >-
+          --health-cmd="pgbouncer -q"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
     - uses: actions/checkout@v4
@@ -32,8 +61,20 @@ jobs:
       run: |
         printf "%s\n" c | ./local-dev-first-start-only.sh
 
+    - name: Configure PgBouncer
+      run: |
+        echo "[databases]" > /etc/pgbouncer/pgbouncer.ini
+        echo "test_db = host=postgres port=5432 user=test_user password=test_password" >> /etc/pgbouncer/pgbouncer.ini
+        echo "[pgbouncer]" >> /etc/pgbouncer/pgbouncer.ini
+        echo "listen_port = 6432" >> /etc/pgbouncer/pgbouncer.ini
+        echo "listen_addr = *" >> /etc/pgbouncer/pgbouncer.ini
+        echo "auth_type = md5" >> /etc/pgbouncer/pgbouncer.ini
+        echo "auth_file = /etc/pgbouncer/userlist.txt" >> /etc/pgbouncer/pgbouncer.ini
+        echo "\"test_user\" \"test_password\"" > /etc/pgbouncer/userlist.txt
 
     - name: Run HydroShare Tests
+      env:
+        DATABASE_URL: postgres://test_user:test_password@localhost:6432/test_db
       run: |
         docker exec hydroshare ./run-tests-jenkins
     
