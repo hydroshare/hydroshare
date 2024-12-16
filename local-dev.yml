@@ -134,10 +134,11 @@ services:
     container_name: defaultworker
     hostname: defaultworker
     environment:
-      POSTGIS_HOST: postgis
-      POSTGIS_PORT: 5432
+      POSTGIS_HOST: pgbouncer
+      POSTGIS_PORT: 6432
       POSTGIS_PASSWORD: postgres
       POSTGIS_DB: postgres
+      POSTGIS_USER: postgres
       PGPASSWORD: postgres
       C_FORCE_ROOT: 1
       RABBITMQ_PORT_5672_TCP_ADDR: rabbitmq
@@ -153,12 +154,12 @@ services:
     volumes:
       - ".:/hydroshare"
     links:
-      - postgis:postgis
+      - pgbouncer:pgbouncer
       - rabbitmq:rabbitmq
       - data.local.org:data.local.org
     depends_on:
       - hydroshare
-      - postgis
+      - pgbouncer
       - solr
       - rabbitmq
       - data.local.org
