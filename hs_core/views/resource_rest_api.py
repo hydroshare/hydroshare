@@ -943,6 +943,11 @@ class CustomTusUpload(TusUpload):
     def patch(self, request, resource_id, *args, **kwargs):
 
         tus_file = TusFile.get_tusfile_or_404(str(resource_id))
+
+        # when using the google file picker api, the file size is initially set to 0
+        http_upload_length = request.META.get('HTTP_UPLOAD_LENGTH', None)
+        if tus_file.file_size == 0 and http_upload_length:
+            tus_file.file_size = int(http_upload_length)
         chunk = TusChunk(request)
 
         if not tus_file.is_valid():
