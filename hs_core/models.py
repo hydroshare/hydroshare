@@ -429,6 +429,9 @@ def page_permissions_page_processor(request, page):
 
     companion_url = getattr(settings, 'COMPANION_URL', 'https://companion.hydroshare.org/')
     uppy_upload_endpoint = getattr(settings, 'UPPY_UPLOAD_ENDPOINT', 'https://hydroshare.org/hsapi/tus/')
+    google_picker_client_id = getattr(settings, 'GOOGLE_PICKER_CLIENT_ID', '')
+    google_picker_api_key = getattr(settings, 'GOOGLE_PICKER_API_KEY', '')
+    google_picker_app_id = getattr(settings, 'GOOGLE_PICKER_APP_ID', '')
 
     # get the session id for the current user
     if request.user.is_authenticated:
@@ -455,6 +458,9 @@ def page_permissions_page_processor(request, page):
         "parallel_uploads_limit": parallel_uploads_limit,
         "companion_url": companion_url,
         "uppy_upload_endpoint": uppy_upload_endpoint,
+        "google_picker_client_id": google_picker_client_id,
+        "google_picker_api_key": google_picker_api_key,
+        "google_picker_app_id": google_picker_app_id,
         "hs_s_id": session
     }
 

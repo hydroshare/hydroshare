@@ -3,14 +3,21 @@ import {
   Dashboard,
   Tus,
   GoldenRetriever,
-  // GoogleDrive,
+  // GoogleDrivePicker,
   DropTarget,
-} from "https://releases.transloadit.com/uppy/v4.4.0/uppy.min.mjs";
+} from "https://releases.transloadit.com/uppy/v4.8.0/uppy.min.mjs";
 
 let uppy = null;
 if (HS_S_ID === "") {
   uppy = new Uppy({
     id: "uppy",
+    // https://github.com/transloadit/uppy/issues/5542
+    locale: {
+      strings: {
+        pluginNameGoogleDrive: 'Google Drive',
+        pluginNameGooglePhotos: 'Google Photos'
+      }
+    }
   })
 }
 else{
@@ -54,6 +61,11 @@ else{
           getCurrentPath()
         );
         // add the file size to the metadata
+        // TODO: file size not set by picker...
+        let remoteFileSize = files[fileId].data.size;
+        if (!remoteFileSize) {
+          remoteFileSize = files[fileId].progress.bytesTotal;
+        }
         files[fileId].meta.file_size = files[fileId].data.size;
       });
       return files;
@@ -108,6 +120,9 @@ else{
         // Used as the screen reader label for buttons that remove a file.
         // removeFile: "Remove file from upload queue",
         // cancel: 'Cancel',
+        // https://github.com/transloadit/uppy/issues/5542
+        pluginNameGoogleDrive: 'Google Drive',
+        pluginNameGooglePhotos: 'Google Photos'
       },
     },
   })
@@ -303,9 +318,19 @@ else{
   })
   // TODO - add Google Drive plugin
   // https://github.com/hydroshare/hydroshare/issues/5635
-  // .use(GoogleDrive, {
+  // .use(GoogleDrivePicker, {
+  //   // https://uppy.io/docs/google-drive-picker/
   //   target: Dashboard,
   //   companionUrl: COMPANION_URL,
+  //   clientId: GOOGLE_PICKER_CLIENT_ID,
+  //   apiKey: GOOGLE_PICKER_API_KEY,
+  //   appId: GOOGLE_PICKER_APP_ID,
+  //   locale: {
+  //     strings: {
+  //       pluginNameGoogleDrive: 'Google Drive',
+  //       pluginNameGooglePhotos: 'Google Photos'
+  //     }
+  //   }
   // });
 }
 
