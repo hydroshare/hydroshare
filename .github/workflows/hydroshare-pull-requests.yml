@@ -10,18 +10,13 @@ on:
 
 jobs:
   hydroshare-pull-request-tests:
-
     runs-on: ubuntu-latest
 
     services:
       postgis:
-        image: postgis/postgis:latest  # Using postgis image for the database
+        image: postgis/postgis:latest
         ports:
           - 5432:5432
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
         options: >-
           --health-cmd="pg_isready -U postgres -d postgres"
           --health-interval=10s
@@ -30,25 +25,21 @@ jobs:
 
       pgbouncer:
         image: edoburu/pgbouncer:latest
-        container_name: pgbouncer
-        environment:
-          DB_HOST: postgis
-          DB_USER: "postgres"
-          DB_PASSWORD: "postgres"
-          DB_NAME: "postgres"
-          DB_PORT: 5432
-          LISTEN_ADDR: "*"
-          LISTEN_PORT: 6432
-          POOL_MODE: "transaction"
-          AUTH_TYPE: "plain"
-          MAX_CLIENT_CONN: 10
-          DEFAULT_POOL_SIZE: 5
-          MIN_POOL_SIZE: 2
         ports:
-          - "6432:6432"
-        depends_on:
-          - postgis
+          - 6432:6432
         options: >-
+          --env=DB_HOST=postgis
+          --env=DB_USER=postgres
+          --env=DB_PASSWORD=postgres
+          --env=DB_NAME=postgres
+          --env=DB_PORT=5432
+          --env=LISTEN_ADDR=*
+          --env=LISTEN_PORT=6432
+          --env=POOL_MODE=transaction
+          --env=AUTH_TYPE=plain
+          --env=MAX_CLIENT_CONN=10
+          --env=DEFAULT_POOL_SIZE=5
+          --env=MIN_POOL_SIZE=2
           --health-cmd="pgbouncer -q"
           --health-interval=10s
           --health-timeout=5s
@@ -85,7 +76,6 @@ jobs:
           nosetests.xml
           pytests.xml
 
-    # archive the test results
     - name: Archive Test Results
       uses: actions/upload-artifact@v4
       with:
