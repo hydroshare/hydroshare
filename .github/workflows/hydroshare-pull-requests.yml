@@ -10,40 +10,10 @@ on:
 
 jobs:
   hydroshare-pull-request-tests:
+
     runs-on: ubuntu-latest
-
-    services:
-      postgis:
-        image: postgis/postgis:latest
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U postgres -d postgres"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
-      pgbouncer:
-        image: edoburu/pgbouncer:latest
-        ports:
-          - 6432:6432
-        options: >-
-          --env=DB_HOST=postgis
-          --env=DB_USER=postgres
-          --env=DB_PASSWORD=postgres
-          --env=DB_NAME=postgres
-          --env=DB_PORT=5432
-          --env=LISTEN_ADDR=*
-          --env=LISTEN_PORT=6432
-          --env=POOL_MODE=transaction
-          --env=AUTH_TYPE=plain
-          --env=MAX_CLIENT_CONN=10
-          --env=DEFAULT_POOL_SIZE=5
-          --env=MIN_POOL_SIZE=2
-          --health-cmd="pgbouncer -q"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
+    #env:
+    #  COVERAGE_TOTAL: 10
 
     steps:
     - uses: actions/checkout@v4
@@ -62,12 +32,11 @@ jobs:
       run: |
         printf "%s\n" c | ./local-dev-first-start-only.sh
 
+
     - name: Run HydroShare Tests
-      env:
-        DATABASE_URL: postgres://postgres:postgres@pgbouncer:6432/postgres
       run: |
         docker exec hydroshare ./run-tests-jenkins
-
+    
     - name: Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action/linux@v2
       if: always()
@@ -75,7 +44,8 @@ jobs:
         files: |
           nosetests.xml
           pytests.xml
-
+    
+    # archive the test results
     - name: Archive Test Results
       uses: actions/upload-artifact@v4
       with:
