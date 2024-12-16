@@ -182,7 +182,9 @@ using a OneToOneField.
 # SILENCED_SYSTEM_CHECKS = ["mezzanine.core.W03", "fields.W342"]
 
 COMPANION_URL = 'http://localhost:3020'
-UPPY_UPLOAD_ENDPOINT = 'http://host.docker.internal:8000/hsapi/tus/'
+UPPY_UPLOAD_ENDPOINT = 'http://localhost:8000/hsapi/tus/'
+# to use COMPANION for 3rd party uploads, use host.docker.internal
+# UPPY_UPLOAD_ENDPOINT = 'http://host.docker.internal:8000/hsapi/tus/'
 
 ENABLE_OIDC_AUTHENTICATION = False
 # If OIDC is enabled, the following additional settings should be defined in local_settings

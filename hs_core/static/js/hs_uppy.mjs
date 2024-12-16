@@ -3,7 +3,7 @@ import {
   Dashboard,
   Tus,
   GoldenRetriever,
-  GoogleDrive,
+  // GoogleDrive,
   DropTarget,
 } from "https://releases.transloadit.com/uppy/v4.4.0/uppy.min.mjs";
 
@@ -301,10 +301,12 @@ else{
   .on("progress", (progress) => {
     $("#upload-progress").text(`${progress}%`);
   })
-  .use(GoogleDrive, {
-    target: Dashboard,
-    companionUrl: COMPANION_URL,
-  });
+  // TODO - add Google Drive plugin
+  // https://github.com/hydroshare/hydroshare/issues/5635
+  // .use(GoogleDrive, {
+  //   target: Dashboard,
+  //   companionUrl: COMPANION_URL,
+  // });
 }
 
 uppy.use(GoldenRetriever)
