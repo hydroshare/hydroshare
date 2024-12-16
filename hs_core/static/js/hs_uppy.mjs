@@ -3,14 +3,15 @@ import {
   Dashboard,
   Tus,
   GoldenRetriever,
-  // GoogleDrive,
+  // GoogleDrivePicker,
   DropTarget,
-} from "https://releases.transloadit.com/uppy/v4.4.0/uppy.min.mjs";
+} from "https://releases.transloadit.com/uppy/v4.8.0/uppy.min.mjs";
 
 let uppy = null;
 if (HS_S_ID === "") {
   uppy = new Uppy({
     id: "uppy",
+    // https://github.com/transloadit/uppy/issues/5542
   })
 }
 else{
@@ -44,6 +45,11 @@ else{
       maxTotalFileSize: RESTRICTED_SIZE,
       // maxNumberOfFiles: MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD,
     },
+    locale: {
+      strings: {
+        pluginNameGoogleDrive: 'Google Drive',
+      }
+    },
     onBeforeUpload: (files) => {
       Object.keys(files).forEach((fileId) => {
         // add metadata to the file
@@ -53,7 +59,6 @@ else{
         files[fileId].meta.existing_path_in_resource = JSON.stringify(
           getCurrentPath()
         );
-        // add the file size to the metadata
         files[fileId].meta.file_size = files[fileId].data.size;
       });
       return files;
@@ -303,9 +308,13 @@ else{
   })
   // TODO - add Google Drive plugin
   // https://github.com/hydroshare/hydroshare/issues/5635
-  // .use(GoogleDrive, {
+  // .use(GoogleDrivePicker, {
+  //   // https://uppy.io/docs/google-drive-picker/
   //   target: Dashboard,
   //   companionUrl: COMPANION_URL,
+  //   clientId: GOOGLE_PICKER_CLIENT_ID,
+  //   apiKey: GOOGLE_PICKER_API_KEY,
+  //   appId: GOOGLE_PICKER_APP_ID,
   // });
 }
 

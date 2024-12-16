@@ -1,7 +1,7 @@
 {% load static %}
 
 {% block extra_head %}
-    <link href="https://releases.transloadit.com/uppy/v4.4.0/uppy.min.css" rel="stylesheet">
+    <link href="https://releases.transloadit.com/uppy/v4.8.0/uppy.min.css" rel="stylesheet">
 {% endblock %}
 
 {% block main %}
@@ -19,6 +19,9 @@
     const RES_ID = "{{ cm.short_id }}";
     const RES_TITLE = "{{ cm.title }}";
     const HS_S_ID = "{{ hs_s_id }}";
+    const GOOGLE_PICKER_CLIENT_ID  = "{{ google_picker_client_id }}";
+    const GOOGLE_PICKER_API_KEY = "{{ google_picker_api_key }}";
+    const GOOGLE_PICKER_APP_ID = "{{ google_picker_app_id }}";
   </script>
   <script type="module" src="{% static 'js/hs_uppy.mjs' %}"></script>
 {% endblock %}

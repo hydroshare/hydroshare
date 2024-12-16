@@ -145,7 +145,7 @@ services:
     command: /bin/bash init-defaultworker
   companion:
   # https://github.com/transloadit/uppy/blob/main/packages/%40uppy/companion/KUBERNETES.md
-    image:  docker.io/transloadit/companion:latest
+    image:  docker.io/transloadit/companion:5.2.0
     container_name: companion
     hostname: companion
     environment:
@@ -165,6 +165,8 @@ services:
       COMPANION_SECRET: 'SECRET'
       COMPANION_GOOGLE_KEY: 'KEY'
       COMPANION_GOOGLE_SECRET: 'SECRET'
+      # https://uppy.io/docs/companion/#enablegooglepickerendpoint-companion_enable_google_picker_endpoint
+      COMPANION_ENABLE_GOOGLE_PICKER_ENDPOINT: 'true'
     ports:
       - "3020:3020"
     volumes:
