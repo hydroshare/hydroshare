@@ -2,6 +2,7 @@ version: '3'
 services:
   minio:
     image: minio/minio
+    platform: linux/amd64
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -16,6 +17,7 @@ services:
     command: server --console-address ":9001" /data
   postgis:
     image: postgis/postgis:15-3.3
+    platform: linux/amd64
     environment:
       POSTGRES_PASSWORD: 'postgres'
     container_name: postgis
@@ -28,6 +30,7 @@ services:
     tty: true
   pgbouncer:
     image: edoburu/pgbouncer:latest
+    platform: linux/amd64
     container_name: pgbouncer
     environment:
       DB_HOST: postgis
@@ -48,11 +51,13 @@ services:
       - postgis
   rabbitmq:
     image: rabbitmq:3.8.2
+    platform: linux/amd64
     container_name: rabbitmq
     volumes:
       - "rabbitmq_data_vol:/var/lib/rabbitmq"
   solr:
     image: solr:6.6
+    platform: linux/amd64
     container_name: solr
     volumes:
       # hydroshare repository
@@ -67,6 +72,7 @@ services:
       dockerfile: Dockerfile
     container_name: hydroshare
     hostname: hydroshare
+    platform: linux/amd64
     devices:
       - "/dev/fuse"
     privileged: true
@@ -116,6 +122,7 @@ services:
       dockerfile: Dockerfile
     container_name: defaultworker
     hostname: defaultworker
+    platform: linux/amd64
     environment:
       POSTGIS_HOST: postgis
       POSTGIS_PORT: 5432
