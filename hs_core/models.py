@@ -4042,8 +4042,9 @@ class BaseResource(Page, AbstractResource):
             # encoded_words = [urllib.parse.quote(word) for word in words]
             # # match all words in the funder name
             # query = "+".join(encoded_words)
-            url = "https://api.ror.org/v2/organizations?filter=types:funder"
             funder_name = funder_name.lower()
+            encoded_funder_name = urllib.parse.quote(funder_name)
+            url = f"https://api.ror.org/v2/organizations?filter=types:funder&query={encoded_funder_name}"
             response = requests.get(url, verify=False)
             if response.status_code == 200:
                 response_json = response.json()
@@ -4051,15 +4052,7 @@ class BaseResource(Page, AbstractResource):
                 for item in items:
                     for name in item['names']:
                         if 'ror_display' in name['types'] and name['value'].lower() == funder_name:
-                            doi_prefix = "https://doi.org/10.13039/"
-                            for external_id in item['external_ids']:
-                                if external_id['type'] == "fundref":
-                                    if external_id['preferred']:
-                                        return doi_prefix + external_id['preferred']
-                                    else:
-                                        all_ids = external_id['all']
-                                        if all_ids:
-                                            return doi_prefix + all_ids[0]
+                            return item['id']
                 return ''
             else:
                 msg = "Failed to get funder_id for funder_name: '{}' from ror funders registry. " \
