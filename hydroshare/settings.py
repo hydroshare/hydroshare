@@ -892,8 +892,8 @@ if 'test' in sys.argv:
         'NAME': 'postgres',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
-        'HOST': 'postgis',
-        'PORT': '5432',
+        'HOST': 'pgbouncer',
+        'PORT': '6432',
     }
 
 ####################
