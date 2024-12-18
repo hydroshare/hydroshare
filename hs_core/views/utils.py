@@ -397,6 +397,83 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
 
     Note: resource 'shareable' status has no effect on authorization
     """
+
+    authorized = False
+    user = get_user(request)
+
+    if isinstance(res_id, str):
+        try:
+            res = hydroshare.utils.get_resource_by_shortkey(res_id, or_404=False)
+        except ObjectDoesNotExist:
+            raise NotFound(detail="No resource was found for resource id:%s" % res_id)
+    else:
+        res = res_id
+
+    if needed_permission == ACTION_TO_AUTHORIZE.VIEW_METADATA:
+        if res.raccess.discoverable or res.raccess.public or res.raccess.allow_private_sharing:
+            authorized = True
+        elif user.is_authenticated and user.is_active:
+            # authorized = user.uaccess.can_view_resource(res)
+            authorized = user.uaccess.has_resource_permission(resource=res, privilege=PrivilegeCodes.VIEW)
+    elif user.is_authenticated and user.is_active:
+        if needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE:
+            # authorized = user.uaccess.can_view_resource(res)
+            authorized = user.uaccess.has_resource_permission(resource=res, privilege=PrivilegeCodes.VIEW)
+        elif needed_permission == ACTION_TO_AUTHORIZE.EDIT_RESOURCE:
+            # authorized = user.uaccess.can_change_resource(res)
+            authorized = user.uaccess.has_resource_permission(resource=res, privilege=PrivilegeCodes.CHANGE)
+        elif needed_permission == ACTION_TO_AUTHORIZE.DELETE_RESOURCE:
+            authorized = user.uaccess.can_delete_resource(res)
+        elif needed_permission == ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG:
+            authorized = user.uaccess.can_change_resource_flags(res)
+        elif needed_permission == ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION:
+            # authorized = user.uaccess.owns_resource(res)
+            authorized = user.uaccess.has_resource_permission(resource=res, privilege=PrivilegeCodes.OWNER)
+        elif needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE_ACCESS:
+            # authorized = user.uaccess.can_view_resource(res)
+            authorized = user.uaccess.has_resource_permission(resource=res, privilege=PrivilegeCodes.VIEW)
+        elif needed_permission == ACTION_TO_AUTHORIZE.EDIT_RESOURCE_ACCESS:
+            authorized = user.uaccess.can_share_resource(res, PrivilegeCodes.CHANGE)
+    elif needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE:
+        authorized = res.raccess.public or res.raccess.allow_private_sharing
+
+    if raises_exception and not authorized:
+        raise PermissionDenied
+    else:
+        return res, authorized, user
+
+def authorize_old(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, raises_exception=True):
+    """
+    This function checks if a user has authorization for resource related actions as outlined
+    below. This function doesn't check authorization for user sharing resource with another user.
+
+    How this function should be called for different actions on a resource by a specific user?
+    1. User wants to view a resource (both metadata and content files) which includes
+       downloading resource bag or resource content files:
+       authorize(request, res_id=id_of_resource,
+       needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    2. User wants to view resource metadata only:
+       authorize(request, res_id=id_of_resource,
+       needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
+    3. User wants to edit a resource which includes:
+       a. edit metadata
+       b. add file to resource
+       c. delete a file from the resource
+       authorize(request, res_id=id_of_resource,
+       needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    4. User wants to set resource flag (public, published, shareable etc):
+       authorize(request, res_id=id_of_resource,
+       needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
+    5. User wants to delete a resource:
+       authorize(request, res_id=id_of_resource,
+       needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
+    6. User wants to create new version of a resource:
+       authorize(request, res_id=id_of_resource,
+       needed_permission=ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION)
+
+    Note: resource 'shareable' status has no effect on authorization
+    """
+
     authorized = False
     user = get_user(request)
     if isinstance(res_id, str):
@@ -434,7 +511,6 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
         raise PermissionDenied
     else:
         return res, authorized, user
-
 
 def validate_json(js):
     try:

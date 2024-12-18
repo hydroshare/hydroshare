@@ -246,6 +246,7 @@ class UserGroupPrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import UserGroupProvenance
+        from hs_access_control.models.user import UserResourcePermission
         if __debug__:
             assert 'group' in kwargs
             assert isinstance(kwargs['group'], Group)
@@ -260,6 +261,9 @@ class UserGroupPrivilege(PrivilegeBase):
             assert len(kwargs) == 4
         cls.update(**kwargs)
         UserGroupProvenance.update(**kwargs)
+        user = kwargs['user']
+        group = kwargs['group']
+        UserResourcePermission.update_on_user_group_update(user=user, group=group)
 
     @classmethod
     def unshare(cls, **kwargs):
@@ -283,6 +287,7 @@ class UserGroupPrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import UserGroupProvenance
+        from hs_access_control.models.user import UserResourcePermission
         if __debug__:
             assert 'group' in kwargs
             assert isinstance(kwargs['group'], Group)
@@ -293,6 +298,9 @@ class UserGroupPrivilege(PrivilegeBase):
             assert len(kwargs) == 3
         cls.update(privilege=PrivilegeCodes.NONE, **kwargs)
         UserGroupProvenance.update(privilege=PrivilegeCodes.NONE, **kwargs)
+        user = kwargs['user']
+        group = kwargs['group']
+        UserResourcePermission.update_on_user_group_update(user=user, group=group)
 
     @classmethod
     def undo_share(cls, **kwargs):
@@ -432,8 +440,12 @@ class UserResourcePrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import UserResourceProvenance
+        from hs_access_control.models.user import UserResourcePermission
         cls.update(**kwargs)
         UserResourceProvenance.update(**kwargs)
+        user = kwargs['user']
+        resource = kwargs['resource']
+        UserResourcePermission.update_on_user_resource_update(user=user, resource=resource)
 
     @classmethod
     def unshare(cls, **kwargs):
@@ -459,8 +471,12 @@ class UserResourcePrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import UserResourceProvenance
+        from hs_access_control.models.user import UserResourcePermission
         cls.update(privilege=PrivilegeCodes.NONE, **kwargs)
         UserResourceProvenance.update(privilege=PrivilegeCodes.NONE, **kwargs)
+        user = kwargs['user']
+        resource = kwargs['resource']
+        UserResourcePermission.update_on_user_resource_update(user=user, resource=resource)
 
     @classmethod
     def undo_share(cls, **kwargs):
@@ -603,8 +619,12 @@ class GroupResourcePrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import GroupResourceProvenance
+        from hs_access_control.models.user import UserResourcePermission
         cls.update(**kwargs)
         GroupResourceProvenance.update(**kwargs)
+        group = kwargs['group']
+        resource = kwargs['resource']
+        UserResourcePermission.update_on_group_resource_update(group=group, resource=resource)
 
     @classmethod
     def unshare(cls, **kwargs):
@@ -624,8 +644,12 @@ class GroupResourcePrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import GroupResourceProvenance
+        from hs_access_control.models.user import UserResourcePermission
         cls.update(privilege=PrivilegeCodes.NONE, **kwargs)
         GroupResourceProvenance.update(privilege=PrivilegeCodes.NONE, **kwargs)
+        group = kwargs['group']
+        resource = kwargs['resource']
+        UserResourcePermission.update_on_group_resource_update(group=group, resource=resource)
 
     @classmethod
     def undo_share(cls, **kwargs):

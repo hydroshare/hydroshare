@@ -2630,12 +2630,15 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     def delete(self, using=None, keep_parents=False):
         """Delete resource along with all of its metadata and data bag."""
         from .hydroshare import hs_bagit
+        from hs_access_control.models.user import UserResourcePermission
         for fl in self.files.all():
             # COUCH: delete of file objects now cascades.
             fl.delete(delete_logical_file=True)
         self.metadata.delete()
         hs_bagit.delete_files_and_bag(self)
+        res_id = self.short_id
         super(AbstractResource, self).delete()
+        UserResourcePermission.update_on_resource_delete(resource_id=res_id)
 
     @property
     def metadata(self):

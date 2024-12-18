@@ -877,5 +877,6 @@ def deactivate_user(request):
         user.uaccess.act_on_group_membership_request(req, accept_request=False)
     user.is_active = False
     user.save()
+    user.uaccess.update_resource_permissions()
     messages.success(request, "Your account has been successfully deactivated.")
     return HttpResponseRedirect("/accounts/logout/")
