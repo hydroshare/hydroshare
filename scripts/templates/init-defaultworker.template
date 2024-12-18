@@ -19,7 +19,7 @@ celery -A hydroshare beat  -s /hydroshare/celery/celerybeat-schedule &
 
 # Start workers with one queue per worker
 # note that these celery internal workers are distinct from k8 worker pods
-celery -A hydroshare worker -E -Q default -n default-worker@%h &
-celery -A hydroshare worker -E -Q periodic -n periodic-worker@%h &
+celery -A hydroshare worker -E -Q default -c 2 --prefetch-multiplier=1 -n default-worker@%h &
+celery -A hydroshare worker -E -Q periodic -c 2 --prefetch-multiplier=1 -n periodic-worker@%h &
 celery -A hydroshare flower --address=0.0.0.0 --broker=amqp://guest:guest@rabbitmq:5672//
 
