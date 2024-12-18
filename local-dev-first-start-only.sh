@@ -328,6 +328,11 @@ echo
 docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}
 
 echo
+echo " - docker exec -u postgres postgis psql -c 'CREATE DATABASE test_postgres;'"
+echo 
+docker exec -u postgres postgis psql -c 'CREATE DATABASE test_postgres;'
+
+echo
 echo '########################################################################################################################'
 echo " Migrating data"
 echo '########################################################################################################################'
