@@ -354,6 +354,7 @@ if (recoveredFiles && Object.keys(recoveredFiles).length > 0) {
     document.getElementById("resume-uploads").addEventListener("click", (event) => {
       event.preventDefault();
       uppy.getPlugin("Dashboard").openModal();
+      $(".custom-alert").hide();
     }); 
   }
   if (Object.keys(recoveredFilesInOtherResource).length > 0) {
