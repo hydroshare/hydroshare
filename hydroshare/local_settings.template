@@ -186,9 +186,10 @@ UPPY_UPLOAD_ENDPOINT = 'http://localhost:8000/hsapi/tus/'
 # to use COMPANION for 3rd party uploads, use host.docker.internal
 # UPPY_UPLOAD_ENDPOINT = 'http://host.docker.internal:8000/hsapi/tus/'
 
-GOOGLE_PICKER_CLIENT_ID = 'GOOGLE_PICKER_CLIENT_ID'
-GOOGLE_PICKER_API_KEY = 'GOOGLE_PICKER_API_KEY'
-GOOGLE_PICKER_APP_ID = 'GOOGLE_PICKER_APP_ID'
+# Intentionally added to repo for testing purposes
+GOOGLE_PICKER_CLIENT_ID = '737951655407-p3d2b2bl2ln90g5plfj09e98bprk42da.apps.googleusercontent.com'
+GOOGLE_PICKER_API_KEY = 'AIzaSyDn4rOvqfQcnzKz-6O9VlMfXA6O3uDmZ7g'
+GOOGLE_PICKER_APP_ID = '737951655407'
 
 ENABLE_OIDC_AUTHENTICATION = False
 # If OIDC is enabled, the following additional settings should be defined in local_settings
