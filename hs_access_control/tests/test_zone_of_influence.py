@@ -98,7 +98,7 @@ class T05ShareResource(TestCase):
             posts, meowers, PrivilegeCodes.CHANGE)
 
         (foo, bar) = zone_of_influence(send=False, user=dog, group=meowers)
-        self.assertTrue(is_equal_to_as_set(foo, [(dog.email, dog.username, dog.is_superuser, cat.id)]))
+        self.assertTrue(is_equal_to_as_set(foo, [(dog.email, dog.username, dog.is_superuser, dog.id)]))
         self.assertTrue(is_equal_to_as_set(bar, [holes.short_id, posts.short_id]))
 
         (foo, bar) = zone_of_influence(send=False, group=meowers, resource=posts)
