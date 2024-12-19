@@ -27,7 +27,6 @@ from mezzanine.utils.models import upload_to
 from sorl.thumbnail import ImageField as ThumbnailImageField
 from theme.utils import get_upload_path_userprofile
 from theme.enums import QuotaStatus
-from uuid import uuid4
 
 
 DEFAULT_COPYRIGHT = '&copy; {% now "Y" %} {{ settings.SITE_TITLE }}'
