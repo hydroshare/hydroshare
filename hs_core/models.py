@@ -4051,7 +4051,7 @@ class BaseResource(Page, AbstractResource):
                 items = response_json['items']
                 for item in items:
                     for name in item['names']:
-                        if 'ror_display' in name['types'] and name['value'].lower() == funder_name:
+                        if name['value'].lower() == funder_name:
                             return item['id']
                 return ''
             else:
