@@ -168,9 +168,9 @@ else
 fi
 
 DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
-HYDROSHARE_CONTAINERS=(hydroshare defaultworker minio rabbitmq solr postgis companion redis)
+HYDROSHARE_CONTAINERS=(hydroshare defaultworker minio rabbitmq solr postgis companion redis nginx)
 HYDROSHARE_VOLUMES=(hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol)
-HYDROSHARE_IMAGES=(hydroshare_defaultworker hydroshare_hydroshare solr hydroshare/hs_docker_base hydroshare/hs_postgres rabbitmq)
+HYDROSHARE_IMAGES=(hydroshare-defaultworker hydroshare-hydroshare solr postgis/postgis rabbitmq nginx redis transloadit/companion minio)
 
 NODE_CONTAINER_RUNNING=`docker ps -a | grep nodejs`
 
