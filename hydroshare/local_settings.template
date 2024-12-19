@@ -18,6 +18,8 @@ NEVERCACHE_KEY = \
 
 ALLOWED_HOSTS = ['*']
 
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 # for Django/Mezzanine comments and ratings to require user login
 COMMENTS_ACCOUNT_REQUIRED = True
 RATINGS_ACCOUNT_REQUIRED = True
@@ -181,8 +183,8 @@ using a OneToOneField.
 """
 # SILENCED_SYSTEM_CHECKS = ["mezzanine.core.W03", "fields.W342"]
 
-COMPANION_URL = 'http://localhost:3020'
-UPPY_UPLOAD_ENDPOINT = 'http://host.docker.internal:8000/hsapi/tus/'
+COMPANION_URL = 'https://localhost/companion'
+UPPY_UPLOAD_ENDPOINT = 'https://localhost/hsapi/tus/'
 
 ENABLE_OIDC_AUTHENTICATION = False
 # If OIDC is enabled, the following additional settings should be defined in local_settings
