@@ -45,8 +45,10 @@ else{
       maxTotalFileSize: RESTRICTED_SIZE,
       // maxNumberOfFiles: MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD,
     },
+    // https://uppy.io/docs/dashboard/#locale
     locale: {
       strings: {
+        dropPasteImportBoth: 'Drop files here, %{browseFolders} or import from:',
         pluginNameGoogleDrive: 'Google Drive',
       }
     },
@@ -214,6 +216,11 @@ else{
     $("#hsDropzone").toggleClass("glow-blue", false);
   })
   .on("dashboard:modal-open", () => {
+    uppy.info(
+      "Google Drive upload is in beta. Please report any issues to help.cuahsi.org",
+      "warning",
+      3000
+    );
     $(".fb-drag-flag").show();
     $("#hsDropzone").toggleClass("glow-blue", true);
     $("#fb-alerts .upload-continue-alert").remove();
