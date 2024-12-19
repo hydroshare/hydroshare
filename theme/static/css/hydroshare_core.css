@@ -4864,11 +4864,3 @@ div.property-selector {
   word-break: normal;
   overflow-wrap: anywhere;
 }
-
-.tr-download-button{
-    background: none;
-    outline: none;
-    border: none;
-    font-size: 24px;
-    margin: 0px 4px;
-}
