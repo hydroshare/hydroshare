@@ -4864,3 +4864,9 @@ div.property-selector {
   word-break: normal;
   overflow-wrap: anywhere;
 }
+
+.download-all-spinner-position {
+	font-size: 25px;
+    display: inline-block;
+    margin: 7px 8px;
+}

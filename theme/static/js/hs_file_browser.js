@@ -1847,18 +1847,26 @@ function onUploadSuccess(file, response) {
 
 $(document).ready(function () {
     // Download All method
-    $("#btn-download-all, #download-bag-btn").click(function (event) {
-        const btnDownloadAll = $("#btn-download-all");
-        const icon = $('#btn-download-all > span:first-child');
+    $("#btn-download-all, #btn-download-all-top-right, #download-bag-btn").click(function (event) {
+        let currentBtnDownloadAll = "btn-download-all";
+        if(event.currentTarget.id === "btn-download-all" || event.currentTarget.id === "btn-download-all-top-right") {
+            currentBtnDownloadAll = event.currentTarget.id;
+        }
+
+        const btnDownloadAll = $(`#${currentBtnDownloadAll}`);
+        const icon = $(`#${currentBtnDownloadAll} > span:first-child`);
         const initialClass = icon.attr("class");
         const dataAgreeRequired = btnDownloadAll.attr("data-toggle") === "modal";
 
         if (event.currentTarget.id === "download-bag-btn" || !dataAgreeRequired) {
             icon.attr("class", "fa fa-spinner fa-pulse fa-lg download-spinner");
+            if(event.currentTarget.id === "btn-download-all-top-right") {
+                icon.addClass("download-all-spinner-position"); 
+            }
             btnDownloadAll.css("cursor", "wait");
         }
         
-        if (dataAgreeRequired && event.currentTarget.id !== "download-bag-btn") {
+        if (dataAgreeRequired && ["download-bag-btn","btn-download-all-top-right"].indexOf(event.currentTarget.id) === -1) {
             return; // download will be triggered from Agreement modal
         }
 
@@ -1872,7 +1880,7 @@ $(document).ready(function () {
             notificationsApp.registerTask(task);
             notificationsApp.show();
         }).always((event) => {
-            const btnDownloadAll = $("#btn-download-all");
+            const btnDownloadAll = $(`#${currentBtnDownloadAll}`);
             btnDownloadAll.toggleClass("disabled", false);
             btnDownloadAll.css("cursor", "");
             icon.attr("class", initialClass)
