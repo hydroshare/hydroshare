@@ -1866,7 +1866,7 @@ $(document).ready(function () {
             btnDownloadAll.css("cursor", "wait");
         }
         
-        if (dataAgreeRequired && ["download-bag-btn","btn-download-all-top-right"].indexOf(event.currentTarget.id) === -1) {
+        if (dataAgreeRequired && event.currentTarget.id !== "download-bag-btn") {
             return; // download will be triggered from Agreement modal
         }
 
