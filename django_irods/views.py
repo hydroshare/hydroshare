@@ -328,17 +328,14 @@ def download(request, path, use_async=True,
     # track download count
     res.update_download_count()
     proc = session.run_safe('iget', None, irods_output_path, *options)
-    # proc.stdout is an _io.BufferedReader object
-    ranged_file = RangedFileReader(proc.stdout)
-    response = FileResponse(ranged_file, content_type=mtype)
     filename = output_path.split('/')[-1]
     filename = urllib.parse.quote(filename)
-    response['Content-Disposition'] = 'attachment; filename="{name}"'.format(name=filename)
-    response['Content-Length'] = flen
 
-    response["Accept-Ranges"] = "bytes"
     # Respect the Range header.
     if "HTTP_RANGE" in request.META:
+        # proc.stdout is an _io.BufferedReader object
+        ranged_file = RangedFileReader(proc.stdout)
+        response = FileResponse(ranged_file, content_type=mtype)
         try:
             ranges = RangedFileReader.parse_range_header(request.META['HTTP_RANGE'], flen)
         except ValueError:
@@ -355,6 +352,12 @@ def download(request, path, use_async=True,
             response["Content-Range"] = "bytes %d-%d/%d" % (start, stop - 1, flen)
             response["Content-Length"] = stop - start
             response.status_code = 206
+    else:
+        response = FileResponse(proc.stdout, content_type=mtype)
+        response['Content-Disposition'] = 'attachment; filename="{name}"'.format(name=filename)
+        response['Content-Length'] = flen
+
+    response["Accept-Ranges"] = "bytes"
     return response
 
 
