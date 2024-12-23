@@ -434,11 +434,12 @@ def page_permissions_page_processor(request, page):
     google_picker_app_id = getattr(settings, 'GOOGLE_PICKER_APP_ID', '')
 
     # get the session id for the current user
+    session = None
     if request.user.is_authenticated:
         try:
             session = request.session.session_key
         except SessionException:
-            session = None
+            pass
 
     return {
         'resource_type': cm._meta.verbose_name,
