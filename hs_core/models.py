@@ -4035,13 +4035,6 @@ class BaseResource(Page, AbstractResource):
             """Return funder_uri for a given funder_name from ror funders registry.
             ROR API Documentation: https://ror.readme.io/docs/api-query
             """
-            # # url encode the funder name for the query parameter
-            # words = funder_name.split()
-            # # filter out words that contain the char '.'
-            # words = [word for word in words if '.' not in word]
-            # encoded_words = [urllib.parse.quote(word) for word in words]
-            # # match all words in the funder name
-            # query = "+".join(encoded_words)
             funder_name = funder_name.lower()
             encoded_funder_name = urllib.parse.quote(funder_name)
             url = f"https://api.ror.org/v2/organizations?filter=types:funder&query={encoded_funder_name}"
