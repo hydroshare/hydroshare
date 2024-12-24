@@ -20,7 +20,22 @@ let subjKeywordsApp = new Vue({
         document.getElementById('lst-tags').style.display = "block";
     },
     methods: {
-        addKeyword: function (resIdShort) {
+        onKeywordInput: function (event) {
+            let newKWLength =  this.newKeywordsLength();
+            if(newKWLength >= 500){
+                this.newKeyword = this.newKeyword.slice(0, -1);
+                event.preventDefault();
+                this.error = "Warning: You have exceeded the character 500 character limit for the subject keywords field. In a future release you will be unable to continue adding keywords beyond the 500 character limit";
+            }else if(this.error != '' || newKWLength == 0){
+                this.error = '';
+            }
+        },
+        addKeyword: function (event,resIdShort) {
+            if(this.newKeywordsLength() >= 500){
+                event.preventDefault();
+                return;
+            }
+
             this.showIsDuplicate = false;  // Reset
             
             // Remove any empty keywords from the list
@@ -92,6 +107,10 @@ let subjKeywordsApp = new Vue({
         safeJS: function (input) {
             input.replace("\\", "\\\\")
             return encodeURIComponent(input)
+        },
+        newKeywordsLength: function () {
+            let newVal =  (this.resKeywords.join(",").length ? this.resKeywords.join(",") + ",": "") + this.newKeyword;
+            return newVal.length;
         }
     }
 });
