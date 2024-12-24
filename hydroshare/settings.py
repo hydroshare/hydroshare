@@ -910,7 +910,7 @@ local_settings = __import__(local_settings_module, globals(), locals(), ["*"])
 for k in dir(local_settings):
     locals()[k] = getattr(local_settings, k)
 
-if any(arg in sys.argv for arg in ['test', 'pytest']):
+if any('pytest' in arg for arg in sys.argv) or 'test' in sys.argv:
     import logging
 
     logging.disable(logging.CRITICAL)
