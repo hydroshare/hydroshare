@@ -879,7 +879,7 @@ local_settings = __import__(local_settings_module, globals(), locals(), ["*"])
 for k in dir(local_settings):
     locals()[k] = getattr(local_settings, k)
 
-if 'test' in sys.argv:
+if any('pytest' in arg for arg in sys.argv) or 'test' in sys.argv:
     import logging
 
     logging.disable(logging.CRITICAL)
@@ -892,9 +892,10 @@ if 'test' in sys.argv:
         'NAME': 'postgres',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
-        'HOST': 'pgbouncer',
-        'PORT': '6432',
+        'HOST': 'postgis',
+        'PORT': '5432',
     }
+
 
 ####################
 # DYNAMIC SETTINGS #
