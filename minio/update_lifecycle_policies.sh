@@ -11,11 +11,18 @@ done <<< "$command_output"
 
 # Loop over each line
 for line in "${lines[@]}"; do
-    parsed_string=${line##* }
-    parsed_string=${parsed_string%/}
+    bucket_name=${line##* }
+    bucket_name=${bucket_name%/}
+    # Check if a rule already exists for the bucket
+    existing_rule=$(mc ilm rule ls cuahsi/$bucket_name)
+    # echo "$existing_rule"
 
-    # Print the parsed string
-    echo "$parsed_string"
-    command="mc ilm rule add --transition-days \"0\" --transition-tier \"GCP-STORAGE\" cuahsi/$parsed_string"
-    eval $command
+    if [[ -n "$existing_rule" ]]; then
+        command=""
+        # echo "Rule already exists for $bucket_name, skipping..."
+    else
+        echo "Adding rule for $bucket_name"
+        command="mc ilm rule add --transition-days \"0\" --transition-tier \"GCP-STORAGE\" cuahsi/$bucket_name"
+        eval $command
+    fi
 done
