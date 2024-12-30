@@ -48,6 +48,7 @@ else{
     // https://uppy.io/docs/dashboard/#locale
     locale: {
       strings: {
+        browseFolders: 'upload a folder',
         dropPasteImportBoth: 'Drop files here, %{browseFolders} or import from:',
         pluginNameGoogleDrive: 'Google Drive',
       }
