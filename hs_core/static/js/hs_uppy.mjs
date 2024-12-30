@@ -15,6 +15,7 @@ if (HS_S_ID === "") {
   })
 }
 else{
+  const WARN_ON_FILES_EXCEEDING_SIZE = 10 * 1024**3; // 10 GB
   let MAX_CHUNK = MAX_CHUNK_SIZE; // in bytes
 
   // Make sure the chunk size is not larger than the max file size
@@ -98,6 +99,15 @@ else{
           );
           return false;
         }
+      }
+
+      // check if the file size needs to be warned
+      const file_size = currentFile.data.size;
+      if (file_size >= WARN_ON_FILES_EXCEEDING_SIZE) {
+        let message = `File ${currentFile.name} is ${formatBytes(parseInt(file_size))}. ` +
+          `For files larger than ${formatBytes(parseInt(WARN_ON_FILES_EXCEEDING_SIZE))}, `+
+          "we recommend that you contact help.cuahsi.org for assistance.";
+        uppy.info(message, "warning", 5000);
       }
     },
   })
