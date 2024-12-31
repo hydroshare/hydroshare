@@ -10,7 +10,7 @@
 
 {% block extra_js %}
   <script>
-    const MAX_FILE_SIZE = {{ max_file_size|default:26843545600 }};
+    const FILE_UPLOAD_MAX_SIZE = {{ file_upload_max_size|default:26843545600 }};
     const MAX_CHUNK_SIZE = {{ max_chunk_size|default:2621440 }};
     const MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD = {{ max_number_of_files_in_single_local_upload|default:50 }};
     const PARALLEL_UPLOADS_LIMIT = {{ parallel_uploads_limit|default:10 }};

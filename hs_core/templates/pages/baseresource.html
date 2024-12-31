@@ -907,7 +907,7 @@
                                             {% if remaining_quota > 0 or remaining_quota is None %}
                                                 <div class="fb-upload-caption">
                                                     <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;
-                                                    Upload files up to {{ max_file_size|filesizeformat }} in size by dragging & dropping.
+                                                    Upload files up to {{ file_upload_max_size|filesizeformat }} in size by dragging & dropping.
                                                     {% if remaining_quota > 0 %} Remaining quota: {{ remaining_quota|filesizeformat }}.{% endif %}
                                                 </div>
                                             {% endif %}

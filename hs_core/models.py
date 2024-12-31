@@ -416,7 +416,7 @@ def page_permissions_page_processor(request, page):
     if is_owner or (cm.raccess.shareable and (is_view or is_edit)):
         show_manage_access = True
 
-    max_file_size = getattr(settings, 'FILE_UPLOAD_MAX_SIZE', 25 * 1024**3)
+    file_upload_max_size = getattr(settings, 'FILE_UPLOAD_MAX_SIZE', 25 * 1024**3)
     remaining_quota = get_remaining_user_quota(cm.quota_holder, "MB")
     if remaining_quota is not None:
         remaining_quota = remaining_quota * 1024**2
@@ -453,7 +453,7 @@ def page_permissions_page_processor(request, page):
         "show_manage_access": show_manage_access,
         "last_changed_by": last_changed_by,
         "remaining_quota": remaining_quota,
-        "max_file_size": max_file_size,
+        "file_upload_max_size": file_upload_max_size,
         "max_chunk_size": max_chunk_size,
         "max_number_of_files_in_single_local_upload": max_number_of_files_in_single_local_upload,
         "parallel_uploads_limit": parallel_uploads_limit,

@@ -19,18 +19,22 @@ else{
   let MAX_CHUNK = MAX_CHUNK_SIZE; // in bytes
 
   // Make sure the chunk size is not larger than the max file size
-  if (MAX_CHUNK > MAX_FILE_SIZE) {
-    MAX_CHUNK = MAX_FILE_SIZE;
+  if (MAX_CHUNK > FILE_UPLOAD_MAX_SIZE) {
+    MAX_CHUNK = FILE_UPLOAD_MAX_SIZE;
   }
 
   // get the least size between max file size and remaining quota
-  const RESTRICTED_SIZE = Math.min(MAX_FILE_SIZE, REMAINING_QUOTA);
+  // remaining quota can be null which effectively means no limit
+  const RESTRICTED_SIZE = FILE_UPLOAD_MAX_SIZE;
+  if (REMAINING_QUOTA !== null) {
+    RESTRICTED_SIZE = Math.min(FILE_UPLOAD_MAX_SIZE, REMAINING_QUOTA);
+  }
 
   const headers = {
     "HS-SID": HS_S_ID
   };
 
-  let quotaNote = `Max file size: ${formatBytes(parseInt(MAX_FILE_SIZE))}.`;
+  let quotaNote = `Max file size: ${formatBytes(parseInt(FILE_UPLOAD_MAX_SIZE))}.`;
   if (REMAINING_QUOTA > 0) {
     // `Remaining Quota: ${formatBytes(parseInt(REMAINING_QUOTA))}.
     quotaNote += ` Remaining Quota: ${formatBytes(parseInt(REMAINING_QUOTA))}.`;
