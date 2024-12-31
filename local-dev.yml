@@ -145,7 +145,7 @@ services:
     command: /bin/bash init-defaultworker
   companion:
   # https://github.com/transloadit/uppy/blob/main/packages/%40uppy/companion/KUBERNETES.md
-    image:  docker.io/transloadit/companion:latest
+    image:  docker.io/transloadit/companion:5.2.0
     container_name: companion
     hostname: companion
     environment:
@@ -164,8 +164,11 @@ services:
       # COMPANION_PREAUTH_SECRET: 'another secret'
       # For 3rd party services like google drive to work locally, you need to set the following:
       COMPANION_SECRET: 'SECRET'
-      COMPANION_GOOGLE_KEY: 'KEY'
-      COMPANION_GOOGLE_SECRET: 'SECRET'
+      # Intentionally added to repo for testing purposes
+      COMPANION_GOOGLE_KEY: '737951655407-p3d2b2bl2ln90g5plfj09e98bprk42da.apps.googleusercontent.com'
+      COMPANION_GOOGLE_SECRET: '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'
+      # https://uppy.io/docs/companion/#enablegooglepickerendpoint-companion_enable_google_picker_endpoint
+      COMPANION_ENABLE_GOOGLE_PICKER_ENDPOINT: 'true'
     ports:
       - "3020:3020"
     volumes:

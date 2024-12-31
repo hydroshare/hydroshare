@@ -285,7 +285,7 @@
                         <span class="glyphicon glyphicon-trash icon-button btn-remove"></span>
                         <span>Delete</span>
                     </li>
-                    {% if max_file_size > 0 %}
+                    {% if remaining_quota is None or remaining_quota > 0 %}
                         <li id="zip-separator" role="separator" class="divider"></li>
 
                         <li id="btn-zip" data-menu-name="zip" data-toggle="modal" data-fb-action="zip"
@@ -439,7 +439,7 @@
                             <span class="fa fa-folder icon-blue"></span>
                             <span>New folder</span>
                         </li>
-                        {% if max_file_size > 0 %}
+                        {% if remaining_quota is None or remaining_quota > 0 %}
                             <li id="menu-add-reference" data-menu-name="add-reference" data-toggle="modal"
                                 data-fb-action="createFolder"
                                 data-target="#add-reference-url-dialog">
@@ -515,7 +515,7 @@
                 {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                     {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
                         <div id="fb-alerts">
-                            {% if max_file_size > 0 %}
+                            {% if remaining_quota is None or remaining_quota > 0 %}
                                 <div class="alert alert-warning alert-dismissible" role="alert">
                                     <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                                         <span aria-hidden="true">&times;</span>
@@ -700,7 +700,7 @@
                                         <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12">
                                             {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                                                 {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
-                                                    <a {% if max_file_size <= 0 %}disabled{% endif %} id="uppy-modal-trigger" type="button" data-fb-action="uploadFiles"
+                                                    <a {% if remaining_quota <= 0 %}disabled{% endif %} id="uppy-modal-trigger" type="button" data-fb-action="uploadFiles"
                                                        class="btn btn-success btn-xs dz-clickable upload-toggle">
                                                         <i class="fa fa-plus"></i> Add files
                                                     </a>
@@ -711,7 +711,7 @@
                                                                 data-toggle="dropdown" aria-haspopup="true"
                                                                 title="Add files from an iRODS server"
                                                                 aria-expanded="false"
-                                                                {% if max_file_size <= 0 %}disabled{% endif %}>
+                                                                {% if remaining_quota <= 0 %}disabled{% endif %}>
                                                             <span>iRODS</span>&nbsp;<span class="caret"></span>
                                                         </button>
 
@@ -753,8 +753,8 @@
                                                             title="Create new folder">
                                                         <span class="fa fa-folder icon-blue"></span>
                                                     </button>
-                                                    {% if max_file_size > 0 %}
-                                                        <button id="fb-add-reference" class="fb-space-right {% if max_file_size <= 0 %}disabled{% endif %}"
+                                                    {% if remaining_quota is None or remaining_quota > 0 %}
+                                                        <button id="fb-add-reference" class="fb-space-right {% if remaining_quota <= 0 %}disabled{% endif %}"
                                                                 data-fb-action="createFolder"
                                                                 data-toggle="modal"
                                                                 data-target="#add-reference-url-dialog"
@@ -783,24 +783,26 @@
                                                     </button>
                                                 {% endif %}
 
-                                                {% if cm.resource_type == "CompositeResource" and max_file_size > 0 %}
-                                                    <button id="fb-zip" data-fb-action="zip"
-                                                            class="disabled"
-                                                            title="Zip folder" data-toggle="modal"
-                                                            data-target="#zip-folder-dialog">
-                                                        <span class="glyphicon glyphicon-compressed icon-blue"></span>
-                                                    </button>
+                                                {% if cm.resource_type == "CompositeResource" %}
+                                                    {% if remaining_quota is None or remaining_quota > 0 %}
+                                                        <button id="fb-zip" data-fb-action="zip"
+                                                                class="disabled"
+                                                                title="Zip folder" data-toggle="modal"
+                                                                data-target="#zip-folder-dialog">
+                                                            <span class="glyphicon glyphicon-compressed icon-blue"></span>
+                                                        </button>
 
-                                                    <button id="fb-unzip" data-fb-action="unzip"
-                                                            class="disabled fb-space-right"
-                                                            title="Unzip here">
-                                                        <span class="fa fa-file-archive-o icon-blue"></span>
-                                                    </button>
-                                                    <button id="fb-unzip-to-folder" data-fb-action="unzipToFolder"
-                                                            class="disabled fb-space-right"
-                                                            title="Unzip to folder">
-                                                        <span class="fa fa-file-archive-o icon-blue"></span>
-                                                    </button>
+                                                        <button id="fb-unzip" data-fb-action="unzip"
+                                                                class="disabled fb-space-right"
+                                                                title="Unzip here">
+                                                            <span class="fa fa-file-archive-o icon-blue"></span>
+                                                        </button>
+                                                        <button id="fb-unzip-to-folder" data-fb-action="unzipToFolder"
+                                                                class="disabled fb-space-right"
+                                                                title="Unzip to folder">
+                                                            <span class="fa fa-file-archive-o icon-blue"></span>
+                                                        </button>
+                                                    {% endif %}
                                                 {% endif %}
                                             {% endif %}
 
@@ -902,10 +904,11 @@
 
                                     {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                                         {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
-                                            {% if max_file_size > 0 %}
+                                            {% if remaining_quota > 0 or remaining_quota is None %}
                                                 <div class="fb-upload-caption">
                                                     <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;
-                                                    Upload files up to {{ max_file_size_for_display|floatformat:"0" }}GB in size by dragging & dropping.
+                                                    Upload files up to {{ file_upload_max_size|filesizeformat }} in size by dragging & dropping.
+                                                    {% if remaining_quota > 0 %} Remaining quota: {{ remaining_quota|filesizeformat }}.{% endif %}
                                                 </div>
                                             {% endif %}
                                         {% endif %}
@@ -981,9 +984,6 @@
             </div>
         {% endif %}
         {% endblock %} {# content_block #}
-            
-        {# ======= Uppy for large file upload ======= #}
-        {% include "uppy.html" %}
 
         {# ======= Data Services ======= #}
         {% if data_services_urls.wms_url or data_services_urls.wfs_url or data_services_urls.wcs_url or data_services_urls.thredds_url %}
@@ -1040,7 +1040,7 @@
       const SHORT_ID = "{{ cm.short_id }}";
       var global_num_ext_refs = 0;
       var global_custom_citation = "{{ custom_citation }}";
-      const MAX_FILE_SIZE = {{ max_file_size }};
+      const REMAINING_QUOTA = {{ remaining_quota|default:"null" }};
       $.ajax({
         type: "GET",
         url: '/hsapi/_internal/' + SHORT_ID + '/list-referenced-content/',

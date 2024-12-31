@@ -310,7 +310,7 @@ def get_access_object(user, user_type, user_access):
 def page_permissions_page_processor(request, page):
     """Return a dict describing permissions for current user."""
     from hs_access_control.models.privilege import PrivilegeCodes
-    from hs_core.hydroshare.utils import get_remaining_user_quota, convert_file_size_to_unit
+    from hs_core.hydroshare.utils import get_remaining_user_quota
 
     cm = page.get_content_model()
     can_change_resource_flags = False
@@ -418,25 +418,30 @@ def page_permissions_page_processor(request, page):
     if is_owner or (cm.raccess.shareable and (is_view or is_edit)):
         show_manage_access = True
 
-    max_file_size = getattr(settings, 'FILE_UPLOAD_MAX_SIZE', 1024 * 25)
+    file_upload_max_size = getattr(settings, 'FILE_UPLOAD_MAX_SIZE', 25 * 1024**3)
     remaining_quota = get_remaining_user_quota(cm.quota_holder, "MB")
     if remaining_quota is not None:
-        max_file_size = min(max_file_size, remaining_quota)
+        remaining_quota = remaining_quota * 1024**2
 
     # https://docs.djangoproject.com/en/3.2/ref/settings/#data-upload-max-memory-size
-    max_chunk_size_mb = 2.5  # mb
-    if hasattr(settings, 'DATA_UPLOAD_MAX_MEMORY_SIZE'):
-        max_chunk_size_mb = settings.DATA_UPLOAD_MAX_MEMORY_SIZE / 1024 / 1024  # convert to MB
+    max_chunk_size = getattr(settings, 'DATA_UPLOAD_MAX_MEMORY_SIZE', 2.5 * 1024**2)
+
+    max_number_of_files_in_single_local_upload = getattr(settings, 'MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD', 50)
+    parallel_uploads_limit = getattr(settings, 'PARALLEL_UPLOADS_LIMIT', 10)
 
     companion_url = getattr(settings, 'COMPANION_URL', 'https://companion.hydroshare.org/')
     uppy_upload_endpoint = getattr(settings, 'UPPY_UPLOAD_ENDPOINT', 'https://hydroshare.org/hsapi/tus/')
+    google_picker_client_id = getattr(settings, 'GOOGLE_PICKER_CLIENT_ID', '')
+    google_picker_api_key = getattr(settings, 'GOOGLE_PICKER_API_KEY', '')
+    google_picker_app_id = getattr(settings, 'GOOGLE_PICKER_APP_ID', '')
 
     # get the session id for the current user
+    session = None
     if request.user.is_authenticated:
         try:
             session = request.session.session_key
         except SessionException:
-            session = None
+            pass
 
     return {
         'resource_type': cm._meta.verbose_name,
@@ -449,11 +454,16 @@ def page_permissions_page_processor(request, page):
         "is_version_of": is_version_of,
         "show_manage_access": show_manage_access,
         "last_changed_by": last_changed_by,
-        "max_file_size": max_file_size,
-        "max_file_size_for_display": convert_file_size_to_unit(max_file_size, "GB", "MB"),
-        "max_chunk_size_mb": max_chunk_size_mb,
+        "remaining_quota": remaining_quota,
+        "file_upload_max_size": file_upload_max_size,
+        "max_chunk_size": max_chunk_size,
+        "max_number_of_files_in_single_local_upload": max_number_of_files_in_single_local_upload,
+        "parallel_uploads_limit": parallel_uploads_limit,
         "companion_url": companion_url,
         "uppy_upload_endpoint": uppy_upload_endpoint,
+        "google_picker_client_id": google_picker_client_id,
+        "google_picker_api_key": google_picker_api_key,
+        "google_picker_app_id": google_picker_app_id,
         "hs_s_id": session
     }
 

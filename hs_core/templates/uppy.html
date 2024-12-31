@@ -1,7 +1,7 @@
 {% load static %}
 
 {% block extra_head %}
-    <link href="https://releases.transloadit.com/uppy/v4.4.0/uppy.min.css" rel="stylesheet">
+    <link href="https://releases.transloadit.com/uppy/v4.8.0/uppy.min.css" rel="stylesheet">
 {% endblock %}
 
 {% block main %}
@@ -10,12 +10,18 @@
 
 {% block extra_js %}
   <script>
-    const MAX_CHUNK_MB = {{ max_chunk_size_mb|default:2.5 }};
-    const MAX_FILE_SIZE_MB = {{ max_file_size|default:10240 }};
+    const FILE_UPLOAD_MAX_SIZE = {{ file_upload_max_size|default:26843545600 }};
+    const MAX_CHUNK_SIZE = {{ max_chunk_size|default:2621440 }};
+    const MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD = {{ max_number_of_files_in_single_local_upload|default:50 }};
+    const PARALLEL_UPLOADS_LIMIT = {{ parallel_uploads_limit|default:10 }};
     const COMPANION_URL = "{{ companion_url }}";
     const UPPY_UPLOAD_ENDPOINT = "{{ uppy_upload_endpoint }}";
     const RES_ID = "{{ cm.short_id }}";
+    const RES_TITLE = "{{ cm.title }}";
     const HS_S_ID = "{{ hs_s_id }}";
+    const GOOGLE_PICKER_CLIENT_ID  = "{{ google_picker_client_id }}";
+    const GOOGLE_PICKER_API_KEY = "{{ google_picker_api_key }}";
+    const GOOGLE_PICKER_APP_ID = "{{ google_picker_app_id }}";
   </script>
   <script type="module" src="{% static 'js/hs_uppy.mjs' %}"></script>
 {% endblock %}
