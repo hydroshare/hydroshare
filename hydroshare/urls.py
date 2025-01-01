@@ -193,7 +193,7 @@ urlpatterns += [
 
 # robots.txt URLs for django-robots
 urlpatterns += [
-    path(r"robots\.txt", include("robots.urls")),
+    re_path(r"robots\.txt", include("robots.urls")),
 ]
 from django.views.static import serve  # noqa
 

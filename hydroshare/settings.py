@@ -241,7 +241,7 @@ FILE_UPLOAD_PERMISSIONS = 0o644
 # Alternative tmp folder
 FILE_UPLOAD_TEMP_DIR = "/tmp"
 
-FILE_UPLOAD_MAX_SIZE = 25 * 1024  # 25GB in MB
+FILE_UPLOAD_MAX_SIZE = 25 * 1024 ** 3  # 25GB in BYTES
 
 # https://docs.djangoproject.com/en/3.2/ref/settings/#data-upload-max-memory-size
 DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100 MB in Bytes
@@ -285,6 +285,13 @@ PROJECT_DIRNAME = PROJECT_ROOT.split(os.sep)[-1]
 # the name of the directory the project is in to try and use something
 # project specific.
 CACHE_MIDDLEWARE_KEY_PREFIX = PROJECT_DIRNAME
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': 'django_cache',
+    }
+}
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
@@ -464,6 +471,12 @@ TUS_EXISTING_FILE = 'error'  # Other options are: 'overwrite',  'error', 'rename
 # https://uppy.io/docs/companion/
 COMPANION_URL = 'https://companion.hydroshare.org/'
 UPPY_UPLOAD_ENDPOINT = 'https://hydroshare.org/hsapi/tus/'
+MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD = 50
+PARALLEL_UPLOADS_LIMIT = 10
+
+GOOGLE_PICKER_CLIENT_ID = 'GOOGLE_PICKER_CLIENT_ID'
+GOOGLE_PICKER_API_KEY = 'GOOGLE_PICKER_API_KEY'
+GOOGLE_PICKER_APP_ID = 'GOOGLE_PICKER_APP_ID'
 
 SWAGGER_SETTINGS = {
     "DEFAULT_GENERATOR_CLASS": "hs_rest_api2.serializers.NestedSchemaGenerator"
@@ -533,8 +546,14 @@ TEMPLATES = [
 # List of middleware classes to use. Order is important; in the request phase,
 # these middleware classes will be applied in the order given, and in the
 # response phase the middleware will be applied in reverse order.
+
+# We have disabled the cacheMiddleware
+# To enable it, we will need to figure out cache invalidation strategy
+# VARY on cookie is not adequate for our use case
+# https://docs.djangoproject.com/en/4.2/topics/http/decorators/#django.views.decorators.vary.vary_on_cookie
+# alternatively, we could choose to implement cache at the view level -- this would likely be the best approach
 MIDDLEWARE = (
-    "mezzanine.core.middleware.UpdateCacheMiddleware",
+    # "mezzanine.core.middleware.UpdateCacheMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -550,7 +569,7 @@ MIDDLEWARE = (
     # Uncomment the following if using any of the SSL settings:
     # "mezzanine.core.middleware.SSLRedirectMiddleware",
     "mezzanine.pages.middleware.PageMiddleware",
-    "mezzanine.core.middleware.FetchFromCacheMiddleware",
+    # "mezzanine.core.middleware.FetchFromCacheMiddleware",
     "hs_core.robots.RobotFilter",
     "hs_tracking.middleware.Tracking",
 )

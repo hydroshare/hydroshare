@@ -25,9 +25,8 @@ from hs_labels.models import ResourceLabels
 from theme.models import UserQuota
 from hs_core.enums import CrossRefSubmissionStatus
 
-FILE_UPLOAD_MAX_SIZE = getattr(settings, 'FILE_UPLOAD_MAX_SIZE', 25 * 1024)  # FILE_UPLOAD_MAX_SIZE is in MB
-FILE_SIZE_LIMIT = FILE_UPLOAD_MAX_SIZE * 1024 ** 2  # FILE_SIZE_LIMIT is in bytes
-FILE_SIZE_LIMIT_FOR_DISPLAY = f"{ round(FILE_UPLOAD_MAX_SIZE / 1024) }GB"
+FILE_UPLOAD_MAX_SIZE = getattr(settings, 'FILE_UPLOAD_MAX_SIZE', 25 * 1024**3)  # FILE_UPLOAD_MAX_SIZE is in bytes
+FILE_SIZE_LIMIT_FOR_DISPLAY = f"{ round(FILE_UPLOAD_MAX_SIZE / 1024**3) }GB"
 METADATA_STATUS_SUFFICIENT = 'Sufficient to publish or make public'
 METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
 
@@ -299,7 +298,7 @@ def check_resource_files(files=()):
 
     Parameters:
     files - list of Django File or UploadedFile objects to be attached to the resource
-    Returns: (status, sum_size) tuple where status is True if files are within FILE_SIZE_LIMIT
+    Returns: (status, sum_size) tuple where status is True if files are within FILE_UPLOAD_MAX_SIZE
              and False if not, and sum_size is the size summation over all files if status is
              True, and -1 if status is False
     """
@@ -330,8 +329,8 @@ def check_resource_files(files=()):
             except (TypeError, OSError):
                 size = 0
         sum += size
-        if size > FILE_SIZE_LIMIT:
-            # file is greater than FILE_SIZE_LIMIT, which is not allowed
+        if size > FILE_UPLOAD_MAX_SIZE:
+            # file is greater than FILE_UPLOAD_MAX_SIZE, which is not allowed
             return False, -1
 
     return True, sum
