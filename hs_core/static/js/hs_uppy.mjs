@@ -25,7 +25,7 @@ else{
 
   // get the least size between max file size and remaining quota
   // remaining quota can be null which effectively means no limit
-  const RESTRICTED_SIZE = FILE_UPLOAD_MAX_SIZE;
+  let RESTRICTED_SIZE = FILE_UPLOAD_MAX_SIZE;
   if (REMAINING_QUOTA !== null) {
     RESTRICTED_SIZE = Math.min(FILE_UPLOAD_MAX_SIZE, REMAINING_QUOTA);
   }
