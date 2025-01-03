@@ -22,7 +22,7 @@ let subjKeywordsApp = new Vue({
     methods: {
         onKeywordInput: function (event) {
             let newKWLength =  this.newKeywordsLength();
-            if(newKWLength >= 500){
+            if(newKWLength > 500){
                 this.newKeyword = this.newKeyword.slice(0, -1);
                 event.preventDefault();
                 this.error = "Warning: You have exceeded the character 500 character limit for the subject keywords field. In a future release you will be unable to continue adding keywords beyond the 500 character limit";
@@ -31,7 +31,7 @@ let subjKeywordsApp = new Vue({
             }
         },
         addKeyword: function (event,resIdShort) {
-            if(this.newKeywordsLength() >= 500){
+            if(this.newKeywordsLength() > 500){
                 event.preventDefault();
                 return;
             }
@@ -109,7 +109,7 @@ let subjKeywordsApp = new Vue({
             return encodeURIComponent(input)
         },
         newKeywordsLength: function () {
-            let newVal =  (this.resKeywords.join(",").length ? this.resKeywords.join(",") + ",": "") + this.newKeyword;
+            let newVal =  this.resKeywords.join("") + this.newKeyword;
             return newVal.length;
         }
     }
