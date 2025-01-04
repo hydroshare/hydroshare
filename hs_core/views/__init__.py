@@ -602,7 +602,6 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
             mutable_post["value"] = keywords
             request.POST = mutable_post
 
-
         handler_response = signals.pre_metadata_element_create.send(
             sender=sender_resource, element_name=element_name, request=request
         )
@@ -618,7 +617,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
                     if original_value:
                         element_data_dict["value"] = original_value
-                        
+
                     if element_name == "subject":
                         # using set() to remove any duplicate keywords
                         keywords = set(
