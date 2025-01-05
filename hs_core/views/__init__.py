@@ -615,10 +615,10 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                 if response["is_valid"]:
                     element_data_dict = response["element_data_dict"]
 
-                    if original_value:
-                        element_data_dict["value"] = original_value
-
                     if element_name == "subject":
+                        if original_value:
+                            element_data_dict["value"] = original_value
+
                         # using set() to remove any duplicate keywords
                         keywords = set(
                             [k.strip() for k in element_data_dict["value"].split(",")]
