@@ -40,6 +40,8 @@ else{
     quotaNote += ` Remaining Quota: ${formatBytes(parseInt(REMAINING_QUOTA))}.`;
   }
 
+  const TUS_ENDPOINT = `${window.location.origin}${UPPY_UPLOAD_PATH}`
+
   uppy = new Uppy({
     id: "uppy",
     // autoProceed: true,
@@ -177,7 +179,7 @@ else{
   });
   uppy
   .use(Tus, {
-    endpoint: UPPY_UPLOAD_ENDPOINT,
+    endpoint: TUS_ENDPOINT,
     // https://uppy.io/docs/tus/#headers
     headers: headers,
     // https://uppy.io/docs/tus/#chunksize
