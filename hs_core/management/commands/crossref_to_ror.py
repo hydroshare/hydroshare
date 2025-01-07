@@ -50,7 +50,8 @@ async def update_record(record):
                     await sync_to_async(record.save)()
                     # Update metadata.
                     resource = await get_resource(record.id)
-                    if resource:
+                    if resource and resource.raccess.published:
+                        print(f"Updating crossref metadata deposit for resource {resource.short_id}")
                         update_crossref_meta_deposit.apply_async((resource.short_id,))
                     else:
                         print(f"Resource not found for funder record {record.id}")
