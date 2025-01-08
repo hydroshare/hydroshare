@@ -943,6 +943,11 @@ class CustomTusUpload(TusUpload):
     def patch(self, request, resource_id, *args, **kwargs):
 
         tus_file = TusFile.get_tusfile_or_404(str(resource_id))
+
+        # when using the google file picker api, the file size is initially set to 0
+        http_upload_length = request.META.get('HTTP_UPLOAD_LENGTH', None)
+        if tus_file.file_size == 0 and http_upload_length:
+            tus_file.file_size = int(http_upload_length)
         chunk = TusChunk(request)
 
         if not tus_file.is_valid():
@@ -951,14 +956,14 @@ class CustomTusUpload(TusUpload):
         if chunk.offset != tus_file.offset:
             return TusResponse(status=409)
 
-        if chunk.offset > tus_file.file_size:
+        if chunk.offset > tus_file.file_size and tus_file.file_size != 0:
             return TusResponse(status=413)
 
         tus_file.write_chunk(chunk=chunk)
 
         # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/tusfile.py#L151-L152
         # here we modify from django_tus to allow for the file to be marked as complete
-        if tus_file.is_complete() or tus_file.offset > tus_file.file_size:
+        if tus_file.is_complete():
             # file transfer complete, rename from resource id to actual filename
             tus_file.rename()
             tus_file.clean()
@@ -989,7 +994,7 @@ class CustomTusUpload(TusUpload):
         # set the filesize from HTTP header if it exists, otherwise set it from the metadata
         file_size = int(request.META.get("HTTP_UPLOAD_LENGTH", "0"))
         meta_file_size = metadata.get("file_size", None)
-        if meta_file_size:
+        if meta_file_size and meta_file_size != 'null':
             file_size = meta_file_size
 
         tus_file = TusFile.create_initial_file(metadata, file_size)
