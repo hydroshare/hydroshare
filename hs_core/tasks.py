@@ -149,7 +149,7 @@ def setup_periodic_tasks(sender, **kwargs):
             options={'queue': 'periodic'})
 
 
-@celery_app.task(ignore_result=False, base=HydroshareTask)
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def daily_cleanup_tus_uploads():
     """Periodic task to cleanup partial TUS uploads that remain in TUS_UPLOAD_DIR.
     """
@@ -167,7 +167,7 @@ def daily_cleanup_tus_uploads():
 # Currently there are two different cleanups scheduled.
 # One is 20 minutes after creation, the other is nightly.
 # TODO Clean up zipfiles in remote federated storage as well.
-@celery_app.task(ignore_result=False, base=HydroshareTask)
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def nightly_zips_cleanup():
     # delete 2 days ago
     date_folder = (date.today() - timedelta(2)).strftime('%Y-%m-%d')
@@ -179,13 +179,13 @@ def nightly_zips_cleanup():
         istorage.delete(zips_daily_date)
 
 
-@celery_app.task(ignore_result=False, base=HydroshareTask)
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def nightly_periodic_task_check():
     with open("celery/periodic_tasks_last_executed.txt", mode='w') as file:
         file.write(timezone.now().strftime('%m/%d/%y %H:%M:%S'))
 
 
-@celery_app.task(ignore_result=False, base=HydroshareTask)
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def nightly_repair_resource_files():
     """
     Run repair_resource on resources updated in the last day
@@ -319,7 +319,7 @@ def notify_owners_of_resource_repair(resource):
                   recipient_list=[o.email for o in resource.raccess.owners.all()])
 
 
-@celery_app.task(ignore_result=False, base=HydroshareTask)
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def manage_task_hourly():
     # The hourly running task do DOI activation check
 
@@ -452,13 +452,13 @@ def manage_task_hourly():
         res.save()
 
 
-@celery_app.task(ignore_result=False, base=HydroshareTask)
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def update_from_geoconnex_task():
     loop = asyncio.get_event_loop()
     loop.run_until_complete(utils.update_geoconnex_texts())
 
 
-@celery_app.task(ignore_result=False, base=HydroshareTask)
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def nightly_metadata_review_reminder():
     # The daiy check for resources with active metadata review that has been pending for more than 48hrs
 
@@ -515,7 +515,7 @@ def notify_owners_of_publication_success(resource):
                   recipient_list=[o.email for o in resource.raccess.owners.all()])
 
 
-@celery_app.task(ignore_result=False, base=HydroshareTask)
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def send_over_quota_emails():
     """
     Checks over quota cases and sends quota warning emails as needed.
@@ -565,7 +565,7 @@ def send_over_quota_emails():
             logger.debug('user ' + u.username + ' does not have UserQuota foreign key relation')
 
 
-@celery_app.task(ignore_result=False, base=HydroshareTask)
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def notify_increased_usage_during_quota_enforcement(user_pk, message):
     from hs_core.views.utils import get_default_support_user
     user = User.objects.get(pk=user_pk)
@@ -592,7 +592,7 @@ def notify_increased_usage_during_quota_enforcement(user_pk, message):
             logger.error("Failed to send quota warning email: " + str(ex))
 
 
-@celery_app.task(ignore_result=False, base=HydroshareTask)
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def send_user_quota_notification(user_pk):
     u = User.objects.get(pk=user_pk)
     uq = u.quotas.first()
@@ -626,7 +626,7 @@ def send_user_quota_notification(user_pk):
             logger.debug("Failed to send quota warning email: " + str(ex))
 
 
-@celery_app.task(ignore_result=False, base=HydroshareTask)
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def check_geoserver_registrations(resources, run_async=True):
     # Check to ensure resources have updated web services registrations
 
@@ -1158,7 +1158,7 @@ def set_resource_files_system_metadata(resource_id):
                                      batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
 
 
-@celery_app.task(ignore_result=False, base=HydroshareTask)
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def nightly_cache_file_system_metadata():
     """
     Generate and store file checksums and modified times for a subset of resources
@@ -1198,7 +1198,7 @@ def nightly_cache_file_system_metadata():
                     {settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION} seconds")
 
 
-@celery_app.task(ignore_result=False, base=HydroshareTask)
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def daily_odm2_sync():
     """
     ODM2 variables are maintained on an external site this synchronizes data to HydroShare for local caching
@@ -1206,7 +1206,7 @@ def daily_odm2_sync():
     ODM2Variable.sync()
 
 
-@celery_app.task(ignore_result=False, base=HydroshareTask)
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def monthly_group_membership_requests_cleanup():
     """
     Delete expired and redeemed group membership requests
@@ -1215,7 +1215,7 @@ def monthly_group_membership_requests_cleanup():
     GroupMembershipRequest.objects.filter(date_requested__lte=two_months_ago).delete()
 
 
-@celery_app.task(ignore_result=False, base=HydroshareTask)
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def daily_innactive_group_requests_cleanup():
     """
     Redeem group membership requests for innactive users
@@ -1247,7 +1247,7 @@ def update_task_notification(sender=None, task_id=None, task=None, state=None, r
             logger.warning("Unhandled task state of {} for {}".format(state, task_id))
 
 
-@celery_app.task(ignore_result=False, base=HydroshareTask)
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def task_notification_cleanup():
     """
     Delete expired task notifications every day
