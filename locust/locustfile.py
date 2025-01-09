@@ -19,27 +19,13 @@ class HSUser(HttpUser):
     # wait_time = between(1, 2)
     number_of_resources = 1
     resources = {}
+    randname = 0
 
     def on_start(self):
         hs = HydroShare(username=USERNAME, password=PASSWORD, host=HOST, port=PORT, protocol=PROTOCOL)
         self.client.get("/accounts/login/", verify=False)
         self.hs = hs
         self.resources = {}
-
-        # create resources
-        # just keep trying until we get the resources created
-        for i in range(self.number_of_resources):
-            logging.info(f"Creating resource {i}")
-            count = 0
-            while True:
-                try:
-                    count += 1
-                    logging.info(f"Attempt #{count} for create resource")
-                    self.create_resource()
-                except Exception:
-                    continue
-                else:
-                    break
 
     def on_stop(self):
         for res in self.resources.values():
@@ -51,29 +37,23 @@ class HSUser(HttpUser):
             logging.info(f"Cleanup file {f}")
             os.remove(f)
 
-    def create_resource(self):
-        try:
-            new_res = self.hs.create()
-            resIdentifier = new_res.resource_id
-            self.resources[resIdentifier] = new_res
-            logging.info(f"created {resIdentifier}")
-        except Exception:
-            logging.error("Error creating resource")
-            raise
-
     @task
+    @tag('get')
     def home(self):
         self.client.get("/home", verify=False)
 
     @task
+    @tag('get')
     def discover(self):
         self.client.get("/search", verify=False)
 
     @task
+    @tag('get')
     def my_resources(self):
         self.client.get("/my-resources/?f=owned&f=discovered&f=favorites&f=shared", verify=False)
 
     @task
+    @tag('get')
     def get_resources(self):
         url = f"/hsapi/resource/?owner={USERNAME}&edit_permission=false&published=false&include_obsolete=false"
         with self.client.get(url, verify=False, catch_response=True) as response:
@@ -89,8 +69,9 @@ class HSUser(HttpUser):
         pass
 
     @task
+    @tag('post')
     def create(self):
-        with self.client.get("/create", catch_response=True) as response:
+        with self.client.post("/create", catch_response=True) as response:
             try:
                 new_res = self.hs.create()
                 resIdentifier = new_res.resource_id
@@ -104,10 +85,11 @@ class HSUser(HttpUser):
 
     @task
     @tag("async")
+    @tag('post')
     def download(self):
         if not self.resources:
             return
-        with self.client.get("/download", catch_response=True) as response:
+        with self.client.post("/download", catch_response=True) as response:
             res_key = random.choice(list(self.resources.keys()))
             try:
                 self.resources[res_key].download()
@@ -120,10 +102,11 @@ class HSUser(HttpUser):
 
     @task
     @tag("async")
+    @tag('post')
     def copy(self):
         if not self.resources:
             return
-        with self.client.get("/copy", catch_response=True) as response:
+        with self.client.post("/copy", catch_response=True) as response:
             res_key = random.choice(list(self.resources.keys()))
             try:
                 self.resources[res_key].copy()
@@ -136,25 +119,43 @@ class HSUser(HttpUser):
 
     @task
     @tag("async")
+    @tag('post')
     def add_files(self):
         if not self.resources:
             return
-        with self.client.get("/add_files", catch_response=True) as response:
+        with self.client.post("/add_files", catch_response=True) as response:
             res_key = random.choice(list(self.resources.keys()))
+            # generate a random file name
+            filename = f"{self.randname}-locustfile.py"
+            self.randname = self.randname + 1
+            # create the file locally
+            with open(filename, "w") as f:
+                f.write("Hello World")
             try:
-                self.resources[res_key].file_upload("locustfile.py")
+                self.resources[res_key].file_upload(filename)
                 logging.info(f"uploaded file to {res_key}")
                 response.success()
             except Exception as e:
                 logging.error(f"Error adding files to resource: {e}")
                 # mark as a locust failure
                 response.failure(f"Error adding files to resource: {e}")
+            # cleanup the file
+            os.remove(filename)
 
     @task
     @tag("async")
+    @tag('post')
     def delete(self):
-        if self.resources:
-            res_key = random.choice(list(self.resources.keys()))
-            res = self.resources.pop(res_key)
-            print(f"deleted {res}")
-            res.delete()
+        if not self.resources:
+            return
+        with self.client.post("/delete_res", catch_response=True) as response:
+            try:
+                res_key = random.choice(list(self.resources.keys()))
+                res = self.resources.pop(res_key)
+                res.delete()
+                print(f"deleted {res}")
+                response.success()
+            except Exception as e:
+                logging.error(f"Error deleting resource: {e}")
+                # mark as a locust failure
+                response.failure(f"Error deleting resource: {e}")
