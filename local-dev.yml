@@ -56,7 +56,7 @@ services:
       LISTEN_PORT: 6432
       POOL_MODE: "transaction"
       AUTH_TYPE: "plain"
-      MAX_CLIENT_CONN: 10
+      MAX_CLIENT_CONN: 1000
       DEFAULT_POOL_SIZE: 5
       MIN_POOL_SIZE: 2
     ports:
