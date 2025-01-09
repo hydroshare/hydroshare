@@ -58,6 +58,7 @@ jobs:
 
     - name: Run Locust Load Test
       run: |
+        docker exec hydroshare pip install locust
         docker exec hydroshare locust
 
     - name: Archive Load Results
