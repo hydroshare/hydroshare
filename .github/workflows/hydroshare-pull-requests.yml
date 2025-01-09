@@ -2,7 +2,8 @@ name: Test HydroShare Pull Requests
 
 on:
   push:
-    branches: [ develop ]
+    # TODO: revert back to develop
+    branches: [ locust-tests ]
   pull_request:
     branches: 
       - '**'
@@ -54,3 +55,13 @@ jobs:
           nosetests.xml
           pytests.xml
           coverage.xml
+
+    - name: Run Locust Load Test
+      run: |
+        docker exec hydroshare locust
+
+    - name: Archive Load Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: load-results
+        path: locust/reports/locust-report.html
