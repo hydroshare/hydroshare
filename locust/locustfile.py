@@ -76,21 +76,31 @@ class HSUser(HttpUser):
     @task
     def get_resources(self):
         # http://localhost:8000/hsapi/resource/?owner=asdf&edit_permission=false&published=false&include_obsolete=false
+        with self.client.get(f"/hsapi/resource/?owner={USERNAME}&edit_permission=false&published=false&include_obsolete=false", verify=False, catch_response=True) as response:
+            if response.status_code == 200:
+                # get the resources from the json
+                resources = response.json().get('results')
+                for res in resources:
+                    resIdentifier = res.get('resource_id')
+                    self.resources[resIdentifier] = self.hs.resource(resIdentifier)
+                response.success()
+            else:
+                response.failure("Failed to get resources")
         pass
 
-    # @task
-    # def create(self):
-    #     with self.client.get("/create", catch_response=True) as response:
-    #         try:
-    #             new_res = self.hs.create()
-    #             resIdentifier = new_res.resource_id
-    #             self.resources[resIdentifier] = new_res
-    #             logging.info(f"created {resIdentifier}")
-    #             response.success()
-    #         except Exception as e:
-    #             logging.error(f"Error creating resource")
-    #             # mark as a locust failure
-    #             response.failure(f"Error creating resource: {e}")
+    @task
+    def create(self):
+        with self.client.get("/create", catch_response=True) as response:
+            try:
+                new_res = self.hs.create()
+                resIdentifier = new_res.resource_id
+                self.resources[resIdentifier] = new_res
+                logging.info(f"created {resIdentifier}")
+                response.success()
+            except Exception as e:
+                logging.error(f"Error creating resource")
+                # mark as a locust failure
+                response.failure(f"Error creating resource: {e}")
 
     @task
     @tag("async")

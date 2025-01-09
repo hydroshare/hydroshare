@@ -59,10 +59,12 @@ jobs:
     - name: Run Locust Load Tests
       run: |
         docker exec hydroshare pip install -r locust/requirements.txt
-        docker exec hydroshare locust -f locust/locustfile.py --headless --exclude-tags async
+        docker exec hydroshare locust --config locust/locust-gh-action.conf
 
     - name: Archive Load Results
       uses: actions/upload-artifact@v4
       with:
-        name: load-results
-        path: locust/reports/locust-report.html
+        name: locust-results
+        path: |
+          locust/reports/locust-report.html
+          locust/reports/locust-report.csv
