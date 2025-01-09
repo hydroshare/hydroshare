@@ -75,8 +75,8 @@ class HSUser(HttpUser):
 
     @task
     def get_resources(self):
-        # http://localhost:8000/hsapi/resource/?owner=asdf&edit_permission=false&published=false&include_obsolete=false
-        with self.client.get(f"/hsapi/resource/?owner={USERNAME}&edit_permission=false&published=false&include_obsolete=false", verify=False, catch_response=True) as response:
+        url = f"/hsapi/resource/?owner={USERNAME}&edit_permission=false&published=false&include_obsolete=false"
+        with self.client.get(url, verify=False, catch_response=True) as response:
             if response.status_code == 200:
                 # get the resources from the json
                 resources = response.json().get('results')
@@ -98,7 +98,7 @@ class HSUser(HttpUser):
                 logging.info(f"created {resIdentifier}")
                 response.success()
             except Exception as e:
-                logging.error(f"Error creating resource")
+                logging.error(f"Error creating resource: {e}")
                 # mark as a locust failure
                 response.failure(f"Error creating resource: {e}")
 
