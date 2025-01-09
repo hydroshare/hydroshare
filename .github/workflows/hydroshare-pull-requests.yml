@@ -56,10 +56,10 @@ jobs:
     #       pytests.xml
     #       coverage.xml
 
-    - name: Run Locust Load Test
+    - name: Run Locust Load Tests
       run: |
-        docker exec hydroshare pip install locust
-        docker exec hydroshare locust
+        docker exec hydroshare pip install -r locust/requirements.txt
+        docker exec hydroshare locust -f locust/locustfile.py --headless --exclude-tags async
 
     - name: Archive Load Results
       uses: actions/upload-artifact@v4
