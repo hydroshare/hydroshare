@@ -30,8 +30,8 @@
                         <div id="cv-add-keyword-wrapper" class="input-group">
                             <input v-model="newKeyword" id="txt-keyword" type="text" class="form-control"
                                    ref="newKeyword"
-                                   @keyup.enter="addKeyword($event,'{{ cm.short_id }}')"
-                                   @input="onKeywordInput($event)"
+                                    @keyup.enter="addKeyword('{{ cm.short_id }}')"
+                                    @input="onKeywordInput($event)"
                                    placeholder="Examples: Hydrologic_modeling, USU, land use">
                             <span class="input-group-btn">
                                 <button @click="addKeyword('{{ cm.short_id }}')"

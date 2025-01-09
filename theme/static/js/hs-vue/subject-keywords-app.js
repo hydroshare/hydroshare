@@ -30,9 +30,8 @@ let subjKeywordsApp = new Vue({
                 this.error = '';
             }
         },
-        addKeyword: function (event,resIdShort) {
+        addKeyword: function (resIdShort) {
             if(this.newKeywordsLength() > 500){
-                event.preventDefault();
                 return;
             }
 
