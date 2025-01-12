@@ -1,0 +1,59 @@
+name: MinIO Sync: Prod to Beta
+
+on:
+  workflow_dispatch:
+    inputs:
+      resource_ids:
+        description: 'Comma-separated list of resource IDs to check and sync'
+        required: true
+
+jobs:
+  check-and-sync:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Install MinIO CLI (mc)
+      run: |
+        curl -O https://dl.min.io/client/mc/release/linux-amd64/mc
+        chmod +x mc
+        sudo mv mc /usr/local/bin/mc
+
+    - name: Set Up MinIO Aliases
+      env:
+        MINIO_PROD_URL: ${{ secrets.MINIO_PROD_URL }}
+        MINIO_BETA_URL: ${{ secrets.MINIO_BETA_URL }}
+        MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
+        MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
+      run: |
+        mc alias set prod $MINIO_PROD_URL $MINIO_ACCESS_KEY $MINIO_SECRET_KEY
+        mc alias set beta $MINIO_BETA_URL $MINIO_ACCESS_KEY $MINIO_SECRET_KEY
+
+    - name: Check and Sync Buckets for Resources
+      env:
+        RESOURCE_IDS: ${{ github.event.inputs.resource_ids }}
+      run: |
+        echo "Processing resource IDs: $RESOURCE_IDS"
+        IFS=',' read -ra RESOURCES <<< "$RESOURCE_IDS"
+
+        for RESOURCE_ID in "${RESOURCES[@]}"; do
+          echo "Checking resource: $RESOURCE_ID"
+          
+          # Check if the bucket exists in production
+          if mc ls prod/$RESOURCE_ID >/data/contents 2>&1; then
+            echo "Bucket for $RESOURCE_ID exists in production. Checking beta..."
+            
+            # Check if the bucket exists in beta
+            if mc ls beta/$RESOURCE_ID >/data/contents 2>&1; then
+              echo "Bucket for $RESOURCE_ID already exists in beta."
+              mc mirror prod/$RESOURCE_ID beta/$RESOURCE_ID
+              echo "Bucket for $RESOURCE_ID copied successfully from production to beta."
+            else
+              echo "Bucket for $RESOURCE_ID does not exist in beta. Copying from production..."
+            fi
+          else
+            echo "Bucket for $RESOURCE_ID does not exist in production. Skipping."
+          fi
+        done
