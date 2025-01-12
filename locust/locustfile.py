@@ -8,11 +8,26 @@ import logging
 import random
 urllib3.disable_warnings()
 
-USERNAME = "asdf"
-PASSWORD = "asdf"
+USERNAME = os.getenv("HS_USERNAME", "asdf")
+PASSWORD = os.getenv("HS_PASSWORD", "asdf")
+
+# get the host port and protocol from LOCUST_HOST which is the full origin
 HOST = "localhost"
 PORT = 8000
 PROTOCOL = 'http'
+
+LOCUST_HOST = os.getenv("LOCUST_HOST", "http://localhost:8000")
+if LOCUST_HOST:
+    parts = LOCUST_HOST.split(":")
+    HOST = parts[1][2:]
+    PROTOCOL = parts[0]
+    try:
+        PORT = int(parts[2])
+    except IndexError:
+        if PROTOCOL == 'https':
+            PORT = 443
+        else:
+            PORT = 80
 
 
 class HSUser(HttpUser):
@@ -22,6 +37,7 @@ class HSUser(HttpUser):
     randname = 0
 
     def on_start(self):
+        logging.info(f"Starting a new user with hsclient: HOST: {HOST} PORT: {PORT} PROTOCOL: {PROTOCOL}")
         hs = HydroShare(username=USERNAME, password=PASSWORD, host=HOST, port=PORT, protocol=PROTOCOL)
         self.client.get("/accounts/login/", verify=False)
         self.hs = hs
