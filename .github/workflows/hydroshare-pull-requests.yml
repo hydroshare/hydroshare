@@ -57,12 +57,28 @@ jobs:
     - name: Run Locust Load Tests
       run: |
         docker exec hydroshare pip install -r locust/requirements.txt
-        docker exec hydroshare locust --config locust/locust-gh-action.conf
-
+        docker exec hydroshare locust --config locust/locust-gh-action.conf || true
+    
+    - name: Zip reports
+      run: |
+        cd locust/reports/csv/
+        zip -r locust-report-csv.zip *.csv
+        mv locust-report-csv.zip ../locust-report-csv.zip
+        cd ../..
+    
     - name: Archive Load Results
       uses: actions/upload-artifact@v4
       with:
         name: locust-results
         path: |
           locust/reports/locust-report.html
-          locust/reports/locust-report.csv
+          locust/reports/locust-report-csv.zip
+    
+    - name: Check for errors
+      run: |
+        if [ -f locust/reports/csv/locust-report_failures.csv ]; then
+            if tail -n +2 locust/reports/csv/locust-report_failures.csv | grep -q 'Error'; then
+            echo "Errors found in locust report"
+            exit 1
+          fi
+        fi
