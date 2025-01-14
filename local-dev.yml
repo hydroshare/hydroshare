@@ -43,6 +43,26 @@ services:
       - "54322:5432"
     stdin_open: true
     tty: true
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: pgbouncer
+    environment:
+      DB_HOST: postgis
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      DB_NAME: "postgres"
+      DB_PORT: 5432
+      LISTEN_ADDR: "*"
+      LISTEN_PORT: 6432
+      POOL_MODE: "transaction"
+      AUTH_TYPE: "plain"
+      MAX_CLIENT_CONN: 1000
+      DEFAULT_POOL_SIZE: 5
+      MIN_POOL_SIZE: 2
+    ports:
+      - "6432:6432"
+    depends_on:
+      - postgis
   rabbitmq:
     image: rabbitmq:3.8.2
     container_name: rabbitmq
@@ -68,8 +88,8 @@ services:
       - "/dev/fuse"
     privileged: true
     environment:
-      POSTGIS_HOST: postgis
-      POSTGIS_PORT: 5432
+      POSTGIS_HOST: pgbouncer
+      POSTGIS_PORT: 6432
       POSTGIS_PASSWORD: postgres
       POSTGIS_DB: postgres
       POSTGIS_USER: postgres
@@ -78,7 +98,8 @@ services:
       SOLR_PORT_8983_TCP_ADDR: solr
       SOLR_HOST: solr
       TMP: /tmp
-      POSTGIS_PORT_5432_TCP_ADDR: postgis
+      POSTGIS_PORT_5432_TCP_ADDR: pgbouncer
+      POSTGIS_DISABLE_SERVER_SIDE_CURSORS: "True"
       HS_PATH: ${PWD}
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
@@ -99,6 +120,7 @@ services:
       - data.local.org:data.local.org
     depends_on:
       - postgis
+      - pgbouncer
       - solr
       - rabbitmq
       - data.local.org
@@ -112,10 +134,11 @@ services:
     container_name: defaultworker
     hostname: defaultworker
     environment:
-      POSTGIS_HOST: postgis
-      POSTGIS_PORT: 5432
+      POSTGIS_HOST: pgbouncer
+      POSTGIS_PORT: 6432
       POSTGIS_PASSWORD: postgres
       POSTGIS_DB: postgres
+      POSTGIS_USER: postgres
       PGPASSWORD: postgres
       C_FORCE_ROOT: 1
       RABBITMQ_PORT_5672_TCP_ADDR: rabbitmq
@@ -131,12 +154,12 @@ services:
     volumes:
       - ".:/hydroshare"
     links:
-      - postgis:postgis
+      - pgbouncer:pgbouncer
       - rabbitmq:rabbitmq
       - data.local.org:data.local.org
     depends_on:
       - hydroshare
-      - postgis
+      - pgbouncer
       - solr
       - rabbitmq
       - data.local.org

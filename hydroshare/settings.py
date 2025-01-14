@@ -929,13 +929,22 @@ local_settings = __import__(local_settings_module, globals(), locals(), ["*"])
 for k in dir(local_settings):
     locals()[k] = getattr(local_settings, k)
 
-if 'test' in sys.argv:
+if any('pytest' in arg for arg in sys.argv) or 'test' in sys.argv:
     import logging
 
     logging.disable(logging.CRITICAL)
     PASSWORD_HASHERS = [
         'django.contrib.auth.hashers.MD5PasswordHasher',
     ]
+
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': 'postgis',
+        'PORT': '5432',
+    }
 
 ####################
 # DYNAMIC SETTINGS #
