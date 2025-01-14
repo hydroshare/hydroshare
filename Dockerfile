@@ -16,6 +16,7 @@ RUN pip install django-widget-tweaks==1.5.*
 RUN pip install django-crispy-forms==2.1
 RUN pip install crispy-bootstrap3==2024.1
 RUN pip install Mezzanine==6.0.0
+RUN pip install git+https://github.com/CUAHSI/django-tus.git@2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8
 
 # intentionally keep bleach at https://github.com/mozilla/bleach/releases/tag/v5.0.1
 # due to issue with mezzanine 6.0.0

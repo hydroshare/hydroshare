@@ -33,6 +33,7 @@ var loading_metadata_alert =
         '<span class="sr-only">Loading...</span>' +
     '</div>';
 
+var hint = "&#9432; Right-click for more options &#13;";
 
 function getCurrentPath() {
     return pathLog[pathLogIndex];
@@ -54,7 +55,7 @@ function getFolderTemplateInstance(folder) {
         }
         return "<li class='fb-folder droppable draggable' data-url='" +
             folder['url'] + "' data-logical-file-id='" + folder['folder_aggregation_id'] +
-            "' title='" + folder['name'] + "&#13;" + folder['folder_aggregation_name'] +
+            "' title='" + hint +" "+ folder['name'] + "&#13;" + folder['folder_aggregation_name'] +
             "' data-aggregation-appkey='" + folder['folder_aggregation_appkey']  +"' >" +
             iconTemplate +
             "<span class='fb-file-name'>" + folder['name'] + "</span>" +
@@ -69,7 +70,7 @@ function getFolderTemplateInstance(folder) {
 
     // Default
     return "<li class='fb-folder droppable draggable' data-url='" + folder.url + "' title='" +
-        folder.name + "&#13;Type: File Folder'>" +
+        hint +" "+folder.name + "&#13;Type: File Folder'>" +
         "<span class='fb-file-icon fa fa-folder icon-blue'></span>" +
         "<span class='fb-file-name'>" + folder.name + "</span>" +
         "<span class='fb-file-type' data-folder-short-path='" + folder['folder_short_path'] + "'>File Folder</span>" +
@@ -90,7 +91,7 @@ function getVirtualFolderTemplateInstance(agg) {
 
     return "<li class='fb-folder droppable draggable' data-url='" + agg.url +
       "' data-logical-file-id='" + agg.logical_file_id + "' title='" +
-      agg.name + "&#13;" + agg.aggregation_name + "' data-main-file='" + agg.main_file +
+      hint + " "+ agg.name + "&#13;" + agg.aggregation_name + "' data-main-file='" + agg.main_file +
       "' data-aggregation-appkey='" + agg.aggregation_appkey  + "' >" +
       iconTemplate +
       "<span class='fb-file-name'>" + agg.name + "</span>" +
@@ -102,7 +103,6 @@ function getVirtualFolderTemplateInstance(agg) {
       "</li>";
 }
 
-// Associates file icons with file extensions. Could be improved with a dictionary.
 function getFileTemplateInstance(file) {
     var fileTypeExt = file.name.substr(file.name.lastIndexOf(".") + 1, file.name.length);
     if (file['logical_type'] === "ModelProgramLogicalFile" && !file.has_model_program_aggr_folder) {
@@ -128,13 +128,14 @@ function getFileTemplateInstance(file) {
     }
 
     if (file.logical_type.length > 0){
-        var title = '' + file.name + "&#13;Type: " + file.type + "&#13;Size: " +
-            formatBytes(parseInt(file.size)) + "&#13;" + file.aggregation_name;
+        var title = hint + file.name + "&#13;Type: " + file.type + "&#13;Size: " +
+            formatBytes(parseInt(file.size)) + "&#13;" + (file.aggregation_name || "");
     }
     else {
-        var title = '' + file.name + "&#13;Type: " + file.type + "&#13;Size: " +
+        var title = hint + file.name + "&#13;Type: " + file.type + "&#13;Size: " +
             formatBytes(parseInt(file.size));
     }
+    
     return "<li data-pk='" + file.pk + "' data-url='" + file.url + "' data-ref-url='" +
         file.reference_url + "' data-logical-file-id='" + file.logical_file_id +
         "' class='fb-file draggable' title='" + title + "' is-single-file-aggregation='" +
@@ -1947,159 +1948,6 @@ $(document).ready(function () {
         if (acceptedFiles === ".*") {
             acceptedFiles = null; // Dropzone default to accept all files
         }
-
-        Dropzone.options.hsDropzone = {
-            paramName: "files", // The name that will be used to transfer the file
-            clickable: ".upload-toggle",
-            previewsContainer: "#previews", // Define the container to display the previews
-            maxFilesize: MAX_FILE_SIZE, // MB
-            acceptedFiles: acceptedFiles,
-            maxFiles: allowMultiple,
-            autoProcessQueue: true,
-            uploadMultiple: true,
-            parallelUploads : 10,
-            error: function (file, response) {
-                console.error(response);
-            },
-            success: onUploadSuccess,
-            successmultiple: onUploadSuccess,
-            init: function () {
-                // The user dragged a file onto the Dropzone
-                this.on("dragenter", function (file) {
-                    $(".fb-drag-flag").show();
-                    $("#hsDropzone").toggleClass("glow-blue", true);
-                });
-
-                this.on("drop", function (event) {
-                    var myDropzone = this;
-                    myDropzone.options.autoProcessQueue = false;    // Disable autoProcess queue so we can wait for the files to reach the queue before processing.
-
-                    (function () {
-                        // Wait for the files to reach the queue from the drop event. Check every 200 milliseconds
-                        if (myDropzone.files.length > 0) {
-                            myDropzone.processQueue();
-                            myDropzone.options.autoProcessQueue = true; // Restore autoprocess
-                            return;
-                        }
-                        setTimeout(arguments.callee, 200);
-                    })();
-                });
-
-                // The user dragged a file out of the Dropzone
-                this.on("dragleave", function (event) {
-                    $(".fb-drag-flag").hide();
-                    $("#hsDropzone").toggleClass("glow-blue", false);
-                });
-
-                // When a file is added to the list
-                this.on("addedfile", function (file) {
-                    var myDropzone = this;
-                    if (getCurrentPath().hasOwnProperty("aggregation")) {
-                        myDropzone.removeFile(file);
-                        // Display an error here
-                        $("#fb-alerts .upload-failed-alert").remove();
-                        $("#hsDropzone").toggleClass("glow-blue", false);
-
-                        $("#fb-alerts").append(
-                            '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
-                                '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-                                    '<span aria-hidden="true">&times;</span></button>' +
-                                '<div>' +
-                                    '<strong>File Upload Failed</strong>'+
-                                '</div>'+
-                                '<div>'+
-                                    '<span>File upload is not allowed. Target folder seems to contain aggregation(s).</span>' +
-                                '</div>'+
-                            '</div>').fadeIn(200);
-                        }
-
-                    $(".fb-drag-flag").hide();
-                });
-
-                // When a file gets processed
-                this.on("processing", function (file) {
-                    if (!$("#flag-uploading").length) {
-                        $("#root-path").text(getCurrentPath().path.length > 0 ? "contents/" : "contents");  // TODO assess for bugs
-                        $("#fb-inner-controls").append(previewNode);
-                    }
-                    $("#hsDropzone").toggleClass("glow-blue", false);
-                });
-
-                // Called when all files in the queue finish uploading.
-                this.on("queuecomplete", function () {
-                    let resourceType = $("#resource-type").val();
-                    // Remove further paths from the log
-                    let range = pathLog.length - pathLogIndex;
-                    pathLog.splice(pathLogIndex + 1, range);
-                    pathLog.push(JSON.parse(sessionStorage.currentBrowsepath));
-                    pathLogIndex = pathLog.length - 1;
-
-                    if (resourceType === 'Resource') {
-                        sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
-                        refreshFileBrowser();
-                    }
-                    else {
-                        refreshFileBrowser();
-                        $("#previews").empty();
-                    }
-                });
-
-                // An error occured. Receives the errorMessage as second parameter and if the error was due to the XMLHttpRequest the xhr object as third.
-                this.on("error", function (error, errorMessage) {
-                    let errorMsg = "";
-                    if (typeof errorMessage === 'object'){
-                        for (const [key, value] of Object.entries(errorMessage)) {
-                            errorMsg += `${key}: ${value}`;
-                          }
-                    }else{
-                        errorMsg = JSON.stringify(errorMessage);
-                    }
-                    try {
-                        let errorMessageJSON = JSON.parse(errorMessage);
-                        if (errorMessageJSON.hasOwnProperty("validation_error")) {
-                            errorMsg = errorMessageJSON.validation_error;
-                        }
-                        else if(errorMessageJSON.hasOwnProperty("file_size_error")) {
-                            errorMsg = errorMessageJSON.file_size_error;
-                        }
-                    } catch (e) {
-
-                    }
-
-                    $("#fb-alerts .upload-failed-alert").remove();
-                    $("#hsDropzone").toggleClass("glow-blue", false);
-                    $("#fb-alerts").append(
-                            '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
-                                '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-                                    '<span aria-hidden="true">&times;</span></button>' +
-                                '<div>' +
-                                    '<strong>File Upload Failed</strong>'+
-                                '</div>'+
-                                '<div>'+
-                                    '<span>' + errorMsg + '</span>' +
-                                '</div>'+
-                            '</div>').fadeIn(200);
-                });
-
-                // Called with the total uploadProgress (0-100), the totalBytes and the totalBytesSent
-                this.on("totaluploadprogress", function (uploadProgress, totalBytes , totalBytesSent) {
-                    $("#upload-progress").text(formatBytes(totalBytesSent) + " / " +  formatBytes(totalBytes) + " (" + parseInt(uploadProgress) + "%)" );
-                });
-
-                this.on('sending', function (file, xhr, formData) {
-                    formData.append('file_folder', getCurrentPath().path.join('/'));
-                });
-
-                // Applies allowing upload of multiple files to OS upload dialog
-                if (allowMultiple) {
-                    this.hiddenFileInput.removeAttribute('multiple');
-                    var fileCount = parseInt($("#hs-file-browser").attr("data-initial-file-count"));
-                    if (fileCount > 0) {
-                        $('.dz-input').hide();
-                    }
-                }
-            }
-        };
     }
 
     // Toggle between grid and list view

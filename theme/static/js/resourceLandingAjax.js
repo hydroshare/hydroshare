@@ -782,7 +782,10 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
         },
         success: function (result) {
             var files = result.files;
+            // export the files to the global scope for use in other functions
+            window.fbFiles = files;
             var folders = result.folders;
+            window.fbFolders = folders;
             var can_be_public = result.can_be_public;
             const mode = $("#hs-file-browser").attr("data-mode");
 
@@ -825,7 +828,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             // Default display message for empty directories
             if (!files.length && !folders.length) {
                 if (mode === "edit") {
-                    if (MAX_FILE_SIZE > 0) {
+                    if (REMAINING_QUOTA > 0 || REMAINING_QUOTA === null) {
                         $('#fb-files-container').append(
                             '<div>' +
                                 '<span class="text-muted fb-empty-dir has-space-bottom">This directory is empty</span>' +
@@ -878,7 +881,6 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                     $(".fb-upload-caption").toggleClass("hidden", false);
                     $(".upload-toggle").toggleClass("hidden", false);
                     $("#irods-group").toggleClass("hidden", false);
-                    Dropzone.forElement("#hsDropzone").files = [];
                 }
             }
 

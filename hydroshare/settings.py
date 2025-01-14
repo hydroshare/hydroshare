@@ -241,7 +241,10 @@ FILE_UPLOAD_PERMISSIONS = 0o644
 # Alternative tmp folder
 FILE_UPLOAD_TEMP_DIR = "/tmp"
 
-FILE_UPLOAD_MAX_SIZE = 5 * 1024  # MB
+FILE_UPLOAD_MAX_SIZE = 25 * 1024 ** 3  # 25GB in BYTES
+
+# https://docs.djangoproject.com/en/3.2/ref/settings/#data-upload-max-memory-size
+DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100 MB in Bytes
 
 #############
 # DATABASES #
@@ -282,6 +285,13 @@ PROJECT_DIRNAME = PROJECT_ROOT.split(os.sep)[-1]
 # the name of the directory the project is in to try and use something
 # project specific.
 CACHE_MIDDLEWARE_KEY_PREFIX = PROJECT_DIRNAME
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': 'django_cache',
+    }
+}
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
@@ -450,7 +460,24 @@ INSTALLED_APPS = (
     "health_check.contrib.psutil",
     "health_check.contrib.rabbitmq",
     "mozilla_django_oidc",
+    'django_tus',
 )
+
+TUS_UPLOAD_DIR = '/tmp/tus_upload'
+TUS_DESTINATION_DIR = '/tmp/tus_completed'
+TUS_FILE_NAME_FORMAT = 'increment'  # Other options are: 'random-suffix', 'random', 'keep'
+TUS_EXISTING_FILE = 'error'  # Other options are: 'overwrite',  'error', 'rename'
+
+# the url for the uppy companion server
+# https://uppy.io/docs/companion/
+COMPANION_URL = 'https://companion.hydroshare.org/'
+UPPY_UPLOAD_PATH = '/hsapi/tus/'
+MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD = 50
+PARALLEL_UPLOADS_LIMIT = 10
+
+GOOGLE_PICKER_CLIENT_ID = 'GOOGLE_PICKER_CLIENT_ID'
+GOOGLE_PICKER_API_KEY = 'GOOGLE_PICKER_API_KEY'
+GOOGLE_PICKER_APP_ID = 'GOOGLE_PICKER_APP_ID'
 
 SWAGGER_SETTINGS = {
     "DEFAULT_GENERATOR_CLASS": "hs_rest_api2.serializers.NestedSchemaGenerator"
@@ -520,8 +547,14 @@ TEMPLATES = [
 # List of middleware classes to use. Order is important; in the request phase,
 # these middleware classes will be applied in the order given, and in the
 # response phase the middleware will be applied in reverse order.
+
+# We have disabled the cacheMiddleware
+# To enable it, we will need to figure out cache invalidation strategy
+# VARY on cookie is not adequate for our use case
+# https://docs.djangoproject.com/en/4.2/topics/http/decorators/#django.views.decorators.vary.vary_on_cookie
+# alternatively, we could choose to implement cache at the view level -- this would likely be the best approach
 MIDDLEWARE = (
-    "mezzanine.core.middleware.UpdateCacheMiddleware",
+    # "mezzanine.core.middleware.UpdateCacheMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -537,7 +570,7 @@ MIDDLEWARE = (
     # Uncomment the following if using any of the SSL settings:
     # "mezzanine.core.middleware.SSLRedirectMiddleware",
     "mezzanine.pages.middleware.PageMiddleware",
-    "mezzanine.core.middleware.FetchFromCacheMiddleware",
+    # "mezzanine.core.middleware.FetchFromCacheMiddleware",
     "hs_core.robots.RobotFilter",
     "hs_tracking.middleware.Tracking",
 )
@@ -851,6 +884,7 @@ SECURE_HSTS_SECONDS = 31536000
 SESSION_COOKIE_SECURE = USE_SECURITY
 CSRF_COOKIE_SECURE = USE_SECURITY
 
+
 # Categorization in discovery of content types
 # according to file extension of otherwise unaggregated files.
 DISCOVERY_EXTENSION_CONTENT_TYPES = {
@@ -895,13 +929,22 @@ local_settings = __import__(local_settings_module, globals(), locals(), ["*"])
 for k in dir(local_settings):
     locals()[k] = getattr(local_settings, k)
 
-if 'test' in sys.argv:
+if any('pytest' in arg for arg in sys.argv) or 'test' in sys.argv:
     import logging
 
     logging.disable(logging.CRITICAL)
     PASSWORD_HASHERS = [
         'django.contrib.auth.hashers.MD5PasswordHasher',
     ]
+
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': 'postgis',
+        'PORT': '5432',
+    }
 
 ####################
 # DYNAMIC SETTINGS #
