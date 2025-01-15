@@ -1,4 +1,4 @@
-## Using local federated iRODS
+## Using local federated iRODS!
 
 The scripts herein are a one-way street that update the configuration of HydroShare to use a locally deployed iCAT server in Docker.
 
