@@ -18,7 +18,7 @@
     "core-js": "^3.8.3",
     "express": "^4.21.2",
     "follow-redirects": "^1.15.6",
-    "vue": "^2.6.11",
+    "vue": "^3.0.0",
     "vue-date-pick": "^1.4.1",
     "vue-router": "^3.1.6",
     "webpack": "^5.97.1"
