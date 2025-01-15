@@ -16,7 +16,7 @@
     "bootstrap-vue": "^2.14.0",
     "braces": "^3.0.3",
     "core-js": "^3.8.3",
-    "express": "^4.19.2",
+    "express": "^4.21.2",
     "follow-redirects": "^1.15.6",
     "vue": "^2.6.11",
     "vue-date-pick": "^1.4.1",
