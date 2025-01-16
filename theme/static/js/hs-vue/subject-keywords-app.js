@@ -108,7 +108,7 @@ let subjKeywordsApp = new Vue({
             return encodeURIComponent(input)
         },
         newKeywordsLength: function () {
-            let newVal =  this.resKeywords.join("") + this.newKeyword;
+            let newVal =  this.resKeywords.join("") + this.newKeyword.split(",").join("");
             return newVal.length;
         }
     }
