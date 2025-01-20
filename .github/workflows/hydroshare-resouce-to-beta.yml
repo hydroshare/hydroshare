@@ -21,15 +21,43 @@ jobs:
         chmod +x mc
         sudo mv mc /usr/local/bin/mc
 
-    - name: Set Up MinIO Aliases
+    - name: Create MinIO Config File
       env:
         MINIO_PROD_URL: ${{ secrets.MINIO_PROD_URL }}
         MINIO_BETA_URL: ${{ secrets.MINIO_BETA_URL }}
-        MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
-        MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
+        MINIO_PROD_ACCESS_KEY: ${{ secrets.MINIO_PROD_ACCESS_KEY }}
+        MINIO_PROD_SECRET_KEY: ${{ secrets.MINIO_PROD_SECRET_KEY }}
+        MINIO_BETA_ACCESS_KEY: ${{ secrets.MINIO_BETA_ACCESS_KEY }}
+        MINIO_BETA_SECRET_KEY: ${{ secrets.MINIO_BETA_SECRET_KEY }}
       run: |
-        mc alias set prod $MINIO_PROD_URL $MINIO_ACCESS_KEY $MINIO_SECRET_KEY
-        mc alias set beta $MINIO_BETA_URL $MINIO_ACCESS_KEY $MINIO_SECRET_KEY
+        cat <<EOF > minio_config.json
+        {
+          "prod": {
+            "url": "$MINIO_PROD_URL",
+            "access_key": "$MINIO_PROD_ACCESS_KEY",
+            "secret_key": "$MINIO_PROD_SECRET_KEY"
+          },
+          "beta": {
+            "url": "$MINIO_BETA_URL",
+            "access_key": "$MINIO_BETA_ACCESS_KEY",
+            "secret_key": "$MINIO_BETA_SECRET_KEY"
+          }
+        }
+        EOF
+
+    - name: Set Up MinIO Aliases Using Config File
+      run: |
+        CONFIG=$(cat minio_config.json)
+        PROD_URL=$(echo $CONFIG | jq -r '.prod.url')
+        PROD_ACCESS_KEY=$(echo $CONFIG | jq -r '.prod.access_key')
+        PROD_SECRET_KEY=$(echo $CONFIG | jq -r '.prod.secret_key')
+
+        BETA_URL=$(echo $CONFIG | jq -r '.beta.url')
+        BETA_ACCESS_KEY=$(echo $CONFIG | jq -r '.beta.access_key')
+        BETA_SECRET_KEY=$(echo $CONFIG | jq -r '.beta.secret_key')
+
+        mc alias set prod $PROD_URL $PROD_ACCESS_KEY $PROD_SECRET_KEY
+        mc alias set beta $BETA_URL $BETA_ACCESS_KEY $BETA_SECRET_KEY
 
     - name: Check and Sync Buckets for Resources
       env:
