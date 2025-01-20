@@ -85,3 +85,7 @@ jobs:
             echo "Bucket for $RESOURCE_ID does not exist in production. Skipping."
           fi
         done
+
+    - name: Clean Up
+      run: |
+        rm -f minio_config.json
