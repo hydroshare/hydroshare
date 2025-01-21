@@ -1,5 +1,4 @@
 """Declare critical models for Hydroshare hs_core app."""
-import asyncio
 import copy
 import json
 import logging
@@ -45,7 +44,6 @@ from pyld import jsonld
 from rdflib import BNode, Literal, URIRef
 from rdflib.namespace import DC, DCTERMS, RDF
 from spam_patterns.worst_patterns_re import patterns
-from asgiref.sync import sync_to_async
 
 from django_irods.storage import IrodsStorage
 from hs_core.enums import (CrossRefSubmissionStatus, CrossRefUpdate,
@@ -430,7 +428,7 @@ def page_permissions_page_processor(request, page):
     parallel_uploads_limit = getattr(settings, 'PARALLEL_UPLOADS_LIMIT', 10)
 
     companion_url = getattr(settings, 'COMPANION_URL', 'https://companion.hydroshare.org/')
-    uppy_upload_endpoint = getattr(settings, 'UPPY_UPLOAD_ENDPOINT', 'https://hydroshare.org/hsapi/tus/')
+    UPPY_UPLOAD_PATH = getattr(settings, 'UPPY_UPLOAD_PATH', 'https://hydroshare.org/hsapi/tus/')
     google_picker_client_id = getattr(settings, 'GOOGLE_PICKER_CLIENT_ID', '')
     google_picker_api_key = getattr(settings, 'GOOGLE_PICKER_API_KEY', '')
     google_picker_app_id = getattr(settings, 'GOOGLE_PICKER_APP_ID', '')
@@ -460,7 +458,7 @@ def page_permissions_page_processor(request, page):
         "max_number_of_files_in_single_local_upload": max_number_of_files_in_single_local_upload,
         "parallel_uploads_limit": parallel_uploads_limit,
         "companion_url": companion_url,
-        "uppy_upload_endpoint": uppy_upload_endpoint,
+        "UPPY_UPLOAD_PATH": UPPY_UPLOAD_PATH,
         "google_picker_client_id": google_picker_client_id,
         "google_picker_api_key": google_picker_api_key,
         "google_picker_app_id": google_picker_app_id,
@@ -2036,52 +2034,6 @@ class FundingAgency(AbstractMetaDataElement):
             raise ValidationError("Agency name is missing")
 
         super(FundingAgency, cls).update(element_id, **kwargs)
-
-    @sync_to_async
-    def get_funding_records(self, apps):
-        FundingAgency = apps.get_model('hs_core', 'FundingAgency')
-        return list(FundingAgency.objects.all())
-
-    @classmethod
-    async def update_record(cls, record):
-        from hs_core.tasks import update_crossref_meta_deposit
-        logger = logging.getLogger(__name__)
-        logger.debug(f"Checking funder record {record.id}")
-        if record.agency_url is not None:
-            doi_prefix = 'http://dx.doi.org/10.13039/'
-            doi_id_parts = record.agency_url.split(doi_prefix)
-            if len(doi_id_parts) == 2:
-                fundref_id = record.agency_url.split(doi_prefix)[1]
-                url = f"https://api.ror.org/v2/organizations?query=%22{fundref_id}%22"
-                response = requests.get(url, verify=False)
-                if response.status_code == 200:
-                    response_json = response.json()
-                    items = response_json.get('items', None)
-                    if items:
-                        item = items[0]
-                        logger.debug(f"Replacing old funder id {record.agency_url} with new id {item['id']}")
-                        agency_name_new = [n['value'] for n in item['names'] if 'ror_display' in n['types']][0]
-                        record.agency_name = agency_name_new
-                        record.agency_url = item['id']
-                        await sync_to_async(record.save)()
-                        # Update metadata.
-                        funding_agency = await sync_to_async(FundingAgency.objects.filter(id=record.id).first())
-                        metadata = funding_agency.metadata
-                        if metadata:
-                            resource = metadata.resource
-                            if resource:
-                                await update_crossref_meta_deposit.apply_async((resource.short_id,))
-
-    @classmethod
-    async def get_funder_records(cls, apps):
-        funding_records = await cls.get_funding_records(apps)
-        await asyncio.gather(*(cls.update_record(record) for record in funding_records))
-
-    @classmethod
-    def migrate_from_crossref_to_ror(cls, apps, schema_editor):
-        """Migrate from CrossRef to ROR asynchronously"""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(cls.get_funder_records(apps))
 
 
 @rdf_terms(DC.subject)
@@ -4027,37 +3979,23 @@ class BaseResource(Page, AbstractResource):
         logger = logging.getLogger(__name__)
 
         def get_funder_id(funder_name):
-            """Return funder_id for a given funder_name from Crossref funders registry.
-            Crossref API Documentation: https://api.crossref.org/swagger-ui/index.html#/Funders/get_funders
+            """Return funder_uri for a given funder_name from ror funders registry.
+            ROR API Documentation: https://ror.readme.io/docs/api-query
             """
-
-            # url encode the funder name for the query parameter
-            words = funder_name.split()
-            # filter out words that contain the char '.'
-            words = [word for word in words if '.' not in word]
-            encoded_words = [urllib.parse.quote(word) for word in words]
-            # match all words in the funder name
-            query = "+".join(encoded_words)
-            # if we can't find a match in first 50 search records then we are not going to find a match
-            max_record_count = 50
-            email = settings.DEFAULT_DEVELOPER_EMAIL
-            url = f"https://api.crossref.org/funders?query={query}&rows={max_record_count}&mailto={email}"
             funder_name = funder_name.lower()
+            encoded_funder_name = urllib.parse.quote(funder_name)
+            url = f"https://api.ror.org/v2/organizations?filter=types:funder&query={encoded_funder_name}"
             response = requests.get(url, verify=False)
             if response.status_code == 200:
                 response_json = response.json()
-                if response_json['status'] == 'ok':
-                    items = response_json['message']['items']
-                    for item in items:
-                        if item['name'].lower() == funder_name:
-                            return item['uri']
-                        for alt_name in item['alt-names']:
-                            if alt_name.lower() == funder_name:
-                                return item['uri']
-                    return ''
+                items = response_json['items']
+                for item in items:
+                    for name in item['names']:
+                        if name['value'].lower() == funder_name:
+                            return item['id']
                 return ''
             else:
-                msg = "Failed to get funder_id for funder_name: '{}' from Crossref funders registry. " \
+                msg = "Failed to get funder_id for funder_name: '{}' from ror funders registry. " \
                       "Status code: {} for resource id: {}"
                 msg = msg.format(funder_name, response.status_code, self.short_id)
                 logger.error(msg)

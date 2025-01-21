@@ -470,7 +470,7 @@ TUS_EXISTING_FILE = 'error'  # Other options are: 'overwrite',  'error', 'rename
 # the url for the uppy companion server
 # https://uppy.io/docs/companion/
 COMPANION_URL = 'https://companion.hydroshare.org/'
-UPPY_UPLOAD_ENDPOINT = 'https://hydroshare.org/hsapi/tus/'
+UPPY_UPLOAD_PATH = '/hsapi/tus/'
 MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD = 50
 PARALLEL_UPLOADS_LIMIT = 10
 
@@ -928,13 +928,22 @@ local_settings = __import__(local_settings_module, globals(), locals(), ["*"])
 for k in dir(local_settings):
     locals()[k] = getattr(local_settings, k)
 
-if 'test' in sys.argv:
+if any('pytest' in arg for arg in sys.argv) or 'test' in sys.argv:
     import logging
 
     logging.disable(logging.CRITICAL)
     PASSWORD_HASHERS = [
         'django.contrib.auth.hashers.MD5PasswordHasher',
     ]
+
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': 'postgis',
+        'PORT': '5432',
+    }
 
 ####################
 # DYNAMIC SETTINGS #

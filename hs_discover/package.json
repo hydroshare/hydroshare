@@ -11,17 +11,17 @@
   },
   "main": "vue.config.js",
   "dependencies": {
-    "axios": "^1.6.0",
-    "bootstrap": "^4.4.1",
+    "axios": "^1.7.4",
+    "bootstrap": "^5.0.0",
     "bootstrap-vue": "^2.14.0",
     "braces": "^3.0.3",
     "core-js": "^3.8.3",
-    "express": "^4.19.2",
+    "express": "^4.21.2",
     "follow-redirects": "^1.15.6",
     "vue": "^2.6.11",
     "vue-date-pick": "^1.4.1",
     "vue-router": "^3.1.6",
-    "webpack": "^5.76.0"
+    "webpack": "^5.97.1"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~5.0.8",
