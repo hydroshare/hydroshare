@@ -1,0 +1,43 @@
+name: Sync Public Thredds compatible resources to the THREDDS S3 bucket
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check-and-sync:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Install MinIO CLI (mc)
+      run: |
+        curl -O https://dl.min.io/client/mc/release/linux-amd64/mc
+        chmod +x mc
+        sudo mv mc /usr/local/bin/mc
+
+    - name: Mirror HydroShare THREDDS compatibles public resources to THREDDS S3 bucket
+      env:
+        MC_HOST_hydroshare: https://${{ secrets.MINIO_PROD_ACCESS_KEY }}:${{ secrets.MINIO_PROD_SECRET_KEY }}@${{ secrets.MINIO_PROD_URL }}
+        MC_HOST_thredds: https://${{ secrets.THREDDS_S3_ACCESS_KEY }}:${{ secrets.THREDDS_S3_SECRET_KEY }}@${{ secrets.THREDDS_S3_URL }}
+      run: |
+        resources=$(curl -X GET "https://beta.hydroshare.org/hsapi/thredds/" -H  "accept: application/json" -H  "authorization: Basic ${{ secrets.HSAPI_AUTHORIZATION }}")
+        resource_ids=$(echo $resources | grep -o '"[^"]*"' | tr -d '"')
+        resource_ids_array=($resource_ids)
+        # drop resource_id from the array
+        resource_ids_array=("${resource_ids_array[@]:1}")
+        for resource_id in "${resource_ids_array[@]}"; do
+            bucket_name=$(curl -X GET "https://beta.hydroshare.org/hsapi/resource/$resource_id/quota_holder_bucket_name/" -H  "accept: application/json" -H  "authorization: Basic ${{ secrets.HSAPI_AUTHORIZATION }}")
+            echo $resource_id
+            mc mirror --overwrite --remove hydroshare/$bucket_name/$resource_id thredds/hydroshare-thredds-catalog/catalog/prod/$resource_id
+        done
+
+        thredds_resource_list=$(mc ls thredds/hydroshare-thredds-catalog/catalog/prod | awk '{print $5}' | sed 's:/*$::')
+
+        for resource_id in "${thredds_resource_list[@]}"; do
+            if [[ ! " ${resource_ids_array[@]} " =~ " ${resource_id} " ]]; then
+                echo "removing $resource_id"
+                # mc rm --recursive --force thredds/hydroshare-thredds-catalog/catalog/prod/$resource_id
+            fi
+        done

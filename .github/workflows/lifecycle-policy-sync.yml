@@ -1,0 +1,45 @@
+name: Ensures all buckets have a lifecycle policy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check-and-sync:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Install MinIO CLI (mc)
+      run: |
+        curl -O https://dl.min.io/client/mc/release/linux-amd64/mc
+        chmod +x mc
+        sudo mv mc /usr/local/bin/mc
+
+    - name: Check each bucket for a resource and add the default policy if no policy exists
+      env:
+        MC_HOST_hydroshare: https://${{ secrets.MINIO_PROD_ACCESS_KEY }}:${{ secrets.MINIO_PROD_SECRET_KEY }}@${{ secrets.MINIO_PROD_URL }}
+      run: |
+        command_output=$(mc ls hydroshare)
+        lines=()
+
+        # Read the command output line by line
+        while IFS= read -r line; do
+            lines+=("$line")
+        done <<< "$command_output"
+
+        # Loop over each line
+        for line in "${lines[@]}"; do
+            bucket_name=${line##* }
+            bucket_name=${bucket_name%/}
+            # Check if a rule already exists for the bucket
+            existing_rule=$(mc ilm rule ls hydroshare/$bucket_name)
+            if [[ -n "$existing_rule" ]]; then
+                command=""
+            else
+                echo "missing rule for $bucket_name"
+                command="mc ilm rule add --transition-days \"0\" --transition-tier \"GCS\" hydroshare/$bucket_name"
+                eval $command
+            fi
+        done

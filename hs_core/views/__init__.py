@@ -2430,6 +2430,22 @@ def hsapi_post_user_for_keycloak(request, user_identifier):
     return HttpResponse() if user.check_password(password) else HttpResponseBadRequest()
 
 
+@swagger_auto_schema(
+    method="get",
+    operation_description="Get list of public resource ids containing netcdf files compatible with THREDDS",
+    responses={200: "Returns JsonResponse with a list of resource ids"},
+)
+@api_view(["GET"])
+def hsapi_thredds_resource_list(request):
+    if not request.user.is_superuser:
+        msg = {"message": "Unauthorized"}
+        return JsonResponse(msg, status=401)
+    thredds_resources = BaseResource.objects.filter(raccess__public=True).filter(
+        Q(files__resource_file__endswith=".nc") |
+        Q(files__resource_file__endswith=".nc")).values_list('short_id', flat=True).distinct()
+    return JsonResponse({"resource_ids": list(thredds_resources)})
+
+
 @login_required
 def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs):
     """
