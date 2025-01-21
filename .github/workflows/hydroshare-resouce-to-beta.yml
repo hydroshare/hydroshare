@@ -59,31 +59,37 @@ jobs:
         mc alias set prod $PROD_URL $PROD_ACCESS_KEY $PROD_SECRET_KEY
         mc alias set beta $BETA_URL $BETA_ACCESS_KEY $BETA_SECRET_KEY
 
-    - name: Check and Sync Buckets for Resources
+    - name: Retrieve and Sync Buckets
       env:
         RESOURCE_IDS: ${{ github.event.inputs.resource_ids }}
+        ADMIN_AUTH: ${{ secrets.ADMIN_AUTH }}
       run: |
         echo "Processing resource IDs: $RESOURCE_IDS"
         IFS=',' read -ra RESOURCES <<< "$RESOURCE_IDS"
 
         for RESOURCE_ID in "${RESOURCES[@]}"; do
-          echo "Checking resource: $RESOURCE_ID"
+          echo "Fetching bucket name for resource: $RESOURCE_ID"
           
-          # Check if the bucket exists in production
-          if mc ls prod/$RESOURCE_ID >/data/contents 2>&1; then
-            echo "Bucket for $RESOURCE_ID exists in production. Checking beta..."
-            
-            # Check if the bucket exists in beta
-            if mc ls beta/$RESOURCE_ID >/data/contents 2>&1; then
-              echo "Bucket for $RESOURCE_ID already exists in beta."
-              mc mirror prod/$RESOURCE_ID beta/$RESOURCE_ID
-              echo "Bucket for $RESOURCE_ID copied successfully from production to beta."
-            else
-              echo "Bucket for $RESOURCE_ID does not exist in beta. Copying from production..."
-            fi
-          else
-            echo "Bucket for $RESOURCE_ID does not exist in production. Skipping."
+          # Fetch the bucket name using the API
+          BUCKET_NAME=$(curl -s -X GET "https://beta.hydroshare.org/hsapi/resource/$RESOURCE_ID/quota_holder_bucket_name/" \
+          -H "accept: application/json" \
+          -H "authorization: Basic $ADMIN_AUTH")
+
+          if [ -z "$BUCKET_NAME" ] || [ "$BUCKET_NAME" == "null" ]; then
+            echo "Error: Could not fetch bucket name for resource $RESOURCE_ID"
+            continue
           fi
+
+          echo "Bucket name for resource $RESOURCE_ID is $BUCKET_NAME"
+
+          # Ensure the bucket exists on the target
+          echo "Ensuring bucket $BUCKET_NAME exists on the target MinIO server..."
+          mc mb --ignore-existing beta/$BUCKET_NAME
+
+          # Sync the bucket
+          echo "Syncing bucket $BUCKET_NAME from prod to beta..."
+          mc mirror --remove --overwrite prod/$BUCKET_NAME beta/$BUCKET_NAME
+          echo "Sync for bucket $BUCKET_NAME completed successfully."
         done
 
     - name: Clean Up
