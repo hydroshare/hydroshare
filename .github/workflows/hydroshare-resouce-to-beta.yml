@@ -1,4 +1,4 @@
-name: MinIO Sync: Prod to Beta
+name: Prod to Beta
 
 on:
   workflow_dispatch:
