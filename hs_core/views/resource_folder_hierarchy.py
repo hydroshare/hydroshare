@@ -2,32 +2,35 @@ import json
 import logging
 import os
 
-from django.core.exceptions import SuspiciousFileOperation, ValidationError, ObjectDoesNotExist
-from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
-
+from django.core.exceptions import (ObjectDoesNotExist,
+                                    SuspiciousFileOperation, ValidationError)
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
-from rest_framework.exceptions import NotFound, status, PermissionDenied, \
-    ValidationError as DRF_ValidationError
+from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.exceptions import ValidationError as DRF_ValidationError
+from rest_framework.exceptions import status
 from rest_framework.response import Response
 
 from django_irods.icommands import SessionException
 from hs_core.hydroshare import delete_resource_file
-from hs_core.hydroshare.utils import get_file_mime_type, resolve_request, QuotaException
+from hs_core.hydroshare.utils import (QuotaException, get_file_mime_type,
+                                      resolve_request)
 from hs_core.models import ResourceFile
 from hs_core.task_utils import get_or_create_task_notification
 from hs_core.tasks import FileOverrideException, unzip_task
 from hs_core.views import utils as view_utils
-
-from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
-    create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
-    rename_file_or_folder, irods_path_is_directory, \
-    add_reference_url_to_resource, edit_reference_url_in_resource, zip_by_aggregation_file
-
-from hs_file_types.models import FileSetLogicalFile, ModelInstanceLogicalFile, ModelProgramLogicalFile
-
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-
+from hs_core.views.utils import (ACTION_TO_AUTHORIZE,
+                                 add_reference_url_to_resource, authorize,
+                                 create_folder, edit_reference_url_in_resource,
+                                 irods_path_is_directory, is_ajax,
+                                 move_or_rename_file_or_folder, move_to_folder,
+                                 remove_folder, rename_file_or_folder,
+                                 unzip_file, zip_by_aggregation_file,
+                                 zip_folder)
+from hs_file_types.models import (FileSetLogicalFile, ModelInstanceLogicalFile,
+                                  ModelProgramLogicalFile)
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +45,7 @@ def data_store_structure(request):
     where store_path is the relative path to res_id/data/contents
     """
     res_id = request.POST.get('res_id', None)
+    found_unreferenced_files = False   # flag to trigger ingest of unreferenced files
     if res_id is None:
         logger.error("no resource id in request")
         return HttpResponse('Bad request - resource id is not included',
@@ -97,7 +101,7 @@ def data_store_structure(request):
             # find if this folder *dir_path* represents (contains) an aggregation object
             aggregation_object = resource.get_folder_aggregation_object(dir_path, aggregations=res_aggregations)
             # folder aggregation type is not relevant for single file aggregation types - which
-            # are: GenericLogicalFile, and RefTimeseriesLogicalFile
+            # are: GenericLogicalFile, RefTimeseriesLogicalFile, and CSVLogicalFile
             if aggregation_object is not None:
                 folder_aggregation_type = aggregation_object.get_aggregation_class_name()
                 folder_aggregation_name = aggregation_object.get_aggregation_display_name()
@@ -143,6 +147,8 @@ def data_store_structure(request):
 
         if not res_file:
             # skip metadata files
+            if not resource.is_metadata_xml_file(f_store_path):
+                found_unreferenced_files = True
             continue
 
         size = store[2][index]
@@ -167,11 +173,12 @@ def data_store_structure(request):
                 # accept any extension
                 main_extension = ""
 
-            _ , file_extension = os.path.splitext(fname)
-            if file_extension and main_extension.endswith(file_extension):
+            _, file_extension = os.path.splitext(fname)
+            if file_extension and main_extension.endswith(file_extension) and main_extension != ".csv":
                 if not hasattr(res_file.logical_file, 'folder') or res_file.logical_file.folder is None:
                     aggregation_appkey = res_file.logical_file.metadata.extra_metadata.get(_APPKEY, '')
 
+                # these aggregations will be shown in the UI as virtual folders
                 aggregations.append({'logical_file_id': res_file.logical_file.id,
                                      'name': res_file.logical_file.dataset_name,
                                      'logical_type': res_file.logical_file.get_aggregation_class_name(),
@@ -216,6 +223,11 @@ def data_store_structure(request):
                      'folders': dirs,
                      'aggregations': aggregations,
                      'can_be_public': resource.can_be_public_or_discoverable}
+
+    if found_unreferenced_files:
+        from hs_core.management.utils import ingest_irods_files
+        ingest_irods_files(resource, None)
+        return data_store_structure(request)
 
     return HttpResponse(
         json.dumps(return_object),
@@ -453,7 +465,7 @@ def data_store_folder_unzip(request, **kwargs):
     remove_original_zip = request.POST.get('remove_original_zip', 'true').lower() == 'true'
     unzip_to_folder = request.POST.get('unzip_to_folder', 'false').lower() == 'true'
 
-    if request.is_ajax():
+    if is_ajax(request):
         task = unzip_task.apply_async((user.pk, res_id, zip_with_rel_path, remove_original_zip, overwrite,
                                        auto_aggregate, ingest_metadata, unzip_to_folder))
         task_id = task.task_id

@@ -20,6 +20,7 @@ from hs_file_types.models import (
     NetCDFLogicalFile,
     RefTimeseriesLogicalFile,
     TimeSeriesLogicalFile,
+    CSVLogicalFile,
 )
 from hs_file_types.tests.utils import CompositeResourceTestMixin
 from hs_file_types.views import (
@@ -82,6 +83,9 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
 
         self.text_file_name = 'generic_file.txt'
         self.text_file = 'hs_file_types/tests/{}'.format(self.text_file_name)
+
+        self.csv_file_name = 'csv_with_header_and_data.csv'
+        self.csv_file = 'hs_file_types/tests/data/{}'.format(self.csv_file_name)
 
     def test_create_raster_aggregation_from_file(self):
         # here we are using a valid raster tif file for setting it
@@ -297,6 +301,71 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.assertTrue(logical_file.metadata.is_dirty)
         # test that the update file (.nc file) state is false
         self.assertFalse(logical_file.metadata.is_update_file)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
+        self.composite_resource.delete()
+
+    def test_create_csv_aggregation_from_file(self):
+        # here we are using a valid csv file for setting it to CSV content type which
+        # includes metadata extraction
+
+        self.create_composite_resource(file_to_upload=self.csv_file)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
+
+        url_params = {'resource_id': self.composite_resource.short_id,
+                      'file_id': res_file.id,
+                      'hs_file_type': 'CSV'
+                      }
+        url = reverse('set_file_type', kwargs=url_params)
+        request = self.factory.post(url)
+        request.user = self.user
+        # this is the view function we are testing
+        response = set_file_type(request, resource_id=self.composite_resource.short_id,
+                                 file_id=res_file.id, hs_file_type='CSV')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # there should be still 1 file now
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        self.assertEqual(res_file.logical_file_type_name, "CSVLogicalFile")
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
+        self.composite_resource.delete()
+
+    def test_create_csv_aggregation_from_folder(self):
+        # here we are using a folder that contains a valid csv file for setting it
+        # to CSV content type which includes metadata extraction
+
+        self.create_composite_resource()
+        # create a folder to place the csv file
+        new_folder = 'csv_folder'
+        ResourceFile.create_folder(self.composite_resource, new_folder)
+        # add the csv file to the resource at the above folder
+        self.add_file_to_resource(file_to_add=self.csv_file, upload_folder=new_folder)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        self.assertEqual(res_file.file_folder, new_folder)
+
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
+        url_params = {'resource_id': self.composite_resource.short_id,
+                      'hs_file_type': 'CSV'
+                      }
+        post_data = {'folder_path': res_file.file_folder}
+        url = reverse('set_file_type', kwargs=url_params)
+        request = self.factory.post(url, data=post_data)
+        request.user = self.user
+        # this is the view function we are testing
+        response = set_file_type(request, resource_id=self.composite_resource.short_id,
+                                 file_id=res_file.id, hs_file_type='CSV')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # there should be still 1 file now
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        self.assertEqual(res_file.logical_file_type_name, "CSVLogicalFile")
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
@@ -583,7 +652,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         new_folder = 'new_folder'
         # ResourceFile.create_folder(self.composite_resource, new_folder)
         ResourceFile.create_folder(self.composite_resource, new_folder)
-        # add the the nc file to the resource at the above folder
+        # add the nc file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.netcdf_file, upload_folder=new_folder)
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
@@ -968,6 +1037,18 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self._test_update_dataset_name_aggregation(file_type="GenericLogicalFile",
                                                    dataset_name="Updated dataset name for "
                                                                 "single file aggregation")
+
+    def test_update_dataset_name_csv_aggregation(self):
+        # here we are testing 'update_dataset_name' view function for updating dataset name
+        # for csv aggregation
+
+        self.create_composite_resource(file_to_upload=self.csv_file)
+        res_file = self.composite_resource.files.first()
+
+        # set the csv file to CSVLogicalFile type
+        CSVLogicalFile.set_file_type(self.composite_resource, self.user, res_file.id)
+        self._test_update_dataset_name_aggregation(file_type="CSVLogicalFile",
+                                                   dataset_name="Logan river water temperatures by year")
 
     def test_update_dataset_name_raster_aggregation(self):
         # here we are testing 'update_dataset_name' view function for updating dataset name
@@ -1665,7 +1746,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.create_composite_resource()
         new_folder = 'fileset_folder'
         ResourceFile.create_folder(self.composite_resource, new_folder)
-        # add the the text file to the resource at the above folder
+        # add the text file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.text_file, upload_folder=new_folder)
 
         # set the folder to file set aggregation
@@ -1867,7 +1948,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
     def add_session_to_request(request):
         """Use SessionMiddleware to add a session to the request."""
         """Annotate a request object with a session"""
-        middleware = SessionMiddleware()
+        middleware = SessionMiddleware(request)
         middleware.process_request(request)
         request.session.save()
 

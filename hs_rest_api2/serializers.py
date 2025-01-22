@@ -5,7 +5,7 @@ from hsmodels.schemas import (FileSetMetadata, GeographicFeatureMetadata,
                               GeographicRasterMetadata,
                               MultidimensionalMetadata,
                               ReferencedTimeSeriesMetadata, ResourceMetadata,
-                              SingleFileMetadata, TimeSeriesMetadata)
+                              SingleFileMetadata, TimeSeriesMetadata, CSVFileMetadata)
 from hsmodels.schemas.aggregations import (FileSetMetadataIn,
                                            GeographicFeatureMetadataIn,
                                            GeographicRasterMetadataIn,
@@ -16,7 +16,8 @@ from hsmodels.schemas.aggregations import (FileSetMetadataIn,
                                            MultidimensionalMetadataIn,
                                            ReferencedTimeSeriesMetadataIn,
                                            SingleFileMetadataIn,
-                                           TimeSeriesMetadataIn)
+                                           TimeSeriesMetadataIn,
+                                           CSVFileMetadataIn,)
 from hsmodels.schemas.resource import ResourceMetadataIn
 from pydantic import ConfigDict
 from rest_framework.serializers import Serializer
@@ -104,6 +105,20 @@ class SingleFileMetadataInSerializer(Serializer):
         swagger_schema_fields = get_schema_open_api_v2(_schema)
 
 
+class CSVFileMetadataSerializer(Serializer):
+    class Meta:
+        fields = "__all__"
+        swagger_schema_fields = get_schema_open_api_v2(CSVFileMetadata.model_json_schema())
+
+
+class CSVFileMetadataInSerializer(Serializer):
+    class Meta:
+        fields = "__all__"
+        _schema = CSVFileMetadataIn.model_json_schema()
+        _schema['title'] = _schema['title'] + " In"
+        swagger_schema_fields = get_schema_open_api_v2(_schema)
+
+
 class FileSetMetadataSerializer(Serializer):
     class Meta:
         fields = "__all__"
@@ -183,7 +198,7 @@ class NestedSchemaGenerator(OpenAPISchemaGenerator):
         swagger = super(NestedSchemaGenerator, self).get_schema(request, public)
         for model in [ResourceMetadata, GeographicFeatureMetadata, GeographicRasterMetadata, MultidimensionalMetadata,
                       SingleFileMetadata, FileSetMetadata, TimeSeriesMetadata, ReferencedTimeSeriesMetadata,
-                      ModelProgramMetadata]:
+                      ModelProgramMetadata, CSVFileMetadata]:
             schema = model.model_json_schema()
             schema = get_schema_open_api_v2(schema)
 

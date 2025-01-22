@@ -28,10 +28,13 @@ class ForgivingManifestFilesMixin(ManifestFilesMixin):
 
 
 class ForgivingManifestStaticFilesStorage(ForgivingManifestFilesMixin, ManifestStaticFilesStorage):
-    pass
+
+    # https://docs.djangoproject.com/en/4.2/ref/contrib/staticfiles/#django.contrib.staticfiles.storage.ManifestStaticFilesStorage
+    support_js_module_import_aggregation = True
 
 
 class ManifestGoogleCloudStorage(ForgivingManifestFilesMixin, GoogleCloudStorage):
+    support_js_module_import_aggregation = True
 
     def path(self, name):
         # https://docs.djangoproject.com/en/3.2/ref/files/storage/#django.core.files.storage.Storage.path

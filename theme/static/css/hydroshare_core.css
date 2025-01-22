@@ -893,6 +893,10 @@ table.info-table > tbody > tr > td {
     background-color: #708a97;
 }
 
+.res-header .agg-csv_content {
+    background-color: #757683;
+}
+
 table.info-table {
 	margin-bottom: 20px;
 	word-break: break-word;
@@ -4559,8 +4563,23 @@ span.caption-file-type {
 }
 
 
+.btn-remove-fa {
+	font-size: 14px;
+	
+}
+
 .btn-remove {
 	font-size: 18px;
+	
+}
+
+.small-red-trash { 
+	color: red; font-size: 14px;  }
+
+.delete-text {
+	font-size: 14px;
+	margin-left: 1px;
+	color: red;
 }
 
 .dz-details .fa-file-o {

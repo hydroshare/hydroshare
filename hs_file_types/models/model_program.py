@@ -1,21 +1,22 @@
 import glob
 import json
 import os
+from urllib.parse import urlparse
 
 import jsonschema
-from urllib.parse import urlparse
+from dateutil import parser
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
-from django.template import Template, Context
+from django.template import Context, Template
 from dominate import tags as dom_tags
 from rdflib import Literal, URIRef
-from dateutil import parser
 
 from hs_core.hs_rdf import HSTERMS
 from hs_core.hydroshare import current_site_url
 from hs_core.models import ResourceFile
+
 from .base_model_program_instance import AbstractModelLogicalFile
 from .generic import GenericFileMetaDataMixin
 
@@ -123,7 +124,14 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
         can be regenerated for those linked model instance aggregations"""
 
         mp_aggr = self.logical_file
-        for mi_metadata in mp_aggr.mi_metadata_objects.all():
+        try:
+            # this query using reverse relation will raise ValueError if there are no related mi metadata objects
+            # this seems to be a problem in django 4.2
+            mi_metadata_objects = list(mp_aggr.mi_metadata_objects.all())
+        except ValueError:
+            mi_metadata_objects = []
+
+        for mi_metadata in mi_metadata_objects:
             mi_metadata.is_dirty = True
             mi_metadata.save(update_fields=["is_dirty"])
 
@@ -485,8 +493,14 @@ class ModelProgramLogicalFile(AbstractModelLogicalFile):
         """Overriding the base model delete() method to set any associated
         model instance aggregation metadata to dirty so that xml metadata file
         can be regenerated"""
+        try:
+            # this query using reverse relation will raise ValueError if there are no related mi metadata objects
+            # this seems to be a problem in django 4.2
+            mi_metadata_objects = list(self.mi_metadata_objects.all())
+        except ValueError:
+            mi_metadata_objects = []
 
-        for mi_metadata in self.mi_metadata_objects.all():
+        for mi_metadata in mi_metadata_objects:
             mi_metadata.is_dirty = True
             mi_metadata.save(update_fields=["is_dirty"])
 

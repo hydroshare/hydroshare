@@ -43,6 +43,26 @@ services:
       - "54322:5432"
     stdin_open: true
     tty: true
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: pgbouncer
+    environment:
+      DB_HOST: postgis
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      DB_NAME: "postgres"
+      DB_PORT: 5432
+      LISTEN_ADDR: "*"
+      LISTEN_PORT: 6432
+      POOL_MODE: "transaction"
+      AUTH_TYPE: "plain"
+      MAX_CLIENT_CONN: 1000
+      DEFAULT_POOL_SIZE: 5
+      MIN_POOL_SIZE: 2
+    ports:
+      - "6432:6432"
+    depends_on:
+      - postgis
   rabbitmq:
     image: rabbitmq:3.8.2
     container_name: rabbitmq
@@ -68,8 +88,8 @@ services:
       - "/dev/fuse"
     privileged: true
     environment:
-      POSTGIS_HOST: postgis
-      POSTGIS_PORT: 5432
+      POSTGIS_HOST: pgbouncer
+      POSTGIS_PORT: 6432
       POSTGIS_PASSWORD: postgres
       POSTGIS_DB: postgres
       POSTGIS_USER: postgres
@@ -78,7 +98,8 @@ services:
       SOLR_PORT_8983_TCP_ADDR: solr
       SOLR_HOST: solr
       TMP: /tmp
-      POSTGIS_PORT_5432_TCP_ADDR: postgis
+      POSTGIS_PORT_5432_TCP_ADDR: pgbouncer
+      POSTGIS_DISABLE_SERVER_SIDE_CURSORS: "True"
       HS_PATH: ${PWD}
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
@@ -99,6 +120,7 @@ services:
       - data.local.org:data.local.org
     depends_on:
       - postgis
+      - pgbouncer
       - solr
       - rabbitmq
       - data.local.org
@@ -112,10 +134,11 @@ services:
     container_name: defaultworker
     hostname: defaultworker
     environment:
-      POSTGIS_HOST: postgis
-      POSTGIS_PORT: 5432
+      POSTGIS_HOST: pgbouncer
+      POSTGIS_PORT: 6432
       POSTGIS_PASSWORD: postgres
       POSTGIS_DB: postgres
+      POSTGIS_USER: postgres
       PGPASSWORD: postgres
       C_FORCE_ROOT: 1
       RABBITMQ_PORT_5672_TCP_ADDR: rabbitmq
@@ -131,18 +154,72 @@ services:
     volumes:
       - ".:/hydroshare"
     links:
-      - postgis:postgis
+      - pgbouncer:pgbouncer
       - rabbitmq:rabbitmq
       - data.local.org:data.local.org
     depends_on:
       - hydroshare
-      - postgis
+      - pgbouncer
       - solr
       - rabbitmq
       - data.local.org
     stdin_open: true
     tty: true
     command: /bin/bash init-defaultworker
+  companion:
+  # https://github.com/transloadit/uppy/blob/main/packages/%40uppy/companion/KUBERNETES.md
+    image:  docker.io/transloadit/companion:5.2.0
+    container_name: companion
+    hostname: companion
+    environment:
+      COMPANION_PORT: '3020'
+      COMPANION_CLIENT_ORIGINS: 'https://localhost'
+      # when testing 3rd party services like google drive, you will access hydroshare at http://host.docker.internal:8000
+      # you will need to add a line in your /etc/hosts file to map host.docker.internal to localhost
+      COMPANION_UPLOAD_URLS: 'https://localhost/hsapi/tus/*'
+      COMPANION_DATADIR: '/mnt/companion-data'
+      COMPANION_DOMAIN: 'localhost'
+      COMPANION_PATH: '/companion'
+      COMPANION_ALLOW_LOCAL_URLS: 'true'
+      COMPANION_PROTOCOL: 'https'
+      COMPANION_REDIS_URL: 'redis://:superSecretPassword@redis:6379'
+      COMPANION_CHUNK_SIZE: '100000000'  # ~72MB
+      # COMPANION_PREAUTH_SECRET: 'another secret'
+      # For 3rd party services like google drive to work locally, you need to set the following:
+      COMPANION_SECRET: 'SECRET'
+      # Intentionally added to repo for testing purposes
+      COMPANION_GOOGLE_KEY: '737951655407-p3d2b2bl2ln90g5plfj09e98bprk42da.apps.googleusercontent.com'
+      COMPANION_GOOGLE_SECRET: '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'
+      # https://uppy.io/docs/companion/#enablegooglepickerendpoint-companion_enable_google_picker_endpoint
+      COMPANION_ENABLE_GOOGLE_PICKER_ENDPOINT: 'true'
+    ports:
+      - "3020:3020"
+    volumes:
+      - "companion_vol:/mnt/companion-data"
+    depends_on:
+      - redis
+  redis:
+    image: redis:latest
+    container_name: redis
+    hostname: redis
+    environment:
+      REDIS_PASSWORD: 'superSecretPassword'
+    ports:
+      - "6379:6379"
+    volumes:
+      - "redis_data_vol:/data"
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx-local-dev.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/config:/etc/ssl
+    depends_on:
+      - hydroshare
+      - companion
 volumes:
   idata_iconf_vol:
   idata_vault_vol:
@@ -153,3 +230,5 @@ volumes:
   temp_vol:
   share_vol:
   rabbitmq_data_vol:
+  redis_data_vol:
+  companion_vol:

@@ -19,9 +19,10 @@
                 </a>
                 {%  if user.is_authenticated %}
                     {% if comment.user == user or user.is_superuser or self_access_level == 'owner' %}
-                        <span comment-id="{{ comment.id }}"
-                              class="glyphicon glyphicon-trash btn-remove icon-button btn-confirm-delete-comment"
-                             title="Delete Reply">{% trans "Delete" %}</span>
+                    <a comment-id="{{ comment.id }}" class="btn-confirm-delete-comment" style="text-decoration: none; cursor: pointer;">    
+                        <span 
+                                  class="glyphicon glyphicon-trash btn-remove-fa small-red-trash"
+                                 title="Delete Reply"></span> <span class="delete-text">{% trans "Delete" %}</span> </a>
                     {% endif %}
                 {% endif %}
                 {% if settings.COMMENTS_USE_RATINGS %}

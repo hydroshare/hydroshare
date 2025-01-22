@@ -40,12 +40,18 @@ from hs_core.hydroshare.resource import (deposit_res_metadata_with_crossref,
                                          get_resource_doi, update_quota_usage,)
 from hs_core.models import BaseResource, ResourceFile, TaskNotification
 from hs_core.task_utils import get_or_create_task_notification
-from hs_file_types.models import (FileSetLogicalFile, GenericLogicalFile,
-                                  GeoFeatureLogicalFile, GeoRasterLogicalFile,
-                                  ModelInstanceLogicalFile,
-                                  ModelProgramLogicalFile, NetCDFLogicalFile,
-                                  RefTimeseriesLogicalFile,
-                                  TimeSeriesLogicalFile)
+from hs_file_types.models import (
+    FileSetLogicalFile,
+    GenericLogicalFile,
+    GeoFeatureLogicalFile,
+    GeoRasterLogicalFile,
+    ModelInstanceLogicalFile,
+    ModelProgramLogicalFile,
+    NetCDFLogicalFile,
+    RefTimeseriesLogicalFile,
+    TimeSeriesLogicalFile,
+    CSVLogicalFile,
+)
 from hs_odm2.models import ODM2Variable
 from hydroshare.hydrocelery import app as celery_app
 from theme.models import QuotaMessage, User, UserQuota
@@ -58,7 +64,8 @@ FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
                  "RefTimeseriesLogicalFile": RefTimeseriesLogicalFile,
                  "TimeSeriesLogicalFile": TimeSeriesLogicalFile,
                  "ModelProgramLogicalFile": ModelProgramLogicalFile,
-                 "ModelInstanceLogicalFile": ModelInstanceLogicalFile
+                 "ModelInstanceLogicalFile": ModelInstanceLogicalFile,
+                 "CSVLogicalFile": CSVLogicalFile,
                  }
 
 # Pass 'django' into getLogger instead of __name__
@@ -127,9 +134,9 @@ def setup_periodic_tasks(sender, **kwargs):
                                  options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=30, hour=6), nightly_periodic_task_check.s(),
                                  options={'queue': 'periodic'})
-
-        # Weekly
-        sender.add_periodic_task(crontab(minute=0, hour=7, day_of_week=1), task_notification_cleanup.s(),
+        sender.add_periodic_task(crontab(minute=0, hour=7), daily_cleanup_tus_uploads.s(),
+                                 options={'queue': 'periodic'})
+        sender.add_periodic_task(crontab(minute=30, hour=7), task_notification_cleanup.s(),
                                  options={'queue': 'periodic'})
 
         # Monthly
@@ -140,6 +147,21 @@ def setup_periodic_tasks(sender, **kwargs):
         sender.add_periodic_task(
             crontab(minute=30, hour=8, day_of_month=1), monthly_group_membership_requests_cleanup.s(),
             options={'queue': 'periodic'})
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def daily_cleanup_tus_uploads():
+    """Periodic task to cleanup partial TUS uploads that remain in TUS_UPLOAD_DIR.
+    """
+    # remove all files from the TUS_UPLOAD_DIR that are older than 24 hours
+    tus_upload_dir = settings.TUS_UPLOAD_DIR
+    if os.path.exists(tus_upload_dir):
+        for f in os.listdir(tus_upload_dir):
+            file_path = os.path.join(tus_upload_dir, f)
+            if os.path.isfile(file_path):
+                file_time = os.path.getmtime(file_path)
+                if (time.time() - file_time) > 86400:  # 24 hours in seconds
+                    os.remove(file_path)
 
 
 # Currently there are two different cleanups scheduled.
@@ -1228,10 +1250,10 @@ def update_task_notification(sender=None, task_id=None, task=None, state=None, r
 @celery_app.task(ignore_result=True, base=HydroshareTask)
 def task_notification_cleanup():
     """
-    Delete expired task notifications each week
+    Delete expired task notifications every day
     """
-    week_ago = datetime.today() - timedelta(days=7)
-    TaskNotification.objects.filter(created__lte=week_ago).delete()
+    day_ago = datetime.today() - timedelta(days=1)
+    TaskNotification.objects.filter(created__lte=day_ago).delete()
 
 
 @shared_task

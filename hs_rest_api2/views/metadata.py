@@ -114,6 +114,16 @@ def single_file_metadata_json(request, pk, aggregation_path):
     return aggregation_metadata_json(request, pk, aggregation_path)
 
 
+@swagger_auto_schema(method='put', request_body=serializers.CSVFileMetadataInSerializer, response={204: None},
+                     responses={200: serializers.CSVFileMetadataSerializer},
+                     operation_description="Update CSV File aggregation metadata with json",)
+@swagger_auto_schema(method='get', responses={200: serializers.CSVFileMetadataSerializer},
+                     operation_description="Get CSV File aggregation metadata json")
+@api_view(['GET', 'PUT'])
+def csv_file_metadata_json(request, pk, aggregation_path):
+    return aggregation_metadata_json(request, pk, aggregation_path)
+
+
 @swagger_auto_schema(method='put', request_body=serializers.ModelProgramMetadataInSerializer, response={204: None},
                      responses={200: serializers.ModelProgramMetadataSerializer},
                      operation_description="Update Model Program aggregation metadata with json",)

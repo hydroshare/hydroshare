@@ -6,7 +6,7 @@ from django.urls import reverse
 from hsmodels.schemas.resource import ResourceMetadataIn
 from hsmodels.schemas.aggregations import GeographicFeatureMetadataIn, GeographicRasterMetadataIn, \
     MultidimensionalMetadataIn, SingleFileMetadataIn, FileSetMetadataIn, TimeSeriesMetadataIn, \
-    ReferencedTimeSeriesMetadataIn, ModelProgramMetadataIn, ModelInstanceMetadataIn
+    ReferencedTimeSeriesMetadataIn, ModelProgramMetadataIn, ModelInstanceMetadataIn, CSVFileMetadataIn
 from rest_framework import status
 
 from hs_core.hydroshare import resource, current_site_url
@@ -111,7 +111,7 @@ class TestFileBasedJSON(HSRESTTestCase):
         prepare_resource(self, "resource")
         self._test_metadata_update_retrieve("hsapi2:resource_metadata_json", ResourceMetadataIn, "resource.json")
 
-    def test_reference_timerseries_metadata_update_retrieve(self):
+    def test_reference_timeseries_metadata_update_retrieve(self):
         prepare_resource(self, "reference_timeseries")
         self._test_metadata_update_retrieve("hsapi2:referenced_time_series_metadata_json",
                                             ReferencedTimeSeriesMetadataIn, "referencedtimeseries.refts.json",
@@ -146,6 +146,11 @@ class TestFileBasedJSON(HSRESTTestCase):
         prepare_resource(self, "single_file")
         self._test_metadata_update_retrieve("hsapi2:single_file_metadata_json", SingleFileMetadataIn,
                                             "singlefile.json", "test.xml")
+
+    def test_csv_file_metadata_update_retrieve(self):
+        prepare_resource(self, "csv_file")
+        self._test_metadata_update_retrieve("hsapi2:csv_file_metadata_json", CSVFileMetadataIn,
+                                            "csvfile.json", "csv_test_modified.csv")
 
     def test_model_program_metadata_update_retrieve(self):
         prepare_resource(self, "model_program")

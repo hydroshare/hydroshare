@@ -395,7 +395,7 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
         <description>This is a test abstract</description>
         <fr:program name="fundref">
           <fr:assertion name="fundgroup">
-            <fr:assertion name="funder_name">National Science Foundation<fr:assertion name="funder_identifier">http://dx.doi.org/10.13039/100000001</fr:assertion></fr:assertion>
+            <fr:assertion name="funder_name">National Science Foundation<fr:assertion name="funder_identifier">https://ror.org/021nxhr62</fr:assertion></fr:assertion>
             <fr:assertion name="award_number">12345</fr:assertion>
           </fr:assertion>
           <fr:assertion name="fundgroup">

@@ -54,7 +54,7 @@
 {% endblock %}
 
 {% endcompress %}
-{% include 'autocomplete_light/static.html' %}
+{#{% include 'autocomplete_light/static.html' %}#}
 
 {% block extra_head %}{% endblock %}
 {% if not page|is_debug %}
@@ -63,6 +63,9 @@
       heap.load("1320547260");
 </script>
 {% endif %}
+<script>
+    const STATIC_URL = "{{ STATIC_URL }}" || "/static/static/";
+</script>
 </head>
 
 <body id="{% block body_id %}body{% endblock %}">
@@ -125,6 +128,9 @@
             {% block main %}{% endblock %}
             {% block after_main %}{% endblock %}
             {% include "pages/site-wide-modals.html" %}
+
+            {# ======= Uppy for large file upload ======= #}
+            {% include "uppy.html" %}
         </div>
     {% endblock %}
 

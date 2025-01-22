@@ -15,6 +15,7 @@
     <link rel='stylesheet' type='text/css' href="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/leaflet.fullscreen.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
 
+
 {# ======= JSON-LD Structure ======= #}
 <script id="schemaorg" type="application/ld+json">
 {
@@ -61,7 +62,7 @@
     ],
     {% endif %}
     "creator": {{ creators | creator_json_ld_element | safe }},
-    {# There is discussion about adding more linked data fields for referenced items #} 
+    {# There is discussion about adding more linked data fields for referenced items #}
     {# https://github.com/hydroshare/hydroshare/issues/4566#issuecomment-1124283370 #}
     {% if geospatial_relations %}
     "about": [
@@ -284,7 +285,7 @@
                         <span class="glyphicon glyphicon-trash icon-button btn-remove"></span>
                         <span>Delete</span>
                     </li>
-                    {% if max_file_size > 0 %}
+                    {% if remaining_quota is None or remaining_quota > 0 %}
                         <li id="zip-separator" role="separator" class="divider"></li>
 
                         <li id="btn-zip" data-menu-name="zip" data-toggle="modal" data-fb-action="zip"
@@ -406,6 +407,13 @@
                                  alt="Model Instance Aggregation Icon" class="resource-type-icon"/>
                                 <span>Model Instance</span>
                             </li>
+                            <li id="btn-set-csv-file-type" data-menu-name="setcsvfiletype"
+                                data-toggle="tooltip" data-placement="right" data-fb-action="setCSVFileType"
+                                title="Convert to a CSV dataset to which you can add metadata">
+                                <img src="{% static 'img/resource-icons/filetype-csv.svg' %}"
+                                 alt="CSV Aggregation Icon" class="resource-type-icon" width="25" height="20"/>
+                                <span>CSV</span>
+                            </li>
                         </ul>
                     </li>
                     <li data-fb-action="removeAggregation"
@@ -431,7 +439,7 @@
                             <span class="fa fa-folder icon-blue"></span>
                             <span>New folder</span>
                         </li>
-                        {% if max_file_size > 0 %}
+                        {% if remaining_quota is None or remaining_quota > 0 %}
                             <li id="menu-add-reference" data-menu-name="add-reference" data-toggle="modal"
                                 data-fb-action="createFolder"
                                 data-target="#add-reference-url-dialog">
@@ -460,10 +468,10 @@
 
             <div class="col-xs-12 content-block">
                 <h3>
-                  <span>Content</span> 
+                  <span>Content</span>
                   {% if resource_edit_mode %}
                   <a data-toggle="tooltip" data-placement="auto"
-                      href="https://www.youtube.com/watch?v=wTPGJY9-k18" target="_blank"
+                      href="https://youtu.be/O7hxoIEcky8?si=FO9tEJrQiGNhRM1j" target="_blank"
                       title='How to: Upload Files to a HydroShare Resource'
                       class="fa fa-youtube-play icon-red no-decoration has-space-left icon-guide">
                   </a>
@@ -507,7 +515,7 @@
                 {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                     {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
                         <div id="fb-alerts">
-                            {% if max_file_size > 0 %}
+                            {% if remaining_quota is None or remaining_quota > 0 %}
                                 <div class="alert alert-warning alert-dismissible" role="alert">
                                     <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                                         <span aria-hidden="true">&times;</span>
@@ -692,7 +700,7 @@
                                         <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12">
                                             {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                                                 {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
-                                                    <a {% if max_file_size <= 0 %}disabled{% endif %} type="button" data-fb-action="uploadFiles"
+                                                    <a {% if remaining_quota <= 0 %}disabled{% endif %} id="uppy-modal-trigger" type="button" data-fb-action="uploadFiles"
                                                        class="btn btn-success btn-xs dz-clickable upload-toggle">
                                                         <i class="fa fa-plus"></i> Add files
                                                     </a>
@@ -703,7 +711,7 @@
                                                                 data-toggle="dropdown" aria-haspopup="true"
                                                                 title="Add files from an iRODS server"
                                                                 aria-expanded="false"
-                                                                {% if max_file_size <= 0 %}disabled{% endif %}>
+                                                                {% if remaining_quota <= 0 %}disabled{% endif %}>
                                                             <span>iRODS</span>&nbsp;<span class="caret"></span>
                                                         </button>
 
@@ -745,8 +753,8 @@
                                                             title="Create new folder">
                                                         <span class="fa fa-folder icon-blue"></span>
                                                     </button>
-                                                    {% if max_file_size > 0 %}
-                                                        <button id="fb-add-reference" class="fb-space-right {% if max_file_size <= 0 %}disabled{% endif %}"
+                                                    {% if remaining_quota is None or remaining_quota > 0 %}
+                                                        <button id="fb-add-reference" class="fb-space-right {% if remaining_quota <= 0 %}disabled{% endif %}"
                                                                 data-fb-action="createFolder"
                                                                 data-toggle="modal"
                                                                 data-target="#add-reference-url-dialog"
@@ -775,24 +783,26 @@
                                                     </button>
                                                 {% endif %}
 
-                                                {% if cm.resource_type == "CompositeResource" and max_file_size > 0 %}
-                                                    <button id="fb-zip" data-fb-action="zip"
-                                                            class="disabled"
-                                                            title="Zip folder" data-toggle="modal"
-                                                            data-target="#zip-folder-dialog">
-                                                        <span class="glyphicon glyphicon-compressed icon-blue"></span>
-                                                    </button>
+                                                {% if cm.resource_type == "CompositeResource" %}
+                                                    {% if remaining_quota is None or remaining_quota > 0 %}
+                                                        <button id="fb-zip" data-fb-action="zip"
+                                                                class="disabled"
+                                                                title="Zip folder" data-toggle="modal"
+                                                                data-target="#zip-folder-dialog">
+                                                            <span class="glyphicon glyphicon-compressed icon-blue"></span>
+                                                        </button>
 
-                                                    <button id="fb-unzip" data-fb-action="unzip"
-                                                            class="disabled fb-space-right"
-                                                            title="Unzip here">
-                                                        <span class="fa fa-file-archive-o icon-blue"></span>
-                                                    </button>
-                                                    <button id="fb-unzip-to-folder" data-fb-action="unzipToFolder"
-                                                            class="disabled fb-space-right"
-                                                            title="Unzip to folder">
-                                                        <span class="fa fa-file-archive-o icon-blue"></span>
-                                                    </button>
+                                                        <button id="fb-unzip" data-fb-action="unzip"
+                                                                class="disabled fb-space-right"
+                                                                title="Unzip here">
+                                                            <span class="fa fa-file-archive-o icon-blue"></span>
+                                                        </button>
+                                                        <button id="fb-unzip-to-folder" data-fb-action="unzipToFolder"
+                                                                class="disabled fb-space-right"
+                                                                title="Unzip to folder">
+                                                            <span class="fa fa-file-archive-o icon-blue"></span>
+                                                        </button>
+                                                    {% endif %}
                                                 {% endif %}
                                             {% endif %}
 
@@ -858,6 +868,13 @@
                             </div>
                             <div class="fb-content-wrapper">
                                 <div class="fb-dropzone-wrapper{% if cm.resource_type == "CompositeResource" %} ui-resizable{% endif %}">
+                                    {% comment %}
+                                        This upload could be chunked with Tus protocol
+                                        Dropzone allows chunking https://docs.dropzone.dev/configuration/basics/configuration-options
+                                        However not using TUS protocol. 
+                                        So could use the tus-js-client library to implement chunking but do so within the Dropzone event handlers.
+                                        https://github.com/tus/tus-js-client/blob/main/demos/browser/demo.js#L38.
+                                    {% endcomment %}
                                     <form id="hsDropzone"
                                         class="files-container h-100 ui-widget-content {% if page.perms.change and resource_edit_mode and not cm.raccess.published_or_review_pending or current_user.is_superuser %}dropzone{% endif %}"
                                         action="/hsapi/_internal/{{ cm.short_id }}/add-files-to-resource/"
@@ -887,11 +904,11 @@
 
                                     {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                                         {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
-                                            {% if max_file_size > 0 %}
+                                            {% if remaining_quota > 0 or remaining_quota is None %}
                                                 <div class="fb-upload-caption">
                                                     <i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;
-                                                    Upload files smaller than {{ max_file_size_for_display|floatformat:"0" }}GB in size by dragging & dropping, or click 
-                                                    <a class="dz-clickable upload-toggle">here</a> to select them. Uploads > 1GB are still in beta. Uploads are not resumable.
+                                                    Upload files up to {{ file_upload_max_size|filesizeformat }} in size by dragging & dropping.
+                                                    {% if remaining_quota > 0 %} Remaining quota: {{ remaining_quota|filesizeformat }}.{% endif %}
                                                 </div>
                                             {% endif %}
                                         {% endif %}
@@ -1023,7 +1040,7 @@
       const SHORT_ID = "{{ cm.short_id }}";
       var global_num_ext_refs = 0;
       var global_custom_citation = "{{ custom_citation }}";
-      const MAX_FILE_SIZE = {{ max_file_size }};
+      const REMAINING_QUOTA = {{ remaining_quota|default:"null" }};
       $.ajax({
         type: "GET",
         url: '/hsapi/_internal/' + SHORT_ID + '/list-referenced-content/',
@@ -1036,7 +1053,7 @@
       const RES_KEYWORDS = {{ keywords|safe }};
       const RES_FUNDING_AGENCIES = [
         {% for agency in fundingagencies %}
-            {   
+            {
                 "agency_id": "{{ agency.id }}",
                 "award_number": "{{ agency.award_number }}",
                 "award_title": "{{ agency.award_title | escapejs }}",
@@ -1054,7 +1071,6 @@
       const RESOURCE_MODE = "{% if resource_edit_mode %}Edit{% else %}View{% endif %}";
       const RESOURCE_PUBLISHED_OR_UNDER_REVIEW = "{{ cm.raccess.published_or_review_pending }}" === "True";
       const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
-      let STATIC_URL = "{{ STATIC_URL }}";
       const USERS_JSON = {{ users_json|safe }};
       const AUTHORS = [
           {% for author in creators %}
@@ -1111,13 +1127,12 @@
     <script src="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/Leaflet.fullscreen.min.js" crossorigin=""></script>
     <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     <script type="text/javascript" src="{% static 'js/coverageMap.js' %}"></script>
-    <script type="text/javascript" src="{% static 'js/dropzone.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/hs-file-icons.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/hs_file_browser.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/resourceLandingAjax.js' %}"></script>
     <script type="text/javascript" charset="utf8" src="{% static 'js/jquery.dataTables.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/copyToClipboard.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/generic-resource.js' %}"></script>
-
+    {#the following loads the asset for the DAL autocomplete#}
+    {{ add_view_resource_permission_form.media }}
 {% endblock %}
-

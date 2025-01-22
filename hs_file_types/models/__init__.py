@@ -8,3 +8,4 @@ from .timeseries import TimeSeriesFileMetaData, TimeSeriesLogicalFile     # noqa
 from .fileset import FileSetMetaData, FileSetLogicalFile     # noqa
 from .model_program import ModelProgramFileMetaData, ModelProgramLogicalFile, ModelProgramResourceFileType    # noqa
 from .model_instance import ModelInstanceFileMetaData, ModelInstanceLogicalFile  # noqa
+from .csv import CSVFileMetaData, CSVLogicalFile, CSVMetaSchemaModel  # noqa
