@@ -406,8 +406,6 @@ do
 done
 
 # discover entrypoint script replaces bucket paths in the hs_discover static files
-# cd /hydroshare
-# chmod +x discover-entrypoint.sh
 echo "  -docker exec hydroshare discover-entrypoint.sh"
 docker exec hydroshare ./discover-entrypoint.sh
 
