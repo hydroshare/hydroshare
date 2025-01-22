@@ -487,15 +487,15 @@ class QuotaRequest(models.Model):
 
         date = self.date_requested.strftime("%m/%d/%Y, %H:%M:%S")
         email_msg = f'''Dear Hydroshare User,
-        <p>On { date }, you requested { self.storage } GB increase in quota.</p>
-        <p>Here is the justification you provided: <strong>'{ self.justification }'</strong></p>
+        <p>On {date}, you requested {self.storage} GB increase in quota.</p>
+        <p>Here is the justification you provided: <strong>'{self.justification}'</strong></p>
 
-        <p>Your request for Quota increase has been reviewed and { self.status }.</p>
+        <p>Your request for Quota increase has been reviewed and {self.status}.</p>
 
         <p>Thank you,</p>
         <p>The HydroShare Team</p>
         '''
-        send_mail(subject=f"HydroShare request for Quota increase { self.status }",
+        send_mail(subject=f"HydroShare request for Quota increase {self.status}",
                   message=email_msg,
                   html_message=email_msg,
                   from_email=settings.DEFAULT_FROM_EMAIL,

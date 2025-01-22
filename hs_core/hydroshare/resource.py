@@ -26,7 +26,7 @@ from theme.models import UserQuota
 from hs_core.enums import CrossRefSubmissionStatus
 
 FILE_UPLOAD_MAX_SIZE = getattr(settings, 'FILE_UPLOAD_MAX_SIZE', 25 * 1024**3)  # FILE_UPLOAD_MAX_SIZE is in bytes
-FILE_SIZE_LIMIT_FOR_DISPLAY = f"{ round(FILE_UPLOAD_MAX_SIZE / 1024**3) }GB"
+FILE_SIZE_LIMIT_FOR_DISPLAY = f"{round(FILE_UPLOAD_MAX_SIZE / 1024**3)}GB"
 METADATA_STATUS_SUFFICIENT = 'Sufficient to publish or make public'
 METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
 

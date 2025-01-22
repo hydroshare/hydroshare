@@ -257,7 +257,7 @@ def repair_resource_before_publication(res_id):
 
         email_msg = f'''
         <p>We discovered corrupted files in the following resource that is under review for publication:
-        <a href="{ res_url }">{ res_url }</a></p>
+        <a href="{res_url}">{res_url}</a></p>
         <p>We found {missing_django} files missing in Django and {dangling_in_django} files dangling in Django.</p>
         <p>The files issues were fixed automatically. Some logs from the fix are included below:</p>
         <p>{errors}</p>
@@ -277,7 +277,7 @@ def repair_resource_before_publication(res_id):
 
         email_msg = f'''
         <p>We were unable to generate Crossref xml in the following resource that is under review for publication:
-        <a href="{ res_url }">{ res_url }</a></p>
+        <a href="{res_url}">{res_url}</a></p>
         <p>Error details:</p>
         <p>{traceback.format_exc()}</p>
         <p>These issues need to be fixed manually. We have notified {settings.DEFAULT_DEVELOPER_EMAIL}.</p>
@@ -302,8 +302,8 @@ def notify_owners_of_resource_repair(resource):
 
     email_msg = f'''Dear Resource Owner,
     <p>We discovered corrupted files in the following resource that you own:
-    <a href="{ res_url }">
-    { res_url }</a></p>
+    <a href="{res_url}">
+    {res_url}</a></p>
 
     <p>File corruption can occur if upload or delete processes get interrupted. The files have been repaired.</p>
     <p>Please contact us if you notice issues or if you repeatedly receive this message.</p>
@@ -474,10 +474,10 @@ def nightly_metadata_review_reminder():
             if review_date < cutoff_date:
                 res_url = current_site_url() + res.get_absolute_url()
                 subject = f"Metadata review pending since " \
-                    f"{ review_date.strftime('%m/%d/%Y') } for { res.metadata.title }"
+                    f"{review_date.strftime('%m/%d/%Y')} for {res.metadata.title}"
                 email_msg = f'''
-                Metadata review for <a href="{ res_url }">{ res_url }</a>
-                was requested at { review_date.strftime("%Y-%m-%d %H:%M:%S") }.
+                Metadata review for <a href="{res_url}">{res_url}</a>
+                was requested at {review_date.strftime("%Y-%m-%d %H:%M:%S")}.
 
                 This is a reminder to review and approve/reject the publication request.
                 '''
@@ -496,13 +496,13 @@ def notify_owners_of_publication_success(resource):
 
     email_msg = f'''Dear Resource Owner,
     <p>The following resource that you submitted for publication:
-    <a href="{ res_url }">
-    { res_url }</a>
+    <a href="{res_url}">
+    {res_url}</a>
     has been reviewed and determined to meet HydroShare's minimum metadata standards and community guidelines.</p>
 
     <p>The publication request was processed by <a href="https://www.crossref.org/">Crossref.org</a>.
     The Digital Object Identifier (DOI) for your resource is:
-    <a href="{ get_resource_doi(resource.short_id) }">https://doi.org/10.4211/hs.{ resource.short_id }</a></p>
+    <a href="{get_resource_doi(resource.short_id)}">https://doi.org/10.4211/hs.{resource.short_id}</a></p>
 
     <p>Thank you,</p>
     <p>The HydroShare Team</p>
@@ -546,7 +546,7 @@ def send_over_quota_emails():
                     continue
                 support_user = get_default_support_user()
                 msg_str = f'Dear {support_user.first_name}{support_user.last_name}:\n\n'
-                msg_str += f'The following user (#{ u.id }) has exceeded their quota:{u.email}\n\n'
+                msg_str += f'The following user (#{u.id}) has exceeded their quota:{u.email}\n\n'
                 ori_qm = uq.get_quota_message()
                 msg_str += ori_qm
                 subject = f'Quota warning for {u.email}(id#{u.id})'
@@ -571,7 +571,7 @@ def notify_increased_usage_during_quota_enforcement(user_pk, message):
     user = User.objects.get(pk=user_pk)
     support_user = get_default_support_user()
     msg_str = f'Dear {support_user.first_name}{support_user.last_name}:\n\n'
-    msg_str += f'User (#{ user.id }, {user.email}) previously exceeded their quota.\n'
+    msg_str += f'User (#{user.id}, {user.email}) previously exceeded their quota.\n'
     msg_str += 'They have continued to put data in spite of their quota being in enforcement status.\n\n'
     msg_str += message
     msg_str += 'Here is the quota message for the user:\n'
