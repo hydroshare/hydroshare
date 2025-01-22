@@ -263,7 +263,7 @@ import DatePick from 'vue-date-pick';
 import 'vue-date-pick/dist/vueDatePick.css';
 import axios from 'axios'; // css font-size overridden in hs_discover/index.html to enforce 1em
 
-let publicPath = process.env.VUE_APP_BUCKET_URL_PUBLIC_PATH;
+let publicPath = process.env.VUE_APP_BUCKET_URL_PUBLIC_PATH || 'VUE_APP_BUCKET_URL_PUBLIC_PATH_PLACEHOLDER';
 if (publicPath == null) {
   publicPath = '/static/static/';
 }
