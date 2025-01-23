@@ -86,8 +86,6 @@ docker run -i -v $HS_PATH:/hydroshare --name=nodejs node:$n_ver /bin/bash << eof
 cd hydroshare
 cd hs_discover
 npm install
-export NODE_ENV=production
-export VUE_APP_BUCKET_URL_PUBLIC_PATH=/static/static
 npm run build
 mkdir -p static/js
 mkdir -p static/css
@@ -387,6 +385,15 @@ docker exec solr rm /opt/solr/server/solr/collection1/conf/managed-schema
 echo '  - docker exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"'
 echo
 docker exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
+
+echo
+echo '########################################################################################################################'
+echo " Replacing env vars in static files for Discovery"
+echo '########################################################################################################################'
+echo
+
+echo "  -docker exec -u hydro-service hydroshare ./discover-entrypoint.sh"
+docker exec -u hydro-service hydroshare ./discover-entrypoint.sh
 
 echo
 echo '########################################################################################################################'

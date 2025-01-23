@@ -89,8 +89,6 @@ docker run -i -v $HS_PATH:/hydroshare --name=nodejs --user=$HS_UID:$HS_GID node:
 cd hydroshare
 cd hs_discover
 npm install
-export NODE_ENV=production
-export VUE_APP_BUCKET_URL_PUBLIC_PATH=/static/static
 npm run build
 mkdir -p static/js
 mkdir -p static/css
@@ -122,6 +120,15 @@ echo '##########################################################################
 echo
 
 node_build
+
+echo
+echo '########################################################################################################################'
+echo " Replacing env vars in static files for Discovery"
+echo '########################################################################################################################'
+echo
+
+echo "  -docker exec -u hydro-service hydroshare ./discover-entrypoint.sh"
+docker exec -u hydro-service hydroshare ./discover-entrypoint.sh
 
 echo
 echo '########################################################################################################################'

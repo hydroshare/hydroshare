@@ -10,8 +10,6 @@ RUN rm -rf static templates && \
     mkdir static/js && \
     mkdir static/css && \
     npm install && \
-    export NODE_ENV=production && \
-    export VUE_APP_BUCKET_URL_PUBLIC_PATH=VUE_APP_BUCKET_URL_PUBLIC_PATH_PLACEHOLDER && \
     npm run build && \
     mkdir -p static/js && \
     mkdir -p static/css && \
@@ -69,8 +67,5 @@ ENV LC_ALL en_US.UTF-8
 
 USER root
 WORKDIR /hydroshare
-
-RUN chmod +x /hydroshare/discover-entrypoint.sh
-ENTRYPOINT ["/hydroshare/discover-entrypoint.sh"]
 
 CMD ["/bin/bash"]

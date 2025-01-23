@@ -5,7 +5,11 @@ for file in $ROOT_DIR/static/js/*.js $ROOT_DIR/static/js/*.js.map $ROOT_DIR/temp
 do
     echo "Processing $file ...";
     # LC_ALL=C sed -i "" 's|VUE_APP_BUCKET_URL_PUBLIC_PATH_PLACEHOLDER|'${VUE_APP_BUCKET_URL_PUBLIC_PATH}'|g' $file
-    sed -i 's|VUE_APP_BUCKET_URL_PUBLIC_PATH_PLACEHOLDER|'${VUE_APP_BUCKET_URL_PUBLIC_PATH}'|g' $file
+    FILENAME=$(basename $file)
+    TEMPFILE=/tmp/$FILENAME
+    cp $file $TEMPFILE
+    sed 's|VUE_APP_BUCKET_URL_PUBLIC_PATH_PLACEHOLDER|'${VUE_APP_BUCKET_URL_PUBLIC_PATH}'|g' $TEMPFILE > $file
+    rm $TEMPFILE
 done
 
 exec "$@"
