@@ -86,8 +86,8 @@ docker run -i -v $HS_PATH:/hydroshare --name=nodejs node:$n_ver /bin/bash << eof
 cd hydroshare
 cd hs_discover
 npm install
-if [ -z ${VUE_APP_BUCKET_URL_PUBLIC_PATH+x} ]; then VUE_APP_BUCKET_URL_PUBLIC_PATH=/static/static ; fi
-echo "Building with VUE_APP_BUCKET_URL_PUBLIC_PATH: $VUE_APP_BUCKET_URL_PUBLIC_PATH"
+export NODE_ENV=production
+export VUE_APP_BUCKET_URL_PUBLIC_PATH=/static/static
 npm run build
 mkdir -p static/js
 mkdir -p static/css
@@ -404,10 +404,6 @@ do
   echo -n "."
   sleep 1
 done
-
-# discover entrypoint script replaces bucket paths in the hs_discover static files
-echo "  -docker exec hydroshare discover-entrypoint.sh"
-docker exec hydroshare ./discover-entrypoint.sh
 
 echo "  -docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput"
 echo
