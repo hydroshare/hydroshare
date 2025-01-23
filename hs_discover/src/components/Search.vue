@@ -265,7 +265,7 @@ import axios from 'axios'; // css font-size overridden in hs_discover/index.html
 // STATIC_URL is a global var set in the Django template
 // use that to set the publicPath for the resource icons
 // eslint-disable-next-line no-undef
-const publicPath = STATIC_URL || '/static/static/';
+const publicPath = STATIC_URL;
 
 export default {
   data() {
