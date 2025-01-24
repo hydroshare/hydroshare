@@ -758,8 +758,8 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
         reject_subject = parse.quote("Publication Request Rejected")
         reject_body = parse.quote("Your Publication Request for the following resource was rejected: ")
         href_for_mailto_reject = (
-            f"mailto:{user_from.email}?subject={ reject_subject }&body={ reject_body }"
-            f'{ request.scheme }://{ request.get_host() }/resource/{ resource.short_id }'
+            f"mailto:{user_from.email}?subject={reject_subject}&body={reject_body}"
+            f'{request.scheme}://{request.get_host()}/resource/{resource.short_id}'
         )
         context['href_for_mailto_reject'] = href_for_mailto_reject
     elif action_type == 'act_on_quota_request':
@@ -779,8 +779,8 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
         reject_subject = parse.quote("Quota Increase Request Rejected")
         reject_body = parse.quote("Your Quota Increase Request was rejected. ")
         href_for_mailto_reject = (
-            f"mailto:{user_from.email}?subject={ reject_subject }&body={ reject_body }"
-            f'{ request.scheme }://{ request.get_host() }/user/{ user_from.id }'
+            f"mailto:{user_from.email}?subject={reject_subject}&body={reject_body}"
+            f'{request.scheme}://{request.get_host()}/user/{user_from.id}'
         )
         context['href_for_mailto_reject'] = href_for_mailto_reject
     else:

@@ -254,13 +254,13 @@ def fix_resourcefile_duplicates(dry_run=False, logger=None, get_model=False):
             num_duplicate_paths = resourcefile['count']
             if not dry_run:
                 logger.info(f"{current_resfile}/{total_resfile_containing_dups} \
-                        Repairing file {filename} by removing {num_duplicate_paths -1} paths.")
+                        Repairing file {filename} by removing {num_duplicate_paths - 1} paths.")
                 resourcefiles_to_remove = ResourceFileModel.objects \
                     .filter(resource_file=filename, object_id=resourcefile['object_id'])
                 ResourceFileModel.objects.filter(pk__in=resourcefiles_to_remove.values_list('pk')[1:]).delete()
             else:
                 logger.info(f"{current_resfile}/{total_resfile_containing_dups} \
-                        Repair of {filename} skipped due to dryrun. Would remove {num_duplicate_paths -1} paths.")
+                        Repair of {filename} skipped due to dryrun. Would remove {num_duplicate_paths - 1} paths.")
             current_resfile += 1
 
 

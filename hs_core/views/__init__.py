@@ -2099,7 +2099,7 @@ def metadata_review(request, shortkey, action, uidb64=None, token=None, **kwargs
     if not res.raccess.review_pending:
         messages.error(
             request,
-            f"This resource does not have a pending metadata review for you to { action }.",
+            f"This resource does not have a pending metadata review for you to {action}.",
         )
     else:
         res.raccess.alter_review_pending_flags(initiating_review=False)
@@ -2116,7 +2116,7 @@ def metadata_review(request, shortkey, action, uidb64=None, token=None, **kwargs
                 "Publication request was rejected. Please send an email to the resource owner indicating why.",
             )
         res.metadata.dates.all().filter(type="reviewStarted").delete()
-    return HttpResponseRedirect(f"/resource/{ res.short_id }/")
+    return HttpResponseRedirect(f"/resource/{res.short_id}/")
 
 
 def spam_allowlist(request, shortkey, action, **kwargs):
@@ -2148,7 +2148,7 @@ def spam_allowlist(request, shortkey, action, **kwargs):
         )
     # update the index
     signals.post_spam_whitelist_change.send(sender=BaseResource, instance=res)
-    return HttpResponseRedirect(f"/resource/{ res.short_id }/")
+    return HttpResponseRedirect(f"/resource/{res.short_id}/")
 
 
 @login_required
