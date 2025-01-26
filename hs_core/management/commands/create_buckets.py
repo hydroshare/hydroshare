@@ -33,5 +33,6 @@ def create_bucket(username, istorage):
     if user.is_active:
         resources = BaseResource.objects.filter(quota_holder_id=user.id)
         if resources.exists():
-            istorage.create_bucket(bucket_name)
-            print(f"created bucket {bucket_name} for user {user.username}")
+            if not istorage.bucket_exists(bucket_name):
+                istorage.create_bucket(bucket_name)
+                print(f"created bucket {bucket_name} for user {user.username}")

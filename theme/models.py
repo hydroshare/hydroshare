@@ -617,6 +617,9 @@ class UserProfile(models.Model):
             # there is a small chance a bucket name exists for another user with the safe_username transformation
             # in that case, we append a unique number to the bucket name
             id_number = 1
+            if len(safe_username) < 3:
+                # ensures a minimum character count of 3 for the bucket name
+                safe_username = f"{safe_username}-{id_number}"
             while UserProfile.objects.filter(_bucket_name=safe_username).exists():
                 safe_username = f"{base_safe_username}-{id_number}"
                 id_number += 1
