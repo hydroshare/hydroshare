@@ -17,8 +17,9 @@ userdel hydro-service \
 
 celery -A hydroshare beat  -s /hydroshare/celery/celerybeat-schedule &
 
-# Start workers with autoscale and one queue per worker
-celery -A hydroshare worker -E -Q default --autoscale=4,1 &
-celery -A hydroshare worker -E -Q periodic --autoscale=3,1 &
+# Start workers with one queue per worker
+# note that these celery internal workers are distinct from k8 worker pods
+celery -A hydroshare worker -E -Q default -c 2 --prefetch-multiplier=1 -n default-worker@%h &
+celery -A hydroshare worker -E -Q periodic -c 2 --prefetch-multiplier=1 -n periodic-worker@%h &
 celery -A hydroshare flower --address=0.0.0.0 --broker=amqp://guest:guest@rabbitmq:5672//
 
