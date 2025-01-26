@@ -361,3 +361,10 @@ class IrodsStorage(S3Storage):
 
         for src_file_path in files_to_delete:
             self.connection.Object(src_bucket, src_file_path).delete()
+
+    def bucket_exists(self, bucket_name):
+        try:
+            self.connection.meta.client.head_bucket(Bucket=bucket_name)
+            return True
+        except Exception:
+            return False
