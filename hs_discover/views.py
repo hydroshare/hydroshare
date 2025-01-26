@@ -134,10 +134,8 @@ class SearchAPI(APIView):
                 except Exception as gen_date_ex:
                     return JsonResponse({'message': 'Filter date parsing error expecting two date string values : {}'
                                         .format(str(gen_date_ex)), 'received': request.query_params}, status=400)
-            
             # filter out old versions which are marked as replaced = True
             sqs = sqs.filter(SQ(replaced=False))
-        
         except TypeError:
             pass  # no filters passed "the JSON object must be str, bytes or bytearray not NoneType"
 
