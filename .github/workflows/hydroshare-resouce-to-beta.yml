@@ -21,43 +21,12 @@ jobs:
         chmod +x mc
         sudo mv mc /usr/local/bin/mc
 
-    - name: Create MinIO Config File
+    - name: Set Up MinIO Environment Variables
       env:
-        MINIO_PROD_URL: ${{ secrets.MINIO_PROD_URL }}
-        MINIO_BETA_URL: ${{ secrets.MINIO_BETA_URL }}
-        MINIO_PROD_ACCESS_KEY: ${{ secrets.MINIO_PROD_ACCESS_KEY }}
-        MINIO_PROD_SECRET_KEY: ${{ secrets.MINIO_PROD_SECRET_KEY }}
-        MINIO_BETA_ACCESS_KEY: ${{ secrets.MINIO_BETA_ACCESS_KEY }}
-        MINIO_BETA_SECRET_KEY: ${{ secrets.MINIO_BETA_SECRET_KEY }}
+        MC_HOST_prod: https://${{ secrets.MINIO_PROD_ACCESS_KEY }}:${{ secrets.MINIO_PROD_SECRET_KEY }}@${{ secrets.MINIO_PROD_URL }}
+        MC_HOST_beta: https://${{ secrets.MINIO_BETA_ACCESS_KEY }}:${{ secrets.MINIO_BETA_SECRET_KEY }}@${{ secrets.MINIO_BETA_URL }}
       run: |
-        cat <<EOF > minio_config.json
-        {
-          "prod": {
-            "url": "$MINIO_PROD_URL",
-            "access_key": "$MINIO_PROD_ACCESS_KEY",
-            "secret_key": "$MINIO_PROD_SECRET_KEY"
-          },
-          "beta": {
-            "url": "$MINIO_BETA_URL",
-            "access_key": "$MINIO_BETA_ACCESS_KEY",
-            "secret_key": "$MINIO_BETA_SECRET_KEY"
-          }
-        }
-        EOF
-
-    - name: Set Up MinIO Aliases Using Config File
-      run: |
-        CONFIG=$(cat minio_config.json)
-        PROD_URL=$(echo $CONFIG | jq -r '.prod.url')
-        PROD_ACCESS_KEY=$(echo $CONFIG | jq -r '.prod.access_key')
-        PROD_SECRET_KEY=$(echo $CONFIG | jq -r '.prod.secret_key')
-
-        BETA_URL=$(echo $CONFIG | jq -r '.beta.url')
-        BETA_ACCESS_KEY=$(echo $CONFIG | jq -r '.beta.access_key')
-        BETA_SECRET_KEY=$(echo $CONFIG | jq -r '.beta.secret_key')
-
-        mc alias set prod $PROD_URL $PROD_ACCESS_KEY $PROD_SECRET_KEY
-        mc alias set beta $BETA_URL $BETA_ACCESS_KEY $BETA_SECRET_KEY
+        echo "MinIO aliases configured using environment variables."
 
     - name: Retrieve and Sync Buckets
       env:
@@ -91,7 +60,3 @@ jobs:
           mc mirror --remove --overwrite prod/$BUCKET_NAME beta/$BUCKET_NAME
           echo "Sync for bucket $BUCKET_NAME completed successfully."
         done
-
-    - name: Clean Up
-      run: |
-        rm -f minio_config.json
