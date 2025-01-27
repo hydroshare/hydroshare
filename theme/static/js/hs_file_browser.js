@@ -1643,7 +1643,6 @@ function onOpenFolder() {
     pathLogIndex = pathLog.length - 1;
 
     var calls = [];
-    calls.push(get_irods_folder_struct_ajax_submit(SHORT_ID, targetPath));
 
     $.when.apply($, calls).done(function () {
         updateSelectionMenuContext();
@@ -1702,9 +1701,6 @@ function refreshFileBrowser(name) {
 
     if (getCurrentPath().hasOwnProperty("aggregation")) {
         calls.push(get_aggregation_folder_struct(getCurrentPath().aggregation));
-    }
-    else {
-        calls.push(get_irods_folder_struct_ajax_submit(SHORT_ID, getCurrentPath()));
     }
 
     $.when.apply($, calls).done(function () {
@@ -1917,9 +1913,6 @@ $(document).ready(function () {
     if (currentPath.hasOwnProperty("aggregation")) {
         get_aggregation_folder_struct(currentPath.aggregation);
     }
-    else {
-        get_irods_folder_struct_ajax_submit(SHORT_ID, currentPath);
-    }
 
     updateNavigationState();
 
@@ -1974,7 +1967,6 @@ $(document).ready(function () {
         sessionStorage.currentBrowsepath = JSON.stringify(path);
         pathLog.push(path);
         pathLogIndex = pathLog.length - 1;
-        get_irods_folder_struct_ajax_submit(SHORT_ID, path);
         $("#fileTypeMetaDataTab").html(file_metadata_alert);
     });
 
@@ -2181,7 +2173,6 @@ $(document).ready(function () {
         if (folderName) {
             var calls = [];
             newFolderPath = {path: getCurrentPath().path.concat(folderName)};
-            calls.push(create_irods_folder_ajax_submit(SHORT_ID, newFolderPath.path.join('/')));
 
             $.when.apply($, calls).done(function () {
                 refreshFileBrowser();
@@ -2269,7 +2260,6 @@ $(document).ready(function () {
         var calls = [];
         var res_id = $("#unzip_res_id").val();
         var zip_with_rel_path = $("#zip_with_rel_path").val();
-        calls.push(unzip_irods_file_ajax_submit(res_id, zip_with_rel_path, overwrite='true', unzip_to_folder='false'));
         // Disable the Cancel button until request has finished
         $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
         function afterDoneRequest() {
@@ -2350,9 +2340,6 @@ $(document).ready(function () {
         if (getCurrentPath().hasOwnProperty("aggregation")) {
             get_aggregation_folder_struct(getCurrentPath().aggregation);
         }
-        else {
-            get_irods_folder_struct_ajax_submit(SHORT_ID, getCurrentPath());
-        }
         sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
     });
 
@@ -2366,9 +2353,6 @@ $(document).ready(function () {
             }
             if (pathLog[pathLogIndex].hasOwnProperty("aggregation")) {
                 get_aggregation_folder_struct(getCurrentPath().aggregation);
-            }
-            else {
-                get_irods_folder_struct_ajax_submit(SHORT_ID, getCurrentPath());
             }
 
             sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
@@ -2385,9 +2369,6 @@ $(document).ready(function () {
 
             if (getCurrentPath().hasOwnProperty("aggregation")) {
                 get_aggregation_folder_struct(getCurrentPath().aggregation);
-            }
-            else {
-                get_irods_folder_struct_ajax_submit(SHORT_ID, getCurrentPath());
             }
             sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
         }
@@ -2670,7 +2651,6 @@ $(document).ready(function () {
             else {
                 const folderName = selected.children(".fb-file-name").text();
                 const path = getCurrentPath().path.concat(folderName);
-                await zip_irods_folder_ajax_submit(SHORT_ID, path.join('/'), fileName);
             }
             refreshFileBrowser();
         }

@@ -152,7 +152,6 @@ async function drawInitialShape() {
   }
   if (sessionStorage.signininfo) {
     $("#sign-in-info").text(sessionStorage.signininfo);
-    $("#btn-select-irods-file").show();
   }
   coverageMap.initialShapesDrawn = true;
 }
