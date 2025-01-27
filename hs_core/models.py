@@ -3979,23 +3979,37 @@ class BaseResource(Page, AbstractResource):
         logger = logging.getLogger(__name__)
 
         def get_funder_id(funder_name):
-            """Return funder_uri for a given funder_name from ror funders registry.
-            ROR API Documentation: https://ror.readme.io/docs/api-query
+            """Return funder_id for a given funder_name from Crossref funders registry.
+            Crossref API Documentation: https://api.crossref.org/swagger-ui/index.html#/Funders/get_funders
             """
+
+            # url encode the funder name for the query parameter
+            words = funder_name.split()
+            # filter out words that contain the char '.'
+            words = [word for word in words if '.' not in word]
+            encoded_words = [urllib.parse.quote(word) for word in words]
+            # match all words in the funder name
+            query = "+".join(encoded_words)
+            # if we can't find a match in first 50 search records then we are not going to find a match
+            max_record_count = 50
+            email = settings.DEFAULT_DEVELOPER_EMAIL
+            url = f"https://api.crossref.org/funders?query={query}&rows={max_record_count}&mailto={email}"
             funder_name = funder_name.lower()
-            encoded_funder_name = urllib.parse.quote(funder_name)
-            url = f"https://api.ror.org/v2/organizations?filter=types:funder&query={encoded_funder_name}"
             response = requests.get(url, verify=False)
             if response.status_code == 200:
                 response_json = response.json()
-                items = response_json['items']
-                for item in items:
-                    for name in item['names']:
-                        if name['value'].lower() == funder_name:
-                            return item['id']
+                if response_json['status'] == 'ok':
+                    items = response_json['message']['items']
+                    for item in items:
+                        if item['name'].lower() == funder_name:
+                            return item['uri']
+                        for alt_name in item['alt-names']:
+                            if alt_name.lower() == funder_name:
+                                return item['uri']
+                    return ''
                 return ''
             else:
-                msg = "Failed to get funder_id for funder_name: '{}' from ror funders registry. " \
+                msg = "Failed to get funder_id for funder_name: '{}' from Crossref funders registry. " \
                       "Status code: {} for resource id: {}"
                 msg = msg.format(funder_name, response.status_code, self.short_id)
                 logger.error(msg)
