@@ -25,7 +25,7 @@ class CommunitiesSitemap(sitemaps.Sitemap):
         return Community.objects.filter(active=True)
 
     def location(self, item):
-        return f'/community/{ item.id }'
+        return f'/community/{item.id}'
 
 
 class GroupsSitemap(sitemaps.Sitemap):
@@ -36,7 +36,7 @@ class GroupsSitemap(sitemaps.Sitemap):
         return Group.objects.filter(gaccess__active=True)
 
     def location(self, item):
-        return f'/group/{ item.id }'
+        return f'/group/{item.id}'
 
 
 class ResourcesSitemap(sitemaps.Sitemap):
