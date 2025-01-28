@@ -144,7 +144,8 @@ services:
       RABBITMQ_PORT_5672_TCP_ADDR: rabbitmq
       SOLR_PORT_8983_TCP_ADDR: solr
       SOLR_HOST: solr
-      POSTGIS_PORT_5432_TCP_ADDR: postgis
+      POSTGIS_PORT_5432_TCP_ADDR: pgbouncer
+      POSTGIS_DISABLE_SERVER_SIDE_CURSORS: "True"
       HS_PATH: ${PWD}
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
