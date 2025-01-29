@@ -36,10 +36,11 @@ def resource_level_tool_urls(resource_obj, request_obj):
             continue
         if tool_metadata.supported_resource_types.supported_res_types.filter(
                 description__iexact=resource_obj.resource_type).exists():
+            # TODO 5386: check this logic
             if _check_user_can_view_app(request_obj, tool_res_obj) and \
                     _check_app_supports_resource_sharing_status(resource_obj, tool_res_obj) and \
-                    _check_app_supports_resource_file_extensions(resource_obj, tool_res_obj):
-                # todo 5386 -- also check aggregation types
+                    (_check_app_supports_resource_file_extensions(resource_obj, tool_res_obj)
+                        or _check_app_supports_resource_aggregation_types(resource_obj, tool_res_obj)):
 
                 tl = _get_app_tool_info(request_obj, resource_obj, tool_res_obj)
                 if tl:
@@ -220,3 +221,22 @@ def _check_app_supports_resource_file_extensions(resource_obj, tool_res_obj):
         resource_contains_extensions = True
 
     return resource_contains_extensions
+
+
+def _check_app_supports_resource_aggregation_types(resource_obj, tool_res_obj):
+    resource_contains_aggr_types = False
+    supported_aggr_types_obj = tool_res_obj.metadata. \
+        supported_aggregation_types
+    if supported_aggr_types_obj is not None:
+        supported_aggr_types_str = supported_aggr_types_obj. \
+            get_supported_agg_types_str()
+        if len(supported_aggr_types_str) > 0:
+            res_aggr_type_names = resource_obj.aggregation_type_names
+            # check if any of the supported aggregation types is in the resource
+            for aggr_type in supported_aggr_types_str.split(','):
+                if aggr_type in res_aggr_type_names:
+                    resource_contains_aggr_types = True
+    else:
+        resource_contains_aggr_types = True
+
+    return resource_contains_aggr_types

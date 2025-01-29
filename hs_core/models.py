@@ -2910,6 +2910,13 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """
         return []
 
+    @property
+    def aggregation_type_names(self):
+        """Gets a list of all aggregation type names that currently exist in this resource
+        Note: Any derived class that supports logical file must override this function
+        """
+        return []
+
     def get_logical_files(self, logical_file_class_name):
         """Get a list of logical files (aggregations) for a specified logical file class name.
         Note: Any derived class that supports logical file must override this function
