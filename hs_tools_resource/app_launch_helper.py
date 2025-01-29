@@ -8,7 +8,8 @@ from hs_tools_resource.utils import parse_app_url_template, get_SupportedResType
 
 def resource_level_tool_urls(resource_obj, request_obj):
     if not _check_user_can_view_resource(request_obj, resource_obj):
-        return None
+        # todo 5386 -- revert this
+        pass
 
     tool_list = []
     tool_res_id_list = []
@@ -36,7 +37,9 @@ def resource_level_tool_urls(resource_obj, request_obj):
         if tool_metadata.supported_resource_types.supported_res_types.filter(
                 description__iexact=resource_obj.resource_type).exists():
             if _check_user_can_view_app(request_obj, tool_res_obj) and \
-                    _check_app_supports_resource_sharing_status(resource_obj, tool_res_obj):
+                    _check_app_supports_resource_sharing_status(resource_obj, tool_res_obj) and \
+                    _check_app_supports_resource_file_extensions(resource_obj, tool_res_obj):
+                # todo 5386 -- also check aggregation types
 
                 tl = _get_app_tool_info(request_obj, resource_obj, tool_res_obj)
                 if tl:
@@ -70,7 +73,9 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
     if not is_open_with_app:
         is_approved_app = _check_webapp_is_approved(tool_res_obj)
     if not is_approved_app and not is_open_with_app:
-        return {}
+        # todo 5386 -- revert this
+        # return {}
+        pass
 
     tool_metadata = tool_res_obj.metadata
     tool_url_resource = tool_metadata.url_base.value \
@@ -195,3 +200,23 @@ def _check_app_supports_resource_sharing_status(resource_obj, tool_res_obj):
         sharing_status_supported = True
 
     return sharing_status_supported
+
+
+def _check_app_supports_resource_file_extensions(resource_obj, tool_res_obj):
+    resource_contains_extensions = False
+    supported_file_extensions_obj = tool_res_obj.metadata. \
+        supported_file_extensions
+    if supported_file_extensions_obj is not None:
+        supported_file_extensions_str = supported_file_extensions_obj. \
+            get_file_extensions_str()
+        if len(supported_file_extensions_str) > 0:
+            res_file_extensions = resource_obj.get_contained_file_extensions()
+            # check if any of the supported file extensions is in the resource
+            # file extensions
+            for ext in supported_file_extensions_str.split(','):
+                if ext in res_file_extensions:
+                    resource_contains_extensions = True
+    else:
+        resource_contains_extensions = True
+
+    return resource_contains_extensions

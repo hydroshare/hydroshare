@@ -2842,6 +2842,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         else:
             return True
 
+    def get_contained_file_extensions(self):
+        # return a set of all file extensions for all files in the resource
+        return set([f.extension for f in self.files.all()])
+
     @property
     def readme_file(self):
         """Returns a resource file that is at the root with a file name of either

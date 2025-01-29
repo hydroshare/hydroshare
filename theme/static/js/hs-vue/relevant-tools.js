@@ -54,6 +54,8 @@ let relevantToolsApp = new Vue({
 
                     return tool;
                 });
+                // TODO 5386 revert
+                console.log(vue.tools)
 
                 vue.openWithTools = vue.tools.filter(function(tool) {
                     return tool.url;
@@ -83,7 +85,7 @@ let relevantToolsApp = new Vue({
                             hasTools = true;
                         }
                     }
-
+                    // TODO 5386 file extensions for right click in file browser
                     if (tool['file_extensions']){
                         let urlFile = vue.getFileAppUrl(tool);
                         if (urlFile) {
