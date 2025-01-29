@@ -184,10 +184,9 @@ urlpatterns += hsapi_urlpatterns + hsapi2_urlpatterns
 
 # Put API URLs before Mezzanine so that Mezzanine doesn't consume them
 urlpatterns += [
-    path("", include("hs_core.resourcemap_urls")),
-    path("", include("hs_core.metadata_terms_urls")),
-    path("", include("hs_core.debug_urls")),
-    path("irods/", include("irods_browser_app.urls")),
+    url("", include("hs_core.resourcemap_urls")),
+    url("", include("hs_core.metadata_terms_urls")),
+    url("", include("hs_core.debug_urls")),
     path("access/", include("hs_access_control.urls")),
     path("hs_metrics/", include("hs_metrics.urls")),
 ]
