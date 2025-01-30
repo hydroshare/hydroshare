@@ -8,8 +8,7 @@ from hs_tools_resource.utils import parse_app_url_template, get_SupportedResType
 
 def resource_level_tool_urls(resource_obj, request_obj):
     if not _check_user_can_view_resource(request_obj, resource_obj):
-        # todo 5386 -- revert this
-        pass
+        return None
 
     tool_list = []
     tool_res_id_list = []
@@ -92,9 +91,7 @@ def _get_app_tool_info(request_obj, resource_obj, tool_res_obj, open_with=False)
     if not is_open_with_app:
         is_approved_app = _check_webapp_is_approved(tool_res_obj)
     if not is_approved_app and not is_open_with_app:
-        # todo 5386 -- revert this
-        # return {}
-        pass
+        return {}
 
     tool_metadata = tool_res_obj.metadata
     tool_url_resource = tool_metadata.url_base.value \
