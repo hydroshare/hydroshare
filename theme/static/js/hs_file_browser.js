@@ -926,11 +926,10 @@ function bindFileBrowserItemEvents() {
                                     extensionApp = aggrApp;
                                 }
                             }
-                            else if ($(this).attr("data-agg-types")) {
-                                // tool has restricted aggregation types but the selected file is not an aggregation
-                                // tool is not applicable/viewable for the selected file
-                                extensionApp = false;
-                            }
+                            // else if ($(this).attr("data-agg-types")) {
+                            //     tool has restricted aggregation types but the selected file is not an aggregation
+                            //     in this case, we explicitly do nothing
+                            // }
                         }
                     }
                     if (!extensionApp) {
