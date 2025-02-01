@@ -1,4 +1,5 @@
 ## Custom
+locust/reports/
 nohup.out
 local_settings.py
 __pycache__/
