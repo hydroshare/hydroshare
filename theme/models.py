@@ -612,7 +612,7 @@ class UserProfile(models.Model):
         if not self._bucket_name:
             safe_username = re.sub(r"[^A-Za-z0-9\.-]", "", self.user.username.lower())
             # limit the length to 60 characters (max length for a bucket name is 63 characters)
-            base_safe_username = safe_username[:60]
+            base_safe_username = safe_username[:60].strip()
             safe_username = base_safe_username
             # there is a small chance a bucket name exists for another user with the safe_username transformation
             # in that case, we append a unique number to the bucket name
