@@ -163,6 +163,7 @@ def access_changed(sender, **kwargs):
             resource_json["user_access"].append(user_json)
         response_json["resources"].append(resource_json)
     try:
-        requests.post(settings.ACCESS_CONTROL_CHANGE_ENDPOINT, json=response_json)
+        if settings.ACCESS_CONTROL_CHANGE_ENDPOINT:
+            requests.post(settings.ACCESS_CONTROL_CHANGE_ENDPOINT, json=response_json)
     except Exception as e:
         logger.warning("Error in sending access change notification: {}".format(str(e)))
