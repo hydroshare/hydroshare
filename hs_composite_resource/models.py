@@ -632,11 +632,7 @@ class CompositeResource(BaseResource):
         :param target_full_path: full folder path name where file needs to be uploaded to
         :return: True or False
         """
-        istorage = self.get_irods_storage()
-        if istorage.exists(target_full_path):
-            path_to_check = target_full_path
-        else:
-            return False
+        path_to_check = target_full_path
 
         if not path_to_check.endswith("data/contents"):
             # it is not the base directory - it must be a directory under base dir

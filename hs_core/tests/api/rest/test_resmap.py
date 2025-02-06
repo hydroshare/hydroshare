@@ -2,6 +2,8 @@ import os
 import json
 import tempfile
 import shutil
+import requests
+
 from rest_framework import status
 from rdflib import Graph, term
 
@@ -35,19 +37,12 @@ class TestResourceMap(ResMapTestCase):
         # This might not be true if we utilize systems other than iRODS.
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         response2 = self.client.get(response.url)
-        self.assertEqual(response2.status_code, status.HTTP_200_OK)
-
-        # collect response from stream
-        output = b""
-        while True:
-            try:
-                output += next(response2.streaming_content)
-            except StopIteration:
-                break
+        self.assertEqual(response2.status_code, status.HTTP_302_FOUND)
+        minio_response = requests.get(response2.url)
 
         # parse as simple RDF graph
         g = Graph()
-        g.parse(data=output.decode("utf-8"))
+        g.parse(data=minio_response.content.decode("utf-8"))
 
         documents = g.triples(
             (None, term.URIRef('http://purl.org/spar/cito/documents'), None)
@@ -91,19 +86,12 @@ class TestResourceMap(ResMapTestCase):
         response = self.client.get("/hsapi/resource/{pid}/map/".format(pid=self.pid))
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         response2 = self.client.get(response.url)
-        self.assertEqual(response2.status_code, status.HTTP_200_OK)
-
-        # collect the map from the stream
-        output = b""
-        while True:
-            try:
-                output += next(response2.streaming_content)
-            except StopIteration:
-                break
+        self.assertEqual(response2.status_code, status.HTTP_302_FOUND)
+        minio_response = requests.get(response2.url)
 
         # parse as a simple RDF file of triples
         g = Graph()
-        g.parse(data=output.decode("utf-8"))
+        g.parse(data=minio_response.content.decode("utf-8"))
 
         # check that the graph contains an appropriate "documents" node
         documents = g.triples(

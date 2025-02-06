@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='resourcefile',
             name='fed_resource_file',
-            field=models.FileField(storage=hs_core.models.FedStorage(), max_length=4096, null=True, upload_to=hs_core.models.get_path, blank=True),
+            field=models.FileField(storage=hs_core.models.IrodsStorage(), max_length=4096, null=True, upload_to=hs_core.models.get_path, blank=True),
         ),
         migrations.AlterField(
             model_name='resourcefile',

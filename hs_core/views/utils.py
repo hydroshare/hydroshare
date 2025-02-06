@@ -34,7 +34,6 @@ from rest_framework import status
 from rest_framework.exceptions import NotFound, ValidationError
 
 from django_irods.icommands import SessionException
-from django_irods.storage import IrodsStorage
 from hs_access_control.models import PrivilegeCodes
 from hs_core import hydroshare
 from hs_core.enums import RelationTypes
@@ -76,40 +75,6 @@ def json_or_jsonp(r, i, code=200):
                             content_type='text/javascript')
     else:
         return HttpResponse(i, content_type='application/json', status=code)
-
-
-# Since an SessionException will be raised for all irods-related operations from django_irods
-# module, there is no need to raise iRODS SessionException from within this function
-def upload_from_irods(username, password, host, port, zone, irods_fnames, res_files):
-    """
-    use iget to transfer selected data object from irods zone to local as a NamedTemporaryFile
-    :param username: iRODS login account username used to download irods data object for uploading
-    :param password: iRODS login account password used to download irods data object for uploading
-    :param host: iRODS login host used to download irods data object for uploading
-    :param port: iRODS login port used to download irods data object for uploading
-    :param zone: iRODS login zone used to download irods data object for uploading
-    :param irods_fnames: the data object file name to download to local for uploading
-    :param res_files: list of files for uploading to create resources
-    :raises SessionException(proc.returncode, stdout, stderr) defined in django_irods/icommands.py
-            to capture iRODS exceptions raised from iRODS icommand subprocess run triggered from
-            any method calls from IrodsStorage() if an error or exception ever occurs
-    :return: None, but the downloaded file from the iRODS will be appended to res_files list for
-    uploading
-    """
-    irods_storage = IrodsStorage()
-    irods_storage.set_user_session(username=username, password=password, host=host, port=port,
-                                   zone=zone)
-    ifnames = irods_fnames.split(',')
-    for ifname in ifnames:
-        size = irods_storage.size(ifname)
-        tmpFile = irods_storage.download(ifname)
-        fname = os.path.basename(ifname.rstrip(os.sep))
-        fileobj = File(file=tmpFile, name=fname)
-        fileobj.size = size
-        res_files.append(fileobj)
-
-    # delete the user session after iRODS file operations are done
-    irods_storage.delete_user_session()
 
 
 def validate_url(url):
@@ -1081,7 +1046,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     if resource.resource_type == "CompositeResource":
         resource.create_aggregation_meta_files()
 
-    istorage.session.run("ibun", None, '-cDzip', '-f', output_zip_full_path, res_coll_input)
+    istorage.zipup(res_coll_input, output_zip_full_path)
     output_zip_size = istorage.size(output_zip_full_path)
     if not bool_remove_original:
         try:
@@ -1171,9 +1136,9 @@ def zip_by_aggregation_file(user, res_id, aggregation_name, output_zip_fname):
     validate_user_quota(resource.quota_holder, zip_file_size)
 
     # move the zip file to the input path
-    move_zip_file_to = os.path.dirname(irods_aggr_input_path)
-    istorage.moveFile(irods_output_path, move_zip_file_to)
-    zip_file_path = os.path.join(move_zip_file_to, os.path.basename(irods_output_path))
+    basepath = os.path.dirname(irods_aggr_input_path)
+    zip_file_path = os.path.join(basepath, os.path.basename(irods_output_path))
+    istorage.moveFile(irods_output_path, zip_file_path)
 
     # register the zip file in Django
     zip_res_file = link_irods_file_to_django(resource, zip_file_path)
@@ -1245,7 +1210,8 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
     unzip_temp_folder = ''
     try:
         # unzip to a temporary folder first to validate contents of the zip file
-        unzip_temp_folder = uuid4().hex
+        relative_path = os.path.dirname(zip_with_rel_path.split('data/contents/')[1])
+        unzip_temp_folder = os.path.join("tmp", uuid4().hex, relative_path)
         # Note: unzipping using the irods 'ibun' command seems to fail if the zip file contains files that have
         # non-english characters.
         unzip_path_temp = istorage.unzip(zip_with_full_path, unzipped_folder=unzip_temp_folder)
@@ -1275,7 +1241,19 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
         if unzip_to_folder:
             # unzip to the subfolder with zip file base name as the subfolder name. If the subfolder name already
             # exists, a sequential number is appended to the subfolder name to make sure the subfolder name is unique
-            unzip_folder = os.path.splitext(os.path.basename(zip_with_full_path))[0].strip()
+            def _get_nonexistant_path(istorage, path):
+                if not istorage.exists(path):
+                    return path
+                i = 1
+                new_path = "{}-{}".format(path, i)
+                while istorage.exists(new_path):
+                    i += 1
+                    new_path = "{}-{}".format(path, i)
+                return new_path
+            folder_name = os.path.splitext(os.path.basename(zip_with_full_path))[0].strip()
+            unzip_folder = os.path.join(os.path.dirname(zip_with_full_path), folder_name)
+
+            unzip_folder = _get_nonexistant_path(istorage, unzip_folder)
             unzip_to_folder_path = istorage.unzip(zip_with_full_path, unzipped_folder=unzip_folder)
             res_files = link_irods_folder_to_django(resource, istorage, unzip_to_folder_path, auto_aggregate)
             if resource.resource_type == 'CompositeResource':
@@ -1300,7 +1278,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                 res_files, meta_files, map_files = identify_metadata_files(res_files)
 
             for file in res_files:
-                destination_file = _get_destination_filename(file.name, unzip_temp_folder)
+                destination_file = _get_destination_filename(file.name, unzip_temp_folder, zip_with_full_path)
                 if istorage.exists(destination_file):
                     override_tgt_paths.append(destination_file)
 
@@ -1339,12 +1317,12 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
 
             # now move each file to the destination
             for file in res_files:
-                destination_file = _get_destination_filename(file.name, unzip_temp_folder)
+                destination_file = _get_destination_filename(file.name, unzip_temp_folder, zip_with_full_path)
                 istorage.moveFile(file.name, destination_file)
             # and now link them to the resource
             added_resource_files = []
             for file in res_files:
-                destination_file = _get_destination_filename(file.name, unzip_temp_folder)
+                destination_file = _get_destination_filename(file.name, unzip_temp_folder, zip_with_full_path)
                 destination_file = destination_file.replace(res_id + "/", "", 1)
                 destination_file = resource.get_irods_path(destination_file)
                 res_file = link_irods_file_to_django(resource, destination_file)
@@ -1405,7 +1383,8 @@ def ingest_bag(resource, bag_file, user):
     zip_with_full_path = os.path.join(resource.file_path, bag_file.short_path)
 
     # unzip to a temporary folder
-    unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=uuid4().hex)
+    tmp_folder = os.path.join("tmp", uuid4().hex)
+    unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=tmp_folder)
     delete_resource_file(resource.short_id, bag_file.id, user)
 
     # list all files to be moved into the resource
@@ -1435,17 +1414,14 @@ def ingest_bag(resource, bag_file, user):
             raise SuspiciousFileOperation(err_msg)
         res_files.append(IrodsFile(unzipped_file, istorage))
     res_files, meta_files, map_files = identify_metadata_files(res_files)
-
     # filter res_files to only files in the data/contents directory
     data_contents_dir = os.path.join("data", "contents")
-    res_files = [res_file for res_file in res_files if res_file.name.count(data_contents_dir) > 1]
-
+    res_files = [res_file for res_file in res_files if res_file.name.count(data_contents_dir) > 0]
     # now move each file to the destination
+
     def destination_filename(resource, file):
         """Parses the temporary filename to the destination filename"""
-        dc_dir = os.path.join("data", "contents")
-        relative_path = dc_dir.join(file.split(dc_dir, 2)[2:])
-        return os.path.join(resource.file_path, relative_path.strip("/"))
+        return os.path.join(resource.file_path, file.split(data_contents_dir, 1)[1].strip("/"))
 
     added_resource_files = []
     for file in res_files:
@@ -1476,18 +1452,22 @@ def ingest_bag(resource, bag_file, user):
     resource.save()
 
 
-def _get_destination_filename(file, unzipped_foldername):
+def _get_destination_filename(file, unzipped_foldername, zip_with_full_path):
     """
     Returns the destination file path by removing the temp unzipped_foldername from the file path.
     Useful for moving files from a temporary unzipped folder to the resource outside of the
     temporary folder.
     :param file: path to a file
-    :param unzipped_foldername: the name of the
+    :param unzipped_foldername: the name of the unzipped folder
+    :param zip_with_full_path: the full path of the zip file
     :return:
     """
-    split = file.split("/" + unzipped_foldername + "/", 1)
+    split = file.split(unzipped_foldername.strip("/"), 1)
     destination_file = os.path.join(split[0], split[1])
-    return destination_file
+    zip_name = os.path.basename(zip_with_full_path)
+    destination_file_path = zip_with_full_path.replace(
+        zip_name, destination_file.strip("/"))
+    return destination_file_path
 
 
 def listfiles_recursively(istorage, path):
@@ -1565,7 +1545,8 @@ def create_folder(res_id, folder_path, migrating_resource=False):
             err_msg = f"{err_msg}Prohibited characters are: {folder_banned_chars}"
             raise SuspiciousFileOperation(err_msg)
 
-    istorage.session.run("imkdir", None, '-p', coll_path)
+    istorage.create_folder(resource.short_id, coll_path)
+    # istorage.session.run("imkdir", None, '-p', coll_path)
 
 
 def remove_folder(user, res_id, folder_path):
@@ -1585,12 +1566,12 @@ def remove_folder(user, res_id, folder_path):
         raise ValidationError("Folder deletion is not allowed for a published resource")
     istorage = resource.get_irods_storage()
     coll_path = os.path.join(resource.root_path, folder_path)
-    if not istorage.exists(coll_path):
-        raise ValidationError(f"Specified folder ({folder_path}) was not found")
+    if not istorage.isDir(coll_path):
+        raise ValidationError(f"Specified folder ({coll_path}) was not found")
 
     # Seems safest to delete from irods before removing from Django
     # istorage command is the longest-running and most likely to get interrupted
-    istorage.delete(coll_path)
+    istorage.remove_folder(resource.short_id, coll_path)
     remove_irods_folder_in_django(resource, coll_path, user)
 
     resource.update_public_and_discoverable()  # make private if required
@@ -1863,6 +1844,16 @@ def _path_move_rename(user, res_id, src_path, tgt_path, validate_move_rename=Tru
         resource.set_flag_to_recreate_aggregation_meta_files(orig_path=src_full_path, new_path=tgt_full_path)
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
+
+
+def user_from_bucket_name(bucket_name: str) -> User:
+    """
+    Get the user from the bucket name
+    :param bucket_name: the name of the bucket
+    :return: the user
+    :raises: User.DoesNotExist if the user does not exist
+    """
+    return User.objects.get(userprofile___bucket_name=bucket_name)
 
 
 def is_ajax(request):

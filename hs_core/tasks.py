@@ -737,16 +737,13 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
 
 
 @shared_task
-def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None, sf_zip=False, download_path='',
-                    request_username=None):
+def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None, sf_zip=False):
     """ Create temporary zip file from input_path and store in output_path
     :param resource_id: the short_id of a resource
     :param input_path: full irods path of input starting with federation path
     :param output_path: full irods path of output starting with federation path
     :param aggregation_name: The name of the aggregation to zip
     :param sf_zip: signals a single file to zip
-    :param download_path: download path to return as task payload
-    :param request_username: the username of the requesting user
     """
     from hs_core.hydroshare.utils import get_resource_by_shortkey
     res = get_resource_by_shortkey(resource_id)
@@ -787,33 +784,39 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
 
         if aggregation:
             try:
-                istorage.copyFiles(aggregation.map_file_path, temp_folder_name)
+                istorage.copyFiles(aggregation.map_file_path,
+                                   os.path.join(temp_folder_name, os.path.basename(aggregation.map_file_path)))
             except SessionException:
                 logger.error("cannot copy {}".format(aggregation.map_file_path))
             try:
-                istorage.copyFiles(aggregation.metadata_file_path, temp_folder_name)
+                istorage.copyFiles(aggregation.metadata_file_path,
+                                   os.path.join(temp_folder_name, os.path.basename(aggregation.metadata_file_path)))
             except SessionException:
                 logger.error("cannot copy {}".format(aggregation.metadata_file_path))
             if aggregation.is_model_program or aggregation.is_model_instance:
                 try:
-                    istorage.copyFiles(aggregation.schema_file_path, temp_folder_name)
+                    istorage.copyFiles(aggregation.schema_file_path,
+                                       os.path.join(temp_folder_name, os.path.basename(aggregation.schema_file_path)))
                 except SessionException:
                     logger.error("cannot copy {}".format(aggregation.schema_file_path))
                 if aggregation.is_model_instance:
                     try:
-                        istorage.copyFiles(aggregation.schema_values_file_path, temp_folder_name)
+                        basename = os.path.basename(aggregation.schema_values_file_path)
+                        istorage.copyFiles(aggregation.schema_values_file_path,
+                                           os.path.join(temp_folder_name, basename))
                     except SessionException:
                         logger.error("cannot copy {}".format(aggregation.schema_values_file_path))
             for file in aggregation.files.all():
                 try:
-                    istorage.copyFiles(file.storage_path, temp_folder_name)
+                    istorage.copyFiles(file.storage_path,
+                                       os.path.join(temp_folder_name, os.path.basename(file.storage_path)))
                 except SessionException:
                     logger.error("cannot copy {}".format(file.storage_path))
         istorage.zipup(temp_folder_name, output_path)
         istorage.delete(temp_folder_name)  # delete working directory; this isn't the zipfile
     else:  # regular folder to zip
         istorage.zipup(input_path, output_path)
-    return download_path
+    return istorage.signed_url(output_path)
 
 
 @shared_task
@@ -860,7 +863,7 @@ def create_bag_by_irods(resource_id, create_zip=True):
                     chksum = istorage.checksum(bag_path)
                     res.bag_checksum = chksum
                 res.setAVU("bag_modified", False)
-                return res.bag_url
+                return istorage.signed_url(bag_path)
             except SessionException as ex:
                 raise SessionException(-1, '', ex.stderr)
         else:
