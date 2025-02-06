@@ -60,7 +60,8 @@ class TestDiscoverResourceDelete(HSRESTTestCase):
         # set the resource to discoverable so that it shows up in the discover view
         resource.raccess.discoverable = True
         resource.raccess.save()
-
+        import time
+        time.sleep(3)
         response = self.client.get(reverse('discover-hsapi', kwargs={}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.content.decode())

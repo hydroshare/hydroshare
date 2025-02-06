@@ -66,6 +66,8 @@ class TestDeleteResource(MockIRODSTestCaseMixin, TestCase):
         current_index_count = len(SearchQuerySet().all())
 
         new_res.set_public(True)
+        import time
+        time.sleep(3)
         self.assertEqual(len(SearchQuerySet().all()), current_index_count + 1)
 
         resource.delete_resource(new_res.short_id)

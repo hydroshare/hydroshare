@@ -48,6 +48,8 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
 
         # matching search test
         response = self.client.get(reverse('discover-hsapi', kwargs={}) + "?title__contains=Test")
+        import time
+        time.sleep(3)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.content.decode())
         # there should be one matching resource in the index
