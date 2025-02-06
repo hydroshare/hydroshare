@@ -463,6 +463,7 @@ def create_resource(
             **kwargs
         )
 
+        resource.get_irods_storage().create_bucket(owner.userprofile.bucket_name)
         resource.resource_type = resource_type
 
         # by default make resource private
@@ -542,8 +543,6 @@ def create_resource(
             # more than ~15 seconds to complete.
             add_resource_files(resource.short_id, *files, full_paths=full_paths,
                                auto_aggregate=auto_aggregate, resource=resource)
-        else:
-            utils.create_empty_contents_directory(resource)
 
         if create_bag:
             hs_bagit.create_bag(resource)
@@ -726,10 +725,7 @@ def add_resource_files(pk, *files, **kwargs):
                                               save_file_system_metadata=False)
         uploaded_res_files.append(res_file)
 
-    if not uploaded_res_files:
-        # no file has been added, make sure data/contents directory exists if no file is added
-        utils.create_empty_contents_directory(resource)
-    else:
+    if uploaded_res_files:
         if resource.resource_type == "CompositeResource":
             upload_to_folder = base_dir
             if upload_to_folder:

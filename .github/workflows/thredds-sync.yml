@@ -1,0 +1,45 @@
+name: RCLONE Sync Public Thredds compatible resources to the THREDDS S3 bucket
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check-and-sync:
+    runs-on: ubuntu-latest
+
+    steps:
+    
+    - uses: milliewalky/setup-rclone@v1
+      with:
+        conf: ${{ secrets.RCLONE_CONF_BASE64 }}
+
+    - name: Echo secrets
+      run: |
+        echo $GCS_CREDS_JSON >> gcs_creds.json
+      shell: bash
+      env:
+        GCS_CREDS_JSON : ${{secrets.GCS_CREDS_JSON}}
+
+    - name: Mirror HydroShare THREDDS compatibles public resources to THREDDS S3 bucket
+      run: |
+        export RCLONE_GCS_BUCKET_POLICY_ONLY=true
+        resources=$(curl -X GET "https://beta.hydroshare.org/hsapi/thredds/" -H  "accept: application/json" -H  "authorization: Basic ${{ secrets.HSAPI_AUTHORIZATION }}")
+        resource_ids=$(echo $resources | grep -o '"[^"]*"' | tr -d '"')
+        resource_ids_array=($resource_ids)
+        # drop resource_id from the array
+        resource_ids_array=("${resource_ids_array[@]:1}")
+        for resource_id in "${resource_ids_array[@]}"; do
+            bucket_name=$(curl -X GET "https://beta.hydroshare.org/hsapi/resource/$resource_id/quota_holder_bucket_name/" -H  "accept: application/json" -H  "authorization: Basic ${{ secrets.HSAPI_AUTHORIZATION }}")
+            echo $resource_id
+            rclone sync hydroshare:$bucket_name/$resource_id thredds:/hydroshare-thredds-catalog/catalog/prod/$resource_id
+        done
+
+        thredds_resource_list=$(rclone lsd thredds:hydroshare-thredds-catalog/catalog/prod | awk '{print $5}' | sed 's:/*$::')
+        thredds_resource_array=($thredds_resource_list)
+
+        for resource_id in "${thredds_resource_array[@]}"; do
+            if [[ ! " ${resource_ids_array[@]} " =~ " ${resource_id} " ]]; then
+                echo "removing $resource_id"
+                rclone delete thredds:hydroshare-thredds-catalog/catalog/prod/$resource_id
+            fi
+        done

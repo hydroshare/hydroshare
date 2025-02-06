@@ -1,6 +1,5 @@
 import asyncio
 import copy
-import errno
 import logging
 import mimetypes
 import os
@@ -177,47 +176,6 @@ def community_from_id(community):
     return tgt
 
 
-# TODO: replace with a cache facility that has automatic cleanup
-# TODO: pass a list rather than a string to allow commas in filenames.
-def get_fed_zone_files(irods_fnames):
-    """
-    Get the files from iRODS federated zone to Django server for metadata extraction on-demand
-    for specific resource types
-    Args:
-        irods_fnames: the logical iRODS file names with full logical path separated by comma
-
-    Returns:
-    a list of the named temp files which have been copied over to local Django server
-    or raise exceptions if input parameter is wrong or iRODS operations fail
-
-    Note: application must delete these files after use.
-    """
-    ret_file_list = []
-    if isinstance(irods_fnames, str):
-        ifnames = irods_fnames.split(',')
-    elif isinstance(irods_fnames, list):
-        ifnames = irods_fnames
-    else:
-        raise ValueError("Input parameter to get_fed_zone_files() must be String or List")
-    irods_storage = IrodsStorage('federated')
-    for ifname in ifnames:
-        fname = os.path.basename(ifname.rstrip(os.sep))
-        # TODO: this is statistically unique but not guaranteed to be unique.
-        tmpdir = os.path.join(settings.TEMP_FILE_DIR, uuid4().hex)
-        tmpfile = os.path.join(tmpdir, fname)
-        try:
-            os.makedirs(tmpdir)
-        except OSError as ex:
-            if ex.errno == errno.EEXIST:
-                shutil.rmtree(tmpdir)
-                os.makedirs(tmpdir)
-            else:
-                raise Exception(str(ex))
-        irods_storage.getFile(ifname, tmpfile)
-        ret_file_list.append(tmpfile)
-    return ret_file_list
-
-
 # TODO: make the local cache file (and cleanup) part of ResourceFile state?
 def get_file_from_irods(resource, file_path, temp_dir=None):
     """
@@ -234,6 +192,7 @@ def get_file_from_irods(resource, file_path, temp_dir=None):
     """
 
     istorage = resource.get_irods_storage()
+
     file_name = os.path.basename(file_path)
 
     if temp_dir is not None:
@@ -245,11 +204,11 @@ def get_file_from_irods(resource, file_path, temp_dir=None):
         tmpdir = temp_dir
     else:
         tmpdir = get_temp_dir()
-
     tmpfile = os.path.join(tmpdir, file_name)
-    istorage.getFile(file_path, tmpfile)
-    copied_file = tmpfile
-    return copied_file
+
+    istorage.download_file(file_path, tmpfile)
+
+    return tmpfile
 
 
 def get_temp_dir():
@@ -277,7 +236,7 @@ def replace_resource_file_on_irods(new_file, original_resource_file, user):
     ori_storage_path = original_resource_file.storage_path
 
     # Note: this doesn't update metadata at all.
-    istorage.saveFile(new_file, ori_storage_path, True)
+    istorage.saveFile(new_file, ori_storage_path)
 
     # do this so that the bag will be regenerated prior to download of the bag
     resource_modified(ori_res, by_user=user, overwrite_bag=False)
@@ -337,9 +296,8 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
     istorage = src_res.get_irods_storage()
 
     # This makes an exact copy of all physical files.
-    src_files = os.path.join(src_res.root_path, 'data')
-    # This has to be one segment short of the source because it is a target directory.
-    dest_files = tgt_res.root_path
+    src_files = os.path.join(src_res.root_path, 'data', 'contents')
+    dest_files = os.path.join(tgt_res.root_path, 'data', 'contents')
     istorage.copyFiles(src_files, dest_files)
 
     src_coll = src_res.root_path
@@ -978,14 +936,6 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
                                                auto_aggregate=auto_aggregate, user=user)
     resource.refresh_from_db()
     return resource_file_objects
-
-
-# TODO: move this to BaseResource
-def create_empty_contents_directory(resource):
-    res_contents_dir = resource.file_path
-    istorage = resource.get_irods_storage()
-    if not istorage.exists(res_contents_dir):
-        istorage.session.run("imkdir", None, '-p', res_contents_dir)
 
 
 def add_file_to_resource(resource, f, folder='', source_name='',

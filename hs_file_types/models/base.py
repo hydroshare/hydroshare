@@ -1404,14 +1404,14 @@ class AbstractLogicalFile(models.Model):
             with open(meta_from_file_name, 'w') as out:
                 out.write(self.metadata.get_xml())
             to_file_name = self.metadata_file_path
-            istorage.saveFile(meta_from_file_name, to_file_name, True)
+            istorage.saveFile(meta_from_file_name, to_file_name)
             log.debug("Aggregation metadata xml file:{} created".format(to_file_name))
 
             if create_map_xml:
                 with open(map_from_file_name, 'w') as out:
                     out.write(self.generate_map_xml())
                 to_file_name = self.map_file_path
-                istorage.saveFile(map_from_file_name, to_file_name, True)
+                istorage.saveFile(map_from_file_name, to_file_name)
                 log.debug("Aggregation map xml file:{} created".format(to_file_name))
             # setting bag flag to dirty - as resource map document needs to be re-generated as
             # resource map xml file has references to aggregation map xml file paths
