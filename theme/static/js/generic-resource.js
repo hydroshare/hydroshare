@@ -462,10 +462,6 @@ $(document).ready(function () {
     }
     else {
         $("#file-multiple").text("Only one file can be uploaded.");
-
-        if (FILE_COUNT > 0) {
-            $("#sign-in-info").hide();
-        }
     }
 
     if ($("input:button[value='Delete creator']").length == 1) {

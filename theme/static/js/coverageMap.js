@@ -150,9 +150,7 @@ async function drawInitialShape() {
       drawMarkerOnTextChange();
     }
   }
-  if (sessionStorage.signininfo) {
-    $("#sign-in-info").text(sessionStorage.signininfo);
-  }
+
   coverageMap.initialShapesDrawn = true;
 }
 
