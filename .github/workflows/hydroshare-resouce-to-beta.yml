@@ -1,0 +1,62 @@
+name: Prod to Beta
+
+on:
+  workflow_dispatch:
+    inputs:
+      resource_ids:
+        description: 'Comma-separated list of resource IDs to check and sync'
+        required: true
+
+jobs:
+  check-and-sync:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Install MinIO CLI (mc)
+      run: |
+        curl -O https://dl.min.io/client/mc/release/linux-amd64/mc
+        chmod +x mc
+        sudo mv mc /usr/local/bin/mc
+
+    - name: Set Up MinIO Environment Variables
+      env:
+        MC_HOST_prod: https://${{ secrets.MINIO_PROD_ACCESS_KEY }}:${{ secrets.MINIO_PROD_SECRET_KEY }}@${{ secrets.MINIO_PROD_URL }}
+        MC_HOST_beta: https://${{ secrets.MINIO_BETA_ACCESS_KEY }}:${{ secrets.MINIO_BETA_SECRET_KEY }}@${{ secrets.MINIO_BETA_URL }}
+      run: |
+        echo "MinIO aliases configured using environment variables."
+
+    - name: Retrieve and Sync Buckets
+      env:
+        RESOURCE_IDS: ${{ github.event.inputs.resource_ids }}
+        ADMIN_AUTH: ${{ secrets.ADMIN_AUTH }}
+      run: |
+        echo "Processing resource IDs: $RESOURCE_IDS"
+        IFS=',' read -ra RESOURCES <<< "$RESOURCE_IDS"
+
+        for RESOURCE_ID in "${RESOURCES[@]}"; do
+          echo "Fetching bucket name for resource: $RESOURCE_ID"
+          
+          # Fetch the bucket name using the API
+          BUCKET_NAME=$(curl -s -X GET "https://beta.hydroshare.org/hsapi/resource/$RESOURCE_ID/quota_holder_bucket_name/" \
+          -H "accept: application/json" \
+          -H "authorization: Basic $ADMIN_AUTH")
+
+          if [ -z "$BUCKET_NAME" ] || [ "$BUCKET_NAME" == "null" ]; then
+            echo "Error: Could not fetch bucket name for resource $RESOURCE_ID"
+            continue
+          fi
+
+          echo "Bucket name for resource $RESOURCE_ID is $BUCKET_NAME"
+
+          # Ensure the bucket exists on the target
+          echo "Ensuring bucket $BUCKET_NAME exists on the target MinIO server..."
+          mc mb --ignore-existing beta/$BUCKET_NAME
+
+          # Sync the bucket
+          echo "Syncing bucket $BUCKET_NAME from prod to beta..."
+          mc mirror --remove --overwrite prod/$BUCKET_NAME beta/$BUCKET_NAME
+          echo "Sync for bucket $BUCKET_NAME completed successfully."
+        done
