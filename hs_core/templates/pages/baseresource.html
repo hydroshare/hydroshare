@@ -3,7 +3,6 @@
 {% load ratings_tags pages_tags keyword_tags hydroshare_tags crispy_forms_tags %}
 
 {% block extra_head %}
-    <link href="{% static 'css/site_base_irods.css' %}" rel="stylesheet"/>
     <link rel="stylesheet" type="text/css" href="{% static 'css/jquery.dataTables.min.css' %}">
     <link href="{% static 'css/toolresource.css' %}" rel="stylesheet"/>
     <link href="{% static 'css/modal-vue.css' %}" rel="stylesheet"/>
@@ -704,44 +703,6 @@
                                                        class="btn btn-success btn-xs dz-clickable upload-toggle">
                                                         <i class="fa fa-plus"></i> Add files
                                                     </a>
-
-                                                    <div id="irods-group" class="btn-group">
-                                                        <button type="button"
-                                                                class="btn btn-default btn-xs dropdown-toggle fb-space-right"
-                                                                data-toggle="dropdown" aria-haspopup="true"
-                                                                title="Add files from an iRODS server"
-                                                                aria-expanded="false"
-                                                                {% if remaining_quota <= 0 %}disabled{% endif %}>
-                                                            <span>iRODS</span>&nbsp;<span class="caret"></span>
-                                                        </button>
-
-                                                        <ul class="dropdown-menu text-left">
-                                                            <li id="btn-signin-irods" data-toggle="modal"
-                                                                data-target="#irodsSignin">
-                                                                <a>
-                                                                    <span class="glyphicon glyphicon-log-in icon-blue"></span>&nbsp;&nbsp;Log
-                                                                    in to iRODS
-                                                                </a>
-                                                            </li>
-
-                                                            <li id="btn-select-irods-file" class="dz-clickable hidden"
-                                                                data-fb-action="uploadFiles"
-                                                                data-toggle="modal" data-target="#irodsContent">
-                                                                <a>
-                                                                    <i class="fa fa-plus icon-green"></i>&nbsp;&nbsp;Add
-                                                                    files from iRODS...
-                                                                </a>
-                                                            </li>
-
-                                                            <li role="separator" class="divider hidden"></li>
-                                                            <li id="btn-signout-irods" class="hidden">
-                                                                <a>
-                                                                    <span class="glyphicon glyphicon-log-out btn-remove"></span>&nbsp;&nbsp;Log
-                                                                    out of iRODS
-                                                                </a>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
                                                 {% endif %}
                                             {% endif %}
 

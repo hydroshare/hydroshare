@@ -168,9 +168,9 @@ else
 fi
 
 DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
-HYDROSHARE_CONTAINERS=(hydroshare defaultworker data.local.org rabbitmq solr postgis companion redis nginx)
-HYDROSHARE_VOLUMES=(hydroshare_idata_iconf_vol hydroshare_idata_pgres_vol hydroshare_idata_vault_vol hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol)
-HYDROSHARE_IMAGES=(hydroshare-defaultworker hydroshare-hydroshare solr hydroshare/hs-irods postgis/postgis rabbitmq nginx redis transloadit/companion)
+HYDROSHARE_CONTAINERS=(hydroshare defaultworker rabbitmq solr postgis companion redis nginx minio)
+HYDROSHARE_VOLUMES=(hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol minio_data_vol)
+HYDROSHARE_IMAGES=(hydroshare-defaultworker hydroshare-hydroshare solr postgis/postgis rabbitmq nginx redis transloadit/companion minio/minio)
 
 NODE_CONTAINER_RUNNING=`docker ps -a | grep nodejs`
 
@@ -261,29 +261,7 @@ echo
 echo " - building Node for Discovery in background"
 node_build > /dev/null 2>&1 &
 
-echo
-echo '########################################################################################################################'
-echo -e " Setting up iRODS"
-echo '########################################################################################################################'
-echo
-
-echo " - waiting for iRODS containers to come up..."
-COUNT=0
-SECOND=0
-while [ $COUNT -lt 2 ]
-do
-  DATA=`docker logs data.local.org 2>/dev/null | grep 'iRODS is installed and running'`
-  if [ "$DATA" != "" ]; then
-    COUNT=$(($COUNT + 1))
-  fi
-  SECOND=$(($SECOND + 1))
-  echo -ne "$SECOND ...\033[0K\r" && sleep 1;
-done
-
-cd irods/
-./partial_build.sh 
-cd ..
-sleep 2
+sleep 180
 
 echo
 echo '########################################################################################################################'

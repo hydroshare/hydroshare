@@ -1584,13 +1584,9 @@ body > .main-container {
 	word-break: break-word;
 }
 
-#btn-select-irods-file, #rep-res-bag {
+#rep-res-bag {
 	margin: 10px 0;
 	max-width: 100%;
-}
-
-#btn-select-irods-file.disabled {
-	pointer-events: none;
 }
 
 div#sharing-status .col-sm-12{

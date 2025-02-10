@@ -434,7 +434,6 @@ INSTALLED_APPS = (
     "hs_access_control",
     "hs_labels",
     "hs_metrics",
-    "irods_browser_app",
     "widget_tweaks",
     "hs_tools_resource",
     "hs_sitemap",
@@ -975,6 +974,13 @@ MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
 )
 
 BULK_UPDATE_CREATE_BATCH_SIZE = 1000
+
+
+AWS_S3_ACCESS_KEY_ID = 'minioadmin'
+AWS_S3_SECRET_ACCESS_KEY = 'minioadmin'
+AWS_S3_ENDPOINT_URL = 'http://minio:9000'
+
+ACCESS_CONTROL_CHANGE_ENDPOINT = None
 
 if ENABLE_OIDC_AUTHENTICATION:
     # The order of the authentication classes is important. The OIDC authentication class

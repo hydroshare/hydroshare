@@ -87,9 +87,6 @@ class TestCaseCommonUtilities(object):
         store = istorage.listdir(res_path)
         self.assertIn('sub_test_dir', store[0], msg='resource does not contain created sub-folder')
 
-        # create a temporary zips folder to make sure no duplicate folders are returned from listdir()
-        zip_res_coll_path = os.path.join('zips', '2020-02-03', res.short_id, 'data', 'contents', 'sub_test_dir')
-        istorage.session.run("imkdir", None, '-p', zip_res_coll_path)
         store = istorage.listdir(res_path)
         self.assertEqual(store[0].count('sub_test_dir'), 1, msg='duplicate folder: sub_test_dir occurred more '
                                                                 'than once')
@@ -134,9 +131,7 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(res.files.all().count(), 2, msg="resource file count didn't match-")
 
         # >> testing folder name collision upon unzip
-        # create a folder 'sub_test_dir' same as the folder we expect the unzip to create
-        create_folder(res.short_id, 'data/contents/sub_test_dir')
-        # unzip should fail due to folder name (sub_test_dir) collision
+        # unzip should fail due to previous unzip collision
         with self.assertRaises(FileOverrideException):
             unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', bool_remove_original=False)
 
@@ -184,7 +179,6 @@ class TestCaseCommonUtilities(object):
         # remove all files in sub_test_dir created by unzip, and then create an empty sub_test_dir
         for rf in res.files.all():
             rf.delete()
-        create_folder(res.short_id, 'data/contents/sub_test_dir')
 
         # add 2 files to the root folder
         add_resource_files(res.short_id, self.test_file_1, self.test_file_3)
