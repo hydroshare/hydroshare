@@ -262,11 +262,10 @@
 import DatePick from 'vue-date-pick';
 import 'vue-date-pick/dist/vueDatePick.css';
 import axios from 'axios'; // css font-size overridden in hs_discover/index.html to enforce 1em
-
-let publicPath = process.env.VUE_APP_BUCKET_URL_PUBLIC_PATH;
-if (publicPath == null) {
-  publicPath = '/static/static/';
-}
+// STATIC_URL is a global var set in the Django template
+// use that to set the publicPath for the resource icons
+// eslint-disable-next-line no-undef
+const publicPath = STATIC_URL;
 
 export default {
   data() {

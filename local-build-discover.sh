@@ -75,13 +75,6 @@ echo '##########################################################################
 echo "Starting Node Build .... "
 echo '####################################################################################################'
 
-if [ -z ${VUE_APP_BUCKET_URL_PUBLIC_PATH+x} ]; then VUE_APP_BUCKET_URL_PUBLIC_PATH=/static/static ; fi
-
-echo "Building with VUE_APP_BUCKET_URL_PUBLIC_PATH: $VUE_APP_BUCKET_URL_PUBLIC_PATH"
-echo "Export this environment variable to change the base URL"
-echo "Example: export VUE_APP_BUCKET_URL_PUBLIC_PATH=https://storage.googleapis.com/hydroshare/static"
-echo "This should be the same as the STATIC_URL in the Django settings"
-
 ### Create Directory structure outside to maintain correct permissions
 cd hs_discover
 rm -rf static templates
@@ -91,7 +84,7 @@ mkdir static/js
 mkdir static/css
 
 # Start Docker container and Run build
-docker run -e VUE_APP_BUCKET_URL_PUBLIC_PATH -i -v $HS_PATH:/hydroshare --name=nodejs --user=$HS_UID:$HS_GID node:$n_ver /bin/bash << eof
+docker run -i -v $HS_PATH:/hydroshare --name=nodejs --user=$HS_UID:$HS_GID node:$n_ver /bin/bash << eof
 
 cd hydroshare
 cd hs_discover
@@ -127,6 +120,15 @@ echo '##########################################################################
 echo
 
 node_build
+
+echo
+echo '########################################################################################################################'
+echo " Replacing env vars in static files for Discovery"
+echo '########################################################################################################################'
+echo
+
+echo "  -docker exec -u hydro-service hydroshare ./discover-entrypoint.sh"
+docker exec -u hydro-service hydroshare ./discover-entrypoint.sh
 
 echo
 echo '########################################################################################################################'
