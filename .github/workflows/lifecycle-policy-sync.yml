@@ -1,7 +1,13 @@
 name: Ensures all buckets have a lifecycle policy
+# secrets required:
+# MINIO_PROD_ACCESS_KEY
+# MINIO_PROD_SECRET_KEY
+# MINIO_PROD_URL
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
 
 jobs:
   check-and-sync:
