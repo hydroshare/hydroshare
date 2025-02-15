@@ -24,7 +24,6 @@ jobs:
         sudo mv mc /usr/local/bin/mc
 
     - name: Check each bucket for a resource and add the default policy if no policy exists
-      continue-on-error: true
       env:
         MC_ALIAS_STRING: ${{ secrets.MINIO_PROD_URL }} ${{ secrets.MINIO_PROD_ACCESS_KEY }} ${{ secrets.MINIO_PROD_SECRET_KEY }}
       run: |
@@ -43,10 +42,7 @@ jobs:
             bucket_name=${line##* }
             bucket_name=${bucket_name%/}
             echo "Checking if rule already exists for the bucket: $bucket_name"
-            existing_rule=$(mc ilm rule ls hydroshare/$bucket_name)
-            if [[ -n "$existing_rule" ]]; then
-                command=""
-            else
+            if [[ $(mc ilm rule ls hydroshare/$bucket_name 2>&1) =~ "Unable to get lifecycle" ]]; then
                 echo "missing rule for $bucket_name"
                 command="mc ilm rule add --transition-days \"0\" --transition-tier \"GCS\" hydroshare/$bucket_name"
                 eval $command
