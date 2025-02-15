@@ -25,8 +25,10 @@ jobs:
 
     - name: Check each bucket for a resource and add the default policy if no policy exists
       env:
-        MC_HOST_hydroshare: https://${{ secrets.MINIO_PROD_ACCESS_KEY }}:${{ secrets.MINIO_PROD_SECRET_KEY }}@${{ secrets.MINIO_PROD_URL }}
+        MC_ALIAS_STRING: ${{ secrets.MINIO_PROD_URL }} ${{ secrets.MINIO_PROD_ACCESS_KEY }} ${{ secrets.MINIO_PROD_SECRET_KEY }}
       run: |
+        # https://min.io/docs/minio/linux/reference/minio-mc/mc-alias-set.html#command-mc.alias.set
+        mc alias set hydroshare $MC_ALIAS_STRING
         command_output=$(mc ls hydroshare)
         lines=()
 
