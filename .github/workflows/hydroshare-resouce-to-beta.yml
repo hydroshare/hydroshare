@@ -65,6 +65,6 @@ jobs:
 
           # Sync the bucket
           echo "Syncing bucket $BUCKET_NAME from prod to beta..."
-          mc mirror --remove --overwrite prod/$BUCKET_NAME beta/$BUCKET_NAME
+          mc mirror --remove --overwrite $MC_HOST_prod/$BUCKET_NAME $MC_HOST_beta/$BUCKET_NAME
           echo "Sync for bucket $BUCKET_NAME completed successfully."
         done
