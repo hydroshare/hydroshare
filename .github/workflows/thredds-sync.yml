@@ -27,7 +27,10 @@ jobs:
         GCS_CREDS_JSON : ${{secrets.GCS_CREDS_JSON}}
 
     - name: Mirror HydroShare THREDDS compatibles public resources to THREDDS S3 bucket
+      env:
+        MC_ALIAS_STRING: ${{ secrets.MINIO_PROD_URL }} ${{ secrets.MINIO_PROD_ACCESS_KEY }} ${{ secrets.MINIO_PROD_SECRET_KEY }}
       run: |
+        mc alias set hydroshare $MC_ALIAS_STRING
         export RCLONE_GCS_BUCKET_POLICY_ONLY=true
         resources=$(curl -X GET "https://hydroshare.org/hsapi/thredds/" -H  "accept: application/json" -H  "authorization: Basic ${{ secrets.HSAPI_AUTHORIZATION }}")
         resource_ids=$(echo $resources | grep -o '"[^"]*"' | tr -d '"')

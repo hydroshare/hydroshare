@@ -1,4 +1,12 @@
-name: Prod to Beta
+name: Sync Resource Files From Production to Beta
+# secrets required:
+# HSAPI_AUTHORIZATION
+# MINIO_PROD_ACCESS_KEY
+# MINIO_PROD_SECRET_KEY
+# MINIO_PROD_URL
+# MINIO_BETA_ACCESS_KEY
+# MINIO_BETA_SECRET_KEY
+# MINIO_BETA_URL
 
 on:
   workflow_dispatch:
@@ -21,17 +29,21 @@ jobs:
         chmod +x mc
         sudo mv mc /usr/local/bin/mc
 
-    - name: Set Up MinIO Environment Variables
+    - name: Set Up MinIO Aliases
       env:
-        MC_HOST_prod: https://${{ secrets.MINIO_PROD_ACCESS_KEY }}:${{ secrets.MINIO_PROD_SECRET_KEY }}@${{ secrets.MINIO_PROD_URL }}
-        MC_HOST_beta: https://${{ secrets.MINIO_BETA_ACCESS_KEY }}:${{ secrets.MINIO_BETA_SECRET_KEY }}@${{ secrets.MINIO_BETA_URL }}
+        PROD_ALIAS_STRING: ${{ secrets.MINIO_PROD_URL }} ${{ secrets.MINIO_PROD_ACCESS_KEY }} ${{ secrets.MINIO_PROD_SECRET_KEY }}
+        BETA_ALIAS_STRING: ${{ secrets.MINIO_BETA_URL }} ${{ secrets.MINIO_BETA_SECRET_KEY }} ${{ secrets.MINIO_BETA_SECRET_KEY }}
       run: |
+        # https://min.io/docs/minio/linux/reference/minio-mc/mc-alias-set.html#command-mc.alias.set
+        echo "Setting up MinIO aliases..."
+        mc alias set prod $PROD_ALIAS_STRING
+        mc alias set beta $BETA_ALIAS_STRING
         echo "MinIO aliases configured using environment variables."
 
     - name: Retrieve and Sync Buckets
       env:
         RESOURCE_IDS: ${{ github.event.inputs.resource_ids }}
-        ADMIN_AUTH: ${{ secrets.ADMIN_AUTH }}
+        HSAPI_AUTHORIZATION: ${{ secrets.HSAPI_AUTHORIZATION }}
       run: |
         echo "Processing resource IDs: $RESOURCE_IDS"
         IFS=',' read -ra RESOURCES <<< "$RESOURCE_IDS"
@@ -40,9 +52,9 @@ jobs:
           echo "Fetching bucket name for resource: $RESOURCE_ID"
           
           # Fetch the bucket name using the API
-          BUCKET_NAME=$(curl -s -X GET "https://beta.hydroshare.org/hsapi/resource/$RESOURCE_ID/quota_holder_bucket_name/" \
+          BUCKET_NAME=$(curl -s -X GET "https://www.hydroshare.org/hsapi/resource/$RESOURCE_ID/quota_holder_bucket_name/" \
           -H "accept: application/json" \
-          -H "authorization: Basic $ADMIN_AUTH")
+          -H "authorization: Basic $HSAPI_AUTHORIZATION")
 
           if [ -z "$BUCKET_NAME" ] || [ "$BUCKET_NAME" == "null" ]; then
             echo "Error: Could not fetch bucket name for resource $RESOURCE_ID"
