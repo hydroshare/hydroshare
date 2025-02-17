@@ -1,4 +1,12 @@
 name: Prod to Beta
+# secrets required:
+# HSAPI_AUTHORIZATION
+# MINIO_PROD_ACCESS_KEY
+# MINIO_PROD_SECRET_KEY
+# MINIO_PROD_URL
+# MINIO_BETA_ACCESS_KEY
+# MINIO_BETA_SECRET_KEY
+# MINIO_BETA_URL
 
 on:
   workflow_dispatch:
@@ -31,7 +39,7 @@ jobs:
     - name: Retrieve and Sync Buckets
       env:
         RESOURCE_IDS: ${{ github.event.inputs.resource_ids }}
-        ADMIN_AUTH: ${{ secrets.ADMIN_AUTH }}
+        HSAPI_AUTHORIZATION: ${{ secrets.HSAPI_AUTHORIZATION }}
       run: |
         echo "Processing resource IDs: $RESOURCE_IDS"
         IFS=',' read -ra RESOURCES <<< "$RESOURCE_IDS"
@@ -42,7 +50,7 @@ jobs:
           # Fetch the bucket name using the API
           BUCKET_NAME=$(curl -s -X GET "https://beta.hydroshare.org/hsapi/resource/$RESOURCE_ID/quota_holder_bucket_name/" \
           -H "accept: application/json" \
-          -H "authorization: Basic $ADMIN_AUTH")
+          -H "authorization: Basic $HSAPI_AUTHORIZATION")
 
           if [ -z "$BUCKET_NAME" ] || [ "$BUCKET_NAME" == "null" ]; then
             echo "Error: Could not fetch bucket name for resource $RESOURCE_ID"
