@@ -48,7 +48,7 @@ jobs:
           echo "Fetching bucket name for resource: $RESOURCE_ID"
           
           # Fetch the bucket name using the API
-          BUCKET_NAME=$(curl -s -X GET "https://beta.hydroshare.org/hsapi/resource/$RESOURCE_ID/quota_holder_bucket_name/" \
+          BUCKET_NAME=$(curl -s -X GET "https://www.hydroshare.org/hsapi/resource/$RESOURCE_ID/quota_holder_bucket_name/" \
           -H "accept: application/json" \
           -H "authorization: Basic $HSAPI_AUTHORIZATION")
 
