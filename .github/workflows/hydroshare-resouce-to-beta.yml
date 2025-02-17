@@ -1,4 +1,4 @@
-name: Prod to Beta
+name: Sync Resource Files From Production to Beta
 # secrets required:
 # HSAPI_AUTHORIZATION
 # MINIO_PROD_ACCESS_KEY
