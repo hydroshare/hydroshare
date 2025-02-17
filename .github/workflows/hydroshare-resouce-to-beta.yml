@@ -29,11 +29,15 @@ jobs:
         chmod +x mc
         sudo mv mc /usr/local/bin/mc
 
-    - name: Set Up MinIO Environment Variables
+    - name: Set Up MinIO Aliases
       env:
-        MC_HOST_prod: https://${{ secrets.MINIO_PROD_ACCESS_KEY }}:${{ secrets.MINIO_PROD_SECRET_KEY }}@${{ secrets.MINIO_PROD_URL }}
-        MC_HOST_beta: https://${{ secrets.MINIO_BETA_ACCESS_KEY }}:${{ secrets.MINIO_BETA_SECRET_KEY }}@${{ secrets.MINIO_BETA_URL }}
+        PROD_ALIAS_STRING: ${{ secrets.MINIO_PROD_URL }} ${{ secrets.MINIO_PROD_ACCESS_KEY }} ${{ secrets.MINIO_PROD_SECRET_KEY }}
+        BETA_ALIAS_STRING: ${{ secrets.MINIO_BETA_URL }} ${{ secrets.MINIO_BETA_SECRET_KEY }} ${{ secrets.MINIO_BETA_SECRET_KEY }}
       run: |
+        # https://min.io/docs/minio/linux/reference/minio-mc/mc-alias-set.html#command-mc.alias.set
+        echo "Setting up MinIO aliases..."
+        mc alias set prod $PROD_ALIAS_STRING
+        mc alias set beta $BETA_ALIAS_STRING
         echo "MinIO aliases configured using environment variables."
 
     - name: Retrieve and Sync Buckets
@@ -65,6 +69,6 @@ jobs:
 
           # Sync the bucket
           echo "Syncing bucket $BUCKET_NAME from prod to beta..."
-          mc mirror --remove --overwrite $MC_HOST_prod/$BUCKET_NAME $MC_HOST_beta/$BUCKET_NAME
+          mc mirror --remove --overwrite prod/$BUCKET_NAME beta/$BUCKET_NAME
           echo "Sync for bucket $BUCKET_NAME completed successfully."
         done
