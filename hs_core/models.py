@@ -4132,12 +4132,10 @@ class BaseResource(Page, AbstractResource):
         dataset_licenses_node = etree.SubElement(dataset_node, '{%s}program' % ai, name="AccessIndicators")
         pub_date_str = pub_date.strftime("%Y-%m-%d")
         rights = self.metadata.rights
-        license_node = etree.SubElement(dataset_licenses_node, '{%s}license_ref' % ai, applies_to="vor",
-                                        start_date=pub_date_str)
         if rights.url:
+            license_node = etree.SubElement(dataset_licenses_node, '{%s}license_ref' % ai, applies_to="vor",
+                                            start_date=pub_date_str)
             license_node.text = rights.url
-        else:
-            license_node.text = rights.statement
 
         # doi_data is required element for dataset
         doi_data_node = etree.SubElement(dataset_node, 'doi_data')
