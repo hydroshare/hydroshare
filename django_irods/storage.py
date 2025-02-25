@@ -292,8 +292,8 @@ class IrodsStorage(S3Storage):
         bucket, name = bucket_and_name(s3_bucket_name)
         self.connection.Bucket(bucket).download_file(name, local_file_path)
 
-    def signed_url(self, name):
-        super_url = super().url(name.strip("/"))
+    def signed_url(self, name, **kwargs):
+        super_url = super().url(name.strip("/"), kwargs)
         # check AWS_S3_USE_LOCAL setting to determine if we should return local url
         use_local = getattr(settings, "AWS_S3_USE_LOCAL", False)
         if use_local:
