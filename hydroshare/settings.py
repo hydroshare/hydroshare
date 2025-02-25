@@ -979,6 +979,8 @@ BULK_UPDATE_CREATE_BATCH_SIZE = 1000
 AWS_S3_ACCESS_KEY_ID = 'minioadmin'
 AWS_S3_SECRET_ACCESS_KEY = 'minioadmin'
 AWS_S3_ENDPOINT_URL = 'http://minio:9000'
+# Only enable this if you are using minio in local development
+# AWS_S3_USE_LOCAL = True
 
 ACCESS_CONTROL_CHANGE_ENDPOINT = None
 

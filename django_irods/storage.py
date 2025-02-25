@@ -8,6 +8,7 @@ import logging
 from django_irods.icommands import SessionException
 from django.urls import reverse
 from urllib.parse import urlencode
+from django.conf import settings
 
 from . import models as m
 from .utils import bucket_and_name, normalized_bucket_name
@@ -293,8 +294,10 @@ class IrodsStorage(S3Storage):
 
     def signed_url(self, name):
         super_url = super().url(name.strip("/"))
-        # if super_url.startswith("http://minio:9000"):  # TODO make this based on DEBUG setting?
-        #    return super_url.replace("http://minio:9000", "http://localhost:9000")
+        # check AWS_S3_USE_LOCAL setting to determine if we should return local url
+        use_local = getattr(settings, "AWS_S3_USE_LOCAL", False)
+        if use_local:
+            return super_url.replace("http://minio:9000", "http://localhost:9000")
         return super_url
 
     def url(self, name, url_download=False, zipped=False, aggregation=False):
