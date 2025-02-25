@@ -13,7 +13,7 @@ class HSClientMiddleware(MiddlewareMixin):
     def process_response(self, request, response):
         # https://github.com/hydroshare/hsclient/blob/1.1.5/hsclient/hydroshare.py#L1331
         # if a request is made from hsclient, it should contain a user-agent header like '... (hsclient 1.1.5)'
-        if True or 'hsclient' in request.META.get('HTTP_USER_AGENT', ''):
+        if 'hsclient' in request.META.get('HTTP_USER_AGENT', ''):
             # parse the version number from the user-agent header
             request_version_string = '0.0.0'
             try:
@@ -26,6 +26,7 @@ class HSClientMiddleware(MiddlewareMixin):
             request_version = tuple(map(int, request_version_string.split('.')))
             if request_version < min_version:
                 response = HttpResponse(status=400)
-                message = f'Please upgrade hsclient to version {min_version} or later'
+                message = f'Version {request_version_string} is deprecated. \
+                    Please upgrade hsclient to version {min_version_string} or later'
                 response.content = message
         return response
