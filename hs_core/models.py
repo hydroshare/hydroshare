@@ -4128,11 +4128,11 @@ class BaseResource(Page, AbstractResource):
                     award_node = etree.SubElement(funder_group_node, '{%s}assertion' % fr, name='award_number')
                     award_node.text = funder.award_number
 
-        # create dataset license sub element
-        dataset_licenses_node = etree.SubElement(dataset_node, '{%s}program' % ai, name="AccessIndicators")
-        pub_date_str = pub_date.strftime("%Y-%m-%d")
         rights = self.metadata.rights
         if rights.url:
+            # create dataset license sub element
+            dataset_licenses_node = etree.SubElement(dataset_node, '{%s}program' % ai, name="AccessIndicators")
+            pub_date_str = pub_date.strftime("%Y-%m-%d")
             license_node = etree.SubElement(dataset_licenses_node, '{%s}license_ref' % ai, applies_to="vor",
                                             start_date=pub_date_str)
             license_node.text = rights.url
