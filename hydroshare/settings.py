@@ -945,6 +945,8 @@ if any('pytest' in arg for arg in sys.argv) or 'test' in sys.argv:
         'PORT': '5432',
     }
 
+    TESTING = True
+
 ####################
 # DYNAMIC SETTINGS #
 ####################

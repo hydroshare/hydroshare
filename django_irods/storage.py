@@ -296,7 +296,7 @@ class IrodsStorage(S3Storage):
         super_url = super().url(name.strip("/"), kwargs)
         # check AWS_S3_USE_LOCAL setting to determine if we should return local url
         use_local = getattr(settings, "AWS_S3_USE_LOCAL", False)
-        if use_local:
+        if use_local and not settings.TESTING:
             return super_url.replace("http://minio:9000", "http://localhost:9000")
         return super_url
 
