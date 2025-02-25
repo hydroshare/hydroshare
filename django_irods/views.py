@@ -300,7 +300,8 @@ def download(request, path, use_async=True,
     # if we get here, none of the above conditions are true
     # if reverse proxy is enabled, then this is because the resource is remote and federated
     # OR the user specifically requested a non-proxied download.
-    signed_url = istorage.signed_url(irods_output_path)
+    filename = output_path.split('/')[-1]
+    signed_url = istorage.signed_url(irods_output_path, ResponseContentDisposition=f'attachment; filename="{filename}"')
     return HttpResponseRedirect(signed_url)
 
 
