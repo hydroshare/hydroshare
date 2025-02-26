@@ -3326,6 +3326,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             try:
                 self.save(update_fields=["_size", "filesize_cache_updated"])
             except Exception as e:
+                logger = logging.getLogger(__name__)
                 logger.error(f"Error saving file size for {self.storage_path}: {e}")
                 self._size = 0
                 self.save(update_fields=["_size", "filesize_cache_updated"])
