@@ -575,7 +575,7 @@ MIDDLEWARE = (
     "hs_core.middleware.HSClientMiddleware",
 )
 
-HSCLIENT_MIN_VERSION = "1.1.5"
+HSCLIENT_MIN_VERSION = "1.1.6"
 
 # security settings
 USE_SECURITY = False
