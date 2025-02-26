@@ -25,7 +25,6 @@ from django.core.validators import URLValidator
 from django.db import models, transaction
 from django.db.models import Q, Sum
 from django.db.models.signals import post_save
-from django.db.utils import IntegrityError
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from django.urls import reverse
@@ -3326,7 +3325,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         if save:
             try:
                 self.save(update_fields=["_size", "filesize_cache_updated"])
-            except IntegrityError as e:
+            except Exception as e:
                 logger.error(f"Error saving file size for {self.storage_path}: {e}")
                 self._size = 0
                 self.save(update_fields=["_size", "filesize_cache_updated"])
