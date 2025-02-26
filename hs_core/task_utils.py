@@ -140,6 +140,10 @@ def revoke_task_by_id(task_id):
     """
     result = AsyncResult(task_id)
     result.revoke(terminate=True)
+    filter_task = TaskNotification.objects.filter(task_id=task_id).first()
+    if filter_task:
+        filter_task.status = 'aborted'
+        filter_task.save()
     return {
         'id': task_id,
         'status': 'aborted',
