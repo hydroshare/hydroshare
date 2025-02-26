@@ -17,7 +17,8 @@ class HSClientMiddleware(MiddlewareMixin):
             # parse the version number from the user-agent header
             request_version_string = '0.0.0'
             try:
-                request_version_string = request.META.get('HTTP_USER_AGENT', '').split('hsclient ')[1]
+                # extract the version number from the user-agent header
+                request_version_string = request.META.get('HTTP_USER_AGENT', '').split('hsclient ')[1].split(')')[0]
             except IndexError:
                 pass
             # check if the version is less than allowed version
