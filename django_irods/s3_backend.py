@@ -1,5 +1,6 @@
 import os
 import posixpath
+import logging
 from datetime import datetime
 from datetime import timedelta
 from urllib.parse import urlencode
@@ -170,7 +171,14 @@ class S3Storage(s3.S3Storage):
         bucket, name = bucket_and_name(name)
         name = self._normalize_name(clean_name(name))
         try:
-            return self.bucket(bucket).Object(name).content_length
+            size_attempt = self.bucket(bucket).Object(name).content_length
+            if not size_attempt:
+                # the content_length is empty for .tar.gz files
+                # so we need to calculate the size manually
+                logger = logging.getLogger(__name__)
+                logger.error(f"s3 content_length is empty for {name}")
+                size_attempt = len(self.bucket(bucket).Object(name).get()["Body"].read())
+            return size_attempt
         except ClientError as err:
             if err.response["ResponseMetadata"]["HTTPStatusCode"] == 404:
                 raise FileNotFoundError("File does not exist: %s" % name)
