@@ -1,0 +1,1 @@
+:::hs_composite_resource.views
