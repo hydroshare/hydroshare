@@ -1,0 +1,26 @@
+site_name: HydroShare Documentation
+
+theme:
+  name: "material"
+
+plugins:
+  - search
+  - autorefs
+  - mkdocstrings:
+      handlers:
+      python:
+        paths: [.]
+
+nav:
+  - About: index.md
+  - Access Control: access-control.md
+  - Design Docs:
+    - API: DesignDocs/API/index.md
+    - UserNameEmailRules: DesignDocs/UserNameEmailRules.md
+  - Code Documentation:
+    - HS Core: 
+      - Views: hs_core/views.md
+      - Models: hs_core/models.md
+    - Composite Resource:
+      - Views: hs_composite_resource/views.md
+      - Models: hs_composite_resource/models.md
