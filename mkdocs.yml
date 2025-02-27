@@ -14,6 +14,10 @@ plugins:
 nav:
   - About: index.md
   - Access Control: access-control.md
+  - Contributing: contributing.md
+  - Dev Environment: devenv.md
+  - Dev Communication: devcommunication.md
+  - Testing: testing.md
   - Design Docs:
     - API: DesignDocs/API/index.md
     - UserNameEmailRules: DesignDocs/UserNameEmailRules.md
