@@ -1591,6 +1591,7 @@ def list_folder(res_id, folder_path):
     if __debug__:
         assert (folder_path.startswith("data/contents/"))
 
+    folder_path = folder_path.strip()
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
     coll_path = os.path.join(resource.root_path, folder_path)
