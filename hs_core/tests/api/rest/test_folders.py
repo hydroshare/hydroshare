@@ -56,6 +56,19 @@ class TestFolders(HSRESTTestCase):
         response = self.client.get(url2, {})
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+        # should be able to list the root folder - this is the url path
+        # we are using: /hsapi/resource/{res_id}/folders/{pathname}/
+        pathname = " "
+        url3 = str.format('/hsapi/resource/{}/folders/{}/', res_id, pathname)
+        response = self.client.get(url3, {})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content.decode())
+        self.assertEqual(len(content['folders']), 0)
+        # there should be 4 files as the uploaded cea.tif crates a raster aggregation
+        self.assertEqual(len(content['files']), 4)
+        self.assertIn('cea.tif', content['files'])
+
+
     def test_file_in_folder(self):
         rtype = 'CompositeResource'
         title = 'My Test resource'
