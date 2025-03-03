@@ -150,7 +150,7 @@ class IrodsStorage(S3Storage):
             return []
         folders = folders.split(folder_delimiter)
         if filter:
-            folders = [f for f in folders if f == filter.strip("/")]
+            folders = [f for f in folders if f.startswith(filter) and filter.split("/")[-1] in f.split("/")]
         return folders
 
     def exists(self, name):
