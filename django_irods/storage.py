@@ -55,7 +55,7 @@ class IrodsStorage(S3Storage):
         path = path.strip("/")
         additional_directories = [d[len(path):].strip("/").split("/")[0]
                                   for d in additional_directories
-                                  if d[len(path):].strip("/") and path == d.split("/")[-1].strip("/")]
+                                  if d[len(path):].strip("/")]
         directories = list(set(directories + additional_directories))
 
         # remove .xml metadata files from the list
