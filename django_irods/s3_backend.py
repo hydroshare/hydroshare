@@ -144,6 +144,7 @@ class S3Storage(s3.S3Storage):
             raise
 
     def listdir(self, name):
+        name = name.strip()
         bucket, name = bucket_and_name(name)
         path = self._normalize_name(clean_name(name))
         # The path needs to end with a slash, but if the root is empty, leave it.
