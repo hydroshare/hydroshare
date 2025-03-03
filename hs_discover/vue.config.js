@@ -3,11 +3,10 @@ module.exports = {
     allowedHosts: 'all',
   },
   outputDir: "templates/hs_discover/",
-  // Here profiding the ability to override the publicPath via an environment variable
-  // Example export VUE_APP_BUCKET_URL_PUBLIC_PATH=http://my-public-bucket && npm run build
-  // This should be the same as the STATIC_URL in the Django settings
+  // publicPath should be the same as the STATIC_URL in the Django settings
+  // This is not known at build time so we use a placeholder for production builds and /static/static for local builds
   // https://cli.vuejs.org/config/#publicpath
-  publicPath: process.env.VUE_APP_BUCKET_URL_PUBLIC_PATH ? process.env.VUE_APP_BUCKET_URL_PUBLIC_PATH : "/static/static",
+  publicPath: 'VUE_APP_BUCKET_URL_PUBLIC_PATH_PLACEHOLDER',
   // https://cli.vuejs.org/config/#crossorigin
   crossorigin: "anonymous",
 };

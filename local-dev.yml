@@ -92,6 +92,7 @@ services:
       HS_PATH: ${PWD}
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
+      VUE_APP_BUCKET_URL_PUBLIC_PATH: "/static/static"
     volumes:
       # hydroshare repository
       - ".:/hydroshare"

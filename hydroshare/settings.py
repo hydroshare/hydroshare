@@ -352,8 +352,6 @@ ENABLE_STATIC_CLOUD_STORAGE = False
 # To enable Google Cloud Storage, the following settings should be added to local_settings.py
 # Additionally, a google service account json file should be placed at the root of the project
 # Service account should have permissions to write to the bucket
-# lastly, when you build the discover VUE app, you should set export the VUE_APP_BUCKET_URL_PUBLIC_PATH env var
-# this value should be the same as the STATIC_URL that you set in django local_settings.py
 
 # ENABLE_STATIC_CLOUD_STORAGE = True
 # from google.oauth2 import service_account
