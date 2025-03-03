@@ -32,7 +32,7 @@ jobs:
     - name: Set Up MinIO Aliases
       env:
         PROD_ALIAS_STRING: ${{ secrets.MINIO_PROD_URL }} ${{ secrets.MINIO_PROD_ACCESS_KEY }} ${{ secrets.MINIO_PROD_SECRET_KEY }}
-        BETA_ALIAS_STRING: ${{ secrets.MINIO_BETA_URL }} ${{ secrets.MINIO_BETA_SECRET_KEY }} ${{ secrets.MINIO_BETA_SECRET_KEY }}
+        BETA_ALIAS_STRING: ${{ secrets.MINIO_BETA_URL }} ${{ secrets.MINIO_BETA_ACCESS_KEY }} ${{ secrets.MINIO_BETA_SECRET_KEY }}
       run: |
         # https://min.io/docs/minio/linux/reference/minio-mc/mc-alias-set.html#command-mc.alias.set
         echo "Setting up MinIO aliases..."
