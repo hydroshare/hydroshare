@@ -46,6 +46,7 @@ class ResourceFolders(APIView):
         except (ValidationError, SuspiciousFileOperation) as ex:
             return Response(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
+        # if len(pathname.strip()) == 0, it means list the root folder: data/contents
         relpath = os.path.join('data', 'contents', pathname)
         try:
             contents = view_utils.list_folder(pk, relpath)
