@@ -77,7 +77,7 @@ class IrodsStorage(S3Storage):
         with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
             for file in filesCollection:
                 relative_path = file.key[len(in_prefix):]
-                with zip_archive.open(relative_path, 'w') as file1:
+                with zip_archive.open(relative_path, 'w', force_zip64=True) as file1:
                     file1.write(file.get()['Body'].read())
 
         archive.seek(0)
