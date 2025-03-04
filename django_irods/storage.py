@@ -38,7 +38,7 @@ class IrodsStorage(S3Storage):
     def download(self, name):
         return self.open(name, mode="rb")
 
-    def listdir(self, path):
+    def listdir(self, path, remove_metadata=False):
         """
         list the contents of the directory
         :param path: the directory path to list
@@ -58,8 +58,9 @@ class IrodsStorage(S3Storage):
                                   if d[len(path):].strip("/")]
         directories = list(set(directories + additional_directories))
 
-        # remove .xml metadata files from the list
-        files = [f for f in files if not is_metadata_xml_file(f)]
+        if remove_metadata:
+            # remove .xml metadata files from the list
+            files = [f for f in files if not is_metadata_xml_file(f)]
 
         return (directories, files, file_sizes)
 

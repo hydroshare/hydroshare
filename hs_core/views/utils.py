@@ -1596,7 +1596,7 @@ def list_folder(res_id, folder_path):
     istorage = resource.get_irods_storage()
     coll_path = os.path.join(resource.root_path, folder_path)
 
-    return istorage.listdir(coll_path)
+    return istorage.listdir(coll_path, remove_metadata=True)
 
 
 # TODO: modify this to take short paths not including data/contents
