@@ -10,6 +10,7 @@ from django.urls import reverse
 from urllib.parse import urlencode
 from django.conf import settings
 
+from smart_open import open
 from . import models as m
 from .utils import bucket_and_name, normalized_bucket_name, is_metadata_xml_file
 
@@ -71,23 +72,23 @@ class IrodsStorage(S3Storage):
         :param out_name: the output zipped file name
         :return: None
         """
-        in_bucket, in_path = bucket_and_name(in_name)
+        in_bucket_name, in_path = bucket_and_name(in_name)
         out_bucket, out_path = bucket_and_name(out_name)
-        in_bucket = self.connection.Bucket(in_bucket)
+        in_bucket = self.connection.Bucket(in_bucket_name)
 
-        # Stream zip https://stackoverflow.com/a/69136133
         filesCollection = in_bucket.objects.filter(Prefix=in_path).all()
-        archive = BytesIO()
         in_prefix = os.path.dirname(in_path) if self.isDir(in_name) else in_path
-        with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
-            for file in filesCollection:
-                relative_path = file.key[len(in_prefix):]
-                with zip_archive.open(relative_path, 'w', force_zip64=True) as file1:
-                    file1.write(file.get()['Body'].read())
 
-        archive.seek(0)
-        self.connection.Object(out_bucket, out_path).upload_fileobj(archive)
-        archive.close()
+        chunk_size_mb = 256
+        with open(f's3://{out_bucket}/{out_path}', 'wb', transport_params={'client': self.connection.meta.client}
+                  ) as out_file:
+            with zipfile.ZipFile(out_file, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
+                for file_key in filesCollection:
+                    relative_path = file_key.key[len(in_prefix):]
+                    s3_object = self.connection.meta.client.get_object(Bucket=in_bucket_name, Key=relative_path)
+                    with zip_archive.open(relative_path, 'w', force_zip64=True) as zip_archive_file:
+                        for chunk in s3_object['Body'].iter_chunks(chunk_size=1024 * chunk_size_mb):
+                            zip_archive_file.write(chunk)
 
     def unzip(self, zip_file_path, unzipped_folder=""):
         """
