@@ -3,8 +3,6 @@ on:
   push:
     branches:
       - master
-      # todo remove this line after testing
-      - 5728-documentation
     paths:
       - "**.py"
       - "**.md"
