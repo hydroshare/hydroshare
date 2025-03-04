@@ -11,7 +11,7 @@ from urllib.parse import urlencode
 from django.conf import settings
 
 from . import models as m
-from .utils import bucket_and_name, normalized_bucket_name
+from .utils import bucket_and_name, normalized_bucket_name, is_metadata_xml_file
 
 from uuid import uuid4
 
@@ -38,7 +38,7 @@ class IrodsStorage(S3Storage):
     def download(self, name):
         return self.open(name, mode="rb")
 
-    def listdir(self, path):
+    def listdir(self, path, remove_metadata=False):
         """
         list the contents of the directory
         :param path: the directory path to list
@@ -57,6 +57,11 @@ class IrodsStorage(S3Storage):
                                   for d in additional_directories
                                   if d[len(path):].strip("/")]
         directories = list(set(directories + additional_directories))
+
+        if remove_metadata:
+            # remove .xml metadata files from the list
+            files = [f for f in files if not is_metadata_xml_file(f)]
+
         return (directories, files, file_sizes)
 
     def zipup(self, in_name, out_name):
@@ -146,7 +151,10 @@ class IrodsStorage(S3Storage):
             return []
         folders = folders.split(folder_delimiter)
         if filter:
-            folders = [f for f in folders if f.startswith(filter)]
+            if not filter.endswith("/"):
+                filter += "/"
+            # folders = [f for f in folders if f.startswith(filter) and filter.split("/")[-1] in f.split("/")]
+            folders = [f for f in folders if f"{f}/".startswith(filter)]
         return folders
 
     def exists(self, name):
