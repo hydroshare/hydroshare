@@ -1,0 +1,1 @@
+:::hs_core.models
