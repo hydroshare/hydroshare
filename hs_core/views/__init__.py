@@ -594,14 +594,32 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
             res.update_public_and_discoverable()
             resource_modified(res, request.user, overwrite_bag=False)
     else:
+
+        if element_name.lower() == "subject":
+            original_value = request.POST.get("value", "")
+            keywords = original_value.replace(",", "")
+            # Make request.POST mutable
+            mutable_post = request.POST.copy()
+            mutable_post["value"] = keywords
+            request.POST = mutable_post
+
         handler_response = signals.pre_metadata_element_create.send(
             sender=sender_resource, element_name=element_name, request=request
         )
+
+        if element_name.lower() == "subject" and original_value:
+            mutable_post["value"] = original_value  # Reassign original value
+            request.POST = mutable_post
+
         for receiver, response in handler_response:
             if "is_valid" in response:
                 if response["is_valid"]:
                     element_data_dict = response["element_data_dict"]
+
                     if element_name == "subject":
+                        if original_value:
+                            element_data_dict["value"] = original_value
+
                         # using set() to remove any duplicate keywords
                         keywords = set(
                             [k.strip() for k in element_data_dict["value"].split(",")]

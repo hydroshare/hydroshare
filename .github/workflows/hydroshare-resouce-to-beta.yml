@@ -1,0 +1,74 @@
+name: Sync Resource Files From Production to Beta
+# secrets required:
+# HSAPI_AUTHORIZATION
+# MINIO_PROD_ACCESS_KEY
+# MINIO_PROD_SECRET_KEY
+# MINIO_PROD_URL
+# MINIO_BETA_ACCESS_KEY
+# MINIO_BETA_SECRET_KEY
+# MINIO_BETA_URL
+
+on:
+  workflow_dispatch:
+    inputs:
+      resource_ids:
+        description: 'Comma-separated list of resource IDs to check and sync'
+        required: true
+
+jobs:
+  check-and-sync:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Install MinIO CLI (mc)
+      run: |
+        curl -O https://dl.min.io/client/mc/release/linux-amd64/mc
+        chmod +x mc
+        sudo mv mc /usr/local/bin/mc
+
+    - name: Set Up MinIO Aliases
+      env:
+        PROD_ALIAS_STRING: ${{ secrets.MINIO_PROD_URL }} ${{ secrets.MINIO_PROD_ACCESS_KEY }} ${{ secrets.MINIO_PROD_SECRET_KEY }}
+        BETA_ALIAS_STRING: ${{ secrets.MINIO_BETA_URL }} ${{ secrets.MINIO_BETA_ACCESS_KEY }} ${{ secrets.MINIO_BETA_SECRET_KEY }}
+      run: |
+        # https://min.io/docs/minio/linux/reference/minio-mc/mc-alias-set.html#command-mc.alias.set
+        echo "Setting up MinIO aliases..."
+        mc alias set prod $PROD_ALIAS_STRING
+        mc alias set beta $BETA_ALIAS_STRING
+        echo "MinIO aliases configured using environment variables."
+
+    - name: Retrieve and Sync Buckets
+      env:
+        RESOURCE_IDS: ${{ github.event.inputs.resource_ids }}
+        HSAPI_AUTHORIZATION: ${{ secrets.HSAPI_AUTHORIZATION }}
+      run: |
+        echo "Processing resource IDs: $RESOURCE_IDS"
+        IFS=',' read -ra RESOURCES <<< "$RESOURCE_IDS"
+
+        for RESOURCE_ID in "${RESOURCES[@]}"; do
+          echo "Fetching bucket name for resource: $RESOURCE_ID"
+          
+          # Fetch the bucket name using the API
+          BUCKET_NAME=$(curl -s -X GET "https://www.hydroshare.org/hsapi/resource/$RESOURCE_ID/quota_holder_bucket_name/" \
+          -H "accept: application/json" \
+          -H "authorization: Basic $HSAPI_AUTHORIZATION")
+
+          if [ -z "$BUCKET_NAME" ] || [ "$BUCKET_NAME" == "null" ]; then
+            echo "Error: Could not fetch bucket name for resource $RESOURCE_ID"
+            continue
+          fi
+
+          echo "Bucket name for resource $RESOURCE_ID is $BUCKET_NAME"
+
+          # Ensure the bucket exists on the target
+          echo "Ensuring bucket $BUCKET_NAME exists on the target MinIO server..."
+          mc mb --ignore-existing beta/$BUCKET_NAME
+
+          # Sync the bucket
+          echo "Syncing bucket $BUCKET_NAME from prod to beta..."
+          mc mirror --remove --overwrite prod/$BUCKET_NAME/$RESOURCE_ID beta/$BUCKET_NAME/$RESOURCE_ID
+          echo "Sync for bucket $BUCKET_NAME completed successfully."
+        done

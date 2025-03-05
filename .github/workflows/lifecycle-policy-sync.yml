@@ -1,7 +1,13 @@
 name: Ensures all buckets have a lifecycle policy
+# secrets required:
+# MINIO_PROD_ACCESS_KEY
+# MINIO_PROD_SECRET_KEY
+# MINIO_PROD_URL
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
 
 jobs:
   check-and-sync:
@@ -19,8 +25,10 @@ jobs:
 
     - name: Check each bucket for a resource and add the default policy if no policy exists
       env:
-        MC_HOST_hydroshare: https://${{ secrets.MINIO_PROD_ACCESS_KEY }}:${{ secrets.MINIO_PROD_SECRET_KEY }}@${{ secrets.MINIO_PROD_URL }}
+        MC_ALIAS_STRING: ${{ secrets.MINIO_PROD_URL }} ${{ secrets.MINIO_PROD_ACCESS_KEY }} ${{ secrets.MINIO_PROD_SECRET_KEY }}
       run: |
+        # https://min.io/docs/minio/linux/reference/minio-mc/mc-alias-set.html#command-mc.alias.set
+        mc alias set hydroshare $MC_ALIAS_STRING
         command_output=$(mc ls hydroshare)
         lines=()
 
@@ -33,11 +41,8 @@ jobs:
         for line in "${lines[@]}"; do
             bucket_name=${line##* }
             bucket_name=${bucket_name%/}
-            # Check if a rule already exists for the bucket
-            existing_rule=$(mc ilm rule ls hydroshare/$bucket_name)
-            if [[ -n "$existing_rule" ]]; then
-                command=""
-            else
+            echo "Checking if rule already exists for the bucket: $bucket_name"
+            if [[ $(mc ilm rule ls hydroshare/$bucket_name 2>&1) =~ "Unable to get lifecycle" ]]; then
                 echo "missing rule for $bucket_name"
                 command="mc ilm rule add --transition-days \"0\" --transition-tier \"GCS\" hydroshare/$bucket_name"
                 eval $command

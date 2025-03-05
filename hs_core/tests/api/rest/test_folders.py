@@ -112,6 +112,6 @@ class TestFolders(HSRESTTestCase):
         content = json.loads(response.content.decode())
         self.assertEqual(len(content['folders']), 1)
         self.assertEqual(content['folders'][0], 'foo')
-        # there should be 4 files as the uploaded cea.tif crates a raster aggregation
-        self.assertEqual(len(content['files']), 4)
+        # there should be 2 files
+        self.assertEqual(len(content['files']), 2)
         self.assertIn('cea.tif', content['files'])

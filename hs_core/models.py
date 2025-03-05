@@ -3323,7 +3323,13 @@ class ResourceFile(ResourceFileIRODSMixin):
             logger.warning("file {} not found in iRODS".format(self.storage_path))
             self._size = 0
         if save:
-            self.save(update_fields=["_size", "filesize_cache_updated"])
+            try:
+                self.save(update_fields=["_size", "filesize_cache_updated"])
+            except Exception as e:
+                logger = logging.getLogger(__name__)
+                logger.error(f"Error saving file size for {self.storage_path}: {e}")
+                self._size = 0
+                self.save(update_fields=["_size", "filesize_cache_updated"])
 
     def set_system_metadata(self, resource=None, save=True):
         """Set system metadata (size, modified time, and checksum) for a file.
@@ -4128,16 +4134,14 @@ class BaseResource(Page, AbstractResource):
                     award_node = etree.SubElement(funder_group_node, '{%s}assertion' % fr, name='award_number')
                     award_node.text = funder.award_number
 
-        # create dataset license sub element
-        dataset_licenses_node = etree.SubElement(dataset_node, '{%s}program' % ai, name="AccessIndicators")
-        pub_date_str = pub_date.strftime("%Y-%m-%d")
         rights = self.metadata.rights
-        license_node = etree.SubElement(dataset_licenses_node, '{%s}license_ref' % ai, applies_to="vor",
-                                        start_date=pub_date_str)
         if rights.url:
+            # create dataset license sub element
+            dataset_licenses_node = etree.SubElement(dataset_node, '{%s}program' % ai, name="AccessIndicators")
+            pub_date_str = pub_date.strftime("%Y-%m-%d")
+            license_node = etree.SubElement(dataset_licenses_node, '{%s}license_ref' % ai, applies_to="vor",
+                                            start_date=pub_date_str)
             license_node.text = rights.url
-        else:
-            license_node.text = rights.statement
 
         # doi_data is required element for dataset
         doi_data_node = etree.SubElement(dataset_node, 'doi_data')

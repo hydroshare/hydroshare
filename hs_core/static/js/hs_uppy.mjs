@@ -44,7 +44,8 @@ else{
 
   uppy = new Uppy({
     id: "uppy",
-    // autoProceed: true,
+    // https://uppy.io/docs/uppy/#autoproceed
+    autoProceed: true,
     // debug: true,
     restrictions: {
       maxFileSize: RESTRICTED_SIZE,

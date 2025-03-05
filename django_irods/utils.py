@@ -50,3 +50,16 @@ def normalized_bucket_name(username):
         row = cursor.fetchone()
         bucket_name = row[0]
         return bucket_name
+
+
+def is_metadata_xml_file(file_path):
+    """Determine whether a given file is metadata.
+    Note: this will return true for any file that ends with the metadata endings
+    We are taking the risk that user might create a file with the same filename ending
+    """
+    from hs_file_types.enums import AggregationMetaFilePath
+
+    if not (file_path.endswith(AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
+            or file_path.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)):
+        return False
+    return True

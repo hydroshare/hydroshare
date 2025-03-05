@@ -230,3 +230,6 @@ DEFAULT_AUTHENTICATION_CLASSES = (
 # the user will be redirected to auth.cuahsi.io to choose if they want to logout of SSO
 # OIDC_OP_LOGOUT_URL_METHOD = 'hs_core.authentication.provider_logout'
 # OIDC_STORE_ID_TOKEN = True
+
+# Only enable this if you are using minio in local development
+AWS_S3_USE_LOCAL = True

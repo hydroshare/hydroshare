@@ -8,9 +8,10 @@ import logging
 from django_irods.icommands import SessionException
 from django.urls import reverse
 from urllib.parse import urlencode
+from django.conf import settings
 
 from . import models as m
-from .utils import bucket_and_name, normalized_bucket_name
+from .utils import bucket_and_name, normalized_bucket_name, is_metadata_xml_file
 
 from uuid import uuid4
 
@@ -37,7 +38,7 @@ class IrodsStorage(S3Storage):
     def download(self, name):
         return self.open(name, mode="rb")
 
-    def listdir(self, path):
+    def listdir(self, path, remove_metadata=False):
         """
         list the contents of the directory
         :param path: the directory path to list
@@ -56,6 +57,11 @@ class IrodsStorage(S3Storage):
                                   for d in additional_directories
                                   if d[len(path):].strip("/")]
         directories = list(set(directories + additional_directories))
+
+        if remove_metadata:
+            # remove .xml metadata files from the list
+            files = [f for f in files if not is_metadata_xml_file(f)]
+
         return (directories, files, file_sizes)
 
     def zipup(self, in_name, out_name):
@@ -76,7 +82,7 @@ class IrodsStorage(S3Storage):
         with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
             for file in filesCollection:
                 relative_path = file.key[len(in_prefix):]
-                with zip_archive.open(relative_path, 'w') as file1:
+                with zip_archive.open(relative_path, 'w', force_zip64=True) as file1:
                     file1.write(file.get()['Body'].read())
 
         archive.seek(0)
@@ -145,7 +151,10 @@ class IrodsStorage(S3Storage):
             return []
         folders = folders.split(folder_delimiter)
         if filter:
-            folders = [f for f in folders if f.startswith(filter)]
+            if not filter.endswith("/"):
+                filter += "/"
+            # folders = [f for f in folders if f.startswith(filter) and filter.split("/")[-1] in f.split("/")]
+            folders = [f for f in folders if f"{f}/".startswith(filter)]
         return folders
 
     def exists(self, name):
@@ -291,10 +300,12 @@ class IrodsStorage(S3Storage):
         bucket, name = bucket_and_name(s3_bucket_name)
         self.connection.Bucket(bucket).download_file(name, local_file_path)
 
-    def signed_url(self, name):
-        super_url = super().url(name.strip("/"))
-        # if super_url.startswith("http://minio:9000"):  # TODO make this based on DEBUG setting?
-        #    return super_url.replace("http://minio:9000", "http://localhost:9000")
+    def signed_url(self, name, **kwargs):
+        super_url = super().url(name.strip("/"), kwargs)
+        # check AWS_S3_USE_LOCAL setting to determine if we should return local url
+        use_local = getattr(settings, "AWS_S3_USE_LOCAL", False)
+        if use_local and not settings.TESTING:
+            return super_url.replace("http://minio:9000", "http://localhost:9000")
         return super_url
 
     def url(self, name, url_download=False, zipped=False, aggregation=False):
