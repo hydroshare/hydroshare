@@ -77,16 +77,14 @@ class IrodsStorage(S3Storage):
         in_bucket = self.connection.Bucket(in_bucket_name)
 
         filesCollection = in_bucket.objects.filter(Prefix=in_path).all()
-        in_prefix = os.path.dirname(in_path) if self.isDir(in_name) else in_path
 
         chunk_size_mb = 256
         with open(f's3://{out_bucket}/{out_path}', 'wb', transport_params={'client': self.connection.meta.client}
                   ) as out_file:
             with zipfile.ZipFile(out_file, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
                 for file_key in filesCollection:
-                    relative_path = file_key.key[len(in_prefix):]
-                    s3_object = self.connection.meta.client.get_object(Bucket=in_bucket_name, Key=relative_path)
-                    with zip_archive.open(relative_path, 'w', force_zip64=True) as zip_archive_file:
+                    s3_object = self.connection.meta.client.get_object(Bucket=in_bucket_name, Key=file_key.key)
+                    with zip_archive.open(file_key.key, 'w', force_zip64=True) as zip_archive_file:
                         for chunk in s3_object['Body'].iter_chunks(chunk_size=1024 * chunk_size_mb):
                             zip_archive_file.write(chunk)
 
