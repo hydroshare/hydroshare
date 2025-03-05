@@ -37,6 +37,7 @@ RUN wget -O /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem https://cacerts.digice
 RUN pip install boto3
 RUN pip install --upgrade django-storages
 RUN pip install hsmodels==1.0.4
+RUN pip install smart_open[s3]
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
