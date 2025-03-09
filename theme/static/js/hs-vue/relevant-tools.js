@@ -62,6 +62,7 @@ let relevantToolsApp = new Vue({
                 // Append menu items to right click menu in file browser
                 let menu = $("#right-click-menu");
                 let hasTools = false;
+                console.log(vue.tools)
                 for (let i = 0; i < vue.tools.length; i++) {
                     let tool = vue.tools[i];
 
@@ -70,7 +71,6 @@ let relevantToolsApp = new Vue({
                         if (aggregationUrl) {
                             let menuItem =
                             '<li class="btn-open-with" data-menu-name="web-app" ' +
-                                'data-file-extensions="' + tool['file_extensions'] + '" ' +
                                 'data-agg-types="' + tool['agg_types'] + '" data-url-aggregation="' +
                                 aggregationUrl + '" data-tool-appkey="' + tool['tool_appkey'] + '">' +
                                 '<img class="file-options-webapp-icon" src="' + tool['icon_url'] +
@@ -83,13 +83,11 @@ let relevantToolsApp = new Vue({
                             hasTools = true;
                         }
                     }
-
                     if (tool['file_extensions']){
                         let urlFile = vue.getFileAppUrl(tool);
                         if (urlFile) {
                             let menuItem =
                             '<li class="btn-open-with" data-menu-name="web-app" ' +
-                                'data-agg-types="' + tool['agg_types'] + '" ' +
                                 'data-file-extensions="' + tool['file_extensions'] + '" data-url-file="' +
                                 urlFile + '" data-tool-appkey="' + tool['tool_appkey'] + '">' +
                                 '<img class="file-options-webapp-icon" src="' + tool['icon_url'] +
@@ -128,6 +126,12 @@ let relevantToolsApp = new Vue({
                                 fullURL = fullURL + '&HS_JS_MAIN_FILE_KEY=' + file.children('span.fb-file-name').text();
                             }
                         }
+                        // hide all of the btn-open-with menu items that are not aggregations
+                        $(".btn-open-with").each(function() {
+                            if (!$(this).attr("data-agg-types")) {
+                                $(this).hide();
+                            }
+                        });
                     }
                     else {
                         // not an aggregation
@@ -135,6 +139,12 @@ let relevantToolsApp = new Vue({
                         if(fullURL.includes('HS_JS_FILE_KEY')) {
                             fullURL = fullURL + '&HS_JS_FILE_KEY=' + path;
                         }
+                        // hide all of the btn-open-with menu items that are not files
+                        $(".btn-open-with").each(function() {
+                            if (!$(this).attr("data-file-extensions")) {
+                                $(this).hide();
+                            }
+                        });
                     }
                     window.open(fullURL);
                 });

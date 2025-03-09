@@ -72,6 +72,9 @@ class SupportedFileExtensions(AbstractMetaDataElement):
         # SupportedFileExtensions element is not repeatable
         unique_together = ("content_type", "object_id")
 
+    def get_file_extensions_str(self):
+        return self.value
+
 
 class AppHomePageUrl(AbstractMetaDataElement):
     term = 'AppHomePageUrl'
