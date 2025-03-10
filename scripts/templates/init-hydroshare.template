@@ -5,7 +5,6 @@
 # Author: Michael Stealey <michael.j.stealey@gmail.com>
 
 sleep 3s
-cp /hydroshare/hydroshare.conf /etc/supervisor/conf.d/hydroshare.conf
 userdel hydro-service \
  && groupdel storage-hydro \
  && echo "storage-hydro:x:HS_SERVICE_GID:" >> /etc/group \
