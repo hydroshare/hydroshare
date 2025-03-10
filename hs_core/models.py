@@ -1852,7 +1852,7 @@ class Coverage(AbstractMetaDataElement):
 
         elif coverage_type == 'box':
             # check that all the required sub-elements exist
-            box_key_names = {'north': 'north', 'east': 'east', 'south': 'south', 'west': 'west'}
+            box_key_names = {'north': 'east', 'east': 'north', 'south': 'west', 'west': 'south'}
             if use_limit_postfix:
                 for key, value in box_key_names.items():
                     box_key_names[key] = f"{value}limit"
