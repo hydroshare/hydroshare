@@ -19,7 +19,7 @@ import json
 import re
 
 import netCDF4
-import osr
+from osgeo import osr
 from pyproj import Proj, transform
 
 from .nc_utils import (

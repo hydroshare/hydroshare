@@ -14,7 +14,7 @@ from collections import OrderedDict
 
 import netCDF4
 import numpy
-import osr
+from osgeo import osr
 
 
 # Functions for General Purpose

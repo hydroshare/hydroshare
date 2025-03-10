@@ -13,9 +13,8 @@ This is used to process the vrt raster and to extract max, min value of each ras
 """
 
 
-import gdal
-from gdalconst import GA_ReadOnly
-from osgeo import osr
+from osgeo import gdal, osr
+from osgeo.gdalconst import GA_ReadOnly
 from collections import OrderedDict
 import re
 import logging
