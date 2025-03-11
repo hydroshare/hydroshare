@@ -563,7 +563,7 @@ def assert_time_series_file_type_metadata(self, expected_file_folder):
     # there should be one format element
     self.assertEqual(self.composite_resource.metadata.formats.all().count(), 1)
     format_element = self.composite_resource.metadata.formats.all().first()
-    self.assertEqual(format_element.value, 'application/sqlite')
+    self.assertEqual(format_element.value, 'application/vnd.sqlite3')
 
     # there should be one subject element
     self.assertEqual(self.composite_resource.metadata.subjects.all().count(), 1)
