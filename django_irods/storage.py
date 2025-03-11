@@ -73,7 +73,7 @@ class IrodsStorage(S3Storage):
         :return: None
         """
         def chunk_request(zip_archive_file, bucket, key):
-            chunk_size = 1024 * 1024 * 256  # 256MB
+            chunk_size = getattr(settings, "S3_STREAM_ZIP_CHUNKING_SIZE", 1024 * 1024 * 256)  # 256MB
             object_attrs = self.connection.meta.client.get_object_attributes(Bucket=bucket, Key=key,
                                                                              ObjectAttributes=["ObjectSize"])
             object_size = object_attrs.get("ObjectSize")
