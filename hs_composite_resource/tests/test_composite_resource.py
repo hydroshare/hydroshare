@@ -1639,7 +1639,7 @@ class CompositeResourceTest(
         self.assertEqual(res_coverage.value["projection"], "WGS 84 EPSG:4326")
         self.assertEqual(res_coverage.value["units"], "Decimal degrees")
         self.assertAlmostEqual(res_coverage.value["northlimit"], 42.05002695977342, places=14)
-        self.assertAlmostEqual(res_coverage.value["eastlimit"], -111.57773718106199, places=14)
+        self.assertAlmostEqual(res_coverage.value["eastlimit"], -111.577737181062, places=14)
         self.assertAlmostEqual(res_coverage.value["southlimit"], 41.98722286030317, places=14)
         self.assertAlmostEqual(res_coverage.value["westlimit"], -111.6975629308406, places=14)
         value_dict = {

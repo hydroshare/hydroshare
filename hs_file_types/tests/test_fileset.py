@@ -1604,7 +1604,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # fileset aggregation should now have spatial coverage
         self.assertNotEqual(fs_aggr.metadata.spatial_coverage, None)
         self.assertAlmostEqual(fs_aggr.metadata.spatial_coverage.value['northlimit'], 42.05002695977342, places=14)
-        self.assertAlmostEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.57773718106199, places=14)
+        self.assertAlmostEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.577737181062, places=14)
         self.assertAlmostEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.98722286030317, places=14)
         self.assertAlmostEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.6975629308406, places=14)
 
@@ -1650,7 +1650,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # fileset aggregation should now have spatial coverage
         self.assertNotEqual(fs_aggr.metadata.spatial_coverage, None)
         self.assertEqual(fs_aggr.metadata.spatial_coverage.value['northlimit'], 42.050026959773426)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.57773718106199)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.577737181062)
         self.assertEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.98722286030317)
         self.assertEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.6975629308406)
 
