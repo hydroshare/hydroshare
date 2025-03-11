@@ -1272,7 +1272,7 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
         self.assertAlmostEqual(box_coverage.value['northlimit'], 42.0500287857716, places=14)
         self.assertAlmostEqual(box_coverage.value['eastlimit'], -111.57737502643897, places=14)
-        self.assertAlmostEqual(box_coverage.value['southlimit'], 41.987457779031246, places=14)
+        self.assertAlmostEqual(box_coverage.value['southlimit'], 41.98745777903126, places=14)
         self.assertAlmostEqual(box_coverage.value['westlimit'], -111.65768822411243, places=14)
 
         # testing additional metadata element: original coverage

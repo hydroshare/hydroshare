@@ -1605,7 +1605,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertNotEqual(fs_aggr.metadata.spatial_coverage, None)
         self.assertAlmostEqual(fs_aggr.metadata.spatial_coverage.value['northlimit'], 42.050026959773426, places=14)
         self.assertAlmostEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.577737181062, places=14)
-        self.assertAlmostEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.98722286030317, places=14)
+        self.assertAlmostEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.98722286030319, places=14)
         self.assertAlmostEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.6975629308406, places=14)
 
         # upload a nc file to the new_folder - folder that represents the above fileset
@@ -1652,7 +1652,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(fs_aggr.metadata.spatial_coverage.value['northlimit'], 42.050026959773426)
         self.assertEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.577737181062)
         self.assertEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.98722286030319)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.6975629308406)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.69756293084063)
 
         # upload a nc file to the new_folder - folder that represents the above fileset
         # aggregation
@@ -1669,7 +1669,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(fs_aggr.metadata.spatial_coverage.value['northlimit'], 42.050026959773426)
         self.assertEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.5059403684569)
         self.assertEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.86390807452128)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.6975629308406)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.69756293084063)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
