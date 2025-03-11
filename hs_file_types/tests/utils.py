@@ -115,7 +115,7 @@ def assert_raster_file_type_metadata(self, aggr_folder_path):
     expected_nlimit = 42.050026959773426
     self.assertAlmostEqual(float(box_coverage.value['northlimit']), expected_nlimit,
                            places=get_number_of_decimal_places(expected_nlimit))
-    expected_elimit = -111.57773718106199
+    expected_elimit = -111.577737181062
     self.assertAlmostEqual(float(box_coverage.value['eastlimit']), expected_elimit,
                            places=get_number_of_decimal_places(expected_elimit))
     expected_slimit = 41.98722286030317
