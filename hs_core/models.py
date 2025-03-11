@@ -29,6 +29,7 @@ from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from django.urls import reverse
 from django.utils.timezone import now
+from django_irods.icommands import SessionException
 from dominate.tags import div, h4, legend, table, tbody, td, th, tr
 from lxml import etree
 from markdown import markdown
@@ -44,7 +45,6 @@ from rdflib import BNode, Literal, URIRef
 from rdflib.namespace import DC, DCTERMS, RDF
 from spam_patterns.worst_patterns_re import patterns
 
-from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from hs_core.enums import (CrossRefSubmissionStatus, CrossRefUpdate,
                            RelationTypes)
@@ -2330,6 +2330,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         # avoid import loop
         from hs_core.signals import post_raccess_change
         from hs_core.views.utils import run_script_to_update_hyrax_input_files
+        from hs_access_control.models.shortcut import zone_of_publicity
 
         # access control is separate from validation logic
         if user is not None and not user.uaccess.can_change_resource_flags(self):
@@ -2361,6 +2362,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             self.raccess.save()
             post_raccess_change.send(sender=self, resource=self)
             self.update_index()
+            zone_of_publicity(resource=self)
             # public changed state: set isPublic metadata AVU accordingly
             if value != old_value:
                 self.setAVU("isPublic", self.raccess.public)
@@ -2502,18 +2504,15 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         # QuotaException will be raised if new_holder does not have enough quota to hold this
         # new resource, in which case, set_quota_holder to the new user fails
         validate_user_quota(new_holder, self.size)
+        if self.quota_holder:
+            # ensure the new holder has a bucket, buckets only exist for users with resources
+            if not new_holder.userprofile._bucket_name:
+                istorage = self.get_irods_storage()
+                istorage.create_bucket(new_holder.userprofile.bucket_name)
+            self.get_irods_storage().new_quota_holder(self.short_id, new_holder.username)
+
         self.quota_holder = new_holder
         self.save()
-
-    def removeAVU(self, attribute, value):
-        """Remove an AVU at the resource level.
-
-        This avoids mistakes in setting AVUs by assuring that the appropriate root path
-        is alway used.
-        """
-        istorage = self.get_irods_storage()
-        root_path = self.root_path
-        istorage.session.run("imeta", None, 'rm', '-C', root_path, attribute, value)
 
     def setAVU(self, attribute, value):
         """Set an AVU at the resource level.
@@ -2525,11 +2524,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             value = str(value).lower()  # normalize boolean values to strings
         istorage = self.get_irods_storage()
         root_path = self.root_path
-        # has to create the resource collection directory if it does not exist already due to
-        # the need for setting quota holder on the resource collection before adding files into
-        # the resource collection in order for the real-time iRODS quota micro-services to work
-        if not istorage.exists(root_path):
-            istorage.session.run("imkdir", None, '-p', root_path)
         istorage.setAVU(root_path, attribute, value)
 
     def getAVU(self, attribute):
@@ -3070,18 +3064,6 @@ def path_is_allowed(path):
         raise SuspiciousFileOperation("File paths cannot contain '/./'")
 
 
-class FedStorage(IrodsStorage):
-    """Define wrapper class to fix Django storage object limitations for iRODS.
-
-    The constructor of a Django storage object must have no arguments.
-    This simple workaround accomplishes that.
-    """
-
-    def __init__(self):
-        """Initialize method with no arguments for federated storage."""
-        super(FedStorage, self).__init__("federated")
-
-
 # TODO: revise path logic for rename_resource_file_in_django for proper path.
 # TODO: utilize antibugging to check that paths are coherent after each operation.
 class ResourceFile(ResourceFileIRODSMixin):
@@ -3177,6 +3159,8 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         kwargs['file_folder'] = folder
 
+        istorage = resource.get_irods_storage()
+
         # if file is an open file, use native copy by setting appropriate variables
         if isinstance(file, File):
             filename = os.path.basename(file.name)
@@ -3193,7 +3177,6 @@ class ResourceFile(ResourceFileIRODSMixin):
                 root, newfile = os.path.split(source)  # take file from source path
                 # newfile is where it should be copied to.
                 target = get_resource_file_path(resource, newfile, folder=folder)
-                istorage = resource.get_irods_storage()
                 if not istorage.exists(source):
                     raise ValidationError("ResourceFile.create: source {} of copy not found"
                                           .format(source))
@@ -3213,6 +3196,9 @@ class ResourceFile(ResourceFileIRODSMixin):
 
             # we've copied or moved if necessary; now set the paths
             kwargs['resource_file'] = target
+        if ResourceFile.objects.filter(resource_file=kwargs['resource_file']).exists():
+            raise ValidationError("ResourceFile.create: file {} already exists"
+                                  .format(kwargs['resource_file']))
 
         # Actually create the file record
         # when file is a File, the file is copied to storage in this step
@@ -3297,7 +3283,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         file_path = self.resource_file.name
 
         try:
-            self._checksum = self.resource_file.storage.checksum(file_path, force_compute=False)
+            self._checksum = self.resource_file.storage.checksum(file_path)
         except (SessionException, ValidationError):
             logger = logging.getLogger(__name__)
             logger.warning("file {} not found in iRODS".format(self.storage_path))
@@ -3348,7 +3334,13 @@ class ResourceFile(ResourceFileIRODSMixin):
             logger.warning("file {} not found in iRODS".format(self.storage_path))
             self._size = 0
         if save:
-            self.save(update_fields=["_size", "filesize_cache_updated"])
+            try:
+                self.save(update_fields=["_size", "filesize_cache_updated"])
+            except Exception as e:
+                logger = logging.getLogger(__name__)
+                logger.error(f"Error saving file size for {self.storage_path}: {e}")
+                self._size = 0
+                self.save(update_fields=["_size", "filesize_cache_updated"])
 
     def set_system_metadata(self, resource=None, save=True):
         """Set system metadata (size, modified time, and checksum) for a file.
@@ -3886,7 +3878,7 @@ class BaseResource(Page, AbstractResource):
         return AbstractResource.can_view(self, request)
 
     def get_irods_storage(self):
-        """Return either IrodsStorage or FedStorage."""
+        """Return IrodsStorage."""
         return IrodsStorage()
 
     # Paths relative to the resource
@@ -3941,9 +3933,8 @@ class BaseResource(Page, AbstractResource):
         bag_path = "{path}/{resource_id}.{postfix}".format(path=bagit_path,
                                                            resource_id=self.short_id,
                                                            postfix=bagit_postfix)
-        istorage = self.get_irods_storage()
-        bag_url = istorage.url(bag_path)
-        return bag_url
+        reverse_url = reverse("django_irods_download", kwargs={"path": bag_path})
+        return reverse_url
 
     @property
     def bag_checksum(self):
@@ -4154,16 +4145,14 @@ class BaseResource(Page, AbstractResource):
                     award_node = etree.SubElement(funder_group_node, '{%s}assertion' % fr, name='award_number')
                     award_node.text = funder.award_number
 
-        # create dataset license sub element
-        dataset_licenses_node = etree.SubElement(dataset_node, '{%s}program' % ai, name="AccessIndicators")
-        pub_date_str = pub_date.strftime("%Y-%m-%d")
         rights = self.metadata.rights
-        license_node = etree.SubElement(dataset_licenses_node, '{%s}license_ref' % ai, applies_to="vor",
-                                        start_date=pub_date_str)
         if rights.url:
+            # create dataset license sub element
+            dataset_licenses_node = etree.SubElement(dataset_node, '{%s}program' % ai, name="AccessIndicators")
+            pub_date_str = pub_date.strftime("%Y-%m-%d")
+            license_node = etree.SubElement(dataset_licenses_node, '{%s}license_ref' % ai, applies_to="vor",
+                                            start_date=pub_date_str)
             license_node.text = rights.url
-        else:
-            license_node.text = rights.statement
 
         # doi_data is required element for dataset
         doi_data_node = etree.SubElement(dataset_node, 'doi_data')

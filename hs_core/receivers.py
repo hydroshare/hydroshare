@@ -2,6 +2,7 @@
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
+from django_irods.storage import IrodsStorage
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update, \
     pre_delete_resource, post_add_geofeature_aggregation, post_add_generic_aggregation, \
     post_add_netcdf_aggregation, post_add_raster_aggregation, post_add_timeseries_aggregation, \
@@ -212,6 +213,8 @@ def hs_update_web_services(sender, **kwargs):
 def pre_delete_user_handler(sender, instance, **kwargs):
     # before delete the user, update the quota holder for all of the user's resources
     user = instance
+    istorage = IrodsStorage()
+    istorage.delete_bucket(user.username)
     for res in BaseResource.objects.filter(quota_holder=user):
         other_owners = None
         if hasattr(res, 'raccess') and res.raccess is not None:

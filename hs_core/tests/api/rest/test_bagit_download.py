@@ -65,8 +65,8 @@ class TestBagitDownload(HSRESTTestCase):
         self.assertIsNotNone(pre_last_downloaded_date)
 
         # download again
-        response = self.client.get(zip_download_url, format="json", follow=True)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response = self.client.get(zip_download_url, format="json")
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
         res.refresh_from_db()
         post_last_downloaded_date = res.bag_last_downloaded

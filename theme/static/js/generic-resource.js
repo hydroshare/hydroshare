@@ -451,7 +451,6 @@ $(document).ready(function () {
         var display_file_types = SUPPORTE_FILE_TYPES.substring(0, SUPPORTE_FILE_TYPES.length - 1) + ').';
         display_file_types = display_file_types.replace(/'/g, '');
         $("#file-types").text("Only the listed file types can be uploaded: " + display_file_types);
-        $("#file-types-irods").text("Only the listed file types can be uploaded: " + display_file_types);
     }
     else {
         $("#file-types").text("Any file type can be uploaded.");
@@ -460,17 +459,9 @@ $(document).ready(function () {
     // set if multiple files can be uploaded
     if (ALLLOW_MULTIPLE_FILE_UPLOAD === "True") {
         $("#file-multiple").text("Multiple file upload is allowed.");
-        $("#file-multiple-irods").text("Multiple file upload is allowed.");
     }
     else {
         $("#file-multiple").text("Only one file can be uploaded.");
-        $("#file-multiple-irods").text("Only one file can be uploaded.");
-
-        if (FILE_COUNT > 0) {
-            $("#log-into-irods").hide();
-            $("#sign-in-info").hide();
-            $("#btn-select-irods-file").hide();
-        }
     }
 
     if ($("input:button[value='Delete creator']").length == 1) {

@@ -352,8 +352,6 @@ ENABLE_STATIC_CLOUD_STORAGE = False
 # To enable Google Cloud Storage, the following settings should be added to local_settings.py
 # Additionally, a google service account json file should be placed at the root of the project
 # Service account should have permissions to write to the bucket
-# lastly, when you build the discover VUE app, you should set export the VUE_APP_BUCKET_URL_PUBLIC_PATH env var
-# this value should be the same as the STATIC_URL that you set in django local_settings.py
 
 # ENABLE_STATIC_CLOUD_STORAGE = True
 # from google.oauth2 import service_account
@@ -434,7 +432,6 @@ INSTALLED_APPS = (
     "hs_access_control",
     "hs_labels",
     "hs_metrics",
-    "irods_browser_app",
     "widget_tweaks",
     "hs_tools_resource",
     "hs_sitemap",
@@ -573,7 +570,10 @@ MIDDLEWARE = (
     # "mezzanine.core.middleware.FetchFromCacheMiddleware",
     "hs_core.robots.RobotFilter",
     "hs_tracking.middleware.Tracking",
+    "hs_core.middleware.HSClientMiddleware",
 )
+
+HSCLIENT_MIN_VERSION = "1.1.6"
 
 # security settings
 USE_SECURITY = False
@@ -946,6 +946,8 @@ if any('pytest' in arg for arg in sys.argv) or 'test' in sys.argv:
         'PORT': '5432',
     }
 
+    TESTING = True
+
 ####################
 # DYNAMIC SETTINGS #
 ####################
@@ -975,6 +977,15 @@ MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
 )
 
 BULK_UPDATE_CREATE_BATCH_SIZE = 1000
+
+
+AWS_S3_ACCESS_KEY_ID = 'minioadmin'
+AWS_S3_SECRET_ACCESS_KEY = 'minioadmin'
+AWS_S3_ENDPOINT_URL = 'http://minio:9000'
+# Only enable this if you are using minio in local development
+# AWS_S3_USE_LOCAL = True
+
+ACCESS_CONTROL_CHANGE_ENDPOINT = None
 
 if ENABLE_OIDC_AUTHENTICATION:
     # The order of the authentication classes is important. The OIDC authentication class

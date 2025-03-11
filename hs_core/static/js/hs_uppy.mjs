@@ -5,7 +5,7 @@ import {
   GoldenRetriever,
   GoogleDrivePicker,
   DropTarget,
-} from "https://releases.transloadit.com/uppy/v4.8.0/uppy.min.mjs";
+} from "https://releases.transloadit.com/uppy/v4.13.0/uppy.min.mjs";
 
 let uppy = null;
 if (HS_S_ID === "") {
@@ -44,7 +44,8 @@ else{
 
   uppy = new Uppy({
     id: "uppy",
-    // autoProceed: true,
+    // https://uppy.io/docs/uppy/#autoproceed
+    autoProceed: true,
     // debug: true,
     restrictions: {
       maxFileSize: RESTRICTED_SIZE,
@@ -57,7 +58,6 @@ else{
       strings: {
         browseFolders: 'upload a folder',
         dropPasteImportBoth: 'Drop files here, %{browseFolders} or import from:',
-        pluginNameGoogleDrive: 'Google Drive',
       }
     },
     onBeforeUpload: (files) => {

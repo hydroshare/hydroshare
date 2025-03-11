@@ -1,38 +1,24 @@
 version: '3'
 services:
-  data.local.org:
-    image: hydroshare/hs-irods:2e7929c
-    container_name: data.local.org
-    hostname: data.local.org
+  minio:
+    image: minio/minio
+    platform: linux/amd64
     ports:
-      - "1247:1247"
+      - "9000:9000"
+      - "9001:9001"
+    expose:
+      - "9000"
+      - "9001"
     volumes:
-      - "idata_iconf_vol:/etc/irods"
-      - "idata_vault_vol:/var/lib/irods"
-      - "idata_pgres_vol:/var/lib/postgresql/data"
-      - "idata_home_vol:/home"
+      - minio_data_vol:/data
     environment:
-      USE_IRODS: 'True'
-      IRODS_ROOT: '/tmp'
-      IRODS_ICOMMANDS_PATH: '/usr/bin'
-      IRODS_HOST: 'data.local.org'
-      IRODS_PORT: '1247'
-      IRODS_DEFAULT_RESOURCE: 'hydroshareReplResc'
-      IRODS_HOME_COLLECTION: '/hydroshareZone/home/wwwHydroProxy'
-      IRODS_ZONE: 'hydroshareZone'
-      IRODS_USERNAME: 'wwwHydroProxy'
-      IRODS_AUTH: 'wwwHydroProxy'
-      IRODS_GLOBAL_SESSION: 'True'
-      REMOTE_USE_IRODS: 'True'
-      IRODS_ZONE_NAME: 'hydroshareZone'
-      IRODS_SERVER_ZONE_KEY: 'hydroshareZone_KEY'
-      IRODS_DATABASE_SERVER_HOSTNAME: 'data.local.org'
-      IRODS_USER_NAME: 'rods'
-      IRODS_PASSWORD: 'rods'
-    stdin_open: true
-    tty: true
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_BROWSER_REDIRECT: "false"
+    command: server --console-address ":9001" /data
   postgis:
     image: postgis/postgis:15-3.3
+    platform: linux/amd64
     environment:
       POSTGRES_PASSWORD: 'postgres'
     container_name: postgis
@@ -65,11 +51,13 @@ services:
       - postgis
   rabbitmq:
     image: rabbitmq:3.8.2
+    platform: linux/amd64
     container_name: rabbitmq
     volumes:
       - "rabbitmq_data_vol:/var/lib/rabbitmq"
   solr:
     image: solr:6.6
+    platform: linux/amd64
     container_name: solr
     volumes:
       # hydroshare repository
@@ -79,6 +67,7 @@ services:
       - "8983"
     command: ["solr-foreground"]
   hydroshare:
+    platform: linux/amd64
     build:
       context: .
       dockerfile: Dockerfile
@@ -103,6 +92,7 @@ services:
       HS_PATH: ${PWD}
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
+      VUE_APP_BUCKET_URL_PUBLIC_PATH: "/static/static"
     volumes:
       # hydroshare repository
       - ".:/hydroshare"
@@ -117,13 +107,13 @@ services:
       - postgis:postgis
       - solr:solr
       - rabbitmq:rabbitmq
-      - data.local.org:data.local.org
+      - minio:minio
     depends_on:
       - postgis
       - pgbouncer
       - solr
       - rabbitmq
-      - data.local.org
+      - minio
     stdin_open: true
     tty: true
     command: /bin/bash init-hydroshare
@@ -132,6 +122,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: defaultworker
+    platform: linux/amd64
     hostname: defaultworker
     environment:
       POSTGIS_HOST: pgbouncer
@@ -157,19 +148,18 @@ services:
     links:
       - pgbouncer:pgbouncer
       - rabbitmq:rabbitmq
-      - data.local.org:data.local.org
     depends_on:
       - hydroshare
       - pgbouncer
       - solr
       - rabbitmq
-      - data.local.org
     stdin_open: true
     tty: true
     command: /bin/bash init-defaultworker
   companion:
   # https://github.com/transloadit/uppy/blob/main/packages/%40uppy/companion/KUBERNETES.md
-    image:  docker.io/transloadit/companion:5.2.0
+    image:  docker.io/transloadit/companion:5.5.0
+    platform: linux/amd64
     container_name: companion
     hostname: companion
     environment:
@@ -201,6 +191,7 @@ services:
       - redis
   redis:
     image: redis:latest
+    platform: linux/amd64
     container_name: redis
     hostname: redis
     environment:
@@ -222,14 +213,11 @@ services:
       - hydroshare
       - companion
 volumes:
-  idata_iconf_vol:
-  idata_vault_vol:
-  idata_pgres_vol:
-  idata_home_vol:
   postgis_data_vol:
   solr_data_vol:
   temp_vol:
   share_vol:
   rabbitmq_data_vol:
+  minio_data_vol:
   redis_data_vol:
   companion_vol:

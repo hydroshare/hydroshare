@@ -1,20 +1,17 @@
 import datetime
 import logging
-import mimetypes
 import os
-import urllib
 from uuid import uuid4
 
 from dateutil import tz
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import (FileResponse, HttpResponse, HttpResponseRedirect,
+from django.http import (HttpResponse, HttpResponseRedirect,
                          JsonResponse)
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view
 
-from django_irods import icommands
 from hs_core.hydroshare.resource import check_resource_type
 from hs_core.signals import (pre_check_bag_flag, pre_download_file,
                              pre_download_resource)
@@ -23,7 +20,6 @@ from hs_core.task_utils import (get_or_create_task_notification,
                                 get_task_user_id)
 from hs_core.tasks import create_bag_by_irods, create_temp_zip
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, is_ajax
-from hs_core.models import RangedFileReader
 from hs_file_types.enums import AggregationMetaFilePath
 
 logger = logging.getLogger(__name__)
@@ -149,7 +145,7 @@ def download(request, path, use_async=True,
 
             if is_zip_request:
                 daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
-                output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
+                output_path = "tmp/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
                 irods_output_path = res.get_irods_path(output_path, prepend_short_id=False)
 
     # After this point, we have valid path, irods_path, output_path, and irods_output_path
@@ -161,12 +157,6 @@ def download(request, path, use_async=True,
     # * is_zip_download: download a zipfile in format zips/{date}/{random guid}/{path}.zip
     # if none of these are set, it's a normal download
 
-    # determine active session
-    if icommands.ACTIVE_SESSION:
-        session = icommands.ACTIVE_SESSION
-    else:
-        raise KeyError('settings must have IRODS_GLOBAL_SESSION set ')
-
     resource_cls = check_resource_type(res.resource_type)
 
     if is_zip_request:
@@ -174,7 +164,7 @@ def download(request, path, use_async=True,
         if use_async:
             user_id = get_task_user_id(request)
             task = create_temp_zip.apply_async((res_id, irods_path, irods_output_path,
-                                                aggregation_name, is_sf_request, download_path, user_id))
+                                                aggregation_name, is_sf_request))
             task_id = task.task_id
             if api_request:
                 return JsonResponse({
@@ -189,8 +179,7 @@ def download(request, path, use_async=True,
 
         else:  # synchronous creation of download
             ret_status = create_temp_zip(res_id, irods_path, irods_output_path,
-                                         aggregation_name=aggregation_name, sf_zip=is_sf_request,
-                                         download_path=download_path)
+                                         aggregation_name=aggregation_name, sf_zip=is_sf_request)
             if not ret_status:
                 content_msg = "Zip could not be created."
                 response = HttpResponse()
@@ -235,12 +224,12 @@ def download(request, path, use_async=True,
                         return JsonResponse({
                             'bag_status': 'Not ready',
                             'task_id': task_id,
-                            'download_path': res.bag_url,
+                            'download_path': "",
                             # status and id are checked by by hs_core.tests.api.rest.test_create_resource.py
                             'status': 'Not ready',
                             'id': task_id})
                     else:
-                        task_dict = get_or_create_task_notification(task_id, name='bag download', payload=res.bag_url,
+                        task_dict = get_or_create_task_notification(task_id, name='bag download', payload="",
                                                                     username=user_id)
                         return JsonResponse(task_dict)
                 else:
@@ -249,9 +238,9 @@ def download(request, path, use_async=True,
                         return JsonResponse({
                             'bag_status': 'Not ready',
                             'task_id': task_id,
-                            'download_path': res.bag_url})
+                            'download_path': ""})
                     else:
-                        task_dict = get_or_create_task_notification(task_id, name='bag download', payload=res.bag_url,
+                        task_dict = get_or_create_task_notification(task_id, name='bag download', payload="",
                                                                     username=user_id)
                         return JsonResponse(task_dict)
             else:
@@ -271,11 +260,9 @@ def download(request, path, use_async=True,
             return JsonResponse(task_dict)
     else:  # regular file download
         # if fetching main metadata files, then these need to be refreshed.
-
         if path in [f"{res_id}/data/resourcemap.xml", f"{res_id}/data/resourcemetadata.xml",
                     f"{res_id}/manifest-md5.txt", f"{res_id}/tagmanifest-md5.txt", f"{res_id}/readme.txt",
                     f"{res_id}/bagit.txt"]:
-
             res.update_relation_meta()
             bag_modified = res.getAVU("bag_modified")
             if bag_modified is None or bag_modified or not istorage.exists(irods_output_path):
@@ -290,21 +277,14 @@ def download(request, path, use_async=True,
 
             if aggregation is not None and aggregation.metadata.is_dirty:
                 aggregation.create_aggregation_xml_documents()
-
     # If we get this far,
     # * path and irods_path point to true input
     # * output_path and irods_output_path point to true output.
     # Try to stream the file back to the requester.
 
-    # obtain mime_type to set content_type
-    mtype = 'application-x/octet-stream'
-    mime_type = mimetypes.guess_type(output_path)
-    if mime_type[0] is not None:
-        mtype = mime_type[0]
     # retrieve file size to set up Content-Length header
     # TODO: standardize this to make it less brittle
-    stdout = session.run("ils", None, "-l", irods_output_path)[0].split()
-    flen = int(stdout[3])
+    flen = istorage.size(irods_output_path)
     # this logs the download request in the tracking system
     if is_bag_download:
         pre_download_resource.send(sender=resource_cls, resource=res, request=request)
@@ -320,42 +300,9 @@ def download(request, path, use_async=True,
     # if we get here, none of the above conditions are true
     # if reverse proxy is enabled, then this is because the resource is remote and federated
     # OR the user specifically requested a non-proxied download.
-
-    options = ('-',)  # we're redirecting to stdout.
-    # this unusual way of calling works for streaming federated or local resources
-    if not settings.DEBUG:
-        logger.debug("Locally streaming {}".format(output_path))
-    # track download count
-    res.update_download_count()
-    proc = session.run_safe('iget', None, irods_output_path, *options)
-    # proc.stdout is an _io.BufferedReader object
-    ranged_file = RangedFileReader(proc.stdout)
-    response = FileResponse(ranged_file, content_type=mtype)
     filename = output_path.split('/')[-1]
-    filename = urllib.parse.quote(filename)
-    response['Content-Disposition'] = 'attachment; filename="{name}"'.format(name=filename)
-    response['Content-Length'] = flen
-
-    response["Accept-Ranges"] = "bytes"
-    # Respect the Range header.
-    if "HTTP_RANGE" in request.META:
-        try:
-            ranges = RangedFileReader.parse_range_header(request.META['HTTP_RANGE'], flen)
-        except ValueError:
-            ranges = None
-        # only handle syntactically valid headers, that are simple (no
-        # multipart byteranges)
-        if ranges is not None and len(ranges) == 1:
-            start, stop = ranges[0]
-            if stop > flen:
-                # requested range not satisfiable
-                return HttpResponse(status=416)
-            ranged_file.start = start
-            ranged_file.stop = stop
-            response["Content-Range"] = "bytes %d-%d/%d" % (start, stop - 1, flen)
-            response["Content-Length"] = stop - start
-            response.status_code = 206
-    return response
+    signed_url = istorage.signed_url(irods_output_path, ResponseContentDisposition=f'attachment; filename="{filename}"')
+    return HttpResponseRedirect(signed_url)
 
 
 @swagger_auto_schema(method='get', auto_schema=None)

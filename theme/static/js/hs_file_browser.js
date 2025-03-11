@@ -70,7 +70,7 @@ function getFolderTemplateInstance(folder) {
 
     // Default
     return "<li class='fb-folder droppable draggable' data-url='" + folder.url + "' title='" +
-        hint +" "+folder.name + "&#13;Type: File Folder'>" +
+        hint + folder.name + "&#13;Type: File Folder'>" +
         "<span class='fb-file-icon fa fa-folder icon-blue'></span>" +
         "<span class='fb-file-name'>" + folder.name + "</span>" +
         "<span class='fb-file-type' data-folder-short-path='" + folder['folder_short_path'] + "'>File Folder</span>" +
@@ -127,12 +127,17 @@ function getFileTemplateInstance(file) {
         iconTemplate = fileIcons.DEFAULT;
     }
 
+    let fileTypeStr = '';
+    if(file.type){
+        fileTypeStr = "Type: " + file.type + "&#13;";
+    }
+
     if (file.logical_type.length > 0){
-        var title = hint + file.name + "&#13;Type: " + file.type + "&#13;Size: " +
+        var title = hint + file.name + "&#13;" + fileTypeStr + "Size: " +
             formatBytes(parseInt(file.size)) + "&#13;" + (file.aggregation_name || "");
     }
     else {
-        var title = hint + file.name + "&#13;Type: " + file.type + "&#13;Size: " +
+        var title = hint + file.name + "&#13;" + fileTypeStr + "Size: " +
             formatBytes(parseInt(file.size));
     }
     

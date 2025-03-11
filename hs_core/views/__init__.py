@@ -1,6 +1,7 @@
 import datetime
 import json
 import logging
+import uuid
 
 from dal import autocomplete as dal_autocomplete
 from dateutil import tz
@@ -51,9 +52,11 @@ from hs_core.hydroshare.resource import (
     METADATA_STATUS_SUFFICIENT,
     update_quota_usage as update_quota_usage_utility,
 )
+from hs_core.tasks import create_bag_by_irods, create_temp_zip
 from hs_core.hydroshare.utils import (
     resolve_request,
     resource_modified,
+    get_resource_by_shortkey,
 )
 from hs_core.models import (
     BaseResource,
@@ -86,7 +89,6 @@ from . import resource_folder_hierarchy
 from . import resource_folder_rest_api
 from . import resource_metadata_rest_api
 from . import resource_rest_api
-from . import resource_ticket_rest_api
 from . import user_rest_api
 from .utils import (
     ACTION_TO_AUTHORIZE,
@@ -94,10 +96,9 @@ from .utils import (
     get_coverage_data_dict,
     get_my_resources_filter_counts,
     get_my_resources_list,
-    run_script_to_update_hyrax_input_files,
     send_action_to_take_email,
-    upload_from_irods,
     get_default_support_user,
+    user_from_bucket_name,
     is_ajax,
 )
 
@@ -593,14 +594,32 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
             res.update_public_and_discoverable()
             resource_modified(res, request.user, overwrite_bag=False)
     else:
+
+        if element_name.lower() == "subject":
+            original_value = request.POST.get("value", "")
+            keywords = original_value.replace(",", "")
+            # Make request.POST mutable
+            mutable_post = request.POST.copy()
+            mutable_post["value"] = keywords
+            request.POST = mutable_post
+
         handler_response = signals.pre_metadata_element_create.send(
             sender=sender_resource, element_name=element_name, request=request
         )
+
+        if element_name.lower() == "subject" and original_value:
+            mutable_post["value"] = original_value  # Reassign original value
+            request.POST = mutable_post
+
         for receiver, response in handler_response:
             if "is_valid" in response:
                 if response["is_valid"]:
                     element_data_dict = response["element_data_dict"]
+
                     if element_name == "subject":
+                        if original_value:
+                            element_data_dict["value"] = original_value
+
                         # using set() to remove any duplicate keywords
                         keywords = set(
                             [k.strip() for k in element_data_dict["value"].split(",")]
@@ -858,17 +877,38 @@ def file_download_url_mapper(request, shortkey):
 
     path_split = request.path.split("/")[2:]  # strip /resource/
     public_file_path = "/".join(path_split)
+    public_file_path = public_file_path.strip("/")
 
-    istorage = res.get_irods_storage()
-    url_download = (
-        True if request.GET.get("url_download", "false").lower() == "true" else False
-    )
     zipped = True if request.GET.get("zipped", "false").lower() == "true" else False
     aggregation = (
         True if request.GET.get("aggregation", "false").lower() == "true" else False
     )
+
+    istorage = res.get_irods_storage()
+    if istorage.isDir(public_file_path):
+        zipped = True
+    aggregation_name = None
+    if aggregation:
+        aggregation_name = public_file_path.split("/")[-1]
+        zipped = True
+    if zipped:
+        zip_path = f"tmp/{uuid.uuid4()}.zip"
+        user_id = get_task_user_id(request)
+        is_single_file = istorage.exists(public_file_path)
+        task = create_temp_zip.apply_async((res.short_id, public_file_path, zip_path, aggregation_name, is_single_file))
+        api_request = request.META.get('CSRF_COOKIE', None) is None
+        if api_request:
+            return JsonResponse({
+                'zip_status': 'Not ready',
+                'task_id': task.task_id,
+                'download_path': zip_path})
+        else:
+            # return status to the task notification App AJAX call
+            task_dict = get_or_create_task_notification(
+                task.task_id, name='zip download', payload=zip_path, username=user_id)
+            return JsonResponse(task_dict)
     return HttpResponseRedirect(
-        istorage.url(public_file_path, url_download, zipped, aggregation)
+        istorage.url(public_file_path)
     )
 
 
@@ -1517,7 +1557,7 @@ go to http://{domain}/verify/{token}/ and verify your account.
 
         context = {"is_email_sent": True}
         return render(request, "pages/verify-account.html", context)
-    except: # noqa
+    except:  # noqa
         pass  # FIXME should log this instead of ignoring it.
 
 
@@ -2223,6 +2263,122 @@ def hsapi_get_user(request, user_identifier):
     return get_user_or_group_data(request, user_identifier, "false")
 
 
+def check_user(user: User, resource: BaseResource, action: str):
+    # Break this down into just view and edit for now.
+    # HydroShare does not conusme changes made through S3 API yet so edit check is not active
+    # Later on we could share the metadata files only or allow resource deletion.
+    # We will also need to figure out owners at some point
+
+    # List of actions https://docs.aws.amazon.com/AmazonS3/latest/API/API_Operations.html
+
+    r = resource.raccess
+    u = user.uaccess
+    # view actions
+    if action == "s3:GetObject":
+        return r.public or r.allow_private_sharing or u.can_view_resource(resource)
+    # view and discoverable actions
+    if action == "s3:ListObjects" or action == "s3:ListObjjectsV2" or action == "s3:ListBucket":
+        return r.public or r.allow_private_sharing or r.discoverable or u.can_view_resource(resource)
+
+    # edit actions
+    if action == "s3:PutObject":
+        return u.can_change_resource(resource)
+    if action == "s3:DeleteObject":
+        return u.can_change_resource(resource)
+    if action == "s3:DeleteObjects":
+        return u.can_change_resource(resource)
+    if action == "s3:UploadPart":
+        return u.can_change_resource(resource)
+
+    return False
+
+
+@swagger_auto_schema(
+    method="post",
+    operation_description="Check user S3 authorization",
+    responses={200: "User S3 Authorization"}
+)
+@api_view(["POST"])
+def hsapi_user_s3_authorization(request):
+    # request body example
+    # https://min.io/docs/minio/linux/administration/identity-access-management/pluggable-authorization.html#id5
+    auth_request = json.loads(request.body.decode('utf-8'))["input"]
+    print(json.dumps(auth_request, indent=2))
+    conditions: dict = auth_request["conditions"]
+
+    # https://min.io/docs/minio/linux/administration/identity-access-management/policy-based-access-control.html
+    action: str = auth_request["action"]  # "s3:"
+
+    if action in ["s3:GetBucketLocation"]:
+        # This is needed by mc to list buckets and does not contain a prefix
+        JsonResponse({"result" : {"allow": True}})
+
+    bucket = auth_request["bucket"]
+
+    # preferred_username is the hydroshare username
+    # username is a guid when logged in through SSO
+    if "preferred_username" in conditions:
+        usernames: list[str] = conditions["preferred_username"]
+    else:
+        usernames: list[str] = conditions["username"]
+
+    # only one username should be present
+    if len(usernames) != 1:
+        logger.warning(f"Usernames length != 1 {usernames}")
+        return JsonResponse({"result" : {"allow": False}})
+    username = usernames[0]
+    logger.info(f"Checking {username} {bucket} {action}")
+
+    # admin account for minio
+    if username == "minioadmin" or username == "cuahsi":
+        return JsonResponse({"result" : {"allow": True}})
+    user: User = User.objects.get(username=username)
+    # admin hydroshare account
+    if user.is_superuser:
+        return JsonResponse({"result" : {"allow": True}})
+
+    # prefixes are paths to (folders/set of) objects in the bucket
+    # checking both Prefix and prefix as the case is not consistent
+    if "Prefix" in conditions:
+        prefixes: list[str] = [prefix for prefix in conditions["Prefix"] if prefix]
+    elif "prefix" in conditions:
+        prefixes: list[str] = [prefix for prefix in conditions["prefix"] if prefix]
+    else:
+        prefixes = []
+    if not prefixes:
+        # only owners of the bucket can do actions without prefixes
+        bucket_owner: User = user_from_bucket_name(bucket)
+        if bucket_owner == user:
+            logger.info("Owner", username, bucket, action)
+            return JsonResponse({"result" : {"allow": True}})
+        logger.warning(f"Not owner with no prefixes {username} {bucket} {action}")
+        return JsonResponse({"result" : {"allow": False}})
+    logger.info("Checking", username, prefixes, action)
+    # the root of the prefix (folder) is the resource id
+    resource_ids = [prefix.split("/")[0] for prefix in prefixes]
+    try:
+        resources: list[BaseResource] = [get_resource_by_shortkey(resource_id, False) for resource_id in resource_ids]
+    except BaseResource.DoesNotExist:
+        logger.warning(f"at least one resource {resource_ids} not found")
+        return False  # resource not found for a prefix
+
+    # users access the objects in these buckets through presigned urls, admins are approved above
+    if bucket in ["zips", "tmp", "bags"]:
+        return JsonResponse({"result" : {"allow": False}})
+
+    # check the user against and each resource against the action
+    for resource in resources:
+        if not check_user(user, resource, action):
+            logger.info(f"Denied {username} {resource.short_id} {action}")
+            return JsonResponse({"result" : {"allow": False}})
+        else:
+            logger.info(f"Approved {username} {resource.short_id} {action}")
+    if resources:
+        return JsonResponse({"result" : {"allow": True}})
+    logger.info(f"No resources found for {username} {prefixes}")
+    return JsonResponse({"result" : {"allow": False}})
+
+
 @swagger_auto_schema(
     method="post",
     operation_description="Check user password for Keycloak Migration",
@@ -2290,6 +2446,22 @@ def hsapi_post_user_for_keycloak(request, user_identifier):
     password = json.loads(request.body.decode('utf-8'))['password']
     user: User = hydroshare.utils.user_from_id(user_identifier)
     return HttpResponse() if user.check_password(password) else HttpResponseBadRequest()
+
+
+@swagger_auto_schema(
+    method="get",
+    operation_description="Get list of public resource ids containing netcdf files compatible with THREDDS",
+    responses={200: "Returns JsonResponse with a list of resource ids"},
+)
+@api_view(["GET"])
+def hsapi_thredds_resource_list(request):
+    if not request.user.is_superuser:
+        msg = {"message": "Unauthorized"}
+        return JsonResponse(msg, status=401)
+    thredds_resources = BaseResource.objects.filter(raccess__public=True).filter(
+        Q(files__resource_file__endswith=".nc")
+        | Q(files__resource_file__endswith=".nc")).values_list('short_id', flat=True).distinct()
+    return JsonResponse({"resource_ids": list(thredds_resources)})
 
 
 @login_required

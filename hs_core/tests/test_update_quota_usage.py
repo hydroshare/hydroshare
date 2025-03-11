@@ -157,7 +157,7 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Assert that the quota has been updated correctly
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
-        size_of_zip = 10240
+        size_of_zip = 191
         expected = self.single_file_size * 3 + size_of_zip
         self.assertAlmostEqual(dz, expected, places=5)
 

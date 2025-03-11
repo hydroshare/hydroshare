@@ -1,5 +1,6 @@
 import socket
 import json
+import requests
 
 from django.contrib.auth.models import Group
 from django.urls import reverse
@@ -87,14 +88,19 @@ class HSRESTTestCase(APITestCase):
         return self._get_file_irods(url, exhaust_stream)
 
     def _get_file_irods(self, url, exhaust_stream=True):
-        response = self.client.get(url, follow=True)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # Exhaust the file stream so that WSGI doesn't get upset (this causes the Docker container to exit)
-        if exhaust_stream and hasattr(response, "streaming_content"):
-            for line in response.streaming_content:
-                pass
-
-        return response
+        # follow the redirects to minio url and then use requests to get the file
+        # rest_framwork.tests.APIClient doesn't work for the file download
+        response = self.client.get(url)
+        response2 = self.client.get(response.url)
+        if response2.url.startswith('http://minio:9000'):
+            minio_response = requests.get(response2.url)
+            return minio_response
+        response3 = self.client.get(response2.url)
+        if response3['Content-Type'] == 'application/json':
+            # async task
+            return response3
+        minio_response = requests.get(response3.url)
+        return minio_response
 
     def getScienceMetadata(self, res_id, exhaust_stream=True):
         """Get sciencematadata.xml from iRODS, following redirects
@@ -108,8 +114,7 @@ class HSRESTTestCase(APITestCase):
         """
         url = "/hsapi/scimeta/{res_id}/".format(res_id=res_id)
         response = self._get_file_irods(url, exhaust_stream)
-        self.assertEqual(response["Content-Type"], "application/xml")
-        self.assertGreater(int(response["Content-Length"]), 0)
+        self.assertTrue(response.url.startswith('http://minio:9000'))
 
         return response
 

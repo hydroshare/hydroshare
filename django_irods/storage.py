@@ -1,120 +1,68 @@
+from io import BytesIO
 import os
-from datetime import datetime
-from dateutil import tz
+from pathlib import Path
+import tempfile
+import zipfile
+import logging
 
-from tempfile import NamedTemporaryFile
-from uuid import uuid4
+from django_irods.icommands import SessionException
+from django.urls import reverse
 from urllib.parse import urlencode
+from django.conf import settings
+
+from . import models as m
+from .utils import bucket_and_name, normalized_bucket_name, is_metadata_xml_file
+
+from uuid import uuid4
 
 from django.utils.deconstruct import deconstructible
-from django.conf import settings
-from django.core.files.storage import Storage
-from django.urls import reverse
-from django.core.exceptions import ValidationError
+from .s3_backend import S3Storage
 
-from django_irods import icommands
-from .icommands import (
-    Session,
-    GLOBAL_SESSION,
-    GLOBAL_ENVIRONMENT,
-    SessionException,
-    IRodsEnv,
-)
+
+folder_delimiter = "|||||||"
+logger = logging.getLogger(__name__)
 
 
 @deconstructible
-class IrodsStorage(Storage):
-    def __init__(self, option=None):
-        self.session = GLOBAL_SESSION
-        self.environment = GLOBAL_ENVIRONMENT
-        icommands.ACTIVE_SESSION = self.session
+class IrodsStorage(S3Storage):
+    def __init__(self, **settings):
+        super().__init__(**settings)
 
     @property
     def getUniqueTmpPath(self):
-        # return a unique temporary path under IRODS_ROOT directory
-        return os.path.join(getattr(settings, "IRODS_ROOT", "/tmp"), uuid4().hex)
-
-    @staticmethod
-    def get_absolute_path_query(path, parent=False):
-        """
-        Get iquest query string that needs absolute path of the input path for the HydroShare iRODS data zone
-        :param path: input path to be converted to absolute path if needed
-        :param parent: indicating whether query string should be checking COLL_PARENT_NAME rather than COLL_NAME
-        :return: iquest query string that has the logical path of the input path as input
-        """
-
-        # iquest has a bug that cannot handle collection name containing single quote as reported here
-        # https://github.com/irods/irods/issues/4887. This is a work around and can be removed after the bug is fixed
-        if "'" in path:
-            path = path.replace("'", "%")
-            qry_str = "COLL_PARENT_NAME like '{}'" if parent else "COLL_NAME like '{}'"
-        else:
-            qry_str = "COLL_PARENT_NAME = '{}'" if parent else "COLL_NAME = '{}'"
-
-        if os.path.isabs(path):
-            # iRODS federated logical path which is already absolute path
-            return qry_str.format(path)
-        return qry_str.format(os.path.join(settings.IRODS_HOME_COLLECTION, path))
-
-    def set_user_session(
-        self,
-        username=None,
-        password=None,
-        host=settings.IRODS_HOST,
-        port=settings.IRODS_PORT,
-        def_res=None,
-        zone=settings.IRODS_ZONE,
-        userid=0,
-        sess_id=None,
-    ):
-        homedir = "/" + zone + "/home/" + username
-        userEnv = IRodsEnv(
-            pk=userid,
-            host=host,
-            port=port,
-            def_res=def_res,
-            home_coll=homedir,
-            cwd=homedir,
-            username=username,
-            zone=zone,
-            auth=password,
-            irods_default_hash_scheme="MD5",
-        )
-        if sess_id is None:
-            self.session = Session(session_id=uuid4())
-            self.environment = self.session.create_environment(myEnv=userEnv)
-        else:
-            self.session = Session(session_id=sess_id)
-            if self.session.session_file_exists():
-                self.environment = userEnv
-            else:
-                self.environment = self.session.create_environment(myEnv=userEnv)
-
-        self.session.run("iinit", None, self.environment.auth)
-        icommands.ACTIVE_SESSION = self.session
-
-    def delete_user_session(self):
-        if self.session != GLOBAL_SESSION and self.session.session_file_exists():
-            self.session.delete_environment()
+        # return a unique temporary path under temporary bucket
+        bucket_name = "tmp"
+        unique_bucket_path = os.path.join(bucket_name, uuid4().hex)
+        return unique_bucket_path
 
     def download(self, name):
-        return self._open(name, mode="rb")
+        return self.open(name, mode="rb")
 
-    def getFile(self, src_name, dest_name):
-        self.session.run("iget", None, "-f", src_name, dest_name)
+    def listdir(self, path, remove_metadata=False):
+        """
+        list the contents of the directory
+        :param path: the directory path to list
+        :return: a list of files in the directory
+        """
+        folder_path = path.strip("/") + "/"  # ensure a folder is matched
+        directories, files, file_sizes = super().listdir(folder_path)
+        directories = [d for d in directories if d != os.path.basename(path)]
 
-    def runBagitRule(self, rule_name, input_path, input_resource):
-        """
-        run iRODS bagit rule which generated bag-releated files without bundling
-        :param rule_name: the iRODS rule name to run
-        :param input_path: input parameter to the rule that indicates the collection path to
-        create bag for
-        :param input_resource: input parameter to the rule that indicates the default resource
-        to store generated bag files
-        :return: None
-        """
-        # SessionException will be raised from run() in icommands.py
-        self.session.run("irule", None, "-F", rule_name, input_path, input_resource)
+        resource_id = "/".join(path.split("/")[:1])
+        additional_directories = self._empty_folders(resource_id, path)
+        if not directories and not files and not additional_directories:
+            raise SessionException(f"Path {path} does not exist")
+        path = path.strip("/")
+        additional_directories = [d[len(path):].strip("/").split("/")[0]
+                                  for d in additional_directories
+                                  if d[len(path):].strip("/")]
+        directories = list(set(directories + additional_directories))
+
+        if remove_metadata:
+            # remove .xml metadata files from the list
+            files = [f for f in files if not is_metadata_xml_file(f)]
+
+        return (directories, files, file_sizes)
 
     def zipup(self, in_name, out_name):
         """
@@ -123,9 +71,23 @@ class IrodsStorage(Storage):
         :param out_name: the output zipped file name
         :return: None
         """
-        self.session.run("imkdir", None, "-p", out_name.rsplit("/", 1)[0])
-        # SessionException will be raised from run() in icommands.py
-        self.session.run("ibun", None, "-cDzip", "-f", out_name, in_name)
+        in_bucket, in_path = bucket_and_name(in_name)
+        out_bucket, out_path = bucket_and_name(out_name)
+        in_bucket = self.connection.Bucket(in_bucket)
+
+        # Stream zip https://stackoverflow.com/a/69136133
+        filesCollection = in_bucket.objects.filter(Prefix=in_path).all()
+        archive = BytesIO()
+        in_prefix = os.path.dirname(in_path) if self.isDir(in_name) else in_path
+        with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
+            for file in filesCollection:
+                relative_path = file.key[len(in_prefix):]
+                with zip_archive.open(relative_path, 'w', force_zip64=True) as file1:
+                    file1.write(file.get()['Body'].read())
+
+        archive.seek(0)
+        self.connection.Object(out_bucket, out_path).upload_fileobj(archive)
+        archive.close()
 
     def unzip(self, zip_file_path, unzipped_folder=""):
         """
@@ -136,31 +98,27 @@ class IrodsStorage(Storage):
         :return: the folder files were unzipped to
         """
 
-        abs_path = os.path.dirname(zip_file_path)
-        if not unzipped_folder:
-            unzipped_folder = abs_path
-        else:
-            unzipped_folder = self._get_nonexistant_path(
-                os.path.join(abs_path, unzipped_folder)
-            )
+        zip_bucket, zip_name = bucket_and_name(zip_file_path)
+        unzipped_bucket, unzipped_path = bucket_and_name(unzipped_folder)
 
-        # SessionException will be raised from run() in icommands.py
-        self.session.run("ibun", None, "-xDzip", zip_file_path, unzipped_folder)
+        bucket = self.connection.Bucket(zip_bucket)
+        filebytes = BytesIO()
+        bucket.download_fileobj(zip_name, filebytes)
+        with tempfile.TemporaryDirectory() as extracted_folder:
+            with zipfile.ZipFile(filebytes, "r") as zip_ref:
+                zip_ref.extractall(extracted_folder)
+            for path in Path(extracted_folder).rglob("*"):
+                if path.is_dir():
+                    continue
+
+                unzipped_file_path = os.path.relpath(path, extracted_folder)
+                file_unzipped_path = os.path.join(unzipped_path, unzipped_file_path)
+                self.connection.Bucket(unzipped_bucket).upload_file(path, file_unzipped_path)
         return unzipped_folder
 
-    def _get_nonexistant_path(self, path):
-        if not self.exists(path):
-            return path
-        i = 1
-        new_path = "{}-{}".format(path, i)
-        while self.exists(new_path):
-            i += 1
-            new_path = "{}-{}".format(path, i)
-        return new_path
-
-    def setAVU(self, name, attName, attVal, attUnit=None):
+    def setAVU(self, name, attName, attVal):
         """
-        set AVU on resource collection - this is used for on-demand bagging by indicating
+        set AVU in database - this is used for on-demand bagging by indicating
         whether the resource has been modified via AVU pairs
 
         Parameters:
@@ -168,19 +126,12 @@ class IrodsStorage(Storage):
         name: the resource collection name to set AVU.
         attName: the attribute name to set
         attVal: the attribute value to set
-        attUnit: the attribute Unit to set, default is None, but can be set to
-        indicate additional info
         """
-
-        # SessionException will be raised from run() in icommands.py
-        if attUnit:
-            self.session.run("imeta", None, "set", "-C", name, attName, attVal, attUnit)
-        else:
-            self.session.run("imeta", None, "set", "-C", name, attName, attVal)
+        m.AVU.objects.update_or_create(name=name, attName=attName, defaults={'attVal': attVal})
 
     def getAVU(self, name, attName):
         """
-        set AVU on resource collection - this is used for on-demand bagging by indicating
+        set AVU in database - this is used for on-demand bagging by indicating
         whether the resource has been modified via AVU pairs
 
         Parameters:
@@ -188,282 +139,174 @@ class IrodsStorage(Storage):
         name: the resource collection name to set AVU.
         attName: the attribute name to set
         attVal: the attribute value to set
-        attUnit: the attribute Unit to set, default is None, but can be set to
-        indicate additional info
         """
-
-        # SessionException will be raised from run() in icommands.py
-        stdout = self.session.run("imeta", None, "ls", "-C", name, attName)[0].split(
-            "\n"
-        )
-        ret_att = stdout[1].strip()
-        if ret_att == "None":  # queried attribute does not exist
+        try:
+            return m.AVU.objects.get(name=name, attName=attName).attVal
+        except m.AVU.DoesNotExist:
             return None
-        else:
-            vals = stdout[2].split(":")
-            return vals[1].strip()
 
-    def copyFiles(self, src_name, dest_name, ires=None):
-        """
-        Parameters:
-        :param
-        src_name: the iRODS data-object or collection name to be copied from.
-        dest_name: the iRODS data-object or collection name to be copied to
-        copyFiles() copied an irods data-object (file) or collection (directory)
-        to another data-object or collection
-        """
-
-        if src_name and dest_name:
-            if "/" in dest_name:
-                splitstrs = dest_name.rsplit("/", 1)
-                if not self.exists(splitstrs[0]):
-                    self.session.run("imkdir", None, "-p", splitstrs[0])
-            if ires:
-                self.session.run("icp", None, "-rf", "-R", ires, src_name, dest_name)
-            else:
-                self.session.run("icp", None, "-rf", src_name, dest_name)
-        return
-
-    def moveFile(self, src_name, dest_name):
-        """
-        Parameters:
-        :param
-        src_name: the iRODS data-object or collection name to be moved from.
-        dest_name: the iRODS data-object or collection name to be moved to
-        moveFile() moves/renames an irods data-object (file) or collection
-        (directory) to another data-object or collection
-        """
-        if src_name and dest_name:
-            if "/" in dest_name:
-                splitstrs = dest_name.rsplit("/", 1)
-                if not self.exists(splitstrs[0]):
-                    self.session.run("imkdir", None, "-p", splitstrs[0])
-            self.session.run("imv", None, src_name, dest_name)
-        return
-
-    def saveFile(self, from_name, to_name, create_directory=False, data_type_str=""):
-        """
-        Parameters:
-        :param
-        from_name: the temporary file name in local disk to be uploaded from.
-        to_name: the data object path in iRODS to be uploaded to
-        create_directory: create directory as needed when set to True. Default is False
-        Note if only directory needs to be created without saving a file, from_name should be empty
-        and to_name should have "/" as the last character
-        """
-        if create_directory:
-            splitstrs = to_name.rsplit("/", 1)
-            self.session.run("imkdir", None, "-p", splitstrs[0])
-            if len(splitstrs) <= 1:
-                return
-
-        if from_name:
-            try:
-                if data_type_str:
-                    self.session.run(
-                        "iput", None, "-D", data_type_str, "-f", from_name, to_name
-                    )
-                else:
-                    self.session.run("iput", None, "-f", from_name, to_name)
-            except: # noqa
-                if data_type_str:
-                    self.session.run(
-                        "iput", None, "-D", data_type_str, "-f", from_name, to_name
-                    )
-                else:
-                    # IRODS 4.0.2, sometimes iput fails on the first try.
-                    # A second try seems to fix it.
-                    self.session.run("iput", None, "-f", from_name, to_name)
-        return
-
-    def _open(self, name, mode="rb"):
-        tmp = NamedTemporaryFile()
-        self.session.run("iget", None, "-f", name, tmp.name)
-        return tmp
-
-    def _save(self, name, content):
-        self.session.run("imkdir", None, "-p", name.rsplit("/", 1)[0])
-        with NamedTemporaryFile(delete=False) as f:
-            for chunk in content.chunks():
-                f.write(chunk)
-            f.flush()
-            f.close()
-            try:
-                self.session.run("iput", None, "-f", f.name, name)
-            except: # noqa
-                # IRODS 4.0.2, sometimes iput fails on the first try. A second try seems to fix it.
-                self.session.run("iput", None, "-f", f.name, name)
-            os.unlink(f.name)
-        return name
-
-    def delete(self, name):
-        self.session.run("irm", None, "-rf", name)
+    def _empty_folders(self, resource_id, filter=None):
+        folders = self.getAVU(resource_id, "empty_folders")
+        if not folders:
+            return []
+        folders = folders.split(folder_delimiter)
+        if filter:
+            if not filter.endswith("/"):
+                filter += "/"
+            # folders = [f for f in folders if f.startswith(filter) and filter.split("/")[-1] in f.split("/")]
+            folders = [f for f in folders if f"{f}/".startswith(filter)]
+        return folders
 
     def exists(self, name):
-        try:
-            stdout = self.session.run("ils", None, name)[0]
-            return stdout != ""
-        except SessionException:
-            return False
+        if super().exists(name):
+            return True
+        bucket_name, key = bucket_and_name(name)
+        bucket = self.connection.Bucket(bucket_name)
+        for f in bucket.objects.filter(Prefix=key):
+            if f.key == key:
+                return True
+            elif f.key.startswith(key.strip("/") + "/"):
+                return True
 
-    def _list_files(self, path):
+        resource_id_and_relative_path = key.split("/data/contents/")
+        resource_id = resource_id_and_relative_path[0]
+        empty_dirs = self._empty_folders(resource_id)
+        if name in empty_dirs:
+            return True
+
+        return False
+
+    def create_folder(self, coll_path, path):
+        folders = self._empty_folders(coll_path)
+        folders.append(path.strip("/"))
+        # remove duplicates
+        folders = list(set(folders))
+        self.setAVU(coll_path, "empty_folders", folder_delimiter.join(folders))
+
+    def remove_folder(self, res_id, path, AVU_only=False):
+        folders = self._empty_folders(res_id)
+        for folder in folders:
+            if folder.startswith(path):
+                folders.remove(folder)
+        self.setAVU(res_id, "empty_folders", folder_delimiter.join(folders))
+        if not AVU_only:
+            src_bucket, src_name = bucket_and_name(path)
+            src_name = src_name.strip("/") + "/"
+            for file in self.connection.Bucket(src_bucket).objects.filter(Prefix=src_name):
+                self.connection.Object(src_bucket, file.key).delete()
+
+    def copyFiles(self, src_path, dest_path, delete_src=False):
         """
-        internal method to only list data objects/files under path
-        :param path: iRODS collection/directory path
-        :return: ordered filename_list and filesize_list
+        copies an S3 object (file) or files matching a prefix (directory)
+        to another data-object or collection
+
+        Parameters:
+        :param
+        src_path: the iRODS data-object or collection name to be copied from.
+        dest_path: the iRODS data-object or collection name to be copied to
+        delete_src: delete the source file after copying when set to True. Default is False
         """
+        src_bucket, src_name = bucket_and_name(src_path)
+        dst_bucket, dest_name = bucket_and_name(dest_path)
+        bucket = self.connection.Bucket(src_bucket)
 
-        fname_list = []
-        fsize_list = []
-
-        # the query below returns name and size (separated in comma) of all data
-        # objects/files under the path collection/directory
-        qrystr = (
-            "select DATA_NAME, DATA_SIZE where DATA_REPL_STATUS = '1' "
-            "AND {}".format(IrodsStorage.get_absolute_path_query(path))
-        )
-        stdout = self.session.run("iquest", None, "--no-page", "%s,%s", qrystr)[
-            0
-        ].split("\n")
-
-        for i in range(len(stdout)):
-            if not stdout[i] or "CAT_NO_ROWS_FOUND" in stdout[i]:
-                break
-            file_info = stdout[i].rsplit(",", 1)
-            fname_list.append(file_info[0])
-            fsize_list.append(file_info[1])
-
-        return fname_list, fsize_list
-
-    def _list_subdirs(self, path):
-        """
-        internal method to only list sub-collections/sub-directories under path
-        :param path: iRODS collection/directory path
-        :return: sub-collection/directory name list
-        """
-        subdir_list = []
-        # the query below returns name of all sub-collections/sub-directories
-        # under the path collection/directory
-
-        qrystr = "select COLL_NAME where {}".format(
-            IrodsStorage.get_absolute_path_query(path, parent=True)
-        )
-        stdout = self.session.run("iquest", None, "--no-page", "%s", qrystr)[0].split(
-            "\n"
-        )
-        for i in range(len(stdout)):
-            if not stdout[i] or "CAT_NO_ROWS_FOUND" in stdout[i]:
-                break
-            dirname = stdout[i]
-            # remove absolute path prefix to only show relative sub-dir name
-            idx = dirname.find(path)
-            if idx > 0:
-                dirname = dirname[idx + len(path) + 1 :]
-
-            subdir_list.append(dirname)
-
-        return subdir_list
-
-    def listdir(self, path):
-        """
-        return list of sub-collections/sub-directories, data objects/files and their sizes
-        :param path: iRODS collection/directory path
-        :return: (sub_directory_list, file_name_list, file_size_list)
-        """
-        # remove any trailing slashes if any; otherwise, iquest would fail
-        path = path.strip()
-        while path.endswith("/"):
-            path = path[:-1]
-
-        # check first whether the path is an iRODS collection/directory or not, and if not, need
-        # to raise SessionException, and if yes, can proceed to get files and sub-dirs under it
-        qrystr = "select COLL_NAME where {}".format(
-            IrodsStorage.get_absolute_path_query(path)
-        )
-        stdout = self.session.run("iquest", None, "%s", qrystr)[0]
-        if "CAT_NO_ROWS_FOUND" in stdout:
-            raise SessionException(-1, "", "folder {} does not exist".format(path))
-
-        fname_list, fsize_list = self._list_files(path)
-
-        subdir_list = self._list_subdirs(path)
-
-        listing = (subdir_list, fname_list, fsize_list)
-
-        return listing
-
-    def size(self, name):
-        """
-        return the size of the data object/file with file name being passed in
-        :param name: file name
-        :return: the size of the file
-        """
-        file_info = name.rsplit("/", 1)
-        if len(file_info) < 2:
-            raise ValidationError(
-                "{} is not a valid file path to retrieve file size "
-                "from iRODS".format(name)
+        if self.isFile(src_path):
+            self.connection.Bucket(dst_bucket).copy(
+                {
+                    "Bucket": src_bucket,
+                    "Key": src_name,
+                },
+                dest_name,
             )
-        coll_name = file_info[0]
-        file_name = file_info[1]
-        qrystr = (
-            "select DATA_SIZE where DATA_REPL_STATUS = '1' AND "
-            "{} AND DATA_NAME = '{}'".format(
-                IrodsStorage.get_absolute_path_query(coll_name), file_name
-            )
-        )
-        stdout = self.session.run("iquest", None, "%s", qrystr)[0]
+            if delete_src:
+                self.connection.Object(src_bucket, src_name).delete()
+        else:
+            # copy files
+            for file in bucket.objects.filter(Prefix=src_name):
+                src_file_path = file.key
+                dst_file_path = file.key.replace(src_name, dest_name)
+                self.connection.Bucket(dst_bucket).copy(
+                    {
+                        "Bucket": src_bucket,
+                        "Key": src_file_path,
+                    },
+                    dst_file_path,
+                )
+                if delete_src:
+                    self.connection.Object(src_bucket, src_file_path).delete()
 
-        if "CAT_NO_ROWS_FOUND" in stdout:
-            raise ValidationError(
-                "{} cannot be found in iRODS to retrieve " "file size".format(name)
-            )
-        # remove potential '\n' from stdout
-        size_string = stdout.replace("\n", "")
-        try:
-            ret = int(float(size_string))
-            return ret
-        except ValueError:
-            return 0
+            # update empty_folders AVU
+            res_id = "/".join(dest_name.split("/")[:1])
+            for empty_folder in self._empty_folders(res_id, filter=src_name):
+                new_folder = empty_folder.replace(src_name, dest_name)
+                self.remove_folder(res_id, empty_folder, AVU_only=True)
+                self.create_folder(res_id, new_folder)
 
-    def checksum(self, full_name, force_compute=True):
+    def moveFile(self, src_path, dest_path):
+        """
+        Parameters:
+        :param
+        src_path: the iRODS data-object or collection name to be moved from.
+        dest_path: the iRODS data-object or collection name to be moved to
+        moveFile() moves/renames an S3 object (file) or prefix (directory) to another data-object or collection
+        """
+        self.copyFiles(src_path, dest_path, delete_src=True)
+
+    def save_md5_manifest(self, resource_id):
+        """
+        save md5 manifest file for the resource
+        :param resource_id: the resource id
+        """
+        bucket_name, path_name = bucket_and_name(resource_id)
+        bucket = self.connection.Bucket(bucket_name)
+        checksums = []
+        strip_length = len(resource_id + "/")
+        for file in bucket.objects.filter(Prefix=os.path.join(path_name, "data")):
+            checksums.append({file.key[strip_length:]: file.e_tag.strip('"')})
+        with tempfile.NamedTemporaryFile() as f:
+            for checksum in checksums:
+                f.write(f"{list(checksum.values())[0]}    {list(checksum.keys())[0]}\n".encode())
+            f.flush()
+            self.saveFile(f.name, f"{resource_id}/manifest-md5.txt")
+
+    def saveFile(self, src_local_file, dest_s3_bucket_path):
+        """
+        Parameters:
+        :param
+        src_local_file: the temporary file name in local disk to be uploaded from.
+        dest_s3_bucket_path: the data object path in iRODS to be uploaded to
+        """
+        dst_bucket, dst_name = bucket_and_name(dest_s3_bucket_path)
+        self.connection.Bucket(dst_bucket).upload_file(src_local_file, dst_name)
+
+    def checksum(self, s3_bucket_name):
         """
         Compute/Update checksum of file object and return the checksum
-        :param full_name: the data object name with full collection path in order to locate data object from current
-        working directory
+        :param s3_bucket_name: the data object name with full collection path in order to locate
+        data object from current working directory
         :return: checksum of the file object
         """
-        # first force checksum (re)computation
-        if force_compute:
-            self.session.run("ichksum", None, "-f", full_name)
-        # retrieve checksum using iquest
-        # get data object name only from the full_name input parameter to be used by iquest
-        if "/" in full_name:
-            file_info = full_name.rsplit("/", 1)
-            coll_name_query = IrodsStorage.get_absolute_path_query(file_info[0])
-            obj_name = file_info[1]
-        else:
-            coll_name_query = "COLL_NAME = '{}'".format(settings.IRODS_HOME_COLLECTION)
-            obj_name = full_name
+        bucket, name = bucket_and_name(s3_bucket_name)
+        s3_object = self.connection.Object(bucket, name)
+        return s3_object.e_tag.strip('"')
 
-        qrystr = "SELECT DATA_CHECKSUM WHERE {} AND DATA_NAME = '{}'".format(
-            coll_name_query, obj_name
-        )
-        stdout = self.session.run("iquest", None, "%s", qrystr)[0]
-        if "CAT_NO_ROWS_FOUND" in stdout:
-            raise ValidationError(
-                "{} cannot be found in iRODS to retrieve " "checksum".format(obj_name)
-            )
-        # remove potential '\n' from stdout
-        checksum = stdout.strip("\n")
-        if not checksum:
-            if force_compute:
-                raise ValidationError(
-                    "checksum for {} cannot be found in iRODS".format(obj_name)
-                )
-            # checksum hasn't been computed, so force the checksum computation
-            return self.checksum(full_name, force_compute=True)
-        return checksum
+    def download_file(self, s3_bucket_name, local_file_path):
+        """
+        Download file from S3 bucket to local file path
+        :param s3_bucket_name: the data object name with full collection path in order to locate data object from
+        current working directory
+        :param local_file_path: the local file path to download the file to
+        """
+        bucket, name = bucket_and_name(s3_bucket_name)
+        self.connection.Bucket(bucket).download_file(name, local_file_path)
+
+    def signed_url(self, name, **kwargs):
+        super_url = super().url(name.strip("/"), kwargs)
+        # check AWS_S3_USE_LOCAL setting to determine if we should return local url
+        use_local = getattr(settings, "AWS_S3_USE_LOCAL", False)
+        if use_local and not settings.TESTING:
+            return super_url.replace("http://minio:9000", "http://localhost:9000")
+        return super_url
 
     def url(self, name, url_download=False, zipped=False, aggregation=False):
         reverse_url = reverse("rest_download", kwargs={"path": name})
@@ -474,45 +317,65 @@ class IrodsStorage(Storage):
         }
         return reverse_url + "?" + urlencode(query_params)
 
-    def get_available_name(self, name, max_length=None):
-        """
-        Reject duplicate file names rather than renaming them.
-        """
-        if self.exists(name):
-            raise ValidationError(str.format("File {} already exists.", name))
-        return name
-
-    def get_modified_time(self, name):
-        """
-        Return the last modified time (as a datetime in UTC timezone) of the file specified by full_name.
-        :param name: data object (file) name with full collection path in order to locate file from current
-        working directory
-        :return: last modified time of the file in UTC timezone
-        """
-        if "/" in name:
-            file_info = name.rsplit("/", 1)
-            coll_name_query = IrodsStorage.get_absolute_path_query(file_info[0])
-            obj_name = file_info[1]
-        else:
-            coll_name_query = "COLL_NAME = '{}'".format(settings.IRODS_HOME_COLLECTION)
-            obj_name = name
-        qrystr = "SELECT DATA_MODIFY_TIME WHERE {} AND DATA_NAME = '{}'".format(
-            coll_name_query, obj_name
-        )
-        stdout = self.session.run("iquest", None, "%s", qrystr)[0]
-        if "CAT_NO_ROWS_FOUND" in stdout:
-            raise ValidationError("{} cannot be found in iRODS".format(name))
-        # remove potential '\n' from stdout
-        timestamp = float(stdout.split("\n", 1)[0])
-        utc_dt = datetime.fromtimestamp(timestamp, tz.UTC)
-        return utc_dt
-
-    def isFile(self, path):
+    def isDir(self, path):
         try:
             self.listdir(path)
-            return False
         except SessionException:
-            return True
+            return False
+        return True
 
-    def isDir(self, path):
-        return not self.isFile(path)
+    def isFile(self, path):
+        src_bucket, src_name = bucket_and_name(path)
+        try:
+            self.connection.Object(src_bucket, src_name).load()
+            return True
+        except Exception:
+            # TODO check if something went wrong vs not found
+            return False
+
+    def create_bucket(self, bucket_name):
+        try:
+            self.connection.create_bucket(Bucket=bucket_name)
+        except Exception:
+            pass
+            # logger.exception(f"Failed to create bucket {bucket_name}")
+
+    def delete_bucket(self, bucket_name):
+        try:
+            self.connection.meta.client.delete_bucket(Bucket=bucket_name)
+        except Exception:
+            pass
+            # logger.exception(f"Failed to delete bucket {bucket_name}")
+
+    def new_quota_holder(self, resource_id, new_quota_holder_id):
+        """
+        Create a new bucket for the resource
+        :param resource_id: the resource id
+        """
+        src_bucket, src_name = bucket_and_name(resource_id)
+        dst_bucket = normalized_bucket_name(new_quota_holder_id)
+        dest_name = src_name
+
+        bucket = self.connection.Bucket(src_bucket)
+        files_to_delete = []
+        for file in bucket.objects.filter(Prefix=src_name):
+            src_file_path = file.key
+            dst_file_path = file.key.replace(src_name, dest_name)
+            self.connection.Bucket(dst_bucket).copy(
+                {
+                    "Bucket": src_bucket,
+                    "Key": src_file_path,
+                },
+                dst_file_path,
+            )
+            files_to_delete.append(src_file_path)
+
+        for src_file_path in files_to_delete:
+            self.connection.Object(src_bucket, src_file_path).delete()
+
+    def bucket_exists(self, bucket_name):
+        try:
+            self.connection.meta.client.head_bucket(Bucket=bucket_name)
+            return True
+        except Exception:
+            return False
