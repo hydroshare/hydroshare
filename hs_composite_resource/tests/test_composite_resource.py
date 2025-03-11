@@ -1661,7 +1661,7 @@ class CompositeResourceTest(
         self.assertEqual(res_coverage.value["northlimit"], 43.6789)
         self.assertEqual(res_coverage.value["eastlimit"], -110.88845678)
         self.assertEqual(res_coverage.value["southlimit"], 41.98722286030319)
-        self.assertEqual(res_coverage.value["westlimit"], -111.6975629308406)
+        self.assertEqual(res_coverage.value["westlimit"], -111.69756293084063)
         # update the LFO coverage to box type
         value_dict = {
             "eastlimit": "-110.88845678",

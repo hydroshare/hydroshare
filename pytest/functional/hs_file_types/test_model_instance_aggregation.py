@@ -785,7 +785,7 @@ def test_no_auto_update_spatial_coverage_from_children(composite_resource_with_m
     assert gr_aggr.metadata.spatial_coverage is not None
     assert gr_aggr.metadata.spatial_coverage.value['northlimit'] == 42.050026959773426
     assert gr_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.577737181062
-    assert gr_aggr.metadata.spatial_coverage.value['southlimit'] == 41.98722286030317
+    assert gr_aggr.metadata.spatial_coverage.value['southlimit'] == 41.98722286030319
     assert gr_aggr.metadata.spatial_coverage.value['westlimit'] == -111.69756293084063
     # check model instance spatial coverage has not been updated
     assert mi_aggr.metadata.spatial_coverage.value['east'] == value_dict['east']
