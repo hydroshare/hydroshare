@@ -74,9 +74,9 @@ class IrodsStorage(S3Storage):
         """
         def chunk_request(zip_archive_file, bucket, key):
             chunk_size = 1024 * 1024 * 256  # 256MB
-            object_size = self.connection.meta.client.get_object_attributes(
-                            Bucket=bucket, Key=key, ObjectAttributes=["ObjectSize"]
-                        ).get("ObjectSize")
+            object_attrs = self.connection.meta.client.get_object_attributes(Bucket=bucket, Key=key,
+                                                                             ObjectAttributes=["ObjectSize"])
+            object_size = object_attrs.get("ObjectSize")
 
             chunk_start = 0
             chunk_end = chunk_start + chunk_size - 1
