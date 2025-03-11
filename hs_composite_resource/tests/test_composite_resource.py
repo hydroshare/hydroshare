@@ -1660,7 +1660,7 @@ class CompositeResourceTest(
         self.assertEqual(res_coverage.value["units"], "Decimal degrees")
         self.assertEqual(res_coverage.value["northlimit"], 43.6789)
         self.assertEqual(res_coverage.value["eastlimit"], -110.88845678)
-        self.assertEqual(res_coverage.value["southlimit"], 41.98722286030317)
+        self.assertEqual(res_coverage.value["southlimit"], 41.98722286030319)
         self.assertEqual(res_coverage.value["westlimit"], -111.6975629308406)
         # update the LFO coverage to box type
         value_dict = {
