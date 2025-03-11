@@ -723,7 +723,7 @@ def test_update_spatial_coverage_from_children(composite_resource_with_mi_aggreg
     mi_aggr = ModelInstanceLogicalFile.objects.first()
     # model aggr should now have spatial coverage
     assert mi_aggr.metadata.spatial_coverage is not None
-    assert mi_aggr.metadata.spatial_coverage.value['northlimit'] == 42.05002695977342
+    assert mi_aggr.metadata.spatial_coverage.value['northlimit'] == 42.050026959773426
     assert mi_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.57773718106199
     assert mi_aggr.metadata.spatial_coverage.value['southlimit'] == 41.98722286030317
     assert mi_aggr.metadata.spatial_coverage.value['westlimit'] == -111.6975629308406
@@ -742,7 +742,7 @@ def test_update_spatial_coverage_from_children(composite_resource_with_mi_aggreg
     # update model instance aggregation spatial coverage from the contained 2 aggregations
     mi_aggr.update_spatial_coverage()
     # test model instance aggregation spatial coverage data
-    assert mi_aggr.metadata.spatial_coverage.value['northlimit'] == 42.05002695977342
+    assert mi_aggr.metadata.spatial_coverage.value['northlimit'] == 42.050026959773426
     assert mi_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.5059403684569
     assert mi_aggr.metadata.spatial_coverage.value['southlimit'] == 41.86390807452128
     assert mi_aggr.metadata.spatial_coverage.value['westlimit'] == -111.6975629308406
@@ -783,7 +783,7 @@ def test_no_auto_update_spatial_coverage_from_children(composite_resource_with_m
     gr_aggr = GeoRasterLogicalFile.objects.first()
     # raster aggr should have spatial coverage
     assert gr_aggr.metadata.spatial_coverage is not None
-    assert gr_aggr.metadata.spatial_coverage.value['northlimit'] == 42.05002695977342
+    assert gr_aggr.metadata.spatial_coverage.value['northlimit'] == 42.050026959773426
     assert gr_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.57773718106199
     assert gr_aggr.metadata.spatial_coverage.value['southlimit'] == 41.98722286030317
     assert gr_aggr.metadata.spatial_coverage.value['westlimit'] == -111.6975629308406
