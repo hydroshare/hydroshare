@@ -223,11 +223,12 @@ def get_wgs84_coverage_info(raster_dataset):
             wgs84_westlimit = min(x_wgs84)  # min x
             wgs84_eastlimit = max(x_wgs84)
 
+            # intentionally reversed to get the correct x, y
             wgs84_coverage_info = OrderedDict([
-                ('northlimit', wgs84_northlimit),
-                ('southlimit', wgs84_southlimit),
-                ('eastlimit', wgs84_eastlimit),
-                ('westlimit', wgs84_westlimit),
+                ('eastlimit', wgs84_northlimit),
+                ('westlimit', wgs84_southlimit),
+                ('northlimit', wgs84_eastlimit),
+                ('southlimit', wgs84_westlimit),
                 ('units', 'Decimal degrees'),
                 ('projection', 'WGS 84 EPSG:4326')
             ])
