@@ -1003,10 +1003,10 @@ def parse_shp(shp_file_path):
     target.ImportFromEPSG(4326)
 
     # create two key points from layer extent
-    right_upper_point = ogr.Geometry(ogr.wkbPoint)
-    right_upper_point.AddPoint(layer_extent[0], layer_extent[3])
-    left_lower_point = ogr.Geometry(ogr.wkbPoint)
-    left_lower_point.AddPoint(layer_extent[1], layer_extent[2])
+    left_upper_point = ogr.Geometry(ogr.wkbPoint)
+    left_upper_point.AddPoint(layer_extent[0], layer_extent[3])
+    right_lower_point = ogr.Geometry(ogr.wkbPoint)
+    right_lower_point.AddPoint(layer_extent[1], layer_extent[2])
 
     # source map always has extent, even projection is unknown
     shp_metadata_dict["origin_extent_dict"] = {}
@@ -1022,13 +1022,12 @@ def parse_shp(shp_file_path):
         # define CoordinateTransformation obj
         transform = osr.CoordinateTransformation(source, target)
         # project two key points
-        right_upper_point.Transform(transform)
-        left_lower_point.Transform(transform)
-        # instentionally swapped for new version of osr
-        shp_metadata_dict["wgs84_extent_dict"]["northlimit"] = right_upper_point.GetX()
-        shp_metadata_dict["wgs84_extent_dict"]["westlimit"] = right_upper_point.GetY()
-        shp_metadata_dict["wgs84_extent_dict"]["southlimit"] = left_lower_point.GetX()
-        shp_metadata_dict["wgs84_extent_dict"]["eastlimit"] = left_lower_point.GetY()
+        lup = left_upper_point.Transform(transform)
+        rlp = right_lower_point.Transform(transform)
+        shp_metadata_dict["wgs84_extent_dict"]["northlimit"] = lup.GetY()
+        shp_metadata_dict["wgs84_extent_dict"]["westlimit"] = lup.GetX()
+        shp_metadata_dict["wgs84_extent_dict"]["southlimit"] = rlp.GetY()
+        shp_metadata_dict["wgs84_extent_dict"]["eastlimit"] = rlp.GetX()
         shp_metadata_dict["wgs84_extent_dict"]["projection"] = "WGS 84 EPSG:4326"
         shp_metadata_dict["wgs84_extent_dict"]["units"] = "Decimal degrees"
     else:
