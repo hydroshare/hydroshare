@@ -54,7 +54,7 @@ from hs_file_types.models import (
 )
 from hs_odm2.models import ODM2Variable
 from hydroshare.hydrocelery import app as celery_app
-from theme.models import QuotaMessage, User, UserQuota
+from theme.models import QuotaMessage, User, UserQuota, UserProfile
 
 FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
                  "FileSetLogicalFile": FileSetLogicalFile,
@@ -138,6 +138,8 @@ def setup_periodic_tasks(sender, **kwargs):
                                  options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=30, hour=7), task_notification_cleanup.s(),
                                  options={'queue': 'periodic'})
+        sender.add_periodic_task(crontab(minute=0, hour=8), check_bucket_names.s(),
+                                 options={'queue': 'periodic'})
 
         # Monthly
         sender.add_periodic_task(crontab(minute=30, hour=7, day_of_month=1), update_from_geoconnex_task.s(),
@@ -147,6 +149,37 @@ def setup_periodic_tasks(sender, **kwargs):
         sender.add_periodic_task(
             crontab(minute=30, hour=8, day_of_month=1), monthly_group_membership_requests_cleanup.s(),
             options={'queue': 'periodic'})
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def check_bucket_names(res_id):
+    """
+    Check to ensure that UserProfiles have bucket names
+    """
+    bad_users = []
+    ups = UserProfile.objects.filter(_bucket_name__isnull=True).filter(user__is_active=True)
+    for up in ups:
+        u = up.user
+        resources = u.uaccess.owned_resources
+        for res in resources:
+            # owned is not the same as being the quota_holder
+            if res.quota_holder == u:
+                bad_users.append(up.user)
+                # set the bucket name
+                up.bucket_name
+                break
+
+    if bad_users and not settings.DISABLE_TASK_EMAILS:
+        string_of_bad_ups = ', '.join([u.username for u in bad_users])
+        email_msg = f'''
+        <p>Found {len(bad_users)} UserProfiles without bucket names</p>:
+        <p>{string_of_bad_ups}</p>
+        '''
+        send_mail(subject="UserProfiles missing bucket_name",
+                  message=email_msg,
+                  html_message=email_msg,
+                  from_email=settings.DEFAULT_FROM_EMAIL,
+                  recipient_list=[settings.DEFAULT_DEVELOPER_EMAIL])
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
