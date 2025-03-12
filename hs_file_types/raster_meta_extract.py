@@ -212,7 +212,8 @@ def get_wgs84_coverage_info(raster_dataset):
             y_wgs84 = []
             for px in xarr:
                 for py in yarr:
-                    xt, yt = transform.TransformPoints(px, py)[:2]
+                    # intentionally reversed to get the correct x, y
+                    yt, xt = transform.TransformPoint(px, py)[:2]
                     x_wgs84.append(xt)
                     y_wgs84.append(yt)
                 yarr.reverse()
