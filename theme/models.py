@@ -594,7 +594,26 @@ class UserProfile(models.Model):
 
     email_opt_out = models.BooleanField(default=False)
 
-    _bucket_name = models.CharField(max_length=63, null=True)
+    _bucket_name = models.CharField(max_length=63, null=True, blank=True, editable=False, default=None)
+    _original_bucket_name = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._original_bucket_name = self._bucket_name
+
+    def save(self, *args, **kwargs):
+        '''Overide the save method to make the _bucket_name immutable once it is set
+        '''
+
+        # if the bucket name has been set and is different from the original bucket name, then
+        # it should not be changed
+        if self._original_bucket_name is not None and self._original_bucket_name != self._bucket_name:
+            self._bucket_name = self._original_bucket_name
+            super().save(*args, **kwargs)
+        else:
+            # set the bucket name for the first time
+            self._original_bucket_name = self._bucket_name
+            super().save(*args, **kwargs)
 
     @property
     def profile_is_missing(self):
