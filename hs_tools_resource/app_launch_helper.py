@@ -238,6 +238,7 @@ def _check_resource_contains_supported_file_extensions(resource_obj, supported_f
         for ext in supported_file_extensions:
             if ext in res_file_extensions:
                 res_contains_supported_extensions = True
+                break
     return res_contains_supported_extensions
 
 
@@ -283,4 +284,5 @@ def _check_resource_contains_supported_aggregation_types(resource_obj, supported
         for aggr_type in supported_aggregation_types:
             if aggr_type in res_aggr_type_names:
                 res_contains_supported_aggregations = True
+                break
     return res_contains_supported_aggregations
