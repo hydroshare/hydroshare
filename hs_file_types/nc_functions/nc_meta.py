@@ -264,6 +264,10 @@ def get_box_info(nc_dataset):
                     # create wgs84 geographic coordinate system
                     wgs84_cs = osr.SpatialReference()
                     wgs84_cs.ImportFromEPSG(4326)
+
+                    # https://gis.stackexchange.com/questions/421771/ogr-coordinatetransformation-appears-to-be-inverting-xy-coordinates
+                    wgs84_cs.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
+
                     original_cs = osr.SpatialReference()
                     original_cs.ImportFromWkt(projection_import_string_dict.get('text'))
                     crs_transform = osr.CoordinateTransformation(original_cs, wgs84_cs)
