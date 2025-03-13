@@ -9,11 +9,11 @@ class Command(BaseCommand):
     help = "Analyze erroneous bucket names"
 
     def add_arguments(self, parser):
-        # a list of user id's, or none to check all users
+        # a list of usernames, or none to check all users
         parser.add_argument('usernames', nargs='*', type=str)
 
     def handle(self, *args, **options):
-        if len(options['usernames']) > 0:  # an array of resource short_id to check.
+        if len(options['usernames']) > 0:  # an array of usernames to check.
             for username in options['usernames']:
                 check_bucket(username)
         else:

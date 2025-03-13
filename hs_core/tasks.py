@@ -54,7 +54,8 @@ from hs_file_types.models import (
 )
 from hs_odm2.models import ODM2Variable
 from hydroshare.hydrocelery import app as celery_app
-from theme.models import QuotaMessage, User, UserQuota, UserProfile
+from theme.models import QuotaMessage, User, UserQuota
+from theme.utils import get_user_profiles_missing_bucket_name
 
 FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
                  "FileSetLogicalFile": FileSetLogicalFile,
@@ -152,28 +153,17 @@ def setup_periodic_tasks(sender, **kwargs):
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
-def check_bucket_names(res_id):
+def check_bucket_names():
     """
-    Check to ensure that UserProfiles have bucket names
+    Check to notify when UserProfile is missing a bucket name
     """
-    bad_users = []
-    ups = UserProfile.objects.filter(_bucket_name__isnull=True).filter(user__is_active=True)
-    for up in ups:
-        u = up.user
-        resources = u.uaccess.owned_resources
-        for res in resources:
-            # owned is not the same as being the quota_holder
-            if res.quota_holder == u:
-                bad_users.append(up.user)
-                # set the bucket name
-                up.bucket_name
-                break
+    bad_ups = get_user_profiles_missing_bucket_name()
 
-    if bad_users and not settings.DISABLE_TASK_EMAILS:
-        string_of_bad_ups = ', '.join([u.username for u in bad_users])
+    if bad_ups and not settings.DISABLE_TASK_EMAILS:
+        string_of_bad_users = ', '.join([up.user.username for up in bad_ups])
         email_msg = f'''
-        <p>Found {len(bad_users)} UserProfiles without bucket names</p>:
-        <p>{string_of_bad_ups}</p>
+        <p>Found {len(bad_ups)} UserProfiles without bucket names</p>:
+        <p>{string_of_bad_users}</p>
         '''
         send_mail(subject="UserProfiles missing bucket_name",
                   message=email_msg,

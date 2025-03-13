@@ -601,6 +601,12 @@ class UserProfile(models.Model):
         However we only create the bucket once the user has a resource
         '''
         super().__init__(*args, **kwargs)
+        self._assign_bucket_name()
+
+    def _assign_bucket_name(self):
+        '''Assign a bucket name to the user profile
+        The bucket name is derived from the user's username
+        '''
         if self.user:
             safe_username = re.sub(r"[^A-Za-z0-9\.-]", "", self.user.username.lower())
             # limit the length to 60 characters (max length for a bucket name is 63 characters)
