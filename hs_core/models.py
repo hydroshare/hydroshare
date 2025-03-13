@@ -2506,9 +2506,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         validate_user_quota(new_holder, self.size)
         if self.quota_holder:
             # ensure the new holder has a bucket, buckets only exist for users with resources
-            if not new_holder.userprofile._bucket_name:
-                istorage = self.get_irods_storage()
-                istorage.create_bucket(new_holder.userprofile.bucket_name)
+            istorage = self.get_irods_storage()
+            istorage.create_bucket(new_holder.userprofile.bucket_name)
             self.get_irods_storage().new_quota_holder(self.short_id, new_holder.username)
 
         self.quota_holder = new_holder

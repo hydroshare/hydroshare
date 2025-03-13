@@ -103,3 +103,24 @@ def get_user_from_username_or_email(username_or_email, **kwargs):
             | Q(email__iexact=username_or_email), **kwargs)
     except User.DoesNotExist:
         return None
+
+
+def get_user_profiles_missing_bucket_name(usernames=None):
+    """
+    Get all users with UserProfile instances that have missing bucket_name
+    :return a tuple of two lists: a list of users and a list of UserProfile instances
+    """
+    from theme.models import UserProfile
+    bad_ups = []
+    ups = UserProfile.objects.filter(_bucket_name__isnull=True).filter(user__is_active=True)
+    if usernames:
+        ups = ups.filter(user__username__in=usernames)
+    for up in ups:
+        u = up.user
+        resources = u.uaccess.owned_resources
+        for res in resources:
+            # owned is not the same as being the quota_holder
+            if res.quota_holder == u:
+                bad_ups.append(up)
+                break
+    return bad_ups
