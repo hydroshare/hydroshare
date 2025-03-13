@@ -223,14 +223,27 @@ def get_wgs84_coverage_info(raster_dataset):
             wgs84_westlimit = min(x_wgs84)  # min x
             wgs84_eastlimit = max(x_wgs84)
 
-            wgs84_coverage_info = OrderedDict([
-                ('northlimit', wgs84_northlimit),
-                ('southlimit', wgs84_southlimit),
-                ('eastlimit', wgs84_eastlimit),
-                ('westlimit', wgs84_westlimit),
-                ('units', 'Decimal degrees'),
-                ('projection', 'WGS 84 EPSG:4326')
-            ])
+            # check if the raster crosses the dateline
+            # if east is greater than 180 and west is less than 180, then the raster crosses the
+            # dateline
+            if original_eastlimit > 180 or original_westlimit < -180:
+                wgs84_coverage_info = OrderedDict([
+                    ('eastlimit', wgs84_northlimit),
+                    ('westlimit', wgs84_southlimit),
+                    ('northlimit', wgs84_eastlimit),
+                    ('southlimit', wgs84_westlimit),
+                    ('units', 'Decimal degrees'),
+                    ('projection', 'WGS 84 EPSG:4326')
+                ])
+            else:
+                wgs84_coverage_info = OrderedDict([
+                    ('northlimit', wgs84_northlimit),
+                    ('southlimit', wgs84_southlimit),
+                    ('eastlimit', wgs84_eastlimit),
+                    ('westlimit', wgs84_westlimit),
+                    ('units', 'Decimal degrees'),
+                    ('projection', 'WGS 84 EPSG:4326')
+                ])
 
     return wgs84_coverage_info
 
