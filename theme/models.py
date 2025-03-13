@@ -594,7 +594,7 @@ class UserProfile(models.Model):
 
     email_opt_out = models.BooleanField(default=False)
 
-    _bucket_name = models.CharField(max_length=63, null=True)
+    _bucket_name = models.CharField(max_length=63, null=True, editable=False, unique=True)
 
     def __init__(self, *args, **kwargs):
         '''We set the _bucket_name during user creation
