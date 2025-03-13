@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 
 
 class Command(BaseCommand):
-    help = "Analyze and remove erroneous bucket names"
+    help = "Analyze erroneous bucket names"
 
     def add_arguments(self, parser):
         # a list of user id's, or none to check all users
@@ -23,8 +23,6 @@ class Command(BaseCommand):
 
 def check_bucket(username):
     user = User.objects.get(username=username)
-    if len(user.userprofile._bucket_name) < 3:
-        bucketname = user.userprofile._bucket_name
-        user.userprofile._bucket_name = None
-        user.userprofile.save()
-        print(f"removed bucket name {bucketname} for user {user.username}")
+    if len(user.userprofile.bucket_name) < 3:
+        bucketname = user.userprofile.bucket_name
+        print(f"found erroneous bucket name {bucketname} for user {user.username}")
