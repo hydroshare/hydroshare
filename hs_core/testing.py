@@ -502,7 +502,7 @@ class TestCaseCommonUtilities(object):
         # there should be one format element
         self.assertEqual(self.resTimeSeries.metadata.formats.all().count(), 1)
         format_element = self.resTimeSeries.metadata.formats.all().first()
-        self.assertEqual(format_element.value, 'application/sqlite')
+        self.assertEqual(format_element.value, 'application/vnd.sqlite3')
 
         # there should be one subject element
         self.assertEqual(self.resTimeSeries.metadata.subjects.all().count(), 1)
