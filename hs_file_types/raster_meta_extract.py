@@ -180,6 +180,10 @@ def get_wgs84_coverage_info(raster_dataset):
         # create wgs84 geographic coordinate system
         wgs84_cs = osr.SpatialReference()
         wgs84_cs.ImportFromEPSG(4326)
+
+        # https://gis.stackexchange.com/questions/421771/ogr-coordinatetransformation-appears-to-be-inverting-xy-coordinates
+        wgs84_cs.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
+
         transform = None
         try:
             original_cs.ImportFromWkt(proj)

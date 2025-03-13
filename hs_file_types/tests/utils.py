@@ -112,13 +112,13 @@ def assert_raster_file_type_metadata(self, aggr_folder_path):
     box_coverage = logical_file.metadata.spatial_coverage
     self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
     self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    expected_nlimit = 42.05002695977342
+    expected_nlimit = 42.050026959773426
     self.assertAlmostEqual(float(box_coverage.value['northlimit']), expected_nlimit,
                            places=get_number_of_decimal_places(expected_nlimit))
-    expected_elimit = -111.57773718106199
+    expected_elimit = -111.577737181062
     self.assertAlmostEqual(float(box_coverage.value['eastlimit']), expected_elimit,
                            places=get_number_of_decimal_places(expected_elimit))
-    expected_slimit = 41.98722286030317
+    expected_slimit = 41.98722286030319
     self.assertAlmostEqual(float(box_coverage.value['southlimit']), expected_slimit,
                            places=get_number_of_decimal_places(expected_slimit))
     expected_wlimit = -111.6975629308406
@@ -563,7 +563,7 @@ def assert_time_series_file_type_metadata(self, expected_file_folder):
     # there should be one format element
     self.assertEqual(self.composite_resource.metadata.formats.all().count(), 1)
     format_element = self.composite_resource.metadata.formats.all().first()
-    self.assertEqual(format_element.value, 'application/sqlite')
+    self.assertEqual(format_element.value, 'application/vnd.sqlite3')
 
     # there should be one subject element
     self.assertEqual(self.composite_resource.metadata.subjects.all().count(), 1)
