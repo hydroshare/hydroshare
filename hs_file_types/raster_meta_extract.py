@@ -161,7 +161,10 @@ def get_wgs84_coverage_info(raster_dataset):
     """
     # get original coordinate system
     try:
-        proj = raster_dataset.GetProjection()
+        original_cs = raster_dataset.GetSpatialRef()
+        sr = osr.SpatialReference(str(original_cs))
+        srid = sr.GetAuthorityCode(None)
+        original_cs.ImportFromEPSG(int(srid))
     except Exception as ex:
         # an exception occurs when doing GetGeoTransform, which means an invalid geotiff is
         # uploaded, print exception
@@ -174,9 +177,7 @@ def get_wgs84_coverage_info(raster_dataset):
     wgs84_coverage_info = OrderedDict()
     original_coverage_info = get_original_coverage_info(raster_dataset)
 
-    if proj and (None not in list(original_coverage_info.values())):
-
-        original_cs = osr.SpatialReference()
+    if original_cs and (None not in list(original_coverage_info.values())):
         # create wgs84 geographic coordinate system
         wgs84_cs = osr.SpatialReference()
         wgs84_cs.ImportFromEPSG(4326)
@@ -186,7 +187,6 @@ def get_wgs84_coverage_info(raster_dataset):
 
         transform = None
         try:
-            original_cs.ImportFromWkt(proj)
             # create transform object
             transform = osr.CoordinateTransformation(original_cs, wgs84_cs)
             # If there is a problem with a transform object such as occurs with
