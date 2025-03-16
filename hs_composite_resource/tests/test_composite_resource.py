@@ -4149,7 +4149,7 @@ class CompositeResourceTest(
         # test that db queries for landing page have constant time complexity
 
         # expected number of queries for landing page when the resource has no resource file
-        _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 171
+        _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 179
 
         # expected number of queries for landing page when the resource has resource file
         _LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT = _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT + 16
@@ -4207,7 +4207,7 @@ class CompositeResourceTest(
 
     def _get_expected_query_count(self, number_of_resources):
         # this is the expected number of queries for "my_resources" page with no resources
-        base_query_count = 15
+        base_query_count = 17
 
         # this is additional number of queries per resource
         # 9 are mezzanine queries (can't do much about it)

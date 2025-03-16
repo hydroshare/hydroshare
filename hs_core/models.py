@@ -2506,9 +2506,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         validate_user_quota(new_holder, self.size)
         if self.quota_holder:
             # ensure the new holder has a bucket, buckets only exist for users with resources
-            if not new_holder.userprofile._bucket_name:
-                istorage = self.get_irods_storage()
-                istorage.create_bucket(new_holder.userprofile.bucket_name)
+            istorage = self.get_irods_storage()
+            istorage.create_bucket(new_holder.userprofile.bucket_name)
             self.get_irods_storage().new_quota_holder(self.short_id, new_holder.username)
 
         self.quota_holder = new_holder
@@ -2836,6 +2835,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         else:
             return True
 
+    def get_contained_file_extensions(self):
+        # return a set of all file extensions for all files in the resource
+        return set([f.extension for f in self.files.all()])
+
     @property
     def readme_file(self):
         """Returns a resource file that is at the root with a file name of either
@@ -2896,6 +2899,13 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     @property
     def aggregation_types(self):
         """Gets a list of all aggregation types that currently exist in this resource
+        Note: Any derived class that supports logical file must override this function
+        """
+        return []
+
+    @property
+    def aggregation_type_names(self):
+        """Gets a list of all aggregation type names that currently exist in this resource
         Note: Any derived class that supports logical file must override this function
         """
         return []

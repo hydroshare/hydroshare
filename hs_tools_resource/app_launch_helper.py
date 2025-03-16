@@ -35,14 +35,35 @@ def resource_level_tool_urls(resource_obj, request_obj):
             continue
         if tool_metadata.supported_resource_types.supported_res_types.filter(
                 description__iexact=resource_obj.resource_type).exists():
-            if _check_user_can_view_app(request_obj, tool_res_obj) and \
-                    _check_app_supports_resource_sharing_status(resource_obj, tool_res_obj):
+            if not _check_user_can_view_app(request_obj, tool_res_obj):
+                continue
+            if not _check_app_supports_resource_sharing_status(resource_obj, tool_res_obj):
+                continue
 
-                tl = _get_app_tool_info(request_obj, resource_obj, tool_res_obj)
-                if tl:
-                    tool_list.append(tl)
-                    if tl['url']:
-                        resource_level_app_counter += 1
+            supported_file_extensions = _get_tools_supported_file_extensions(tool_res_obj)
+            supported_aggregation_types = _get_tools_supported_aggregation_types(tool_res_obj)
+            resource_contains_supported_file_extensions = _check_resource_contains_supported_file_extensions(
+                resource_obj, supported_file_extensions)
+            resource_contains_supported_aggregation_types = _check_resource_contains_supported_aggregation_types(
+                resource_obj, supported_aggregation_types)
+
+            # if the tool declares file extensions, then the resource must contain at least one of them
+            # unless the resource contains supported aggregation types
+            if supported_file_extensions and not resource_contains_supported_file_extensions:
+                if not supported_aggregation_types or not resource_contains_supported_aggregation_types:
+                    continue
+
+            # if the tool declares supported aggregation types, then the resource must contain at least one of them
+            # unless the resource contains supported file extensions
+            if supported_aggregation_types and not resource_contains_supported_aggregation_types:
+                if not supported_file_extensions or not resource_contains_supported_file_extensions:
+                    continue
+
+            tl = _get_app_tool_info(request_obj, resource_obj, tool_res_obj)
+            if tl:
+                tool_list.append(tl)
+                if tl['url']:
+                    resource_level_app_counter += 1
 
     if len(tool_list) > 0:
         return {"tool_list": tool_list,
@@ -195,3 +216,73 @@ def _check_app_supports_resource_sharing_status(resource_obj, tool_res_obj):
         sharing_status_supported = True
 
     return sharing_status_supported
+
+
+def _get_tools_supported_file_extensions(tool_res_obj):
+    supported_file_extensions_list = []
+    supported_file_extensions_obj = tool_res_obj.metadata. \
+        supported_file_extensions
+    if supported_file_extensions_obj is not None:
+        supported_file_extensions_str = supported_file_extensions_obj. \
+            get_file_extensions_str()
+        if len(supported_file_extensions_str) > 0:
+            supported_file_extensions_list = supported_file_extensions_str.split(',')
+    return supported_file_extensions_list
+
+
+def _check_resource_contains_supported_file_extensions(resource_obj, supported_file_extensions):
+    res_contains_supported_extensions = False
+    if supported_file_extensions:
+        res_file_extensions = resource_obj.get_contained_file_extensions()
+        # check if any of the supported file extensions is in the resource
+        for ext in supported_file_extensions:
+            if ext in res_file_extensions:
+                res_contains_supported_extensions = True
+                break
+    return res_contains_supported_extensions
+
+
+def _get_tools_supported_aggregation_types(tool_res_obj):
+    """
+    Retrieves the supported aggregation types for a given tool resource object.
+
+    Args:
+        tool_res_obj: An object representing the tool resource, which contains metadata
+                      about supported aggregation types.
+
+    Returns:
+        A list of supported aggregation types as strings. If no supported aggregation types
+        are found, an empty list is returned.
+    """
+    supported_aggr_types_list = []
+    supported_aggr_types_obj = tool_res_obj.metadata. \
+        supported_aggregation_types
+    if supported_aggr_types_obj is not None:
+        supported_aggr_types_str = supported_aggr_types_obj. \
+            get_supported_agg_types_str()
+        if len(supported_aggr_types_str) > 0:
+            supported_aggr_types_list = supported_aggr_types_str.split(',')
+    return supported_aggr_types_list
+
+
+def _check_resource_contains_supported_aggregation_types(resource_obj, supported_aggregation_types):
+    """
+    Check if the resource contains any of the supported aggregation types.
+
+    Args:
+        resource_obj: An object representing the resource, which has an attribute `aggregation_type_names`
+                      that is a list of aggregation type names present in the resource.
+        supported_aggregation_types: A list of aggregation type names that are supported.
+
+    Returns:
+        bool: True if the resource contains any of the supported aggregation types, False otherwise.
+    """
+    res_contains_supported_aggregations = False
+    if supported_aggregation_types:
+        res_aggr_type_names = resource_obj.aggregation_type_names
+        # check if any of the supported aggregation types is in the resource
+        for aggr_type in supported_aggregation_types:
+            if aggr_type in res_aggr_type_names:
+                res_contains_supported_aggregations = True
+                break
+    return res_contains_supported_aggregations
