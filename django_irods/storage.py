@@ -106,7 +106,12 @@ class IrodsStorage(S3Storage):
                 for file_key in filesCollection:
                     relative_path = file_key.key[len(in_prefix):]
                     with zip_archive.open(relative_path, 'w', force_zip64=True) as zip_archive_file:
-                        chunk_request(zip_archive_file, in_bucket_name, file_key.key)
+                        if "-" in file_key.key:
+                            # https://github.com/minio/mc/issues/4893
+                            file = self.connection.meta.client.get_object(Bucket=in_bucket_name, Key=file_key.key)
+                            zip_archive_file.write(file.get("Body").read())
+                        else:
+                            chunk_request(zip_archive_file, in_bucket_name, file_key.key)
 
     def unzip(self, zip_file_path, unzipped_folder=""):
         """
