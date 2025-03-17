@@ -73,6 +73,11 @@ class CompositeResourceTest(
             self.generic_file_name
         )
 
+        self.generic_tar_gz_file_name = "generic_file.txt.tar.gz"
+        self.generic_tar_gz_file = "hs_composite_resource/tests/data/{}".format(
+            self.generic_file_tar_gz_name
+        )
+
         self.csv_file_name = "csv_with_header_and_data.csv"
         self.csv_file = "hs_composite_resource/tests/data/{}".format(
             self.csv_file_name
@@ -2676,6 +2681,33 @@ class CompositeResourceTest(
         self.assertEqual(CompositeResource.objects.count(), 1)
         # add a file to the resource
         self.add_file_to_resource(file_to_add=self.generic_file)
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        # create a copy of the composite resource
+        new_composite_resource = hydroshare.create_empty_resource(
+            self.composite_resource.short_id, self.user, action="copy"
+        )
+        self.assertEqual(CompositeResource.objects.count(), 2)
+        # copy resource files and metadata
+        new_composite_resource = hydroshare.copy_resource(
+            self.composite_resource, new_composite_resource
+        )
+        self.assertEqual(
+            self.composite_resource.metadata.title.value,
+            new_composite_resource.metadata.title.value,
+        )
+        self.assertEqual(
+            self.composite_resource.files.count(), new_composite_resource.files.count()
+        )
+        self.assertEqual(new_composite_resource.files.count(), 1)
+
+    def test_copy_resource_with_tar_gz(self):
+        """Here we are testing that we can create a copy of a composite resource that contains a
+        tar.gz file"""
+
+        self.create_composite_resource()
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        # add a file to the resource
+        self.add_file_to_resource(file_to_add=self.generic_tar_gz_file)
         self.assertEqual(self.composite_resource.files.count(), 1)
         # create a copy of the composite resource
         new_composite_resource = hydroshare.create_empty_resource(
