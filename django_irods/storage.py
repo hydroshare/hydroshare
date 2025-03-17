@@ -77,21 +77,26 @@ class IrodsStorage(S3Storage):
             object_attrs = self.connection.meta.client.get_object_attributes(Bucket=bucket, Key=key,
                                                                              ObjectAttributes=["ObjectSize"])
             object_size = object_attrs.get("ObjectSize")
+            if object_size is None:
+                # could not get object size, read the entire file
+                logger.warning(f"Could not get object size for {key}")
+                file = self.connection.meta.client.get_object(Bucket=bucket, Key=key)
+                zip_archive_file.write(file.get("Body").read())
+            else:
+                chunk_start = 0
+                chunk_end = chunk_start + chunk_size - 1
 
-            chunk_start = 0
-            chunk_end = chunk_start + chunk_size - 1
-
-            while chunk_start < object_size:
-                # Read specific byte range from file as a chunk. We do this because AWS server times out and sends
-                # empty chunks when streaming the entire file.
-                if body := self.connection.meta.client.get_object(
-                    Bucket=bucket, Key=key, Range=f"bytes={chunk_start}-{chunk_end}"
-                ).get("Body"):
-                    chunk = body.read()
-                    zip_archive_file.write(chunk)
-                    chunk_start += chunk_size
-                    chunk_end += chunk_size
-                    chunk_end = min(chunk_end, object_size)
+                while chunk_start < object_size:
+                    # Read specific byte range from file as a chunk. We do this because AWS server times out and sends
+                    # empty chunks when streaming the entire file.
+                    if body := self.connection.meta.client.get_object(
+                        Bucket=bucket, Key=key, Range=f"bytes={chunk_start}-{chunk_end}"
+                    ).get("Body"):
+                        chunk = body.read()
+                        zip_archive_file.write(chunk)
+                        chunk_start += chunk_size
+                        chunk_end += chunk_size
+                        chunk_end = min(chunk_end, object_size)
 
         in_bucket_name, in_path = bucket_and_name(in_name)
         out_bucket, out_path = bucket_and_name(out_name)
