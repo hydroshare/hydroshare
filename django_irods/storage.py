@@ -79,6 +79,7 @@ class IrodsStorage(S3Storage):
             object_size = object_attrs.get("ObjectSize")
             if object_size is None:
                 # could not get object size, read the entire file
+                logger.warning(f"Could not get object size for {key}")
                 file = self.connection.meta.client.get_object(Bucket=bucket, Key=key)
                 zip_archive_file.write(file.get("Body").read())
             else:
