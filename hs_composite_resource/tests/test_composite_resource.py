@@ -75,7 +75,7 @@ class CompositeResourceTest(
 
         self.generic_tar_gz_file_name = "generic_file.txt.tar.gz"
         self.generic_tar_gz_file = "hs_composite_resource/tests/data/{}".format(
-            self.generic_file_tar_gz_name
+            self.generic_tar_gz_file_name
         )
 
         self.csv_file_name = "csv_with_header_and_data.csv"
