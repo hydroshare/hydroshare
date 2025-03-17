@@ -1,4 +1,4 @@
-FROM hydroshare/hs_docker_base:06e98a5
+FROM hydroshare/hs_docker_base:1da03ef
 # make sure to update multistage-node dockerfile as well if you update this base image
 
 # Set the locale. TODO - remove once we have a better alternative worked out
@@ -16,11 +16,6 @@ RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
 RUN wget -O /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem https://cacerts.digicert.com/GeoTrustTLSRSACAG1.crt.pem && \
     update-ca-certificates && \
     cat /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem >> $(python -c "import requests; print(requests.certs.where())")
-
-RUN pip install boto3
-RUN pip install --upgrade django-storages
-RUN pip install hsmodels==1.0.4
-RUN pip install smart_open[s3]
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en

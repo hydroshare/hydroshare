@@ -23,7 +23,7 @@ RUN rm -rf static templates && \
     ls -l static/css && \
     echo "--------------------------------------"
 
-FROM hydroshare/hs_docker_base:06e98a5
+FROM hydroshare/hs_docker_base:1da03ef
 
 COPY --from=node-build /hydroshare /hydroshare
 
@@ -42,10 +42,6 @@ RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
 RUN wget -O /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem https://cacerts.digicert.com/GeoTrustTLSRSACAG1.crt.pem && \
     update-ca-certificates && \
     cat /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem >> $(python -c "import requests; print(requests.certs.where())")
-
-RUN pip install boto3
-RUN pip install --upgrade django-storages
-RUN pip install smart_open[s3]
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
