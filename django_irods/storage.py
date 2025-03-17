@@ -45,8 +45,8 @@ class IrodsStorage(S3Storage):
         :param path: the directory path to list
         :return: a list of files in the directory
         """
-        folder_path = path.strip("/") + "/"  # ensure a folder is matched
-        directories, files, file_sizes = super().listdir(folder_path)
+        path = path.strip("/") + "/"  # ensure a folder is matched
+        directories, files, file_sizes = super().listdir(path)
         directories = [d for d in directories if d != os.path.basename(path)]
 
         resource_id = "/".join(path.split("/")[:1])
