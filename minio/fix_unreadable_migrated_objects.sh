@@ -27,23 +27,23 @@ for bucket in "${buckets[@]}"; do
         resource_id=${resource##* }
         resource_id=${resource_id%/}
         echo "Resource ID: $resource_id"
+        if file_listing=$(mc find "prod-minio/$bucket_name/$resource_id/data/contents/" --print {} 2>/dev/null); then
+            files=()
+            while IFS= read -r file; do
+                files+=("$file")
+            done <<< "$file_listing"
 
-        file_listing=$(mc find "prod-minio/$bucket_name/$resource_id/data/contents/" --print {})
-        files=()
-        while IFS= read -r file; do
-            files+=("$file")
-        done <<< "$file_listing"
-
-        for file_name in "${files[@]}"; do
-            if [[ -n "$file_name" ]]; then
-                if ! file_head=$(mc head -n 1 "$file_name" 2>/dev/null); then
-                    file_size=$(mc find "$file_name" --print {size})
-                    echo "$file_size - $file_name"
-                    if [[ "$file_size" != "0B" ]]; then
-                        echo "Unreadable file detected: $file_name"
+            for file_name in "${files[@]}"; do
+                if [[ -n "$file_name" ]]; then
+                    if ! file_head=$(mc head -n 1 "$file_name" 2>/dev/null); then
+                        file_size=$(mc find "$file_name" --print {size})
+                        #echo "$file_size - $file_name"
+                        if [[ "$file_size" != "0 B" ]]; then
+                            echo "Unreadable file detected: $file_name"
+                        fi
                     fi
                 fi
-            fi
-        done
+            done
+        fi
     done
 done
