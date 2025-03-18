@@ -1,12 +1,12 @@
 #!/bin/bash
 
-#command_output=$(mc ls prod-minio)
+command_output=$(mc ls prod-minio)
 
-buckets=('limaos90')
+buckets=("limaos90")
 
-#while IFS= read -r bucket; do
-#    buckets+=("$bucket")
-#done <<< "$command_output"
+while IFS= read -r bucket; do
+    buckets+=("$bucket")
+done <<< "$command_output"
 
 for bucket in "${buckets[@]}"; do
     bucket_name=${bucket##* }
@@ -28,24 +28,18 @@ for bucket in "${buckets[@]}"; do
         resource_id=${resource_id%/}
         echo "Resource ID: $resource_id"
 
-        file_listing=$(mc ls --recursive prod-minio/$bucket_name/$resource_id/data/contents/)
+        file_listing=$(mc find "prod-minio/$bucket_name/$resource_id/data/contents/" --print {})
         files=()
         while IFS= read -r file; do
             files+=("$file")
         done <<< "$file_listing"
 
-        for file in "${files[@]}"; do
-            file_name=$(echo "$file" | awk '{for (i=6; i<=NF; i++) printf $i (i<NF ? OFS : "");}')
-            #file_name=${file##* }
-            #file_name=${file_name%/}
-
+        for file_name in "${files[@]}"; do
             if [[ -n "$file_name" ]]; then
-                #echo "File: [$file_name]"
-                #file_head=$(mc head -n 1 prod-minio/$bucket_name/$resource_id/data/contents/$file_name)
-                file_size=$(echo "$file" | awk '{print $4}')
-                #echo "Parsed file size: $file_size - $file_name"
-                if [[ "$file_size" != "0B" ]]; then
-                    if ! file_head=$(mc head -n 1 "prod-minio/$bucket_name/$resource_id/data/contents/$file_name" 2>/dev/null); then
+                if ! file_head=$(mc head -n 1 "$file_name" 2>/dev/null); then
+                    file_size=$(mc find "$file_name" --print {size})
+                    echo "$file_size - $file_name"
+                    if [[ "$file_size" != "0B" ]]; then
                         echo "Unreadable file detected: $file_name"
                     fi
                 fi
