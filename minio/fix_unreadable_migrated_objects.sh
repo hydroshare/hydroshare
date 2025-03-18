@@ -2,7 +2,7 @@
 
 command_output=$(mc ls prod-minio)
 
-buckets=("limaos90")
+buckets=()
 
 while IFS= read -r bucket; do
     buckets+=("$bucket")
