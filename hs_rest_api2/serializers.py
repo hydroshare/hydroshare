@@ -207,5 +207,6 @@ class NestedSchemaGenerator(OpenAPISchemaGenerator):
                 swagger.definitions.update({d: schema['definitions'][d]})
         return swagger
 
+
 class ResourceSharingStatusSerializer(Serializer):
     sharing_status = serializers.ChoiceField(choices=['public', 'private', 'discoverable', 'published'])
