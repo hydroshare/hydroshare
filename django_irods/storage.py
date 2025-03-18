@@ -235,12 +235,10 @@ class IrodsStorage(S3Storage):
         bucket = self.connection.Bucket(src_bucket)
 
         if self.isFile(src_path):
-            self.connection.Bucket(dst_bucket).copy(
-                {
-                    "Bucket": src_bucket,
-                    "Key": src_name,
-                },
-                dest_name,
+            self.connection.meta.client.copy_object(
+                Bucket=dst_bucket,
+                Key=dest_name,
+                CopySource={"Bucket": src_bucket, "Key": src_name},
             )
             if delete_src:
                 self.connection.Object(src_bucket, src_name).delete()
@@ -249,12 +247,10 @@ class IrodsStorage(S3Storage):
             for file in bucket.objects.filter(Prefix=src_name):
                 src_file_path = file.key
                 dst_file_path = file.key.replace(src_name, dest_name)
-                self.connection.Bucket(dst_bucket).copy(
-                    {
-                        "Bucket": src_bucket,
-                        "Key": src_file_path,
-                    },
-                    dst_file_path,
+                self.connection.meta.client.copy_object(
+                    Bucket=dst_bucket,
+                    Key=dst_file_path,
+                    CopySource={"Bucket": src_bucket, "Key": src_file_path},
                 )
                 if delete_src:
                     self.connection.Object(src_bucket, src_file_path).delete()
