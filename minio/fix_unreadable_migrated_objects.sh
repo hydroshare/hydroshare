@@ -1,12 +1,27 @@
 #!/bin/bash
 
-command_output=$(mc ls prod-minio)
+if [[ -z "$1" ]]; then
+    echo "Usage: $0 <buckets_file>"
+    exit 1
+fi
+
+buckets_file="$1"
+
+if [[ ! -f "$buckets_file" ]]; then
+    echo "Error: File '$buckets_file' not found."
+    exit 1
+fi
 
 buckets=()
+while IFS= read -r line; do
+    buckets+=("$line")
+done < "$buckets_file"
 
-while IFS= read -r bucket; do
-    buckets+=("$bucket")
-done <<< "$command_output"
+#command_output=$(mc ls prod-minio)
+
+#while IFS= read -r bucket; do
+#    buckets+=("$bucket")
+#done <<< "$command_output"
 
 for bucket in "${buckets[@]}"; do
     bucket_name=${bucket##* }
