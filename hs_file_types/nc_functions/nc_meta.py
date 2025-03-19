@@ -19,7 +19,7 @@ import json
 import re
 
 import netCDF4
-import osr
+from osgeo import osr
 from pyproj import Proj, transform
 
 from .nc_utils import (
@@ -264,14 +264,19 @@ def get_box_info(nc_dataset):
                     # create wgs84 geographic coordinate system
                     wgs84_cs = osr.SpatialReference()
                     wgs84_cs.ImportFromEPSG(4326)
+
+                    # https://gis.stackexchange.com/questions/421771/ogr-coordinatetransformation-appears-to-be-inverting-xy-coordinates
+                    wgs84_cs.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
+
                     original_cs = osr.SpatialReference()
                     original_cs.ImportFromWkt(projection_import_string_dict.get('text'))
                     crs_transform = osr.CoordinateTransformation(original_cs, wgs84_cs)
-                    box_info['westlimit'], box_info['northlimit'] = crs_transform.TransformPoint(
+                    # https://gdal.org/en/stable/api/python/spatial_ref_api.html#osgeo.osr.CoordinateTransformation.TransformPoints
+                    box_info['westlimit'], box_info['northlimit'] = crs_transform.TransformPoints(
                         float(original_box_info['westlimit']),
                         float(original_box_info['northlimit']))[:2]
 
-                    box_info['eastlimit'], box_info['southlimit'] = crs_transform.TransformPoint(
+                    box_info['eastlimit'], box_info['southlimit'] = crs_transform.TransformPoints(
                         float(original_box_info['eastlimit']),
                         float(original_box_info['southlimit']))[:2]
                 except Exception:
