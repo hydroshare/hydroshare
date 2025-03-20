@@ -2,17 +2,20 @@ import csv
 import datetime
 import sys
 import logging
+import pytz
+import warnings
 from calendar import monthrange
 
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.db.models import Q
 from django.utils import timezone
-import zoneinfo
 from hs_core.models import BaseResource, Date
 from theme.models import UserProfile
 
 from ... import models as hs_tracking
+
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 # Add logger for stderr messages.
 err = logging.getLogger('stats-command')
@@ -34,7 +37,7 @@ def month_year_iter(start, end):
         y, m = divmod(ym, 12)
         m += 1
         d = monthrange(y, m)[1]
-        yield timezone.datetime(y, m, d, tzinfo=zoneinfo.ZoneInfo("UTC"))
+        yield timezone.datetime(y, m, d, tzinfo=pytz.UTC)
 
 
 class Command(BaseCommand):
@@ -77,6 +80,39 @@ class Command(BaseCommand):
             dest="yesterdays_variables",
             action="store_true",
             help="dump tracking variables collected today",
+        )
+        parser.add_argument(
+            "--publications-between-dates",
+            dest="publications_between_dates",
+            action="store_true",
+            help="show publication stats between two dates: --start-date YYYY-MM-DD --end-date YYYY-MM-DD",
+        )
+        parser.add_argument(
+            "--start-date",
+            dest="start_date",
+            help="start date for publication stats, format: YYYY-MM-DD",
+            default=timezone.datetime(2016, 1, 1, tzinfo=pytz.UTC).date().strftime('%Y-%m-%d'),
+        )
+        parser.add_argument(
+            "--end-date",
+            dest="end_date",
+            help="end date for publication stats, format: YYYY-MM-DD",
+            default=timezone.datetime.now().replace(hour=0,
+                                                    minute=0,
+                                                    second=0,
+                                                    microsecond=0).strftime('%Y-%m-%d'),
+        )
+        parser.add_argument(
+            "--publications-by-year",
+            dest="publications_by_year",
+            action="store_true",
+            help="show publications by year since 2016",
+        )
+        parser.add_argument(
+            "--verbose",
+            dest="verbose",
+            action="store_true",
+            help="print verbose output",
         )
         parser.add_argument('lookback-days', nargs='?', default=1)
 
@@ -231,6 +267,56 @@ class Command(BaseCommand):
                       vals]
             print('|'.join(values))
 
+    def publications_between_dates(self, start_date, end_date, options):
+        '''
+        Print publication stats between start and end dates
+        '''
+        public_count = 0
+        private_count = 0
+        bad_count = 0
+        print(f"Publications between {start_date} and {end_date}")
+        dates = Date.objects.filter(type='created', start_date__range=[start_date, end_date])
+        bad_dates = []
+        for d in dates.all():
+            if not d.metadata.resource:
+                bad_count = bad_count + 1
+                bad_dates.append(d)
+            elif d.metadata.resource.raccess.public is True:
+                public_count = public_count + 1
+            else:
+                private_count = private_count + 1
+        published_count = Date.objects.filter(type='published', start_date__range=[start_date, end_date]).count()
+        if options.get("verbose"):
+            print("Bad Dates")
+            for bd in bad_dates:
+                print("-" * 80)
+                try:
+                    print(f"Date: {bd}")
+                    print(f"Associated Title: {bd.content_object.title}")
+                    print(f"Associated Resource id: {bd.content_object.citation.first().value}")
+                except Exception as e:
+                    print("Error inspecting date: ", e)
+                    pass
+            print("*" * 80)
+        print("*" * 80)
+        print(f"resources that became published within date range: {published_count}")
+        if options.get("verbose"):
+            print(f"resources that were created within date range: {dates.count()}")
+            print(f"resources that were created in the date range that are currently private: {private_count}")
+            print(f"resources that were created in the date range that are currently public:{public_count}")
+            print(f"resources that can't be checked because they have no metadata: {bad_count}")
+
+    def publications_by_year(self, options):
+        '''
+        Print publication stats by year since 2016
+        '''
+        START_YEAR = 2016
+        for y in range(START_YEAR, timezone.now().year):
+            print(f"Year: {y}")
+            self.publications_between_dates(start_date=f"{y}-01-01", end_date=f"{y}-12-31", options=options)
+            print("#" * 80)
+            print()
+
     def dict_spc_to_pipe(self, s):
 
         # exit early if pipes already exist
@@ -253,13 +339,20 @@ class Command(BaseCommand):
         return formatted_str
 
     def handle(self, *args, **options):
-        START_YEAR = 2016
-        start_date = timezone.datetime(START_YEAR, 1, 1).date()
-        end_date = timezone.datetime.now().replace(hour=0,
-                                                   minute=0,
-                                                   second=0,
-                                                   microsecond=0)
-
+        # check for start_date and end_date as args
+        # cant have start/end in addition to lookback
+        if 'lookback-days' in options:
+            if 'start_date' in options or 'end_date' in options:
+                print("Lookback days option will be ignored")
+        start_date = options.get("start_date", timezone.datetime(2016, 1, 1, tzinfo=pytz.UTC).strftime('%Y-%m-%d'))
+        end_date = options.get("end_date", timezone.datetime.now().replace(hour=0,
+                                                                           minute=0,
+                                                                           second=0,
+                                                                           microsecond=0).strftime('%Y-%m-%d'))
+        if options["publications_between_dates"]:
+            self.publications_between_dates(start_date, end_date, options=options)
+        if options["publications_by_year"]:
+            self.publications_by_year(options=options)
         if options["monthly_users_counts"]:
             for month_end in month_year_iter(start_date, end_date):
                 self.monthly_users_counts(start_date, month_end)
