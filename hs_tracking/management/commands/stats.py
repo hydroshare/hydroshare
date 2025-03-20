@@ -281,7 +281,7 @@ class Command(BaseCommand):
                 try:
                     print(f"Date: {d}")
                     print(f"Associated Title: {d.content_object.title}")
-                    rid = d.content_object.citation.first().value
+                    rid = d.metadata.resource.short_id
                     print(f"Associated Resource: {SITE_URL}resource/{rid}")
                 except Exception as e:
                     print("Error inspecting date: ", e)
