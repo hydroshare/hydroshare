@@ -278,10 +278,13 @@ class Command(BaseCommand):
         dates = Date.objects.filter(type='created', start_date__range=[start_date, end_date])
         bad_dates = []
         for d in dates.all():
-            if not d.metadata.resource:
+            try:
+                d.metadata.resource.raccess
+            except Exception:
                 bad_count = bad_count + 1
                 bad_dates.append(d)
-            elif d.metadata.resource.raccess.public is True:
+                continue
+            if d.metadata.resource.raccess.public is True:
                 public_count = public_count + 1
             else:
                 private_count = private_count + 1
