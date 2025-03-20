@@ -11,6 +11,7 @@ from django.core.management.base import BaseCommand
 from django.db.models import Q
 from django.utils import timezone
 from hs_core.models import BaseResource, Date
+from hs_core.hydroshare import current_site_url
 from theme.models import UserProfile
 
 from ... import models as hs_tracking
@@ -28,6 +29,8 @@ formatter = logging.Formatter("%(asctime)s - "
                               "%(message)s")
 handler.setFormatter(formatter)
 err.addHandler(handler)
+
+SITE_URL = current_site_url()
 
 
 def month_year_iter(start, end):
@@ -271,6 +274,19 @@ class Command(BaseCommand):
         '''
         Print publication stats between start and end dates
         '''
+
+        def print_resource_info_from_dates(dates):
+            for d in dates:
+                print("-" * 80)
+                try:
+                    print(f"Date: {d}")
+                    print(f"Associated Title: {d.content_object.title}")
+                    rid = d.content_object.citation.first().value
+                    print(f"Associated Resource: {SITE_URL}resource/{rid}")
+                except Exception as e:
+                    print("Error inspecting date: ", e)
+                    pass
+            print("*" * 80)
         public_count = 0
         private_count = 0
         bad_count = 0
@@ -288,34 +304,30 @@ class Command(BaseCommand):
                 public_count = public_count + 1
             else:
                 private_count = private_count + 1
-        published_count = Date.objects.filter(type='published', start_date__range=[start_date, end_date]).count()
-        if options.get("verbose"):
-            print("Bad Dates")
-            for bd in bad_dates:
-                print("-" * 80)
-                try:
-                    print(f"Date: {bd}")
-                    print(f"Associated Title: {bd.content_object.title}")
-                    print(f"Associated Resource id: {bd.content_object.citation.first().value}")
-                except Exception as e:
-                    print("Error inspecting date: ", e)
-                    pass
-            print("*" * 80)
-        print("*" * 80)
-        print(f"resources that became published within date range: {published_count}")
+        published_dates = Date.objects.filter(type='published', start_date__range=[start_date, end_date])
+        print(f"resources that became published within date range: {published_dates.count()}")
         if options.get("verbose"):
             print(f"resources that were created within date range: {dates.count()}")
             print(f"resources that were created in the date range that are currently private: {private_count}")
             print(f"resources that were created in the date range that are currently public:{public_count}")
             print(f"resources that can't be checked because they have no metadata: {bad_count}")
+            print("*" * 80)
+            print("Published Date Information")
+            print_resource_info_from_dates(published_dates)
+            print("*" * 80)
+            print("Information for 'Bad Dates' discovered")
+            print_resource_info_from_dates(bad_dates)
 
     def publications_by_year(self, options):
         '''
         Print publication stats by year since 2016
         '''
         START_YEAR = 2016
-        for y in range(START_YEAR, timezone.now().year):
-            print(f"Year: {y}")
+        for y in range(START_YEAR, timezone.now().year + 1):
+            if y == timezone.now().year:
+                print("Year to date:")
+            else:
+                print(f"Year {y}:")
             self.publications_between_dates(start_date=f"{y}-01-01", end_date=f"{y}-12-31", options=options)
             print("#" * 80)
             print()
