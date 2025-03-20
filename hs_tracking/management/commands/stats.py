@@ -326,9 +326,11 @@ class Command(BaseCommand):
         for y in range(START_YEAR, timezone.now().year + 1):
             if y == timezone.now().year:
                 print("Year to date:")
+                end_date = timezone.now().strftime('%Y-%m-%d')
             else:
                 print(f"Year {y}:")
-            self.publications_between_dates(start_date=f"{y}-01-01", end_date=f"{y}-12-31", options=options)
+                end_date = f"{y}-12-31"
+            self.publications_between_dates(start_date=f"{y}-01-01", end_date=end_date, options=options)
             print("#" * 80)
             print()
 
