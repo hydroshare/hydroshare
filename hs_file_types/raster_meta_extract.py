@@ -160,6 +160,7 @@ def get_wgs84_coverage_info(raster_dataset):
     Return: meta of spatial extent as wgs84 geographic coordinate system of raster
     """
     # get original coordinate system
+    original_cs = None
     try:
         original_cs = raster_dataset.GetSpatialRef()
         sr = osr.SpatialReference(str(original_cs))
