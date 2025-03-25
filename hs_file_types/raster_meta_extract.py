@@ -173,7 +173,6 @@ def get_wgs84_coverage_info(raster_dataset):
         # upload a tiff file without valid tags
         log = logging.getLogger()
         log.exception(str(ex))
-        proj = None
 
     wgs84_coverage_info = OrderedDict()
     original_coverage_info = get_original_coverage_info(raster_dataset)
@@ -194,6 +193,7 @@ def get_wgs84_coverage_info(raster_dataset):
             # USA_Contiguous_Albers_Equal_Area_Conic_USGS_version
             # then use the following workaround that uses wkt
             if transform.this is None:
+                proj = raster_dataset.GetProjection()
                 ogc_wkt = from_unknown_wkt(proj).to_ogc_wkt()
                 original_cs.ImportFromWkt(ogc_wkt)
                 # create transform object
