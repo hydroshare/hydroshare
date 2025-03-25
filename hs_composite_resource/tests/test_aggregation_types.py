@@ -3,10 +3,16 @@ from unittest.mock import MagicMock, PropertyMock
 from hs_composite_resource.models import CompositeResource
 
 
-class TestCompositeResource(unittest.TestCase):
+class TestCompositeResourceAggregationTypes(unittest.TestCase):
 
     def setUp(self):
+        super(TestCompositeResourceAggregationTypes, self).setUp()
         self.resource = CompositeResource()
+
+    def tearDown(self):
+        super(TestCompositeResourceAggregationTypes, self).tearDown()
+        if self.resource:
+            self.resource.delete()
 
     def test_aggregation_types_empty(self):
         # Mock logical_files to return an empty list
