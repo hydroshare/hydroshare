@@ -11,8 +11,6 @@ class TestCompositeResourceAggregationTypes(unittest.TestCase):
 
     def tearDown(self):
         super(TestCompositeResourceAggregationTypes, self).tearDown()
-        if self.resource:
-            self.resource.delete()
 
     def test_aggregation_types_empty(self):
         # Mock logical_files to return an empty list
