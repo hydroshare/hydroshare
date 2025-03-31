@@ -801,9 +801,9 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 def raster_file_validation(raster_file, resource, raster_folder=''):
     """ Validates if the relevant files are valid for raster aggregation or raster resource type
 
-    :param  raster_file: a temp file (extension tif or zip) retrieved from irods and stored on temp
+    :param  raster_file: a temp file (extension tif or zip) retrieved from S3 and stored on temp
     dir in django
-    :param  raster_folder: (optional) folder in which raster file exists on irods.
+    :param  raster_folder: (optional) folder in which raster file exists on S3.
     :param  resource: an instance of CompositeResource in which raster_file exits.
 
     :return A list of error messages and a list of file paths for all files that belong to raster
@@ -832,7 +832,7 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
             vrt_file = vrt_files_for_raster[0]
             raster_resource_files.extend([vrt_file])
             temp_dir = os.path.dirname(raster_file)
-            temp_vrt_file = utils.get_file_from_irods(resource=resource, file_path=vrt_file.storage_path,
+            temp_vrt_file = utils.get_file_from_s3(resource=resource, file_path=vrt_file.storage_path,
                                                       temp_dir=temp_dir)
             listed_tif_files = list_tif_files(vrt_file)
             tif_files = [f for f in res_files if f.file_name in listed_tif_files]
@@ -947,7 +947,7 @@ def list_tif_files(vrt_file):
     :return: List of string filenames read from vrt_file
     """
     resource = vrt_file.resource
-    temp_vrt_file = utils.get_file_from_irods(resource=resource, file_path=vrt_file.storage_path)
+    temp_vrt_file = utils.get_file_from_s3(resource=resource, file_path=vrt_file.storage_path)
     with open(temp_vrt_file, 'r') as opened_vrt_file:
         vrt_string = opened_vrt_file.read()
         root = ET.fromstring(vrt_string)
@@ -1002,7 +1002,7 @@ def extract_metadata(temp_vrt_file_path):
 
 
 def create_vrt_file(tif_file):
-    """ tif_file exists in temp directory - retrieved from irods """
+    """ tif_file exists in temp directory - retrieved from S3 """
 
     log = logging.getLogger()
 
@@ -1034,7 +1034,7 @@ def create_vrt_file(tif_file):
 
 
 def _explode_raster_zip_file(zip_file):
-    """ zip_file exists in temp directory - retrieved from irods """
+    """ zip_file exists in temp directory - retrieved from S3 """
 
     log = logging.getLogger()
     temp_dir = os.path.dirname(zip_file)

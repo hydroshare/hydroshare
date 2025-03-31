@@ -5,12 +5,12 @@ from django.contrib.auth.models import Group
 from hs_access_control.models import PrivilegeCodes
 
 from hs_core import hydroshare
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 
 from hs_access_control.tests.utilities import global_reset
 
 
-class T11PreserveOwnership(MockIRODSTestCaseMixin, TestCase):
+class T11PreserveOwnership(MockS3TestCaseMixin, TestCase):
 
     def setUp(self):
         super(T11PreserveOwnership, self).setUp()

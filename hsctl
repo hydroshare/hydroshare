@@ -31,8 +31,6 @@ DEV_SSH_COMMAND='runuser -p -u hydro-service -g storage-hydro /usr/sbin/sshd'
 PROD_SERVER='./run-server'
 PROD_SSH_COMMAND='# REMOVED SSH COMPONENT'
 
-USE_LOCAL_IRODS=false
-
 display_usage() {
     echo "*** HydroShare Control script ***"
     echo "usage: $0 loaddb          # loads database specified in hydroshare-config.yaml into running container"
@@ -122,11 +120,6 @@ preflight_hs() {
     echo "  - HS_LOG_FILES  :${HS_LOG_FILES}"
     echo "  - USE_SECURITY  :${USE_SECURITY}"
     # Generate docker-compose.yml
-    if [[ "$USE_LOCAL_IRODS" = true ]]; then
-        cp -rf ${HS_PATH}/scripts/templates/docker-compose-local-irods.template ${HS_PATH}/docker-compose.yml
-    else
-        cp -rf ${HS_PATH}/scripts/templates/docker-compose.template ${HS_PATH}/docker-compose.yml
-    fi
     sed -i $SED_EXT 's!HS_PATH!'${HS_PATH}'!g' ${HS_PATH}/docker-compose.yml
     sed -i $SED_EXT 's!HS_LOG_FILES!'${HS_LOG_FILES}'!g' ${HS_PATH}/docker-compose.yml
     # Create static directory if it does not exist

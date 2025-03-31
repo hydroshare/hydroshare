@@ -5,7 +5,7 @@ import tempfile
 import zipfile
 import logging
 
-from django_irods.icommands import SessionException
+from django_s3.exceptions import SessionException
 from django.urls import reverse
 from urllib.parse import urlencode
 from django.conf import settings
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 @deconstructible
-class IrodsStorage(S3Storage):
+class S3Storage(S3Storage):
     def __init__(self, **settings):
         super().__init__(**settings)
 
@@ -67,7 +67,7 @@ class IrodsStorage(S3Storage):
 
     def zipup(self, in_name, out_name):
         """
-        run iRODS ibun command to generate zip file for the bag
+        run command to generate zip file for the bag
         :param in_name: input parameter to indicate the collection path to generate zip
         :param out_name: the output zipped file name
         :return: None
@@ -115,7 +115,7 @@ class IrodsStorage(S3Storage):
 
     def unzip(self, zip_file_path, unzipped_folder=""):
         """
-        run iRODS ibun command to unzip files into a new folder
+        run command to unzip files into a new folder
         :param zip_file_path: path of the zipped file to be unzipped
         :param unzipped_folder: Optional defaults to the basename of zip_file_path when not
         provided.  The folder to unzip to.
@@ -226,8 +226,8 @@ class IrodsStorage(S3Storage):
 
         Parameters:
         :param
-        src_path: the iRODS data-object or collection name to be copied from.
-        dest_path: the iRODS data-object or collection name to be copied to
+        src_path: the object or prefix name to be copied from.
+        dest_path: the object or prefix name to be copied to
         delete_src: delete the source file after copying when set to True. Default is False
         """
         src_bucket, src_name = bucket_and_name(src_path)
@@ -266,9 +266,9 @@ class IrodsStorage(S3Storage):
         """
         Parameters:
         :param
-        src_path: the iRODS data-object or collection name to be moved from.
-        dest_path: the iRODS data-object or collection name to be moved to
-        moveFile() moves/renames an S3 object (file) or prefix (directory) to another data-object or collection
+        src_path: the object or prefix name to be moved from.
+        dest_path: the object or prefix name to be moved to
+        moveFile() moves/renames an S3 object (file) or prefix (directory) to another object or prefix
         """
         self.copyFiles(src_path, dest_path, delete_src=True)
 
@@ -294,7 +294,7 @@ class IrodsStorage(S3Storage):
         Parameters:
         :param
         src_local_file: the temporary file name in local disk to be uploaded from.
-        dest_s3_bucket_path: the data object path in iRODS to be uploaded to
+        dest_s3_bucket_path: the data object path in S3 to be uploaded to
         """
         dst_bucket, dst_name = bucket_and_name(dest_s3_bucket_path)
         self.connection.Bucket(dst_bucket).upload_file(src_local_file, dst_name)

@@ -15,27 +15,24 @@ from hs_labels.models import UserLabels
 
 
 @pytest.fixture(scope="module")
-def mock_irods():
-    # only mock up testing iRODS operations when local iRODS container is not used
-    if settings.IRODS_HOST != 'data.local.org':
-        from mock import patch
+def mock_s3():
+    from mock import patch
 
-        irods_patchers = (
-            patch("hs_core.hydroshare.hs_bagit.delete_files_and_bag"),
-            patch("hs_core.hydroshare.hs_bagit.create_bag"),
-            patch("hs_core.hydroshare.hs_bagit.create_bag_files"),
-            patch("hs_core.tasks.create_bag_by_irods"),
-            patch("hs_core.hydroshare.utils.copy_resource_files_and_AVUs"),
-        )
+    patchers = (
+        patch("hs_core.hydroshare.hs_bagit.delete_files_and_bag"),
+        patch("hs_core.hydroshare.hs_bagit.create_bag"),
+        patch("hs_core.hydroshare.hs_bagit.create_bag_files"),
+        patch("hs_core.tasks.create_bag_by_s3"),
+        patch("hs_core.hydroshare.utils.copy_resource_files_and_AVUs"),
+    )
 
-        for patcher in irods_patchers:
-            patcher.start()
+    for patcher in patchers:
+        patcher.start()
     yield
 
-    """Stop iRODS patchers."""
-    if settings.IRODS_HOST != 'data.local.org':
-        for patcher in irods_patchers:
-            patcher.stop()
+    """Stop patchers."""
+    for patcher in patchers:
+        patcher.stop()
 
 
 def base_sample_resource(username='admin', title=str(uuid.uuid4()), contributor=str(uuid.uuid4()),

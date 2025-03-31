@@ -241,7 +241,7 @@ class QuotaMessage(models.Model):
 
 class UserQuota(models.Model):
     # ForeignKey relationship makes it possible to associate multiple UserQuota models to
-    # a User with each UserQuota model defining quota for a set of iRODS zones. By default,
+    # a User with each UserQuota model defining quota for a set of S3 zones. By default,
     # the UserQuota model instance defines quota in hydroshareZone,
     # categorized as hydroshare in zone field in UserQuota model, however,
     # another UserQuota model instance could be defined in a third-party federated zone as needed.

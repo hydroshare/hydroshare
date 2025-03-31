@@ -18,7 +18,7 @@ from hs_core.signals import (pre_check_bag_flag, pre_download_file,
 from hs_core.task_utils import (get_or_create_task_notification,
                                 get_resource_bag_task, get_task_notification,
                                 get_task_user_id)
-from hs_core.tasks import create_bag_by_irods, create_temp_zip
+from hs_core.tasks import create_bag_by_s3, create_temp_zip
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, is_ajax
 from hs_file_types.enums import AggregationMetaFilePath
 
@@ -36,9 +36,9 @@ def download(request, path, use_async=True,
     The following variables are computed:
 
     * `path` is the public path of the thing to be downloaded.
-    * `irods_path` is the location of `path` in irods.
+    * `s3_path` is the location of `path` in S3.
     * `output_path` is the output path to be reported in the response object.
-    * `irods_output_path` is the location of `output_path` in irods
+    * `s3_output_path` is the location of `output_path` in S3
 
     and there are six cases:
 
@@ -98,13 +98,13 @@ def download(request, path, use_async=True,
         response.content = content_msg
         return response
 
-    istorage = res.get_irods_storage()
+    istorage = res.get_s3_storage()
 
-    irods_path = res.get_irods_path(path, prepend_short_id=False)
+    s3_path = res.get_s3_path(path, prepend_short_id=False)
 
     # in many cases, path and output_path are the same.
     output_path = path
-    irods_output_path = irods_path
+    s3_output_path = s3_path
     # folder requests are automatically zipped
     if not is_bag_download and not is_zip_download:  # path points into resource: should I zip it?
         # check for aggregations
@@ -126,19 +126,19 @@ def download(request, path, use_async=True,
             daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
             output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
 
-            irods_path = res.get_irods_path(path, prepend_short_id=False)
-            irods_output_path = res.get_irods_path(output_path, prepend_short_id=False)
+            s3_path = res.get_s3_path(path, prepend_short_id=False)
+            s3_output_path = res.get_s3_path(output_path, prepend_short_id=False)
 
         store_path = '/'.join(split_path_strs[1:])  # data/contents/{path-to-something}
         if res.is_folder(store_path):  # automatically zip folders
             is_zip_request = True
             daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
             output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
-            irods_output_path = res.get_irods_path(output_path, prepend_short_id=False)
+            s3_output_path = res.get_s3_path(output_path, prepend_short_id=False)
 
             if not settings.DEBUG:
                 logger.debug("automatically zipping folder {} to {}".format(path, output_path))
-        elif istorage.exists(irods_path):
+        elif istorage.exists(s3_path):
             if not settings.DEBUG:
                 logger.debug("request for single file {}".format(path))
             is_sf_request = True
@@ -146,9 +146,9 @@ def download(request, path, use_async=True,
             if is_zip_request:
                 daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
                 output_path = "tmp/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
-                irods_output_path = res.get_irods_path(output_path, prepend_short_id=False)
+                s3_output_path = res.get_s3_path(output_path, prepend_short_id=False)
 
-    # After this point, we have valid path, irods_path, output_path, and irods_output_path
+    # After this point, we have valid path, s3_path, output_path, and s3_output_path
     # * is_zip_request: signals download should be zipped, folders are always zipped
     # * aggregation: aggregation object if the path matches an aggregation
     # * is_sf_request: path is a single-file
@@ -163,7 +163,7 @@ def download(request, path, use_async=True,
         download_path = '/django_irods/rest_download/' + output_path
         if use_async:
             user_id = get_task_user_id(request)
-            task = create_temp_zip.apply_async((res_id, irods_path, irods_output_path,
+            task = create_temp_zip.apply_async((res_id, s3_path, s3_output_path,
                                                 aggregation_name, is_sf_request))
             task_id = task.task_id
             if api_request:
@@ -178,7 +178,7 @@ def download(request, path, use_async=True,
                 return JsonResponse(task_dict)
 
         else:  # synchronous creation of download
-            ret_status = create_temp_zip(res_id, irods_path, irods_output_path,
+            ret_status = create_temp_zip(res_id, s3_path, s3_output_path,
                                          aggregation_name=aggregation_name, sf_zip=is_sf_request)
             if not ret_status:
                 content_msg = "Zip could not be created."
@@ -195,14 +195,14 @@ def download(request, path, use_async=True,
         # Shorten request if it contains extra junk at the end
         bag_file_name = res_id + '.zip'
         output_path = os.path.join('bags', bag_file_name)
-        irods_output_path = res.bag_path
+        s3_output_path = res.bag_path
         res.update_relation_meta()
         bag_modified = res.getAVU('bag_modified')
         # recreate the bag if it doesn't exist even if bag_modified is "false".
         if not settings.DEBUG:
-            logger.debug("irods_output_path is {}".format(irods_output_path))
+            logger.debug("s3_output_path is {}".format(s3_output_path))
         if bag_modified is None or not bag_modified:
-            if not istorage.exists(irods_output_path):
+            if not istorage.exists(s3_output_path):
                 bag_modified = True
 
         # send signal for pre_check_bag_flag
@@ -218,7 +218,7 @@ def download(request, path, use_async=True,
                 user_id = get_task_user_id(request)
                 if not task_id:
                     # create the bag
-                    task = create_bag_by_irods.apply_async((res_id, ))
+                    task = create_bag_by_s3.apply_async((res_id, ))
                     task_id = task.task_id
                     if api_request:
                         return JsonResponse({
@@ -244,7 +244,7 @@ def download(request, path, use_async=True,
                                                                     username=user_id)
                         return JsonResponse(task_dict)
             else:
-                ret_status = create_bag_by_irods(res_id)
+                ret_status = create_bag_by_s3(res_id)
                 if not ret_status:
                     content_msg = "Bag cannot be created successfully. Check log for details."
                     response = HttpResponse()
@@ -265,9 +265,9 @@ def download(request, path, use_async=True,
                     f"{res_id}/bagit.txt"]:
             res.update_relation_meta()
             bag_modified = res.getAVU("bag_modified")
-            if bag_modified is None or bag_modified or not istorage.exists(irods_output_path):
-                res.setAVU("bag_modified", True)  # ensure bag_modified is set when irods_output_path does not exist
-                create_bag_by_irods(res_id, create_zip=False)
+            if bag_modified is None or bag_modified or not istorage.exists(s3_output_path):
+                res.setAVU("bag_modified", True)  # ensure bag_modified is set when s3_output_path does not exist
+                create_bag_by_s3(res_id, create_zip=False)
         elif any([path.endswith(suffix) for suffix in AggregationMetaFilePath]):
             # download aggregation meta xml/json schema file
             try:
@@ -278,13 +278,13 @@ def download(request, path, use_async=True,
             if aggregation is not None and aggregation.metadata.is_dirty:
                 aggregation.create_aggregation_xml_documents()
     # If we get this far,
-    # * path and irods_path point to true input
-    # * output_path and irods_output_path point to true output.
+    # * path and s3_path point to true input
+    # * output_path and s3_output_path point to true output.
     # Try to stream the file back to the requester.
 
     # retrieve file size to set up Content-Length header
     # TODO: standardize this to make it less brittle
-    flen = istorage.size(irods_output_path)
+    flen = istorage.size(s3_output_path)
     # this logs the download request in the tracking system
     if is_bag_download:
         pre_download_resource.send(sender=resource_cls, resource=res, request=request)
@@ -301,7 +301,7 @@ def download(request, path, use_async=True,
     # if reverse proxy is enabled, then this is because the resource is remote and federated
     # OR the user specifically requested a non-proxied download.
     filename = output_path.split('/')[-1]
-    signed_url = istorage.signed_url(irods_output_path, ResponseContentDisposition=f'attachment; filename="{filename}"')
+    signed_url = istorage.signed_url(s3_output_path, ResponseContentDisposition=f'attachment; filename="{filename}"')
     return HttpResponseRedirect(signed_url)
 
 
@@ -316,12 +316,12 @@ def rest_download(request, path, *args, **kwargs):
 @api_view(['GET'])
 def rest_check_task_status(request, task_id, *args, **kwargs):
     '''
-    A REST view function to tell the client if the asynchronous create_bag_by_irods()
+    A REST view function to tell the client if the asynchronous create_bag_by_s3()
     task is done and the bag file is ready for download.
     Args:
         request: an ajax request to check for download status
     Returns:
-        JSON response to return result from asynchronous task create_bag_by_irods
+        JSON response to return result from asynchronous task create_bag_by_s3
     '''
     if not task_id:
         task_id = request.POST.get('task_id')

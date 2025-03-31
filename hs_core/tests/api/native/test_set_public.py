@@ -9,11 +9,11 @@ from django.core.exceptions import ValidationError
 
 from hs_core.hydroshare import resource
 from hs_core.models import BaseResource
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core import hydroshare
 
 
-class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
+class TestCreateResource(MockS3TestCaseMixin, TestCase):
     def setUp(self):
         super(TestCreateResource, self).setUp()
 

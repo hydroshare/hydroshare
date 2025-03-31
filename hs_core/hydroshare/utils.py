@@ -25,8 +25,8 @@ from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
 from mezzanine.conf import settings
 
-from django_irods.icommands import SessionException
-from django_irods.storage import IrodsStorage
+from django_s3.exceptions import SessionException
+from django_s3.storage import S3Storage
 from hs_access_control.models.community import Community
 from hs_access_control.models.privilege import PrivilegeCodes
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
@@ -177,21 +177,21 @@ def community_from_id(community):
 
 
 # TODO: make the local cache file (and cleanup) part of ResourceFile state?
-def get_file_from_irods(resource, file_path, temp_dir=None):
+def get_file_from_s3(resource, file_path, temp_dir=None):
     """
-    Copy the file (given by file_path) from iRODS (local or federated zone)
+    Copy the file (given by file_path) from S3
     over to django (temp directory) which is
     necessary for manipulating the file (e.g. metadata extraction, zipping etc.).
     Note: The caller is responsible for cleaning the temp directory
 
     :param  resource: an instance of CompositeResource
-    :param  file_path: storage path (absolute path) of a file in iRODS
+    :param  file_path: storage path (absolute path) of a file in S3
     :param  temp_dir: (optional) existing temp directory to which the file will be copied from
-    irods. If temp_dir is None then a new temporary directory will be created.
+    S3. If temp_dir is None then a new temporary directory will be created.
     :return: path of the copied file
     """
 
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_s3_storage()
 
     file_name = os.path.basename(file_path)
 
@@ -222,17 +222,16 @@ def get_temp_dir():
 
 
 # TODO: should be ResourceFile.replace
-def replace_resource_file_on_irods(new_file, original_resource_file, user):
+def replace_resource_file_on_s3(new_file, original_resource_file, user):
     """
-    Replaces the specified resource file with file (new_file) by copying to iRODS
-    (local or federated zone)
-    :param new_file: file path for the file to be copied to iRODS
+    Replaces the specified resource file with file (new_file) by copying to S3
+    :param new_file: file path for the file to be copied to S3
     :param original_resource_file: an instance of ResourceFile that is to be replaced
     :param user: user who is replacing the resource file.
     :return:
     """
     ori_res = original_resource_file.resource
-    istorage = ori_res.get_irods_storage()
+    istorage = ori_res.get_s3_storage()
     ori_storage_path = original_resource_file.storage_path
 
     # Note: this doesn't update metadata at all.
@@ -282,7 +281,7 @@ def get_resource_file_by_id(resource, file_id):
 def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
     """
     Copy resource files and AVUs from source resource to target resource including both
-    on iRODS storage and on Django database
+    on S3 storage and on Django database
     :param src_res_id: source resource uuid
     :param dest_res_id: target resource uuid
     :return:
@@ -293,7 +292,7 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
 
     # This makes the assumption that the destination is in the same exact zone.
     # Also, bags and similar attached files are not copied.
-    istorage = src_res.get_irods_storage()
+    istorage = src_res.get_s3_storage()
 
     # This makes an exact copy of all physical files.
     src_files = os.path.join(src_res.root_path, 'data', 'contents')
@@ -511,7 +510,7 @@ def resource_modified(resource, by_user, overwrite_bag=True):
     if overwrite_bag:
         create_bag_metadata_files(resource)
 
-    # set bag_modified-true AVU pair for the modified resource in iRODS to indicate
+    # set bag_modified-true AVU pair for the modified resource in S3 to indicate
     # the resource is modified for on-demand bagging.
     set_dirty_bag_flag(resource)
 
@@ -522,7 +521,7 @@ def resource_modified(resource, by_user, overwrite_bag=True):
 # TODO: should be part of BaseResource
 def set_dirty_bag_flag(resource):
     """
-    Set bag_modified=true AVU pair for the modified resource in iRODS
+    Set bag_modified=true AVU pair for the modified resource in S3
     to indicate that the resource is modified for on-demand bagging.
 
     set metadata_dirty (AVU) to 'true' to indicate that metadata has been modified for the
@@ -534,7 +533,7 @@ def set_dirty_bag_flag(resource):
     """
     res_coll = resource.root_path
 
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_s3_storage()
     res_coll = resource.root_path
     istorage.setAVU(res_coll, "bag_modified", "true")
     istorage.setAVU(res_coll, "metadata_dirty", "true")
@@ -946,21 +945,19 @@ def add_file_to_resource(resource, f, folder='', source_name='',
     :param  resource: Resource to which file should be added
     :param  f: File-like object to add to a resource
     :param  folder: folder at which the file will live
-    :param  source_name: the logical file name of the resource content file for
-                        federated iRODS resource or the federated zone name;
+    :param  source_name: the logical file name of the resource content file;
                         By default, it is empty. A non-empty value indicates
-                        the file needs to be added into the federated zone, either
+                        the file needs to be added, either
                         from local disk where f holds the uploaded file from local
-                        disk, or from the federated zone directly where f is empty
-                        but source_name has the whole data object
-                        iRODS path in the federated zone
+                        disk, or from the storage directly where f is empty
+                        but source_name has the whole data object S3 path
     :param  check_target_folder: if true and the resource is a composite resource then uploading
     a file to the specified folder will be validated before adding the file to the resource
     :param  add_to_aggregation: if true and the resource is a composite resource then the file
     being added to the resource also will be added to a fileset aggregation if such an aggregation
     exists in the file path
     :param  user: user who is adding file to the resource
-    :param  save_file_system_metadata: if True, file system metadata will be retrieved from iRODS and saved in DB
+    :param  save_file_system_metadata: if True, file system metadata will be retrieved from S3 and saved in DB
     :return: The identifier of the ResourceFile added.
     """
 
@@ -994,7 +991,7 @@ def add_file_to_resource(resource, f, folder='', source_name='',
 
     elif source_name:
         try:
-            # create from existing iRODS file
+            # create from existing S3 file
             ret = ResourceFile.create(resource, file=None, folder=folder, source=source_name)
         except SessionException as ex:
             try:
@@ -1056,7 +1053,7 @@ class ZipContents(object):
 
 
 def get_file_storage():
-    return IrodsStorage() if getattr(settings, 'USE_IRODS', False) else DefaultStorage()
+    return S3Storage() if getattr(settings, 'USE_IRODS', False) else DefaultStorage()
 
 
 def resolve_request(request):

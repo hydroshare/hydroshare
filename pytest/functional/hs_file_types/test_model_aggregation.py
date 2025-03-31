@@ -17,7 +17,7 @@ from hs_file_types.models import ModelProgramLogicalFile, ModelInstanceLogicalFi
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
-def test_create_aggregation_from_file_1(composite_resource, aggr_cls, mock_irods):
+def test_create_aggregation_from_file_1(composite_resource, aggr_cls, mock_s3):
     """test that we can create a model program aggregation from a single file that exists at root"""
 
     res, user = composite_resource
@@ -48,7 +48,7 @@ def test_create_aggregation_from_file_1(composite_resource, aggr_cls, mock_irods
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
-def test_create_aggregation_from_file_2(composite_resource, aggr_cls, mock_irods):
+def test_create_aggregation_from_file_2(composite_resource, aggr_cls, mock_s3):
     """test that we can create a model program aggregation from a single file that exists in a folder"""
 
     res, user = composite_resource
@@ -79,7 +79,7 @@ def test_create_aggregation_from_file_2(composite_resource, aggr_cls, mock_irods
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
-def test_create_aggregation_from_file_3(composite_resource, aggr_cls, mock_irods):
+def test_create_aggregation_from_file_3(composite_resource, aggr_cls, mock_s3):
     """test that we can create a model program aggregation from a file that exists in a folder that represents
     a fileset aggregation"""
 
@@ -115,7 +115,7 @@ def test_create_aggregation_from_file_3(composite_resource, aggr_cls, mock_irods
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
-def test_create_aggregation_from_folder(composite_resource, aggr_cls, mock_irods):
+def test_create_aggregation_from_folder(composite_resource, aggr_cls, mock_s3):
     """test that we can create a model program/instance aggregation from a folder that contains a resource file"""
 
     res, user = composite_resource
@@ -145,7 +145,7 @@ def test_create_aggregation_from_folder(composite_resource, aggr_cls, mock_irods
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
-def test_create_aggregation_from_parent_folder(composite_resource, aggr_cls, mock_irods):
+def test_create_aggregation_from_parent_folder(composite_resource, aggr_cls, mock_s3):
     """test that we can create a model program/instance aggregation from a parent folder (that contains sub folders)
      as long as there is at least one file under the parent folder or in any of its sub folders.
      all files become part of the aggregation including the ones in the sub folders
@@ -189,7 +189,7 @@ def test_create_aggregation_from_parent_folder(composite_resource, aggr_cls, moc
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
-def test_create_aggregation_from_folder_inside_fileset(composite_resource, aggr_cls, mock_irods):
+def test_create_aggregation_from_folder_inside_fileset(composite_resource, aggr_cls, mock_s3):
     """test that we can create a model program/instance aggregation from a folder that contains a resource file
     from within a folder that represents a fileset aggregation"""
 
@@ -237,7 +237,7 @@ def test_create_aggregation_from_folder_inside_fileset(composite_resource, aggr_
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_folder', ['', 'mp_mi_folder'])
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
-def test_move_aggregation_to_fileset(composite_resource, aggr_folder, aggr_cls, mock_irods):
+def test_move_aggregation_to_fileset(composite_resource, aggr_folder, aggr_cls, mock_s3):
     """test that we can move a model program/instance aggregation into a folder that represents a
     fileset aggregation"""
 
@@ -296,7 +296,7 @@ def test_move_aggregation_to_fileset(composite_resource, aggr_folder, aggr_cls, 
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
-def test_upload_file_to_aggregation_folder(composite_resource, aggr_cls, mock_irods):
+def test_upload_file_to_aggregation_folder(composite_resource, aggr_cls, mock_s3):
     """test that when we upload a file to a model program/instance aggregation folder that file becomes part of that
     aggregation"""
 
@@ -333,7 +333,7 @@ def test_upload_file_to_aggregation_folder(composite_resource, aggr_cls, mock_ir
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
-def test_upload_file_to_aggregation_sub_folder(composite_resource, aggr_cls, mock_irods):
+def test_upload_file_to_aggregation_sub_folder(composite_resource, aggr_cls, mock_s3):
     """test that when we upload a file to a model program/instance aggregation sub folder that file becomes part of the
     model program/instance aggregation"""
 
@@ -371,7 +371,7 @@ def test_upload_file_to_aggregation_sub_folder(composite_resource, aggr_cls, moc
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
-def test_create_aggregation_from_folder_failure_1(composite_resource, aggr_cls, mock_irods):
+def test_create_aggregation_from_folder_failure_1(composite_resource, aggr_cls, mock_s3):
     """test that we can't create a model program/instance aggregation from a folder that does not contain any
     resource file"""
 
@@ -402,7 +402,7 @@ def test_create_aggregation_from_folder_failure_1(composite_resource, aggr_cls, 
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
-def test_create_aggregation_from_folder_failure_2(composite_resource, aggr_cls, mock_irods):
+def test_create_aggregation_from_folder_failure_2(composite_resource, aggr_cls, mock_s3):
     """test that we can't create a model program/instance aggregation from a folder that contains a
     sub-folder representing  a fileset aggregation"""
 
@@ -440,7 +440,7 @@ def test_create_aggregation_from_folder_failure_2(composite_resource, aggr_cls, 
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
-def test_create_aggregation_from_folder_failure_3(composite_resource, aggr_cls, mock_irods):
+def test_create_aggregation_from_folder_failure_3(composite_resource, aggr_cls, mock_s3):
     """test that we can't create a model program/instance aggregation from a folder that is a sub folder of a folder
     representing a model program/instance aggregation"""
 
@@ -477,7 +477,7 @@ def test_create_aggregation_from_folder_failure_3(composite_resource, aggr_cls, 
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
-def test_create_fileset_from_folder_failure(composite_resource, aggr_cls, mock_irods):
+def test_create_fileset_from_folder_failure(composite_resource, aggr_cls, mock_s3):
     """test that we can't create a fileset aggregation from a folder that is a sub folder of a folder
     representing a model program/instance aggregation"""
 
@@ -514,7 +514,7 @@ def test_create_fileset_from_folder_failure(composite_resource, aggr_cls, mock_i
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
-def test_delete_aggregation_res_file_1(composite_resource, aggr_cls, mock_irods):
+def test_delete_aggregation_res_file_1(composite_resource, aggr_cls, mock_s3):
     """ test when we delete a resource file from which we have created a model program/instance aggregation
     the aggregation gets deleted"""
 
@@ -547,7 +547,7 @@ def test_delete_aggregation_res_file_1(composite_resource, aggr_cls, mock_irods)
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
-def test_delete_aggregation_res_file_2(composite_resource, aggr_cls, mock_irods):
+def test_delete_aggregation_res_file_2(composite_resource, aggr_cls, mock_s3):
     """ test when we delete a resource file that belongs to a folder based model program/instance aggregation
     the aggregation doesn't get deleted"""
 
@@ -584,7 +584,7 @@ def test_delete_aggregation_res_file_2(composite_resource, aggr_cls, mock_irods)
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
 @pytest.mark.parametrize('move_type', ['file', 'folder'])
-def test_move_model_aggr_into_model_aggr_folder_failure(composite_resource, aggr_cls, move_type, mock_irods):
+def test_move_model_aggr_into_model_aggr_folder_failure(composite_resource, aggr_cls, move_type, mock_s3):
     """ test that we can't move a file that is part of a file based model program/instance aggregation or a
     folder that represents a model program/model instance into a another folder that represents
     a model program/instance aggregation"""
@@ -646,7 +646,7 @@ def test_move_model_aggr_into_model_aggr_folder_failure(composite_resource, aggr
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
-def test_move_fileset_into_model_aggr_folder_failure(composite_resource, aggr_cls, mock_irods):
+def test_move_fileset_into_model_aggr_folder_failure(composite_resource, aggr_cls, mock_s3):
     """ test that we can't move a folder that represents a fileset into a folder that represents a
     model program/instance aggregation"""
 
@@ -690,7 +690,7 @@ def test_move_fileset_into_model_aggr_folder_failure(composite_resource, aggr_cl
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
-def test_move_model_aggregation_file_1(composite_resource, aggr_cls, mock_irods):
+def test_move_model_aggregation_file_1(composite_resource, aggr_cls, mock_s3):
     """ test that we can move a file that is part of a model program/instance aggregation folder to a normal folder"""
 
     res, user = composite_resource
@@ -742,7 +742,7 @@ def test_move_model_aggregation_file_1(composite_resource, aggr_cls, mock_irods)
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
-def test_move_model_aggregation_file_2(composite_resource, aggr_cls, mock_irods):
+def test_move_model_aggregation_file_2(composite_resource, aggr_cls, mock_s3):
     """ test that we can move a file that is part of a model program/instance aggregation folder to a sub folder of the
     aggregation folder"""
 
@@ -796,7 +796,7 @@ def test_move_model_aggregation_file_2(composite_resource, aggr_cls, mock_irods)
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
-def test_rename_model_aggregation_folder(composite_resource, aggr_cls, mock_irods):
+def test_rename_model_aggregation_folder(composite_resource, aggr_cls, mock_s3):
     """ test that we can rename a model program/instance aggregation folder"""
 
     res, user = composite_resource
@@ -829,7 +829,7 @@ def test_rename_model_aggregation_folder(composite_resource, aggr_cls, mock_irod
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
-def test_delete_model_aggregation_folder(composite_resource, aggr_cls, mock_irods):
+def test_delete_model_aggregation_folder(composite_resource, aggr_cls, mock_s3):
     """ test that we can delete a model program/instance aggregation folder"""
 
     res, user = composite_resource
@@ -858,7 +858,7 @@ def test_delete_model_aggregation_folder(composite_resource, aggr_cls, mock_irod
 
 
 @pytest.mark.django_db(transaction=True)
-def test_resource_copy(composite_resource, mock_irods):
+def test_resource_copy(composite_resource, mock_s3):
     """Test copying a resource that has both mi and mp aggregations"""
 
     res, user = composite_resource
@@ -916,7 +916,7 @@ def test_resource_copy(composite_resource, mock_irods):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_resource_copy_with_aggregations_with_no_files(composite_resource, mock_irods):
+def test_resource_copy_with_aggregations_with_no_files(composite_resource, mock_s3):
     """Test copying a resource that has both mi and mp folder based aggregations (aggregations have no files)"""
 
     res, user = composite_resource
@@ -990,7 +990,7 @@ def test_resource_copy_with_aggregations_with_no_files(composite_resource, mock_
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_to_delete', [ModelProgramLogicalFile, ModelInstanceLogicalFile])
-def test_resource_copy_after_aggr_delete(composite_resource, aggr_to_delete, mock_irods):
+def test_resource_copy_after_aggr_delete(composite_resource, aggr_to_delete, mock_s3):
     """Test copying a resource that has both mi and mp aggregations originally but one of them is deleted
     before making the copy"""
 

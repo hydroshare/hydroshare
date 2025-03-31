@@ -13,7 +13,7 @@ from rest_framework.exceptions import ValidationError as DRF_ValidationError
 from rest_framework.exceptions import status
 from rest_framework.response import Response
 
-from django_irods.icommands import SessionException
+from django_s3.exceptions import SessionException
 from hs_core.hydroshare import delete_resource_file
 from hs_core.hydroshare.utils import (QuotaException, get_file_mime_type,
                                       resolve_request)
@@ -24,7 +24,7 @@ from hs_core.views import utils as view_utils
 from hs_core.views.utils import (ACTION_TO_AUTHORIZE,
                                  add_reference_url_to_resource, authorize,
                                  create_folder, edit_reference_url_in_resource,
-                                 irods_path_is_directory, is_ajax,
+                                 s3_path_is_directory, is_ajax,
                                  move_or_rename_file_or_folder, move_to_folder,
                                  remove_folder, rename_file_or_folder,
                                  unzip_file, zip_by_aggregation_file,
@@ -68,11 +68,11 @@ def data_store_structure(request):
     except ValidationError as ex:
         return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
-    istorage = resource.get_irods_storage()
-    directory_in_irods = resource.get_irods_path(store_path)
+    istorage = resource.get_s3_storage()
+    directory_in_s3 = resource.get_s3_path(store_path)
 
     try:
-        store = istorage.listdir(directory_in_irods)
+        store = istorage.listdir(directory_in_s3)
     except SessionException as ex:
         logger.error("session exception querying store_path {} for {}".format(store_path, res_id))
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -97,7 +97,7 @@ def data_store_structure(request):
         folder_aggregation_type_to_set = ''
         folder_aggregation_appkey = ''
         if resource.resource_type == "CompositeResource":
-            dir_path = resource.get_irods_path(d_store_path)
+            dir_path = resource.get_s3_path(d_store_path)
             # find if this folder *dir_path* represents (contains) an aggregation object
             aggregation_object = resource.get_folder_aggregation_object(dir_path, aggregations=res_aggregations)
             # folder aggregation type is not relevant for single file aggregation types - which
@@ -141,9 +141,9 @@ def data_store_structure(request):
 
     for index, fname in enumerate(store[1]):  # files
         f_store_path = os.path.join(store_path, fname)
-        file_in_irods = resource.get_irods_path(f_store_path)
+        file_in_s3 = resource.get_s3_path(f_store_path)
         res_file = ResourceFile.objects.filter(object_id=resource.id,
-                                               resource_file=file_in_irods).first()
+                                               resource_file=file_in_s3).first()
 
         if not res_file:
             # skip metadata files
@@ -225,8 +225,8 @@ def data_store_structure(request):
                      'can_be_public': resource.can_be_public_or_discoverable}
 
     if found_unreferenced_files:
-        from hs_core.management.utils import ingest_irods_files
-        ingest_irods_files(resource, None)
+        from hs_core.management.utils import ingest_s3_files
+        ingest_s3_files(resource, None)
         return data_store_structure(request)
 
     return HttpResponse(
@@ -477,10 +477,10 @@ def data_store_folder_unzip(request, **kwargs):
             unzip_file(user, res_id, zip_with_rel_path, remove_original_zip, overwrite, auto_aggregate,
                        ingest_metadata, unzip_to_folder)
         except SessionException as ex:
-            specific_msg = "iRODS error resulted in unzip being cancelled. This may be due to " \
+            specific_msg = "S3 error resulted in unzip being cancelled. This may be due to " \
                            "protection from overwriting existing files. Unzip in a different " \
                            "location (e.g., folder) or move or rename the file being overwritten. " \
-                           "iRODS error follows: "
+                           "S3 error follows: "
             err_msg = specific_msg + ex.stderr
             return JsonResponse({"error": err_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except (DRF_ValidationError, SuspiciousFileOperation, FileOverrideException, QuotaException) as ex:
@@ -876,12 +876,12 @@ def data_store_move_to_folder(request, pk=None):
     except ValidationError as ex:
         return HttpResponse(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_s3_storage()
 
     tgt_short_path = tgt_path[len('data/contents/'):]
     tgt_storage_path = os.path.join(resource.root_path, tgt_path)
 
-    if not irods_path_is_directory(istorage, tgt_storage_path):
+    if not s3_path_is_directory(istorage, tgt_storage_path):
         return HttpResponse('Target of move is not an existing folder',
                             status=status.HTTP_400_BAD_REQUEST)
 
@@ -910,7 +910,7 @@ def data_store_move_to_folder(request, pk=None):
             return HttpResponse('Source file {} does not exist'.format(src_short_path),
                                 status=status.HTTP_400_BAD_REQUEST)
 
-        if not irods_path_is_directory(istorage, src_storage_path):  # there is django record
+        if not s3_path_is_directory(istorage, src_storage_path):  # there is django record
             try:
                 ResourceFile.get(resource, file, folder=folder)
             except ObjectDoesNotExist:
@@ -934,7 +934,7 @@ def data_store_move_to_folder(request, pk=None):
         # delete conflicting files so that move can succeed
         for override_tgt_path in override_tgt_paths:
             override_storage_tgt_path = os.path.join(resource.root_path, 'data', 'contents', override_tgt_path)
-            if irods_path_is_directory(istorage, override_storage_tgt_path):
+            if s3_path_is_directory(istorage, override_storage_tgt_path):
                 # folder rather than a data object, just delete the folder
                 remove_folder(user, pk, os.path.join('data', 'contents', override_tgt_path))
             else:
@@ -1003,7 +1003,7 @@ def data_store_rename_file_or_folder(request, pk=None):
     if src_folder != tgt_folder:
         return JsonResponse({"error": "Source and target names must be in same folder"},
                             status=status.HTTP_400_BAD_REQUEST)
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_s3_storage()
 
     # protect against stale data botches: source files should exist
     src_storage_path = os.path.join(resource.root_path, src_path)
@@ -1014,7 +1014,7 @@ def data_store_rename_file_or_folder(request, pk=None):
     except ValidationError:
         return JsonResponse({"error": "Object to be renamed does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
-    if not irods_path_is_directory(istorage, src_storage_path):
+    if not s3_path_is_directory(istorage, src_storage_path):
         try:  # Django record should exist for each file
             ResourceFile.get(resource, base, folder=folder)
         except ObjectDoesNotExist:

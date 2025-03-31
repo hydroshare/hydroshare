@@ -1,13 +1,13 @@
 from django.core.management.base import BaseCommand
-from django_irods.storage import IrodsStorage
+from django_s3.storage import S3Storage
 from hs_core.models import BaseResource, ResourceFile
 from django.utils import timezone
-from django_irods.icommands import SessionException
+from django_s3.exceptions import SessionException
 from datetime import timedelta
 
 
 class Command(BaseCommand):
-    help = "Check synchronization between iRODS and Django."
+    help = "Check synchronization between S3 and Django."
 
     def add_arguments(self, parser):
         parser.add_argument('resource_ids', nargs='*', type=str)
@@ -33,7 +33,7 @@ class Command(BaseCommand):
             print("Removing unreferenced files for all resources.")
             resources = BaseResource.objects.all()
 
-        istorage = IrodsStorage()
+        istorage = S3Storage()
 
         def list_files_recursively(folder_path):
             try:
@@ -67,21 +67,21 @@ class Command(BaseCommand):
         for resource in resources.iterator():
             print(f"{current_resource_count}/{total_resources}")
             current_resource_count = current_resource_count + 1
-            irods_files = list_files_recursively(resource.file_path)
-            irods_files = [f for f in irods_files if not special_file(f)]
+            s3_files = list_files_recursively(resource.file_path)
+            s3_files = [f for f in s3_files if not special_file(f)]
             res_files = ResourceFile.objects.filter(object_id=resource.id)
-            res_files_with_no_file = res_files.exclude(resource_file__in=irods_files).values_list('resource_file',
+            res_files_with_no_file = res_files.exclude(resource_file__in=s3_files).values_list('resource_file',
                                                                                                   flat=True)
             if res_files_with_no_file:
                 resources_with_dangling_rf.append(resource.short_id)
-            matched_values = res_files.filter(resource_file__in=irods_files).values_list('resource_file', flat=True)
-            unreferenced_irods_files = [f for f in irods_files if f not in list(matched_values)]
-            if unreferenced_irods_files:
+            matched_values = res_files.filter(resource_file__in=s3_files).values_list('resource_file', flat=True)
+            unreferenced_s3_files = [f for f in s3_files if f not in list(matched_values)]
+            if unreferenced_s3_files:
                 resources_with_missing_rf.append(resource.short_id)
-                print("Unreferenced irods files")
-                print(" ".join(unreferenced_irods_files))
+                print("Unreferenced S3 files")
+                print(" ".join(unreferenced_s3_files))
                 if not dryrun:
-                    for file in unreferenced_irods_files:
+                    for file in unreferenced_s3_files:
                         try:
                             istorage.delete(file)
                         except SessionException as ex:

@@ -6,11 +6,11 @@ from django.core.files.uploadedfile import UploadedFile
 
 from hs_core.hydroshare.resource import add_resource_files
 from hs_core import hydroshare
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core.views.utils import create_folder
 
 
-class TestReadmeResourceFile(MockIRODSTestCaseMixin, TransactionTestCase):
+class TestReadmeResourceFile(MockS3TestCaseMixin, TransactionTestCase):
     def setUp(self):
         super(TestReadmeResourceFile, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')

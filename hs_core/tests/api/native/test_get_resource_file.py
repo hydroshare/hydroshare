@@ -5,10 +5,10 @@ from unittest import TestCase
 from django.contrib.auth.models import Group
 
 from hs_core import hydroshare
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 
 
-class TestGetResourceFile(MockIRODSTestCaseMixin, TestCase):
+class TestGetResourceFile(MockS3TestCaseMixin, TestCase):
     def setUp(self):
         super(TestGetResourceFile, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -49,6 +49,6 @@ class TestGetResourceFile(MockIRODSTestCaseMixin, TestCase):
         )
 
         # test if the last modified time for the file can be obtained
-        # assert time is not None without iRODS Session Exception being raised
+        # assert time is not None without S3 Session Exception being raised
         self.assertTrue(res_file.modified_time)
         self.assertTrue(res_file.checksum)

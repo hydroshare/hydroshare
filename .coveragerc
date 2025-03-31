@@ -1,11 +1,10 @@
 [run]
 omit =
    /*/python2.7/*
-   django_irods/*
+   django_s3/*
    dublincore/*
    ga_ows/*
    ga_resources/*
-   */python-irodsclient/*
    */pysqlite2/*
    */tests/*
    */migrations/*

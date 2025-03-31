@@ -50,7 +50,7 @@ class HSRESTTestCase(APITestCase):
         self.user.delete()
 
     def getResourceBag(self, res_id, exhaust_stream=True):
-        """Get resource bag from iRODS, following redirects.
+        """Get resource bag from S3, following redirects.
 
         :param res_id: ID of resource whose bag should be fetched
         :param exhaust_stream: If True, the response returned
@@ -60,7 +60,7 @@ class HSRESTTestCase(APITestCase):
         :return: Django test client response object
         """
         url = "/hsapi/resource/{res_id}".format(res_id=res_id)
-        return self._get_file_irods(url, exhaust_stream)
+        return self._get_file_s3(url, exhaust_stream)
 
     def getDownloadTaskStatus(self, task_id):
         """Check download celery task status.
@@ -72,7 +72,7 @@ class HSRESTTestCase(APITestCase):
         return self.client.get(url, follow=True)
 
     def getResourceFile(self, res_id, file_name, exhaust_stream=True):
-        """Get resource file from iRODS, following redirects
+        """Get resource file from S3, following redirects
 
         :param res_id: ID of resource whose resource file should be fetched
         :param file_name: Name of the file to fetch (just the filename, not the full path)
@@ -85,9 +85,9 @@ class HSRESTTestCase(APITestCase):
         url = "/hsapi/resource/{res_id}/files/{file_name}".format(
             res_id=res_id, file_name=file_name
         )
-        return self._get_file_irods(url, exhaust_stream)
+        return self._get_file_s3(url, exhaust_stream)
 
-    def _get_file_irods(self, url, exhaust_stream=True):
+    def _get_file_s3(self, url, exhaust_stream=True):
         # follow the redirects to minio url and then use requests to get the file
         # rest_framwork.tests.APIClient doesn't work for the file download
         response = self.client.get(url)
@@ -103,7 +103,7 @@ class HSRESTTestCase(APITestCase):
         return minio_response
 
     def getScienceMetadata(self, res_id, exhaust_stream=True):
-        """Get sciencematadata.xml from iRODS, following redirects
+        """Get sciencematadata.xml from S3, following redirects
 
         :param res_id: ID of resource whose science metadata should be fetched
         :param exhaust_stream: If True, the response returned
@@ -113,7 +113,7 @@ class HSRESTTestCase(APITestCase):
         :return: Django test client response object
         """
         url = "/hsapi/scimeta/{res_id}/".format(res_id=res_id)
-        response = self._get_file_irods(url, exhaust_stream)
+        response = self._get_file_s3(url, exhaust_stream)
         self.assertTrue(response.url.startswith('http://minio:9000'))
 
         return response

@@ -16,12 +16,12 @@ from hs_composite_resource.models import CompositeResource
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import (ResourceVersioningException,
                                       add_file_to_resource,
-                                      get_file_from_irods,
+                                      get_file_from_s3,
                                       get_resource_by_shortkey,
                                       resource_file_add_process)
 from hs_core.models import BaseResource, ResourceFile
 from hs_core.tasks import FileOverrideException
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core.views.utils import (add_reference_url_to_resource, create_folder,
                                  delete_resource_file,
                                  edit_reference_url_in_resource,
@@ -45,7 +45,7 @@ from hs_file_types.tests.utils import CompositeResourceTestMixin
 
 
 class CompositeResourceTest(
-    MockIRODSTestCaseMixin, TransactionTestCase, CompositeResourceTestMixin
+    MockS3TestCaseMixin, TransactionTestCase, CompositeResourceTestMixin
 ):
     def setUp(self):
         super(CompositeResourceTest, self).setUp()
@@ -344,7 +344,7 @@ class CompositeResourceTest(
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
 
     def test_resource_file_system_metadata(self):
-        """Test when files are added/uploaded to a resource, system level metadata is retrieved from iRODS and saved in
+        """Test when files are added/uploaded to a resource, system level metadata is retrieved from S3 and saved in
         the DB for each file.
         """
         self.create_composite_resource(self.generic_file)
@@ -3931,7 +3931,7 @@ class CompositeResourceTest(
         )
 
     def test_zip_by_aggregation_file_1(self):
-        """Test that we can zip a netcdf aggregation that exists at the root of resource path in iRODS
+        """Test that we can zip a netcdf aggregation that exists at the root of resource path in S3
         The aggregation zip file becomes a resource file
         """
 
@@ -4039,7 +4039,7 @@ class CompositeResourceTest(
         self._test_zip_file_contents(zipfile=zip_res_file, aggregation=nc_aggr)
 
     def test_zip_by_aggregation_file_4(self):
-        """Test that we can zip a single file aggregation that exists at the root of resource path in iRODS
+        """Test that we can zip a single file aggregation that exists at the root of resource path in S3
         The aggregation zip file becomes a resource file
         """
 
@@ -4070,7 +4070,7 @@ class CompositeResourceTest(
         self._test_zip_file_contents(zipfile=zip_res_file, aggregation=gen_aggr)
 
     def _test_zip_file_contents(self, zipfile, aggregation):
-        temp_zip_file = get_file_from_irods(
+        temp_zip_file = get_file_from_s3(
             resource=self.composite_resource, file_path=zipfile.storage_path
         )
         aggr_files = [f.file_name for f in aggregation.files.all()]

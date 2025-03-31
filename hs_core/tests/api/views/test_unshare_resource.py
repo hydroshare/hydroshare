@@ -9,11 +9,11 @@ from rest_framework import status
 
 from hs_core import hydroshare
 from hs_core.views import unshare_resource_with_user, unshare_resource_with_group
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_access_control.models import PrivilegeCodes
 
 
-class TestUnshareResource(MockIRODSTestCaseMixin, TestCase):
+class TestUnshareResource(MockS3TestCaseMixin, TestCase):
     def setUp(self):
         super(TestUnshareResource, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')

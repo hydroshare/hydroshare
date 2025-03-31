@@ -56,7 +56,7 @@ def update_file_sizes(resources, refreshed_weeks=None, modified_weeks=None):
             file_counter += 1
             print(file_counter, end=', ')
             if res_file._size <= 0:
-                print(f"File {res_file.short_path} was not found in iRODS.")
+                print(f"File {res_file.short_path} was not found in S3.")
         time_spent = time.time() - start_time
         print(f"\nTime spent for resource {res.short_id}: {time_spent} seconds")
         print(f"Updated {file_counter} files for resource {res.short_id}")
@@ -78,10 +78,10 @@ def filter_files(file_queryset, refreshed_weeks=None, modified_weeks=None):
 
 
 class Command(BaseCommand):
-    help = "Reset the filesize cached in django. Optionally update the file size cache by querying iRODS."
+    help = "Reset the filesize cached in django. Optionally update the file size cache by querying S3."
 
     def add_arguments(self, parser):
-        parser.add_argument('--update', action='store_true', help='update file size cache in Django by querying iRODS')
+        parser.add_argument('--update', action='store_true', help='update file size cache in Django by querying S3')
         parser.add_argument('--uid', type=int, help='filter to just a single user by uid')
         parser.add_argument('--resource_id', type=str , help='filter to just a single resource by id')
         parser.add_argument('--min_quota_django_model', type=int, help='filter to django UserQuota above this (in GB)')
@@ -120,7 +120,7 @@ class Command(BaseCommand):
         elif min_quota_django_model > 0:
             uqs = UserQuota.objects.filter(user__is_active=True) \
                 .filter(user__is_superuser=False)
-            # TODO: once the quota system is moved from irods to django, used_value can no longer be filtered on
+            # TODO: once the quota system is moved to django, used_value can no longer be filtered on
             # It will be a property, so this will need to be updated
             if min_quota_django_model > 0:
                 uqs = uqs.filter(used_value__gt=min_quota_django_model).order_by('-used_value')

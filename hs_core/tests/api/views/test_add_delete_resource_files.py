@@ -7,12 +7,12 @@ from rest_framework import status
 
 from hs_core import hydroshare
 from hs_core.models import ResourceFile
-from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
+from hs_core.testing import MockS3TestCaseMixin, ViewTestCase
 from hs_core.views import (add_files_to_resource, delete_file,
                            delete_multiple_files)
 
 
-class TestAddDeleteResourceFiles(MockIRODSTestCaseMixin, ViewTestCase):
+class TestAddDeleteResourceFiles(MockS3TestCaseMixin, ViewTestCase):
     def setUp(self):
         super(TestAddDeleteResourceFiles, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
