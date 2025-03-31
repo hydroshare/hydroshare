@@ -853,7 +853,7 @@ def _link_s3_folder_to_django(resource, istorage, foldername):
         for folder in store[0]:
             res_files = res_files + \
                 _link_s3_folder_to_django(resource, istorage,
-                                             os.path.join(foldername, folder))
+                                          os.path.join(foldername, folder))
     return res_files
 
 

@@ -71,7 +71,7 @@ class Command(BaseCommand):
             s3_files = [f for f in s3_files if not special_file(f)]
             res_files = ResourceFile.objects.filter(object_id=resource.id)
             res_files_with_no_file = res_files.exclude(resource_file__in=s3_files).values_list('resource_file',
-                                                                                                  flat=True)
+                                                                                               flat=True)
             if res_files_with_no_file:
                 resources_with_dangling_rf.append(resource.short_id)
             matched_values = res_files.filter(resource_file__in=s3_files).values_list('resource_file', flat=True)

@@ -833,7 +833,7 @@ def raster_file_validation(raster_file, resource, raster_folder=''):
             raster_resource_files.extend([vrt_file])
             temp_dir = os.path.dirname(raster_file)
             temp_vrt_file = utils.get_file_from_s3(resource=resource, file_path=vrt_file.storage_path,
-                                                      temp_dir=temp_dir)
+                                                   temp_dir=temp_dir)
             listed_tif_files = list_tif_files(vrt_file)
             tif_files = [f for f in res_files if f.file_name in listed_tif_files]
             if len(tif_files) != len(listed_tif_files):

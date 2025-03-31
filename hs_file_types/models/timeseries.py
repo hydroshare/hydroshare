@@ -3456,7 +3456,7 @@ def sqlite_file_update(instance, sqlite_res_file, user):
 
                 # push the updated sqlite file to S3
                 utils.replace_resource_file_on_s3(temp_sqlite_file, sqlite_file_to_update,
-                                                     user)
+                                                  user)
                 metadata = instance.metadata
                 metadata.is_update_file = False
                 metadata.save()

@@ -265,9 +265,9 @@ def fix_resourcefile_duplicates(dry_run=False, logger=None, get_model=False):
 
 
 def check_s3_files(resource, stop_on_error=False, log_errors=True,
-                      echo_errors=False, return_errors=False,
-                      sync_ispublic=False, clean_s3=False, clean_django=False,
-                      dry_run=False, user=None, ingest_from_s3=False):
+                   echo_errors=False, return_errors=False,
+                   sync_ispublic=False, clean_s3=False, clean_django=False,
+                   dry_run=False, user=None, ingest_from_s3=False):
     """Check whether files in resource.files and on S3 agree.
 
     :param resource: resource to check
@@ -357,12 +357,12 @@ def check_s3_files(resource, stop_on_error=False, log_errors=True,
         # Step 4: does every S3 file correspond to a record in files?
         should_del_s3 = clean_s3 and not dry_run
         error2, missing_in_django = __check_s3_directory(resource, resource.file_path, logger,
-                                                            stop_on_error=stop_on_error,
-                                                            log_errors=log_errors,
-                                                            echo_errors=echo_errors,
-                                                            return_errors=return_errors,
-                                                            delete_s3=should_del_s3,
-                                                            ingest_from_s3=ingest_from_s3)
+                                                         stop_on_error=stop_on_error,
+                                                         log_errors=log_errors,
+                                                         echo_errors=echo_errors,
+                                                         return_errors=return_errors,
+                                                         delete_s3=should_del_s3,
+                                                         ingest_from_s3=ingest_from_s3)
         errors.extend(error2)
         ecount += missing_in_django
 
@@ -437,9 +437,9 @@ def check_s3_files(resource, stop_on_error=False, log_errors=True,
 
 
 def __check_s3_directory(resource, dir, logger,
-                            stop_on_error=False, log_errors=True,
-                            echo_errors=False, return_errors=False,
-                            delete_s3=False, ingest_from_s3=False):
+                         stop_on_error=False, log_errors=True,
+                         echo_errors=False, return_errors=False,
+                         delete_s3=False, ingest_from_s3=False):
     """List a directory and check files there for conformance with django ResourceFiles.
 
     :param stop_on_error: whether to raise a ValidationError exception on first error
@@ -496,22 +496,22 @@ def __check_s3_directory(resource, dir, logger,
                     raise ValidationError(msg)
         if need_to_ingest:
             error2, ecount2 = ingest_s3_files(resource, logger,
-                                                 stop_on_error=stop_on_error,
-                                                 echo_errors=echo_errors,
-                                                 log_errors=log_errors,
-                                                 return_errors=return_errors)
+                                              stop_on_error=stop_on_error,
+                                              echo_errors=echo_errors,
+                                              log_errors=log_errors,
+                                              return_errors=return_errors)
             errors.extend(error2)
             ecount += ecount2
 
         for dname in listing[0]:  # directories
             # do not use os.path.join because paths might contain unicode characters!
             error3, ecount3 = __check_s3_directory(resource, dir + '/' + dname, logger,
-                                                      stop_on_error=stop_on_error,
-                                                      echo_errors=echo_errors,
-                                                      log_errors=log_errors,
-                                                      return_errors=return_errors,
-                                                      delete_s3=delete_s3,
-                                                      ingest_from_s3=ingest_from_s3)
+                                                   stop_on_error=stop_on_error,
+                                                   echo_errors=echo_errors,
+                                                   log_errors=log_errors,
+                                                   return_errors=return_errors,
+                                                   delete_s3=delete_s3,
+                                                   ingest_from_s3=ingest_from_s3)
             errors.extend(error3)
             ecount += ecount3
 
@@ -523,11 +523,11 @@ def __check_s3_directory(resource, dir, logger,
 
 
 def ingest_s3_files(resource,
-                       logger,
-                       stop_on_error=False,
-                       echo_errors=True,
-                       log_errors=False,
-                       return_errors=False):
+                    logger,
+                    stop_on_error=False,
+                    echo_errors=True,
+                    log_errors=False,
+                    return_errors=False):
 
     istorage = resource.get_s3_storage()
     errors = []
@@ -556,23 +556,23 @@ def ingest_s3_files(resource,
 
     else:
         return __ingest_s3_directory(resource,
-                                        resource.file_path,
-                                        logger,
-                                        stop_on_error=False,
-                                        echo_errors=True,
-                                        log_errors=False,
-                                        return_errors=False)
+                                     resource.file_path,
+                                     logger,
+                                     stop_on_error=False,
+                                     echo_errors=True,
+                                     log_errors=False,
+                                     return_errors=False)
 
     return errors, ecount
 
 
 def __ingest_s3_directory(resource,
-                             dir,
-                             logger,
-                             stop_on_error=False,
-                             log_errors=True,
-                             echo_errors=False,
-                             return_errors=False):
+                          dir,
+                          logger,
+                          stop_on_error=False,
+                          log_errors=True,
+                          echo_errors=False,
+                          return_errors=False):
     """
     list a directory and ingest files there for conformance with django ResourceFiles
 
@@ -679,12 +679,12 @@ def __ingest_s3_directory(resource,
         for dname in listing[0]:  # directories
             # do not use os.path.join because fname might contain unicode characters
             error2, ecount2 = __ingest_s3_directory(resource,
-                                                       dir + '/' + dname,
-                                                       logger,
-                                                       stop_on_error=stop_on_error,
-                                                       echo_errors=echo_errors,
-                                                       log_errors=log_errors,
-                                                       return_errors=return_errors)
+                                                    dir + '/' + dname,
+                                                    logger,
+                                                    stop_on_error=stop_on_error,
+                                                    echo_errors=echo_errors,
+                                                    log_errors=log_errors,
+                                                    return_errors=return_errors)
             errors.extend(error2)
             ecount += ecount2
 
@@ -754,16 +754,16 @@ def repair_resource(resource, logger, dry_run=False, user=None):
     now = timezone.now()
 
     errors, ecount, dangling_in_django, missing_django = check_s3_files(resource,
-                                                                           stop_on_error=False,
-                                                                           echo_errors=True,
-                                                                           log_errors=True,
-                                                                           return_errors=True,
-                                                                           clean_s3=False,
-                                                                           clean_django=True,
-                                                                           sync_ispublic=True,
-                                                                           dry_run=dry_run,
-                                                                           user=user,
-                                                                           ingest_from_s3=True)
+                                                                        stop_on_error=False,
+                                                                        echo_errors=True,
+                                                                        log_errors=True,
+                                                                        return_errors=True,
+                                                                        clean_s3=False,
+                                                                        clean_django=True,
+                                                                        sync_ispublic=True,
+                                                                        dry_run=dry_run,
+                                                                        user=user,
+                                                                        ingest_from_s3=True)
     if ecount:
         print("... affected resource {} has type {}, title '{}'"
               .format(resource.short_id, resource.resource_type,
@@ -833,9 +833,9 @@ class CheckResource(object):
                                                                        self.resource.raccess.public)))
 
         s3_issues, s3_errors, _, _ = check_s3_files(self.resource,
-                                                             log_errors=False,
-                                                             echo_errors=False,
-                                                             return_errors=True)
+                                                    log_errors=False,
+                                                    echo_errors=False,
+                                                    return_errors=True)
 
         if s3_errors:
             self.label()

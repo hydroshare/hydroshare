@@ -4,7 +4,6 @@ from dateutil import parser
 import tempfile
 import os
 
-from django.conf import settings
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.core.files.uploadedfile import UploadedFile

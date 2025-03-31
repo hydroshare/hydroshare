@@ -64,7 +64,7 @@ class TestResourceFileAPI(MockS3TestCaseMixin,
 
         # cleaning should not change anything
         check_s3_files(self.res, stop_on_error=True, log_errors=False, return_errors=True,
-                          clean_s3=True, clean_django=True, sync_ispublic=True)
+                       clean_s3=True, clean_django=True, sync_ispublic=True)
 
         # resource should has only one file at this point
         self.assertEqual(self.res.files.all().count(), 1,
@@ -100,7 +100,7 @@ class TestResourceFileAPI(MockS3TestCaseMixin,
 
         # now try to clean it up
         errors, ecount, _, _ = check_s3_files(self.res, return_errors=True, log_errors=False,
-                                                 clean_s3=True, clean_django=True)
+                                              clean_s3=True, clean_django=True)
         self.assertTrue(errors[0].endswith(
             'data/contents/fuzz.txt does not exist in S3 (DELETED FROM DJANGO)'))
         self.assertTrue(errors[1].endswith(
@@ -169,7 +169,7 @@ class TestResourceFileAPI(MockS3TestCaseMixin,
 
         # now try to clean it up
         errors, ecount, _, _ = check_s3_files(self.res, return_errors=True, log_errors=False,
-                                                 clean_s3=True, clean_django=True)
+                                              clean_s3=True, clean_django=True)
         self.assertTrue(errors[0].endswith(
             'data/contents/fuzz.txt does not exist in S3 (DELETED FROM DJANGO)'))
         self.assertTrue(errors[1].endswith(

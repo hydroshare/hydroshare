@@ -80,11 +80,11 @@ class Command(BaseCommand):
                         continue
 
                     _, count = ingest_s3_files(resource,
-                                                  logger,
-                                                  stop_on_error=False,
-                                                  echo_errors=not options['log'],
-                                                  log_errors=options['log'],
-                                                  return_errors=False)
+                                               logger,
+                                               stop_on_error=False,
+                                               echo_errors=not options['log'],
+                                               log_errors=options['log'],
+                                               return_errors=False)
                     if count:
                         msg = "... affected resource {} has type {}, title '{}'"\
                               .format(resource.short_id, resource.resource_type,
@@ -121,11 +121,11 @@ class Command(BaseCommand):
                         continue  # next resource
 
                     _, count = ingest_s3_files(resource,
-                                                  logger,
-                                                  stop_on_error=False,
-                                                  echo_errors=not options['log'],
-                                                  log_errors=options['log'],
-                                                  return_errors=False)
+                                               logger,
+                                               stop_on_error=False,
+                                               echo_errors=not options['log'],
+                                               log_errors=options['log'],
+                                               return_errors=False)
                     if count:
                         msg = "... affected resource {} has type {}, title '{}'"\
                               .format(resource.short_id, resource.resource_type, resource.title)

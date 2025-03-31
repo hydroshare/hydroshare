@@ -67,8 +67,8 @@ class Command(BaseCommand):
         if options['unreferenced']:
             print("LOOKING FOR S3 RESOURCES NOT IN DJANGO")
             check_for_dangling_s3(echo_errors=not options['log'],
-                                     log_errors=options['log'],
-                                     return_errors=False)
+                                  log_errors=options['log'],
+                                  return_errors=False)
 
         elif len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
@@ -86,12 +86,12 @@ class Command(BaseCommand):
                 if options['sync_ispublic']:
                     print(' (correcting isPublic in S3)')
                 check_s3_files(resource, stop_on_error=False,
-                                  echo_errors=not options['log'],
-                                  log_errors=options['log'],
-                                  return_errors=False,
-                                  clean_s3=options['clean_s3'],
-                                  clean_django=options['clean_django'],
-                                  sync_ispublic=options['sync_ispublic'])
+                               echo_errors=not options['log'],
+                               log_errors=options['log'],
+                               return_errors=False,
+                               clean_s3=options['clean_s3'],
+                               clean_django=options['clean_django'],
+                               sync_ispublic=options['sync_ispublic'])
 
         else:  # check all resources
             print("LOOKING FOR FILE ERRORS FOR ALL RESOURCES")
@@ -105,9 +105,9 @@ class Command(BaseCommand):
                 if r.resource_type == "CompositeResource":
                     r = CompositeResource.objects.get(short_id=r.short_id)
                 check_s3_files(r, stop_on_error=False,
-                                  echo_errors=not options['log'],  # Don't both log and echo
-                                  log_errors=options['log'],
-                                  return_errors=False,
-                                  clean_s3=options['clean_s3'],
-                                  clean_django=options['clean_django'],
-                                  sync_ispublic=options['sync_ispublic'])
+                               echo_errors=not options['log'],  # Don't both log and echo
+                               log_errors=options['log'],
+                               return_errors=False,
+                               clean_s3=options['clean_s3'],
+                               clean_django=options['clean_django'],
+                               sync_ispublic=options['sync_ispublic'])
