@@ -114,7 +114,7 @@ urlpatterns += i18n_patterns(
         name="email_verify_password_reset",
     ),
     re_path(r"^verify/(?P<token>[0-9a-zA-Z:_\-]*)/", hs_core_views.verify),
-    path("django_irods/", include("django_irods.urls")),
+    path("django_irods/", include("django_s3.urls")),
     # path("autocomplete/", include("autocomplete_light.urls")),
     path("discoverapi/", SearchAPI.as_view(), name="DiscoverAPI"),
     path("search/", SearchView.as_view(), name="Discover"),

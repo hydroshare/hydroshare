@@ -320,6 +320,11 @@ echo
 docker exec -u hydro-service hydroshare python manage.py migrate sites --noinput
 
 echo
+echo "  - docker exec -u hydro-service hydroshare python manage.py rename_app django_irods django_s3"
+echo
+docker exec -u hydro-service hydroshare python manage.py rename_app django_irods django_s3
+
+echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py migrate --fake-initial --noinput"
 echo
 docker exec hydroshare python manage.py migrate --fake-initial --noinput
