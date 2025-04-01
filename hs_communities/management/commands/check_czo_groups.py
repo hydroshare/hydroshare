@@ -15,7 +15,7 @@ from django.contrib.auth.models import User, Group
 from hs_access_control.models import UserResourcePrivilege, GroupResourcePrivilege, \
     GroupCommunityPrivilege, PrivilegeCodes, Community
 from hs_core.models import BaseResource
-from django_s3.exceptions import SessionException
+from django_irods.exceptions import SessionException
 
 
 # Details of CZO setup.

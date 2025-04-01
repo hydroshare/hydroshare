@@ -13,7 +13,7 @@ from rest_framework.exceptions import ValidationError as DRF_ValidationError
 from rest_framework.exceptions import status
 from rest_framework.response import Response
 
-from django_s3.exceptions import SessionException
+from django_irods.exceptions import SessionException
 from hs_core.hydroshare import delete_resource_file
 from hs_core.hydroshare.utils import (QuotaException, get_file_mime_type,
                                       resolve_request)

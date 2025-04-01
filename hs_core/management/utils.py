@@ -24,8 +24,8 @@ from django.db.models import Count
 from django.utils import timezone
 from requests import post
 
-from django_s3.exceptions import SessionException
-from django_s3.storage import S3Storage
+from django_irods.exceptions import SessionException
+from django_irods.storage import S3Storage
 from hs_core.hydroshare import get_resource_by_shortkey
 from hs_core.models import BaseResource, ResourceFile
 from hs_core.views.utils import link_s3_file_to_django

@@ -25,8 +25,8 @@ from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
 from mezzanine.conf import settings
 
-from django_s3.exceptions import SessionException
-from django_s3.storage import S3Storage
+from django_irods.exceptions import SessionException
+from django_irods.storage import S3Storage
 from hs_access_control.models.community import Community
 from hs_access_control.models.privilege import PrivilegeCodes
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files

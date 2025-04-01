@@ -26,7 +26,7 @@ from rest_framework import generics, status
 from rest_framework.request import Request
 from rest_framework.exceptions import ValidationError, NotAuthenticated, PermissionDenied, NotFound
 
-from django_s3.exceptions import SessionException
+from django_irods.exceptions import SessionException
 from django_tus.views import TusUpload
 from django_tus.tusfile import TusFile, TusChunk
 from django_tus.response import TusResponse

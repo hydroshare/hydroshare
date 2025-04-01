@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_access_control.models.privilege import UserResourcePrivilege, PrivilegeCodes
-from django_s3.exceptions import SessionException
+from django_irods.exceptions import SessionException
 from django.db import transaction
 
 

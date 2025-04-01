@@ -12,7 +12,7 @@ from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 from hs_core.tasks import create_bag_by_s3
-from django_s3.exceptions import SessionException
+from django_irods.exceptions import SessionException
 
 
 def check_bag(rid, options):

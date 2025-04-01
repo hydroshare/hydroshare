@@ -1,8 +1,8 @@
 from django.core.management.base import BaseCommand
-from django_s3.storage import S3Storage
+from django_irods.storage import S3Storage
 from hs_core.models import BaseResource, ResourceFile
 from django.utils import timezone
-from django_s3.exceptions import SessionException
+from django_irods.exceptions import SessionException
 from datetime import timedelta
 
 

@@ -33,7 +33,7 @@ from mezzanine.utils.urls import next_url
 from rest_framework import status
 from rest_framework.exceptions import NotFound, ValidationError
 
-from django_s3.exceptions import SessionException
+from django_irods.exceptions import SessionException
 from hs_access_control.models import PrivilegeCodes
 from hs_core import hydroshare
 from hs_core.enums import RelationTypes

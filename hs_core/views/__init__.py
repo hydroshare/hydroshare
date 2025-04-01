@@ -37,7 +37,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from sorl.thumbnail import ImageField as ThumbnailImageField, get_thumbnail
 
-from django_s3.exceptions import SessionException
+from django_irods.exceptions import SessionException
 from hs_access_control.emails import CommunityRequestEmailNotification
 from hs_access_control.enums import CommunityRequestEvents
 from hs_access_control.forms import RequestNewCommunityForm, UpdateCommunityForm
@@ -2222,7 +2222,7 @@ def act_on_group_membership_request(
 
 @login_required
 def get_file(request, *args, **kwargs):
-    from django_s3.exceptions import Session as RodsSession
+    from django_irods.exceptions import Session as RodsSession
 
     name = kwargs["name"]
     session = RodsSession("./", "/usr/bin")
