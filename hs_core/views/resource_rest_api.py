@@ -437,9 +437,10 @@ class ScienceMetadataRetrieveUpdate(APIView):
             resmeta_path = os.path.join(bag_data_path, 'resourcemap.xml')
             with open(resmeta_path, 'wb') as resmeta:
                 storage = get_file_storage()
-                resmeta = storage.open(AbstractResource.sysmeta_path(pk))
-                shutil.copyfileobj(resmeta, resmeta)
+                resmeta_s3 = storage.open(AbstractResource.sysmeta_path(pk))
+                shutil.copyfileobj(resmeta_s3, resmeta)
 
+            resmeta_s3.close()
             resmeta.close()
 
             try:

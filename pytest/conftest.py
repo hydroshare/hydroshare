@@ -20,7 +20,7 @@ def mock_s3():
     patchers = (
         patch("hs_core.hydroshare.hs_bagit.delete_files_and_bag"),
         patch("hs_core.hydroshare.hs_bagit.create_bag"),
-        patch("hs_core.hydroshare.hs_bagit.create_bag_files"),
+        patch("hs_core.hydroshare.hs_bagit.create_bagit_files_by_s3"),
         patch("hs_core.tasks.create_bag_by_s3"),
         patch("hs_core.hydroshare.utils.copy_resource_files_and_AVUs"),
     )
