@@ -6,7 +6,7 @@ from django.core.files.uploadedfile import UploadedFile
 from django.urls import reverse
 from rest_framework import status
 
-from django_irods.views import download
+from django_s3.views import download
 from hs_core import hydroshare
 from hs_core.hydroshare import resource_file_add_process
 from hs_core.models import ResourceFile
@@ -102,7 +102,7 @@ class TestAggregationZipDownload(MockS3TestCaseMixin, ViewTestCase):
         aggr_main_file = raster_aggr.get_main_file
         aggr_main_file_path = aggr_main_file.storage_path
         url_params = {'path': aggr_main_file_path}
-        url = reverse('django_irods_download', kwargs=url_params)
+        url = reverse('django_s3_download', kwargs=url_params)
         url = f"{url}?zipped=True&aggregation=True"
         request = self.factory.get(url)
         request.user = self.user

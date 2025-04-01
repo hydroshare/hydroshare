@@ -3,7 +3,7 @@
 
 from django.db import migrations
 from django.core.exceptions import ValidationError
-from django_irods.storage import S3Storage
+from django_s3.storage import S3Storage
 import os.path
 
 # This migration converts ResourceFiles from a variety of forms to a consistent form

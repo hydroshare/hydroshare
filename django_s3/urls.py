@@ -1,10 +1,10 @@
 from django.urls import re_path
 
-from django_irods.views import download, rest_check_task_status, rest_download
+from django_s3.views import download, rest_check_task_status, rest_download
 
 urlpatterns = [
     # for download request from resource landing page
-    re_path(r'^download/(?P<path>.*)$', download, name='django_irods_download'),
+    re_path(r'^download/(?P<path>.*)$', download, name='django_s3_download'),
     # for download request from REST API
     re_path(r'^rest_download/(?P<path>.*)$', rest_download, name='rest_download'),
     # for REST API poll

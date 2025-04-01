@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('django_irods', '0003_auto_20240809_1412'),
+        ('django_s3', '0003_auto_20240809_1412'),
     ]
 
     operations = [

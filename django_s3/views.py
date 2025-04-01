@@ -160,7 +160,7 @@ def download(request, path, use_async=True,
     resource_cls = check_resource_type(res.resource_type)
 
     if is_zip_request:
-        download_path = '/django_irods/rest_download/' + output_path
+        download_path = '/django_s3/rest_download/' + output_path
         if use_async:
             user_id = get_task_user_id(request)
             task = create_temp_zip.apply_async((res_id, s3_path, s3_output_path,
@@ -170,7 +170,7 @@ def download(request, path, use_async=True,
                 return JsonResponse({
                     'zip_status': 'Not ready',
                     'task_id': task.task_id,
-                    'download_path': '/django_irods/rest_download/' + output_path})
+                    'download_path': '/django_s3/rest_download/' + output_path})
             else:
                 # return status to the task notification App AJAX call
                 task_dict = get_or_create_task_notification(task_id, name='zip download', payload=download_path,

@@ -5,7 +5,7 @@ import tempfile
 import zipfile
 import logging
 
-from django_irods.exceptions import SessionException
+from django_s3.exceptions import SessionException
 from django.urls import reverse
 from urllib.parse import urlencode
 from django.conf import settings

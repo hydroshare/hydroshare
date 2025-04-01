@@ -37,7 +37,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from sorl.thumbnail import ImageField as ThumbnailImageField, get_thumbnail
 
-from django_irods.exceptions import SessionException
+from django_s3.exceptions import SessionException
 from hs_access_control.emails import CommunityRequestEmailNotification
 from hs_access_control.enums import CommunityRequestEvents
 from hs_access_control.forms import RequestNewCommunityForm, UpdateCommunityForm
@@ -860,7 +860,7 @@ def update_metadata_element(
 @swagger_auto_schema(method="get", auto_schema=None)
 @api_view(["GET"])
 def file_download_url_mapper(request, shortkey):
-    """maps the file URIs in resourcemap document to django_irods download view function"""
+    """maps the file URIs in resourcemap document to django_s3 download view function"""
     try:
         res, _, _ = authorize(
             request,
@@ -2222,7 +2222,7 @@ def act_on_group_membership_request(
 
 @login_required
 def get_file(request, *args, **kwargs):
-    from django_irods.exceptions import Session as RodsSession
+    from django_s3.exceptions import Session as RodsSession
 
     name = kwargs["name"]
     session = RodsSession("./", "/usr/bin")

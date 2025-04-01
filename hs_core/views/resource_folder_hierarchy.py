@@ -13,7 +13,7 @@ from rest_framework.exceptions import ValidationError as DRF_ValidationError
 from rest_framework.exceptions import status
 from rest_framework.response import Response
 
-from django_irods.exceptions import SessionException
+from django_s3.exceptions import SessionException
 from hs_core.hydroshare import delete_resource_file
 from hs_core.hydroshare.utils import (QuotaException, get_file_mime_type,
                                       resolve_request)
@@ -240,7 +240,7 @@ def to_external_url(url):
     Convert an internal download file/folder url to the external url.  This should eventually be
     replaced with a reverse method that gets the correct mapping.
     """
-    return url.replace("django_irods/download", "resource", 1)
+    return url.replace("django_s3/download", "resource", 1)
 
 
 def data_store_folder_zip(request, res_id=None):

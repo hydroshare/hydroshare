@@ -26,7 +26,7 @@ from rest_framework import generics, status
 from rest_framework.request import Request
 from rest_framework.exceptions import ValidationError, NotAuthenticated, PermissionDenied, NotFound
 
-from django_irods.exceptions import SessionException
+from django_s3.exceptions import SessionException
 from django_tus.views import TusUpload
 from django_tus.tusfile import TusFile, TusChunk
 from django_tus.response import TusResponse
@@ -590,10 +590,10 @@ class ResourceFileCRUD(APIView):
                       'resource id {res_id}'.format(file_name=pathname, res_id=pk)
             raise NotFound(detail=err_msg)
 
-        # redirects to django_irods/views.download function
+        # redirects to django_s3/views.download function
         # use new internal url for rest call
         # TODO: (Couch) Migrate model (with a "data migration") so that this hack is not needed.
-        redirect_url = f.url.replace('django_irods/download/', 'django_irods/rest_download/')
+        redirect_url = f.url.replace('django_s3/download/', 'django_s3/rest_download/')
         return HttpResponseRedirect(redirect_url)
 
     @swagger_auto_schema(request_body=serializers.ResourceFileValidator)
@@ -711,7 +711,7 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
         "previous": null,
         "results": [
             {
-                "url": "http://mill24.cep.unc.edu/django_irods/
+                "url": "http://mill24.cep.unc.edu/django_s3/
                 download/bd88d2a152894134928c587d38cf0272/data/contents/
                 mytest_resource/text_file.txt",
                 "size": 21,
@@ -720,7 +720,7 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
                 "checksum": "7265548b8f345605113bd9539313b4e7"
             },
             {
-                "url": "http://mill24.cep.unc.edu/django_irods/download/
+                "url": "http://mill24.cep.unc.edu/django_s3/download/
                 bd88d2a152894134928c587d38cf0272/data/contents/mytest_resource/a_directory/cea.tif",
                 "size": 270993,
                 "content_type": "image/tiff",

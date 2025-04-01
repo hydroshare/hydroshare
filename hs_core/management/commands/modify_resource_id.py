@@ -12,7 +12,7 @@ from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.hydroshare.hs_bagit import create_bag
 from uuid import UUID
 from django.db import transaction, IntegrityError
-from django_irods.exceptions import SessionException
+from django_s3.exceptions import SessionException
 
 
 class Command(BaseCommand):

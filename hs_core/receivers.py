@@ -2,7 +2,7 @@
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
-from django_irods.storage import S3Storage
+from django_s3.storage import S3Storage
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update, \
     pre_delete_resource, post_add_geofeature_aggregation, post_add_generic_aggregation, \
     post_add_netcdf_aggregation, post_add_raster_aggregation, post_add_timeseries_aggregation, \

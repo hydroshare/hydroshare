@@ -7,7 +7,7 @@ from hs_core.hydroshare import hs_bagit
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.tasks import create_bag_by_s3
 from hs_core.models import BaseResource
-from django_irods.storage import S3Storage
+from django_s3.storage import S3Storage
 from hs_core.task_utils import _retrieve_task_id
 from django.core.files.uploadedfile import UploadedFile
 from hs_core.hydroshare.resource import add_resource_files

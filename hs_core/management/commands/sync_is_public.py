@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from django_irods.exceptions import SessionException
+from django_s3.exceptions import SessionException
 from hs_core.models import BaseResource
 from django.utils import timezone
 from datetime import timedelta

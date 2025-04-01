@@ -25,8 +25,8 @@ from django.utils import timezone
 from rest_framework import status
 
 from celery import Task, shared_task
-from django_irods.exceptions import SessionException
-from django_irods.storage import S3Storage
+from django_s3.exceptions import SessionException
+from django_s3.storage import S3Storage
 from hs_access_control.models import GroupMembershipRequest
 from hs_collection_resource.models import CollectionDeletedResource
 from hs_core.enums import (CrossRefSubmissionStatus, CrossRefUpdate,

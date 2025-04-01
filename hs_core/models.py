@@ -29,7 +29,7 @@ from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from django.urls import reverse
 from django.utils.timezone import now
-from django_irods.exceptions import SessionException
+from django_s3.exceptions import SessionException
 from dominate.tags import div, h4, legend, table, tbody, td, th, tr
 from lxml import etree
 from markdown import markdown
@@ -45,7 +45,7 @@ from rdflib import BNode, Literal, URIRef
 from rdflib.namespace import DC, DCTERMS, RDF
 from spam_patterns.worst_patterns_re import patterns
 
-from django_irods.storage import S3Storage
+from django_s3.storage import S3Storage
 from hs_core.enums import (CrossRefSubmissionStatus, CrossRefUpdate,
                            RelationTypes)
 from hs_core.s3 import ResourceFileS3Mixin, ResourceS3Mixin
@@ -3927,7 +3927,7 @@ class BaseResource(Page, AbstractResource):
         bag_path = "{path}/{resource_id}.{postfix}".format(path=bagit_path,
                                                            resource_id=self.short_id,
                                                            postfix=bagit_postfix)
-        reverse_url = reverse("django_irods_download", kwargs={"path": bag_path})
+        reverse_url = reverse("django_s3_download", kwargs={"path": bag_path})
         return reverse_url
 
     @property

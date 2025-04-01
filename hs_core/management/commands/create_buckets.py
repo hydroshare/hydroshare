@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 
 from hs_core.models import BaseResource
-from django_irods.storage import S3Storage
+from django_s3.storage import S3Storage
 
 
 class Command(BaseCommand):

@@ -54,7 +54,7 @@ class TestPublicZipEndpoint(HSRESTTestCase):
         self.client.post(url3, params)
 
     def test_folder_download_rest(self):
-        zip_download_url = "/django_irods/rest_download/{pid}/data/contents/foo"\
+        zip_download_url = "/django_s3/rest_download/{pid}/data/contents/foo"\
                            .format(pid=self.pid)
 
         response = self.client.get(zip_download_url, format="json", follow=True)
@@ -65,7 +65,7 @@ class TestPublicZipEndpoint(HSRESTTestCase):
         self.assertTrue(len(task_id) > 0, msg='ensure a task_id is returned for async zipping')
         download_split = download_path.split("/")
         date_folder = (date.today()).strftime('%Y-%m-%d')
-        self.assertEqual("django_irods", download_split[1])
+        self.assertEqual("django_s3", download_split[1])
         self.assertEqual("rest_download", download_split[2])
         self.assertEqual("zips", download_split[3])
         self.assertEqual(date_folder, download_split[4])

@@ -10,7 +10,7 @@ from django.core.exceptions import SuspiciousFileOperation
 from hs_core.views import utils as view_utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE
 
-from django_irods.exceptions import SessionException
+from django_s3.exceptions import SessionException
 
 
 class ResourceFolders(APIView):
