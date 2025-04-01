@@ -13,27 +13,6 @@ from hs_file_types.models import ModelProgramLogicalFile, ModelInstanceLogicalFi
 from hs_labels.models import UserLabels
 
 
-@pytest.fixture(scope="module")
-def mock_s3():
-    from mock import patch
-
-    patchers = (
-        patch("hs_core.hydroshare.hs_bagit.delete_files_and_bag"),
-        patch("hs_core.hydroshare.hs_bagit.create_bag"),
-        patch("hs_core.hydroshare.hs_bagit.create_bagit_files_by_s3"),
-        patch("hs_core.tasks.create_bag_by_s3"),
-        patch("hs_core.hydroshare.utils.copy_resource_files_and_AVUs"),
-    )
-
-    for patcher in patchers:
-        patcher.start()
-    yield
-
-    """Stop patchers."""
-    for patcher in patchers:
-        patcher.stop()
-
-
 def base_sample_resource(username='admin', title=str(uuid.uuid4()), contributor=str(uuid.uuid4()),
                          creator=str(uuid.uuid4())):
     """A resource with sample entries that can be customized by tests"""

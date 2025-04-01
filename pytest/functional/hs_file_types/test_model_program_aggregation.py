@@ -16,7 +16,7 @@ from hs_file_types.forms import ModelProgramMetadataValidationForm
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('mp_type', ['software', 'computational engine', 'documentation', 'release notes'])
-def test_mark_res_file_as_mp_file_type(composite_resource, mp_type, mock_s3):
+def test_mark_res_file_as_mp_file_type(composite_resource, mp_type):
     """test that we can mark a resource file that is part of a model program aggregation as one of the model program
     file types"""
 
@@ -49,7 +49,7 @@ def test_mark_res_file_as_mp_file_type(composite_resource, mp_type, mock_s3):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_mark_multiple_res_files_as_mp_file_type(composite_resource, mock_s3):
+def test_mark_multiple_res_files_as_mp_file_type(composite_resource):
     """test that we can mark more than one resource file that is part of a model program aggregation as a specific
     model program file type (e.g., software)"""
 
@@ -93,7 +93,7 @@ def test_mark_multiple_res_files_as_mp_file_type(composite_resource, mock_s3):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_mark_res_file_as_mp_file_type_failure_1(composite_resource, mock_s3):
+def test_mark_res_file_as_mp_file_type_failure_1(composite_resource):
     """test that we can't mark the same resource file that is part of a model program aggregation as one of the
     model program file type twice"""
 
@@ -132,7 +132,7 @@ def test_mark_res_file_as_mp_file_type_failure_1(composite_resource, mock_s3):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_mark_res_file_as_mp_file_type_failure_2(composite_resource, mock_s3):
+def test_mark_res_file_as_mp_file_type_failure_2(composite_resource):
     """test that we can't mark the a resource file that is not part of a model program aggregation as one of the
     model program file type"""
 
@@ -172,7 +172,7 @@ def test_mark_res_file_as_mp_file_type_failure_2(composite_resource, mock_s3):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_delete_res_file_deletes_mp_file_object(composite_resource_with_mp_aggregation, mock_s3):
+def test_delete_res_file_deletes_mp_file_object(composite_resource_with_mp_aggregation):
     """test that when a res file that is marked as mp file type is deleted then mp file type object also gets
     deleted"""
 
@@ -195,7 +195,7 @@ def test_delete_res_file_deletes_mp_file_object(composite_resource_with_mp_aggre
 
 
 @pytest.mark.django_db(transaction=True)
-def test_metadata_schema_json_valid(mock_s3):
+def test_metadata_schema_json_valid():
     """test that metadata form validation is successful when metadata schema json is a valid json schema"""
 
     schema_file_path = 'pytest/assets/mi_schema.json'
@@ -208,7 +208,7 @@ def test_metadata_schema_json_valid(mock_s3):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_metadata_schema_json_templates(mock_s3):
+def test_metadata_schema_json_templates():
     """test that the schema templates stored as part of hydroshare are valid JSON schemas"""
 
     template_path = settings.MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH
@@ -224,7 +224,7 @@ def test_metadata_schema_json_templates(mock_s3):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_metadata_schema_json_valid_file_upload(mock_s3):
+def test_metadata_schema_json_valid_file_upload():
     """test that metadata form validation is successful when metadata schema json file with valid json
     schema is uploaded"""
 
@@ -250,7 +250,7 @@ def test_metadata_schema_json_valid_file_upload(mock_s3):
                                                  'mi_schema_invalid_value_additionalProperties_2.json',
                                                  'mi_schema_invalid_missing_format_1.json',
                                                  'mi_schema_invalid_format_value_2.json'])
-def test_metadata_schema_json_invalid_file_upload(invalid_schema_file, mock_s3):
+def test_metadata_schema_json_invalid_file_upload(invalid_schema_file):
     """test that metadata form validation is NOT successful when metadata schema json file with invalid json
     schema is uploaded
     'mi_schema_invalid.json' - contains invalid value type for an attribute
@@ -289,7 +289,7 @@ def test_metadata_schema_json_invalid_file_upload(invalid_schema_file, mock_s3):
                                                  'mi_schema_invalid_value_additionalProperties_2.json',
                                                  'mi_schema_invalid_missing_format_1.json',
                                                  'mi_schema_invalid_format_value_2.json'])
-def test_metadata_schema_json_invalid(invalid_schema_file, mock_s3):
+def test_metadata_schema_json_invalid(invalid_schema_file):
     """test that metadata form validation fails when metadata schema json is not a valid json schema which
     includes additional hydroshare validation on top of standard json schema validation
 
@@ -319,7 +319,7 @@ def test_metadata_schema_json_invalid(invalid_schema_file, mock_s3):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_set_metadata(composite_resource_with_mp_aggregation, mock_s3):
+def test_set_metadata(composite_resource_with_mp_aggregation):
     """Test that we can store all metadata items for a model program aggregation"""
 
     res, user = composite_resource_with_mp_aggregation
@@ -400,7 +400,7 @@ def test_set_metadata(composite_resource_with_mp_aggregation, mock_s3):
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_cls', [GenericLogicalFile, ModelInstanceLogicalFile])
-def test_move_single_file_aggr_into_model_prog_aggr_failure(composite_resource, aggr_cls, mock_s3):
+def test_move_single_file_aggr_into_model_prog_aggr_failure(composite_resource, aggr_cls):
     """ test that we can't move a generic file aggregation or a model instance aggregation which are based on a single
     file into a folder that represents a model program aggregation"""
 
@@ -446,7 +446,7 @@ def test_move_single_file_aggr_into_model_prog_aggr_failure(composite_resource, 
 
 
 @pytest.mark.django_db(transaction=True)
-def test_move_single_file_into_model_program_aggregation(composite_resource, mock_s3):
+def test_move_single_file_into_model_program_aggregation(composite_resource):
     """ test that we move a single file into a folder that represents a
     model program aggregation the moved file becomes part of the model program aggregation"""
 
@@ -491,7 +491,7 @@ def test_move_single_file_into_model_program_aggregation(composite_resource, moc
 
 
 @pytest.mark.django_db(transaction=True)
-def test_move_single_file_out_of_model_program_aggregation(composite_resource, mock_s3):
+def test_move_single_file_out_of_model_program_aggregation(composite_resource):
     """ test that when we move a file out of a folder that represents a
     model program aggregation the moved file is no more part of the model program aggregation"""
 
@@ -540,7 +540,7 @@ def test_move_single_file_out_of_model_program_aggregation(composite_resource, m
 
 
 @pytest.mark.django_db(transaction=True)
-def test_move_folder_into_model_program_aggregation(composite_resource, mock_s3):
+def test_move_folder_into_model_program_aggregation(composite_resource):
     """ test that when we move a folder into a folder that represents a
     model program aggregation the files in the moved folder become part of the model program aggregation"""
 
@@ -589,7 +589,7 @@ def test_move_folder_into_model_program_aggregation(composite_resource, mock_s3)
 
 
 @pytest.mark.django_db(transaction=True)
-def test_move_folder_out_of_model_program_aggregation(composite_resource, mock_s3):
+def test_move_folder_out_of_model_program_aggregation(composite_resource):
     """ test that when we move a folder out of a folder that represents a
     model program aggregation the files in the moved folder are no mare part of the model program aggregation"""
 
