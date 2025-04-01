@@ -2,7 +2,7 @@ from django.apps import AppConfig
 
 
 class DjangoS3AppConfig(AppConfig):
-    name = "django_s3"
+    name = "django_irods"
 
     def ready(self):
         from .storage import S3Storage

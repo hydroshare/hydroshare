@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('django_s3', '0001_initial'),
+        ('django_irods', '0001_initial'),
     ]
 
     operations = [
