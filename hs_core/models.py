@@ -2329,7 +2329,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """
         # avoid import loop
         from hs_core.signals import post_raccess_change
-        from hs_core.views.utils import run_script_to_update_hyrax_input_files
         from hs_access_control.models.shortcut import zone_of_publicity
 
         # access control is separate from validation logic
@@ -2366,25 +2365,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             # public changed state: set isPublic metadata AVU accordingly
             if value != old_value:
                 self.setAVU("isPublic", self.raccess.public)
-
-                # TODO: why does this only run when something becomes public?
-                # TODO: Should it be run when a NetcdfResource becomes private?
-                # Answer to TODO above: it is intentional not to run it when a target resource
-                # becomes private for performance reasons. The nightly script run will clean up
-                # to make sure all private resources are not available to hyrax server as well as
-                # to make sure all resources files available to hyrax server are up to date with
-                # the HydroShare iRODS data store.
-
-                # run script to update hyrax input files when private netCDF resource becomes
-                # public or private composite resource that includes netCDF files becomes public
-
-                is_netcdf_to_public = False
-                if self.resource_type == 'CompositeResource' and \
-                        self.get_logical_files('NetCDFLogicalFile'):
-                    is_netcdf_to_public = True
-
-                if value and settings.RUN_HYRAX_UPDATE and is_netcdf_to_public:
-                    run_script_to_update_hyrax_input_files(self.short_id)
 
     def set_published(self, value):
         """Set the published flag for a resource.
