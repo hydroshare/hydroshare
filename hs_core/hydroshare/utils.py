@@ -17,7 +17,6 @@ from django.apps import apps
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.files import File
-from django.core.files.storage import DefaultStorage
 from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import URLValidator, validate_email
 from django.http import Http404
