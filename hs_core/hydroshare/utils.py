@@ -1053,7 +1053,7 @@ class ZipContents(object):
 
 
 def get_file_storage():
-    return S3Storage() if getattr(settings, 'USE_IRODS', False) else DefaultStorage()
+    return S3Storage()
 
 
 def resolve_request(request):

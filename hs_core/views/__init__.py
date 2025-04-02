@@ -276,32 +276,6 @@ def change_quota_holder(request, shortkey):
     return JsonResponse(ajax_response_data)
 
 
-@swagger_auto_schema(method="post", auto_schema=None)
-@api_view(["POST"])
-def update_quota_usage(request, username):
-    req_user = request.user
-    if req_user.username != settings.IRODS_SERVICE_ACCOUNT_USERNAME:
-        return HttpResponseForbidden(
-            "only iRODS service account is authorized to " "perform this action"
-        )
-    if not req_user.is_authenticated:
-        return HttpResponseForbidden("You are not authenticated to perform this action")
-
-    try:
-        _ = User.objects.get(username=username)
-    except User.DoesNotExist:
-        return HttpResponseBadRequest("user to update quota for is not valid")
-
-    try:
-        update_quota_usage_utility(username, notify_user=False)
-        return HttpResponse(
-            "quota for user {} has been updated".format(username), status=200
-        )
-    except ValidationError as ex:
-        err_msg = "quota for user {} failed to update: {}".format(username, str(ex))
-        return HttpResponse(err_msg, status=500)
-
-
 def extract_files_with_paths(request):
     res_files = []
     full_paths = {}

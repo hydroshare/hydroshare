@@ -3915,15 +3915,15 @@ class BaseResource(Page, AbstractResource):
 
         Since this is a cache, it is stored in a different place than the resource files.
         """
-        bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
-        bagit_postfix = getattr(settings, 'IRODS_BAGIT_POSTFIX', 'zip')
+        bagit_path = getattr(settings, 'HS_BAGIT_PATH', 'bags')
+        bagit_postfix = getattr(settings, 'HS_BAGIT_POSTFIX', 'zip')
         return os.path.join(bagit_path, self.short_id + '.' + bagit_postfix)
 
     @property
     def bag_url(self):
         """Get bag url of resource data bag."""
-        bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
-        bagit_postfix = getattr(settings, 'IRODS_BAGIT_POSTFIX', 'zip')
+        bagit_path = getattr(settings, 'HS_BAGIT_PATH', 'bags')
+        bagit_postfix = getattr(settings, 'HS_BAGIT_POSTFIX', 'zip')
         bag_path = "{path}/{resource_id}.{postfix}".format(path=bagit_path,
                                                            resource_id=self.short_id,
                                                            postfix=bagit_postfix)

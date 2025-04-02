@@ -3924,13 +3924,13 @@ form#covereage-search-fields {
 	flex-grow: 1;
 }
 
-#fb-sort a, #irods-group a {
+#fb-sort a, #hs-group a {
 	cursor: pointer;
 	padding: 8px;
 	font-size: 12px;
 }
 
-#fb-sort ul, #irods-group ul {
+#fb-sort ul, #hs-group ul {
 	background :#FFF;
 	padding: 1px;
 }

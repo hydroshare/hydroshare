@@ -109,29 +109,9 @@ DATABASES = {
 }
 POSTGIS_VERSION = (2, 1, 1)
 
-# Native Docker iRODS developer local
-USE_IRODS = True
-IRODS_ROOT = '/tmp'
-IRODS_ICOMMANDS_PATH = '/usr/bin'
-IRODS_HOST = 'data.local.org'
-IRODS_PORT = '1247'
-IRODS_DEFAULT_RESOURCE = 'hydroshareReplResc'
-IRODS_HOME_COLLECTION = '/hydroshareZone/home/wwwHydroProxy'
-IRODS_CWD = '/hydroshareZone/home/wwwHydroProxy'
-IRODS_ZONE = 'hydroshareZone'
-IRODS_USERNAME = 'wwwHydroProxy'
-IRODS_AUTH = 'wwwHydroProxy'
-IRODS_GLOBAL_SESSION = True
-
-# Remote user zone iRODS configuration
-REMOTE_USE_IRODS = True
-
-# iRODS customized bagit rule path
-IRODS_BAGIT_RULE = 'hydroshare/irods/ruleGenerateBagIt_HS.r'
-IRODS_BAGIT_PATH = 'bags'
-IRODS_BAGIT_POSTFIX = 'zip'
-
-IRODS_SERVICE_ACCOUNT_USERNAME = ''
+# customized bagit rule path
+HS_BAGIT_PATH = 'bags'
+HS_BAGIT_POSTFIX = 'zip'
 
 HS_BAGIT_README_FILE_WITH_PATH = 'docs/bagit/readme.txt'
 
@@ -166,10 +146,6 @@ HYDROSHARE_SHARED_TEMP = '/shared_tmp'
 # used by the mailchimp subscription job in hs_core/tasks.py
 MAILCHIMP_ACTIVE_SUBSCRIBERS = "e210a70864"
 MAILCHIMP_SUBSCRIBERS = "f0c27254e3"
-
-# IRODS_USER_URI = "/irods-user"
-IRODS_DATA_URI = "/irods-data"
-LOCAL_CACHE_URI = "/local-cache"
 
 # Needed for deployments to non-dev environments
 RECAPTCHA_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"

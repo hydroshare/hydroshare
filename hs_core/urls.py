@@ -264,11 +264,6 @@ urlpatterns = [
         views.resource_folder_hierarchy.data_store_remove_folder,
     ),
     re_path(
-        r"^_internal/update_quota_usage/(?P<username>[\w.@+-]+)/$",
-        views.update_quota_usage,
-        name="update_quota_usage",
-    ),
-    re_path(
         r"^_internal/(?P<shortkey>[0-9a-f-]+)/non-preferred-paths/$",
         views.get_non_preferred_paths,
         name="get_non_preferred_paths",

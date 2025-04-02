@@ -874,13 +874,13 @@ function get_folder_struct_ajax_submit(res_id, store_path) {
                     $('.dz-input').hide();
                     $(".fb-upload-caption").toggleClass("hidden", true);
                     $(".upload-toggle").toggleClass("hidden", true);
-                    $("#irods-group").toggleClass("hidden", true);
+                    $("#hs-group").toggleClass("hidden", true);
                 }
                 else {
                     $('.dz-input').show();
                     $(".fb-upload-caption").toggleClass("hidden", false);
                     $(".upload-toggle").toggleClass("hidden", false);
-                    $("#irods-group").toggleClass("hidden", false);
+                    $("#hs-group").toggleClass("hidden", false);
                 }
             }
 
