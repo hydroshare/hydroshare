@@ -11,6 +11,13 @@
     <div class="container">
         {% with profile_user.userprofile as profile %}
         {% if profile_user.id == user.id or user.is_superuser %}
+        <form id="service-account-form" action="{% url 'create_service_account' profile_user.id %}" class="account-form" method="post"
+              enctype="multipart/form-data">
+        {% csrf_token %}
+        <button type="submit" data-page-mode="service-account"
+                                        class="btn btn-primary pull-right">Create Service Account
+                                </button>
+        </form>
         <form id="profile-form" action="{% url 'update_profile' profile_user.id %}" class="account-form" method="post"
               enctype="multipart/form-data" onsubmit="return validateForm()">
         {% csrf_token %}

@@ -453,6 +453,23 @@ def signup_verify(request, uidb36=None, token=None):
 
 
 @login_required
+def create_service_account(request, profile_user_id):
+    if request.user.is_superuser:
+        user = User.objects.get(id=profile_user_id)
+    else:
+        user = request.user
+    import requests
+    data = {
+        "username": user.username
+    }
+    url = "http://micro-auth/sa/auth/minio/sa/"
+    response = requests.post(url, json=data)
+
+    messages.add_message(request, messages.INFO, response.json())
+    return HttpResponseRedirect(request.headers["referer"])
+
+
+@login_required
 def update_user_profile(request, profile_user_id):
     if request.user.is_superuser:
         user = User.objects.get(id=profile_user_id)

@@ -72,6 +72,11 @@ urlpatterns += i18n_patterns(
         theme.update_user_profile,
         name="update_profile",
     ),
+    re_path(
+        r"^service-account/(?P<profile_user_id>.*)/$",
+        theme.create_service_account,
+        name="create_service_account",
+    ),
     re_path(r"^act-on-quota-request/(?P<quota_request_id>[0-9]+)/(?P<action>[a-z]+)/$",
             theme.act_on_quota_request, name='act_on_quota_request_noauth'),
     re_path(
