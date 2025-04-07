@@ -103,7 +103,7 @@ class CompositeResource(BaseResource):
         aggr_types = []
         aggr_type_names = []
         for lf in self.logical_files:
-            if lf.type_name not in aggr_type_names:
+            if lf.type_name() not in aggr_type_names:
                 aggr_type_names.append(lf.type_name())
                 aggr_type = lf.get_aggregation_display_name().split(":")[0]
                 aggr_types.append(aggr_type)
