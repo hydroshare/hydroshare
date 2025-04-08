@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-import parser
 import shutil
 import subprocess
 import defusedxml.ElementTree as ET
