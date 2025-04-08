@@ -948,6 +948,13 @@ if any('pytest' in arg for arg in sys.argv) or 'test' in sys.argv:
 
     TESTING = True
 
+    # patch for nose (django-nose) for py3.11
+    # https://github.com/jazzband/django-nose/issues/330
+    import collections
+    collections.Callable = collections.abc.Callable
+    # End of patch
+
+
 ####################
 # DYNAMIC SETTINGS #
 ####################
