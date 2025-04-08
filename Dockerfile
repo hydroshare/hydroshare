@@ -1,6 +1,4 @@
-FROM hydroshare/hs_docker_base:8d38075
-# TODO update to 080a6f0 once this build is complete
-# https://github.com/hydroshare/hs_docker_base/actions/runs/14341189085/job/40200545601
+FROM hydroshare/hs_docker_base:080a6f0
 # make sure to update multistage-node dockerfile as well if you update this base image
 
 # Set the locale. TODO - remove once we have a better alternative worked out
@@ -22,10 +20,6 @@ RUN wget -O /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem https://cacerts.digice
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
-
-# TODO: remove these once this build completes
-# https://github.com/hydroshare/hs_docker_base/actions/runs/14340852182/job/40199445181
-RUN pip install --no-cache-dir --upgrade nameparser==1.1.3 deepdiff==8.4.2
 
 USER root
 WORKDIR /hydroshare
