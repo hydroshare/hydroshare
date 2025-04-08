@@ -1,4 +1,4 @@
-FROM hydroshare/hs_docker_base:e8b80e7
+FROM hydroshare/hs_docker_base:5db6950
 # https://hub.docker.com/layers/hydroshare/hs_docker_base/dc160d2/images/sha256-b009c50162dc7c2dd6d916a84f343eb0014aad457817ab0fd8f4192c884b1d8a
 # https://github.com/hydroshare/hs_docker_base/commit/dc160d2b9ccca7fbe4183e345c9264695267ffa8
 # make sure to update multistage-node dockerfile as well if you update this base image
