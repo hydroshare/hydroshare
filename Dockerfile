@@ -21,8 +21,8 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
-RUN pip uninstall nose
-RUN pip install pynose
+# RUN pip uninstall nose
+# RUN pip install pynose
 
 USER root
 WORKDIR /hydroshare
