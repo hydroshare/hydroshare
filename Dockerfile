@@ -26,6 +26,7 @@ ENV LC_ALL en_US.UTF-8
 # tzlocal>=1.5.0,<3.*
 # downgrade the tzlocal version to maintiain compatibility with mezzanine
 RUN pip install tzlocal==2.1
+RUN pip install django==4.2.8
 
 USER root
 WORKDIR /hydroshare
