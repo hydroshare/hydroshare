@@ -23,6 +23,10 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
+# tzlocal>=1.5.0,<3.*
+# downgrade the tzlocal version to maintiain compatibility with mezzanine
+RUN pip install tzlocal==2.1
+
 USER root
 WORKDIR /hydroshare
 
