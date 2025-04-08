@@ -1,5 +1,4 @@
-FROM hydroshare/hs_docker_base:5ca09aa
-# https://github.com/hydroshare/hs_docker_base/commit/5ca09aafd885d193c5c57c76a097fa9e8c1192ca
+FROM hydroshare/hs_docker_base:080a6f0
 # make sure to update multistage-node dockerfile as well if you update this base image
 
 # Set the locale. TODO - remove once we have a better alternative worked out
@@ -21,6 +20,9 @@ RUN wget -O /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem https://cacerts.digice
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
+
+# RUN pip uninstall nose
+# RUN pip install pynose
 
 USER root
 WORKDIR /hydroshare

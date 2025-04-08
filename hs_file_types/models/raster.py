@@ -1,7 +1,7 @@
+import ast
 import json
 import logging
 import os
-import parser
 import shutil
 import subprocess
 import defusedxml.ElementTree as ET
@@ -141,7 +141,7 @@ class OriginalCoverageRaster(AbstractMetaDataElement):
                     key_value = key_value.strip()
                     k, v = key_value.split("=")
                     if k in ['start', 'end']:
-                        v = parser.parse(v).strftime("%Y/%m/%d")
+                        v = ast.literal_eval(f"'{v}'").replace("-", "/")
                     value_dict[k] = v
                 OriginalCoverageRaster.create(value=value_dict, content_object=content_object)
 
