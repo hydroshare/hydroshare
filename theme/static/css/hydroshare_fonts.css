@@ -23,7 +23,3 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
-.hs-icon-irods:before {
-  content: "\e900";
-}

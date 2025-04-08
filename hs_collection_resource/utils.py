@@ -114,7 +114,7 @@ def update_collection_list_csv(collection_obj):
                 for row in csv_content_list:
                     w.writerow(row)
 
-            # push the new csv file to irods bag
+            # push the new csv file to bag
             files = (UploadedFile(file=open(csv_full_path, 'rb'), name=csv_full_name))
             add_resource_files(collection_obj.short_id, files)
 

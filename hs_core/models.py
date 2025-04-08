@@ -29,7 +29,7 @@ from django.dispatch import receiver
 from django.forms.models import model_to_dict
 from django.urls import reverse
 from django.utils.timezone import now
-from django_irods.icommands import SessionException
+from django_s3.exceptions import SessionException
 from dominate.tags import div, h4, legend, table, tbody, td, th, tr
 from lxml import etree
 from markdown import markdown
@@ -45,10 +45,10 @@ from rdflib import BNode, Literal, URIRef
 from rdflib.namespace import DC, DCTERMS, RDF
 from spam_patterns.worst_patterns_re import patterns
 
-from django_irods.storage import IrodsStorage
+from django_s3.storage import S3Storage
 from hs_core.enums import (CrossRefSubmissionStatus, CrossRefUpdate,
                            RelationTypes)
-from hs_core.irods import ResourceFileIRODSMixin, ResourceIRODSMixin
+from hs_core.s3 import ResourceFileS3Mixin, ResourceS3Mixin
 
 from .hs_rdf import (HSTERMS, RDFS1, RDF_MetaData_Mixin, RDF_Term_MixIn,
                      rdf_terms)
@@ -2138,7 +2138,7 @@ class ResourceManager(PageManager):
         return qs
 
 
-class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
+class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
     """
     Create Abstract Class for all Resources.
 
@@ -2200,7 +2200,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     # for tracking number of times resource has been viewed
     view_count = models.PositiveIntegerField(default=0)
 
-    # for tracking when resourceFiles were last compared with irods
+    # for tracking when resourceFiles were last compared with S3
     files_checked = models.DateTimeField(null=True)
     repaired = models.DateTimeField(null=True)
 
@@ -2373,7 +2373,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 # becomes private for performance reasons. The nightly script run will clean up
                 # to make sure all private resources are not available to hyrax server as well as
                 # to make sure all resources files available to hyrax server are up to date with
-                # the HydroShare iRODS data store.
+                # the HydroShare S3 data store.
 
                 # run script to update hyrax input files when private netCDF resource becomes
                 # public or private composite resource that includes netCDF files becomes public
@@ -2476,8 +2476,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         url_encoded_path = urllib.parse.quote(path)
         return '/' + os.path.join('resource', self.short_id, url_encoded_path)
 
-    def get_irods_path(self, path, prepend_short_id=True):
-        """Return the irods path by which the given path is accessed.
+    def get_s3_path(self, path, prepend_short_id=True):
+        """Return the S3 path by which the given path is accessed.
            The input path includes data/contents/ as needed.
         """
         if prepend_short_id and not path.startswith(self.short_id):
@@ -2506,9 +2506,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         validate_user_quota(new_holder, self.size)
         if self.quota_holder:
             # ensure the new holder has a bucket, buckets only exist for users with resources
-            istorage = self.get_irods_storage()
+            istorage = self.get_s3_storage()
             istorage.create_bucket(new_holder.userprofile.bucket_name)
-            self.get_irods_storage().new_quota_holder(self.short_id, new_holder.username)
+            self.get_s3_storage().new_quota_holder(self.short_id, new_holder.username)
 
         self.quota_holder = new_holder
         self.save()
@@ -2521,7 +2521,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """
         if isinstance(value, bool):
             value = str(value).lower()  # normalize boolean values to strings
-        istorage = self.get_irods_storage()
+        istorage = self.get_s3_storage()
         root_path = self.root_path
         istorage.setAVU(root_path, attribute, value)
 
@@ -2531,7 +2531,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         This avoids mistakes in getting AVUs by assuring that the appropriate root path
         is alway used.
         """
-        istorage = self.get_irods_storage()
+        istorage = self.get_s3_storage()
         root_path = self.root_path
         value = istorage.getAVU(root_path, attribute)
 
@@ -2865,12 +2865,12 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         characters in the file will be escaped when we return the file content.
         """
         readme_file = self.readme_file
-        # check the file exists on irods
+        # check the file exists on S3
 
         if readme_file is None:
             return readme_file
 
-        # check the file exists on irods
+        # check the file exists on S3
         if readme_file.exists:
             readme_file_content = readme_file.read().decode('utf-8', 'ignore')
             if readme_file.extension.lower() == '.md':
@@ -2883,7 +2883,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             file_name = readme_file.file_name
             readme_file.delete()
             logger = logging.getLogger(__name__)
-            log_msg = f"readme file ({file_name}) is missing on iRODS. Deleting the file from Django."
+            log_msg = f"readme file ({file_name}) is missing on S3. Deleting the file from Django."
             logger.warning(log_msg)
             return None
 
@@ -2971,10 +2971,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         dir_path = '/'.join(path_split[0:-1])
 
         # handles federation
-        irods_path = os.path.join(self.root_path, dir_path)
-        istorage = self.get_irods_storage()
+        s3_path = os.path.join(self.root_path, dir_path)
+        istorage = self.get_s3_storage()
         try:
-            listing = istorage.listdir(irods_path)
+            listing = istorage.listdir(s3_path)
         except SessionException:
             return False
         if path_split[-1] in listing[0]:  # folders
@@ -3031,7 +3031,7 @@ def get_resource_file_path(resource, filename, folder=''):
         # TODO: does this now start with /?
         # check if the folder is a path relative to the resource data content path, if yes, no need to strip out
         # resource.root_path
-        istorage = resource.get_irods_storage()
+        istorage = resource.get_s3_storage()
         if not istorage.exists(os.path.join(res_data_content_path, folder)):
             # folder is not a path relative to res_data_content_path, but a path including resource root path,
             # strip out resource root path to make folder a relative path
@@ -3065,7 +3065,7 @@ def path_is_allowed(path):
 
 # TODO: revise path logic for rename_resource_file_in_django for proper path.
 # TODO: utilize antibugging to check that paths are coherent after each operation.
-class ResourceFile(ResourceFileIRODSMixin):
+class ResourceFile(ResourceFileS3Mixin):
     """
     Represent a file in a resource.
     """
@@ -3083,7 +3083,7 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     # This pair of FileFields deals with the fact that there are two kinds of storage
     resource_file = models.FileField(upload_to=get_path, max_length=4096, unique=True,
-                                     storage=IrodsStorage())
+                                     storage=S3Storage())
 
     # we are using GenericForeignKey to allow resource file to be associated with any
     # HydroShare defined LogicalFile types (e.g., GeoRasterFile, NetCdfFile etc)
@@ -3094,13 +3094,13 @@ class ResourceFile(ResourceFileIRODSMixin):
     logical_file_content_object = GenericForeignKey('logical_file_content_type',
                                                     'logical_file_object_id')
 
-    # these file metadata (size, modified_time, and checksum) values are retrieved from iRODS and stored in db
-    # for performance reason so that we don't have to query iRODS for these values every time we need them
+    # these file metadata (size, modified_time, and checksum) values are retrieved from S3 and stored in db
+    # for performance reason so that we don't have to query S3 for these values every time we need them
     _size = models.BigIntegerField(default=-1)
     _modified_time = models.DateTimeField(null=True, blank=True)
     _checksum = models.CharField(max_length=255, null=True, blank=True)
 
-    # for tracking when size was last compared with irods
+    # for tracking when size was last compared with S3
     filesize_cache_updated = models.DateTimeField(null=True)
 
     def __str__(self):
@@ -3125,9 +3125,9 @@ class ResourceFile(ResourceFileIRODSMixin):
         Federation must be initialized first at the resource level.
 
         :param resource: resource that contains the file.
-        :param file: a File or a iRODS path to an existing file already copied.
+        :param file: a File or a S3 path to an existing file already copied.
         :param folder: the folder in which to store the file.
-        :param source: an iRODS path in the same zone from which to copy the file.
+        :param source: an S3 path in the same zone from which to copy the file.
 
         There are two main usages to this constructor:
 
@@ -3135,14 +3135,14 @@ class ResourceFile(ResourceFileIRODSMixin):
 
                 ResourceFile.create(r, File(...something...), folder=d)
 
-        * copying a file internally from iRODS:
+        * copying a file internally from S3:
 
                 ResourceFile.create(r, file_name, folder=d, source=s)
 
-        In this case, source is a full iRODS pathname of the place from which to copy
+        In this case, source is a full S3 pathname of the place from which to copy
         the file.
 
-        A third form is less common and presumes that the file already exists in iRODS
+        A third form is less common and presumes that the file already exists in S3
         in the proper place:
 
         * pointing to an existing file:
@@ -3158,7 +3158,7 @@ class ResourceFile(ResourceFileIRODSMixin):
 
         kwargs['file_folder'] = folder
 
-        istorage = resource.get_irods_storage()
+        istorage = resource.get_s3_storage()
 
         # if file is an open file, use native copy by setting appropriate variables
         if isinstance(file, File):
@@ -3172,7 +3172,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             if file is None and source is not None:
                 if __debug__:
                     assert (isinstance(source, str))
-                # source is a path to an iRODS file to be copied here.
+                # source is a path to an S3 file to be copied here.
                 root, newfile = os.path.split(source)  # take file from source path
                 # newfile is where it should be copied to.
                 target = get_resource_file_path(resource, newfile, folder=folder)
@@ -3184,10 +3184,10 @@ class ResourceFile(ResourceFileIRODSMixin):
                     raise ValidationError("ResourceFile.create: copy to target {} failed"
                                           .format(target))
             elif file is not None and source is None:
-                # file points to an existing iRODS file
-                # no need to verify whether the file exists in iRODS since the file
-                # name is returned from iRODS ils list dir command which already
-                # confirmed the file exists already in iRODS
+                # file points to an existing S3 file
+                # no need to verify whether the file exists in S3 since the file
+                # name is returned from S3 ils list dir command which already
+                # confirmed the file exists already in S3
                 target = get_resource_file_path(resource, file, folder=folder)
             else:
                 raise ValidationError(
@@ -3237,7 +3237,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     @property
     def modified_time(self):
         """Return modified time of the file.
-        If the modified time is not already set, then it is first retrieved from iRODS and stored in db.
+        If the modified time is not already set, then it is first retrieved from S3 and stored in db.
         """
         # self._size != 0 -> file exists, or we have not set the size yet
         if not self._modified_time and self._size != 0:
@@ -3246,7 +3246,7 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     def calculate_modified_time(self, resource=None, save=True):
         """Updates modified time of the file in db.
-        Retrieves the modified time from iRODS and stores it in db.
+        Retrieves the modified time from S3 and stores it in db.
         """
         if resource is None:
             resource = self.resource
@@ -3257,7 +3257,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             self._modified_time = self.resource_file.storage.get_modified_time(file_path)
         except (SessionException, ValidationError):
             logger = logging.getLogger(__name__)
-            logger.warning("file {} not found in iRODS".format(self.storage_path))
+            logger.warning("file {} not found in S3".format(self.storage_path))
             self._modified_time = None
         if save:
             self.save(update_fields=["_modified_time"])
@@ -3265,7 +3265,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     @property
     def checksum(self):
         """Return checksum of the file.
-        If the checksum is not already set, then it is first retrieved from iRODS and stored in db.
+        If the checksum is not already set, then it is first retrieved from S3 and stored in db.
         """
         # self._size != 0 -> file exists, or we have not set the size yet
         if not self._checksum and self._size != 0:
@@ -3274,7 +3274,7 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     def calculate_checksum(self, resource=None, save=True):
         """Updates checksum of the file in db.
-        Retrieves the checksum from iRODS and stores it in db.
+        Retrieves the checksum from S3 and stores it in db.
         """
         if resource is None:
             resource = self.resource
@@ -3285,7 +3285,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             self._checksum = self.resource_file.storage.checksum(file_path)
         except (SessionException, ValidationError):
             logger = logging.getLogger(__name__)
-            logger.warning("file {} not found in iRODS".format(self.storage_path))
+            logger.warning("file {} not found in S3".format(self.storage_path))
             self._checksum = None
         if save:
             self.save(update_fields=["_checksum"])
@@ -3293,7 +3293,7 @@ class ResourceFile(ResourceFileIRODSMixin):
     # TODO: write unit test
     @property
     def exists(self):
-        istorage = self.resource.get_irods_storage()
+        istorage = self.resource.get_s3_storage()
         return istorage.exists(self.resource_file.name)
 
     # TODO: write unit test
@@ -3304,8 +3304,8 @@ class ResourceFile(ResourceFileIRODSMixin):
     def storage_path(self):
         """Return the qualified name for a file in the storage hierarchy.
 
-        This is a valid input to IrodsStorage for manipulating the file.
-        The output depends upon whether the IrodsStorage instance is running
+        This is a valid input to S3Storage for manipulating the file.
+        The output depends upon whether the S3Storage instance is running
 
         """
         # instance.content_object can be stale after changes.
@@ -3330,7 +3330,7 @@ class ResourceFile(ResourceFileIRODSMixin):
             self.filesize_cache_updated = now()
         except (SessionException, ValidationError):
             logger = logging.getLogger(__name__)
-            logger.warning("file {} not found in iRODS".format(self.storage_path))
+            logger.warning("file {} not found in S3".format(self.storage_path))
             self._size = 0
         if save:
             try:
@@ -3343,16 +3343,16 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     def set_system_metadata(self, resource=None, save=True):
         """Set system metadata (size, modified time, and checksum) for a file.
-        This method should be called after a file is uploaded to iRODS and registered with Django.
+        This method should be called after a file is uploaded to S3 and registered with Django.
         """
 
         self.calculate_size(resource=resource, save=save)
         if self._size > 0:
-            # file exists in iRODS - get modified time and checksum
+            # file exists in S3 - get modified time and checksum
             self.calculate_modified_time(resource=resource, save=save)
             self.calculate_checksum(resource=resource, save=save)
         else:
-            # file was not found in iRODS
+            # file was not found in S3
             self._size = 0
             self._modified_time = None
             self._checksum = None
@@ -3364,7 +3364,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         """Bind this ResourceFile instance to an existing file.
 
         :param path: the path of the object.
-        :param test_exists: if True, test for path existence in iRODS
+        :param test_exists: if True, test for path existence in S3
 
         Path can be absolute or relative.
 
@@ -3373,14 +3373,14 @@ class ResourceFile(ResourceFileIRODSMixin):
         :raises ValidationError: if the pathname is inconsistent with resource configuration.
         It is rather important that applications call this rather than simply calling
         resource_file = "text path" because it takes the trouble of making that path
-        fully qualified so that IrodsStorage will work properly.
+        fully qualified so that S3Storage will work properly.
 
         This records file_folder for future possible uploads and searches.
 
         The heavy lifting in this routine is accomplished via path_is_acceptable and get_path,
         which together normalize the file name.  Regardless of whether the internal file name
         is qualified or not, this makes it fully qualified from the point of view of the
-        IrodsStorage module.
+        S3Storage module.
 
         """
         folder, base = self.path_is_acceptable(path, test_exists=test_exists)
@@ -3445,7 +3445,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         Called inside ResourceFile objects to check paths
 
         :param path: path to test
-        :param test_exists: if True, test for path existence in iRODS
+        :param test_exists: if True, test for path existence in S3
 
         """
         return ResourceFile.resource_path_is_acceptable(self.resource, path, test_exists)
@@ -3457,19 +3457,19 @@ class ResourceFile(ResourceFileIRODSMixin):
         Called outside ResourceFile objects or before such an object exists
 
         :param path: path to test
-        :param test_exists: if True, test for path existence in iRODS
+        :param test_exists: if True, test for path existence in S3
 
         This has the side effect of returning the short path for the resource
         as a folder/filename pair.
         """
         if test_exists:
-            storage = resource.get_irods_storage()
+            storage = resource.get_s3_storage()
         locpath = os.path.join(resource.short_id, "data", "contents") + "/"
         relpath = path
         if path.startswith(locpath):
             # strip optional local path prefix
             if test_exists and not storage.exists(path):
-                raise ValidationError("Local path ({}) does not exist in irods".format(path))
+                raise ValidationError("Local path ({}) does not exist in S3".format(path))
             plen = len(locpath)
             relpath = relpath[plen:]  # strip local prefix, omit /
 
@@ -3481,13 +3481,13 @@ class ResourceFile(ResourceFileIRODSMixin):
             folder, base = os.path.split(relpath)
             abspath = get_resource_file_path(resource, base, folder=folder)
             if test_exists and not storage.exists(abspath):
-                raise ValidationError("Local path does not exist in irods")
+                raise ValidationError("Local path does not exist in S3")
         else:
             folder = ''
             base = relpath
             abspath = get_resource_file_path(resource, base, folder=folder)
             if test_exists and not storage.exists(abspath):
-                raise ValidationError("Local path does not exist in irods")
+                raise ValidationError("Local path does not exist in S3")
 
         return folder, base
 
@@ -3720,13 +3720,13 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     @property
     def public_path(self):
-        """ return the public path (unqualified iRODS path) for a resource.
+        """ return the public path (unqualified S3 path) for a resource.
         """
         return os.path.join(self.resource.short_id, 'data', 'contents', self.short_path)
 
     @property
-    def irods_path(self):
-        """ Return the irods path for accessing a file, including possible federation information.
+    def s3_path(self):
+        """ Return the S3 path for accessing a file, including possible federation information.
             This consists of the resource id, /data/contents/, and the file path.
         """
 
@@ -3876,14 +3876,14 @@ class BaseResource(Page, AbstractResource):
         """Pass through to abstract resource can_view function."""
         return AbstractResource.can_view(self, request)
 
-    def get_irods_storage(self):
-        """Return IrodsStorage."""
-        return IrodsStorage()
+    def get_s3_storage(self):
+        """Return S3Storage."""
+        return S3Storage()
 
     # Paths relative to the resource
     @property
     def root_path(self):
-        """Return the root folder of the iRODS structure containing resource files.
+        """Return the root folder of the S3 structure containing resource files.
 
         Note that this folder doesn't directly contain the resource files;
         They are contained in ./data/contents/* instead.
@@ -3901,38 +3901,33 @@ class BaseResource(Page, AbstractResource):
 
     @property
     def scimeta_path(self):
-        """ path to science metadata file (in iRODS) """
+        """ path to science metadata file (in S3) """
         return os.path.join(self.root_path, "data", "resourcemetadata.xml")
 
     @property
     def resmap_path(self):
-        """ path to resource map file (in iRODS) """
+        """ path to resource map file (in S3) """
         return os.path.join(self.root_path, "data", "resourcemap.xml")
-
-    # @property
-    # def sysmeta_path(self):
-    #     """ path to system metadata file (in iRODS) """
-    #     return os.path.join(self.root_path, "data", "systemmetadata.xml")
 
     @property
     def bag_path(self):
-        """Return the unique iRODS path to the bag for the resource.
+        """Return the unique S3 path to the bag for the resource.
 
         Since this is a cache, it is stored in a different place than the resource files.
         """
-        bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
-        bagit_postfix = getattr(settings, 'IRODS_BAGIT_POSTFIX', 'zip')
+        bagit_path = getattr(settings, 'HS_BAGIT_PATH', 'bags')
+        bagit_postfix = getattr(settings, 'HS_BAGIT_POSTFIX', 'zip')
         return os.path.join(bagit_path, self.short_id + '.' + bagit_postfix)
 
     @property
     def bag_url(self):
         """Get bag url of resource data bag."""
-        bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
-        bagit_postfix = getattr(settings, 'IRODS_BAGIT_POSTFIX', 'zip')
+        bagit_path = getattr(settings, 'HS_BAGIT_PATH', 'bags')
+        bagit_postfix = getattr(settings, 'HS_BAGIT_POSTFIX', 'zip')
         bag_path = "{path}/{resource_id}.{postfix}".format(path=bagit_path,
                                                            resource_id=self.short_id,
                                                            postfix=bagit_postfix)
-        reverse_url = reverse("django_irods_download", kwargs={"path": bag_path})
+        reverse_url = reverse("django_s3_download", kwargs={"path": bag_path})
         return reverse_url
 
     @property
@@ -4168,13 +4163,13 @@ class BaseResource(Page, AbstractResource):
 
     @property
     def size(self):
-        """Return the total size of all data files in iRODS.
+        """Return the total size of all data files in S3.
 
         This size does not include metadata. Just files. Specifically,
         resourcemetadata.xml, systemmetadata.xml are not included in this
         size estimate.
 
-        Raises SessionException if iRODS fails.
+        Raises SessionException if S3 fails.
         """
         # trigger file size read for files that haven't been set yet
         res_size = 0
@@ -4414,7 +4409,7 @@ class BaseResource(Page, AbstractResource):
                 find_non_preferred_folder_paths(subdir_path)
 
         not_preferred_paths = []
-        istorage = self.get_irods_storage()
+        istorage = self.get_s3_storage()
         # check for non-conforming file names
         for res_file in self.files.all():
             short_path = res_file.short_path

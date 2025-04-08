@@ -7,7 +7,7 @@ from rest_framework.exceptions import ValidationError as DRF_ValidationError
 
 from hs_core import hydroshare
 from hs_core.models import ResourceFile
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
 
 from hs_file_types.enums import AggregationMetaFilePath
@@ -33,7 +33,7 @@ from hs_file_types.models.timeseries import (
 from .utils import assert_time_series_file_type_metadata, CompositeResourceTestMixin
 
 
-class TimeSeriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
+class TimeSeriesFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
                              CompositeResourceTestMixin):
     def setUp(self):
         super(TimeSeriesFileTypeTest, self).setUp()

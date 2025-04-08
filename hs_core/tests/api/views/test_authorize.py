@@ -5,12 +5,12 @@ from rest_framework.exceptions import NotFound
 
 from hs_core.hydroshare import resource
 from hs_core.hydroshare import users
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_access_control.models import PrivilegeCodes
 
 
-class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
+class TestAuthorize(MockS3TestCaseMixin, TestCase):
 
     def setUp(self):
         super(TestAuthorize, self).setUp()

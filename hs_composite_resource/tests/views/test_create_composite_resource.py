@@ -10,11 +10,11 @@ from rest_framework import status
 from hs_core import hydroshare
 from hs_core.models import BaseResource, ResourceFile
 from hs_core.views import create_resource
-from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
+from hs_core.testing import MockS3TestCaseMixin, ViewTestCase
 from hs_file_types.models import GenericLogicalFile
 
 
-class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
+class TestCreateResourceViewFunctions(MockS3TestCaseMixin, ViewTestCase):
     def setUp(self):
         super(TestCreateResourceViewFunctions, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')

@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand
 
 from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey
-from hs_core.tasks import create_bag_by_irods
+from hs_core.tasks import create_bag_by_s3
 
 
 class Command(BaseCommand):
@@ -19,9 +19,9 @@ class Command(BaseCommand):
             for rid in options['resource_ids']:
                 resource = get_resource_by_shortkey(rid)
                 if resource.raccess.published:
-                    create_bag_by_irods(rid)
+                    create_bag_by_s3(rid)
                 else:
                     print("Resource {} is not published, hence ignored.".format(rid))
         else:
             for resource in BaseResource.objects.filter(raccess__published=True):
-                create_bag_by_irods(resource.short_id)
+                create_bag_by_s3(resource.short_id)

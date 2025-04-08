@@ -128,8 +128,7 @@
 
     // Only letters, numbers, dashes, dot, underscore, or @ are viewed as valid characters
     // to conform to the same user name validation rules in Django with + removed from set of
-    // valid characters since although + is supported as a valid character in username field,
-    // it is not supported as a valid character in corresponding iRODS username
+    // valid characters since although + is supported as a valid character in username field
     function validateUserName() {
         var regex = /^[a-zA-Z0-9-_.@]+$/;
         var username = $("#id_username");
@@ -181,8 +180,7 @@
                 }
            }
 
-           // validate username to make sure username not only passes django username validation
-           // but also passed iRODS username validation
+           // validate username to make sure username passes django username validation
            var username_valid = validateUserName();
            if(empty || !username_valid) {
                var warning_str = '';

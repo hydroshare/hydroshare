@@ -4,14 +4,14 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
 
 from hs_core.hydroshare import resource
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core import hydroshare
 from hs_access_control.models import PrivilegeCodes
 from hs_core.hydroshare.utils import QuotaException
 from theme.models import QuotaMessage
 
 
-class TestChangeQuotaHolder(MockIRODSTestCaseMixin, TestCase):
+class TestChangeQuotaHolder(MockS3TestCaseMixin, TestCase):
     def setUp(self):
         super(TestChangeQuotaHolder, self).setUp()
 

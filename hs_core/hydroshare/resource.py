@@ -37,8 +37,8 @@ def get_quota_usage(username, raise_on_error=True):
     """
     Query to get quota usage
     :param username: the user name to get quota usage for.
-    :param raise_on_error: if True, raise ValidationError if quota usage cannot be retrieved from iRODS
-    :return: the quota usage from iRODS data zone; raise ValidationError if quota usage cannot be retrieved
+    :param raise_on_error: if True, raise ValidationError if quota usage cannot be retrieved from S3
+    :return: the quota usage from S3; raise ValidationError if quota usage cannot be retrieved
     """
     uqDataZoneSize = get_data_zone_usage(username, raise_on_error=raise_on_error)
     return uqDataZoneSize
@@ -305,7 +305,7 @@ def check_resource_files(files=()):
     sum = 0
     for file in files:
         if not isinstance(file, UploadedFile):
-            # if file is already on the server, e.g., a file transferred directly from iRODS,
+            # if file is already on the server, e.g., a file transferred directly from S3,
             # the file should not be subject to file size check since the file size check is
             # only prompted by file upload limit
             if hasattr(file, '_size'):
@@ -463,7 +463,7 @@ def create_resource(
             **kwargs
         )
 
-        resource.get_irods_storage().create_bucket(owner.userprofile.bucket_name)
+        resource.get_s3_storage().create_bucket(owner.userprofile.bucket_name)
         resource.resource_type = resource_type
 
         # by default make resource private
@@ -509,7 +509,7 @@ def create_resource(
                 owner.uaccess.share_resource_with_group(resource, group, PrivilegeCodes.VIEW)
 
         # set quota of this resource to this creator
-        # quota holder has to be set before the files are added in order for real time iRODS
+        # quota holder has to be set before the files are added in order for real time S3
         # quota micro-services to work
         resource.set_quota_holder(owner, owner)
 

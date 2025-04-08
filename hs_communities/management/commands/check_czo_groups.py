@@ -15,7 +15,7 @@ from django.contrib.auth.models import User, Group
 from hs_access_control.models import UserResourcePrivilege, GroupResourcePrivilege, \
     GroupCommunityPrivilege, PrivilegeCodes, Community
 from hs_core.models import BaseResource
-from django_irods.icommands import SessionException
+from django_s3.exceptions import SessionException
 
 
 # Details of CZO setup.
@@ -37,7 +37,7 @@ czo_setup = [
 
 
 def set_quota_holder(resource, user):
-    """ set quota holder and deal with iRODS failures """
+    """ set quota holder and deal with failures """
     try:
         if resource.quota_holder != user:
             print("    SET QUOTA HOLDER FOR  {} {} TO {}"
@@ -46,7 +46,7 @@ def set_quota_holder(resource, user):
                           user.username))
             resource.set_quota_holder(user, user)
     except SessionException as ex:
-        # some resources copied from www for testing do not exist in the iRODS backend,
+        # some resources copied from www for testing do not exist in the backend,
         # hence need to skip these test artifects
         print(resource.short_id + ' raised SessionException when setting quota holder: '
               + ex.stderr)

@@ -307,7 +307,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         be deleted
         :param delete_meta_files: If True the resource map and metadata files that are part of this logical file
         will be deleted. The only time this should be set to False is when deleting a folder as the folder
-        gets deleted from iRODS which deletes the associated metadata and resource map files.
+        gets deleted from S3 which deletes the associated metadata and resource map files.
         """
 
         from hs_core.hydroshare.resource import delete_resource_file
@@ -318,7 +318,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
 
         if delete_meta_files:
             # delete associated metadata and map xml documents
-            istorage = resource.get_irods_storage()
+            istorage = resource.get_s3_storage()
             if istorage.exists(self.metadata_file_path):
                 istorage.delete(self.metadata_file_path)
             if istorage.exists(self.map_file_path):
@@ -366,7 +366,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         object. However, it doesn't delete any resource files that are part of the aggregation."""
 
         # delete associated metadata and map xml document
-        istorage = self.resource.get_irods_storage()
+        istorage = self.resource.get_s3_storage()
         if istorage.exists(self.metadata_file_path):
             istorage.delete(self.metadata_file_path)
         if istorage.exists(self.map_file_path):
@@ -434,9 +434,9 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         if not self.metadata_schema_json:
             return
 
-        # create a temp dir where the json file will be temporarily saved before copying to iRODS
+        # create a temp dir where the json file will be temporarily saved before copying to S3
         tmpdir = os.path.join(settings.TEMP_FILE_DIR, str(random.getrandbits(32)), uuid4().hex)
-        istorage = self.resource.get_irods_storage()
+        istorage = self.resource.get_s3_storage()
 
         if os.path.exists(tmpdir):
             shutil.rmtree(tmpdir)
@@ -493,7 +493,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
             return False
 
         # check the first parent folder that represents an aggregation
-        irods_path = dir_path
+        s3_path = dir_path
 
         # get the parent folder path
         path = os.path.dirname(dir_path)
@@ -511,7 +511,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         if parent_aggregation is not None:
             if parent_aggregation.is_fileset:
                 # check that all resource files under the target folder 'dir_path' are associated with fileset only
-                files_in_path = ResourceFile.list_folder(resource, folder=irods_path, sub_folders=True)
+                files_in_path = ResourceFile.list_folder(resource, folder=s3_path, sub_folders=True)
                 # if all the resource files are associated with fileset then we can set the folder to model program
                 # or model instance aggregation
                 if files_in_path:
@@ -523,7 +523,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         else:
             # none of the parent folders represents an aggregation
             # check the files in the target path
-            files_in_path = ResourceFile.list_folder(resource, folder=irods_path, sub_folders=True)
+            files_in_path = ResourceFile.list_folder(resource, folder=s3_path, sub_folders=True)
 
             if files_in_path:
                 # if none of the resource files in the target path has logical file then we can set the folder

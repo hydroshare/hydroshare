@@ -152,7 +152,7 @@ class TestNewVersionResource(TestCase):
                          [rel.type for rel in self.resource.metadata.relations.all()],
                          msg="isReplacedBy is not removed from the original resource after "
                              "its versioned resource is deleted")
-        # delete the original resource to make sure iRODS files are cleaned up
+        # delete the original resource to make sure S3 files are cleaned up
         hydroshare.delete_resource(self.resource.short_id)
 
     def test_replaced_by_resources(self):

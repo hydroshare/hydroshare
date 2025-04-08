@@ -475,7 +475,7 @@ class CompositeResource(BaseResource):
         new_path = self.get_relative_path(new_path)
         orig_path = self.get_relative_path(orig_path)
         is_new_path_a_folder = self.is_path_folder(path=new_path)
-        istorage = self.get_irods_storage()
+        istorage = self.get_s3_storage()
 
         # remove file extension from aggregation name (note: aggregation name is a file path
         # for all aggregation types except fileset/model aggregation
@@ -576,7 +576,7 @@ class CompositeResource(BaseResource):
             # at the root of the resource all file operations are allowed
             return True
 
-        istorage = self.get_irods_storage()
+        istorage = self.get_s3_storage()
         scr_base_name = os.path.basename(src_full_path)
         src_dir_path = os.path.dirname(src_full_path)
         tgt_dir_path = os.path.dirname(tgt_full_path)
@@ -815,7 +815,7 @@ class CompositeResource(BaseResource):
         return False
 
     def is_path_folder(self, path):
-        istorage = self.get_irods_storage()
+        istorage = self.get_s3_storage()
         if not path.startswith(self.file_path):
             path = os.path.join(self.file_path, path)
         return istorage.isDir(path)

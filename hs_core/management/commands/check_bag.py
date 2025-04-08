@@ -11,15 +11,15 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
-from hs_core.tasks import create_bag_by_irods
-from django_irods.icommands import SessionException
+from hs_core.tasks import create_bag_by_s3
+from django_s3.exceptions import SessionException
 
 
 def check_bag(rid, options):
     requests.packages.urllib3.disable_warnings()
     try:
         resource = BaseResource.objects.get(short_id=rid)
-        istorage = resource.get_irods_storage()
+        istorage = resource.get_s3_storage()
 
         root_exists = istorage.exists(resource.root_path)
 
@@ -123,8 +123,8 @@ def check_bag(rid, options):
                     print("{}.metadata_dirty set to false".format(rid))
 
                 if not options['if_needed'] or modified or not bag_exists:
-                    create_bag_by_irods(rid)
-                    print("{} bag generated from iRODs".format(rid))
+                    create_bag_by_s3(rid)
+                    print("{} bag generated".format(rid))
                     resource.setAVU('bag_modified', 'false')
                     print("{}.bag_modified set to false".format(rid))
 
@@ -143,8 +143,8 @@ def check_bag(rid, options):
 
             if options['generate_bag']:
                 if not options['if_needed'] or modified or not bag_exists:
-                    create_bag_by_irods(rid)
-                    print("{}: bag generated from iRODs".format(rid))
+                    create_bag_by_s3(rid)
+                    print("{}: bag generated".format(rid))
                     resource.setAVU('bag_modified', 'false')
                     print("{}.bag_modified set to false".format(rid))
 
@@ -187,7 +187,7 @@ def check_bag(rid, options):
                 else:
                     print("cannot open bag without username and password.")
         else:
-            print("Resource with id {} does not exist in iRODS".format(rid))
+            print("Resource with id {} does not exist in S3".format(rid))
     except BaseResource.DoesNotExist:
         print("Resource with id {} NOT FOUND in Django".format(rid))
 

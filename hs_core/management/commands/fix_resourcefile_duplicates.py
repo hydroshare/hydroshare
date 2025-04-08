@@ -3,7 +3,7 @@
 """
 Fix resource file duplicates
 
-This checks that there is only one ResourceFile for each iRods file
+This checks that there is only one ResourceFile for each S3 file
 
 * By default, prints errors on stdout.
 * Optional argument --log instead logs output to system log.

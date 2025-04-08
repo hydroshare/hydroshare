@@ -395,7 +395,7 @@ class CSVLogicalFile(AbstractLogicalFile):
     def _extract_metadata(cls, csv_file_path: str) -> dict:
         """
         Extracts metadata from the CSV file
-        :param csv_file_path: a temporary file path of the CSV file after the file is copied from iRODS
+        :param csv_file_path: a temporary file path of the CSV file after the file is copied from S3
         :return: a dictionary of extracted metadata
         """
 

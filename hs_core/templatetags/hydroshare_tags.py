@@ -250,9 +250,9 @@ def to_int(value):
 
 
 @register.filter
-def relative_irods_path(fed_irods_file_name):
-    idx = fed_irods_file_name.find('/data/contents/')
-    return fed_irods_file_name[idx + 1:]
+def relative_s3_path(s3_file_name):
+    idx = s3_file_name.find('/data/contents/')
+    return s3_file_name[idx + 1:]
 
 
 @register.filter

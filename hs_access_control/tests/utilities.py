@@ -20,7 +20,6 @@ from hs_access_control.models import UserAccess, GroupAccess, ResourceAccess, \
 
 # from hs_core import hydroshare
 from hs_core.models import BaseResource
-# from hs_core.testing import MockIRODSTestCaseMixin
 
 
 def global_reset():
