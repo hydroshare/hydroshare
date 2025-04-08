@@ -55,6 +55,7 @@ from hs_file_types.models import (
 from hs_odm2.models import ODM2Variable
 from hydroshare.hydrocelery import app as celery_app
 from theme.models import QuotaMessage, User, UserQuota
+from theme.utils import get_user_profiles_missing_bucket_name
 
 FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
                  "FileSetLogicalFile": FileSetLogicalFile,
@@ -138,6 +139,8 @@ def setup_periodic_tasks(sender, **kwargs):
                                  options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=30, hour=7), task_notification_cleanup.s(),
                                  options={'queue': 'periodic'})
+        sender.add_periodic_task(crontab(minute=0, hour=8), check_bucket_names.s(),
+                                 options={'queue': 'periodic'})
 
         # Monthly
         sender.add_periodic_task(crontab(minute=30, hour=7, day_of_month=1), update_from_geoconnex_task.s(),
@@ -147,6 +150,26 @@ def setup_periodic_tasks(sender, **kwargs):
         sender.add_periodic_task(
             crontab(minute=30, hour=8, day_of_month=1), monthly_group_membership_requests_cleanup.s(),
             options={'queue': 'periodic'})
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def check_bucket_names():
+    """
+    Check to notify when UserProfile is missing a bucket name
+    """
+    bad_ups = get_user_profiles_missing_bucket_name()
+
+    if bad_ups and not settings.DISABLE_TASK_EMAILS:
+        string_of_bad_users = ', '.join([up.user.username for up in bad_ups])
+        email_msg = f'''
+        <p>Found {len(bad_ups)} UserProfiles without bucket names</p>:
+        <p>{string_of_bad_users}</p>
+        '''
+        send_mail(subject="UserProfiles missing bucket_name",
+                  message=email_msg,
+                  html_message=email_msg,
+                  from_email=settings.DEFAULT_FROM_EMAIL,
+                  recipient_list=[settings.DEFAULT_DEVELOPER_EMAIL])
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)

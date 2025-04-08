@@ -158,7 +158,7 @@ services:
     command: /bin/bash init-defaultworker
   companion:
   # https://github.com/transloadit/uppy/blob/main/packages/%40uppy/companion/KUBERNETES.md
-    image:  docker.io/transloadit/companion:5.2.0
+    image:  docker.io/transloadit/companion:5.5.0
     platform: linux/amd64
     container_name: companion
     hostname: companion

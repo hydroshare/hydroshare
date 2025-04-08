@@ -1002,6 +1002,9 @@ def parse_shp(shp_file_path):
     target = osr.SpatialReference()
     target.ImportFromEPSG(4326)
 
+    # https://gis.stackexchange.com/questions/421771/ogr-coordinatetransformation-appears-to-be-inverting-xy-coordinates
+    target.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
+
     # create two key points from layer extent
     left_upper_point = ogr.Geometry(ogr.wkbPoint)
     left_upper_point.AddPoint(layer_extent[0], layer_extent[3])  # left-upper

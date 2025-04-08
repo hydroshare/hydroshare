@@ -21,6 +21,7 @@ from hsmodels.schemas.aggregations import (FileSetMetadataIn,
 from hsmodels.schemas.resource import ResourceMetadataIn
 from pydantic import ConfigDict
 from rest_framework.serializers import Serializer
+from rest_framework import serializers
 
 
 def get_schema_open_api_v2(schema):
@@ -205,3 +206,7 @@ class NestedSchemaGenerator(OpenAPISchemaGenerator):
             for d in schema['definitions']:
                 swagger.definitions.update({d: schema['definitions'][d]})
         return swagger
+
+
+class ResourceSharingStatusSerializer(Serializer):
+    sharing_status = serializers.ChoiceField(choices=['public', 'private', 'discoverable', 'published'])

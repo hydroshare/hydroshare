@@ -594,7 +594,34 @@ class UserProfile(models.Model):
 
     email_opt_out = models.BooleanField(default=False)
 
-    _bucket_name = models.CharField(max_length=63, null=True)
+    _bucket_name = models.CharField(max_length=63, null=True, editable=False, unique=True)
+
+    def __init__(self, *args, **kwargs):
+        '''We set the _bucket_name during user creation
+        However we only create the bucket once the user has a resource
+        '''
+        super().__init__(*args, **kwargs)
+        self._assign_bucket_name()
+
+    def _assign_bucket_name(self):
+        '''Assign a bucket name to the user profile
+        The bucket name is derived from the user's username
+        '''
+        if hasattr(self, 'user') and self.user is not None:
+            safe_username = re.sub(r"[^A-Za-z0-9\.-]", "", self.user.username.lower())
+            # limit the length to 60 characters (max length for a bucket name is 63 characters)
+            base_safe_username = safe_username[:60].strip()
+            safe_username = base_safe_username
+            # there is a small chance a bucket name exists for another user with the safe_username transformation
+            # in that case, we append a unique number to the bucket name
+            id_number = 1
+            if len(safe_username) < 3:
+                # ensures a minimum character count of 3 for the bucket name
+                safe_username = f"{safe_username}-{id_number}"
+            while UserProfile.objects.filter(_bucket_name=safe_username).exclude(id=self.id).exists():
+                safe_username = f"{base_safe_username}-{id_number}"
+                id_number += 1
+            self._bucket_name = safe_username
 
     @property
     def profile_is_missing(self):
@@ -609,22 +636,6 @@ class UserProfile(models.Model):
 
     @property
     def bucket_name(self):
-        if not self._bucket_name:
-            safe_username = re.sub(r"[^A-Za-z0-9\.-]", "", self.user.username.lower())
-            # limit the length to 60 characters (max length for a bucket name is 63 characters)
-            base_safe_username = safe_username[:60].strip()
-            safe_username = base_safe_username
-            # there is a small chance a bucket name exists for another user with the safe_username transformation
-            # in that case, we append a unique number to the bucket name
-            id_number = 1
-            if len(safe_username) < 3:
-                # ensures a minimum character count of 3 for the bucket name
-                safe_username = f"{safe_username}-{id_number}"
-            while UserProfile.objects.filter(_bucket_name=safe_username).exists():
-                safe_username = f"{base_safe_username}-{id_number}"
-                id_number += 1
-            self._bucket_name = safe_username
-            self.save()
         return self._bucket_name
 
 

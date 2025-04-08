@@ -10,6 +10,7 @@ from django.urls import reverse
 from urllib.parse import urlencode
 from django.conf import settings
 
+from smart_open import open
 from . import models as m
 from .utils import bucket_and_name, normalized_bucket_name, is_metadata_xml_file
 
@@ -44,8 +45,8 @@ class IrodsStorage(S3Storage):
         :param path: the directory path to list
         :return: a list of files in the directory
         """
-        folder_path = path.strip("/") + "/"  # ensure a folder is matched
-        directories, files, file_sizes = super().listdir(folder_path)
+        path = path.strip("/") + "/"  # ensure a folder is matched
+        directories, files, file_sizes = super().listdir(path)
         directories = [d for d in directories if d != os.path.basename(path)]
 
         resource_id = "/".join(path.split("/")[:1])
@@ -71,23 +72,46 @@ class IrodsStorage(S3Storage):
         :param out_name: the output zipped file name
         :return: None
         """
-        in_bucket, in_path = bucket_and_name(in_name)
+        def chunk_request(zip_archive_file, bucket, key):
+            chunk_size = getattr(settings, "S3_STREAM_ZIP_CHUNKING_SIZE", 1024 * 1024 * 256)  # 256MB
+            object_attrs = self.connection.meta.client.get_object_attributes(Bucket=bucket, Key=key,
+                                                                             ObjectAttributes=["ObjectSize"])
+            object_size = object_attrs.get("ObjectSize")
+            if object_size is None:
+                # could not get object size, read the entire file
+                logger.warning(f"Could not get object size for {key}")
+                file = self.connection.meta.client.get_object(Bucket=bucket, Key=key)
+                zip_archive_file.write(file.get("Body").read())
+            else:
+                chunk_start = 0
+                chunk_end = chunk_start + chunk_size - 1
+
+                while chunk_start < object_size:
+                    # Read specific byte range from file as a chunk. We do this because AWS server times out and sends
+                    # empty chunks when streaming the entire file.
+                    if body := self.connection.meta.client.get_object(
+                        Bucket=bucket, Key=key, Range=f"bytes={chunk_start}-{chunk_end}"
+                    ).get("Body"):
+                        chunk = body.read()
+                        zip_archive_file.write(chunk)
+                        chunk_start += chunk_size
+                        chunk_end += chunk_size
+                        chunk_end = min(chunk_end, object_size)
+
+        in_bucket_name, in_path = bucket_and_name(in_name)
         out_bucket, out_path = bucket_and_name(out_name)
-        in_bucket = self.connection.Bucket(in_bucket)
+        in_bucket = self.connection.Bucket(in_bucket_name)
 
-        # Stream zip https://stackoverflow.com/a/69136133
         filesCollection = in_bucket.objects.filter(Prefix=in_path).all()
-        archive = BytesIO()
-        in_prefix = os.path.dirname(in_path) if self.isDir(in_name) else in_path
-        with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
-            for file in filesCollection:
-                relative_path = file.key[len(in_prefix):]
-                with zip_archive.open(relative_path, 'w', force_zip64=True) as file1:
-                    file1.write(file.get()['Body'].read())
 
-        archive.seek(0)
-        self.connection.Object(out_bucket, out_path).upload_fileobj(archive)
-        archive.close()
+        in_prefix = os.path.dirname(in_path) if self.isDir(in_name) else in_path
+        with open(f's3://{out_bucket}/{out_path}', 'wb', transport_params={'client': self.connection.meta.client}
+                  ) as out_file:
+            with zipfile.ZipFile(out_file, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
+                for file_key in filesCollection:
+                    relative_path = file_key.key[len(in_prefix):]
+                    with zip_archive.open(relative_path, 'w', force_zip64=True) as zip_archive_file:
+                        chunk_request(zip_archive_file, in_bucket_name, file_key.key)
 
     def unzip(self, zip_file_path, unzipped_folder=""):
         """
@@ -211,12 +235,10 @@ class IrodsStorage(S3Storage):
         bucket = self.connection.Bucket(src_bucket)
 
         if self.isFile(src_path):
-            self.connection.Bucket(dst_bucket).copy(
-                {
-                    "Bucket": src_bucket,
-                    "Key": src_name,
-                },
-                dest_name,
+            self.connection.meta.client.copy_object(
+                Bucket=dst_bucket,
+                Key=dest_name,
+                CopySource={"Bucket": src_bucket, "Key": src_name},
             )
             if delete_src:
                 self.connection.Object(src_bucket, src_name).delete()
@@ -225,12 +247,10 @@ class IrodsStorage(S3Storage):
             for file in bucket.objects.filter(Prefix=src_name):
                 src_file_path = file.key
                 dst_file_path = file.key.replace(src_name, dest_name)
-                self.connection.Bucket(dst_bucket).copy(
-                    {
-                        "Bucket": src_bucket,
-                        "Key": src_file_path,
-                    },
-                    dst_file_path,
+                self.connection.meta.client.copy_object(
+                    Bucket=dst_bucket,
+                    Key=dst_file_path,
+                    CopySource={"Bucket": src_bucket, "Key": src_file_path},
                 )
                 if delete_src:
                     self.connection.Object(src_bucket, src_file_path).delete()

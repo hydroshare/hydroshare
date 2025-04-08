@@ -8,14 +8,14 @@ import defusedxml.ElementTree as ET
 import zipfile
 from functools import partial, wraps
 
-import gdal
+from osgeo import gdal
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.forms.models import formset_factory
 from django.template import Template, Context
 from dominate import tags as html_tags
-from gdalconst import GA_ReadOnly
+from osgeo.gdalconst import GA_ReadOnly
 from rdflib import BNode, RDF, Literal
 
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm

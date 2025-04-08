@@ -103,11 +103,21 @@ class CompositeResource(BaseResource):
         aggr_types = []
         aggr_type_names = []
         for lf in self.logical_files:
-            if lf.type_name not in aggr_type_names:
-                aggr_type_names.append(lf.type_name)
+            if lf.type_name() not in aggr_type_names:
+                aggr_type_names.append(lf.type_name())
                 aggr_type = lf.get_aggregation_display_name().split(":")[0]
                 aggr_types.append(aggr_type)
         return aggr_types
+
+    @property
+    def aggregation_type_names(self):
+        """Gets a list of all aggregation type names that currently exist in this resource
+        """
+        aggr_type_names = []
+        for lf in self.logical_files:
+            if lf.type_name not in aggr_type_names:
+                aggr_type_names.append(lf.type_name())
+        return aggr_type_names
 
     def get_logical_files(self, logical_file_class_name):
         """Get a list of logical files (aggregations) for a specified logical file class name."""
