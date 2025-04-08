@@ -1,4 +1,4 @@
-FROM hydroshare/hs_docker_base:c602a84
+FROM hydroshare/hs_docker_base:6c52262
 # TODO update to bdec5aa once this build is complete
 # https://github.com/hydroshare/hs_docker_base/actions/runs/14340852182/job/40199445181
 # make sure to update multistage-node dockerfile as well if you update this base image
