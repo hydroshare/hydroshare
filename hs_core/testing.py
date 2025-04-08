@@ -4,7 +4,6 @@ from dateutil import parser
 import tempfile
 import os
 
-from django.conf import settings
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.core.files.uploadedfile import UploadedFile
@@ -16,53 +15,21 @@ from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, zi
 from hs_core.tasks import FileOverrideException
 
 
-class MockIRODSTestCaseMixin(object):
-    """Mix in to allow for mock iRODS testing."""
+class MockS3TestCaseMixin(object):
+    """Mix in to allow for mock S3 testing."""
 
     def setUp(self):
-        """Set up iRODS patchers for testing of data bags, etc."""
-        super(MockIRODSTestCaseMixin, self).setUp()
-        # only mock up testing iRODS operations when local iRODS container is not used
-        if settings.IRODS_HOST != 'data.local.org':
-            from mock import patch
-            self.irods_patchers = (
-                patch("hs_core.hydroshare.hs_bagit.delete_files_and_bag"),
-                patch("hs_core.hydroshare.hs_bagit.create_bag"),
-                patch("hs_core.hydroshare.hs_bagit.create_bag_files"),
-                patch("hs_core.tasks.create_bag_by_irods"),
-                patch("hs_core.hydroshare.utils.copy_resource_files_and_AVUs"),
-            )
-            for patcher in self.irods_patchers:
-                patcher.start()
+        super(MockS3TestCaseMixin, self).setUp()
 
     def tearDown(self):
-        """Stop iRODS patchers."""
-        if settings.IRODS_HOST != 'data.local.org':
-            for patcher in self.irods_patchers:
-                patcher.stop()
-        super(MockIRODSTestCaseMixin, self).tearDown()
+        super(MockS3TestCaseMixin, self).tearDown()
 
 
 class TestCaseCommonUtilities(object):
-    """Enable common utilities for iRODS testing."""
-
-    def check_file_exist(self, irods_path):
-        """Check whether the input irods_path exist in iRODS.
-
-        :param irods_path: the iRODS path to check whether it exists or not
-        :return: True if exist, False otherwise.
-        """
-        return self.irods_storage.exists(irods_path)
-
-    def delete_directory(self, irods_path):
-        """delete the input irods_path.
-        :param irods_path: the iRODS path to be deleted
-        :return:
-        """
-        self.irods_fed_storage.delete(irods_path)
+    """Enable common utilities for S3 testing."""
 
     def resource_file_oprs(self):
-        """Test common iRODS file operations.
+        """Test common S3 file operations.
 
         This is a common test utility function to be called by both regular folder operation
         testing and federated zone folder operation testing.
@@ -79,10 +46,10 @@ class TestCaseCommonUtilities(object):
         res = self.res
         file_name_list = self.file_name_list
         # create a folder, if folder is created successfully, no exception is raised, otherwise,
-        # an iRODS exception will be raised which will be caught by the test runner and mark as
+        # an S3 exception will be raised which will be caught by the test runner and mark as
         # a test failure
         create_folder(res.short_id, 'data/contents/sub_test_dir')
-        istorage = res.get_irods_storage()
+        istorage = res.get_s3_storage()
         res_path = res.file_path
         store = istorage.listdir(res_path)
         self.assertIn('sub_test_dir', store[0], msg='resource does not contain created sub-folder')

@@ -8,7 +8,7 @@ from rest_framework.exceptions import ValidationError as DRF_ValidationError
 
 from hs_core import hydroshare
 from hs_core.models import Coverage, ResourceFile
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core.views.utils import move_or_rename_file_or_folder
 from hs_file_types.models import GenericLogicalFile, GeoRasterFileMetaData, GeoRasterLogicalFile
 from hs_file_types.enums import AggregationMetaFilePath
@@ -16,7 +16,7 @@ from hs_file_types.models.raster import BandInformation, CellInformation, Origin
 from .utils import CompositeResourceTestMixin, assert_raster_file_type_metadata, get_path_with_no_file_extension
 
 
-class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
+class RasterFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
                          CompositeResourceTestMixin):
     def setUp(self):
         super(RasterFileTypeTest, self).setUp()

@@ -11,7 +11,7 @@ from rdflib.namespace import DCTERMS, RDF, DC
 from hs_core import hydroshare
 from hs_core.hs_rdf import HSTERMS
 from hs_core.hydroshare import resource, current_site_url
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core.tests.api.utils import prepare_resource as prepare_resource_util
 from hs_file_types.models import (
     GenericLogicalFile,
@@ -78,7 +78,7 @@ def prepare_resource(self, folder, upload_to=""):
     prepare_resource_util(folder, self.res, self.user, self.extracted_directory, self.test_bag_path, upload_to)
 
 
-class TestIngestMetadata(MockIRODSTestCaseMixin, TestCase):
+class TestIngestMetadata(MockS3TestCaseMixin, TestCase):
     def setUp(self):
         super(TestIngestMetadata, self).setUp()
 

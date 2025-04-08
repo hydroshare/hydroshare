@@ -9,10 +9,10 @@ from haystack.query import SearchQuerySet
 from hs_core.hydroshare import resource
 from hs_core.hydroshare import users
 from hs_core.models import BaseResource
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 
 
-class TestDeleteResource(MockIRODSTestCaseMixin, TestCase):
+class TestDeleteResource(MockS3TestCaseMixin, TestCase):
 
     def setUp(self):
         super(TestDeleteResource, self).setUp()

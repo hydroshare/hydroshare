@@ -6,7 +6,7 @@
 
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
-from hs_core.management.utils import check_irods_files
+from hs_core.management.utils import check_s3_files
 
 
 def debug_resource(short_id):
@@ -20,21 +20,21 @@ def debug_resource(short_id):
     resource = res.get_content_model()
     assert resource, (res, res.content_model)
 
-    irods_issues, irods_errors, _, _ = check_irods_files(resource, log_errors=False, return_errors=True)
+    s3_issues, s3_errors, _, _ = check_s3_files(resource, log_errors=False, return_errors=True)
 
     print("resource: {}".format(short_id))
     print("resource type: {}".format(resource.resource_type))
     print("resource creator: {} {}".format(resource.creator.first_name, resource.creator.last_name))
-    print("resource irods bag modified: {}".format(str(resource.getAVU('bag_modified'))))
-    print("resource irods isPublic: {}".format(str(resource.getAVU('isPublic'))))
-    print("resource irods resourceType: {}".format(str(resource.getAVU('resourceType'))))
+    print("resource bag modified: {}".format(str(resource.getAVU('bag_modified'))))
+    print("resource isPublic: {}".format(str(resource.getAVU('isPublic'))))
+    print("resource resourceType: {}".format(str(resource.getAVU('resourceType'))))
     print("resource quota holder: {}".format(str(resource.quota_holder.username)))
-    if irods_errors:
-        print("iRODS errors:")
-        for e in irods_issues:
+    if s3_errors:
+        print("S3 errors:")
+        for e in s3_issues:
             print("    {}".format(e))
     else:
-        print("No iRODS errors")
+        print("No S3 errors")
 
     if resource.resource_type == 'CompositeResource':
         print("Resource file logical files:")
@@ -43,22 +43,6 @@ def debug_resource(short_id):
                 print(("    {} logical file {} is [{}]".format(res_file.short_path,
                                                                str(type(res_file.logical_file)),
                                                                str(res_file.logical_file.id))))
-
-    # context = {
-    #     'shortkey': shortkey,
-    #     'creator': resource.creator,
-    #     'resource': resource,
-    #     'raccess': resource.raccess,
-    #     'owners': resource.raccess.owners,
-    #     'editors': resource.raccess.get_users_with_explicit_access(PrivilegeCodes.CHANGE),
-    #     'viewers': resource.raccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
-    #     'public_AVU': resource.getAVU('isPublic'),
-    #     'type_AVU': resource.getAVU('resourceType'),
-    #     'modified_AVU': resource.getAVU('bag_modified'),
-    #     'quota_AVU': resource.getAVU('quotaUserName'),
-    #     'irods_issues': irods_issues,
-    #     'irods_errors': irods_errors,
-    # }
 
 
 class Command(BaseCommand):

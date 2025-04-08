@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_access_control.models.privilege import UserResourcePrivilege, PrivilegeCodes
-from django_irods.icommands import SessionException
+from django_s3.exceptions import SessionException
 from django.db import transaction
 
 
@@ -16,7 +16,7 @@ def set_quota_holder(resource, user):
     try:
         resource.set_quota_holder(user, user)
     except SessionException as ex:
-        # some resources copied from www for testing do not exist in the iRODS backend,
+        # some resources copied from www for testing do not exist in the S3 backend,
         # hence need to skip these test artifects
         print(resource.short_id + ' raised SessionException when setting quota holder: '
               + ex.stderr)

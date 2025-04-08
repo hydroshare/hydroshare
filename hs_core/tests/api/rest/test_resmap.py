@@ -34,7 +34,7 @@ class TestResourceMap(ResMapTestCase):
         response = self.client.get("/hsapi/resource/{pid}/map/".format(pid=self.pid),
                                    format='json')
         # Note: this presumes that there is always a single redirection.
-        # This might not be true if we utilize systems other than iRODS.
+        # This might not be true if we utilize other systems.
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         response2 = self.client.get(response.url)
         self.assertEqual(response2.status_code, status.HTTP_302_FOUND)

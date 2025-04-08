@@ -5,7 +5,7 @@ from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
 
 from hs_core import hydroshare
-from hs_core.testing import MockIRODSTestCaseMixin, TestCaseCommonUtilities
+from hs_core.testing import MockS3TestCaseMixin, TestCaseCommonUtilities
 from hs_core.search_indexes import get_content_types
 
 
@@ -20,7 +20,7 @@ def is_equal_to_as_set(l1, l2):
         len(set(l1) | set(l2)) == len(set(l1))
 
 
-class TestContentTypes(MockIRODSTestCaseMixin,
+class TestContentTypes(MockS3TestCaseMixin,
                        TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(TestContentTypes, self).setUp()

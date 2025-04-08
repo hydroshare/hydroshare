@@ -12,7 +12,7 @@ from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.hydroshare.hs_bagit import create_bag
 from uuid import UUID
 from django.db import transaction, IntegrityError
-from django_irods.icommands import SessionException
+from django_s3.exceptions import SessionException
 
 
 class Command(BaseCommand):
@@ -54,7 +54,7 @@ class Command(BaseCommand):
         else:
             new_res_id = short_id()
 
-        storage = res.get_irods_storage()
+        storage = res.get_s3_storage()
 
         if storage.exists(res.bag_path):
             try:

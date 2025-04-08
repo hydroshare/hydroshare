@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """
-Check synchronization between iRODS and Django for multiple resources
+Check synchronization between S3 and Django for multiple resources
 
 This checks that:
 
-1. every ResourceFile corresponds to an iRODS file
-2. every iRODS file in {short_id}/data/contents corresponds to a ResourceFile
-3. every iRODS directory {short_id} corresponds to a Django resource
+1. every ResourceFile corresponds to an S3 file
+2. every S3 file in {short_id}/data/contents corresponds to a ResourceFile
+3. every S3 directory {short_id} corresponds to a Django resource
 """
 
 from django.core.management.base import BaseCommand, CommandError
@@ -24,7 +24,7 @@ import logging
 
 
 class Command(BaseCommand):
-    help = "Check synchronization between iRODS and Django."
+    help = "Check synchronization between S3 and Django."
 
     def add_arguments(self, parser):
         parser.add_argument('resource_ids', nargs='*', type=str)
@@ -106,7 +106,7 @@ class Command(BaseCommand):
         total_files_missing_in_django = 0
         total_files_dangling_in_django = 0
         resources_with_missing_django = []
-        resources_with_missing_irods = []
+        resources_with_missing_s3 = []
         failed_resources = []
         for resource in resources.iterator():
             current_resource += 1
@@ -133,11 +133,11 @@ class Command(BaseCommand):
                 if missing_in_django > 0:
                     resources_with_missing_django.append(res_url)
                 if dangling_in_django > 0:
-                    resources_with_missing_irods.append(res_url)
+                    resources_with_missing_s3.append(res_url)
                 print(f"{dangling_in_django} files dangling in Django for this resource.")
                 print(f"{missing_in_django} files missing in Django for this resource.")
                 print(f"Resources thus far with at least one missing django file: {len(resources_with_missing_django)}")
-                print(f"Resources thus far with at least one dangling django file: {len(resources_with_missing_irods)}")
+                print(f"Resources thus far with at least one dangling django file: {len(resources_with_missing_s3)}")
                 print(f"Total resources with discrepancies thus far: {impacted_resources}")
         print("*" * 100)
         print("*" * 100)
@@ -153,8 +153,8 @@ class Command(BaseCommand):
         print("*" * 100)
         print(f"Total number of files dangling in Django (across all checked resources): \
               {total_files_dangling_in_django}")
-        print(f"Number of resources with at least one dangling Django file: {len(resources_with_missing_irods)}")
-        for res in resources_with_missing_irods:
+        print(f"Number of resources with at least one dangling Django file: {len(resources_with_missing_s3)}")
+        for res in resources_with_missing_s3:
             print(res)
 
         # Make it simple to detect clean/fail run in Jenkins
@@ -165,6 +165,6 @@ class Command(BaseCommand):
         if failed_resources:
             print("*" * 100)
             print("Repair was attempted but failed for the following resources:")
-            for res in resources_with_missing_irods:
+            for res in resources_with_missing_s3:
                 print(res)
             raise CommandError("Repair was attempted but failed on at least one resource")

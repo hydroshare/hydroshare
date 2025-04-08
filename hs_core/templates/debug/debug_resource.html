@@ -33,7 +33,7 @@
   <tbody>
   <tr>
     <th colspan='2'>Resource Flags</th>
-    <th colspan='2'>iRODs AVUs</th>
+    <th colspan='2'>AVUs</th>
   </tr>
   <tr>
     <td>resource_type</td>
@@ -49,7 +49,7 @@
   </tr>
   <tr>
     <th colspan='2'>Resource Flags</th>
-    <th colspan='2'>iRODs AVUs</th>
+    <th colspan='2'>AVUs</th>
   </tr>
   <tr>
     <td>discoverable</td>
@@ -74,47 +74,47 @@
     <h2>Non Preferred Path Names</h2>
     <p class="loading">Debugging. Please wait...</p>
 </div>
-<div id="irods-issues">
-  <h2>iRODs Issues</h2>
+<div id="s3-issues">
+  <h2>S3 Issues</h2>
   <p class="loading">Debugging. Please wait...</p>
 </div>
 
 <script>
-  // Load async data for iRODs issues found
+  // Load async data for S3 issues found
   const xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function () {
     if (this.readyState == 4 && this.status == 200) {
       const response = JSON.parse(this.responseText);
-      const irodsIssuesDiv = document.getElementById("irods-issues");
+      const s3IssuesDiv = document.getElementById("s3-issues");
       if (response.status === "SUCCESS") {
-        if (response.irods_issues.length) {
+        if (response.s3_issues.length) {
           const title = document.createElement("p");
-          const titleText = document.createTextNode("iRODs issues found: ");
+          const titleText = document.createTextNode("S3 issues found: ");
           title.appendChild(titleText);
-          irodsIssuesDiv.appendChild(title);
+          s3IssuesDiv.appendChild(title);
 
           const list = document.createElement("UL");
 
-          for (let i = 0; i < response.irods_issues.length; i++) {
+          for (let i = 0; i < response.s3_issues.length; i++) {
             const listItem = document.createElement("LI");
             const code = document.createElement("CODE");
-            const itemText = document.createTextNode(response.irods_issues[i]);
+            const itemText = document.createTextNode(response.s3_issues[i]);
             code.appendChild(itemText);
             listItem.appendChild(code);
             list.appendChild(listItem);
           }
-          irodsIssuesDiv.appendChild(list);
+          s3IssuesDiv.appendChild(list);
           // Remove loading indicator
-          document.querySelector("#irods-issues > .loading").remove();
+          document.querySelector("#s3-issues > .loading").remove();
         }
         else {
           // No issues found
           const title = document.createElement("P");
-          const titleText = document.createTextNode("No iRODs issues found.");
+          const titleText = document.createTextNode("No S3 issues found.");
           title.appendChild(titleText);
-          irodsIssuesDiv.appendChild(title);
+          s3IssuesDiv.appendChild(title);
           // Remove loading indicator
-          document.querySelector("#irods-issues > .loading").remove();
+          document.querySelector("#s3-issues > .loading").remove();
         }
       }
       else if (response.status === null) {
@@ -129,15 +129,15 @@
       else {
         // Failed to retrieve data
         const title = document.createElement("P");
-        const titleText = document.createTextNode("Failed to get iRODS issues.");
+        const titleText = document.createTextNode("Failed to get S3 issues.");
         title.appendChild(titleText);
-        irodsIssuesDiv.appendChild(title);
+        s3IssuesDiv.appendChild(title);
         // Remove loading indicator
-        document.querySelector("#irods-issues > .loading").remove();
+        document.querySelector("#s3-issues > .loading").remove();
       }
     }
   };
-  xhttp.open("GET", "irods-issues/", true);
+  xhttp.open("GET", "s3-issues/", true);
   xhttp.send();
 
   // Load async data for non preferred paths in the resource

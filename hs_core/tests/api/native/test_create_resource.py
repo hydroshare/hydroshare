@@ -13,14 +13,14 @@ from django.utils import timezone
 from hs_core.hydroshare import resource, get_resource_by_shortkey
 from hs_core.tests.api.utils import MyTemporaryUploadedFile
 from hs_core.models import BaseResource
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import QuotaException, resource_pre_create_actions
 from theme.models import QuotaMessage
 from hs_composite_resource.models import CompositeResource
 
 
-class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
+class TestCreateResource(MockS3TestCaseMixin, TestCase):
     def setUp(self):
         super(TestCreateResource, self).setUp()
 

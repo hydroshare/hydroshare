@@ -125,9 +125,9 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
             # go to next parent folder
             path = os.path.dirname(path)
 
-        irods_path = dir_path
+        s3_path = dir_path
 
-        files_in_path = ResourceFile.list_folder(resource, folder=irods_path, sub_folders=True)
+        files_in_path = ResourceFile.list_folder(resource, folder=s3_path, sub_folders=True)
         # if there are any files in the dir_path, we can set the folder to fileset aggregation
         return len(files_in_path) > 0
 

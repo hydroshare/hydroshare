@@ -32,8 +32,8 @@ class Command(BaseCommand):
 def ingest_bag(res_id):
     res = CompositeResource.objects.get(short_id=res_id)
 
-    url = f"https://www.hydroshare.org/django_irods/rest_download/bags/{res_id}.zip"
-    istorage = res.get_irods_storage()
+    url = f"https://www.hydroshare.org/django_s3/rest_download/bags/{res_id}.zip"
+    istorage = res.get_s3_storage()
     response = requests.get(url, auth=HTTPBasicAuth(settings.HS_AUTH_USER, settings.HS_AUTH_PASSWORD))
 
     if response.status_code == 200:

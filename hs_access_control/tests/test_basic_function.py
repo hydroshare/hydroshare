@@ -6,7 +6,7 @@ from hs_access_control.models import PrivilegeCodes
 
 from hs_core.hydroshare.users import create_account
 from hs_core.hydroshare.resource import create_resource
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 
 from hs_access_control.tests.utilities import global_reset, \
     assertResourceUserState, assertUserResourceState, \
@@ -14,7 +14,7 @@ from hs_access_control.tests.utilities import global_reset, \
     assertGroupResourceState, assertResourceGroupState
 
 
-class BasicFunction(MockIRODSTestCaseMixin, TestCase):
+class BasicFunction(MockS3TestCaseMixin, TestCase):
     """ test basic functions """
 
     def setUp(self):

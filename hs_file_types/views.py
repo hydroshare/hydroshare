@@ -552,7 +552,7 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
     file_type_class = FILE_TYPE_MAP[hs_file_type]
     aggregation = file_type_class.objects.get(id=file_type_id)
     res_files.extend(aggregation.files.all())
-    istorage = res.get_irods_storage()
+    istorage = res.get_s3_storage()
     for file in res_files:
         file_name = os.path.basename(file.storage_path)
         if tgt_path:

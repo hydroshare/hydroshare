@@ -5,13 +5,13 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 
 from hs_core import hydroshare
-from hs_core.testing import MockIRODSTestCaseMixin, TestCaseCommonUtilities
-from hs_core.management.utils import check_irods_files
+from hs_core.testing import MockS3TestCaseMixin, TestCaseCommonUtilities
+from hs_core.management.utils import check_s3_files
 
 from hs_core.models import ResourceFile
 
 
-class TestResourceFileAPI(MockIRODSTestCaseMixin,
+class TestResourceFileAPI(MockS3TestCaseMixin,
                           TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(TestResourceFileAPI, self).setUp()
@@ -54,17 +54,17 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         self.assertEqual(self.res.files.all().count(), 0,
                          msg="resource file count didn't match")
 
-        check_irods_files(self.res, stop_on_error=True)
+        check_s3_files(self.res, stop_on_error=True)
 
         # add one file to the resource
         hydroshare.add_resource_files(self.res.short_id, self.test_file_1)
 
         # should succeed without errors
-        check_irods_files(self.res, stop_on_error=True)
+        check_s3_files(self.res, stop_on_error=True)
 
         # cleaning should not change anything
-        check_irods_files(self.res, stop_on_error=True, log_errors=False, return_errors=True,
-                          clean_irods=True, clean_django=True, sync_ispublic=True)
+        check_s3_files(self.res, stop_on_error=True, log_errors=False, return_errors=True,
+                       clean_s3=True, clean_django=True, sync_ispublic=True)
 
         # resource should has only one file at this point
         self.assertEqual(self.res.files.all().count(), 1,
@@ -86,25 +86,25 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
 
         # should raise exception
         with self.assertRaises(ValidationError):
-            check_irods_files(self.res, stop_on_error=True)
+            check_s3_files(self.res, stop_on_error=True)
 
         # now don't raise exception and read error
-        errors, ecount, _, _ = check_irods_files(self.res, return_errors=True, log_errors=False)
+        errors, ecount, _, _ = check_s3_files(self.res, return_errors=True, log_errors=False)
 
         self.assertTrue(errors[0].endswith(
-            'data/contents/fuzz.txt does not exist in iRODS'))
+            'data/contents/fuzz.txt does not exist in S3'))
         self.assertTrue(errors[1].endswith(
-            'data/contents/file1.txt in iRODs does not exist in Django'))
+            'data/contents/file1.txt in S3 does not exist in Django'))
         self.assertTrue(errors[2].endswith(
             "type is CompositeResource, title is 'My Test Resource'"))
 
         # now try to clean it up
-        errors, ecount, _, _ = check_irods_files(self.res, return_errors=True, log_errors=False,
-                                                 clean_irods=True, clean_django=True)
+        errors, ecount, _, _ = check_s3_files(self.res, return_errors=True, log_errors=False,
+                                              clean_s3=True, clean_django=True)
         self.assertTrue(errors[0].endswith(
-            'data/contents/fuzz.txt does not exist in iRODS (DELETED FROM DJANGO)'))
+            'data/contents/fuzz.txt does not exist in S3 (DELETED FROM DJANGO)'))
         self.assertTrue(errors[1].endswith(
-            'data/contents/file1.txt in iRODs does not exist in Django (DELETED FROM IRODS)'))
+            'data/contents/file1.txt in S3 does not exist in Django (DELETED FROM S3)'))
         self.assertTrue(errors[2].endswith(
             "type is CompositeResource, title is 'My Test Resource'"))
 
@@ -113,7 +113,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
                          msg="resource file count didn't match")
 
         # now check should succeed
-        errors, ecount, _, _ = check_irods_files(self.res, stop_on_error=True, log_errors=False)
+        errors, ecount, _, _ = check_s3_files(self.res, stop_on_error=True, log_errors=False)
         self.assertEqual(ecount, 0)
 
         # delete resources to clean up
@@ -128,13 +128,13 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         ResourceFile.create_folder(self.res, 'foo')
 
         # should succeed without errors
-        check_irods_files(self.res, stop_on_error=True)
+        check_s3_files(self.res, stop_on_error=True)
 
         # add one file to the resource
         hydroshare.add_resource_files(self.res.short_id, self.test_file_1, folder='foo')
 
         # should succeed without errors
-        check_irods_files(self.res, stop_on_error=True)
+        check_s3_files(self.res, stop_on_error=True)
 
         # resource should has only one file at this point
         self.assertEqual(self.res.files.all().count(), 1,
@@ -155,25 +155,25 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
 
         # should raise exception
         with self.assertRaises(ValidationError):
-            check_irods_files(self.res, stop_on_error=True)
+            check_s3_files(self.res, stop_on_error=True)
 
         # now don't raise exception and read error
-        errors, ecount, _, _ = check_irods_files(self.res, return_errors=True, log_errors=False)
+        errors, ecount, _, _ = check_s3_files(self.res, return_errors=True, log_errors=False)
 
         self.assertTrue(errors[0].endswith(
-            'data/contents/fuzz.txt does not exist in iRODS'))
+            'data/contents/fuzz.txt does not exist in S3'))
         self.assertTrue(errors[1].endswith(
-            'data/contents/foo/file1.txt in iRODs does not exist in Django'))
+            'data/contents/foo/file1.txt in S3 does not exist in Django'))
         self.assertTrue(errors[2].endswith(
             "type is CompositeResource, title is 'My Test Resource'"))
 
         # now try to clean it up
-        errors, ecount, _, _ = check_irods_files(self.res, return_errors=True, log_errors=False,
-                                                 clean_irods=True, clean_django=True)
+        errors, ecount, _, _ = check_s3_files(self.res, return_errors=True, log_errors=False,
+                                              clean_s3=True, clean_django=True)
         self.assertTrue(errors[0].endswith(
-            'data/contents/fuzz.txt does not exist in iRODS (DELETED FROM DJANGO)'))
+            'data/contents/fuzz.txt does not exist in S3 (DELETED FROM DJANGO)'))
         self.assertTrue(errors[1].endswith(
-            'data/contents/foo/file1.txt in iRODs does not exist in Django (DELETED FROM IRODS)'))
+            'data/contents/foo/file1.txt in S3 does not exist in Django (DELETED FROM S3)'))
         self.assertTrue(errors[2].endswith(
             "type is CompositeResource, title is 'My Test Resource'"))
 
@@ -182,7 +182,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
                          msg="resource file count didn't match")
 
         # now check should succeed
-        errors, ecount, _, _ = check_irods_files(self.res, stop_on_error=True, log_errors=False)
+        errors, ecount, _, _ = check_s3_files(self.res, stop_on_error=True, log_errors=False)
         self.assertEqual(ecount, 0)
 
         # delete resources to clean up

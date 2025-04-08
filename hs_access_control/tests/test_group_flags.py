@@ -5,12 +5,12 @@ from django.contrib.auth.models import Group
 from hs_access_control.models import PrivilegeCodes
 
 from hs_core import hydroshare
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 
 from hs_access_control.tests.utilities import global_reset
 
 
-class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
+class T10GroupFlags(MockS3TestCaseMixin, TestCase):
     """Test for effects of group flags"""
 
     def setUp(self):
