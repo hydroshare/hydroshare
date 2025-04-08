@@ -1,6 +1,6 @@
 FROM hydroshare/hs_docker_base:8d38075
-# TODO update to bdec5aa once this build is complete
-# https://github.com/hydroshare/hs_docker_base/actions/runs/14340852182/job/40199445181
+# TODO update to 080a6f0 once this build is complete
+# https://github.com/hydroshare/hs_docker_base/actions/runs/14341189085/job/40200545601
 # make sure to update multistage-node dockerfile as well if you update this base image
 
 # Set the locale. TODO - remove once we have a better alternative worked out
