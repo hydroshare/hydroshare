@@ -4,10 +4,10 @@ from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
 
 from hs_core import hydroshare
-from hs_core.testing import MockIRODSTestCaseMixin, TestCaseCommonUtilities
+from hs_core.testing import MockS3TestCaseMixin, TestCaseCommonUtilities
 
 
-class TestResourceFileFolderOprsAPI(MockIRODSTestCaseMixin,
+class TestResourceFileFolderOprsAPI(MockS3TestCaseMixin,
                                     TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(TestResourceFileFolderOprsAPI, self).setUp()

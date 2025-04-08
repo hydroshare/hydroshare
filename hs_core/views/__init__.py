@@ -37,7 +37,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from sorl.thumbnail import ImageField as ThumbnailImageField, get_thumbnail
 
-from django_irods.icommands import SessionException
+from django_s3.exceptions import SessionException
 from hs_access_control.emails import CommunityRequestEmailNotification
 from hs_access_control.enums import CommunityRequestEvents
 from hs_access_control.forms import RequestNewCommunityForm, UpdateCommunityForm
@@ -52,7 +52,7 @@ from hs_core.hydroshare.resource import (
     METADATA_STATUS_SUFFICIENT,
     update_quota_usage as update_quota_usage_utility,
 )
-from hs_core.tasks import create_bag_by_irods, create_temp_zip
+from hs_core.tasks import create_bag_by_s3, create_temp_zip
 from hs_core.hydroshare.utils import (
     resolve_request,
     resource_modified,
@@ -274,32 +274,6 @@ def change_quota_holder(request, shortkey):
 
     ajax_response_data["status"] = "success"
     return JsonResponse(ajax_response_data)
-
-
-@swagger_auto_schema(method="post", auto_schema=None)
-@api_view(["POST"])
-def update_quota_usage(request, username):
-    req_user = request.user
-    if req_user.username != settings.IRODS_SERVICE_ACCOUNT_USERNAME:
-        return HttpResponseForbidden(
-            "only iRODS service account is authorized to " "perform this action"
-        )
-    if not req_user.is_authenticated:
-        return HttpResponseForbidden("You are not authenticated to perform this action")
-
-    try:
-        _ = User.objects.get(username=username)
-    except User.DoesNotExist:
-        return HttpResponseBadRequest("user to update quota for is not valid")
-
-    try:
-        update_quota_usage_utility(username, notify_user=False)
-        return HttpResponse(
-            "quota for user {} has been updated".format(username), status=200
-        )
-    except ValidationError as ex:
-        err_msg = "quota for user {} failed to update: {}".format(username, str(ex))
-        return HttpResponse(err_msg, status=500)
 
 
 def extract_files_with_paths(request):
@@ -860,7 +834,7 @@ def update_metadata_element(
 @swagger_auto_schema(method="get", auto_schema=None)
 @api_view(["GET"])
 def file_download_url_mapper(request, shortkey):
-    """maps the file URIs in resourcemap document to django_irods download view function"""
+    """maps the file URIs in resourcemap document to django_s3 download view function"""
     try:
         res, _, _ = authorize(
             request,
@@ -884,7 +858,7 @@ def file_download_url_mapper(request, shortkey):
         True if request.GET.get("aggregation", "false").lower() == "true" else False
     )
 
-    istorage = res.get_irods_storage()
+    istorage = res.get_s3_storage()
     if istorage.isDir(public_file_path):
         zipped = True
     aggregation_name = None
@@ -2222,7 +2196,7 @@ def act_on_group_membership_request(
 
 @login_required
 def get_file(request, *args, **kwargs):
-    from django_irods.icommands import Session as RodsSession
+    from django_s3.exceptions import Session as RodsSession
 
     name = kwargs["name"]
     session = RodsSession("./", "/usr/bin")

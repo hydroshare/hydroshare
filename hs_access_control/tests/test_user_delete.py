@@ -6,11 +6,11 @@ from hs_access_control.models import UserAccess, GroupAccess, ResourceAccess, \
 
 from hs_core import hydroshare
 from hs_core.models import BaseResource
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_access_control.tests.utilities import global_reset
 
 
-class T12UserDelete(MockIRODSTestCaseMixin, TestCase):
+class T12UserDelete(MockS3TestCaseMixin, TestCase):
 
     def setUp(self):
         super(T12UserDelete, self).setUp()

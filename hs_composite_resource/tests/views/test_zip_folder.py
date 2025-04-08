@@ -10,12 +10,12 @@ from rest_framework import status
 from hs_core import hydroshare
 from hs_core.hydroshare import add_file_to_resource
 from hs_core.models import ResourceFile
-from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
+from hs_core.testing import MockS3TestCaseMixin, ViewTestCase
 from hs_core.views.resource_folder_hierarchy import data_store_folder_zip
 from hs_file_types.models import GenericLogicalFile, FileSetLogicalFile
 
 
-class TestZipFolderViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
+class TestZipFolderViewFunctions(MockS3TestCaseMixin, ViewTestCase):
     def setUp(self):
         super(TestZipFolderViewFunctions, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')

@@ -3,12 +3,12 @@ from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import Group
 
 from hs_core import hydroshare
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 
 from hs_access_control.models import PrivilegeCodes
 
 
-class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
+class GroupMembershipRequest(MockS3TestCaseMixin, TestCase):
 
     def setUp(self):
         super(GroupMembershipRequest, self).setUp()

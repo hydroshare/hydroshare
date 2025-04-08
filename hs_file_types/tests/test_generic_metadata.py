@@ -7,14 +7,14 @@ from django.test import TransactionTestCase
 
 from hs_core import hydroshare
 from hs_core.models import Coverage, ResourceFile
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core.views.utils import move_or_rename_file_or_folder, create_folder
 from hs_file_types.models import GenericLogicalFile, GenericFileMetaData
 from ..enums import AggregationMetaFilePath
 from .utils import CompositeResourceTestMixin
 
 
-class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
+class GenericFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
                           CompositeResourceTestMixin):
     def setUp(self):
         super(GenericFileTypeTest, self).setUp()

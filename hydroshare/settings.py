@@ -408,7 +408,7 @@ INSTALLED_APPS = (
     "django.contrib.postgres",
     "django.contrib.messages",
     "django_nose",
-    "django_irods",
+    "django_s3",
     "drf_yasg",
     "theme",
     "theme.blog_mods",
@@ -488,7 +488,7 @@ APPS_TO_NOT_RUN = (
     "rest_framework",
     "django_nose",
     "grappelli_safe",
-    "django_irods",
+    "django_s3",
     "crispy_forms",
     "autocomplete_light",
     "widget_tweaks",
@@ -681,7 +681,7 @@ HAYSTACK_SIGNAL_PROCESSOR = (
 # to expire in 7 days
 PASSWORD_RESET_TIMEOUT = 60 * 60 * 24 * 7
 
-# customized temporary file path for large files retrieved from iRODS user zone for metadata
+# customized temporary file path for large files retrieved from S3 user zone for metadata
 # extraction
 TEMP_FILE_DIR = "/tmp"
 
@@ -905,7 +905,7 @@ HSWS_GEOSERVER_URL = "https://geoserver.hydroshare.org/geoserver"
 
 # celery task names to be recorded in task notification model
 TASK_NAME_LIST = [
-    "hs_core.tasks.create_bag_by_irods",
+    "hs_core.tasks.create_bag_by_s3",
     "hs_core.tasks.create_temp_zip",
     "hs_core.tasks.unzip_task",
     "hs_core.tasks.copy_resource_task",

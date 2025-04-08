@@ -8,7 +8,7 @@ from hs_access_control.models import UserResourceProvenance, UserResourcePrivile
     PrivilegeCodes
 
 from hs_core import hydroshare
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 
 from hs_access_control.tests.utilities import is_equal_to_as_set, global_reset, \
     check_provenance_synchronization
@@ -16,7 +16,7 @@ from hs_access_control.tests.utilities import is_equal_to_as_set, global_reset, 
 __author__ = 'Alva'
 
 
-class UnitTests(MockIRODSTestCaseMixin, TestCase):
+class UnitTests(MockS3TestCaseMixin, TestCase):
     """ test basic behavior of each routine """
 
     def setUp(self):

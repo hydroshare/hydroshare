@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """
-Check synchronization between iRODS and Django
+Check synchronization between S3 and Django
 
-This checks that every file in IRODS corresponds to a ResourceFile in Django.
-If a file in iRODS is not present in Django, it attempts to register that file in Django.
+This checks that every file in S3 corresponds to a ResourceFile in Django.
+If a file in S3 is not present in Django, it attempts to register that file in Django.
 
 * By default, prints errors on stdout.
 * Optional argument --log instead logs output to system log.
@@ -13,7 +13,7 @@ If a file in iRODS is not present in Django, it attempts to register that file i
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
 
-from hs_core.management.utils import ingest_irods_files
+from hs_core.management.utils import ingest_s3_files
 
 
 import logging
@@ -59,7 +59,7 @@ class Command(BaseCommand):
                     print(("resource {} has type {}: skipping".format(r.short_id,
                                                                       r.resource_type)))
                 else:
-                    print("LOOKING FOR UNREGISTERED IRODS FILES FOR RESOURCE {} (current files {})"
+                    print("LOOKING FOR UNREGISTERED FILES FOR RESOURCE {} (current files {})"
                           .format(rid, str(r.files.all().count())))
                     # get the typed resource
                     try:
@@ -79,12 +79,12 @@ class Command(BaseCommand):
                             print(msg)
                         continue
 
-                    _, count = ingest_irods_files(resource,
-                                                  logger,
-                                                  stop_on_error=False,
-                                                  echo_errors=not options['log'],
-                                                  log_errors=options['log'],
-                                                  return_errors=False)
+                    _, count = ingest_s3_files(resource,
+                                               logger,
+                                               stop_on_error=False,
+                                               echo_errors=not options['log'],
+                                               log_errors=options['log'],
+                                               return_errors=False)
                     if count:
                         msg = "... affected resource {} has type {}, title '{}'"\
                               .format(resource.short_id, resource.resource_type,
@@ -95,12 +95,12 @@ class Command(BaseCommand):
                             print(msg)
 
         else:  # check all resources
-            print("LOOKING FOR UNREGISTERED IRODS FILES FOR ALL RESOURCES")
+            print("LOOKING FOR UNREGISTERED FILES FOR ALL RESOURCES")
             for r in BaseResource.objects.all():
                 # Pabitra: Not sure why are we skipping other resource types
                 # Alva: cannot preserve file integrity constraints for other file types.
                 if r.resource_type == 'CompositeResource':
-                    print("LOOKING FOR UNREGISTERED IRODS FILES FOR RESOURCE {} (current files {})"
+                    print("LOOKING FOR UNREGISTERED FILES FOR RESOURCE {} (current files {})"
                           .format(r.short_id, str(r.files.all().count())))
                     try:
                         # get the typed resource
@@ -120,12 +120,12 @@ class Command(BaseCommand):
                             print(msg)
                         continue  # next resource
 
-                    _, count = ingest_irods_files(resource,
-                                                  logger,
-                                                  stop_on_error=False,
-                                                  echo_errors=not options['log'],
-                                                  log_errors=options['log'],
-                                                  return_errors=False)
+                    _, count = ingest_s3_files(resource,
+                                               logger,
+                                               stop_on_error=False,
+                                               echo_errors=not options['log'],
+                                               log_errors=options['log'],
+                                               return_errors=False)
                     if count:
                         msg = "... affected resource {} has type {}, title '{}'"\
                               .format(resource.short_id, resource.resource_type, resource.title)

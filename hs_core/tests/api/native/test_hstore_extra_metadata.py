@@ -3,10 +3,10 @@ from django.test import TestCase
 
 from hs_core.hydroshare import resource
 from hs_core.hydroshare import users
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 
 
-class TestHStore(MockIRODSTestCaseMixin, TestCase):
+class TestHStore(MockS3TestCaseMixin, TestCase):
 
     def setUp(self):
         super(TestHStore, self).setUp()

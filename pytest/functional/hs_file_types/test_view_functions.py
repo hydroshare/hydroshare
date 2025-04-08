@@ -29,7 +29,7 @@ from hs_file_types.views import (
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_type', ['ModelProgram', 'ModelInstance'])
-def test_create_model_aggregation_from_file(composite_resource, aggr_type, mock_irods):
+def test_create_model_aggregation_from_file(composite_resource, aggr_type):
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
     upload_folder = ''
@@ -64,7 +64,7 @@ def test_create_model_aggregation_from_file(composite_resource, aggr_type, mock_
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('aggr_type', ['ModelProgram', 'ModelInstance'])
-def test_create_model_aggregation_from_folder(composite_resource, aggr_type, mock_irods):
+def test_create_model_aggregation_from_folder(composite_resource, aggr_type):
     res, user = composite_resource
     file_path = 'pytest/assets/generic_file.txt'
     # create a folder and put a file in that folder
@@ -100,7 +100,7 @@ def test_create_model_aggregation_from_folder(composite_resource, aggr_type, moc
 
 
 @pytest.mark.django_db(transaction=True)
-def test_update_csv_aggregation_table_schema(composite_resource, mock_irods):
+def test_update_csv_aggregation_table_schema(composite_resource):
     res, user = composite_resource
     file_path = 'pytest/assets/csv_with_header_and_data.csv'
     upload_folder = ''
@@ -152,7 +152,7 @@ def test_update_csv_aggregation_table_schema(composite_resource, mock_irods):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_update_model_program_metadata(composite_resource_with_mp_aggregation, mock_irods):
+def test_update_model_program_metadata(composite_resource_with_mp_aggregation):
     res, user = composite_resource_with_mp_aggregation
     mp_aggr = next(res.logical_files)
     code_repo = "https://github.com/swat"
@@ -179,7 +179,7 @@ def test_update_model_program_metadata(composite_resource_with_mp_aggregation, m
 
 
 @pytest.mark.django_db(transaction=True)
-def test_update_model_instance_metadata(composite_resource_with_mi_aggregation, mock_irods):
+def test_update_model_instance_metadata(composite_resource_with_mi_aggregation):
     res, user = composite_resource_with_mi_aggregation
     mi_aggr = next(res.logical_files)
     assert isinstance(mi_aggr, ModelInstanceLogicalFile)
@@ -201,7 +201,7 @@ def test_update_model_instance_metadata(composite_resource_with_mi_aggregation, 
 
 
 @pytest.mark.django_db(transaction=True)
-def test_update_model_instance_metadata_json(composite_resource_with_mi_mp_aggregation, mock_irods):
+def test_update_model_instance_metadata_json(composite_resource_with_mi_mp_aggregation):
     res, user = composite_resource_with_mi_mp_aggregation
     logical_files = res.logical_files
     aggr1 = next(logical_files)
@@ -253,7 +253,7 @@ def test_update_model_instance_metadata_json(composite_resource_with_mi_mp_aggre
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize('move_aggr_cls', [NetCDFLogicalFile, GeoRasterLogicalFile, TimeSeriesLogicalFile,
                                            GeoFeatureLogicalFile, CSVLogicalFile])
-def test_move_aggr_into_model_instance_aggr(composite_resource_with_mi_aggregation_folder, move_aggr_cls, mock_irods):
+def test_move_aggr_into_model_instance_aggr(composite_resource_with_mi_aggregation_folder, move_aggr_cls):
     """test that we can move any of the following aggregations into a folder that represents a
     model instance aggregation
     1- Netcdf aggr

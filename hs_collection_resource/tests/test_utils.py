@@ -3,12 +3,12 @@ from django.test import TransactionTestCase, Client
 from django.contrib.auth.models import Group
 
 from hs_core.hydroshare import create_resource, create_account, UploadedFile
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 
 from hs_collection_resource.utils import get_collectable_resources
 
 
-class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
+class TestCollection(MockS3TestCaseMixin, TransactionTestCase):
 
     def setUp(self):
         super(TestCollection, self).setUp()

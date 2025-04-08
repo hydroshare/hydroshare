@@ -27,7 +27,7 @@ def delete_files_and_bag(resource):
     :param resource: the resource to delete the bag and files for.
     :return: none
     """
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_s3_storage()
 
     # delete resource directory first to remove all generated bag-related files for the resource
     try:
@@ -46,11 +46,11 @@ def delete_bag(resource, istorage=None, raise_on_exception=False):
 
     Parameters:
     :param resource: the resource to delete the bag for.
-    :param istorage: An IrodsStorage instance
+    :param istorage: An S3Storage instance
     :return: none
     """
     if istorage is None:
-        istorage = resource.get_irods_storage()
+        istorage = resource.get_s3_storage()
 
     try:
         if istorage.exists(resource.bag_path):
@@ -62,11 +62,11 @@ def delete_bag(resource, istorage=None, raise_on_exception=False):
             raise HsBagitException("failed to remove {}: {}".format(resource.bag_path, e))
 
 
-def create_bagit_files_by_irods(res, istorage):
+def create_bagit_files_by_s3(res, istorage):
     """
-    Creates bagit files created by the `hydroshare/irods/ruleGenerateBagIt_HS.r` rule in irods
+    Creates bagit files
     :param res: the resource to create the bag files for
-    :param istorage: An IRodsStorage instance
+    :param istorage: An S3Storage instance
     :return: None
     """
     resource_id = res.short_id
@@ -89,7 +89,7 @@ def create_bagit_files_by_irods(res, istorage):
     istorage.save_md5_manifest(resource_id)
 
 
-def _create_temp_dir_on_irods(istorage):
+def _create_temp_dir_on_s3(istorage):
     temp_path = istorage.getUniqueTmpPath
     try:
         os.makedirs(temp_path)
@@ -110,8 +110,8 @@ def save_resource_metadata_xml(resource):
     Parameters:
     :param resource: A resource instance
     """
-    istorage = resource.get_irods_storage()
-    temp_path = _create_temp_dir_on_irods(istorage)
+    istorage = resource.get_s3_storage()
+    temp_path = _create_temp_dir_on_s3(istorage)
     from_file_name = os.path.join(temp_path, 'resourcemetadata.xml')
     with open(from_file_name, 'w') as out:
         # write resource level metadata
@@ -122,27 +122,27 @@ def save_resource_metadata_xml(resource):
 
 def create_bag_metadata_files(resource):
     """
-    create and update files needed by bagit operation that is conducted on iRODS server;
+    create and update files needed by bagit operation that is conducted on S3 server;
     no bagit operation is performed, only files that will be included in the bag are created
     or updated.
 
     Parameters:
     :param resource: A resource whose files will be created or updated to be included in the
     resource bag.
-    :return: istorage, an IrodsStorage object that will be used by subsequent operation to
+    :return: istorage, an S3Storage object that will be used by subsequent operation to
     create a bag on demand as needed.
     """
     from hs_core.hydroshare.utils import current_site_url, get_file_mime_type
     from hs_core.hydroshare import encode_resource_url
 
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_s3_storage()
 
-    # the temp_path is a temporary holding path to make the files available to iRODS
+    # the temp_path is a temporary holding path to make the files available to S3
     # we have to make temp_path unique even for the same resource with same update time
     # to accommodate asynchronous multiple file move operations for the same resource
 
     # TODO: This is always in /tmp; otherwise code breaks because open() is called on the result!
-    temp_path = _create_temp_dir_on_irods(istorage)
+    temp_path = _create_temp_dir_on_s3(istorage)
 
     # an empty visualization directory will not be put into the zipped bag file by ibun command,
     # so creating an empty visualization directory to be put into the zip file as done by the two
@@ -152,7 +152,7 @@ def create_bag_metadata_files(resource):
     # to_file_name = '{res_id}/data/visualization/'.format(res_id=resource.short_id)
     # istorage.saveFile('', to_file_name, create_directory=True)
 
-    # create resourcemetadata.xml in local directory and upload it to iRODS
+    # create resourcemetadata.xml in local directory and upload it to S3
     save_resource_metadata_xml(resource)
 
     # URLs are found in the /data/ subdirectory to comply with bagit format assumptions
@@ -260,7 +260,7 @@ def create_bag_metadata_files(resource):
     xml_string = xml_string.replace(
         '<ore:aggregates rdf:resource="%s"/>\n' % str(resource.metadata.type.url), '')
 
-    # create resourcemap.xml and upload it to iRODS
+    # create resourcemap.xml and upload it to S3
     from_file_name = os.path.join(temp_path, 'resourcemap.xml')
     with open(from_file_name, 'w') as out:
         out.write(xml_string)
@@ -280,14 +280,7 @@ def create_bag_metadata_files(resource):
 
 def create_bag(resource):
     """
-    Modified to implement the new bagit workflow. The previous workflow was to create a bag from
-    the current filesystem of the resource, then zip it up and add it to the resource. The new
-    workflow is to delegate bagit and zip-up operations to iRODS, specifically, by executing an
-    iRODS bagit rule to create bagit file hierarchy, followed by execution of an ibun command to
-    zip up the bagit file hierarchy which is done asychronously as a celery task. This function
-    only creates all bag files under resource collection in iRODS and set bag_modified iRODS AVU
-    metadata to true so that the bag will be created or recreated on demand when it is being
-    downloaded asychronously by a celery task.
+    Creates bagit files on S3
 
     Parameters:
     :param resource: (subclass of AbstractResource) A resource to create a bag for.

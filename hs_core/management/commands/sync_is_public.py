@@ -1,12 +1,12 @@
 from django.core.management.base import BaseCommand
-from django_irods.icommands import SessionException
+from django_s3.exceptions import SessionException
 from hs_core.models import BaseResource
 from django.utils import timezone
 from datetime import timedelta
 
 
 class Command(BaseCommand):
-    help = "Check synchronization between iRODS and Django."
+    help = "Check synchronization between S3 and Django."
 
     def add_arguments(self, parser):
         parser.add_argument('resource_ids', nargs='*', type=str)

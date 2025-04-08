@@ -24,6 +24,3 @@ Running the tests
 
 Advanced Topics
 ---------------
-
-Local IRODS
-```````````

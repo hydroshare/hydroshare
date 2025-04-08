@@ -187,7 +187,7 @@ class TestCopyResource(TestCase):
         derived_from = _get_relation_meta_derived_from(self.res)
         self.assertEqual(relation_meta.value, derived_from)
 
-        # make sure to clean up resource so that irods storage can be cleaned up
+        # make sure to clean up resource so that S3 storage can be cleaned up
         if new_res:
             new_res.delete()
 
@@ -331,7 +331,7 @@ class TestCopyResource(TestCase):
         self.assertEqual(orig_band_info.maximumValue, copy_band_info.maximumValue)
         self.assertEqual(orig_band_info.minimumValue, copy_band_info.minimumValue)
 
-        # make sure to clean up all created resources to clean up iRODS storage
+        # make sure to clean up all created resources to clean up S3 storage
         if self.composite_resource:
             self.composite_resource.delete()
         if new_composite_resource:

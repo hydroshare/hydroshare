@@ -13,10 +13,10 @@ from hs_core.hydroshare import create_resource, create_account, \
     create_empty_resource, create_new_version_resource, \
     update_science_metadata, copy_resource, delete_resource
 from hs_core.hydroshare.resource import ResourceFile
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 
 
-class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
+class TestCollection(MockS3TestCaseMixin, TransactionTestCase):
 
     def setUp(self):
         super(TestCollection, self).setUp()

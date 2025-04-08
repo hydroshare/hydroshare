@@ -926,8 +926,8 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         file.delete()
                         break
                 else:
-                    # check if the dump file in irods and then delete it
-                    istorage = resource.get_irods_storage()
+                    # check if the dump file in S3 and then delete it
+                    istorage = resource.get_s3_storage()
                     if folder_path:
                         dump_file_path = os.path.join(
                             resource.file_path, folder_path, dump_file_name
@@ -1322,7 +1322,7 @@ def add_keywords_metadata(metadata_list, extracted_metadata, file_type=True):
 def create_header_info_txt_file(nc_temp_file, nc_file_name):
     """
     Creates the header text file using the *nc_temp_file*
-    :param nc_temp_file: the netcdf file copied from irods to django
+    :param nc_temp_file: the netcdf file copied from S3 to django
     for metadata extraction
     :return:
     """
@@ -1358,9 +1358,9 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
     # check the instance type
     file_type = isinstance(instance, NetCDFLogicalFile)
 
-    # get the file from irods to temp dir
+    # get the file from S3 to temp dir
     resource = nc_res_file.resource
-    temp_nc_file = utils.get_file_from_irods(
+    temp_nc_file = utils.get_file_from_s3(
         resource=resource, file_path=nc_res_file.storage_path
     )
     nc_dataset = netCDF4.Dataset(temp_nc_file, "a")
@@ -1549,9 +1549,9 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
     nc_file_name = os.path.basename(temp_nc_file).split(".")[0]
     temp_text_file = create_header_info_txt_file(temp_nc_file, nc_file_name)
 
-    # push the updated nc file and the txt file to iRODS
-    utils.replace_resource_file_on_irods(temp_nc_file, nc_res_file, user)
-    utils.replace_resource_file_on_irods(temp_text_file, txt_res_file, user)
+    # push the updated nc file and the txt file to S3
+    utils.replace_resource_file_on_s3(temp_nc_file, nc_res_file, user)
+    utils.replace_resource_file_on_s3(temp_text_file, txt_res_file, user)
 
     metadata = instance.metadata
     metadata.is_update_file = False

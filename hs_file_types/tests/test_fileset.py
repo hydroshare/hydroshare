@@ -6,7 +6,7 @@ from django.test import TransactionTestCase
 
 from hs_core import hydroshare
 from hs_core.models import ResourceFile
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core.views.utils import move_or_rename_file_or_folder, remove_folder
 from hs_file_types.models import FileSetLogicalFile, GenericLogicalFile, NetCDFLogicalFile, \
     GeoRasterLogicalFile, GeoFeatureLogicalFile, TimeSeriesLogicalFile, RefTimeseriesLogicalFile, \
@@ -14,7 +14,7 @@ from hs_file_types.models import FileSetLogicalFile, GenericLogicalFile, NetCDFL
 from .utils import CompositeResourceTestMixin
 
 
-class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
+class FileSetFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
                           CompositeResourceTestMixin):
     def setUp(self):
         super(FileSetFileTypeTest, self).setUp()
@@ -844,8 +844,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(FileSetLogicalFile.objects.count(), 0)
         # there should be no resource file
         self.assertEqual(self.composite_resource.files.all().count(), 0)
-        # check that the folder got deleted from irods
-        istorage = self.composite_resource.get_irods_storage()
+        # check that the folder got deleted from S3
+        istorage = self.composite_resource.get_s3_storage()
         full_folder_path = os.path.join(self.composite_resource.file_path, fileset_folder)
         self.assertFalse(istorage.exists(full_folder_path))
 

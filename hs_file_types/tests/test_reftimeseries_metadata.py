@@ -4,7 +4,7 @@ from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import ResourceFile
 from hs_core.views.utils import move_or_rename_file_or_folder, create_folder
@@ -14,7 +14,7 @@ from hs_file_types.models import RefTimeseriesLogicalFile, RefTimeseriesFileMeta
 from hs_file_types.enums import AggregationMetaFilePath
 
 
-class RefTimeseriesFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
+class RefTimeseriesFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
                                 CompositeResourceTestMixin):
     def setUp(self):
         super(RefTimeseriesFileTypeTest, self).setUp()

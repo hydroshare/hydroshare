@@ -5,12 +5,12 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 
 from hs_core import hydroshare
-from hs_core.testing import MockIRODSTestCaseMixin, TestCaseCommonUtilities
+from hs_core.testing import MockS3TestCaseMixin, TestCaseCommonUtilities
 
 from hs_core.models import ResourceFile
 
 
-class TestResourceFileAPI(MockIRODSTestCaseMixin,
+class TestResourceFileAPI(MockS3TestCaseMixin,
                           TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(TestResourceFileAPI, self).setUp()

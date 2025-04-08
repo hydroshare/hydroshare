@@ -6,10 +6,10 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from hs_core import hydroshare
 from hs_core.models import BaseResource
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 
 
-class TestUpdateResourceFileAPI(MockIRODSTestCaseMixin, unittest.TestCase):
+class TestUpdateResourceFileAPI(MockS3TestCaseMixin, unittest.TestCase):
     def setUp(self):
         super(TestUpdateResourceFileAPI, self).setUp()
         self.hydroshare_author_group, _ = Group.objects.get_or_create(name='Hydroshare Author')

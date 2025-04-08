@@ -31,7 +31,7 @@ def debug_resource(short_id):
         resource.create_aggregation_meta_files()
         print("resource {}".format(resource.short_id))
         '''
-        storage = resource.get_irods_storage()
+        storage = resource.get_s3_storage()
         single_file_aggregation has been removed
         for f in ResourceFile.objects.filter(object_id=resource.id):
             if f.has_logical_file and f.logical_file.is_single_file_aggregation:

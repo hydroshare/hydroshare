@@ -30,7 +30,7 @@ def measure_resource(short_id):
     resource = res.get_content_model()
     assert resource, (res, res.content_model)
 
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_s3_storage()
     if resource.raccess.public:
         status = "public"
     elif resource.raccess.discoverable:
@@ -42,10 +42,10 @@ def measure_resource(short_id):
         print(("{} {} {} {} {} {}".format(resource.size, short_id, status, resource.storage_type,
                                           resource.resource_type, resource.title)))
     else:
-        print(("{} {} {} {} {} {} NO IRODS FILES".format('-', short_id, status,
-                                                         resource.storage_type,
-                                                         resource.resource_type,
-                                                         resource.title)))
+        print(("{} {} {} {} {} {} NO FILES".format('-', short_id, status,
+                                                   resource.storage_type,
+                                                   resource.resource_type,
+                                                   resource.title)))
 
 
 class Command(BaseCommand):
@@ -109,14 +109,14 @@ class Command(BaseCommand):
            (options['access'] != 'discoverable' or resource.raccess.discoverable) and \
            (options['access'] != 'private' or not resource.raccess.discoverable) and \
            (not options['has_subfolders'] or has_subfolders(resource)):
-            storage = resource.get_irods_storage()
+            storage = resource.get_s3_storage()
             if options['brief']:
                 print(resource.short_id)
             else:
                 if storage.exists(resource.root_path):
                     measure_resource(resource.short_id)
                 else:
-                    print("{} does not exist in iRODS".format(resource.short_id))
+                    print("{} does not exist in S3".format(resource.short_id))
 
     def handle(self, *args, **options):
         if options['owned_by'] is not None:

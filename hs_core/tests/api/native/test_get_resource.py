@@ -6,8 +6,8 @@ from hs_core.hydroshare import resource, utils
 from hs_core.hydroshare import users
 from hs_core.models import BaseResource
 
-# iRODS mocking has not been used here as we want to test bag creation which needs
-# interaction with iRODS
+# Storage mocking has not been used here as we want to test bag creation which needs
+# interaction with S3
 
 
 class TestGetResource(TestCase):
