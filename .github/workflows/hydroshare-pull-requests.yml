@@ -42,7 +42,7 @@ jobs:
       if: always()
       with:
         files: |
-          nosetests.xml
+          coverage.xml
           pytests.xml
     
     # archive the test results
@@ -51,6 +51,5 @@ jobs:
       with:
         name: test-results
         path: |
-          nosetests.xml
           pytests.xml
           coverage.xml
