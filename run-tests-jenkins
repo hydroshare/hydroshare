@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
-coverage run manage.py test theme -v 3 --timer --parallel
+coverage run manage.py test theme --verbosity 3 --parallel --noinput
 coverage xml
 pytest
