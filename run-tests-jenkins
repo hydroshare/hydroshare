@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 set -e
 
-python manage.py test theme.tests.test_profile_buckets --verbosity 3 --noinput --timing
+python manage.py test --verbosity 3 --noinput --timing
 pytest
