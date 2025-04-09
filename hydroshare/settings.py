@@ -1,12 +1,9 @@
-# TEST_RUNNER='django_nose.NoseTestSuiteRunner'
 import os
 import sys
 
 from PIL import ImageFile
 
 TEST_RUNNER = "hs_core.tests.runner.CustomTestSuiteRunner"
-TEST_WITHOUT_MIGRATIONS_COMMAND = "django_nose.management.commands.test.Command"
-
 
 # import importlib
 
@@ -407,7 +404,6 @@ INSTALLED_APPS = (
     "django.contrib.gis",
     "django.contrib.postgres",
     "django.contrib.messages",
-    "django_nose",
     "django_s3",
     "drf_yasg",
     "theme",
@@ -486,7 +482,6 @@ OAUTH2_PROVIDER_APPLICATION_MODEL = "oauth2_provider.Application"
 # All apps beginning with "django." or "mezzanine." are also excluded by default
 APPS_TO_NOT_RUN = (
     "rest_framework",
-    "django_nose",
     "grappelli_safe",
     "django_s3",
     "crispy_forms",
@@ -947,12 +942,6 @@ if any('pytest' in arg for arg in sys.argv) or 'test' in sys.argv:
     }
 
     TESTING = True
-
-    # patch for nose (django-nose) for py3.11
-    # https://github.com/jazzband/django-nose/issues/330
-    import collections
-    collections.Callable = collections.abc.Callable
-    # End of patch
 
 
 ####################

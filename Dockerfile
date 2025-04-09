@@ -21,8 +21,8 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
-# RUN pip uninstall nose
-# RUN pip install pynose
+# TODO remove these from hs_docker_base
+RUN pip uninstall -y nose django-nose nose-timer
 
 USER root
 WORKDIR /hydroshare
