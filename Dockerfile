@@ -1,4 +1,4 @@
-FROM hydroshare/hs_docker_base:40a3252
+FROM hydroshare/hs_docker_base:080a6f0
 # make sure to update multistage-node dockerfile as well if you update this base image
 
 # Set the locale. TODO - remove once we have a better alternative worked out
@@ -20,6 +20,12 @@ RUN wget -O /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem https://cacerts.digice
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
+
+# TODO remove these from hs_docker_base
+RUN pip uninstall -y nose django-nose nose-timer
+RUN pip install tblib
+# RUN pip install -y unittest-xml-reporting
+# https://github.com/xmlrunner/unittest-xml-reporting
 
 USER root
 WORKDIR /hydroshare
