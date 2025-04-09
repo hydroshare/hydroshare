@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
-coverage run manage.py test -v 3 --with-xunit $1 --with-timer --exe
+coverage run manage.py test theme -v 3 --with-xunit $1 --with-timer --exe
 coverage xml
 pytest
