@@ -41,3 +41,6 @@ class TestUserProfileBuckets(TestCase):
 
         # see that the bucket_name attribute is still the same
         self.assertEqual(self.user_profile.bucket_name, "testuser")
+
+    def test_fail(self):
+        self.assertEqual(True, False)
