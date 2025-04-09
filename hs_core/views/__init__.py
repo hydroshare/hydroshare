@@ -2625,77 +2625,13 @@ class FindGroupsView(TemplateView):
         return super(FindGroupsView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
+        gp_qs = Group.objects \
+            .filter(gaccess__active=True) \
+            .exclude(name="Hydroshare Author") \
+            .select_related("gaccess")
 
-        def get_groups_with_members(ugp_queryset):
-            group_seen = []
-            groups = []
-            for ugp in ugp_queryset:
-                if ugp.group.id not in group_seen:
-                    group = ugp.group
-                    group.members = []
-                    group_seen.append(group.id)
-                    groups.append(group)
-                else:
-                    group = groups[group_seen.index(ugp.group.id)]
-                if ugp.user.is_active:
-                    group.members.append(ugp.user)
-            groups = sorted(groups, key=lambda _group: _group.name)
-            return groups
-
-        if self.request.user.is_authenticated:
-            u = User.objects.get(pk=self.request.user.id)
-
-            gmr_waiting_owner_action = GroupMembershipRequest.objects \
-                .filter(request_from=u, group_to_join__gaccess__active=True, redeemed=False) \
-                .values_list("group_to_join__id", flat=True)
-
-            gmr_waiting_user_action = GroupMembershipRequest.objects \
-                .filter(invitation_to=u, group_to_join__gaccess__active=True, redeemed=False) \
-                .values_list("group_to_join__id", flat=True)
-
-            gmr_pending = GroupMembershipRequest.objects \
-                .filter(group_to_join__gaccess__active=True, redeemed=False) \
-                .filter(Q(request_from=u) | Q(invitation_to=u)).select_related("group_to_join")
-
-            ugp_qs = UserGroupPrivilege.objects \
-                .filter(group__gaccess__active=True) \
-                .exclude(group__name="Hydroshare Author") \
-                .select_related("group", "user", "group__gaccess", "user__userprofile")
-
-            # for ech group collect members of the group - not using 'group.gaccess.members'
-            # as this results in N+1 query
-            groups = get_groups_with_members(ugp_qs)
-            for g in groups:
-                g.is_user_member = u in g.members
-                g.join_request = None
-                if g.is_user_member:
-                    g.join_request_waiting_owner_action = False
-                    g.join_request_waiting_user_action = False
-                else:
-                    g.join_request_waiting_owner_action = g.id in gmr_waiting_owner_action
-                    g.join_request_waiting_user_action = g.id in gmr_waiting_user_action
-
-                    if (
-                        g.join_request_waiting_owner_action
-                        or g.join_request_waiting_user_action
-                    ):
-                        g.join_request = None
-                        for gmr in gmr_pending:
-                            if g.id == gmr.group_to_join.id:
-                                g.join_request = gmr
-                                break
-
-            return {"profile_user": u, "groups": groups}
-        else:
-            # for anonymous user
-            ugp_qs = UserGroupPrivilege.objects \
-                .filter(Q(group__gaccess__active=True)
-                        & (Q(group__gaccess__discoverable=True) | Q(group__gaccess__public=True))) \
-                .exclude(group__name="Hydroshare Author") \
-                .select_related("group", "user", "group__gaccess", "user__userprofile")
-
-            groups = get_groups_with_members(ugp_qs)
-            return {"groups": groups}
+        groups = list(gp_qs)
+        return {"groups": groups}
 
 
 class MyGroupsView(TemplateView):
