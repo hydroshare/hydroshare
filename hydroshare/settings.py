@@ -942,6 +942,7 @@ if any('pytest' in arg for arg in sys.argv) or 'test' in sys.argv:
     }
 
     TESTING = True
+    TEST_RUNNER = "hs_core.tests.runner.CustomXmlRunner"
 
 
 ####################
