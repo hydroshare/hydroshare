@@ -35,4 +35,4 @@ jobs:
 
     - name: Run HydroShare Tests
       run: |
-        docker exec hydroshare ./run-tests-jenkins
+        docker exec hydroshare ./run-tests-jenkins || exit 1
