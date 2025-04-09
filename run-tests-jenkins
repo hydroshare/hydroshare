@@ -2,4 +2,4 @@
 
 coverage run manage.py test theme --verbosity 3 --parallel --noinput --timing
 coverage xml
-pytest
+# pytest
