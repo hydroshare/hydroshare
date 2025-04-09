@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
-python manage.py test --verbosity 3 --noinput --timing --testrunner=hs_core.tests.runner.CustomXmlRunner
+python manage.py test --verbosity 3 --noinput --timing
 pytest

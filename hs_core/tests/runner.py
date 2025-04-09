@@ -1,7 +1,6 @@
 
 from django.test.runner import DiscoverRunner
 from django.conf import settings
-from xmlrunner.extra.djangotestrunner import XMLTestRunner
 
 from celery import current_app
 
@@ -47,11 +46,3 @@ class CustomTestSuiteRunner(DiscoverRunner):
                            and (not app.startswith('django.') and not app.startswith('mezzanine.'))]
 
         return super(CustomTestSuiteRunner, self).run_tests(test_labels, extra_tests, **kwargs)
-
-
-class CustomXmlRunner(CustomTestSuiteRunner, XMLTestRunner):
-    """
-    Custom test runner that uses XMLTestRunner to output results in XML format.
-    This is useful for CI/CD pipelines and other automated testing environments.
-    """
-    pass
