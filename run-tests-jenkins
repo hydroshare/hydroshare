@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
 
-coverage run manage.py test --verbosity 3 --parallel --noinput --timing
-coverage xml
+python manage.py test --verbosity 3 --parallel --noinput --timing
 pytest
