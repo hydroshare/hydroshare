@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
-
-python manage.py test --verbosity 3 --noinput --timing --testrunner=hs_core.tests.runner.CustomXmlRunner
+coverage run --source='.' manage.py test --verbosity 3 --noinput --timing --testrunner=hs_core.tests.runner.CustomXmlRunner
+coverage xml
 pytest
