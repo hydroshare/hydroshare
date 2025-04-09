@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-python manage.py test theme --verbosity 3 --parallel --noinput --timing --testrunner=hs_core.tests.runner.CustomXmlRunner
+python manage.py test theme --verbosity 3 --noinput --timing --testrunner=hs_core.tests.runner.CustomXmlRunner
 # pytest
