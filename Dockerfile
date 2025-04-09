@@ -23,7 +23,7 @@ ENV LC_ALL en_US.UTF-8
 
 # TODO remove these from hs_docker_base
 RUN pip uninstall -y nose django-nose nose-timer
-RUN pip install -y tblib
+RUN pip install tblib
 # RUN pip install -y unittest-xml-reporting
 # https://github.com/xmlrunner/unittest-xml-reporting
 
