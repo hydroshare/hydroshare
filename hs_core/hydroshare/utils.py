@@ -975,7 +975,11 @@ def add_file_to_resource(resource, f, folder='', source_name='',
                 err_msg = "File can't be added to this folder which represents an aggregation"
                 raise ValidationError(err_msg)
         openfile = File(f) if not isinstance(f, UploadedFile) else f
-        ret = ResourceFile.create(resource, openfile, folder=folder, source=None)
+        try:
+            ret = ResourceFile.create(resource, openfile, folder=folder, source=None)
+        except Exception as e:
+            logger.error("Error creating resource file: %s" % e)
+            raise OSError("Error creating resource file: %s" % e)
         if add_to_aggregation:
             if folder and resource.resource_type == 'CompositeResource':
                 aggregation = resource.get_model_aggregation_in_path(folder)
