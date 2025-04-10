@@ -115,6 +115,7 @@ urlpatterns += i18n_patterns(
     ),
     re_path(r"^verify/(?P<token>[0-9a-zA-Z:_\-]*)/", hs_core_views.verify),
     path("django_s3/", include("django_s3.urls")),
+    path("django_irods/", include("django_s3.urls")),
     # path("autocomplete/", include("autocomplete_light.urls")),
     path("discoverapi/", SearchAPI.as_view(), name="DiscoverAPI"),
     path("search/", SearchView.as_view(), name="Discover"),
