@@ -31,6 +31,10 @@ RUN pip install mezzanine==6.1.0
 RUN pip install --upgrade setuptools
 RUN pip install numpy==1.26.4
 
+# TODO: upgrade PILLOW >=10.3.0
+# https://github.com/stephenmcd/mezzanine/releases/tag/v6.1.0
+# https://github.com/hydroshare/hs_docker_base/security/dependabot/68
+
 USER root
 WORKDIR /hydroshare
 
