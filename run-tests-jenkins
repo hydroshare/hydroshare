@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-python manage.py test --verbosity 3 --noinput --timing --failfast
+python manage.py test --verbosity 3 --noinput --timing
 pytest
 # ./hsctl managepy test hs_rest_api2.tests.test_file_json_metadata.TestFileBasedJSON.test_geographic_raster_metadata_update_retrieve --failfast
