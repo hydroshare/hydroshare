@@ -43,7 +43,7 @@ jobs:
       with:
         files: |
           pytests.xml
-          test_results/*.xml
+          t_results/*.xml
     
     # archive the test results
     - name: Archive Test Results
@@ -52,4 +52,4 @@ jobs:
         name: test-results
         path: |
           pytests.xml
-          test_results/*.xml
+          t_results/*.xml

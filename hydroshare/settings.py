@@ -4,7 +4,7 @@ import sys
 from PIL import ImageFile
 
 TEST_RUNNER = "hs_core.tests.runner.CustomTestSuiteRunner"
-TEST_OUTPUT_DIR = "test_results"
+TEST_OUTPUT_DIR = "t_results"
 
 # import importlib
 
