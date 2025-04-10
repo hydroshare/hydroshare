@@ -6,9 +6,9 @@ from os.path import dirname
 
 from django.core.management.base import BaseCommand
 from hs_dictionary.models import SubjectArea
-import imp
+import importlib
 
-imp.reload(sys)
+importlib.reload(sys)
 
 
 class Command(BaseCommand):

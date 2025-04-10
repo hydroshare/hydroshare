@@ -56,9 +56,9 @@ class TestOauthGroup(TestCase):
                           'response_type=code'.format(self.testGroup1.pk)
         # check user in group can authenticate
         response = self.client.get(group_authorize, follow=True)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         # check user not in group cannot authenticate
         self.client.logout()
         self.client.login(username=self.user2.username, password='abc123')
         response = self.client.get(group_authorize, follow=True)
-        self.assertEquals(response.redirect_chain, [('/group/{}'.format(self.testGroup1.pk), 302)])
+        self.assertEqual(response.redirect_chain, [('/group/{}'.format(self.testGroup1.pk), 302)])

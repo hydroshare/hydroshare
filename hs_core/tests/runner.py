@@ -1,9 +1,8 @@
 
-from django_nose.runner import NoseTestSuiteRunner
+from django.test.runner import DiscoverRunner
+from django.conf import settings
 
 from celery import current_app
-
-from hydroshare import settings
 
 
 def _set_eager():
@@ -23,7 +22,7 @@ def _set_eager():
     current_app.conf.CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
 
 
-class CustomTestSuiteRunner(NoseTestSuiteRunner):
+class CustomTestSuiteRunner(DiscoverRunner):
     """Override the default django 'test' command, exclude from testing
     all 3rd part apps which we know will probably fail."""
 
