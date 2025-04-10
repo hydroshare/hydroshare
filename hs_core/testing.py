@@ -4,7 +4,6 @@ from dateutil import parser
 import tempfile
 import os
 
-from django.contrib.auth.models import User
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.core.files.uploadedfile import UploadedFile
@@ -20,8 +19,6 @@ class MockS3TestCaseMixin(object):
     """Mix in to allow for mock S3 testing."""
 
     def setUp(self):
-        # for some reason, the test runner is not deleting the user created in the previous test during teardown
-        User.objects.all().delete()
         super(MockS3TestCaseMixin, self).setUp()
 
     def tearDown(self):
