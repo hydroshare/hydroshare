@@ -26,6 +26,10 @@ RUN pip uninstall -y nose django-nose nose-timer
 RUN pip install tblib
 # RUN pip install unittest-xml-reporting
 # https://github.com/xmlrunner/unittest-xml-reporting
+RUN pip install celery==5.2.3
+RUN pip install mezzanine==6.1.0
+RUN pip install --upgrade setuptools
+RUN pip install numpy==1.26.4
 
 USER root
 WORKDIR /hydroshare
