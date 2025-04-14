@@ -73,9 +73,10 @@ def data_store_structure(request):
 
     try:
         store = istorage.listdir(directory_in_s3)
-    except SessionException as ex:
+    except Exception as ex:
         logger.error("session exception querying store_path {} for {}".format(store_path, res_id))
-        return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise ex
+        # return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     files = []
     dirs = []
