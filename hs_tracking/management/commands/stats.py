@@ -287,26 +287,26 @@ class Command(BaseCommand):
                     print("Error inspecting date: ", e)
                     pass
             print("*" * 80)
-        public_count = 0
-        private_count = 0
-        bad_count = 0
-        print(f"Publications between {start_date} and {end_date}")
-        dates = Date.objects.filter(type='created', start_date__range=[start_date, end_date])
-        bad_dates = []
-        for d in dates.all():
-            try:
-                d.metadata.resource.raccess
-            except Exception:
-                bad_count = bad_count + 1
-                bad_dates.append(d)
-                continue
-            if d.metadata.resource.raccess.public is True:
-                public_count = public_count + 1
-            else:
-                private_count = private_count + 1
         published_dates = Date.objects.filter(type='published', start_date__range=[start_date, end_date])
         print(f"resources that became published within date range: {published_dates.count()}")
+
         if options.get("verbose"):
+            public_count = 0
+            private_count = 0
+            bad_count = 0
+            dates = Date.objects.filter(type='created', start_date__range=[start_date, end_date])
+            bad_dates = []
+            for d in dates.all():
+                try:
+                    d.metadata.resource.raccess
+                except Exception:
+                    bad_count = bad_count + 1
+                    bad_dates.append(d)
+                    continue
+                if d.metadata.resource.raccess.public is True:
+                    public_count = public_count + 1
+                else:
+                    private_count = private_count + 1
             print(f"resources that were created within date range: {dates.count()}")
             print(f"resources that were created in the date range that are currently private: {private_count}")
             print(f"resources that were created in the date range that are currently public:{public_count}")
