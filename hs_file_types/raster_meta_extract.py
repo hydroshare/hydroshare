@@ -16,7 +16,9 @@ This is used to process the vrt raster and to extract max, min value of each ras
 from osgeo import gdal, osr
 from osgeo.gdalconst import GA_ReadOnly
 from collections import OrderedDict
+from errno import ENOENT
 import re
+import sys
 import logging
 from pycrs.parse import from_unknown_wkt
 import numpy
@@ -292,7 +294,11 @@ def get_band_info(raster_file_name):
 
         for i in range(0, band_count):
             band = raster_dataset.GetRasterBand(i + 1)
-            minimum, maximum, _, _ = band.ComputeStatistics(False)
+            stats = band.ComputeStatistics(False)
+            if stats is not None:
+                minimum, maximum, _, _ = stats
+            else:
+                continue
             no_data = band.GetNoDataValue()
             new_no_data = None
 
