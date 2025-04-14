@@ -16,9 +16,7 @@ This is used to process the vrt raster and to extract max, min value of each ras
 from osgeo import gdal, osr
 from osgeo.gdalconst import GA_ReadOnly
 from collections import OrderedDict
-from errno import ENOENT
 import re
-import sys
 import logging
 from pycrs.parse import from_unknown_wkt
 import numpy
