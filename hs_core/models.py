@@ -3188,6 +3188,7 @@ class ResourceFile(ResourceFileS3Mixin):
         except Exception as e:
             logger = logging.getLogger(__name__)
             logger.error(f"Error creating ResourceFile: {e}")
+            # {'content_object': <CompositeResource: Untitled Resource>, 'file_folder': '', 'resource_file': <File: env.local>}
             raise
         return file
 
