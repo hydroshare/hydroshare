@@ -3182,7 +3182,7 @@ class ResourceFile(ResourceFileS3Mixin):
         # Actually create the file record
         # when file is a File, the file is copied to storage in this step
         # otherwise, the copy must precede this step.
-        # https://github.com/jschneier/django-storages/issues/255
+
         return ResourceFile.objects.create(**kwargs)
 
     # TODO: automagically handle orphaned logical files
