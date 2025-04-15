@@ -3183,13 +3183,7 @@ class ResourceFile(ResourceFileS3Mixin):
         # when file is a File, the file is copied to storage in this step
         # otherwise, the copy must precede this step.
         # https://github.com/jschneier/django-storages/issues/255
-        try:
-            file = ResourceFile.objects.create(**kwargs)
-        except Exception as e:
-            logger = logging.getLogger(__name__)
-            logger.error(f"Error creating ResourceFile: {e}")
-            raise
-        return file
+        return ResourceFile.objects.create(**kwargs)
 
     # TODO: automagically handle orphaned logical files
     def delete(self, delete_logical_file=False):
