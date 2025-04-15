@@ -3779,7 +3779,7 @@ class CompositeResourceTest(
         for res_file in self.composite_resource.files.all():
             # there should not be any resource files ending with _meta.xml or _resmap.xml
             self.assertFalse(res_file.file_name.endswith(AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value))
-            self.assertFalse(res_file.file_name.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH))
+            self.assertFalse(res_file.file_name.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value))
             # check file level system metadata
             self.assertGreater(res_file._size, 0)
             self.assertGreater(len(res_file._checksum), 0)

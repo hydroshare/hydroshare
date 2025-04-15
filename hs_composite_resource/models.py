@@ -373,8 +373,8 @@ class CompositeResource(BaseResource):
         folder, base = os.path.split(meta_file_path)
         if base.endswith(AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value):
             base_file_name_to_match = base[:-len(AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)]
-        elif base.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH):
-            base_file_name_to_match = base[:-len(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)]
+        elif base.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value):
+            base_file_name_to_match = base[:-len(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value)]
         else:
             base_file_name_to_match = base[:-len(AggregationMetaFilePath.SCHEMA_JSON_FILE_ENDSWITH)]
 
@@ -482,7 +482,7 @@ class CompositeResource(BaseResource):
         file_name, _ = os.path.splitext(orig_path)
         schema_json_file_name = file_name + AggregationMetaFilePath.SCHEMA_JSON_FILE_ENDSWITH
         meta_xml_file_name = file_name + AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value
-        map_xml_file_name = file_name + AggregationMetaFilePath.RESMAP_FILE_ENDSWITH
+        map_xml_file_name = file_name + AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value
         if not is_new_path_a_folder:
             # case of file rename/move for single file aggregation
             schema_json_file_full_path = os.path.join(self.file_path, schema_json_file_name)
