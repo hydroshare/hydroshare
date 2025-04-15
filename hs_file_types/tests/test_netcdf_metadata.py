@@ -744,7 +744,7 @@ class NetCDFFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
 
         # test aggregation xml file paths
         nc_file_path = get_path_with_no_file_extension(nc_res_file.short_path)
-        expected_meta_file_path = '{0}{1}'.format(nc_file_path, AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
+        expected_meta_file_path = '{0}{1}'.format(nc_file_path, AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
         expected_map_file_path = '{0}{1}'.format(nc_file_path, AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
@@ -767,7 +767,7 @@ class NetCDFFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
 
         # test aggregation xml file paths
         nc_file_path = get_path_with_no_file_extension(nc_res_file.short_path)
-        expected_meta_file_path = '{0}{1}'.format(nc_file_path, AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
+        expected_meta_file_path = '{0}{1}'.format(nc_file_path, AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
         expected_map_file_path = '{0}{1}'.format(nc_file_path, AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
@@ -803,7 +803,7 @@ class NetCDFFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
 
         # test aggregation xml file paths
         nc_file_path = get_path_with_no_file_extension(nc_res_file.short_path)
-        expected_meta_file_path = '{0}{1}'.format(nc_file_path, AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
+        expected_meta_file_path = '{0}{1}'.format(nc_file_path, AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
         expected_map_file_path = '{0}{1}'.format(nc_file_path, AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
@@ -842,7 +842,7 @@ class NetCDFFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
 
         # test aggregation xml file paths after folder rename
         nc_file_path = get_path_with_no_file_extension(nc_res_file.short_path)
-        expected_meta_file_path = '{0}{1}'.format(nc_file_path, AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
+        expected_meta_file_path = '{0}{1}'.format(nc_file_path, AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
         expected_map_file_path = '{0}{1}'.format(nc_file_path, AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
@@ -891,7 +891,7 @@ class NetCDFFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
 
         # test aggregation xml file paths
         nc_file_path = get_path_with_no_file_extension(nc_res_file.short_path)
-        expected_meta_file_path = '{0}{1}'.format(nc_file_path, AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
+        expected_meta_file_path = '{0}{1}'.format(nc_file_path, AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
         expected_map_file_path = '{0}{1}'.format(nc_file_path, AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)

@@ -371,8 +371,8 @@ class CompositeResource(BaseResource):
 
         meta_file_path = self.get_relative_path(meta_file_path)
         folder, base = os.path.split(meta_file_path)
-        if base.endswith(AggregationMetaFilePath.METADATA_FILE_ENDSWITH):
-            base_file_name_to_match = base[:-len(AggregationMetaFilePath.METADATA_FILE_ENDSWITH)]
+        if base.endswith(AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value):
+            base_file_name_to_match = base[:-len(AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)]
         elif base.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH):
             base_file_name_to_match = base[:-len(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)]
         else:
@@ -481,7 +481,7 @@ class CompositeResource(BaseResource):
         # for all aggregation types except fileset/model aggregation
         file_name, _ = os.path.splitext(orig_path)
         schema_json_file_name = file_name + AggregationMetaFilePath.SCHEMA_JSON_FILE_ENDSWITH
-        meta_xml_file_name = file_name + AggregationMetaFilePath.METADATA_FILE_ENDSWITH
+        meta_xml_file_name = file_name + AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value
         map_xml_file_name = file_name + AggregationMetaFilePath.RESMAP_FILE_ENDSWITH
         if not is_new_path_a_folder:
             # case of file rename/move for single file aggregation
