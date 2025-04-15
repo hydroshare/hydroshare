@@ -1,4 +1,4 @@
-FROM hydroshare/hs_docker_base:bd09a94
+FROM hydroshare/hs_docker_base:5e929b2
 # make sure to update multistage-node dockerfile as well if you update this base image
 
 # Set the locale. TODO - remove once we have a better alternative worked out
@@ -20,20 +20,6 @@ RUN wget -O /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem https://cacerts.digice
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
-
-# TODO remove these from hs_docker_base
-RUN pip uninstall -y nose django-nose nose-timer
-RUN pip install tblib
-# RUN pip install unittest-xml-reporting
-# https://github.com/xmlrunner/unittest-xml-reporting
-RUN pip install celery==5.2.3
-RUN pip install mezzanine==6.1.0
-RUN pip install --upgrade setuptools
-RUN pip install numpy==1.26.4
-
-# TODO: upgrade PILLOW >=10.3.0
-# https://github.com/stephenmcd/mezzanine/releases/tag/v6.1.0
-# https://github.com/hydroshare/hs_docker_base/security/dependabot/68
 
 USER root
 WORKDIR /hydroshare
