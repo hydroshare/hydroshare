@@ -1,16 +1,14 @@
+import logging
+import mimetypes
 import os
 import shutil
-import errno
 import tempfile
-import mimetypes
 import zipfile
-import logging
-
-from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
-from rdflib import Namespace, URIRef
-from django.conf import settings
 
 import bagit
+from django.conf import settings
+from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
+from rdflib import Namespace, URIRef
 
 from hs_core.models import ResourceFile
 

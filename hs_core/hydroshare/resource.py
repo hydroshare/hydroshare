@@ -1251,7 +1251,8 @@ def save_resource_metadata_json(resource):
     from_file_name = os.path.join(temp_path, meta_json_filename)
     metadata_json = resource.metadata.to_json()
     with open(from_file_name, 'w') as out:
-        # write resource level metadata
-        out.write(json.dumps(metadata_json, indent=4)) # Writes json to a temporary local file
+        # write resource level metadata to temporary local file
+        out.write(json.dumps(metadata_json, indent=4))
     to_file_name = os.path.join(resource.root_path, 'data', 'contents', meta_json_filename)
-    istorage.saveFile(from_file_name, to_file_name) # Uploads the local file to S3
+    # upload the local file to S3
+    istorage.saveFile(from_file_name, to_file_name)

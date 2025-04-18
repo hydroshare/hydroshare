@@ -220,6 +220,7 @@ def get_temp_dir():
     os.makedirs(tmpdir)
     return tmpdir
 
+
 def create_temp_dir_on_s3(istorage):
     temp_path = istorage.getUniqueTmpPath
     try:
@@ -232,6 +233,7 @@ def create_temp_dir_on_s3(istorage):
         else:
             raise Exception(str(ex))
     return temp_path
+
 
 # TODO: should be ResourceFile.replace
 def replace_resource_file_on_s3(new_file, original_resource_file, user):
