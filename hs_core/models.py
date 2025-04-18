@@ -1435,9 +1435,10 @@ class GeospatialRelation(AbstractRelation):
         schema_dict = {
             "type": "CreativeWork",
             "text": self.value,
-            "description": 'The content of this resource is related to'                      
+            "description": 'The content of this resource is related to'
         }
         return schema_dict
+
 
 @rdf_terms(DC.identifier)
 class Identifier(AbstractMetaDataElement):
@@ -2145,8 +2146,8 @@ class Coverage(AbstractMetaDataElement):
                     }
                 })
             else:
-                geo = {"geo":
-                    {
+                geo = {
+                    "geo": {
                         "type": "GeoCoordinates",
                         "latitude": value_dict.get('north'),
                         "longitude": value_dict.get('east')
@@ -2217,10 +2218,10 @@ class FundingAgency(AbstractMetaDataElement):
             "type": "MonetaryGrant",
             "name": self.award_title,
             "identifier": self.award_number,
-            "funder": {       
+            "funder": {
                 "type": "Organization",
                 "name": self.agency_name,
-                "url": self.agency_url,                
+                "url": self.agency_url,
             }
         }
         return schema_dict
@@ -4783,7 +4784,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         if self.publisher:
             json_dict.update(self.publisher.to_json())
 
-        citation= {"citation": self.resource.get_citation(forceHydroshareURI=False)}
+        citation = {"citation": self.resource.get_citation(forceHydroshareURI=False)}
         json_dict.update(citation)
 
         hs_res_url = os.path.join(current_site_url(), 'resource', self.resource.short_id)
@@ -4862,7 +4863,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
             rel_value = rel_dict[rel_key]
             relation_terms[rel_key].append(rel_value)
         if relation_terms:
-            json_dict.update(relation_terms)        
+            json_dict.update(relation_terms)
 
         geospatial_relations = {"hsterms:geospatialRelation": []}
         for geospatialrelation in self.geospatialrelations.all():
