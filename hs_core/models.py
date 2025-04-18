@@ -814,6 +814,41 @@ class Party(AbstractMetaDataElement):
                                                    f"\'{id_link}\' is not a valid {id_name}.")
         return identifiers
 
+    def to_json(self):
+        """Convert model data to JSON-compatible dict with schema.org mapping."""        
+        
+        identifiers = self.identifiers
+        if not identifiers and self.hydroshare_user_id:
+            user = User.objects.get(id=self.hydroshare_user_id)
+            identifiers = user.userprofile.identifiers
+        
+        additional_properties = []
+        for key, value in identifiers.items():            
+            identifier = {
+                "type": "PropertyValue",
+                "name": key,
+                "value": value
+            }
+            additional_properties.append(identifier)
+        schema_dict = {
+            "type": "Person",
+            "name": self.name
+        }
+        if self.organization:
+            schema_dict["affiliation"] = self.organization
+        if self.email:
+            schema_dict["email"] = self.email
+        if self.address:
+            schema_dict["address"] = self.address
+        if self.phone:
+            schema_dict["telephone"] = self.phone
+        if self.homepage:
+            schema_dict["url"] = self.homepage
+
+        if additional_properties:
+            schema_dict["additionalProperty"] = additional_properties
+        return schema_dict
+
 
 @rdf_terms(DC.contributor)
 class Contributor(Party):
@@ -834,6 +869,10 @@ class Creator(Party):
 
         ordering = ['order']
 
+    def to_json(self):
+        js_meta = super().to_json()
+        js_meta["hsterms:order"] = self.order
+        return js_meta
 
 def validate_abstract(value):
     """
@@ -891,6 +930,13 @@ class Description(AbstractMetaDataElement):
     def remove(cls, element_id):
         """Create custom remove method for Description model."""
         raise ValidationError("Description element of a resource can't be deleted.")
+
+    def to_json(self):
+        """Convert model data to JSON-compatible dict with schema.org mapping."""
+        schema_dict = {
+            "description": self.abstract
+        }
+        return schema_dict
 
 
 @rdf_terms(DCTERMS.bibliographicCitation)
@@ -960,6 +1006,13 @@ class Title(AbstractMetaDataElement):
         if title:
             Title.create(value=title.value, content_object=content_object)
 
+    def to_json(self):
+        """Convert model data to JSON-compatible dict with schema.org mapping."""
+        schema_dict = {
+            "name": self.value
+        }
+        return schema_dict
+
 
 @rdf_terms(DC.type)
 class Type(AbstractMetaDataElement):
@@ -990,6 +1043,13 @@ class Type(AbstractMetaDataElement):
         url = graph.value(subject=subject, predicate=cls.get_class_term())
         if url:
             Type.create(url=str(url), content_object=content_object)
+
+    def to_json(self):
+        """Convert model data to JSON-compatible dict with schema.org mapping."""
+        schema_dict = {
+            "additionalType": self.url.split('/')[-1]
+        }
+        return schema_dict
 
 
 @rdf_terms(DC.date)
@@ -1131,6 +1191,31 @@ class Date(AbstractMetaDataElement):
 
         dt.delete()
 
+    def to_json(self):
+        """Convert model data to JSON-compatible dict with schema.org mapping."""
+        if self.type == "created":
+            key = "dateCreated"
+        elif self.type == "modified":
+            key = "dateModified"
+        elif self.type == "published":
+            key = "datePublished"
+        else:
+            key = f"hsterms:{self.type}"    
+        if "hsterms:" not in key:
+            schema_dict = {
+                key: self.start_date.isoformat() if self.start_date else None
+            }
+        elif key == "hsterms:reviewStarted":
+            schema_dict = {
+                "hsterms:reviewStarted": self.start_date.isoformat() if self.start_date else None
+            }
+        else:
+            schema_dict = {
+                f"{key}StartDate": self.start_date.isoformat() if self.start_date else None,
+                f"{key}EndDate": self.end_date.isoformat() if self.end_date else None
+            }
+        return schema_dict
+
 
 class AbstractRelation(AbstractMetaDataElement):
     """Define Abstract Relation class."""
@@ -1271,6 +1356,24 @@ class Relation(AbstractRelation):
                 value = str(value)
                 Relation.create(type=type, value=value, content_object=content_object)
 
+    def to_json(self):
+        """Convert model data to JSON-compatible dict with schema.org mapping."""         
+        
+        schema_org_relation_types = (RelationTypes.isPartOf.value, RelationTypes.hasPart.value)
+        if self.type not in schema_org_relation_types:
+            key = f'hsterms:{self.type}'            
+        else:
+            key = self.type
+        
+        schema_dict = {
+            key: {
+                "type": "CreativeWork",
+                "text": self.value,
+                "description": dict(self.SOURCE_TYPES).get(self.type, 'The content of this resource is related to')
+            }            
+        }
+        return schema_dict
+
 
 @rdf_terms(HSTERMS.geospatialRelation, text=HSTERMS.relation_name)
 class GeospatialRelation(AbstractRelation):
@@ -1325,6 +1428,15 @@ class GeospatialRelation(AbstractRelation):
             if name and value and type:
                 GeospatialRelation.create(type=type, value=value, text=name, content_object=content_object)
 
+    def to_json(self):
+        """Convert model data to JSON-compatible dict with schema.org mapping."""
+        
+        schema_dict = {            
+            "type": "CreativeWork",
+            "text": self.value,
+            "description": 'The content of this resource is related to'                      
+        }
+        return schema_dict
 
 @rdf_terms(DC.identifier)
 class Identifier(AbstractMetaDataElement):
@@ -1504,6 +1616,17 @@ class Publisher(AbstractMetaDataElement):
         """Define custom remove method for Publisher model."""
         raise ValidationError("Publisher element can't be deleted.")
 
+    def to_json(self):
+        """Convert model data to JSON-compatible dict with schema.org mapping."""
+        schema_dict = {
+            "publisher": {
+                "type": "Organization",
+                "name": self.name,
+                "url": self.url
+            }
+        }
+        return schema_dict
+
 
 @rdf_terms(DC.language)
 class Language(AbstractMetaDataElement):
@@ -1553,6 +1676,13 @@ class Language(AbstractMetaDataElement):
         code = graph.value(subject=subject, predicate=cls.get_class_term())
         if code:
             Language.create(code=str(code), content_object=content_object)
+
+    def to_json(self):
+        """Convert model data to JSON-compatible dict with schema.org mapping."""
+        schema_dict = {
+            "inLanguage": self.code
+        }
+        return schema_dict
 
 
 @rdf_terms(DC.coverage)
@@ -1985,6 +2115,50 @@ class Coverage(AbstractMetaDataElement):
                                             file_type=file_type)
         return coverage_form
 
+    def to_json(self):
+        """Convert model data to JSON-compatible dict with schema.org mapping."""
+        value_dict = json.loads(self._value)
+        
+        if self.type == 'period':
+            schema_dict = {
+                "temporalCoverage": {
+                    "start": value_dict.get('start'),
+                    "end": value_dict.get('end')
+                }
+            }
+        else:
+            schema_dict = {
+                "spatialCoverage": {
+                    "type": "Place",
+                    "name": value_dict.get('name'),
+                    "hsterms:projection": value_dict.get('projection'),
+                    "hsterms:units": value_dict.get('units')
+                }
+            }
+            if self.type == 'box':
+                schema_dict['spatialCoverage'].update({
+                    "geo": {
+                        "type": "GeoShape",
+                        "box": "{northlimit} {eastlimit} {southlimit} {westlimit}".format(**value_dict)
+                    }
+                })
+            else:
+                geo = {"geo":
+                    {
+                        "type": "GeoCoordinates",
+                        "latitude": value_dict.get('north'),
+                        "longitude": value_dict.get('east')
+                    }
+                }
+                elevation = value_dict.get('elevation', None)
+                zunits = value_dict.get('zunits', None)
+                if elevation is not None:
+                    geo['geo']['elevation'] = elevation
+                if zunits is not None:
+                    geo['geo']['hsterms:zunits'] = zunits
+                schema_dict['spatialCoverage'].update(geo)
+        return schema_dict
+
 
 class Format(AbstractMetaDataElement):
     """Define Format custom metadata element model."""
@@ -2035,6 +2209,19 @@ class FundingAgency(AbstractMetaDataElement):
 
         super(FundingAgency, cls).update(element_id, **kwargs)
 
+    def to_json(self):
+        """Convert model data to JSON-compatible dict with schema.org mapping."""
+        schema_dict = {
+            "type": "MonetaryGrant",
+            "name": self.award_title,
+            "identifier": self.award_number,
+            "funder": {       
+                "type": "Organization",
+                "name": self.agency_name,
+                "url": self.agency_url,                
+            }
+        }
+        return schema_dict
 
 @rdf_terms(DC.subject)
 class Subject(AbstractMetaDataElement):
@@ -2109,6 +2296,17 @@ class Rights(AbstractMetaDataElement):
     def remove(cls, element_id):
         """Define custom remove method for Rights model."""
         raise ValidationError("Rights element of a resource can't be deleted.")
+
+    def to_json(self):
+        """Convert model data to JSON-compatible dict with schema.org mapping."""
+        schema_dict = {
+            "license": {
+                "type": "CreativeWork",
+                "url": self.url,
+                "name": self.statement
+            }
+        }
+        return schema_dict
 
 
 def short_id():
@@ -4557,6 +4755,120 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         of classes to be ignored"""
         return [Format]
 
+    def to_json(self):
+        """Return the metadata in JSON format - uses schema.org terms where possible and the rest
+        terms are based on hsterms."""
+        
+        from .hydroshare import current_site_url
+        
+        json_dict = {
+            "context": [
+                "https://schema.org/",
+                {
+                    "hsterms": "https://hydroshare.org/terms/"
+                }
+            ],
+            "type": "Dataset"
+        }
+        json_dict.update(self.title.to_json())
+        if self.description:
+            json_dict.update(self.description.to_json())
+        
+        json_dict.update(self.language.to_json())
+        json_dict.update(self.rights.to_json())
+        json_dict.update(self.type.to_json())
+        if self.publisher:
+            json_dict.update(self.publisher.to_json())
+        
+        citation= {"citation": self.resource.get_citation(forceHydroshareURI=False)}
+        json_dict.update(citation)
+                
+        hs_res_url = os.path.join(current_site_url(), 'resource', self.resource.short_id)
+        json_dict.update({"identifier": hs_res_url})
+        
+        provider = {
+            "provider": {                
+                "@type": "Organization",
+                "name": "CUAHSI",
+                "url": "https://www.cuahsi.org/",
+                "address": "1167 Massachusetts Ave Suites 418 & 419, Arlington, MA 02476"
+            }
+        }
+        json_dict.update(provider)
+        
+        creators = {"creator": []}
+        for creator in self.creators.all():
+            creators["creator"].append(creator.to_json())
+        json_dict.update(creators)
+        
+        contributors = {"contributor": []}
+        for contributor in self.contributors.all():
+            contributors["contributor"].append(contributor.to_json())
+        json_dict.update(contributors)
+
+        for date in self.dates.all():
+            json_dict.update(date.to_json())
+        for coverage in self.coverages.all():
+            json_dict.update(coverage.to_json())
+
+        associated_media = {"associatedMedia": []}        
+        # use the files in the resource to get the associated media
+        # TODO: should we only include the files that are not part of any aggregation?
+        for res_file in self.resource.files.all():
+            media_object = {
+                "type": "MediaObject",
+                "name": res_file.file_name,                
+                "contentUrl": os.path.join(current_site_url(), 'resource', self.resource.short_id, res_file.short_path),
+                "contentSize": res_file.size,
+                "sha256": res_file.checksum,
+                "encodingFormat": res_file.mime_type,                
+            }
+            associated_media["associatedMedia"].append(media_object)        
+        if associated_media["associatedMedia"]:
+            json_dict.update(associated_media)
+        
+        keywords = {"keywords": []}
+        for subject in self.subjects.all():
+            keywords["keywords"].append(subject.value)
+        if keywords["keywords"]:
+            json_dict.update(keywords)
+                
+        funders = {"funding": []}
+        for funding_agency in self.funding_agencies.all():
+            funders["funding"].append(funding_agency.to_json())
+        if funders["funding"]:
+            json_dict.update(funders)
+        
+        additional_metadata = {"hsterms:additionalMetadata": []}
+        for key, value in self.resource.extra_metadata.items():
+            as_property_value = {
+                "type": "PropertyValue",
+                "name": key,
+                "value": value
+            }
+            additional_metadata["hsterms:additionalMetadata"].append(as_property_value)
+        if additional_metadata["hsterms:additionalMetadata"]:
+            json_dict.update(additional_metadata)
+        
+        relation_terms = {}
+        for relation in self.relations.all():
+            rel_dict = relation.to_json()
+            rel_key = list(rel_dict.keys())[0]
+            if rel_key not in relation_terms:
+                relation_terms[rel_key] = []
+            rel_value = rel_dict[rel_key]
+            relation_terms[rel_key].append(rel_value)
+        if relation_terms:
+            json_dict.update(relation_terms)        
+                
+        geospatial_relations = {"hsterms:geospatialRelation": []}
+        for geospatialrelation in self.geospatialrelations.all():
+            geospatial_relations["hsterms:geospatialRelation"].append(geospatialrelation.to_json())
+        if geospatial_relations["hsterms:geospatialRelation"]:
+            json_dict.update(geospatial_relations)
+        
+        return json_dict
+    
     def ingest_metadata(self, graph):
         super(CoreMetaData, self).ingest_metadata(graph)
         subject = self.rdf_subject_from_graph(graph)
