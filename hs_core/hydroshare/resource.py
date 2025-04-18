@@ -1,4 +1,5 @@
 import datetime
+import json
 import logging
 import os
 import shutil
@@ -1235,3 +1236,22 @@ def delete_metadata_element(resource_short_id, element_model_name, element_id):
     """
     res = utils.get_resource_by_shortkey(resource_short_id)
     res.metadata.delete_element(element_model_name, element_id)
+
+
+def save_resource_metadata_json(resource):
+    """
+    Writes the resource level metadata from the db in schema.org format to the hs_user_metadata.json file of a resource
+
+    Parameters:
+    :param resource: A resource instance
+    """
+    istorage = resource.get_s3_storage()
+    temp_path = utils.create_temp_dir_on_s3(istorage)
+    meta_json_filename = 'hs_user_metadata.json'
+    from_file_name = os.path.join(temp_path, meta_json_filename)
+    metadata_json = resource.metadata.to_json()
+    with open(from_file_name, 'w') as out:
+        # write resource level metadata
+        out.write(json.dumps(metadata_json, indent=4)) # Writes json to a temporary local file
+    to_file_name = os.path.join(resource.root_path, 'data', 'contents', meta_json_filename)
+    istorage.saveFile(from_file_name, to_file_name) # Uploads the local file to S3

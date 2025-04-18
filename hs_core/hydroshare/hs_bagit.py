@@ -89,20 +89,6 @@ def create_bagit_files_by_s3(res, istorage):
     istorage.save_md5_manifest(resource_id)
 
 
-def _create_temp_dir_on_s3(istorage):
-    temp_path = istorage.getUniqueTmpPath
-    try:
-        os.makedirs(temp_path)
-    except OSError as ex:
-        # TODO: there might be concurrent operations.
-        if ex.errno == errno.EEXIST:
-            shutil.rmtree(temp_path)
-            os.makedirs(temp_path)
-        else:
-            raise Exception(str(ex))
-    return temp_path
-
-
 def save_resource_metadata_xml(resource):
     """
     Writes the resource level metadata from the db to the resourcemetadata.xml file of a resource
@@ -110,8 +96,10 @@ def save_resource_metadata_xml(resource):
     Parameters:
     :param resource: A resource instance
     """
+    from hs_core.hydroshare.utils import create_temp_dir_on_s3
+
     istorage = resource.get_s3_storage()
-    temp_path = _create_temp_dir_on_s3(istorage)
+    temp_path = create_temp_dir_on_s3(istorage)
     from_file_name = os.path.join(temp_path, 'resourcemetadata.xml')
     with open(from_file_name, 'w') as out:
         # write resource level metadata
@@ -132,7 +120,7 @@ def create_bag_metadata_files(resource):
     :return: istorage, an S3Storage object that will be used by subsequent operation to
     create a bag on demand as needed.
     """
-    from hs_core.hydroshare.utils import current_site_url, get_file_mime_type
+    from hs_core.hydroshare.utils import current_site_url, get_file_mime_type, create_temp_dir_on_s3
     from hs_core.hydroshare import encode_resource_url
 
     istorage = resource.get_s3_storage()
@@ -142,7 +130,7 @@ def create_bag_metadata_files(resource):
     # to accommodate asynchronous multiple file move operations for the same resource
 
     # TODO: This is always in /tmp; otherwise code breaks because open() is called on the result!
-    temp_path = _create_temp_dir_on_s3(istorage)
+    temp_path = create_temp_dir_on_s3(istorage)
 
     # an empty visualization directory will not be put into the zipped bag file by ibun command,
     # so creating an empty visualization directory to be put into the zip file as done by the two
