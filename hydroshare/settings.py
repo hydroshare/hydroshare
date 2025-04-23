@@ -914,6 +914,21 @@ TASK_NAME_LIST = [
     "hs_core.tasks.move_aggregation_task",
 ]
 
+MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
+    "/hydroshare/hs_file_types/model_meta_schema_templates"
+)
+
+BULK_UPDATE_CREATE_BATCH_SIZE = 1000
+
+
+AWS_S3_ACCESS_KEY_ID = 'minioadmin'
+AWS_S3_SECRET_ACCESS_KEY = 'minioadmin'
+AWS_S3_ENDPOINT_URL = 'http://minio:9000'
+# Only enable this if you are using minio in local development
+# AWS_S3_USE_LOCAL = True
+
+ACCESS_CONTROL_CHANGE_ENDPOINT = None
+
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #
 ####################################
@@ -971,21 +986,6 @@ else:
 # import codecs
 # sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 # sys.stderr = codecs.getwriter('utf8')(sys.stderr)
-
-MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
-    "/hydroshare/hs_file_types/model_meta_schema_templates"
-)
-
-BULK_UPDATE_CREATE_BATCH_SIZE = 1000
-
-
-AWS_S3_ACCESS_KEY_ID = 'minioadmin'
-AWS_S3_SECRET_ACCESS_KEY = 'minioadmin'
-AWS_S3_ENDPOINT_URL = 'http://minio:9000'
-# Only enable this if you are using minio in local development
-# AWS_S3_USE_LOCAL = True
-
-ACCESS_CONTROL_CHANGE_ENDPOINT = None
 
 if ENABLE_OIDC_AUTHENTICATION:
     # The order of the authentication classes is important. The OIDC authentication class
