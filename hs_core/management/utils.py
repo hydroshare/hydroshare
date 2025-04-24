@@ -468,6 +468,9 @@ def __check_s3_directory(resource, dir, logger,
                 if resource.is_metadata_xml_file(fullpath):
                     print("Skipping {} because it is a metadata XML file.".format(fullpath))
                     continue
+                if resource.is_metadata_json_file(fullpath):
+                    print("Skipping {} because it is a metadata JSON file.".format(fullpath))
+                    continue
                 if resource.is_collection_list_csv(fullpath):
                     print("Skipping {} because it is a collection .csv file.".format(fullpath))
                     continue
@@ -600,6 +603,9 @@ def __ingest_s3_directory(resource,
                 if not found:
                     if resource.is_metadata_xml_file(fullpath):
                         print("Skipping {} because it is a metadata XML file.".format(fullpath))
+                        continue
+                    if resource.is_metadata_json_file(fullpath):
+                        print("Skipping {} because it is a metadata JSON file.".format(fullpath))
                         continue
                     if resource.is_collection_list_csv(fullpath):
                         print("Skipping {} because it is a collection .csv file.".format(fullpath))

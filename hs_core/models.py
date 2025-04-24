@@ -2819,7 +2819,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             return True
         return False
 
-    def is_metadata_xml_file(self, file_path):
+    @classmethod
+    def is_metadata_xml_file(cls, file_path):
         """Determine whether a given file is metadata.
         Note: this will return true for any file that ends with the metadata endings
         We are taking the risk that user might create a file with the same filename ending
@@ -2830,6 +2831,16 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
                 or file_path.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)):
             return False
         return True
+
+    @classmethod
+    def is_metadata_json_file(cls, file_path):
+        """Determine whether a given file is a metadata json file.
+        Note: this will return true for any file that ends with the metadata endings or
+        has the same name as the metadata json file
+        """
+        from django_s3.utils import is_metadata_json_file
+
+        return is_metadata_json_file(file_path)
 
     def is_aggregation_xml_file(self, file_path):
         """Checks if the file path *file_path* is one of the aggregation related xml file paths

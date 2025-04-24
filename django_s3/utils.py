@@ -1,3 +1,4 @@
+import os
 from django.db import connection
 
 
@@ -63,3 +64,18 @@ def is_metadata_xml_file(file_path):
             or file_path.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)):
         return False
     return True
+
+def is_metadata_json_file(file_path):
+    """Determine whether a given file is a metadata json file.
+    Note: this will return true for any file that ends with the metadata endings or
+    has the same name as the metadata json file
+    """
+    from hs_file_types.enums import AggregationMetaFilePath
+
+    if file_path.endswith(AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH):
+        return True
+
+    file_name = os.path.basename(file_path)
+    if file_name == AggregationMetaFilePath.METADATA_JSON_FILE_NAME:
+        return True
+    return False

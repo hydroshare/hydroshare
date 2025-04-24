@@ -147,7 +147,7 @@ def data_store_structure(request):
 
         if not res_file:
             # skip metadata files
-            if not resource.is_metadata_xml_file(f_store_path):
+            if not resource.is_metadata_xml_file(f_store_path) and not resource.is_metadata_json_file(f_store_path):
                 found_unreferenced_files = True
             continue
 
