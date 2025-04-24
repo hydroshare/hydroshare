@@ -12,7 +12,6 @@ def bucket_and_name(path):
         bucket_and_path = path.split("/")
         return bucket_and_path[0], "/".join(bucket_and_path[1:])
     res_id = path.split("/")[0] if "/" in path else path
-    print("res_id " + res_id)
     resource_query = 'SELECT quota_holder_id \
                         FROM hs_core_genericresource \
                         WHERE short_id = %s'
