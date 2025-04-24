@@ -148,7 +148,7 @@ You can debug via PyCharm by following the instructions [here](https://docs.goog
 
 ## Other Configuration Options
 
-## Contribute
+## Contribute!
 
 There are many ways to contribute to Hydroshare. Review [Contributing guidelines](https://github.com/hydroshare/hydroshare/blob/develop/docs/contributing.rst) and github practices for information on
 1. Opening issues for any bugs you find or suggestions you may have
