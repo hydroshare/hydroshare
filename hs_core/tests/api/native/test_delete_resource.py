@@ -3,7 +3,6 @@ import tempfile
 
 from django.contrib.auth.models import Group
 from django.test import TestCase
-from unittest import skip
 from haystack.query import SearchQuerySet
 
 from hs_core.hydroshare import resource
