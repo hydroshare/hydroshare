@@ -1851,7 +1851,7 @@ function onUploadSuccess(file, response) {
 
 $(document).ready(function () {
     // Download All method
-    $("#btn-download-all, #download-bag-btn").click(function (event) {
+    $("#btn-download-all, #download-bag-btn, #btn-toolbar-download-all").click(function (event) {
         const btnDownloadAll = $("#btn-download-all");
         const icon = $('#btn-download-all > span:first-child');
         const initialClass = icon.attr("class");
