@@ -4,7 +4,6 @@ import tempfile
 from django.core.management import call_command
 from django.urls import reverse
 from rest_framework import status
-from unittest import skip
 
 from hs_core.models import BaseResource
 from hs_core.tests.api.rest.base import HSRESTTestCase
@@ -24,7 +23,6 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
         # clean up haystack
         call_command('clear_index', "--noinput")
 
-    @skip("TODO: https://github.com/hydroshare/hydroshare/issues/5736")
     def test_discovery_rest_api(self):
         # Just need to test it works, more thorough tests exist in the discover view
         response = self.client.get(reverse('discover-hsapi', kwargs={}))

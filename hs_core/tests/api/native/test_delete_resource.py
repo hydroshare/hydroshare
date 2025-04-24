@@ -3,7 +3,6 @@ import tempfile
 
 from django.contrib.auth.models import Group
 from django.test import TestCase
-from unittest import skip
 from haystack.query import SearchQuerySet
 
 from hs_core.hydroshare import resource
@@ -43,7 +42,6 @@ class TestDeleteResource(MockS3TestCaseMixin, TestCase):
         # there should be no resource at this point
         self.assertEqual(BaseResource.objects.all().count(), 0, msg="Number of resources not equal to 0")
 
-    @skip("TODO: https://github.com/hydroshare/hydroshare/issues/5736")
     def test_delete_resource_public(self):
         # create files
         file_one = os.path.join(self.tmp_dir, "test1.txt")
