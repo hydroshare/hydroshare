@@ -42,7 +42,6 @@ class TestDiscoverResourceDelete(HSRESTTestCase):
         # clean up haystack
         call_command('clear_index', "--noinput")
 
-    @skip("TODO: https://github.com/hydroshare/hydroshare/issues/5736")
     def test_discover_res_delete(self):
         """Test that deleting user account cascades to remove resource from solr index
         """

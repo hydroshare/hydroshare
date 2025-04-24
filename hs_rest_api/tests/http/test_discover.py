@@ -24,7 +24,6 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
         # clean up haystack
         call_command('clear_index', "--noinput")
 
-    @skip("TODO: https://github.com/hydroshare/hydroshare/issues/5736")
     def test_discovery_rest_api(self):
         # Just need to test it works, more thorough tests exist in the discover view
         response = self.client.get(reverse('discover-hsapi', kwargs={}))
