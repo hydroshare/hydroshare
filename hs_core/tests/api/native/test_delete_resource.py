@@ -66,7 +66,23 @@ class TestDeleteResource(MockS3TestCaseMixin, TestCase):
         current_index_count = len(SearchQuerySet().all())
 
         new_res.set_public(True)
-        self.assertEqual(len(SearchQuerySet().all()), current_index_count + 1)
+        # Retry mechanism to wait for the resource to be indexed
+        import time
+        for _ in range(5):  # Retry up to 5 times
+            if len(SearchQuerySet().all()) == current_index_count + 1:  # Check if the resource is indexed
+                break
+            else:
+                # Wait for a short period before retrying
+                time.sleep(1)
+        else:
+            self.fail("Resource was not indexed in time")
 
         resource.delete_resource(new_res.short_id)
-        self.assertEqual(len(SearchQuerySet().all()), current_index_count)
+        for _ in range(5):  # Retry up to 5 times
+            if len(SearchQuerySet().all()) == current_index_count:  # Check if the resource is indexed
+                break
+            else:
+                # Wait for a short period before retrying
+                time.sleep(1)
+        else:
+            self.fail("Resource was not indexed in time")

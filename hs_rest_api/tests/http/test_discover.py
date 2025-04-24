@@ -47,9 +47,15 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
         resource.raccess.save()
 
         # matching search test
-        response = self.client.get(reverse('discover-hsapi', kwargs={}) + "?title__contains=Test")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.content.decode())
+        # Retry mechanism to wait for the resource to be indexed
+        for _ in range(5):  # Retry up to 5 times
+            response = self.client.get(reverse('discover-hsapi', kwargs={}) + "?title__contains=Test")
+            if response.status_code == status.HTTP_200_OK:
+                response_json = json.loads(response.content.decode())
+                if response_json.get("count") == 1:  # Check if the resource is indexed
+                    break
+        else:
+            self.fail("Resource was not indexed in time")
         # there should be one matching resource in the index
         self.assertEqual(response_json.get("count"), 1)
 
