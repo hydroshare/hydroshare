@@ -12,7 +12,7 @@ from django.conf import settings
 
 from smart_open import open
 from . import models as m
-from .utils import bucket_and_name, normalized_bucket_name, is_metadata_xml_file
+from .utils import bucket_and_name, is_metadata_json_file, normalized_bucket_name, is_metadata_xml_file
 
 from uuid import uuid4
 
@@ -60,8 +60,8 @@ class S3Storage(S3Storage):
         directories = list(set(directories + additional_directories))
 
         if remove_metadata:
-            # remove .xml metadata files from the list
-            files = [f for f in files if not is_metadata_xml_file(f)]
+            # remove .xml metadata and json metadata files from the list
+            files = [f for f in files if not is_metadata_xml_file(f) and not is_metadata_json_file(f)]
 
         return (directories, files, file_sizes)
 
