@@ -13,7 +13,7 @@ def bucket_and_name(path):
         return bucket_and_path[0], "/".join(bucket_and_path[1:])
     res_id = path.split("/")[0] if "/" in path else path
     print("res_id " + res_id)
-    resource_query = f'SELECT quota_holder_id \
+    resource_query = 'SELECT quota_holder_id \
                         FROM hs_core_genericresource \
                         WHERE short_id = %s'
 
@@ -23,7 +23,7 @@ def bucket_and_name(path):
         if row is None:
             raise Exception(f"Resource with short_id {res_id} not found")
         owner_id = row[0]
-        owner_username_query = f'SELECT _bucket_name \
+        owner_username_query = 'SELECT _bucket_name \
                                 FROM theme_userprofile WHERE user_id = %s'
     with connection.cursor() as cursor:
         cursor.execute(owner_username_query, [owner_id])
@@ -34,7 +34,7 @@ def bucket_and_name(path):
 
 def normalized_bucket_name(username):
     with connection.cursor() as cursor:
-        user_id_from_username_query = f'SELECT id \
+        user_id_from_username_query = 'SELECT id \
                                         FROM auth_user \
                                         WHERE username = %s'
         cursor.execute(user_id_from_username_query, [username])
@@ -42,7 +42,7 @@ def normalized_bucket_name(username):
         if row is None:
             raise Exception(f"User with username {username} not found")
         owner_id = row[0]
-        owner_username_query = f'SELECT _bucket_name \
+        owner_username_query = 'SELECT _bucket_name \
                                 FROM theme_userprofile \
                                 WHERE user_id = %s'
         cursor.execute(owner_username_query, [owner_id])
