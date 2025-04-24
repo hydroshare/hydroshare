@@ -122,6 +122,8 @@ def setup_periodic_tasks(sender, **kwargs):
         sender.add_periodic_task(crontab(minute=45), manage_task_hourly.s(), options={'queue': 'periodic'})
 
         # Daily (times in UTC)
+        sender.add_periodic_task(crontab(minute=30, hour=2), clear_tokens.s(),
+                                 options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=0, hour=3), nightly_metadata_review_reminder.s())
         sender.add_periodic_task(crontab(minute=30, hour=3), nightly_zips_cleanup.s(), options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=0, hour=4), daily_odm2_sync.s(), options={'queue': 'periodic'})
@@ -153,9 +155,19 @@ def setup_periodic_tasks(sender, **kwargs):
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
+def clear_tokens():
+    """
+    Clear expired tokens from the database.
+    https://django-oauth-toolkit.readthedocs.io/en/latest/management_commands.html#createapplication
+    """
+    from oauth2_provider.models import clear_expired
+    clear_expired()
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def check_bucket_names():
     """
-    Check to notify when UserProfile is missing a bucket name
+    Check to notify when UserProfi`le is missing a bucket name
     """
     bad_ups = get_user_profiles_missing_bucket_name()
 

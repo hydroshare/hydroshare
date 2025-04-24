@@ -481,6 +481,8 @@ SWAGGER_SETTINGS = {
 }
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = "oauth2_provider.Application"
+# https://django-oauth-toolkit.readthedocs.io/en/3.0.1/settings.html#refresh-token-expire-seconds
+REFRESH_TOKEN_EXPIRE_SECONDS = 60 * 60 * 24 * 30  # 30 days
 
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
 # All apps beginning with "django." or "mezzanine." are also excluded by default
