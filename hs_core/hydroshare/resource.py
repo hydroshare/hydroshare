@@ -13,6 +13,7 @@ from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
                                     ValidationError)
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
+from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import Sum
 from rest_framework import status
@@ -1245,14 +1246,12 @@ def save_resource_metadata_json(resource):
     Parameters:
     :param resource: A resource instance
     """
+    from hs_file_types.enums import AggregationMetaFilePath
+
     istorage = resource.get_s3_storage()
-    temp_path = utils.create_temp_dir_on_s3(istorage)
-    meta_json_filename = 'hs_user_metadata.json'
-    from_file_name = os.path.join(temp_path, meta_json_filename)
-    metadata_json = resource.metadata.to_json()
-    with open(from_file_name, 'w') as out:
-        # write resource level metadata to temporary local file
-        out.write(json.dumps(metadata_json, indent=4))
+    meta_json_filename = AggregationMetaFilePath.METADATA_JSON_FILE_NAME
+    metadata_json_str = json.dumps(resource.metadata.to_json(), indent=4)
+    content_file = ContentFile(metadata_json_str.encode('utf-8'))
     to_file_name = os.path.join(resource.root_path, 'data', 'contents', meta_json_filename)
-    # upload the local file to S3
-    istorage.saveFile(from_file_name, to_file_name)
+    # save the json file to S3
+    istorage.save(to_file_name, content_file)
