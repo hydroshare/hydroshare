@@ -54,6 +54,10 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
                 response_json = json.loads(response.content.decode())
                 if response_json.get("count") == 1:  # Check if the resource is indexed
                     break
+                else:
+                    # Wait for a bit before retrying
+                    import time
+                    time.sleep(1)
         else:
             self.fail("Resource was not indexed in time")
         # there should be one matching resource in the index
