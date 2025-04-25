@@ -1,8 +1,8 @@
 """This does a comprehensive test of a resource.
 
 This checks:
-* IRODS files
-* IRODS AVU values
+* S3 files
+* AVU values
 * Existence of Logical files
 
 Notes:

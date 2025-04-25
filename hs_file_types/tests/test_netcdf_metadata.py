@@ -7,7 +7,7 @@ from rest_framework.exceptions import ValidationError as DRF_ValidationError
 
 from hs_core import hydroshare
 from hs_core.models import Coverage, ResourceFile
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
 from hs_file_types.models import NetCDFLogicalFile, NetCDFFileMetaData, OriginalCoverage, Variable
 from hs_file_types.enums import AggregationMetaFilePath
@@ -18,7 +18,7 @@ from .utils import (
 )
 
 
-class NetCDFFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
+class NetCDFFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
                          CompositeResourceTestMixin):
     def setUp(self):
         super(NetCDFFileTypeTest, self).setUp()

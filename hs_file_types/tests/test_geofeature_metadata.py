@@ -7,7 +7,7 @@ from rest_framework.exceptions import ValidationError as DRF_ValidationError
 
 from hs_core import hydroshare
 from hs_core.models import Coverage, ResourceFile
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
 from hs_file_types.models import (
     GeoFeatureLogicalFile,
@@ -25,7 +25,7 @@ from .utils import (
 )
 
 
-class GeoFeatureFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
+class GeoFeatureFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
                              CompositeResourceTestMixin):
     def setUp(self):
         super(GeoFeatureFileTypeTest, self).setUp()

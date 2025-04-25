@@ -16,30 +16,36 @@ from hs_composite_resource.models import CompositeResource
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import (ResourceVersioningException,
                                       add_file_to_resource,
-                                      get_file_from_irods,
+                                      get_file_from_s3,
                                       get_resource_by_shortkey,
                                       resource_file_add_process)
 from hs_core.models import BaseResource, ResourceFile
 from hs_core.tasks import FileOverrideException
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core.views.utils import (add_reference_url_to_resource, create_folder,
                                  delete_resource_file,
                                  edit_reference_url_in_resource,
                                  move_or_rename_file_or_folder, remove_folder,
                                  unzip_file, zip_by_aggregation_file)
-from hs_file_types.models import (FileSetLogicalFile, GenericFileMetaData,
-                                  GenericLogicalFile, GeoFeatureLogicalFile,
-                                  GeoRasterLogicalFile,
-                                  ModelInstanceLogicalFile,
-                                  ModelProgramLogicalFile, NetCDFLogicalFile,
-                                  RefTimeseriesLogicalFile,
-                                  TimeSeriesLogicalFile)
+from hs_file_types.models import (
+    FileSetLogicalFile,
+    GenericFileMetaData,
+    GenericLogicalFile,
+    GeoFeatureLogicalFile,
+    GeoRasterLogicalFile,
+    ModelInstanceLogicalFile,
+    ModelProgramLogicalFile,
+    NetCDFLogicalFile,
+    RefTimeseriesLogicalFile,
+    TimeSeriesLogicalFile,
+    CSVLogicalFile,
+)
 from hs_file_types.enums import AggregationMetaFilePath
 from hs_file_types.tests.utils import CompositeResourceTestMixin
 
 
 class CompositeResourceTest(
-    MockIRODSTestCaseMixin, TransactionTestCase, CompositeResourceTestMixin
+    MockS3TestCaseMixin, TransactionTestCase, CompositeResourceTestMixin
 ):
     def setUp(self):
         super(CompositeResourceTest, self).setUp()
@@ -65,6 +71,16 @@ class CompositeResourceTest(
         self.generic_file_name = "generic_file.txt"
         self.generic_file = "hs_composite_resource/tests/data/{}".format(
             self.generic_file_name
+        )
+
+        self.generic_tar_gz_file_name = "generic_file.txt.tar.gz"
+        self.generic_tar_gz_file = "hs_composite_resource/tests/data/{}".format(
+            self.generic_tar_gz_file_name
+        )
+
+        self.csv_file_name = "csv_with_header_and_data.csv"
+        self.csv_file = "hs_composite_resource/tests/data/{}".format(
+            self.csv_file_name
         )
 
         self.netcdf_file_name = "netcdf_valid.nc"
@@ -328,7 +344,7 @@ class CompositeResourceTest(
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
 
     def test_resource_file_system_metadata(self):
-        """Test when files are added/uploaded to a resource, system level metadata is retrieved from iRODS and saved in
+        """Test when files are added/uploaded to a resource, system level metadata is retrieved from S3 and saved in
         the DB for each file.
         """
         self.create_composite_resource(self.generic_file)
@@ -1627,10 +1643,10 @@ class CompositeResourceTest(
         )
         self.assertEqual(res_coverage.value["projection"], "WGS 84 EPSG:4326")
         self.assertEqual(res_coverage.value["units"], "Decimal degrees")
-        self.assertEqual(res_coverage.value["northlimit"], 42.05002695977342)
-        self.assertEqual(res_coverage.value["eastlimit"], -111.57773718106199)
-        self.assertEqual(res_coverage.value["southlimit"], 41.98722286030317)
-        self.assertEqual(res_coverage.value["westlimit"], -111.6975629308406)
+        self.assertAlmostEqual(res_coverage.value["northlimit"], 42.050026959773426, places=14)
+        self.assertAlmostEqual(res_coverage.value["eastlimit"], -111.577737181062, places=14)
+        self.assertAlmostEqual(res_coverage.value["southlimit"], 41.98722286030319, places=14)
+        self.assertAlmostEqual(res_coverage.value["westlimit"], -111.69756293084063, places=14)
         value_dict = {
             "east": "-110.88845678",
             "north": "43.6789",
@@ -1649,8 +1665,8 @@ class CompositeResourceTest(
         self.assertEqual(res_coverage.value["units"], "Decimal degrees")
         self.assertEqual(res_coverage.value["northlimit"], 43.6789)
         self.assertEqual(res_coverage.value["eastlimit"], -110.88845678)
-        self.assertEqual(res_coverage.value["southlimit"], 41.98722286030317)
-        self.assertEqual(res_coverage.value["westlimit"], -111.6975629308406)
+        self.assertEqual(res_coverage.value["southlimit"], 41.98722286030319)
+        self.assertEqual(res_coverage.value["westlimit"], -111.69756293084063)
         # update the LFO coverage to box type
         value_dict = {
             "eastlimit": "-110.88845678",
@@ -1792,6 +1808,66 @@ class CompositeResourceTest(
             len(self.composite_resource.get_logical_files("GenericLogicalFile")), 1
         )
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
+
+    def test_aggregation_types(self):
+        """Here wre are testing the 'aggregation_types' property of the resource
+        Test for single file, raster, csv, and netcdf
+        """
+
+        self.create_composite_resource()
+
+        # add a file to the resource
+        self.add_file_to_resource(file_to_add=self.generic_file)
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        self.assertEqual(
+            len(self.composite_resource.get_logical_files("GenericLogicalFile")), 0
+        )
+        self.assertEqual(GenericLogicalFile.objects.count(), 0)
+
+        # now create a generic aggregation - single-file aggregation
+        gen_res_file = self.composite_resource.files.first()
+        # crate a generic logical file type
+        GenericLogicalFile.set_file_type(
+            self.composite_resource, self.user, gen_res_file.id
+        )
+
+        # now test the aggregation_types property
+        self.assertEqual(self.composite_resource.aggregation_types, ["Single File Content"])
+
+        # add a tif file
+        self.add_file_to_resource(file_to_add=self.raster_file)
+        # make the tif as part of the GeoRasterLogicalFile - multi-file aggregation
+        tif_res_file = [
+            f for f in self.composite_resource.files.all() if f.extension == ".tif"
+        ][0]
+        GeoRasterLogicalFile.set_file_type(
+            self.composite_resource, self.user, tif_res_file.id
+        )
+
+        self.assertEqual(self.composite_resource.aggregation_types,
+                         ["Single File Content", "Geographic Raster Content"])
+
+        # add a csv file to the resource
+        self.add_file_to_resource(file_to_add=self.csv_file)
+
+        csv_res_file = self.composite_resource.files.last()
+        # set the csv file to CSV file aggregation
+        CSVLogicalFile.set_file_type(
+            self.composite_resource, self.user, csv_res_file.id
+        )
+
+        self.assertEqual(self.composite_resource.aggregation_types,
+                         ["Single File Content", "Geographic Raster Content", "CSV Content"])
+
+        self.add_file_to_resource(file_to_add=self.netcdf_file_no_coverage)
+        # create NetCDF aggregation using the netcdf file
+        nc_res_file = self.composite_resource.files.last()
+        NetCDFLogicalFile.set_file_type(
+            self.composite_resource, self.user, nc_res_file.id
+        )
+        self.assertEqual(self.composite_resource.aggregation_types,
+                         ["Single File Content", "Multidimensional Content", "Geographic Raster Content",
+                          "CSV Content"])
 
     def test_can_be_public_or_discoverable_with_no_aggregation(self):
         """Here we are testing the function 'can_be_public_or_discoverable()'
@@ -2684,6 +2760,33 @@ class CompositeResourceTest(
         )
         self.assertEqual(new_composite_resource.files.count(), 1)
 
+    def test_copy_resource_with_tar_gz(self):
+        """Here we are testing that we can create a copy of a composite resource that contains a
+        tar.gz file"""
+
+        self.create_composite_resource()
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        # add a file to the resource
+        self.add_file_to_resource(file_to_add=self.generic_tar_gz_file)
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        # create a copy of the composite resource
+        new_composite_resource = hydroshare.create_empty_resource(
+            self.composite_resource.short_id, self.user, action="copy"
+        )
+        self.assertEqual(CompositeResource.objects.count(), 2)
+        # copy resource files and metadata
+        new_composite_resource = hydroshare.copy_resource(
+            self.composite_resource, new_composite_resource
+        )
+        self.assertEqual(
+            self.composite_resource.metadata.title.value,
+            new_composite_resource.metadata.title.value,
+        )
+        self.assertEqual(
+            self.composite_resource.files.count(), new_composite_resource.files.count()
+        )
+        self.assertEqual(new_composite_resource.files.count(), 1)
+
     def test_copy_resource_with_single_file_aggregation(self):
         """Here we are testing that we can create a copy of a composite resource that contains one
         single file aggregation"""
@@ -2717,6 +2820,44 @@ class CompositeResourceTest(
         self.assertEqual(new_composite_resource.files.count(), 1)
         self.assertEqual(GenericLogicalFile.objects.count(), 2)
 
+    def test_copy_resource_with_csv_file_aggregation(self):
+        """Here we are testing that we can create a copy of a composite resource that contains one
+        csv file aggregation"""
+
+        self.create_composite_resource()
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        # add the csv file to the resource
+        self.add_file_to_resource(file_to_add=self.csv_file)
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        csv_res_file = self.composite_resource.files.first()
+        # set the csv file to CSV file aggregation
+        CSVLogicalFile.set_file_type(
+            self.composite_resource, self.user, csv_res_file.id
+        )
+        self.assertEqual(CSVLogicalFile.objects.count(), 1)
+        # create a copy of the composite resource
+        new_composite_resource = hydroshare.create_empty_resource(
+            self.composite_resource.short_id, self.user, action="copy"
+        )
+        new_composite_resource = hydroshare.copy_resource(
+            self.composite_resource, new_composite_resource
+        )
+
+        self.assertEqual(CompositeResource.objects.count(), 2)
+        self.assertEqual(
+            self.composite_resource.metadata.title.value,
+            new_composite_resource.metadata.title.value,
+        )
+        self.assertEqual(
+            self.composite_resource.files.count(), new_composite_resource.files.count()
+        )
+        self.assertEqual(new_composite_resource.files.count(), 1)
+        self.assertEqual(CSVLogicalFile.objects.count(), 2)
+        csv_logical_files = CSVLogicalFile.objects.all()
+        self.assertEqual(csv_logical_files[0].metadata.tableSchema, csv_logical_files[1].metadata.tableSchema)
+        # compare preview_data
+        self.assertEqual(csv_logical_files[0].preview_data, csv_logical_files[1].preview_data)
+
     def test_copy_resource_with_file_set_aggregation_1(self):
         """Here we are testing that we can create a copy of a composite resource that contains one
         file set aggregation"""
@@ -2725,7 +2866,7 @@ class CompositeResourceTest(
         self.assertEqual(CompositeResource.objects.count(), 1)
         new_folder = "fileset_folder"
         ResourceFile.create_folder(self.composite_resource, new_folder)
-        # add the the txt file to the resource at the above folder
+        # add the txt file to the resource at the above folder
         self.add_file_to_resource(
             file_to_add=self.generic_file, upload_folder=new_folder
         )
@@ -2760,7 +2901,7 @@ class CompositeResourceTest(
         self.assertEqual(CompositeResource.objects.count(), 1)
         new_folder = "fileset_folder"
         ResourceFile.create_folder(self.composite_resource, new_folder)
-        # add the the txt file to the resource at the above folder
+        # add the txt file to the resource at the above folder
         self.add_file_to_resource(
             file_to_add=self.generic_file, upload_folder=new_folder
         )
@@ -2770,7 +2911,7 @@ class CompositeResourceTest(
         )
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
         self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
-        # add the the nc file to the resource at the above folder
+        # add the nc file to the resource at the above folder
         self.add_file_to_resource(
             file_to_add=self.netcdf_file, upload_folder=new_folder
         )
@@ -3115,6 +3256,43 @@ class CompositeResourceTest(
         self.assertEqual(new_composite_resource.files.count(), 1)
         self.assertEqual(GenericLogicalFile.objects.count(), 2)
 
+    def test_version_resource_with_csv_file_aggregation(self):
+        """Here we are testing that we can create a new version of a composite resource that contains one
+        CSV file aggregation"""
+
+        self.create_composite_resource()
+        self.assertEqual(CompositeResource.objects.count(), 1)
+        # add a csv file to the resource
+        self.add_file_to_resource(file_to_add=self.csv_file)
+        csv_res_file = self.composite_resource.files.first()
+        # set the csv file to CSV file aggregation
+        CSVLogicalFile.set_file_type(
+            self.composite_resource, self.user, csv_res_file.id
+        )
+        self.assertEqual(CSVLogicalFile.objects.count(), 1)
+        # create a new version of the composite resource
+        new_composite_resource = hydroshare.create_empty_resource(
+            self.composite_resource.short_id, self.user
+        )
+        new_composite_resource = hydroshare.create_new_version_resource(
+            self.composite_resource, new_composite_resource, self.user
+        )
+
+        self.assertEqual(CompositeResource.objects.count(), 2)
+        self.assertEqual(
+            self.composite_resource.metadata.title.value,
+            new_composite_resource.metadata.title.value,
+        )
+        self.assertEqual(
+            self.composite_resource.files.count(), new_composite_resource.files.count()
+        )
+        self.assertEqual(new_composite_resource.files.count(), 1)
+        self.assertEqual(CSVLogicalFile.objects.count(), 2)
+        csv_logical_files = CSVLogicalFile.objects.all()
+        self.assertEqual(csv_logical_files[0].metadata.tableSchema, csv_logical_files[1].metadata.tableSchema)
+        # compare preview_data
+        self.assertEqual(csv_logical_files[0].preview_data, csv_logical_files[1].preview_data)
+
     def test_version_resource_with_file_set_aggregation_1(self):
         """Here we are testing that we can create a new version of a composite resource that contains one
         file set aggregation"""
@@ -3123,7 +3301,7 @@ class CompositeResourceTest(
         self.assertEqual(CompositeResource.objects.count(), 1)
         new_folder = "fileset_folder"
         ResourceFile.create_folder(self.composite_resource, new_folder)
-        # add the the txt file to the resource at the above folder
+        # add the txt file to the resource at the above folder
         self.add_file_to_resource(
             file_to_add=self.generic_file, upload_folder=new_folder
         )
@@ -3158,7 +3336,7 @@ class CompositeResourceTest(
         self.assertEqual(CompositeResource.objects.count(), 1)
         new_folder = "fileset_folder"
         ResourceFile.create_folder(self.composite_resource, new_folder)
-        # add the the txt file to the resource at the above folder
+        # add the txt file to the resource at the above folder
         self.add_file_to_resource(
             file_to_add=self.generic_file, upload_folder=new_folder
         )
@@ -3168,7 +3346,7 @@ class CompositeResourceTest(
         )
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
         self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
-        # add the the nc file to the resource at the above folder
+        # add the nc file to the resource at the above folder
         self.add_file_to_resource(
             file_to_add=self.netcdf_file, upload_folder=new_folder
         )
@@ -3208,7 +3386,7 @@ class CompositeResourceTest(
         self.assertEqual(CompositeResource.objects.count(), 1)
         parent_fs_folder = "parent_fs_folder"
         ResourceFile.create_folder(self.composite_resource, parent_fs_folder)
-        # add the the txt file to the resource at the above folder
+        # add the txt file to the resource at the above folder
         self.add_file_to_resource(
             file_to_add=self.generic_file, upload_folder=parent_fs_folder
         )
@@ -3219,7 +3397,7 @@ class CompositeResourceTest(
         self.assertEqual(FileSetLogicalFile.objects.count(), 1)
         child_fs_folder = "{}/child_fs_folder".format(parent_fs_folder)
         ResourceFile.create_folder(self.composite_resource, child_fs_folder)
-        # add the the txt file to the resource at the above child folder
+        # add the txt file to the resource at the above child folder
         self.add_file_to_resource(
             file_to_add=self.generic_file, upload_folder=child_fs_folder
         )
@@ -3813,7 +3991,7 @@ class CompositeResourceTest(
         )
 
     def test_zip_by_aggregation_file_1(self):
-        """Test that we can zip a netcdf aggregation that exists at the root of resource path in iRODS
+        """Test that we can zip a netcdf aggregation that exists at the root of resource path in S3
         The aggregation zip file becomes a resource file
         """
 
@@ -3921,7 +4099,7 @@ class CompositeResourceTest(
         self._test_zip_file_contents(zipfile=zip_res_file, aggregation=nc_aggr)
 
     def test_zip_by_aggregation_file_4(self):
-        """Test that we can zip a single file aggregation that exists at the root of resource path in iRODS
+        """Test that we can zip a single file aggregation that exists at the root of resource path in S3
         The aggregation zip file becomes a resource file
         """
 
@@ -3952,7 +4130,7 @@ class CompositeResourceTest(
         self._test_zip_file_contents(zipfile=zip_res_file, aggregation=gen_aggr)
 
     def _test_zip_file_contents(self, zipfile, aggregation):
-        temp_zip_file = get_file_from_irods(
+        temp_zip_file = get_file_from_s3(
             resource=self.composite_resource, file_path=zipfile.storage_path
         )
         aggr_files = [f.file_name for f in aggregation.files.all()]
@@ -3966,6 +4144,28 @@ class CompositeResourceTest(
                 f = os.path.basename(f)
                 self.assertIn(f, aggr_files)
             shutil.rmtree(os.path.dirname(temp_zip_file))
+
+    def test_composite_resource_my_resources_none(self):
+        # test that only a fixed number of db queries (based on the number of resources) are
+        # generated for "my_resources" page - this test is with no resource.
+
+        # there should not be any resource at this point
+        self.assertEqual(BaseResource.objects.count(), 0)
+
+        self.client.login(username='user1', password='mypassword1')
+        # navigating to home page for initializing db queries
+        response = self.client.get(reverse("home"), follow=True)
+        self.assertTrue(response.status_code == 200)
+
+        # there should be no resources at this point
+        number_of_resources = BaseResource.objects.count()
+        self.assertEqual(number_of_resources, 0)
+        expected_query_count = self._get_expected_query_count(number_of_resources)
+        with self.assertNumQueries(expected_query_count):
+            response = self.client.get(reverse("my_resources"), follow=True)
+            self.assertTrue(response.status_code == 200)
+
+        self.composite_resource = None
 
     def test_composite_resource_my_resources_one(self):
         # test that only a fixed number of db queries (based on the number of resources) are
@@ -4041,7 +4241,7 @@ class CompositeResourceTest(
         # test that db queries for landing page have constant time complexity
 
         # expected number of queries for landing page when the resource has no resource file
-        _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 161
+        _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 179
 
         # expected number of queries for landing page when the resource has resource file
         _LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT = _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT + 16
@@ -4099,15 +4299,18 @@ class CompositeResourceTest(
 
     def _get_expected_query_count(self, number_of_resources):
         # this is the expected number of queries for "my_resources" page with no resources
-        base_query_count = 15
+        base_query_count = 17
 
         # this is additional number of queries per resource
-        # 3 are mezzanine queries (can't do much about it)
+        # 9 are mezzanine queries (can't do much about it)
         # 3 queries are our code in template
-        per_resource_query_count = 6
+        per_resource_query_count = 12
 
         # these are additional queries generated by get_my_resources_list() function
-        pre_template_query_count = 4 + number_of_resources
+        if number_of_resources > 0:
+            pre_template_query_count = 4 + number_of_resources
+        else:
+            pre_template_query_count = 0
 
         expected_query_count = base_query_count + pre_template_query_count
         expected_query_count += per_resource_query_count * number_of_resources

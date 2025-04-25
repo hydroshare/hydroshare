@@ -1,24 +1,25 @@
-from autocomplete_light import shortcuts as autocomplete_light
-from django.conf.urls import include, url
+# from autocomplete_light import shortcuts as autocomplete_light
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
+from django.urls import include, path, re_path
 from django.views.generic.base import RedirectView
 from mezzanine.conf import settings
-from mezzanine.core.views import direct_to_template # noqa
+from mezzanine.core.views import direct_to_template  # noqa
 from mezzanine.pages.views import page
 
 import hs_communities.views.communities
+from hs_core import autocomplete_light_registry as alr
 from hs_core import views as hs_core_views
 from hs_core.views.oauth2_view import GroupAuthorizationView
 from hs_discover.views import SearchAPI, SearchView
-from hs_rest_api.urls import hsapi_urlpatterns
 from hs_rest_api2.urls import hsapi2_urlpatterns
+from hs_rest_api.urls import hsapi_urlpatterns
 from hs_sitemap.views import sitemap
 from hs_tracking import views as tracking
 from theme import views as theme
-from theme.views import delete_resource_comment, oidc_signup, LogoutView
+from theme.views import LogoutView, delete_resource_comment, oidc_signup
 
-autocomplete_light.autodiscover()
+# autocomplete_light.autodiscover()
 admin.autodiscover()
 
 # Add the urlpatterns for any custom Django applications here.
@@ -27,153 +28,155 @@ admin.autodiscover()
 urlpatterns = []
 if settings.ENABLE_OIDC_AUTHENTICATION:
     urlpatterns += i18n_patterns(
-        url(r"^admin/login/$", RedirectView.as_view(url='/oidc/authenticate'), name="admin_login"),
-        url(r"^sign-up/$", oidc_signup, name='sign-up'),
-        url(r"^accounts/logout/$", LogoutView.as_view(), name='logout'),
-        url(r"^accounts/login/$", RedirectView.as_view(url='/oidc/authenticate'), name="login"),
-        url('oidc/', include('mozilla_django_oidc.urls')),
+        path("admin/login/", RedirectView.as_view(url='/oidc/authenticate'), name="admin_login"),
+        path("sign-up/", oidc_signup, name='sign-up'),
+        path("accounts/logout/", LogoutView.as_view(), name='logout'),
+        path("accounts/login/", RedirectView.as_view(url='/oidc/authenticate'), name="login"),
+        path('oidc/', include('mozilla_django_oidc.urls')),
     )
 
 urlpatterns += i18n_patterns(
     # Change the admin prefix here to use an alternate URL for the
     # admin interface, which would be marginally more secure.
-    url("^admin/", include(admin.site.urls)),
-    url(r"^o/", include("oauth2_provider.urls", namespace="oauth2_provider")),
-    url(
-        "^o/groupauthorize/(?P<group_id>[0-9]+)/$",
+    path("admin/", include(admin.site.urls)),
+    path("o/", include("oauth2_provider.urls", namespace="oauth2_provider")),
+    path(
+        "o/groupauthorize/<int:group_id>/",
         GroupAuthorizationView.as_view(),
         name="group-authorize",
     ),
-    url("^r/(?P<shortkey>[A-z0-9\-_]+)", hs_core_views.short_url), # noqa
-    url(
-        r"^tracking/reports/profiles/$",
+    re_path("^r/(?P<shortkey>[A-z0-9\-_]+)", hs_core_views.short_url), # noqa
+    path(
+        "tracking/reports/profiles/",
         tracking.VisitorProfileReport.as_view(),
         name="tracking-report-profiles",
     ),
-    url(
-        r"^tracking/reports/history/$",
+    path(
+        "tracking/reports/history/",
         tracking.HistoryReport.as_view(),
         name="tracking-report-history",
     ),
-    url(r"^tracking/$", tracking.UseTrackingView.as_view(), name="tracking"),
-    url(
-        r"^tracking/applaunch/", tracking.AppLaunch.as_view(), name="tracking-applaunch"
-    ),
-    url(r"^user/$", theme.UserProfileView.as_view()),
-    url(r"^user/(?P<user>.*)/", theme.UserProfileView.as_view()),
-    url(r"^comment/$", theme.comment),
-    url(
+    path("tracking/", tracking.UseTrackingView.as_view(), name="tracking"),
+    path("tracking/applaunch/", tracking.AppLaunch.as_view(), name="tracking-applaunch"),
+    path("user/", theme.UserProfileView.as_view()),
+    re_path(r"^user/(?P<user>.*)/", theme.UserProfileView.as_view()),
+    path("comment/", theme.comment),
+    re_path(
         r"^comment/delete/(?P<id>.*)/$",
         delete_resource_comment,
         name="delete_resource_comment",
     ),
-    url(r"^rating/$", theme.rating),
-    url(
+    path("rating/", theme.rating),
+    re_path(
         r"^profile/(?P<profile_user_id>.*)/$",
         theme.update_user_profile,
         name="update_profile",
     ),
-    url(r'^act-on-quota-request/(?P<quota_request_id>[0-9]+)/(?P<action>[a-z]+)/$',
-        theme.act_on_quota_request, name='act_on_quota_request_noauth'),
-    url(r'^act-on-quota-request/(?P<quota_request_id>[0-9]+)/(?P<action>[a-z]+)/(?P<uidb36>[-\w]+)/(?P<token>[-\w]+)/$',
+    re_path(r"^act-on-quota-request/(?P<quota_request_id>[0-9]+)/(?P<action>[a-z]+)/$",
+            theme.act_on_quota_request, name='act_on_quota_request_noauth'),
+    re_path(
+        r'^act-on-quota-request/(?P<quota_request_id>[0-9]+)/(?P<action>[a-z]+)/(?P<uidb36>[-\w]+)/(?P<token>[-\w]+)/$',
         theme.act_on_quota_request, name='act_on_quota_request'),
-    url(r'^quota-request/$', theme.quota_request, name='quota_request'),
-    url(r"^update_password/$", theme.update_user_password, name="update_password"),
-    url(
+    path("quota-request/", theme.quota_request, name='quota_request'),
+    path("update_password/", theme.update_user_password, name="update_password"),
+    re_path(
         r"^resend_verification_email/(?P<email>.*)/",
         theme.resend_verification_email,
         name="resend_verification_email",
     ),
-    url(
-        r"^reset_password_request/$",
+    path(
+        "reset_password_request/",
         theme.request_password_reset,
         name="reset_password_request",
     ),
-    url(
-        r"^new_password_for_reset/$",
+    path(
+        "new_password_for_reset/",
         theme.UserPasswordResetView.as_view(),
         name="new_password_for_reset",
     ),
-    url(
-        r"^confirm_reset_password/$",
+    path(
+        "confirm_reset_password/",
         theme.reset_user_password,
         name="confirm_reset_password",
     ),
-    url(r"^deactivate_account/$", theme.deactivate_user, name="deactivate_account"),
-    url(r"^landingPage/$", theme.landingPage, name="landing_page"),
-    url(r"^home/$", theme.dashboard, name="dashboard"),
-    url(r"^$", theme.home_router, name="home_router"),
-    url(
+    path("deactivate_account/", theme.deactivate_user, name="deactivate_account"),
+    path("landingPage/", theme.landingPage, name="landing_page"),
+    path("home/", theme.dashboard, name="dashboard"),
+    path("", theme.home_router, name="home_router"),
+    re_path(
         r"^email_verify/(?P<new_email>.*)/(?P<token>[-\w]+)/(?P<uidb36>[-\w]+)/",
         theme.email_verify,
         name="email_verify",
     ),
-    url(
+    re_path(
         r"^email_verify_password_reset/(?P<token>[-\w]+)/(?P<uidb36>[-\w]+)/",
         theme.email_verify_password_reset,
         name="email_verify_password_reset",
     ),
-    url(r"^verify/(?P<token>[0-9a-zA-Z:_\-]*)/", hs_core_views.verify),
-    url(r"^django_irods/", include("django_irods.urls")),
-    url(r"^autocomplete/", include("autocomplete_light.urls")),
-    url(r"^discoverapi/$", SearchAPI.as_view(), name="DiscoverAPI"),
-    url(r"^search/$", SearchView.as_view(), name="Discover"),
-    url(
-        r"^topics/$",
+    re_path(r"^verify/(?P<token>[0-9a-zA-Z:_\-]*)/", hs_core_views.verify),
+    path("django_s3/", include("django_s3.urls")),
+    path("django_irods/", include("django_s3.urls")),
+    # path("autocomplete/", include("autocomplete_light.urls")),
+    path("discoverapi/", SearchAPI.as_view(), name="DiscoverAPI"),
+    path("search/", SearchView.as_view(), name="Discover"),
+    path(
+        "topics/",
         hs_communities.views.communities.TopicsView.as_view(),
         name="topics",
     ),
-    url(r"^sitemap/$", sitemap, name="sitemap"),
-    url(r"^sitemap", include("hs_sitemap.urls")),
-    url(r"^groups", hs_core_views.FindGroupsView.as_view(), name="groups"),
-    url(
-        r"^communities/$",
+    path("sitemap/", sitemap, name="sitemap"),
+    path("sitemap", include("hs_sitemap.urls")),
+    path("groups", hs_core_views.FindGroupsView.as_view(), name="groups"),
+    path(
+        "communities/",
         hs_communities.views.communities.FindCommunitiesView.as_view(),
         name="communities",
     ),
-    url(
-        r"^community/(?P<community_id>[0-9]+)/$",
+    path(
+        "community/<int:community_id>/",
         hs_communities.views.communities.CommunityView.as_view(),
         name="community",
     ),
-    url(
-        r"^communities/manage-requests/$",
+    path(
+        "communities/manage-requests/",
         hs_communities.views.communities.CommunityCreationRequests.as_view(),
         name="manage_requests",
     ),
-    url(
-        r"^communities/manage-requests/(?P<rid>[0-9]+)/$",
+    path(
+        "communities/manage-requests/<int:rid>/",
         hs_communities.views.communities.CommunityCreationRequest.as_view(),
         name="manage_request"
     ),
-    url(
-        r"^collaborate/$",
+    path(
+        "collaborate/",
         hs_communities.views.communities.CollaborateView.as_view(),
         name="collaborate",
     ),
-    url(r"^my-resources/$", hs_core_views.my_resources, name="my_resources"),
-    url(
-        r"^my-resources-counts/$",
+    path("my-resources/", hs_core_views.my_resources, name="my_resources"),
+    path(
+        "my-resources-counts/",
         hs_core_views.my_resources_filter_counts,
         name="my_resources_counts",
     ),
-    url(r"^my-groups/$", hs_core_views.MyGroupsView.as_view(), name="my_groups"),
-    url(
-        r"^my-communities/$",
+    path("my-groups/", hs_core_views.MyGroupsView.as_view(), name="my_groups"),
+    path(
+        "my-communities/",
         hs_communities.views.communities.MyCommunitiesView.as_view(),
         name="my_communities",
     ),
-    url(
+    re_path(
         r"^group/(?P<group_id>[0-9]+)", hs_core_views.GroupView.as_view(), name="group"
     ),
-    url(r"^apps/$", hs_core_views.apps.AppsView.as_view(), name="apps"),
+    path("apps/", hs_core_views.apps.AppsView.as_view(), name="apps"),
+    path("user-autocomplete/", alr.UserAutocompleteView.as_view(), name="user-autocomplete"),
+    path("group-autocomplete/", alr.GroupAutocompleteView.as_view(), name="group-autocomplete"),
 )
 
 # Filebrowser admin media library.
 if getattr(settings, "PACKAGE_NAME_FILEBROWSER") in settings.INSTALLED_APPS:
     urlpatterns += i18n_patterns(
-        url(
-            "^admin/media-library/",
+        path(
+            "admin/media-library/",
             include("%s.urls" % settings.PACKAGE_NAME_FILEBROWSER),
         ),
     )
@@ -182,33 +185,32 @@ urlpatterns += hsapi_urlpatterns + hsapi2_urlpatterns
 
 # Put API URLs before Mezzanine so that Mezzanine doesn't consume them
 urlpatterns += [
-    url("", include("hs_core.resourcemap_urls")),
-    url("", include("hs_core.metadata_terms_urls")),
-    url("", include("hs_core.debug_urls")),
-    url("^irods/", include("irods_browser_app.urls")),
-    url("^access/", include("hs_access_control.urls")),
-    url("^hs_metrics/", include("hs_metrics.urls")),
+    path("", include("hs_core.resourcemap_urls")),
+    path("", include("hs_core.metadata_terms_urls")),
+    path("", include("hs_core.debug_urls")),
+    path("access/", include("hs_access_control.urls")),
+    path("hs_metrics/", include("hs_metrics.urls")),
 ]
 
 # robots.txt URLs for django-robots
 urlpatterns += [
-    url(r"^robots\.txt", include("robots.urls")),
+    re_path(r"robots\.txt", include("robots.urls")),
 ]
-from django.views.static import serve # noqa
+from django.views.static import serve  # noqa
 
 if settings.DEBUG is False and not settings.ENABLE_STATIC_CLOUD_STORAGE:
     # if DEBUG is True it will be served automatically
     urlpatterns += [
-        url(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}),
+        re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATIC_ROOT}),
     ]
 
 if "heartbeat" in settings.INSTALLED_APPS:
     from heartbeat.urls import urlpatterns as heartbeat_urls
 
-    urlpatterns += [url(r"^heartbeat/", include(heartbeat_urls))]
+    urlpatterns += [path("heartbeat/", include(heartbeat_urls))]
 
 if "health_check" in settings.INSTALLED_APPS:
-    urlpatterns += [url(r'^ht/', include('health_check.urls'))]
+    urlpatterns += [path('ht/', include('health_check.urls'))]
 
 urlpatterns += [
     # We don't want to presume how your homepage works, so here are a
@@ -220,7 +222,7 @@ urlpatterns += [
     # one homepage pattern, so if you use a different one, comment this
     # one out.
     # url("^$", direct_to_template, {"template": "index.html"}, name="home"),
-    url(r"^tests/$", direct_to_template, {"template": "tests.html"}, name="tests"),
+    path("tests/", direct_to_template, {"template": "tests.html"}, name="tests"),
     # HOMEPAGE AS AN EDITABLE PAGE IN THE PAGE TREE
     # ---------------------------------------------
     # This pattern gives us a normal ``Page`` object, so that your
@@ -234,7 +236,7 @@ urlpatterns += [
     # "/.html" - so for this case, the template "pages/index.html"
     # should be used if you want to customize the homepage's template.
     # Any impact on this with the new home routing mechanism.
-    url("^$", page, {"slug": "/"}, name="home"),
+    path("", page, {"slug": "/"}, name="home"),
     # HOMEPAGE FOR A BLOG-ONLY SITE
     # -----------------------------
     # This pattern points the homepage to the blog post listing page,
@@ -244,8 +246,8 @@ urlpatterns += [
     # page tree in the admin if it was installed.
     # url("^$", "mezzanine.blog.views.blog_post_list", name="home"),
     # Override Mezzanine URLs here, before the Mezzanine URL include
-    url("^accounts/signup/", theme.signup),
-    url("^accounts/verify/(?P<uidb36>[-\w]+)/(?P<token>[-\w]+)", theme.signup_verify), # noqa
+    re_path("^accounts/signup/", theme.signup),
+    re_path("^accounts/verify/(?P<uidb36>[-\w]+)/(?P<token>[-\w]+)", theme.signup_verify), # noqa
     # MEZZANINE'S URLS
     # ----------------
     # ADD YOUR OWN URLPATTERNS *ABOVE* THE LINE BELOW.
@@ -256,7 +258,7 @@ urlpatterns += [
     # ``mezzanine.urls``, go right ahead and take the parts you want
     # from it, and use them directly below instead of using
     # ``mezzanine.urls``.
-    url("^", include("mezzanine.urls")),
+    path("", include("mezzanine.urls")),
     # MOUNTING MEZZANINE UNDER A PREFIX
     # ---------------------------------
     # You can also mount all of Mezzanine's urlpatterns under a

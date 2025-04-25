@@ -3,13 +3,13 @@ from django.test import TestCase
 from django.contrib.auth.models import Group
 
 from hs_core import hydroshare
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_access_control.models import PrivilegeCodes
 
 from hs_access_control.tests.utilities import global_reset
 
 
-class T13Delete(MockIRODSTestCaseMixin, TestCase):
+class T13Delete(MockS3TestCaseMixin, TestCase):
 
     def setUp(self):
         super(T13Delete, self).setUp()

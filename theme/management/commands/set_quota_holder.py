@@ -38,7 +38,7 @@ class Command(BaseCommand):
                     count += 1
             except Exception as ex:
                 # this is needed for migration testing where some resources copied from www
-                # for testing do not exist in the iRODS backend, hence need to skip these
+                # for testing do not exist in the backend, hence need to skip these
                 # test artifects
                 print(res.short_id + ' raised SessionException when setting quota holder: '
                       + ex)

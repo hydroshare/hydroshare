@@ -26,17 +26,17 @@ class Command(BaseCommand):
         _BATCH_SIZE = settings.BULK_UPDATE_CREATE_BATCH_SIZE
         print(f"Total files in resource {res_id}: {res.files.all().count()}")
         file_counter = 0
-        # exclude files with size 0 as they don't exist in iRODS
+        # exclude files with size 0 as they don't exist in S3
         for res_file in res.files.exclude(_size=0).iterator():
-            # this is an expensive operation (3 irods calls per file) - about 1 min for 100 files
-            # size, checksum and modified time are obtained from irods and assigned to
+            # this is an expensive operation (3 S3 calls per file) - about 1 min for 100 files
+            # size, checksum and modified time are obtained from S3 and assigned to
             # relevant fields of the resource file object
             res_file.set_system_metadata(resource=res, save=False)
             res_files.append(res_file)
             file_counter += 1
             print(f"Updated file count: {file_counter}")
             if res_file._size <= 0:
-                print(f"File {res_file.short_path} was not found in iRODS.")
+                print(f"File {res_file.short_path} was not found in S3.")
 
         if res_files:
             ResourceFile.objects.bulk_update(res_files, ResourceFile.system_meta_fields(), batch_size=_BATCH_SIZE)

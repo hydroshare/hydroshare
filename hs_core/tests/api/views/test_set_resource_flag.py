@@ -10,10 +10,10 @@ from django.core.files.uploadedfile import UploadedFile
 from hs_core import hydroshare
 from hs_core.models import BaseResource
 from hs_core.views import set_resource_flag
-from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
+from hs_core.testing import MockS3TestCaseMixin, ViewTestCase
 
 
-class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
+class TestSetResourceFlag(MockS3TestCaseMixin, ViewTestCase):
     def setUp(self):
         super(TestSetResourceFlag, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')

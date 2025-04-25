@@ -1,18 +1,18 @@
+import json
 import os
 import shutil
-import json
 
 from django.contrib.auth.models import Group
 from django.urls import reverse
-
 from rest_framework import status
 
 from hs_core import hydroshare
-from hs_core.views import add_metadata_element, update_metadata_element, delete_metadata_element
-from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
+from hs_core.testing import MockS3TestCaseMixin, ViewTestCase
+from hs_core.views import (add_metadata_element, delete_metadata_element,
+                           update_metadata_element)
 
 
-class TestCRUDMetadata(MockIRODSTestCaseMixin, ViewTestCase):
+class TestCRUDMetadata(MockS3TestCaseMixin, ViewTestCase):
     def setUp(self):
         super(TestCRUDMetadata, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -124,7 +124,7 @@ class TestCRUDMetadata(MockIRODSTestCaseMixin, ViewTestCase):
         response = delete_metadata_element(request, shortkey=self.gen_res.short_id,
                                            element_name='contributor', element_id=contributor.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        self.assertEqual(response['Location'], request.headers['referer'])
         self.gen_res.refresh_from_db()
         # there should be no contributors
         self.assertEqual(self.gen_res.metadata.contributors.count(), 0)

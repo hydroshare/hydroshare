@@ -3,16 +3,16 @@ import shutil
 
 from django.contrib.auth.models import Group
 from django.urls import reverse
-
 from rest_framework import status
 
 from hs_core import hydroshare
 from hs_core.models import ResourceFile
-from hs_core.views import add_files_to_resource, delete_file, delete_multiple_files
-from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
+from hs_core.testing import MockS3TestCaseMixin, ViewTestCase
+from hs_core.views import (add_files_to_resource, delete_file,
+                           delete_multiple_files)
 
 
-class TestAddDeleteResourceFiles(MockIRODSTestCaseMixin, ViewTestCase):
+class TestAddDeleteResourceFiles(MockS3TestCaseMixin, ViewTestCase):
     def setUp(self):
         super(TestAddDeleteResourceFiles, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -128,7 +128,7 @@ class TestAddDeleteResourceFiles(MockIRODSTestCaseMixin, ViewTestCase):
         self.add_session_to_request(request)
         response = delete_file(request, shortkey=self.gen_res.short_id, f=res_file.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        self.assertEqual(response["Location"], request.headers["referer"])
         self.assertEqual(self.gen_res.files.count(), 0)
 
         hydroshare.delete_resource(self.gen_res.short_id)
@@ -166,7 +166,7 @@ class TestAddDeleteResourceFiles(MockIRODSTestCaseMixin, ViewTestCase):
         self.add_session_to_request(request)
         response = delete_multiple_files(request, shortkey=self.gen_res.short_id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        self.assertEqual(response["Location"], request.headers["referer"])
         self.assertEqual(self.gen_res.files.count(), 0)
 
         hydroshare.delete_resource(self.gen_res.short_id)

@@ -18,6 +18,8 @@ NEVERCACHE_KEY = \
 
 ALLOWED_HOSTS = ['*']
 
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 # for Django/Mezzanine comments and ratings to require user login
 COMMENTS_ACCOUNT_REQUIRED = True
 RATINGS_ACCOUNT_REQUIRED = True
@@ -27,10 +29,15 @@ RABBITMQ_HOST = os.environ.get('RABBITMQ_PORT_5672_TCP_ADDR', 'localhost')
 RABBITMQ_PORT = '5672'
 
 POSTGIS_HOST = os.environ.get('POSTGIS_PORT_5432_TCP_ADDR', 'localhost')
-POSTGIS_PORT = 5432
+POSTGIS_PORT = os.environ.get('POSTGIS_PORT', 5432)
 POSTGIS_DB = os.environ.get('POSTGIS_DB', 'postgres')
 POSTGIS_PASSWORD = os.environ.get('POSTGIS_PASSWORD', 'postgres')
 POSTGIS_USER = os.environ.get('POSTGIS_USER', 'postgres')
+POSTGIS_DISABLE_SERVER_SIDE_CURSORS = os.environ.get('POSTGIS_DISABLE_SERVER_SIDE_CURSORS', 'True')
+POSGIS_CLIENT_ENCODING = os.environ.get('POSTGIS_CLIENT_ENCODING', 'UTF8')
+POSTGIS_DEFAULT_TRANSACTION_ISOLATION = os.environ.get('POSTGIS_DEFAULT_TRANSACTION_ISOLATION', 'read committed')
+POSTGIS_USE_TZ = os.environ.get('POSTGIS_USE_TZ', 'True')
+POSTGIS_TIMEZONE = os.environ.get('POSTGIS_TIMEZONE', 'UTC')
 
 # number of seconds database connections should persist
 # https://docs.djangoproject.com/en/3.2/ref/settings/#std-setting-CONN_MAX_AGE
@@ -93,33 +100,18 @@ DATABASES = {
         "HOST": POSTGIS_HOST,
         # Set to empty string for default. Not used with sqlite3.
         "PORT": POSTGIS_PORT,
+        "DISABLE_SERVER_SIDE_CURSORS": POSTGIS_DISABLE_SERVER_SIDE_CURSORS,
+        "CLIENT_ENCODING": POSGIS_CLIENT_ENCODING,
+        "DEFAULT_TRANSACTION_ISOLATION": POSTGIS_DEFAULT_TRANSACTION_ISOLATION,
+        "USE_TZ": POSTGIS_USE_TZ,
+        "TIMEZONE": POSTGIS_TIMEZONE
     }
 }
 POSTGIS_VERSION = (2, 1, 1)
 
-# Native Docker iRODS developer local
-USE_IRODS = True
-IRODS_ROOT = '/tmp'
-IRODS_ICOMMANDS_PATH = '/usr/bin'
-IRODS_HOST = 'data.local.org'
-IRODS_PORT = '1247'
-IRODS_DEFAULT_RESOURCE = 'hydroshareReplResc'
-IRODS_HOME_COLLECTION = '/hydroshareZone/home/wwwHydroProxy'
-IRODS_CWD = '/hydroshareZone/home/wwwHydroProxy'
-IRODS_ZONE = 'hydroshareZone'
-IRODS_USERNAME = 'wwwHydroProxy'
-IRODS_AUTH = 'wwwHydroProxy'
-IRODS_GLOBAL_SESSION = True
-
-# Remote user zone iRODS configuration
-REMOTE_USE_IRODS = True
-
-# iRODS customized bagit rule path
-IRODS_BAGIT_RULE = 'hydroshare/irods/ruleGenerateBagIt_HS.r'
-IRODS_BAGIT_PATH = 'bags'
-IRODS_BAGIT_POSTFIX = 'zip'
-
-IRODS_SERVICE_ACCOUNT_USERNAME = ''
+# customized bagit rule path
+HS_BAGIT_PATH = 'bags'
+HS_BAGIT_POSTFIX = 'zip'
 
 HS_BAGIT_README_FILE_WITH_PATH = 'docs/bagit/readme.txt'
 
@@ -155,10 +147,6 @@ HYDROSHARE_SHARED_TEMP = '/shared_tmp'
 MAILCHIMP_ACTIVE_SUBSCRIBERS = "e210a70864"
 MAILCHIMP_SUBSCRIBERS = "f0c27254e3"
 
-# IRODS_USER_URI = "/irods-user"
-IRODS_DATA_URI = "/irods-data"
-LOCAL_CACHE_URI = "/local-cache"
-
 # Needed for deployments to non-dev environments
 RECAPTCHA_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
 RECAPTCHA_SECRET_KEY = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
@@ -180,6 +168,14 @@ hydroshare | security.PasswordExpiry.user: (fields.W342) Setting unique=True on 
 using a OneToOneField.
 """
 # SILENCED_SYSTEM_CHECKS = ["mezzanine.core.W03", "fields.W342"]
+
+COMPANION_URL = 'https://localhost/companion'
+UPPY_UPLOAD_PATH = '/hsapi/tus/'
+
+# Intentionally added to repo for testing purposes
+GOOGLE_PICKER_CLIENT_ID = '737951655407-p3d2b2bl2ln90g5plfj09e98bprk42da.apps.googleusercontent.com'
+GOOGLE_PICKER_API_KEY = 'AIzaSyDn4rOvqfQcnzKz-6O9VlMfXA6O3uDmZ7g'
+GOOGLE_PICKER_APP_ID = '737951655407'
 
 ENABLE_OIDC_AUTHENTICATION = False
 # If OIDC is enabled, the following additional settings should be defined in local_settings
@@ -210,3 +206,6 @@ DEFAULT_AUTHENTICATION_CLASSES = (
 # the user will be redirected to auth.cuahsi.io to choose if they want to logout of SSO
 # OIDC_OP_LOGOUT_URL_METHOD = 'hs_core.authentication.provider_logout'
 # OIDC_STORE_ID_TOKEN = True
+
+# Only enable this if you are using minio in local development
+AWS_S3_USE_LOCAL = True

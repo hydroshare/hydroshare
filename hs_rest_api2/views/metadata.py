@@ -1,6 +1,9 @@
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.http import JsonResponse
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework.exceptions import NotFound
+
+from hs_core import hydroshare
 from hs_rest_api2.metadata import ingest_resource_metadata, ingest_aggregation_metadata, \
     aggregation_metadata_json_loads, resource_metadata_json_loads
 from rest_framework.decorators import api_view
@@ -114,6 +117,16 @@ def single_file_metadata_json(request, pk, aggregation_path):
     return aggregation_metadata_json(request, pk, aggregation_path)
 
 
+@swagger_auto_schema(method='put', request_body=serializers.CSVFileMetadataInSerializer, response={204: None},
+                     responses={200: serializers.CSVFileMetadataSerializer},
+                     operation_description="Update CSV File aggregation metadata with json",)
+@swagger_auto_schema(method='get', responses={200: serializers.CSVFileMetadataSerializer},
+                     operation_description="Get CSV File aggregation metadata json")
+@api_view(['GET', 'PUT'])
+def csv_file_metadata_json(request, pk, aggregation_path):
+    return aggregation_metadata_json(request, pk, aggregation_path)
+
+
 @swagger_auto_schema(method='put', request_body=serializers.ModelProgramMetadataInSerializer, response={204: None},
                      responses={200: serializers.ModelProgramMetadataSerializer},
                      operation_description="Update Model Program aggregation metadata with json",)
@@ -132,3 +145,21 @@ def model_program_metadata_json(request, pk, aggregation_path):
 @api_view(['GET', 'PUT'])
 def model_instance_metadata_json(request, pk, aggregation_path):
     return aggregation_metadata_json(request, pk, aggregation_path)
+
+
+@swagger_auto_schema(method='get', responses={200: serializers.ResourceSharingStatusSerializer},
+                     operation_description="Get the sharing status of a resource")
+@api_view(['GET'])
+def resource_sharing_status_json(_, pk):
+    try:
+        res = hydroshare.utils.get_resource_by_shortkey(pk, or_404=False)
+    except ObjectDoesNotExist:
+        raise NotFound(detail=f"No resource was found for resource id:{pk}")
+
+    if res.raccess.published:
+        return JsonResponse({"sharing_status": "published"})
+    elif res.raccess.public:
+        return JsonResponse({"sharing_status": "public"})
+    elif res.raccess.discoverable:
+        return JsonResponse({"sharing_status": "discoverable"})
+    return JsonResponse({"sharing_status": "private"})

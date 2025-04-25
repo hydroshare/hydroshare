@@ -1,5 +1,6 @@
 import os
 import mimetypes
+import base64
 import copy
 import tempfile
 import shutil
@@ -7,11 +8,16 @@ import logging
 import json
 
 from django.urls import reverse
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousFileOperation
 from django.core.exceptions import ValidationError as CoreValidationError
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotFound
 from django.shortcuts import redirect
+from django.contrib.sessions.models import Session
+from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
@@ -20,7 +26,10 @@ from rest_framework import generics, status
 from rest_framework.request import Request
 from rest_framework.exceptions import ValidationError, NotAuthenticated, PermissionDenied, NotFound
 
-from django_irods.icommands import SessionException
+from django_s3.exceptions import SessionException
+from django_tus.views import TusUpload
+from django_tus.tusfile import TusFile, TusChunk
+from django_tus.response import TusResponse
 from hs_core import hydroshare
 from hs_core.models import AbstractResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_types, \
@@ -423,15 +432,16 @@ class ScienceMetadataRetrieveUpdate(APIView):
             scimeta_path = os.path.join(bag_data_path, 'resourcemetadata.xml')
             shutil.copy(scimeta.temporary_file_path(), scimeta_path)
             # Copy existing resource map to bag data path
-            # (use a file-like object as the file may be in iRODS, so we can't
+            # (use a file-like object as the file may be in S3, so we can't
             #  just copy it to a local path)
             resmeta_path = os.path.join(bag_data_path, 'resourcemap.xml')
             with open(resmeta_path, 'wb') as resmeta:
                 storage = get_file_storage()
-                resmeta_irods = storage.open(AbstractResource.sysmeta_path(pk))
-                shutil.copyfileobj(resmeta_irods, resmeta)
+                resmeta_s3 = storage.open(AbstractResource.sysmeta_path(pk))
+                shutil.copyfileobj(resmeta_s3, resmeta)
 
-            resmeta_irods.close()
+            resmeta_s3.close()
+            resmeta.close()
 
             try:
                 # Read resource system and science metadata
@@ -569,7 +579,7 @@ class ResourceFileCRUD(APIView):
             return Response("Resource type does not support folders", status.HTTP_403_FORBIDDEN)
 
         try:
-            view_utils.irods_path_is_allowed(pathname)
+            view_utils.s3_path_is_allowed(pathname)
         except (ValidationError, SuspiciousFileOperation) as ex:
             return Response(str(ex), status_code=status.HTTP_400_BAD_REQUEST)
 
@@ -580,10 +590,10 @@ class ResourceFileCRUD(APIView):
                       'resource id {res_id}'.format(file_name=pathname, res_id=pk)
             raise NotFound(detail=err_msg)
 
-        # redirects to django_irods/views.download function
+        # redirects to django_s3/views.download function
         # use new internal url for rest call
         # TODO: (Couch) Migrate model (with a "data migration") so that this hack is not needed.
-        redirect_url = f.url.replace('django_irods/download/', 'django_irods/rest_download/')
+        redirect_url = f.url.replace('django_s3/download/', 'django_s3/rest_download/')
         return HttpResponseRedirect(redirect_url)
 
     @swagger_auto_schema(request_body=serializers.ResourceFileValidator)
@@ -651,7 +661,7 @@ class ResourceFileCRUD(APIView):
             return Response("Resource type does not support folders", status.HTTP_403_FORBIDDEN)
 
         try:
-            view_utils.irods_path_is_allowed(pathname)  # check for hacking attempts
+            view_utils.s3_path_is_allowed(pathname)  # check for hacking attempts
         except (ValidationError, SuspiciousFileOperation) as ex:
             return Response(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
@@ -701,7 +711,7 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
         "previous": null,
         "results": [
             {
-                "url": "http://mill24.cep.unc.edu/django_irods/
+                "url": "http://mill24.cep.unc.edu/django_s3/
                 download/bd88d2a152894134928c587d38cf0272/data/contents/
                 mytest_resource/text_file.txt",
                 "size": 21,
@@ -710,7 +720,7 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
                 "checksum": "7265548b8f345605113bd9539313b4e7"
             },
             {
-                "url": "http://mill24.cep.unc.edu/django_irods/download/
+                "url": "http://mill24.cep.unc.edu/django_s3/download/
                 bd88d2a152894134928c587d38cf0272/data/contents/mytest_resource/a_directory/cea.tif",
                 "size": 270993,
                 "content_type": "image/tiff",
@@ -773,10 +783,10 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
                 try:
                     resource_file_info_list.append(self.resourceFileToListItem(f))
                 except SessionException as err:
-                    logger.error(f"Error for file {f.storage_path} from iRODS: {err.stderr}")
+                    logger.error(f"Error for file {f.storage_path} from S3: {err.stderr}")
                 except CoreValidationError as err:
-                    # primarily this exception will be raised if the file is not found in iRODS
-                    logger.error(f"Error for file {f.storage_path} from iRODS: {str(err)}")
+                    # primarily this exception will be raised if the file is not found in S3
+                    logger.error(f"Error for file {f.storage_path} from S3: {str(err)}")
 
             serializer = self.get_serializer(resource_file_info_list, many=True)
             return self.get_paginated_response(serializer.data)
@@ -788,7 +798,7 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
         resource, _, _ = view_utils.authorize(self.request, self.kwargs['pk'],
                                               needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
 
-        # exclude files with size 0 as they are missing from iRODS
+        # exclude files with size 0 as they are missing from S3
         return resource.files.exclude(_size=0).all()
 
     def get_serializer_class(self):
@@ -881,3 +891,115 @@ def _validate_metadata(metadata_list):
         if k.lower() in ('title', 'subject', 'description', 'publisher', 'format', 'date', 'type'):
             err_message = err_message.format(k.lower())
             raise ValidationError(detail=err_message)
+
+
+class CustomTusUpload(TusUpload):
+
+    @method_decorator(csrf_exempt)
+    def dispatch(self, *args, **kwargs):
+        # check that the user has permission to upload a file to the resource
+        from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
+        metadata = self.get_metadata(self.request)
+        if not metadata:
+            # get the tus resource_id from the request
+            tus_resource_id = self.kwargs['resource_id']
+            try:
+                tus_file = TusFile(str(tus_resource_id))
+                # get the resource id from the tus metadata
+                metadata = tus_file.metadata
+            except Exception as ex:
+                err_msg = f"Error in getting metadata for the tus upload: {str(ex)}"
+                logger.error(err_msg)
+                # https://tus.io/protocols/resumable-upload#head
+                # return a 404 not found response
+                return HttpResponseNotFound(err_msg)
+
+        # get the hydroshare resource id from the metadata
+        hs_res_id = metadata.get('hs_res_id')
+
+        if not self.request.user.is_authenticated:
+            sessionid = self.request.headers.get('HS-SID', None)
+            # use the cookie to get the django session and user
+            if sessionid:
+                try:
+                    # get the user from the session
+                    session = Session.objects.get(session_key=sessionid)
+                    user_id = session.get_decoded().get('_auth_user_id')
+                    user = User.objects.get(pk=user_id)
+                    self.request.user = user
+                except Exception as ex:
+                    err_msg = f"Error in getting user from session: {str(ex)}"
+                    logger.error(err_msg)
+                    return HttpResponseForbidden(err_msg)
+
+        # check that the user has permission to upload a file to the resource
+        try:
+            view_utils.authorize(self.request, hs_res_id,
+                                 needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+        except DjangoPermissionDenied:
+            return HttpResponseForbidden()
+
+        return super(CustomTusUpload, self).dispatch(*args, **kwargs)
+
+    def patch(self, request, resource_id, *args, **kwargs):
+
+        tus_file = TusFile.get_tusfile_or_404(str(resource_id))
+
+        # when using the google file picker api, the file size is initially set to 0
+        http_upload_length = request.META.get('HTTP_UPLOAD_LENGTH', None)
+        if tus_file.file_size == 0 and http_upload_length:
+            tus_file.file_size = int(http_upload_length)
+        chunk = TusChunk(request)
+
+        if not tus_file.is_valid():
+            return TusResponse(status=410)
+
+        if chunk.offset != tus_file.offset:
+            return TusResponse(status=409)
+
+        if chunk.offset > tus_file.file_size and tus_file.file_size != 0:
+            return TusResponse(status=413)
+
+        tus_file.write_chunk(chunk=chunk)
+
+        # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/tusfile.py#L151-L152
+        # here we modify from django_tus to allow for the file to be marked as complete
+        if tus_file.is_complete():
+            # file transfer complete, rename from resource id to actual filename
+            tus_file.rename()
+            tus_file.clean()
+
+            self.send_signal(tus_file)
+            self.finished()
+
+        return TusResponse(status=204, extra_headers={'Upload-Offset': tus_file.offset})
+
+    def post(self, request, *args, **kwargs):
+        # adapted from django_tus TusUpload.post
+        # in order to handle missing HTTP_UPLOAD_LENGTH header
+        # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/views.py#L56-L75
+
+        metadata = self.get_metadata(request)
+
+        metadata["filename"] = self.validate_filename(metadata)
+
+        message_id = request.META.get("HTTP_MESSAGE_ID")
+        if message_id:
+            metadata["message_id"] = base64.b64decode(message_id)
+
+        existing = TusFile.check_existing_file(metadata.get("filename", False))
+
+        if settings.TUS_EXISTING_FILE == 'error' and settings.TUS_FILE_NAME_FORMAT == 'keep' and existing:
+            return TusResponse(status=409, reason="File = with same name already exists")
+
+        # set the filesize from HTTP header if it exists, otherwise set it from the metadata
+        file_size = int(request.META.get("HTTP_UPLOAD_LENGTH", "0"))
+        meta_file_size = metadata.get("file_size", None)
+        if meta_file_size and meta_file_size != 'null':
+            file_size = meta_file_size
+
+        tus_file = TusFile.create_initial_file(metadata, file_size)
+
+        return TusResponse(
+            status=201,
+            extra_headers={'Location': '{}{}'.format(request.build_absolute_uri(), tus_file.resource_id)})

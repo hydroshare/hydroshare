@@ -64,7 +64,7 @@
                         {#  Existing HydroShare User  #}
                         <div v-show="authorType === authorTypes.EXISTING_HS_USER">
                             <div class="modal-body">
-                                {{ add_view_hs_user_form.user }}
+                                {{ add_view_hs_user_form.author }}
 
                                 <div v-if="addAuthorError" class="alert alert-danger has-space-top">
                                     ${addAuthorError}
@@ -427,7 +427,7 @@
                 {% with "user-type-hs-user" as div_id %}
                 <div data-contributor-type="hs_user">
                     <div class="modal-body">
-                        {{ add_view_contrib_user_form.user }}
+                        {{ add_view_contrib_user_form.contributor }}
                     </div>
 
                     <form action="/hsapi/_internal/{{ cm.short_id }}/contributor/add-metadata/" method="POST"
@@ -1357,9 +1357,6 @@
             </div>
         </div>
     </div>
-    {% include "irods_signin.html" %}
-    {% include "irods_upload_add.html" %}
-
 {% endif %}
 
 <div class="modal fade in" id="deleteCommentDialog" tabindex="-1" role="dialog" aria-labelledby="add-extra-meta" aria-hidden="true">
@@ -1461,7 +1458,7 @@
                                 <p>
                                     This resource doesn't meet the
                                     <a href="https://help.hydroshare.org/publishing-in-hydroshare/minimum-metadata-requirements-for-publishing-in-hydroshare/" target="_blank">minimum metadata standards</a>
-                                    for publication and adherence to 
+                                    for publication and adherence to
                                     <a href="https://help.hydroshare.org/publishing-in-hydroshare/terms-of-use-and-community-guidelines/" target="_blank">community guidelines</a>:
                                     <ul>
                                         {% for missing in missing_metadata_elements_for_publication %}
@@ -1735,7 +1732,7 @@
                                     <p class="discoverable">
                                         You have requested the URL for a file that is within a Discoverable resource.
                                         Only you and other HydroShare users who have been granted at least "view" permission will be able to access this URL.
-                                        If you want this URL to be publicly available, 
+                                        If you want this URL to be publicly available,
                                         change the sharing status of your resource to "public" or enable Private Link Sharing.
                                     </p>
                                     <p class="private_sharing">
@@ -1777,4 +1774,9 @@
 {% block extra_js %}
     <script type="text/javascript" src="{% static 'js/modals.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/identifiers-form.js' %}"></script>
+    <script>
+        // https://github.com/select2/select2/issues/1436#issuecomment-21028474
+        // incompatibility between Select2 and Bootstrap modals
+        $.fn.modal.Constructor.prototype.enforceFocus = function() {};
+    </script>
 {% endblock %}

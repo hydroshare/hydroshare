@@ -4,14 +4,14 @@ from django.test import RequestFactory
 
 from rest_framework import status
 
-from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
+from hs_core.testing import MockS3TestCaseMixin, ViewTestCase
 from hs_core import hydroshare
 from hs_composite_resource.views import update_resource_coverage
 from hs_file_types.models import GeoRasterLogicalFile, NetCDFLogicalFile
 from hs_file_types.tests.utils import CompositeResourceTestMixin
 
 
-class TestUpdateResourceCoverageViewFunctions(MockIRODSTestCaseMixin, ViewTestCase,
+class TestUpdateResourceCoverageViewFunctions(MockS3TestCaseMixin, ViewTestCase,
                                               CompositeResourceTestMixin):
     def setUp(self):
         super(TestUpdateResourceCoverageViewFunctions, self).setUp()

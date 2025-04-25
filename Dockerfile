@@ -1,9 +1,12 @@
-FROM hydroshare/hs_docker_base:262c2ca
+FROM hydroshare/hs_docker_base:dc160d2
+# https://hub.docker.com/layers/hydroshare/hs_docker_base/dc160d2/images/sha256-b009c50162dc7c2dd6d916a84f343eb0014aad457817ab0fd8f4192c884b1d8a
+# https://github.com/hydroshare/hs_docker_base/commit/dc160d2b9ccca7fbe4183e345c9264695267ffa8
 # make sure to update multistage-node dockerfile as well if you update this base image
 
 # Set the locale. TODO - remove once we have a better alternative worked out
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen
+
 
 # https://www.digicert.com/kb/digicert-root-certificates.htm
 # Get the .pem file from digicert and add it to the bundle used by certifi

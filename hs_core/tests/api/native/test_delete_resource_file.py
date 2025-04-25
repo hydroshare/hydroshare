@@ -7,10 +7,10 @@ from django.contrib.auth.models import Group, User
 
 from hs_core import hydroshare
 from hs_core.models import ResourceFile, BaseResource
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 
 
-class TestDeleteResourceFile(MockIRODSTestCaseMixin, unittest.TestCase):
+class TestDeleteResourceFile(MockS3TestCaseMixin, unittest.TestCase):
     def setUp(self):
         super(TestDeleteResourceFile, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')

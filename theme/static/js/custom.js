@@ -255,14 +255,14 @@ $(document).ready(function () {
 
     // Fixes positioning of user and group autocomplete input.
     // Solution found here: https://github.com/yourlabs/django-autocomplete-light/issues/253#issuecomment-35863432
-    yourlabs.Autocomplete.prototype.fixPosition = function (html) {
-        // Make sure overflow won't hide the select
-        this.input.parents().filter(function () {
-            return $(this).css('overflow') === 'hidden';
-        }).first().css('overflow', 'visible');
-
-        this.box.insertAfter(this.input).css({top: 35, left: 0});
-    };
+    // yourlabs.Autocomplete.prototype.fixPosition = function (html) {
+    //     // Make sure overflow won't hide the select
+    //     this.input.parents().filter(function () {
+    //         return $(this).css('overflow') === 'hidden';
+    //     }).first().css('overflow', 'visible');
+    //
+    //     this.box.insertAfter(this.input).css({top: 35, left: 0});
+    // };
 
     // Prevent clicking on list items dismissing the modal window
     $(".autocomplete-light-widget > input.autocomplete").each(function (i, el) {

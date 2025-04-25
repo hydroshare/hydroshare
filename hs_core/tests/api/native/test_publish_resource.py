@@ -18,13 +18,13 @@ from hs_access_control.models.privilege import UserResourcePrivilege, PrivilegeC
 from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_doi
 from hs_core.models import BaseResource
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core.views.utils import get_default_admin_user, get_default_support_user
 from django.core.exceptions import ValidationError, PermissionDenied
 from theme.backends import without_login_date_token_generator
 
 
-class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
+class TestPublishResource(MockS3TestCaseMixin, TestCase):
     def setUp(self):
         super(TestPublishResource, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -395,7 +395,7 @@ class TestPublishResource(MockIRODSTestCaseMixin, TestCase):
         <description>This is a test abstract</description>
         <fr:program name="fundref">
           <fr:assertion name="fundgroup">
-            <fr:assertion name="funder_name">National Science Foundation<fr:assertion name="funder_identifier">http://dx.doi.org/10.13039/100000001</fr:assertion></fr:assertion>
+            <fr:assertion name="funder_name">National Science Foundation<fr:assertion name="funder_identifier">https://ror.org/021nxhr62</fr:assertion></fr:assertion>
             <fr:assertion name="award_number">12345</fr:assertion>
           </fr:assertion>
           <fr:assertion name="fundgroup">

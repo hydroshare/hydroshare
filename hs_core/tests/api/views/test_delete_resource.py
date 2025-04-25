@@ -10,10 +10,10 @@ from rest_framework import status
 from hs_core import hydroshare
 from hs_core.models import BaseResource
 from hs_core.views import delete_resource
-from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
+from hs_core.testing import MockS3TestCaseMixin, ViewTestCase
 
 
-class TestDeleteResource(MockIRODSTestCaseMixin, ViewTestCase):
+class TestDeleteResource(MockS3TestCaseMixin, ViewTestCase):
     def setUp(self):
         super(TestDeleteResource, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')

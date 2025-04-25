@@ -6,15 +6,15 @@ from django.test import TransactionTestCase
 
 from hs_core import hydroshare
 from hs_core.models import ResourceFile
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core.views.utils import move_or_rename_file_or_folder, remove_folder
 from hs_file_types.models import FileSetLogicalFile, GenericLogicalFile, NetCDFLogicalFile, \
     GeoRasterLogicalFile, GeoFeatureLogicalFile, TimeSeriesLogicalFile, RefTimeseriesLogicalFile, \
-    ModelProgramLogicalFile
+    ModelProgramLogicalFile, CSVLogicalFile
 from .utils import CompositeResourceTestMixin
 
 
-class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
+class FileSetFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
                           CompositeResourceTestMixin):
     def setUp(self):
         super(FileSetFileTypeTest, self).setUp()
@@ -54,6 +54,9 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.states_dbf_file = base_data_file_path.format(self.states_dbf_file_name)
         self.states_shx_file_name = 'states.shx'
         self.states_shx_file = base_data_file_path.format(self.states_shx_file_name)
+
+        self.csv_file_name = "csv_with_header_and_data.csv"
+        self.csv_file = base_data_file_path.format(self.csv_file_name)
 
     def test_create_aggregation_1(self):
         """Test that we can create a fileset aggregation from a folder that contains one file """
@@ -841,8 +844,8 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertEqual(FileSetLogicalFile.objects.count(), 0)
         # there should be no resource file
         self.assertEqual(self.composite_resource.files.all().count(), 0)
-        # check that the folder got deleted from irods
-        istorage = self.composite_resource.get_irods_storage()
+        # check that the folder got deleted from S3
+        istorage = self.composite_resource.get_s3_storage()
         full_folder_path = os.path.join(self.composite_resource.file_path, fileset_folder)
         self.assertFalse(istorage.exists(full_folder_path))
 
@@ -1010,6 +1013,32 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
+    def test_auto_csv_aggregation_creation(self):
+        """Here we are testing when a csv file is uploaded to a folder representing a fileset aggregation
+        a csv aggregation is created automatically"""
+
+        self._create_fileset_aggregation()
+        fs_aggr_path = FileSetLogicalFile.objects.first().aggregation_name
+        self.assertEqual(CSVLogicalFile.objects.count(), 0)
+        # upload the scv file to the fileset folder
+        self.add_files_to_resource(files_to_add=[self.csv_file], upload_folder=fs_aggr_path)
+        # there should be two resource files
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        self.assertEqual(CSVLogicalFile.objects.count(), 1)
+        fileset_aggregation = FileSetLogicalFile.objects.first()
+        assert fileset_aggregation.metadata.is_dirty
+        # check that there are no missing required metadata for the fileset aggregation
+        self.assertEqual(len(fileset_aggregation.metadata.get_required_missing_elements()), 0)
+        # the csv file added to the fileset folder should be part of a new csv
+        # aggregation
+        csv_res_file = ResourceFile.get(resource=self.composite_resource,
+                                        file=self.csv_file_name, folder=fs_aggr_path)
+        self.assertEqual(csv_res_file.has_logical_file, True)
+        # the csv aggregation should contain one file
+        self.assertEqual(CSVLogicalFile.objects.first().files.count(), 1)
+        self.assertFalse(self.composite_resource.dangling_aggregations_exist())
+        self.composite_resource.delete()
+
     def test_rename_aggregation_1(self):
         """Testing that we can rename a folder that represents a fileset aggregation"""
         self._create_fileset_aggregation()
@@ -1167,7 +1196,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource()
         fs_1_folder = 'fs_1_folder'
         ResourceFile.create_folder(self.composite_resource, fs_1_folder)
-        # add the the txt file to the resource at the above folder
+        # add the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=fs_1_folder)
         # there should be one resource file
         self.assertEqual(self.composite_resource.files.all().count(), 1)
@@ -1180,7 +1209,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # create a another folder for the 2nd fileset aggregation
         fs_2_folder = 'fs_2_folder'
         ResourceFile.create_folder(self.composite_resource, fs_2_folder)
-        # add the the json file to the resource at the above sub folder
+        # add the json file to the resource at the above sub folder
         self.add_file_to_resource(file_to_add=self.json_file, upload_folder=fs_2_folder)
         # there should be two resource files
         self.assertEqual(self.composite_resource.files.all().count(), 2)
@@ -1574,10 +1603,10 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # fs_aggr.update_spatial_coverage()
         # fileset aggregation should now have spatial coverage
         self.assertNotEqual(fs_aggr.metadata.spatial_coverage, None)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['northlimit'], 42.05002695977342)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.57773718106199)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.98722286030317)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.6975629308406)
+        self.assertAlmostEqual(fs_aggr.metadata.spatial_coverage.value['northlimit'], 42.050026959773426, places=14)
+        self.assertAlmostEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.577737181062, places=14)
+        self.assertAlmostEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.98722286030319, places=14)
+        self.assertAlmostEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.69756293084063, places=14)
 
         # upload a nc file to the new_folder - folder that represents the above fileset
         # aggregation
@@ -1620,10 +1649,10 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
 
         # fileset aggregation should now have spatial coverage
         self.assertNotEqual(fs_aggr.metadata.spatial_coverage, None)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['northlimit'], 42.05002695977342)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.57773718106199)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.98722286030317)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.6975629308406)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['northlimit'], 42.050026959773426)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.577737181062)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.98722286030319)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.69756293084063)
 
         # upload a nc file to the new_folder - folder that represents the above fileset
         # aggregation
@@ -1637,10 +1666,10 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # update fileset aggregation spatial coverage from the contained 2 aggregations
         fs_aggr.update_spatial_coverage()
         # test fileset aggregation spatial coverage data
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['northlimit'], 42.05002695977342)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['northlimit'], 42.050026959773426)
         self.assertEqual(fs_aggr.metadata.spatial_coverage.value['eastlimit'], -111.5059403684569)
         self.assertEqual(fs_aggr.metadata.spatial_coverage.value['southlimit'], 41.86390807452128)
-        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.6975629308406)
+        self.assertEqual(fs_aggr.metadata.spatial_coverage.value['westlimit'], -111.69756293084063)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
         self.composite_resource.delete()
 
@@ -1681,7 +1710,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource()
         new_folder = 'fileset_folder'
         ResourceFile.create_folder(self.composite_resource, new_folder)
-        # add the the txt file to the resource at the above folder
+        # add the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=new_folder)
 
         # set folder to fileset logical file type (aggregation)
@@ -1691,7 +1720,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         self.create_composite_resource()
         parent_fs_folder = 'parent_fileset_folder'
         ResourceFile.create_folder(self.composite_resource, parent_fs_folder)
-        # add the the txt file to the resource at the above folder
+        # add the txt file to the resource at the above folder
         self.add_file_to_resource(file_to_add=self.generic_file, upload_folder=parent_fs_folder)
         # there should be one resource file
         self.assertEqual(self.composite_resource.files.all().count(), 1)
@@ -1712,7 +1741,7 @@ class FileSetFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         # create a folder inside fileset folder - new_folder
         child_fs_folder = '{}/child_fileset_folder'.format(parent_fs_folder)
         ResourceFile.create_folder(self.composite_resource, child_fs_folder)
-        # add the the json file to the resource at the above sub folder
+        # add the json file to the resource at the above sub folder
         self.add_file_to_resource(file_to_add=self.json_file, upload_folder=child_fs_folder)
         # there should be two resource files
         self.assertEqual(self.composite_resource.files.all().count(), 2)

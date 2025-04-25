@@ -22,7 +22,7 @@ from rdflib.namespace import DC
 from hs_core.hs_rdf import RDFS1, HSTERMS, RDF_MetaData_Mixin
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.hydroshare.utils import current_site_url, get_resource_file_by_id, \
-    set_dirty_bag_flag, add_file_to_resource, resource_modified, get_file_from_irods
+    set_dirty_bag_flag, add_file_to_resource, resource_modified, get_file_from_s3
 from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage
 from hs_core.signals import post_remove_file_aggregation
 from ..enums import AggregationMetaFilePath
@@ -129,6 +129,9 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         root_div = div()
         with root_div:
             h3("{} Content Metadata".format(self.logical_file.data_type), style="margin-bottom: 20px;")
+            if self.logical_file.data_type == "CSV":
+                csv_metadata = self.logical_file.metadata
+                csv_metadata.get_preview_data_html()
 
         if self.logical_file.dataset_name:
             root_div.add(self.get_dataset_name_html())
@@ -194,6 +197,9 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         root_div = div()
         with root_div:
             h3("{} Content Metadata".format(self.logical_file.data_type), style="margin-bottom: 20px;")
+            if self.logical_file.data_type == "CSV":
+                csv_metadata = self.logical_file.metadata
+                csv_metadata.get_preview_data_html()
             if dataset_name_form:
                 self.get_dataset_name_form()
 
@@ -919,12 +925,12 @@ class AbstractLogicalFile(models.Model):
                         raise ValidationError(msg)
         else:
             # user selected a folder to set aggregation - check if the specified folder exists
-            storage = resource.get_irods_storage()
+            storage = resource.get_s3_storage()
             if folder_path.startswith("data/contents/"):
                 folder_path = folder_path[len("data/contents/"):]
             path_to_check = os.path.join(resource.file_path, folder_path)
             if not storage.exists(path_to_check):
-                msg = "Specified folder {} path does not exist in irods."
+                msg = "Specified folder {} path does not exist in S3."
                 msg = msg.format(path_to_check)
                 raise ValidationError(msg)
 
@@ -989,10 +995,10 @@ class AbstractLogicalFile(models.Model):
         """Checks if this aggregation is a dangling aggregation or not"""
 
         resource = self.resource
-        istorage = resource.get_irods_storage()
+        istorage = resource.get_s3_storage()
         if self.files.count() == 0:
             if any([self.is_fileset, self.is_model_instance, self.is_model_program]):
-                # check folder exist in irods
+                # check folder exist in S3
                 if self.folder:
                     path = os.path.join(resource.file_path, self.folder)
                     if not istorage.exists(path):
@@ -1162,7 +1168,7 @@ class AbstractLogicalFile(models.Model):
         A helper for creating aggregation. Copies the given list of resource files to the
         specified folder path and then makes those copied files as part of the aggregation
         :param  resource: an instance of CompositeResource for which aggregation being created
-        :param  files_to_copy: a list of resource file paths in irods that need to be copied
+        :param  files_to_copy: a list of resource file paths in S3 that need to be copied
         to a specified directory *tgt_folder* and made part of this aggregation
         :param  tgt_folder: folder to which files need to be copied to
         """
@@ -1222,7 +1228,7 @@ class AbstractLogicalFile(models.Model):
         be deleted
         :param delete_meta_files: If True the resource map and metadata files that are part of this logical file
         will be deleted. The only time this should be set to False is when deleting a folder as the folder
-        gets deleted from iRODS which deletes the associated metadata and resource map files.
+        gets deleted from S3 which deletes the associated metadata and resource map files.
         """
 
         from hs_core.hydroshare.resource import delete_resource_file
@@ -1234,7 +1240,7 @@ class AbstractLogicalFile(models.Model):
 
         if delete_meta_files:
             # delete associated metadata and map xml documents
-            istorage = resource.get_irods_storage()
+            istorage = resource.get_s3_storage()
             if istorage.exists(self.metadata_file_path):
                 istorage.delete(self.metadata_file_path)
             if istorage.exists(self.map_file_path):
@@ -1274,7 +1280,7 @@ class AbstractLogicalFile(models.Model):
         object. However, it doesn't delete any resource files that are part of the aggregation."""
 
         # delete associated metadata and map xml document
-        istorage = self.resource.get_irods_storage()
+        istorage = self.resource.get_s3_storage()
         if istorage.exists(self.metadata_file_path):
             istorage.delete(self.metadata_file_path)
         if istorage.exists(self.map_file_path):
@@ -1383,9 +1389,9 @@ class AbstractLogicalFile(models.Model):
 
         log = logging.getLogger()
 
-        # create a temp dir where the xml files will be temporarily saved before copying to iRODS
+        # create a temp dir where the xml files will be temporarily saved before copying to S3
         tmpdir = os.path.join(settings.TEMP_FILE_DIR, str(random.getrandbits(32)), uuid4().hex)
-        istorage = self.resource.get_irods_storage()
+        istorage = self.resource.get_s3_storage()
 
         if os.path.exists(tmpdir):
             shutil.rmtree(tmpdir)
@@ -1398,14 +1404,14 @@ class AbstractLogicalFile(models.Model):
             with open(meta_from_file_name, 'w') as out:
                 out.write(self.metadata.get_xml())
             to_file_name = self.metadata_file_path
-            istorage.saveFile(meta_from_file_name, to_file_name, True)
+            istorage.saveFile(meta_from_file_name, to_file_name)
             log.debug("Aggregation metadata xml file:{} created".format(to_file_name))
 
             if create_map_xml:
                 with open(map_from_file_name, 'w') as out:
                     out.write(self.generate_map_xml())
                 to_file_name = self.map_file_path
-                istorage.saveFile(map_from_file_name, to_file_name, True)
+                istorage.saveFile(map_from_file_name, to_file_name)
                 log.debug("Aggregation map xml file:{} created".format(to_file_name))
             # setting bag flag to dirty - as resource map document needs to be re-generated as
             # resource map xml file has references to aggregation map xml file paths
@@ -1541,7 +1547,7 @@ class AbstractLogicalFile(models.Model):
         return xml_file_name
 
     def read_metadata_file(self):
-        istorage = self.resource.get_irods_storage()
+        istorage = self.resource.get_s3_storage()
         return istorage.download(self.metadata_file_path).read()
 
     def read_metadata_as_rdf(self):
@@ -1560,7 +1566,7 @@ class FileTypeContext(object):
     required for creating FileSet aggregation
     :param post_aggr_signal (optional) post aggregation creation signal to send signal
     :param  is_temp_file if True resource file specified by file_id will be retrieved from
-    irods to temp directory
+    S3 to temp directory
     """
 
     def __init__(self, aggr_cls, user, resource, file_id=None, folder_path='',
@@ -1589,8 +1595,8 @@ class FileTypeContext(object):
             self.resource, self.file_id, self.folder_path)
 
         if self.is_temp_file:
-            # need to get the file from irods to temp dir
-            self.temp_file = get_file_from_irods(resource=self.resource, file_path=self.res_file.storage_path)
+            # need to get the file from S3 to temp dir
+            self.temp_file = get_file_from_s3(resource=self.resource, file_path=self.res_file.storage_path)
             self.temp_dir = os.path.dirname(self.temp_file)
         return self  # control returned to the caller
 

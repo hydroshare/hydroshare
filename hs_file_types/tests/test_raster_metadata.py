@@ -8,7 +8,7 @@ from rest_framework.exceptions import ValidationError as DRF_ValidationError
 
 from hs_core import hydroshare
 from hs_core.models import Coverage, ResourceFile
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core.views.utils import move_or_rename_file_or_folder
 from hs_file_types.models import GenericLogicalFile, GeoRasterFileMetaData, GeoRasterLogicalFile
 from hs_file_types.enums import AggregationMetaFilePath
@@ -16,7 +16,7 @@ from hs_file_types.models.raster import BandInformation, CellInformation, Origin
 from .utils import CompositeResourceTestMixin, assert_raster_file_type_metadata, get_path_with_no_file_extension
 
 
-class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
+class RasterFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
                          CompositeResourceTestMixin):
     def setUp(self):
         super(RasterFileTypeTest, self).setUp()
@@ -1270,10 +1270,10 @@ class RasterFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         box_coverage = logical_file.metadata.spatial_coverage
         self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-        self.assertEqual(box_coverage.value['northlimit'], 42.05002878577159)
-        self.assertEqual(box_coverage.value['eastlimit'], -111.57737502643894)
-        self.assertEqual(box_coverage.value['southlimit'], 41.987457779031246)
-        self.assertEqual(box_coverage.value['westlimit'], -111.65768822411243)
+        self.assertAlmostEqual(box_coverage.value['northlimit'], 42.0500287857716, places=14)
+        self.assertAlmostEqual(box_coverage.value['eastlimit'], -111.57737502643897, places=14)
+        self.assertAlmostEqual(box_coverage.value['southlimit'], 41.98745777903126, places=14)
+        self.assertAlmostEqual(box_coverage.value['westlimit'], -111.65768822411246, places=14)
 
         # testing additional metadata element: original coverage
         ori_coverage = logical_file.metadata.originalCoverage

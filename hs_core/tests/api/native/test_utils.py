@@ -7,11 +7,11 @@ from mezzanine.conf import settings
 from hs_core.hydroshare import utils
 from hs_core.models import BaseResource
 from hs_core import hydroshare
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_composite_resource.models import CompositeResource
 
 
-class TestUtils(MockIRODSTestCaseMixin, TestCase):
+class TestUtils(MockS3TestCaseMixin, TestCase):
     def setUp(self):
         super(TestUtils, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -129,7 +129,7 @@ class TestUtils(MockIRODSTestCaseMixin, TestCase):
         test_file = 'my_file.tif'
         self.assertEqual(utils.get_file_mime_type(test_file), 'image/tiff')
         test_file = 'my_file.abc'
-        self.assertEqual(utils.get_file_mime_type(test_file), 'application/abc')
+        self.assertEqual(utils.get_file_mime_type(test_file), 'text/vnd.abc')
 
     def test_get_current_site_url(self):
         current_site = Site.objects.get_current()

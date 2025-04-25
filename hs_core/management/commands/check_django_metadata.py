@@ -27,13 +27,13 @@ def check_django_metadata(self, stop_on_error=False,
 
     # print("check_django_metadata: check {}".format(self.short_id))
     logger = logging.getLogger(__name__)
-    istorage = self.get_irods_storage()
+    istorage = self.get_s3_storage()
     errors = []
     ecount = 0
 
-    # flag non-existent resources in iRODS
+    # flag non-existent resources in storage
     if not istorage.exists(self.root_path):
-        msg = "root path {} does not exist in iRODS".format(self.root_path)
+        msg = "root path {} does not exist in storage".format(self.root_path)
         ecount += 1
         if echo_errors:
             print(msg)

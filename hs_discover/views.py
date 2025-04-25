@@ -133,6 +133,8 @@ class SearchAPI(APIView):
                 except Exception as gen_date_ex:
                     return JsonResponse({'message': 'Filter date parsing error expecting two date string values : {}'
                                         .format(str(gen_date_ex)), 'received': request.query_params}, status=400)
+            # filter out old versions which are marked as replaced = True
+            sqs = sqs.filter(SQ(replaced=False))
         except TypeError:
             pass  # no filters passed "the JSON object must be str, bytes or bytearray not NoneType"
 
@@ -163,13 +165,13 @@ class SearchAPI(APIView):
                 availability = [x for x in availability if x[1] > 0]
             filterdata = [authors, owners, subjects, contributors, types, availability]
 
+        # Sort the resources by the requested field or default.
         sort = 'modified'
         if request.GET.get('sort'):
             sort = request.GET.get('sort')
             # protect against ludicrous sort orders
             if sort != 'title' and sort != 'author' and sort != 'modified' and sort != 'created':
                 sort = 'modified'
-
         asc = '-1'
         if request.GET.get('asc'):
             asc = request.GET.get('asc')
@@ -199,7 +201,6 @@ class SearchAPI(APIView):
             pnum = min(pnum, p.num_pages)
 
         geodata = []
-
         for result in p.page(pnum):
             contributor = 'None'  # contributor is actually a list and can have multiple values
             owner = 'None'  # owner is actually a list and can have multiple values

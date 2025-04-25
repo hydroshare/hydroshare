@@ -9,7 +9,7 @@ from hs_core import hydroshare
 from hs_core.models import BaseResource
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, zip_folder, \
     unzip_file, remove_folder, get_default_admin_user
-from hs_core.tasks import create_bag_by_irods
+from hs_core.tasks import create_bag_by_s3
 
 
 class UpdateQuotaUsageTestCase(TestCase):
@@ -157,7 +157,7 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Assert that the quota has been updated correctly
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
-        size_of_zip = 10240
+        size_of_zip = 215
         expected = self.single_file_size * 3 + size_of_zip
         self.assertAlmostEqual(dz, expected, places=5)
 
@@ -556,7 +556,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertAlmostEqual(initial_quota_value, 3 * self.single_file_size, places=5)
 
         # create the zipped bag
-        status = create_bag_by_irods(self.res.short_id)
+        status = create_bag_by_s3(self.res.short_id)
         self.assertTrue(status)
 
         # Assert that the resource has the original files

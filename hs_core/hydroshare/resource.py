@@ -25,8 +25,8 @@ from hs_labels.models import ResourceLabels
 from theme.models import UserQuota
 from hs_core.enums import CrossRefSubmissionStatus
 
-FILE_SIZE_LIMIT = 5 * (1024 ** 3)
-FILE_SIZE_LIMIT_FOR_DISPLAY = '5G'
+FILE_UPLOAD_MAX_SIZE = getattr(settings, 'FILE_UPLOAD_MAX_SIZE', 25 * 1024**3)  # FILE_UPLOAD_MAX_SIZE is in bytes
+FILE_SIZE_LIMIT_FOR_DISPLAY = f"{round(FILE_UPLOAD_MAX_SIZE / 1024**3)}GB"
 METADATA_STATUS_SUFFICIENT = 'Sufficient to publish or make public'
 METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
 
@@ -37,8 +37,8 @@ def get_quota_usage(username, raise_on_error=True):
     """
     Query to get quota usage
     :param username: the user name to get quota usage for.
-    :param raise_on_error: if True, raise ValidationError if quota usage cannot be retrieved from iRODS
-    :return: the quota usage from iRODS data zone; raise ValidationError if quota usage cannot be retrieved
+    :param raise_on_error: if True, raise ValidationError if quota usage cannot be retrieved from S3
+    :return: the quota usage from S3; raise ValidationError if quota usage cannot be retrieved
     """
     uqDataZoneSize = get_data_zone_usage(username, raise_on_error=raise_on_error)
     return uqDataZoneSize
@@ -298,14 +298,14 @@ def check_resource_files(files=()):
 
     Parameters:
     files - list of Django File or UploadedFile objects to be attached to the resource
-    Returns: (status, sum_size) tuple where status is True if files are within FILE_SIZE_LIMIT
+    Returns: (status, sum_size) tuple where status is True if files are within FILE_UPLOAD_MAX_SIZE
              and False if not, and sum_size is the size summation over all files if status is
              True, and -1 if status is False
     """
     sum = 0
     for file in files:
         if not isinstance(file, UploadedFile):
-            # if file is already on the server, e.g., a file transferred directly from iRODS,
+            # if file is already on the server, e.g., a file transferred directly from S3,
             # the file should not be subject to file size check since the file size check is
             # only prompted by file upload limit
             if hasattr(file, '_size'):
@@ -329,8 +329,8 @@ def check_resource_files(files=()):
             except (TypeError, OSError):
                 size = 0
         sum += size
-        if size > FILE_SIZE_LIMIT:
-            # file is greater than FILE_SIZE_LIMIT, which is not allowed
+        if size > FILE_UPLOAD_MAX_SIZE:
+            # file is greater than FILE_UPLOAD_MAX_SIZE, which is not allowed
             return False, -1
 
     return True, sum
@@ -463,6 +463,7 @@ def create_resource(
             **kwargs
         )
 
+        resource.get_s3_storage().create_bucket(owner.userprofile.bucket_name)
         resource.resource_type = resource_type
 
         # by default make resource private
@@ -508,7 +509,7 @@ def create_resource(
                 owner.uaccess.share_resource_with_group(resource, group, PrivilegeCodes.VIEW)
 
         # set quota of this resource to this creator
-        # quota holder has to be set before the files are added in order for real time iRODS
+        # quota holder has to be set before the files are added in order for real time S3
         # quota micro-services to work
         resource.set_quota_holder(owner, owner)
 
@@ -542,8 +543,6 @@ def create_resource(
             # more than ~15 seconds to complete.
             add_resource_files(resource.short_id, *files, full_paths=full_paths,
                                auto_aggregate=auto_aggregate, resource=resource)
-        else:
-            utils.create_empty_contents_directory(resource)
 
         if create_bag:
             hs_bagit.create_bag(resource)
@@ -726,10 +725,7 @@ def add_resource_files(pk, *files, **kwargs):
                                               save_file_system_metadata=False)
         uploaded_res_files.append(res_file)
 
-    if not uploaded_res_files:
-        # no file has been added, make sure data/contents directory exists if no file is added
-        utils.create_empty_contents_directory(resource)
-    else:
+    if uploaded_res_files:
         if resource.resource_type == "CompositeResource":
             upload_to_folder = base_dir
             if upload_to_folder:
@@ -1159,6 +1155,11 @@ def publish_resource(user, pk):
                'url': 'https://www.cuahsi.org'}
     resource.metadata.create_element('Publisher', **md_args)
 
+    # Here we publish the resource on behalf of the last_changed_by user
+    # This ensures that the modified date closely matches the date that the metadata are submitted to Crossref
+    last_modified = resource.last_changed_by
+    utils.resource_modified(resource, by_user=last_modified, overwrite_bag=False)
+
     # create published date
     resource.metadata.create_element('date', type='published', start_date=resource.updated)
 
@@ -1166,12 +1167,6 @@ def publish_resource(user, pk):
     md_args = {'name': 'doi',
                'url': get_activated_doi(resource.doi)}
     resource.metadata.create_element('Identifier', **md_args)
-
-    # Here we publish the resource on behalf of the last_changed_by user
-    # This ensures that the modified date closely matches the date that the metadata are submitted to Crossref
-    last_modified = resource.last_changed_by
-    utils.resource_modified(resource, by_user=last_modified, overwrite_bag=False)
-
     return pk
 
 

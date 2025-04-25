@@ -6,7 +6,7 @@ from hs_core.hydroshare.users import create_account
 from hs_core.hydroshare.resource import add_resource_files, create_resource
 from hs_core.models import BaseResource
 from hs_core.tasks import create_temp_zip
-from django_irods.storage import IrodsStorage
+from django_s3.storage import S3Storage
 from hs_core.models import ResourceFile
 
 
@@ -49,7 +49,7 @@ class TestFolderDownloadZip(TestCase):
 
         add_resource_files(self.res.short_id, self.refts_file)
         self.res.create_aggregation_meta_files()
-        self.istorage = IrodsStorage()
+        self.istorage = S3Storage()
 
     def tearDown(self):
         super(TestFolderDownloadZip, self).tearDown()
@@ -62,15 +62,12 @@ class TestFolderDownloadZip(TestCase):
             self.refts_file.close()
             os.remove(self.refts_file.name)
         BaseResource.objects.all().delete()
-        if self.istorage.exists("zips"):
-            self.istorage.delete("zips")
 
     def test_create_temp_zip(self):
         input_path = "{}/data/contents/foo".format(self.res.short_id)
         output_path = "zips/rand/foo.zip"
 
-        self.assertEqual(create_temp_zip(self.res.short_id, input_path, output_path,
-                                         download_path=input_path), input_path)
+        create_temp_zip(self.res.short_id, input_path, output_path)
         self.assertTrue(self.istorage.exists(output_path))
 
         # test aggregation
@@ -78,8 +75,7 @@ class TestFolderDownloadZip(TestCase):
                      .format(self.res.short_id)
         output_path = "zips/rand/multi_sites_formatted_version1.0.refts.json.zip"
 
-        self.assertEqual(create_temp_zip(self.res.short_id, input_path, output_path, sf_zip=True,
-                                         download_path=input_path), input_path)
+        create_temp_zip(self.res.short_id, input_path, output_path, sf_zip=True)
         self.assertTrue(self.istorage.exists(output_path))
 
     def test_create_temp_zip_aggregation(self):
@@ -87,8 +83,6 @@ class TestFolderDownloadZip(TestCase):
                      "multi_sites_formatted_version1.0.refts.json".format(self.res.short_id)
         output_path = "zips/rand/aggregation.zip"
 
-        self.assertEqual(create_temp_zip(self.res.short_id, input_path,
-                                         output_path,
-                                         aggregation_name="multi_sites_formatted_version1.0.refts.json",
-                                         download_path=input_path), input_path)
+        create_temp_zip(self.res.short_id, input_path, output_path,
+                        aggregation_name="multi_sites_formatted_version1.0.refts.json")
         self.assertTrue(self.istorage.exists(output_path))

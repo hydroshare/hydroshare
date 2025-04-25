@@ -5,11 +5,11 @@ from django.urls import reverse
 
 from hs_core import hydroshare
 from hs_core.views import change_quota_holder
-from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
+from hs_core.testing import MockS3TestCaseMixin, ViewTestCase
 from hs_access_control.models import PrivilegeCodes
 
 
-class TestChangeQuotaHolder(MockIRODSTestCaseMixin, ViewTestCase):
+class TestChangeQuotaHolder(MockS3TestCaseMixin, ViewTestCase):
     def setUp(self):
         super(TestChangeQuotaHolder, self).setUp()
         self.hs_group, _ = Group.objects.get_or_create(name='Hydroshare Author')

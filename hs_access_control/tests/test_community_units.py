@@ -10,14 +10,14 @@ from hs_access_control.models import \
 
 from hs_core import hydroshare
 from hs_core.models import BaseResource
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 
 from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
 
 __author__ = 'Alva'
 
 
-class UnitTests(MockIRODSTestCaseMixin, TestCase):
+class UnitTests(MockS3TestCaseMixin, TestCase):
     """ test basic behavior of each routine """
 
     def setUp(self):

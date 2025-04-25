@@ -133,8 +133,7 @@ Vue.component('add-author-modal', {
             let vue = this;
             vue.addAuthorError = null;
 
-            let autoComplete = $("#add-author-modal #user-autocomplete").yourlabsAutocomplete().data;
-            let userId = autoComplete.exclude ? autoComplete.exclude[0] : null;
+            let userId = $("#id_author").find(':selected').val();
 
             if (!userId) {
                 vue.addAuthorError = "Select a user to add as an author";

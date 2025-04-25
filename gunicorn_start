@@ -5,17 +5,16 @@
 
 NAME="hydroshare_app"                               # Name of the application
 DJANGODIR=/hydroshare                               # Django project directory
-SOCKFILE=/tmp/gunicorn.sock              # we will communicate using this unix socket
 USER=hydro-service                                  # the user to run as
 GROUP=storage-hydro                                 # the group to run as
 NUM_WORKERS=$(python -c "exec(\"import multiprocessing\nprint( multiprocessing.cpu_count() * 2 + 1)\")")
-                                                    # how many worker processes should Gunicorn spawn
+HOST=0.0.0.0                                        # Host IP address
+PORT=8000                                           # Port number
 DJANGO_SETTINGS_MODULE=hydroshare.settings          # which settings file should Django use
 DJANGO_WSGI_MODULE=hydroshare.wsgi                  # WSGI module name
 GUNICORN_LOG=/hydroshare/log/gunicorn.log           # path to logfile
 TIMEOUT_PERIOD=300                                  # timeout period in seconds
 MAX_REQUESTS=1000                                   # maximum number of requests a worker will process before restarting
-THREADS=5                                           # threads per worker, assuming that each thread uses two ports. 
 
 ### Do not edit below this line ###
 echo "Starting $NAME as `whoami`"
@@ -23,19 +22,19 @@ echo "Starting $NAME as `whoami`"
 cd $DJANGODIR
 export DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE
 export PYTHONPATH=$DJANGODIR:$PYTHONPATH
-# Create the run directory if it doesn't exist
-RUNDIR=$(dirname $SOCKFILE)
-test -d $RUNDIR || mkdir -p $RUNDIR
+
 # Start your Django Unicorn
 exec gunicorn ${DJANGO_WSGI_MODULE}:application \
   --name $NAME \
   --workers $NUM_WORKERS \
   --worker-class gevent \
-  --worker-connections $THREADS \
   --user $USER \
   --group $GROUP \
-  --bind unix:$SOCKFILE \
+  --bind=$HOST:$PORT \
   --log-level debug \
-  --log-file $GUNICORN_LOG \
   --timeout $TIMEOUT_PERIOD \
-  --max-requests $MAX_REQUESTS
+  --max-requests $MAX_REQUESTS \
+  --capture-output \
+  --access-logfile - \
+  --error-logfile - \
+  --reload

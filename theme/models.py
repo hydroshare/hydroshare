@@ -1,5 +1,6 @@
 import datetime
 import logging
+import re
 
 from django.utils import timezone
 from django.dispatch import receiver
@@ -240,7 +241,7 @@ class QuotaMessage(models.Model):
 
 class UserQuota(models.Model):
     # ForeignKey relationship makes it possible to associate multiple UserQuota models to
-    # a User with each UserQuota model defining quota for a set of iRODS zones. By default,
+    # a User with each UserQuota model defining quota for a set of S3 zones. By default,
     # the UserQuota model instance defines quota in hydroshareZone,
     # categorized as hydroshare in zone field in UserQuota model, however,
     # another UserQuota model instance could be defined in a third-party federated zone as needed.
@@ -486,15 +487,15 @@ class QuotaRequest(models.Model):
 
         date = self.date_requested.strftime("%m/%d/%Y, %H:%M:%S")
         email_msg = f'''Dear Hydroshare User,
-        <p>On { date }, you requested { self.storage } GB increase in quota.</p>
-        <p>Here is the justification you provided: <strong>'{ self.justification }'</strong></p>
+        <p>On {date}, you requested {self.storage} GB increase in quota.</p>
+        <p>Here is the justification you provided: <strong>'{self.justification}'</strong></p>
 
-        <p>Your request for Quota increase has been reviewed and { self.status }.</p>
+        <p>Your request for Quota increase has been reviewed and {self.status}.</p>
 
         <p>Thank you,</p>
         <p>The HydroShare Team</p>
         '''
-        send_mail(subject=f"HydroShare request for Quota increase { self.status }",
+        send_mail(subject=f"HydroShare request for Quota increase {self.status}",
                   message=email_msg,
                   html_message=email_msg,
                   from_email=settings.DEFAULT_FROM_EMAIL,
@@ -593,6 +594,34 @@ class UserProfile(models.Model):
 
     email_opt_out = models.BooleanField(default=False)
 
+    _bucket_name = models.CharField(max_length=63, null=True, editable=False, unique=True)
+
+    def __init__(self, *args, **kwargs):
+        '''We set the _bucket_name during user creation
+        However we only create the bucket once the user has a resource
+        '''
+        super().__init__(*args, **kwargs)
+        self._assign_bucket_name()
+
+    def _assign_bucket_name(self):
+        '''Assign a bucket name to the user profile
+        The bucket name is derived from the user's username
+        '''
+        safe_username = re.sub(r"[^A-Za-z0-9\.-]", "", self.user.username.lower())
+        # limit the length to 60 characters (max length for a bucket name is 63 characters)
+        base_safe_username = safe_username[:60].strip()
+        safe_username = base_safe_username
+        # there is a small chance a bucket name exists for another user with the safe_username transformation
+        # in that case, we append a unique number to the bucket name
+        id_number = 1
+        if len(safe_username) < 3:
+            # ensures a minimum character count of 3 for the bucket name
+            safe_username = f"{safe_username}-{id_number}"
+        while UserProfile.objects.filter(_bucket_name=safe_username).exclude(id=self.id).exists():
+            safe_username = f"{base_safe_username}-{id_number}"
+            id_number += 1
+        self._bucket_name = safe_username
+
     @property
     def profile_is_missing(self):
         missing = []
@@ -603,6 +632,10 @@ class UserProfile(models.Model):
         if not self.user_type:
             missing.append("User Type")
         return missing
+
+    @property
+    def bucket_name(self):
+        return self._bucket_name
 
 
 def force_unique_emails(sender, instance, **kwargs):

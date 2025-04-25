@@ -16,7 +16,8 @@ from hs_file_types.models import (
     ModelProgramResourceFileType,
     NetCDFLogicalFile,
     RefTimeseriesLogicalFile,
-    TimeSeriesLogicalFile
+    TimeSeriesLogicalFile,
+    CSVLogicalFile,
 )
 from hs_file_types.enums import AggregationMetaFilePath
 from hs_file_types.utils import update_target_spatial_coverage, update_target_temporal_coverage
@@ -32,7 +33,8 @@ AggregationType = Union[
     ModelInstanceLogicalFile,
     NetCDFLogicalFile,
     RefTimeseriesLogicalFile,
-    TimeSeriesLogicalFile
+    TimeSeriesLogicalFile,
+    CSVLogicalFile,
 ]
 
 
@@ -92,6 +94,8 @@ class CompositeResource(BaseResource):
             yield lf
         for lf in self.modelinstancelogicalfile_set.all():
             yield lf
+        for lf in self.csvlogicalfile_set.all():
+            yield lf
 
     @property
     def aggregation_types(self):
@@ -99,11 +103,21 @@ class CompositeResource(BaseResource):
         aggr_types = []
         aggr_type_names = []
         for lf in self.logical_files:
-            if lf.type_name not in aggr_type_names:
-                aggr_type_names.append(lf.type_name)
+            if lf.type_name() not in aggr_type_names:
+                aggr_type_names.append(lf.type_name())
                 aggr_type = lf.get_aggregation_display_name().split(":")[0]
                 aggr_types.append(aggr_type)
         return aggr_types
+
+    @property
+    def aggregation_type_names(self):
+        """Gets a list of all aggregation type names that currently exist in this resource
+        """
+        aggr_type_names = []
+        for lf in self.logical_files:
+            if lf.type_name not in aggr_type_names:
+                aggr_type_names.append(lf.type_name())
+        return aggr_type_names
 
     def get_logical_files(self, logical_file_class_name):
         """Get a list of logical files (aggregations) for a specified logical file class name."""
@@ -117,7 +131,8 @@ class CompositeResource(BaseResource):
             ModelProgramLogicalFile.type_name(): self.modelprogramlogicalfile_set.all(),
             NetCDFLogicalFile.type_name(): self.netcdflogicalfile_set.all(),
             TimeSeriesLogicalFile.type_name(): self.timeserieslogicalfile_set.all(),
-            RefTimeseriesLogicalFile.type_name(): self.reftimeserieslogicalfile_set.all()
+            RefTimeseriesLogicalFile.type_name(): self.reftimeserieslogicalfile_set.all(),
+            CSVLogicalFile.type_name(): self.csvlogicalfile_set.all(),
         }
 
         if logical_file_class_name in class_name_to_query_mappings:
@@ -460,7 +475,7 @@ class CompositeResource(BaseResource):
         new_path = self.get_relative_path(new_path)
         orig_path = self.get_relative_path(orig_path)
         is_new_path_a_folder = self.is_path_folder(path=new_path)
-        istorage = self.get_irods_storage()
+        istorage = self.get_s3_storage()
 
         # remove file extension from aggregation name (note: aggregation name is a file path
         # for all aggregation types except fileset/model aggregation
@@ -561,7 +576,7 @@ class CompositeResource(BaseResource):
             # at the root of the resource all file operations are allowed
             return True
 
-        istorage = self.get_irods_storage()
+        istorage = self.get_s3_storage()
         scr_base_name = os.path.basename(src_full_path)
         src_dir_path = os.path.dirname(src_full_path)
         tgt_dir_path = os.path.dirname(tgt_full_path)
@@ -627,11 +642,7 @@ class CompositeResource(BaseResource):
         :param target_full_path: full folder path name where file needs to be uploaded to
         :return: True or False
         """
-        istorage = self.get_irods_storage()
-        if istorage.exists(target_full_path):
-            path_to_check = target_full_path
-        else:
-            return False
+        path_to_check = target_full_path
 
         if not path_to_check.endswith("data/contents"):
             # it is not the base directory - it must be a directory under base dir
@@ -804,7 +815,7 @@ class CompositeResource(BaseResource):
         return False
 
     def is_path_folder(self, path):
-        istorage = self.get_irods_storage()
+        istorage = self.get_s3_storage()
         if not path.startswith(self.file_path):
             path = os.path.join(self.file_path, path)
         return istorage.isDir(path)

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """
-Check synchronization between iRODS and Django
+Check synchronization between S3 and Django
 
-This checks that every file in IRODS corresponds to a ResourceFile in Django.
-If a file in iRODS is not present in Django, it attempts to register that file in Django.
+This checks that every file in S3 corresponds to a ResourceFile in Django.
+If a file in S3 is not present in Django, it attempts to register that file in Django.
 
 * By default, prints errors on stdout.
 * Optional argument --log instead logs output to system log.
@@ -24,11 +24,11 @@ from django.db.models import Count
 from django.utils import timezone
 from requests import post
 
-from django_irods.icommands import SessionException
-from django_irods.storage import IrodsStorage
+from django_s3.exceptions import SessionException
+from django_s3.storage import S3Storage
 from hs_core.hydroshare import get_resource_by_shortkey
 from hs_core.models import BaseResource, ResourceFile
-from hs_core.views.utils import link_irods_file_to_django
+from hs_core.views.utils import link_s3_file_to_django
 from hs_file_types.utils import set_logical_file_type, get_logical_file_type
 
 
@@ -36,7 +36,7 @@ def _get_model_aggregation_folder_name(comp_res, default_folder_name):
     # generate a folder name if the default folder name already exists
     # used for migrating model resources
     folder_name = default_folder_name
-    istorage = comp_res.get_irods_storage()
+    istorage = comp_res.get_s3_storage()
     folder_path = os.path.join(comp_res.file_path, default_folder_name)
     post_fix = 1
     while istorage.exists(folder_path):
@@ -61,7 +61,7 @@ def move_files_and_folders_to_model_aggregation(command, model_aggr, comp_res, l
     command.stdout.write(command.style.SUCCESS(msg))
 
     # move files and folders to the new aggregation folder
-    istorage = comp_res.get_irods_storage()
+    istorage = comp_res.get_s3_storage()
     moved_folders = []
     aggr_name = aggr_name.replace("-", " ")
     for res_file in comp_res.files.all().iterator():
@@ -97,7 +97,7 @@ def move_files_and_folders_to_model_aggregation(command, model_aggr, comp_res, l
                     command.stdout.write(command.style.SUCCESS(msg))
                     command.stdout.flush()
 
-                    # Note: some of the files returned by list_folder() may not exist in iRODS
+                    # Note: some of the files returned by list_folder() may not exist in S3
                     res_file_objs = ResourceFile.list_folder(comp_res, folder_to_move)
                     tgt_short_path = os.path.join('data', 'contents', new_folder, folder_to_move)
                     src_short_path = os.path.join('data', 'contents', folder_to_move)
@@ -111,7 +111,7 @@ def move_files_and_folders_to_model_aggregation(command, model_aggr, comp_res, l
                             logger.info(msg)
                             command.stdout.write(command.style.SUCCESS(msg))
                         else:
-                            err_msg = "File ({}) is missing in iRODS. File not added to the aggregation"
+                            err_msg = "File ({}) is missing in S3. File not added to the aggregation"
                             err_msg = err_msg.format(new_path)
                             logger.warning(err_msg)
                             command.stdout.write(command.style.WARNING(err_msg))
@@ -125,7 +125,7 @@ def move_files_and_folders_to_model_aggregation(command, model_aggr, comp_res, l
                     logger.info(msg)
                     command.stdout.write(command.style.SUCCESS(msg))
             else:
-                err_msg = "File path ({}) not found in iRODS. Couldn't make this file part of " \
+                err_msg = "File path ({}) not found in S3. Couldn't make this file part of " \
                           "the {} aggregation.".format(src_full_path, aggr_name)
                 logger.warning(err_msg)
                 command.stdout.write(command.style.WARNING(err_msg))
@@ -254,21 +254,21 @@ def fix_resourcefile_duplicates(dry_run=False, logger=None, get_model=False):
             num_duplicate_paths = resourcefile['count']
             if not dry_run:
                 logger.info(f"{current_resfile}/{total_resfile_containing_dups} \
-                        Repairing file {filename} by removing {num_duplicate_paths -1} paths.")
+                        Repairing file {filename} by removing {num_duplicate_paths - 1} paths.")
                 resourcefiles_to_remove = ResourceFileModel.objects \
                     .filter(resource_file=filename, object_id=resourcefile['object_id'])
                 ResourceFileModel.objects.filter(pk__in=resourcefiles_to_remove.values_list('pk')[1:]).delete()
             else:
                 logger.info(f"{current_resfile}/{total_resfile_containing_dups} \
-                        Repair of {filename} skipped due to dryrun. Would remove {num_duplicate_paths -1} paths.")
+                        Repair of {filename} skipped due to dryrun. Would remove {num_duplicate_paths - 1} paths.")
             current_resfile += 1
 
 
-def check_irods_files(resource, stop_on_error=False, log_errors=True,
-                      echo_errors=False, return_errors=False,
-                      sync_ispublic=False, clean_irods=False, clean_django=False,
-                      dry_run=False, user=None, ingest_from_irods=False):
-    """Check whether files in resource.files and on iRODS agree.
+def check_s3_files(resource, stop_on_error=False, log_errors=True,
+                   echo_errors=False, return_errors=False,
+                   sync_ispublic=False, clean_s3=False, clean_django=False,
+                   dry_run=False, user=None, ingest_from_s3=False):
+    """Check whether files in resource.files and on S3 agree.
 
     :param resource: resource to check
     :param stop_on_error: whether to raise a ValidationError exception on first error
@@ -277,9 +277,9 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
     :param return_errors: whether to collect errors in an array and return them.
     :param sync_ispublic: whether to repair deviations between ResourceAccess.public
            and AVU isPublic
-    :param clean_irods: whether to delete files in iRODs that are not in Django
-    :param clean_django: whether to delete files in Django that are not in iRODs
-    :param ingest_from_irods: whether to ingest files missing in Django from iRODS
+    :param clean_s3: whether to delete files in S3 that are not in Django
+    :param clean_django: whether to delete files in Django that are not in S3
+    :param ingest_from_s3: whether to ingest files missing in Django from S3
     :param dry_run: whether to make no changes to the system
     :param user: the user to attribute changes to, if any
     :return: a tuple (errors, ecount, dangling_in_django, missing_in_django)
@@ -287,31 +287,32 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
     from hs_core.hydroshare.resource import delete_resource_file
 
     logger = logging.getLogger(__name__)
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_s3_storage()
     errors = []
     ecount = 0
     dangling_in_django = 0
     missing_in_django = 0
 
-    # skip resources that do not exist in iRODS
+    # skip resources that do not exist in S3
     if not istorage.exists(resource.root_path):
-        msg = "root path {} does not exist in iRODS".format(resource.root_path)
-        ecount += 1
-        if echo_errors:
-            print(msg)
-        if log_errors:
-            logger.error(msg)
-        if return_errors:
-            errors.append(msg)
+        if resource.files.all().count() > 0:  # s3 does not have folders so no folder if no files
+            msg = "root path {} does not exist in S3".format(resource.root_path)
+            ecount += 1
+            if echo_errors:
+                print(msg)
+            if log_errors:
+                logger.error(msg)
+            if return_errors:
+                errors.append(msg)
 
     else:
-        # Step 2: does every file in Django refer to an existing file in iRODS?
+        # Step 2: does every file in Django refer to an existing file in S3?
         for f in resource.files.all().iterator():
             file_storage_path = f.get_storage_path(resource=resource)
             if not istorage.exists(file_storage_path):
                 dangling_in_django += 1
                 ecount += 1
-                msg = "check_irods_files: django file {} does not exist in iRODS"\
+                msg = "check_s3_files: django file {} does not exist in S3"\
                     .format(file_storage_path)
                 if clean_django and not dry_run:
                     if not user:
@@ -339,7 +340,7 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
                 if lf.is_dangling:
                     agg_cls_name = lf.type_name()
                     ecount += 1
-                    msg = "check_irods_files: dangling aggregation {} in {}"\
+                    msg = "check_s3_files: dangling aggregation {} in {}"\
                         .format(agg_cls_name, resource.short_id)
                     if clean_django and not dry_run:
                         lf.remove_aggregation()
@@ -353,23 +354,23 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
                     if stop_on_error:
                         raise ValidationError(msg)
 
-        # Step 4: does every iRODS file correspond to a record in files?
-        should_del_irods = clean_irods and not dry_run
-        error2, missing_in_django = __check_irods_directory(resource, resource.file_path, logger,
-                                                            stop_on_error=stop_on_error,
-                                                            log_errors=log_errors,
-                                                            echo_errors=echo_errors,
-                                                            return_errors=return_errors,
-                                                            delete_irods=should_del_irods,
-                                                            ingest_from_irods=ingest_from_irods)
+        # Step 4: does every S3 file correspond to a record in files?
+        should_del_s3 = clean_s3 and not dry_run
+        error2, missing_in_django = __check_s3_directory(resource, resource.file_path, logger,
+                                                         stop_on_error=stop_on_error,
+                                                         log_errors=log_errors,
+                                                         echo_errors=echo_errors,
+                                                         return_errors=return_errors,
+                                                         delete_s3=should_del_s3,
+                                                         ingest_from_s3=ingest_from_s3)
         errors.extend(error2)
         ecount += missing_in_django
 
-        # Step 5: check whether the iRODS public flag agrees with Django
+        # Step 5: check whether the S3 public flag agrees with Django
         django_public = resource.raccess.public
-        irods_public = None
+        s3_public = None
         try:
-            irods_public = resource.getAVU('isPublic')
+            s3_public = resource.getAVU('isPublic')
         except SessionException as ex:
             msg = "cannot read isPublic attribute of {}: {}"\
                 .format(resource.short_id, ex.stderr)
@@ -383,30 +384,30 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
             if stop_on_error:
                 raise ValidationError(msg)
 
-        if irods_public is not None:
+        if s3_public is not None:
             # convert to boolean
-            irods_public = str(irods_public).lower() == 'true'
+            s3_public = str(s3_public).lower() == 'true'
 
-        if irods_public is None or irods_public != django_public:
+        if s3_public is None or s3_public != django_public:
             ecount += 1
-            if not django_public:  # and irods_public
-                msg = "check_irods_files: resource {} public in irods, private in Django"\
+            if not django_public:  # and s3_public
+                msg = "check_s3_files: resource {} public in S3, private in Django"\
                     .format(resource.short_id)
                 if sync_ispublic and not dry_run:
                     try:
                         resource.setAVU('isPublic', 'false')
-                        msg += " (REPAIRED IN IRODS)"
+                        msg += " (REPAIRED IN S3)"
                     except SessionException as ex:
                         msg += ": (CANNOT REPAIR: {})"\
                             .format(ex.stderr)
 
-            else:  # django_public and not irods_public
-                msg = "check_irods_files: resource {} private in irods, public in Django"\
+            else:  # django_public and not s3_public
+                msg = "check_s3_files: resource {} private in S3, public in Django"\
                     .format(resource.short_id)
                 if sync_ispublic and not dry_run:
                     try:
                         resource.setAVU('isPublic', 'true')
-                        msg += " (REPAIRED IN IRODS)"
+                        msg += " (REPAIRED IN S3)"
                     except SessionException as ex:
                         msg += ": (CANNOT REPAIR: {})"\
                             .format(ex.stderr)
@@ -422,7 +423,7 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
                     raise ValidationError(msg)
 
     if ecount > 0:  # print information about the affected resource (not really an error)
-        msg = "check_irods_files: affected resource {} type is {}, title is '{}'"\
+        msg = "check_s3_files: affected resource {} type is {}, title is '{}'"\
             .format(resource.short_id, resource.resource_type,
                     resource.title)
         if log_errors:
@@ -435,23 +436,23 @@ def check_irods_files(resource, stop_on_error=False, log_errors=True,
     return errors, ecount, dangling_in_django, missing_in_django  # empty unless return_errors=True
 
 
-def __check_irods_directory(resource, dir, logger,
-                            stop_on_error=False, log_errors=True,
-                            echo_errors=False, return_errors=False,
-                            delete_irods=False, ingest_from_irods=False):
+def __check_s3_directory(resource, dir, logger,
+                         stop_on_error=False, log_errors=True,
+                         echo_errors=False, return_errors=False,
+                         delete_s3=False, ingest_from_s3=False):
     """List a directory and check files there for conformance with django ResourceFiles.
 
     :param stop_on_error: whether to raise a ValidationError exception on first error
     :param log_errors: whether to log errors to Django log
     :param echo_errors: whether to print errors on stdout
     :param return_errors: whether to collect errors in an array and return them.
-    :param delete_irods: whether to delete files in iRODs that are not in Django
-    :ingest_from_irods: whether to ingest files missing in Django from iRODS
+    :param delete_s3: whether to delete files in S3 that are not in Django
+    :ingest_from_s3: whether to ingest files missing in Django from S3
 
     """
     errors = []
     ecount = 0
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_s3_storage()
     try:
         listing = istorage.listdir(dir)
         need_to_ingest = False
@@ -474,16 +475,16 @@ def __check_irods_directory(resource, dir, logger,
                     print("Skipping {} because it is a schema.json file.".format(fullpath))
                     continue
                 ecount += 1
-                msg = "check_irods_files: file {} in iRODs does not exist in Django"\
+                msg = "check_s3_files: file {} in S3 does not exist in Django"\
                     .format(fullpath)
-                if delete_irods:
+                if delete_s3:
                     try:
                         istorage.delete(fullpath)
-                        msg += " (DELETED FROM IRODS)"
+                        msg += " (DELETED FROM S3)"
                     except SessionException as ex:
                         msg += ": (CANNOT DELETE: {})"\
                             .format(ex.stderr)
-                if ingest_from_irods:
+                if ingest_from_s3:
                     need_to_ingest = True
                 if echo_errors:
                     print(msg)
@@ -494,23 +495,23 @@ def __check_irods_directory(resource, dir, logger,
                 if stop_on_error:
                     raise ValidationError(msg)
         if need_to_ingest:
-            error2, ecount2 = ingest_irods_files(resource, logger,
-                                                 stop_on_error=stop_on_error,
-                                                 echo_errors=echo_errors,
-                                                 log_errors=log_errors,
-                                                 return_errors=return_errors)
+            error2, ecount2 = ingest_s3_files(resource, logger,
+                                              stop_on_error=stop_on_error,
+                                              echo_errors=echo_errors,
+                                              log_errors=log_errors,
+                                              return_errors=return_errors)
             errors.extend(error2)
             ecount += ecount2
 
         for dname in listing[0]:  # directories
             # do not use os.path.join because paths might contain unicode characters!
-            error3, ecount3 = __check_irods_directory(resource, dir + '/' + dname, logger,
-                                                      stop_on_error=stop_on_error,
-                                                      echo_errors=echo_errors,
-                                                      log_errors=log_errors,
-                                                      return_errors=return_errors,
-                                                      delete_irods=delete_irods,
-                                                      ingest_from_irods=ingest_from_irods)
+            error3, ecount3 = __check_s3_directory(resource, dir + '/' + dname, logger,
+                                                   stop_on_error=stop_on_error,
+                                                   echo_errors=echo_errors,
+                                                   log_errors=log_errors,
+                                                   return_errors=return_errors,
+                                                   delete_s3=delete_s3,
+                                                   ingest_from_s3=ingest_from_s3)
             errors.extend(error3)
             ecount += ecount3
 
@@ -521,19 +522,19 @@ def __check_irods_directory(resource, dir, logger,
     return errors, ecount  # empty unless return_errors=True
 
 
-def ingest_irods_files(resource,
-                       logger,
-                       stop_on_error=False,
-                       echo_errors=True,
-                       log_errors=False,
-                       return_errors=False):
+def ingest_s3_files(resource,
+                    logger,
+                    stop_on_error=False,
+                    echo_errors=True,
+                    log_errors=False,
+                    return_errors=False):
 
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_s3_storage()
     errors = []
     ecount = 0
-    # flag non-existent resources in iRODS
+    # flag non-existent resources in S3
     if not istorage.exists(resource.root_path):
-        msg = "root path {} does not exist in iRODS".format(resource.root_path)
+        msg = "root path {} does not exist in S3".format(resource.root_path)
         ecount += 1
         if echo_errors:
             print(msg)
@@ -542,9 +543,9 @@ def ingest_irods_files(resource,
         if return_errors:
             errors.append(msg)
 
-    # flag non-existent file paths in iRODS
+    # flag non-existent file paths in S3
     elif not istorage.exists(resource.file_path):
-        msg = "file path {} does not exist in iRODS".format(resource.file_path)
+        msg = "file path {} does not exist in S3".format(resource.file_path)
         ecount += 1
         if echo_errors:
             print(msg)
@@ -554,24 +555,24 @@ def ingest_irods_files(resource,
             errors.append(msg)
 
     else:
-        return __ingest_irods_directory(resource,
-                                        resource.file_path,
-                                        logger,
-                                        stop_on_error=False,
-                                        echo_errors=True,
-                                        log_errors=False,
-                                        return_errors=False)
+        return __ingest_s3_directory(resource,
+                                     resource.file_path,
+                                     logger,
+                                     stop_on_error=False,
+                                     echo_errors=True,
+                                     log_errors=False,
+                                     return_errors=False)
 
     return errors, ecount
 
 
-def __ingest_irods_directory(resource,
-                             dir,
-                             logger,
-                             stop_on_error=False,
-                             log_errors=True,
-                             echo_errors=False,
-                             return_errors=False):
+def __ingest_s3_directory(resource,
+                          dir,
+                          logger,
+                          stop_on_error=False,
+                          log_errors=True,
+                          echo_errors=False,
+                          return_errors=False):
     """
     list a directory and ingest files there for conformance with django ResourceFiles
 
@@ -583,7 +584,7 @@ def __ingest_irods_directory(resource,
     """
     errors = []
     ecount = 0
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_s3_storage()
     try:
         listing = istorage.listdir(dir)
         for fname in listing[1]:  # files
@@ -607,7 +608,7 @@ def __ingest_irods_directory(resource,
                         print("Skipping {} because it is a schema.json file.".format(fullpath))
                         continue
                     ecount += 1
-                    msg = "ingest_irods_files: file {} in iRODs does not exist in Django (INGESTING)"\
+                    msg = "ingest_s3_files: file {} in S3 does not exist in Django (INGESTING)"\
                         .format(fullpath)
                     if echo_errors:
                         print(msg)
@@ -618,14 +619,14 @@ def __ingest_irods_directory(resource,
                     if stop_on_error:
                         raise ValidationError(msg)
                     # TODO: does not ingest logical file structure for composite resources
-                    res_file = link_irods_file_to_django(resource, fullpath)
+                    res_file = link_s3_file_to_django(resource, fullpath)
 
                     # Create required logical files as necessary
                     if resource.resource_type == "CompositeResource":
                         file_type = get_logical_file_type(res=resource,
                                                           file_id=res_file.pk, fail_feedback=False)
                         if not res_file.has_logical_file and file_type is not None:
-                            msg = "ingest_irods_files: setting required logical file for {}"\
+                            msg = "ingest_s3_files: setting required logical file for {}"\
                                 .format(fullpath)
                             if echo_errors:
                                 print(msg)
@@ -639,7 +640,7 @@ def __ingest_irods_directory(resource,
                                                   fail_feedback=False)
                         elif res_file.has_logical_file and file_type is not None and \
                                 not isinstance(res_file.logical_file, file_type):
-                            msg = "ingest_irods_files: logical file for {} has type {}, should be {}"\
+                            msg = "ingest_s3_files: logical file for {} has type {}, should be {}"\
                                 .format(res_file.get_storage_path(resource=resource),
                                         type(res_file.logical_file).__name__,
                                         file_type.__name__)
@@ -652,7 +653,7 @@ def __ingest_irods_directory(resource,
                             if stop_on_error:
                                 raise ValidationError(msg)
                         elif res_file.has_logical_file and file_type is None:
-                            msg = "ingest_irods_files: logical file for {} has type {}, not needed"\
+                            msg = "ingest_s3_files: logical file for {} has type {}, not needed"\
                                 .format(res_file.get_storage_path(resource=resource),
                                         type(res_file.logical_file).__name__)
                             if echo_errors:
@@ -664,7 +665,7 @@ def __ingest_irods_directory(resource,
                             if stop_on_error:
                                 raise ValidationError(msg)
             except Exception as ex:
-                msg = "ingest_irods_files: exception ingesting file {}: {}"\
+                msg = "ingest_s3_files: exception ingesting file {}: {}"\
                     .format(fname, ex)
                 if echo_errors:
                     print(msg)
@@ -677,32 +678,32 @@ def __ingest_irods_directory(resource,
 
         for dname in listing[0]:  # directories
             # do not use os.path.join because fname might contain unicode characters
-            error2, ecount2 = __ingest_irods_directory(resource,
-                                                       dir + '/' + dname,
-                                                       logger,
-                                                       stop_on_error=stop_on_error,
-                                                       echo_errors=echo_errors,
-                                                       log_errors=log_errors,
-                                                       return_errors=return_errors)
+            error2, ecount2 = __ingest_s3_directory(resource,
+                                                    dir + '/' + dname,
+                                                    logger,
+                                                    stop_on_error=stop_on_error,
+                                                    echo_errors=echo_errors,
+                                                    log_errors=log_errors,
+                                                    return_errors=return_errors)
             errors.extend(error2)
             ecount += ecount2
 
     except SessionException as se:
-        print("iRODs error: {}".format(se.stderr))
-        logger.error("iRODs error: {}".format(se.stderr))
+        print("S3 error: {}".format(se.stderr))
+        logger.error("S3 error: {}".format(se.stderr))
 
     return errors, ecount  # empty unless return_errors=True
 
 
-def check_for_dangling_irods(echo_errors=True, log_errors=False, return_errors=False):
-    """ This checks for resource trees in iRODS with no correspondence to Django at all
+def check_for_dangling_s3(echo_errors=True, log_errors=False, return_errors=False):
+    """ This checks for resource trees in S3 with no correspondence to Django at all
 
     :param log_errors: whether to log errors to Django log
     :param echo_errors: whether to print errors on stdout
     :param return_errors: whether to collect errors in an array and return them.
     """
 
-    istorage = IrodsStorage()  # local only
+    istorage = S3Storage()  # local only
     toplevel = istorage.listdir('.')  # list the resources themselves
     logger = logging.getLogger(__name__)
 
@@ -752,17 +753,17 @@ def repair_resource(resource, logger, dry_run=False, user=None):
     print("CHECKING IF RESOURCE {} NEEDS REPAIR".format(resource.short_id))
     now = timezone.now()
 
-    errors, ecount, dangling_in_django, missing_django = check_irods_files(resource,
-                                                                           stop_on_error=False,
-                                                                           echo_errors=True,
-                                                                           log_errors=True,
-                                                                           return_errors=True,
-                                                                           clean_irods=False,
-                                                                           clean_django=True,
-                                                                           sync_ispublic=True,
-                                                                           dry_run=dry_run,
-                                                                           user=user,
-                                                                           ingest_from_irods=True)
+    errors, ecount, dangling_in_django, missing_django = check_s3_files(resource,
+                                                                        stop_on_error=False,
+                                                                        echo_errors=True,
+                                                                        log_errors=True,
+                                                                        return_errors=True,
+                                                                        clean_s3=False,
+                                                                        clean_django=True,
+                                                                        sync_ispublic=True,
+                                                                        dry_run=dry_run,
+                                                                        user=user,
+                                                                        ingest_from_s3=True)
     if ecount:
         print("... affected resource {} has type {}, title '{}'"
               .format(resource.short_id, resource.resource_type,
@@ -809,11 +810,11 @@ class CheckResource(object):
             print("{} does not exist in Django".format(self.short_id))
             return
 
-        istorage = self.resource.get_irods_storage()
+        istorage = self.resource.get_s3_storage()
 
         if not istorage.exists(self.resource.root_path):
             self.label()
-            print("  root path {} does not exist in iRODS".format(self.resource.root_path))
+            print("  root path {} does not exist in S3".format(self.resource.root_path))
             print("  ... resource {} has type {} and title {}"
                   .format(self.resource.short_id,
                           self.resource.resource_type,
@@ -831,15 +832,15 @@ class CheckResource(object):
                 print(("  AVU isPublic is {}, but public is {}".format(value,
                                                                        self.resource.raccess.public)))
 
-        irods_issues, irods_errors, _, _ = check_irods_files(self.resource,
-                                                             log_errors=False,
-                                                             echo_errors=False,
-                                                             return_errors=True)
+        s3_issues, s3_errors, _, _ = check_s3_files(self.resource,
+                                                    log_errors=False,
+                                                    echo_errors=False,
+                                                    return_errors=True)
 
-        if irods_errors:
+        if s3_errors:
             self.label()
-            print("  iRODS errors:")
-            for e in irods_issues:
+            print("  S3 errors:")
+            for e in s3_issues:
                 print("    {}".format(e))
 
         if self.resource.resource_type == 'CompositeResource':

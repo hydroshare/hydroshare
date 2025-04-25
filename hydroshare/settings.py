@@ -1,8 +1,9 @@
 # TEST_RUNNER='django_nose.NoseTestSuiteRunner'
+import os
 import sys
 
 from PIL import ImageFile
-import os
+
 TEST_RUNNER = "hs_core.tests.runner.CustomTestSuiteRunner"
 TEST_WITHOUT_MIGRATIONS_COMMAND = "django_nose.management.commands.test.Command"
 
@@ -173,6 +174,12 @@ INTERNAL_IPS = ("127.0.0.1",)
 # is not that great for our project use case
 FILE_UPLOAD_MAX_MEMORY_SIZE = 0
 
+# the size that a file will be chunked for resumable download
+RANGED_FILE_READER_BLOCK_SIZE = 1024 * 1024  # 1MB
+
+# the size of the buffer that will be used when dumping unneeded bytes from head of a resumed file
+RANGED_FILE_READER_DUMP_SIZE = 1024 * 1024 * 1024  # 1GB
+
 # TODO remove MezzanineBackend after conflicting users have been removed
 AUTHENTICATION_BACKENDS = [
     "theme.backends.CaseInsensitiveMezzanineBackend",
@@ -234,7 +241,10 @@ FILE_UPLOAD_PERMISSIONS = 0o644
 # Alternative tmp folder
 FILE_UPLOAD_TEMP_DIR = "/tmp"
 
-FILE_UPLOAD_MAX_SIZE = 5 * 1024  # MB
+FILE_UPLOAD_MAX_SIZE = 25 * 1024 ** 3  # 25GB in BYTES
+
+# https://docs.djangoproject.com/en/3.2/ref/settings/#data-upload-max-memory-size
+DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100 MB in Bytes
 
 #############
 # DATABASES #
@@ -276,6 +286,13 @@ PROJECT_DIRNAME = PROJECT_ROOT.split(os.sep)[-1]
 # project specific.
 CACHE_MIDDLEWARE_KEY_PREFIX = PROJECT_DIRNAME
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': 'django_cache',
+    }
+}
+
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
 
@@ -299,7 +316,14 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, STATIC_URL.strip("/"))
 # using this storage class might cause issues for future tests
 # The documentation suggests using the default storage backend when testing
 # https://docs.djangoproject.com/en/1.11/ref/contrib/staticfiles/#django.contrib.staticfiles.storage.ManifestStaticFilesStorage.manifest_strict
-STATICFILES_STORAGE = "hydroshare.storage.ForgivingManifestStaticFilesStorage"
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "hydroshare.storage.ForgivingManifestStaticFilesStorage",
+    },
+}
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -328,8 +352,6 @@ ENABLE_STATIC_CLOUD_STORAGE = False
 # To enable Google Cloud Storage, the following settings should be added to local_settings.py
 # Additionally, a google service account json file should be placed at the root of the project
 # Service account should have permissions to write to the bucket
-# lastly, when you build the discover VUE app, you should set export the VUE_APP_BUCKET_URL_PUBLIC_PATH env var
-# this value should be the same as the STATIC_URL that you set in django local_settings.py
 
 # ENABLE_STATIC_CLOUD_STORAGE = True
 # from google.oauth2 import service_account
@@ -370,7 +392,8 @@ INPLACE_SAVE_URL = "/hsapi/save_inline/"
 
 INSTALLED_APPS = (
     "test_without_migrations",
-    "autocomplete_light",
+    "dal",
+    "dal_select2",
     "django.contrib.admin",
     "django.contrib.auth",
     "oauth2_provider",
@@ -385,7 +408,7 @@ INSTALLED_APPS = (
     "django.contrib.postgres",
     "django.contrib.messages",
     "django_nose",
-    "django_irods",
+    "django_s3",
     "drf_yasg",
     "theme",
     "theme.blog_mods",
@@ -399,6 +422,7 @@ INSTALLED_APPS = (
     "mezzanine.pages",
     "mezzanine.galleries",
     "crispy_forms",
+    "crispy_bootstrap3",
     "mezzanine.accounts",
     "haystack",
     "rest_framework",
@@ -408,7 +432,6 @@ INSTALLED_APPS = (
     "hs_access_control",
     "hs_labels",
     "hs_metrics",
-    "irods_browser_app",
     "widget_tweaks",
     "hs_tools_resource",
     "hs_sitemap",
@@ -434,7 +457,24 @@ INSTALLED_APPS = (
     "health_check.contrib.psutil",
     "health_check.contrib.rabbitmq",
     "mozilla_django_oidc",
+    'django_tus',
 )
+
+TUS_UPLOAD_DIR = '/tmp/tus_upload'
+TUS_DESTINATION_DIR = '/tmp/tus_completed'
+TUS_FILE_NAME_FORMAT = 'increment'  # Other options are: 'random-suffix', 'random', 'keep'
+TUS_EXISTING_FILE = 'error'  # Other options are: 'overwrite',  'error', 'rename'
+
+# the url for the uppy companion server
+# https://uppy.io/docs/companion/
+COMPANION_URL = 'https://companion.hydroshare.org/'
+UPPY_UPLOAD_PATH = '/hsapi/tus/'
+MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD = 50
+PARALLEL_UPLOADS_LIMIT = 10
+
+GOOGLE_PICKER_CLIENT_ID = 'GOOGLE_PICKER_CLIENT_ID'
+GOOGLE_PICKER_API_KEY = 'GOOGLE_PICKER_API_KEY'
+GOOGLE_PICKER_APP_ID = 'GOOGLE_PICKER_APP_ID'
 
 SWAGGER_SETTINGS = {
     "DEFAULT_GENERATOR_CLASS": "hs_rest_api2.serializers.NestedSchemaGenerator"
@@ -448,7 +488,7 @@ APPS_TO_NOT_RUN = (
     "rest_framework",
     "django_nose",
     "grappelli_safe",
-    "django_irods",
+    "django_s3",
     "crispy_forms",
     "autocomplete_light",
     "widget_tweaks",
@@ -504,8 +544,14 @@ TEMPLATES = [
 # List of middleware classes to use. Order is important; in the request phase,
 # these middleware classes will be applied in the order given, and in the
 # response phase the middleware will be applied in reverse order.
+
+# We have disabled the cacheMiddleware
+# To enable it, we will need to figure out cache invalidation strategy
+# VARY on cookie is not adequate for our use case
+# https://docs.djangoproject.com/en/4.2/topics/http/decorators/#django.views.decorators.vary.vary_on_cookie
+# alternatively, we could choose to implement cache at the view level -- this would likely be the best approach
 MIDDLEWARE = (
-    "mezzanine.core.middleware.UpdateCacheMiddleware",
+    # "mezzanine.core.middleware.UpdateCacheMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -521,10 +567,13 @@ MIDDLEWARE = (
     # Uncomment the following if using any of the SSL settings:
     # "mezzanine.core.middleware.SSLRedirectMiddleware",
     "mezzanine.pages.middleware.PageMiddleware",
-    "mezzanine.core.middleware.FetchFromCacheMiddleware",
+    # "mezzanine.core.middleware.FetchFromCacheMiddleware",
     "hs_core.robots.RobotFilter",
     "hs_tracking.middleware.Tracking",
+    "hs_core.middleware.HSClientMiddleware",
 )
+
+HSCLIENT_MIN_VERSION = "1.1.6"
 
 # security settings
 USE_SECURITY = False
@@ -593,7 +642,7 @@ DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
 
 
 ACCOUNTS_PROFILE_MODEL = "theme.UserProfile"
-CRISPY_TEMPLATE_PACK = "bootstrap"
+CRISPY_TEMPLATE_PACK = "bootstrap3"
 
 DEFAULT_AUTHENTICATION_CLASSES = (
     "rest_framework.authentication.BasicAuthentication",
@@ -632,7 +681,7 @@ HAYSTACK_SIGNAL_PROCESSOR = (
 # to expire in 7 days
 PASSWORD_RESET_TIMEOUT = 60 * 60 * 24 * 7
 
-# customized temporary file path for large files retrieved from iRODS user zone for metadata
+# customized temporary file path for large files retrieved from S3 user zone for metadata
 # extraction
 TEMP_FILE_DIR = "/tmp"
 
@@ -835,6 +884,7 @@ SECURE_HSTS_SECONDS = 31536000
 SESSION_COOKIE_SECURE = USE_SECURITY
 CSRF_COOKIE_SECURE = USE_SECURITY
 
+
 # Categorization in discovery of content types
 # according to file extension of otherwise unaggregated files.
 DISCOVERY_EXTENSION_CONTENT_TYPES = {
@@ -855,7 +905,7 @@ HSWS_GEOSERVER_URL = "https://geoserver.hydroshare.org/geoserver"
 
 # celery task names to be recorded in task notification model
 TASK_NAME_LIST = [
-    "hs_core.tasks.create_bag_by_irods",
+    "hs_core.tasks.create_bag_by_s3",
     "hs_core.tasks.create_temp_zip",
     "hs_core.tasks.unzip_task",
     "hs_core.tasks.copy_resource_task",
@@ -863,6 +913,21 @@ TASK_NAME_LIST = [
     "hs_core.tasks.delete_resource_task",
     "hs_core.tasks.move_aggregation_task",
 ]
+
+MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
+    "/hydroshare/hs_file_types/model_meta_schema_templates"
+)
+
+BULK_UPDATE_CREATE_BATCH_SIZE = 1000
+
+
+AWS_S3_ACCESS_KEY_ID = 'minioadmin'
+AWS_S3_SECRET_ACCESS_KEY = 'minioadmin'
+AWS_S3_ENDPOINT_URL = 'http://minio:9000'
+# Only enable this if you are using minio in local development
+# AWS_S3_USE_LOCAL = True
+
+ACCESS_CONTROL_CHANGE_ENDPOINT = None
 
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #
@@ -879,13 +944,24 @@ local_settings = __import__(local_settings_module, globals(), locals(), ["*"])
 for k in dir(local_settings):
     locals()[k] = getattr(local_settings, k)
 
-if 'test' in sys.argv:
+if any('pytest' in arg for arg in sys.argv) or 'test' in sys.argv:
     import logging
 
     logging.disable(logging.CRITICAL)
     PASSWORD_HASHERS = [
         'django.contrib.auth.hashers.MD5PasswordHasher',
     ]
+
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': 'postgis',
+        'PORT': '5432',
+    }
+
+    TESTING = True
 
 ####################
 # DYNAMIC SETTINGS #
@@ -910,12 +986,6 @@ else:
 # import codecs
 # sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 # sys.stderr = codecs.getwriter('utf8')(sys.stderr)
-
-MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
-    "/hydroshare/hs_file_types/model_meta_schema_templates"
-)
-
-BULK_UPDATE_CREATE_BATCH_SIZE = 1000
 
 if ENABLE_OIDC_AUTHENTICATION:
     # The order of the authentication classes is important. The OIDC authentication class

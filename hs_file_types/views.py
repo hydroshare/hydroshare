@@ -32,7 +32,7 @@ class BadRequestException(Exception):
     pass
 
 
-def authorise_for_aggregation_edit(f=None, file_type=None):
+def authorize_for_aggregation_edit(f=None, file_type=None):
     """a decorator for checking if the user has edit permission to the resource for which the aggregation needs to
     be edited"""
 
@@ -424,7 +424,7 @@ def model_instance_metadata_in_json(request, resource_id, aggregation_path, **kw
     return JsonResponse(data=meta_serializer.serialize(mi_aggr=aggr), status=status.HTTP_200_OK)
 
 
-@authorise_for_aggregation_edit
+@authorize_for_aggregation_edit
 @login_required
 def remove_aggregation(request, resource_id, hs_file_type, file_type_id, **kwargs):
     """Deletes an instance of a specific file type (aggregation) and all the associated metadata.
@@ -461,7 +461,7 @@ def remove_aggregation(request, resource_id, hs_file_type, file_type_id, **kwarg
     return JsonResponse(response_data, status=status.HTTP_200_OK)
 
 
-@authorise_for_aggregation_edit
+@authorize_for_aggregation_edit
 @login_required
 def delete_aggregation(request, resource_id, hs_file_type, file_type_id, **kwargs):
     """Deletes all files associated with an aggregation and all the associated metadata.
@@ -492,7 +492,7 @@ def delete_aggregation(request, resource_id, hs_file_type, file_type_id, **kwarg
     return JsonResponse(response_data, status=status.HTTP_200_OK)
 
 
-@authorise_for_aggregation_edit
+@authorize_for_aggregation_edit
 @login_required
 def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path="", run_async=True, **kwargs):
     """
@@ -552,7 +552,7 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
     file_type_class = FILE_TYPE_MAP[hs_file_type]
     aggregation = file_type_class.objects.get(id=file_type_id)
     res_files.extend(aggregation.files.all())
-    istorage = res.get_irods_storage()
+    istorage = res.get_s3_storage()
     for file in res_files:
         file_name = os.path.basename(file.storage_path)
         if tgt_path:
@@ -592,7 +592,7 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
         return JsonResponse(response_data, status=status.HTTP_200_OK)
 
 
-@authorise_for_aggregation_edit(file_type='NestedLogicalFile')
+@authorize_for_aggregation_edit(file_type='NestedLogicalFile')
 @login_required
 def update_aggregation_coverage(request, file_type_id, coverage_type, **kwargs):
     """Updates nested (e.g., fileset, model instance) aggregation level coverage using coverage data from the contained
@@ -634,7 +634,7 @@ def update_aggregation_coverage(request, file_type_id, coverage_type, **kwargs):
     return JsonResponse(response_data, status=status.HTTP_200_OK)
 
 
-@authorise_for_aggregation_edit
+@authorize_for_aggregation_edit
 @login_required
 def update_metadata_element(request, hs_file_type, file_type_id, element_name,
                             element_id, **kwargs):
@@ -709,7 +709,7 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
-@authorise_for_aggregation_edit
+@authorize_for_aggregation_edit
 @login_required
 def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kwargs):
     err_msg = "Failed to create metadata element '{}'. {}."
@@ -785,7 +785,7 @@ def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kw
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
-@authorise_for_aggregation_edit
+@authorize_for_aggregation_edit
 @login_required
 def delete_coverage_element(request, hs_file_type, file_type_id,
                             element_id, **kwargs):
@@ -802,7 +802,7 @@ def delete_coverage_element(request, hs_file_type, file_type_id,
     # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
     logical_file = kwargs['logical_file']
 
-    if hs_file_type not in ('GenericLogicalFile', 'FileSetLogicalFile', 'ModelInstanceLogicalFile'):
+    if hs_file_type not in ('GenericLogicalFile', 'FileSetLogicalFile', 'ModelInstanceLogicalFile', 'CSVLogicalFile'):
         err_msg = "Coverage can be deleted only for single file content, model instance content, or file set content."
         ajax_response_data = {'status': 'error', 'message': err_msg}
         return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
@@ -841,7 +841,7 @@ def delete_coverage_element(request, hs_file_type, file_type_id,
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
-@authorise_for_aggregation_edit
+@authorize_for_aggregation_edit
 @login_required
 def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
     """add/update key/value additional metadata for a given logical file
@@ -905,7 +905,7 @@ def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
-@authorise_for_aggregation_edit
+@authorize_for_aggregation_edit
 @login_required
 def delete_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
     """deletes one pair of key/value additional metadata for a given logical file
@@ -943,7 +943,7 @@ def delete_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
-@authorise_for_aggregation_edit
+@authorize_for_aggregation_edit
 @login_required
 def add_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
     """adds one or more keywords for a given logical file
@@ -1005,7 +1005,7 @@ def add_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
         return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
 
-@authorise_for_aggregation_edit
+@authorize_for_aggregation_edit
 @login_required
 def delete_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
     """deletes a keyword for a given logical file
@@ -1056,7 +1056,7 @@ def delete_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
         return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
 
-@authorise_for_aggregation_edit
+@authorize_for_aggregation_edit
 @login_required
 def update_dataset_name(request, hs_file_type, file_type_id, **kwargs):
     """updates the dataset_name (title) attribute of the specified logical file object
@@ -1105,7 +1105,7 @@ def update_dataset_name(request, hs_file_type, file_type_id, **kwargs):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
-@authorise_for_aggregation_edit(file_type='RefTimeseriesLogicalFile')
+@authorize_for_aggregation_edit(file_type='RefTimeseriesLogicalFile')
 @login_required
 def update_refts_abstract(request, file_type_id, **kwargs):
     """updates the abstract for ref time series specified logical file object
@@ -1148,7 +1148,7 @@ def update_refts_abstract(request, file_type_id, **kwargs):
         return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
 
-@authorise_for_aggregation_edit(file_type='TimeSeriesLogicalFile')
+@authorize_for_aggregation_edit(file_type='TimeSeriesLogicalFile')
 @login_required
 def update_timeseries_abstract(request, file_type_id, **kwargs):
     """updates the abstract for time series specified logical file object
@@ -1189,7 +1189,7 @@ def update_timeseries_abstract(request, file_type_id, **kwargs):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
-@authorise_for_aggregation_edit(file_type="NetCDFLogicalFile")
+@authorize_for_aggregation_edit(file_type="NetCDFLogicalFile")
 @login_required
 def update_netcdf_file(request, file_type_id, **kwargs):
     """updates (writes the metadata) the netcdf file associated with a instance of a specified
@@ -1221,7 +1221,7 @@ def update_netcdf_file(request, file_type_id, **kwargs):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
-@authorise_for_aggregation_edit(file_type="TimeSeriesLogicalFile")
+@authorize_for_aggregation_edit(file_type="TimeSeriesLogicalFile")
 @login_required
 def update_sqlite_file(request, file_type_id, **kwargs):
     """updates (writes the metadata) the SQLite file associated with a instance of a specified
@@ -1254,10 +1254,10 @@ def update_sqlite_file(request, file_type_id, **kwargs):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
-@authorise_for_aggregation_edit(file_type="ModelProgramLogicalFile")
+@authorize_for_aggregation_edit(file_type="ModelProgramLogicalFile")
 @login_required
 def update_model_program_metadata(request, file_type_id, **kwargs):
-    """adds/update any/all of the following metadata attributes associated metadata object
+    """adds/update any/all the following metadata attributes associated metadata object
 
     """
     # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
@@ -1292,7 +1292,7 @@ def update_model_program_metadata(request, file_type_id, **kwargs):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
-@authorise_for_aggregation_edit(file_type="ModelInstanceLogicalFile")
+@authorize_for_aggregation_edit(file_type="ModelInstanceLogicalFile")
 @login_required
 def update_model_instance_metadata_json(request, file_type_id, **kwargs):
     """adds/updates the 'metadata_json' field of the associated metadata object. This metadata field stores
@@ -1336,7 +1336,7 @@ def update_model_instance_metadata_json(request, file_type_id, **kwargs):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
-@authorise_for_aggregation_edit(file_type="ModelInstanceLogicalFile")
+@authorize_for_aggregation_edit(file_type="ModelInstanceLogicalFile")
 @login_required
 def update_model_instance_meta_schema(request, file_type_id, **kwargs):
     """copies the metadata schema from the associated model program aggregation over to the model instance aggregation
@@ -1379,7 +1379,7 @@ def update_model_instance_meta_schema(request, file_type_id, **kwargs):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
-@authorise_for_aggregation_edit(file_type="ModelInstanceLogicalFile")
+@authorize_for_aggregation_edit(file_type="ModelInstanceLogicalFile")
 @login_required
 def update_model_instance_metadata(request, file_type_id, **kwargs):
     """adds/update any/all of the following metadata attributes associated metadata object
@@ -1417,6 +1417,57 @@ def update_model_instance_metadata(request, file_type_id, **kwargs):
 
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                           'element_name': 'multiple-elements', 'refresh_metadata': refresh_metadata,
+                          'message': "Update was successful"}
+
+    return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+
+@authorize_for_aggregation_edit(file_type="CSVLogicalFile")
+@login_required
+def update_csv_table_schema_metadata(request, file_type_id, **kwargs):
+    """Updates the tableSchema metadata field of the CSVFileMetadata object associated with the CSVLogicalFile
+    """
+
+    # Note: decorator 'authorise_for_aggregation_edit' sets the error_response key in kwargs
+    if 'error_response' in kwargs and kwargs['error_response']:
+        error_response = kwargs['error_response']
+        return JsonResponse(error_response, status=status.HTTP_400_BAD_REQUEST)
+
+    # Note: decorator 'authorise_for_aggregation_edit' sets the logical_file key in kwargs
+    logical_file = kwargs['logical_file']
+    metadata = logical_file.metadata
+    post_table_schema_data = request.POST.dict()
+    table_schema_model = metadata.get_table_schema_model()
+    for col_no, col in enumerate(table_schema_model.table.columns):
+        col.titles = post_table_schema_data[f"column-{col_no}-titles"].strip()
+        if col.titles == '':
+            col.titles = None
+        col.description = post_table_schema_data[f"column-{col_no}-description"].strip()
+        if col.description == '':
+            col.description = None
+        col.datatype = post_table_schema_data[f"column-{col_no}-datatype"].strip()
+
+    # it is not allowed to have some columns with titles and some without titles
+    columns_with_titles = [col.titles for col in table_schema_model.table.columns if col.titles]
+    if 0 < len(columns_with_titles) < len(table_schema_model.table.columns):
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'message': "The title for one or more columns is missing."}
+        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    columns_with_duplicate_titles = set([title.lower() for title in columns_with_titles])
+    if len(columns_with_duplicate_titles) < len(columns_with_titles):
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'message': "Duplicate column titles are not allowed."}
+        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    metadata.tableSchema = table_schema_model.model_dump()
+    metadata.is_dirty = True
+    metadata.save()
+    resource = logical_file.resource
+    resource_modified(resource, request.user, overwrite_bag=False)
+
+    ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
+                          'element_name': 'multiple-elements', 'refresh_metadata': False,
                           'message': "Update was successful"}
 
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)

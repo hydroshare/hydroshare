@@ -31,7 +31,7 @@ def debug_resource(request, shortkey):
     return HttpResponse(template.render(context, request))
 
 
-def irods_issues(request, shortkey):
+def s3_issues(request, shortkey):
     """ Debug view for resource depicts output of various integrity checking scripts, runs async """
     resource, _, _ = authorize(request, shortkey,
                                needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
@@ -45,13 +45,13 @@ def check_task_status(request, task_id=None, *args, **kwargs):
     if resource_debug.AsyncResult(task_id).ready():
         status = "SUCCESS"
         try:
-            irods_issues, irods_errors, _ = AsyncResult(task_id).get()
+            s3_issues, s3_errors, _ = AsyncResult(task_id).get()
         except Exception as e:
             status = "ERROR - {}".format(e)
         context = {
             'status': status,
-            'irods_issues': irods_issues,
-            'irods_errors': irods_errors,
+            's3_issues': s3_issues,
+            's3_errors': s3_errors,
         }
         return HttpResponse(json.dumps(context))
     else:
