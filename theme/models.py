@@ -272,8 +272,7 @@ class UserQuota(models.Model):
         verbose_name_plural = _("User quotas")
         unique_together = ("user", "zone")
 
-    @property
-    def allocated_value(self):
+    def _allocated_value_size_and_unit(self):
         try:
             result = subprocess.run(
                 ["mc", "quota", "info", f"hydroshare/{self.user.userprofile.bucket_name}"],
@@ -283,9 +282,17 @@ class UserQuota(models.Model):
                 text=True,
             )
         except (subprocess.CalledProcessError, ValueError, IndexError) as e:
-            return 0
+            # TODO Assuming the user doesn't have a bucket, should actually check
+            return 20, "GB"
         result_split = result.stdout.split(" ")
+        unit = result_split[-1].strip()
+        unit = unit.replace("i", "") # dirty hack, should convert from GiB to GB
         size = result_split[-2]
+        return float(size), unit
+
+    @property
+    def allocated_value(self):
+        size, _ = self._allocated_value_size_and_unit()
         return size
 
     def save_allocated_value(self, allocated_value, unit):
@@ -294,11 +301,11 @@ class UserQuota(models.Model):
         """
         try:
             subprocess.run(
-                ["mc", "quota", "set", f"hydroshare/{self.user.userprofile.bucket_name}", f"{allocated_value}{unit}"],
+                ["mc", "quota", "set", f"hydroshare/{self.user.userprofile.bucket_name}", "--size", f"{allocated_value}{unit}"],
                 check=True,
             )
         except subprocess.CalledProcessError as e:
-            raise
+            raise ValidationError(f"Error setting quota: {e}")
 
     def _size_and_unit(self):
         try:
@@ -316,16 +323,18 @@ class UserQuota(models.Model):
         size = size_and_unit[0]
         unit = size_and_unit[1]
         unit = unit.replace("i", "") # dirty hack, should convert from GiB to GB
-        return size, unit
+        return float(size), unit
 
     @property
     def data_zone_value(self):
-        size, _ = self._size_and_unit()
-        return size
+        size, used_unit = self._size_and_unit()
+        allocated_unit = self.unit
+        from hs_core.hydroshare.utils import convert_file_size_to_unit
+        return convert_file_size_to_unit(size, allocated_unit, used_unit)
 
     @property
     def unit(self):
-        _, unit = self._size_and_unit()
+        _, unit = self._allocated_value_size_and_unit()
         return unit
 
     @property
