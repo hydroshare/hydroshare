@@ -20,25 +20,33 @@ class UserQuotaForm(forms.ModelForm):
 
     class Meta:
         model = UserQuota
-        exclude = ['zone',]
-        #readonly_fields = ['zone', 'unit', 'data_zone_value',]
+        fields = ['allocated_value', 'unit', 'zone', 'grace_period_ends']
+        #exclude = ['zone',]
+        readonly_fields = ['data_zone_value',]
 
     allocated_value = forms.FloatField()
     unit = forms.CharField()
+    zone = forms.CharField()
+    data_zone_value = forms.FloatField()
+    grace_period_ends = forms.DateTimeField(label='Grace Period Ends', help_text='Date when the grace period ends',
+                                            widget=forms.widgets.DateInput(attrs={'type': 'date'}), required=False)
 
     def __init__(self, *args, **kwargs):
         instance = kwargs.get('instance', None)
         if instance:
+            print("In instances")
             kwargs['initial'] = {'allocated_value': instance.allocated_value,
-                                 #'zone': instance.zone,
+                                 'zone': instance.zone,
                                  'unit': instance.unit,
-                                 'data_zone_value': instance.data_zone_value}
+                                 'data_zone_value': instance.data_zone_value,
+                                 'user': instance.user}
         super().__init__(*args, **kwargs)
 
     def save(self, *args, **kwargs):
         instance = super(UserQuotaForm, self).save(commit=False)
-        instance.user = self.cleaned_data['user']
-        instance.save_allocated_value(self.cleaned_data['allocated_value'], self.cleaned_data['unit'])
+        print(self.cleaned_data)
+        instance.user.quotas.get(zone='hydroshare').save_allocated_value(self.cleaned_data['allocated_value'],
+                                                                         self.cleaned_data['unit'])
         return instance
 
 
@@ -65,17 +73,14 @@ class QuotaRequestAdmin(admin.ModelAdmin):
 
 class QuotaAdmin(admin.ModelAdmin):
     model = UserQuota
+    form = UserQuotaForm
 
     list_display = ('user', 'allocated_value', 'unit', 'zone')
     list_filter = ('zone',)
 
     readonly_fields = ('user', 'data_zone_value')
+    fields = ('allocated_value', 'unit', 'zone', 'grace_period_ends', 'user', 'data_zone_value')
     search_fields = ('user__username',)
-
-    def get_form(self, request, obj=None, **kwargs):
-        # use a customized form class when adding a UserQuota object so that
-        # the foreign key user field is available for selection.
-        return UserQuotaForm
 
 
 admin.site.register(HomePage)
