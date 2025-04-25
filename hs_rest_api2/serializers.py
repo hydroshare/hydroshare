@@ -210,3 +210,7 @@ class NestedSchemaGenerator(OpenAPISchemaGenerator):
 
 class ResourceSharingStatusSerializer(Serializer):
     sharing_status = serializers.ChoiceField(choices=['public', 'private', 'discoverable', 'published'])
+
+
+class ResourcePermissionSerializer(Serializer):
+    permission = serializers.ChoiceField(choices=['owner', 'edit', 'view', 'none'])
