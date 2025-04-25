@@ -57,7 +57,7 @@ class TestResourceFileMetadataEndpoint(HSRESTTestCase):
                 else:
                     # Wait for a bit before retrying
                     import time
-                    time.sleep(6)
+                    time.sleep(7)
         else:
             self.fail("Resource was not indexed in time")
         # there should be one matching resource in the index
