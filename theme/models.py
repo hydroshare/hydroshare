@@ -1,6 +1,7 @@
 import datetime
 import logging
 import re
+import subprocess
 
 from django.utils import timezone
 from django.dispatch import receiver
@@ -254,8 +255,8 @@ class UserQuota(models.Model):
         related_query_name="quotas",
     )
 
-    allocated_value = models.FloatField(default=20)
-    unit = models.CharField(max_length=10, default="GB")
+    #allocated_value = models.FloatField(default=20)
+    #unit = models.CharField(max_length=10, default="GB")
     zone = models.CharField(max_length=100, default="hydroshare")
     # grace_period_ends to be quota-enforced. Default is None meaning the user is below
     # soft quota limit and thus grace period has not started. When today=grace_period_ends, quota
@@ -272,11 +273,60 @@ class UserQuota(models.Model):
         unique_together = ("user", "zone")
 
     @property
+    def allocated_value(self):
+        try:
+            result = subprocess.run(
+                ["mc", "quota", "info", f"hydroshare/{self.user.userprofile.bucket_name}"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True,
+                text=True,
+            )
+        except (subprocess.CalledProcessError, ValueError, IndexError) as e:
+            return 0
+        result_split = result.stdout.split(" ")
+        size = result_split[-2]
+        return size
+
+    def save_allocated_value(self, allocated_value, unit):
+        """
+        Save the allocated value to the database and update the quota on MinIO.
+        """
+        try:
+            subprocess.run(
+                ["mc", "quota", "set", f"hydroshare/{self.user.userprofile.bucket_name}", f"{allocated_value}{unit}"],
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise
+
+    def _size_and_unit(self):
+        try:
+            result = subprocess.run(
+                ["mc", "stat", f"hydroshare/{self.user.userprofile.bucket_name}"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True,
+                text=True,
+            )
+        except (subprocess.CalledProcessError, ValueError, IndexError) as e:
+            return 0, "GB"
+        size_with_unit_str = result.stdout.split("Total size: ")[1].split("\n")[0]
+        size_and_unit = size_with_unit_str.split(" ")
+        size = size_and_unit[0]
+        unit = size_and_unit[1]
+        unit = unit.replace("i", "") # dirty hack, should convert from GiB to GB
+        return size, unit
+
+    @property
     def data_zone_value(self):
-        from hs_core.hydroshare.resource import get_data_zone_usage
-        from hs_core.hydroshare.utils import convert_file_size_to_unit
-        dz = get_data_zone_usage(self.user.username)
-        return convert_file_size_to_unit(dz, self.unit)
+        size, _ = self._size_and_unit()
+        return size
+
+    @property
+    def unit(self):
+        _, unit = self._size_and_unit()
+        return unit
 
     @property
     def used_percent(self):

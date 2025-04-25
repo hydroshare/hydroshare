@@ -19,6 +19,15 @@ RUN wget -O /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem https://cacerts.digice
     update-ca-certificates && \
     cat /usr/lib/ssl/certs/GeoTrustTLSRSACAG1.crt.pem >> $(python -c "import requests; print(requests.certs.where())")
 
+RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc \
+    --create-dirs \
+    -o $HOME/minio-binaries/mc
+#    -o /root/minio-binaries/mc
+RUN mv $HOME/minio-binaries/mc /usr/local/bin/mc
+RUN chmod +x /usr/local/bin/mc
+#RUN chmod +x $HOME/minio-binaries/mc
+#ENV PATH $PATH:$HOME/minio-binaries
+
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8

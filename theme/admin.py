@@ -20,12 +20,25 @@ class UserQuotaForm(forms.ModelForm):
 
     class Meta:
         model = UserQuota
-        fields = ['allocated_value',]
-        readonly_fields = ['zone', 'unit', 'data_zone_value',]
+        exclude = ['zone',]
+        #readonly_fields = ['zone', 'unit', 'data_zone_value',]
+
+    allocated_value = forms.FloatField()
+    unit = forms.CharField()
+
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get('instance', None)
+        if instance:
+            kwargs['initial'] = {'allocated_value': instance.allocated_value,
+                                 #'zone': instance.zone,
+                                 'unit': instance.unit,
+                                 'data_zone_value': instance.data_zone_value}
+        super().__init__(*args, **kwargs)
 
     def save(self, *args, **kwargs):
         instance = super(UserQuotaForm, self).save(commit=False)
         instance.user = self.cleaned_data['user']
+        instance.save_allocated_value(self.cleaned_data['allocated_value'], self.cleaned_data['unit'],)
         return instance
 
 
@@ -53,19 +66,16 @@ class QuotaRequestAdmin(admin.ModelAdmin):
 class QuotaAdmin(admin.ModelAdmin):
     model = UserQuota
 
-    list_display = ('user', 'allocated_value', 'used_value', 'data_zone_value', 'unit', 'zone')
+    list_display = ('user', 'allocated_value', 'unit', 'zone')
     list_filter = ('zone',)
 
-    readonly_fields = ('user', 'data_zone_value',)
+    readonly_fields = ('user', 'data_zone_value')
     search_fields = ('user__username',)
 
     def get_form(self, request, obj=None, **kwargs):
         # use a customized form class when adding a UserQuota object so that
         # the foreign key user field is available for selection.
-        if obj is None:
-            return UserQuotaForm
-        else:
-            return super(QuotaAdmin, self).get_form(request, obj, **kwargs)
+        return UserQuotaForm
 
 
 admin.site.register(HomePage)
