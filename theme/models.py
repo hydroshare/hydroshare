@@ -256,8 +256,6 @@ class UserQuota(models.Model):
         related_query_name="quotas",
     )
 
-    #allocated_value = models.FloatField(default=20)
-    #unit = models.CharField(max_length=10, default="GB")
     zone = models.CharField(max_length=100, default="hydroshare")
     # grace_period_ends to be quota-enforced. Default is None meaning the user is below
     # soft quota limit and thus grace period has not started. When today=grace_period_ends, quota
@@ -282,12 +280,12 @@ class UserQuota(models.Model):
                 check=True,
                 text=True,
             )
-        except (subprocess.CalledProcessError, ValueError, IndexError) as e:
+        except (subprocess.CalledProcessError, ValueError, IndexError):
             # TODO Assuming the user doesn't have a bucket, should actually check
             return 20, "GB"
         result_split = result.stdout.split(" ")
         unit = result_split[-1].strip()
-        unit = unit.replace("i", "") # dirty hack, should convert from GiB to GB
+        unit = unit.replace("i", "")
         size = result_split[-2]
         size = float(size) * 1.07374
         return size, unit
@@ -303,7 +301,8 @@ class UserQuota(models.Model):
         """
         try:
             subprocess.run(
-                ["mc", "quota", "set", f"hydroshare/{self.user.userprofile.bucket_name}", "--size", f"{allocated_value}{unit}"],
+                ["mc", "quota", "set", f"hydroshare/{self.user.userprofile.bucket_name}",
+                 "--size", f"{allocated_value}{unit}"],
                 check=True,
             )
         except subprocess.CalledProcessError as e:
@@ -318,13 +317,13 @@ class UserQuota(models.Model):
                 check=True,
                 text=True,
             )
-        except (subprocess.CalledProcessError, ValueError, IndexError) as e:
+        except (subprocess.CalledProcessError, ValueError, IndexError):
             return 0, "GB"
         size_with_unit_str = result.stdout.split("Total size: ")[1].split("\n")[0]
         size_and_unit = size_with_unit_str.split(" ")
         size = size_and_unit[0]
         unit = size_and_unit[1]
-        unit = unit.replace("i", "") # dirty hack, should convert from GiB to GB
+        unit = unit.replace("i", "")
         size = float(size) * 1.07374
         return size, unit
 

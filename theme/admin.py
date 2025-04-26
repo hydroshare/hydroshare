@@ -21,7 +21,6 @@ class UserQuotaForm(forms.ModelForm):
     class Meta:
         model = UserQuota
         fields = ['allocated_value', 'unit', 'zone', 'grace_period_ends']
-        #exclude = ['zone',]
         readonly_fields = ['data_zone_value',]
 
     allocated_value = forms.FloatField()
