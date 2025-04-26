@@ -1,6 +1,6 @@
 import json
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from rest_framework import status
 
 from hs_core.hydroshare import resource
@@ -19,7 +19,17 @@ class TestResourcePermission(HSRESTTestCase):
             title='Test Resource for testing Permission',
         )
 
-        # Create additional users with different permission levels
+        # Create test groups
+        self.edit_group = self.user.uaccess.create_group(
+            title='edit_group',
+            description='Group for resource edit permission testing'
+        )
+        self.view_group = self.user.uaccess.create_group(
+            title='view_group',
+            description='Group for resource view permission testing'
+        )
+
+        # Create users
         self.edit_user = User.objects.create_user(
             username='edituser',
             email='edituser@example.com',
@@ -38,12 +48,48 @@ class TestResourcePermission(HSRESTTestCase):
             password='nopermuser'
         )
 
-        # Set permissions for users
+        # Create group users
+        self.edit_user_via_group = User.objects.create_user(
+            username='groupedituser',
+            email='groupedituser@example.com',
+            password='groupedituser'
+        )
+        self.view_user_via_group = User.objects.create_user(
+            username='groupviewuser',
+            email='groupviewuser@example.com',
+            password='groupviewuser'
+        )
+
+        # Add users to groups using proper access control
+        self.user.uaccess.share_group_with_user(
+            self.edit_group,
+            self.edit_user_via_group,
+            PrivilegeCodes.VIEW # edit_user_via_group has view permission on edit_group
+        )
+        self.user.uaccess.share_group_with_user(
+            self.view_group,
+            self.view_user_via_group,
+            PrivilegeCodes.CHANGE # view_user_via_group has edit permission on view_group
+        )
+
+        # Set individual permissions
         self.user.uaccess.share_resource_with_user(
             self.res, self.edit_user, PrivilegeCodes.CHANGE)
 
         self.user.uaccess.share_resource_with_user(
             self.res, self.view_user, PrivilegeCodes.VIEW)
+
+        # Set group permissions
+        self.user.uaccess.share_resource_with_group(
+            self.res,
+            self.edit_group,
+            PrivilegeCodes.CHANGE
+        )
+        self.user.uaccess.share_resource_with_group(
+            self.res,
+            self.view_group,
+            PrivilegeCodes.VIEW
+        )
 
         # URL for the permission endpoint
         self.url = "/hsapi2/resource/{}/permission/json/".format(self.res.short_id)
@@ -97,3 +143,37 @@ class TestResourcePermission(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.content.decode())
         self.assertEqual(response_json['permission'], 'none')
+
+    def test_get_permission_group_edit(self):
+        # Test edit permission through group membership
+        self.client.logout()
+        self.client.login(username='groupedituser', password='groupedituser')
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.content.decode())
+        self.assertEqual(response_json['permission'], 'edit')
+
+    def test_get_permission_group_view(self):
+        # Test view permission through group membership
+        self.client.logout()
+        self.client.login(username='groupviewuser', password='groupviewuser')
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.content.decode())
+        self.assertEqual(response_json['permission'], 'view')
+
+    def test_get_permission_highest_privilege(self):
+        # Test user gets highest privilege when they have both direct and group permissions
+        self.user.uaccess.share_group_with_user(
+            self.edit_group,
+            self.view_user,
+            PrivilegeCodes.CHANGE # view_user has edit permission on edit_group
+        )
+
+        self.client.logout()
+        self.client.login(username='viewuser', password='viewuser')
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.content.decode())
+        # view_user has both edit (via group) and view (direct) permission on the resource
+        self.assertEqual(response_json['permission'], 'edit')
