@@ -18,6 +18,7 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import MinValueValidator, MaxValueValidator, MinLengthValidator, MaxLengthValidator
 from django.contrib.postgres.fields import HStoreField
+from django_s3.storage import S3Storage
 
 from mezzanine.core.fields import FileField, RichTextField
 from mezzanine.core.models import Orderable, SiteRelated
@@ -288,7 +289,8 @@ class UserQuota(models.Model):
         unit = result_split[-1].strip()
         unit = unit.replace("i", "") # dirty hack, should convert from GiB to GB
         size = result_split[-2]
-        return float(size), unit
+        size = float(size) * 1.07374
+        return size, unit
 
     @property
     def allocated_value(self):
@@ -323,7 +325,8 @@ class UserQuota(models.Model):
         size = size_and_unit[0]
         unit = size_and_unit[1]
         unit = unit.replace("i", "") # dirty hack, should convert from GiB to GB
-        return float(size), unit
+        size = float(size) * 1.07374
+        return size, unit
 
     @property
     def data_zone_value(self):
@@ -761,7 +764,15 @@ def update_user_quota_on_quota_request(sender, instance, **kwargs):
 
     try:
         qr = QuotaRequest.objects.select_related("quota").get(pk=instance.pk)
-        qr.quota.allocated_value += qr.storage
+        new_storage_amount = qr.storage
+        if qr.quota.unit != "GB":
+            from hs_core.hydroshare.utils import convert_file_size_to_unit
+            new_storage_amount = convert_file_size_to_unit(qr.storage, qr.quota.unit, "GB")
+        istorage = S3Storage()
+        # If a user hasn't created a resource yet, the bucket won't exist
+        if not istorage.bucket_exists(qr.quota.user.userprofile.bucket_name):
+            istorage.create_bucket(qr.quota.user.userprofile.bucket_name)
+        qr.quota.save_allocated_value(qr.quota.allocated_value + new_storage_amount, qr.quota.unit)
 
         # approving a quota request will also reset the grace period
         # this is done by the reset_grace_period_on_allocation_change signal
