@@ -140,7 +140,6 @@ function getFileTemplateInstance(file) {
         var title = hint + file.name + "&#13;" + fileTypeStr + "Size: " +
             formatBytes(parseInt(file.size));
     } 
-  const fileName = ellipsisFileName(file.name);
 
     return "<li data-pk='" + file.pk + "' data-url='" + file.url + "' data-ref-url='" +
         file.reference_url + "' data-logical-file-id='" + file.logical_file_id +
@@ -160,17 +159,6 @@ function getFileTemplateInstance(file) {
         "<span class='fb-file-size' data-file-size=" + file.size + ">" + formatBytes(parseInt(file.size)) +
         "</span></li>"
 }
-
-
-function ellipsisFileName(fileName){
-    var fileEllipsisName = fileName;
-    if(fileName.length > 15)
-    {
-        fileEllipsisName = `${fileName.substring(0, 14)}...${fileName.substring(fileName.length - 9)}`
-    }
-    return fileEllipsisName ;
-}
-
 
 function formatBytes(bytes) {
     if(bytes < 1024) return bytes + " Bytes";
