@@ -149,8 +149,11 @@ function getFileTemplateInstance(file) {
         file.has_model_program_aggr_folder + "' data-has-model-instance-aggr-folder='" +
         file.has_model_instance_aggr_folder + "' data-aggregation-appkey='" + file.aggregation_appkey  + "'>" +
         iconTemplate +
-        "<span class='fb-file-name'>" + file.name + "</span>" +
-        "<span class='fb-file-name-ellipsis'>" + fileName + "</span>" +
+        "<span class='fb-file-name'>" + (
+            file.name.length > 15
+                ? file.name.slice(0, 8) + "..." + file.name.slice(file.name.lastIndexOf('.') - 5)
+                : file.name
+        ) + "</span>"  +
         "<span class='fb-file-type'>" + file.type + " File</span>" +
         "<span class='fb-logical-file-type' data-logical-file-type='" + file.logical_type + "' data-logical-file-id='" +
         file.logical_file_id +  "'>" + file.aggregation_name + "</span>" +
