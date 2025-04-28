@@ -3996,6 +3996,9 @@ form#covereage-search-fields {
 ul#fb-files-container li.ui-selected .fb-file-name, #fb-files-container li.ui-selecting .fb-file-name {
 	word-break: break-word;
 }
+ul#fb-files-container li.ui-selected .fb-file-name-display, #fb-files-container li.ui-selecting .fb-file-name-display {
+	word-break: break-word;
+}
 
 ul#fb-files-container {
     min-height: 100%;
@@ -4016,8 +4019,17 @@ ul#fb-files-container .hs-upload-indicator {
 	font-size: 12px;
 	cursor: default;
 }
+.fb-file-name-display {
+	color: #555;
+	font-size: 12px;
+	cursor: default;
+}
 
 .fb-view-list .fb-file-name {
+	font-size: 14px;
+	white-space: nowrap;
+}
+.fb-view-list .fb-file-name-display {
 	font-size: 14px;
 	white-space: nowrap;
 }
@@ -4249,6 +4261,13 @@ div.fb-upload-caption a {
 }
 
 .fb-view-grid .fb-file-name {
+    display: block;
+	word-break: break-word;
+	margin-top: 6px;
+    line-height: 1.5em;
+    max-height: 3em;
+}
+.fb-view-grid .fb-file-name-display {
     display: block;
 	word-break: break-word;
 	margin-top: 6px;

@@ -149,7 +149,7 @@ function getFileTemplateInstance(file) {
         file.has_model_instance_aggr_folder + "' data-aggregation-appkey='" + file.aggregation_appkey  + "'>" +
         iconTemplate +
         "<span class='fb-file-name' style='display:none'>" + file.name + "</span>" +
-        "<span class='fb-file-name'>" + (
+        "<span class='fb-file-name-display'>" + (
             file.name.length > 15
                 ? file.name.slice(0, 8) + "..." + file.name.slice(file.name.lastIndexOf('.') - 5)
                 : file.name
