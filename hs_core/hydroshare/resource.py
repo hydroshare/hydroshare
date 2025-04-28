@@ -641,8 +641,8 @@ def create_new_version_resource(ori_res, new_res, user):
     if ori_res.locked_time:
         # cannot create new version for this resource since the resource is locked by another user
         raise ResourceVersioningException('Failed to create a new version for this resource '
-                                                'since another user is creating a new version for '
-                                                'this resource synchronously.')
+                                          'since another user is creating a new version for '
+                                          'this resource synchronously.')
     # lock the resource to prevent concurrent new version creation since only one new version for an
     # obsoleted resource is allowed
     ori_res.locked_time = datetime.datetime.now(tz.UTC)
