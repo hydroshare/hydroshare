@@ -14,8 +14,8 @@ from rest_framework import status
 
 from hs_composite_resource.models import CompositeResource
 from hs_core import hydroshare
-from hs_core.hydroshare.utils import (ResourceVersioningException,
-                                      add_file_to_resource,
+from hs_core.exceptions import ResourceVersioningException
+from hs_core.hydroshare.utils import (add_file_to_resource,
                                       get_file_from_s3,
                                       get_resource_by_shortkey,
                                       resource_file_add_process)

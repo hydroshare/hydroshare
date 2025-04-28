@@ -883,8 +883,8 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
 
     resource_cls = resource.__class__
     if len(files) > 0:
-        size = validate_resource_file_size(files)
-        validate_user_quota(resource.quota_holder, size)
+        #size = validate_resource_file_size(files)
+        #validate_user_quota(resource.quota_holder, size)
         validate_resource_file_count(resource_cls, files)
 
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
