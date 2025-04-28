@@ -7,7 +7,7 @@ from django.urls import reverse
 
 from rest_framework.test import APIClient
 from rest_framework import status
-from rest_framework.test import APITestCase
+from rest_framework.test import APITransactionTestCase
 
 from hs_core.hydroshare import users
 from hs_core.hydroshare import resource
@@ -15,7 +15,7 @@ from hs_core.hydroshare import resource
 from django.contrib.sites.models import Site
 
 
-class HSRESTTestCase(APITestCase):
+class HSRESTTestCase(APITransactionTestCase):
     def setUp(self):
         self.hostname = socket.gethostname()
         self.resource_url = "http://example.com/resource/{res_id}/"

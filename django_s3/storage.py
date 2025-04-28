@@ -361,11 +361,9 @@ class S3Storage(S3Storage):
             # logger.exception(f"Failed to create bucket {bucket_name}")
 
     def delete_bucket(self, bucket_name):
-        try:
-            self.connection.meta.client.delete_bucket(Bucket=bucket_name)
-        except Exception:
-            pass
-            # logger.exception(f"Failed to delete bucket {bucket_name}")
+        bucket = self.connection.Bucket(bucket_name)
+        bucket.objects.delete()
+        self.connection.meta.client.delete_bucket(Bucket=bucket_name)
 
     def new_quota_holder(self, resource_id, new_quota_holder_id):
         """

@@ -32,8 +32,6 @@ class TestCopyResource(TransactionTestCase):
             superuser=False,
             groups=[]
         )
-        uquota = self.owner.quotas.first()
-        uquota.save_allocated_value(20, "GB")
 
         # create a user who is NOT the owner of the resource to be copied
         self.nonowner = hydroshare.create_account(
@@ -113,6 +111,8 @@ class TestCopyResource(TransactionTestCase):
         self.test_file3.close()
         os.remove(self.test_file3.name)
         BaseResource.objects.all().delete()
+        self.owner.delete()
+        self.nonowner.delete()
 
     def test_copy_resource(self):
         # ensure a nonowner who does not have permission to view a resource cannot copy it
