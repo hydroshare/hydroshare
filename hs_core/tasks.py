@@ -22,6 +22,7 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.mail import send_mail
 from django.db.models import F, Q
 from django.utils import timezone
+from hs_tracking.models import Variable
 from rest_framework import status
 
 from celery import Task, shared_task
@@ -122,9 +123,11 @@ def setup_periodic_tasks(sender, **kwargs):
         sender.add_periodic_task(crontab(minute=45), manage_task_hourly.s(), options={'queue': 'periodic'})
 
         # Daily (times in UTC)
-        sender.add_periodic_task(crontab(minute=30, hour=2), clear_tokens.s(),
+        sender.add_periodic_task(crontab(minute=30, hour=2), clear_tokens.s(), options={'queue': 'periodic'})
+        sender.add_periodic_task(crontab(minute=0, hour=2), nightly_hs_tracking_cleanup.s(),
                                  options={'queue': 'periodic'})
-        sender.add_periodic_task(crontab(minute=0, hour=3), nightly_metadata_review_reminder.s())
+        sender.add_periodic_task(crontab(minute=0, hour=3), nightly_metadata_review_reminder.s(),
+                                 options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=30, hour=3), nightly_zips_cleanup.s(), options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=0, hour=4), daily_odm2_sync.s(), options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=30, hour=4), daily_innactive_group_requests_cleanup.s(),
@@ -218,6 +221,13 @@ def nightly_zips_cleanup():
 def nightly_periodic_task_check():
     with open("celery/periodic_tasks_last_executed.txt", mode='w') as file:
         file.write(timezone.now().strftime('%m/%d/%y %H:%M:%S'))
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def nightly_hs_tracking_cleanup():
+    # trims the hs_tracking tables to the last 60 days
+    time_threshold = timezone.now() - timedelta(days=60)
+    Variable.objects.filter(timestamp__lt=time_threshold).delete()
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)

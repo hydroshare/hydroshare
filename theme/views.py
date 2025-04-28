@@ -761,9 +761,7 @@ def home_router(request):
 
 @login_required
 def dashboard(request, template="pages/dashboard.html"):
-    my_username = request.user.username
-    user = User.objects.get(username=my_username)
-    my_recent = Variable.recent_resources(user, days=60, n_resources=5)
+    my_recent = Variable.recent_resources(request.user, days=60, n_resources=5)
 
     context = {"recent": my_recent}
     return render(request, template, context)

@@ -1283,6 +1283,10 @@ body > .main-container {
     width: auto !important;
 }
 
+#btn-toolbar-download-all.icon-button {
+	padding: 0;
+}
+
 .icon-button:hover{
     text-decoration: none;
 }
