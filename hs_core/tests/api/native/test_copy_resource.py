@@ -6,7 +6,7 @@ from datetime import date
 from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
 from django.core.files.uploadedfile import UploadedFile
-from django.test import TestCase
+from django.test import TransactionTestCase
 
 from hs_access_control.models import PrivilegeCodes
 from hs_core import hydroshare
@@ -18,7 +18,7 @@ from hs_core.hydroshare.utils import QuotaException
 from hs_file_types.models import GeoRasterLogicalFile
 
 
-class TestCopyResource(TestCase):
+class TestCopyResource(TransactionTestCase):
     def setUp(self):
         super(TestCopyResource, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -32,6 +32,8 @@ class TestCopyResource(TestCase):
             superuser=False,
             groups=[]
         )
+        uquota = self.owner.quotas.first()
+        uquota.save_allocated_value(20, "GB")
 
         # create a user who is NOT the owner of the resource to be copied
         self.nonowner = hydroshare.create_account(
@@ -56,8 +58,12 @@ class TestCopyResource(TestCase):
         test_file2 = open('test2.txt', 'w')
         test_file2.write("Test text file in test2.txt")
         test_file2.close()
+        test_file3 = open('test3.txt', 'w')
+        test_file3.write("Test text file in test3.txt")
+        test_file3.close()
         self.test_file1 = open('test1.txt', 'rb')
         self.test_file2 = open('test2.txt', 'rb')
+        self.test_file3 = open('test3.txt', 'rb')
 
         hydroshare.add_resource_files(self.res.short_id, self.test_file1, self.test_file2)
 
@@ -104,6 +110,8 @@ class TestCopyResource(TestCase):
         os.remove(self.test_file1.name)
         self.test_file2.close()
         os.remove(self.test_file2.name)
+        self.test_file3.close()
+        os.remove(self.test_file3.name)
         BaseResource.objects.all().delete()
 
     def test_copy_resource(self):
@@ -344,23 +352,15 @@ class TestCopyResource(TestCase):
         # Set the user's quota to be over the limit
         if not QuotaMessage.objects.exists():
             QuotaMessage.objects.create()
-        qmsg = QuotaMessage.objects.first()
-        qmsg.enforce_quota = True
-        qmsg.save()
         uquota = self.owner.quotas.first()
-        from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit
-        set_quota_usage_over_hard_limit(uquota, qmsg)
+        uquota.save_allocated_value(1, "B")
 
         with self.assertRaises(QuotaException):
-            hydroshare.create_empty_resource(self.res.short_id,
-                                             self.owner,
-                                             action='copy')
-        qmsg.enforce_quota = False
-        qmsg.save()
+            hydroshare.add_file_to_resource(self.res, self.test_file3)
+        uquota.save_allocated_value(20, "GB")
+
         # QuotaException should NOT be raised now that quota is not enforced
-        hydroshare.create_empty_resource(self.res.short_id,
-                                         self.owner,
-                                         action='copy')
+        hydroshare.add_file_to_resource(self.res, self.test_file3)
 
 
 def _get_relation_meta_derived_from(resource):

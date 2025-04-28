@@ -29,31 +29,13 @@ from django_s3.storage import S3Storage
 from hs_access_control.models.community import Community
 from hs_access_control.models.privilege import PrivilegeCodes
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
+from hs_core.exceptions import ResourceFileValidationException, ResourceFileSizeException, QuotaException, \
+    ResourceCopyException, ResourceVersioningException
 from hs_core.models import AbstractResource, BaseResource, GeospatialRelation, ResourceFile
 from hs_core.signals import post_create_resource, pre_add_files_to_resource, pre_create_resource
 from theme.models import QuotaMessage
 
 logger = logging.getLogger(__name__)
-
-
-class ResourceFileSizeException(Exception):
-    pass
-
-
-class ResourceFileValidationException(Exception):
-    pass
-
-
-class QuotaException(Exception):
-    pass
-
-
-class ResourceCopyException(Exception):
-    pass
-
-
-class ResourceVersioningException(Exception):
-    pass
 
 
 def get_resource_types():

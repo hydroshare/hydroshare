@@ -48,6 +48,7 @@ def debug_on(*exceptions):
 
 
 def set_quota_usage_over_hard_limit(uquota, qmsg):
-    used_in_units = convert_file_size_to_unit(uquota.used_value, uquota.unit, 'B')
-    uquota.allocated_value = used_in_units / (qmsg.hard_limit_percent + 5) * 100
+    # used_in_units = convert_file_size_to_unit(uquota.used_value, uquota.unit, 'B')
+    #uquota.save_allocated_value(uquota.used_value / (qmsg.hard_limit_percent + 5) * 100, uquota.unit)
+    uquota.save_allocated_value(1, "B")
     uquota.save()
