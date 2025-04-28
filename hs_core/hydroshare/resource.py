@@ -19,6 +19,7 @@ from rest_framework import status
 from hs_core.hydroshare import hs_bagit
 from hs_core.models import ResourceFile, BaseResource
 from hs_core import signals
+from hs_core.exceptions import ResourceVersioningException
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
@@ -639,7 +640,7 @@ def create_new_version_resource(ori_res, new_res, user):
     from hs_core.tasks import create_new_version_resource_task
     if ori_res.locked_time:
         # cannot create new version for this resource since the resource is locked by another user
-        raise utils.ResourceVersioningException('Failed to create a new version for this resource '
+        raise ResourceVersioningException('Failed to create a new version for this resource '
                                                 'since another user is creating a new version for '
                                                 'this resource synchronously.')
     # lock the resource to prevent concurrent new version creation since only one new version for an

@@ -31,6 +31,7 @@ from hs_access_control.models import GroupMembershipRequest
 from hs_collection_resource.models import CollectionDeletedResource
 from hs_core.enums import (CrossRefSubmissionStatus, CrossRefUpdate,
                            RelationTypes)
+from hs_core.exceptions import ResourceCopyException, ResourceVersioningException
 from hs_core.hydroshare import (create_empty_resource, current_site_url,
                                 set_dirty_bag_flag, utils)
 from hs_core.hydroshare.hs_bagit import (create_bag_metadata_files,
@@ -927,7 +928,7 @@ def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
     except Exception as ex:
         if new_res:
             new_res.delete()
-        raise utils.ResourceCopyException(str(ex))
+        raise ResourceCopyException(str(ex))
 
 
 @shared_task
@@ -986,7 +987,7 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
     except Exception as ex:
         if new_res:
             new_res.delete()
-        raise utils.ResourceVersioningException(str(ex))
+        raise ResourceVersioningException(str(ex))
     finally:
         # release the lock regardless
         ori_res.locked_time = None
