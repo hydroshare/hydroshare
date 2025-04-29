@@ -814,41 +814,6 @@ class Party(AbstractMetaDataElement):
                                                    f"\'{id_link}\' is not a valid {id_name}.")
         return identifiers
 
-    def to_json(self):
-        """Convert model data to JSON-compatible dict with schema.org mapping."""
-
-        identifiers = self.identifiers
-        if not identifiers and self.hydroshare_user_id:
-            user = User.objects.get(id=self.hydroshare_user_id)
-            identifiers = user.userprofile.identifiers
-
-        additional_properties = []
-        for key, value in identifiers.items():
-            identifier = {
-                "type": "PropertyValue",
-                "name": key,
-                "value": value
-            }
-            additional_properties.append(identifier)
-        schema_dict = {
-            "type": "Person",
-            "name": self.name
-        }
-        if self.organization:
-            schema_dict["affiliation"] = self.organization
-        if self.email:
-            schema_dict["email"] = self.email
-        if self.address:
-            schema_dict["address"] = self.address
-        if self.phone:
-            schema_dict["telephone"] = self.phone
-        if self.homepage:
-            schema_dict["url"] = self.homepage
-
-        if additional_properties:
-            schema_dict["additionalProperty"] = additional_properties
-        return schema_dict
-
 
 @rdf_terms(DC.contributor)
 class Contributor(Party):
@@ -868,11 +833,6 @@ class Creator(Party):
         """Define meta properties for Creator class."""
 
         ordering = ['order']
-
-    def to_json(self):
-        js_meta = super().to_json()
-        js_meta["hsterms:order"] = self.order
-        return js_meta
 
 
 def validate_abstract(value):
@@ -931,13 +891,6 @@ class Description(AbstractMetaDataElement):
     def remove(cls, element_id):
         """Create custom remove method for Description model."""
         raise ValidationError("Description element of a resource can't be deleted.")
-
-    def to_json(self):
-        """Convert model data to JSON-compatible dict with schema.org mapping."""
-        schema_dict = {
-            "description": self.abstract
-        }
-        return schema_dict
 
 
 @rdf_terms(DCTERMS.bibliographicCitation)
@@ -1007,13 +960,6 @@ class Title(AbstractMetaDataElement):
         if title:
             Title.create(value=title.value, content_object=content_object)
 
-    def to_json(self):
-        """Convert model data to JSON-compatible dict with schema.org mapping."""
-        schema_dict = {
-            "name": self.value
-        }
-        return schema_dict
-
 
 @rdf_terms(DC.type)
 class Type(AbstractMetaDataElement):
@@ -1044,13 +990,6 @@ class Type(AbstractMetaDataElement):
         url = graph.value(subject=subject, predicate=cls.get_class_term())
         if url:
             Type.create(url=str(url), content_object=content_object)
-
-    def to_json(self):
-        """Convert model data to JSON-compatible dict with schema.org mapping."""
-        schema_dict = {
-            "additionalType": self.url.split('/')[-1]
-        }
-        return schema_dict
 
 
 @rdf_terms(DC.date)
@@ -1192,31 +1131,6 @@ class Date(AbstractMetaDataElement):
 
         dt.delete()
 
-    def to_json(self):
-        """Convert model data to JSON-compatible dict with schema.org mapping."""
-        if self.type == "created":
-            key = "dateCreated"
-        elif self.type == "modified":
-            key = "dateModified"
-        elif self.type == "published":
-            key = "datePublished"
-        else:
-            key = f"hsterms:{self.type}"
-        if "hsterms:" not in key:
-            schema_dict = {
-                key: self.start_date.isoformat() if self.start_date else None
-            }
-        elif key == "hsterms:reviewStarted":
-            schema_dict = {
-                "hsterms:reviewStarted": self.start_date.isoformat() if self.start_date else None
-            }
-        else:
-            schema_dict = {
-                f"{key}StartDate": self.start_date.isoformat() if self.start_date else None,
-                f"{key}EndDate": self.end_date.isoformat() if self.end_date else None
-            }
-        return schema_dict
-
 
 class AbstractRelation(AbstractMetaDataElement):
     """Define Abstract Relation class."""
@@ -1357,24 +1271,6 @@ class Relation(AbstractRelation):
                 value = str(value)
                 Relation.create(type=type, value=value, content_object=content_object)
 
-    def to_json(self):
-        """Convert model data to JSON-compatible dict with schema.org mapping."""
-
-        schema_org_relation_types = (RelationTypes.isPartOf.value, RelationTypes.hasPart.value)
-        if self.type not in schema_org_relation_types:
-            key = f'hsterms:{self.type}'
-        else:
-            key = self.type
-
-        schema_dict = {
-            key: {
-                "type": "CreativeWork",
-                "text": self.value,
-                "description": dict(self.SOURCE_TYPES).get(self.type, 'The content of this resource is related to')
-            }
-        }
-        return schema_dict
-
 
 @rdf_terms(HSTERMS.geospatialRelation, text=HSTERMS.relation_name)
 class GeospatialRelation(AbstractRelation):
@@ -1428,16 +1324,6 @@ class GeospatialRelation(AbstractRelation):
                     value = str(o)
             if name and value and type:
                 GeospatialRelation.create(type=type, value=value, text=name, content_object=content_object)
-
-    def to_json(self):
-        """Convert model data to JSON-compatible dict with schema.org mapping."""
-
-        schema_dict = {
-            "type": "CreativeWork",
-            "text": self.value,
-            "description": 'The content of this resource is related to'
-        }
-        return schema_dict
 
 
 @rdf_terms(DC.identifier)
@@ -1618,18 +1504,6 @@ class Publisher(AbstractMetaDataElement):
         """Define custom remove method for Publisher model."""
         raise ValidationError("Publisher element can't be deleted.")
 
-    def to_json(self):
-        """Convert model data to JSON-compatible dict with schema.org mapping."""
-
-        schema_dict = {
-            "publisher": {
-                "type": "Organization",
-                "name": self.name,
-                "url": self.url
-            }
-        }
-        return schema_dict
-
 
 @rdf_terms(DC.language)
 class Language(AbstractMetaDataElement):
@@ -1679,13 +1553,6 @@ class Language(AbstractMetaDataElement):
         code = graph.value(subject=subject, predicate=cls.get_class_term())
         if code:
             Language.create(code=str(code), content_object=content_object)
-
-    def to_json(self):
-        """Convert model data to JSON-compatible dict with schema.org mapping."""
-        schema_dict = {
-            "inLanguage": self.code
-        }
-        return schema_dict
 
 
 @rdf_terms(DC.coverage)
@@ -2119,7 +1986,9 @@ class Coverage(AbstractMetaDataElement):
         return coverage_form
 
     def to_json(self):
-        """Convert model data to JSON-compatible dict with schema.org mapping."""
+        """Convert metadata models data to JSON-compatible dict with schema.org mapping where possible and the rest
+        terms are based on hsterms."""
+
         value_dict = json.loads(self._value)
 
         if self.type == 'period':
@@ -2133,11 +2002,13 @@ class Coverage(AbstractMetaDataElement):
             schema_dict = {
                 "spatialCoverage": {
                     "type": "Place",
-                    "name": value_dict.get('name'),
                     "hsterms:projection": value_dict.get('projection'),
                     "hsterms:units": value_dict.get('units')
                 }
             }
+            if value_dict.get('name'):
+                schema_dict["spatialCoverage"]["name"] = value_dict.get('name')
+
             if self.type == 'box':
                 schema_dict['spatialCoverage'].update({
                     "geo": {
@@ -2211,20 +2082,6 @@ class FundingAgency(AbstractMetaDataElement):
             raise ValidationError("Agency name is missing")
 
         super(FundingAgency, cls).update(element_id, **kwargs)
-
-    def to_json(self):
-        """Convert model data to JSON-compatible dict with schema.org mapping."""
-        schema_dict = {
-            "type": "MonetaryGrant",
-            "name": self.award_title,
-            "identifier": self.award_number,
-            "funder": {
-                "type": "Organization",
-                "name": self.agency_name,
-                "url": self.agency_url,
-            }
-        }
-        return schema_dict
 
 
 @rdf_terms(DC.subject)
@@ -2300,17 +2157,6 @@ class Rights(AbstractMetaDataElement):
     def remove(cls, element_id):
         """Define custom remove method for Rights model."""
         raise ValidationError("Rights element of a resource can't be deleted.")
-
-    def to_json(self):
-        """Convert model data to JSON-compatible dict with schema.org mapping."""
-        schema_dict = {
-            "license": {
-                "type": "CreativeWork",
-                "url": self.url,
-                "name": self.statement
-            }
-        }
-        return schema_dict
 
 
 def short_id():
@@ -2841,6 +2687,25 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         from django_s3.utils import is_metadata_json_file
 
         return is_metadata_json_file(file_path)
+
+    @property
+    def metadata_json_file_path(self):
+        """Returns the storage path of the resource metadata json file"""
+
+        from hs_file_types.enums import AggregationMetaFilePath
+
+        meta_file_path =  os.path.join(self.file_path, AggregationMetaFilePath.METADATA_JSON_FILE_NAME)
+        return meta_file_path
+
+    @property
+    def metadata_json_file_url_path(self):
+        """Returns the url path of the resource metadata json file"""
+
+        from .hydroshare import current_site_url
+
+        meta_file_path =  self.metadata_json_file_path
+        meta_file_url_path = os.path.join(current_site_url(), 'resource', meta_file_path)
+        return meta_file_url_path
 
     def is_aggregation_xml_file(self, file_path):
         """Checks if the file path *file_path* is one of the aggregation related xml file paths
@@ -4776,6 +4641,106 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
         from .hydroshare import current_site_url
 
+        def get_party_dict(party):
+            identifiers = party.identifiers
+            if not identifiers and party.hydroshare_user_id:
+                user = User.objects.get(id=party.hydroshare_user_id)
+                identifiers = user.userprofile.identifiers
+
+            additional_properties = []
+            for key, value in identifiers.items():
+                identifier = {
+                    "type": "PropertyValue",
+                    "name": key,
+                    "value": value
+                }
+                additional_properties.append(identifier)
+
+            party_dict = {
+                "type": "Person",
+                "name": party.name
+            }
+            if party.organization:
+                party_dict["affiliation"] = party.organization
+            if party.email:
+                party_dict["email"] = party.email
+            if party.address:
+                party_dict["address"] = party.address
+            if party.phone:
+                party_dict["telephone"] = party.phone
+            if party.homepage:
+                party_dict["url"] = self.homepage
+
+            if additional_properties:
+                party_dict["additionalProperty"] = additional_properties
+            return party_dict
+
+        def get_date_dict(date):
+            if date.type == "created":
+                key = "dateCreated"
+            elif date.type == "modified":
+                key = "dateModified"
+            elif date.type == "published":
+                key = "datePublished"
+            else:
+                key = f"hsterms:{date.type}"
+
+            if "hsterms:" not in key:
+                date_dict = {
+                    key: date.start_date.isoformat() if date.start_date else None
+                }
+            elif key == "hsterms:reviewStarted":
+                date_dict = {
+                    "hsterms:reviewStarted": date.start_date.isoformat() if date.start_date else None
+                }
+            else:
+                date_dict = {
+                    f"{key}StartDate": date.start_date.isoformat() if date.start_date else None,
+                    f"{key}EndDate": date.end_date.isoformat() if date.end_date else None
+                }
+            return date_dict
+
+        def get_funding_agency_dict(funding_agency):
+            funding_agency_dict = {
+                "type": "MonetaryGrant",
+                "funder": {
+                    "type": "Organization",
+                    "name": funding_agency.agency_name
+                }
+            }
+            if funding_agency.award_title:
+                funding_agency_dict["name"] = funding_agency.award_title
+            if funding_agency.award_number:
+                funding_agency_dict["identifier"] = funding_agency.award_number
+            if funding_agency.agency_url:
+                funding_agency_dict["funder"]["url"] = funding_agency.agency_url
+
+            return funding_agency_dict
+
+        def get_relation_dict(relation):
+            if relation.type in (RelationTypes.isPartOf.value, RelationTypes.hasPart.value):
+                key = relation.type
+            else:
+                key = f"hsterms:{relation.type}"
+            rel_description = dict(Relation.SOURCE_TYPES).get(relation.type,
+                                                              'The content of this resource is related to')
+            relation_dict = {
+                key: {
+                    "type": "CreativeWork",
+                    "text": relation.value,
+                    "description": rel_description
+                }
+            }
+            return relation_dict
+
+        def get_geo_spatial_relation_dict(geospatial_relation):
+            geo_relation_dict = {
+                "type": "CreativeWork",
+                "text": geospatial_relation.value,
+                "description": 'The content of this resource is related to'
+            }
+            return geo_relation_dict
+
         json_dict = {
             "context": [
                 "https://schema.org/",
@@ -4785,15 +4750,32 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
             ],
             "type": "Dataset"
         }
-        json_dict.update(self.title.to_json())
-        if self.description:
-            json_dict.update(self.description.to_json())
+        json_dict.update({"name": self.title.value})
 
-        json_dict.update(self.language.to_json())
-        json_dict.update(self.rights.to_json())
-        json_dict.update(self.type.to_json())
+        if self.description:
+            json_dict.update({"description": self.description.abstract})
+
+        json_dict.update({"inLanguage": self.language.code})
+
+        rights_dict = {
+            "license": {
+                "type": "CreativeWork",
+                "url": self.rights.url,
+                "name": self.rights.statement
+            }
+        }
+        json_dict.update(rights_dict)
+
+        json_dict.update({"additionalType": self.type.url.split('/')[-1]})
         if self.publisher:
-            json_dict.update(self.publisher.to_json())
+            publisher_dict ={
+                "publisher": {
+                    "@type": "Organization",
+                    "name": self.publisher.name,
+                    "url": self.publisher.url
+                }
+            }
+            json_dict.update(publisher_dict)
 
         citation = {"citation": self.resource.get_citation(forceHydroshareURI=False)}
         json_dict.update(citation)
@@ -4813,27 +4795,32 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
         creators = {"creator": []}
         for creator in self.creators.all():
-            creators["creator"].append(creator.to_json())
+            party_dict = get_party_dict(creator)
+            party_dict["hsterms:order"] = creator.order
+            creators["creator"].append(party_dict)
         json_dict.update(creators)
 
         contributors = {"contributor": []}
         for contributor in self.contributors.all():
-            contributors["contributor"].append(contributor.to_json())
-        json_dict.update(contributors)
+            party_dict = get_party_dict(contributor)
+            contributors["contributor"].append(party_dict)
+        if contributors["contributor"]:
+            json_dict.update(contributors)
 
         for date in self.dates.all():
-            json_dict.update(date.to_json())
+            date_dict = get_date_dict(date)
+            json_dict.update(date_dict)
+
         for coverage in self.coverages.all():
             json_dict.update(coverage.to_json())
 
         associated_media = {"associatedMedia": []}
-        # use the files in the resource to get the associated media
         # TODO: should we only include the files that are not part of any aggregation?
         for res_file in self.resource.files.all():
             media_object = {
                 "type": "MediaObject",
                 "name": res_file.file_name,
-                "contentUrl": os.path.join(current_site_url(), 'resource', self.resource.short_id, res_file.short_path),
+                "contentUrl": os.path.join(current_site_url(), 'resource', res_file.storage_path),
                 "contentSize": res_file.size,
                 "sha256": res_file.checksum,
                 "encodingFormat": res_file.mime_type,
@@ -4850,7 +4837,8 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
         funders = {"funding": []}
         for funding_agency in self.funding_agencies.all():
-            funders["funding"].append(funding_agency.to_json())
+            funding_agency_dict = get_funding_agency_dict(funding_agency)
+            funders["funding"].append(funding_agency_dict)
         if funders["funding"]:
             json_dict.update(funders)
 
@@ -4866,19 +4854,33 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
             json_dict.update(additional_metadata)
 
         relation_terms = {}
+        # for each aggregation that this resource has, set the aggregation meta json file path as hasPart
+        aggregation_has_parts = []
+        resource = self.resource
+        resource = resource.get_content_model()
+        for logical_file in resource.logical_files:
+            if logical_file.has_parent:
+                # skip aggregations that have a parent as it will be added as hasPart of the parent aggregation
+                continue
+            aggregation_has_parts.append(logical_file.metadata_json_file_url_path)
+        if aggregation_has_parts:
+            relation_terms['hasPart'] = aggregation_has_parts
+
         for relation in self.relations.all():
-            rel_dict = relation.to_json()
+            rel_dict = get_relation_dict(relation)
             rel_key = list(rel_dict.keys())[0]
             if rel_key not in relation_terms:
                 relation_terms[rel_key] = []
             rel_value = rel_dict[rel_key]
             relation_terms[rel_key].append(rel_value)
+
         if relation_terms:
             json_dict.update(relation_terms)
 
         geospatial_relations = {"hsterms:geospatialRelation": []}
         for geospatialrelation in self.geospatialrelations.all():
-            geospatial_relations["hsterms:geospatialRelation"].append(geospatialrelation.to_json())
+            geospatial_relation_dict = get_geo_spatial_relation_dict(geospatialrelation)
+            geospatial_relations["hsterms:geospatialRelation"].append(geospatial_relation_dict)
         if geospatial_relations["hsterms:geospatialRelation"]:
             json_dict.update(geospatial_relations)
 
