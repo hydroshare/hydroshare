@@ -274,7 +274,7 @@ class UserQuota(models.Model):
     def _allocated_value_size_and_unit(self):
         try:
             result = subprocess.run(
-                ["mc", "quota", "info", f"hydroshare/{self.user.userprofile.bucket_name}"],
+                ["mc", "quota", "info", f"{self.zone}/{self.user.userprofile.bucket_name}"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 check=True,
@@ -287,8 +287,7 @@ class UserQuota(models.Model):
         unit = result_split[-1].strip()
         unit = unit.replace("i", "")
         size = result_split[-2]
-        size = float(size) * 1.07374
-        return size, unit
+        return float(size), unit
 
     @property
     def allocated_value(self):
@@ -301,7 +300,7 @@ class UserQuota(models.Model):
         """
         try:
             subprocess.run(
-                ["mc", "quota", "set", f"hydroshare/{self.user.userprofile.bucket_name}",
+                ["mc", "quota", "set", f"{self.zone}/{self.user.userprofile.bucket_name}",
                  "--size", f"{allocated_value}{unit}"],
                 check=True,
             )
@@ -311,7 +310,7 @@ class UserQuota(models.Model):
     def _size_and_unit(self):
         try:
             result = subprocess.run(
-                ["mc", "stat", f"hydroshare/{self.user.userprofile.bucket_name}"],
+                ["mc", "stat", f"{self.zone}/{self.user.userprofile.bucket_name}"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 check=True,
@@ -324,8 +323,7 @@ class UserQuota(models.Model):
         size = size_and_unit[0]
         unit = size_and_unit[1]
         unit = unit.replace("i", "")
-        size = float(size) * 1.07374
-        return size, unit
+        return float(size), unit
 
     @property
     def data_zone_value(self):

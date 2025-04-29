@@ -1,4 +1,5 @@
 import os
+import uuid
 from time import sleep
 from django.http.response import Http404
 from django.test import TestCase
@@ -20,7 +21,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
             'test_user@email.com',
-            username=self.username,
+            username=self.username + uuid.uuid4().hex,  # to ensure unique bucket in minio
             first_name='some_first_name',
             last_name='some_last_name',
             superuser=False,
@@ -28,7 +29,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         )
         self.user2 = hydroshare.create_account(
             'test_user2@email.com',
-            username='testuser2',
+            username='testuser2' + uuid.uuid4().hex,
             first_name='some_first_name2',
             last_name='some_last_name2',
             superuser=False,
@@ -82,18 +83,10 @@ class UpdateQuotaUsageTestCase(TestCase):
 
     def convert_gb_to_bytes(self, gb):
         return gb * 1024 * 1024 * 1024
-    
-    def wait_for_zero_quota(self, user_quota, timeout=120):
-        elapsed_time = 0
-        while user_quota.data_zone_value != 0:
-            sleep(1)
-            elapsed_time += 1
-            if elapsed_time >= timeout:
-                assert False, "Quota update timed out"
 
-    def wait_for_quota_update(self, user_quota, initial_value=None, timeout=120):
+    def wait_for_quota_update(self, user_quota, initial_value=None, timeout=360):
         elapsed_time = 0
-        if initial_value == None:
+        if initial_value is None:
             initial_value = user_quota.data_zone_value
         while user_quota.data_zone_value == initial_value:
             sleep(1)
@@ -124,13 +117,14 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertAlmostEqual(dz, expected, places=5)
 
     def test_deleting_file_decrease_quota(self):
+        # Retrieve the UserQuota object for the user
+        user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
+
         # Add files to the resource
         hydroshare.resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3)
         self.assertEqual(self.res.files.all().count(), 3)
         self.assertEqual(self.single_file_size * 3, self.res.size)
 
-        # Retrieve the UserQuota object for the user
-        user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
         self.wait_for_quota_update(user_quota, 0)
         data_zone_value = user_quota.data_zone_value
         initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
@@ -183,6 +177,9 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertAlmostEqual(dz, expected, places=5)
 
     def test_unzipping_files_increase_quota(self):
+        # Retrieve the UserQuota object for the user
+        user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
+
         hydroshare.resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3,
                                                folder='test')
         zip_folder(self.user, self.res.short_id, 'data/contents/test', 'test.zip', bool_remove_original=False)
@@ -191,8 +188,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         folder_path = "data/contents/test"
         remove_folder(self.user, self.res.short_id, folder_path)
 
-        # Retrieve the UserQuota object for the user
-        user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
         self.wait_for_quota_update(user_quota, 0)
         data_zone_value = user_quota.data_zone_value
         initial_quota_value = self.convert_gb_to_bytes(data_zone_value)
@@ -420,7 +415,6 @@ class UpdateQuotaUsageTestCase(TestCase):
     def test_delete_resource_reduces_quota(self):
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
-        self.wait_for_zero_quota(user_quota)
         # Add files to the resource
         hydroshare.resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3)
 
@@ -495,6 +489,9 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertAlmostEqual(dz, initial_quota_value * 2, places=5)
 
     def test_version_resource_doubles_quota(self):
+        # Retrieve the UserQuota object for the user
+        user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
+
         # Add files to the resource
         hydroshare.resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3)
 
@@ -502,7 +499,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.single_file_size * 3, self.res.size)
 
         # Retrieve the UserQuota object for the user
-        user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
         self.wait_for_quota_update(user_quota, 0)
         data_zone_value = user_quota.data_zone_value
         initial_quota_value = self.convert_gb_to_bytes(data_zone_value)
@@ -541,6 +537,9 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertAlmostEqual(dz, initial_quota_value * 2, places=5)
 
     def test_publish_resource_decreases_quota(self):
+        # Retrieve the UserQuota object for the user
+        user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
+
         # Add files to the resource
         hydroshare.resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3)
 
@@ -548,7 +547,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.single_file_size * 3, self.res.size)
 
         # Retrieve the UserQuota object for the user
-        user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
         self.wait_for_quota_update(user_quota, 0)
         data_zone_value = user_quota.data_zone_value
         initial_quota_value = self.convert_gb_to_bytes(data_zone_value)

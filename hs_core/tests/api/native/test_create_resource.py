@@ -431,10 +431,10 @@ class TestCreateResource(MockS3TestCaseMixin, TestCase):
                                            content_type='application/zip',
                                            size=os.stat(zip_path).st_size)
         res = resource.create_resource('CompositeResource',
-                                self.user,
-                                'My Test resource',
-                                files=(payload2,),
-                                unpack_file=True)
+                                       self.user,
+                                       'My Test resource',
+                                       files=(payload2,),
+                                       unpack_file=True)
 
         uquota = self.user.quotas.first()
         # make user's quota over hard limit 125%
