@@ -361,12 +361,8 @@ class S3Storage(S3Storage):
             except Exception:
                 pass
             try:
-                subprocess.run(
-                    ["mc", "quota", "set", f"hydroshare/{bucket_name}",
-                    "--size", "20GiB"],
-                    check=True,
-                )
-            except subprocess.CalledProcessError as e:
+                subprocess.run(["mc", "quota", "set", f"hydroshare/{bucket_name}", "--size", "20GiB"], check=True)
+            except subprocess.CalledProcessError:
                 pass
 
     def delete_bucket(self, bucket_name):
