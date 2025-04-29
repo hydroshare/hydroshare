@@ -7,6 +7,7 @@ from django.db import models
 from hs_core.models import ResourceFile
 from .base import AbstractLogicalFile, FileTypeContext, NestedLogicalFileMixin
 from .generic import GenericFileMetaDataMixin
+from ..enums import AggregationMetaFilePath
 
 
 class FileSetMetaData(GenericFileMetaDataMixin):
@@ -236,6 +237,32 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         super(FileSetLogicalFile, self).create_aggregation_xml_documents(create_map_xml=create_map_xml)
         for child_aggr in self.get_children():
             child_aggr.create_aggregation_xml_documents(create_map_xml=create_map_xml)
+
+    def get_metadata_json(self):
+        """Return the metadata in JSON format - uses schema.org terms where possible and the rest
+        terms are based on hsterms."""
+
+        return self.metadata.to_json()
+
+    @property
+    def metadata_json_file_path(self):
+        """Returns the url path of the aggregation metadata json file"""
+
+        meta_file_path = os.path.join(self.resource.file_path, self.folder,
+                                      AggregationMetaFilePath.METADATA_JSON_FILE_NAME)
+        return meta_file_path
+
+    def save_metadata_json_file(self):
+        """Creates aggregation metadata json file and saves it to S3. If the aggregation contains other
+        aggregations, it also saves the metadata json file for each of those aggregations."""
+
+        from hs_file_types.utils import save_metadata_json_file as utils_save_metadata_json_file
+
+        metadata_json = self.metadata.to_json()
+        to_file_name = self.metadata_json_file_path
+        utils_save_metadata_json_file(self.resource.get_s3_storage(), metadata_json, to_file_name)
+        for child_aggr in self.get_children():
+            child_aggr.save_metadata_json_file()
 
     def get_copy(self, copied_resource):
         """Overrides the base class method"""
