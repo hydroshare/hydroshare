@@ -12,19 +12,18 @@
         {% endif %}
         {% if not resource_edit_mode %}
             {% if show_content_files %}
-                <button id="btn-toolbar-download-all"
+                <a id="btn-toolbar-download-all"
                     {% if cm.raccess.require_download_agreement %}
                     data-target="#license-agree-dialog-bag" data-toggle="modal"
                     data-placement="auto"
                     {% endif %}
-                    class="icon-button"
                     data-bag-url="{{ cm.bag_url }}"
                 >
                     <span data-toggle="tooltip" data-placement="bottom"
                             title="Download all content as Zipped BagIt Archive"
                             class="fa fa-briefcase icon-blue icon-button">
                     </span>
-                </button>
+                </a>
             {% endif %}
             {% if not self_access_level == 'None' and cm.raccess.public %}
                 {% if resource_is_mine %}
