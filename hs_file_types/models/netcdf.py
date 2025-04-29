@@ -26,7 +26,8 @@ from hs_core.hs_rdf import HSTERMS, rdf_terms
 from hs_core.hydroshare import utils
 from hs_core.models import Creator, Contributor, AbstractMetaDataElement
 from hs_core.signals import post_add_netcdf_aggregation
-from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from hs_file_types.models.base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from hs_file_types.enums import AggregationMetaFilePath
 
 
 @rdf_terms(HSTERMS.spatialReference)
@@ -423,6 +424,50 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         # There can be at most only one instance of type OriginalCoverage associated
         # with this metadata object
         return self.originalCoverage
+
+    def to_json(self):
+        """Returns metadata in JSON format using schema.org vocabulary where possible and the rest terms
+          are based on hsterms."""
+
+        json_dict = super().to_json()
+        json_dict['additionalType'] = self.logical_file.get_aggregation_type_name()
+
+        variables_meta = {"variableMeasured": []}
+        for variable in self.variables.all():
+            v_meta ={
+                "hsterms:name": variable.name,
+                "hsterms:type": variable.type,
+                "hsterms:shape": variable.shape,
+                "hsterms:unit": variable.unit
+            }
+            if variable.missing_value:
+                v_meta["hsterms:missingValue"] = variable.missing_value
+            if variable.descriptive_name:
+                v_meta["hsterms:longName"] = variable.descriptive_name
+            if variable.method:
+                v_meta["hsterms:method"] = variable.method
+
+            variables_meta["variableMeasured"].append(v_meta)
+        if variables_meta["variableMeasured"]:
+            json_dict.update(variables_meta)
+
+        if self.originalCoverage:
+            orig_coverage_meta = {
+                "hsterms:northLimit": self.originalCoverage.value["northlimit"],
+                "hsterms:eastLimit": self.originalCoverage.value["eastlimit"],
+                "hsterms:southLimit": self.originalCoverage.value["southlimit"],
+                "hsterms:westLimit": self.originalCoverage.value["westlimit"],
+                "hsterms:units": self.originalCoverage.value["units"],
+            }
+            if "projection" in self.originalCoverage.value and self.originalCoverage.value["projection"]:
+                orig_coverage_meta.update({
+                    "hsterms:projection": self.originalCoverage.value["projection"],
+                    "hsterms:projectionString": self.originalCoverage.projection_string_text,
+                    "hsterms:projectionStringType": self.originalCoverage.projection_string_type,
+                    "hsterms:datum": self.originalCoverage.datum,
+                })
+        json_dict.update({"hsterms:originalCoverage": orig_coverage_meta})
+        return json_dict
 
     def _get_opendap_html(self):
         opendap_div = html_tags.div(cls="content-block")
@@ -1037,6 +1082,29 @@ class NetCDFLogicalFile(AbstractLogicalFile):
 
         res_files = [f for f in resource_files if f.extension.lower() == ".nc"]
         return res_files[0] if res_files else None
+
+    def get_metadata_json(self):
+        """Return the metadata in JSON format - uses schema.org terms where possible and the rest
+        terms are based on hsterms."""
+
+        return self.metadata.to_json()
+
+    @property
+    def metadata_json_file_path(self):
+        """Returns the storage path of the aggregation metadata json file"""
+
+        nc_file = self.get_primary_resource_file(self.files.all())
+        meta_file_path = nc_file.storage_path + AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH
+        return meta_file_path
+
+    def save_metadata_json_file(self):
+        """Creates aggregation metadata json file and saves it to S3 """
+
+        from hs_file_types.utils import save_metadata_json_file as utils_save_metadata_json_file
+
+        metadata_json = self.metadata.to_json()
+        to_file_name = self.metadata_json_file_path
+        utils_save_metadata_json_file(self.resource.get_s3_storage(), metadata_json, to_file_name)
 
 
 def add_metadata_to_list(
