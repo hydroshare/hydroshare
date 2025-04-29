@@ -74,6 +74,10 @@ class NestedLogicalFileMixin(object):
         if self.metadata.temporal_coverage is None:
             self.update_temporal_coverage()
 
+    def save_metadata_json_file(self):
+        """Creates aggregation metadata json file and saves it to S3 """
+        for child_aggr in self.get_children():
+            child_aggr.save_metadata_json_file()
 
 class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
     """ base class for HydroShare file type metadata """
@@ -118,6 +122,65 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         self.extra_metadata = {}
         self.keywords = []
         self.save()
+
+    def to_json(self):
+        """Return the metadata in JSON format - uses schema.org terms where possible and the rest
+        terms are based on hsterms."""
+
+        json_dict = {
+            "context": [
+                "https://schema.org/",
+                {
+                    "hsterms": "https://hydroshare.org/terms/"
+                }
+            ],
+            "type": "Dataset"
+        }
+        for coverage in self.coverages.all():
+            json_dict.update(coverage.to_json())
+        if self.keywords:
+            json_dict.update({"keywords": self.keywords})
+        additional_metadata = {"hsterms:additionalMetadata": []}
+        for key, value in self.extra_metadata.items():
+            as_property_value = {
+                "type": "PropertyValue",
+                "name": key,
+                "value": value
+            }
+            additional_metadata["hsterms:additionalMetadata"].append(as_property_value)
+        if additional_metadata["hsterms:additionalMetadata"]:
+            json_dict.update(additional_metadata)
+
+        associated_media = {"associatedMedia": []}
+        for res_file in self.logical_file.files.all():
+            media_object = {
+                "type": "MediaObject",
+                "name": res_file.file_name,
+                "contentUrl": os.path.join(current_site_url(), 'resource', res_file.storage_path),
+                "contentSize": res_file.size,
+                "sha256": res_file.checksum,
+                "encodingFormat": res_file.mime_type,
+            }
+            json_dict.update({"associatedMedia": media_object})
+        if associated_media["associatedMedia"]:
+            json_dict.update(associated_media)
+
+        child_aggr_has_parts = []
+        for child_aggr in self.logical_file.get_children():
+            child_aggr_has_parts.append(child_aggr.metadata_json_file_url_path)
+        if child_aggr_has_parts:
+            if 'hasPart' not in json_dict:
+                json_dict['hasPart'] = [child_aggr_has_parts]
+            else:
+                json_dict['hasPart'].extend(child_aggr_has_parts)
+
+        parent_aggr = self.logical_file.get_parent()
+        if parent_aggr is not None:
+            json_dict['isPartOf'] = [parent_aggr.metadata_json_file_url_path]
+        else:
+            json_dict['isPartOf'] = [self.logical_file.resource.metadata_json_file_url_path]
+
+        return json_dict
 
     def get_html(self, include_extra_metadata=True, **kwargs):
         """Generates html for displaying all metadata elements associated with this logical file.
@@ -1105,6 +1168,22 @@ class AbstractLogicalFile(models.Model):
         """Full file path of the aggregation map xml file starting with {resource_id}/data/contents/
         """
         return os.path.join(self.resource.file_path, self.map_short_file_path)
+
+    @property
+    def metadata_json_file_path(self):
+        """Returns the path of the aggregation metadata json file starting with {resource_id}/data/contents/
+        """
+        raise NotImplementedError
+
+    @property
+    def metadata_json_file_url_path(self):
+        """Returns the url path of the aggregation metadata json file"""
+
+        from hs_core.hydroshare.utils import current_site_url
+
+        meta_file_path = self.metadata_json_file_path
+        meta_file_url_path = os.path.join(current_site_url(), 'resource', meta_file_path)
+        return meta_file_url_path
 
     @property
     def is_single_file_aggregation(self):

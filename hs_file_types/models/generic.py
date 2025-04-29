@@ -10,6 +10,7 @@ from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.signals import post_add_generic_aggregation
 
 from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from ..enums import AggregationMetaFilePath
 
 
 class GenericFileMetaDataMixin(AbstractFileMetaData):
@@ -176,14 +177,22 @@ class GenericFileMetaDataMixin(AbstractFileMetaData):
         else:
             return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
+    def to_json(self):
+        """Returns metadata in JSON format using schema.org vocabulary where possible and the rest terms
+          are based on hsterms."""
+
+        json_dict = super().to_json()
+        json_dict['additionalType'] = self.logical_file.get_aggregation_type_name()
+        return json_dict
+
 
 class GenericFileMetaData(GenericFileMetaDataMixin):
     pass
 
 
 class GenericLogicalFile(AbstractLogicalFile):
-    """ Each resource file is assigned an instance of this logical file type on upload to
-    Composite Resource """
+    """ Any resource file can be part of this aggregation """
+
     metadata = models.OneToOneField(GenericFileMetaData, on_delete=models.CASCADE, related_name="logical_file")
     data_type = "genericData"
 
@@ -229,6 +238,28 @@ class GenericLogicalFile(AbstractLogicalFile):
             return self.extra_data['url']
         else:
             return None
+
+    def get_metadata_json(self):
+        """Return the metadata in JSON format - uses schema.org terms where possible and the rest
+        terms are based on hsterms."""
+
+        return self.metadata.to_json()
+
+    @property
+    def metadata_json_file_path(self):
+        """Returns the url path of the aggregation metadata json file"""
+
+        meta_file_path = self.files.first().storage_path + AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH
+        return meta_file_path
+
+    def save_metadata_json_file(self):
+        """Creates aggregation metadata json file and saves it to S3 """
+
+        from hs_file_types.utils import save_metadata_json_file as utils_save_metadata_json_file
+
+        metadata_json = self.metadata.to_json()
+        to_file_name = self.metadata_json_file_path
+        utils_save_metadata_json_file(self.resource.get_s3_storage(), metadata_json, to_file_name)
 
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path='', extra_data={}):
