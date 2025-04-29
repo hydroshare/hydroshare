@@ -421,6 +421,21 @@ class TestCreateResource(MockS3TestCaseMixin, TestCase):
         qmsg.enforce_quota = True
         qmsg.save()
 
+        # Make a zip file
+        zip_path = os.path.join(self.tmp_dir, 'test.zip')
+        with zipfile.ZipFile(zip_path, 'w') as zfile:
+            zfile.write(self.raster_file_path)
+            zfile.write(self.txt_file_path)
+        # Create a resource with zipfile, un-pack
+        payload2 = MyTemporaryUploadedFile(open(zip_path, 'rb'), name=zip_path,
+                                           content_type='application/zip',
+                                           size=os.stat(zip_path).st_size)
+        res = resource.create_resource('CompositeResource',
+                                self.user,
+                                'My Test resource',
+                                files=(payload2,),
+                                unpack_file=True)
+
         uquota = self.user.quotas.first()
         # make user's quota over hard limit 125%
         from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit
@@ -451,3 +466,5 @@ class TestCreateResource(MockS3TestCaseMixin, TestCase):
             self.fail(
                 "create resource should not raise QuotaException for over quota cases "
                 " if quota is not enforced - Quota Exception: " + str(ex))
+        if res:
+            res.delete()

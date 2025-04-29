@@ -1,3 +1,4 @@
+from time import sleep
 import pytest
 import sys
 import pdb
@@ -49,4 +50,10 @@ def debug_on(*exceptions):
 
 def set_quota_usage_over_hard_limit(uquota, qmsg):
     uquota.save_allocated_value(1, "B")
-    uquota.save()
+    time_out = 60
+    time_elapsed = 0
+    while uquota.allocated_value != 1:
+        sleep(1)
+        time_elapsed += 1
+        if time_elapsed > time_out:
+            raise Exception("Timeout waiting for quota usage to be over hard limit")

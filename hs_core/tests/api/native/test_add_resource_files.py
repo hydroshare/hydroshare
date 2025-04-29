@@ -46,9 +46,6 @@ class TestAddResourceFiles(MockS3TestCaseMixin, unittest.TestCase):
         self.myfile2 = open(self.n2, "rb")
         self.myfile3 = open(self.n3, "rb")
 
-        uquota = self.user.quotas.first()
-        uquota.save_allocated_value(20, "GB")
-
         self.res = create_resource(resource_type='CompositeResource',
                                    owner=self.user,
                                    title='Test Resource',
