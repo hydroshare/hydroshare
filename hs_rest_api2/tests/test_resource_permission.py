@@ -1,6 +1,6 @@
 import json
 
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from rest_framework import status
 
 from hs_core.hydroshare import resource
@@ -64,12 +64,12 @@ class TestResourcePermission(HSRESTTestCase):
         self.user.uaccess.share_group_with_user(
             self.edit_group,
             self.edit_user_via_group,
-            PrivilegeCodes.VIEW # edit_user_via_group has view permission on edit_group
+            PrivilegeCodes.VIEW  # edit_user_via_group has view permission on edit_group
         )
         self.user.uaccess.share_group_with_user(
             self.view_group,
             self.view_user_via_group,
-            PrivilegeCodes.CHANGE # view_user_via_group has edit permission on view_group
+            PrivilegeCodes.CHANGE  # view_user_via_group has edit permission on view_group
         )
 
         # Set individual permissions
@@ -167,7 +167,7 @@ class TestResourcePermission(HSRESTTestCase):
         self.user.uaccess.share_group_with_user(
             self.edit_group,
             self.view_user,
-            PrivilegeCodes.CHANGE # view_user has edit permission on edit_group
+            PrivilegeCodes.CHANGE  # view_user has edit permission on edit_group
         )
 
         self.client.logout()
