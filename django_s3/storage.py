@@ -1,6 +1,7 @@
 from io import BytesIO
 import os
 from pathlib import Path
+import subprocess
 import tempfile
 import zipfile
 import logging
@@ -354,11 +355,19 @@ class S3Storage(S3Storage):
             return False
 
     def create_bucket(self, bucket_name):
-        try:
-            self.connection.create_bucket(Bucket=bucket_name)
-        except Exception:
-            pass
-            # logger.exception(f"Failed to create bucket {bucket_name}")
+        if not self.bucket_exists(bucket_name):
+            try:
+                self.connection.create_bucket(Bucket=bucket_name)
+            except Exception:
+                pass
+            try:
+                subprocess.run(
+                    ["mc", "quota", "set", f"hydroshare/{bucket_name}",
+                    "--size", "20GiB"],
+                    check=True,
+                )
+            except subprocess.CalledProcessError as e:
+                pass
 
     def delete_bucket(self, bucket_name):
         bucket = self.connection.Bucket(bucket_name)

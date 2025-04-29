@@ -318,7 +318,7 @@ class UserQuota(models.Model):
                 text=True,
             )
         except (subprocess.CalledProcessError, ValueError, IndexError):
-            return 0, "GB"
+            raise ValidationError("Error retrieving quota information.")
         size_with_unit_str = result.stdout.split("Total size: ")[1].split("\n")[0]
         size_and_unit = size_with_unit_str.split(" ")
         size = size_and_unit[0]
