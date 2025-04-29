@@ -79,6 +79,7 @@ class NestedLogicalFileMixin(object):
         for child_aggr in self.get_children():
             child_aggr.save_metadata_json_file()
 
+
 class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
     """ base class for HydroShare file type metadata """
 

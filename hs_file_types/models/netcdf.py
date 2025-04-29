@@ -434,7 +434,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
 
         variables_meta = {"variableMeasured": []}
         for variable in self.variables.all():
-            v_meta ={
+            v_meta = {
                 "hsterms:name": variable.name,
                 "hsterms:type": variable.type,
                 "hsterms:shape": variable.shape,

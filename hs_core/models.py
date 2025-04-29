@@ -2694,7 +2694,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
 
         from hs_file_types.enums import AggregationMetaFilePath
 
-        meta_file_path =  os.path.join(self.file_path, AggregationMetaFilePath.METADATA_JSON_FILE_NAME)
+        meta_file_path = os.path.join(self.file_path, AggregationMetaFilePath.METADATA_JSON_FILE_NAME)
         return meta_file_path
 
     @property
@@ -2703,7 +2703,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
 
         from .hydroshare import current_site_url
 
-        meta_file_path =  self.metadata_json_file_path
+        meta_file_path = self.metadata_json_file_path
         meta_file_url_path = os.path.join(current_site_url(), 'resource', meta_file_path)
         return meta_file_url_path
 
@@ -4768,7 +4768,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
         json_dict.update({"additionalType": self.type.url.split('/')[-1]})
         if self.publisher:
-            publisher_dict ={
+            publisher_dict = {
                 "publisher": {
                     "@type": "Organization",
                     "name": self.publisher.name,
