@@ -1241,10 +1241,10 @@ def delete_metadata_element(resource_short_id, element_model_name, element_id):
 
 def save_resource_metadata_json(resource):
     """
-    Writes the resource level metadata from the db in schema.org format to the hs_user_metadata.json file of a resource
+    Writes the resource-level metadata and metadata for the contained aggregations in JSON format.
 
     Parameters:
-    :param resource: A resource instance
+    :param resource: An instance of the resource whose metadata is to be written.
     """
     from hs_file_types.enums import AggregationMetaFilePath
 
@@ -1252,6 +1252,12 @@ def save_resource_metadata_json(resource):
     meta_json_filename = AggregationMetaFilePath.METADATA_JSON_FILE_NAME
     metadata_json_str = json.dumps(resource.metadata.to_json(), indent=4)
     content_file = ContentFile(metadata_json_str.encode('utf-8'))
-    to_file_name = os.path.join(resource.root_path, 'data', 'contents', meta_json_filename)
-    # save the json file to S3
+    to_file_name = os.path.join(resource.file_path, meta_json_filename)
+    # save the resource level metadata json file to S3
     istorage.save(to_file_name, content_file)
+    # save the aggregation metadata json file to S3 for each aggregation
+    for logical_file in resource.logical_files:
+        if logical_file.has_parent:
+            # skip aggregations that have a parent as the parent will generate the json file and save it
+            continue
+        logical_file.save_metadata_json_file()
