@@ -596,11 +596,11 @@ def convert_file_size_to_unit(size, to_unit, from_unit='B'):
     :param from_unit: should be one of the five: 'B', 'KB', 'MB', 'GB', or 'TB'
     :return: the size converted to the pass-in unit
     """
-    unit = to_unit.lower()
-    if unit not in ('kb', 'mb', 'gb', 'tb'):
-        raise ValidationError('Pass-in unit for file size conversion must be one of KB, MB, GB, '
+    unit = to_unit.lower().replace("i", "")
+    if unit not in ('b', 'kb', 'mb', 'gb', 'tb'):
+        raise ValidationError('Pass-in unit for file size conversion must be one of B, KB, MB, GB, '
                               'or TB')
-    from_unit = from_unit.lower()
+    from_unit = from_unit.lower().replace("i", "")
     if from_unit not in ('b', 'kb', 'mb', 'gb', 'tb'):
         raise ValidationError('Starting unit for file size conversion must be one of B, KB, MB, GB, '
                               'or TB')
@@ -619,6 +619,8 @@ def convert_file_size_to_unit(size, to_unit, from_unit='B'):
 
     # Now convert to the pass-in unit
     factor = 1024.0
+    if unit == 'b':
+        return size
     kbsize = size / factor
     if unit == 'kb':
         return kbsize
