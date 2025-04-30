@@ -351,26 +351,7 @@ class UserQuota(models.Model):
 
     @property
     def used_value(self):
-        dz = self.get_used_value_by_zone(refresh=False)
-        return dz
-
-    def get_used_value_by_zone(self, refresh=False):
-        """
-        Get the used value by zone.
-
-        Parameters:
-            refresh (bool): If True, refreshes the quota usage before returning the values.
-
-        Returns:
-            used value in the dataZone
-        """
-        from hs_core.hydroshare.resource import get_quota_usage
-
-        if refresh:
-            dz = get_quota_usage(self.user.username, False)
-        else:
-            dz = self.data_zone_value
-        return dz
+        return self.data_zone_value
 
     def add_to_used_value(self, size):
         """
@@ -416,7 +397,7 @@ class UserQuota(models.Model):
         grace = self.grace_period_ends
         allocated = self.allocated_value
         unit = self.unit
-        used = self.get_used_value_by_zone(refresh=False)
+        used = self.used_value
         dzp = used * 100.0 / allocated
         percent = used * 100.0 / allocated
         remaining = allocated - used

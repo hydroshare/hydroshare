@@ -655,30 +655,25 @@ def validate_user_quota(user_or_username, size):
         user = None
 
     if user:
-        # validate it is within quota hard limit
         uq = user.quotas.filter(zone='hydroshare').first()
+        
         if uq:
             if not QuotaMessage.objects.exists():
                 QuotaMessage.objects.create()
             qmsg = QuotaMessage.objects.first()
-            enforce_flag = qmsg.enforce_quota
-            if enforce_flag:
-                hard_limit = qmsg.hard_limit_percent
-                used_size = uq.add_to_used_value(size)
-                used_percent = uq.used_percent
-                rounded_percent = round(used_percent, 2)
-                rounded_used_val = round(used_size, 4)
-                grace_ends = uq.grace_period_ends
-                past_grace_period = grace_ends < date.today() if grace_ends else False
-                if used_percent >= hard_limit or past_grace_period:
-                    msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
-                                                         qmsg.content)
-                    msg_str = msg_template_str.format(used=rounded_used_val,
-                                                      unit=uq.unit,
-                                                      allocated=uq.allocated_value,
-                                                      zone=uq.zone,
-                                                      percent=rounded_percent)
-                    raise QuotaException(msg_str)
+            used_size = uq.add_to_used_value(size)
+            used_percent = uq.used_percent
+            rounded_percent = round(used_percent, 2)
+            rounded_used_val = round(used_size, 4)
+            if used_percent >= 100:
+                msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
+                                                     qmsg.content)
+                msg_str = msg_template_str.format(used=rounded_used_val,
+                                                  unit=uq.unit,
+                                                  allocated=uq.allocated_value,
+                                                  zone=uq.zone,
+                                                  percent=rounded_percent)
+                raise QuotaException(msg_str)
 
 
 def get_remaining_user_quota(user_or_username, units='MB'):

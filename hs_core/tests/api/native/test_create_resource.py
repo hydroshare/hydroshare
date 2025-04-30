@@ -14,6 +14,7 @@ from hs_core.hydroshare import resource, get_resource_by_shortkey
 from hs_core.tests.api.utils import MyTemporaryUploadedFile
 from hs_core.models import BaseResource
 from hs_core.testing import MockS3TestCaseMixin
+from hs_core.tests.utils.test_utils import wait_for_quota_update
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import QuotaException, resource_pre_create_actions
 from theme.models import QuotaMessage
@@ -426,45 +427,28 @@ class TestCreateResource(MockS3TestCaseMixin, TestCase):
         with zipfile.ZipFile(zip_path, 'w') as zfile:
             zfile.write(self.raster_file_path)
             zfile.write(self.txt_file_path)
-        # Create a resource with zipfile, un-pack
-        payload2 = MyTemporaryUploadedFile(open(zip_path, 'rb'), name=zip_path,
-                                           content_type='application/zip',
-                                           size=os.stat(zip_path).st_size)
+        payload2 = MyTemporaryUploadedFile(open(self.raster_file_path, 'rb'), name="raster.tif",
+                                           size=os.stat(self.raster_file_path).st_size)
         res = resource.create_resource('CompositeResource',
                                        self.user,
                                        'My Test resource',
-                                       files=(payload2,),
-                                       unpack_file=True)
+                                       files=(payload2,))
 
         uquota = self.user.quotas.first()
         # make user's quota over hard limit 125%
         from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit
         set_quota_usage_over_hard_limit(uquota, qmsg)
-
+        wait_for_quota_update(uquota)
         # create_resource should raise quota exception now that the creator user is over hard
         # limit and enforce quota flag is set to True
+        file_one_payload = MyTemporaryUploadedFile(open(self.raster_file_path, 'rb'), name="raster2.tif",
+                                           size=os.stat(self.raster_file_path).st_size)
         with self.assertRaises(QuotaException):
             resource_pre_create_actions(resource_type='CompositeResource',
                                         resource_title='My Test Resource',
                                         page_redirect_url_key=None,
-                                        files=(self.file_one,),
+                                        files=(file_one_payload,),
                                         metadata=None,
                                         requesting_user=self.user,)
-
-        qmsg.enforce_quota = False
-        qmsg.save()
-        # create resource should not raise quota exception now that enforce_quota flag
-        # is set to False
-        try:
-            resource_pre_create_actions(resource_type='CompositeResource',
-                                        resource_title='My Test Resource',
-                                        page_redirect_url_key=None,
-                                        files=(self.file_one,),
-                                        metadata=None,
-                                        requesting_user=self.user, )
-        except QuotaException as ex:
-            self.fail(
-                "create resource should not raise QuotaException for over quota cases "
-                " if quota is not enforced - Quota Exception: " + str(ex))
         if res:
             res.delete()

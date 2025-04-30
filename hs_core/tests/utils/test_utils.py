@@ -57,3 +57,14 @@ def set_quota_usage_over_hard_limit(uquota, qmsg):
         time_elapsed += 1
         if time_elapsed > time_out:
             raise Exception("Timeout waiting for quota usage to be over hard limit")
+
+
+def wait_for_quota_update(user_quota, initial_value=None, timeout=360):
+    elapsed_time = 0
+    if initial_value is None:
+        initial_value = user_quota.data_zone_value
+    while user_quota.data_zone_value == initial_value:
+        sleep(1)
+        elapsed_time += 1
+        if elapsed_time >= timeout:
+            assert False, "Quota update timed out"
