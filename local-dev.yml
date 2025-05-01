@@ -15,6 +15,7 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
       MINIO_BROWSER_REDIRECT: "false"
+      MINIO_SCANNER_SPEED: "fastest"
     command: server --console-address ":9001" /data
   postgis:
     image: postgis/postgis:15-3.3
