@@ -12,7 +12,6 @@ from uuid import uuid4
 
 import aiohttp
 from asgiref.sync import sync_to_async
-from datetime import date
 from django.apps import apps
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -656,7 +655,7 @@ def validate_user_quota(user_or_username, size):
 
     if user:
         uq = user.quotas.filter(zone='hydroshare').first()
-        
+
         if uq:
             if not QuotaMessage.objects.exists():
                 QuotaMessage.objects.create()

@@ -442,7 +442,7 @@ class TestCreateResource(MockS3TestCaseMixin, TestCase):
         # create_resource should raise quota exception now that the creator user is over hard
         # limit and enforce quota flag is set to True
         file_one_payload = MyTemporaryUploadedFile(open(self.raster_file_path, 'rb'), name="raster2.tif",
-                                           size=os.stat(self.raster_file_path).st_size)
+                                                   size=os.stat(self.raster_file_path).st_size)
         with self.assertRaises(QuotaException):
             resource_pre_create_actions(resource_type='CompositeResource',
                                         resource_title='My Test Resource',

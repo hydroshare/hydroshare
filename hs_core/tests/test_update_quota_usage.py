@@ -1,6 +1,5 @@
 import os
 import uuid
-from time import sleep
 from django.http.response import Http404
 from django.test import TestCase
 from django.contrib.auth.models import User, Group
