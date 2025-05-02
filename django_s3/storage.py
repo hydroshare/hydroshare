@@ -21,6 +21,7 @@ from uuid import uuid4
 
 from django.utils.deconstruct import deconstructible
 from .s3_backend import S3Storage
+from django.core.exceptions import ImproperlyConfigured
 
 try:
     from botocore.exceptions import ClientError
