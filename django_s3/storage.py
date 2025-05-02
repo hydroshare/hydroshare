@@ -114,8 +114,8 @@ class S3Storage(S3Storage):
 
         in_prefix = os.path.dirname(in_path) if self.isDir(in_name) else in_path
         try:
-            with open(f's3://{out_bucket}/{out_path}', 'wb', transport_params={'client': self.connection.meta.client}
-                    ) as out_file:
+            with open(f's3://{out_bucket}/{out_path}', 'wb',
+                      transport_params={'client': self.connection.meta.client}) as out_file:
                 with zipfile.ZipFile(out_file, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
                     for file_key in filesCollection:
                         relative_path = file_key.key[len(in_prefix):]
