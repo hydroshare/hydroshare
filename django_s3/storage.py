@@ -113,13 +113,18 @@ class S3Storage(S3Storage):
         filesCollection = in_bucket.objects.filter(Prefix=in_path).all()
 
         in_prefix = os.path.dirname(in_path) if self.isDir(in_name) else in_path
-        with open(f's3://{out_bucket}/{out_path}', 'wb', transport_params={'client': self.connection.meta.client}
-                  ) as out_file:
-            with zipfile.ZipFile(out_file, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
-                for file_key in filesCollection:
-                    relative_path = file_key.key[len(in_prefix):]
-                    with zip_archive.open(relative_path, 'w', force_zip64=True) as zip_archive_file:
-                        chunk_request(zip_archive_file, in_bucket_name, file_key.key)
+        try:
+            with open(f's3://{out_bucket}/{out_path}', 'wb', transport_params={'client': self.connection.meta.client}
+                    ) as out_file:
+                with zipfile.ZipFile(out_file, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
+                    for file_key in filesCollection:
+                        relative_path = file_key.key[len(in_prefix):]
+                        with zip_archive.open(relative_path, 'w', force_zip64=True) as zip_archive_file:
+                            chunk_request(zip_archive_file, in_bucket_name, file_key.key)
+        except ClientError as e:
+            if "An error occurred (InvalidRequest) when calling the CompleteMultipartUpload operation:" in str(e):
+                raise QuotaException("Bucket quota exceeded. Please contact your system administrator.")
+            raise e
 
     def unzip(self, zip_file_path, unzipped_folder=""):
         """
