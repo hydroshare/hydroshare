@@ -775,11 +775,11 @@ class TimeSeriesFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
 
         # test aggregation xml file paths
         expected_meta_file_path = '{}/{}{}'.format(new_folder, base_sqlite_file_name,
-                                                   AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)
+                                                   AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
         expected_map_file_path = '{}/{}{}'.format(new_folder, base_sqlite_file_name,
-                                                  AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value)
+                                                  AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         # test renaming folder
@@ -799,11 +799,11 @@ class TimeSeriesFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
 
         # test aggregation xml file paths
         expected_meta_file_path = '{}_1/{}{}'.format(new_folder, base_sqlite_file_name,
-                                                     AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)
+                                                     AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
         expected_map_file_path = '{}_1/{}{}'.format(new_folder, base_sqlite_file_name,
-                                                    AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value)
+                                                    AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())
@@ -839,12 +839,12 @@ class TimeSeriesFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
         # test aggregation xml file paths
         expected_meta_file_path = '{}/{}{}'.format(aggregation_folder_name,
                                                    base_sqlite_file_name,
-                                                   AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)
+                                                   AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
         expected_map_file_path = '{}/{}{}'.format(aggregation_folder_name,
                                                   base_sqlite_file_name,
-                                                  AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value)
+                                                  AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
         # create a folder to be the parent folder of the aggregation folder
@@ -883,13 +883,13 @@ class TimeSeriesFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
         expected_meta_file_path = '{0}/{1}/{2}{3}'.format(parent_folder_rename,
                                                           aggregation_folder_name,
                                                           base_sqlite_file_name,
-                                                          AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)
+                                                          AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
 
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
         expected_map_file_path = '{0}/{1}/{2}{3}'.format(parent_folder_rename,
                                                          aggregation_folder_name,
                                                          base_sqlite_file_name,
-                                                         AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value)
+                                                         AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
 
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 
@@ -942,13 +942,13 @@ class TimeSeriesFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
         expected_meta_file_path = '{0}/{1}/{2}{3}'.format(parent_folder,
                                                           aggregation_folder_name,
                                                           base_sqlite_file_name,
-                                                          AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)
+                                                          AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_file_path)
 
         expected_map_file_path = '{0}/{1}/{2}{3}'.format(parent_folder,
                                                          aggregation_folder_name,
                                                          base_sqlite_file_name,
-                                                         AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value)
+                                                         AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
 
         self.assertEqual(logical_file.map_short_file_path, expected_map_file_path)
 

@@ -2624,8 +2624,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         """
         from hs_file_types.enums import AggregationMetaFilePath
 
-        if not (file_path.endswith(AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)
-                or file_path.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value)):
+        if not (file_path.endswith(AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
+                or file_path.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)):
             return False
         return True
 
