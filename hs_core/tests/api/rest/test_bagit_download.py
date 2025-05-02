@@ -52,7 +52,7 @@ class TestBagitDownload(HSRESTTestCase):
         last_downloaded_date = res.bag_last_downloaded
         self.assertIsNone(last_downloaded_date)
 
-        zip_download_url = f"/django_irods/rest_download/bags/{res.short_id}.zip?"
+        zip_download_url = f"/django_s3/rest_download/bags/{res.short_id}.zip?"
         params = {'url_download': False, 'zipped': False, 'aggregation': False}
         zip_download_url += urllib.parse.urlencode(params)
 

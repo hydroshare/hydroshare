@@ -3,11 +3,11 @@ from django.http import Http404
 from django.test import TestCase
 
 from hs_core import hydroshare
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core.models import BaseResource
 
 
-class TestResolveDOIAPI(MockIRODSTestCaseMixin, TestCase):
+class TestResolveDOIAPI(MockS3TestCaseMixin, TestCase):
     def setUp(self):
         super(TestResolveDOIAPI, self).setUp()
         self.hydroshare_author_group, _ = Group.objects.get_or_create(name='Hydroshare Author')

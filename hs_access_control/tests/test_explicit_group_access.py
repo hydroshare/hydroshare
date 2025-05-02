@@ -1,12 +1,12 @@
 from django.test import TestCase
 from django.contrib.auth.models import Group
 
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core import hydroshare
 from hs_access_control.models import PrivilegeCodes
 
 
-class TestExplicitGroupAccess(MockIRODSTestCaseMixin, TestCase):
+class TestExplicitGroupAccess(MockS3TestCaseMixin, TestCase):
 
     def setUp(self):
         super(TestExplicitGroupAccess, self).setUp()

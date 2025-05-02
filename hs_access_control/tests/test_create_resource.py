@@ -5,7 +5,7 @@ from hs_access_control.models import PrivilegeCodes
 
 from hs_core import hydroshare
 from hs_core.models import BaseResource
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 
 from hs_composite_resource.models import CompositeResource
 
@@ -13,7 +13,7 @@ from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set, 
     assertUserResourceState, assertResourceUserState
 
 
-class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
+class T03CreateResource(MockS3TestCaseMixin, TestCase):
 
     def setUp(self):
         super(T03CreateResource, self).setUp()

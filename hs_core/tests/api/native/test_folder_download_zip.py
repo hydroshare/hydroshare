@@ -6,7 +6,7 @@ from hs_core.hydroshare.users import create_account
 from hs_core.hydroshare.resource import add_resource_files, create_resource
 from hs_core.models import BaseResource
 from hs_core.tasks import create_temp_zip
-from django_irods.storage import IrodsStorage
+from django_s3.storage import S3Storage
 from hs_core.models import ResourceFile
 
 
@@ -49,7 +49,7 @@ class TestFolderDownloadZip(TestCase):
 
         add_resource_files(self.res.short_id, self.refts_file)
         self.res.create_aggregation_meta_files()
-        self.istorage = IrodsStorage()
+        self.istorage = S3Storage()
 
     def tearDown(self):
         super(TestFolderDownloadZip, self).tearDown()

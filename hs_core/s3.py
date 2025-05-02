@@ -1,37 +1,12 @@
-import os
-
 from django.db import models
-from mezzanine.conf import settings
 
 from hs_core.signals import pre_check_bag_flag
 
 
-class ResourceIRODSMixin(models.Model):
-    """ This contains iRODS methods to be included as options for resources """
+class ResourceS3Mixin(models.Model):
+    """ This contains S3 methods to be included as options for resources """
     class Meta:
         abstract = True
-
-    @property
-    def irods_home_path(self):
-        """
-        Return the home path for local iRODS resources
-
-        This must be public in order to be accessed from the methods below in a mixin context.
-        """
-        return settings.IRODS_CWD
-
-    def irods_full_path(self, path):
-        """
-        Return fully qualified path for local paths
-
-        This leaves fully qualified paths alone, but presumes that unqualified paths
-        are home paths, and adds irods_home_path to these to qualify them.
-
-        """
-        if path.startswith('/'):
-            return path
-        else:
-            return os.path.join(self.irods_home_path, path)
 
     def update_bag(self):
         """
@@ -43,7 +18,7 @@ class ResourceIRODSMixin(models.Model):
 
         This is a synchronous update. The call waits until the update is finished.
         """
-        from hs_core.tasks import create_bag_by_irods
+        from hs_core.tasks import create_bag_by_s3
         from hs_core.hydroshare.resource import check_resource_type
         from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
 
@@ -61,7 +36,7 @@ class ResourceIRODSMixin(models.Model):
         # the ticket system does synchronous bag creation.
         # async bag creation isn't supported.
         if bag_modified:  # automatically cast to Bool
-            create_bag_by_irods(self.short_id)
+            create_bag_by_s3(self.short_id)
             self.setAVU('bag_modified', False)
 
     def update_metadata_files(self):
@@ -78,7 +53,7 @@ class ResourceIRODSMixin(models.Model):
             self.setAVU('metadata_dirty', False)
 
 
-class ResourceFileIRODSMixin(models.Model):
-    """ This contains iRODS functions related to resource files """
+class ResourceFileS3Mixin(models.Model):
+    """ This contains S3 functions related to resource files """
     class Meta:
         abstract = True

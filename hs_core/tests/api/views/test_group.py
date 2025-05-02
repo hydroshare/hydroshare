@@ -12,7 +12,7 @@ from rest_framework import status
 
 from hs_access_control.models import PrivilegeCodes
 from hs_core import hydroshare
-from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
+from hs_core.testing import MockS3TestCaseMixin, ViewTestCase
 from hs_core.views import (act_on_group_membership_request, create_user_group,
                            delete_user_group, make_group_membership_request,
                            restore_user_group, share_group_with_user,
@@ -21,7 +21,7 @@ from hs_core.views import (act_on_group_membership_request, create_user_group,
 from theme.backends import without_login_date_token_generator
 
 
-class TestGroup(MockIRODSTestCaseMixin, ViewTestCase):
+class TestGroup(MockS3TestCaseMixin, ViewTestCase):
 
     def setUp(self):
         super(TestGroup, self).setUp()

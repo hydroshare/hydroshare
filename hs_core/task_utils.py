@@ -13,7 +13,7 @@ celery_inspector = celery_app.control.inspect()
 
 def _retrieve_task_id(job_name, res_id, job_dict):
     """
-    internal function to retrieve a matching job id for job_name celery task (e.g., hs_core.tasks.create_bag_by_irods)
+    internal function to retrieve a matching job id for job_name celery task (e.g., hs_core.tasks.create_bag_by_s3)
     from a specified celery job dictionary including active jobs, reserved jobs, and scheduled jobs. Active jobs and
     reserved jobs have the same dictionary format, while schedule jobs have a bit different format in which the job
     details are stored in the 'request' key of a sub dictionary. Refer to
@@ -104,7 +104,7 @@ def get_task_notification(task_id):
 
 
 def get_resource_bag_task(res_id):
-    job_name = 'hs_core.tasks.create_bag_by_irods'
+    job_name = 'hs_core.tasks.create_bag_by_s3'
     return _retrieve_job_id(job_name, res_id)
 
 

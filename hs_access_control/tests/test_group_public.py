@@ -5,12 +5,12 @@ from hs_access_control.models import PrivilegeCodes
 
 from hs_core import hydroshare
 from hs_core.models import BaseResource
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 
 from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
 
 
-class T09GroupPublic(MockIRODSTestCaseMixin, TestCase):
+class T09GroupPublic(MockS3TestCaseMixin, TestCase):
 
     def setUp(self):
         super(T09GroupPublic, self).setUp()

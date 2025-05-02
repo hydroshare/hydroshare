@@ -2,7 +2,6 @@ from django.test import TestCase
 from django.contrib.auth.models import Group
 
 from hs_core import hydroshare
-# from hs_core.testing import MockIRODSTestCaseMixin
 
 from hs_access_control.models import PrivilegeCodes, shortcut
 from hs_access_control.tests.utilities import global_reset

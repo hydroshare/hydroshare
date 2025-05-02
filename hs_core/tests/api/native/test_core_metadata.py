@@ -27,11 +27,11 @@ from hs_core.models import (
     FundingAgency,
 )
 from hs_core import hydroshare
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core.templatetags.hydroshare_tags import name_without_commas
 
 
-class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
+class TestCoreMetadata(MockS3TestCaseMixin, TestCase):
     def setUp(self):
         super(TestCoreMetadata, self).setUp()
         self.group, _ = Group.objects.get_or_create(name="Hydroshare Author")
@@ -1632,7 +1632,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # delete resource file
         hydroshare.delete_resource_file(res.short_id, file_obj_1.name, self.user)
 
-        _ = res.get_irods_storage()
+        _ = res.get_s3_storage()
 
         # there should be not be any format element at this point for this resource
         self.assertEqual(

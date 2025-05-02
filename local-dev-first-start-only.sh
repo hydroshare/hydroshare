@@ -236,7 +236,6 @@ echo "Creating django settings and static directories"
 cp hydroshare/local_settings.template hydroshare/local_settings.py 2>/dev/null
 mkdir -p hydroshare/static/static 2>/dev/null
 mkdir -p hydroshare/static/media 2>/dev/null
-rm -fr log .irods 2>/dev/null
 mkdir -p log/nginx 2>/dev/null
 #chmod -R 777 log 2>/dev/null
 
@@ -314,6 +313,11 @@ echo
 echo "  - docker exec hydroshare chown -R hydro-service:storage-hydro /tmp /shared_tmp"
 docker exec hydroshare chown -R hydro-service:storage-hydro /tmp /shared_tmp
 echo
+
+echo
+echo "  - docker exec -u hydro-service hydroshare python manage.py rename_app django_irods django_s3"
+echo
+docker exec -u hydro-service hydroshare python manage.py rename_app django_irods django_s3
 
 echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py migrate sites --noinput"

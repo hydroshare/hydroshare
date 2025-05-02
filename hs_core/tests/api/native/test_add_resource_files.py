@@ -6,12 +6,12 @@ from django.contrib.auth.models import User, Group
 from hs_core.hydroshare.resource import add_resource_files, create_resource
 from hs_core.hydroshare.users import create_account
 from hs_core.models import BaseResource
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core.hydroshare.utils import QuotaException, resource_file_add_pre_process
 from theme.models import QuotaMessage
 
 
-class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
+class TestAddResourceFiles(MockS3TestCaseMixin, unittest.TestCase):
     def setUp(self):
         super(TestAddResourceFiles, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')

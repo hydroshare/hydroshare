@@ -408,7 +408,7 @@ INSTALLED_APPS = (
     "django.contrib.postgres",
     "django.contrib.messages",
     "django_nose",
-    "django_irods",
+    "django_s3",
     "drf_yasg",
     "theme",
     "theme.blog_mods",
@@ -467,7 +467,7 @@ TUS_EXISTING_FILE = 'error'  # Other options are: 'overwrite',  'error', 'rename
 
 # the url for the uppy companion server
 # https://uppy.io/docs/companion/
-COMPANION_URL = 'https://companion.hydroshare.org/'
+COMPANION_URL = 'https://companion.hydroshare.org'
 UPPY_UPLOAD_PATH = '/hsapi/tus/'
 MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD = 50
 PARALLEL_UPLOADS_LIMIT = 10
@@ -481,6 +481,8 @@ SWAGGER_SETTINGS = {
 }
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = "oauth2_provider.Application"
+# https://django-oauth-toolkit.readthedocs.io/en/3.0.1/settings.html#refresh-token-expire-seconds
+REFRESH_TOKEN_EXPIRE_SECONDS = 60 * 60 * 24 * 30  # 30 days
 
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
 # All apps beginning with "django." or "mezzanine." are also excluded by default
@@ -488,7 +490,7 @@ APPS_TO_NOT_RUN = (
     "rest_framework",
     "django_nose",
     "grappelli_safe",
-    "django_irods",
+    "django_s3",
     "crispy_forms",
     "autocomplete_light",
     "widget_tweaks",
@@ -681,7 +683,7 @@ HAYSTACK_SIGNAL_PROCESSOR = (
 # to expire in 7 days
 PASSWORD_RESET_TIMEOUT = 60 * 60 * 24 * 7
 
-# customized temporary file path for large files retrieved from iRODS user zone for metadata
+# customized temporary file path for large files retrieved from S3 user zone for metadata
 # extraction
 TEMP_FILE_DIR = "/tmp"
 
@@ -905,7 +907,7 @@ HSWS_GEOSERVER_URL = "https://geoserver.hydroshare.org/geoserver"
 
 # celery task names to be recorded in task notification model
 TASK_NAME_LIST = [
-    "hs_core.tasks.create_bag_by_irods",
+    "hs_core.tasks.create_bag_by_s3",
     "hs_core.tasks.create_temp_zip",
     "hs_core.tasks.unzip_task",
     "hs_core.tasks.copy_resource_task",
@@ -913,6 +915,21 @@ TASK_NAME_LIST = [
     "hs_core.tasks.delete_resource_task",
     "hs_core.tasks.move_aggregation_task",
 ]
+
+MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
+    "/hydroshare/hs_file_types/model_meta_schema_templates"
+)
+
+BULK_UPDATE_CREATE_BATCH_SIZE = 1000
+
+
+AWS_S3_ACCESS_KEY_ID = 'minioadmin'
+AWS_S3_SECRET_ACCESS_KEY = 'minioadmin'
+AWS_S3_ENDPOINT_URL = 'http://minio:9000'
+# Only enable this if you are using minio in local development
+# AWS_S3_USE_LOCAL = True
+
+ACCESS_CONTROL_CHANGE_ENDPOINT = None
 
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #
@@ -971,21 +988,6 @@ else:
 # import codecs
 # sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 # sys.stderr = codecs.getwriter('utf8')(sys.stderr)
-
-MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
-    "/hydroshare/hs_file_types/model_meta_schema_templates"
-)
-
-BULK_UPDATE_CREATE_BATCH_SIZE = 1000
-
-
-AWS_S3_ACCESS_KEY_ID = 'minioadmin'
-AWS_S3_SECRET_ACCESS_KEY = 'minioadmin'
-AWS_S3_ENDPOINT_URL = 'http://minio:9000'
-# Only enable this if you are using minio in local development
-# AWS_S3_USE_LOCAL = True
-
-ACCESS_CONTROL_CHANGE_ENDPOINT = None
 
 if ENABLE_OIDC_AUTHENTICATION:
     # The order of the authentication classes is important. The OIDC authentication class

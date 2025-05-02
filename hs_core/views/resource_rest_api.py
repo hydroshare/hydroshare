@@ -26,7 +26,7 @@ from rest_framework import generics, status
 from rest_framework.request import Request
 from rest_framework.exceptions import ValidationError, NotAuthenticated, PermissionDenied, NotFound
 
-from django_irods.icommands import SessionException
+from django_s3.exceptions import SessionException
 from django_tus.views import TusUpload
 from django_tus.tusfile import TusFile, TusChunk
 from django_tus.response import TusResponse
@@ -432,15 +432,16 @@ class ScienceMetadataRetrieveUpdate(APIView):
             scimeta_path = os.path.join(bag_data_path, 'resourcemetadata.xml')
             shutil.copy(scimeta.temporary_file_path(), scimeta_path)
             # Copy existing resource map to bag data path
-            # (use a file-like object as the file may be in iRODS, so we can't
+            # (use a file-like object as the file may be in S3, so we can't
             #  just copy it to a local path)
             resmeta_path = os.path.join(bag_data_path, 'resourcemap.xml')
             with open(resmeta_path, 'wb') as resmeta:
                 storage = get_file_storage()
-                resmeta_irods = storage.open(AbstractResource.sysmeta_path(pk))
-                shutil.copyfileobj(resmeta_irods, resmeta)
+                resmeta_s3 = storage.open(AbstractResource.sysmeta_path(pk))
+                shutil.copyfileobj(resmeta_s3, resmeta)
 
-            resmeta_irods.close()
+            resmeta_s3.close()
+            resmeta.close()
 
             try:
                 # Read resource system and science metadata
@@ -578,7 +579,7 @@ class ResourceFileCRUD(APIView):
             return Response("Resource type does not support folders", status.HTTP_403_FORBIDDEN)
 
         try:
-            view_utils.irods_path_is_allowed(pathname)
+            view_utils.s3_path_is_allowed(pathname)
         except (ValidationError, SuspiciousFileOperation) as ex:
             return Response(str(ex), status_code=status.HTTP_400_BAD_REQUEST)
 
@@ -589,10 +590,10 @@ class ResourceFileCRUD(APIView):
                       'resource id {res_id}'.format(file_name=pathname, res_id=pk)
             raise NotFound(detail=err_msg)
 
-        # redirects to django_irods/views.download function
+        # redirects to django_s3/views.download function
         # use new internal url for rest call
         # TODO: (Couch) Migrate model (with a "data migration") so that this hack is not needed.
-        redirect_url = f.url.replace('django_irods/download/', 'django_irods/rest_download/')
+        redirect_url = f.url.replace('django_s3/download/', 'django_s3/rest_download/')
         return HttpResponseRedirect(redirect_url)
 
     @swagger_auto_schema(request_body=serializers.ResourceFileValidator)
@@ -660,7 +661,7 @@ class ResourceFileCRUD(APIView):
             return Response("Resource type does not support folders", status.HTTP_403_FORBIDDEN)
 
         try:
-            view_utils.irods_path_is_allowed(pathname)  # check for hacking attempts
+            view_utils.s3_path_is_allowed(pathname)  # check for hacking attempts
         except (ValidationError, SuspiciousFileOperation) as ex:
             return Response(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
@@ -710,7 +711,7 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
         "previous": null,
         "results": [
             {
-                "url": "http://mill24.cep.unc.edu/django_irods/
+                "url": "http://mill24.cep.unc.edu/django_s3/
                 download/bd88d2a152894134928c587d38cf0272/data/contents/
                 mytest_resource/text_file.txt",
                 "size": 21,
@@ -719,7 +720,7 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
                 "checksum": "7265548b8f345605113bd9539313b4e7"
             },
             {
-                "url": "http://mill24.cep.unc.edu/django_irods/download/
+                "url": "http://mill24.cep.unc.edu/django_s3/download/
                 bd88d2a152894134928c587d38cf0272/data/contents/mytest_resource/a_directory/cea.tif",
                 "size": 270993,
                 "content_type": "image/tiff",
@@ -782,10 +783,10 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
                 try:
                     resource_file_info_list.append(self.resourceFileToListItem(f))
                 except SessionException as err:
-                    logger.error(f"Error for file {f.storage_path} from iRODS: {err.stderr}")
+                    logger.error(f"Error for file {f.storage_path} from S3: {err.stderr}")
                 except CoreValidationError as err:
-                    # primarily this exception will be raised if the file is not found in iRODS
-                    logger.error(f"Error for file {f.storage_path} from iRODS: {str(err)}")
+                    # primarily this exception will be raised if the file is not found in S3
+                    logger.error(f"Error for file {f.storage_path} from S3: {str(err)}")
 
             serializer = self.get_serializer(resource_file_info_list, many=True)
             return self.get_paginated_response(serializer.data)
@@ -797,7 +798,7 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
         resource, _, _ = view_utils.authorize(self.request, self.kwargs['pk'],
                                               needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
 
-        # exclude files with size 0 as they are missing from iRODS
+        # exclude files with size 0 as they are missing from S3
         return resource.files.exclude(_size=0).all()
 
     def get_serializer_class(self):

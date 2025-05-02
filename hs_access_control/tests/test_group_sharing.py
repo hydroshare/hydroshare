@@ -5,13 +5,13 @@ from django.contrib.auth.models import Group
 from hs_access_control.models import GroupResourcePrivilege, UserGroupPrivilege, PrivilegeCodes
 
 from hs_core import hydroshare
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 
 from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set, \
     assertGroupResourceUnshareCoherence
 
 
-class T09GroupSharing(MockIRODSTestCaseMixin, TestCase):
+class T09GroupSharing(MockS3TestCaseMixin, TestCase):
 
     def setUp(self):
         super(T09GroupSharing, self).setUp()

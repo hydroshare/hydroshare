@@ -5,12 +5,12 @@ from django.contrib.auth.models import Group
 from hs_access_control.models import PrivilegeCodes
 
 from hs_core import hydroshare
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 
 from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
 
 
-class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
+class T04CreateGroup(MockS3TestCaseMixin, TestCase):
 
     def setUp(self):
         super(T04CreateGroup, self).setUp()
@@ -180,7 +180,7 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(dog.uaccess.view_groups.count(), 0)
 
 
-class T15CreateGroup(MockIRODSTestCaseMixin, TestCase):
+class T15CreateGroup(MockS3TestCaseMixin, TestCase):
     "Test creatng a group: flags and isolation"
 
     def setUp(self):

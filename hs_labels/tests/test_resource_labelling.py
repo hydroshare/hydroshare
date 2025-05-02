@@ -3,7 +3,7 @@ from django.contrib.auth.models import Group
 
 from hs_core import hydroshare
 from hs_core.models import BaseResource
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_labels.models import (
     UserLabels,
     ResourceLabels,
@@ -103,7 +103,7 @@ def match_nested_lists(l1, l2):
     return True
 
 
-class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
+class T01BasicFunction(MockS3TestCaseMixin, TestCase):
     def setUp(self):
         super(T01BasicFunction, self).setUp()
         global_reset()
