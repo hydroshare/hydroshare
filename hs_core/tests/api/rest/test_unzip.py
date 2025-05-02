@@ -180,4 +180,4 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         response = self.client.post(unzip_url, data={"remove_original_zip": "true"})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

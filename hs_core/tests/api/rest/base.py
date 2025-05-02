@@ -1,6 +1,7 @@
 import socket
 import json
 import requests
+import uuid
 
 from django.contrib.auth.models import Group
 from django.urls import reverse
@@ -26,7 +27,7 @@ class HSRESTTestCase(APITransactionTestCase):
         # create a user
         self.user = users.create_account(
             "test_user@email.com",
-            username="testuser",
+            username="testuser" + uuid.uuid4().hex,
             password="foobar",
             first_name="some_first_name",
             last_name="some_last_name",

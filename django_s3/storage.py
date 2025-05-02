@@ -12,6 +12,8 @@ from urllib.parse import urlencode
 from django.conf import settings
 
 from smart_open import open
+
+from hs_core.exceptions import QuotaException
 from . import models as m
 from .utils import bucket_and_name, normalized_bucket_name, is_metadata_xml_file
 
@@ -20,6 +22,10 @@ from uuid import uuid4
 from django.utils.deconstruct import deconstructible
 from .s3_backend import S3Storage
 
+try:
+    from botocore.exceptions import ClientError
+except ImportError as e:
+    raise ImproperlyConfigured("Could not load Boto3's S3 bindings. %s" % e)
 
 folder_delimiter = "|||||||"
 logger = logging.getLogger(__name__)
@@ -384,13 +390,20 @@ class S3Storage(S3Storage):
         for file in bucket.objects.filter(Prefix=src_name):
             src_file_path = file.key
             dst_file_path = file.key.replace(src_name, dest_name)
-            self.connection.Bucket(dst_bucket).copy(
-                {
-                    "Bucket": src_bucket,
-                    "Key": src_file_path,
-                },
-                dst_file_path,
-            )
+            try:
+                self.connection.Bucket(dst_bucket).copy(
+                    {
+                        "Bucket": src_bucket,
+                        "Key": src_file_path,
+                    },
+                    dst_file_path,
+                )
+            except ClientError as e:
+                if "XMinioAdminBucketQuotaExceeded" in str(e):
+                    raise QuotaException(
+                        "Bucket quota exceeded. Please contact your system administrator."
+                    )
+                raise e
             files_to_delete.append(src_file_path)
 
         for src_file_path in files_to_delete:

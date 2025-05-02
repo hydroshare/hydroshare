@@ -1,3 +1,4 @@
+import uuid
 from unittest import TestCase
 
 from django.contrib.auth.models import Group
@@ -19,7 +20,7 @@ class TestChangeQuotaHolder(MockS3TestCaseMixin, TestCase):
         # create two users
         self.user1 = hydroshare.create_account(
             'test_user1@email.com',
-            username='owner1',
+            username='owner1' + uuid.uuid4().hex,
             first_name='owner1_first_name',
             last_name='owner1_last_name',
             superuser=False,
@@ -36,10 +37,19 @@ class TestChangeQuotaHolder(MockS3TestCaseMixin, TestCase):
         )
 
     def test_change_quota_holder(self):
+        # create files
+        n1 = "test1.txt"
+        test_file = open(n1, 'w')
+        test_file.write("Test text file in test1.txt")
+        test_file.close()
+        # open files for read and upload
+        myfile1 = open(n1, "rb")
+
         res = resource.create_resource(
             'CompositeResource',
             self.user1,
-            'My Test Resource'
+            'My Test Resource',
+            files=[myfile1],
         )
 
         self.assertTrue(res.creator == self.user1)
@@ -70,7 +80,7 @@ class TestChangeQuotaHolder(MockS3TestCaseMixin, TestCase):
         qmsg.enforce_quota = True
         qmsg.save()
 
-        from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit
+        from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit, wait_for_quota_update
         set_quota_usage_over_hard_limit(uquota, qmsg)
 
         # QuotaException should be raised when attempting to change quota holder to user1 when
@@ -78,8 +88,8 @@ class TestChangeQuotaHolder(MockS3TestCaseMixin, TestCase):
         with self.assertRaises(QuotaException):
             res.set_quota_holder(self.user2, self.user1)
 
-        qmsg.enforce_quota = False
-        qmsg.save()
+        uquota.save_allocated_value(20, "GB")
+        wait_for_quota_update(uquota)
 
         # QuotaException should NOT be raised now that quota is not enforced
         res.set_quota_holder(self.user2, self.user1)
