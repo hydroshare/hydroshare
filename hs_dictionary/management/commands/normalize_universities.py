@@ -8,9 +8,9 @@ from os.path import dirname
 from django.core.management.base import BaseCommand
 from hs_dictionary.models import University, UncategorizedTerm
 from theme.models import UserProfile
-import imp
+import importlib
 
-imp.reload(sys)
+importlib.reload(sys)
 sys.setdefaultencoding('utf8')
 
 

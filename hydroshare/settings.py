@@ -1,11 +1,9 @@
-# TEST_RUNNER='django_nose.NoseTestSuiteRunner'
 import os
 import sys
 
 from PIL import ImageFile
 
 TEST_RUNNER = "hs_core.tests.runner.CustomTestSuiteRunner"
-TEST_WITHOUT_MIGRATIONS_COMMAND = "django_nose.management.commands.test.Command"
 
 
 # import importlib
@@ -407,7 +405,6 @@ INSTALLED_APPS = (
     "django.contrib.gis",
     "django.contrib.postgres",
     "django.contrib.messages",
-    "django_nose",
     "django_s3",
     "drf_yasg",
     "theme",
@@ -488,7 +485,6 @@ REFRESH_TOKEN_EXPIRE_SECONDS = 60 * 60 * 24 * 30  # 30 days
 # All apps beginning with "django." or "mezzanine." are also excluded by default
 APPS_TO_NOT_RUN = (
     "rest_framework",
-    "django_nose",
     "grappelli_safe",
     "django_s3",
     "crispy_forms",
