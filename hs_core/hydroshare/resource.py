@@ -95,32 +95,18 @@ def update_quota_usage(username, notify_user=False):
         raise ValidationError(err_msg)
 
     original_quota_data = uq.get_quota_data()
-    qmsg = original_quota_data["qmsg"]
     user = User.objects.get(username=username)
     uq.save()
 
-    if original_quota_data["enforce_quota"]:
-        updated_quota_data = uq.get_quota_data()
-        # if enforcing quota, take steps to send messages
-        percent = updated_quota_data["percent"]
-        if percent < 100:
-            if uq.grace_period_ends:
-                # reset grace period now that the user is below allocation
-                uq.reset_grace_period()
-            return
-        else:
-            if percent < qmsg.hard_limit_percent:
-                if not uq.grace_period_ends:
-                    # triggers grace period counting
-                    uq.start_grace_period(qmsg_days=qmsg.grace_period)
-            elif percent >= qmsg.hard_limit_percent:
-                # reset grace period when user quota exceeds hard limit
-                uq.reset_grace_period()
-            # send notification to user in the cases of exceeding soft limit or hard limit
-            # only send notificaiton if the quota status changed
-            # this avoids sending multiple notifications when files are changed but the status does not change
-            if notify_user and (original_quota_data["status"] != updated_quota_data["status"]):
-                tasks.send_user_quota_notification.apply_async((user.pk))
+    updated_quota_data = uq.get_quota_data()
+    # if enforcing quota, take steps to send messages
+    percent = updated_quota_data["percent"]
+    if percent >= 100:
+        # send notification to user in the cases of exceeding soft limit or hard limit
+        # only send notificaiton if the quota status changed
+        # this avoids sending multiple notifications when files are changed but the status does not change
+        if notify_user and (original_quota_data["status"] != updated_quota_data["status"]):
+            tasks.send_user_quota_notification.apply_async((user.pk))
 
 
 def res_has_web_reference(res):

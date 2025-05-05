@@ -5,7 +5,6 @@ import zipfile
 from rest_framework import status
 
 from hs_core.hydroshare import resource
-from theme.models import QuotaMessage
 from hs_core.tests.api.utils import MyTemporaryUploadedFile
 from .base import HSRESTTestCase
 
@@ -165,14 +164,9 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
 
         """
         # Set the user's quota to be over the limit
-        if not QuotaMessage.objects.exists():
-            QuotaMessage.objects.create()
-        qmsg = QuotaMessage.objects.first()
-        qmsg.enforce_quota = True
-        qmsg.save()
         uquota = self.user.quotas.first()
         from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit
-        set_quota_usage_over_hard_limit(uquota, qmsg)
+        set_quota_usage_over_hard_limit(uquota)
         uquota.save()
 
         unzip_url = "/hsapi/resource/%s/functions/unzip/test.zip/" % self.pid

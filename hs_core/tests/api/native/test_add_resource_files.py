@@ -8,7 +8,6 @@ from hs_core.hydroshare.users import create_account
 from hs_core.models import BaseResource
 from hs_core.testing import MockS3TestCaseMixin
 from hs_core.exceptions import QuotaException
-from theme.models import QuotaMessage
 
 
 class TestAddResourceFiles(MockS3TestCaseMixin, unittest.TestCase):
@@ -87,25 +86,18 @@ class TestAddResourceFiles(MockS3TestCaseMixin, unittest.TestCase):
 
     def test_add_files_over_quota(self):
 
-        if not QuotaMessage.objects.exists():
-            QuotaMessage.objects.create()
-        qmsg = QuotaMessage.objects.first()
-        qmsg.enforce_quota = True
-        qmsg.save()
-
         uquota = self.user.quotas.first()
         # make user's quota over hard limit 125%
         from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit
-        set_quota_usage_over_hard_limit(uquota, qmsg)
+        set_quota_usage_over_hard_limit(uquota)
 
-        # add files should raise quota exception now that the quota holder is over hard limit
-        # and quota enforce flag is set to True
+        # add files should raise quota exception now that the quota holder is over limit
         files = [self.myfile1, self.myfile2, self.myfile3]
         with self.assertRaises(QuotaException):
             add_resource_files(self.res.short_id, *files)
 
         uquota.save_allocated_value(20, "GB")
-        # add files should not raise quota exception since enforce_quota flag is set to False
+        # add files should not raise quota exception since they have not exceeded quota
         try:
             add_resource_files(self.res.short_id, *files)
         except QuotaException as ex:
