@@ -928,6 +928,7 @@ AWS_S3_ENDPOINT_URL = 'http://minio:9000'
 # AWS_S3_USE_LOCAL = True
 
 ACCESS_CONTROL_CHANGE_ENDPOINT = None
+PUBLISHER_USER_NAME = "publisher"
 
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #

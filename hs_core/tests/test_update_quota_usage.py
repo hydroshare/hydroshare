@@ -527,6 +527,13 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertAlmostEqual(dz, initial_quota_value * 2, places=5)
 
     def test_publish_resource_decreases_quota(self):
+        publisher_account = hydroshare.create_account(
+            'publisher@email.com',
+            username='publisher',
+            first_name='some_first_name2',
+            last_name='some_last_name2',
+            superuser=False,
+        )
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
 

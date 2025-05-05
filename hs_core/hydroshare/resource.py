@@ -1122,7 +1122,10 @@ def publish_resource(user, pk):
         raise ValidationError("This resource cannot be submitted for metadata review since "
                               "it does not have required metadata or content files, or it contains "
                               "reference content, or this resource type is not allowed for publication.")
-
+    publisher_user_account = User.objects.get(username=settings.PUBLISHER_USER_NAME)
+    UserResourcePrivilege.share(user=publisher_user_account, resource=resource,
+                                privilege=PrivilegeCodes.OWNER, grantor=resource.quota_holder)
+    resource.set_quota_holder(resource.quota_holder, publisher_user_account)
     # append pending to the doi field to indicate DOI is not activated yet. Upon successful
     # activation, "pending" will be removed from DOI field
     resource.doi = get_resource_doi(pk, CrossRefSubmissionStatus.PENDING)
