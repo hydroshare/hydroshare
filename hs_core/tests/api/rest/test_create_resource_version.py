@@ -1,7 +1,6 @@
 from rest_framework import status
 
 from hs_core.hydroshare import resource
-from theme.models import QuotaMessage
 
 from .base import HSRESTTestCase
 
@@ -44,7 +43,7 @@ class TestCreateResourceVersion(HSRESTTestCase):
 
         # increase quota to allow version creation
         uquota.save_allocated_value(20, "GB")
-        wait_for_quota_update(uquota)
+        wait_for_quota_update()
         response = self.client.post(version_url, {}, format='json')
         self.resources_to_delete.append(response.content.decode())
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)

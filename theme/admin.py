@@ -31,7 +31,6 @@ class UserQuotaForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         instance = kwargs.get('instance', None)
         if instance:
-            print("In instances")
             kwargs['initial'] = {'allocated_value': instance.allocated_value,
                                  'zone': instance.zone,
                                  'unit': instance.unit,
@@ -41,7 +40,6 @@ class UserQuotaForm(forms.ModelForm):
 
     def save(self, *args, **kwargs):
         instance = super(UserQuotaForm, self).save(commit=False)
-        print(self.cleaned_data)
         instance.user.quotas.get(zone='hydroshare').save_allocated_value(self.cleaned_data['allocated_value'],
                                                                          self.cleaned_data['unit'])
         return instance

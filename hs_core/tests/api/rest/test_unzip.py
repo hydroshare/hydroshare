@@ -5,7 +5,6 @@ import zipfile
 from rest_framework import status
 
 from hs_core.hydroshare import resource
-from theme.models import QuotaMessage
 from hs_core.tests.api.utils import MyTemporaryUploadedFile
 from .base import HSRESTTestCase
 

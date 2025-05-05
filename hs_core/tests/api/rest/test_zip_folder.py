@@ -6,7 +6,6 @@ from rest_framework import status
 from hs_core.hydroshare import resource
 from hs_core.views.utils import zip_folder
 from hs_core.hydroshare.utils import QuotaException
-from theme.models import QuotaMessage
 
 from .base import HSRESTTestCase
 
@@ -169,7 +168,7 @@ class TestPublicZipEndpoint(HSRESTTestCase):
             zip_folder(self.user, self.res.short_id, 'data/contents/test', 'test.zip', bool_remove_original=True)
 
         uquota.save_allocated_value(20, "GB")
-        wait_for_quota_update(uquota)
+        wait_for_quota_update()
 
         resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3, folder='test2')
         # zip files should not raise quota exception since the user has quota

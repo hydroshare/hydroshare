@@ -17,7 +17,6 @@ from hs_core.testing import MockS3TestCaseMixin
 from hs_core.tests.utils.test_utils import wait_for_quota_update
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import QuotaException, resource_pre_create_actions
-from theme.models import QuotaMessage
 from hs_composite_resource.models import CompositeResource
 
 
@@ -432,7 +431,6 @@ class TestCreateResource(MockS3TestCaseMixin, TestCase):
         # make user's quota over hard limit 125%
         from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit
         set_quota_usage_over_hard_limit(uquota)
-        wait_for_quota_update(uquota)
         # create_resource should raise quota exception now that the creator user is over hard
         # limit and enforce quota flag is set to True
         file_one_payload = MyTemporaryUploadedFile(open(self.raster_file_path, 'rb'), name="raster2.tif",
@@ -444,5 +442,20 @@ class TestCreateResource(MockS3TestCaseMixin, TestCase):
                                         files=(file_one_payload,),
                                         metadata=None,
                                         requesting_user=self.user,)
+        # create resource should not raise quota exception now that enforce_quota flag
+        # is set to False
+        uquota.save_allocated_value(20, "GB")
+        wait_for_quota_update()
+        try:
+            resource_pre_create_actions(resource_type='CompositeResource',
+                                        resource_title='My Test Resource',
+                                        page_redirect_url_key=None,
+                                        files=(self.file_one,),
+                                        metadata=None,
+                                        requesting_user=self.user, )
+        except QuotaException as ex:
+            self.fail(
+                "create resource should not raise QuotaException for over quota cases "
+                " if quota is not enforced - Quota Exception: " + str(ex))
         if res:
             res.delete()

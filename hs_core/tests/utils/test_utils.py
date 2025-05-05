@@ -53,5 +53,5 @@ def set_quota_usage_over_hard_limit(uquota):
     sleep(30)
 
 
-def wait_for_quota_update(user_quota, initial_value=None, timeout=360):
+def wait_for_quota_update():
     sleep(30)

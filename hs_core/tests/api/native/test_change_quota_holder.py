@@ -9,7 +9,6 @@ from hs_core.testing import MockS3TestCaseMixin
 from hs_core import hydroshare
 from hs_access_control.models import PrivilegeCodes
 from hs_core.hydroshare.utils import QuotaException
-from theme.models import QuotaMessage
 
 
 class TestChangeQuotaHolder(MockS3TestCaseMixin, TestCase):
@@ -83,7 +82,7 @@ class TestChangeQuotaHolder(MockS3TestCaseMixin, TestCase):
             res.set_quota_holder(self.user2, self.user1)
 
         uquota.save_allocated_value(20, "GB")
-        wait_for_quota_update(uquota)
+        wait_for_quota_update()
 
         # QuotaException should NOT be raised now that quota is not enforced
         res.set_quota_holder(self.user2, self.user1)
