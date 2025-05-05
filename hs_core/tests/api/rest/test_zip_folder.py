@@ -113,28 +113,21 @@ class TestPublicZipEndpoint(HSRESTTestCase):
 
         Steps:
         1. Create a composite resource.
-        2. Set up the quota message and enforce the quota limit.
-        3. Create three test files.
-        4. Open the files for read and upload.
-        5. Add the files to the resource.
-        6. Set the user's quota over the hard limit.
-        7. Verify that zipping the folder raises a `QuotaException`.
-        8. Verify that zipping the files does not raise a `QuotaException` when `bool_remove_original` is set to True.
-        9. Disable quota enforcement.
-        10. Add the files to a different folder.
-        11. Verify that zipping the files does not raise a `QuotaException` when quota enforcement is disabled.
+        2. Create three test files.
+        3. Open the files for read and upload.
+        4. Add the files to the resource.
+        5. Set the user's quota over the hard limit.
+        6. Verify that zipping the folder raises a `QuotaException`.
+        7. Verify that zipping the files does not raise a `QuotaException` when `bool_remove_original` is set to True.
+        8. Increase the user's quota.
+        9. Add the files to a different folder.
+        10. Verify that zipping the files does not raise a `QuotaException` when quota enforcement is disabled.
 
         """
         self.res = resource.create_resource(resource_type='CompositeResource',
                                             owner=self.user,
                                             title='Test Resource',
                                             metadata=[], )
-
-        if not QuotaMessage.objects.exists():
-            QuotaMessage.objects.create()
-        qmsg = QuotaMessage.objects.first()
-        qmsg.enforce_quota = True
-        qmsg.save()
 
         # create files
         self.n1 = "test1.txt"
@@ -163,7 +156,7 @@ class TestPublicZipEndpoint(HSRESTTestCase):
         uquota = self.user.quotas.first()
         # make user's quota over hard limit 125%
         from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit, wait_for_quota_update
-        set_quota_usage_over_hard_limit(uquota, qmsg)
+        set_quota_usage_over_hard_limit(uquota)
         uquota.save()
 
         # zip should raise quota exception now that the quota holder is over hard limit
@@ -179,7 +172,7 @@ class TestPublicZipEndpoint(HSRESTTestCase):
         wait_for_quota_update(uquota)
 
         resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3, folder='test2')
-        # zip files should not raise quota exception since enforce_quota flag is set to False
+        # zip files should not raise quota exception since the user has quota
         try:
             zip_folder(self.user, self.res.short_id, 'data/contents/test2', 'test2.zip', bool_remove_original=False)
         except QuotaException as ex:

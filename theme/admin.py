@@ -20,15 +20,13 @@ class UserQuotaForm(forms.ModelForm):
 
     class Meta:
         model = UserQuota
-        fields = ['allocated_value', 'unit', 'zone', 'grace_period_ends']
+        fields = ['allocated_value', 'unit', 'zone']
         readonly_fields = ['data_zone_value',]
 
     allocated_value = forms.FloatField()
     unit = forms.CharField()
     zone = forms.CharField()
     data_zone_value = forms.FloatField()
-    grace_period_ends = forms.DateTimeField(label='Grace Period Ends', help_text='Date when the grace period ends',
-                                            widget=forms.widgets.DateInput(attrs={'type': 'date'}), required=False)
 
     def __init__(self, *args, **kwargs):
         instance = kwargs.get('instance', None)
@@ -78,7 +76,7 @@ class QuotaAdmin(admin.ModelAdmin):
     list_filter = ('zone',)
 
     readonly_fields = ('user', 'data_zone_value')
-    fields = ('allocated_value', 'unit', 'zone', 'grace_period_ends', 'user', 'data_zone_value')
+    fields = ('allocated_value', 'unit', 'zone', 'user', 'data_zone_value')
     search_fields = ('user__username',)
 
 

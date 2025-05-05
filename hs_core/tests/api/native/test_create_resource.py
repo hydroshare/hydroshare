@@ -416,12 +416,6 @@ class TestCreateResource(MockS3TestCaseMixin, TestCase):
             res.delete()
 
     def test_create_resource_over_quota(self):
-        if not QuotaMessage.objects.exists():
-            QuotaMessage.objects.create()
-        qmsg = QuotaMessage.objects.first()
-        qmsg.enforce_quota = True
-        qmsg.save()
-
         # Make a zip file
         zip_path = os.path.join(self.tmp_dir, 'test.zip')
         with zipfile.ZipFile(zip_path, 'w') as zfile:
@@ -437,7 +431,7 @@ class TestCreateResource(MockS3TestCaseMixin, TestCase):
         uquota = self.user.quotas.first()
         # make user's quota over hard limit 125%
         from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit
-        set_quota_usage_over_hard_limit(uquota, qmsg)
+        set_quota_usage_over_hard_limit(uquota)
         wait_for_quota_update(uquota)
         # create_resource should raise quota exception now that the creator user is over hard
         # limit and enforce quota flag is set to True

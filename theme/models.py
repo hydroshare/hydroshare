@@ -191,23 +191,13 @@ class IconBox(Orderable):
 
 class QuotaMessage(models.Model):
     # warning_content_prepend prepends the content to form a warning message to be emailed to the
-    # user and displayed when the user is logged in; grace_period_cotent_prepend prepends the
-    # content when over quota within grace period and less than 125% of hard limit quota;
+    # user and displayed when the user is logged in;
     # enforce_content_prepend prepends the content to form an enforcement message to inform users
-    # after grace period or when they are over hard limit quota
+    # when they are over hard limit quota
     warning_content_prepend = models.TextField(
         default="Once your quota reaches 100% you will no "
         "longer be able to create new resources in "
         "HydroShare. "
-    )
-    grace_period_content_prepend = models.TextField(
-        default="You have exceeded your HydroShare "
-        "quota. You have a "
-        "grace period until {cut_off_date} to "
-        "reduce your use to below your quota, "
-        "or to acquire additional quota, after "
-        "which you will no longer be able to "
-        "create new resources in HydroShare. "
     )
     enforce_content_prepend = models.TextField(
         default="You can not take further action "
@@ -228,17 +218,9 @@ class QuotaMessage(models.Model):
     # quota soft limit percent value for starting to show quota usage warning. Default is 80%
     soft_limit_percent = models.IntegerField(default=80)
     # quota hard limit percent value for hard quota enforcement. Default is 125%
-    hard_limit_percent = models.IntegerField(default=125)
-    # percent that published resources should count toward quota
-    # Default=0 -> published resources aren't counted toward quota
     published_resource_percent = models.IntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(100)],
         default=0)
-    # grace period, default is 7 days
-    grace_period = models.IntegerField(default=7)
-    # whether to enforce quota or not. Default is False, which can be changed to true from
-    # admin panel when needed
-    enforce_quota = models.BooleanField(default=False)
 
 
 class UserQuota(models.Model):
@@ -257,14 +239,6 @@ class UserQuota(models.Model):
     )
 
     zone = models.CharField(max_length=100, default="hydroshare")
-    # grace_period_ends to be quota-enforced. Default is None meaning the user is below
-    # soft quota limit and thus grace period has not started. When today=grace_period_ends, quota
-    # enforcement takes place
-    grace_period_ends = models.DateField(verbose_name='Grace Period Ends',
-                                         null=True,
-                                         blank=True,
-                                         help_text='The date that Grace Period will end for this User Quota',
-                                         default=None)
 
     class Meta:
         verbose_name = _("User quota")
@@ -364,21 +338,6 @@ class UserQuota(models.Model):
 
         return self.used_value + convert_file_size_to_unit(size, self.unit)
 
-    def start_grace_period(self, qmsg_days=7):
-        """
-        start grace period for this user quota
-        :param qmsg_days: number of days for grace period
-        """
-        self.grace_period_ends = datetime.date.today() + datetime.timedelta(days=qmsg_days)
-        self.save()
-
-    def reset_grace_period(self):
-        """
-        reset grace period for this user quota
-        """
-        self.grace_period_ends = None
-        self.save()
-
     def get_quota_data(self):
         """
         get user quota data for display on user profile page
@@ -390,11 +349,7 @@ class UserQuota(models.Model):
         if qmsg is None:
             qmsg = QuotaMessage.objects.create()
 
-        enforce_quota = qmsg.enforce_quota
         soft_limit = qmsg.soft_limit_percent
-        hard_limit = qmsg.hard_limit_percent
-        today = datetime.date.today()
-        grace = self.grace_period_ends
         allocated = self.allocated_value
         unit = self.unit
         used = self.used_value
@@ -402,18 +357,9 @@ class UserQuota(models.Model):
         percent = used * 100.0 / allocated
         remaining = allocated - used
 
-        if percent >= 100 and not grace:
-            # This would indicate that the grace period has not been set even though the user went over quota.
-            # This can only happen in a race condition where the quota microservice is still in the process of updating
-            self.start_grace_period(qmsg.grace_period)
-            grace = self.grace_period_ends
-            logger.error(f"User {self.user.username} went over quota but grace period was not set.")
-
         status = QuotaStatus.INFO
-        if percent >= hard_limit or (percent >= 100 and grace <= today):
+        if percent >= 100:
             status = QuotaStatus.ENFORCEMENT
-        elif percent >= 100 and grace > today:
-            status = QuotaStatus.GRACE_PERIOD
         elif percent >= soft_limit:
             status = QuotaStatus.WARNING
 
@@ -425,8 +371,6 @@ class UserQuota(models.Model):
                    "percent": percent if percent < 100 else 100,
                    "remaining": 0 if remaining < 0 else remaining,
                    "percent_over": 0 if percent < 100 else percent - 100,
-                   "grace_period_ends": grace,
-                   "enforce_quota": enforce_quota,
                    "status": status,
                    "qmsg": qmsg,
                    }
@@ -445,7 +389,6 @@ class UserQuota(models.Model):
         qmsg = quota_data["qmsg"]
         allocated = quota_data["allocated"]
         used = quota_data["used"]
-        grace = quota_data["grace_period_ends"]
         quota_status = quota_data["status"]
         percent = used * 100.0 / allocated
         rounded_percent = round(percent, 2)
@@ -462,18 +405,6 @@ class UserQuota(models.Model):
                                                   allocated=self.allocated_value,
                                                   zone=self.zone,
                                                   percent=rounded_percent)
-        elif quota_status == QuotaStatus.GRACE_PERIOD:
-            # return quota grace period message
-            if include_quota_usage_info:
-                msg_template_str = f'{qmsg.grace_period_content_prepend} {qmsg.quota_usage_info} {qmsg.content}\n'
-            else:
-                msg_template_str = f'{qmsg.grace_period_content_prepend} {qmsg.content}\n'
-            return_msg += msg_template_str.format(used=rounded_used_val,
-                                                  unit=self.unit,
-                                                  allocated=self.allocated_value,
-                                                  zone=self.zone,
-                                                  percent=rounded_percent,
-                                                  cut_off_date=grace)
         elif quota_status == QuotaStatus.WARNING:
             # return quota warning message
             if include_quota_usage_info:
@@ -752,48 +683,9 @@ def update_user_quota_on_quota_request(sender, instance, **kwargs):
             istorage.create_bucket(qr.quota.user.userprofile.bucket_name)
         qr.quota.save_allocated_value(qr.quota.allocated_value + new_storage_amount, qr.quota.unit)
 
-        # approving a quota request will also reset the grace period
-        # this is done by the reset_grace_period_on_allocation_change signal
-
         qr.quota.save()
         qr.notify_user_of_quota_action()
     except QuotaRequest.DoesNotExist:
         logger.warning(
             f"QuotaRequest for {instance.pk} does not exist when trying to update it"
         )
-
-
-@receiver(models.signals.pre_save, sender=UserQuota)
-def reset_grace_period_on_allocation_change(sender, instance, **kwargs):
-    """
-    Reset the pending UserQuota grace period when the allocated_value is modified in the UserQuota
-    """
-    if instance.id is None:  # new object will be created
-        pass
-    else:
-        previous = UserQuota.objects.get(id=instance.id)
-        if previous.allocated_value != instance.allocated_value:
-            # allocated_value is being updated
-            instance.grace_period_ends = None
-
-
-@receiver(models.signals.pre_save, sender=QuotaMessage)
-def update_user_quota_on_grace_period_change(sender, instance, **kwargs):
-    """
-    Adjust the pending UserQuota grace periods when the grace period setting is modified in the QuotaMessage
-    """
-    if instance.id is None:  # new object will be created
-        pass
-    else:
-        previous = QuotaMessage.objects.get(id=instance.id)
-        if previous.grace_period != instance.grace_period:
-            # grace_period is being updated
-            grace_delta = instance.grace_period - previous.grace_period
-            cuttoff_date = datetime.date.today()
-            if grace_delta < 0:
-                # we don't want to force pending quotas "into the past"
-                cuttoff_date = datetime.date.today() - datetime.timedelta(days=grace_delta)
-            pending_quotas = UserQuota.objects.filter(grace_period_ends__gt=cuttoff_date)
-            # add grace_delta to each of the pending grace periods
-            pending_quotas.update(grace_period_ends=models.F('grace_period_ends')
-                                  + datetime.timedelta(days=grace_delta))

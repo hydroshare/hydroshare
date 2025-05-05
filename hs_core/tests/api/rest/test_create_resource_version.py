@@ -34,14 +34,9 @@ class TestCreateResourceVersion(HSRESTTestCase):
         """
         Test case to verify the behavior of creating a resource version when the user is over their quota.
         """
-        if not QuotaMessage.objects.exists():
-            QuotaMessage.objects.create()
-        qmsg = QuotaMessage.objects.first()
-        qmsg.enforce_quota = True
-        qmsg.save()
         uquota = self.user.quotas.first()
         from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit, wait_for_quota_update
-        set_quota_usage_over_hard_limit(uquota, qmsg)
+        set_quota_usage_over_hard_limit(uquota)
 
         version_url = "/hsapi/resource/%s/version/" % self.pid
         response = self.client.post(version_url, {}, format='json')

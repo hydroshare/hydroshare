@@ -74,14 +74,8 @@ class TestChangeQuotaHolder(MockS3TestCaseMixin, TestCase):
         uquota = self.user1.quotas.first()
         # make user1's quota over hard limit 125%
 
-        if not QuotaMessage.objects.exists():
-            QuotaMessage.objects.create()
-        qmsg = QuotaMessage.objects.first()
-        qmsg.enforce_quota = True
-        qmsg.save()
-
         from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit, wait_for_quota_update
-        set_quota_usage_over_hard_limit(uquota, qmsg)
+        set_quota_usage_over_hard_limit(uquota)
 
         # QuotaException should be raised when attempting to change quota holder to user1 when
         # quota is enforced

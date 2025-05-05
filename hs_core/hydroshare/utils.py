@@ -698,12 +698,9 @@ def get_remaining_user_quota(user_or_username, units='MB'):
         if not uq:
             # create a quota object for the user
             uq = user.quotas.create(zone='hydroshare')
-        qmsg = QuotaMessage.objects.first()
-        enforce_flag = qmsg.enforce_quota
-        if enforce_flag:
-            remaining = uq.allocated_value - uq.used_value
-            remaining = convert_file_size_to_unit(remaining, to_unit=units, from_unit=uq.unit) or 0
-            return max(remaining, 0)
+        remaining = uq.allocated_value - uq.used_value
+        remaining = convert_file_size_to_unit(remaining, to_unit=units, from_unit=uq.unit) or 0
+        return max(remaining, 0)
     return None
 
 

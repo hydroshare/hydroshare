@@ -87,12 +87,6 @@ class TestAddResourceFiles(MockS3TestCaseMixin, unittest.TestCase):
 
     def test_add_files_over_quota(self):
 
-        if not QuotaMessage.objects.exists():
-            QuotaMessage.objects.create()
-        qmsg = QuotaMessage.objects.first()
-        qmsg.enforce_quota = True
-        qmsg.save()
-
         uquota = self.user.quotas.first()
         # make user's quota over hard limit 125%
         from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit
@@ -105,7 +99,7 @@ class TestAddResourceFiles(MockS3TestCaseMixin, unittest.TestCase):
             add_resource_files(self.res.short_id, *files)
 
         uquota.save_allocated_value(20, "GB")
-        # add files should not raise quota exception since enforce_quota flag is set to False
+        # add files should not raise quota exception since they have not exceeded quota
         try:
             add_resource_files(self.res.short_id, *files)
         except QuotaException as ex:

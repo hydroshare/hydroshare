@@ -48,7 +48,7 @@ def debug_on(*exceptions):
     return decorator
 
 
-def set_quota_usage_over_hard_limit(uquota, qmsg):
+def set_quota_usage_over_hard_limit(uquota):
     uquota.save_allocated_value(1, "B")
     sleep(30)
 

@@ -150,7 +150,14 @@ class S3Storage(S3Storage):
 
                 unzipped_file_path = os.path.relpath(path, extracted_folder)
                 file_unzipped_path = os.path.join(unzipped_path, unzipped_file_path)
-                self.connection.Bucket(unzipped_bucket).upload_file(path, file_unzipped_path)
+                try:
+                    self.connection.Bucket(unzipped_bucket).upload_file(path, file_unzipped_path)
+                except ClientError as e:
+                    if "XMinioAdminBucketQuotaExceeded" in str(e):
+                        raise QuotaException(
+                            "Bucket quota exceeded. Please contact your system administrator."
+                        )
+                    raise e
         return unzipped_folder
 
     def setAVU(self, name, attName, attVal):
@@ -248,11 +255,18 @@ class S3Storage(S3Storage):
         bucket = self.connection.Bucket(src_bucket)
 
         if self.isFile(src_path):
-            self.connection.meta.client.copy_object(
-                Bucket=dst_bucket,
-                Key=dest_name,
-                CopySource={"Bucket": src_bucket, "Key": src_name},
-            )
+            try:
+                self.connection.meta.client.copy_object(
+                    Bucket=dst_bucket,
+                    Key=dest_name,
+                    CopySource={"Bucket": src_bucket, "Key": src_name},
+                )
+            except ClientError as e:
+                if "XMinioAdminBucketQuotaExceeded" in str(e):
+                    raise QuotaException(
+                        "Bucket quota exceeded. Please contact your system administrator."
+                    )
+                raise e
             if delete_src:
                 self.connection.Object(src_bucket, src_name).delete()
         else:
@@ -260,11 +274,18 @@ class S3Storage(S3Storage):
             for file in bucket.objects.filter(Prefix=src_name):
                 src_file_path = file.key
                 dst_file_path = file.key.replace(src_name, dest_name)
-                self.connection.meta.client.copy_object(
-                    Bucket=dst_bucket,
-                    Key=dst_file_path,
-                    CopySource={"Bucket": src_bucket, "Key": src_file_path},
-                )
+                try:
+                    self.connection.meta.client.copy_object(
+                        Bucket=dst_bucket,
+                        Key=dst_file_path,
+                        CopySource={"Bucket": src_bucket, "Key": src_file_path},
+                    )
+                except ClientError as e:
+                    if "XMinioAdminBucketQuotaExceeded" in str(e):
+                        raise QuotaException(
+                            "Bucket quota exceeded. Please contact your system administrator."
+                        )
+                    raise e
                 if delete_src:
                     self.connection.Object(src_bucket, src_file_path).delete()
 
@@ -310,7 +331,14 @@ class S3Storage(S3Storage):
         dest_s3_bucket_path: the data object path in S3 to be uploaded to
         """
         dst_bucket, dst_name = bucket_and_name(dest_s3_bucket_path)
-        self.connection.Bucket(dst_bucket).upload_file(src_local_file, dst_name)
+        try:
+            self.connection.Bucket(dst_bucket).upload_file(src_local_file, dst_name)
+        except ClientError as e:
+            if "XMinioAdminBucketQuotaExceeded" in str(e):
+                raise QuotaException(
+                    "Bucket quota exceeded. Please contact your system administrator."
+                )
+            raise e
 
     def checksum(self, s3_bucket_name):
         """
