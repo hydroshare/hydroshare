@@ -142,4 +142,3 @@ class TestAggregationZipDownload(MockS3TestCaseMixin, ViewTestCase):
         # check that the download request was successful
         status_content = json.loads(status_response.content.decode())
         self.assertTrue(status_content['status'])
-
