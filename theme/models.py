@@ -268,6 +268,11 @@ class UserQuota(models.Model):
         size, _ = self._allocated_value_size_and_unit()
         return size
 
+    def _convert_unit(self, unit):
+        if len(unit) == 2:
+            return f'{unit[0]}i{unit[1]}'
+        return unit
+
     def save_allocated_value(self, allocated_value, unit):
         """
         Save the allocated value to the database and update the quota on MinIO.
@@ -275,7 +280,7 @@ class UserQuota(models.Model):
         try:
             subprocess.run(
                 ["mc", "quota", "set", f"{self.zone}/{self.user.userprofile.bucket_name}",
-                 "--size", f"{allocated_value}{unit}"],
+                 "--size", f"{allocated_value}{self._convert_unit(unit)}"],
                 check=True,
             )
         except subprocess.CalledProcessError as e:
