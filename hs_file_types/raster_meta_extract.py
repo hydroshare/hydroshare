@@ -307,7 +307,7 @@ def get_band_info(raster_file_name):
 
             if new_no_data is not None:
                 band.SetNoDataValue(new_no_data)
-                minimum, maximum, _, _ = band.GetStatistics(False)
+                minimum, maximum, _, _ = band.GetStatistics(False, False)
 
             band_info[i + 1] = {
                 'name': 'Band_' + str(i + 1),
