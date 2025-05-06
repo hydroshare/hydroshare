@@ -124,6 +124,8 @@ class S3Storage(S3Storage):
         except ClientError as e:
             if "An error occurred (InvalidRequest) when calling the CompleteMultipartUpload operation:" in str(e):
                 raise QuotaException("Bucket quota exceeded. Please contact your system administrator.")
+            if "XMinioAdminBucketQuotaExceeded" in str(e):
+                raise QuotaException("Bucket quota exceeded. Please contact your system administrator.")
             raise e
 
     def unzip(self, zip_file_path, unzipped_folder=""):
