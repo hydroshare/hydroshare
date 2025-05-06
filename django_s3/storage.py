@@ -398,7 +398,7 @@ class S3Storage(S3Storage):
         if not self.bucket_exists(bucket_name):
             self.connection.create_bucket(Bucket=bucket_name)
             subprocess.run(["mc", "quota", "set", f"hydroshare/{bucket_name}", "--size", "20GiB"], check=True)
-            if not settings.DEBUG:
+            if settings.MINIO_LIFECYCLE_POLICY:
                 subprocess.run(["mc", "ilm", "rule", "add" "--transition-days", "0", "--transition-tier",
                                 settings.MINIO_LIFECYCLE_POLICY, f"hydroshare/{bucket_name}"], check=True)
 
