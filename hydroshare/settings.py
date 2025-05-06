@@ -929,6 +929,7 @@ AWS_S3_ENDPOINT_URL = 'http://minio:9000'
 
 ACCESS_CONTROL_CHANGE_ENDPOINT = None
 PUBLISHER_USER_NAME = "publisher"
+MINIO_LIFECYCLE_POLICY = "GCS"
 
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #

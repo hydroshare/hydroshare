@@ -159,7 +159,6 @@ class TestPublicZipEndpoint(HSRESTTestCase):
         uquota.save()
 
         # zip should raise quota exception now that the quota holder is over hard limit
-        # and quota enforce flag is set to True
         with self.assertRaises(QuotaException):
             zip_folder(self.user, self.res.short_id, 'data/contents/test', 'test.zip', bool_remove_original=False)
 

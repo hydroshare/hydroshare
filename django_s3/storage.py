@@ -396,14 +396,11 @@ class S3Storage(S3Storage):
 
     def create_bucket(self, bucket_name):
         if not self.bucket_exists(bucket_name):
-            try:
-                self.connection.create_bucket(Bucket=bucket_name)
-            except Exception:
-                pass
-            try:
-                subprocess.run(["mc", "quota", "set", f"hydroshare/{bucket_name}", "--size", "20GiB"], check=True)
-            except subprocess.CalledProcessError:
-                pass
+            self.connection.create_bucket(Bucket=bucket_name)
+            subprocess.run(["mc", "quota", "set", f"hydroshare/{bucket_name}", "--size", "20GiB"], check=True)
+            if not settings.DEBUG:
+                subprocess.run(["mc", "ilm", "rule", "add" "--transition-days", "0", "--transition-tier",
+                                settings.MINIO_LIFECYCLE_POLICY, f"hydroshare/{bucket_name}"], check=True)
 
     def delete_bucket(self, bucket_name):
         bucket = self.connection.Bucket(bucket_name)
