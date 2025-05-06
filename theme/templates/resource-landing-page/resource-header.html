@@ -105,14 +105,13 @@
                 </tr>
                 <tr>
                     <th>Created:</th>
-                    <td><span class="local-datetime" data-dt="{{ cm.created|date:" c" }}"></span></td>
+                    <td><span class="local-datetime" data-dt="{{ cm.created|date:'c' }}"></span></td>
                 </tr>
                 <tr>
                     <th>Last updated:</th>
                     <td>
-                        <span class="local-datetime" data-dt="{{ cm.last_updated|date:" c" }}"></span>
-                        {% if cm.raccess.published and cm.last_updated > cm|published_date and cm.last_updated !=
-                        cm|published_date %}
+                        <span class="local-datetime" data-dt="{{ cm.last_updated|date:'c' }}"></span>
+                        {% if cm.raccess.published and cm.last_updated > cm|published_date and cm.last_updated != cm|published_date %}
                         <span>(Metadata update)</span>
                         {% endif %}
                     </td>
@@ -123,7 +122,7 @@
                     <th>Published date:</th>
 
                     <td>
-                        <span class="local-datetime" data-dt="{{ cm.published_date|date:" c" }}"></span>
+                        <span class="local-datetime" data-dt="{{ cm.published_date|date:'c' }}"></span>
                     </td>
                 </tr>
                 <tr>
