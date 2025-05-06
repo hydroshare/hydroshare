@@ -1,11 +1,9 @@
-# TEST_RUNNER='django_nose.NoseTestSuiteRunner'
 import os
 import sys
 
 from PIL import ImageFile
 
 TEST_RUNNER = "hs_core.tests.runner.CustomTestSuiteRunner"
-TEST_WITHOUT_MIGRATIONS_COMMAND = "django_nose.management.commands.test.Command"
 
 
 # import importlib
@@ -407,7 +405,6 @@ INSTALLED_APPS = (
     "django.contrib.gis",
     "django.contrib.postgres",
     "django.contrib.messages",
-    "django_nose",
     "django_s3",
     "drf_yasg",
     "theme",
@@ -467,7 +464,7 @@ TUS_EXISTING_FILE = 'error'  # Other options are: 'overwrite',  'error', 'rename
 
 # the url for the uppy companion server
 # https://uppy.io/docs/companion/
-COMPANION_URL = 'https://companion.hydroshare.org/'
+COMPANION_URL = 'https://companion.hydroshare.org'
 UPPY_UPLOAD_PATH = '/hsapi/tus/'
 MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD = 50
 PARALLEL_UPLOADS_LIMIT = 10
@@ -481,12 +478,13 @@ SWAGGER_SETTINGS = {
 }
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = "oauth2_provider.Application"
+# https://django-oauth-toolkit.readthedocs.io/en/3.0.1/settings.html#refresh-token-expire-seconds
+REFRESH_TOKEN_EXPIRE_SECONDS = 60 * 60 * 24 * 30  # 30 days
 
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
 # All apps beginning with "django." or "mezzanine." are also excluded by default
 APPS_TO_NOT_RUN = (
     "rest_framework",
-    "django_nose",
     "grappelli_safe",
     "django_s3",
     "crispy_forms",
