@@ -255,8 +255,7 @@ class UserQuota(models.Model):
                 text=True,
             )
         except (subprocess.CalledProcessError, ValueError, IndexError):
-            # TODO Assuming the user doesn't have a bucket, should actually check
-            return 20, "GB"
+            return settings.DEFAULT_QUOTA_VALUE, settings.DEFAULT_QUOTA_UNIT
         result_split = result.stdout.split(" ")
         unit = result_split[-1].strip()
         unit = unit.replace("i", "")
