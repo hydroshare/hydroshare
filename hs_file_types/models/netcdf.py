@@ -1084,12 +1084,6 @@ class NetCDFLogicalFile(AbstractLogicalFile):
         res_files = [f for f in resource_files if f.extension.lower() == ".nc"]
         return res_files[0] if res_files else None
 
-    def get_metadata_json(self):
-        """Return the metadata in JSON format - uses schema.org terms where possible and the rest
-        terms are based on hsterms."""
-
-        return self.metadata.to_json()
-
     @property
     def metadata_json_file_path(self):
         """Returns the storage path of the aggregation metadata json file"""

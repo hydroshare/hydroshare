@@ -238,12 +238,6 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         for child_aggr in self.get_children():
             child_aggr.create_aggregation_xml_documents(create_map_xml=create_map_xml)
 
-    def get_metadata_json(self):
-        """Return the metadata in JSON format - uses schema.org terms where possible and the rest
-        terms are based on hsterms."""
-
-        return self.metadata.to_json()
-
     @property
     def metadata_json_file_path(self):
         """Returns the url path of the aggregation metadata json file"""
