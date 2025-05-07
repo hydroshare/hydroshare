@@ -162,7 +162,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
                 "sha256": res_file.checksum,
                 "encodingFormat": res_file.mime_type,
             }
-            json_dict.update({"associatedMedia": media_object})
+            associated_media["associatedMedia"].append(media_object)
         if associated_media["associatedMedia"]:
             json_dict.update(associated_media)
 
