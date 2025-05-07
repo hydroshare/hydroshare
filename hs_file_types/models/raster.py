@@ -426,6 +426,69 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
             element_model_name = 'originalcoverageraster'
         return super()._get_metadata_element_model_type(element_model_name)
 
+    def to_json(self):
+        json_dict = super().to_json()
+        json_dict['additionalType'] = self.logical_file.get_aggregation_type_name()
+        cellinfo = self.cellInformation
+        if cellinfo:
+            cellinfo_meta = {}
+            if cellinfo.name:
+                cellinfo_meta['hsterms:name'] = cellinfo.name
+            if cellinfo.rows:
+                cellinfo_meta['hsterms:rows'] = cellinfo.rows
+            if cellinfo.columns:
+                cellinfo_meta['hsterms:columns'] = cellinfo.columns
+            if cellinfo.cellSizeXValue:
+                cellinfo_meta['hsterms:cellSizeXValue'] = cellinfo.cellSizeXValue
+            if cellinfo.cellSizeYValue:
+                cellinfo_meta['hsterms:cellSizeYValue'] = cellinfo.cellSizeYValue
+            if cellinfo.cellDataType:
+                cellinfo_meta['hsterms:cellDataType'] = cellinfo.cellDataType
+
+            if cellinfo_meta:
+                json_dict.update({"hsterms:cellInformation": cellinfo_meta})
+
+        bandinfo_meta_list = []
+        for bandinfo in self.bandInformations:
+            bandinfo_meta = {}
+            if bandinfo.name:
+                bandinfo_meta['hsterms:name'] = bandinfo.name
+            if bandinfo.variableName:
+                bandinfo_meta['hsterms:variableName'] = bandinfo.variableName
+            if bandinfo.variableUnit:
+                bandinfo_meta['hsterms:variableUnit'] = bandinfo.variableUnit
+            if bandinfo.noDataValue:
+                bandinfo_meta['hsterms:noDataValue'] = bandinfo.noDataValue
+            if bandinfo.maximumValue:
+                bandinfo_meta['hsterms:maximumValue'] = bandinfo.maximumValue
+            if bandinfo.minimumValue:
+                bandinfo_meta['hsterms:minimumValue'] = bandinfo.minimumValue
+            if bandinfo.method:
+                bandinfo_meta['hsterms:method'] = bandinfo.method
+            if bandinfo.comment:
+                bandinfo_meta['hsterms:comment'] = bandinfo.comment
+            if bandinfo_meta:
+                bandinfo_meta_list.append(bandinfo_meta)
+
+        if bandinfo_meta_list:
+            json_dict.update({"hsterms:bandInformation": bandinfo_meta_list})
+
+        originalCoverage = self.originalCoverage
+        if originalCoverage:
+            orig_coverage_meta = {
+                "hsterms:northLimit": originalCoverage.value["northlimit"],
+                "hsterms:eastLimit": originalCoverage.value["eastlimit"],
+                "hsterms:southLimit": originalCoverage.value["southlimit"],
+                "hsterms:westLimit": originalCoverage.value["westlimit"],
+                "hsterms:units": originalCoverage.value["units"],
+            }
+            if 'projection' in originalCoverage.value and originalCoverage.value['projection']:
+                orig_coverage_meta['hsterms:projection'] = originalCoverage.value['projection']
+                orig_coverage_meta['hsterms:projectionString'] = originalCoverage.value['projection_string']
+                orig_coverage_meta['hsterms:datum'] = originalCoverage.value['datum']
+            json_dict.update({"hsterms:originalCoverage": orig_coverage_meta})
+        return json_dict
+
     def get_html(self, **kwargs):
         """overrides the base class function to generate html needed to display metadata
         in view mode"""
@@ -599,6 +662,31 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
     def get_allowed_uploaded_file_types(cls):
         """only .zip and .tif file can be set to this logical file group"""
         return [".zip", ".tif", ".tiff"]
+
+    def get_metadata_json(self):
+        """Return the metadata in JSON format - uses schema.org terms where possible and the rest
+        terms are based on hsterms."""
+
+        return self.metadata.to_json()
+
+    @property
+    def metadata_json_file_path(self):
+        """Returns the storage path of the aggregation metadata json file"""
+
+        from hs_file_types.enums import AggregationMetaFilePath
+
+        primary_file = self.get_primary_resource_file(self.files.all())
+        meta_file_path = primary_file.storage_path + AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH
+        return meta_file_path
+
+    def save_metadata_json_file(self):
+        """Creates aggregation metadata json file and saves it to S3"""
+
+        from hs_file_types.utils import save_metadata_json_file as utils_save_metadata_json_file
+
+        metadata_json = self.metadata.to_json()
+        to_file_name = self.metadata_json_file_path
+        utils_save_metadata_json_file(self.resource.get_s3_storage(), metadata_json, to_file_name)
 
     @classmethod
     def get_main_file_type(cls):
