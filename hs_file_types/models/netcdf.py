@@ -451,20 +451,21 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         if variables_meta["variableMeasured"]:
             json_dict.update(variables_meta)
 
-        if self.originalCoverage:
+        originalCoverage = self.originalCoverage
+        if originalCoverage:
             orig_coverage_meta = {
-                "hsterms:northLimit": self.originalCoverage.value["northlimit"],
-                "hsterms:eastLimit": self.originalCoverage.value["eastlimit"],
-                "hsterms:southLimit": self.originalCoverage.value["southlimit"],
-                "hsterms:westLimit": self.originalCoverage.value["westlimit"],
-                "hsterms:units": self.originalCoverage.value["units"],
+                "hsterms:northLimit": originalCoverage.value["northlimit"],
+                "hsterms:eastLimit": originalCoverage.value["eastlimit"],
+                "hsterms:southLimit": originalCoverage.value["southlimit"],
+                "hsterms:westLimit": originalCoverage.value["westlimit"],
+                "hsterms:units": originalCoverage.value["units"],
             }
-            if "projection" in self.originalCoverage.value and self.originalCoverage.value["projection"]:
+            if "projection" in originalCoverage.value and originalCoverage.value["projection"]:
                 orig_coverage_meta.update({
-                    "hsterms:projection": self.originalCoverage.value["projection"],
-                    "hsterms:projectionString": self.originalCoverage.projection_string_text,
-                    "hsterms:projectionStringType": self.originalCoverage.projection_string_type,
-                    "hsterms:datum": self.originalCoverage.datum,
+                    "hsterms:projection": originalCoverage.value["projection"],
+                    "hsterms:projectionString": originalCoverage.projection_string_text,
+                    "hsterms:projectionStringType": originalCoverage.projection_string_type,
+                    "hsterms:datum": originalCoverage.datum,
                 })
         json_dict.update({"hsterms:originalCoverage": orig_coverage_meta})
         return json_dict
