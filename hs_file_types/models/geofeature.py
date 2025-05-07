@@ -285,6 +285,58 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         metadata_model_classes['fieldinformation'] = FieldInformation
         return metadata_model_classes
 
+    def to_json(self):
+        """Returns metadata in JSON format using schema.org vocabulary where possible and the rest terms
+          are based on hsterms."""
+
+        json_dict = super().to_json()
+        json_dict['additionalType'] = self.logical_file.get_aggregation_type_name()
+
+        geometry_info = self.geometryinformation
+        if geometry_info:
+            geometry_info_meta = {
+                "hsterms:featureCount": geometry_info.featureCount,
+                "hsterms:geometryType": geometry_info.geometryType
+            }
+            json_dict.update({"hsterms:geometryInformation": geometry_info_meta})
+
+        original_coverage = self.originalcoverage
+        if original_coverage:
+            original_coverage_meta = {
+                    "hsterms:northLimit": original_coverage.northlimit,
+                    "hsterms:southLimit": original_coverage.southlimit,
+                    "hsterms:westLimit": original_coverage.westlimit,
+                    "hsterms:eastLimit": original_coverage.eastlimit,
+            }
+            if original_coverage.projection_name:
+                original_coverage_meta["hsterms:projectionName"] = original_coverage.projection_name
+            if original_coverage.projection_string:
+                original_coverage_meta["hsterms:projectionString"] = original_coverage.projection_string
+            if original_coverage.datum:
+                original_coverage_meta["hsterms:datum"] = original_coverage.datum
+            if original_coverage.unit:
+                original_coverage_meta["hsterms:unit"] = original_coverage.unit
+            json_dict.update({"hsterms:spatialReference": original_coverage_meta})
+
+        field_info_list = []
+        for field_info in self.fieldinformations.all():
+            field_info_meta = {
+                "hsterms:fieldName": field_info.fieldName,
+                "hsterms:fieldType": field_info.fieldType,
+            }
+            if field_info.fieldTypeCode:
+                field_info_meta["hsterms:fieldTypeCode"] = field_info.fieldTypeCode
+            if field_info.fieldWidth:
+                field_info_meta["hsterms:fieldWidth"] = field_info.fieldWidth
+            if field_info.fieldPrecision is not None:
+                field_info_meta["hsterms:fieldPrecision"] = field_info.fieldPrecision
+            field_info_list.append(field_info_meta)
+
+        if field_info_list:
+            json_dict["hsterms:fieldInformation"] = field_info_list
+
+        return json_dict
+
     def get_html(self, **kwargs):
         """overrides the base class function"""
 
@@ -409,6 +461,25 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                 ".sbx", ".sbn", ".cpg", ".xml", ".fbn",
                 ".fbx", ".ain", ".aih", ".atx", ".ixs",
                 ".mxs")
+
+    @property
+    def metadata_json_file_path(self):
+        """Returns the storage path of the aggregation metadata json file"""
+
+        from hs_file_types.enums import AggregationMetaFilePath
+
+        primary_file = self.get_primary_resource_file(self.files.all())
+        meta_file_path = primary_file.storage_path + AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH
+        return meta_file_path
+
+    def save_metadata_json_file(self):
+        """Creates aggregation metadata json file and saves it to S3"""
+
+        from hs_file_types.utils import save_metadata_json_file as utils_save_metadata_json_file
+
+        metadata_json = self.metadata.to_json()
+        to_file_name = self.metadata_json_file_path
+        utils_save_metadata_json_file(self.resource.get_s3_storage(), metadata_json, to_file_name)
 
     @classmethod
     def get_main_file_type(cls):
