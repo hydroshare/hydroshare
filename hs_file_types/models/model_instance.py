@@ -330,6 +330,25 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         rendered_html = template.render(context)
         return rendered_html
 
+    def to_json(self):
+        """Return the metadata in JSON format using schema.org vocabulary where possible and the rest terms
+        are based on hsterms."""
+
+        json_dict = super(ModelInstanceFileMetaData, self).to_json()
+        json_dict['additionalType'] = self.logical_file.get_aggregation_type_name()
+
+        # Add model instance specific metadata
+        json_dict['hsterms:includesModelOutput'] = self.has_model_output
+        if self.executed_by:
+            aggr_url = self.executed_by.metadata_json_file_url_path
+            json_dict['hsterms:executedByModelProgram'] = aggr_url
+        if self.logical_file.metadata_schema_json:
+            json_dict['hsterms:modelProgramSchema'] = self.logical_file.schema_file_url
+        if self.metadata_json:
+            json_dict['hsterms:modelProgramSchemaValues'] = self.logical_file.schema_values_file_url
+
+        return json_dict
+
     def get_rdf_graph(self):
         graph = super(ModelInstanceFileMetaData, self).get_rdf_graph()
         subject = self.rdf_subject()
