@@ -1181,12 +1181,6 @@ class AbstractLogicalFile(models.Model):
         return os.path.join(self.resource.file_path, self.map_short_file_path)
 
     @property
-    def metadata_json_file_path(self):
-        """Returns the path of the aggregation metadata json file starting with {resource_id}/data/contents/
-        """
-        raise NotImplementedError
-
-    @property
     def metadata_json_file_url_path(self):
         """Returns the url path of the aggregation metadata json file"""
 
