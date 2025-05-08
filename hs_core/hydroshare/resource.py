@@ -999,6 +999,11 @@ def get_crossref_url():
         main_url = 'https://doi.crossref.org/'
     return main_url
 
+def get_datacite_url():
+    main_url = 'https://api.test.datacite.org/dois?affiliation=true&publisher=true'
+    if not settings.USE_CROSSREF_TEST:
+        main_url = 'https://api.datacite.org/dois?affiliation=true&publisher=true'
+    return main_url
 
 def deposit_res_metadata_with_crossref(res):
     """
@@ -1028,7 +1033,7 @@ def deposit_res_metadata_with_crossref(res):
 
 def deposit_res_metadata_with_datacite(res):
     """
-    Deposit resource metadata with DataCite using the Fabrica-style payload.
+    Deposit resource metadata with DataCite using real data from the resource object.
     Args:
         res: Django model instance with metadata
 
@@ -1036,38 +1041,77 @@ def deposit_res_metadata_with_datacite(res):
         Response object or None if error occurred
     """
 
-    # Base64 encode the username:password combo
-    token = base64.b64encode(b'PDPO.KYFNWO:QD2ja501b3uC').decode()
+    # Replace with your real encoded credentials
+    auth_token = 'UERQTy5LWUZOV086UUQyamE1MDFiM3VD'
+
     headers = {
-        "accept": "application/vnd.api+json",
-        "content-type": "application/json",
-        "authorization": f"Basic {token}"
+        'accept': 'application/vnd.api+json',
+        'authorization': f'Basic {auth_token}',
+        'content-type': 'application/json'
+    }
+
+    # Fallbacks for missing fields
+    creator_name = f"User {res.creator_id}" if res.creator_id else "Unknown"
+    publication_year = res.publish_date.year if res.publish_date else datetime.now().year
+    resource_url = f"https://example.org/{res.slug}" if res.slug else "https://example.org"
+
+    # Payload based on the object you shared
+    payload = {
+        "data": {
+            "type": "dois",
+            "attributes": {
+                "doi": res.doi or None,  # optional, DataCite can mint
+                "event": "publish",
+                "creators": [
+                    {
+                        "name": creator_name,
+                        "nameType": "Personal"
+                    }
+                ],
+                "titles": [
+                    {
+                        "title": res.title
+                    }
+                ],
+                "publisher": "CUAHSI",
+                "publicationYear": publication_year,
+                "types": {
+                    "resourceTypeGeneral": "Dataset",  # Update if needed
+                    "resourceType": res.resource_type or "CompositeResource"
+                },
+                "url": resource_url,
+                "schemaVersion": "http://datacite.org/schema/kernel-4"
+            }
+        }
     }
 
     try:
-        print("Sending DOI creation request to DataCite... \n\n{}\n\n".format(res.get_datacite_deposit_json()))
+        print("Sending DOI creation request to DataCite...")
         response = requests.post(
-            "https://api.test.datacite.org/dois",
-            data=res.get_datacite_deposit_json(),
+            'https://api.test.datacite.org/dois',
             headers=headers,
+            json=payload,
             timeout=10
         )
         response.raise_for_status()
-        print(f"DOI creation successful: {response.status_code}")
-        print(response.json())
+
+        print(f"DOI creation successful. Status Code: {response.status_code}")
+        print(f"DOI metadata registered: {response.json()}")
         return response
 
     except requests.exceptions.HTTPError as http_err:
-        print(f"HTTP error occurred: {http_err}")
-        if response is not None:
-            print(f"Response content: {response.text}")
-    except requests.exceptions.RequestException as err:
-        print(f"Request failed: {err}")
+        print(f"HTTP error: {http_err}")
+        print(f"Response content: {response.text if response else 'No response'}")
+    except requests.exceptions.ConnectionError as conn_err:
+        print(f"Connection error: {conn_err}")
+    except requests.exceptions.Timeout as timeout_err:
+        print(f"Request timed out: {timeout_err}")
+    except requests.exceptions.RequestException as req_err:
+        print(f"General request error: {req_err}")
     except Exception as e:
         print(f"Unexpected error: {e}")
 
     return None
-
 
 def submit_resource_for_review(pk, user):
     """
