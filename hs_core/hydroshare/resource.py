@@ -999,6 +999,11 @@ def get_crossref_url():
         main_url = 'https://doi.crossref.org/'
     return main_url
 
+def get_datacite_url():
+    main_url = 'https://api.test.datacite.org/dois?affiliation=true&publisher=true'
+    if not settings.USE_CROSSREF_TEST:
+        main_url = 'https://api.datacite.org/dois?affiliation=true&publisher=true'
+    return main_url
 
 def deposit_res_metadata_with_crossref(res):
     """
@@ -1067,7 +1072,6 @@ def deposit_res_metadata_with_datacite(res):
         print(f"Unexpected error: {e}")
 
     return None
-
 
 def submit_resource_for_review(pk, user):
     """
