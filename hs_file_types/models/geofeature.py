@@ -303,10 +303,10 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         original_coverage = self.originalcoverage
         if original_coverage:
             original_coverage_meta = {
-                    "hsterms:northLimit": original_coverage.northlimit,
-                    "hsterms:southLimit": original_coverage.southlimit,
-                    "hsterms:westLimit": original_coverage.westlimit,
-                    "hsterms:eastLimit": original_coverage.eastlimit,
+                "hsterms:northLimit": original_coverage.northlimit,
+                "hsterms:southLimit": original_coverage.southlimit,
+                "hsterms:westLimit": original_coverage.westlimit,
+                "hsterms:eastLimit": original_coverage.eastlimit,
             }
             if original_coverage.projection_name:
                 original_coverage_meta["hsterms:projectionName"] = original_coverage.projection_name
