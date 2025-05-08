@@ -97,7 +97,8 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         if self.folder:
             # this model instance aggregation has been created from a folder
             file_folder = self.folder
-            meta_file_path = os.path.join(self.resource.file_path, file_folder, AggregationMetaFilePath.METADATA_JSON_FILE_NAME)
+            meta_file_path = os.path.join(self.resource.file_path, file_folder,
+                                          AggregationMetaFilePath.METADATA_JSON_FILE_NAME)
             return meta_file_path
         else:
             # this model instance aggregation has been created from a single resource file
