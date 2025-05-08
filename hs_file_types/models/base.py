@@ -135,7 +135,8 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
                     "hsterms": "https://hydroshare.org/terms/"
                 }
             ],
-            "type": "Dataset"
+            "type": "Dataset",
+            "name": self.logical_file.dataset_name
         }
         for coverage in self.coverages.all():
             json_dict.update(coverage.to_json())
