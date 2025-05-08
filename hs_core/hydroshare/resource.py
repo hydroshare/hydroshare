@@ -997,6 +997,11 @@ def get_crossref_url():
         main_url = 'https://doi.crossref.org/'
     return main_url
 
+def get_datacite_url():
+    main_url = 'https://api.test.datacite.org/dois?affiliation=true&publisher=true'
+    if not settings.USE_CROSSREF_TEST:
+        main_url = 'https://api.datacite.org/dois?affiliation=true&publisher=true'
+    return main_url
 
 def deposit_res_metadata_with_crossref(res):
     """
@@ -1023,6 +1028,88 @@ def deposit_res_metadata_with_crossref(res):
     response = requests.post(post_url, data=post_data, files=files, verify=False)
     return response
 
+
+def deposit_res_metadata_with_datacite(res):
+    """
+    Deposit resource metadata with DataCite using real data from the resource object.
+    Args:
+        res: Django model instance with metadata
+
+    Returns:
+        Response object or None if error occurred
+    """
+
+    # Replace with your real encoded credentials
+    auth_token = 'UERQTy5LWUZOV086UUQyamE1MDFiM3VD'
+
+    headers = {
+        'accept': 'application/vnd.api+json',
+        'authorization': f'Basic {auth_token}',
+        'content-type': 'application/json'
+    }
+
+    # Fallbacks for missing fields
+    creator_name = f"User {res.creator_id}" if res.creator_id else "Unknown"
+    publication_year = res.publish_date.year if res.publish_date else datetime.now().year
+    resource_url = f"https://example.org/{res.slug}" if res.slug else "https://example.org"
+
+    # Payload based on the object you shared
+    payload = {
+        "data": {
+            "type": "dois",
+            "attributes": {
+                "doi": res.doi or None,  # optional, DataCite can mint
+                "event": "publish",
+                "creators": [
+                    {
+                        "name": creator_name,
+                        "nameType": "Personal"
+                    }
+                ],
+                "titles": [
+                    {
+                        "title": res.title
+                    }
+                ],
+                "publisher": "CUAHSI",
+                "publicationYear": publication_year,
+                "types": {
+                    "resourceTypeGeneral": "Dataset",  # Update if needed
+                    "resourceType": res.resource_type or "CompositeResource"
+                },
+                "url": resource_url,
+                "schemaVersion": "http://datacite.org/schema/kernel-4"
+            }
+        }
+    }
+
+    try:
+        print("Sending DOI creation request to DataCite...")
+        response = requests.post(
+            'https://api.test.datacite.org/dois',
+            headers=headers,
+            json=payload,
+            timeout=10
+        )
+        response.raise_for_status()
+
+        print(f"DOI creation successful. Status Code: {response.status_code}")
+        print(f"DOI metadata registered: {response.json()}")
+        return response
+
+    except requests.exceptions.HTTPError as http_err:
+        print(f"HTTP error: {http_err}")
+        print(f"Response content: {response.text if response else 'No response'}")
+    except requests.exceptions.ConnectionError as conn_err:
+        print(f"Connection error: {conn_err}")
+    except requests.exceptions.Timeout as timeout_err:
+        print(f"Request timed out: {timeout_err}")
+    except requests.exceptions.RequestException as req_err:
+        print(f"General request error: {req_err}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+
+    return None
 
 def submit_resource_for_review(pk, user):
     """
@@ -1098,6 +1185,10 @@ def publish_resource(user, pk):
     if not user.is_superuser:
         raise ValidationError("Resource can only be published by an admin user")
     resource = utils.get_resource_by_shortkey(pk)
+    print("===========================================")
+    print("Publishing resource with id: {}".format(pk))
+    print(resource.__dict__)
+    print("============================================")
     if resource.raccess.published:
         raise ValidationError("This resource is already published")
     resource.raccess.alter_review_pending_flags(initiating_review=False)
@@ -1121,6 +1212,8 @@ def publish_resource(user, pk):
         assert settings.USE_CROSSREF_TEST is True
     try:
         response = deposit_res_metadata_with_crossref(resource)
+        response = deposit_res_metadata_with_datacite(resource)
+        # create new funtion for Datacite registration and call here
     except ValueError as v:
         logger.error(f"Failed depositing XML {v} with Crossref for res id {pk}")
         resource.doi = get_resource_doi(pk)
