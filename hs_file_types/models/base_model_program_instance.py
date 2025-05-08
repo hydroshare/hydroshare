@@ -88,6 +88,47 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         from hs_core.hydroshare.utils import current_site_url
         return "{}/resource/{}".format(current_site_url(), self.schema_file_path)
 
+    @property
+    def metadata_json_file_path(self):
+        """Returns the storage path of the aggregation metadata json file"""
+
+        from hs_file_types.enums import AggregationMetaFilePath
+
+        if self.folder:
+            # this model instance aggregation has been created from a folder
+            file_folder = self.folder
+            meta_file_path = os.path.join(self.resource.file_path, file_folder, AggregationMetaFilePath.METADATA_JSON_FILE_NAME)
+            return meta_file_path
+        else:
+            # this model instance aggregation has been created from a single resource file
+            mi_file = self.files.first()
+            meta_file_path = mi_file.storage_path + AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH
+            return meta_file_path
+
+    @property
+    def metadata_json_file_url_path(self):
+        """Returns the url path of the aggregation metadata json file"""
+
+        from hs_core.hydroshare.utils import current_site_url
+
+        meta_file_path = self.metadata_json_file_path
+        meta_file_url_path = os.path.join(current_site_url(), 'resource', meta_file_path)
+        return meta_file_url_path
+
+    def save_metadata_json_file(self):
+        """Creates aggregation metadata json file and saves it to S3. If the aggregation contains other
+        aggregations, it also saves the metadata json file for each of those aggregations."""
+
+        from hs_file_types.utils import save_metadata_json_file as utils_save_metadata_json_file
+
+        metadata_json = self.metadata.to_json()
+        to_file_name = self.metadata_json_file_path
+        utils_save_metadata_json_file(self.resource.get_s3_storage(), metadata_json, to_file_name)
+
+        # Save metadata json files for child aggregations
+        for child_aggr in self.get_children():
+            child_aggr.save_metadata_json_file()
+
     @classmethod
     def get_main_file_type(cls):
         """The main file type for this aggregation - no specific main file"""
@@ -323,6 +364,8 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
                 istorage.delete(self.metadata_file_path)
             if istorage.exists(self.map_file_path):
                 istorage.delete(self.map_file_path)
+            if istorage.exists(self.metadata_json_file_path):
+                istorage.delete(self.metadata_json_file_path)
 
             # delete schema json file if this a model aggregation
             if istorage.exists(self.schema_file_path):
@@ -371,6 +414,8 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
             istorage.delete(self.metadata_file_path)
         if istorage.exists(self.map_file_path):
             istorage.delete(self.map_file_path)
+        if istorage.exists(self.metadata_json_file_path):
+            istorage.delete(self.metadata_json_file_path)
 
         # delete schema json file if this a model aggregation
         if istorage.exists(self.schema_file_path):
