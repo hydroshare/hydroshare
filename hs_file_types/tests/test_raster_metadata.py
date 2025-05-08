@@ -1298,7 +1298,7 @@ class RasterFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
         self.assertEqual(logical_file.metadata.bandInformations.count(), 1)
         band_info = logical_file.metadata.bandInformations.first()
         self.assertEqual(band_info.noDataValue, '-3.4028234663852886e+38')
-        self.assertEqual(band_info.maximumValue, '2880.0070800781')
+        self.assertEqual(band_info.maximumValue, '2880.007080078125')
         self.assertEqual(band_info.minimumValue, '2274.958984375')
 
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())

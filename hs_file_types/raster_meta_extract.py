@@ -292,7 +292,7 @@ def get_band_info(raster_file_name):
 
         for i in range(0, band_count):
             band = raster_dataset.GetRasterBand(i + 1)
-            stats = band.GetStatistics(False, False)
+            stats = band.GetStatistics(False, True)
             if stats is not None:
                 minimum, maximum, _, _ = stats
             else:
