@@ -701,6 +701,16 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         res_files = [f for f in resource_files if f.extension.lower() == '.json']
         return res_files[0] if res_files else None
 
+    @property
+    def metadata_json_file_path(self):
+        """Returns the storage path of the aggregation metadata json file"""
+
+        from hs_file_types.enums import AggregationMetaFilePath
+
+        primary_file = self.get_primary_resource_file(self.files.all())
+        meta_file_path = primary_file.storage_path + AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH
+        return meta_file_path
+
     @classmethod
     def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=''):
         res_file, folder_path = super(RefTimeseriesLogicalFile, cls)._validate_set_file_type_inputs(
