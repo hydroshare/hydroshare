@@ -3,8 +3,11 @@ import logging
 import os
 import shutil
 import zipfile
+import base64
+
 
 import requests
+from requests.auth import HTTPBasicAuth
 from dateutil import tz
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -1031,7 +1034,7 @@ def deposit_res_metadata_with_crossref(res):
 
 def deposit_res_metadata_with_datacite(res):
     """
-    Deposit resource metadata with DataCite using real data from the resource object.
+    Deposit resource metadata with DataCite using the Fabrica-style payload.
     Args:
         res: Django model instance with metadata
 
@@ -1039,73 +1042,123 @@ def deposit_res_metadata_with_datacite(res):
         Response object or None if error occurred
     """
 
-    # Replace with your real encoded credentials
-    auth_token = 'UERQTy5LWUZOV086UUQyamE1MDFiM3VD'
-
+    # Base64 encode the username:password combo
+    token = base64.b64encode(b'PDPO.KYFNWO:QD2ja501b3uC').decode()
     headers = {
-        'accept': 'application/vnd.api+json',
-        'authorization': f'Basic {auth_token}',
-        'content-type': 'application/json'
+        "accept": "application/vnd.api+json",
+        "content-type": "application/json",
+        "authorization": f"Basic {token}"
     }
 
-    # Fallbacks for missing fields
+    # Clean DOI
+    doi = res.doi.split("CrossRefSubmissionStatus")[0] if res.doi and "CrossRefSubmissionStatus" in res.doi else res.doi
+
+    # Defaults
     creator_name = f"User {res.creator_id}" if res.creator_id else "Unknown"
-    publication_year = res.publish_date.year if res.publish_date else datetime.now().year
+    publication_year = res.publish_date.year if res.publish_date else datetime.utcnow().year
     resource_url = f"https://example.org/{res.slug}" if res.slug else "https://example.org"
 
-    # Payload based on the object you shared
     payload = {
         "data": {
             "type": "dois",
             "attributes": {
-                "doi": res.doi or None,  # optional, DataCite can mint
-                "event": "publish",
+                "doi": f"10.83165/{res.short_id}",
+                "confirmDoi": None,
+                "url": resource_url,
                 "creators": [
                     {
                         "name": creator_name,
-                        "nameType": "Personal"
+                        "givenName": "User",
+                        "familyName": str(res.creator_id),
+                        "nameType": "Personal",
+                        "nameIdentifiers": [
+                            {
+                                "nameIdentifier": f"hydroshare-user-{res.creator_id}",
+                                "nameIdentifierScheme": "Other",
+                                "schemeUri": None
+                            }
+                        ],
+                        "affiliation": [
+                            {
+                                "name": "CUAHSI",
+                                "affiliationIdentifier": "https://ror.org/037ncgg21",
+                                "affiliationIdentifierScheme": "ROR",
+                                "schemeUri": "https://ror.org"
+                            }
+                        ]
                     }
                 ],
                 "titles": [
                     {
-                        "title": res.title
+                        "title": res.title,
+                        "titleType": "Subtitle",
+                        "lang": "en"
                     }
                 ],
-                "publisher": "CUAHSI",
-                "publicationYear": publication_year,
-                "types": {
-                    "resourceTypeGeneral": "Dataset",  # Update if needed
-                    "resourceType": res.resource_type or "CompositeResource"
+                "publisher": {
+                    "name": "CUAHSI",
+                    "lang": None,
+                    "publisherIdentifier": "https://ror.org/037ncgg21",
+                    "publisherIdentifierScheme": "ROR",
+                    "schemeUri": "https://ror.org"
                 },
-                "url": resource_url,
-                "schemaVersion": "http://datacite.org/schema/kernel-4"
+                "publicationYear": publication_year,
+                "subjects": [],
+                "contributors": [],
+                "alternateIdentifiers": [],
+                "dates": [],
+                "language": "en",
+                "types": {
+                    "resourceTypeGeneral": "Dataset",
+                    "resourceType": res.content_model or "CompositeResource"
+                },
+                "relatedIdentifiers": [],
+                "sizes": [],
+                "formats": [],
+                "version": None,
+                "rightsList": [],
+                "descriptions": [],
+                "geoLocations": [],
+                "fundingReferences": [],
+                "relatedItems": [],
+                "xml": None,
+                "schemaVersion": "http://datacite.org/schema/kernel-4",
+                "source": "fabricaForm",
+                "state": "draft",
+                "reason": None,
+                "event": None,
+                "mode": "new"
+            },
+            "relationships": {
+                "client": {
+                    "data": {
+                        "type": "repositories",
+                        "id": "pdpo.kyfnwo"
+                    }
+                }
             }
         }
     }
 
     try:
-        print("Sending DOI creation request to DataCite...")
+        print("Sending DOI creation request to DataCite... \n\n{}\n\n".format(payload))
         response = requests.post(
-            'https://api.test.datacite.org/dois',
-            headers=headers,
+            "https://api.test.datacite.org/dois",
             json=payload,
+            headers=headers,
             timeout=10
         )
         response.raise_for_status()
-
-        print(f"DOI creation successful. Status Code: {response.status_code}")
-        print(f"DOI metadata registered: {response.json()}")
+        print(f"DOI creation successful: {response.status_code}")
+        print(response.json())
         return response
 
     except requests.exceptions.HTTPError as http_err:
-        print(f"HTTP error: {http_err}")
-        print(f"Response content: {response.text if response else 'No response'}")
-    except requests.exceptions.ConnectionError as conn_err:
-        print(f"Connection error: {conn_err}")
-    except requests.exceptions.Timeout as timeout_err:
-        print(f"Request timed out: {timeout_err}")
-    except requests.exceptions.RequestException as req_err:
-        print(f"General request error: {req_err}")
+        print(f"HTTP error occurred: {http_err}")
+        if response is not None:
+            print(f"Response content: {response.text}")
+    except requests.exceptions.RequestException as err:
+        print(f"Request failed: {err}")
     except Exception as e:
         print(f"Unexpected error: {e}")
 
@@ -1221,7 +1274,7 @@ def publish_resource(user, pk):
         # set the resource back into review_pending
         resource.raccess.alter_review_pending_flags(initiating_review=True)
         raise
-    if not response.status_code == status.HTTP_200_OK:
+    if response and not response.status_code == status.HTTP_200_OK:
         # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
         # crontab celery task
         logger.error(f"Received a {response.status_code} from Crossref while depositing metadata for res id {pk}")
