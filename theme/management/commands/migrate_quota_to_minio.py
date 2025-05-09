@@ -23,6 +23,6 @@ class Command(BaseCommand):
                 subprocess.run(["mc", "quota", "set", f"{quota.zone}/{quota.user.userprofile.bucket_name}",
                                 "--size", f"{quota.allocated_value}{_convert_unit(quota.unit)}"],
                                check=True,
-                )
+                               )
             except subprocess.CalledProcessError as e:
                 raise ValidationError(f"Error setting quota: {e}")
