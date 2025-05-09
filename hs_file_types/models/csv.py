@@ -728,6 +728,15 @@ class CSVLogicalFile(AbstractLogicalFile):
 
         return resource_files[0] if resource_files else None
 
+    def metadata_json_file_path(self):
+        """Returns the storage path of the aggregation metadata json file"""
+
+        from hs_file_types.enums import AggregationMetaFilePath
+
+        primary_file = self.get_primary_resource_file(self.files.all())
+        meta_file_path = primary_file.storage_path + AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH
+        return meta_file_path
+
     def create_aggregation_xml_documents(self, create_map_xml=True):
         super(CSVLogicalFile, self).create_aggregation_xml_documents(create_map_xml)
         self.metadata.is_dirty = False
