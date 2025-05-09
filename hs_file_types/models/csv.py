@@ -728,6 +728,7 @@ class CSVLogicalFile(AbstractLogicalFile):
 
         return resource_files[0] if resource_files else None
 
+    @property
     def metadata_json_file_path(self):
         """Returns the storage path of the aggregation metadata json file"""
 
