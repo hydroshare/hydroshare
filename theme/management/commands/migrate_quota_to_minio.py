@@ -10,6 +10,7 @@ def _convert_unit(unit):
         return f'{unit[0]}i{unit[1]}'
     return unit
 
+
 class Command(BaseCommand):
     """
     Migrate quota to minio
@@ -19,10 +20,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         for quota in UserQuota.objects.all():
             try:
-                subprocess.run(
-                    ["mc", "quota", "set", f"{quota.zone}/{quota.user.userprofile.bucket_name}",
-                    "--size", f"{quota.allocated_value}{_convert_unit(quota.unit)}"],
-                    check=True,
+                subprocess.run(["mc", "quota", "set", f"{quota.zone}/{quota.user.userprofile.bucket_name}",
+                                "--size", f"{quota.allocated_value}{_convert_unit(quota.unit)}"],
+                               check=True,
                 )
             except subprocess.CalledProcessError as e:
                 raise ValidationError(f"Error setting quota: {e}")
