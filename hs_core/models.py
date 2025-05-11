@@ -2647,7 +2647,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
 
     def is_schema_json_file(self, file_path):
         """Determine whether a given file is a schema.json file.
-        Note: this will return true for any file that ends with the schema.json ending
+        Note: this will return true for any file that ends with the _schema.json ending
         We are taking the risk that user might create a file with the same filename ending
         """
         from hs_file_types.enums import AggregationMetaFilePath
@@ -2655,6 +2655,15 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         if file_path.endswith(AggregationMetaFilePath.SCHEMA_JSON_FILE_ENDSWITH):
             return True
         return False
+
+    def is_schema_json_values_file(self, file_path):
+        """Determine whether a given file is a schema_values.json file.
+        Note: this will return true for any file that ends with the _schema_values.json ending
+        We are taking the risk that user might create a file with the same filename ending
+        """
+        from hs_file_types.enums import AggregationMetaFilePath
+
+        return file_path.endswith(AggregationMetaFilePath.SCHEAMA_JSON_VALUES_FILE_ENDSWITH)
 
     def is_collection_list_csv(self, file_path):
         """Determine if a given file is an internally-generated collection list

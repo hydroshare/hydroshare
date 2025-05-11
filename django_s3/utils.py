@@ -80,3 +80,25 @@ def is_metadata_json_file(file_path):
     if file_name == AggregationMetaFilePath.METADATA_JSON_FILE_NAME:
         return True
     return False
+
+def is_schema_json_file(file_path):
+    """Determine whether a given file is a schema.json file.
+    Note: this will return true for any file that ends with the _schema.json ending
+    We are taking the risk that user might create a file with the same filename ending
+    """
+    from hs_file_types.enums import AggregationMetaFilePath
+
+    if file_path.endswith(AggregationMetaFilePath.SCHEMA_JSON_FILE_ENDSWITH):
+        return True
+    return False
+
+def is_schema_json_values_file(file_path):
+    """Determine whether a given file is a schema_values.json file.
+    Note: this will return true for any file that ends with the _schema_values.json ending
+    We are taking the risk that user might create a file with the same filename ending
+    """
+    from hs_file_types.enums import AggregationMetaFilePath
+
+    if file_path.endswith(AggregationMetaFilePath.SCHEAMA_JSON_VALUES_FILE_ENDSWITH):
+        return True
+    return False
