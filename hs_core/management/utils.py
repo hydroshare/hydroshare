@@ -613,6 +613,9 @@ def __ingest_s3_directory(resource,
                     if resource.is_schema_json_file(fullpath):
                         print("Skipping {} because it is a schema.json file.".format(fullpath))
                         continue
+                    if resource.is_schema_json_values_file(fullpath):
+                        print("Skipping {} because it is a schema_values.json file.".format(fullpath))
+                        continue
                     ecount += 1
                     msg = "ingest_s3_files: file {} in S3 does not exist in Django (INGESTING)"\
                         .format(fullpath)
