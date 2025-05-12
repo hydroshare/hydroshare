@@ -64,6 +64,36 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
     # this field is used for storing the extracted CSV metadata
     tableSchema = models.JSONField(default=dict)
 
+    def to_json(self):
+        """Returns metadata in JSON format using schema.org vocabulary where possible and the rest terms
+           are based on hsterms."""
+
+        json_dict = super().to_json()
+        json_dict['additionalType'] = self.logical_file.get_aggregation_type_name()
+
+        table_schema_model = self.get_table_schema_model()
+        csv_meta = {
+            "hsterms:delimiter": table_schema_model.delimiter,
+            "hsterms:numberOfDataRows": table_schema_model.rows,
+            "hsterms:columns": []
+        }
+
+        for col in table_schema_model.table.columns:
+            col_meta = {
+                "hsterms:columnNumber": col.column_number,
+                "hsterms:dataType": col.datatype
+            }
+
+            if col.titles:
+                col_meta["hsterms:title"] = col.titles
+            if col.description:
+                col_meta["hsterms:description"] = col.description
+
+            csv_meta["hsterms:columns"].append(col_meta)
+
+        json_dict.update({"hsterms:csvTableSchema": csv_meta})
+        return json_dict
+
     def get_table_schema_model(self):
         return CSVMetaSchemaModel(**self.tableSchema)
 
