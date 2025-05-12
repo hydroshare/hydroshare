@@ -1660,6 +1660,7 @@ class TimeSeriesMetaDataMixin(models.Model):
             if os.path.exists(temp_csv_file):
                 shutil.rmtree(os.path.dirname(temp_csv_file))
 
+
 class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
     model_app_label = 'hs_file_types'
 

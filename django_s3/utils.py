@@ -81,6 +81,7 @@ def is_metadata_json_file(file_path):
         return True
     return False
 
+
 def is_schema_json_file(file_path):
     """Determine whether a given file is a schema.json file.
     Note: this will return true for any file that ends with the _schema.json ending
@@ -91,6 +92,7 @@ def is_schema_json_file(file_path):
     if file_path.endswith(AggregationMetaFilePath.SCHEMA_JSON_FILE_ENDSWITH):
         return True
     return False
+
 
 def is_schema_json_values_file(file_path):
     """Determine whether a given file is a schema_values.json file.
