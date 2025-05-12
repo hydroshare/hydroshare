@@ -84,7 +84,7 @@ class TestChangeQuotaHolder(MockS3TestCaseMixin, TestCase):
         uquota.save_allocated_value(20, "GB")
         wait_for_quota_update()
 
-        # QuotaException should NOT be raised now that quota is not enforced
+        # QuotaException should NOT be raised now that more quota is allocated
         res.set_quota_holder(self.user2, self.user1)
 
         if res:
