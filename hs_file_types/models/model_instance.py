@@ -447,13 +447,15 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
         """File path of the aggregation schema values file relative to {resource_id}/data/contents/
         """
 
+        from hs_file_types.enums import AggregationMetaFilePath
+
         json_file_name = self.aggregation_name
         if "/" in json_file_name:
             json_file_name = os.path.basename(json_file_name)
 
         json_file_name, _ = os.path.splitext(json_file_name)
 
-        json_file_name += "_schema_values.json"
+        json_file_name += AggregationMetaFilePath.SCHEAMA_JSON_VALUES_FILE_ENDSWITH
 
         if self.folder:
             file_folder = self.folder
@@ -513,6 +515,16 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
         finally:
             shutil.rmtree(tmpdir)
 
+    def save_metadata_json_file(self):
+        """Creates aggregation metadata json file and saves it to S3. If the aggregation contains other
+        aggregations, it also saves the metadata json file for each of those aggregations.
+        
+        This method also saves the schema values json file.
+        """
+
+        super(ModelInstanceLogicalFile, self).save_metadata_json_file()
+        self.create_schema_values_json_file()
+    
     def can_contain_aggregation(self, aggregation):
         if aggregation.is_model_instance and self.id == aggregation.id:
             # allow moving file/folder within the same aggregation
