@@ -120,6 +120,7 @@ class S3Storage(s3.S3Storage):
                 raise QuotaException(
                     "Bucket quota exceeded. Please contact your system administrator."
                 )
+            raise
         finally:
             content.close = original_close
         return cleaned_name
