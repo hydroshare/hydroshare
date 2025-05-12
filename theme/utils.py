@@ -1,7 +1,6 @@
 import os
 from uuid import uuid4
 
-from datetime import date, timedelta
 from django.db.models import Q
 
 import logging
