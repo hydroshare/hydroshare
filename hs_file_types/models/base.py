@@ -867,7 +867,11 @@ class AbstractLogicalFile(models.Model):
 
     def save_metadata_json_file(self):
         """Creates aggregation metadata json file and saves it to S3 """
-        raise NotImplementedError
+        from hs_file_types.utils import save_metadata_json_file as utils_save_metadata_json_file
+
+        metadata_json = self.metadata.to_json()
+        to_file_name = self.metadata_json_file_path
+        utils_save_metadata_json_file(self.resource.get_s3_storage(), metadata_json, to_file_name)
 
     @classmethod
     def can_set_folder_to_aggregation(cls, resource, dir_path, aggregations=None):

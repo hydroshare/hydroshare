@@ -246,15 +246,6 @@ class GenericLogicalFile(AbstractLogicalFile):
         meta_file_path = self.files.first().storage_path + AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH
         return meta_file_path
 
-    def save_metadata_json_file(self):
-        """Creates aggregation metadata json file and saves it to S3 """
-
-        from hs_file_types.utils import save_metadata_json_file as utils_save_metadata_json_file
-
-        metadata_json = self.metadata.to_json()
-        to_file_name = self.metadata_json_file_path
-        utils_save_metadata_json_file(self.resource.get_s3_storage(), metadata_json, to_file_name)
-
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path='', extra_data={}):
         """
