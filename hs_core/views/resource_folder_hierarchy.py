@@ -148,10 +148,10 @@ def data_store_structure(request):
         if not res_file:
             # skip metadata, schema and schema values files
             is_metadata_related_file = (
-                resource.is_metadata_xml_file(f_store_path) or
-                resource.is_metadata_json_file(f_store_path) or
-                resource.is_schema_json_file(f_store_path) or
-                resource.is_schema_json_values_file(f_store_path)
+                resource.is_metadata_xml_file(f_store_path)
+                or resource.is_metadata_json_file(f_store_path)
+                or resource.is_schema_json_file(f_store_path)
+                or resource.is_schema_json_values_file(f_store_path)
             )
             if not is_metadata_related_file:
                 found_unreferenced_files = True
