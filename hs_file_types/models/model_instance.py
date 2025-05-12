@@ -518,13 +518,12 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
     def save_metadata_json_file(self):
         """Creates aggregation metadata json file and saves it to S3. If the aggregation contains other
         aggregations, it also saves the metadata json file for each of those aggregations.
-        
+
         This method also saves the schema values json file.
         """
-
-        super(ModelInstanceLogicalFile, self).save_metadata_json_file()
+        super(AbstractModelLogicalFile, self).save_metadata_json_file()
         self.create_schema_values_json_file()
-    
+
     def can_contain_aggregation(self, aggregation):
         if aggregation.is_model_instance and self.id == aggregation.id:
             # allow moving file/folder within the same aggregation
