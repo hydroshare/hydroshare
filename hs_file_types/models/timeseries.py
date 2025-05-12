@@ -1660,9 +1660,115 @@ class TimeSeriesMetaDataMixin(models.Model):
             if os.path.exists(temp_csv_file):
                 shutil.rmtree(os.path.dirname(temp_csv_file))
 
-
 class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
     model_app_label = 'hs_file_types'
+
+    def to_json(self):
+        """Returns metadata in JSON format using schema.org vocabulary where possible and the rest terms
+           are based on hsterms."""
+
+        json_dict = super().to_json()
+        json_dict['additionalType'] = self.logical_file.get_aggregation_type_name()
+        if self.abstract:
+            json_dict['abstract'] = self.abstract
+        if self.utc_offset:
+            json_dict['hsterms:UTCOffSet'] = self.utc_offset.value
+
+        # Get all unique series_ids to organize metadata by series
+        all_series = set()
+        for site in self.sites:
+            all_series.update(site.series_ids)
+
+        # Create timeseries metadata organized by series_id
+        timeseries_results = []
+        for series_id in all_series:
+            series_meta = {}
+
+            for site in self.sites:
+                if series_id in site.series_ids:
+                    site_dict = {
+                        "hsterms:siteCode": site.site_code
+                    }
+                    if site.site_name:
+                        site_dict["hsterms:siteName"] = site.site_name
+                    if site.elevation_m:
+                        site_dict["hsterms:elevation"] = site.elevation_m
+                    if site.elevation_datum:
+                        site_dict["hsterms:elevationDatum"] = site.elevation_datum
+                    if site.site_type:
+                        site_dict["hsterms:siteType"] = site.site_type
+                    if site.latitude:
+                        site_dict["hsterms:latitude"] = site.latitude
+                    if site.longitude:
+                        site_dict["hsterms:longitude"] = site.longitude
+                    series_meta["hsterms:site"] = site_dict
+                    break
+
+            for variable in self.variables:
+                if series_id in variable.series_ids:
+                    var_dict = {
+                        "hsterms:variableCode": variable.variable_code,
+                        "hsterms:variableName": variable.variable_name,
+                        "hsterms:variableType": variable.variable_type,
+                        "hsterms:noDataValue": variable.no_data_value,
+                    }
+                    if variable.variable_definition:
+                        var_dict["hsterms:variableDefinition"] = variable.variable_definition
+                    if variable.speciation:
+                        var_dict["hsterms:speciation"] = variable.speciation
+                    series_meta["hsterms:variable"] = var_dict
+                    break
+
+            for method in self.methods:
+                if series_id in method.series_ids:
+                    method_dict = {
+                        "hsterms:methodCode": method.method_code,
+                        "hsterms:methodName": method.method_name,
+                        "hsterms:methodType": method.method_type,
+                    }
+                    if method.method_description:
+                        method_dict["hsterms:methodDescription"] = method.method_description
+                    if method.method_link:
+                        method_dict["hsterms:methodLink"] = method.method_link
+                    series_meta["hsterms:method"] = method_dict
+                    break
+
+            for pro_level in self.processing_levels:
+                if series_id in pro_level.series_ids:
+                    pro_level_dict = {
+                        "hsterms:processingLevelCode": pro_level.processing_level_code,
+                    }
+                    if pro_level.definition:
+                        pro_level_dict["hsterms:definition"] = pro_level.definition
+                    if pro_level.explanation:
+                        pro_level_dict["hsterms:explanation"] = pro_level.explanation
+                    series_meta["hsterms:processingLevel"] = pro_level_dict
+                    break
+
+            for tsr in self.time_series_results:
+                if series_id in tsr.series_ids:
+                    unit_dict = {
+                        "hsterms:unitsType": tsr.units_type,
+                        "hsterms:unitsName": tsr.units_name,
+                        "hsterms:unitsAbbreviation": tsr.units_abbreviation
+                    }
+                    series_meta["hsterms:unit"] = unit_dict
+                    series_meta["hsterms:timeSeriesResultUUID"] = series_id
+                    series_meta["hsterms:valueCount"] = tsr.value_count
+                    series_meta["hsterms:status"] = tsr.status if tsr.status else "Unknown"
+                    series_meta["hsterms:sampleMedium"] = tsr.sample_medium if tsr.sample_medium else "Unknown"
+                    series_meta["hsterms:aggregationStatistic"] = tsr.aggregation_statistics
+                    if tsr.series_label:
+                        series_meta["hsterms:seriesLabel"] = tsr.series_label
+                    break
+
+            # Only add to results if we have metadata for this series
+            if series_meta:
+                timeseries_results.append(series_meta)
+
+        json_dict.update({"hsterms:timeSeriesResult": timeseries_results})
+        return json_dict
+
     # this is to store abstract
     abstract = models.TextField(null=True, blank=True)
 
