@@ -455,9 +455,9 @@ class CompositeResource(BaseResource):
     def set_flag_to_recreate_aggregation_meta_files(self, orig_path, new_path):
         """
         When a folder or file representing an aggregation is renamed or moved,
-        the associated meta files (resource map, metadata xml files as well as schema json files) are deleted
+        the associated meta files (resource map, metadata xml files, schema json files) are deleted
         and then aggregation metadata is set to dirty so that these meta files will be regenerated as part of
-        aggregation or bag download
+        aggregation or bag download. For single file aggregations, metadata JSON files are also deleted.
         :param  orig_path: original file/folder path prior to move/rename
         :param  new_path: new file/folder path after move/rename
         """
@@ -483,11 +483,17 @@ class CompositeResource(BaseResource):
         schema_json_file_name = file_name + AggregationMetaFilePath.SCHEMA_JSON_FILE_ENDSWITH
         meta_xml_file_name = file_name + AggregationMetaFilePath.METADATA_FILE_ENDSWITH
         map_xml_file_name = file_name + AggregationMetaFilePath.RESMAP_FILE_ENDSWITH
+
         if not is_new_path_a_folder:
             # case of file rename/move for single file aggregation
             schema_json_file_full_path = os.path.join(self.file_path, schema_json_file_name)
             meta_xml_file_full_path = os.path.join(self.file_path, meta_xml_file_name)
             map_xml_file_full_path = os.path.join(self.file_path, map_xml_file_name)
+
+            # for single file aggregations, compute the metadata JSON file path using original path
+            metadata_json_file_full_path = os.path.join(
+                self.file_path, orig_path + AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH
+                )
         else:
             # case of folder rename - fileset/model aggregation
             _, schema_json_file_name = os.path.split(schema_json_file_name)
@@ -496,6 +502,8 @@ class CompositeResource(BaseResource):
             schema_json_file_full_path = os.path.join(self.file_path, new_path, schema_json_file_name)
             meta_xml_file_full_path = os.path.join(self.file_path, new_path, meta_xml_file_name)
             map_xml_file_full_path = os.path.join(self.file_path, new_path, map_xml_file_name)
+            # We don't delete metadata JSON files for folder rename cases as metadata JSON filename
+            # is not affected by folder rename
 
         if istorage.exists(schema_json_file_full_path):
             istorage.delete(schema_json_file_full_path)
@@ -505,6 +513,10 @@ class CompositeResource(BaseResource):
 
         if istorage.exists(map_xml_file_full_path):
             istorage.delete(map_xml_file_full_path)
+
+        # delete metadata JSON file only for single file aggregations
+        if not is_new_path_a_folder and istorage.exists(metadata_json_file_full_path):
+            istorage.delete(metadata_json_file_full_path)
 
         # set affected logical file metadata to dirty so that xml meta files will be regenerated at the time of
         # aggregation or bag download
