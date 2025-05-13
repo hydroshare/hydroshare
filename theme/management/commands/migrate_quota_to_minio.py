@@ -25,4 +25,4 @@ class Command(BaseCommand):
                                check=True,
                                )
             except subprocess.CalledProcessError as e:
-                raise ValidationError(f"Error setting quota: {e}")
+                print(f"Quota for {quota.user.username} in {quota.zone} not set")
