@@ -834,7 +834,7 @@ def update_metadata_element(
 
 @swagger_auto_schema(method="get", auto_schema=None)
 @api_view(["GET"])
-def file_download_url_mapper(request, shortkey):
+def file_download_url_mapper(request, shortkey, filepath):
     """maps the file URIs in resourcemap document to django_s3 download view function"""
     try:
         res, _, _ = authorize(
@@ -864,7 +864,7 @@ def file_download_url_mapper(request, shortkey):
         zipped = True
     aggregation_name = None
     if aggregation:
-        aggregation_name = public_file_path.split("/")[-1]
+        aggregation_name = filepath
         zipped = True
     if zipped:
         zip_path = f"tmp/{uuid.uuid4()}.zip"

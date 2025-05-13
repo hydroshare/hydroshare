@@ -3383,9 +3383,9 @@ class ResourceFile(ResourceFileS3Mixin):
         """
 
         # use of self.resource generates a query
-        return self.get_short_path(self.resource)
+        return self.get_short_path()
 
-    def get_short_path(self, resource):
+    def get_short_path(self):
         """Return the unqualified path to the file object.
 
         * This path is invariant of where the object is stored.
@@ -3393,7 +3393,6 @@ class ResourceFile(ResourceFileS3Mixin):
         * Thus, it does not change if the resource is moved.
 
         This is the path that should be used as a key to index things such as file type.
-        :param resource: the resource to which the file (self) belongs
         Note: This is the preferred way to get the short path for a file when we are trying to find short path
         for more than one file in a resource.
         """
