@@ -257,11 +257,20 @@ class RefWebService(object):
 
 class RefTimeseriesFileMetaData(AbstractFileMetaData):
     model_app_label = 'hs_file_types'
+
     # field to store the content of the json file (the file that is part
     # of the RefTimeseriesLogicalFile type
     json_file_content = models.TextField()
     # this is to store abstract
     abstract = models.TextField(null=True, blank=True)
+
+    def to_json(self):
+        """Return the metadata in JSON format - uses schema.org terms where possible and the rest
+        terms are based on hsterms."""
+
+        json_dict = super().to_json()
+        json_dict['additionalType'] = self.logical_file.get_aggregation_type_name()
+        return json_dict
 
     @property
     def has_title_in_json(self):
