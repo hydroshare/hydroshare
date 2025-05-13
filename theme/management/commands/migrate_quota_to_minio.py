@@ -23,5 +23,5 @@ class Command(BaseCommand):
                                 "--size", f"{quota.allocated_value}{_convert_unit(quota.unit)}"],
                                check=True,
                                )
-            except subprocess.CalledProcessError as e:
+            except subprocess.CalledProcessError:
                 print(f"Quota for {quota.user.username} in {quota.zone} not set")
