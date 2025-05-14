@@ -2,6 +2,7 @@ import subprocess
 from django.core.management.base import BaseCommand
 
 from theme.models import UserQuota
+from hs_core.models import BaseResource
 
 
 def _convert_unit(unit):
@@ -18,10 +19,13 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         for quota in UserQuota.objects.all():
-            try:
-                subprocess.run(["mc", "quota", "set", f"{quota.zone}/{quota.user.userprofile.bucket_name}",
-                                "--size", f"{quota.allocated_value}{_convert_unit(quota.unit)}"],
-                               check=True,
-                               )
-            except subprocess.CalledProcessError:
-                print(f"Quota for {quota.user.username} in {quota.zone} not set")
+            if quota.user.is_active:
+                resources = BaseResource.objects.filter(quota_holder_id=quota.user.id)
+                if resources.exists():
+                    try:
+                        subprocess.run(["mc", "quota", "set", f"{quota.zone}/{quota.user.userprofile.bucket_name}",
+                                        "--size", f"{quota.allocated_value}{_convert_unit(quota.unit)}"],
+                                    check=True,
+                                    )
+                    except subprocess.CalledProcessError:
+                        print(f"Quota for {quota.user.username} in {quota.zone} not set")
