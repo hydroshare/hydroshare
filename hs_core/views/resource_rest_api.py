@@ -41,6 +41,7 @@ from hs_core.hydroshare.utils import get_file_storage, resource_modified
 from hs_core.serialization import GenericResourceMeta, HsDeserializationDependencyException, \
     HsDeserializationException
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
+from hs_core.hydroshare.resource import save_resource_metadata_json
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.parsers import MultiPartParser
@@ -891,6 +892,53 @@ def _validate_metadata(metadata_list):
         if k.lower() in ('title', 'subject', 'description', 'publisher', 'format', 'date', 'type'):
             err_message = err_message.format(k.lower())
             raise ValidationError(detail=err_message)
+
+
+class WriteMetadataJSON(APIView):
+    """
+    Write resource and aggregation level metadata as JSON files to resource directory on S3.
+
+    REST URL: hsapi/resource/{pk}/metadata/json
+    HTTP method: PUT
+
+    :type pk: str
+    :param pk: id of the resource
+    :return: No content. Status code will be 200 (OK) on success.
+    :raises:
+    NotFound: return json format: {'detail': 'No resource was found for resource id:pk'}
+    PermissionDenied: return json format: {'detail': 'You do not have permission to perform this action.'}
+    Exception: return json format: {'detail': 'Error saving metadata JSON files: [error message]'}
+    """
+    allowed_methods = ('PUT',)
+
+    @swagger_auto_schema(
+        operation_description="Write resource and aggregation level metadata as JSON files to resource directory on S3",
+        responses={
+            200: openapi.Response(description="Metadata JSON files successfully saved"),
+            403: openapi.Response(description="Permission denied - only superusers can access this endpoint"),
+            404: openapi.Response(description="Resource not found"),
+            500: openapi.Response(description="Internal server error")
+        }
+    )
+    def put(self, request, pk):
+        # allowing only superuser to access this endpoint.
+        if not request.user.is_superuser:
+            raise PermissionDenied()
+
+        try:
+            resource = get_resource_by_shortkey(pk, or_404=False)
+        except ObjectDoesNotExist:
+            logger.error(f"Resource not found for id: {pk}")
+            raise NotFound(detail=f'No resource was found for resource id:{pk}')
+
+        try:
+            # generate and save metadata in JSON format to S3
+            save_resource_metadata_json(resource)
+            return Response(status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Error saving metadata JSON files for resource {pk}: {str(e)}")
+            return Response({'detail': f'Error saving metadata JSON files: {str(e)}'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class CustomTusUpload(TusUpload):
