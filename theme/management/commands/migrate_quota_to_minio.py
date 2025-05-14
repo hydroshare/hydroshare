@@ -25,7 +25,7 @@ class Command(BaseCommand):
                     try:
                         subprocess.run(["mc", "quota", "set", f"{quota.zone}/{quota.user.userprofile.bucket_name}",
                                         "--size", f"{quota.allocated_value}{_convert_unit(quota.unit)}"],
-                                    check=True,
-                                    )
+                                       check=True,
+                                       )
                     except subprocess.CalledProcessError:
                         print(f"Quota for {quota.user.username} in {quota.zone} not set")
