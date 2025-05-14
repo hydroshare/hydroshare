@@ -44,9 +44,6 @@ class Command(BaseCommand):
         resources = BaseResource.objects.filter(raccess__published=True).exclude(quota_holder=published_user)
         count = 0
         for res in resources:
-            if res.quota_holder == published_user:
-                print('Resource {} already has published user as quota holder'.format(res.short_id))
-                continue
             print('Fixing resource: {}'.format(res.short_id))
             try:
                 UserResourcePrivilege.share(user=published_user, resource=res,
