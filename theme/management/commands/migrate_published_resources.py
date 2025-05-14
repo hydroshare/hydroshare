@@ -48,15 +48,12 @@ class Command(BaseCommand):
                 print('Resource {} already has published user as quota holder'.format(res.short_id))
                 continue
             print('Fixing resource: {}'.format(res.short_id))
-            # ensure bucket_name is set
-            res.quota_holder.userprofile.save()
             try:
                 UserResourcePrivilege.share(user=published_user, resource=res,
                                             privilege=PrivilegeCodes.OWNER, grantor=res.quota_holder)
                 set_quota_holder(res, published_user)
             except Exception as ex:
-                raise ex
-                print(res.short_id + ' raised SessionException when setting quota holder: '
+                print(res.short_id + ' raised Exception when setting quota holder: '
                       + str(ex))
                 continue
 
