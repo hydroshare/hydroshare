@@ -15,6 +15,7 @@ def exists(bucket_object):
         else:
             raise e
 
+
 class Command(BaseCommand):
     """
     Cleanup migrated published resource data from source quota holder
