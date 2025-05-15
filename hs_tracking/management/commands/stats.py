@@ -287,8 +287,28 @@ class Command(BaseCommand):
                     print("Error inspecting date: ", e)
                     pass
             print("*" * 80)
+
+        # the range query will not include the end date
+        # https://docs.djangoproject.com/en/4.2/ref/models/querysets/#range
+        # so we need to add a day to the end date
+        end_date = timezone.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1)
+
         published_dates = Date.objects.filter(type='published', start_date__range=[start_date, end_date])
-        print(f"resources that became published within date range: {published_dates.count()}")
+        # filter out dates that are not associated with a resource
+        for d in published_dates:
+            try:
+                d.metadata.resource.raccess
+            except Exception:
+                print(f"Dangling date not associated with a resource: {d}")
+                print("This indicates that a resource was published and then deleted.")
+                print("This deleted resource will not be included in the following stats.")
+                published_dates = published_dates.exclude(id=d.id)
+                continue
+
+        print(
+            f"resources that became published within date range, excluding resources that were later deleted: "
+            f"{published_dates.count()}"
+        )
 
         if options.get("verbose"):
             public_count = 0
