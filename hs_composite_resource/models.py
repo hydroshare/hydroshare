@@ -492,7 +492,7 @@ class CompositeResource(BaseResource):
             # for single file aggregations, compute the metadata JSON file path using original path
             metadata_json_file_full_path = os.path.join(
                 self.file_path, orig_path + AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH.value
-                )
+            )
         else:
             # case of folder rename - fileset/model aggregation
             _, schema_json_file_name = os.path.split(schema_json_file_name)
