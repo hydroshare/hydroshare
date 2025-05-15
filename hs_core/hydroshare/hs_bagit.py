@@ -186,7 +186,7 @@ def create_bag_metadata_files(resource):
         # only the files that are not part of file type aggregation (logical file)
         # should be added to the resource level map xml file
         if f.logical_file is None:
-            short_path = f.get_short_path(resource=resource)
+            short_path = f.get_short_path()
             res_uri = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
                 hs_url=current_site_url,
                 res_id=resource.short_id,

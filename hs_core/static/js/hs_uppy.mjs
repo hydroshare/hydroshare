@@ -210,16 +210,6 @@ else{
         );
       }
     }
-    else{
-      // display a warning that google upload is in beta if the file is from google drive
-      if (file.source === "GoogleDrivePicker") {
-        uppy.info(
-          "Google Drive upload is in beta. Please report any issues to help.cuahsi.org",
-          "warning",
-          3000
-        );
-      }
-    }
   })
   .on("dashboard:modal-closed", () => {
     // if there are pending uploads, show an alert that they will continue in the background
