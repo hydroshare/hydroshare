@@ -2,8 +2,18 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 
 from hs_core.models import BaseResource
-from django_s3.utils import S3Storage
+from django_s3.storage import S3Storage
 
+
+def exists(bucket_object):
+    try:
+        bucket_object.load()
+        return True
+    except Exception as e:
+        if '404' in str(e):
+            return False
+        else:
+            raise e
 
 class Command(BaseCommand):
     """
@@ -22,10 +32,16 @@ class Command(BaseCommand):
             # not sure which owner was the old quota holder, so check them all
             for owner in res.raccess.owners.exclude(username=published_user.username):
                 bucket_name = owner.userprofile.bucket_name
-                for file in istorage.connection.Bucket(bucket_name).objects.filter(Prefix=res.short_id):
-                    if istorage.connection.Object("published", file.key).exists():
-                        istorage.connection.Object(bucket_name, file.key).delete()
-                    else:
-                        print('File {} does not exist in published bucket'.format(file.key))
+                try:
+                    for file in istorage.connection.Bucket(bucket_name).objects.filter(Prefix=res.short_id):
+                        if exists(istorage.connection.Object("published", file.key)):
+                            istorage.connection.Object(bucket_name, file.key).delete()
+                        else:
+                            print('File {} does not exist in published bucket'.format(file.key))
+                except Exception as e:
+                    if res.raccess.owners.count() == 2:
+                        # this should not happen
+                        print('Failure deleting resource {} on Bucket {}'.format(res.short_id, bucket_name))
+                        print(str(e))
 
         print('{} resources deleted src files after published migration'.format(count))
