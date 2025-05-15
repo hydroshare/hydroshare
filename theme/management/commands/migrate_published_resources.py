@@ -49,6 +49,7 @@ class Command(BaseCommand):
                 UserResourcePrivilege.share(user=published_user, resource=res,
                                             privilege=PrivilegeCodes.OWNER, grantor=res.quota_holder)
                 set_quota_holder(res, published_user)
+                count += 1
             except Exception as ex:
                 print(res.short_id + ' raised Exception when setting quota holder: '
                       + str(ex))

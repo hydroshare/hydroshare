@@ -17,6 +17,8 @@ class Command(BaseCommand):
         count = 0
         istorage = S3Storage()
         for res in resources:
+            count += 1
+            print('Cleaning up resource: {}'.format(res.short_id))
             # not sure which owner was the old quota holder, so check them all
             for owner in res.raccess.owners.exclude(username=published_user.username):
                 bucket_name = owner.userprofile.bucket_name
