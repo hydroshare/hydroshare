@@ -4025,11 +4025,7 @@ ul#fb-files-container .hs-upload-indicator {
 	cursor: default;
 }
 
-.fb-view-list .fb-file-name {
-	font-size: 14px;
-	white-space: nowrap;
-}
-.fb-view-list .fb-file-name-display {
+.fb-view-list .fb-file-name, .fb-view-list .fb-file-name-display {
 	font-size: 14px;
 	white-space: nowrap;
 }
