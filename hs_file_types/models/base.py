@@ -1527,9 +1527,9 @@ class AbstractLogicalFile(models.Model):
         xml_file_name, _ = os.path.splitext(xml_file_name)
 
         if resmap:
-            xml_file_name += AggregationMetaFilePath.RESMAP_FILE_ENDSWITH
+            xml_file_name += AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value
         else:
-            xml_file_name += AggregationMetaFilePath.METADATA_FILE_ENDSWITH
+            xml_file_name += AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value
         return xml_file_name
 
     def xml_file_short_path(self, resmap=True):

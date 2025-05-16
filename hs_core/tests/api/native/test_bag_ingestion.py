@@ -71,7 +71,7 @@ def compare_metadatas(self, short_id, new_metadata_str, original_metadata_file):
     self.assertEqual(graph_len(new_graph) + 2, original_count)
 
     for (new_triple, original_triple) in _squashed_graphs_triples(new_graph, original_graph):
-        self.assertEquals(new_triple, original_triple, "Ingested metadata does not match original")
+        self.assertEqual(new_triple, original_triple, "Ingested metadata does not match original")
 
 
 def prepare_resource(self, folder, upload_to=""):
