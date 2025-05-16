@@ -933,6 +933,8 @@ class WriteMetadataJSON(APIView):
 
         try:
             # generate and save metadata in JSON format to S3
+            # TODO: Maybe we need to run this function as a background task as it can result in a timeout
+            # for resources with large number of aggregations
             save_resource_metadata_json(resource)
             return Response(status=status.HTTP_200_OK)
         except Exception as e:
