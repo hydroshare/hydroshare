@@ -1050,101 +1050,11 @@ def deposit_res_metadata_with_datacite(res):
         "authorization": f"Basic {token}"
     }
 
-    # Clean DOI
-    doi = res.doi.split("CrossRefSubmissionStatus")[0] if res.doi and "CrossRefSubmissionStatus" in res.doi else res.doi
-
-    # Defaults
-    creator_name = f"User {res.creator_id}" if res.creator_id else "Unknown"
-    publication_year = res.publish_date.year if res.publish_date else datetime.utcnow().year
-    resource_url = f"https://example.org/{res.slug}" if res.slug else "https://example.org"
-
-    payload = {
-        "data": {
-            "type": "dois",
-            "attributes": {
-                "doi": f"10.83165/{res.short_id}",
-                "confirmDoi": None,
-                "url": resource_url,
-                "creators": [
-                    {
-                        "name": creator_name,
-                        "givenName": "User",
-                        "familyName": str(res.creator_id),
-                        "nameType": "Personal",
-                        "nameIdentifiers": [
-                            {
-                                "nameIdentifier": f"hydroshare-user-{res.creator_id}",
-                                "nameIdentifierScheme": "Other",
-                                "schemeUri": None
-                            }
-                        ],
-                        "affiliation": [
-                            {
-                                "name": "CUAHSI",
-                                "affiliationIdentifier": "https://ror.org/037ncgg21",
-                                "affiliationIdentifierScheme": "ROR",
-                                "schemeUri": "https://ror.org"
-                            }
-                        ]
-                    }
-                ],
-                "titles": [
-                    {
-                        "title": res.title,
-                        "titleType": "Subtitle",
-                        "lang": "en"
-                    }
-                ],
-                "publisher": {
-                    "name": "CUAHSI",
-                    "lang": None,
-                    "publisherIdentifier": "https://ror.org/037ncgg21",
-                    "publisherIdentifierScheme": "ROR",
-                    "schemeUri": "https://ror.org"
-                },
-                "publicationYear": publication_year,
-                "subjects": [],
-                "contributors": [],
-                "alternateIdentifiers": [],
-                "dates": [],
-                "language": "en",
-                "types": {
-                    "resourceTypeGeneral": "Dataset",
-                    "resourceType": res.content_model or "CompositeResource"
-                },
-                "relatedIdentifiers": [],
-                "sizes": [],
-                "formats": [],
-                "version": None,
-                "rightsList": [],
-                "descriptions": [],
-                "geoLocations": [],
-                "fundingReferences": [],
-                "relatedItems": [],
-                "xml": None,
-                "schemaVersion": "http://datacite.org/schema/kernel-4",
-                "source": "fabricaForm",
-                "state": "draft",
-                "reason": None,
-                "event": None,
-                "mode": "new"
-            },
-            "relationships": {
-                "client": {
-                    "data": {
-                        "type": "repositories",
-                        "id": "pdpo.kyfnwo"
-                    }
-                }
-            }
-        }
-    }
-
     try:
-        print("Sending DOI creation request to DataCite... \n\n{}\n\n".format(payload))
+        print("Sending DOI creation request to DataCite... \n\n{}\n\n".format(res.get_datacite_deposit_json()))
         response = requests.post(
             "https://api.test.datacite.org/dois",
-            json=payload,
+            json=res.get_datacite_deposit_json(),
             headers=headers,
             timeout=10
         )
