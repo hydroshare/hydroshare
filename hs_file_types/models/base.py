@@ -129,13 +129,13 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         terms are based on hsterms."""
 
         json_dict = {
-            "context": [
+            "@context": [
                 "https://schema.org/",
                 {
                     "hsterms": "https://hydroshare.org/terms/"
                 }
             ],
-            "type": "Dataset",
+            "@type": "Dataset",
             "name": self.logical_file.dataset_name
         }
         for coverage in self.coverages.all():
@@ -145,7 +145,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         additional_metadata = {"hsterms:additionalMetadata": []}
         for key, value in self.extra_metadata.items():
             as_property_value = {
-                "type": "PropertyValue",
+                "@type": "PropertyValue",
                 "name": key,
                 "value": value
             }
@@ -156,7 +156,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         associated_media = {"associatedMedia": []}
         for res_file in self.logical_file.files.all():
             media_object = {
-                "type": "MediaObject",
+                "@type": "MediaObject",
                 "name": res_file.file_name,
                 "contentUrl": os.path.join(current_site_url(), 'resource', res_file.storage_path),
                 "contentSize": res_file.size,

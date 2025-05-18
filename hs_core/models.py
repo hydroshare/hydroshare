@@ -2001,7 +2001,7 @@ class Coverage(AbstractMetaDataElement):
         else:
             schema_dict = {
                 "spatialCoverage": {
-                    "type": "Place",
+                    "@type": "Place",
                     "hsterms:projection": value_dict.get('projection'),
                     "hsterms:units": value_dict.get('units')
                 }
@@ -2012,14 +2012,14 @@ class Coverage(AbstractMetaDataElement):
             if self.type == 'box':
                 schema_dict['spatialCoverage'].update({
                     "geo": {
-                        "type": "GeoShape",
+                        "@type": "GeoShape",
                         "box": "{northlimit} {eastlimit} {southlimit} {westlimit}".format(**value_dict)
                     }
                 })
             else:
                 geo = {
                     "geo": {
-                        "type": "GeoCoordinates",
+                        "@type": "GeoCoordinates",
                         "latitude": value_dict.get('north'),
                         "longitude": value_dict.get('east')
                     }
@@ -4658,14 +4658,14 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
             additional_properties = []
             for key, value in identifiers.items():
                 identifier = {
-                    "type": "PropertyValue",
+                    "@type": "PropertyValue",
                     "name": key,
                     "value": value
                 }
                 additional_properties.append(identifier)
 
             party_dict = {
-                "type": "Person",
+                "@type": "Person",
                 "name": party.name
             }
             if party.organization:
@@ -4710,9 +4710,9 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
         def get_funding_agency_dict(funding_agency):
             funding_agency_dict = {
-                "type": "MonetaryGrant",
+                "@type": "MonetaryGrant",
                 "funder": {
-                    "type": "Organization",
+                    "@type": "Organization",
                     "name": funding_agency.agency_name
                 }
             }
@@ -4734,7 +4734,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                                                               'The content of this resource is related to')
             relation_dict = {
                 key: {
-                    "type": "CreativeWork",
+                    "@type": "CreativeWork",
                     "text": relation.value,
                     "description": rel_description
                 }
@@ -4743,20 +4743,20 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
         def get_geo_spatial_relation_dict(geospatial_relation):
             geo_relation_dict = {
-                "type": "CreativeWork",
+                "@type": "CreativeWork",
                 "text": geospatial_relation.value,
                 "description": 'The content of this resource is related to'
             }
             return geo_relation_dict
 
         json_dict = {
-            "context": [
+            "@context": [
                 "https://schema.org/",
                 {
                     "hsterms": "https://hydroshare.org/terms/"
                 }
             ],
-            "type": "Dataset"
+            "@type": "Dataset"
         }
         json_dict.update({"name": self.title.value})
 
@@ -4767,7 +4767,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
         rights_dict = {
             "license": {
-                "type": "CreativeWork",
+                "@type": "CreativeWork",
                 "url": self.rights.url,
                 "name": self.rights.statement
             }
@@ -4826,7 +4826,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         # TODO: should we only include the files that are not part of any aggregation?
         for res_file in self.resource.files.all():
             media_object = {
-                "type": "MediaObject",
+                "@type": "MediaObject",
                 "name": res_file.file_name,
                 "contentUrl": os.path.join(current_site_url(), 'resource', res_file.storage_path),
                 "contentSize": res_file.size,
@@ -4853,7 +4853,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         additional_metadata = {"hsterms:additionalMetadata": []}
         for key, value in self.resource.extra_metadata.items():
             as_property_value = {
-                "type": "PropertyValue",
+                "@type": "PropertyValue",
                 "name": key,
                 "value": value
             }
