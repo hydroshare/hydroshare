@@ -40,9 +40,7 @@ class Command(BaseCommand):
                         else:
                             print('File {} does not exist in published bucket'.format(file.key))
                 except Exception as e:
-                    if res.raccess.owners.count() == 2:
-                        # this should not happen
-                        print('Failure deleting resource {} on Bucket {}'.format(res.short_id, bucket_name))
-                        print(str(e))
+                    print('Failure deleting resource {} on Bucket {}'.format(res.short_id, bucket_name))
+                    print(str(e))
 
         print('{} resources deleted src files after published migration'.format(count))
