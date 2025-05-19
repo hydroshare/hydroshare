@@ -7,7 +7,7 @@ import re
 import sys
 import unicodedata
 import urllib.parse
-import json
+
 from uuid import uuid4
 
 import arrow
@@ -3977,239 +3977,257 @@ class BaseResource(Page, AbstractResource):
     #     return os.path.join(self.root_uri, 'files'
 
     def get_datacite_deposit_json(self):
-            """
-            Return JSON payload for creating a DOI with DataCite API.
-            Conforms to DataCite REST API for DOI creation: https://support.datacite.org/reference/post_dois
-            """
-            import json
-            import logging
+        """
+        Return JSON payload for creating a DOI with DataCite API.
+        Conforms to DataCite REST API for DOI creation: https://support.datacite.org/reference/post_dois
+        """
 
-            logger = logging.getLogger(__name__)
+        logger = logging.getLogger(__name__)
 
-            # Validate required metadata fields
-            if not hasattr(self.metadata, 'title') or not self.metadata.title.value:
-                raise ValidationError(f"No title found for resource {self.short_id}")
-            if not hasattr(self.metadata, 'description') or not self.metadata.description.abstract:
-                logger.warning(f"No abstract found for resource {self.short_id}. Using empty string.")
-                self.metadata.description.abstract = ""
+        # Validate required metadata fields
+        if not self.metadata.title:
+            raise ValidationError(f"No title found for resource {self.short_id}")
+        if not self.metadata.creators.count():
+            raise ValidationError(f"No creators found for resource {self.short_id}")
+        if not self.metadata.description or not self.metadata.description.abstract:
+            logger.warning(f"No abstract found for resource {self.short_id}. Using empty string.")
+            self.metadata.description = type('obj', (), {'abstract': ''})()
 
-            # Initialize the payload structure
-            payload = {
-                "data": {
-                    "type": "dois",
-                    "attributes": {
-                        "doi": f"10.83165/{self.short_id}",
-                        "confirmDoi": None,
-                        "url": None,
-                        "creators": [],
-                        "titles": [
-                            {
-                                "title": self.metadata.title.value,
-                                "titleType": "Subtitle",
-                                "lang": "en"
-                            }
-                        ],
-                        "publisher": {
+        # Initialize the payload structure
+        doi = f"10.83165/{self.short_id}"
+        payload = {
+            "data": {
+                "type": "dois",
+                "attributes": {
+                    "doi": doi,
+                    "prefix": "10.83165",
+                    "suffix": self.short_id,
+                    "url": None,
+                    "creators": [],
+                    "titles": [
+                        {
+                            "title": self.metadata.title.value,
+                            "titleType": "MainTitle",
+                            "lang": "en"
+                        }
+                    ],
+                    "publisher": {
                             "name": "CUAHSI",
-                            "lang": None,
+                            "lang": 'en',
                             "publisherIdentifier": "https://ror.org/037ncgg21",
                             "publisherIdentifierScheme": "ROR",
                             "schemeUri": "https://ror.org"
                         },
-                        "publicationYear": None,
-                        "subjects": [],
-                        "contributors": [],
-                        "alternateIdentifiers": [],
-                        "dates": [],
-                        "language": "en",
-                        "types": {
-                            "resourceTypeGeneral": "Dataset",
-                            "resourceType": self.content_model or "CompositeResource"
-                        },
-                        "relatedIdentifiers": [],
-                        "sizes": [],
-                        "formats": [],
-                        "version": None,
-                        "rightsList": [],
-                        "descriptions": [],
-                        "geoLocations": [],
-                        "fundingReferences": [],
-                        "relatedItems": [],
-                        "xml": None,
-                        "schemaVersion": "http://datacite.org/schema/kernel-4",
-                        "source": "fabricaForm",
-                        "state": "draft",
-                        "reason": None,
-                        "event": None,
-                        "mode": "new"
+                    "publicationYear": None,
+                    "subjects": [],
+                    "contributors": [],
+                    "alternateIdentifiers": [],
+                    "dates": [],
+                    "language": "en",
+                    "types": {
+                        "resourceTypeGeneral": "Dataset",
+                        "resourceType": self.content_model or "CompositeResource",
+                        "schemaOrg": "Dataset",
+                        "bibtex": "misc",
+                        "citeproc": "dataset"
                     },
-                    "relationships": {
-                        "client": {
-                            "data": {
-                                "type": "repositories",
-                                "id": "pdpo.kyfnwo"
-                            }
+                    "relatedIdentifiers": [],
+                    "relatedItems": [],
+                    "sizes": [],
+                    "formats": [],
+                    "version": None,
+                    "rightsList": [],
+                    "descriptions": [],
+                    "geoLocations": [],
+                    "fundingReferences": [],
+                    "container": {},
+                    "contentUrl": self.bag_url if hasattr(self, 'bag_url') else None,
+                    "schemaVersion": "http://datacite.org/schema/kernel-4",
+                    "state": "draft"
+                },
+                "relationships": {
+                    "client": {
+                        "data": {
+                            "type": "repositories",
+                            "id": "pdpo.kyfnwo"
                         }
                     }
                 }
             }
+        }
 
-            # Publication Year
-            pub_year = self.metadata.dates.filter(type='published').first()
-            payload["data"]["attributes"]["publicationYear"] = str(pub_year.start_date.year if pub_year else self.updated.year)
+        pub_year = self.metadata.dates.filter(type='published').first()
+        payload["data"]["attributes"]["publicationYear"] = str(pub_year.start_date.year if pub_year else self.updated.year)
 
-            # URL (required, using hydroShareIdentifier)
-            hs_identifier = self.metadata.identifiers.filter(name='hydroShareIdentifier').first()
-            if hs_identifier:
-                payload["data"]["attributes"]["url"] = hs_identifier.url
-            else:
-                raise ValidationError(f"No hydroShareIdentifier found for resource {self.short_id}")
+        # URL (required, using hydroShareIdentifier)
+        hs_identifier = self.metadata.identifiers.filter(name='hydroShareIdentifier').first()
+        if hs_identifier:
+            payload["data"]["attributes"]["url"] = hs_identifier.url
+        else:
+            raise ValidationError(f"No hydroShareIdentifier found for resource {self.short_id}")
 
-            # Creators
-            creator_id = getattr(self.metadata, 'creator_id', None)
-            if creator_id:
-                creator_name = f"HydroShare User {creator_id}"
-                payload["data"]["attributes"]["creators"] = [
-                    {
-                        "name": creator_name,
-                        "givenName": "User",
-                        "familyName": str(creator_id),
-                        "nameType": "Personal",
-                        "nameIdentifiers": [
-                            {
-                                "nameIdentifier": f"hydroshare-user-{creator_id}",
-                                "nameIdentifierScheme": "Other",
-                                "schemeUri": None
-                            }
-                        ],
-                        "affiliation": [
-                            {
-                                "name": "CUAHSI",
-                                "affiliationIdentifier": "https://ror.org/037ncgg21",
-                                "affiliationIdentifierScheme": "ROR",
-                                "schemeUri": "https://ror.org"
-                            }
-                        ]
-                    }
-                ]
-            else:
-                creators = self.metadata.creators.all()
-                if not creators:
-                    raise ValidationError(f"No creators found for resource {self.short_id}")
-                creator = creators[0]  # Use first creator as fallback
-                creator_name = creator.name
-                creator_data = {
-                    "name": creator_name,
-                    "givenName": HumanName(creator_name).first,
-                    "familyName": HumanName(creator_name).last,
-                    "nameType": "Personal",
-                    "nameIdentifiers": [],
-                    "affiliation": [
-                        {
-                            "name": "CUAHSI",
-                            "affiliationIdentifier": "https://ror.org/037ncgg21",
-                            "affiliationIdentifierScheme": "ROR",
-                            "schemeUri": "https://ror.org"
-                        }
-                    ]
+        # Creators
+        for creator in self.metadata.creators.all():
+            creator_data = {
+                "name": creator.name,
+                "nameType": "Personal",
+                "givenName": HumanName(creator.name).first,
+                "familyName": HumanName(creator.name).last,
+                "affiliation": [{"name": creator.organization or "CUAHSI"}],
+                "nameIdentifiers": []
+            }
+            if creator.hydroshare_user_id:
+                creator_data["nameIdentifiers"].append({
+                    "nameIdentifier": f"hydroshare-user-{creator.hydroshare_user_id}",
+                    "nameIdentifierScheme": "Other",
+                    "schemeUri": None
+                })
+            if creator.identifiers.get('ORCID'):
+                creator_data["nameIdentifiers"].append({
+                    "nameIdentifier": creator.identifiers['ORCID'],
+                    "nameIdentifierScheme": "ORCID",
+                    "schemeUri": "https://orcid.org"
+                })
+            payload["data"]["attributes"]["creators"].append(creator_data)
+
+        # Contributors
+        for contributor in self.metadata.contributors.all():
+            contributor_data = {
+                "name": contributor.name,
+                "nameType": "Personal",
+                "givenName": HumanName(contributor.name).first,
+                "familyName": HumanName(contributor.name).last,
+                "contributorType": "Other",
+                "nameIdentifiers": []
+            }
+            if contributor.hydroshare_user_id:
+                contributor_data["nameIdentifiers"].append({
+                    "nameIdentifier": f"hydroshare-user-{contributor.hydroshare_user_id}",
+                    "nameIdentifierScheme": "Other",
+                    "schemeUri": None
+                })
+            if contributor.identifiers.get('ORCID'):
+                contributor_data["nameIdentifiers"].append({
+                    "nameIdentifier": contributor.identifiers['ORCID'],
+                    "nameIdentifierScheme": "ORCID",
+                    "schemeUri": "https://orcid.org"
+                })
+            if contributor.organization:
+                contributor_data["affiliation"] = [{"name": contributor.organization}]
+            payload["data"]["attributes"]["contributors"].append(contributor_data)
+
+        # Subjects
+        for subject in self.metadata.subjects.all():
+            payload["data"]["attributes"]["subjects"].append({
+                "subject": subject.value,
+                "subjectScheme": "HydroShare Keywords",
+                "schemeUri": "http://www.hydroshare.org/terms"
+            })
+
+        # Dates
+        for date in self.metadata.dates.all():
+            if date.type in ('created', 'modified', 'published'):
+                payload["data"]["attributes"]["dates"].append({
+                    "date": date.start_date.strftime("%Y-%m-%d"),
+                    "dateType": date.type.capitalize()
+                })
+
+        # Descriptions
+        if self.metadata.description and self.metadata.description.abstract:
+            payload["data"]["attributes"]["descriptions"] = [
+                {
+                    "description": self.metadata.description.abstract,
+                    "descriptionType": "Abstract",
+                    "lang": "en"
                 }
-                if creator.identifiers.get('ORCID'):
-                    creator_data["nameIdentifiers"].append({
-                        "nameIdentifier": creator.identifiers['ORCID'],
-                        "nameIdentifierScheme": "ORCID",
-                        "schemeUri": "https://orcid.org"
-                    })
-                payload["data"]["attributes"]["creators"] = [creator_data]
+            ]
 
-            # Subjects (from metadata.subjects)
-            if hasattr(self.metadata, 'subjects'):
-                subjects = self.metadata.subjects.all()
-                if subjects:
-                    payload["data"]["attributes"]["subjects"] = [
-                        {"subject": subject.value} for subject in subjects
-                    ]
+        # Rights
+        if self.metadata.rights and self.metadata.rights.url:
+            payload["data"]["attributes"]["rightsList"] = [
+                {
+                    "rights": self.metadata.rights.statement,
+                    "rightsUri": self.metadata.rights.url
+                }
+            ]
 
-            # Dates (creation and publication)
-            dates = []
-            if self.created:
-                dates.append({
-                    "date": self.created.strftime("%Y-%m-%d"),
-                    "dateType": "Created"
+        # Related Identifiers
+        for relation in self.metadata.relations.all():
+            identifier_type = "URL" if relation.value.startswith('http') else "DOI"
+            payload["data"]["attributes"]["relatedIdentifiers"].append({
+                "relatedIdentifier": relation.value,
+                "relatedIdentifierType": identifier_type,
+                "relationType": relation.type
+            })
+        if hs_identifier:
+            payload["data"]["attributes"]["relatedIdentifiers"].append({
+                "relatedIdentifier": hs_identifier.url,
+                "relatedIdentifierType": "URL",
+                "relationType": "IsIdenticalTo"
+            })
+
+        # Related Items (map relations with specific types)
+        for relation in self.metadata.relations.all():
+            if relation.type in ('isPartOf', 'hasPart', 'isSupplementTo'):
+                identifier_type = "URL" if relation.value.startswith('http') else "DOI"
+                payload["data"]["attributes"]["relatedItems"].append({
+                    "relatedIdentifier": relation.value,
+                    "relatedIdentifierType": identifier_type,
+                    "relationType": relation.type
                 })
-            if pub_year:
-                dates.append({
-                    "date": pub_year.start_date.strftime("%Y-%m-%d"),
-                    "dateType": "Issued"
+
+        # GeoLocations
+        for coverage in self.metadata.coverages.all():
+            if coverage.type == 'box':
+                payload["data"]["attributes"]["geoLocations"].append({
+                    "geoLocationBox": {
+                        "westBoundLongitude": str(coverage.value.get('westlimit', '')),
+                        "eastBoundLongitude": str(coverage.value.get('eastlimit', '')),
+                        "southBoundLatitude": str(coverage.value.get('southlimit', '')),
+                        "northBoundLatitude": str(coverage.value.get('northlimit', ''))
+                    }
                 })
-            elif self.updated:
-                dates.append({
-                    "date": self.updated.strftime("%Y-%m-%d"),
-                    "dateType": "Updated"
+            elif coverage.type == 'point':
+                payload["data"]["attributes"]["geoLocations"].append({
+                    "geoLocationPlace": coverage.value.get('name', ''),
+                    "geoLocationPoint": {
+                        "pointLongitude": str(coverage.value.get('longitude', '')),
+                        "pointLatitude": str(coverage.value.get('latitude', ''))
+                    }
                 })
-            if dates:
-                payload["data"]["attributes"]["dates"] = dates
 
-            # Descriptions
-            if self.metadata.description.abstract:
-                payload["data"]["attributes"]["descriptions"] = [
-                    {
-                        "description": clean_abstract(self.metadata.description.abstract),
-                        "descriptionType": "Abstract"
-                    }
-                ]
+        # Funding References
+        for funder in self.metadata.funding_agencies.all():
+            funder_data = {
+                "funderName": funder.agency_name
+            }
+            if funder.agency_url:
+                funder_data["funderIdentifier"] = funder.agency_url
+                funder_data["funderIdentifierType"] = "Other"
+            if funder.award_number:
+                funder_data["awardNumber"] = funder.award_number
+            if funder.award_title:
+                funder_data["awardTitle"] = funder.award_title
+            payload["data"]["attributes"]["fundingReferences"].append(funder_data)
 
-            # Rights (License)
-            if self.metadata.rights and self.metadata.rights.url:
-                payload["data"]["attributes"]["rightsList"] = [
-                    {
-                        "rights": self.metadata.rights.statement or "License",
-                        "rightsUri": self.metadata.rights.url
-                    }
-                ]
+        # Formats
+        for format_obj in self.metadata.formats.all():
+            payload["data"]["attributes"]["formats"].append(format_obj.value)
 
-            # Related Identifier
-            if hs_identifier:
-                payload["data"]["attributes"]["relatedIdentifiers"] = [
-                    {
-                        "relatedIdentifier": hs_identifier.url,
-                        "relatedIdentifierType": "URL",
-                        "relationType": "IsIdenticalTo"
-                    }
-                ]
+        # Alternate Identifiers
+        doi_identifier = self.metadata.identifiers.filter(name='doi').first()
+        if doi_identifier:
+            payload["data"]["attributes"]["alternateIdentifiers"].append({
+                "alternateIdentifier": doi_identifier.url,
+                "alternateIdentifierType": "DOI"
+            })
+        if self.metadata.citation and hasattr(self.metadata.citation, 'value'):
+            payload["data"]["attributes"]["alternateIdentifiers"].append({
+                "alternateIdentifier": self.metadata.citation.value,
+                "alternateIdentifierType": "Citation"
+            })
 
-            # GeoLocations
-            if hasattr(self.metadata, 'coverages'):
-                coverages = self.metadata.coverages.all()
-                if coverages:
-                    payload["data"]["attributes"]["geoLocations"] = []
-                    for cov in coverages:
-                        if cov.type == 'box':
-                            payload["data"]["attributes"]["geoLocations"].append({
-                                "geoLocationBox": {
-                                    "westBoundLongitude": str(cov.value['westlimit']),
-                                    "eastBoundLongitude": str(cov.value['eastlimit']),
-                                    "southBoundLatitude": str(cov.value['southlimit']),
-                                    "northBoundLatitude": str(cov.value['northlimit'])
-                                }
-                            })
-
-            # Funding References
-            if hasattr(self.metadata, 'funding_agencies'):
-                funders = self.metadata.funding_agencies.all()
-                if funders:
-                    payload["data"]["attributes"]["fundingReferences"] = []
-                    for funder in funders:
-                        funder_data = {
-                            "funderName": funder.agency_name
-                        }
-                        if funder.agency_url:
-                            funder_data["funderIdentifier"] = funder.agency_url
-                            funder_data["funderIdentifierType"] = "Other"
-                        if funder.award_number:
-                            funder_data["awardNumber"] = funder.award_number
-                        payload["data"]["attributes"]["fundingReferences"].append(funder_data)
-
-            return json.dumps(payload, indent=2)
+        return json.dumps(payload, indent=2)
 
     def get_crossref_deposit_xml(self, pretty_print=True):
         """Return XML structure describing crossref deposit.
