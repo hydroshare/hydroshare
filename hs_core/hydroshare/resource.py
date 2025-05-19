@@ -1054,7 +1054,7 @@ def deposit_res_metadata_with_datacite(res):
         print("Sending DOI creation request to DataCite... \n\n{}\n\n".format(res.get_datacite_deposit_json()))
         response = requests.post(
             "https://api.test.datacite.org/dois",
-            json=res.get_datacite_deposit_json(),
+            data=res.get_datacite_deposit_json(),
             headers=headers,
             timeout=10
         )
