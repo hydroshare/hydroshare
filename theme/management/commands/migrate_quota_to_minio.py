@@ -3,6 +3,7 @@ from django.core.management.base import BaseCommand
 
 from theme.models import UserQuota
 from hs_core.models import BaseResource
+from django_s3.storage import S3Storage
 
 
 def _convert_unit(unit):
@@ -18,8 +19,9 @@ class Command(BaseCommand):
     help = "Migrate quota to minio"
 
     def handle(self, *args, **options):
+        istorage = S3Storage()
         for quota in UserQuota.objects.all():
-            if quota.user.is_active:
+            if istorage.bucket_exists(quota.user.user_profile.bucket_name):
                 resources = BaseResource.objects.filter(quota_holder_id=quota.user.id)
                 if resources.exists():
                     try:
