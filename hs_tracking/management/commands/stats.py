@@ -295,16 +295,16 @@ class Command(BaseCommand):
 
         published_dates = Date.objects.filter(type='published', start_date__range=[start_date, end_date])
         # filter out dates that are not associated with a resource
+        dates_with_errors = []
         for d in published_dates:
             try:
                 d.metadata.resource.raccess
-            except Exception:
-                print(f"Dangling date not associated with a resource: {d}")
-                print("This indicates that a resource was published and then deleted.")
-                print("This deleted resource will not be included in the following stats.")
-                published_dates = published_dates.exclude(id=d.id)
+            except AttributeError:
+                dates_with_errors.append(d)
                 continue
-
+        published_dates = published_dates.exclude(
+            Q(id__in=[d.id for d in dates_with_errors])
+        )
         print(
             f"resources that became published within date range, excluding resources that were later deleted: "
             f"{published_dates.count()}"
