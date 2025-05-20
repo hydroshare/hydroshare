@@ -330,6 +330,25 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
         rendered_html = template.render(context)
         return rendered_html
 
+    def to_json(self):
+        """Return the metadata in JSON format using schema.org vocabulary where possible and the rest terms
+        are based on hsterms."""
+
+        json_dict = super(ModelInstanceFileMetaData, self).to_json()
+        json_dict['additionalType'] = self.logical_file.get_aggregation_type_name()
+
+        # Add model instance specific metadata
+        json_dict['hsterms:includesModelOutput'] = self.has_model_output
+        if self.executed_by:
+            aggr_url = self.executed_by.metadata_json_file_url_path
+            json_dict['hsterms:executedByModelProgram'] = aggr_url
+        if self.logical_file.metadata_schema_json:
+            json_dict['hsterms:modelProgramSchema'] = self.logical_file.schema_file_url
+        if self.metadata_json:
+            json_dict['hsterms:modelProgramSchemaValues'] = self.logical_file.schema_values_file_url
+
+        return json_dict
+
     def get_rdf_graph(self):
         graph = super(ModelInstanceFileMetaData, self).get_rdf_graph()
         subject = self.rdf_subject()
@@ -428,13 +447,15 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
         """File path of the aggregation schema values file relative to {resource_id}/data/contents/
         """
 
+        from hs_file_types.enums import AggregationMetaFilePath
+
         json_file_name = self.aggregation_name
         if "/" in json_file_name:
             json_file_name = os.path.basename(json_file_name)
 
         json_file_name, _ = os.path.splitext(json_file_name)
 
-        json_file_name += "_schema_values.json"
+        json_file_name += AggregationMetaFilePath.SCHEAMA_JSON_VALUES_FILE_ENDSWITH
 
         if self.folder:
             file_folder = self.folder
@@ -493,6 +514,15 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
             istorage.saveFile(json_from_file_name, to_file_name)
         finally:
             shutil.rmtree(tmpdir)
+
+    def save_metadata_json_file(self):
+        """Creates aggregation metadata json file and saves it to S3. If the aggregation contains other
+        aggregations, it also saves the metadata json file for each of those aggregations.
+
+        This method also saves the schema values json file.
+        """
+        super(AbstractModelLogicalFile, self).save_metadata_json_file()
+        self.create_schema_values_json_file()
 
     def can_contain_aggregation(self, aggregation):
         if aggregation.is_model_instance and self.id == aggregation.id:

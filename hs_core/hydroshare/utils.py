@@ -1,5 +1,6 @@
 import asyncio
 import copy
+import errno
 import logging
 import mimetypes
 import os
@@ -218,6 +219,20 @@ def get_temp_dir():
         shutil.rmtree(tmpdir)
     os.makedirs(tmpdir)
     return tmpdir
+
+
+def create_temp_dir_on_s3(istorage):
+    temp_path = istorage.getUniqueTmpPath
+    try:
+        os.makedirs(temp_path)
+    except OSError as ex:
+        # TODO: there might be concurrent operations.
+        if ex.errno == errno.EEXIST:
+            shutil.rmtree(temp_path)
+            os.makedirs(temp_path)
+        else:
+            raise Exception(str(ex))
+    return temp_path
 
 
 # TODO: should be ResourceFile.replace

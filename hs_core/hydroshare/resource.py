@@ -1,4 +1,5 @@
 import datetime
+import json
 import logging
 import os
 import shutil
@@ -12,6 +13,7 @@ from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
                                     ValidationError)
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
+from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import Sum
 from rest_framework import status
@@ -1235,3 +1237,27 @@ def delete_metadata_element(resource_short_id, element_model_name, element_id):
     """
     res = utils.get_resource_by_shortkey(resource_short_id)
     res.metadata.delete_element(element_model_name, element_id)
+
+
+def save_resource_metadata_json(resource):
+    """
+    Writes the resource-level metadata and metadata for the contained aggregations in JSON format.
+
+    Parameters:
+    :param resource: An instance of the resource whose metadata is to be written.
+    """
+    from hs_file_types.enums import AggregationMetaFilePath
+
+    istorage = resource.get_s3_storage()
+    meta_json_filename = AggregationMetaFilePath.METADATA_JSON_FILE_NAME
+    metadata_json_str = json.dumps(resource.metadata.to_json(), indent=4)
+    content_file = ContentFile(metadata_json_str.encode('utf-8'))
+    to_file_name = os.path.join(resource.file_path, meta_json_filename)
+    # save the resource level metadata json file to S3
+    istorage.save(to_file_name, content_file)
+    # save the aggregation metadata json file to S3 for each aggregation
+    for logical_file in resource.logical_files:
+        if logical_file.has_parent:
+            # skip aggregations that have a parent as the parent will generate the json file and save it
+            continue
+        logical_file.save_metadata_json_file()

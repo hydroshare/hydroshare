@@ -1985,6 +1985,54 @@ class Coverage(AbstractMetaDataElement):
                                             file_type=file_type)
         return coverage_form
 
+    def to_json(self):
+        """Convert metadata models data to JSON-compatible dict with schema.org mapping where possible and the rest
+        terms are based on hsterms."""
+
+        value_dict = json.loads(self._value)
+
+        if self.type == 'period':
+            schema_dict = {
+                "temporalCoverage": {
+                    "start": value_dict.get('start'),
+                    "end": value_dict.get('end')
+                }
+            }
+        else:
+            schema_dict = {
+                "spatialCoverage": {
+                    "@type": "Place",
+                    "hsterms:projection": value_dict.get('projection'),
+                    "hsterms:units": value_dict.get('units')
+                }
+            }
+            if value_dict.get('name'):
+                schema_dict["spatialCoverage"]["name"] = value_dict.get('name')
+
+            if self.type == 'box':
+                schema_dict['spatialCoverage'].update({
+                    "geo": {
+                        "@type": "GeoShape",
+                        "box": "{northlimit} {eastlimit} {southlimit} {westlimit}".format(**value_dict)
+                    }
+                })
+            else:
+                geo = {
+                    "geo": {
+                        "@type": "GeoCoordinates",
+                        "latitude": value_dict.get('north'),
+                        "longitude": value_dict.get('east')
+                    }
+                }
+                elevation = value_dict.get('elevation', None)
+                zunits = value_dict.get('zunits', None)
+                if elevation is not None:
+                    geo['geo']['elevation'] = elevation
+                if zunits is not None:
+                    geo['geo']['hsterms:zunits'] = zunits
+                schema_dict['spatialCoverage'].update(geo)
+        return schema_dict
+
 
 class Format(AbstractMetaDataElement):
     """Define Format custom metadata element model."""
@@ -2599,7 +2647,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
 
     def is_schema_json_file(self, file_path):
         """Determine whether a given file is a schema.json file.
-        Note: this will return true for any file that ends with the schema.json ending
+        Note: this will return true for any file that ends with the _schema.json ending
         We are taking the risk that user might create a file with the same filename ending
         """
         from hs_file_types.enums import AggregationMetaFilePath
@@ -2607,6 +2655,15 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         if file_path.endswith(AggregationMetaFilePath.SCHEMA_JSON_FILE_ENDSWITH):
             return True
         return False
+
+    def is_schema_json_values_file(self, file_path):
+        """Determine whether a given file is a schema_values.json file.
+        Note: this will return true for any file that ends with the _schema_values.json ending
+        We are taking the risk that user might create a file with the same filename ending
+        """
+        from hs_file_types.enums import AggregationMetaFilePath
+
+        return file_path.endswith(AggregationMetaFilePath.SCHEAMA_JSON_VALUES_FILE_ENDSWITH)
 
     def is_collection_list_csv(self, file_path):
         """Determine if a given file is an internally-generated collection list
@@ -2617,7 +2674,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             return True
         return False
 
-    def is_metadata_xml_file(self, file_path):
+    @classmethod
+    def is_metadata_xml_file(cls, file_path):
         """Determine whether a given file is metadata.
         Note: this will return true for any file that ends with the metadata endings
         We are taking the risk that user might create a file with the same filename ending
@@ -2628,6 +2686,35 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
                 or file_path.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value)):
             return False
         return True
+
+    @classmethod
+    def is_metadata_json_file(cls, file_path):
+        """Determine whether a given file is a metadata json file.
+        Note: this will return true for any file that ends with the metadata endings or
+        has the same name as the metadata json file
+        """
+        from django_s3.utils import is_metadata_json_file
+
+        return is_metadata_json_file(file_path)
+
+    @property
+    def metadata_json_file_path(self):
+        """Returns the storage path of the resource metadata json file"""
+
+        from hs_file_types.enums import AggregationMetaFilePath
+
+        meta_file_path = os.path.join(self.file_path, AggregationMetaFilePath.METADATA_JSON_FILE_NAME)
+        return meta_file_path
+
+    @property
+    def metadata_json_file_url_path(self):
+        """Returns the url path of the resource metadata json file"""
+
+        from .hydroshare import current_site_url
+
+        meta_file_path = self.metadata_json_file_path
+        meta_file_url_path = os.path.join(current_site_url(), 'resource', meta_file_path)
+        return meta_file_url_path
 
     def is_aggregation_xml_file(self, file_path):
         """Checks if the file path *file_path* is one of the aggregation related xml file paths
@@ -4555,6 +4642,257 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         only AbstractMetadataElement that is on a metadata model and not included in the rdf/xml.  Returns a list
         of classes to be ignored"""
         return [Format]
+
+    def to_json(self):
+        """Return the metadata in JSON format - uses schema.org terms where possible and the rest
+        terms are based on hsterms."""
+
+        from .hydroshare import current_site_url
+
+        def get_party_dict(party):
+            identifiers = party.identifiers
+            if not identifiers and party.hydroshare_user_id:
+                user = User.objects.get(id=party.hydroshare_user_id)
+                identifiers = user.userprofile.identifiers
+
+            additional_properties = []
+            for key, value in identifiers.items():
+                identifier = {
+                    "@type": "PropertyValue",
+                    "name": key,
+                    "value": value
+                }
+                additional_properties.append(identifier)
+
+            party_dict = {
+                "@type": "Person",
+                "name": party.name
+            }
+            if party.organization:
+                party_dict["affiliation"] = party.organization
+            if party.email:
+                party_dict["email"] = party.email
+            if party.address:
+                party_dict["address"] = party.address
+            if party.phone:
+                party_dict["telephone"] = party.phone
+            if party.homepage:
+                party_dict["url"] = self.homepage
+
+            if additional_properties:
+                party_dict["additionalProperty"] = additional_properties
+            return party_dict
+
+        def get_date_dict(date):
+            if date.type == "created":
+                key = "dateCreated"
+            elif date.type == "modified":
+                key = "dateModified"
+            elif date.type == "published":
+                key = "datePublished"
+            else:
+                key = f"hsterms:{date.type}"
+
+            if "hsterms:" not in key:
+                date_dict = {
+                    key: date.start_date.isoformat() if date.start_date else None
+                }
+            elif key == "hsterms:reviewStarted":
+                date_dict = {
+                    "hsterms:reviewStarted": date.start_date.isoformat() if date.start_date else None
+                }
+            else:
+                date_dict = {
+                    f"{key}StartDate": date.start_date.isoformat() if date.start_date else None,
+                    f"{key}EndDate": date.end_date.isoformat() if date.end_date else None
+                }
+            return date_dict
+
+        def get_funding_agency_dict(funding_agency):
+            funding_agency_dict = {
+                "@type": "MonetaryGrant",
+                "funder": {
+                    "@type": "Organization",
+                    "name": funding_agency.agency_name
+                }
+            }
+            if funding_agency.award_title:
+                funding_agency_dict["name"] = funding_agency.award_title
+            if funding_agency.award_number:
+                funding_agency_dict["identifier"] = funding_agency.award_number
+            if funding_agency.agency_url:
+                funding_agency_dict["funder"]["url"] = funding_agency.agency_url
+
+            return funding_agency_dict
+
+        def get_relation_dict(relation):
+            if relation.type in (RelationTypes.isPartOf.value, RelationTypes.hasPart.value):
+                key = relation.type
+            else:
+                key = f"hsterms:{relation.type}"
+            rel_description = dict(Relation.SOURCE_TYPES).get(relation.type,
+                                                              'The content of this resource is related to')
+            relation_dict = {
+                key: {
+                    "@type": "CreativeWork",
+                    "text": relation.value,
+                    "description": rel_description
+                }
+            }
+            return relation_dict
+
+        def get_geo_spatial_relation_dict(geospatial_relation):
+            geo_relation_dict = {
+                "@type": "CreativeWork",
+                "text": geospatial_relation.value,
+                "description": 'The content of this resource is related to'
+            }
+            return geo_relation_dict
+
+        json_dict = {
+            "@context": [
+                "https://schema.org/",
+                {
+                    "hsterms": "https://hydroshare.org/terms/"
+                }
+            ],
+            "@type": "Dataset"
+        }
+        json_dict.update({"name": self.title.value})
+
+        if self.description:
+            json_dict.update({"description": self.description.abstract})
+
+        json_dict.update({"inLanguage": self.language.code})
+
+        rights_dict = {
+            "license": {
+                "@type": "CreativeWork",
+                "url": self.rights.url,
+                "name": self.rights.statement
+            }
+        }
+        json_dict.update(rights_dict)
+
+        json_dict.update({"additionalType": self.type.url.split('/')[-1]})
+        if self.publisher:
+            publisher_dict = {
+                "publisher": {
+                    "@type": "Organization",
+                    "name": self.publisher.name,
+                    "url": self.publisher.url
+                }
+            }
+            json_dict.update(publisher_dict)
+
+        citation = {"citation": self.resource.get_citation(forceHydroshareURI=False)}
+        json_dict.update(citation)
+
+        hs_res_url = os.path.join(current_site_url(), 'resource', self.resource.short_id)
+        json_dict.update({"identifier": hs_res_url})
+
+        provider = {
+            "provider": {
+                "@type": "Organization",
+                "name": "CUAHSI",
+                "url": "https://www.cuahsi.org/",
+                "address": "1167 Massachusetts Ave Suites 418 & 419, Arlington, MA 02476"
+            }
+        }
+        json_dict.update(provider)
+
+        creators = {"creator": []}
+        for creator in self.creators.all():
+            party_dict = get_party_dict(creator)
+            party_dict["hsterms:order"] = creator.order
+            creators["creator"].append(party_dict)
+        json_dict.update(creators)
+
+        contributors = {"contributor": []}
+        for contributor in self.contributors.all():
+            party_dict = get_party_dict(contributor)
+            contributors["contributor"].append(party_dict)
+        if contributors["contributor"]:
+            json_dict.update(contributors)
+
+        for date in self.dates.all():
+            date_dict = get_date_dict(date)
+            json_dict.update(date_dict)
+
+        for coverage in self.coverages.all():
+            json_dict.update(coverage.to_json())
+
+        associated_media = {"associatedMedia": []}
+        # TODO: should we only include the files that are not part of any aggregation?
+        for res_file in self.resource.files.all():
+            media_object = {
+                "@type": "MediaObject",
+                "name": res_file.file_name,
+                "contentUrl": os.path.join(current_site_url(), 'resource', res_file.storage_path),
+                "contentSize": res_file.size,
+                "sha256": res_file.checksum,
+                "encodingFormat": res_file.mime_type,
+            }
+            associated_media["associatedMedia"].append(media_object)
+        if associated_media["associatedMedia"]:
+            json_dict.update(associated_media)
+
+        keywords = {"keywords": []}
+        for subject in self.subjects.all():
+            keywords["keywords"].append(subject.value)
+        if keywords["keywords"]:
+            json_dict.update(keywords)
+
+        funders = {"funding": []}
+        for funding_agency in self.funding_agencies.all():
+            funding_agency_dict = get_funding_agency_dict(funding_agency)
+            funders["funding"].append(funding_agency_dict)
+        if funders["funding"]:
+            json_dict.update(funders)
+
+        additional_metadata = {"hsterms:additionalMetadata": []}
+        for key, value in self.resource.extra_metadata.items():
+            as_property_value = {
+                "@type": "PropertyValue",
+                "name": key,
+                "value": value
+            }
+            additional_metadata["hsterms:additionalMetadata"].append(as_property_value)
+        if additional_metadata["hsterms:additionalMetadata"]:
+            json_dict.update(additional_metadata)
+
+        relation_terms = {}
+        # for each aggregation that this resource has, set the aggregation meta json file path as hasPart
+        aggregation_has_parts = []
+        resource = self.resource
+        resource = resource.get_content_model()
+        for logical_file in resource.logical_files:
+            if logical_file.has_parent:
+                # skip aggregations that have a parent as it will be added as hasPart of the parent aggregation
+                continue
+            aggregation_has_parts.append(logical_file.metadata_json_file_url_path)
+        if aggregation_has_parts:
+            relation_terms['hasPart'] = aggregation_has_parts
+
+        for relation in self.relations.all():
+            rel_dict = get_relation_dict(relation)
+            rel_key = list(rel_dict.keys())[0]
+            if rel_key not in relation_terms:
+                relation_terms[rel_key] = []
+            rel_value = rel_dict[rel_key]
+            relation_terms[rel_key].append(rel_value)
+
+        if relation_terms:
+            json_dict.update(relation_terms)
+
+        geospatial_relations = {"hsterms:geospatialRelation": []}
+        for geospatialrelation in self.geospatialrelations.all():
+            geospatial_relation_dict = get_geo_spatial_relation_dict(geospatialrelation)
+            geospatial_relations["hsterms:geospatialRelation"].append(geospatial_relation_dict)
+        if geospatial_relations["hsterms:geospatialRelation"]:
+            json_dict.update(geospatial_relations)
+
+        return json_dict
 
     def ingest_metadata(self, graph):
         super(CoreMetaData, self).ingest_metadata(graph)

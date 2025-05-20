@@ -83,6 +83,14 @@ class ModelProgramResourceFileType(models.Model):
                         }
         return xml_name_map[self.file_type]
 
+    def get_hsterms_name(self):
+        hsterms_name_map = {self.RELEASE_NOTES: 'modelReleaseNotes',
+                            self.DOCUMENTATION: 'modelDocumentation',
+                            self.SOFTWARE: 'modelSoftware',
+                            self.ENGINE: 'modelEngine'
+                            }
+        return hsterms_name_map[self.file_type]
+
 
 class ModelProgramFileMetaData(GenericFileMetaDataMixin):
     # version of model program
@@ -136,6 +144,50 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
             mi_metadata.save(update_fields=["is_dirty"])
 
         super(ModelProgramFileMetaData, self).delete()
+
+    def to_json(self):
+        """Return the metadata in JSON format using schema.org vocabulary where possible and the rest terms
+        are based on hsterms."""
+
+        json_dict = super(ModelProgramFileMetaData, self).to_json()
+        json_dict['additionalType'] = self.logical_file.get_aggregation_type_name()
+
+        # Add model program specific metadata
+        if self.version:
+            json_dict['hsterms:modelVersion'] = self.version
+
+        if self.release_date:
+            json_dict['hsterms:modelReleaseDate'] = self.release_date.isoformat()
+
+        if self.website:
+            json_dict['hsterms:modelWebsite'] = self.website
+
+        if self.code_repository:
+            json_dict['hsterms:modelCodeRepository'] = self.code_repository
+
+        if self.programming_languages:
+            json_dict['hsterms:modelProgramLanguage'] = self.programming_languages
+
+        if self.operating_systems:
+            json_dict['hsterms:modelOperatingSystem'] = self.operating_systems
+
+        # Add model program file types
+        if self.mp_file_types.exists():
+            current_site = current_site_url()
+            mp_file_types = {"hsterms:modelProgramFileType": []}
+            for mp_file_type in self.mp_file_types.all():
+                mp_file_type_name = mp_file_type.get_hsterms_name()
+                type_name_hsterms = f"hsterms:{mp_file_type_name}"
+                mp_file_url = os.path.join(current_site, 'resource', mp_file_type.res_file.storage_path)
+                mp_file_types["hsterms:modelProgramFileType"].append({type_name_hsterms: mp_file_url})
+
+            json_dict.update(mp_file_types)
+
+        # Add metadata schema file url path
+        if self.logical_file.metadata_schema_json:
+            json_dict['hsterms:modelProgramJsonSchema'] = self.logical_file.schema_file_url
+
+        return json_dict
 
     def get_rdf_graph(self):
         graph = super(ModelProgramFileMetaData, self).get_rdf_graph()

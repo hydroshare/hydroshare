@@ -7,6 +7,7 @@ from django.apps import apps
 from django.db import transaction
 from rdflib import RDFS, Graph
 from rdflib.namespace import DC, Namespace
+from django.core.files.base import ContentFile
 
 from hs_core.hydroshare import utils, get_resource_file
 from hs_file_types.models.base import AbstractLogicalFile
@@ -521,3 +522,11 @@ def set_logical_file_type(
         return None
     logicalfile.create_aggregation_xml_documents()
     return logicalfile
+
+
+def save_metadata_json_file(s3_storage, metadata_dict, save_to_file_path):
+    """Saves the aggregation metadata json file to S3"""
+
+    metadata_json_str = json.dumps(metadata_dict, indent=4)
+    content_file = ContentFile(metadata_json_str.encode('utf-8'))
+    s3_storage.save(save_to_file_path, content_file)
