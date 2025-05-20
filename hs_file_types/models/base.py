@@ -172,9 +172,9 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
             child_aggr_has_parts.append(child_aggr.metadata_json_file_url_path)
         if child_aggr_has_parts:
             if 'hasPart' not in json_dict:
-                json_dict['hasPart'] = [child_aggr_has_parts]
+                json_dict['hasPart'] = child_aggr_has_parts
             else:
-                json_dict['hasPart'].extend(child_aggr_has_parts)
+                json_dict['hasPart'] += child_aggr_has_parts
 
         parent_aggr = self.logical_file.get_parent()
         if parent_aggr is not None:
