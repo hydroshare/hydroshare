@@ -1,4 +1,5 @@
 import os
+import uuid
 from django.http.response import Http404
 from django.test import TestCase
 from django.contrib.auth.models import User, Group
@@ -6,6 +7,7 @@ from theme.models import UserQuota
 from hs_access_control.models import PrivilegeCodes
 from hs_composite_resource.models import CompositeResource
 from hs_core import hydroshare
+from hs_core.tests.utils.test_utils import wait_for_quota_update
 from hs_core.models import BaseResource
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, zip_folder, \
     unzip_file, remove_folder, get_default_admin_user
@@ -19,7 +21,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
             'test_user@email.com',
-            username=self.username,
+            username=self.username + uuid.uuid4().hex,  # to ensure unique bucket in minio
             first_name='some_first_name',
             last_name='some_last_name',
             superuser=False,
@@ -27,7 +29,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         )
         self.user2 = hydroshare.create_account(
             'test_user2@email.com',
-            username='testuser2',
+            username='testuser2' + uuid.uuid4().hex,
             first_name='some_first_name2',
             last_name='some_last_name2',
             superuser=False,
@@ -97,7 +99,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         # assert math.isclose(expected, self.res.size, rel_tol=1e-5)
         self.assertAlmostEqual(expected, self.res.size, places=5)
 
-        user_quota.refresh_from_db()
+        wait_for_quota_update()
         self.assertNotEqual(user_quota.data_zone_value, 0)
 
         # Assert that the used values have been updated correctly
@@ -105,19 +107,20 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertAlmostEqual(dz, expected, places=5)
 
     def test_deleting_file_decrease_quota(self):
+        # Retrieve the UserQuota object for the user
+        user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
+
         # Add files to the resource
         hydroshare.resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3)
         self.assertEqual(self.res.files.all().count(), 3)
         self.assertEqual(self.single_file_size * 3, self.res.size)
 
-        # Retrieve the UserQuota object for the user
-        user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
-        user_quota.refresh_from_db()
+        wait_for_quota_update()
         initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
 
         # Delete a file from the resource
         hydroshare.resource.delete_resource_file(self.res.short_id, self.n1, self.user)
-
+        wait_for_quota_update()
         # Assert that the file has been deleted
         self.assertEqual(self.res.files.all().count(), 2)
         expected = 2 * self.single_file_size
@@ -125,7 +128,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertAlmostEqual(expected, self.res.size, places=5)
 
         # Assert that the quota has been updated correctly
-        user_quota.refresh_from_db()
         expected = initial_quota_value - self.single_file_size
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         # assert math.isclose(user_quota.data_zone_value, expected, rel_tol=1e-5)
@@ -141,6 +143,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
 
+        wait_for_quota_update()
         create_folder(self.res.short_id, 'data/contents/sub_test_dir')
         move_or_rename_file_or_folder(self.user, self.res.short_id,
                                       'data/contents/' + self.n1,
@@ -148,6 +151,7 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Zip the files in the resource
         zip_folder(self.user, self.res.short_id, 'data/contents/sub_test_dir', 'sub_test_dir.zip', False)
+        wait_for_quota_update()
 
         # Assert that the resource has added a single zip file
         self.assertEqual(self.res.files.all().count(), 4)
@@ -162,6 +166,9 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertAlmostEqual(dz, expected, places=5)
 
     def test_unzipping_files_increase_quota(self):
+        # Retrieve the UserQuota object for the user
+        user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
+
         hydroshare.resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3,
                                                folder='test')
         zip_folder(self.user, self.res.short_id, 'data/contents/test', 'test.zip', bool_remove_original=False)
@@ -170,18 +177,18 @@ class UpdateQuotaUsageTestCase(TestCase):
         folder_path = "data/contents/test"
         remove_folder(self.user, self.res.short_id, folder_path)
 
-        # Retrieve the UserQuota object for the user
-        user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
-        initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
+        wait_for_quota_update()
+        data_zone_value = user_quota.data_zone_value
+        initial_quota_value = self.convert_gb_to_bytes(data_zone_value)
 
         # Unzip the files in the resource
         unzip_file(self.user, self.res.short_id, 'data/contents/test.zip', bool_remove_original=False)
+        wait_for_quota_update()
 
         # Assert that the resource has the original files + 1
         self.assertEqual(self.res.files.all().count(), 4)
 
         # Assert that the quota has been updated correctly
-        user_quota.refresh_from_db()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         expected = initial_quota_value + 3 * self.single_file_size
         # assert math.isclose(user_quota.data_zone_value, expected, rel_tol=1e-5)
@@ -196,6 +203,7 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
+        wait_for_quota_update()
         initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
 
         # Move a file in the resource
@@ -208,7 +216,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.res.files.all().count(), 3)
 
         # Assert that the quota has not been updated
-        user_quota.refresh_from_db()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertEqual(dz, initial_quota_value)
 
@@ -221,6 +228,7 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
+        wait_for_quota_update()
         initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
 
         # Rename a file in the resource
@@ -232,7 +240,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.res.files.all().count(), 3)
 
         # Assert that the quota has not been updated
-        user_quota.refresh_from_db()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertEqual(dz, initial_quota_value)
 
@@ -245,6 +252,7 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
+        wait_for_quota_update()
         initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
 
         # Create a folder in the resource
@@ -254,7 +262,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.res.files.all().count(), 3)
 
         # Assert that the quota has not been updated
-        user_quota.refresh_from_db()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertEqual(dz, initial_quota_value)
 
@@ -267,6 +274,7 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
+        wait_for_quota_update()
         initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
 
         # Create a folder in the resource
@@ -276,7 +284,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.res.files.all().count(), 3)
 
         # Assert that the quota has not been updated
-        user_quota.refresh_from_db()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertEqual(dz, initial_quota_value)
 
@@ -288,7 +295,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.res.files.all().count(), 3)
 
         # Assert that the quota has not been updated
-        user_quota.refresh_from_db()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertEqual(dz, initial_quota_value)
 
@@ -301,6 +307,7 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
+        wait_for_quota_update()
         initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
 
         # Create a folder in the resource
@@ -310,7 +317,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.res.files.all().count(), 3)
 
         # Assert that the quota has not been updated
-        user_quota.refresh_from_db()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertEqual(dz, initial_quota_value)
 
@@ -323,7 +329,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.res.files.all().count(), 3)
 
         # Assert that the quota has not been updated
-        user_quota.refresh_from_db()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertEqual(dz, initial_quota_value)
 
@@ -336,6 +341,7 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
+        wait_for_quota_update()
         initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
 
         # Create a folder in the resource
@@ -345,7 +351,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.res.files.all().count(), 3)
 
         # Assert that the quota has not been updated
-        user_quota.refresh_from_db()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertEqual(dz, initial_quota_value)
 
@@ -358,7 +363,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.res.files.all().count(), 3)
 
         # Assert that the quota has not been updated
-        user_quota.refresh_from_db()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertEqual(dz, initial_quota_value)
 
@@ -371,7 +375,9 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
-        initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
+        wait_for_quota_update()
+        data_zone_value = user_quota.data_zone_value
+        initial_quota_value = self.convert_gb_to_bytes(data_zone_value)
         self.assertAlmostEqual(initial_quota_value, 3 * self.single_file_size, places=5)
 
         # change the quota holder
@@ -385,7 +391,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.res.quota_holder, self.user2)
 
         # Assert that the quota has been updated
-        user_quota.refresh_from_db()
+        wait_for_quota_update()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertAlmostEqual(dz, 0, places=5)
 
@@ -395,15 +401,17 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertAlmostEqual(dz2, initial_quota_value, places=5)
 
     def test_delete_resource_reduces_quota(self):
+        # Retrieve the UserQuota object for the user
+        user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
         # Add files to the resource
         hydroshare.resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3)
 
         self.assertEqual(self.res.files.all().count(), 3)
         self.assertEqual(self.single_file_size * 3, self.res.size)
 
-        # Retrieve the UserQuota object for the user
-        user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
-        initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
+        wait_for_quota_update()
+        data_zone_value = user_quota.data_zone_value
+        initial_quota_value = self.convert_gb_to_bytes(data_zone_value)
 
         # assert that the initial quota value is correct
         self.assertAlmostEqual(initial_quota_value, self.single_file_size * 3, places=5)
@@ -424,7 +432,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(BaseResource.objects.filter(quota_holder=self.user).count(), 0)
 
         # Assert that the quota has been updated
-        user_quota.refresh_from_db()
+        wait_for_quota_update()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertAlmostEqual(dz, 0, places=5)
 
@@ -437,7 +445,9 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
-        initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
+        wait_for_quota_update()
+        data_zone_value = user_quota.data_zone_value
+        initial_quota_value = self.convert_gb_to_bytes(data_zone_value)
         self.assertAlmostEqual(initial_quota_value, 3 * self.single_file_size, places=5)
 
         new_res = hydroshare.create_empty_resource(self.res.short_id,
@@ -462,11 +472,14 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.res.quota_holder, self.user)
 
         # Assert that the quota has been updated
-        user_quota.refresh_from_db()
+        wait_for_quota_update()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertAlmostEqual(dz, initial_quota_value * 2, places=5)
 
     def test_version_resource_doubles_quota(self):
+        # Retrieve the UserQuota object for the user
+        user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
+
         # Add files to the resource
         hydroshare.resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3)
 
@@ -474,8 +487,9 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.single_file_size * 3, self.res.size)
 
         # Retrieve the UserQuota object for the user
-        user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
-        initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
+        wait_for_quota_update()
+        data_zone_value = user_quota.data_zone_value
+        initial_quota_value = self.convert_gb_to_bytes(data_zone_value)
         self.assertAlmostEqual(initial_quota_value, 3 * self.single_file_size, places=5)
 
         # Version the resource
@@ -506,11 +520,21 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.res.quota_holder, self.user)
 
         # Assert that the quota has been updated
-        user_quota.refresh_from_db()
+        wait_for_quota_update()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertAlmostEqual(dz, initial_quota_value * 2, places=5)
 
     def test_publish_resource_decreases_quota(self):
+        hydroshare.create_account(
+            'publisher@email.com',
+            username='publisher',
+            first_name='some_first_name2',
+            last_name='some_last_name2',
+            superuser=False,
+        )
+        # Retrieve the UserQuota object for the user
+        user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
+
         # Add files to the resource
         hydroshare.resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3)
 
@@ -518,8 +542,9 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.single_file_size * 3, self.res.size)
 
         # Retrieve the UserQuota object for the user
-        user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
-        initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
+        wait_for_quota_update()
+        data_zone_value = user_quota.data_zone_value
+        initial_quota_value = self.convert_gb_to_bytes(data_zone_value)
         self.assertAlmostEqual(initial_quota_value, 3 * self.single_file_size, places=5)
 
         # there should not be published date type metadata element
@@ -539,7 +564,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         )
 
         # Assert that the quota has been updated
-        user_quota.refresh_from_db()
+        wait_for_quota_update()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertAlmostEqual(dz, 0, places=5)
 
@@ -552,6 +577,7 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
+        wait_for_quota_update()
         initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertAlmostEqual(initial_quota_value, 3 * self.single_file_size, places=5)
 
@@ -563,6 +589,5 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.res.files.all().count(), 3)
 
         # Assert that the quota has not been updated
-        user_quota.refresh_from_db()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertAlmostEqual(dz, initial_quota_value, places=5)

@@ -89,7 +89,7 @@ class TestUserDetails(APITestCase):
             first_name='willow',
             last_name='winter',
             superuser=False)
-        self.assertEquals(willow.userprofile.bucket_name, 'dog')
+        self.assertEqual(willow.userprofile.bucket_name, 'dog')
 
     def test_safe_bucketname_transformation(self):
         willow = users.create_account(
@@ -98,7 +98,7 @@ class TestUserDetails(APITestCase):
             first_name='willow',
             last_name='winter',
             superuser=False)
-        self.assertEquals(willow.userprofile.bucket_name, 'dogstick')
+        self.assertEqual(willow.userprofile.bucket_name, 'dogstick')
 
     def test_safe_bucketname_transformation_with_collision(self):
         willow = users.create_account(
@@ -107,7 +107,7 @@ class TestUserDetails(APITestCase):
             first_name='willow',
             last_name='winter',
             superuser=False)
-        self.assertEquals(willow.userprofile.bucket_name, 'dogstick')
+        self.assertEqual(willow.userprofile.bucket_name, 'dogstick')
 
         juniper = users.create_account(
             'dog@fetchanotherstick.org',
@@ -116,7 +116,7 @@ class TestUserDetails(APITestCase):
             last_name='tree',
             superuser=False)
 
-        self.assertEquals(juniper.userprofile.bucket_name, 'dogstick-1')
+        self.assertEqual(juniper.userprofile.bucket_name, 'dogstick-1')
 
         wendy = users.create_account(
             'dog@fetchabone.org',
@@ -125,4 +125,4 @@ class TestUserDetails(APITestCase):
             last_name='winter',
             superuser=False)
 
-        self.assertEquals(wendy.userprofile.bucket_name, 'dogstick-2')
+        self.assertEqual(wendy.userprofile.bucket_name, 'dogstick-2')

@@ -2481,13 +2481,14 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
                 not new_holder.uaccess.owns_resource(self):
             raise PermissionDenied("Only owners can set or be set as quota holder for the resource")
 
+        # ensure the new holder has a bucket, buckets only exist for users with resources
+        istorage = self.get_s3_storage()
+        istorage.create_bucket(new_holder.userprofile.bucket_name)
         # QuotaException will be raised if new_holder does not have enough quota to hold this
         # new resource, in which case, set_quota_holder to the new user fails
         validate_user_quota(new_holder, self.size)
+        # if the resource is new, it does not have a quota holder yet
         if self.quota_holder:
-            # ensure the new holder has a bucket, buckets only exist for users with resources
-            istorage = self.get_s3_storage()
-            istorage.create_bucket(new_holder.userprofile.bucket_name)
             self.get_s3_storage().new_quota_holder(self.short_id, new_holder.username)
 
         self.quota_holder = new_holder
@@ -2624,8 +2625,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         """
         from hs_file_types.enums import AggregationMetaFilePath
 
-        if not (file_path.endswith(AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
-                or file_path.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)):
+        if not (file_path.endswith(AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)
+                or file_path.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value)):
             return False
         return True
 
@@ -3382,9 +3383,9 @@ class ResourceFile(ResourceFileS3Mixin):
         """
 
         # use of self.resource generates a query
-        return self.get_short_path(self.resource)
+        return self.get_short_path()
 
-    def get_short_path(self, resource):
+    def get_short_path(self):
         """Return the unqualified path to the file object.
 
         * This path is invariant of where the object is stored.
@@ -3392,7 +3393,6 @@ class ResourceFile(ResourceFileS3Mixin):
         * Thus, it does not change if the resource is moved.
 
         This is the path that should be used as a key to index things such as file type.
-        :param resource: the resource to which the file (self) belongs
         Note: This is the preferred way to get the short path for a file when we are trying to find short path
         for more than one file in a resource.
         """
