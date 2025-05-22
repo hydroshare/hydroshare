@@ -527,7 +527,7 @@ class UpdateQuotaUsageTestCase(TestCase):
     def test_publish_resource_decreases_quota(self):
         hydroshare.create_account(
             'publisher@email.com',
-            username='publisher',
+            username='published',
             first_name='some_first_name2',
             last_name='some_last_name2',
             superuser=False,
