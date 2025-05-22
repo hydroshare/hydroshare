@@ -176,8 +176,8 @@ class S3Storage(s3.S3Storage):
         return True
 
     def listdir(self, name):
-        name = name.strip()
-        bucket, name = bucket_and_name(name)
+        original_name = name.strip()
+        bucket, name = bucket_and_name(original_name)
         path = self._normalize_name(clean_name(name))
         # The path needs to end with a slash, but if the root is empty, leave it.
         if path and not path.endswith("/"):
@@ -200,7 +200,7 @@ class S3Storage(s3.S3Storage):
                     file_sizes.append(entry["Size"])
         empty_directories = []
         for directory in directories:
-            if self._directory_empty(name + "/" + directory):
+            if self._directory_empty(os.path.join(original_name, directory)):
                 empty_directories.append(directory)
         directories = [d for d in directories if d not in empty_directories]
         return directories, files, file_sizes
