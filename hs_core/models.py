@@ -7,6 +7,7 @@ import re
 import sys
 import unicodedata
 import urllib.parse
+
 from uuid import uuid4
 
 import arrow
@@ -3955,9 +3956,355 @@ class BaseResource(Page, AbstractResource):
 
     # @property
     # def file_uri(self):
-    #     return os.path.join(self.root_uri, 'files')
+    #     return os.path.join(self.root_uri, 'files'
 
-    # create crossref deposit xml for resource publication
+
+    def get_datacite_deposit_json(self):
+        """
+        Return JSON payload for creating a DOI with DataCite API.
+        Conforms to DataCite REST API for DOI creation: https://support.datacite.org/reference/post_dois
+        """
+        logger = logging.getLogger(__name__)
+
+        def get_funder_id(funder_name):
+            """Return funder ROR ID for a given funder_name from ROR API."""
+            funder_name = funder_name.lower()
+            encoded_funder_name = urllib.parse.quote(funder_name)
+            url = f"https://api.ror.org/v2/organizations?filter=types:funder&query={encoded_funder_name}"
+            try:
+                response = requests.get(url, verify=False, timeout=10)
+                if response.status_code == 200:
+                    response_json = response.json()
+                    items = response_json.get('items', [])
+                    for item in items:
+                        for name in item['names']:
+                            if name['value'].lower() == funder_name:
+                                return item['id']
+                    return ''
+                else:
+                    logger.error(
+                        f"Failed to get funder_id for funder_name: '{funder_name}'. "
+                        f"Status code: {response.status_code} for resource id: {self.short_id}"
+                    )
+                    return ''
+            except requests.RequestException as e:
+                logger.error(
+                    f"Error fetching funder_id for funder_name: '{funder_name}'. "
+                    f"Error: {str(e)} for resource id: {self.short_id}"
+                )
+                return ''
+
+        def parse_creator_name(creator):
+            """Parse creator name into given and family names, handling edge cases."""
+            creator_name = creator.name.strip()
+            name = HumanName(creator_name)
+            if not name.first or not name.last:
+                name_parts = creator_name.split()
+                if not name.first and name_parts:
+                    name.first = name_parts[0]
+                if not name.last and name_parts:
+                    name.last = name_parts[-1]
+            return name.first, name.last
+
+        # Validate required metadata fields
+        if not self.metadata.title:
+            raise ValidationError(f"No title found for resource {self.short_id}")
+        if not self.metadata.creators.count():
+            raise ValidationError(f"No creators found for resource {self.short_id}")
+        if not self.metadata.description or not self.metadata.description.abstract:
+            logger.warning(f"No abstract found for resource {self.short_id}. Using empty string.")
+            self.metadata.description = type('obj', (), {'abstract': ''})()
+
+        # Initialize the payload structure
+        doi = f"10.83165/{self.short_id}"
+        payload = {
+            "data": {
+                "type": "dois",
+                "attributes": {
+                    "doi": doi,
+                    "prefix": "10.83165",
+                    "suffix": self.short_id,
+                    "event": "publish",
+                    "url": None,
+                    "creators": [],
+                    "titles": [
+                        {
+                            "title": self.metadata.title.value,
+                            "titleType": "MainTitle",
+                            "lang": "en"
+                        }
+                    ],
+                    "publisher": {
+                            "name": "CUAHSI",
+                            "lang": 'en',
+                            "publisherIdentifier": "https://ror.org/037ncgg21",
+                            "publisherIdentifierScheme": "ROR",
+                            "schemeUri": "https://ror.org"
+                        },
+                    "publicationYear": None,
+                    "subjects": [],
+                    "contributors": [],
+                    "alternateIdentifiers": [],
+                    "dates": [],
+                    "language": "en",
+                    "types": {
+                        "resourceTypeGeneral": "Dataset",
+                        "resourceType": self.content_model or "CompositeResource",
+                        "schemaOrg": "Dataset",
+                        "bibtex": "misc",
+                        "citeproc": "dataset"
+                    },
+                    "relatedIdentifiers": [],
+                    "relatedItems": [],
+                    "sizes": [],
+                    "formats": [],
+                    "version": None,
+                    "rightsList": [],
+                    "descriptions": [],
+                    "geoLocations": [],
+                    "fundingReferences": [],
+                    "container": {
+                        "type": "DataRepository",
+                        "identifier": "https://www.hydroshare.org",
+                        "identifierType": "URL",
+                        "title": "HydroShare Resources"
+                    },
+                    "contentUrl": [self.bag_url] if hasattr(self, 'bag_url') and self.bag_url else [],
+                    "schemaVersion": "http://datacite.org/schema/kernel-4",
+                    "state": "draft"
+                },
+                "relationships": {
+                    "client": {
+                        "data": {
+                            "type": "repositories",
+                            "id": "pdpo.kyfnwo"
+                        }
+                    }
+                }
+            }
+        }
+
+        # Publication Year
+        pub_date = self.metadata.dates.filter(type='published').first()
+        payload["data"]["attributes"]["publicationYear"] = (
+            str(pub_date.start_date.year if pub_date else self.updated.year)
+        )
+
+        # URL (required, using hydroShareIdentifier)
+        hs_identifier = self.metadata.identifiers.filter(name='hydroShareIdentifier').first()
+        if hs_identifier:
+            payload["data"]["attributes"]["url"] = hs_identifier.url
+        else:
+            raise ValidationError(f"No hydroShareIdentifier found for resource {self.short_id}")
+
+        # Creators
+        creators = self.metadata.creators.all()
+        first_creator = [cr for cr in creators if cr.order == 1]
+        other_creators = [cr for cr in creators if cr.order > 1]
+        for creator in [first_creator[0]] + other_creators if first_creator else creators:
+            if creator.name:
+                first_name, last_name = parse_creator_name(creator)
+                creator_data = {
+                    "name": creator.name,
+                    "nameType": "Personal",
+                    "givenName": first_name,
+                    "familyName": last_name,
+                    "affiliation": [{"name": creator.organization or "CUAHSI"}],
+                    "nameIdentifiers": []
+                }
+                if creator.hydroshare_user_id:
+                    creator_data["nameIdentifiers"].append({
+                        "nameIdentifier": f"hydroshare-user-{creator.hydroshare_user_id}",
+                        "nameIdentifierScheme": "Other",
+                        "schemeUri": None
+                    })
+                if creator.identifiers.get('ORCID'):
+                    creator_data["nameIdentifiers"].append({
+                        "nameIdentifier": creator.identifiers['ORCID'],
+                        "nameIdentifierScheme": "ORCID",
+                        "schemeUri": "https://orcid.org"
+                    })
+                payload["data"]["attributes"]["creators"].append(creator_data)
+            else:
+                creator_data = {
+                    "name": creator.organization or "CUAHSI",
+                    "nameType": "Organizational",
+                    "nameIdentifiers": []
+                }
+                payload["data"]["attributes"]["creators"].append(creator_data)
+
+        # Contributors
+        for contributor in self.metadata.contributors.all():
+            if contributor.name:
+                first_name, last_name = parse_creator_name(contributor)
+                contributor_data = {
+                    "name": contributor.name,
+                    "nameType": "Personal",
+                    "givenName": first_name,
+                    "familyName": last_name,
+                    "contributorType": "Other",
+                    "affiliation": [{"name": contributor.organization or "CUAHSI"}],
+                    "nameIdentifiers": []
+                }
+                if contributor.hydroshare_user_id:
+                    contributor_data["nameIdentifiers"].append({
+                        "nameIdentifier": f"hydroshare-user-{contributor.hydroshare_user_id}",
+                        "nameIdentifierScheme": "Other",
+                        "schemeUri": None
+                    })
+                if contributor.identifiers.get('ORCID'):
+                    contributor_data["nameIdentifiers"].append({
+                        "nameIdentifier": contributor.identifiers['ORCID'],
+                        "nameIdentifierScheme": "ORCID",
+                        "schemeUri": "https://orcid.org"
+                    })
+                payload["data"]["attributes"]["contributors"].append(contributor_data)
+            else:
+                contributor_data = {
+                    "name": contributor.organization or "CUAHSI",
+                    "nameType": "Organizational",
+                    "contributorType": "Other",
+                    "nameIdentifiers": []
+                }
+                payload["data"]["attributes"]["contributors"].append(contributor_data)
+
+        # Subjects
+        for subject in self.metadata.subjects.all():
+            payload["data"]["attributes"]["subjects"].append({
+                "subject": subject.value,
+                "subjectScheme": "HydroShare Keywords",
+                "schemeUri": "http://www.hydroshare.org/terms"
+            })
+
+        # Dates
+        date_mapping = {
+            'created': 'Created',
+            'modified': 'Updated',
+            'published': 'Available'
+        }
+        for date in self.metadata.dates.all():
+            if date.type in date_mapping:
+                payload["data"]["attributes"]["dates"].append({
+                    "date": date.start_date.strftime("%Y-%m-%d"),
+                    "dateType": date_mapping[date.type]
+                })
+
+        # Descriptions
+        if self.metadata.description and self.metadata.description.abstract:
+            payload["data"]["attributes"]["descriptions"] = [
+                {
+                    "description": self.metadata.description.abstract,
+                    "descriptionType": "Abstract",
+                    "lang": "en"
+                }
+            ]
+
+        # Rights
+        if self.metadata.rights and self.metadata.rights.url:
+            rights_data = {
+                "rights": self.metadata.rights.statement,
+                "rightsUri": self.metadata.rights.url
+            }
+            if pub_date:
+                rights_data["rightsUriStartDate"] = pub_date.strftime("%Y-%m-%d")
+            payload["data"]["attributes"]["rightsList"] = [rights_data]
+
+        # Related Identifiers
+        for relation in self.metadata.relations.all():
+            identifier_type = "URL" if relation.value.startswith('http') else "DOI"
+            payload["data"]["attributes"]["relatedIdentifiers"].append({
+                "relatedIdentifier": relation.value,
+                "relatedIdentifierType": identifier_type,
+                "relationType": relation.type
+            })
+        if hs_identifier:
+            payload["data"]["attributes"]["relatedIdentifiers"].append({
+                "relatedIdentifier": hs_identifier.url,
+                "relatedIdentifierType": "URL",
+                "relationType": "IsIdenticalTo"
+            })
+
+        # Related Items
+        for relation in self.metadata.relations.all():
+            if relation.type in ('isPartOf', 'hasPart', 'isSupplementTo'):
+                identifier_type = "URL" if relation.value.startswith('http') else "DOI"
+                payload["data"]["attributes"]["relatedItems"].append({
+                    "relatedItemIdentifier": relation.value,
+                    "relatedItemIdentifierType": identifier_type,
+                    "relationType": relation.type
+                })
+
+        # GeoLocations
+        for coverage in self.metadata.coverages.all():
+            if coverage.type == 'box':
+                box_values = coverage.value
+                if all(k in box_values for k in ('westlimit', 'eastlimit', 'southlimit', 'northlimit')):
+                    payload["data"]["attributes"]["geoLocations"].append({
+                        "geoLocationBox": {
+                            "westBoundLongitude": str(box_values['westlimit']),
+                            "eastBoundLongitude": str(box_values['eastlimit']),
+                            "southBoundLatitude": str(box_values['southlimit']),
+                            "northBoundLatitude": str(box_values['northlimit'])
+                        }
+                    })
+            elif coverage.type == 'point':
+                point_values = coverage.value
+                if all(k in point_values for k in ('longitude', 'latitude')):
+                    geo_location = {
+                        "geoLocationPoint": {
+                            "pointLongitude": str(point_values['longitude']),
+                            "pointLatitude": str(point_values['latitude'])
+                        }
+                    }
+                    if point_values.get('name'):
+                        geo_location["geoLocationPlace"] = point_values['name']
+                    payload["data"]["attributes"]["geoLocations"].append(geo_location)
+
+        # Funding References
+        for funder in self.metadata.funding_agencies.all():
+            funder_data = {
+                "funderName": funder.agency_name
+            }
+            funder_id = get_funder_id(funder.agency_name)
+            if funder_id:
+                funder_data["funderIdentifier"] = funder_id
+                funder_data["funderIdentifierType"] = "ROR"
+            elif funder.agency_url:
+                funder_data["funderIdentifier"] = funder.agency_url
+                funder_data["funderIdentifierType"] = "Other"
+            if funder.award_number:
+                funder_data["awardNumber"] = funder.award_number
+            if funder.award_title:
+                funder_data["awardTitle"] = funder.award_title
+            payload["data"]["attributes"]["fundingReferences"].append(funder_data)
+
+        # Formats
+        for format_obj in self.metadata.formats.all():
+            payload["data"]["attributes"]["formats"].append(format_obj.value)
+
+        # Alternate Identifiers
+        doi_identifier = self.metadata.identifiers.filter(name='doi').first()
+        if doi_identifier:
+            payload["data"]["attributes"]["alternateIdentifiers"].append({
+                "alternateIdentifier": doi_identifier.url,
+                "alternateIdentifierType": "DOI"
+            })
+        if self.metadata.citation and hasattr(self.metadata.citation, 'value'):
+            payload["data"]["attributes"]["alternateIdentifiers"].append({
+                "alternateIdentifier": self.metadata.citation.value,
+                "alternateIdentifierType": "Citation"
+            })
+
+        # Sizes (optional, add if available)
+        if hasattr(self, 'size') and self.size:
+            payload["data"]["attributes"]["sizes"].append(f"{self.size} bytes")
+
+        # Version (optional, add if available)
+        if hasattr(self, 'version') and self.version:
+            payload["data"]["attributes"]["version"] = str(self.version)
+
+        return json.dumps(payload, indent=2)
+
     def get_crossref_deposit_xml(self, pretty_print=True):
         """Return XML structure describing crossref deposit.
         The mapping of hydroshare resource metadata to crossref metadata has been implemented here as per
@@ -4136,7 +4483,9 @@ class BaseResource(Page, AbstractResource):
         etree.SubElement(doi_data_node, 'doi').text = res_doi
         res_url = self.metadata.identifiers.all().filter(name='hydroShareIdentifier')[0].url
         etree.SubElement(doi_data_node, 'resource').text = res_url
-
+        print("===============Datacite XML========")
+        print(etree.tostring(ROOT, encoding='UTF-8', pretty_print=pretty_print).decode())
+        print("===============Datacite XML END========")
         return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(
             ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
 

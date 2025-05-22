@@ -3,8 +3,11 @@ import logging
 import os
 import shutil
 import zipfile
+import base64
+
 
 import requests
+from requests.auth import HTTPBasicAuth
 from dateutil import tz
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -1010,6 +1013,11 @@ def get_crossref_url():
         main_url = 'https://doi.crossref.org/'
     return main_url
 
+def get_datacite_url():
+    main_url = 'https://api.test.datacite.org/dois?affiliation=true&publisher=true'
+    if not settings.USE_CROSSREF_TEST:
+        main_url = 'https://api.datacite.org/dois?affiliation=true&publisher=true'
+    return main_url
 
 def deposit_res_metadata_with_crossref(res):
     """
@@ -1036,6 +1044,48 @@ def deposit_res_metadata_with_crossref(res):
     response = requests.post(post_url, data=post_data, files=files, verify=False)
     return response
 
+
+def deposit_res_metadata_with_datacite(res):
+    """
+    Deposit resource metadata with DataCite using the Fabrica-style payload.
+    Args:
+        res: Django model instance with metadata
+
+    Returns:
+        Response object or None if error occurred
+    """
+
+    # Base64 encode the username:password combo
+    token = base64.b64encode(b'PDPO.KYFNWO:QD2ja501b3uC').decode()
+    headers = {
+        "accept": "application/vnd.api+json",
+        "content-type": "application/json",
+        "authorization": f"Basic {token}"
+    }
+
+    try:
+        print("Sending DOI creation request to DataCite... \n\n{}\n\n".format(res.get_datacite_deposit_json()))
+        response = requests.post(
+            "https://api.test.datacite.org/dois",
+            data=res.get_datacite_deposit_json(),
+            headers=headers,
+            timeout=10
+        )
+        response.raise_for_status()
+        print(f"DOI creation successful: {response.status_code}")
+        print(response.json())
+        return response
+
+    except requests.exceptions.HTTPError as http_err:
+        print(f"HTTP error occurred: {http_err}")
+        if response is not None:
+            print(f"Response content: {response.text}")
+    except requests.exceptions.RequestException as err:
+        print(f"Request failed: {err}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+
+    return None
 
 def submit_resource_for_review(pk, user):
     """
@@ -1111,6 +1161,10 @@ def publish_resource(user, pk):
     if not user.is_superuser:
         raise ValidationError("Resource can only be published by an admin user")
     resource = utils.get_resource_by_shortkey(pk)
+    print("===========================================")
+    print("Publishing resource with id: {}".format(pk))
+    print(resource.__dict__)
+    print("============================================")
     if resource.raccess.published:
         raise ValidationError("This resource is already published")
     resource.raccess.alter_review_pending_flags(initiating_review=False)
@@ -1131,6 +1185,8 @@ def publish_resource(user, pk):
         assert settings.USE_CROSSREF_TEST is True
     try:
         response = deposit_res_metadata_with_crossref(resource)
+        response = deposit_res_metadata_with_datacite(resource)
+        # create new funtion for Datacite registration and call here
     except ValueError as v:
         logger.error(f"Failed depositing XML {v} with Crossref for res id {pk}")
         resource.doi = get_resource_doi(pk)
@@ -1138,7 +1194,7 @@ def publish_resource(user, pk):
         # set the resource back into review_pending
         resource.raccess.alter_review_pending_flags(initiating_review=True)
         raise
-    if not response.status_code == status.HTTP_200_OK:
+    if response and not response.status_code == status.HTTP_200_OK:
         # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
         # crontab celery task
         logger.error(f"Received a {response.status_code} from Crossref while depositing metadata for res id {pk}")
