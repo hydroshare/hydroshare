@@ -151,6 +151,30 @@ class S3Storage(s3.S3Storage):
             # Some other error was encountered. Re-raise it.
             raise
 
+    def _directory_empty(self, name):
+        """
+        Check if a directory is empty. This is a workaround folders with files marked for deletion but not deleted yet
+        """
+        bucket, name = bucket_and_name(name)
+        name = self._normalize_name(clean_name(name))
+        path = self._normalize_name(name)
+        if path and not path.endswith("/"):
+            path += "/"
+
+        paginator = self.connection.meta.client.get_paginator("list_objects")
+        pages = paginator.paginate(Bucket=bucket, Prefix=path, Delimiter="/")
+        for page in pages:
+            if page.get("Contents"):
+                return False
+            if page.get("CommonPrefixes"):
+                directories = [
+                    posixpath.relpath(entry["Prefix"], path)
+                    for entry in page.get("CommonPrefixes", ())]
+                for directory in directories:
+                    if not self._directory_empty(name + "/" + directory):
+                        return False
+        return True
+
     def listdir(self, name):
         name = name.strip()
         bucket, name = bucket_and_name(name)
@@ -174,6 +198,11 @@ class S3Storage(s3.S3Storage):
                 if key != path:
                     files.append(posixpath.relpath(key, path))
                     file_sizes.append(entry["Size"])
+        empty_directories = []
+        for directory in directories:
+            if self._directory_empty(name + "/" + directory):
+                empty_directories.append(directory)
+        directories = [d for d in directories if d not in empty_directories]
         return directories, files, file_sizes
 
     def size(self, name):
