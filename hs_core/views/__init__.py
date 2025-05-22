@@ -47,6 +47,7 @@ from hs_access_control.views import community_json, group_community_request_json
 from hs_core import hydroshare
 from hs_core import signals
 from hs_core.enums import RelationTypes
+from hs_core.exceptions import ResourceCopyException, ResourceVersioningException
 from hs_core.hydroshare.resource import (
     METADATA_STATUS_INSUFFICIENT,
     METADATA_STATUS_SUFFICIENT,
@@ -1070,7 +1071,7 @@ def copy_resource(request, shortkey, *args, **kwargs):
                 shortkey, new_res_id=None, request_username=user.username
             )
             return HttpResponseRedirect(response_url)
-        except hydroshare.utils.ResourceCopyException as ex:
+        except ResourceCopyException as ex:
             messages.error(request, str(ex))
             request.session[
                 "resource_creation_error"
@@ -1135,7 +1136,7 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
         try:
             response_url = create_new_version_resource_task(shortkey, user.username)
             return HttpResponseRedirect(response_url)
-        except hydroshare.utils.ResourceVersioningException as ex:
+        except ResourceVersioningException as ex:
             messages.error(request, str(ex))
             request.session[
                 "resource_creation_error"

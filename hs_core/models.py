@@ -2481,13 +2481,14 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
                 not new_holder.uaccess.owns_resource(self):
             raise PermissionDenied("Only owners can set or be set as quota holder for the resource")
 
+        # ensure the new holder has a bucket, buckets only exist for users with resources
+        istorage = self.get_s3_storage()
+        istorage.create_bucket(new_holder.userprofile.bucket_name)
         # QuotaException will be raised if new_holder does not have enough quota to hold this
         # new resource, in which case, set_quota_holder to the new user fails
         validate_user_quota(new_holder, self.size)
+        # if the resource is new, it does not have a quota holder yet
         if self.quota_holder:
-            # ensure the new holder has a bucket, buckets only exist for users with resources
-            istorage = self.get_s3_storage()
-            istorage.create_bucket(new_holder.userprofile.bucket_name)
             self.get_s3_storage().new_quota_holder(self.short_id, new_holder.username)
 
         self.quota_holder = new_holder

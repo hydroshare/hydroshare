@@ -15,6 +15,7 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
       MINIO_BROWSER_REDIRECT: "false"
+      MINIO_SCANNER_SPEED: "fastest"
     command: server --console-address ":9001" /data
   postgis:
     image: postgis/postgis:15-3.3
@@ -93,6 +94,7 @@ services:
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       VUE_APP_BUCKET_URL_PUBLIC_PATH: "/static/static"
+      MC_HOST_hydroshare: "http://minioadmin:minioadmin@minio:9000"
     volumes:
       # hydroshare repository
       - ".:/hydroshare"

@@ -4,6 +4,8 @@ import logging
 from datetime import datetime
 from datetime import timedelta
 from urllib.parse import urlencode
+
+from hs_core.exceptions import QuotaException
 from .utils import bucket_and_name
 
 from django.core.exceptions import ImproperlyConfigured
@@ -113,6 +115,12 @@ class S3Storage(s3.S3Storage):
         content.close = lambda: None
         try:
             obj.upload_fileobj(content, ExtraArgs=params, Config=self.transfer_config)
+        except ClientError as e:
+            if "XMinioAdminBucketQuotaExceeded" in str(e):
+                raise QuotaException(
+                    "Bucket quota exceeded. Please contact your system administrator."
+                )
+            raise
         finally:
             content.close = original_close
         return cleaned_name
