@@ -198,11 +198,13 @@ class S3Storage(s3.S3Storage):
                 if key != path:
                     files.append(posixpath.relpath(key, path))
                     file_sizes.append(entry["Size"])
-        empty_directories = []
-        for directory in directories:
-            if self._directory_empty(os.path.join(original_name, directory)):
-                empty_directories.append(directory)
-        directories = [d for d in directories if d not in empty_directories]
+        if bucket not in ['tmp', 'zips', 'bags']:
+            # check for directories with files marked for deletion for file listing on landing page
+            empty_directories = []
+            for directory in directories:
+                if self._directory_empty(os.path.join(original_name, directory)):
+                    empty_directories.append(directory)
+            directories = [d for d in directories if d not in empty_directories]
         return directories, files, file_sizes
 
     def size(self, name):
