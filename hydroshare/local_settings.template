@@ -41,7 +41,7 @@ POSTGIS_TIMEZONE = os.environ.get('POSTGIS_TIMEZONE', 'UTC')
 
 # number of seconds database connections should persist
 # https://docs.djangoproject.com/en/3.2/ref/settings/#std-setting-CONN_MAX_AGE
-# this must be shorter than the database's timeout 
+# this must be shorter than the database's timeout
 # https://www.postgresql.org/docs/11/runtime-config-client.html#GUC-IDLE-IN-TRANSACTION-SESSION-TIMEOUT
 CONN_MAX_AGE = 60
 
@@ -202,10 +202,14 @@ DEFAULT_AUTHENTICATION_CLASSES = (
 )
 
 # The following two settings will logout of OIDC during signout
-# If these two settings are not enabled, 
+# If these two settings are not enabled,
 # the user will be redirected to auth.cuahsi.io to choose if they want to logout of SSO
 # OIDC_OP_LOGOUT_URL_METHOD = 'hs_core.authentication.provider_logout'
 # OIDC_STORE_ID_TOKEN = True
 
 # Only enable this if you are using minio in local development
 AWS_S3_USE_LOCAL = True
+
+# API key for WriteMetadataJSON endpoint
+# Generate a secure random key, e.g., using: python -c "import secrets; print(secrets.token_hex(32))"
+API_KEY = "change_me_to_a_random_secure_key"
