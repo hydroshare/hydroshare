@@ -29,7 +29,7 @@ class Command(BaseCommand):
             raise CommandError("Resource is not a published resource")
 
         # this should check both 'pending' and 'update_pending' flags in doi
-        if CrossRefSubmissionStatus.PENDING in resource.doi:
+        if CrossRefSubmissionStatus.PENDING.value in resource.doi:
             raise CommandError("Resource has a pending crossref deposit request. Please try again later.")
 
         print(f"Updating CrossRef metadata for resource id {resource.short_id}")
@@ -39,6 +39,6 @@ class Command(BaseCommand):
                        f"metadata for res id {resource.short_id}")
             raise CommandError(err_msg)
         else:
-            resource.doi = get_resource_doi(resource.short_id, flag=CrossRefSubmissionStatus.UPDATE_PENDING)
+            resource.doi = get_resource_doi(resource.short_id, flag=CrossRefSubmissionStatus.UPDATE_PENDING.value)
             resource.save()
         print(f"Successfully deposited metadata to CrossRef for resource id {resource.short_id}")
