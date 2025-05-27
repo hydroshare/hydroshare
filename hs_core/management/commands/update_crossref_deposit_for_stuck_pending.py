@@ -23,7 +23,7 @@ class Command(BaseCommand):
 
             # update the doi to swap CrossRefSubmissionStatus.PENDING with CrossRefSubmissionStatus.PENDING.value
             resource.doi = resource.doi.replace(
-                CrossRefSubmissionStatus.PENDING, CrossRefSubmissionStatus.PENDING.value
+                "CrossRefSubmissionStatus.PENDING", CrossRefSubmissionStatus.PENDING.value
             )
             resource.save()
 
