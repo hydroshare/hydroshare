@@ -4256,14 +4256,7 @@ div.fb-upload-caption a {
 	height: 30px;
 }
 
-.fb-view-grid .fb-file-name {
-    display: block;
-	word-break: break-word;
-	margin-top: 6px;
-    line-height: 1.5em;
-    max-height: 3em;
-}
-.fb-view-grid .fb-file-name-display {
+.fb-view-grid .fb-file-name-display .fb-view-grid .fb-file-name{
     display: block;
 	word-break: break-word;
 	margin-top: 6px;
