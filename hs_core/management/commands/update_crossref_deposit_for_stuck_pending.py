@@ -30,7 +30,9 @@ class Command(BaseCommand):
             # update all of the res.metadata.identifiers that have name="doi" to use the enum value
             identifier = resource.metadata.identifiers.filter(name="doi").first()
             if identifier:
-                identifier.update(identifier.id, url=resource.doi)
+                # .update() doesn't work because we don't permit modification of the doi field using that method
+                # identifier.update(identifier.id, url=resource.doi) # this doesn't work
+                identifier.url = resource.doi
                 identifier.save()
                 print(f"Updated DOI in metadata for resource {resource.short_id} to {resource.doi}")
             else:
