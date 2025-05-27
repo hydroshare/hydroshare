@@ -2745,8 +2745,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
 
         if doi and not forceHydroshareURI:
             hs_identifier = doi[0]
-            if (self.doi.find(CrossRefSubmissionStatus.PENDING) >= 0
-                    or self.doi.find(CrossRefSubmissionStatus.FAILURE) >= 0):
+            if (self.doi.find(CrossRefSubmissionStatus.PENDING.value) >= 0
+                    or self.doi.find(CrossRefSubmissionStatus.FAILURE.value) >= 0):
                 isPendingActivation = True
         else:
             hs_identifier = [idn for idn in identifiers if idn.name == "hydroShareIdentifier"]
@@ -4424,7 +4424,7 @@ class BaseResource(Page, AbstractResource):
             update_crossref_meta_deposit.apply_async((self.short_id,))
 
         # check for both 'pending' and 'update_pending' status in doi
-        if CrossRefSubmissionStatus.PENDING in self.doi:
+        if CrossRefSubmissionStatus.PENDING.value in self.doi:
             # setting this flag will update the crossref deposit when the hourly celery task runs
             self.extra_data[CrossRefUpdate.UPDATE.value] = 'True'
 
