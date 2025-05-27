@@ -1,6 +1,7 @@
 from io import BytesIO
 import os
 from pathlib import Path
+import subprocess
 import tempfile
 import zipfile
 import logging
@@ -11,6 +12,8 @@ from urllib.parse import urlencode
 from django.conf import settings
 
 from smart_open import open
+
+from hs_core.exceptions import QuotaException
 from . import models as m
 from .utils import bucket_and_name, normalized_bucket_name, is_metadata_xml_file
 
@@ -18,7 +21,12 @@ from uuid import uuid4
 
 from django.utils.deconstruct import deconstructible
 from .s3_backend import S3Storage
+from django.core.exceptions import ImproperlyConfigured
 
+try:
+    from botocore.exceptions import ClientError
+except ImportError as e:
+    raise ImproperlyConfigured("Could not load Boto3's S3 bindings. %s" % e)
 
 folder_delimiter = "|||||||"
 logger = logging.getLogger(__name__)
@@ -105,13 +113,20 @@ class S3Storage(S3Storage):
         filesCollection = in_bucket.objects.filter(Prefix=in_path).all()
 
         in_prefix = os.path.dirname(in_path) if self.isDir(in_name) else in_path
-        with open(f's3://{out_bucket}/{out_path}', 'wb', transport_params={'client': self.connection.meta.client}
-                  ) as out_file:
-            with zipfile.ZipFile(out_file, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
-                for file_key in filesCollection:
-                    relative_path = file_key.key[len(in_prefix):]
-                    with zip_archive.open(relative_path, 'w', force_zip64=True) as zip_archive_file:
-                        chunk_request(zip_archive_file, in_bucket_name, file_key.key)
+        try:
+            with open(f's3://{out_bucket}/{out_path}', 'wb',
+                      transport_params={'client': self.connection.meta.client}) as out_file:
+                with zipfile.ZipFile(out_file, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
+                    for file_key in filesCollection:
+                        relative_path = file_key.key[len(in_prefix):]
+                        with zip_archive.open(relative_path, 'w', force_zip64=True) as zip_archive_file:
+                            chunk_request(zip_archive_file, in_bucket_name, file_key.key)
+        except ClientError as e:
+            if "An error occurred (InvalidRequest) when calling the CompleteMultipartUpload operation:" in str(e):
+                raise QuotaException("Bucket quota exceeded. Please contact your system administrator.")
+            if "XMinioAdminBucketQuotaExceeded" in str(e):
+                raise QuotaException("Bucket quota exceeded. Please contact your system administrator.")
+            raise e
 
     def unzip(self, zip_file_path, unzipped_folder=""):
         """
@@ -137,7 +152,14 @@ class S3Storage(S3Storage):
 
                 unzipped_file_path = os.path.relpath(path, extracted_folder)
                 file_unzipped_path = os.path.join(unzipped_path, unzipped_file_path)
-                self.connection.Bucket(unzipped_bucket).upload_file(path, file_unzipped_path)
+                try:
+                    self.connection.Bucket(unzipped_bucket).upload_file(path, file_unzipped_path)
+                except ClientError as e:
+                    if "XMinioAdminBucketQuotaExceeded" in str(e):
+                        raise QuotaException(
+                            "Bucket quota exceeded. Please contact your system administrator."
+                        )
+                    raise e
         return unzipped_folder
 
     def setAVU(self, name, attName, attVal):
@@ -235,11 +257,18 @@ class S3Storage(S3Storage):
         bucket = self.connection.Bucket(src_bucket)
 
         if self.isFile(src_path):
-            self.connection.meta.client.copy_object(
-                Bucket=dst_bucket,
-                Key=dest_name,
-                CopySource={"Bucket": src_bucket, "Key": src_name},
-            )
+            try:
+                self.connection.meta.client.copy_object(
+                    Bucket=dst_bucket,
+                    Key=dest_name,
+                    CopySource={"Bucket": src_bucket, "Key": src_name},
+                )
+            except ClientError as e:
+                if "XMinioAdminBucketQuotaExceeded" in str(e):
+                    raise QuotaException(
+                        "Bucket quota exceeded. Please contact your system administrator."
+                    )
+                raise e
             if delete_src:
                 self.connection.Object(src_bucket, src_name).delete()
         else:
@@ -247,11 +276,18 @@ class S3Storage(S3Storage):
             for file in bucket.objects.filter(Prefix=src_name):
                 src_file_path = file.key
                 dst_file_path = file.key.replace(src_name, dest_name)
-                self.connection.meta.client.copy_object(
-                    Bucket=dst_bucket,
-                    Key=dst_file_path,
-                    CopySource={"Bucket": src_bucket, "Key": src_file_path},
-                )
+                try:
+                    self.connection.meta.client.copy_object(
+                        Bucket=dst_bucket,
+                        Key=dst_file_path,
+                        CopySource={"Bucket": src_bucket, "Key": src_file_path},
+                    )
+                except ClientError as e:
+                    if "XMinioAdminBucketQuotaExceeded" in str(e):
+                        raise QuotaException(
+                            "Bucket quota exceeded. Please contact your system administrator."
+                        )
+                    raise e
                 if delete_src:
                     self.connection.Object(src_bucket, src_file_path).delete()
 
@@ -297,7 +333,14 @@ class S3Storage(S3Storage):
         dest_s3_bucket_path: the data object path in S3 to be uploaded to
         """
         dst_bucket, dst_name = bucket_and_name(dest_s3_bucket_path)
-        self.connection.Bucket(dst_bucket).upload_file(src_local_file, dst_name)
+        try:
+            self.connection.Bucket(dst_bucket).upload_file(src_local_file, dst_name)
+        except ClientError as e:
+            if "XMinioAdminBucketQuotaExceeded" in str(e):
+                raise QuotaException(
+                    "Bucket quota exceeded. Please contact your system administrator."
+                )
+            raise e
 
     def checksum(self, s3_bucket_name):
         """
@@ -354,18 +397,17 @@ class S3Storage(S3Storage):
             return False
 
     def create_bucket(self, bucket_name):
-        try:
+        if not self.bucket_exists(bucket_name):
             self.connection.create_bucket(Bucket=bucket_name)
-        except Exception:
-            pass
-            # logger.exception(f"Failed to create bucket {bucket_name}")
+            subprocess.run(["mc", "quota", "set", f"hydroshare/{bucket_name}", "--size", "20GiB"], check=True)
+            if settings.MINIO_LIFECYCLE_POLICY:
+                subprocess.run(["mc", "ilm", "rule", "add" "--transition-days", "0", "--transition-tier",
+                                settings.MINIO_LIFECYCLE_POLICY, f"hydroshare/{bucket_name}"], check=True)
 
     def delete_bucket(self, bucket_name):
-        try:
-            self.connection.meta.client.delete_bucket(Bucket=bucket_name)
-        except Exception:
-            pass
-            # logger.exception(f"Failed to delete bucket {bucket_name}")
+        bucket = self.connection.Bucket(bucket_name)
+        bucket.objects.delete()
+        self.connection.meta.client.delete_bucket(Bucket=bucket_name)
 
     def new_quota_holder(self, resource_id, new_quota_holder_id):
         """
@@ -381,13 +423,20 @@ class S3Storage(S3Storage):
         for file in bucket.objects.filter(Prefix=src_name):
             src_file_path = file.key
             dst_file_path = file.key.replace(src_name, dest_name)
-            self.connection.Bucket(dst_bucket).copy(
-                {
-                    "Bucket": src_bucket,
-                    "Key": src_file_path,
-                },
-                dst_file_path,
-            )
+            try:
+                self.connection.Bucket(dst_bucket).copy(
+                    {
+                        "Bucket": src_bucket,
+                        "Key": src_file_path,
+                    },
+                    dst_file_path,
+                )
+            except ClientError as e:
+                if "XMinioAdminBucketQuotaExceeded" in str(e):
+                    raise QuotaException(
+                        "Bucket quota exceeded. Please contact your system administrator."
+                    )
+                raise e
             files_to_delete.append(src_file_path)
 
         for src_file_path in files_to_delete:

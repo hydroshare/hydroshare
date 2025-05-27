@@ -48,6 +48,15 @@ class TestPublishResource(MockS3TestCaseMixin, TestCase):
             groups=[]
         )
 
+        # create a published user
+        self.user2 = hydroshare.create_account(
+            'publisher@usu.edu',
+            username='published',
+            first_name='user2_FirstName',
+            last_name='user2_LastName',
+            superuser=False,
+        )
+
         # create a resource
         self.res = hydroshare.create_resource(
             'CompositeResource',

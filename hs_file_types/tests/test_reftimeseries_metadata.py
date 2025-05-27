@@ -234,8 +234,8 @@ class RefTimeseriesFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
 
         logical_file = res_file.logical_file
         res_file_name, _ = os.path.splitext(res_file.file_name)
-        expected_meta_path = '{0}{1}'.format(res_file_name, AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
-        expected_map_path = '{0}{1}'.format(res_file_name, AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
+        expected_meta_path = '{0}{1}'.format(res_file_name, AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)
+        expected_map_path = '{0}{1}'.format(res_file_name, AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
 
@@ -251,9 +251,9 @@ class RefTimeseriesFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
         logical_file = res_file.logical_file
         res_file_name, _ = os.path.splitext(res_file.file_name)
         expected_meta_path = '{0}/{1}{2}'.format(new_folder, res_file_name,
-                                                 AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
+                                                 AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)
         expected_map_path = '{0}/{1}{2}'.format(new_folder, res_file_name,
-                                                AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
+                                                AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
 
@@ -266,9 +266,9 @@ class RefTimeseriesFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
         logical_file = res_file.logical_file
         res_file_name, _ = os.path.splitext(res_file.file_name)
         expected_meta_path = '{0}/{1}{2}'.format(new_folder, res_file_name,
-                                                 AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
+                                                 AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)
         expected_map_path = '{0}/{1}{2}'.format(new_folder, res_file_name,
-                                                AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
+                                                AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
 
@@ -282,9 +282,9 @@ class RefTimeseriesFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
         logical_file = res_file.logical_file
         res_file_name, _ = os.path.splitext(res_file.file_name)
         expected_meta_path = '{0}/{1}{2}'.format(folder_rename, res_file_name,
-                                                 AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
+                                                 AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)
         expected_map_path = '{0}/{1}{2}'.format(folder_rename, res_file_name,
-                                                AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
+                                                AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())

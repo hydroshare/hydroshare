@@ -14,8 +14,8 @@ from rest_framework import status
 
 from hs_composite_resource.models import CompositeResource
 from hs_core import hydroshare
-from hs_core.hydroshare.utils import (ResourceVersioningException,
-                                      add_file_to_resource,
+from hs_core.exceptions import ResourceVersioningException
+from hs_core.hydroshare.utils import (add_file_to_resource,
                                       get_file_from_s3,
                                       get_resource_by_shortkey,
                                       resource_file_add_process)
@@ -3778,8 +3778,8 @@ class CompositeResourceTest(
         self.assertEqual(self.composite_resource.files.count(), 3)
         for res_file in self.composite_resource.files.all():
             # there should not be any resource files ending with _meta.xml or _resmap.xml
-            self.assertFalse(res_file.file_name.endswith(AggregationMetaFilePath.METADATA_FILE_ENDSWITH))
-            self.assertFalse(res_file.file_name.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH))
+            self.assertFalse(res_file.file_name.endswith(AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value))
+            self.assertFalse(res_file.file_name.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value))
             # check file level system metadata
             self.assertGreater(res_file._size, 0)
             self.assertGreater(len(res_file._checksum), 0)

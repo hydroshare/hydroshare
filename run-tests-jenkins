@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
-coverage run manage.py test -v 3 --with-xunit $1 --with-timer --exe
-coverage xml
+python manage.py test --verbosity 3 --noinput --timing
 pytest
