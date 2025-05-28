@@ -68,16 +68,18 @@ class TestAddResourceFiles(MockS3TestCaseMixin, unittest.TestCase):
         Test that when a user is a quota_holder for no resources/files, the quota size defaults to 0.
         """
         uquota = self.user.quotas.first()
-        self.assertEqual(uquota.data_zone_value, 0)
+        self.assertAlmostEqual(uquota.data_zone_value, 0.0, places=6)
         self.assertEqual(uquota.unit, 'GB')
 
         # check that the resource has no files
         self.assertEqual(self.res.files.all().count(), 0)
         self.assertEqual(self.res.size, 0)
 
-        # check that the user is a quota holder for just this resource
-        self.assertTrue(self.user.is_quota_holder(self.res.short_id))
-        self.assertEqual(self.user.quotas.count(), 1)
+        # check that the user is a quota holder for only this one resource
+        self.assertEqual(self.user, self.res.quota_holder)
+        owned_resources = self.user.uaccess.owned_resources.all()
+        self.assertEqual(owned_resources.count(), 1)
+        self.assertIn(self.res, owned_resources)
 
     def test_add_files(self):
 
