@@ -295,7 +295,8 @@ class UserQuota(models.Model):
                 text=True,
             )
         except (subprocess.CalledProcessError, ValueError, IndexError):
-            raise ValidationError("Error retrieving quota information.")
+            # return a default value of 0 and default unit
+            return float(0), settings.DEFAULT_QUOTA_UNIT
         size_with_unit_str = result.stdout.split("Total size: ")[1].split("\n")[0]
         size_and_unit = size_with_unit_str.split(" ")
         size = size_and_unit[0]
