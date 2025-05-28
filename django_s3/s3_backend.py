@@ -4,6 +4,8 @@ import logging
 from datetime import datetime
 from datetime import timedelta
 from urllib.parse import urlencode
+
+from hs_core.exceptions import QuotaException
 from .utils import bucket_and_name
 
 from django.core.exceptions import ImproperlyConfigured
@@ -113,6 +115,12 @@ class S3Storage(s3.S3Storage):
         content.close = lambda: None
         try:
             obj.upload_fileobj(content, ExtraArgs=params, Config=self.transfer_config)
+        except ClientError as e:
+            if "XMinioAdminBucketQuotaExceeded" in str(e):
+                raise QuotaException(
+                    "Bucket quota exceeded. Please contact your system administrator."
+                )
+            raise
         finally:
             content.close = original_close
         return cleaned_name
@@ -143,9 +151,33 @@ class S3Storage(s3.S3Storage):
             # Some other error was encountered. Re-raise it.
             raise
 
-    def listdir(self, name):
-        name = name.strip()
+    def _directory_empty(self, name):
+        """
+        Check if a directory is empty. This is a workaround folders with files marked for deletion but not deleted yet
+        """
         bucket, name = bucket_and_name(name)
+        name = self._normalize_name(clean_name(name))
+        path = self._normalize_name(name)
+        if path and not path.endswith("/"):
+            path += "/"
+
+        paginator = self.connection.meta.client.get_paginator("list_objects")
+        pages = paginator.paginate(Bucket=bucket, Prefix=path, Delimiter="/")
+        for page in pages:
+            if page.get("Contents"):
+                return False
+            if page.get("CommonPrefixes"):
+                directories = [
+                    posixpath.relpath(entry["Prefix"], path)
+                    for entry in page.get("CommonPrefixes", ())]
+                for directory in directories:
+                    if not self._directory_empty(name + "/" + directory):
+                        return False
+        return True
+
+    def listdir(self, name):
+        original_name = name.strip()
+        bucket, name = bucket_and_name(original_name)
         path = self._normalize_name(clean_name(name))
         # The path needs to end with a slash, but if the root is empty, leave it.
         if path and not path.endswith("/"):
@@ -166,6 +198,13 @@ class S3Storage(s3.S3Storage):
                 if key != path:
                     files.append(posixpath.relpath(key, path))
                     file_sizes.append(entry["Size"])
+        if bucket not in ['tmp', 'zips', 'bags']:
+            # check for directories with files marked for deletion for file listing on landing page
+            empty_directories = []
+            for directory in directories:
+                if self._directory_empty(os.path.join(original_name, directory)):
+                    empty_directories.append(directory)
+            directories = [d for d in directories if d not in empty_directories]
         return directories, files, file_sizes
 
     def size(self, name):

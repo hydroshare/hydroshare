@@ -11,6 +11,8 @@ from rest_framework.decorators import api_view
 from hs_core.views import ACTION_TO_AUTHORIZE
 from hs_core.views.utils import authorize
 from hs_rest_api2 import serializers
+from hs_access_control.models.utilities import get_user_resource_privilege
+from hs_access_control.models.privilege import PrivilegeCodes
 
 
 @swagger_auto_schema(method='put', request_body=serializers.ResourceMetadataInSerializer,
@@ -163,3 +165,25 @@ def resource_sharing_status_json(_, pk):
     elif res.raccess.discoverable:
         return JsonResponse({"sharing_status": "discoverable"})
     return JsonResponse({"sharing_status": "private"})
+
+
+@swagger_auto_schema(method='get', responses={200: serializers.ResourcePermissionSerializer},
+                     operation_description="Get the permission of a user on a resource")
+@api_view(['GET'])
+def resource_permission_json(request, pk):
+    if request.user.is_authenticated:
+        user_id = request.user.id
+    else:
+        user_id = None
+
+    privilege = get_user_resource_privilege(user_id, pk)
+    if privilege == PrivilegeCodes.OWNER:
+        permission = "owner"
+    elif privilege == PrivilegeCodes.CHANGE:
+        permission = "edit"
+    elif privilege == PrivilegeCodes.VIEW:
+        permission = "view"
+    else:
+        permission = "none"
+
+    return JsonResponse({"permission": permission})

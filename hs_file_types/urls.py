@@ -78,33 +78,27 @@ urlpatterns = [
             views.update_aggregation_coverage,
             name="update_fileset_coverage"),
 
-    path('_internal/<int:file_type_id>/update-reftimeseries-abstract/'
-         r'update-reftimeseries-abstract/',
+    path('_internal/<int:file_type_id>/update-reftimeseries-abstract/',
          views.update_refts_abstract,
          name="update_reftimeseries_abstract"),
 
-    path('_internal/<int:file_type_id>/update-timeseries-abstract/'
-         r'update-timeseries-abstract/',
+    path('_internal/<int:file_type_id>/update-timeseries-abstract/',
          views.update_timeseries_abstract,
          name="update_timeseries_abstract"),
 
-    path('_internal/<int:file_type_id>/update-modelprogram-metadata/'
-         r'update-modelprogram-metadata/',
+    path('_internal/<int:file_type_id>/update-modelprogram-metadata/',
          views.update_model_program_metadata,
          name="update_modelprogram_metadata"),
 
-    path('_internal/<int:file_type_id>/update-modelinstance-metadata/'
-         r'update-modelinstance-metadata/',
+    path('_internal/<int:file_type_id>/update-modelinstance-metadata/',
          views.update_model_instance_metadata,
          name="update_modelinstance_metadata"),
 
-    path('_internal/<int:file_type_id>/update-modelinstance-metadata-json/'
-         r'update-modelinstance-metadata-json/',
+    path('_internal/<int:file_type_id>/update-modelinstance-metadata-json/',
          views.update_model_instance_metadata_json,
          name="update_modelinstance_metadata_json"),
 
-    path('_internal/<int:file_type_id>/update-modelinstance-meta-schema/'
-         r'update-modelinstance-meta-schema/',
+    path('_internal/<int:file_type_id>/update-modelinstance-meta-schema/',
          views.update_model_instance_meta_schema,
          name="update_modelinstance_meta_schema"),
 

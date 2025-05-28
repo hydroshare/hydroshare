@@ -699,7 +699,7 @@
                                         <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12">
                                             {% if page.perms.change and resource_edit_mode and cm.get_supported_upload_file_types != "()" %}
                                                 {% if not cm.raccess.published_or_review_pending or current_user.is_superuser %}
-                                                    <a {% if remaining_quota <= 0 %}disabled{% endif %} id="uppy-modal-trigger" type="button" data-fb-action="uploadFiles"
+                                                    <a {% if remaining_quota <= 0 %}disabled{% else %} id="uppy-modal-trigger" {% endif %} type="button" data-fb-action="uploadFiles"
                                                        class="btn btn-success btn-xs dz-clickable upload-toggle">
                                                         <i class="fa fa-plus"></i> Add files
                                                     </a>

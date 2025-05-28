@@ -16,6 +16,7 @@ from .views.metadata import (
     time_series_metadata_json,
     csv_file_metadata_json,
     resource_sharing_status_json,
+    resource_permission_json,
 )
 
 app_name = "hsapi2"
@@ -46,6 +47,9 @@ urlpatterns = [
 
     re_path(r'^resource/(?P<pk>[0-9a-f-]+)/sharing_status/json/$', resource_sharing_status_json,
             name='resource_sharing_status_json'),
+
+    re_path(r'^resource/(?P<pk>[0-9a-f-]+)/permission/json/$', resource_permission_json,
+            name='resource_permission_json'),
 
     re_path(r'^resource/(?P<pk>[0-9a-f-]+)/json/$',
             resource_metadata_json,

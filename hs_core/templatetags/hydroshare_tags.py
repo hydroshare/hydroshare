@@ -421,9 +421,11 @@ def show_publication_status(resource):
     doi = resource.doi
     if doi.endswith(resource.short_id):
         return False
-    if doi.endswith(CrossRefSubmissionStatus.PENDING) and not doi.endswith(CrossRefSubmissionStatus.UPDATE_PENDING):
+    if (doi.endswith(CrossRefSubmissionStatus.PENDING.value)
+            and not doi.endswith(CrossRefSubmissionStatus.UPDATE_PENDING.value)):
         return True
-    if doi.endswith(CrossRefSubmissionStatus.FAILURE) and not doi.endswith(CrossRefSubmissionStatus.UPDATE_FAILURE):
+    if (doi.endswith(CrossRefSubmissionStatus.FAILURE.value)
+            and not doi.endswith(CrossRefSubmissionStatus.UPDATE_FAILURE.value)):
         return True
 
     return False

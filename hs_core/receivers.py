@@ -213,8 +213,6 @@ def hs_update_web_services(sender, **kwargs):
 def pre_delete_user_handler(sender, instance, **kwargs):
     # before delete the user, update the quota holder for all of the user's resources
     user = instance
-    istorage = S3Storage()
-    istorage.delete_bucket(user.username)
     for res in BaseResource.objects.filter(quota_holder=user):
         other_owners = None
         if hasattr(res, 'raccess') and res.raccess is not None:
@@ -226,3 +224,7 @@ def pre_delete_user_handler(sender, instance, **kwargs):
                                                                                   user.username))
             res.quota_holder = None
         res.save()
+    istorage = S3Storage()
+    if istorage.bucket_exists(user.username):
+        # delete the bucket for the user
+        istorage.delete_bucket(user.username)

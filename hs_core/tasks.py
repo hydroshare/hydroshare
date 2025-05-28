@@ -32,6 +32,7 @@ from hs_access_control.models import GroupMembershipRequest
 from hs_collection_resource.models import CollectionDeletedResource
 from hs_core.enums import (CrossRefSubmissionStatus, CrossRefUpdate,
                            RelationTypes)
+from hs_core.exceptions import ResourceCopyException, ResourceVersioningException
 from hs_core.hydroshare import (create_empty_resource, current_site_url,
                                 set_dirty_bag_flag, utils)
 from hs_core.hydroshare.hs_bagit import (create_bag_metadata_files,
@@ -384,14 +385,14 @@ def manage_task_hourly():
             if response.status_code == status.HTTP_200_OK:
                 # retry of metadata deposition succeeds, change resource flag from failure
                 # to pending
-                if CrossRefSubmissionStatus.UPDATE_FAILURE in res.doi:
-                    res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.UPDATE_PENDING)
+                if CrossRefSubmissionStatus.UPDATE_FAILURE.value in res.doi:
+                    res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.UPDATE_PENDING.value)
                 else:
-                    res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.PENDING)
+                    res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.PENDING.value)
                 res.save()
             else:
                 # retry of metadata deposition failed again, notify admin
-                if CrossRefSubmissionStatus.UPDATE_FAILURE not in res.doi:
+                if CrossRefSubmissionStatus.UPDATE_FAILURE.value not in res.doi:
                     # this is the case of retry of initial deposit (deposit when publishing the resource)
                     msg = f"Metadata deposition with CrossRef for the published resource " \
                           f"DOI {act_doi} failed again after retry with first metadata " \
@@ -445,13 +446,13 @@ def manage_task_hourly():
                     create_bag_by_s3(res.short_id)
                 elif failure_cnt > 0 :
                     # set the doi status to failure
-                    if CrossRefSubmissionStatus.UPDATE_PENDING in res.doi:
-                        res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.UPDATE_FAILURE)
+                    if CrossRefSubmissionStatus.UPDATE_PENDING.value in res.doi:
+                        res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.UPDATE_FAILURE.value)
                     else:
-                        res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.FAILURE)
+                        res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.FAILURE.value)
                     res.save()
             if not success:
-                if CrossRefSubmissionStatus.UPDATE_PENDING not in res.doi:
+                if CrossRefSubmissionStatus.UPDATE_PENDING.value not in res.doi:
                     # this is the case of initial deposit when publishing the resource
                     msg = f"Published resource DOI {act_doi} is not yet activated with request " \
                           f"data deposited since {pub_date}."
@@ -949,7 +950,7 @@ def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
     except Exception as ex:
         if new_res:
             new_res.delete()
-        raise utils.ResourceCopyException(str(ex))
+        raise ResourceCopyException(str(ex))
 
 
 @shared_task
@@ -1008,7 +1009,7 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
     except Exception as ex:
         if new_res:
             new_res.delete()
-        raise utils.ResourceVersioningException(str(ex))
+        raise ResourceVersioningException(str(ex))
     finally:
         # release the lock regardless
         ori_res.locked_time = None
@@ -1317,7 +1318,7 @@ def update_crossref_meta_deposit(res_id):
 
 def _update_crossref_deposit(resource):
     logger.info(f"Updating Crossref metadata deposit for published resource: {resource.short_id}")
-    resource.doi = get_resource_doi(resource.short_id, CrossRefSubmissionStatus.UPDATE_PENDING)
+    resource.doi = get_resource_doi(resource.short_id, CrossRefSubmissionStatus.UPDATE_PENDING.value)
     resource.save()
     response = deposit_res_metadata_with_crossref(resource)
     if not response.status_code == status.HTTP_200_OK:
@@ -1326,5 +1327,5 @@ def _update_crossref_deposit(resource):
         err_msg = (f"Received a {response.status_code} from Crossref while updating "
                    f"metadata for published resource: {resource.short_id}")
         logger.error(err_msg)
-        resource.doi = get_resource_doi(resource.short_id, CrossRefSubmissionStatus.UPDATE_FAILURE)
+        resource.doi = get_resource_doi(resource.short_id, CrossRefSubmissionStatus.UPDATE_FAILURE.value)
         resource.save()

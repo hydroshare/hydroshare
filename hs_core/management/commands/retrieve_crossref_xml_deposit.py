@@ -30,13 +30,13 @@ class Command(BaseCommand):
             raise CommandError("Resource is not a published resource")
 
         # this should check both 'pending' and 'update_pending' flags
-        if CrossRefSubmissionStatus.PENDING in resource.doi:
+        if CrossRefSubmissionStatus.PENDING.value in resource.doi:
             raise CommandError(
                 "Resource has a pending crossref deposit request. Please try again later."
             )
 
         # this should check both 'failure' and 'update_failure' flags
-        if CrossRefSubmissionStatus.FAILURE in resource.doi:
+        if CrossRefSubmissionStatus.FAILURE.value in resource.doi:
             raise CommandError("Crossref for metadata deposit request for this resource has failed.")
 
         # make a request to crossref to get the xml deposit for this resource

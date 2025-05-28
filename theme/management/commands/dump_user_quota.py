@@ -39,7 +39,6 @@ class Command(BaseCommand):
             'Remaining quota value',
             'Django UserQuota model DataZone value',
             'Quota unit',
-            'Grace period ends',
             'DataZone Bagit AVU Size (bytes)',
             'DataZone Bagit AVU Converted Size',
         ]
@@ -76,7 +75,6 @@ class Command(BaseCommand):
                 uq.remaining,
                 uq.data_zone_value,
                 uq.unit,
-                uq.grace_period_ends,
                 dz_bytes,
                 dz,
             ]

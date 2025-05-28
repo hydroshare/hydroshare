@@ -1,10 +1,11 @@
+from time import sleep
 import pytest
 import sys
 import pdb
 import functools
 import traceback
 
-from hs_core.hydroshare.utils import encode_resource_url, decode_resource_url, convert_file_size_to_unit
+from hs_core.hydroshare.utils import encode_resource_url, decode_resource_url
 
 
 @pytest.mark.parametrize("decoded_url,encoded_url", [
@@ -47,7 +48,10 @@ def debug_on(*exceptions):
     return decorator
 
 
-def set_quota_usage_over_hard_limit(uquota, qmsg):
-    used_in_units = convert_file_size_to_unit(uquota.used_value, uquota.unit, 'B')
-    uquota.allocated_value = used_in_units / (qmsg.hard_limit_percent + 5) * 100
-    uquota.save()
+def set_quota_usage_over_hard_limit(uquota):
+    uquota.save_allocated_value(1, "B")
+    sleep(30)
+
+
+def wait_for_quota_update():
+    sleep(30)

@@ -156,8 +156,8 @@ def assert_raster_file_type_metadata(self, aggr_folder_path):
     self.assertEqual(logical_file.metadata.bandInformations.count(), 1)
     band_info = logical_file.metadata.bandInformations.first()
     self.assertEqual(band_info.noDataValue, '-3.4028234663852886e+38')
-    self.assertEqual(band_info.maximumValue, '2880.007080078125')
-    self.assertEqual(band_info.minimumValue, '1870.6365966796875')
+    self.assertEqual(band_info.maximumValue, '2880.0070800781')
+    self.assertEqual(band_info.minimumValue, '1870.6365966797')
 
 
 def assert_netcdf_file_type_metadata(self, title, aggr_folder):
