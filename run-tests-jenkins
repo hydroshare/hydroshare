@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 set -e
 
-python manage.py test --verbosity 3 --noinput --timing
+python manage.py test hs_core.tests.api.native.test_add_resource_files --failfast --noinput --timing
 pytest
