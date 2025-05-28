@@ -672,11 +672,13 @@ class Party(AbstractMetaDataElement):
                 kwargs['order'] = creator_order
 
         party = super(Party, cls).create(**kwargs)
+        resource = party.content_object.resource
 
         if party.hydroshare_user_id:
             user = User.objects.get(id=party.hydroshare_user_id)
             party.is_active_user = user.is_active
             party.save()
+        resource.update_denormalized_metadata_field('creators')
         return party
 
     @classmethod
@@ -702,6 +704,7 @@ class Party(AbstractMetaDataElement):
             kwargs['identifiers'] = identifiers
 
         party = super(Party, cls).update(element_id, **kwargs)
+        resource = party.content_object.resource
 
         if party.hydroshare_user_id is not None:
             user = User.objects.get(id=party.hydroshare_user_id)
@@ -730,6 +733,8 @@ class Party(AbstractMetaDataElement):
 
                 party.order = creator_order
                 party.save(update_fields=["order"])
+        if isinstance(party, Creator):
+            resource.update_denormalized_metadata_field('creators')
 
     @property
     def relative_uri(self):
@@ -740,9 +745,10 @@ class Party(AbstractMetaDataElement):
         return self.is_active_user
 
     @classmethod
-    def remove(cls, element_id):
+    def remove(cls, element_id, delete=True):
         """Define custom remove method for Party model."""
         party = cls.objects.get(id=element_id)
+        resource = party.content_object.resource
 
         # if we are deleting a creator, then we have to update the order attribute of remaining
         # creators associated with a resource
@@ -760,7 +766,17 @@ class Party(AbstractMetaDataElement):
                 if cr.order > party.order:
                     cr.order -= 1
                     cr.save(update_fields=["order"])
-        party.delete()
+        if delete:
+            party.delete()
+            resource.update_denormalized_metadata_field('creators')
+
+    def delete(self, using=None, keep_parents=False):
+        """Overriding the django model delete() method"""
+        resource = self.content_object.resource
+        self.remove(element_id=self.id, delete=False)
+        super(Party, self).delete(using=using, keep_parents=keep_parents)
+        resource.update_denormalized_metadata_field('creators')
+
 
     @classmethod
     def validate_identifiers(cls, identifiers):
@@ -947,6 +963,27 @@ class Title(AbstractMetaDataElement):
         unique_together = ("content_type", "object_id")
 
     @classmethod
+    def create(cls, **kwargs):
+        """Define custom create method for Title model."""
+        metadata_obj = kwargs['content_object']
+        resource = metadata_obj.resource
+        # get the title from Title model
+        title = cls.objects.filter(object_id=metadata_obj.id).first()   
+        if title:
+            raise ValidationError("Title element already exists.")
+        title = super(Title, cls).create(**kwargs)
+        resource.update_denormalized_metadata_field('title')
+        return title
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        """Define custom update method for Title model."""
+        super(Title, cls).update(element_id, **kwargs)
+        title = Title.objects.get(id=element_id)
+        resource = title.metadata.resource
+        resource.update_denormalized_metadata_field('title')
+
+    @classmethod
     def remove(cls, element_id):
         """Define custom remove function for Title class."""
         raise ValidationError("Title element of a resource can't be deleted.")
@@ -1079,7 +1116,10 @@ class Date(AbstractMetaDataElement):
                         raise ValidationError("For date type valid, end date must be a date "
                                               "after the start date.")
 
-            return super(Date, cls).create(**kwargs)
+            dt = super(Date, cls).create(**kwargs)
+            if dt.type == 'created' or dt.type == 'modified':
+                resource.update_denormalized_metadata_field('dates')
+            return dt
 
         else:
             raise ValidationError("Type of date element is missing.")
@@ -1120,6 +1160,9 @@ class Date(AbstractMetaDataElement):
         elif dt.type == 'modified':
             dt.start_date = now().isoformat()
             dt.save()
+        if dt.type == 'created' or dt.type == 'modified':
+            resource = dt.metadata.resource
+            resource.update_denormalized_metadata_field('dates')
 
     @classmethod
     def remove(cls, element_id):
@@ -2061,17 +2104,30 @@ class Subject(AbstractMetaDataElement):
             if metadata_obj.subjects.filter(value__iexact=value).exists():
                 raise ValidationError("Subject element already exists.")
 
-        return super(Subject, cls).create(**kwargs)
+        subject = super(Subject, cls).create(**kwargs)
+        resource = metadata_obj.resource
+        resource.update_denormalized_metadata_field('subjects')
+        return subject
 
     @classmethod
-    def remove(cls, element_id):
+    def remove(cls, element_id, delete=True):
         """Define custom remove method for Subject model."""
         sub = Subject.objects.get(id=element_id)
+        resource = sub.metadata.resource
 
         if Subject.objects.filter(object_id=sub.object_id,
                                   content_type__pk=sub.content_type.id).count() == 1:
             raise ValidationError("The only subject element of the resource can't be deleted.")
-        sub.delete()
+        if delete:
+            sub.delete()
+            resource.update_denormalized_metadata_field('subjects')
+
+    def delete(self, *args, **kwargs):
+        """Define custom delete method for Subject model."""
+        self.remove(self.id, delete=False)
+        resource = self.metadata.resource
+        super(Subject, self).delete(*args, **kwargs)
+        resource.update_denormalized_metadata_field('subjects')
 
     def rdf_triples(self, subject, graph):
         graph.add((subject, self.get_class_term(), Literal(self.value)))
@@ -2194,6 +2250,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
     # this field WILL NOT get recorded in bag and SHOULD NEVER be used for storing metadata
     extra_data = HStoreField(default=dict)
 
+    # add denormalized meatadata for performance optimization (my-resource page)
+    denormalized_metadata = models.JSONField(default=dict)
+
     # for tracking number of times resource and its files have been downloaded
     download_count = models.PositiveIntegerField(default=0)
     bag_last_downloaded = models.DateTimeField(null=True, blank=True)
@@ -2219,6 +2278,52 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         self.download_count += 1
         # using update query api to update instead of self.save() to avoid triggering solr realtime indexing
         type(self).objects.filter(id=self.id).update(download_count=self.download_count)
+
+    def update_denormalized_metadata_field(self, field_name):
+        """
+        Update a specific field in the denormalized metadata
+
+        :param field_name: The field to update ('creators', 'subjects', etc.)
+        """
+
+        metadata = self.metadata
+
+        # Update only the specified field
+        if field_name == 'creators':
+            creators = metadata.creators.all()
+            self.denormalized_metadata['creators'] = [
+                {"name": c.name, "order": c.order, "hs_user_id": c.hydroshare_user_id}
+                for c in creators
+            ]
+        elif field_name == 'title':
+            title = metadata.title.value if hasattr(metadata, 'title') and metadata.title else ""
+            self.denormalized_metadata['title'] = title
+        elif field_name == 'subjects':
+            subjects = list(metadata.subjects.all())
+            self.denormalized_metadata['subjects'] = [s.value for s in subjects]
+        elif field_name == 'dates':
+            created_date = metadata.dates.filter(type='created').first()
+            if created_date:
+                self.denormalized_metadata['created'] = created_date.start_date.isoformat()
+            modified_date = metadata.dates.filter(type='modified').first()
+            if modified_date:
+                self.denormalized_metadata['modified'] = modified_date.start_date.isoformat()
+        elif field_name == 'status':
+            self.denormalized_metadata['status'] = {
+                "public": self.raccess.public,
+                "discoverable": self.raccess.discoverable,
+                "published": self.raccess.published
+            }
+
+        if 'subjects' not in self.denormalized_metadata:
+            self.denormalized_metadata['subjects'] = []
+
+        type(self).objects.filter(id=self.id).update(denormalized_metadata=self.denormalized_metadata)
+
+    def update_all_denormalized_metadata(self):
+        """Update all fields in the denormalized metadata"""
+        for field in ['creators', 'title', 'subjects', 'dates', 'status']:
+            self.update_denormalized_metadata_field(field)
 
     # definition of resource logic
     @property
@@ -5146,6 +5251,29 @@ class TaskNotification(models.Model):
     payload = models.CharField(max_length=1000, blank=True)
     status = models.CharField(max_length=20, choices=TASK_STATUS_CHOICES, default='progress')
 
+
+class UserResource(models.Model):
+    """
+    Denormalized table to track user-resource relationships for efficient listing
+    """
+    from hs_access_control.models.privilege import PrivilegeCodes
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_resources')
+    resource = models.ForeignKey(BaseResource, on_delete=models.CASCADE, related_name='resource_users')
+
+    # Permission level (1=owner, 2=edit, 3=view)
+    permission = models.IntegerField(choices=PrivilegeCodes.CHOICES, default=PrivilegeCodes.VIEW)
+
+    # Flags
+    is_favorite = models.BooleanField(default=False)
+    is_discovered = models.BooleanField(default=False)
+    class Meta:
+        unique_together = ('user', 'resource')
+        indexes = [
+            models.Index(fields=['user', 'permission']),
+            models.Index(fields=['user', 'is_favorite']),
+            models.Index(fields=['user', 'is_discovered']),
+        ]
 
 def resource_processor(request, page):
     """Return mezzanine page processor for resource page."""

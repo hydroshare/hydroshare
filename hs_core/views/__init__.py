@@ -568,6 +568,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
             is_add_success = True
             res.update_public_and_discoverable()
             resource_modified(res, request.user, overwrite_bag=False)
+            res.update_denormalized_metadata_field('subjects')
     else:
 
         if element_name.lower() == "subject":
@@ -641,6 +642,8 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
                     if is_add_success:
                         resource_modified(res, request.user, overwrite_bag=False)
+                        if element_name == "subject":
+                            res.update_denormalized_metadata_field('subjects')
                 elif "errors" in response:
                     err_msg = err_msg.format(element_name, response["errors"])
 

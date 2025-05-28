@@ -21,12 +21,14 @@ from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
                                     SuspiciousFileOperation)
 from django.core.files.base import File
 from django.core.validators import URLValidator
-from django.db.models import BooleanField, Case, Prefetch, Value, When
+from django.db.models import BooleanField, Case, Prefetch, Value, When, Subquery, OuterRef, Exists, Q
+from django.db import models
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse, QueryDict
 from django.urls import reverse
 from django.utils.encoding import force_bytes
 from django.utils.http import int_to_base36, urlsafe_base64_encode
+from hs_labels.models import UserResourceLabels
 from mezzanine.conf import settings
 from mezzanine.utils.email import send_mail_template, subject_template
 from mezzanine.utils.urls import next_url
@@ -43,7 +45,7 @@ from hs_core.hydroshare import (add_resource_files, check_resource_type,
 from hs_core.hydroshare.utils import (QuotaException, check_aggregations,
                                       get_file_mime_type, validate_user_quota)
 from hs_core.models import (AbstractMetaDataElement, BaseResource,
-                            CoreMetaData, Relation, ResourceFile, get_user)
+                            CoreMetaData, Relation, ResourceFile, UserResource, get_user)
 from hs_core.signals import (post_delete_file_from_resource,
                              pre_metadata_element_create)
 from hs_core.tasks import FileOverrideException, create_temp_zip
@@ -662,6 +664,85 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
                                          Prefetch('content_object___title'),
                                          )
 
+    return resource_collection
+
+
+def get_my_resources_list_new(user, annotate=False, filter=None, **kwargs):
+    """
+    Gets a QuerySet object for listing resources that belong to a given user.
+    :param user: an instance of User - user who wants to see his/her resources
+    :param annotate: whether to annotate for my resources page listing.
+    :param filter: an array containing filters that determine the type of resources fetched
+    :return: an instance of QuerySet of resources
+    """
+    # Start with a query on UserResource - much more efficient!
+    user_resources = UserResource.objects.filter(user=user)
+    
+    # Apply filters - combine them with OR
+    if filter:
+        filter_query = models.Q()  # Initialize an empty Q object for OR combinations
+        
+        # Build filter conditions using OR operations
+        if 'owned' in filter:
+            filter_query |= models.Q(permission=PrivilegeCodes.OWNER)
+        if 'editable' in filter:
+            filter_query |= models.Q(permission=PrivilegeCodes.CHANGE)
+        if 'viewable' in filter:
+            filter_query |= models.Q(permission=PrivilegeCodes.VIEW)
+        if 'favorites' in filter:
+            filter_query |= models.Q(is_favorite=True)
+        if 'discovered' in filter:
+            filter_query |= models.Q(is_discovered=True)
+        
+        # Apply the filter query to the user_resources
+        user_resources = user_resources.filter(filter_query)
+
+    # Get the actual resources
+    # Use foreign key relationship directly to get BaseResource objects
+    resource_collection = BaseResource.objects.filter(resource_users__in=user_resources)
+
+    # Remove obsoleted resources
+    resource_collection = resource_collection.exclude(
+        object_id__in=Relation.objects.filter(type='isReplacedBy').values('object_id')
+    ).exclude(extra_data__to_be_deleted__isnull=False)
+
+    # annotate user permission on the resource as user_permission
+    resource_collection = resource_collection.annotate(
+        user_permission=Subquery(
+            UserResource.objects.filter(
+                user=user, 
+                resource=OuterRef('pk')
+            ).values('permission')
+        )
+    )
+
+    # When used in the My Resources page, we can use the UserResource data
+    if annotate:
+        # Join back to UserResource to get the flags
+        resource_collection = resource_collection.annotate(
+            is_favorite=Subquery(
+                UserResource.objects.filter(
+                    user=user, 
+                    resource=OuterRef('pk')
+                ).values('is_favorite')
+            ),
+            has_labels=Exists(
+                UserResourceLabels.objects.filter(
+                    user=user,
+                    resource=OuterRef('pk')
+                )
+            ),
+            is_discovered=Subquery(
+                UserResource.objects.filter(
+                    user=user, 
+                    resource=OuterRef('pk')
+                ).values('is_discovered')
+            )
+        )
+        
+        # Select related for raccess and content_type
+        # resource_collection = resource_collection.select_related('raccess', 'content_type')
+    
     return resource_collection
 
 
