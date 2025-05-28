@@ -3985,35 +3985,26 @@ class BaseResource(Page, AbstractResource):
         logger = logging.getLogger(__name__)
 
         def get_funder_id(funder_name):
-            """Return funder ROR ID for a given funder_name from ROR API."""
             funder_name = funder_name.lower()
             encoded_funder_name = urllib.parse.quote(funder_name)
             url = f"https://api.ror.org/v2/organizations?filter=types:funder&query={encoded_funder_name}"
             try:
                 response = requests.get(url, verify=False, timeout=10)
                 if response.status_code == 200:
-                    response_json = response.json()
-                    items = response_json.get('items', [])
+                    items = response.json().get('items', [])
                     for item in items:
                         for name in item['names']:
                             if name['value'].lower() == funder_name:
                                 return item['id']
                     return ''
                 else:
-                    logger.error(
-                        f"Failed to get funder_id for funder_name: '{funder_name}'. "
-                        f"Status code: {response.status_code} for resource id: {self.short_id}"
-                    )
+                    logger.error(f"Failed to get funder_id for '{funder_name}'. Status code: {response.status_code} for resource id: {self.short_id}")
                     return ''
             except requests.RequestException as e:
-                logger.error(
-                    f"Error fetching funder_id for funder_name: '{funder_name}'. "
-                    f"Error: {str(e)} for resource id: {self.short_id}"
-                )
+                logger.error(f"Error fetching funder_id for '{funder_name}'. Error: {str(e)} for resource id: {self.short_id}")
                 return ''
 
         def parse_creator_name(creator):
-            """Parse creator name into given and family names, handling edge cases."""
             creator_name = creator.name.strip()
             name = HumanName(creator_name)
             if not name.first or not name.last:
@@ -4024,7 +4015,6 @@ class BaseResource(Page, AbstractResource):
                     name.last = name_parts[-1]
             return name.first, name.last
 
-        # Validate required metadata fields
         if not self.metadata.title:
             raise ValidationError(f"No title found for resource {self.short_id}")
         if not self.metadata.creators.count():
@@ -4033,7 +4023,6 @@ class BaseResource(Page, AbstractResource):
             logger.warning(f"No abstract found for resource {self.short_id}. Using empty string.")
             self.metadata.description = type('obj', (), {'abstract': ''})()
 
-        # Initialize the payload structure
         doi = f"10.83165/{self.short_id}"
         payload = {
             "data": {
@@ -4045,24 +4034,18 @@ class BaseResource(Page, AbstractResource):
                     "event": "publish",
                     "url": None,
                     "creators": [],
-                    "titles": [
-                        {
-                            "title": self.metadata.title.value,
-                            "titleType": "MainTitle",
-                            "lang": "en"
-                        }
-                    ],
+                    "titles": [{"title": self.metadata.title.value, "titleType": "Subtitle", "lang": "en"}],
                     "publisher": {
-                            "name": "CUAHSI",
-                            "lang": 'en',
-                            "publisherIdentifier": "https://ror.org/037ncgg21",
-                            "publisherIdentifierScheme": "ROR",
-                            "schemeUri": "https://ror.org"
-                        },
+                        "name": "CUAHSI",
+                        "lang": "en",
+                        "publisherIdentifier": "https://ror.org/037ncgg21",
+                        "publisherIdentifierScheme": "ROR",
+                        "schemeUri": "https://ror.org"
+                    },
                     "publicationYear": None,
                     "subjects": [],
                     "contributors": [],
-                    "alternateIdentifiers": [],
+                    "identifiers": [],
                     "dates": [],
                     "language": "en",
                     "types": {
@@ -4089,7 +4072,7 @@ class BaseResource(Page, AbstractResource):
                     },
                     "contentUrl": [self.bag_url] if hasattr(self, 'bag_url') and self.bag_url else [],
                     "schemaVersion": "http://datacite.org/schema/kernel-4",
-                    "state": "draft"
+                    "state": "findable"
                 },
                 "relationships": {
                     "client": {
@@ -4102,20 +4085,15 @@ class BaseResource(Page, AbstractResource):
             }
         }
 
-        # Publication Year
         pub_date = self.metadata.dates.filter(type='published').first()
-        payload["data"]["attributes"]["publicationYear"] = (
-            str(pub_date.start_date.year if pub_date else self.updated.year)
-        )
+        payload["data"]["attributes"]["publicationYear"] = str(pub_date.start_date.year if pub_date else self.updated.year)
 
-        # URL (required, using hydroShareIdentifier)
         hs_identifier = self.metadata.identifiers.filter(name='hydroShareIdentifier').first()
         if hs_identifier:
             payload["data"]["attributes"]["url"] = hs_identifier.url
         else:
             raise ValidationError(f"No hydroShareIdentifier found for resource {self.short_id}")
 
-        # Creators
         creators = self.metadata.creators.all()
         first_creator = [cr for cr in creators if cr.order == 1]
         other_creators = [cr for cr in creators if cr.order > 1]
@@ -4151,7 +4129,6 @@ class BaseResource(Page, AbstractResource):
                 }
                 payload["data"]["attributes"]["creators"].append(creator_data)
 
-        # Contributors
         for contributor in self.metadata.contributors.all():
             if contributor.name:
                 first_name, last_name = parse_creator_name(contributor)
@@ -4186,7 +4163,6 @@ class BaseResource(Page, AbstractResource):
                 }
                 payload["data"]["attributes"]["contributors"].append(contributor_data)
 
-        # Subjects
         for subject in self.metadata.subjects.all():
             payload["data"]["attributes"]["subjects"].append({
                 "subject": subject.value,
@@ -4194,7 +4170,6 @@ class BaseResource(Page, AbstractResource):
                 "schemeUri": "http://www.hydroshare.org/terms"
             })
 
-        # Dates
         date_mapping = {
             'created': 'Created',
             'modified': 'Updated',
@@ -4207,7 +4182,6 @@ class BaseResource(Page, AbstractResource):
                     "dateType": date_mapping[date.type]
                 })
 
-        # Descriptions
         if self.metadata.description and self.metadata.description.abstract:
             payload["data"]["attributes"]["descriptions"] = [
                 {
@@ -4217,7 +4191,6 @@ class BaseResource(Page, AbstractResource):
                 }
             ]
 
-        # Rights
         if self.metadata.rights and self.metadata.rights.url:
             rights_data = {
                 "rights": self.metadata.rights.statement,
@@ -4227,13 +4200,17 @@ class BaseResource(Page, AbstractResource):
                 rights_data["rightsUriStartDate"] = pub_date.strftime("%Y-%m-%d")
             payload["data"]["attributes"]["rightsList"] = [rights_data]
 
-        # Related Identifiers
         for relation in self.metadata.relations.all():
             identifier_type = "URL" if relation.value.startswith('http') else "DOI"
+            relation_type = relation.type
+            if relation_type.lower() == 'isreferencedby':
+                relation_type = 'IsReferencedBy'
+            elif relation_type.lower() == 'isversionof':
+                relation_type = 'IsVersionOf'
             payload["data"]["attributes"]["relatedIdentifiers"].append({
                 "relatedIdentifier": relation.value,
                 "relatedIdentifierType": identifier_type,
-                "relationType": relation.type
+                "relationType": relation_type
             })
         if hs_identifier:
             payload["data"]["attributes"]["relatedIdentifiers"].append({
@@ -4242,7 +4219,6 @@ class BaseResource(Page, AbstractResource):
                 "relationType": "IsIdenticalTo"
             })
 
-        # Related Items
         for relation in self.metadata.relations.all():
             if relation.type in ('isPartOf', 'hasPart', 'isSupplementTo'):
                 identifier_type = "URL" if relation.value.startswith('http') else "DOI"
@@ -4252,12 +4228,11 @@ class BaseResource(Page, AbstractResource):
                     "relationType": relation.type
                 })
 
-        # GeoLocations
         for coverage in self.metadata.coverages.all():
             if coverage.type == 'box':
                 box_values = coverage.value
                 if all(k in box_values for k in ('westlimit', 'eastlimit', 'southlimit', 'northlimit')):
-                    payload["data"]["attributes"]["geoLocations"].append({
+                    payload["data"]["attributes"].setdefault("geoLocations", []).append({
                         "geoLocationBox": {
                             "westBoundLongitude": str(box_values['westlimit']),
                             "eastBoundLongitude": str(box_values['eastlimit']),
@@ -4267,18 +4242,21 @@ class BaseResource(Page, AbstractResource):
                     })
             elif coverage.type == 'point':
                 point_values = coverage.value
-                if all(k in point_values for k in ('longitude', 'latitude')):
+                longitude = point_values.get('longitude', point_values.get('east'))
+                latitude = point_values.get('latitude', point_values.get('north'))
+
+                if longitude is not None and latitude is not None:
                     geo_location = {
                         "geoLocationPoint": {
-                            "pointLongitude": str(point_values['longitude']),
-                            "pointLatitude": str(point_values['latitude'])
+                            "pointLongitude": str(longitude),
+                            "pointLatitude": str(latitude)
                         }
                     }
                     if point_values.get('name'):
                         geo_location["geoLocationPlace"] = point_values['name']
-                    payload["data"]["attributes"]["geoLocations"].append(geo_location)
 
-        # Funding References
+                    payload["data"]["attributes"].setdefault("geoLocations", []).append(geo_location)
+
         for funder in self.metadata.funding_agencies.all():
             funder_data = {
                 "funderName": funder.agency_name
@@ -4296,33 +4274,32 @@ class BaseResource(Page, AbstractResource):
                 funder_data["awardTitle"] = funder.award_title
             payload["data"]["attributes"]["fundingReferences"].append(funder_data)
 
-        # Formats
         for format_obj in self.metadata.formats.all():
             payload["data"]["attributes"]["formats"].append(format_obj.value)
 
-        # Alternate Identifiers
-        doi_identifier = self.metadata.identifiers.filter(name='doi').first()
-        if doi_identifier:
-            payload["data"]["attributes"]["alternateIdentifiers"].append({
-                "alternateIdentifier": doi_identifier.url,
-                "alternateIdentifierType": "DOI"
+        all_identifiers = self.metadata.identifiers.all()
+
+        for identifier in all_identifiers:
+            payload["data"]["attributes"].setdefault("identifiers", []).append({
+                "identifier": identifier.url,
+                "identifierType": identifier.name
             })
+
         if self.metadata.citation and hasattr(self.metadata.citation, 'value'):
-            payload["data"]["attributes"]["alternateIdentifiers"].append({
+            payload["data"]["attributes"]["identifiers"].append({
                 "alternateIdentifier": self.metadata.citation.value,
                 "alternateIdentifierType": "Citation"
             })
 
-        # Sizes (optional, add if available)
         if hasattr(self, 'size') and self.size:
             payload["data"]["attributes"]["sizes"].append(f"{self.size} bytes")
 
-        # Version (optional, add if available)
         if hasattr(self, 'version') and self.version:
             payload["data"]["attributes"]["version"] = str(self.version)
 
         return json.dumps(payload, indent=2)
 
+     
     def get_crossref_deposit_xml(self, pretty_print=True):
         """Return XML structure describing crossref deposit.
         The mapping of hydroshare resource metadata to crossref metadata has been implemented here as per
