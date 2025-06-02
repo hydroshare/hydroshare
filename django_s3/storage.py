@@ -73,11 +73,11 @@ class S3Storage(S3Storage):
 
         return (directories, files, file_sizes)
 
-    def zipup(self, in_name, out_name):
+    def zipup(self, out_name, *in_names):
         """
         run command to generate zip file for the bag
-        :param in_name: input parameter to indicate the collection path to generate zip
         :param out_name: the output zipped file name
+        :param in_names: input parameters to indicate one or more collection paths to generate zip
         :return: None
         """
         def chunk_request(zip_archive_file, bucket, key):
@@ -106,21 +106,22 @@ class S3Storage(S3Storage):
                         chunk_end += chunk_size
                         chunk_end = min(chunk_end, object_size)
 
-        in_bucket_name, in_path = bucket_and_name(in_name)
         out_bucket, out_path = bucket_and_name(out_name)
-        in_bucket = self.connection.Bucket(in_bucket_name)
 
-        filesCollection = in_bucket.objects.filter(Prefix=in_path).all()
-
-        in_prefix = os.path.dirname(in_path) if self.isDir(in_name) else in_path
         try:
             with open(f's3://{out_bucket}/{out_path}', 'wb',
                       transport_params={'client': self.connection.meta.client}) as out_file:
                 with zipfile.ZipFile(out_file, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
-                    for file_key in filesCollection:
-                        relative_path = file_key.key[len(in_prefix):]
-                        with zip_archive.open(relative_path, 'w', force_zip64=True) as zip_archive_file:
-                            chunk_request(zip_archive_file, in_bucket_name, file_key.key)
+                    for in_name in in_names:
+                        in_bucket_name, in_path = bucket_and_name(in_name)
+                        in_bucket = self.connection.Bucket(in_bucket_name)
+                        filesCollection = in_bucket.objects.filter(Prefix=in_path).all()
+
+                        in_prefix = os.path.dirname(in_path) if self.isDir(in_name) else in_path
+                        for file_key in filesCollection:
+                            relative_path = file_key.key[len(in_prefix):]
+                            with zip_archive.open(relative_path, 'w', force_zip64=True) as zip_archive_file:
+                                chunk_request(zip_archive_file, in_bucket_name, file_key.key)
         except ClientError as e:
             if "An error occurred (InvalidRequest) when calling the CompleteMultipartUpload operation:" in str(e):
                 raise QuotaException("Bucket quota exceeded. Please contact your system administrator.")
