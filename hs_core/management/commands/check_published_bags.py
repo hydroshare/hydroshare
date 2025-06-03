@@ -15,7 +15,7 @@ class Command(BaseCommand):
         istorage = S3Storage()
         for res in published_res:
             print(f"Checking resource {res.short_id} for bag creation...")
-            if res.getAVU("bag_modified") == True or not istorage.exists(res.bag_path):
+            if res.getAVU("bag_modified") == True or istorage.exists(res.bag_path) == False:
                 print(f"Resource {res.short_id} has been modified, creating bag...")
                 try:
                     create_bag_by_s3(res.short_id)
