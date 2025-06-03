@@ -843,7 +843,7 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
             for file in aggregation.files.all():
                 if istorage.exists(file.storage_path):
                     files_to_zip.append(file.storage_path)
-        istorage.zipup(output_path, *set(files_to_zip))
+        istorage.zipup(output_path, *set(files_to_zip), in_prefix=os.path.dirname(input_path))
     else:  # regular folder to zip
         istorage.zipup(output_path, input_path)
     return istorage.signed_url(output_path)

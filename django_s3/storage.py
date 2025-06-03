@@ -73,11 +73,12 @@ class S3Storage(S3Storage):
 
         return (directories, files, file_sizes)
 
-    def zipup(self, out_name, *in_names):
+    def zipup(self, out_name, *in_names, in_prefix=None):
         """
         run command to generate zip file for the bag
         :param out_name: the output zipped file name
         :param in_names: input parameters to indicate one or more collection paths to generate zip
+        :param in_prefix: the prefix of the input files to be zipped
         :return: None
         """
         def chunk_request(zip_archive_file, bucket, key):
@@ -116,8 +117,8 @@ class S3Storage(S3Storage):
                         in_bucket_name, in_path = bucket_and_name(in_name)
                         in_bucket = self.connection.Bucket(in_bucket_name)
                         filesCollection = in_bucket.objects.filter(Prefix=in_path).all()
-
-                        in_prefix = os.path.dirname(in_path) if self.isDir(in_name) else in_path
+                        if not in_prefix:
+                            in_prefix = os.path.dirname(in_path) if self.isDir(in_name) else in_path
                         for file_key in filesCollection:
                             relative_path = file_key.key[len(in_prefix):]
                             with zip_archive.open(relative_path, 'w', force_zip64=True) as zip_archive_file:
