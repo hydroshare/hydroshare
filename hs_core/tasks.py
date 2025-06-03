@@ -806,17 +806,6 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
             res.create_aggregation_meta_files()
 
     if aggregation or sf_zip:
-        # input path points to single file aggregation
-        # ensure that foo.zip contains aggregation metadata
-        # by copying these into a temp subdirectory foo/foo parallel to where foo.zip is stored
-        temp_folder_name, _ = os.path.splitext(output_path)  # strip zip to get scratch dir
-        _, tail = os.path.split(temp_folder_name)  # tail is unqualified folder name "foo"
-        out_with_folder = os.path.join(temp_folder_name, tail)  # foo/foo is subdir to zip
-        # in the case of user provided zip file name, out_with_folder path may not end with
-        # aggregation file name
-        aggr_filename = os.path.basename(input_path)
-        if not out_with_folder.endswith(aggr_filename):
-            out_with_folder = os.path.join(os.path.dirname(out_with_folder), aggr_filename)
         files_to_zip = [input_path]
         if not aggregation:
             if '/data/contents/' in input_path:
