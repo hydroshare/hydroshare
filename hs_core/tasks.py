@@ -904,11 +904,11 @@ def create_bag_by_s3(resource_id, create_zip=True):
                 if istorage.exists(bag_path):
                     istorage.delete(bag_path)
                 istorage.zipup(bagit_input_path, bag_path)
+                res.setAVU("bag_modified", False)
                 if res.raccess.published:
                     # compute checksum to meet DataONE distribution requirement
                     chksum = istorage.checksum(bag_path)
                     res.bag_checksum = chksum
-                res.setAVU("bag_modified", False)
                 return istorage.signed_url(bag_path)
             except SessionException as ex:
                 raise SessionException(-1, '', ex.stderr)
