@@ -4050,7 +4050,7 @@ class BaseResource(Page, AbstractResource):
                     "language": "en",
                     "types": {
                         "resourceTypeGeneral": "Dataset",
-                        "resourceType": self.content_model or "CompositeResource",
+                        "resourceType": self.resource_type,
                         "schemaOrg": "Dataset",
                         "bibtex": "misc",
                         "citeproc": "dataset"
@@ -4200,17 +4200,61 @@ class BaseResource(Page, AbstractResource):
                 rights_data["rightsUriStartDate"] = pub_date.strftime("%Y-%m-%d")
             payload["data"]["attributes"]["rightsList"] = [rights_data]
 
+                
+        VALID_RELATION_TYPE_MAP = {
+            RelationTypes.isPartOf: "IsPartOf",
+            RelationTypes.hasPart: "HasPart",
+            RelationTypes.isExecutedBy: "IsSupplementedBy",   
+            RelationTypes.isCreatedBy: "IsDocumentedBy",      
+            RelationTypes.isVersionOf: "IsVersionOf",
+            RelationTypes.isReplacedBy: "IsNewVersionOf",
+            RelationTypes.isDescribedBy: "IsDescribedBy",     
+            RelationTypes.conformsTo: "References",           
+            RelationTypes.hasFormat: "HasPart",               
+            RelationTypes.isFormatOf: "IsPartOf",             
+            RelationTypes.isRequiredBy: "IsRequiredBy",
+            RelationTypes.requires: "Requires",
+            RelationTypes.isReferencedBy: "IsReferencedBy",
+            RelationTypes.references: "References",
+            RelationTypes.replaces: "Replaces",
+            RelationTypes.source: "IsDerivedFrom",
+            RelationTypes.isSimilarTo: "IsIdenticalTo",       
+            RelationTypes.relation: "References"              
+        }
+        RESOURCE_TYPE_MAP = {
+            "CompositeResource": "Dataset",
+            "CollectionResource": "Collection",
+            "ToolResource": "Software",
+            "ModelProgramResource": "Software",
+            "ModelInstanceResource": "Model",
+            "GenericResource": "Dataset",
+            "TimeSeriesResource": "Dataset",
+            "GeographicFeatureResource": "Dataset",
+            "GeographicRasterResource": "Dataset",
+            "MultidimensionalResource": "Dataset",
+            "ScriptResource": "Software",
+            "WebAppResource": "Service"
+        }
+
         for relation in self.metadata.relations.all():
-            identifier_type = "URL" if relation.value.startswith('http') else "DOI"
-            relation_type = relation.type
-            if relation_type.lower() == 'isreferencedby':
-                relation_type = 'IsReferencedBy'
-            elif relation_type.lower() == 'isversionof':
-                relation_type = 'IsVersionOf'
+            match = re.search(r'(https?://\S+|10\.\d{4,9}/\S+)', relation.value)
+            identifier_value = match.group(0) if match else relation.value
+            identifier_type = "URL" if identifier_value.startswith("http") else "DOI"
+
+
             payload["data"]["attributes"]["relatedIdentifiers"].append({
-                "relatedIdentifier": relation.value,
+                "relatedIdentifier": identifier_value,
                 "relatedIdentifierType": identifier_type,
-                "relationType": relation_type
+                "relationType": VALID_RELATION_TYPE_MAP.get(relation.type),
+            })
+
+            payload["data"]["attributes"]["relatedItems"].append({
+                "relatedItemType": RESOURCE_TYPE_MAP.get(self.resource_type, "Other"),
+                "relationType": VALID_RELATION_TYPE_MAP.get(relation.type),
+                "relatedItemIdentifier": {
+                    "relatedItemIdentifierType": identifier_type,
+                    "relatedItemIdentifier": identifier_value
+                }
             })
         if hs_identifier:
             payload["data"]["attributes"]["relatedIdentifiers"].append({
@@ -4219,14 +4263,6 @@ class BaseResource(Page, AbstractResource):
                 "relationType": "IsIdenticalTo"
             })
 
-        for relation in self.metadata.relations.all():
-            if relation.type in ('isPartOf', 'hasPart', 'isSupplementTo'):
-                identifier_type = "URL" if relation.value.startswith('http') else "DOI"
-                payload["data"]["attributes"]["relatedItems"].append({
-                    "relatedItemIdentifier": relation.value,
-                    "relatedItemIdentifierType": identifier_type,
-                    "relationType": relation.type
-                })
 
         for coverage in self.metadata.coverages.all():
             if coverage.type == 'box':
