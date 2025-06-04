@@ -147,6 +147,8 @@ def setup_periodic_tasks(sender, **kwargs):
                                  options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=0, hour=8), check_bucket_names.s(),
                                  options={'queue': 'periodic'})
+        sender.add_periodic_task(crontab(minute=0, hour=9), ensure_published_resources_have_bags.s(),
+                                 options={'queue': 'periodic'})
 
         # Monthly
         sender.add_periodic_task(crontab(minute=30, hour=7, day_of_month=1), update_from_geoconnex_task.s(),
@@ -166,6 +168,27 @@ def clear_tokens():
     """
     from oauth2_provider.models import clear_expired
     clear_expired()
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def ensure_published_resources_have_bags():
+    """
+    Ensure that all published resources have bags created.
+    This task is run periodically to ensure that all published resources
+    have bags created for them.
+    """
+    published_res = BaseResource.objects.filter(raccess__published=True)
+    istorage = S3Storage()
+    for res in published_res:
+        logger.info(f"Checking resource {res.short_id} for bag creation...")
+        if res.getAVU("bag_modified") or not istorage.exists(res.bag_path):
+            logger.info(f"Resource {res.short_id} has been modified, creating bag...")
+            try:
+                create_bag_by_s3(res.short_id)
+            except Exception as e:
+                logger.error(f"Error creating bag for resource {res.short_id}: {e}")
+        else:
+            logger.info(f"Resource {res.short_id} has not been modified and bag exists, skipping bag creation.")
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
@@ -904,11 +927,11 @@ def create_bag_by_s3(resource_id, create_zip=True):
                 if istorage.exists(bag_path):
                     istorage.delete(bag_path)
                 istorage.zipup(bagit_input_path, bag_path)
+                res.setAVU("bag_modified", False)
                 if res.raccess.published:
                     # compute checksum to meet DataONE distribution requirement
                     chksum = istorage.checksum(bag_path)
                     res.bag_checksum = chksum
-                res.setAVU("bag_modified", False)
                 return istorage.signed_url(bag_path)
             except SessionException as ex:
                 raise SessionException(-1, '', ex.stderr)
