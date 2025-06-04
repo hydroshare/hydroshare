@@ -19,15 +19,5 @@ For more information, see https://docs.google.com/document/d/1dzxqlZW5fKNEyQSeKi
 
 - [ ] Sufficient User and Developer Documentation
 
-<!-- Please email your positive test case lbrazil@cuahsi.org, who will make the decision regarding user documentation. -->
-
-- [ ] Passing Jenkins Build
-
-<!-- Our Jenkins Instance is set up to automatically test every commit from a pull request. Every test must pass, including PEP8 code formatting tests. -->
-
-- [ ] Peer Code review and approval
-
-<!-- This is the process by which a peer developer on the HydroShare team will read the changeset, provide feedback, and ultimately give a formal approval to the code before it passes PR status. -->
-
 ### Positive Test Case
 1. [Enter positive test case here]

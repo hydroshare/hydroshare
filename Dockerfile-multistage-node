@@ -23,7 +23,7 @@ RUN rm -rf static templates && \
     ls -l static/css && \
     echo "--------------------------------------"
 
-FROM hydroshare/hs_docker_base:41f2084
+FROM hydroshare/hs_docker_base:637ae20
 
 COPY --from=node-build /hydroshare /hydroshare
 
