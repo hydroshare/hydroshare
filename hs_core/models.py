@@ -2483,7 +2483,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
 
         # ensure the new holder has a bucket, buckets only exist for users with resources
         istorage = self.get_s3_storage()
-        istorage.create_bucket(new_holder.userprofile.bucket_name)
+        istorage.create_bucket(new_holder.userprofile.bucket_name, user=new_holder)
         # QuotaException will be raised if new_holder does not have enough quota to hold this
         # new resource, in which case, set_quota_holder to the new user fails
         validate_user_quota(new_holder, self.size)

@@ -688,7 +688,7 @@ def update_user_quota_on_quota_request(sender, instance, **kwargs):
         istorage = S3Storage()
         # If a user hasn't created a resource yet, the bucket won't exist
         if not istorage.bucket_exists(qr.quota.user.userprofile.bucket_name):
-            istorage.create_bucket(qr.quota.user.userprofile.bucket_name)
+            istorage.create_bucket(qr.quota.user.userprofile.bucket_name, qr.quota.user)
         qr.quota.save_allocated_value(qr.quota.allocated_value + new_storage_amount, qr.quota.unit)
 
         qr.quota.save()

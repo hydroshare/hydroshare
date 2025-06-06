@@ -450,7 +450,7 @@ def create_resource(
             **kwargs
         )
 
-        resource.get_s3_storage().create_bucket(owner.userprofile.bucket_name)
+        resource.get_s3_storage().create_bucket(owner.userprofile.bucket_name, owner)
         resource.resource_type = resource_type
 
         # by default make resource private
