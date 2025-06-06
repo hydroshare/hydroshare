@@ -579,7 +579,7 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
         if delete_meta_files:
             if resource is None:
                 resource = self.resource
-            istorage = resource.get_s3_storage()
+            istorage = resource.get_s3_storage(as_user=user)
             if istorage.exists(self.schema_values_file_path):
                 istorage.delete(self.schema_values_file_path)
         super(ModelInstanceLogicalFile, self).logical_delete(

@@ -927,7 +927,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         break
                 else:
                     # check if the dump file in S3 and then delete it
-                    istorage = resource.get_s3_storage()
+                    istorage = resource.get_s3_storage(as_user=user)
                     if folder_path:
                         dump_file_path = os.path.join(
                             resource.file_path, folder_path, dump_file_name

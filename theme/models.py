@@ -572,6 +572,9 @@ class UserProfile(models.Model):
 
     _bucket_name = models.CharField(max_length=63, null=True, editable=False, unique=True)
 
+    minio_secret_key = models.CharField(max_length=64, null=True, blank=True)
+    minio_access_key = models.CharField(max_length=64, null=True, blank=True)
+
     def __init__(self, *args, **kwargs):
         '''We set the _bucket_name during user creation
         However we only create the bucket once the user has a resource

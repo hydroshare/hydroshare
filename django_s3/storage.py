@@ -5,6 +5,7 @@ import subprocess
 import tempfile
 import zipfile
 import logging
+import secrets
 
 from django_s3.exceptions import SessionException
 from django.urls import reverse
@@ -34,8 +35,14 @@ logger = logging.getLogger(__name__)
 
 @deconstructible
 class S3Storage(S3Storage):
-    def __init__(self, **settings):
-        super().__init__(**settings)
+    def __init__(self, hydroshare_user=None, **settings):
+        if hydroshare_user:
+            super().__init__(**settings,
+                                AWS_S3_ACCESS_KEY_ID=hydroshare_user.userprofile.minio_access_key,
+                                AWS_S3_SECRET_ACCESS_KEY=hydroshare_user.userprofile.minio_secret_key)
+        else:
+            # default to admin credentials
+            super().__init__(**settings)
 
     @property
     def getUniqueTmpPath(self):
@@ -396,13 +403,33 @@ class S3Storage(S3Storage):
             # TODO check if something went wrong vs not found
             return False
 
-    def create_bucket(self, bucket_name):
+    def create_bucket(self, bucket_name, user=None):
         if not self.bucket_exists(bucket_name):
             self.connection.create_bucket(Bucket=bucket_name)
-            subprocess.run(["mc", "quota", "set", f"hydroshare/{bucket_name}", "--size", "20GiB"], check=True)
-            if settings.MINIO_LIFECYCLE_POLICY:
-                subprocess.run(["mc", "ilm", "rule", "add" "--transition-days", "0", "--transition-tier",
-                                settings.MINIO_LIFECYCLE_POLICY, f"hydroshare/{bucket_name}"], check=True)
+            if user:
+                subprocess.run(["mc", "quota", "set", f"hydroshare/{bucket_name}", "--size", "20GiB"], check=True)
+                if settings.MINIO_LIFECYCLE_POLICY:
+                    subprocess.run(["mc", "ilm", "rule", "add" "--transition-days", "0", "--transition-tier",
+                                    settings.MINIO_LIFECYCLE_POLICY, f"hydroshare/{bucket_name}"], check=True)
+                if settings.HS_MINIO_USER_ENFORCEMENT:
+                            subprocess.run(
+                                ["mc", "admin", "user", "add", "hydroshare", bucket_name, secrets.token_urlsafe(16)],
+                                check=True,
+                                capture_output=True,
+                                text=True,
+                            )
+                            result = subprocess.run(
+                                ["mc", "admin", "user", "svcacct", "add", "hydroshare", bucket_name],
+                                check=True,
+                                capture_output=True,
+                                text=True,
+                            )
+                            output = result.stdout
+                            access_key = output.split("Access Key: ")[1].split("\n")[0]
+                            secret_key = output.split("Secret Key: ")[1].split("\n")[0]
+                            user.userprofile.minio_access_key = access_key
+                            user.userprofile.minio_secret_key = secret_key
+                            user.userprofile.save()
 
     def delete_bucket(self, bucket_name):
         bucket = self.connection.Bucket(bucket_name)

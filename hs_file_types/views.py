@@ -552,7 +552,7 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
     file_type_class = FILE_TYPE_MAP[hs_file_type]
     aggregation = file_type_class.objects.get(id=file_type_id)
     res_files.extend(aggregation.files.all())
-    istorage = res.get_s3_storage()
+    istorage = res.get_s3_storage(as_user=request.user)
     for file in res_files:
         file_name = os.path.basename(file.storage_path)
         if tgt_path:
@@ -577,14 +577,14 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
         res.cleanup_aggregations()
 
     if run_async:
-        task = move_aggregation_task.apply_async((resource_id, file_type_id, hs_file_type, tgt_path))
+        task = move_aggregation_task.apply_async((resource_id, file_type_id, hs_file_type, tgt_path, request.user.username))
         task_id = task.task_id
         task_dict = get_or_create_task_notification(task_id, name='aggregation move', payload=resource_id,
                                                     username=request.user.username)
         resource_modified(res, request.user, overwrite_bag=False)
         return JsonResponse(task_dict)
     else:
-        move_aggregation_task(resource_id, file_type_id, hs_file_type, tgt_path)
+        move_aggregation_task(resource_id, file_type_id, hs_file_type, tgt_path, request.user.username)
         resource_modified(res, request.user, overwrite_bag=False)
         msg = "Aggregation was successfully moved to {}.".format(tgt_path)
         response_data['status'] = 'success'

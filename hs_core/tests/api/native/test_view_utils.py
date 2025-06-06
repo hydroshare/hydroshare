@@ -38,7 +38,7 @@ class TestViewUtils(MockS3TestCaseMixin, TestCase):
                        tgt_path="data/contents/test_folder",
                        validate_move=True)
 
-        folder_contents = list_folder(resource.short_id, "data/contents/test_folder")
+        folder_contents = list_folder(resource.short_id, "data/contents/test_folder", user)
         self.assertTrue(['myfile.txt'] in folder_contents)
 
         resource.delete()
@@ -79,7 +79,7 @@ class TestViewUtils(MockS3TestCaseMixin, TestCase):
                               tgt_path="data/contents/test_folder2",
                               validate_rename=True)
 
-        folder_contents = list_folder(resource.short_id, "data/contents/")
+        folder_contents = list_folder(resource.short_id, "data/contents/", user)
         self.assertTrue(['myfile2.txt'] in folder_contents)
         self.assertTrue(['test_folder2'] in folder_contents)
 

@@ -16,6 +16,7 @@ services:
       MINIO_ROOT_PASSWORD: minioadmin
       MINIO_BROWSER_REDIRECT: "false"
       MINIO_SCANNER_SPEED: "fastest"
+      MINIO_POLICY_PLUGIN_URL: "http://micro-auth/minio/authorization/"
     command: server --console-address ":9001" /data
   postgis:
     image: postgis/postgis:15-3.3
@@ -215,6 +216,19 @@ services:
     depends_on:
       - hydroshare
       - companion
+  micro-auth:
+    image: us-central1-docker.pkg.dev/hydroshare-403701/micro-auth/service:hs-integration
+    platform: linux/amd64
+    environment:
+      HS_DATABASE_URL: "postgresql://postgres:postgres@postgis:5432/postgres"
+      MC_HOST_hydroshare: "http://minioadmin:minioadmin@minio:9000"
+    #- name: REDIS_HOST
+    #  value: micro-auth-redis
+    #- name: REDIS_PORT
+    #  value: "6379"
+    ports:
+      - 8001:8001
+    restart: on-failure
 volumes:
   postgis_data_vol:
   solr_data_vol:

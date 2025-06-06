@@ -318,7 +318,7 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
 
         if delete_meta_files:
             # delete associated metadata and map xml documents
-            istorage = resource.get_s3_storage()
+            istorage = resource.get_s3_storage(as_user=user)
             if istorage.exists(self.metadata_file_path):
                 istorage.delete(self.metadata_file_path)
             if istorage.exists(self.map_file_path):

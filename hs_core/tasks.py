@@ -946,7 +946,11 @@ def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
         if not new_res_id:
             new_res = create_empty_resource(ori_res_id, request_username, action='copy')
             new_res_id = new_res.short_id
-        utils.copy_resource_files_and_AVUs(ori_res_id, new_res_id)
+        if request_username:
+            user = User.objects.get(username=request_username)
+            utils.copy_resource_files_and_AVUs(ori_res_id, new_res_id, user=user)
+        else:
+            utils.copy_resource_files_and_AVUs(ori_res_id, new_res_id)
         ori_res = utils.get_resource_by_shortkey(ori_res_id)
         if not new_res:
             new_res = utils.get_resource_by_shortkey(new_res_id)
@@ -994,7 +998,8 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
         if not new_res_id:
             new_res = create_empty_resource(ori_res_id, username)
             new_res_id = new_res.short_id
-        utils.copy_resource_files_and_AVUs(ori_res_id, new_res_id)
+        user = User.objects.get(username=username)
+        utils.copy_resource_files_and_AVUs(ori_res_id, new_res_id, user=user)
 
         # copy metadata from source resource to target new-versioned resource except three elements
         if not new_res:
@@ -1185,10 +1190,11 @@ def unzip_task(user_pk, res_id, zip_with_rel_path, bool_remove_original, overwri
 
 
 @shared_task
-def move_aggregation_task(res_id, file_type_id, file_type, tgt_path):
+def move_aggregation_task(res_id, file_type_id, file_type, tgt_path, username):
     from hs_core.views.utils import rename_s3_file_or_folder_in_django
     res = utils.get_resource_by_shortkey(res_id)
-    istorage = res.get_s3_storage()
+    user = User.objects.get(username=username)
+    istorage = res.get_s3_storage(as_user=user)
     res_files = []
     file_type_obj = FILE_TYPE_MAP[file_type]
     aggregation = file_type_obj.objects.get(id=file_type_id)

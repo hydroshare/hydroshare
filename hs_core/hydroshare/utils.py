@@ -210,7 +210,7 @@ def replace_resource_file_on_s3(new_file, original_resource_file, user):
     :return:
     """
     ori_res = original_resource_file.resource
-    istorage = ori_res.get_s3_storage()
+    istorage = ori_res.get_s3_storage(as_user=user)
     ori_storage_path = original_resource_file.storage_path
 
     # Note: this doesn't update metadata at all.
@@ -257,12 +257,13 @@ def get_resource_file_by_id(resource, file_id):
     return resource.files.filter(id=file_id).first()
 
 
-def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
+def copy_resource_files_and_AVUs(src_res_id, dest_res_id, user=None):
     """
     Copy resource files and AVUs from source resource to target resource including both
     on S3 storage and on Django database
     :param src_res_id: source resource uuid
     :param dest_res_id: target resource uuid
+    :param user: user who is copying the resource files
     :return:
     """
     avu_list = ['bag_modified', 'metadata_dirty', 'isPublic', 'resourceType']
@@ -271,7 +272,7 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
 
     # This makes the assumption that the destination is in the same exact zone.
     # Also, bags and similar attached files are not copied.
-    istorage = src_res.get_s3_storage()
+    istorage = src_res.get_s3_storage(as_user=user)
 
     # This makes an exact copy of all physical files.
     src_files = os.path.join(src_res.root_path, 'data', 'contents')
@@ -947,7 +948,7 @@ def add_file_to_resource(resource, f, folder='', source_name='',
                 err_msg = "File can't be added to this folder which represents an aggregation"
                 raise ValidationError(err_msg)
         openfile = File(f) if not isinstance(f, UploadedFile) else f
-        ret = ResourceFile.create(resource, openfile, folder=folder, source=None)
+        ret = ResourceFile.create(resource, openfile, folder=folder, source=None, user=user)
         if add_to_aggregation:
             if folder and resource.resource_type == 'CompositeResource':
                 aggregation = resource.get_model_aggregation_in_path(folder)
@@ -963,7 +964,7 @@ def add_file_to_resource(resource, f, folder='', source_name='',
     elif source_name:
         try:
             # create from existing S3 file
-            ret = ResourceFile.create(resource, file=None, folder=folder, source=source_name)
+            ret = ResourceFile.create(resource, file=None, folder=folder, source=source_name, user=user)
         except SessionException as ex:
             try:
                 ret.delete()
@@ -1021,10 +1022,6 @@ class ZipContents(object):
                             yield f
         finally:
             shutil.rmtree(temp_dir)
-
-
-def get_file_storage():
-    return S3Storage()
 
 
 def resolve_request(request):

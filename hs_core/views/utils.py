@@ -211,7 +211,7 @@ def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filena
         if not is_valid:
             return status.HTTP_400_BAD_REQUEST, err_msg
 
-    istorage = res.get_s3_storage()
+    istorage = res.get_s3_storage(as_user=user)
     # temp path to hold updated url file to be written to S3
     temp_path = istorage.getUniqueTmpPath
 
@@ -828,8 +828,6 @@ def _link_s3_folder_to_django(resource, istorage, foldername):
     """
     if __debug__:
         assert (isinstance(resource, BaseResource))
-    if istorage is None:
-        istorage = resource.get_s3_storage()
 
     res_files = []
     if foldername:
@@ -1006,7 +1004,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.raccess.published:
         raise ValidationError("Folder zipping is not allowed for a published resource")
-    istorage = resource.get_s3_storage()
+    istorage = resource.get_s3_storage(as_user=user)
     res_coll_input = os.path.join(resource.root_path, input_coll_path)
     if not istorage.exists(res_coll_input):
         raise ValidationError(f"Specified folder path ({input_coll_path}) doesn't exist.")
@@ -1180,7 +1178,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.raccess.published:
         raise ValidationError("Unzipping of file is not allowed for a published resource.")
-    istorage = resource.get_s3_storage()
+    istorage = resource.get_s3_storage(as_user=user)
     zip_with_full_path = os.path.join(resource.root_path, zip_with_rel_path)
     if not istorage.exists(zip_with_full_path):
         raise ValidationError(f"Zip file ({zip_with_rel_path}) was not found.")
@@ -1360,7 +1358,7 @@ def ingest_bag(resource, bag_file, user):
     from hs_file_types.utils import (identify_metadata_files,
                                      ingest_metadata_files)
 
-    istorage = resource.get_s3_storage()
+    istorage = resource.get_s3_storage(as_user=user)
     zip_with_full_path = os.path.join(resource.file_path, bag_file.short_path)
 
     # unzip to a temporary folder
@@ -1545,7 +1543,7 @@ def remove_folder(user, res_id, folder_path):
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.raccess.published:
         raise ValidationError("Folder deletion is not allowed for a published resource")
-    istorage = resource.get_s3_storage()
+    istorage = resource.get_s3_storage(as_user=user)
     coll_path = os.path.join(resource.root_path, folder_path)
     if not istorage.isDir(coll_path):
         raise ValidationError(f"Specified folder ({coll_path}) was not found")
@@ -1560,13 +1558,13 @@ def remove_folder(user, res_id, folder_path):
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
 
-def list_folder(res_id, folder_path):
+def list_folder(res_id, folder_path, user):
     """
     list a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
     resource backend store.
-    :param user: requesting user
     :param res_id: resource uuid
     :param folder_path: the relative path for the folder to be listed under res_id collection.
+    :param user: requesting user
     :return:
     """
     if __debug__:
@@ -1574,7 +1572,7 @@ def list_folder(res_id, folder_path):
 
     folder_path = folder_path.strip()
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    istorage = resource.get_s3_storage()
+    istorage = resource.get_s3_storage(as_user=user)
     coll_path = os.path.join(resource.root_path, folder_path)
 
     return istorage.listdir(coll_path, remove_metadata=True)
@@ -1653,7 +1651,7 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.raccess.published and not user.is_superuser:
         raise ValidationError("Operations related to file/folder are allowed only for admin for a published resource")
-    istorage = resource.get_s3_storage()
+    istorage = resource.get_s3_storage(as_user=user)
     tgt_full_path = os.path.join(resource.root_path, tgt_path)
     if not istorage.exists(tgt_full_path):
         raise ValidationError(f"Target path ({tgt_path}) doesn't exist")
@@ -1785,7 +1783,7 @@ def _path_move_rename(user, res_id, src_path, tgt_path, validate_move_rename=Tru
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.raccess.published and not user.is_superuser:
         raise ValidationError("Operations related to file/folder are allowed only for admin for a published resource")
-    istorage = resource.get_s3_storage()
+    istorage = resource.get_s3_storage(as_user=user)
     src_base_name = src_path[len("data/contents/"):]
     src_base_name = ResourceFile.validate_new_path(new_path=src_base_name)
     src_full_path = os.path.join(resource.file_path, src_base_name)

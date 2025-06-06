@@ -3098,7 +3098,7 @@ class ResourceFile(ResourceFileS3Mixin):
         return ['_size', '_modified_time', '_checksum', 'filesize_cache_updated']
 
     @classmethod
-    def create(cls, resource, file, folder='', source=None):
+    def create(cls, resource, file, folder='', source=None, user=None):
         """Create custom create method for ResourceFile model.
 
         Create takes arguments that are invariant of storage medium.
@@ -3109,6 +3109,7 @@ class ResourceFile(ResourceFileS3Mixin):
         :param file: a File or a S3 path to an existing file already copied.
         :param folder: the folder in which to store the file.
         :param source: an S3 path in the same zone from which to copy the file.
+        :param user: the user who is creating the file.
 
         There are two main usages to this constructor:
 
@@ -3139,7 +3140,7 @@ class ResourceFile(ResourceFileS3Mixin):
 
         kwargs['file_folder'] = folder
 
-        istorage = resource.get_s3_storage()
+        istorage = resource.get_s3_storage(as_user=user)
 
         # if file is an open file, use native copy by setting appropriate variables
         if isinstance(file, File):
@@ -3856,9 +3857,9 @@ class BaseResource(Page, AbstractResource):
         """Pass through to abstract resource can_view function."""
         return AbstractResource.can_view(self, request)
 
-    def get_s3_storage(self):
+    def get_s3_storage(self, as_user=None):
         """Return S3Storage."""
-        return S3Storage()
+        return S3Storage(user=as_user)
 
     # Paths relative to the resource
     @property

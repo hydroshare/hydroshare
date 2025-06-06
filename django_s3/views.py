@@ -98,7 +98,7 @@ def download(request, path, use_async=True,
         response.content = content_msg
         return response
 
-    istorage = res.get_s3_storage()
+    istorage = res.get_s3_storage(as_user=request.user)
 
     s3_path = res.get_s3_path(path, prepend_short_id=False)
 

@@ -37,7 +37,7 @@ from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_type
 from hs_core.views import utils as view_utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE
 from hs_core.views import serializers
-from hs_core.hydroshare.utils import get_file_storage, resource_modified
+from hs_core.hydroshare.utils import resource_modified
 from hs_core.serialization import GenericResourceMeta, HsDeserializationDependencyException, \
     HsDeserializationException
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
@@ -436,7 +436,7 @@ class ScienceMetadataRetrieveUpdate(APIView):
             #  just copy it to a local path)
             resmeta_path = os.path.join(bag_data_path, 'resourcemap.xml')
             with open(resmeta_path, 'wb') as resmeta:
-                storage = get_file_storage()
+                storage = resource.get_s3_storage(as_user=user)
                 resmeta_s3 = storage.open(AbstractResource.sysmeta_path(pk))
                 shutil.copyfileobj(resmeta_s3, resmeta)
 
