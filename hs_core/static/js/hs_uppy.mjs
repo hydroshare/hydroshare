@@ -1,10 +1,10 @@
 import {
   Uppy,
   Dashboard,
-  Tus,
   GoldenRetriever,
   GoogleDrivePicker,
   DropTarget,
+  AwsS3,
 } from "https://releases.transloadit.com/uppy/v4.13.0/uppy.min.mjs";
 
 let uppy = null;
@@ -16,12 +16,6 @@ if (HS_S_ID === "") {
 }
 else{
   const WARN_ON_FILES_EXCEEDING_SIZE = 10 * 1024**3; // 10 GB
-  let MAX_CHUNK = MAX_CHUNK_SIZE; // in bytes
-
-  // Make sure the chunk size is not larger than the max file size
-  if (MAX_CHUNK > FILE_UPLOAD_MAX_SIZE) {
-    MAX_CHUNK = FILE_UPLOAD_MAX_SIZE;
-  }
 
   // get the least size between max file size and remaining quota
   // remaining quota can be null which effectively means no limit
@@ -30,17 +24,15 @@ else{
     RESTRICTED_SIZE = Math.min(FILE_UPLOAD_MAX_SIZE, REMAINING_QUOTA);
   }
 
-  const headers = {
-    "HS-SID": HS_S_ID
-  };
+  // const headers = {
+  //   "HS-SID": HS_S_ID
+  // };
 
   let quotaNote = `Max file size: ${formatBytes(parseInt(FILE_UPLOAD_MAX_SIZE))}.`;
   if (REMAINING_QUOTA > 0) {
     // `Remaining Quota: ${formatBytes(parseInt(REMAINING_QUOTA))}.
     quotaNote += ` Remaining Quota: ${formatBytes(parseInt(REMAINING_QUOTA))}.`;
   }
-
-  const TUS_ENDPOINT = `${window.location.origin}${UPPY_UPLOAD_PATH}`
 
   uppy = new Uppy({
     id: "uppy",
@@ -178,15 +170,12 @@ else{
     },
   });
   uppy
-  .use(Tus, {
-    endpoint: TUS_ENDPOINT,
-    // https://uppy.io/docs/tus/#headers
-    headers: headers,
-    // https://uppy.io/docs/tus/#chunksize
-    // it is not recommended to set the chunk size
-    // however in testing it seems to improve resumability
-    chunkSize: MAX_CHUNK, // in bytes
-    // https://uppy.io/docs/tus/#limit
+  .use(AwsS3, {
+    // https://uppy.io/docs/companion/#s3
+    endpoint: COMPANION_URL,
+    // https://uppy.io/docs/aws-s3/#headers
+    // headers: headers,
+    // https://uppy.io/docs/aws-s3/#limit
     limit: PARALLEL_UPLOADS_LIMIT || 10,
   })
   // https://uppy.io/docs/uppy/#events

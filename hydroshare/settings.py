@@ -454,7 +454,6 @@ INSTALLED_APPS = (
     "health_check.contrib.psutil",
     "health_check.contrib.rabbitmq",
     "mozilla_django_oidc",
-    'django_tus',
 )
 
 TUS_UPLOAD_DIR = '/tmp/tus_upload'
@@ -465,7 +464,6 @@ TUS_EXISTING_FILE = 'error'  # Other options are: 'overwrite',  'error', 'rename
 # the url for the uppy companion server
 # https://uppy.io/docs/companion/
 COMPANION_URL = 'https://companion.hydroshare.org'
-UPPY_UPLOAD_PATH = '/hsapi/tus/'
 MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD = 50
 PARALLEL_UPLOADS_LIMIT = 10
 
