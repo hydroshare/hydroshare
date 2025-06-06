@@ -3859,7 +3859,7 @@ class BaseResource(Page, AbstractResource):
 
     def get_s3_storage(self, as_user=None):
         """Return S3Storage."""
-        return S3Storage(user=as_user)
+        return S3Storage(hydroshare_user=as_user)
 
     # Paths relative to the resource
     @property
