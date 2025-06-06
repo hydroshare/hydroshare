@@ -38,8 +38,8 @@ class S3Storage(S3Storage):
     def __init__(self, hydroshare_user=None, **settings):
         if hydroshare_user:
             super().__init__(**settings,
-                                AWS_S3_ACCESS_KEY_ID=hydroshare_user.userprofile.minio_access_key,
-                                AWS_S3_SECRET_ACCESS_KEY=hydroshare_user.userprofile.minio_secret_key)
+                             AWS_S3_ACCESS_KEY_ID=hydroshare_user.userprofile.minio_access_key,
+                             AWS_S3_SECRET_ACCESS_KEY=hydroshare_user.userprofile.minio_secret_key)
         else:
             # default to admin credentials
             super().__init__(**settings)
@@ -412,24 +412,24 @@ class S3Storage(S3Storage):
                     subprocess.run(["mc", "ilm", "rule", "add" "--transition-days", "0", "--transition-tier",
                                     settings.MINIO_LIFECYCLE_POLICY, f"hydroshare/{bucket_name}"], check=True)
                 if settings.HS_MINIO_USER_ENFORCEMENT:
-                            subprocess.run(
-                                ["mc", "admin", "user", "add", "hydroshare", bucket_name, secrets.token_urlsafe(16)],
-                                check=True,
-                                capture_output=True,
-                                text=True,
-                            )
-                            result = subprocess.run(
-                                ["mc", "admin", "user", "svcacct", "add", "hydroshare", bucket_name],
-                                check=True,
-                                capture_output=True,
-                                text=True,
-                            )
-                            output = result.stdout
-                            access_key = output.split("Access Key: ")[1].split("\n")[0]
-                            secret_key = output.split("Secret Key: ")[1].split("\n")[0]
-                            user.userprofile.minio_access_key = access_key
-                            user.userprofile.minio_secret_key = secret_key
-                            user.userprofile.save()
+                    subprocess.run(
+                        ["mc", "admin", "user", "add", "hydroshare", bucket_name, secrets.token_urlsafe(16)],
+                        check=True,
+                        capture_output=True,
+                        text=True,
+                    )
+                    result = subprocess.run(
+                        ["mc", "admin", "user", "svcacct", "add", "hydroshare", bucket_name],
+                        check=True,
+                        capture_output=True,
+                        text=True,
+                    )
+                    output = result.stdout
+                    access_key = output.split("Access Key: ")[1].split("\n")[0]
+                    secret_key = output.split("Secret Key: ")[1].split("\n")[0]
+                    user.userprofile.minio_access_key = access_key
+                    user.userprofile.minio_secret_key = secret_key
+                    user.userprofile.save()
 
     def delete_bucket(self, bucket_name):
         bucket = self.connection.Bucket(bucket_name)

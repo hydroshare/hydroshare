@@ -577,7 +577,8 @@ def move_aggregation(request, resource_id, hs_file_type, file_type_id, tgt_path=
         res.cleanup_aggregations()
 
     if run_async:
-        task = move_aggregation_task.apply_async((resource_id, file_type_id, hs_file_type, tgt_path, request.user.username))
+        task = move_aggregation_task.apply_async((resource_id, file_type_id, hs_file_type, tgt_path,
+                                                  request.user.username))
         task_id = task.task_id
         task_dict = get_or_create_task_notification(task_id, name='aggregation move', payload=resource_id,
                                                     username=request.user.username)
