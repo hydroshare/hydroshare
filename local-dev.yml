@@ -217,7 +217,7 @@ services:
       - hydroshare
       - companion
   micro-auth:
-    image: us-central1-docker.pkg.dev/hydroshare-403701/micro-auth/service:hs-integration
+    image: scootna/micro-auth:latest
     platform: linux/amd64
     environment:
       HS_DATABASE_URL: "postgresql://postgres:postgres@postgis:5432/postgres"
