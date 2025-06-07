@@ -1,6 +1,7 @@
 import datetime
 import logging
 import re
+import secrets
 import subprocess
 
 from django.utils import timezone
@@ -600,6 +601,24 @@ class UserProfile(models.Model):
             safe_username = f"{base_safe_username}-{id_number}"
             id_number += 1
         self._bucket_name = safe_username
+
+        subprocess.run(
+            ["mc", "admin", "user", "add", "hydroshare", safe_username, secrets.token_urlsafe(16)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        result = subprocess.run(
+            ["mc", "admin", "user", "svcacct", "add", "hydroshare", safe_username],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        output = result.stdout
+        access_key = output.split("Access Key: ")[1].split("\n")[0]
+        secret_key = output.split("Secret Key: ")[1].split("\n")[0]
+        self.minio_access_key = access_key
+        self.minio_secret_key = secret_key
 
     @property
     def profile_is_missing(self):

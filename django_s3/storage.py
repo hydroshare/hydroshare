@@ -5,7 +5,6 @@ import subprocess
 import tempfile
 import zipfile
 import logging
-import secrets
 
 from django_s3.exceptions import SessionException
 from django.urls import reverse
@@ -408,24 +407,6 @@ class S3Storage(S3Storage):
                 if settings.MINIO_LIFECYCLE_POLICY:
                     subprocess.run(["mc", "ilm", "rule", "add" "--transition-days", "0", "--transition-tier",
                                     settings.MINIO_LIFECYCLE_POLICY, f"hydroshare/{bucket_name}"], check=True)
-                subprocess.run(
-                    ["mc", "admin", "user", "add", "hydroshare", bucket_name, secrets.token_urlsafe(16)],
-                    check=True,
-                    capture_output=True,
-                    text=True,
-                )
-                result = subprocess.run(
-                    ["mc", "admin", "user", "svcacct", "add", "hydroshare", bucket_name],
-                    check=True,
-                    capture_output=True,
-                    text=True,
-                )
-                output = result.stdout
-                access_key = output.split("Access Key: ")[1].split("\n")[0]
-                secret_key = output.split("Secret Key: ")[1].split("\n")[0]
-                user.userprofile.minio_access_key = access_key
-                user.userprofile.minio_secret_key = secret_key
-                user.userprofile.save()
 
     def delete_bucket(self, bucket_name):
         bucket = self.connection.Bucket(bucket_name)
