@@ -36,13 +36,10 @@ logger = logging.getLogger(__name__)
 @deconstructible
 class S3Storage(S3Storage):
     def __init__(self, hydroshare_user=None, **settings):
+        super().__init__(**settings)
         if hydroshare_user:
-            super().__init__(**settings,
-                             AWS_S3_ACCESS_KEY_ID=hydroshare_user.userprofile.minio_access_key,
-                             AWS_S3_SECRET_ACCESS_KEY=hydroshare_user.userprofile.minio_secret_key)
-        else:
-            # default to admin credentials
-            super().__init__(**settings)
+            self.access_key = hydroshare_user.userprofile.minio_access_key
+            self.secret_key = hydroshare_user.userprofile.minio_secret_key
 
     @property
     def getUniqueTmpPath(self):
