@@ -294,6 +294,7 @@ echo
 echo "  - docker exec -u hydro-service hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template1"
 echo
 docker exec -u hydro-service hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template1
+docker exec -u hydro-service hydroshare createdb -U postgres -h postgis postgres-test --encoding UNICODE --template=template1
 
 echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'"
 echo

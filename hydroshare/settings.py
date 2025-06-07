@@ -961,6 +961,10 @@ if any('pytest' in arg for arg in sys.argv) or 'test' in sys.argv:
         'PASSWORD': 'postgres',
         'HOST': 'postgis',
         'PORT': '5432',
+        "TEST": {
+            "NAME": "postgres-test",
+        },
+
     }
 
     TESTING = True
