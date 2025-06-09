@@ -736,7 +736,7 @@ class CompositeResource(BaseResource):
 
             if 'Multidimensional' in resource_data_types:
                 thredds_url = (
-                    f'{settings.THREDDS_SERVER_URL}catalog/hydroshare/resources/{self.short_id}/data/contents/'
+                    f'{settings.THREDDS_SERVER_URL}catalog/hydroshare/resources/catalog/prod/{self.short_id}/data/contents/'
                     f'catalog.html'
                 )
         data_services_urls = {
