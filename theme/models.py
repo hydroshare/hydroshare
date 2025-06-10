@@ -587,7 +587,7 @@ class UserProfile(models.Model):
         '''Assign a bucket name to the user profile
         The bucket name is derived from the user's username
         '''
-        if self._bucket_name:
+        if not hasattr(self, "user") or self._bucket_name:
             return
         safe_username = re.sub(r"[^A-Za-z0-9\.-]", "", self.user.username.lower())
         # limit the length to 60 characters (max length for a bucket name is 63 characters)
@@ -603,13 +603,15 @@ class UserProfile(models.Model):
             safe_username = f"{base_safe_username}-{id_number}"
             id_number += 1
         self._bucket_name = safe_username
-
-        subprocess.run(
-            ["mc", "admin", "user", "add", "hydroshare", safe_username, secrets.token_urlsafe(16)],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
+        try:
+            subprocess.run(
+                ["mc", "admin", "user", "add", "hydroshare", safe_username, secrets.token_urlsafe(16)],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        except:
+            pass
         result = subprocess.run(
             ["mc", "admin", "user", "svcacct", "add", "hydroshare", safe_username],
             check=True,
