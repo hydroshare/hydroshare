@@ -610,7 +610,7 @@ class UserProfile(models.Model):
                 capture_output=True,
                 text=True,
             )
-        except:
+        except Exception:
             pass
         result = subprocess.run(
             ["mc", "admin", "user", "svcacct", "add", "hydroshare", safe_username],
