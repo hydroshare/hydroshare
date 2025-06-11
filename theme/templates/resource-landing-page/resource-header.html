@@ -8,78 +8,81 @@
                     <th>Authors:</th>
 
                     <td style="display:flex; align-items: flex-start;">
-                        <div v-if="res_mode === 'View'" class="authors-wrapper">
-                            <template v-if="authors.length">
-                                <a v-for="(author, index) in authors" data-toggle="modal"
-                                    @click="selectAuthor(author, index)" data-target="#view-author-modal">
+                      <div v-if="res_mode === 'View'" class="authors-wrapper">
+                        <template v-if="authors.length">
+                          <a v-for="(author, index) in authors" data-toggle="modal"
+                            @click="selectAuthor(author, index)"
+                            data-target="#view-author-modal">
+                              <template v-if="author.name">${ author.name | nameWithoutCommas }</template>
+                              <template v-else-if="author.organization">${ author.organization }</template>
+                              <template v-else>${ author.email }</template>
+                          </a>
+                        </template>
+                        <template v-else>
+                          This resource does not have an author who is an active HydroShare user.
+                          Contact CUAHSI (<a href="mailto:help@cuahsi.org">help@cuahsi.org</a>)
+                          {% if cm.raccess.public %}
+                              for information on this resource.
+                          {% else %}
+                              to determine if accessing this resource is possible.
+                          {% endif %}
+                        </template>
+                      </div>
+
+                      <div v-if="res_mode === 'Edit'">
+                        {% if not cm.raccess.published_or_review_pending %}
+                        <a :disabled="isUpdatingAuthor" type="button" id="btn-add-new-author"
+                           class="btn btn-success btn-xs has-space-right" data-toggle="modal"
+                           data-target="#add-author-modal" title="Add Author">
+                            <span class="glyphicon glyphicon-plus"></span>
+                        </a>
+
+                        <span :class="{loading: isUpdatingAuthor}" class="authors-wrapper sortable">
+                            <span v-for="(author, index) in authors" :data-id="author.id">
+                                <a data-toggle="modal" class="author-preview" :title="'Edit ' + author.name"
+                                   @click="selectAuthor(author, index)" data-target="#edit-author-modal">
                                     <template v-if="author.name">${ author.name | nameWithoutCommas }</template>
                                     <template v-else-if="author.organization">${ author.organization }</template>
                                     <template v-else>${ author.email }</template>
                                 </a>
-                            </template>
-                            <template v-else>
-                                This resource does not have an author who is an active HydroShare user.
-                                Contact CUAHSI (<a href="mailto:help@cuahsi.org">help@cuahsi.org</a>)
-                                {% if cm.raccess.public %}
-                                for information on this resource.
-                                {% else %}
-                                to determine if accessing this resource is possible.
-                                {% endif %}
-                            </template>
-                        </div>
-
-                        <div v-if="res_mode === 'Edit'">
+                            </span>
+                        </span>
+                        
+                        {% else %}
+                          <span class="authors-wrapper">
+                               <a v-for="(author, index) in authors" data-toggle="modal"
+                               @click="selectAuthor(author, index)"
+                               data-target="#view-author-modal">
+                                <template v-if="author.name">${ author.name | nameWithoutCommas }</template>
+                                <template v-else-if="author.organization">${ author.organization }</template>
+                                <template v-else>${ author.email }</template>
+                                </a>
+                          </span>
+                        {% endif %}
+                      </div>
+                      <div class="flex has-space-left align-center gap-1">
+                        {% if resource_edit_mode %}
                             {% if not cm.raccess.published_or_review_pending %}
-                            <a :disabled="isUpdatingAuthor" type="button" id="btn-add-new-author"
-                                class="btn btn-success btn-xs has-space-right" data-toggle="modal"
-                                data-target="#add-author-modal" title="Add Author">
-                                <span class="glyphicon glyphicon-plus"></span>
-                            </a>
-
-                            <span :class="{loading: isUpdatingAuthor}" class="authors-wrapper sortable">
-                                <span v-for="(author, index) in authors" :data-id="author.id">
-                                    <a data-toggle="modal" class="author-preview" :title="'Edit ' + author.name"
-                                        @click="selectAuthor(author, index)" data-target="#edit-author-modal">
-                                        <template v-if="author.name">${ author.name | nameWithoutCommas }</template>
-                                        <template v-else-if="author.organization">${ author.organization }</template>
-                                        <template v-else>${ author.email }</template>
-                                    </a>
+                                <span data-toggle="tooltip" data-placement="auto"
+                                    title='Drag and drop Authors to rearrange.'
+                                    class="glyphicon glyphicon-info-sign text-muted">
                                 </span>
-                            </span>
-
-                            {% else %}
-                            <span class="authors-wrapper">
-                                <a v-for="(author, index) in authors" data-toggle="modal"
-                                    @click="selectAuthor(author, index)" data-target="#view-author-modal">
-                                    <template v-if="author.name">${ author.name | nameWithoutCommas }</template>
-                                    <template v-else-if="author.organization">${ author.organization }</template>
-                                    <template v-else>${ author.email }</template>
-                                </a>
-                            </span>
-                            {% endif %}
-                        </div>
-                        <div class="flex has-space-left align-center gap-1">
-                            {% if resource_edit_mode %}
-                            {% if not cm.raccess.published_or_review_pending %}
-                            <span data-toggle="tooltip" data-placement="auto"
-                                title='Drag and drop Authors to rearrange.'
-                                class="glyphicon glyphicon-info-sign text-muted">
-                            </span>
                             {% endif %}
                             <a data-toggle="tooltip" data-placement="auto"
                                 href="https://www.youtube.com/watch?v=5rYQjvnRXlI" target="_blank"
                                 title='How to: Authorship and Ownership'
                                 class="fa fa-youtube-play icon-red no-decoration icon-guide">
                             </a>
-                            {% endif %}
-                        </div>
+                        {% endif %}
+                      </div>
                     </td>
                 </tr>
                 <tr>
                     <th>Owners:</th>
                     <td v-if="owners.length" class="owners-wrapper">
                         <template v-for="owner in owners">
-                            <profile-link :user="owner" :key="owner.id" @load-card="loadOwnerCard($event)">
+                            <profile-link
+                                :user="owner" :key="owner.id" @load-card="loadOwnerCard($event)">
                             </profile-link>
                         </template>
 
@@ -89,9 +92,9 @@
                         This resource does not have an owner who is an active HydroShare user.
                         Contact CUAHSI (<a href="mailto:help@cuahsi.org">help@cuahsi.org</a>)
                         {% if cm.raccess.public %}
-                        for information on this resource.
+                            for information on this resource.
                         {% else %}
-                        to determine if accessing this resource is possible.
+                            to determine if accessing this resource is possible.
                         {% endif %}
                     </td>
                 </tr>
@@ -105,31 +108,28 @@
                 </tr>
                 <tr>
                     <th>Created:</th>
-                    <td><span class="local-datetime" data-dt="{{ cm.created|date:'c' }}"></span></td>
+                    <td>{{ cm.created|date:"M d, Y" }} at {{ cm.created|time }} (UTC)</td>
                 </tr>
                 <tr>
                     <th>Last updated:</th>
                     <td>
-                        <span class="local-datetime" data-dt="{{ cm.last_updated|date:'c' }}"></span>
+                        {{ cm.last_updated|date:"M d, Y" }} at {{ cm.last_updated|time }} (UTC)
                         {% if cm.raccess.published and cm.last_updated > cm|published_date and cm.last_updated != cm|published_date %}
-                        <span>(Metadata update)</span>
+                            <span>(Metadata update)</span>
                         {% endif %}
                     </td>
                 </tr>
-
+                
                 {% if cm.raccess.published %}
                 <tr>
                     <th>Published date:</th>
-
-                    <td>
-                        <span class="local-datetime" data-dt="{{ cm.published_date|date:'c' }}"></span>
-                    </td>
+                    <td> {{ cm|published_date|date:"M d, Y" }} at {{ cm|published_date|time }} (UTC)</td>
                 </tr>
                 <tr>
                     <th>DOI:</th>
                     <td>10.4211/hs.{{ cm.short_id }}</td>
                 </tr>
-                {% endif %}
+                {% endif %}               
                 <tr>
                     <th>Citation:</th>
                     <td><a href="#citation">See how to cite this resource</a></td>
@@ -139,20 +139,27 @@
                     <th>Content types:</th>
                     <td>
                         {% for ct in cm.aggregation_types %}
-                        <span class="label label-info agg-{{ ct|display_name_to_class }}">{{ ct }}</span>&nbsp;
+                            <span class="label label-info agg-{{ ct|display_name_to_class }}">{{ ct }}</span>&nbsp;
                         {% endfor %}
                     </td>
                 </tr>
                 {% endif %}
             </table>
 
-            <edit-author-modal v-if="res_mode === 'Edit'" @update-author="updateAuthor" @delete-author="deleteAuthor"
-                :_author="selectedAuthor.author" :is_updating_author="isUpdatingAuthor"
-                :is_deleting_author="isDeletingAuthor" :is_person="isPerson" :edit_author_error="editAuthorError"
-                :can_remove="authors.length > 1">
+            <edit-author-modal v-if="res_mode === 'Edit'"
+                               @update-author="updateAuthor"
+                               @delete-author="deleteAuthor"
+                               :_author="selectedAuthor.author"
+                               :is_updating_author="isUpdatingAuthor"
+                               :is_deleting_author="isDeletingAuthor"
+                               :is_person="isPerson"
+                               :edit_author_error="editAuthorError"
+                               :can_remove="authors.length > 1">
             </edit-author-modal>
 
-            <author-preview-modal v-if="res_mode === 'View'" :author="selectedAuthor.author" :is_person="isPerson">
+            <author-preview-modal v-if="res_mode === 'View'"
+                                  :author="selectedAuthor.author"
+                                  :is_person="isPerson">
             </author-preview-modal>
 
             <add-author-modal v-if="res_mode === 'Edit'"></add-author-modal>
@@ -162,27 +169,5 @@
         </div>
     </div>
 </div>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const options = {
-            year: 'numeric',
-            month: 'short',
-            day: '2-digit',
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true
-        };
 
-        document.querySelectorAll(".local-datetime").forEach(function (el) {
-            const dt = new Date(el.dataset.dt);
-            const parts = new Intl.DateTimeFormat(undefined, options).formatToParts(dt);
-
-            const map = Object.fromEntries(parts.map(p => [p.type, p.value]));
-
-            const amPm = map.dayPeriod === 'AM' ? 'a.m.' : 'p.m.';
-            const formatted = `${map.month} ${map.day}, ${map.year} at ${map.hour}:${map.minute} ${amPm}`;
-            el.textContent = formatted;
-        });
-    });
-</script>
 <script type="text/javascript" src="{% static 'js/hs-vue/left-header-app.js' %}"></script>
