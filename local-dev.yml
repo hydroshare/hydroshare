@@ -17,7 +17,7 @@ services:
       MINIO_ROOT_PASSWORD: minioadmin
       MINIO_BROWSER_REDIRECT: "false"
       MINIO_SCANNER_SPEED: "fastest"
-      # MINIO_API_CORS_ALLOW_ORIGIN: "*"
+      # MINIO_API_CORS_ALLOW_ORIGIN: "*localhost*"
     command: server --console-address ":9001" /data
   postgis:
     image: postgis/postgis:15-3.3
@@ -198,9 +198,9 @@ services:
       COMPANION_AWS_ENDPOINT: 'https://localhost/minio'
       # COMPANION_AWS_ENDPOINT: 'http://localhost:9000'
       # same as AWS_S3_ENDPOINT_URL
+      COMPANION_AWS_FORCE_PATH_STYLE: 'true'
       COMPANION_AWS_BUCKET: 'tmp'
       COMPANION_AWS_REGION: 'us-east-1'
-
     ports:
       - "3020:3020"
     volumes:
