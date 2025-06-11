@@ -16,6 +16,7 @@ if (HS_S_ID === "") {
 }
 else{
   const WARN_ON_FILES_EXCEEDING_SIZE = 10 * 1024**3; // 10 GB
+  const BUCKET_NAME = "asdf"
 
   // get the least size between max file size and remaining quota
   // remaining quota can be null which effectively means no limit
@@ -58,6 +59,7 @@ else{
           getCurrentPath()
         );
         files[fileId].meta.file_size = files[fileId].data.size;
+        files[fileId].meta.bucket = BUCKET_NAME;
       });
       return files;
     },
@@ -112,7 +114,7 @@ else{
     target: "#uppy",
     showProgressDetails: true,
     trigger: "#uppy-modal-trigger",
-    note: quotaNote,
+    note: quotaNote + `\nBucket: ${BUCKET_NAME}`,
     // https://uppy.io/docs/dashboard/#locale
     locale: {
       strings: {

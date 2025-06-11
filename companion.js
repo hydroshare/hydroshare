@@ -19,7 +19,7 @@ defaultOptions.s3.bucket = ({ filename, metadata, req }) => {
 	console.log('filename:', filename);
 	console.log('metadata:', metadata);
 	// console.log('req:', req);
-			return 'asdf'
+			return metadata.bucket
 		}
 
 
