@@ -16,6 +16,7 @@ services:
       MINIO_ROOT_PASSWORD: minioadmin
       MINIO_BROWSER_REDIRECT: "false"
       MINIO_SCANNER_SPEED: "fastest"
+      # MINIO_API_CORS_ALLOW_ORIGIN: "*"
     command: server --console-address ":9001" /data
   postgis:
     image: postgis/postgis:15-3.3
@@ -170,7 +171,7 @@ services:
       COMPANION_CLIENT_ORIGINS: 'https://localhost'
       # when testing 3rd party services like google drive, you will access hydroshare at http://host.docker.internal:8000
       # you will need to add a line in your /etc/hosts file to map host.docker.internal to localhost
-      COMPANION_UPLOAD_URLS: 'https://localhost/hsapi/tus/*'
+      COMPANION_UPLOAD_URLS: 'https://localhost/*'
       COMPANION_DATADIR: '/mnt/companion-data'
       COMPANION_DOMAIN: 'localhost'
       COMPANION_PATH: '/companion'
@@ -186,6 +187,19 @@ services:
       COMPANION_GOOGLE_SECRET: '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'
       # https://uppy.io/docs/companion/#enablegooglepickerendpoint-companion_enable_google_picker_endpoint
       COMPANION_ENABLE_GOOGLE_PICKER_ENDPOINT: 'true'
+      # https://uppy.io/docs/companion/#s3
+      # https://uppy.io/docs/companion/#s3getkey-filename-metadata-req-
+      COMPANION_AWS_KEY: 'minioadmin'
+      # same as AWS_S3_ACCESS_KEY_ID
+      COMPANION_AWS_SECRET: 'minioadmin'
+      # same as AWS_S3_SECRET_ACCESS_KEY
+      # COMPANION_AWS_ENDPOINT: 'http://minio:9000'
+      COMPANION_AWS_ENDPOINT: 'https://localhost/minio'
+      # COMPANION_AWS_ENDPOINT: 'http://localhost:9000'
+      # same as AWS_S3_ENDPOINT_URL
+      COMPANION_AWS_BUCKET: 'tmp'
+      COMPANION_AWS_REGION: 'us-east-1'
+
     ports:
       - "3020:3020"
     volumes:
