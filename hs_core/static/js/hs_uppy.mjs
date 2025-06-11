@@ -24,10 +24,6 @@ else{
     RESTRICTED_SIZE = Math.min(FILE_UPLOAD_MAX_SIZE, REMAINING_QUOTA);
   }
 
-  // const headers = {
-  //   "HS-SID": HS_S_ID
-  // };
-
   let quotaNote = `Max file size: ${formatBytes(parseInt(FILE_UPLOAD_MAX_SIZE))}.`;
   if (REMAINING_QUOTA > 0) {
     // `Remaining Quota: ${formatBytes(parseInt(REMAINING_QUOTA))}.
@@ -177,6 +173,11 @@ else{
     // headers: headers,
     // https://uppy.io/docs/aws-s3/#limit
     limit: PARALLEL_UPLOADS_LIMIT || 10,
+    // https://github.com/transloadit/uppy/blob/5c0c831937c9b3d93313775cc5b629fc15874a4b/packages/%40uppy/companion/src/server/controllers/s3.js#L111
+    createMultipartUpload: (file) => {
+      // https://uppy.io/docs/aws-s3/#createMultipartUpload
+      console.log(file)
+    }
   })
   // https://uppy.io/docs/uppy/#events
   .on("file-added", (file) => {

@@ -163,7 +163,9 @@ services:
     command: /bin/bash init-defaultworker
   companion:
   # https://github.com/transloadit/uppy/blob/main/packages/%40uppy/companion/KUBERNETES.md
-    image:  docker.io/transloadit/companion:5.5.0
+    build:
+      context: .
+      dockerfile: Dockerfile-companion
     platform: linux/amd64
     container_name: companion
     hostname: companion
@@ -200,7 +202,8 @@ services:
       # same as AWS_S3_ENDPOINT_URL
       # https://uppy.io/docs/companion/#companion_aws_prefix
       # COMPANION_AWS_PREFIX: 'data'
-      COMPANION_AWS_BUCKET: 'asdf'
+      # https://uppy.io/docs/companion/#s3bucket-companion_aws_bucket
+      # COMPANION_AWS_BUCKET: 'asdf'
       COMPANION_AWS_FORCE_PATH_STYLE: 'true'
       # set this at http://localhost:9001/settings/configurations/region
       COMPANION_AWS_REGION: 'us-east'

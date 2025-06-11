@@ -1,0 +1,10 @@
+# https://github.com/transloadit/uppy/blob/5c0c831937c9b3d93313775cc5b629fc15874a4b/Dockerfile
+FROM docker.io/transloadit/companion:5.8.0
+
+# rename the existing config
+RUN mv /app/lib/config/companion.js /app/lib/config/companion-old.js
+# copy in the new config
+COPY ./companion.js /app/lib/config/companion.js
+
+# CMD ["node","/app/bin/companion","--config","/app/companion.js"]
+CMD ["node","/app/bin/companion"]
