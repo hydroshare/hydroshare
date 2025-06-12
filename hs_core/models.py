@@ -54,8 +54,6 @@ from .hs_rdf import (HSTERMS, RDFS1, RDF_MetaData_Mixin, RDF_Term_MixIn,
                      rdf_terms)
 from .languages_iso import languages as iso_languages
 
-from django_tus.signals import tus_upload_finished_signal
-
 
 def clean_abstract(original_string):
     """Clean abstract for XML inclusion.
