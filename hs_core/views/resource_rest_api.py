@@ -6,9 +6,11 @@ import tempfile
 import shutil
 import logging
 import json
+import uuid
 
 from django.urls import reverse
 from django.conf import settings
+from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousFileOperation
 from django.core.exceptions import ValidationError as CoreValidationError
 from django.http import HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotFound
@@ -27,8 +29,9 @@ from rest_framework.request import Request
 from rest_framework.exceptions import ValidationError, NotAuthenticated, PermissionDenied, NotFound
 
 from django_s3.exceptions import SessionException
+from django_s3.storage import S3Storage
 from django_tus.views import TusUpload
-from django_tus.tusfile import TusFile, TusChunk
+from django_tus.tusfile import TusFile, TusChunk, FilenameGenerator
 from django_tus.response import TusResponse
 from hs_core import hydroshare
 from hs_core.models import AbstractResource
@@ -893,6 +896,99 @@ def _validate_metadata(metadata_list):
             raise ValidationError(detail=err_message)
 
 
+class CustomTusFile(TusFile):
+    # extend TusFile to allow it to write to s3 storage instead of local disk
+    # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/tusfile.py#L52
+
+    # TODO: 5686 -- get the username from the metadata
+    BUCKET = "admin"
+
+    def __init__(self, resource_id):
+        self.storage = S3Storage()
+        self.resource_id = resource_id
+        self.filename = cache.get("tus-uploads/{}/filename".format(resource_id))
+        self.file_size = int(cache.get("tus-uploads/{}/file_size".format(resource_id)))
+        self.metadata = cache.get("tus-uploads/{}/metadata".format(resource_id))
+        self.offset = cache.get("tus-uploads/{}/offset".format(resource_id))
+
+    def get_storage(self):
+        return self.storage
+
+    @staticmethod
+    def create_initial_file(metadata, file_size):
+        resource_id = str(uuid.uuid4())
+        cache.add("tus-uploads/{}/filename".format(resource_id), "{}".format(metadata.get("filename")), settings.TUS_TIMEOUT)
+        cache.add("tus-uploads/{}/file_size".format(resource_id), file_size, settings.TUS_TIMEOUT)
+        cache.add("tus-uploads/{}/offset".format(resource_id), 0, settings.TUS_TIMEOUT)
+        cache.add("tus-uploads/{}/metadata".format(resource_id), metadata, settings.TUS_TIMEOUT)
+
+        tus_file = CustomTusFile(resource_id)
+        tus_file.write_init_file()
+        return tus_file
+
+    def get_path(self):
+        hs_res_id = self.metadata.get('hs_res_id')
+        return f"{hs_res_id}/data/contents/{self.resource_id}"
+        # return self.resource_id
+
+    def get_path_and_name(self):
+        hs_res_id = self.metadata.get('hs_res_id')
+        return f"{hs_res_id}/data/contents/{self.filename}"
+
+    @staticmethod
+    def check_existing_file(path):
+        return S3Storage().exists(path)
+
+    def is_valid(self):
+        return self.filename is not None and self.storage.exists(self.get_path())
+
+    def _write_file(self, path, offset, content):
+        self.storage.connection.Bucket(self.BUCKET).put_object(Key=path, Body=content)
+
+    def write_init_file(self):
+        try:
+            self._write_file(self.get_path(), self.file_size, b"\0")
+        except Exception as e:
+            error_message = "Unable to create file: {}".format(e)
+            logger.error(error_message, exc_info=True)
+            return TusResponse(status=500, reason=error_message)
+
+    def write_chunk(self, chunk):
+        try:
+            self._write_file(self.get_path(), chunk.offset, chunk.content)
+            self.offset = cache.incr("tus-uploads/{}/offset".format(self.resource_id), chunk.chunk_size)
+
+        except IOError:
+            logger.error("patch", extra={'request': chunk.META, 'tus': {
+                "resource_id": self.resource_id,
+                "filename": self.filename,
+                "file_size": self.file_size,
+                "metadata": self.metadata,
+                "offset": self.offset,
+                "upload_file_path": self.get_path(),
+            }})
+            return TusResponse(status=500)
+
+    def rename(self):
+
+        setting = settings.TUS_FILE_NAME_FORMAT
+
+        if setting == 'keep':
+            if self.check_existing_file(self.filename):
+                return TusResponse(status=409, reason="File with same name already exists")
+        elif setting == 'random':
+            self.filename = FilenameGenerator(self.filename).create_random_name()
+        elif setting == 'random-suffix':
+            self.filename = FilenameGenerator(self.filename).create_random_suffix_name()
+        elif setting == 'increment':
+            self.filename = FilenameGenerator(self.filename).create_incremented_name()
+        else:
+            return ValueError()
+
+        # move the object in s3
+        self.storage.moveFile(self.get_path(), self.get_path_and_name())
+
+
 class CustomTusUpload(TusUpload):
 
     @method_decorator(csrf_exempt)
@@ -904,7 +1000,7 @@ class CustomTusUpload(TusUpload):
             # get the tus resource_id from the request
             tus_resource_id = self.kwargs['resource_id']
             try:
-                tus_file = TusFile(str(tus_resource_id))
+                tus_file = CustomTusFile(str(tus_resource_id))
                 # get the resource id from the tus metadata
                 metadata = tus_file.metadata
             except Exception as ex:
@@ -934,16 +1030,18 @@ class CustomTusUpload(TusUpload):
 
         # check that the user has permission to upload a file to the resource
         try:
-            view_utils.authorize(self.request, hs_res_id,
-                                 needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+            _, _, user = view_utils.authorize(self.request, hs_res_id, 
+                                              needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
         except DjangoPermissionDenied:
             return HttpResponseForbidden()
-
+        # set the username in the metadata
+        metadata['username'] = user.username
         return super(CustomTusUpload, self).dispatch(*args, **kwargs)
 
     def patch(self, request, resource_id, *args, **kwargs):
 
-        tus_file = TusFile.get_tusfile_or_404(str(resource_id))
+        # tus_file = CustomTusFile.get_tusfile_or_404(str(resource_id))
+        tus_file = CustomTusFile(str(resource_id))
 
         # when using the google file picker api, the file size is initially set to 0
         http_upload_length = request.META.get('HTTP_UPLOAD_LENGTH', None)
@@ -969,7 +1067,8 @@ class CustomTusUpload(TusUpload):
             tus_file.rename()
             tus_file.clean()
 
-            self.send_signal(tus_file)
+            # TODO: 5686 any additional cleanup required?
+            # self.send_signal(tus_file)
             self.finished()
 
         return TusResponse(status=204, extra_headers={'Upload-Offset': tus_file.offset})
@@ -987,7 +1086,8 @@ class CustomTusUpload(TusUpload):
         if message_id:
             metadata["message_id"] = base64.b64decode(message_id)
 
-        existing = TusFile.check_existing_file(metadata.get("filename", False))
+        path = f"{metadata.get('hs_res_id')}/{metadata.get('filename', False)}"
+        existing = CustomTusFile.check_existing_file(path)
 
         if settings.TUS_EXISTING_FILE == 'error' and settings.TUS_FILE_NAME_FORMAT == 'keep' and existing:
             return TusResponse(status=409, reason="File = with same name already exists")
@@ -998,7 +1098,7 @@ class CustomTusUpload(TusUpload):
         if meta_file_size and meta_file_size != 'null':
             file_size = meta_file_size
 
-        tus_file = TusFile.create_initial_file(metadata, file_size)
+        tus_file = CustomTusFile.create_initial_file(metadata, file_size)
 
         return TusResponse(
             status=201,

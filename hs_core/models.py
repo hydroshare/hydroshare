@@ -5171,6 +5171,7 @@ def resource_update_signal_handler(sender, instance, created, **kwargs):
     pass
 
 
+# TODO: 5686 remove this if not needed
 @receiver(tus_upload_finished_signal)
 def tus_upload_finished_handler(sender, **kwargs):
     from hs_core.views.utils import create_folder
@@ -5210,6 +5211,7 @@ def tus_upload_finished_handler(sender, **kwargs):
     eventual_relative_path = ''
 
     try:
+        # TODO 5686 modify this path
         # see if there is a path within data/contents that the file should be uploaded to
         existing_path_in_resource = metadata.get('existing_path_in_resource', '')
         existing_path_in_resource = json.loads(existing_path_in_resource).get("path")
