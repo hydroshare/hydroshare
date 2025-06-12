@@ -457,7 +457,7 @@ INSTALLED_APPS = (
     'django_tus',
 )
 
-TUS_FILE_NAME_FORMAT = 'increment'  # Other options are: 'random-suffix', 'random', 'keep'
+TUS_FILE_NAME_FORMAT = 'keep'  # Other options are: 'random-suffix', 'random', 'keep'
 TUS_EXISTING_FILE = 'error'  # Other options are: 'overwrite',  'error', 'rename'
 
 # the url for the uppy companion server
