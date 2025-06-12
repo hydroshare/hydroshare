@@ -22,6 +22,9 @@
     const GOOGLE_PICKER_CLIENT_ID  = "{{ google_picker_client_id }}";
     const GOOGLE_PICKER_API_KEY = "{{ google_picker_api_key }}";
     const GOOGLE_PICKER_APP_ID = "{{ google_picker_app_id }}";
+    {% if request.user.is_authenticated %}
+    const USERNAME = "{{ request.user.username }}";
+    {% endif %}
   </script>
   <script type="module" src="{% static 'js/hs_uppy.mjs' %}"></script>
 {% endblock %}

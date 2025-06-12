@@ -70,6 +70,7 @@ else{
           getCurrentPath()
         );
         files[fileId].meta.file_size = files[fileId].data.size;
+        files[fileId].meta.username = USERNAME;
       });
       return files;
     },
