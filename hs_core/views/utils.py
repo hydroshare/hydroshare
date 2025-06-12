@@ -677,11 +677,11 @@ def get_my_resources_list_new(user, annotate=False, filter=None, **kwargs):
     """
     # Start with a query on UserResource - much more efficient!
     user_resources = UserResource.objects.filter(user=user)
-    
+
     # Apply filters - combine them with OR
     if filter:
         filter_query = models.Q()  # Initialize an empty Q object for OR combinations
-        
+
         # Build filter conditions using OR operations
         if 'owned' in filter:
             filter_query |= models.Q(permission=PrivilegeCodes.OWNER)
@@ -693,7 +693,7 @@ def get_my_resources_list_new(user, annotate=False, filter=None, **kwargs):
             filter_query |= models.Q(is_favorite=True)
         if 'discovered' in filter:
             filter_query |= models.Q(is_discovered=True)
-        
+
         # Apply the filter query to the user_resources
         user_resources = user_resources.filter(filter_query)
 
@@ -710,7 +710,7 @@ def get_my_resources_list_new(user, annotate=False, filter=None, **kwargs):
     resource_collection = resource_collection.annotate(
         user_permission=Subquery(
             UserResource.objects.filter(
-                user=user, 
+                user=user,
                 resource=OuterRef('pk')
             ).values('permission')
         )
@@ -722,7 +722,7 @@ def get_my_resources_list_new(user, annotate=False, filter=None, **kwargs):
         resource_collection = resource_collection.annotate(
             is_favorite=Subquery(
                 UserResource.objects.filter(
-                    user=user, 
+                    user=user,
                     resource=OuterRef('pk')
                 ).values('is_favorite')
             ),
@@ -734,15 +734,15 @@ def get_my_resources_list_new(user, annotate=False, filter=None, **kwargs):
             ),
             is_discovered=Subquery(
                 UserResource.objects.filter(
-                    user=user, 
+                    user=user,
                     resource=OuterRef('pk')
                 ).values('is_discovered')
             )
         )
-        
+
         # Select related for raccess and content_type
         # resource_collection = resource_collection.select_related('raccess', 'content_type')
-    
+
     return resource_collection
 
 
