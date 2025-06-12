@@ -16,7 +16,11 @@ if (HS_S_ID === "") {
 }
 else{
   const WARN_ON_FILES_EXCEEDING_SIZE = 10 * 1024**3; // 10 GB
-  let MAX_CHUNK = MAX_CHUNK_SIZE; // in bytes
+  // MAX_CHUNK should be less than the DATA_UPLOAD_MAX_MEMORY_SIZE but > 0
+  let MAX_CHUNK = MAX_CHUNK_SIZE - 1000000; // 1 MB less than the max chunk size, in bytes
+  if (MAX_CHUNK <= 0) {
+    MAX_CHUNK = 1;
+  }
 
   // Make sure the chunk size is not larger than the max file size
   if (MAX_CHUNK > FILE_UPLOAD_MAX_SIZE) {
