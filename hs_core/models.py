@@ -5258,15 +5258,23 @@ class UserResource(models.Model):
     """
     from hs_access_control.models.privilege import PrivilegeCodes
 
+    PERMISSION_CHOICES = (
+        (PrivilegeCodes.OWNER, 'Owner'),
+        (PrivilegeCodes.CHANGE, 'Change'),
+        (PrivilegeCodes.VIEW, 'View'),
+        (PrivilegeCodes.NONE, 'None')
+    )
+
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_resources')
     resource = models.ForeignKey(BaseResource, on_delete=models.CASCADE, related_name='resource_users')
 
-    # Permission level (1=owner, 2=edit, 3=view)
-    permission = models.IntegerField(choices=PrivilegeCodes.CHOICES, default=PrivilegeCodes.VIEW)
+    # Effective (group and user combined) permission level (1=owner, 2=edit, 3=view, 4=none)
+    permission = models.IntegerField(choices=PERMISSION_CHOICES, default=PrivilegeCodes.NONE)
 
     # Flags
     is_favorite = models.BooleanField(default=False)
     is_discovered = models.BooleanField(default=False)
+
     class Meta:
         unique_together = ('user', 'resource')
         indexes = [
@@ -5274,6 +5282,7 @@ class UserResource(models.Model):
             models.Index(fields=['user', 'is_favorite']),
             models.Index(fields=['user', 'is_discovered']),
         ]
+
 
 def resource_processor(request, page):
     """Return mezzanine page processor for resource page."""

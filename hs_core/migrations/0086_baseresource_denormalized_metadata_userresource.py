@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
             name='UserResource',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('permission', models.IntegerField(choices=[(1, 'Owner'), (2, 'Change'), (3, 'View')], default=3)),
+                ('permission', models.IntegerField(choices=[(1, 'Owner'), (2, 'Change'), (3, 'View'), (4, 'None')], default=4)),
                 ('is_favorite', models.BooleanField(default=False)),
                 ('is_discovered', models.BooleanField(default=False)),
                 ('resource', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='resource_users', to='hs_core.baseresource')),
