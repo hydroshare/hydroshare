@@ -30,6 +30,7 @@ from rest_framework.exceptions import ValidationError, NotAuthenticated, Permiss
 
 from django_s3.exceptions import SessionException
 from django_s3.storage import S3Storage
+from django_s3.utils import bucket_and_name
 from django_tus.views import TusUpload
 from django_tus.tusfile import TusFile, TusChunk, FilenameGenerator
 from django_tus.response import TusResponse
@@ -900,9 +901,6 @@ class CustomTusFile(TusFile):
     # extend TusFile to allow it to write to s3 storage instead of local disk
     # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/tusfile.py#L52
 
-    # TODO: 5686 -- get the username from the metadata
-    BUCKET = "admin"
-
     def __init__(self, resource_id):
         self.storage = S3Storage()
         self.resource_id = resource_id
@@ -910,6 +908,8 @@ class CustomTusFile(TusFile):
         self.file_size = int(cache.get("tus-uploads/{}/file_size".format(resource_id)))
         self.metadata = cache.get("tus-uploads/{}/metadata".format(resource_id))
         self.offset = cache.get("tus-uploads/{}/offset".format(resource_id))
+        bucket, _ = bucket_and_name(self.metadata.get("hs_res_id"))
+        self.bucket = bucket
 
     def get_storage(self):
         return self.storage
@@ -943,7 +943,7 @@ class CustomTusFile(TusFile):
         return self.filename is not None and self.storage.exists(self.get_path())
 
     def _write_file(self, path, offset, content):
-        self.storage.connection.Bucket(self.BUCKET).put_object(Key=path, Body=content)
+        self.storage.connection.Bucket(self.bucket).put_object(Key=path, Body=content)
 
     def write_init_file(self):
         try:
@@ -1012,6 +1012,7 @@ class CustomTusUpload(TusUpload):
 
         # get the hydroshare resource id from the metadata
         hs_res_id = metadata.get('hs_res_id')
+        username_from_client = metadata.get('username')
 
         if not self.request.user.is_authenticated:
             sessionid = self.request.headers.get('HS-SID', None)
@@ -1032,10 +1033,11 @@ class CustomTusUpload(TusUpload):
         try:
             _, _, user = view_utils.authorize(self.request, hs_res_id, 
                                               needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-        except DjangoPermissionDenied:
+            # ensure that the username is the same as the request user
+            assert (user.username == username_from_client)
+        except (DjangoPermissionDenied, AssertionError):
             return HttpResponseForbidden()
-        # set the username in the metadata
-        metadata['username'] = user.username
+
         return super(CustomTusUpload, self).dispatch(*args, **kwargs)
 
     def patch(self, request, resource_id, *args, **kwargs):
