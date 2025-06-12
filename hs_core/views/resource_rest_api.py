@@ -967,8 +967,6 @@ class CustomTusFile(TusFile):
 
     @staticmethod
     def check_existing_file(path):
-        # TODO: #5685 this seems to return False even when the file exists...
-        # need to add bucket?
         return S3Storage().exists(path)
 
     def is_valid(self):
@@ -1002,20 +1000,18 @@ class CustomTusFile(TusFile):
             return TusResponse(status=500)
 
     def rename(self):
-
         setting = settings.TUS_FILE_NAME_FORMAT
-
-        if setting == 'keep':
-            if self.check_existing_file(self.get_path_and_name()):
+        if self.check_existing_file(self.get_path_and_name()):
+            if setting == 'keep':
                 return TusResponse(status=409, reason="File with same name already exists")
-        elif setting == 'random':
-            self.filename = FilenameGenerator(self.filename).create_random_name()
-        elif setting == 'random-suffix':
-            self.filename = FilenameGenerator(self.filename).create_random_suffix_name()
-        elif setting == 'increment':
-            self.filename = FilenameGenerator(self.filename).create_incremented_name()
-        else:
-            return ValueError()
+            elif setting == 'random':
+                self.filename = FilenameGenerator(self.filename).create_random_name()
+            elif setting == 'random-suffix':
+                self.filename = FilenameGenerator(self.filename).create_random_suffix_name()
+            elif setting == 'increment':
+                self.filename = FilenameGenerator(self.filename).create_incremented_name()
+            else:
+                return ValueError()
 
         # move the object in s3
         self.storage.moveFile(self.get_path_and_id(), self.get_path_and_name())
