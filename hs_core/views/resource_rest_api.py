@@ -915,14 +915,13 @@ def get_path(metadata):
     except Exception as ex:
         logger.info(f"Existing path in resource not found: {str(ex)}")
 
-    # TODO #5686 folder upload is broken
     # handle the case that a folder was uploaded instead of a single file
     # use the metadata.relativePath to rebuild the folder structure
     path_within_uploaded_folder = metadata.get('relativePath', '')
     # path_within_resource_contents will include the name of the file, so we need to remove it
     path_within_uploaded_folder = os.path.dirname(path_within_uploaded_folder)
     if path_within_uploaded_folder:
-        eventual_relative_path += path_within_uploaded_folder
+        eventual_relative_path += path_within_uploaded_folder + '/'
     path = f'{hs_res_id}/data/contents/{eventual_relative_path}'
     return path
 
