@@ -242,7 +242,11 @@ FILE_UPLOAD_TEMP_DIR = "/tmp"
 FILE_UPLOAD_MAX_SIZE = 25 * 1024 ** 3  # 25GB in BYTES
 
 # https://docs.djangoproject.com/en/3.2/ref/settings/#data-upload-max-memory-size
-DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100 MB in Bytes
+# This represents a tradeoff for resumable uploads. There is some overhead for each chunk so
+# so a larger value will be significantly faster. However, in the case that an upload fails prematurely,
+# having a smaller chunk size allows the user to resume the upload from the last successful chunk --
+# meaning that less data is lost during a failure, in the case of a lower value.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 500 * 1024 * 1024  # 500 MB in Bytes
 
 #############
 # DATABASES #
