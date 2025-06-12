@@ -1119,7 +1119,7 @@ class CustomTusUpload(TusUpload):
         existing = CustomTusFile.check_existing_file(path)
 
         if settings.TUS_EXISTING_FILE == 'error' and settings.TUS_FILE_NAME_FORMAT == 'keep' and existing:
-            return TusResponse(status=409, reason="File = with same name already exists")
+            return TusResponse(status=409, reason="File with same name already exists")
 
         # set the filesize from HTTP header if it exists, otherwise set it from the metadata
         file_size = int(request.META.get("HTTP_UPLOAD_LENGTH", "0"))
