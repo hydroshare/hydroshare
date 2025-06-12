@@ -6,7 +6,7 @@ import tempfile
 import shutil
 import logging
 import json
-import uuid
+import hashlib
 
 from django.urls import reverse
 from django.conf import settings
@@ -944,9 +944,14 @@ class CustomTusFile(TusFile):
 
     @staticmethod
     def create_initial_file(metadata, file_size):
-        resource_id = str(uuid.uuid4())
+        # TODO: 5686 failed partial uploads will still show in the file browser
+        # create the upload id as a unique hash of the path and filename
+        filename = metadata.get('filename')
+        path_and_name = f"{get_path(metadata)}{filename}"
+        # Create a unique hash for the resource_id based on the path and filename
+        resource_id = hashlib.md5(path_and_name.encode('utf-8')).hexdigest()
         cache.add("tus-uploads/{}/filename".format(resource_id),
-                  "{}".format(metadata.get("filename")), settings.TUS_TIMEOUT)
+                  "{}".format(filename), settings.TUS_TIMEOUT)
         cache.add("tus-uploads/{}/file_size".format(resource_id), file_size, settings.TUS_TIMEOUT)
         cache.add("tus-uploads/{}/offset".format(resource_id), 0, settings.TUS_TIMEOUT)
         cache.add("tus-uploads/{}/metadata".format(resource_id), metadata, settings.TUS_TIMEOUT)
@@ -1026,9 +1031,9 @@ class CustomTusUpload(TusUpload):
         metadata = self.get_metadata(self.request)
         if not metadata:
             # get the tus resource_id from the request
-            tus_resource_id = self.kwargs['resource_id']
+            resource_id = self.kwargs['resource_id']
             try:
-                tus_file = CustomTusFile(str(tus_resource_id))
+                tus_file = CustomTusFile(str(resource_id))
                 # get the resource id from the tus metadata
                 metadata = tus_file.metadata
             except Exception as ex:
