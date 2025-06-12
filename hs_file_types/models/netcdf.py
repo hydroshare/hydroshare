@@ -26,7 +26,8 @@ from hs_core.hs_rdf import HSTERMS, rdf_terms
 from hs_core.hydroshare import utils
 from hs_core.models import Creator, Contributor, AbstractMetaDataElement
 from hs_core.signals import post_add_netcdf_aggregation
-from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from hs_file_types.models.base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from hs_file_types.enums import AggregationMetaFilePath
 
 
 @rdf_terms(HSTERMS.spatialReference)
@@ -423,6 +424,51 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         # There can be at most only one instance of type OriginalCoverage associated
         # with this metadata object
         return self.originalCoverage
+
+    def to_json(self):
+        """Returns metadata in JSON format using schema.org vocabulary where possible and the rest terms
+          are based on hsterms."""
+
+        json_dict = super().to_json()
+        json_dict['additionalType'] = self.logical_file.get_aggregation_type_name()
+
+        variables_meta = {"variableMeasured": []}
+        for variable in self.variables.all():
+            v_meta = {
+                "hsterms:name": variable.name,
+                "hsterms:type": variable.type,
+                "hsterms:shape": variable.shape,
+                "hsterms:unit": variable.unit
+            }
+            if variable.missing_value:
+                v_meta["hsterms:missingValue"] = variable.missing_value
+            if variable.descriptive_name:
+                v_meta["hsterms:longName"] = variable.descriptive_name
+            if variable.method:
+                v_meta["hsterms:method"] = variable.method
+
+            variables_meta["variableMeasured"].append(v_meta)
+        if variables_meta["variableMeasured"]:
+            json_dict.update(variables_meta)
+
+        originalCoverage = self.originalCoverage
+        if originalCoverage:
+            orig_coverage_meta = {
+                "hsterms:northLimit": originalCoverage.value["northlimit"],
+                "hsterms:eastLimit": originalCoverage.value["eastlimit"],
+                "hsterms:southLimit": originalCoverage.value["southlimit"],
+                "hsterms:westLimit": originalCoverage.value["westlimit"],
+                "hsterms:units": originalCoverage.value["units"],
+            }
+            if "projection" in originalCoverage.value and originalCoverage.value["projection"]:
+                orig_coverage_meta.update({
+                    "hsterms:projection": originalCoverage.value["projection"],
+                    "hsterms:projectionString": originalCoverage.projection_string_text,
+                    "hsterms:projectionStringType": originalCoverage.projection_string_type,
+                    "hsterms:datum": originalCoverage.datum,
+                })
+        json_dict.update({"hsterms:originalCoverage": orig_coverage_meta})
+        return json_dict
 
     def _get_opendap_html(self):
         opendap_div = html_tags.div(cls="content-block")
@@ -1037,6 +1083,14 @@ class NetCDFLogicalFile(AbstractLogicalFile):
 
         res_files = [f for f in resource_files if f.extension.lower() == ".nc"]
         return res_files[0] if res_files else None
+
+    @property
+    def metadata_json_file_path(self):
+        """Returns the storage path of the aggregation metadata json file"""
+
+        nc_file = self.get_primary_resource_file(self.files.all())
+        meta_file_path = nc_file.storage_path + AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH
+        return meta_file_path
 
 
 def add_metadata_to_list(

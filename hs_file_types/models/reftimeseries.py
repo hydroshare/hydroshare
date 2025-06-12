@@ -257,11 +257,20 @@ class RefWebService(object):
 
 class RefTimeseriesFileMetaData(AbstractFileMetaData):
     model_app_label = 'hs_file_types'
+
     # field to store the content of the json file (the file that is part
     # of the RefTimeseriesLogicalFile type
     json_file_content = models.TextField()
     # this is to store abstract
     abstract = models.TextField(null=True, blank=True)
+
+    def to_json(self):
+        """Return the metadata in JSON format - uses schema.org terms where possible and the rest
+        terms are based on hsterms."""
+
+        json_dict = super().to_json()
+        json_dict['additionalType'] = self.logical_file.get_aggregation_type_name()
+        return json_dict
 
     @property
     def has_title_in_json(self):
@@ -700,6 +709,16 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
 
         res_files = [f for f in resource_files if f.extension.lower() == '.json']
         return res_files[0] if res_files else None
+
+    @property
+    def metadata_json_file_path(self):
+        """Returns the storage path of the aggregation metadata json file"""
+
+        from hs_file_types.enums import AggregationMetaFilePath
+
+        primary_file = self.get_primary_resource_file(self.files.all())
+        meta_file_path = primary_file.storage_path + AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH
+        return meta_file_path
 
     @classmethod
     def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=''):

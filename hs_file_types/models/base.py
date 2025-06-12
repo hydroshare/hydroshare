@@ -74,6 +74,11 @@ class NestedLogicalFileMixin(object):
         if self.metadata.temporal_coverage is None:
             self.update_temporal_coverage()
 
+    def save_metadata_json_file(self):
+        """Creates aggregation metadata json file and saves it to S3 """
+        for child_aggr in self.get_children():
+            child_aggr.save_metadata_json_file()
+
 
 class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
     """ base class for HydroShare file type metadata """
@@ -118,6 +123,66 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
         self.extra_metadata = {}
         self.keywords = []
         self.save()
+
+    def to_json(self):
+        """Return the metadata in JSON format - uses schema.org terms where possible and the rest
+        terms are based on hsterms."""
+
+        json_dict = {
+            "@context": [
+                "https://schema.org/",
+                {
+                    "hsterms": "https://hydroshare.org/terms/"
+                }
+            ],
+            "@type": "Dataset",
+            "name": self.logical_file.dataset_name
+        }
+        for coverage in self.coverages.all():
+            json_dict.update(coverage.to_json())
+        if self.keywords:
+            json_dict.update({"keywords": self.keywords})
+        additional_metadata = {"hsterms:additionalMetadata": []}
+        for key, value in self.extra_metadata.items():
+            as_property_value = {
+                "@type": "PropertyValue",
+                "name": key,
+                "value": value
+            }
+            additional_metadata["hsterms:additionalMetadata"].append(as_property_value)
+        if additional_metadata["hsterms:additionalMetadata"]:
+            json_dict.update(additional_metadata)
+
+        associated_media = {"associatedMedia": []}
+        for res_file in self.logical_file.files.all():
+            media_object = {
+                "@type": "MediaObject",
+                "name": res_file.file_name,
+                "contentUrl": os.path.join(current_site_url(), 'resource', res_file.storage_path),
+                "contentSize": res_file.size,
+                "sha256": res_file.checksum,
+                "encodingFormat": res_file.mime_type,
+            }
+            associated_media["associatedMedia"].append(media_object)
+        if associated_media["associatedMedia"]:
+            json_dict.update(associated_media)
+
+        child_aggr_has_parts = []
+        for child_aggr in self.logical_file.get_children():
+            child_aggr_has_parts.append(child_aggr.metadata_json_file_url_path)
+        if child_aggr_has_parts:
+            if 'hasPart' not in json_dict:
+                json_dict['hasPart'] = child_aggr_has_parts
+            else:
+                json_dict['hasPart'] += child_aggr_has_parts
+
+        parent_aggr = self.logical_file.get_parent()
+        if parent_aggr is not None:
+            json_dict['isPartOf'] = [parent_aggr.metadata_json_file_url_path]
+        else:
+            json_dict['isPartOf'] = [self.logical_file.resource.metadata_json_file_url_path]
+
+        return json_dict
 
     def get_html(self, include_extra_metadata=True, **kwargs):
         """Generates html for displaying all metadata elements associated with this logical file.
@@ -795,6 +860,19 @@ class AbstractLogicalFile(models.Model):
         # - subclass needs to override this
         return None
 
+    @property
+    def metadata_json_file_path(self):
+        """Returns the storage path of the aggregation metadata json file"""
+        raise NotImplementedError
+
+    def save_metadata_json_file(self):
+        """Creates aggregation metadata json file and saves it to S3 """
+        from hs_file_types.utils import save_metadata_json_file as utils_save_metadata_json_file
+
+        metadata_json = self.metadata.to_json()
+        to_file_name = self.metadata_json_file_path
+        utils_save_metadata_json_file(self.resource.get_s3_storage(), metadata_json, to_file_name)
+
     @classmethod
     def can_set_folder_to_aggregation(cls, resource, dir_path, aggregations=None):
         """helper to check if the specified folder *dir_path* can be set to this aggregation type
@@ -1107,6 +1185,16 @@ class AbstractLogicalFile(models.Model):
         return os.path.join(self.resource.file_path, self.map_short_file_path)
 
     @property
+    def metadata_json_file_url_path(self):
+        """Returns the url path of the aggregation metadata json file"""
+
+        from hs_core.hydroshare.utils import current_site_url
+
+        meta_file_path = self.metadata_json_file_path
+        meta_file_url_path = os.path.join(current_site_url(), 'resource', meta_file_path)
+        return meta_file_url_path
+
+    @property
     def is_single_file_aggregation(self):
         """
         Returns True if the aggregation consists of only one file, otherwise, False.
@@ -1245,6 +1333,8 @@ class AbstractLogicalFile(models.Model):
                 istorage.delete(self.metadata_file_path)
             if istorage.exists(self.map_file_path):
                 istorage.delete(self.map_file_path)
+            if istorage.exists(self.metadata_json_file_path):
+                istorage.delete(self.metadata_json_file_path)
 
         # delete all resource files associated with this instance of logical file
         if delete_res_files:
@@ -1285,6 +1375,8 @@ class AbstractLogicalFile(models.Model):
             istorage.delete(self.metadata_file_path)
         if istorage.exists(self.map_file_path):
             istorage.delete(self.map_file_path)
+        if istorage.exists(self.metadata_json_file_path):
+            istorage.delete(self.metadata_json_file_path)
 
         # find if there is a parent aggregation - files in this (self) aggregation
         # need to be added to parent if exists

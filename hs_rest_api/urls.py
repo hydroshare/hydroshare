@@ -245,6 +245,11 @@ urlpatterns = [
 
     re_path(r'^resource/(?P<resource_id>[0-9a-f]+)/quota_holder_bucket_name/$', get_quota_holder_bucket),
 
+    # Write resource and aggregation level metadata as JSON files to resource directory on S3
+    re_path(r'^resource/(?P<pk>[0-9a-f-]+)/write-metadata/json/$',
+            core_views.resource_rest_api.WriteMetadataJSON.as_view(),
+            name='write_metadata_json'),
+
     path("tus/", core_views.resource_rest_api.CustomTusUpload.as_view(), name='tus_upload'),
     path("tus/<uuid:resource_id>", core_views.resource_rest_api.CustomTusUpload.as_view(), name='tus_upload_chunks'),
 ]
