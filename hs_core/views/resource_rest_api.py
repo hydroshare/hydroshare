@@ -913,6 +913,7 @@ def get_path(metadata):
     except Exception as ex:
         logger.info(f"Existing path in resource not found: {str(ex)}")
 
+    # TODO #5686 folder upload is broken
     # handle the case that a folder was uploaded instead of a single file
     # use the metadata.relativePath to rebuild the folder structure
     path_within_uploaded_folder = metadata.get('relativePath', '')
@@ -955,14 +956,11 @@ class CustomTusFile(TusFile):
         tus_file.write_init_file()
         return tus_file
 
-    def get_path_and_id(self):
+    def get_path_and_name(self, temp=False):
         if not self.path:
             self.path = get_path(self.metadata)
-        return self.path + self.resource_id
-
-    def get_path_and_name(self):
-        if not self.path:
-            self.path = get_path(self.metadata)
+        if temp:
+            return self.path + self.filename + self.resource_id + ".part"
         return self.path + self.filename
 
     @staticmethod
@@ -970,14 +968,14 @@ class CustomTusFile(TusFile):
         return S3Storage().exists(path)
 
     def is_valid(self):
-        return self.filename is not None and self.storage.exists(self.get_path_and_id())
+        return self.filename is not None and self.storage.exists(self.get_path_and_name(temp=True))
 
     def _write_file(self, path, offset, content):
         self.storage.connection.Bucket(self.bucket).put_object(Key=path, Body=content)
 
     def write_init_file(self):
         try:
-            self._write_file(self.get_path_and_id(), self.file_size, b"\0")
+            self._write_file(self.get_path_and_name(temp=True), self.file_size, b"\0")
         except Exception as e:
             error_message = "Unable to create file: {}".format(e)
             logger.error(error_message, exc_info=True)
@@ -985,7 +983,7 @@ class CustomTusFile(TusFile):
 
     def write_chunk(self, chunk):
         try:
-            self._write_file(self.get_path_and_id(), chunk.offset, chunk.content)
+            self._write_file(self.get_path_and_name(temp=True), chunk.offset, chunk.content)
             self.offset = cache.incr("tus-uploads/{}/offset".format(self.resource_id), chunk.chunk_size)
 
         except IOError:
@@ -995,7 +993,7 @@ class CustomTusFile(TusFile):
                 "file_size": self.file_size,
                 "metadata": self.metadata,
                 "offset": self.offset,
-                "upload_file_path": self.get_path_and_id(),
+                "upload_file_path": self.get_path_and_name(temp=True),
             }})
             return TusResponse(status=500)
 
@@ -1014,7 +1012,7 @@ class CustomTusFile(TusFile):
                 return ValueError()
 
         # move the object in s3
-        self.storage.moveFile(self.get_path_and_id(), self.get_path_and_name())
+        self.storage.moveFile(self.get_path_and_name(temp=True), self.get_path_and_name())
 
 
 class CustomTusUpload(TusUpload):
