@@ -897,6 +897,33 @@ def _validate_metadata(metadata_list):
             raise ValidationError(detail=err_message)
 
 
+def get_path(metadata):
+    hs_res_id = metadata.get('hs_res_id')
+    eventual_relative_path = ''
+    try:
+        # see if there is a path within data/contents that the file should be uploaded to
+        existing_path_in_resource = metadata.get('existing_path_in_resource', '')
+        existing_path_in_resource = json.loads(existing_path_in_resource).get("path")
+        if existing_path_in_resource:
+            # in this case, we are uploading to an existing folder in the resource
+            # existing_path_in_resource is a list of folder names
+            # append them into a path
+            for folder in existing_path_in_resource:
+                eventual_relative_path += folder + '/'
+    except Exception as ex:
+        logger.info(f"Existing path in resource not found: {str(ex)}")
+
+    # handle the case that a folder was uploaded instead of a single file
+    # use the metadata.relativePath to rebuild the folder structure
+    path_within_uploaded_folder = metadata.get('relativePath', '')
+    # path_within_resource_contents will include the name of the file, so we need to remove it
+    path_within_uploaded_folder = os.path.dirname(path_within_uploaded_folder)
+    if path_within_uploaded_folder:
+        eventual_relative_path += path_within_uploaded_folder
+    path = f'{hs_res_id}/data/contents/{eventual_relative_path}'
+    return path
+
+
 class CustomTusFile(TusFile):
     # extend TusFile to allow it to write to s3 storage instead of local disk
     # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/tusfile.py#L52
@@ -910,6 +937,7 @@ class CustomTusFile(TusFile):
         self.offset = cache.get("tus-uploads/{}/offset".format(resource_id))
         bucket, _ = bucket_and_name(self.metadata.get("hs_res_id"))
         self.bucket = bucket
+        self.path = get_path(self.metadata)
 
     def get_storage(self):
         return self.storage
@@ -927,41 +955,20 @@ class CustomTusFile(TusFile):
         tus_file.write_init_file()
         return tus_file
 
-    def get_path(self):
-        metadata = self.metadata
-        hs_res_id = metadata.get('hs_res_id')
-        eventual_relative_path = ''
-        try:
-            # see if there is a path within data/contents that the file should be uploaded to
-            existing_path_in_resource = metadata.get('existing_path_in_resource', '')
-            existing_path_in_resource = json.loads(existing_path_in_resource).get("path")
-            if existing_path_in_resource:
-                # in this case, we are uploading to an existing folder in the resource
-                # existing_path_in_resource is a list of folder names
-                # append them into a path
-                for folder in existing_path_in_resource:
-                    eventual_relative_path += folder + '/'
-        except Exception as ex:
-            logger.info(f"Existing path in resource not found: {str(ex)}")
-
-        # handle the case that a folder was uploaded instead of a single file
-        # use the metadata.relativePath to rebuild the folder structure
-        path_within_uploaded_folder = metadata.get('relativePath', '')
-        # path_within_resource_contents will include the name of the file, so we need to remove it
-        path_within_uploaded_folder = os.path.dirname(path_within_uploaded_folder)
-        if path_within_uploaded_folder:
-            eventual_relative_path += path_within_uploaded_folder
-        file_folder = f'{hs_res_id}/data/contents/{eventual_relative_path}'
-        return file_folder
-
     def get_path_and_id(self):
-        return self.get_path() + self.resource_id
+        if not self.path:
+            self.path = get_path(self.metadata)
+        return self.path + self.resource_id
 
     def get_path_and_name(self):
-        return self.get_path() + self.filename
+        if not self.path:
+            self.path = get_path(self.metadata)
+        return self.path + self.filename
 
     @staticmethod
     def check_existing_file(path):
+        # TODO: #5685 this seems to return False even when the file exists...
+        # need to add bucket?
         return S3Storage().exists(path)
 
     def is_valid(self):
@@ -999,7 +1006,7 @@ class CustomTusFile(TusFile):
         setting = settings.TUS_FILE_NAME_FORMAT
 
         if setting == 'keep':
-            if self.check_existing_file(self.filename):
+            if self.check_existing_file(self.get_path_and_name()):
                 return TusResponse(status=409, reason="File with same name already exists")
         elif setting == 'random':
             self.filename = FilenameGenerator(self.filename).create_random_name()
@@ -1112,7 +1119,7 @@ class CustomTusUpload(TusUpload):
         if message_id:
             metadata["message_id"] = base64.b64decode(message_id)
 
-        path = f"{metadata.get('hs_res_id')}/{metadata.get('filename', False)}"
+        path = f"{get_path(metadata)}{metadata.get('filename', False)}"
         existing = CustomTusFile.check_existing_file(path)
 
         if settings.TUS_EXISTING_FILE == 'error' and settings.TUS_FILE_NAME_FORMAT == 'keep' and existing:
