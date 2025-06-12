@@ -917,7 +917,8 @@ class CustomTusFile(TusFile):
     @staticmethod
     def create_initial_file(metadata, file_size):
         resource_id = str(uuid.uuid4())
-        cache.add("tus-uploads/{}/filename".format(resource_id), "{}".format(metadata.get("filename")), settings.TUS_TIMEOUT)
+        cache.add("tus-uploads/{}/filename".format(resource_id),
+                  "{}".format(metadata.get("filename")), settings.TUS_TIMEOUT)
         cache.add("tus-uploads/{}/file_size".format(resource_id), file_size, settings.TUS_TIMEOUT)
         cache.add("tus-uploads/{}/offset".format(resource_id), 0, settings.TUS_TIMEOUT)
         cache.add("tus-uploads/{}/metadata".format(resource_id), metadata, settings.TUS_TIMEOUT)
@@ -1031,7 +1032,7 @@ class CustomTusUpload(TusUpload):
 
         # check that the user has permission to upload a file to the resource
         try:
-            _, _, user = view_utils.authorize(self.request, hs_res_id, 
+            _, _, user = view_utils.authorize(self.request, hs_res_id,
                                               needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
             # ensure that the username is the same as the request user
             assert (user.username == username_from_client)
