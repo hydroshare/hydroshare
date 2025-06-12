@@ -928,27 +928,51 @@ class CustomTusFile(TusFile):
         return tus_file
 
     def get_path(self):
-        hs_res_id = self.metadata.get('hs_res_id')
-        return f"{hs_res_id}/data/contents/{self.resource_id}"
-        # return self.resource_id
+        metadata = self.metadata
+        hs_res_id = metadata.get('hs_res_id')
+        eventual_relative_path = ''
+        try:
+            # see if there is a path within data/contents that the file should be uploaded to
+            existing_path_in_resource = metadata.get('existing_path_in_resource', '')
+            existing_path_in_resource = json.loads(existing_path_in_resource).get("path")
+            if existing_path_in_resource:
+                # in this case, we are uploading to an existing folder in the resource
+                # existing_path_in_resource is a list of folder names
+                # append them into a path
+                for folder in existing_path_in_resource:
+                    eventual_relative_path += folder + '/'
+        except Exception as ex:
+            logger.info(f"Existing path in resource not found: {str(ex)}")
+
+        # handle the case that a folder was uploaded instead of a single file
+        # use the metadata.relativePath to rebuild the folder structure
+        path_within_uploaded_folder = metadata.get('relativePath', '')
+        # path_within_resource_contents will include the name of the file, so we need to remove it
+        path_within_uploaded_folder = os.path.dirname(path_within_uploaded_folder)
+        if path_within_uploaded_folder:
+            eventual_relative_path += path_within_uploaded_folder
+        file_folder = f'{hs_res_id}/data/contents/{eventual_relative_path}'
+        return file_folder
+
+    def get_path_and_id(self):
+        return self.get_path() + self.resource_id
 
     def get_path_and_name(self):
-        hs_res_id = self.metadata.get('hs_res_id')
-        return f"{hs_res_id}/data/contents/{self.filename}"
+        return self.get_path() + self.filename
 
     @staticmethod
     def check_existing_file(path):
         return S3Storage().exists(path)
 
     def is_valid(self):
-        return self.filename is not None and self.storage.exists(self.get_path())
+        return self.filename is not None and self.storage.exists(self.get_path_and_id())
 
     def _write_file(self, path, offset, content):
         self.storage.connection.Bucket(self.bucket).put_object(Key=path, Body=content)
 
     def write_init_file(self):
         try:
-            self._write_file(self.get_path(), self.file_size, b"\0")
+            self._write_file(self.get_path_and_id(), self.file_size, b"\0")
         except Exception as e:
             error_message = "Unable to create file: {}".format(e)
             logger.error(error_message, exc_info=True)
@@ -956,7 +980,7 @@ class CustomTusFile(TusFile):
 
     def write_chunk(self, chunk):
         try:
-            self._write_file(self.get_path(), chunk.offset, chunk.content)
+            self._write_file(self.get_path_and_id(), chunk.offset, chunk.content)
             self.offset = cache.incr("tus-uploads/{}/offset".format(self.resource_id), chunk.chunk_size)
 
         except IOError:
@@ -966,7 +990,7 @@ class CustomTusFile(TusFile):
                 "file_size": self.file_size,
                 "metadata": self.metadata,
                 "offset": self.offset,
-                "upload_file_path": self.get_path(),
+                "upload_file_path": self.get_path_and_id(),
             }})
             return TusResponse(status=500)
 
@@ -987,7 +1011,7 @@ class CustomTusFile(TusFile):
             return ValueError()
 
         # move the object in s3
-        self.storage.moveFile(self.get_path(), self.get_path_and_name())
+        self.storage.moveFile(self.get_path_and_id(), self.get_path_and_name())
 
 
 class CustomTusUpload(TusUpload):
@@ -1070,7 +1094,6 @@ class CustomTusUpload(TusUpload):
             tus_file.rename()
             tus_file.clean()
 
-            # TODO: 5686 any additional cleanup required?
             # self.send_signal(tus_file)
             self.finished()
 
