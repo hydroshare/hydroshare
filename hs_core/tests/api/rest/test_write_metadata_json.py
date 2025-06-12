@@ -7,6 +7,7 @@ from django.conf import settings
 from hs_core.hydroshare import resource
 from hs_core.tests.api.rest.base import HSRESTTestCase
 
+
 def get_response_content(response):
     """
     Helper function to get the content from a response, handling both JSON and HTML responses.
