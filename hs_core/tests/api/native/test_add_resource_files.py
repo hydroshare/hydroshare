@@ -7,8 +7,7 @@ from hs_core.hydroshare.resource import add_resource_files, create_resource
 from hs_core.hydroshare.users import create_account
 from hs_core.models import BaseResource
 from hs_core.testing import MockS3TestCaseMixin
-from hs_core.hydroshare.utils import QuotaException, resource_file_add_pre_process
-from theme.models import QuotaMessage
+from hs_core.exceptions import QuotaException
 
 
 class TestAddResourceFiles(MockS3TestCaseMixin, unittest.TestCase):
@@ -46,6 +45,11 @@ class TestAddResourceFiles(MockS3TestCaseMixin, unittest.TestCase):
         self.myfile2 = open(self.n2, "rb")
         self.myfile3 = open(self.n3, "rb")
 
+        self.res = create_resource(resource_type='CompositeResource',
+                                   owner=self.user,
+                                   title='Test Resource',
+                                   metadata=[], )
+
     def tearDown(self):
         super(TestAddResourceFiles, self).tearDown()
         User.objects.all().delete()
@@ -59,12 +63,25 @@ class TestAddResourceFiles(MockS3TestCaseMixin, unittest.TestCase):
         self.myfile3.close()
         os.remove(self.myfile3.name)
 
+    def test_no_files_default_size(self):
+        """
+        Test that when a user is a quota_holder for no resources/files, the quota size defaults to 0.
+        """
+        uquota = self.user.quotas.first()
+        self.assertAlmostEqual(uquota.data_zone_value, 0.0, places=6)
+        self.assertEqual(uquota.unit, 'GB')
+
+        # check that the resource has no files
+        self.assertEqual(self.res.files.all().count(), 0)
+        self.assertEqual(self.res.size, 0)
+
+        # check that the user is a quota holder for only this one resource
+        self.assertEqual(self.user, self.res.quota_holder)
+        owned_resources = self.user.uaccess.owned_resources.all()
+        self.assertEqual(owned_resources.count(), 1)
+        self.assertIn(self.res, owned_resources)
+
     def test_add_files(self):
-        # create a resource
-        self.res = create_resource(resource_type='CompositeResource',
-                                   owner=self.user,
-                                   title='Test Resource',
-                                   metadata=[], )
 
         self.assertEqual(0, self.res.size)
 
@@ -86,48 +103,26 @@ class TestAddResourceFiles(MockS3TestCaseMixin, unittest.TestCase):
         self.assertTrue(self.n3 in file_list, "file 3 has not been added")
 
     def test_add_files_over_quota(self):
-        # create a resource
-        self.res = create_resource(resource_type='CompositeResource',
-                                   owner=self.user,
-                                   title='Test Resource',
-                                   metadata=[], )
-
-        if not QuotaMessage.objects.exists():
-            QuotaMessage.objects.create()
-        qmsg = QuotaMessage.objects.first()
-        qmsg.enforce_quota = True
-        qmsg.save()
 
         uquota = self.user.quotas.first()
         # make user's quota over hard limit 125%
         from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit
-        set_quota_usage_over_hard_limit(uquota, qmsg)
+        set_quota_usage_over_hard_limit(uquota)
 
-        # add files should raise quota exception now that the quota holder is over hard limit
-        # and quota enforce flag is set to True
+        # add files should raise quota exception now that the quota holder is over limit
         files = [self.myfile1, self.myfile2, self.myfile3]
         with self.assertRaises(QuotaException):
-            resource_file_add_pre_process(resource=self.res, files=files,
-                                          user=self.user, folder="",
-                                          extract_metadata=False)
+            add_resource_files(self.res.short_id, *files)
 
-        qmsg.enforce_quota = False
-        qmsg.save()
-        # add files should not raise quota exception since enforce_quota flag is set to False
+        uquota.save_allocated_value(20, "GB")
+        # add files should not raise quota exception since they have not exceeded quota
         try:
-            resource_file_add_pre_process(resource=self.res, files=files,
-                                          user=self.user, folder="",
-                                          extract_metadata=False)
+            add_resource_files(self.res.short_id, *files)
         except QuotaException as ex:
             self.fail("add resource file action should not raise QuotaException for "
                       "over quota cases if quota is not enforced - Quota Exception: " + str(ex))
 
     def test_add_files_toggles_bag_flag(self):
-        # create a resource
-        self.res = create_resource(resource_type='CompositeResource',
-                                   owner=self.user,
-                                   title='Test Resource',
-                                   metadata=[], )
         self.res.setAVU('bag_modified', 'false')
         self.assertFalse(self.res.getAVU('bag_modified'))
         # add files - this is the api we are testing

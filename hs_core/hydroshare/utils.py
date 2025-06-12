@@ -13,7 +13,6 @@ from uuid import uuid4
 
 import aiohttp
 from asgiref.sync import sync_to_async
-from datetime import date
 from django.apps import apps
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -30,31 +29,12 @@ from django_s3.storage import S3Storage
 from hs_access_control.models.community import Community
 from hs_access_control.models.privilege import PrivilegeCodes
 from hs_core.hydroshare.hs_bagit import create_bag_metadata_files
+from hs_core.exceptions import ResourceFileValidationException, ResourceFileSizeException, QuotaException
 from hs_core.models import AbstractResource, BaseResource, GeospatialRelation, ResourceFile
 from hs_core.signals import post_create_resource, pre_add_files_to_resource, pre_create_resource
 from theme.models import QuotaMessage
 
 logger = logging.getLogger(__name__)
-
-
-class ResourceFileSizeException(Exception):
-    pass
-
-
-class ResourceFileValidationException(Exception):
-    pass
-
-
-class QuotaException(Exception):
-    pass
-
-
-class ResourceCopyException(Exception):
-    pass
-
-
-class ResourceVersioningException(Exception):
-    pass
 
 
 def get_resource_types():
@@ -630,11 +610,11 @@ def convert_file_size_to_unit(size, to_unit, from_unit='B'):
     :param from_unit: should be one of the five: 'B', 'KB', 'MB', 'GB', or 'TB'
     :return: the size converted to the pass-in unit
     """
-    unit = to_unit.lower()
-    if unit not in ('kb', 'mb', 'gb', 'tb'):
-        raise ValidationError('Pass-in unit for file size conversion must be one of KB, MB, GB, '
+    unit = to_unit.lower().replace("i", "")
+    if unit not in ('b', 'kb', 'mb', 'gb', 'tb'):
+        raise ValidationError('Pass-in unit for file size conversion must be one of B, KB, MB, GB, '
                               'or TB')
-    from_unit = from_unit.lower()
+    from_unit = from_unit.lower().replace("i", "")
     if from_unit not in ('b', 'kb', 'mb', 'gb', 'tb'):
         raise ValidationError('Starting unit for file size conversion must be one of B, KB, MB, GB, '
                               'or TB')
@@ -653,6 +633,8 @@ def convert_file_size_to_unit(size, to_unit, from_unit='B'):
 
     # Now convert to the pass-in unit
     factor = 1024.0
+    if unit == 'b':
+        return size
     kbsize = size / factor
     if unit == 'kb':
         return kbsize
@@ -687,30 +669,25 @@ def validate_user_quota(user_or_username, size):
         user = None
 
     if user:
-        # validate it is within quota hard limit
         uq = user.quotas.filter(zone='hydroshare').first()
+
         if uq:
             if not QuotaMessage.objects.exists():
                 QuotaMessage.objects.create()
             qmsg = QuotaMessage.objects.first()
-            enforce_flag = qmsg.enforce_quota
-            if enforce_flag:
-                hard_limit = qmsg.hard_limit_percent
-                used_size = uq.add_to_used_value(size)
-                used_percent = uq.used_percent
-                rounded_percent = round(used_percent, 2)
-                rounded_used_val = round(used_size, 4)
-                grace_ends = uq.grace_period_ends
-                past_grace_period = grace_ends < date.today() if grace_ends else False
-                if used_percent >= hard_limit or past_grace_period:
-                    msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
-                                                         qmsg.content)
-                    msg_str = msg_template_str.format(used=rounded_used_val,
-                                                      unit=uq.unit,
-                                                      allocated=uq.allocated_value,
-                                                      zone=uq.zone,
-                                                      percent=rounded_percent)
-                    raise QuotaException(msg_str)
+            used_size = uq.add_to_used_value(size)
+            used_percent = uq.used_percent
+            rounded_percent = round(used_percent, 2)
+            rounded_used_val = round(used_size, 4)
+            if used_percent >= 100:
+                msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
+                                                     qmsg.content)
+                msg_str = msg_template_str.format(used=rounded_used_val,
+                                                  unit=uq.unit,
+                                                  allocated=uq.allocated_value,
+                                                  zone=uq.zone,
+                                                  percent=rounded_percent)
+                raise QuotaException(msg_str)
 
 
 def get_remaining_user_quota(user_or_username, units='MB'):
@@ -736,12 +713,9 @@ def get_remaining_user_quota(user_or_username, units='MB'):
         if not uq:
             # create a quota object for the user
             uq = user.quotas.create(zone='hydroshare')
-        qmsg = QuotaMessage.objects.first()
-        enforce_flag = qmsg.enforce_quota
-        if enforce_flag:
-            remaining = uq.allocated_value - uq.used_value
-            remaining = convert_file_size_to_unit(remaining, to_unit=units, from_unit=uq.unit) or 0
-            return max(remaining, 0)
+        remaining = uq.allocated_value - uq.used_value
+        remaining = convert_file_size_to_unit(remaining, to_unit=units, from_unit=uq.unit) or 0
+        return max(remaining, 0)
     return None
 
 
@@ -917,8 +891,6 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
 
     resource_cls = resource.__class__
     if len(files) > 0:
-        size = validate_resource_file_size(files)
-        validate_user_quota(resource.quota_holder, size)
         validate_resource_file_count(resource_cls, files)
 
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}

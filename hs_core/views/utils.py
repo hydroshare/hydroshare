@@ -1036,15 +1036,8 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     if resource.resource_type == "CompositeResource":
         resource.create_aggregation_meta_files()
 
-    istorage.zipup(res_coll_input, output_zip_full_path)
+    istorage.zipup(output_zip_full_path, res_coll_input)
     output_zip_size = istorage.size(output_zip_full_path)
-    if not bool_remove_original:
-        try:
-            validate_user_quota(resource.quota_holder, output_zip_size)
-        except QuotaException as ex:
-            # remove the zip file that was created
-            istorage.delete(output_zip_full_path)
-            raise ex
     zip_res_file = link_s3_file_to_django(resource, output_zip_full_path)
     if resource.resource_type == "CompositeResource":
         # make the newly added zip file part of an aggregation if needed
@@ -1299,9 +1292,9 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                                     istorage.delete(override_tgt_path)
                     else:
                         istorage.delete(override_tgt_path)
-            if not bool_remove_original:
-                size = validate_resource_file_size(res_files)
-                validate_user_quota(resource.quota_holder, size)
+
+            size = validate_resource_file_size(res_files)
+            validate_user_quota(resource.quota_holder, size)
 
             # now move each file to the destination
             for file in res_files:

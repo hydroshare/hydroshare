@@ -21,6 +21,7 @@ from rest_framework import status
 from hs_core.hydroshare import hs_bagit
 from hs_core.models import ResourceFile, BaseResource
 from hs_core import signals
+from hs_core.exceptions import ResourceVersioningException
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
@@ -96,32 +97,18 @@ def update_quota_usage(username, notify_user=False):
         raise ValidationError(err_msg)
 
     original_quota_data = uq.get_quota_data()
-    qmsg = original_quota_data["qmsg"]
     user = User.objects.get(username=username)
     uq.save()
 
-    if original_quota_data["enforce_quota"]:
-        updated_quota_data = uq.get_quota_data()
-        # if enforcing quota, take steps to send messages
-        percent = updated_quota_data["percent"]
-        if percent < 100:
-            if uq.grace_period_ends:
-                # reset grace period now that the user is below allocation
-                uq.reset_grace_period()
-            return
-        else:
-            if percent < qmsg.hard_limit_percent:
-                if not uq.grace_period_ends:
-                    # triggers grace period counting
-                    uq.start_grace_period(qmsg_days=qmsg.grace_period)
-            elif percent >= qmsg.hard_limit_percent:
-                # reset grace period when user quota exceeds hard limit
-                uq.reset_grace_period()
-            # send notification to user in the cases of exceeding soft limit or hard limit
-            # only send notificaiton if the quota status changed
-            # this avoids sending multiple notifications when files are changed but the status does not change
-            if notify_user and (original_quota_data["status"] != updated_quota_data["status"]):
-                tasks.send_user_quota_notification.apply_async((user.pk))
+    updated_quota_data = uq.get_quota_data()
+    # if enforcing quota, take steps to send messages
+    percent = updated_quota_data["percent"]
+    if percent >= 100:
+        # send notification to user in the cases of exceeding soft limit or hard limit
+        # only send notificaiton if the quota status changed
+        # this avoids sending multiple notifications when files are changed but the status does not change
+        if notify_user and (original_quota_data["status"] != updated_quota_data["status"]):
+            tasks.send_user_quota_notification.apply_async((user.pk))
 
 
 def res_has_web_reference(res):
@@ -641,9 +628,9 @@ def create_new_version_resource(ori_res, new_res, user):
     from hs_core.tasks import create_new_version_resource_task
     if ori_res.locked_time:
         # cannot create new version for this resource since the resource is locked by another user
-        raise utils.ResourceVersioningException('Failed to create a new version for this resource '
-                                                'since another user is creating a new version for '
-                                                'this resource synchronously.')
+        raise ResourceVersioningException('Failed to create a new version for this resource '
+                                          'since another user is creating a new version for '
+                                          'this resource synchronously.')
     # lock the resource to prevent concurrent new version creation since only one new version for an
     # obsoleted resource is allowed
     ori_res.locked_time = datetime.datetime.now(tz.UTC)
@@ -995,14 +982,14 @@ def get_activated_doi(doi):
         the activated DOI with all flags removed if any
     """
 
-    if doi.endswith(CrossRefSubmissionStatus.UPDATE_PENDING):
-        return doi[:-len(CrossRefSubmissionStatus.UPDATE_PENDING)]
-    if doi.endswith(CrossRefSubmissionStatus.UPDATE_FAILURE):
-        return doi[:-len(CrossRefSubmissionStatus.UPDATE_FAILURE)]
-    if doi.endswith(CrossRefSubmissionStatus.PENDING):
-        return doi[:-len(CrossRefSubmissionStatus.PENDING)]
-    if doi.endswith(CrossRefSubmissionStatus.FAILURE):
-        return doi[:-len(CrossRefSubmissionStatus.FAILURE)]
+    if doi.endswith(CrossRefSubmissionStatus.UPDATE_PENDING.value):
+        return doi[:-len(CrossRefSubmissionStatus.UPDATE_PENDING.value)]
+    if doi.endswith(CrossRefSubmissionStatus.UPDATE_FAILURE.value):
+        return doi[:-len(CrossRefSubmissionStatus.UPDATE_FAILURE.value)]
+    if doi.endswith(CrossRefSubmissionStatus.PENDING.value):
+        return doi[:-len(CrossRefSubmissionStatus.PENDING.value)]
+    if doi.endswith(CrossRefSubmissionStatus.FAILURE.value):
+        return doi[:-len(CrossRefSubmissionStatus.FAILURE.value)]
     return doi
 
 
@@ -1123,10 +1110,13 @@ def publish_resource(user, pk):
         raise ValidationError("This resource cannot be submitted for metadata review since "
                               "it does not have required metadata or content files, or it contains "
                               "reference content, or this resource type is not allowed for publication.")
-
+    publisher_user_account = User.objects.get(username=settings.PUBLISHER_USER_NAME)
+    UserResourcePrivilege.share(user=publisher_user_account, resource=resource,
+                                privilege=PrivilegeCodes.OWNER, grantor=resource.quota_holder)
+    resource.set_quota_holder(resource.quota_holder, publisher_user_account)
     # append pending to the doi field to indicate DOI is not activated yet. Upon successful
     # activation, "pending" will be removed from DOI field
-    resource.doi = get_resource_doi(pk, CrossRefSubmissionStatus.PENDING)
+    resource.doi = get_resource_doi(pk, CrossRefSubmissionStatus.PENDING.value)
     resource.save()
     if settings.DEBUG:
         # in debug mode, making sure we are using the test CrossRef service
@@ -1144,7 +1134,7 @@ def publish_resource(user, pk):
         # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
         # crontab celery task
         logger.error(f"Received a {response.status_code} from Crossref while depositing metadata for res id {pk}")
-        resource.doi = get_resource_doi(pk, CrossRefSubmissionStatus.FAILURE)
+        resource.doi = get_resource_doi(pk, CrossRefSubmissionStatus.FAILURE.value)
         resource.save()
 
     resource.set_public(True)  # also sets discoverable to True

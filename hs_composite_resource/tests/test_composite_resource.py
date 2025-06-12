@@ -14,8 +14,8 @@ from rest_framework import status
 
 from hs_composite_resource.models import CompositeResource
 from hs_core import hydroshare
-from hs_core.hydroshare.utils import (ResourceVersioningException,
-                                      add_file_to_resource,
+from hs_core.exceptions import ResourceVersioningException
+from hs_core.hydroshare.utils import (add_file_to_resource,
                                       get_file_from_s3,
                                       get_resource_by_shortkey,
                                       resource_file_add_process)
@@ -4241,7 +4241,7 @@ class CompositeResourceTest(
         # test that db queries for landing page have constant time complexity
 
         # expected number of queries for landing page when the resource has no resource file
-        _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 179
+        _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 181
 
         # expected number of queries for landing page when the resource has resource file
         _LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT = _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT + 16
