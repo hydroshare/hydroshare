@@ -1,6 +1,7 @@
 """Signal receivers for the hs_core app."""
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save, pre_delete, post_delete
+from django.db import models
 from django.dispatch import receiver
 from django_s3.storage import S3Storage
 from hs_access_control.models.privilege import UserResourcePrivilege, GroupResourcePrivilege, UserGroupPrivilege
@@ -398,12 +399,46 @@ def update_user_group_membership(sender, instance, **kwargs):
     # Get all resources that the group has access to
     group_resources = GroupResourcePrivilege.objects.filter(
         group=instance.group
-    ).select_related('resource')
+    ).select_related('resource', 'resource__raccess')
 
-    # NOTE: This for loop results in n+1 queries.
+    # Pre-fetch user's direct privileges on all these resources to avoid N+1 queries
+    resource_ids = [grp.resource_id for grp in group_resources]
+    user_res_privileges_dict = {
+        urp.resource_id: urp.privilege 
+        for urp in UserResourcePrivilege.objects.filter(
+            user=instance.user, 
+            resource_id__in=resource_ids
+        )
+    }
+
+    # Pre-fetch user's group privileges on all these resources to avoid N+1 queries
+    user_group_res_privileges = GroupResourcePrivilege.objects.filter(
+        resource_id__in=resource_ids,
+        group__gaccess__active=True,
+        group__g2ugp__user=instance.user
+    ).values('resource_id').annotate(
+        min_privilege=models.Min('privilege')
+    )
+    user_group_res_privileges_dict = {ugrp['resource_id']: ugrp['min_privilege'] for ugrp in user_group_res_privileges}
+
     for grp in group_resources:
         # Calculate effective permission for this user on each resource
-        effective_permission = grp.resource.raccess.get_effective_privilege(instance.user)
+        # Using pre-fetched data instead of making individual queries
+        user_res_priv = user_res_privileges_dict.get(grp.resource_id, PrivilegeCodes.NONE)
+        group_res_priv = user_group_res_privileges_dict.get(grp.resource_id, PrivilegeCodes.NONE)
+
+        # Apply resource flags (immutable check)
+        if grp.resource.raccess.immutable:
+            if user_res_priv == PrivilegeCodes.CHANGE:
+                user_res_priv = PrivilegeCodes.VIEW
+            if group_res_priv == PrivilegeCodes.CHANGE:
+                group_res_priv = PrivilegeCodes.VIEW
+
+        # Apply superuser privileges
+        if instance.user.is_superuser:
+            effective_permission = PrivilegeCodes.OWNER
+        else:
+            effective_permission = min(user_res_priv, group_res_priv)
 
         if effective_permission < PrivilegeCodes.NONE:  # User has some permission
             UserResource.objects.update_or_create(
@@ -437,12 +472,51 @@ def remove_user_group_membership(sender, instance, **kwargs):
     # Get all resources that the group has access to
     group_resources = GroupResourcePrivilege.objects.filter(
         group=instance.group
-    ).select_related('resource')
+    ).select_related('resource', 'resource__raccess')
 
-    # NOTE: This for loop results in n+1 queries.
+    if not group_resources:
+        return
+
+    # Get resource IDs for bulk queries
+    resource_ids = [grp.resource.id for grp in group_resources]
+
+    # Pre-fetch user privileges for all resources
+    user_res_privileges = {}
+    if not instance.user.is_superuser:
+        user_priv_qs = UserResourcePrivilege.objects.filter(
+            user=instance.user,
+            resource_id__in=resource_ids
+        ).values('resource_id', 'privilege')
+        for priv in user_priv_qs:
+            user_res_privileges[priv['resource_id']] = priv['privilege']
+
+    # Pre-fetch group privileges for all resources (excluding the removed group)
+    user_group_res_privileges = {}
+    if not instance.user.is_superuser:
+        # Get user's groups excluding the one they were removed from
+        user_groups = instance.user.uaccess.my_groups.exclude(id=instance.group.id)
+        if user_groups.exists():
+            group_priv_qs = GroupResourcePrivilege.objects.filter(
+                resource_id__in=resource_ids,
+                group__in=user_groups
+            ).values('resource_id').annotate(
+                min_privilege=models.Min('privilege')
+            )
+            for priv in group_priv_qs:
+                user_group_res_privileges[priv['resource_id']] = priv['min_privilege']
+
     for grp in group_resources:
-        # Calculate effective permission for this user on each resource after group removal
-        effective_permission = grp.resource.raccess.get_effective_privilege(instance.user)
+        # Skip immutable resources if user is not superuser
+        if grp.resource.raccess.immutable and not instance.user.is_superuser:
+            continue
+
+        # Calculate effective permission manually to avoid N+1 queries
+        if instance.user.is_superuser:
+            effective_permission = PrivilegeCodes.OWNER
+        else:
+            user_priv = user_res_privileges.get(grp.resource.id, PrivilegeCodes.NONE)
+            group_priv = user_group_res_privileges.get(grp.resource.id, PrivilegeCodes.NONE)
+            effective_permission = min(user_priv, group_priv)
 
         if effective_permission < PrivilegeCodes.NONE:  # User still has some permission
             UserResource.objects.update_or_create(
