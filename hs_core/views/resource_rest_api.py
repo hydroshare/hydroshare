@@ -8,6 +8,8 @@ import logging
 import json
 import uuid
 
+from smart_open import open
+
 from django.urls import reverse
 from django.conf import settings
 from django.core.cache import cache
@@ -971,7 +973,12 @@ class CustomTusFile(TusFile):
         return self.filename is not None and self.storage.exists(self.get_path_and_name(temp=True))
 
     def _write_file(self, path, offset, content):
-        self.storage.connection.Bucket(self.bucket).put_object(Key=path, Body=content)
+        s3_url = f's3://{self.bucket}/{path}'
+        transport_params = {
+            'client': self.storage.connection.meta.client
+        }
+        with open(s3_url, 'wb', transport_params=transport_params) as out_file:
+            out_file.write(content)
 
     def write_init_file(self):
         try:
