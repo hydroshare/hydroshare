@@ -288,9 +288,10 @@ PROJECT_DIRNAME = PROJECT_ROOT.split(os.sep)[-1]
 # project specific.
 CACHE_MIDDLEWARE_KEY_PREFIX = PROJECT_DIRNAME
 
+# requires initial python manage.py createcachetable
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
         'LOCATION': 'django_cache',
     }
 }
@@ -463,6 +464,7 @@ INSTALLED_APPS = (
 
 TUS_FILE_NAME_FORMAT = 'keep'  # Other options are: 'random-suffix', 'random', 'increment'
 TUS_EXISTING_FILE = 'error'  # Other options are: 'overwrite',  'error', 'rename'
+TUS_TIMEOUT = 60 * 60 * 24 * 7  # seconds that tus keeps entries in the django cache
 
 # the url for the uppy companion server
 # https://uppy.io/docs/companion/
