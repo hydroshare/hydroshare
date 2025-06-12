@@ -829,18 +829,7 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
             res.create_aggregation_meta_files()
 
     if aggregation or sf_zip:
-        # input path points to single file aggregation
-        # ensure that foo.zip contains aggregation metadata
-        # by copying these into a temp subdirectory foo/foo parallel to where foo.zip is stored
-        temp_folder_name, ext = os.path.splitext(output_path)  # strip zip to get scratch dir
-        head, tail = os.path.split(temp_folder_name)  # tail is unqualified folder name "foo"
-        out_with_folder = os.path.join(temp_folder_name, tail)  # foo/foo is subdir to zip
-        # in the case of user provided zip file name, out_with_folder path may not end with
-        # aggregation file name
-        aggr_filename = os.path.basename(input_path)
-        if not out_with_folder.endswith(aggr_filename):
-            out_with_folder = os.path.join(os.path.dirname(out_with_folder), aggr_filename)
-        istorage.copyFiles(input_path, out_with_folder)
+        files_to_zip = [input_path]
         if not aggregation:
             if '/data/contents/' in input_path:
                 short_path = input_path.split('/data/contents/')[1]  # strip /data/contents/
@@ -852,39 +841,23 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
                 pass
 
         if aggregation:
-            try:
-                istorage.copyFiles(aggregation.map_file_path,
-                                   os.path.join(temp_folder_name, os.path.basename(aggregation.map_file_path)))
-            except SessionException:
-                logger.error("cannot copy {}".format(aggregation.map_file_path))
-            try:
-                istorage.copyFiles(aggregation.metadata_file_path,
-                                   os.path.join(temp_folder_name, os.path.basename(aggregation.metadata_file_path)))
-            except SessionException:
-                logger.error("cannot copy {}".format(aggregation.metadata_file_path))
+            files_to_zip = [input_path]
+            if istorage.exists(aggregation.map_file_path):
+                files_to_zip.append(aggregation.map_file_path)
+            if istorage.exists(aggregation.metadata_file_path):
+                files_to_zip.append(aggregation.metadata_file_path)
             if aggregation.is_model_program or aggregation.is_model_instance:
-                try:
-                    istorage.copyFiles(aggregation.schema_file_path,
-                                       os.path.join(temp_folder_name, os.path.basename(aggregation.schema_file_path)))
-                except SessionException:
-                    logger.error("cannot copy {}".format(aggregation.schema_file_path))
+                if istorage.exists(aggregation.schema_file_path):
+                    files_to_zip.append(aggregation.schema_file_path)
                 if aggregation.is_model_instance:
-                    try:
-                        basename = os.path.basename(aggregation.schema_values_file_path)
-                        istorage.copyFiles(aggregation.schema_values_file_path,
-                                           os.path.join(temp_folder_name, basename))
-                    except SessionException:
-                        logger.error("cannot copy {}".format(aggregation.schema_values_file_path))
+                    if istorage.exists(aggregation.schema_values_file_path):
+                        files_to_zip.append(aggregation.schema_values_file_path)
             for file in aggregation.files.all():
-                try:
-                    istorage.copyFiles(file.storage_path,
-                                       os.path.join(temp_folder_name, os.path.basename(file.storage_path)))
-                except SessionException:
-                    logger.error("cannot copy {}".format(file.storage_path))
-        istorage.zipup(temp_folder_name, output_path)
-        istorage.delete(temp_folder_name)  # delete working directory; this isn't the zipfile
+                if istorage.exists(file.storage_path):
+                    files_to_zip.append(file.storage_path)
+        istorage.zipup(output_path, *set(files_to_zip), in_prefix=os.path.dirname(input_path))
     else:  # regular folder to zip
-        istorage.zipup(input_path, output_path)
+        istorage.zipup(output_path, input_path)
     return istorage.signed_url(output_path)
 
 
@@ -926,7 +899,7 @@ def create_bag_by_s3(resource_id, create_zip=True):
             try:
                 if istorage.exists(bag_path):
                     istorage.delete(bag_path)
-                istorage.zipup(bagit_input_path, bag_path)
+                istorage.zipup(bag_path, bagit_input_path)
                 res.setAVU("bag_modified", False)
                 if res.raccess.published:
                     # compute checksum to meet DataONE distribution requirement
