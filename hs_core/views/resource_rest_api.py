@@ -34,7 +34,7 @@ from django_s3.exceptions import SessionException
 from django_s3.storage import S3Storage
 from django_s3.utils import bucket_and_name
 from django_tus.views import TusUpload
-from django_tus.tusfile import TusFile, TusChunk, FilenameGenerator
+from django_tus.tusfile import TusFile, TusChunk
 from django_tus.response import TusResponse
 from hs_core import hydroshare
 from hs_core.models import AbstractResource
@@ -934,6 +934,7 @@ class CustomTusFile(TusFile):
         self.storage = S3Storage()
         self.resource_id = resource_id
         self.filename = cache.get("tus-uploads/{}/filename".format(resource_id))
+        self.path = cache.get("tus-uploads/{}/path".format(resource_id))
         self.file_size = int(cache.get("tus-uploads/{}/file_size".format(resource_id)))
         self.metadata = cache.get("tus-uploads/{}/metadata".format(resource_id))
         self.offset = cache.get("tus-uploads/{}/offset".format(resource_id))
@@ -942,7 +943,6 @@ class CustomTusFile(TusFile):
         self.upload_id = cache.get("tus-uploads/{}/upload_id".format(resource_id))
         bucket, _ = bucket_and_name(self.metadata.get("hs_res_id"))
         self.bucket = bucket
-        self.path = get_path(self.metadata)
 
     def get_storage(self):
         return self.storage
@@ -957,18 +957,13 @@ class CustomTusFile(TusFile):
         cache.add("tus-uploads/{}/metadata".format(resource_id), metadata, settings.TUS_TIMEOUT)
 
         tus_file = CustomTusFile(resource_id)
+        tus_file.path = metadata.get("path")
+        cache.add("tus-uploads/{}/path".format(resource_id), tus_file.path, settings.TUS_TIMEOUT)
         tus_file.initiate_multipart_upload()
         cache.add("tus-uploads/{}/part_number".format(resource_id), tus_file.part_number, settings.TUS_TIMEOUT)
         cache.add("tus-uploads/{}/parts".format(resource_id), tus_file.parts, settings.TUS_TIMEOUT)
         cache.add("tus-uploads/{}/upload_id".format(resource_id), tus_file.upload_id, settings.TUS_TIMEOUT)
         return tus_file
-
-    def get_path_and_name(self, temp=False):
-        if not self.path:
-            self.path = get_path(self.metadata)
-        if temp:
-            return self.path + self.filename + self.resource_id + ".part"
-        return self.path + self.filename
 
     @staticmethod
     def check_existing_file(path):
@@ -996,7 +991,7 @@ class CustomTusFile(TusFile):
         try:
             response = self.storage.connection.meta.client.create_multipart_upload(
                 Bucket=self.bucket,
-                Key=self.get_path_and_name(temp=True)
+                Key=self.path
             )
             self.upload_id = response['UploadId']
             self.part_number = 1
@@ -1009,7 +1004,7 @@ class CustomTusFile(TusFile):
         try:
             response = self.storage.connection.meta.client.upload_part(
                 Bucket=self.bucket,
-                Key=self.get_path_and_name(temp=True),
+                Key=self.path,
                 PartNumber=self.part_number,
                 UploadId=self.upload_id,
                 Body=chunk.content
@@ -1026,36 +1021,19 @@ class CustomTusFile(TusFile):
                 "file_size": self.file_size,
                 "metadata": self.metadata,
                 "offset": self.offset,
-                "upload_file_path": self.get_path_and_name(temp=True),
+                "upload_file_path": self.path,
             }})
             raise e
 
     def complete_upload(self):
         self.storage.connection.meta.client.complete_multipart_upload(
             Bucket=self.bucket,
-            Key=self.get_path_and_name(temp=True),
+            Key=self.path,
             UploadId=self.upload_id,
             MultipartUpload={
                 'Parts': self.parts
             }
         )
-
-    def rename(self):
-        setting = settings.TUS_FILE_NAME_FORMAT
-        if self.check_existing_file(self.get_path_and_name()):
-            if setting == 'keep':
-                return TusResponse(status=409, reason="File with same name already exists")
-            elif setting == 'random':
-                self.filename = FilenameGenerator(self.filename).create_random_name()
-            elif setting == 'random-suffix':
-                self.filename = FilenameGenerator(self.filename).create_random_suffix_name()
-            elif setting == 'increment':
-                self.filename = FilenameGenerator(self.filename).create_incremented_name()
-            else:
-                return ValueError()
-
-        # move the object in s3
-        self.storage.moveFile(self.get_path_and_name(temp=True), self.get_path_and_name())
 
 
 class CustomTusUpload(TusUpload):
@@ -1162,6 +1140,7 @@ class CustomTusUpload(TusUpload):
             metadata["message_id"] = base64.b64decode(message_id)
 
         path = f"{get_path(metadata)}{metadata.get('filename', False)}"
+        metadata["path"] = path
         existing = CustomTusFile.check_existing_file(path)
 
         if settings.TUS_EXISTING_FILE == 'error' and settings.TUS_FILE_NAME_FORMAT == 'keep' and existing:
