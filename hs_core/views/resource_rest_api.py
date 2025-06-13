@@ -937,6 +937,9 @@ class CustomTusFile(TusFile):
         self.file_size = int(cache.get("tus-uploads/{}/file_size".format(resource_id)))
         self.metadata = cache.get("tus-uploads/{}/metadata".format(resource_id))
         self.offset = cache.get("tus-uploads/{}/offset".format(resource_id))
+        self.part_number = cache.get("tus-uploads/{}/part_number".format(resource_id))
+        self.parts = cache.get("tus-uploads/{}/parts".format(resource_id)) or []
+        self.upload_id = cache.get("tus-uploads/{}/upload_id".format(resource_id))
         bucket, _ = bucket_and_name(self.metadata.get("hs_res_id"))
         self.bucket = bucket
         self.path = get_path(self.metadata)
@@ -954,7 +957,10 @@ class CustomTusFile(TusFile):
         cache.add("tus-uploads/{}/metadata".format(resource_id), metadata, settings.TUS_TIMEOUT)
 
         tus_file = CustomTusFile(resource_id)
-        tus_file.write_init_file()
+        tus_file.initiate_multipart_upload()
+        cache.add("tus-uploads/{}/part_number".format(resource_id), tus_file.part_number, settings.TUS_TIMEOUT)
+        cache.add("tus-uploads/{}/parts".format(resource_id), tus_file.parts, settings.TUS_TIMEOUT)
+        cache.add("tus-uploads/{}/upload_id".format(resource_id), tus_file.upload_id, settings.TUS_TIMEOUT)
         return tus_file
 
     def get_path_and_name(self, temp=False):
@@ -969,7 +975,7 @@ class CustomTusFile(TusFile):
         return S3Storage().exists(path)
 
     def is_valid(self):
-        return self.filename is not None and self.storage.exists(self.get_path_and_name(temp=True))
+        return self.filename is not None
 
     def _write_file(self, path, offset, content):
         s3_url = f's3://{self.bucket}/{path}'
@@ -986,25 +992,34 @@ class CustomTusFile(TusFile):
                     raise IOError("Error seeking in file for tus upload")
             out_file.write(content)
 
-    def write_init_file(self):
+    def initiate_multipart_upload(self):
         try:
-            # self._write_file(self.get_path_and_name(temp=True), self.file_size - 1, b"\0")
-            # Create an empty file (zero size) at the temp path
-            # self.storage.connection.Bucket(self.bucket).put_object(
-            #     Key=self.get_path_and_name(temp=True),
-            #     Body=b"\0" * self.file_size
-            # )
-            self.storage.connection.Bucket(self.bucket).put_object(Key=self.get_path_and_name(temp=True), Body='')
+            response = self.storage.connection.meta.client.create_multipart_upload(
+                Bucket=self.bucket,
+                Key=self.get_path_and_name(temp=True)
+            )
+            self.upload_id = response['UploadId']
+            self.part_number = 1
+            self.parts = []
         except Exception as e:
             logger.error("Error writing initial file for tus upload", exc_info=e)
             raise IOError("Error writing initial file for tus upload")
 
-    def write_chunk(self, chunk):
+    def upload_part(self, chunk):
         try:
-            self._write_file(self.get_path_and_name(temp=True), self.offset, chunk.content)
+            response = self.storage.connection.meta.client.upload_part(
+                Bucket=self.bucket,
+                Key=self.get_path_and_name(temp=True),
+                PartNumber=self.part_number,
+                UploadId=self.upload_id,
+                Body=chunk.content
+            )
+            self.parts.append({'PartNumber': self.part_number, 'ETag': response['ETag']})
+            cache.set("tus-uploads/{}/parts".format(self.resource_id), self.parts, settings.TUS_TIMEOUT)
+            self.part_number = cache.incr("tus-uploads/{}/part_number".format(self.resource_id))
             self.offset = cache.incr("tus-uploads/{}/offset".format(self.resource_id), chunk.chunk_size)
 
-        except Exception:
+        except Exception as e:
             logger.error("patch", extra={'request': chunk.META, 'tus': {
                 "resource_id": self.resource_id,
                 "filename": self.filename,
@@ -1013,7 +1028,17 @@ class CustomTusFile(TusFile):
                 "offset": self.offset,
                 "upload_file_path": self.get_path_and_name(temp=True),
             }})
-            raise
+            raise e
+
+    def complete_upload(self):
+        self.storage.connection.meta.client.complete_multipart_upload(
+            Bucket=self.bucket,
+            Key=self.get_path_and_name(temp=True),
+            UploadId=self.upload_id,
+            MultipartUpload={
+                'Parts': self.parts
+            }
+        )
 
     def rename(self):
         setting = settings.TUS_FILE_NAME_FORMAT
@@ -1104,7 +1129,7 @@ class CustomTusUpload(TusUpload):
         if chunk.offset > tus_file.file_size and tus_file.file_size != 0:
             return TusResponse(status=413)
         try:
-            tus_file.write_chunk(chunk=chunk)
+            tus_file.upload_part(chunk=chunk)
         except Exception as e:
             error_message = f"Unable to write chunk for tus upload: {str(e)}"
             logger.error(error_message, exc_info=True)
@@ -1113,6 +1138,7 @@ class CustomTusUpload(TusUpload):
         # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/tusfile.py#L151-L152
         # here we modify from django_tus to allow for the file to be marked as complete
         if tus_file.is_complete():
+            tus_file.complete_upload()
             # file transfer complete, rename from resource id to actual filename
             tus_file.rename()
             tus_file.clean()
