@@ -977,6 +977,7 @@ class CustomTusFile(TusFile):
             'client': self.storage.connection.meta.client
         }
         with open(s3_url, 'wb', transport_params=transport_params) as out_file:
+            out_file.seek(offset)
             out_file.write(content)
 
     def write_init_file(self):
