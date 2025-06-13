@@ -977,23 +977,34 @@ class CustomTusFile(TusFile):
             'client': self.storage.connection.meta.client
         }
         with open(s3_url, 'wb', transport_params=transport_params) as out_file:
-            out_file.seek(offset)
+            if offset:
+                try:
+                    out_file.seek(offset)
+                except OSError as e:
+                    # https://github.com/piskvorky/smart_open/issues/580
+                    logger.error("Error seeking in file for tus upload", exc_info=e)
+                    raise IOError("Error seeking in file for tus upload")
             out_file.write(content)
 
     def write_init_file(self):
         try:
-            self._write_file(self.get_path_and_name(temp=True), self.file_size, b"\0")
+            # self._write_file(self.get_path_and_name(temp=True), self.file_size - 1, b"\0")
+            # Create an empty file (zero size) at the temp path
+            # self.storage.connection.Bucket(self.bucket).put_object(
+            #     Key=self.get_path_and_name(temp=True),
+            #     Body=b"\0" * self.file_size
+            # )
+            self.storage.connection.Bucket(self.bucket).put_object(Key=self.get_path_and_name(temp=True), Body='')
         except Exception as e:
-            error_message = "Unable to create file: {}".format(e)
-            logger.error(error_message, exc_info=True)
-            return TusResponse(status=500, reason=error_message)
+            logger.error("Error writing initial file for tus upload", exc_info=e)
+            raise IOError("Error writing initial file for tus upload")
 
     def write_chunk(self, chunk):
         try:
-            self._write_file(self.get_path_and_name(temp=True), chunk.offset, chunk.content)
+            self._write_file(self.get_path_and_name(temp=True), self.offset, chunk.content)
             self.offset = cache.incr("tus-uploads/{}/offset".format(self.resource_id), chunk.chunk_size)
 
-        except IOError:
+        except Exception:
             logger.error("patch", extra={'request': chunk.META, 'tus': {
                 "resource_id": self.resource_id,
                 "filename": self.filename,
@@ -1002,7 +1013,7 @@ class CustomTusFile(TusFile):
                 "offset": self.offset,
                 "upload_file_path": self.get_path_and_name(temp=True),
             }})
-            return TusResponse(status=500)
+            raise
 
     def rename(self):
         setting = settings.TUS_FILE_NAME_FORMAT
@@ -1092,8 +1103,12 @@ class CustomTusUpload(TusUpload):
 
         if chunk.offset > tus_file.file_size and tus_file.file_size != 0:
             return TusResponse(status=413)
-
-        tus_file.write_chunk(chunk=chunk)
+        try:
+            tus_file.write_chunk(chunk=chunk)
+        except Exception as e:
+            error_message = f"Unable to write chunk for tus upload: {str(e)}"
+            logger.error(error_message, exc_info=True)
+            return TusResponse(status=500, reason=error_message)
 
         # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/tusfile.py#L151-L152
         # here we modify from django_tus to allow for the file to be marked as complete
@@ -1131,8 +1146,12 @@ class CustomTusUpload(TusUpload):
         meta_file_size = metadata.get("file_size", None)
         if meta_file_size and meta_file_size != 'null':
             file_size = meta_file_size
-
-        tus_file = CustomTusFile.create_initial_file(metadata, file_size)
+        try:
+            tus_file = CustomTusFile.create_initial_file(metadata, file_size)
+        except Exception as e:
+            error_message = f"Unable to create file for tus upload {str(e)}"
+            logger.error(error_message, exc_info=True)
+            return TusResponse(status=500, reason=error_message)
 
         return TusResponse(
             status=201,
