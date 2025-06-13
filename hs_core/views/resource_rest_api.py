@@ -976,8 +976,28 @@ class CustomTusFile(TusFile):
         transport_params = {
             'client': self.storage.connection.meta.client
         }
+        # Download the existing object if it exists, otherwise start with empty bytes
+        existing_data = b''
+        try:
+            with open(s3_url, 'rb', transport_params=transport_params) as in_file:
+                existing_data = in_file.read()
+        except OSError as e:
+            # Object does not exist yet, so we start with empty data
+            logger.info(f"File not found: {s3_url}, error: {e}")
+            pass
+
+        # Ensure the existing_data is at least as long as the offset
+        if len(existing_data) < offset:
+            existing_data += b'\0' * (offset - len(existing_data))
+
+        # Insert the new content at the correct offset
+        new_data = existing_data[:offset] + content
+        if len(existing_data) > offset + len(content):
+            new_data += existing_data[offset + len(content):]
+
+        # Write the combined data back to S3
         with open(s3_url, 'wb', transport_params=transport_params) as out_file:
-            out_file.write(content)
+            out_file.write(new_data)
 
     def write_init_file(self):
         try:
