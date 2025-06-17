@@ -3981,9 +3981,9 @@ class BaseResource(Page, AbstractResource):
                     return ''
                 else:
                     logger.error(
-                        f"Failed to get funder_id for '{funder_name}'. "
+                        f"Failed to get funder_ƒid for '{funder_name}'. "
                         f"Status code: {response.status_code} for resource id: {self.short_id}"
-                    )                  
+                    )
                     return ''
             except requests.RequestException as e:
                 logger.error(
