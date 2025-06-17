@@ -4334,7 +4334,7 @@ class BaseResource(Page, AbstractResource):
             payload["data"]["attributes"]["version"] = str(self.version)
 
         return json.dumps(payload, indent=2)
-     
+    
     def get_crossref_deposit_xml(self, pretty_print=True):
         """Return XML structure describing crossref deposit.
         The mapping of hydroshare resource metadata to crossref metadata has been implemented here as per
