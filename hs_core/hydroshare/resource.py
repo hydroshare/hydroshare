@@ -7,7 +7,6 @@ import base64
 
 
 import requests
-from requests.auth import HTTPBasicAuth
 from dateutil import tz
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -1000,6 +999,7 @@ def get_crossref_url():
         main_url = 'https://doi.crossref.org/'
     return main_url
 
+
 def deposit_res_metadata_with_crossref(res):
     """
     Deposit resource metadata with CrossRef DOI registration agency.
@@ -1067,6 +1067,7 @@ def deposit_res_metadata_with_datacite(res):
         print(f"Unexpected error: {e}")
 
     return None
+
 
 def submit_resource_for_review(pk, user):
     """
