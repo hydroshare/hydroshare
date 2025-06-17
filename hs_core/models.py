@@ -3976,7 +3976,6 @@ class BaseResource(Page, AbstractResource):
     # def file_uri(self):
     #     return os.path.join(self.root_uri, 'files'
 
-
     def get_datacite_deposit_json(self):
         """
         Return JSON payload for creating a DOI with DataCite API.
@@ -3998,10 +3997,12 @@ class BaseResource(Page, AbstractResource):
                                 return item['id']
                     return ''
                 else:
-                    logger.error(f"Failed to get funder_id for '{funder_name}'. Status code: {response.status_code} for resource id: {self.short_id}")
+                    logger.error(
+                        f"Failed to get funder_id for '{funder_name}'. Status code: {response.status_code} for resource id: {self.short_id}")
                     return ''
             except requests.RequestException as e:
-                logger.error(f"Error fetching funder_id for '{funder_name}'. Error: {str(e)} for resource id: {self.short_id}")
+                logger.error(
+                    f"Error fetching funder_id for '{funder_name}'. Error: {str(e)} for resource id: {self.short_id}")
                 return ''
 
         def parse_creator_name(creator):
@@ -4086,7 +4087,8 @@ class BaseResource(Page, AbstractResource):
         }
 
         pub_date = self.metadata.dates.filter(type='published').first()
-        payload["data"]["attributes"]["publicationYear"] = str(pub_date.start_date.year if pub_date else self.updated.year)
+        payload["data"]["attributes"]["publicationYear"] = str(
+            pub_date.start_date.year if pub_date else self.updated.year)
 
         hs_identifier = self.metadata.identifiers.filter(name='hydroShareIdentifier').first()
         if hs_identifier:
@@ -4200,26 +4202,25 @@ class BaseResource(Page, AbstractResource):
                 rights_data["rightsUriStartDate"] = pub_date.strftime("%Y-%m-%d")
             payload["data"]["attributes"]["rightsList"] = [rights_data]
 
-                
         VALID_RELATION_TYPE_MAP = {
             RelationTypes.isPartOf: "IsPartOf",
             RelationTypes.hasPart: "HasPart",
-            RelationTypes.isExecutedBy: "IsSupplementedBy",   
-            RelationTypes.isCreatedBy: "IsDocumentedBy",      
+            RelationTypes.isExecutedBy: "IsSupplementedBy",
+            RelationTypes.isCreatedBy: "IsDocumentedBy",
             RelationTypes.isVersionOf: "IsVersionOf",
             RelationTypes.isReplacedBy: "IsNewVersionOf",
-            RelationTypes.isDescribedBy: "IsDescribedBy",     
-            RelationTypes.conformsTo: "References",           
-            RelationTypes.hasFormat: "HasPart",               
-            RelationTypes.isFormatOf: "IsPartOf",             
+            RelationTypes.isDescribedBy: "IsDescribedBy",
+            RelationTypes.conformsTo: "References",
+            RelationTypes.hasFormat: "HasPart",
+            RelationTypes.isFormatOf: "IsPartOf",
             RelationTypes.isRequiredBy: "IsRequiredBy",
             RelationTypes.requires: "Requires",
             RelationTypes.isReferencedBy: "IsReferencedBy",
             RelationTypes.references: "References",
             RelationTypes.replaces: "Replaces",
             RelationTypes.source: "IsDerivedFrom",
-            RelationTypes.isSimilarTo: "IsIdenticalTo",       
-            RelationTypes.relation: "References"              
+            RelationTypes.isSimilarTo: "IsIdenticalTo",
+            RelationTypes.relation: "References"
         }
         RESOURCE_TYPE_MAP = {
             "CompositeResource": "Dataset",
@@ -4241,7 +4242,6 @@ class BaseResource(Page, AbstractResource):
             identifier_value = match.group(0) if match else relation.value
             identifier_type = "URL" if identifier_value.startswith("http") else "DOI"
 
-
             payload["data"]["attributes"]["relatedIdentifiers"].append({
                 "relatedIdentifier": identifier_value,
                 "relatedIdentifierType": identifier_type,
@@ -4262,7 +4262,6 @@ class BaseResource(Page, AbstractResource):
                 "relatedIdentifierType": "URL",
                 "relationType": "IsIdenticalTo"
             })
-
 
         for coverage in self.metadata.coverages.all():
             if coverage.type == 'box':
@@ -4334,7 +4333,7 @@ class BaseResource(Page, AbstractResource):
             payload["data"]["attributes"]["version"] = str(self.version)
 
         return json.dumps(payload, indent=2)
-    
+
     def get_crossref_deposit_xml(self, pretty_print=True):
         """Return XML structure describing crossref deposit.
         The mapping of hydroshare resource metadata to crossref metadata has been implemented here as per
