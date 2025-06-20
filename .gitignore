@@ -37,6 +37,7 @@ celerybeat.pid
 pg.deploy.sql
 pylint.out
 .ssh
+django_cache
 
 # Frontend
 node_modules/

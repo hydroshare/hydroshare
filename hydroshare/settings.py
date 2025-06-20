@@ -284,10 +284,11 @@ PROJECT_DIRNAME = PROJECT_ROOT.split(os.sep)[-1]
 # project specific.
 CACHE_MIDDLEWARE_KEY_PREFIX = PROJECT_DIRNAME
 
+# https://docs.djangoproject.com/en/4.2/topics/cache/#redis
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': 'django_cache',
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://:superSecretPassword@redis:6379",
     }
 }
 
@@ -457,10 +458,9 @@ INSTALLED_APPS = (
     'django_tus',
 )
 
-TUS_UPLOAD_DIR = '/tmp/tus_upload'
-TUS_DESTINATION_DIR = '/tmp/tus_completed'
-TUS_FILE_NAME_FORMAT = 'increment'  # Other options are: 'random-suffix', 'random', 'keep'
+TUS_FILE_NAME_FORMAT = 'keep'  # Other options are: 'random-suffix', 'random', 'increment'
 TUS_EXISTING_FILE = 'error'  # Other options are: 'overwrite',  'error', 'rename'
+TUS_TIMEOUT = 60 * 60 * 24 * 7  # seconds that tus keeps entries in the django cache
 
 # the url for the uppy companion server
 # https://uppy.io/docs/companion/
