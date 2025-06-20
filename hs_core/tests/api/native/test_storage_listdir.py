@@ -244,10 +244,12 @@ class TestS3StorageListDir(MockS3TestCaseMixin, TestCase):
 
         # Metadata files should be filtered out
         for filename in metadata_files.keys():
-            if (is_metadata_xml_file(filename) or
-                is_metadata_json_file(filename) or
-                is_schema_json_file(filename) or
-                is_schema_json_values_file(filename)):
+            if (
+                is_metadata_xml_file(filename)
+                or is_metadata_json_file(filename)
+                or is_schema_json_file(filename)
+                or is_schema_json_values_file(filename)
+            ):
                 self.assertNotIn(filename, files_filtered)
 
         # Verify filtering worked - should have fewer files after filtering
