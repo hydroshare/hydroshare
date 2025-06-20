@@ -88,6 +88,24 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
         from hs_core.hydroshare.utils import current_site_url
         return "{}/resource/{}".format(current_site_url(), self.schema_file_path)
 
+    @property
+    def metadata_json_file_path(self):
+        """Returns the storage path of the aggregation metadata json file"""
+
+        from hs_file_types.enums import AggregationMetaFilePath
+
+        if self.folder:
+            # this model instance aggregation has been created from a folder
+            file_folder = self.folder
+            meta_file_path = os.path.join(self.resource.file_path, file_folder,
+                                          AggregationMetaFilePath.METADATA_JSON_FILE_NAME.value)
+            return meta_file_path
+        else:
+            # this model instance aggregation has been created from a single resource file
+            mi_file = self.files.first()
+            meta_file_path = mi_file.storage_path + AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH.value
+            return meta_file_path
+
     @classmethod
     def get_main_file_type(cls):
         """The main file type for this aggregation - no specific main file"""

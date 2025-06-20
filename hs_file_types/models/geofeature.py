@@ -19,6 +19,7 @@ from hs_core.hydroshare import utils
 from hs_core.models import Title, AbstractMetaDataElement
 from hs_core.signals import post_add_geofeature_aggregation
 from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from ..enums import AggregationMetaFilePath
 
 UNKNOWN_STR = "unknown"
 
@@ -409,6 +410,14 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                 ".sbx", ".sbn", ".cpg", ".xml", ".fbn",
                 ".fbx", ".ain", ".aih", ".atx", ".ixs",
                 ".mxs")
+
+    @property
+    def metadata_json_file_path(self):
+        """Returns the storage path of the aggregation metadata json file"""
+
+        primary_file = self.get_primary_resource_file(self.files.all())
+        meta_file_path = primary_file.storage_path + AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH.value
+        return meta_file_path
 
     @classmethod
     def get_main_file_type(cls):

@@ -795,6 +795,11 @@ class AbstractLogicalFile(models.Model):
         # - subclass needs to override this
         return None
 
+    @property
+    def metadata_json_file_path(self):
+        """Returns the storage path of the aggregation metadata json file"""
+        raise NotImplementedError
+
     @classmethod
     def can_set_folder_to_aggregation(cls, resource, dir_path, aggregations=None):
         """helper to check if the specified folder *dir_path* can be set to this aggregation type
