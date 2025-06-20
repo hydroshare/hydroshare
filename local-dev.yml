@@ -1,4 +1,3 @@
-version: '3'
 services:
   minio:
     # this is the last release before the admin features were removed from the console
@@ -117,6 +116,7 @@ services:
       - solr
       - rabbitmq
       - minio
+      - redis
     stdin_open: true
     tty: true
     command: /bin/bash init-hydroshare
