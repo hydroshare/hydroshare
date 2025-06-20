@@ -1047,6 +1047,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
         meta_file_path = nc_file.storage_path + AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH.value
         return meta_file_path
 
+
 def add_metadata_to_list(
     res_meta_list,
     extracted_core_meta,

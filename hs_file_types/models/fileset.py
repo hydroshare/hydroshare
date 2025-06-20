@@ -245,7 +245,7 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         meta_file_path = os.path.join(self.resource.file_path, self.folder,
                                       AggregationMetaFilePath.METADATA_JSON_FILE_NAME.value)
         return meta_file_path
-    
+
     def get_copy(self, copied_resource):
         """Overrides the base class method"""
 

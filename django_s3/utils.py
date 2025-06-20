@@ -63,6 +63,7 @@ def is_metadata_xml_file(file_path):
         return False
     return True
 
+
 def is_metadata_json_file(file_path):
     """Determine whether a given file is a metadata json file.
     Note: this will return true for any file that ends with the metadata endings or

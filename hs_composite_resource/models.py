@@ -512,7 +512,7 @@ class CompositeResource(BaseResource):
 
         if istorage.exists(map_xml_file_full_path):
             istorage.delete(map_xml_file_full_path)
-        
+
         # delete metadata JSON file only for single file aggregations
         if (
             not is_new_path_a_folder
