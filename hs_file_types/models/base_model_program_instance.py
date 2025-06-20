@@ -341,6 +341,8 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
                 istorage.delete(self.metadata_file_path)
             if istorage.exists(self.map_file_path):
                 istorage.delete(self.map_file_path)
+            if istorage.exists(self.metadata_json_file_path):
+                istorage.delete(self.metadata_json_file_path)
 
             # delete schema json file if this a model aggregation
             if istorage.exists(self.schema_file_path):
@@ -389,6 +391,8 @@ class AbstractModelLogicalFile(AbstractLogicalFile):
             istorage.delete(self.metadata_file_path)
         if istorage.exists(self.map_file_path):
             istorage.delete(self.map_file_path)
+        if istorage.exists(self.metadata_json_file_path):
+            istorage.delete(self.metadata_json_file_path)
 
         # delete schema json file if this a model aggregation
         if istorage.exists(self.schema_file_path):
