@@ -10,6 +10,7 @@ from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.signals import post_add_generic_aggregation
 
 from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from ..enums import AggregationMetaFilePath
 
 
 class GenericFileMetaDataMixin(AbstractFileMetaData):
@@ -182,8 +183,7 @@ class GenericFileMetaData(GenericFileMetaDataMixin):
 
 
 class GenericLogicalFile(AbstractLogicalFile):
-    """ Each resource file is assigned an instance of this logical file type on upload to
-    Composite Resource """
+    """ Any resource file can be part of this aggregation """
     metadata = models.OneToOneField(GenericFileMetaData, on_delete=models.CASCADE, related_name="logical_file")
     data_type = "genericData"
 
@@ -229,6 +229,13 @@ class GenericLogicalFile(AbstractLogicalFile):
             return self.extra_data['url']
         else:
             return None
+
+    @property
+    def metadata_json_file_path(self):
+        """Returns the storage path of the aggregation metadata json file"""
+
+        meta_file_path = self.files.first().storage_path + AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH.value
+        return meta_file_path
 
     @classmethod
     def set_file_type(cls, resource, user, file_id=None, folder_path='', extra_data={}):

@@ -2598,16 +2598,25 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         return self.metadata.get_xml(pretty_print=pretty_print,
                                      include_format_elements=include_format_elements)
 
-    def is_schema_json_file(self, file_path):
+    @classmethod
+    def is_schema_json_file(cls, file_path):
         """Determine whether a given file is a schema.json file.
         Note: this will return true for any file that ends with the schema.json ending
         We are taking the risk that user might create a file with the same filename ending
         """
-        from hs_file_types.enums import AggregationMetaFilePath
+        from django_s3.utils import is_schema_json_file as _is_schema_json_file
 
-        if file_path.endswith(AggregationMetaFilePath.SCHEMA_JSON_FILE_ENDSWITH):
-            return True
-        return False
+        return _is_schema_json_file(file_path)
+
+    @classmethod
+    def is_schema_json_values_file(cls, file_path):
+        """Determine whether a given file is a schema_values.json file.
+        Note: this will return true for any file that ends with the _schema_values.json ending
+        We are taking the risk that user might create a file with the same filename ending
+        """
+        from django_s3.utils import is_schema_json_values_file as _is_schema_json_values_file
+
+        return _is_schema_json_values_file(file_path)
 
     def is_collection_list_csv(self, file_path):
         """Determine if a given file is an internally-generated collection list
@@ -2618,17 +2627,25 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             return True
         return False
 
-    def is_metadata_xml_file(self, file_path):
+    @classmethod
+    def is_metadata_xml_file(cls, file_path):
         """Determine whether a given file is metadata.
         Note: this will return true for any file that ends with the metadata endings
         We are taking the risk that user might create a file with the same filename ending
         """
-        from hs_file_types.enums import AggregationMetaFilePath
+        from django_s3.utils import is_metadata_xml_file as _is_metadata_xml_file
 
-        if not (file_path.endswith(AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)
-                or file_path.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value)):
-            return False
-        return True
+        return _is_metadata_xml_file(file_path)
+
+    @classmethod
+    def is_metadata_json_file(cls, file_path):
+        """Determine whether a given file is a metadata json file.
+        Note: this will return true for any file that ends with the metadata endings or
+        has the same name as the metadata json file
+        """
+        from django_s3.utils import is_metadata_json_file as _is_metadata_json_file
+
+        return _is_metadata_json_file(file_path)
 
     def is_aggregation_xml_file(self, file_path):
         """Checks if the file path *file_path* is one of the aggregation related xml file paths

@@ -15,7 +15,14 @@ from smart_open import open
 
 from hs_core.exceptions import QuotaException
 from . import models as m
-from .utils import bucket_and_name, normalized_bucket_name, is_metadata_xml_file
+from .utils import (
+    bucket_and_name,
+    normalized_bucket_name,
+    is_metadata_xml_file,
+    is_metadata_json_file,
+    is_schema_json_file,
+    is_schema_json_values_file,
+)
 
 from uuid import uuid4
 
@@ -51,6 +58,7 @@ class S3Storage(S3Storage):
         """
         list the contents of the directory
         :param path: the directory path to list
+        :param remove_metadata: if True, remove metadata files from the list
         :return: a list of files in the directory
         """
         path = path.strip("/") + "/"  # ensure a folder is matched
@@ -68,8 +76,29 @@ class S3Storage(S3Storage):
         directories = list(set(directories + additional_directories))
 
         if remove_metadata:
-            # remove .xml metadata files from the list
-            files = [f for f in files if not is_metadata_xml_file(f)]
+            # remove .xml metadata, json metadata, json schema and json schema values files from the list
+            def is_metadata_file(file_path: str) -> bool:
+                """
+                Check if a file is a metadata or schema file that should be excluded.
+                """
+                return any([
+                    is_metadata_xml_file(file_path),
+                    is_metadata_json_file(file_path),
+                    is_schema_json_file(file_path),
+                    is_schema_json_values_file(file_path)
+                ])
+
+            # filter out metadata files from the list and corresponding file sizes
+            filtered_files = []
+            filtered_file_sizes = []
+            for i, f in enumerate(files):
+                if not is_metadata_file(f):
+                    filtered_files.append(f)
+                    # Only add file size if it exists (in case of length mismatch)
+                    if i < len(file_sizes):
+                        filtered_file_sizes.append(file_sizes[i])
+            files = filtered_files
+            file_sizes = filtered_file_sizes
 
         return (directories, files, file_sizes)
 
@@ -120,6 +149,8 @@ class S3Storage(S3Storage):
                         if not in_prefix:
                             in_prefix = os.path.dirname(in_path) if self.isDir(in_name) else in_path
                         for file_key in filesCollection:
+                            if is_metadata_json_file(file_key.key):
+                                continue
                             relative_path = file_key.key[len(in_prefix):]
                             with zip_archive.open(relative_path, 'w', force_zip64=True) as zip_archive_file:
                                 chunk_request(zip_archive_file, in_bucket_name, file_key.key)

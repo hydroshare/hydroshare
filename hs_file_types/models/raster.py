@@ -25,6 +25,7 @@ from hs_core.models import ResourceFile, AbstractMetaDataElement
 from hs_core.signals import post_add_raster_aggregation
 from hs_file_types import raster_meta_extract
 from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from ..enums import AggregationMetaFilePath
 
 
 # additional metadata for raster aggregation type to store the original box type coverage
@@ -599,6 +600,14 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
     def get_allowed_uploaded_file_types(cls):
         """only .zip and .tif file can be set to this logical file group"""
         return [".zip", ".tif", ".tiff"]
+
+    @property
+    def metadata_json_file_path(self):
+        """Returns the storage path of the aggregation metadata json file"""
+
+        primary_file = self.get_primary_resource_file(self.files.all())
+        meta_file_path = primary_file.storage_path + AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH.value
+        return meta_file_path
 
     @classmethod
     def get_main_file_type(cls):
