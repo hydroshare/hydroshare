@@ -85,7 +85,7 @@ urlpatterns = [
          name='minio_service_accounts'),
 
     re_path(r'user/service/accounts/s3/(?P<service_account_key>[\w]+)', MinIOServiceAccountsDelete.as_view(),
-         name='minio_service_accounts_delete'),
+            name='minio_service_accounts_delete'),
 
     # DEPRECATED: use form above instead
     re_path(r'^resource/accessRules/(?P<pk>[0-9a-f-]+)/$',

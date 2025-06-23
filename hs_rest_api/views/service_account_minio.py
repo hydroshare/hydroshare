@@ -14,7 +14,8 @@ class MinIOServiceAccounts(APIView):
     @swagger_auto_schema(operation_description="Creates a service account with access key/secret for the user")
     def post(self, request):
         if not request.user.is_authenticated:
-            return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"detail": "Authentication credentials were not provided."},
+                            status=status.HTTP_401_UNAUTHORIZED)
         user = get_user(request)
         # using bucketname as the usnername since it is character safe and derived from the username
         response = requests.post("http://micro-auth/sa/auth/minio/sa/", json={"username": user.userprofile.bucket_name})
@@ -23,18 +24,21 @@ class MinIOServiceAccounts(APIView):
     @swagger_auto_schema(operation_description="Lists service accounts for the user")
     def get(self, request):
         if not request.user.is_authenticated:
-            return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"detail": "Authentication credentials were not provided."},
+                            status=status.HTTP_401_UNAUTHORIZED)
         user = get_user(request)
         # using bucketname as the usnername since it is character safe and derived from the username
         response = requests.get("http://micro-auth/sa/auth/minio/sa/" + user.userprofile.bucket_name)
         return Response(response.json(), status=response.status_code)
+
 
 class MinIOServiceAccountsDelete(APIView):
 
     @swagger_auto_schema(operation_description="Delete a service account for the user")
     def delete(self, request, service_account_key):
         if not request.user.is_authenticated:
-            return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"detail": "Authentication credentials were not provided."},
+                            status=status.HTTP_401_UNAUTHORIZED)
         user = get_user(request)
         # using bucketname as the usnername since it is character safe and derived from the username
         response = requests.get("http://micro-auth/sa/auth/minio/sa/" + user.userprofile.bucket_name)
