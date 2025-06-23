@@ -6,6 +6,8 @@ from django.contrib.auth.models import AnonymousUser, User, Group
 from django.http import HttpResponseForbidden, HttpResponseNotFound
 from django.test import Client, RequestFactory, TestCase
 
+from hs_access_control.models import PrivilegeCodes
+
 from hs_core import hydroshare
 from hs_core.models import BaseResource
 from hs_core.views.resource_rest_api import CustomTusUpload
@@ -110,12 +112,52 @@ class CustomTusUploadTests(TestCase):
             resp = view.patch(request, "fakeid")
             self.assertEqual(resp.status_code, 204)
 
-    def test_dispatch_returns_403_if_permission_denied(self):
+    def test_that_user_with_edit_permission_on_resource_can_post(self):
+        view = CustomTusUpload()
+        request = self.factory.post("/")
+
+        # create a new user to make the request
+        self.user2 = hydroshare.create_account(
+            'testuser2@email.com',
+            username='testuser2',
+            first_name='some_first_name',
+            last_name='some_last_name',
+            superuser=False,
+            groups=[]
+        )
+        self.user.uaccess.share_resource_with_user(self.res, self.user2, PrivilegeCodes.CHANGE)
+
+        request.user = self.user2
+        request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        request.META["HTTP_UPLOAD_LENGTH"] = "123"
+        self.create_request_metadata(request)
+        view.request = request
+        view.kwargs = {'resource_id': self.res.short_id}
+
+        # use mock to patch the get_metadata method to return fake metadata
+        with mock.patch.object(view, "get_metadata", return_value=self.fake_metadata()):
+            resp = view.dispatch(request)
+            self.assertEqual(resp.status_code, 201)
+
+    def test_dispatch_returns_403_for_non_editor(self):
         view = CustomTusUpload()
         request = self.factory.get("/")
-        request.user = AnonymousUser()
-        view.request = request
+        # create a new user to make the request
+        self.user2 = hydroshare.create_account(
+            'testuser2@email.com',
+            username='testuser2',
+            first_name='some_first_name',
+            last_name='some_last_name',
+            superuser=False,
+            groups=[]
+        )
+
+        request.user = self.user2
+        request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        request.META["HTTP_UPLOAD_LENGTH"] = "123"
         self.create_request_metadata(request)
+        view.request = request
+        view.kwargs = {'resource_id': self.res.short_id}
 
         # use mock to patch the get_metadata method to return fake metadata
         view.kwargs = {'resource_id': self.res.short_id}
