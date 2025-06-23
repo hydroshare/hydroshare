@@ -1,12 +1,14 @@
+import base64
 import uuid
 from unittest import mock
-from django.http import HttpResponseForbidden, HttpResponseNotFound
-from hs_core.views.resource_rest_api import CustomTusUpload
-from django.test import RequestFactory, TestCase, Client
+
 from django.contrib.auth.models import AnonymousUser, User, Group
+from django.http import HttpResponseForbidden, HttpResponseNotFound
+from django.test import Client, RequestFactory, TestCase
+
 from hs_core import hydroshare
 from hs_core.models import BaseResource
-import base64
+from hs_core.views.resource_rest_api import CustomTusUpload
 
 
 class CustomTusUploadTests(TestCase):
@@ -56,29 +58,57 @@ class CustomTusUploadTests(TestCase):
         BaseResource.objects.all().delete()
         Group.objects.all().delete()
 
-    def test_dispatch_returns_404_if_no_metadata_and_no_tusfile(self):
+    def test_post_returns_expected_metadata(self):
         view = CustomTusUpload()
-        request = self.factory.get("/")
+        request = self.factory.post("/")
+        request.user = self.user
+        request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        request.META["HTTP_UPLOAD_LENGTH"] = "123"
+        self.create_request_metadata(request)
         view.request = request
-        view.kwargs = {'resource_id': 'fakeid'}
+        view.kwargs = {'resource_id': self.res.short_id}
 
-        with mock.patch.object(view, "get_metadata", return_value=None), \
-             mock.patch("hs_core.views.resource_rest_api.CustomTusFile", side_effect=Exception("fail")):
-            resp = view.dispatch()
-            self.assertIsInstance(resp, HttpResponseNotFound)
-            self.assertIn("Error in getting metadata", resp.content.decode())
+        # Mock the get_metadata method to return fake metadata
+        with mock.patch.object(view, "get_metadata", return_value=self.fake_metadata()):
+            resp = view.dispatch(request)
+            self.assertEqual(resp.status_code, 201)
+            self.assertIn("Tus-Resumable", resp.headers)
 
-    def test_dispatch_returns_403_if_user_not_authenticated_and_no_session(self):
+    def test_post_returns_201_on_success(self):
         view = CustomTusUpload()
-        request = self.factory.get("/")
-        request.user = AnonymousUser()
+        request = self.factory.post("/")
+        request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        request.META["HTTP_UPLOAD_LENGTH"] = "123"
+        self.create_request_metadata(request)
         view.request = request
-        view.kwargs = {'resource_id': 'fakeid'}
+        view.kwargs = {'resource_id': self.res.short_id}
 
+        # Mock the get_metadata method to return fake metadata
         with mock.patch.object(view, "get_metadata", return_value=self.fake_metadata()), \
-             mock.patch("hs_core.views.resource_rest_api.Session"):
-            resp = view.dispatch()
-            self.assertIsInstance(resp, HttpResponseForbidden)
+             mock.patch("hs_core.views.resource_rest_api.get_path", lambda meta: "some/path/"), \
+             mock.patch("hs_core.views.resource_rest_api.CustomTusFile.check_existing_file", lambda path: False):
+            resp = view.post(request)
+            self.assertEqual(resp.status_code, 201)
+            self.assertIn("Tus-Resumable", resp.headers)
+            self.assertIn("Location", resp.headers)
+
+    def test_patch_returns_204_on_success(self):
+        view = CustomTusUpload()
+        request = self.factory.patch("/")
+        view.request = request
+        view.kwargs = {'resource_id': 'fakeid'}
+        tus_file = mock.Mock(
+            is_valid=lambda: True,
+            offset=0,
+            file_size=10,
+            is_complete=lambda: False
+        )
+        chunk = mock.Mock(offset=0)
+        with mock.patch("hs_core.views.resource_rest_api.CustomTusFile", lambda rid: tus_file), \
+             mock.patch("hs_core.views.resource_rest_api.TusChunk", lambda req: chunk):
+            tus_file.upload_part.return_value = None
+            resp = view.patch(request, "fakeid")
+            self.assertEqual(resp.status_code, 204)
 
     def test_dispatch_returns_403_if_permission_denied(self):
         view = CustomTusUpload()
@@ -97,14 +127,32 @@ class CustomTusUploadTests(TestCase):
         resp = view.dispatch()
         self.assertIsInstance(resp, HttpResponseForbidden)
 
-    def test_patch_returns_410_if_invalid(self):
+    def test_dispatch_returns_403_if_anonymous_user_with_no_permissions(self):
         view = CustomTusUpload()
-        request = self.factory.patch("/")
+        factory = RequestFactory()
+        request = factory.post("/")
+        request.META["HTTP_UPLOAD_LENGTH"] = "123"
+        self.create_request_metadata(request)
+
+        request.user = AnonymousUser()
+        view.request = request
+        view.kwargs = {'resource_id': self.res.short_id}
+
+        # Do not mock authorize, just use a user with no permissions
+        resp = view.dispatch()
+        self.assertIsInstance(resp, HttpResponseForbidden)
+
+    def test_dispatch_returns_404_if_no_metadata_and_no_tusfile(self):
+        view = CustomTusUpload()
+        request = self.factory.get("/")
         view.request = request
         view.kwargs = {'resource_id': 'fakeid'}
-        with mock.patch("hs_core.views.resource_rest_api.CustomTusFile", lambda rid: mock.Mock(is_valid=lambda: False)):
-            resp = view.patch(request, "fakeid")
-            self.assertEqual(resp.status_code, 410)
+
+        with mock.patch.object(view, "get_metadata", return_value=None), \
+             mock.patch("hs_core.views.resource_rest_api.CustomTusFile", side_effect=Exception("fail")):
+            resp = view.dispatch()
+            self.assertIsInstance(resp, HttpResponseNotFound)
+            self.assertIn("Error in getting metadata", resp.content.decode())
 
     def test_patch_returns_409_if_offset_mismatch(self):
         view = CustomTusUpload()
@@ -130,37 +178,6 @@ class CustomTusUploadTests(TestCase):
             resp = view.patch(request, "fakeid")
             self.assertEqual(resp.status_code, 409)
 
-    def test_patch_returns_500_on_upload_part_error(self):
-        view = CustomTusUpload()
-        request = self.factory.patch("/")
-        view.request = request
-        view.kwargs = {'resource_id': 'fakeid'}
-        tus_file = mock.Mock(is_valid=lambda: True, offset=0, file_size=10)
-        chunk = mock.Mock(offset=0)
-        with mock.patch("hs_core.views.resource_rest_api.CustomTusFile", lambda rid: tus_file), \
-             mock.patch("hs_core.views.resource_rest_api.TusChunk", lambda req: chunk):
-            tus_file.upload_part.side_effect = Exception("fail")
-            resp = view.patch(request, "fakeid")
-            self.assertEqual(resp.status_code, 500)
-
-    def test_patch_returns_204_on_success(self):
-        view = CustomTusUpload()
-        request = self.factory.patch("/")
-        view.request = request
-        view.kwargs = {'resource_id': 'fakeid'}
-        tus_file = mock.Mock(
-            is_valid=lambda: True,
-            offset=0,
-            file_size=10,
-            is_complete=lambda: False
-        )
-        chunk = mock.Mock(offset=0)
-        with mock.patch("hs_core.views.resource_rest_api.CustomTusFile", lambda rid: tus_file), \
-             mock.patch("hs_core.views.resource_rest_api.TusChunk", lambda req: chunk):
-            tus_file.upload_part.return_value = None
-            resp = view.patch(request, "fakeid")
-            self.assertEqual(resp.status_code, 204)
-
     def test_post_returns_409_if_existing_file(self):
         view = CustomTusUpload()
         request = self.factory.post("/")
@@ -173,6 +190,40 @@ class CustomTusUploadTests(TestCase):
              mock.patch.object(view, "validate_filename", lambda fn: fn["filename"]):
             resp = view.post(request)
             self.assertEqual(resp.status_code, 409)
+
+    def test_patch_returns_410_if_invalid(self):
+        view = CustomTusUpload()
+        request = self.factory.patch("/")
+        view.request = request
+        view.kwargs = {'resource_id': 'fakeid'}
+        with mock.patch("hs_core.views.resource_rest_api.CustomTusFile", lambda rid: mock.Mock(is_valid=lambda: False)):
+            resp = view.patch(request, "fakeid")
+            self.assertEqual(resp.status_code, 410)
+
+    def test_patch_returns_413_if_offset_larger_than_file_size(self):
+        view = CustomTusUpload()
+        request = self.factory.patch("/")
+        view.request = request
+        view.kwargs = {'resource_id': self.res.short_id}
+        tus_file = mock.Mock(is_valid=lambda: True, offset=15, file_size=10)
+        chunk = mock.Mock(offset=15)
+        with mock.patch("hs_core.views.resource_rest_api.CustomTusFile", lambda rid: tus_file), \
+             mock.patch("hs_core.views.resource_rest_api.TusChunk", lambda req: chunk):
+            resp = view.patch(request, "fakeid")
+            self.assertEqual(resp.status_code, 413)
+
+    def test_patch_returns_500_on_upload_part_error(self):
+        view = CustomTusUpload()
+        request = self.factory.patch("/")
+        view.request = request
+        view.kwargs = {'resource_id': 'fakeid'}
+        tus_file = mock.Mock(is_valid=lambda: True, offset=0, file_size=10)
+        chunk = mock.Mock(offset=0)
+        with mock.patch("hs_core.views.resource_rest_api.CustomTusFile", lambda rid: tus_file), \
+             mock.patch("hs_core.views.resource_rest_api.TusChunk", lambda req: chunk):
+            tus_file.upload_part.side_effect = Exception("fail")
+            resp = view.patch(request, "fakeid")
+            self.assertEqual(resp.status_code, 500)
 
     def test_post_returns_500_on_create_initial_file_error(self):
         view = CustomTusUpload()
@@ -188,180 +239,3 @@ class CustomTusUploadTests(TestCase):
                         mock.Mock(side_effect=Exception("fail"))):
             resp = view.post(request)
             self.assertEqual(resp.status_code, 500)
-
-
-def test_dispatch_returns_404_if_no_metadata_and_no_tusfile(monkeypatch, rf):
-    view = CustomTusUpload()
-    request = rf.get("/")
-    view.request = request
-    view.kwargs = {'resource_id': 'fakeid'}
-
-    monkeypatch.setattr(view, "get_metadata", lambda req: None)
-    monkeypatch.setattr("hs_core.views.resource_rest_api.CustomTusFile", mock.Mock(side_effect=Exception("fail")))
-    resp = view.dispatch()
-    assert isinstance(resp, HttpResponseNotFound)
-    assert "Error in getting metadata" in resp.content.decode()
-
-
-def test_dispatch_returns_403_if_user_not_authenticated_and_no_session(monkeypatch, rf, fake_metadata):
-    view = CustomTusUpload()
-    request = rf.get("/")
-    request.user = AnonymousUser()
-    view.request = request
-    view.kwargs = {'resource_id': 'fakeid'}
-
-    monkeypatch.setattr(view, "get_metadata", lambda req: fake_metadata)
-    monkeypatch.setattr("hs_core.views.resource_rest_api.Session", mock.Mock())
-    resp = view.dispatch()
-    assert isinstance(resp, HttpResponseForbidden)
-
-
-def test_dispatch_returns_403_if_anonymous_user_with_no_permissions(self):
-    view = CustomTusUpload()
-    factory = RequestFactory()
-    request = factory.get("/")
-
-    request.user = AnonymousUser()
-    view.request = request
-    view.kwargs = {'resource_id': 'fakeid'}
-
-    # Do not mock authorize, just use a user with no permissions
-    resp = view.dispatch()
-    assert isinstance(resp, HttpResponseForbidden)
-
-
-def test_dispatch_calls_super_on_success(monkeypatch, rf, fake_metadata, fake_user):
-    view = CustomTusUpload()
-    request = rf.get("/")
-    request.user = fake_user
-    view.request = request
-    view.kwargs = {'resource_id': 'fakeid'}
-
-    monkeypatch.setattr(view, "get_metadata", lambda req: fake_metadata)
-    monkeypatch.setattr("hs_core.views.resource_rest_api.view_utils.authorize",
-                        mock.Mock(return_value=(None, None, fake_user)))
-    monkeypatch.setattr("django.utils.decorators.method_decorator", lambda x: x)
-    monkeypatch.setattr(CustomTusUpload, "dispatch", lambda self, *a, **kw: "called-super")
-    # Call the original method, not the monkeypatched one
-    result = CustomTusUpload.__bases__[0].dispatch(view, request)
-    assert result == "called-super"
-
-
-def test_patch_returns_410_if_invalid(monkeypatch, rf, fake_user):
-    view = CustomTusUpload()
-    request = rf.patch("/")
-    view.request = request
-    view.kwargs = {'resource_id': 'fakeid'}
-    monkeypatch.setattr("hs_core.views.resource_rest_api.CustomTusFile", lambda rid: mock.Mock(is_valid=lambda: False))
-    resp = view.patch(request, "fakeid")
-    assert resp.status_code == 410
-
-
-def test_patch_returns_409_if_offset_mismatch(monkeypatch, rf, fake_user):
-    view = CustomTusUpload()
-    request = rf.patch("/")
-    view.request = request
-    view.kwargs = {'resource_id': 'fakeid'}
-    tus_file = mock.Mock(is_valid=lambda: True, offset=5, file_size=10)
-    chunk = mock.Mock(offset=3)
-    monkeypatch.setattr("hs_core.views.resource_rest_api.CustomTusFile", lambda rid: tus_file)
-    monkeypatch.setattr("hs_core.views.resource_rest_api.TusChunk", lambda req: chunk)
-    resp = view.patch(request, "fakeid")
-    assert resp.status_code == 409
-
-
-def test_patch_returns_413_if_offset_too_large(monkeypatch, rf, fake_user):
-    view = CustomTusUpload()
-    request = rf.patch("/")
-    view.request = request
-    view.kwargs = {'resource_id': 'fakeid'}
-    tus_file = mock.Mock(is_valid=lambda: True, offset=15, file_size=10)
-    chunk = mock.Mock(offset=20)
-    monkeypatch.setattr("hs_core.views.resource_rest_api.CustomTusFile", lambda rid: tus_file)
-    monkeypatch.setattr("hs_core.views.resource_rest_api.TusChunk", lambda req: chunk)
-    resp = view.patch(request, "fakeid")
-    assert resp.status_code == 413
-
-
-def test_patch_returns_500_on_upload_part_error(monkeypatch, rf, fake_user):
-    view = CustomTusUpload()
-    request = rf.patch("/")
-    view.request = request
-    view.kwargs = {'resource_id': 'fakeid'}
-    tus_file = mock.Mock(is_valid=lambda: True, offset=0, file_size=10)
-    chunk = mock.Mock(offset=0)
-    monkeypatch.setattr("hs_core.views.resource_rest_api.CustomTusFile", lambda rid: tus_file)
-    monkeypatch.setattr("hs_core.views.resource_rest_api.TusChunk", lambda req: chunk)
-    tus_file.upload_part.side_effect = Exception("fail")
-    resp = view.patch(request, "fakeid")
-    assert resp.status_code == 500
-    assert "Unable to write chunk" in resp.reason
-
-
-def test_patch_returns_204_on_success(monkeypatch, rf, fake_user):
-    view = CustomTusUpload()
-    request = rf.patch("/")
-    view.request = request
-    view.kwargs = {'resource_id': 'fakeid'}
-    tus_file = mock.Mock(
-        is_valid=lambda: True,
-        offset=0,
-        file_size=10,
-        is_complete=lambda: False
-    )
-    chunk = mock.Mock(offset=0)
-    monkeypatch.setattr("hs_core.views.resource_rest_api.CustomTusFile", lambda rid: tus_file)
-    monkeypatch.setattr("hs_core.views.resource_rest_api.TusChunk", lambda req: chunk)
-    tus_file.upload_part.return_value = None
-    resp = view.patch(request, "fakeid")
-    assert resp.status_code == 204
-
-
-def test_post_returns_409_if_existing_file(monkeypatch, rf, fake_metadata):
-    view = CustomTusUpload()
-    request = rf.post("/")
-    request.META["HTTP_UPLOAD_LENGTH"] = "123"
-    monkeypatch.setattr(view, "get_metadata", lambda req: fake_metadata)
-    monkeypatch.setattr("hs_core.views.resource_rest_api.get_path", lambda meta: "some/path/")
-    monkeypatch.setattr("hs_core.views.resource_rest_api.CustomTusFile.check_existing_file", lambda path: True)
-    monkeypatch.setattr("hs_core.views.resource_rest_api.settings", mock.Mock(TUS_EXISTING_FILE='error',
-                                                                              TUS_FILE_NAME_FORMAT='keep'))
-    monkeypatch.setattr(view, "validate_filename", lambda fn: fn["filename"])
-    resp = view.post(request)
-    assert resp.status_code == 409
-
-
-def test_post_returns_500_on_create_initial_file_error(monkeypatch, rf, fake_metadata):
-    view = CustomTusUpload()
-    request = rf.post("/")
-    request.META["HTTP_UPLOAD_LENGTH"] = "123"
-    monkeypatch.setattr(view, "get_metadata", lambda req: fake_metadata)
-    monkeypatch.setattr("hs_core.views.resource_rest_api.get_path", lambda meta: "some/path/")
-    monkeypatch.setattr("hs_core.views.resource_rest_api.CustomTusFile.check_existing_file", lambda path: False)
-    monkeypatch.setattr("hs_core.views.resource_rest_api.settings", mock.Mock(TUS_EXISTING_FILE='skip',
-                                                                              TUS_FILE_NAME_FORMAT='keep'))
-    monkeypatch.setattr(view, "validate_filename", lambda fn: fn["filename"])
-    monkeypatch.setattr("hs_core.views.resource_rest_api.CustomTusFile.create_initial_file",
-                        mock.Mock(side_effect=Exception("fail")))
-    resp = view.post(request)
-    assert resp.status_code == 500
-    assert "Unable to create file" in resp.reason
-
-
-def test_post_returns_201_on_success(monkeypatch, rf, fake_metadata):
-    view = CustomTusUpload()
-    request = rf.post("/")
-    request.build_absolute_uri = lambda: "http://test/"
-    request.META["HTTP_UPLOAD_LENGTH"] = "123"
-    monkeypatch.setattr(view, "get_metadata", lambda req: fake_metadata)
-    monkeypatch.setattr("hs_core.views.resource_rest_api.get_path", lambda meta: "some/path/")
-    monkeypatch.setattr("hs_core.views.resource_rest_api.CustomTusFile.check_existing_file", lambda path: False)
-    monkeypatch.setattr("hs_core.views.resource_rest_api.settings",
-                        mock.Mock(TUS_EXISTING_FILE='skip', TUS_FILE_NAME_FORMAT='keep'))
-    monkeypatch.setattr(view, "validate_filename", lambda fn: fn["filename"])
-    tus_file = mock.Mock(resource_id="abc123")
-    monkeypatch.setattr("hs_core.views.resource_rest_api.CustomTusFile.create_initial_file",
-                        mock.Mock(return_value=tus_file))
-    resp = view.post(request)
-    assert resp.status_code == 201
-    assert resp["Location"].endswith("abc123")
