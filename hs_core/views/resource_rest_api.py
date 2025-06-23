@@ -935,7 +935,10 @@ class CustomTusFile(TusFile):
         self.resource_id = resource_id
         self.filename = cache.get("tus-uploads/{}/filename".format(resource_id))
         self.path = cache.get("tus-uploads/{}/path".format(resource_id))
-        self.file_size = int(cache.get("tus-uploads/{}/file_size".format(resource_id)))
+        try:
+            self.file_size = int(cache.get("tus-uploads/{}/file_size".format(resource_id)))
+        except (ValueError, TypeError):
+            self.file_size = None
         self.metadata = cache.get("tus-uploads/{}/metadata".format(resource_id))
         self.offset = cache.get("tus-uploads/{}/offset".format(resource_id))
         self.part_number = cache.get("tus-uploads/{}/part_number".format(resource_id))
@@ -1088,9 +1091,11 @@ class CustomTusUpload(TusUpload):
         return super(CustomTusUpload, self).dispatch(*args, **kwargs)
 
     def patch(self, request, resource_id, *args, **kwargs):
-
-        # tus_file = CustomTusFile.get_tusfile_or_404(str(resource_id))
-        tus_file = CustomTusFile(str(resource_id))
+        try:
+            tus_file = CustomTusFile(str(resource_id))
+        except Exception as ex:
+            logger.error(f"Error in getting tus_file during patch request: {str(ex)}")
+            return HttpResponseNotFound()
 
         # when using the google file picker api, the file size is initially set to 0
         http_upload_length = request.META.get('HTTP_UPLOAD_LENGTH', None)
