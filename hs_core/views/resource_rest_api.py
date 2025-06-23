@@ -1059,7 +1059,6 @@ class CustomTusUpload(TusUpload):
 
         # get the hydroshare resource id from the metadata
         hs_res_id = metadata.get('hs_res_id')
-        username_from_client = metadata.get('username')
 
         if not self.request.user.is_authenticated:
             sessionid = self.request.headers.get('HS-SID', None)
@@ -1081,7 +1080,8 @@ class CustomTusUpload(TusUpload):
             _, _, user = view_utils.authorize(self.request, hs_res_id,
                                               needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
             # ensure that the username is the same as the request user
-            assert (user.username == username_from_client)
+            # username_from_client = metadata.get('username')
+            # assert (user.username == username_from_client)
         except (DjangoPermissionDenied, AssertionError):
             return HttpResponseForbidden()
 
