@@ -401,7 +401,9 @@ class S3Storage(S3Storage):
     def create_bucket(self, bucket_name):
         if not self.bucket_exists(bucket_name):
             self.connection.create_bucket(Bucket=bucket_name)
-            if not settings.TESTING:
+            # Check settings in order to allow for running tests locally
+            use_local = getattr(settings, "AWS_S3_USE_LOCAL", False)
+            if use_local and not settings.TESTING:
                 subprocess.run(["mc", "quota", "set", f"hydroshare/{bucket_name}", "--size", "20GiB"], check=True)
                 if settings.MINIO_LIFECYCLE_POLICY:
                     subprocess.run(["mc", "ilm", "rule", "add" "--transition-days", "0", "--transition-tier",
