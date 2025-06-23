@@ -18,6 +18,8 @@ services:
       MINIO_SCANNER_SPEED: "fastest"
       MINIO_POLICY_PLUGIN_URL: "http://micro-auth/minio/authorization/"
     command: server --console-address ":9001" /data
+    depends_on:
+      - micro-auth
   postgis:
     image: postgis/postgis:15-3.3
     platform: linux/amd64
