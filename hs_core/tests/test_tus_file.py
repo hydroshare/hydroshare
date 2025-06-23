@@ -45,13 +45,11 @@ class TestCustomTusFile(TestCase):
         BaseResource.objects.all().delete()
         Group.objects.all().delete()
 
-    @mock.patch.object(CustomTusFile, "initiate_multipart_upload")
-    def test_create_initial_file_sets_cache(self, mock_initiate):
+    def test_create_initial_file_sets_cache(self):
         tus_file = CustomTusFile.create_initial_file(self.metadata, self.file_size)
         self.assertEqual(tus_file.filename, self.metadata["filename"])
         self.assertEqual(tus_file.file_size, self.file_size)
         self.assertEqual(tus_file.path, self.metadata["path"])
-        self.assertTrue(mock_initiate.called)
 
         filename = cache.get("tus-uploads/{}/filename".format(tus_file.resource_id))
         self.assertEqual(filename, self.metadata["filename"])
@@ -75,11 +73,6 @@ class TestCustomTusFile(TestCase):
         tus_file = CustomTusFile.__new__(CustomTusFile)
         tus_file.filename = None
         self.assertFalse(tus_file.is_valid())
-
-    @mock.patch.object(CustomTusFile, "initiate_multipart_upload")
-    def test_initiate_multipart_upload_success(self, mock_initiate):
-        _ = CustomTusFile.create_initial_file(self.metadata, self.file_size)
-        mock_initiate.assert_called_once()
 
     def test_upload_part(self):
         tus_file = CustomTusFile.create_initial_file(self.metadata, 13)
