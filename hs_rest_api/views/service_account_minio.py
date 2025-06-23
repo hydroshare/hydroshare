@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 micro_auth_service_url = getattr(settings, 'MICRO_AUTH_SERVICE_URL', 'http://micro-auth/sa/auth/minio/sa/')
 
+
 class MinIOServiceAccounts(APIView):
 
     @swagger_auto_schema(operation_description="Creates a service account with access key/secret for the user")

@@ -4,9 +4,6 @@ from hs_core.tests.api.rest.base import HSRESTTestCase
 
 
 class TestServiceAccountMinIO(HSRESTTestCase):
-    
-    def setUp(self):
-        super(TestServiceAccountMinIO, self).setUp()
 
     def test_add_list_remove_service_account(self):
         # create
