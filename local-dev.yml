@@ -16,6 +16,7 @@ services:
       MINIO_ROOT_PASSWORD: minioadmin
       MINIO_BROWSER_REDIRECT: "false"
       MINIO_SCANNER_SPEED: "fastest"
+      MINIO_POLICY_PLUGIN_URL: "http://micro-auth/minio/authorization/"
     command: server --console-address ":9001" /data
   postgis:
     image: postgis/postgis:15-3.3
@@ -32,6 +33,7 @@ services:
     tty: true
   pgbouncer:
     image: edoburu/pgbouncer:latest
+    platform: linux/amd64
     container_name: pgbouncer
     environment:
       DB_HOST: postgis
@@ -176,7 +178,7 @@ services:
       COMPANION_PATH: '/companion'
       COMPANION_ALLOW_LOCAL_URLS: 'true'
       COMPANION_PROTOCOL: 'https'
-      COMPANION_REDIS_URL: 'redis://:superSecretPassword@redis:6379'
+      COMPANION_REDIS_URL: 'redis://redis:6379'
       COMPANION_CHUNK_SIZE: '100000000'  # ~72MB
       # COMPANION_PREAUTH_SECRET: 'another secret'
       # For 3rd party services like google drive to work locally, you need to set the following:
@@ -197,8 +199,6 @@ services:
     platform: linux/amd64
     container_name: redis
     hostname: redis
-    environment:
-      REDIS_PASSWORD: 'superSecretPassword'
     ports:
       - "6379:6379"
     volumes:
@@ -215,6 +215,21 @@ services:
     depends_on:
       - hydroshare
       - companion
+  micro-auth:
+    image: micro-auth
+    platform: linux/amd64
+    environment:
+      HS_DATABASE_URL: "postgresql://postgres:postgres@postgis:5432/postgres-test"
+      MC_HOST_hydroshare: "http://minioadmin:minioadmin@minio:9000"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    ports:
+      - 8001:8001
+    links:
+      - postgis:postgis
+    restart: on-failure
+    depends_on:
+      - postgis
 volumes:
   postgis_data_vol:
   solr_data_vol:
