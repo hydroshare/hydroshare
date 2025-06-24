@@ -151,7 +151,7 @@ class S3Storage(S3Storage):
                         for file_key in filesCollection:
                             if is_metadata_json_file(file_key.key):
                                 continue
-                            relative_path = file_key.key[len(in_prefix):]
+                            relative_path = file_key.key[len(in_prefix):].strip("/")
                             with zip_archive.open(relative_path, 'w', force_zip64=True) as zip_archive_file:
                                 chunk_request(zip_archive_file, in_bucket_name, file_key.key)
         except ClientError as e:
