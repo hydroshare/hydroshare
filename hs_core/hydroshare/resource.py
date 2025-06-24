@@ -1157,6 +1157,10 @@ def publish_resource(user, pk):
     md_args = {'name': 'doi',
                'url': get_activated_doi(resource.doi)}
     resource.metadata.create_element('Identifier', **md_args)
+
+    from hs_core.tasks import create_bag_by_s3
+    create_bag_by_s3.apply_async(resource_id=pk)
+
     return pk
 
 
