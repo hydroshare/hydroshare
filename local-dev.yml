@@ -221,7 +221,7 @@ services:
     image: scootna/micro-auth:latest
     platform: linux/amd64
     environment:
-      HS_DATABASE_URL: "postgresql://postgres:postgres@postgis:5432/postgres-test"
+      HS_DATABASE_URL: "postgresql://postgres:postgres@postgis:5432/postgres"
       MC_HOST_hydroshare: "http://minioadmin:minioadmin@minio:9000"
       REDIS_HOST: redis
       REDIS_PORT: "6379"
