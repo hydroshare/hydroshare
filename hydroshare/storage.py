@@ -1,6 +1,8 @@
 from storages.backends.gcloud import GoogleCloudStorage
 from django.contrib.staticfiles.storage import ManifestFilesMixin, ManifestStaticFilesStorage
 import logging
+import os
+from django.conf import settings
 
 
 class ForgivingManifestFilesMixin(ManifestFilesMixin):
@@ -43,6 +45,19 @@ class ManifestGoogleCloudStorage(ForgivingManifestFilesMixin, GoogleCloudStorage
         # The storage backend does not have a local filesystem path.
         # Here we avoid https://docs.python.org/3/library/exceptions.html#NotImplementedError by returning the name.
         return name
+
+    def read_manifest(self):
+        """
+        Looks up staticfiles.json in Project directory
+        """
+        manifest_location = os.path.abspath(
+            os.path.join(settings.PROJECT_ROOT, self.manifest_name)
+        )
+        try:
+            with open(manifest_location) as manifest:
+                return manifest.read().decode('utf-8')
+        except IOError:
+            return None
 
 
 class MediaGoogleCloudStorage(GoogleCloudStorage):
