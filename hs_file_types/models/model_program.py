@@ -224,6 +224,56 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
                 self.logical_file.metadata_schema_json = metadata_schema_json
                 self.logical_file.save()
 
+    def to_json(self):
+        """Create dictionary object from all the contained metadata elements models.
+
+        Uses django model_to_dict() to convert each metadata element model to dictionary
+        and then adds all the dictionary objects to a dictionary and returns the dictionary.
+        Ignores model object ids and converts date/datetime values to strings for JSON serialization.
+
+        Returns:
+            dict: A dictionary of metadata elements
+        """
+
+        metadata_dict = super(ModelProgramFileMetaData, self).to_json()
+
+        # Add Model Program-specific metadata elements
+        if self.version:
+            metadata_dict['version'] = self.version
+
+        if self.programming_languages:
+            metadata_dict['programming_languages'] = self.programming_languages
+
+        if self.operating_systems:
+            metadata_dict['operating_systems'] = self.operating_systems
+
+        if self.release_date:
+            metadata_dict['release_date'] = self.release_date.isoformat()
+
+        if self.website:
+            metadata_dict['website'] = self.website
+
+        if self.code_repository:
+            metadata_dict['code_repository'] = self.code_repository
+
+        mp_file_types_list = []
+        # using file path relative to resource_id/data/contents/ path
+        for mp_file_type in self.mp_file_types.all():
+            file_type_dict = {
+                'file_path': mp_file_type.res_file.short_path,
+                'file_type': ModelProgramResourceFileType.type_name_from_type(mp_file_type.file_type)
+            }
+            mp_file_types_list.append(file_type_dict)
+
+        if mp_file_types_list:
+            metadata_dict['model_program_file_types'] = mp_file_types_list
+
+        if self.logical_file.metadata_schema_json:
+            # using file path relative to resource_id/data/contents/ path
+            metadata_dict['metadata_schema_file_path'] = self.logical_file.schema_short_file_path
+
+        return metadata_dict
+
     def get_html(self, include_extra_metadata=True, **kwargs):
         """generates html code to display aggregation metadata in view mode"""
 

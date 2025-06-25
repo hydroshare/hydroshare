@@ -14,6 +14,7 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.forms.models import formset_factory
 from django.template import Template, Context
+from django.forms.models import model_to_dict
 from dominate import tags as html_tags
 from osgeo.gdalconst import GA_ReadOnly
 from rdflib import BNode, RDF, Literal
@@ -420,6 +421,63 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         elements += [self.cellInformation, self.originalCoverage]
         elements += list(self.bandInformations.all())
         return elements
+
+    def to_json(self):
+        """Create dictionary object from all the contained metadata elements models.
+
+        Uses django model_to_dict() to convert each metadata element model to dictionary
+        and then adds all the dictionary objects to a dictionary and returns the dictionary.
+        Ignores model object ids and converts date/datetime values to strings for JSON serialization.
+
+        Returns:
+            dict: A dictionary of metadata elements
+        """
+        from hs_file_types.utils import convert_dates_to_strings, remove_internal_db_fields
+
+        metadata_dict = super(GeoRasterFileMetaData, self).to_json()
+
+        # Add GeoRaster-specific metadata elements
+        if self.cellInformation:
+            cell_dict = model_to_dict(self.cellInformation)
+            # Remove internal fields
+            cell_dict = remove_internal_db_fields(cell_dict)
+            cell_dict = convert_dates_to_strings(cell_dict)
+            metadata_dict['cell_information'] = cell_dict
+
+        if self.originalCoverage:
+            orig_cov_dict = model_to_dict(self.originalCoverage)
+            # Remove internal fields
+            orig_cov_dict = remove_internal_db_fields(orig_cov_dict)
+            # Special handling for OriginalCoverageRaster - parse the _value JSON field
+            if hasattr(self.originalCoverage, 'value'):
+                # Remove the raw _value string and merge the parsed JSON dict directly
+                orig_cov_dict.pop('_value', None)
+                # Merge the value dictionary directly into the orig_cov_dict
+                orig_cov_dict.update(self.originalCoverage.value)
+            orig_cov_dict = convert_dates_to_strings(orig_cov_dict)
+            metadata_dict['original_coverage'] = orig_cov_dict
+
+        band_info_list = []
+        for band_info in self.bandInformations.all():
+            band_dict = model_to_dict(band_info)
+            # Remove internal fields
+            band_dict = remove_internal_db_fields(band_dict)
+            band_dict = convert_dates_to_strings(band_dict)
+            # any empty string values are converted to None
+            for key, value in list(band_dict.items()):
+                if isinstance(value, str) and value.strip() == '':
+                    band_dict[key] = None
+                elif key in ['noDataValue', 'maximumValue', 'minimumValue']:
+                    try:
+                        band_dict[key] = float(value)
+                    except ValueError:
+                        pass
+            band_info_list.append(band_dict)
+
+        if band_info_list:
+            metadata_dict['band_information'] = band_info_list
+
+        return metadata_dict
 
     def _get_metadata_element_model_type(self, element_model_name):
         if element_model_name.lower() == 'originalcoverage':

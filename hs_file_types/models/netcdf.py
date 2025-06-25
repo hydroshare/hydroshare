@@ -13,6 +13,7 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.forms.models import formset_factory, BaseFormSet
 from django.template import Template, Context
+from django.forms.models import model_to_dict
 from dominate import tags as html_tags
 from rdflib import RDF, BNode, Literal
 from rdflib.namespace import DCTERMS
@@ -423,6 +424,52 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         # There can be at most only one instance of type OriginalCoverage associated
         # with this metadata object
         return self.originalCoverage
+
+    def to_json(self):
+        """Create dictionary object from all the contained metadata elements models.
+
+        Uses django model_to_dict() to convert each metadata element model to dictionary
+        and then adds all the dictionary objects to a dictionary and returns the dictionary.
+        Ignores model object ids and converts date/datetime values to strings for JSON serialization.
+
+        Returns:
+            dict: A dictionary of metadata elements
+        """
+        from hs_file_types.utils import convert_dates_to_strings, remove_internal_db_fields
+
+        metadata_dict = super(NetCDFFileMetaData, self).to_json()
+
+        # Add NetCDF-specific metadata elements
+        if self.originalCoverage:
+            orig_cov_dict = model_to_dict(self.originalCoverage)
+            # Remove internal fields
+            orig_cov_dict = remove_internal_db_fields(orig_cov_dict)
+            # Special handling for OriginalCoverage - parse the _value JSON field
+            if hasattr(self.originalCoverage, 'value'):
+                # Remove the raw _value string and merge the parsed JSON dict directly
+                orig_cov_dict.pop('_value', None)
+                # Merge the value dictionary directly into the orig_cov_dict
+                orig_cov_dict.update(self.originalCoverage.value)
+            
+            orig_cov_dict = convert_dates_to_strings(orig_cov_dict)
+            # empty string values are converted to None
+            for key, value in list(orig_cov_dict.items()):
+                if isinstance(value, str) and value.strip() == '':
+                    orig_cov_dict[key] = None
+            metadata_dict['original_coverage'] = orig_cov_dict
+
+        variable_list = []
+        for variable in self.variables.all():
+            var_dict = model_to_dict(variable)
+            # Remove internal fields
+            var_dict = remove_internal_db_fields(var_dict)
+            var_dict = convert_dates_to_strings(var_dict)
+            variable_list.append(var_dict)
+
+        if variable_list:
+            metadata_dict['variables'] = variable_list
+
+        return metadata_dict
 
     def _get_opendap_html(self):
         opendap_div = html_tags.div(cls="content-block")

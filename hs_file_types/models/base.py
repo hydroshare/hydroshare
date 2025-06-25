@@ -12,6 +12,7 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.files.uploadedfile import UploadedFile
 from django.db import models
 from django.forms.models import model_to_dict
+
 from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
     span, a, form, button, label, textarea, h4, h3, _input, ul, li, p
 from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
@@ -356,6 +357,86 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
     @property
     def temporal_coverage(self):
         return self.coverages.filter(type='period').first()
+
+    def to_json(self):
+        """Create dictionary object from all the contained metadata elements models.
+
+        Uses django model_to_dict() to convert each metadata element model to dictionary
+        and then adds all the dictionary objects to a dictionary and returns the dictionary.
+        Ignores model object ids and converts date/datetime values to strings for JSON serialization.
+
+        Returns:
+            dict: A dictionary of metadata elements
+        """
+
+        from hs_file_types.utils import convert_dates_to_strings, remove_internal_db_fields
+
+        metadata_dict = {}
+
+        # Add dataset name (title)
+        if self.logical_file.dataset_name:
+            metadata_dict['title'] = self.logical_file.dataset_name
+
+        metadata_dict['type'] = self.logical_file.type_name()
+
+        if self.keywords:
+            metadata_dict['keywords'] = self.keywords
+
+        if self.extra_metadata:
+            metadata_dict['additional_metadata'] = self.extra_metadata
+
+        # Multi-value metadata elements (GenericRelation fields that return querysets)
+        multi_elements = [
+            ('coverages', self.coverages),
+        ]
+
+        for element_name, element_queryset in multi_elements:
+            element_list = []
+            for element_obj in element_queryset.all():
+                element_dict = model_to_dict(element_obj)
+                # Remove internal fields
+                element_dict = remove_internal_db_fields(element_dict)
+
+                # Special handling for Coverage objects - parse the _value JSON field
+                if element_name == 'coverages' and hasattr(element_obj, 'value'):
+                    # Remove the raw _value string and merge the parsed JSON dict directly
+                    element_dict.pop('_value', None)
+                    # Merge the value dictionary directly into the element_dict
+                    element_dict.update(element_obj.value)
+
+                # Convert dates to strings
+                element_dict = convert_dates_to_strings(element_dict)
+                element_list.append(element_dict)
+
+            if element_list:
+                metadata_dict[element_name] = element_list
+
+        # Add logical file content files metadata
+        content_files = []
+        # site_url = current_site_url()
+        for res_file in self.logical_file.files.all():
+            file_meta = {
+                # "name": res_file.file_name,
+                # "url": f"{site_url}{res_file.url}",
+                "path": res_file.short_path,
+                "size": res_file.size,
+                "mime_type": res_file.mime_type,
+                "checksum": res_file.checksum
+            }
+            content_files.append(file_meta)
+        metadata_dict['content_files'] = content_files
+
+        # Add metadata for child aggregations (aggregations that are contained within this aggregation)
+        aggregations = []
+        for child_logical_file in self.logical_file.get_children():
+            type_path = {
+                "path": child_logical_file.aggregation_name,
+                "type": child_logical_file.type_name()
+            }
+            aggregations.append(type_path)
+        metadata_dict['aggregations'] = aggregations
+
+        return metadata_dict
 
     def rdf_subject(self):
         return Namespace("{}/resource/{}#".format(current_site_url(), self.logical_file.map_file_path)).aggregation

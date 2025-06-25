@@ -1680,6 +1680,119 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
             elements += [self.utc_offset]
         return elements
 
+    def to_json(self):
+        """Create dictionary object from all the contained metadata elements models.
+
+        Organizes metadata by series ID to provide a structured view of time series data.
+        Each series contains all associated metadata elements (site, variable, method, etc.).
+
+        Returns:
+            dict: A dictionary of metadata elements
+        """
+
+        metadata_dict = super(TimeSeriesFileMetaData, self).to_json()
+
+        # Add TimeSeries-specific metadata elements
+        if self.abstract:
+            metadata_dict['abstract'] = self.abstract
+
+        if self.utc_offset:
+            metadata_dict['utc_offset'] = self.utc_offset.value
+
+        # Get all unique series_ids to organize timeseries results by series
+        all_series = set()
+        for site in self.sites:
+            all_series.update(site.series_ids)
+
+        timeseries_results = []
+        for series_id in sorted(all_series):
+            series_meta = {}
+            # Add site information for this series
+            for site in self.sites:
+                if series_id in site.series_ids:
+                    site_dict = {"site_code": site.site_code}
+                    if site.site_name:
+                        site_dict["site_name"] = site.site_name
+                    if site.elevation_m:
+                        site_dict["elevation"] = site.elevation_m
+                    if site.elevation_datum:
+                        site_dict["elevation_datum"] = site.elevation_datum
+                    if site.site_type:
+                        site_dict["site_type"] = site.site_type
+                    if site.latitude:
+                        site_dict["latitude"] = site.latitude
+                    if site.longitude:
+                        site_dict["longitude"] = site.longitude
+                    series_meta["site"] = site_dict
+                    break
+
+            # Add variable information for this series
+            for variable in self.variables:
+                if series_id in variable.series_ids:
+                    variable_dict = {
+                        "variable_code": variable.variable_code,
+                        "variable_name": variable.variable_name,
+                        "variable_type": variable.variable_type,
+                        "no_data_value": variable.no_data_value
+                    }
+                    if variable.variable_definition:
+                        variable_dict["variable_definition"] = variable.variable_definition
+                    if variable.speciation:
+                        variable_dict["speciation"] = variable.speciation
+                    series_meta["variable"] = variable_dict
+                    break
+
+            # Add method information for this series
+            for method in self.methods:
+                if series_id in method.series_ids:
+                    method_dict = {
+                        "method_code": method.method_code,
+                        "method_name": method.method_name,
+                        "method_type": method.method_type
+                    }
+                    if method.method_description:
+                        method_dict["method_description"] = method.method_description
+                    if method.method_link:
+                        method_dict["method_link"] = method.method_link
+                    series_meta["method"] = method_dict
+                    break
+
+            # Add processing level information for this series
+            for processing_level in self.processing_levels:
+                if series_id in processing_level.series_ids:
+                    processing_level_dict = {
+                        "processing_level_code": processing_level.processing_level_code
+                    }
+                    if processing_level.definition:
+                        processing_level_dict["definition"] = processing_level.definition
+                    if processing_level.explanation:
+                        processing_level_dict["explanation"] = processing_level.explanation
+                    series_meta["processing_level"] = processing_level_dict
+                    break
+
+            # Add time series result information for this series
+            for ts_result in self.time_series_results:
+                if series_id in ts_result.series_ids:
+                    unit_dict = {
+                        "units_type": ts_result.units_type,
+                        "units_name": ts_result.units_name,
+                        "units_abbreviation": ts_result.units_abbreviation
+                    }
+                    series_meta["unit"] = unit_dict
+                    series_meta["status"] = ts_result.status if ts_result.status else "Unknown"
+                    series_meta["sample_medium"] = ts_result.sample_medium if ts_result.sample_medium else "Unknown"
+                    series_meta["value_count"] = ts_result.value_count
+                    series_meta["aggregation_statistics"] = ts_result.aggregation_statistics
+                    series_meta["timeseries_result_UUID"] = series_id
+                    if ts_result.series_label:
+                        series_meta["series_label"] = ts_result.series_label
+                    break
+            if series_meta:
+                timeseries_results.append(series_meta)
+
+        metadata_dict['timeseries_results'] = timeseries_results
+        return metadata_dict
+
     def _get_metadata_element_model_type(self, element_model_name):
         if element_model_name.lower() == 'variable':
             element_model_name = 'variabletimeseries'

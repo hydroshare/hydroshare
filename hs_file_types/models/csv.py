@@ -163,6 +163,47 @@ class CSVFileMetaData(GenericFileMetaDataMixin):
 
         return graph
 
+    def to_json(self):
+        """Create dictionary object from all the contained metadata elements models.
+
+        Uses django model_to_dict() to convert each metadata element model to dictionary
+        and then adds all the dictionary objects to a dictionary and returns the dictionary.
+
+        Returns:
+            dict: A dictionary of metadata elements
+        """
+
+        # Get base metadata from parent class
+        metadata_dict = super(CSVFileMetaData, self).to_json()
+
+        # Add CSV-specific metadata elements
+        if self.tableSchema:
+            table_schema_model = self.get_table_schema_model()
+
+            # Add CSV file properties
+            csv_properties = {
+                'number_of_rows': table_schema_model.rows,
+                'delimiter': table_schema_model.delimiter,
+                'columns': []
+            }
+
+            # Add column information
+            columns_list = []
+            for col_no, col in enumerate(table_schema_model.table.columns, start=1):
+                column_dict = {
+                    'column_number': col_no,
+                    'title': col.titles if col.titles else None,
+                    'description': col.description if col.description else None,
+                    'datatype': col.datatype
+                }
+                columns_list.append(column_dict)
+
+            if columns_list:
+                csv_properties['columns'] = columns_list
+            metadata_dict['csv_table_schema'] = csv_properties
+
+        return metadata_dict
+
     def get_html(self, include_extra_metadata=True, **kwargs):
         """overrides the base class function to generate html needed to display metadata
         in view mode"""

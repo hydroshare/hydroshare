@@ -263,6 +263,12 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
     # this is to store abstract
     abstract = models.TextField(null=True, blank=True)
 
+    def to_json(self):
+        metadata_dict = super(RefTimeseriesFileMetaData, self).to_json()
+        if self.abstract:
+            metadata_dict['abstract'] = self.abstract
+        return metadata_dict
+
     @property
     def has_title_in_json(self):
         """checks if title is in the uploaded json file"""

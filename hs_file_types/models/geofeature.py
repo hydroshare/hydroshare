@@ -9,6 +9,7 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.template import Template, Context
 from django.utils.html import strip_tags
+from django.forms.models import model_to_dict
 from dominate import tags as html_tags
 from osgeo import ogr, osr
 from rdflib import RDF, BNode, Literal
@@ -284,6 +285,48 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         metadata_model_classes['geometryinformation'] = GeometryInformation
         metadata_model_classes['fieldinformation'] = FieldInformation
         return metadata_model_classes
+
+    def to_json(self):
+        """Create dictionary object from all the contained metadata elements models.
+
+        Uses django model_to_dict() to convert each metadata element model to dictionary
+        and then adds all the dictionary objects to a dictionary and returns the dictionary.
+        Ignores model object ids and converts date/datetime values to strings for JSON serialization.
+
+        Returns:
+            dict: A dictionary of metadata elements
+        """
+        from hs_file_types.utils import convert_dates_to_strings, remove_internal_db_fields
+
+        metadata_dict = super(GeoFeatureFileMetaData, self).to_json()
+
+        # Add GeoFeature-specific metadata elements
+        if self.geometryinformation:
+            geom_dict = model_to_dict(self.geometryinformation)
+            # Remove internal fields
+            geom_dict = remove_internal_db_fields(geom_dict)
+            geom_dict = convert_dates_to_strings(geom_dict)
+            metadata_dict['geometry_information'] = geom_dict
+
+        if self.originalcoverage:
+            orig_cov_dict = model_to_dict(self.originalcoverage)
+            # Remove internal fields
+            orig_cov_dict = remove_internal_db_fields(orig_cov_dict)
+            orig_cov_dict = convert_dates_to_strings(orig_cov_dict)
+            metadata_dict['original_coverage'] = orig_cov_dict
+
+        field_info_list = []
+        for field_info in self.fieldinformations.all():
+            field_dict = model_to_dict(field_info)
+            # Remove internal fields
+            field_dict = remove_internal_db_fields(field_dict)
+            field_dict = convert_dates_to_strings(field_dict)
+            field_info_list.append(field_dict)
+
+        if field_info_list:
+            metadata_dict['field_information'] = field_info_list
+
+        return metadata_dict
 
     def get_html(self, **kwargs):
         """overrides the base class function"""

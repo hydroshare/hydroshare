@@ -396,6 +396,43 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
                 self.metadata_json = metadata_schema_json
                 self.save()
 
+    def to_json(self):
+        """Create dictionary object from all the contained metadata elements models.
+
+        Uses django model_to_dict() to convert each metadata element model to dictionary
+        and then adds all the dictionary objects to a dictionary and returns the dictionary.
+        Ignores model object ids and converts date/datetime values to strings for JSON serialization.
+
+        Returns:
+            dict: A dictionary of metadata elements
+        """
+
+        metadata_dict = super(ModelInstanceFileMetaData, self).to_json()
+
+        # Add Model Instance-specific metadata elements
+        metadata_dict['has_model_output'] = self.has_model_output
+
+        if self.executed_by:
+            # Note: The model program aggregation can be from another resource (possible only in the case of
+            # migrated mi resource) - hence we need to include the resource id in the json
+            mp_aggr_dict = {
+                'model_program_path': self.executed_by.aggregation_name,
+                'resource_id': self.executed_by.resource.short_id
+            }
+            metadata_dict['executed_by'] = mp_aggr_dict
+
+        if self.logical_file.metadata_schema_json:
+            # using file path relative to resource_id/data/contents/ path
+            schema_file_path= self.logical_file.schema_short_file_path
+            metadata_dict['metadata_schema_file_path'] = schema_file_path
+
+            if self.metadata_json:
+                # using file path relative to resource_id/data/contents/ path
+                schema_values_file_path = self.logical_file.schema_values_short_file_path
+                metadata_dict['schema_based_metadata_file_path'] = schema_values_file_path
+
+        return metadata_dict
+
 
 class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile):
     """ One file or more than one file in a specific folder can be part of this aggregation """
