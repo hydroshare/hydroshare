@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 from operator import lt, gt
@@ -521,3 +522,23 @@ def set_logical_file_type(
         return None
     logicalfile.create_aggregation_xml_documents()
     return logicalfile
+
+
+def convert_dates_to_strings(data):
+    """Recursively convert datetime objects to ISO format strings."""
+    if isinstance(data, dict):
+        return {key: convert_dates_to_strings(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [convert_dates_to_strings(item) for item in data]
+    elif isinstance(data, (datetime.datetime, datetime.date)):
+        return data.isoformat()
+    else:
+        return data
+
+
+def remove_internal_db_fields(meta_dict):
+    """Remove internal database fields from a metadata dictionary."""
+    meta_dict.pop('id', None)
+    meta_dict.pop('object_id', None)
+    meta_dict.pop('content_type', None)
+    return meta_dict

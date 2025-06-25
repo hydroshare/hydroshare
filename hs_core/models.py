@@ -4524,6 +4524,145 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     def temporal_coverage(self):
         return self.coverages.filter(type='period').first()
 
+    def to_json(self):
+        """Create dictionary object from all the contained metadata elements models.
+
+        Uses django model_to_dict() to convert each metadata element model to dictionary
+        and then adds all the dictionary objects to a dictionary and returns the dictionary.
+        Ignores model object ids and converts date/datetime values to strings for JSON serialization.
+
+        Returns:
+            dict: A dictionary of metadata elements
+        """
+
+        from hs_file_types.utils import convert_dates_to_strings, remove_internal_db_fields
+
+        metadata_dict = {}
+
+        # Single-value metadata elements (properties that return single objects)
+        single_elements = [
+            ('title', self.title),
+            ('description', self.description),
+            ('language', self.language),
+            ('rights', self.rights),
+            ('type', self.type),
+            ('publisher', self.publisher)
+        ]
+
+        for element_name, element_obj in single_elements:
+            if element_obj:
+                element_dict = model_to_dict(element_obj)
+                # Remove internal fields
+                element_dict = remove_internal_db_fields(element_dict)
+                # Convert dates to strings
+                element_dict = convert_dates_to_strings(element_dict)
+
+                # Flatten single-value elements by extracting their main value
+                if element_name == 'title' and 'value' in element_dict:
+                    metadata_dict[element_name] = element_dict['value']
+                elif element_name == 'description' and 'abstract' in element_dict:
+                    metadata_dict[element_name] = element_dict['abstract']
+                elif element_name == 'language' and 'code' in element_dict:
+                    metadata_dict[element_name] = element_dict['code']
+                elif element_name == 'type' and 'url' in element_dict:
+                    content_type = element_dict['url'].split('/')[-1]
+                    metadata_dict[element_name] = content_type
+                elif element_name == 'publisher' and 'name' in element_dict:
+                    metadata_dict[element_name] = element_dict['name']
+                else:
+                    # Keep full dict structure for rights and other elements
+                    metadata_dict[element_name] = element_dict
+
+        # Multi-value metadata elements (GenericRelation fields that return querysets)
+        multi_elements = [
+            ('creators', self.creators),
+            ('contributors', self.contributors),
+            # ('citation', self.citation), - this model is not used to store resource citation
+            ('dates', self.dates),
+            ('coverages', self.coverages),
+            # ('formats', self.formats),
+            ('identifiers', self.identifiers),
+            ('keywords', self.subjects),
+            ('relations', self.relations),
+            ('geospatialrelations', self.geospatialrelations),
+            ('funding_agencies', self.funding_agencies)
+        ]
+
+        for element_name, element_queryset in multi_elements:
+            element_list = []
+            for element_obj in element_queryset.all():
+                element_dict = model_to_dict(element_obj)
+                # Remove internal fields
+                element_dict = remove_internal_db_fields(element_dict)
+
+                # Special handling for Coverage objects - parse the _value JSON field
+                if element_name == 'coverages' and hasattr(element_obj, 'value'):
+                    # Remove the raw _value string and merge the parsed JSON dict directly
+                    element_dict.pop('_value', None)
+                    # Merge the value dictionary directly into the element_dict
+                    element_dict.update(element_obj.value)
+
+                # Special handling for Relations - replace type with description from SOURCE_TYPES
+                if element_name == 'relations' and 'type' in element_dict:
+                    type_value = element_dict['type']
+                    # Get the relation type description from SOURCE_TYPES
+                    source_types_dict = dict(element_obj.SOURCE_TYPES)
+                    if type_value in source_types_dict:
+                        element_dict['type'] = source_types_dict[type_value]
+
+                # Convert dates to strings
+                element_dict = convert_dates_to_strings(element_dict)
+                element_list.append(element_dict)
+
+            # Special handling for keywords - flatten to just the values
+            if element_name == 'keywords' and element_list:
+                keyword_values = [item['value'] for item in element_list if 'value' in item]
+                if keyword_values:
+                    metadata_dict[element_name] = keyword_values
+            elif element_list:
+                metadata_dict[element_name] = element_list
+
+        resource = self.resource
+        # add the resource level 'extra_metadata'
+        if resource.extra_metadata:
+            metadata_dict['additional_metadata'] = resource.extra_metadata
+        metadata_dict['sharing_status'] = resource.raccess.sharing_status
+        metadata_dict['citation'] = resource.get_citation(forceHydroshareURI=False)
+
+        if resource.resource_type == "CompositeResource":
+            # add resource files metadata
+            # TODO: Since each logical file has metadata for files that are part of the logical file,
+            # should we only include content files that are not part of any logical file?
+            content_files = []
+            # site_url = current_site_url()
+            for res_file in resource.files.all():
+                file_meta = {
+                    # "name": res_file.file_name,
+                    # "url": f"{site_url}{res_file.url}",
+                    "path": res_file.short_path,
+                    "size": res_file.size,
+                    "mime_type": res_file.mime_type,
+                    "checksum": res_file.checksum
+                }
+                content_files.append(file_meta)
+            metadata_dict['content_files'] = content_files
+
+            # add logical file paths and logical file type for all logical files
+            # these paths can be used for retrieving the logical file metadata
+            aggregations = []
+            resource = resource.get_content_model()
+            for logical_file in resource.logical_files:
+                if logical_file.has_parent:
+                    continue
+                type_path = {
+                    "path": logical_file.aggregation_name,
+                    "type": logical_file.type_name()
+                }
+                aggregations.append(type_path)
+            metadata_dict['aggregations'] = aggregations
+
+        return metadata_dict
+
     @property
     def spatial_coverage_default_projection(self):
         return 'WGS 84 EPSG:4326'
