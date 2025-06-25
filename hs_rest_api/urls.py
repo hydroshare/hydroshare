@@ -16,6 +16,7 @@ from .resources.quota_holder import get_quota_holder_bucket
 
 from .discovery import DiscoverSearchView
 from .views.resource_share import ShareResourceGroup, ShareResourceUser
+from .views.service_account_minio import MinIOServiceAccounts, MinIOServiceAccountsDelete
 
 hsapi_urlpatterns = [
     path('hsapi/', include('hs_rest_api.urls')),
@@ -79,6 +80,12 @@ urlpatterns = [
 
     re_path(r'^resource/(?P<pk>[0-9a-f-]+)/share/(?P<privilege>[a-z]+)/user/(?P<user_id>[\w.@+-]+)/$',
             ShareResourceUser.as_view(), name='share_resource_user_public'),
+
+    path('user/service/accounts/s3/', MinIOServiceAccounts.as_view(),
+         name='minio_service_accounts'),
+
+    re_path(r'user/service/accounts/s3/(?P<service_account_key>[\w]+)', MinIOServiceAccountsDelete.as_view(),
+            name='minio_service_accounts_delete'),
 
     # DEPRECATED: use form above instead
     re_path(r'^resource/accessRules/(?P<pk>[0-9a-f-]+)/$',

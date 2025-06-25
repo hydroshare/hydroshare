@@ -4140,6 +4140,7 @@ class CompositeResourceTest(
             files = zipfile.namelist()
             self.assertEqual(len(files), len(aggr_files))
             for f in files:
+                self.assertFalse(f.startswith("/"))
                 # strip out the additional folder path in the zip file
                 f = os.path.basename(f)
                 self.assertIn(f, aggr_files)

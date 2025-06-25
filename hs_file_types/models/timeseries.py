@@ -26,6 +26,7 @@ from hs_core.hydroshare import utils
 from hs_core.models import AbstractMetaDataElement
 from hs_core.signals import post_add_timeseries_aggregation
 from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from ..enums import AggregationMetaFilePath
 
 _SQLITE_FILE_NAME = 'ODM2.sqlite'
 _ODM2_SQLITE_FILE_PATH = f'hs_file_types/files/{_SQLITE_FILE_NAME}'
@@ -2493,6 +2494,14 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         res_files = [f for f in resource_files if f.extension.lower() == '.sqlite'
                      or f.extension.lower() == '.csv']
         return res_files[0] if res_files else None
+
+    @property
+    def metadata_json_file_path(self):
+        """Returns the storage path of the aggregation metadata json file"""
+
+        primary_file = self.get_primary_resource_file(self.files.all())
+        meta_file_path = primary_file.storage_path + AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH.value
+        return meta_file_path
 
     @classmethod
     def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=''):

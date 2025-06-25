@@ -876,6 +876,11 @@ class AbstractLogicalFile(models.Model):
         # - subclass needs to override this
         return None
 
+    @property
+    def metadata_json_file_path(self):
+        """Returns the storage path of the aggregation metadata json file"""
+        raise NotImplementedError
+
     @classmethod
     def can_set_folder_to_aggregation(cls, resource, dir_path, aggregations=None):
         """helper to check if the specified folder *dir_path* can be set to this aggregation type
@@ -1326,6 +1331,8 @@ class AbstractLogicalFile(models.Model):
                 istorage.delete(self.metadata_file_path)
             if istorage.exists(self.map_file_path):
                 istorage.delete(self.map_file_path)
+            if istorage.exists(self.metadata_json_file_path):
+                istorage.delete(self.metadata_json_file_path)
 
         # delete all resource files associated with this instance of logical file
         if delete_res_files:
@@ -1366,6 +1373,8 @@ class AbstractLogicalFile(models.Model):
             istorage.delete(self.metadata_file_path)
         if istorage.exists(self.map_file_path):
             istorage.delete(self.map_file_path)
+        if istorage.exists(self.metadata_json_file_path):
+            istorage.delete(self.metadata_json_file_path)
 
         # find if there is a parent aggregation - files in this (self) aggregation
         # need to be added to parent if exists

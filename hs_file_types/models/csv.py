@@ -17,6 +17,7 @@ from hs_core.hs_rdf import HSTERMS, DC
 from hs_core.signals import post_add_csv_aggregation
 from .base import AbstractLogicalFile, FileTypeContext
 from .generic import GenericFileMetaDataMixin
+from ..enums import AggregationMetaFilePath
 
 
 class _CSVColumnSchema(BaseModel):
@@ -768,6 +769,14 @@ class CSVLogicalFile(AbstractLogicalFile):
         """Gets any resource file as the primary file  from the list of files *resource_files* """
 
         return resource_files[0] if resource_files else None
+
+    @property
+    def metadata_json_file_path(self):
+        """Returns the storage path of the aggregation metadata json file"""
+
+        primary_file = self.get_primary_resource_file(self.files.all())
+        meta_file_path = primary_file.storage_path + AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH.value
+        return meta_file_path
 
     def create_aggregation_xml_documents(self, create_map_xml=True):
         super(CSVLogicalFile, self).create_aggregation_xml_documents(create_map_xml)

@@ -19,6 +19,7 @@ from .base import NestedLogicalFileMixin
 from .base_model_program_instance import AbstractModelLogicalFile
 from .generic import GenericFileMetaDataMixin
 from .model_program import ModelProgramLogicalFile
+from ..enums import AggregationMetaFilePath
 from hydroshare import settings
 
 
@@ -471,7 +472,7 @@ class ModelInstanceLogicalFile(NestedLogicalFileMixin, AbstractModelLogicalFile)
 
         json_file_name, _ = os.path.splitext(json_file_name)
 
-        json_file_name += "_schema_values.json"
+        json_file_name += AggregationMetaFilePath.SCHEAMA_JSON_VALUES_FILE_ENDSWITH.value
 
         if self.folder:
             file_folder = self.folder
