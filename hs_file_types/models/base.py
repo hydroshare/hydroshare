@@ -436,6 +436,18 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
             aggregations.append(type_path)
         metadata_dict['aggregations'] = aggregations
 
+        if self.logical_file.has_parent:
+            type_path = {
+                "path": self.logical_file.get_parent().aggregation_name,
+                "type": self.logical_file.get_parent().type_name()
+            }
+        else:
+            type_path = {
+                "path": self.logical_file.resource.short_id,
+                "type": "CompositeResource"
+            }
+        metadata_dict['isPartOf'] = type_path
+
         return metadata_dict
 
     def rdf_subject(self):
