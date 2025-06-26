@@ -1,7 +1,7 @@
-version: '3'
 services:
   minio:
-    image: minio/minio
+    # this is the last release before the admin features were removed from the console
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
     platform: linux/amd64
     ports:
       - "9000:9000"
@@ -120,6 +120,7 @@ services:
       - solr
       - rabbitmq
       - minio
+      - redis
     stdin_open: true
     tty: true
     command: /bin/bash init-hydroshare
@@ -205,6 +206,7 @@ services:
       - "6379:6379"
     volumes:
       - "redis_data_vol:/data"
+    command: redis-server --requirepass superSecretPassword
   nginx:
     image: nginx:latest
     container_name: nginx
