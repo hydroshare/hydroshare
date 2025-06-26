@@ -451,7 +451,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
                 orig_cov_dict.pop('_value', None)
                 # Merge the value dictionary directly into the orig_cov_dict
                 orig_cov_dict.update(self.originalCoverage.value)
-            
+
             orig_cov_dict = convert_dates_to_strings(orig_cov_dict)
             # empty string values are converted to None
             for key, value in list(orig_cov_dict.items()):

@@ -424,7 +424,7 @@ class ModelInstanceFileMetaData(GenericFileMetaDataMixin):
 
         if self.logical_file.metadata_schema_json:
             # using file path relative to resource_id/data/contents/ path
-            schema_file_path= self.logical_file.schema_short_file_path
+            schema_file_path = self.logical_file.schema_short_file_path
             metadata_dict['metadata_schema_file_path'] = schema_file_path
 
             if self.metadata_json:
