@@ -297,7 +297,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         Returns:
             dict: A dictionary of metadata elements
         """
-        from hs_file_types.utils import convert_dates_to_strings, remove_internal_db_fields
+        from hs_file_types.utils import convert_dates_to_strings, remove_internal_db_fields, set_empty_string_to_none
 
         metadata_dict = super(GeoFeatureFileMetaData, self).to_json()
 
@@ -307,6 +307,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
             # Remove internal fields
             geom_dict = remove_internal_db_fields(geom_dict)
             geom_dict = convert_dates_to_strings(geom_dict)
+            geom_dict = set_empty_string_to_none(geom_dict)
             metadata_dict['geometry_information'] = geom_dict
 
         if self.originalcoverage:
@@ -314,6 +315,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
             # Remove internal fields
             orig_cov_dict = remove_internal_db_fields(orig_cov_dict)
             orig_cov_dict = convert_dates_to_strings(orig_cov_dict)
+            orig_cov_dict = set_empty_string_to_none(orig_cov_dict)
             metadata_dict['original_coverage'] = orig_cov_dict
 
         field_info_list = []
@@ -322,6 +324,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
             # Remove internal fields
             field_dict = remove_internal_db_fields(field_dict)
             field_dict = convert_dates_to_strings(field_dict)
+            field_dict = set_empty_string_to_none(field_dict)
             field_info_list.append(field_dict)
 
         if field_info_list:

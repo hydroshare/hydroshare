@@ -369,7 +369,7 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
             dict: A dictionary of metadata elements
         """
 
-        from hs_file_types.utils import convert_dates_to_strings, remove_internal_db_fields
+        from hs_file_types.utils import convert_dates_to_strings, remove_internal_db_fields, set_empty_string_to_none
 
         metadata_dict = {}
 
@@ -401,11 +401,11 @@ class AbstractFileMetaData(models.Model, RDF_MetaData_Mixin):
                 if element_name == 'coverages' and hasattr(element_obj, 'value'):
                     # Remove the raw _value string and merge the parsed JSON dict directly
                     element_dict.pop('_value', None)
-                    # Merge the value dictionary directly into the element_dict
                     element_dict.update(element_obj.value)
 
                 # Convert dates to strings
                 element_dict = convert_dates_to_strings(element_dict)
+                element_dict = set_empty_string_to_none(element_dict)
                 element_list.append(element_dict)
 
             if element_list:

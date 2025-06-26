@@ -433,7 +433,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         Returns:
             dict: A dictionary of metadata elements
         """
-        from hs_file_types.utils import convert_dates_to_strings, remove_internal_db_fields
+        from hs_file_types.utils import convert_dates_to_strings, remove_internal_db_fields, set_empty_string_to_none
 
         metadata_dict = super(GeoRasterFileMetaData, self).to_json()
 
@@ -442,7 +442,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
             cell_dict = model_to_dict(self.cellInformation)
             # Remove internal fields
             cell_dict = remove_internal_db_fields(cell_dict)
-            cell_dict = convert_dates_to_strings(cell_dict)
+            cell_dict = set_empty_string_to_none(cell_dict)
             metadata_dict['cell_information'] = cell_dict
 
         if self.originalCoverage:
@@ -453,9 +453,9 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
             if hasattr(self.originalCoverage, 'value'):
                 # Remove the raw _value string and merge the parsed JSON dict directly
                 orig_cov_dict.pop('_value', None)
-                # Merge the value dictionary directly into the orig_cov_dict
                 orig_cov_dict.update(self.originalCoverage.value)
             orig_cov_dict = convert_dates_to_strings(orig_cov_dict)
+            orig_cov_dict = set_empty_string_to_none(orig_cov_dict)
             metadata_dict['original_coverage'] = orig_cov_dict
 
         band_info_list = []
@@ -463,12 +463,9 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
             band_dict = model_to_dict(band_info)
             # Remove internal fields
             band_dict = remove_internal_db_fields(band_dict)
-            band_dict = convert_dates_to_strings(band_dict)
-            # any empty string values are converted to None
+            band_dict = set_empty_string_to_none(band_dict)
             for key, value in list(band_dict.items()):
-                if isinstance(value, str) and value.strip() == '':
-                    band_dict[key] = None
-                elif key in ['noDataValue', 'maximumValue', 'minimumValue']:
+                if key in ['noDataValue', 'maximumValue', 'minimumValue']:
                     try:
                         band_dict[key] = float(value)
                     except ValueError:

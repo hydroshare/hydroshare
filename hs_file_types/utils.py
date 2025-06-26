@@ -542,3 +542,15 @@ def remove_internal_db_fields(meta_dict):
     meta_dict.pop('object_id', None)
     meta_dict.pop('content_type', None)
     return meta_dict
+
+
+def set_empty_string_to_none(data):
+    """Recursively convert empty strings to None."""
+    if isinstance(data, dict):
+        return {key: set_empty_string_to_none(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [set_empty_string_to_none(item) for item in data]
+    elif isinstance(data, str) and data.strip() == '':
+        return None
+    else:
+        return data

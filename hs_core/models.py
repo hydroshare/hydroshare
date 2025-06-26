@@ -4552,7 +4552,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
             dict: A dictionary of metadata elements
         """
 
-        from hs_file_types.utils import convert_dates_to_strings, remove_internal_db_fields
+        from hs_file_types.utils import convert_dates_to_strings, remove_internal_db_fields, set_empty_string_to_none
 
         metadata_dict = {}
 
@@ -4571,8 +4571,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 element_dict = model_to_dict(element_obj)
                 # Remove internal fields
                 element_dict = remove_internal_db_fields(element_dict)
-                # Convert dates to strings
-                element_dict = convert_dates_to_strings(element_dict)
 
                 # Flatten single-value elements by extracting their main value
                 if element_name == 'title' and 'value' in element_dict:
@@ -4616,7 +4614,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 if element_name == 'coverages' and hasattr(element_obj, 'value'):
                     # Remove the raw _value string and merge the parsed JSON dict directly
                     element_dict.pop('_value', None)
-                    # Merge the value dictionary directly into the element_dict
                     element_dict.update(element_obj.value)
 
                 # Special handling for Relations - replace type with description from SOURCE_TYPES
@@ -4629,6 +4626,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
 
                 # Convert dates to strings
                 element_dict = convert_dates_to_strings(element_dict)
+                element_dict = set_empty_string_to_none(element_dict)
                 element_list.append(element_dict)
 
             # Special handling for keywords - flatten to just the values
@@ -4652,6 +4650,8 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
             # should we only include content files that are not part of any logical file?
             content_files = []
             # site_url = current_site_url()
+
+            # setting path relative to resource_id/data/contents/
             for res_file in resource.files.all():
                 file_meta = {
                     # "name": res_file.file_name,

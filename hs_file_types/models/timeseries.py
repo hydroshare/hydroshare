@@ -1780,8 +1780,9 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                         "units_abbreviation": ts_result.units_abbreviation
                     }
                     series_meta["unit"] = unit_dict
-                    series_meta["status"] = ts_result.status if ts_result.status else "Unknown"
-                    series_meta["sample_medium"] = ts_result.sample_medium if ts_result.sample_medium else "Unknown"
+                    if ts_result.status:
+                        series_meta["status"] = ts_result.status
+                    series_meta["sample_medium"] = ts_result.sample_medium
                     series_meta["value_count"] = ts_result.value_count
                     series_meta["aggregation_statistics"] = ts_result.aggregation_statistics
                     series_meta["timeseries_result_UUID"] = series_id

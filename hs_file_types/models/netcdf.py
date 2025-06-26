@@ -436,7 +436,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         Returns:
             dict: A dictionary of metadata elements
         """
-        from hs_file_types.utils import convert_dates_to_strings, remove_internal_db_fields
+        from hs_file_types.utils import convert_dates_to_strings, remove_internal_db_fields, set_empty_string_to_none
 
         metadata_dict = super(NetCDFFileMetaData, self).to_json()
 
@@ -449,14 +449,10 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
             if hasattr(self.originalCoverage, 'value'):
                 # Remove the raw _value string and merge the parsed JSON dict directly
                 orig_cov_dict.pop('_value', None)
-                # Merge the value dictionary directly into the orig_cov_dict
                 orig_cov_dict.update(self.originalCoverage.value)
 
             orig_cov_dict = convert_dates_to_strings(orig_cov_dict)
-            # empty string values are converted to None
-            for key, value in list(orig_cov_dict.items()):
-                if isinstance(value, str) and value.strip() == '':
-                    orig_cov_dict[key] = None
+            orig_cov_dict = set_empty_string_to_none(orig_cov_dict)
             metadata_dict['original_coverage'] = orig_cov_dict
 
         variable_list = []
@@ -464,7 +460,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
             var_dict = model_to_dict(variable)
             # Remove internal fields
             var_dict = remove_internal_db_fields(var_dict)
-            var_dict = convert_dates_to_strings(var_dict)
+            var_dict = set_empty_string_to_none(var_dict)
             variable_list.append(var_dict)
 
         if variable_list:
