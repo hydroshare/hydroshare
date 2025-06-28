@@ -999,6 +999,4 @@ if ENABLE_OIDC_AUTHENTICATION:
     AUTHENTICATION_BACKENDS.append("hs_core.authentication.HydroShareOIDCAuthenticationBackend")
 
 DATACITE_PREFIX="10.83165"
-DATACITE_USERNAME="PDPO.KYFNWO"
-DATACITE_PASSWORD="QD2ja501b3uC"
 DATACITE_API_IRL="https://api.test.datacite.org/dois"
