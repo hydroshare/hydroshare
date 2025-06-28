@@ -146,6 +146,7 @@ class TestPublishResource(MockS3TestCaseMixin, TestCase):
         istorage = self.pub_res.get_s3_storage()
         bag_path = self.pub_res.bag_path
         self.assertTrue(istorage.exists(bag_path))
+
     def test_publish_via_email_link(self):
         """
         Test case for publishing a resource via email link.
