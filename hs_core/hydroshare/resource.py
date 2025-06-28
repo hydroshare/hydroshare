@@ -1148,10 +1148,6 @@ def publish_resource(user, pk):
     if not user.is_superuser:
         raise ValidationError("Resource can only be published by an admin user")
     resource = utils.get_resource_by_shortkey(pk)
-    print("===========================================")
-    print("Publishing resource with id: {}".format(pk))
-    print(resource.__dict__)
-    print("============================================")
     if resource.raccess.published:
         raise ValidationError("This resource is already published")
     resource.raccess.alter_review_pending_flags(initiating_review=False)
