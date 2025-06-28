@@ -4026,13 +4026,13 @@ class BaseResource(Page, AbstractResource):
             logger.warning(f"No abstract found for resource {self.short_id}. Using empty string.")
             self.metadata.description = type('obj', (), {'abstract': ''})()
 
-        doi = f"10.83165/{self.short_id}"
+        doi = f"{settings.DATACITE_PREFIX}/{self.short_id}"
         payload = {
             "data": {
                 "type": "dois",
                 "attributes": {
                     "doi": doi,
-                    "prefix": "10.83165",
+                    "prefix": f"{settings.DATACITE_PREFIX}",
                     "suffix": self.short_id,
                     "event": "publish",
                     "url": None,
@@ -4514,9 +4514,6 @@ class BaseResource(Page, AbstractResource):
         etree.SubElement(doi_data_node, 'doi').text = res_doi
         res_url = self.metadata.identifiers.all().filter(name='hydroShareIdentifier')[0].url
         etree.SubElement(doi_data_node, 'resource').text = res_url
-        print("===============Datacite XML========")
-        print(etree.tostring(ROOT, encoding='UTF-8', pretty_print=pretty_print).decode())
-        print("===============Datacite XML END========")
         return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(
             ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
 

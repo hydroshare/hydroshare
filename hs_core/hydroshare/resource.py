@@ -1028,46 +1028,51 @@ def deposit_res_metadata_with_crossref(res):
 
 def deposit_res_metadata_with_datacite(res):
     """
-    Deposit resource metadata with DataCite using the Fabrica-style payload.
+    Deposits resource metadata with DataCite using a Fabrica-style JSON payload.
+
     Args:
-        res: Django model instance with metadata
+        res: Resource instance containing metadata.
 
     Returns:
-        Response object or None if error occurred
+        Response: The HTTP response object from DataCite if successful, else None.
     """
-
-    # Base64 encode the username:password combo
-    token = base64.b64encode(b'PDPO.KYFNWO:QD2ja501b3uC').decode()
-    headers = {
-        "accept": "application/vnd.api+json",
-        "content-type": "application/json",
-        "authorization": f"Basic {token}"
-    }
-
     try:
-        print("Sending DOI creation request to DataCite... \n\n{}\n\n".format(res.get_datacite_deposit_json()))
+        credentials = f"{settings.DATACITE_USERNAME}:{settings.DATACITE_PASSWORD}"
+        token = base64.b64encode(credentials.encode()).decode()
+
+        headers = {
+            "accept": "application/vnd.api+json",
+            "content-type": "application/json",
+            "authorization": f"Basic {token}"
+        }
+
+        payload = res.get_datacite_deposit_json()
+
+        logger.info(f"Sending DOI creation request to DataCite for resource {res.short_id}")
+
         response = requests.post(
-            "https://api.test.datacite.org/dois",
-            data=res.get_datacite_deposit_json(),
+            url=settings.DATACITE_API_URL,
+            data=payload,
             headers=headers,
             timeout=10
         )
         response.raise_for_status()
-        print(f"DOI creation successful: {response.status_code}")
-        print(response.json())
+
+        logger.info(f"DOI creation successful for resource {res.short_id}, status code: {response.status_code}")
         return response
 
     except requests.exceptions.HTTPError as http_err:
-        print(f"HTTP error occurred: {http_err}")
-        if response is not None:
-            print(f"Response content: {response.text}")
-    except requests.exceptions.RequestException as err:
-        print(f"Request failed: {err}")
+        logger.error(f"HTTP error while depositing metadata to DataCite for resource {res.short_id}: {http_err}")
+        if 'response' in locals():
+            logger.error(f"Response content: {response.text}")
+
+    except requests.exceptions.RequestException as req_err:
+        logger.error(f"Request exception during DataCite metadata deposit for resource {res.short_id}: {req_err}")
+
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        logger.exception(f"Unexpected error during DataCite metadata deposit for resource {res.short_id}: {e}")
 
     return None
-
 
 def submit_resource_for_review(pk, user):
     """
@@ -1169,7 +1174,6 @@ def publish_resource(user, pk):
         # in debug mode, making sure we are using the test CrossRef service
         assert settings.USE_CROSSREF_TEST is True
     try:
-        response = deposit_res_metadata_with_crossref(resource)
         response = deposit_res_metadata_with_datacite(resource)
         # create new funtion for Datacite registration and call here
     except ValueError as v:
