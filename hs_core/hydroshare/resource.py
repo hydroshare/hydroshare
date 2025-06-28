@@ -3,6 +3,8 @@ import logging
 import os
 import shutil
 import zipfile
+import base64
+
 
 import requests
 from dateutil import tz
@@ -1024,6 +1026,54 @@ def deposit_res_metadata_with_crossref(res):
     return response
 
 
+def deposit_res_metadata_with_datacite(res):
+    """
+    Deposits resource metadata with DataCite using a Fabrica-style JSON payload.
+
+    Args:
+        res: Resource instance containing metadata.
+
+    Returns:
+        Response: The HTTP response object from DataCite if successful, else None.
+    """
+    try:
+        credentials = f"{settings.DATACITE_USERNAME}:{settings.DATACITE_PASSWORD}"
+        token = base64.b64encode(credentials.encode()).decode()
+
+        headers = {
+            "accept": "application/vnd.api+json",
+            "content-type": "application/json",
+            "authorization": f"Basic {token}"
+        }
+
+        payload = res.get_datacite_deposit_json()
+
+        logger.info(f"Sending DOI creation request to DataCite for resource {res.short_id}")
+
+        response = requests.post(
+            url=settings.DATACITE_API_URL,
+            data=payload,
+            headers=headers,
+            timeout=10
+        )
+        response.raise_for_status()
+
+        logger.info(f"DOI creation successful for resource {res.short_id}, status code: {response.status_code}")
+        return response
+
+    except requests.exceptions.HTTPError as http_err:
+        logger.error(f"HTTP error while depositing metadata to DataCite for resource {res.short_id}: {http_err}")
+        if 'response' in locals():
+            logger.error(f"Response content: {response.text}")
+
+    except requests.exceptions.RequestException as req_err:
+        logger.error(f"Request exception during DataCite metadata deposit for resource {res.short_id}: {req_err}")
+
+    except Exception as e:
+        logger.exception(f"Unexpected error during DataCite metadata deposit for resource {res.short_id}: {e}")
+
+    return None
+
 def submit_resource_for_review(pk, user):
     """
     Submits a resource for minimum metadata review, prior to publishing.
@@ -1120,7 +1170,8 @@ def publish_resource(user, pk):
         # in debug mode, making sure we are using the test CrossRef service
         assert settings.USE_CROSSREF_TEST is True
     try:
-        response = deposit_res_metadata_with_crossref(resource)
+        response = deposit_res_metadata_with_datacite(resource)
+        # create new funtion for Datacite registration and call here
     except ValueError as v:
         logger.error(f"Failed depositing XML {v} with Crossref for res id {pk}")
         resource.doi = get_resource_doi(pk)
@@ -1128,7 +1179,7 @@ def publish_resource(user, pk):
         # set the resource back into review_pending
         resource.raccess.alter_review_pending_flags(initiating_review=True)
         raise
-    if not response.status_code == status.HTTP_200_OK:
+    if response and not response.status_code == status.HTTP_200_OK:
         # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
         # crontab celery task
         logger.error(f"Received a {response.status_code} from Crossref while depositing metadata for res id {pk}")
