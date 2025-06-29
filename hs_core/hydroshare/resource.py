@@ -3,6 +3,7 @@ import logging
 import os
 import shutil
 import zipfile
+import base64
 
 import requests
 from dateutil import tz
@@ -998,6 +999,50 @@ def get_crossref_url():
     return main_url
 
 
+def deposit_res_metadata_with_datacite(res):
+    """
+    Deposit resource metadata with DataCite using the Fabrica-style payload.
+    Args:
+        res: Django model instance with metadata
+
+    Returns:
+        Response object or None if error occurred
+    """
+
+    # Base64 encode the username:password combo
+    token = base64.b64encode(f"{settings.DATACITE_USERNAME}:{settings.DATACITE_PASSWORD}".encode()).decode()
+    
+    headers = {
+        "accept": "application/vnd.api+json",
+        "content-type": "application/json",
+        "authorization": f"Basic {token}"
+    }
+
+    try:
+        print("Sending DOI creation request to DataCite... \n\n{}\n\n".format(res.get_datacite_deposit_json()))
+        response = requests.post(
+            settings.DATACITE_API_URL,
+            data=res.get_datacite_deposit_json(),
+            headers=headers,
+            timeout=10
+        )
+        response.raise_for_status()
+        print(f"DOI creation successful: {response.status_code}")
+        print(response.json())
+        return response
+
+    except requests.exceptions.HTTPError as http_err:
+        print(f"HTTP error occurred: {http_err}")
+        if response is not None:
+            print(f"Response content: {response.text}")
+    except requests.exceptions.RequestException as err:
+        print(f"Request failed: {err}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+
+    return None
+
+
 def deposit_res_metadata_with_crossref(res):
     """
     Deposit resource metadata with CrossRef DOI registration agency.
@@ -1120,7 +1165,7 @@ def publish_resource(user, pk):
         # in debug mode, making sure we are using the test CrossRef service
         assert settings.USE_CROSSREF_TEST is True
     try:
-        response = deposit_res_metadata_with_crossref(resource)
+        response = deposit_res_metadata_with_datacite(resource)
     except ValueError as v:
         logger.error(f"Failed depositing XML {v} with Crossref for res id {pk}")
         resource.doi = get_resource_doi(pk)
