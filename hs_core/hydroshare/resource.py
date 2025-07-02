@@ -998,6 +998,7 @@ def get_crossref_url():
         main_url = 'https://doi.crossref.org/'
     return main_url
 
+
 def get_datacite_url():
     main_url = settings.TEST_DATACITE_API_URL
     if not settings.USE_DATACITE_TEST:
@@ -1014,9 +1015,8 @@ def deposit_res_metadata_with_datacite(res):
     Returns:
         Response object or None if error occurred
     """
-
     token = base64.b64encode(f"{settings.DATACITE_USERNAME}:{settings.DATACITE_PASSWORD}".encode()).decode()
-    
+
     headers = {
         "accept": "application/vnd.api+json",
         "content-type": "application/json",
@@ -1156,7 +1156,6 @@ def publish_resource(user, pk):
         raise ValidationError("This resource cannot be submitted for metadata review since "
                               "it does not have required metadata or content files, or it contains "
                               "reference content, or this resource type is not allowed for publication.")
-    
     publisher_user_account = User.objects.get(username=settings.PUBLISHER_USER_NAME)
     UserResourcePrivilege.share(user=publisher_user_account, resource=resource,
                                 privilege=PrivilegeCodes.OWNER, grantor=resource.quota_holder)

@@ -3975,7 +3975,6 @@ class BaseResource(Page, AbstractResource):
     # def file_uri(self):
     #     return os.path.join(self.root_uri, 'files')
 
-
     def get_datacite_deposit_json(self):
         """
         Return JSON payload for creating a DOI with DataCite API.
@@ -4336,13 +4335,13 @@ class BaseResource(Page, AbstractResource):
 
         return json.dumps(payload, indent=2)
 
-
     # create crossref deposit xml for resource publication
     def get_crossref_deposit_xml(self, pretty_print=True):
         """Return XML structure describing crossref deposit.
         The mapping of hydroshare resource metadata to crossref metadata has been implemented here as per
         the specification in this repo: https://github.com/hydroshare/hs_doi_deposit_metadata
         """
+
         # importing here to avoid circular import problem
         from .hydroshare.resource import get_activated_doi
 
