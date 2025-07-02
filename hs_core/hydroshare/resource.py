@@ -998,6 +998,12 @@ def get_crossref_url():
         main_url = 'https://doi.crossref.org/'
     return main_url
 
+def get_datacite_url():
+    main_url = settings.TEST_DATACITE_API_URL
+    if not settings.USE_DATACITE_TEST:
+        main_url = settings.DATACITE_API_URL
+    return main_url
+
 
 def deposit_res_metadata_with_datacite(res):
     """
@@ -1009,7 +1015,6 @@ def deposit_res_metadata_with_datacite(res):
         Response object or None if error occurred
     """
 
-    # Base64 encode the username:password combo
     token = base64.b64encode(f"{settings.DATACITE_USERNAME}:{settings.DATACITE_PASSWORD}".encode()).decode()
     
     headers = {
@@ -1019,26 +1024,24 @@ def deposit_res_metadata_with_datacite(res):
     }
 
     try:
-        print("Sending DOI creation request to DataCite... \n\n{}\n\n".format(res.get_datacite_deposit_json()))
         response = requests.post(
-            settings.DATACITE_API_URL,
+            url=get_datacite_url(),
             data=res.get_datacite_deposit_json(),
             headers=headers,
             timeout=10
         )
         response.raise_for_status()
-        print(f"DOI creation successful: {response.status_code}")
-        print(response.json())
+        logger.info(f"Metadata deposited successfully with DataCite for resource {res.short_id}")
         return response
 
     except requests.exceptions.HTTPError as http_err:
-        print(f"HTTP error occurred: {http_err}")
+        logger.error(f"HTTP error occurred: {http_err}")
         if response is not None:
-            print(f"Response content: {response.text}")
+            logger.error(f"Response content: {response.text}")
     except requests.exceptions.RequestException as err:
-        print(f"Request failed: {err}")
+        logger.error(f"Request failed: {err}")
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        logger.error(f"Unexpected error: {e}")
 
     return None
 
@@ -1153,6 +1156,7 @@ def publish_resource(user, pk):
         raise ValidationError("This resource cannot be submitted for metadata review since "
                               "it does not have required metadata or content files, or it contains "
                               "reference content, or this resource type is not allowed for publication.")
+    
     publisher_user_account = User.objects.get(username=settings.PUBLISHER_USER_NAME)
     UserResourcePrivilege.share(user=publisher_user_account, resource=resource,
                                 privilege=PrivilegeCodes.OWNER, grantor=resource.quota_holder)
@@ -1163,17 +1167,17 @@ def publish_resource(user, pk):
     resource.save()
     if settings.DEBUG:
         # in debug mode, making sure we are using the test CrossRef service
-        assert settings.USE_CROSSREF_TEST is True
+        assert settings.USE_DATACITE_TEST is True
     try:
         response = deposit_res_metadata_with_datacite(resource)
     except ValueError as v:
-        logger.error(f"Failed depositing XML {v} with Crossref for res id {pk}")
+        logger.error(f"Failed depositing XML {v} with Datacite for res id {pk}")
         resource.doi = get_resource_doi(pk)
         resource.save()
         # set the resource back into review_pending
         resource.raccess.alter_review_pending_flags(initiating_review=True)
         raise
-    if not response.status_code == status.HTTP_200_OK:
+    if response.status_code not in (status.HTTP_200_OK, status.HTTP_201_CREATED):
         # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
         # crontab celery task
         logger.error(f"Received a {response.status_code} from Crossref while depositing metadata for res id {pk}")

@@ -997,3 +997,8 @@ if ENABLE_OIDC_AUTHENTICATION:
         DEFAULT_AUTHENTICATION_CLASSES + ("mozilla_django_oidc.contrib.drf.OIDCAuthentication",)
     REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = DEFAULT_AUTHENTICATION_CLASSES
     AUTHENTICATION_BACKENDS.append("hs_core.authentication.HydroShareOIDCAuthenticationBackend")
+
+#Todo: Change for production deployment
+DATACITE_PREFIX="10.83165"
+TEST_DATACITE_API_URL="https://api.test.datacite.org/dois"
+DATACITE_API_URL="https://api.datacite.org/dois"
