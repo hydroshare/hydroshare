@@ -1015,33 +1015,37 @@ def deposit_res_metadata_with_datacite(res):
     Returns:
         Response object or None if error occurred
     """
-    token = base64.b64encode(f"{settings.DATACITE_USERNAME}:{settings.DATACITE_PASSWORD}".encode()).decode()
-
-    headers = {
-        "accept": "application/vnd.api+json",
-        "content-type": "application/json",
-        "authorization": f"Basic {token}"
-    }
 
     try:
+        token = base64.b64encode(f"{settings.DATACITE_USERNAME}:{settings.DATACITE_PASSWORD}".encode()).decode()
+
+        headers = {
+            "accept": "application/vnd.api+json",
+            "content-type": "application/json",
+            "authorization": f"Basic {token}"
+        }
         response = requests.post(
             url=get_datacite_url(),
             data=res.get_datacite_deposit_json(),
             headers=headers,
             timeout=10
         )
+        print(f"Metadata deposited successfully with DataCite for resource {res.short_id} \n\n {response.text}")
         response.raise_for_status()
         logger.info(f"Metadata deposited successfully with DataCite for resource {res.short_id}")
         return response
-
     except requests.exceptions.HTTPError as http_err:
         logger.error(f"HTTP error occurred: {http_err}")
+        print(f"HTTP error occurred: {http_err}")
         if response is not None:
             logger.error(f"Response content: {response.text}")
+            print(f"Response content: {response.text}")
     except requests.exceptions.RequestException as err:
         logger.error(f"Request failed: {err}")
+        print(f"Request failed: {err}")
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
+        print(f"Unexpected error: {e}")
 
     return None
 

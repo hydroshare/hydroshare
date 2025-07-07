@@ -3975,6 +3975,111 @@ class BaseResource(Page, AbstractResource):
     # def file_uri(self):
     #     return os.path.join(self.root_uri, 'files')
 
+    @staticmethod
+    def parse_creator_name(creator):
+        creator_name = creator.name.strip()
+        name = HumanName(creator_name)
+        if not name.first or not name.last:
+            name_parts = creator_name.split()
+            if not name.first and name_parts:
+                name.first = name_parts[0]
+            if not name.last and name_parts:
+                name.last = name_parts[-1]
+        return name.first, name.last
+    
+    @staticmethod
+    def get_contributor_data(self):
+        contributor_list = []
+
+        for contributor in self.metadata.contributors.all():
+            if contributor.name:
+                first_name, last_name = self.parse_creator_name(contributor)
+                contributor_data = {
+                    "name": contributor.name,
+                    "nameType": "Personal",
+                    "givenName": first_name,
+                    "familyName": last_name,
+                    "contributorType": "Other",
+                    "affiliation": [{"name": contributor.organization or "CUAHSI"}],
+                    "nameIdentifiers": []
+                }
+                if contributor.hydroshare_user_id:
+                    contributor_data["nameIdentifiers"].append({
+                        "nameIdentifier": f"hydroshare-user-{contributor.hydroshare_user_id}",
+                        "nameIdentifierScheme": "Other",
+                        "schemeUri": None
+                    })
+                if contributor.identifiers.get('ORCID'):
+                    contributor_data["nameIdentifiers"].append({
+                        "nameIdentifier": contributor.identifiers['ORCID'],
+                        "nameIdentifierScheme": "ORCID",
+                        "schemeUri": "https://orcid.org"
+                    })
+            else:
+                contributor_data = {
+                    "name": contributor.organization or "CUAHSI",
+                    "nameType": "Organizational",
+                    "contributorType": "Other",
+                    "nameIdentifiers": []
+                }
+
+            contributor_list.append(contributor_data)
+
+        return contributor_list
+
+
+    @staticmethod
+    def get_funding_references(self):
+        """
+        Build fundingReferences list for the DataCite JSON payload.
+        """
+        logger = logging.getLogger(__name__)
+        funding_references = []
+
+        def get_funder_id(funder_name):
+            funder_name_lower = funder_name.lower()
+            encoded_funder_name = urllib.parse.quote(funder_name_lower)
+            url = f"https://api.ror.org/v2/organizations?filter=types:funder&query={encoded_funder_name}"
+
+            try:
+                response = requests.get(url, verify=False, timeout=10)
+                if response.status_code == 200:
+                    items = response.json().get('items', [])
+                    for item in items:
+                        for name in item.get('names', []):
+                            if name.get('value', '').lower() == funder_name_lower:
+                                return item.get('id')
+                else:
+                    logger.error(f"Failed to get funder ID for '{funder_name}'. Status: {response.status_code}")
+            except requests.RequestException as e:
+                logger.error(f"Error fetching funder ID for '{funder_name}': {str(e)}")
+
+            return ''
+
+        for funder in self.metadata.funding_agencies.all():
+            funder_data = {
+                "funderName": funder.agency_name
+            }
+
+            funder_id = get_funder_id(funder.agency_name)
+            if funder_id:
+                funder_data["funderIdentifier"] = funder_id
+                funder_data["funderIdentifierType"] = "ROR"
+            elif funder.agency_url:
+                funder_data["funderIdentifier"] = funder.agency_url
+                funder_data["funderIdentifierType"] = "Other"
+
+            if funder.award_number:
+                funder_data["awardNumber"] = funder.award_number
+            if funder.award_title:
+                funder_data["awardTitle"] = funder.award_title
+
+            funding_references.append(funder_data)
+
+        return funding_references
+
+
+
     def get_datacite_deposit_json(self):
         """
         Return JSON payload for creating a DOI with DataCite API.
@@ -4005,17 +4110,6 @@ class BaseResource(Page, AbstractResource):
                 logger.error(
                     f"Error fetching funder_id for '{funder_name}'. Error: {str(e)} for resource id: {self.short_id}")
                 return ''
-
-        def parse_creator_name(creator):
-            creator_name = creator.name.strip()
-            name = HumanName(creator_name)
-            if not name.first or not name.last:
-                name_parts = creator_name.split()
-                if not name.first and name_parts:
-                    name.first = name_parts[0]
-                if not name.last and name_parts:
-                    name.last = name_parts[-1]
-            return name.first, name.last
 
         if not self.metadata.title:
             raise ValidationError(f"No title found for resource {self.short_id}")
@@ -4102,7 +4196,7 @@ class BaseResource(Page, AbstractResource):
         other_creators = [cr for cr in creators if cr.order > 1]
         for creator in [first_creator[0]] + other_creators if first_creator else creators:
             if creator.name:
-                first_name, last_name = parse_creator_name(creator)
+                first_name, last_name = self.parse_creator_name(creator)
                 creator_data = {
                     "name": creator.name,
                     "nameType": "Personal",
@@ -4131,40 +4225,8 @@ class BaseResource(Page, AbstractResource):
                     "nameIdentifiers": []
                 }
                 payload["data"]["attributes"]["creators"].append(creator_data)
-
-        for contributor in self.metadata.contributors.all():
-            if contributor.name:
-                first_name, last_name = parse_creator_name(contributor)
-                contributor_data = {
-                    "name": contributor.name,
-                    "nameType": "Personal",
-                    "givenName": first_name,
-                    "familyName": last_name,
-                    "contributorType": "Other",
-                    "affiliation": [{"name": contributor.organization or "CUAHSI"}],
-                    "nameIdentifiers": []
-                }
-                if contributor.hydroshare_user_id:
-                    contributor_data["nameIdentifiers"].append({
-                        "nameIdentifier": f"hydroshare-user-{contributor.hydroshare_user_id}",
-                        "nameIdentifierScheme": "Other",
-                        "schemeUri": None
-                    })
-                if contributor.identifiers.get('ORCID'):
-                    contributor_data["nameIdentifiers"].append({
-                        "nameIdentifier": contributor.identifiers['ORCID'],
-                        "nameIdentifierScheme": "ORCID",
-                        "schemeUri": "https://orcid.org"
-                    })
-                payload["data"]["attributes"]["contributors"].append(contributor_data)
-            else:
-                contributor_data = {
-                    "name": contributor.organization or "CUAHSI",
-                    "nameType": "Organizational",
-                    "contributorType": "Other",
-                    "nameIdentifiers": []
-                }
-                payload["data"]["attributes"]["contributors"].append(contributor_data)
+        
+        payload["data"]["attributes"]["contributors"] = self.get_contributor_data(self)
 
         for subject in self.metadata.subjects.all():
             payload["data"]["attributes"]["subjects"].append({
@@ -4293,22 +4355,7 @@ class BaseResource(Page, AbstractResource):
 
                     payload["data"]["attributes"].setdefault("geoLocations", []).append(geo_location)
 
-        for funder in self.metadata.funding_agencies.all():
-            funder_data = {
-                "funderName": funder.agency_name
-            }
-            funder_id = get_funder_id(funder.agency_name)
-            if funder_id:
-                funder_data["funderIdentifier"] = funder_id
-                funder_data["funderIdentifierType"] = "ROR"
-            elif funder.agency_url:
-                funder_data["funderIdentifier"] = funder.agency_url
-                funder_data["funderIdentifierType"] = "Other"
-            if funder.award_number:
-                funder_data["awardNumber"] = funder.award_number
-            if funder.award_title:
-                funder_data["awardTitle"] = funder.award_title
-            payload["data"]["attributes"]["fundingReferences"].append(funder_data)
+        payload["data"]["attributes"]["fundingReferences"] = self.get_funding_references(self)
 
         for format_obj in self.metadata.formats.all():
             payload["data"]["attributes"]["formats"].append(format_obj.value)
