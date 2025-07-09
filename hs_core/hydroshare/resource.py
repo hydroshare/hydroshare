@@ -1050,10 +1050,22 @@ def deposit_res_metadata_with_datacite(res):
     return None
 
 
-def update_payload_for_datacite(form_data):
+def update_payload_for_datacite(short_id, element_name, form_data):
     """
     Transforms QueryDict form input into a DataCite-compliant payload using field mappings.
     """
+    attributes = {}
+    if element_name == 'fundingagency':
+        res = utils.get_resource_by_shortkey(short_id)
+        attributes = {
+            "fundingReferences": res.get_funding_references(res)
+        }
+    elif element_name == 'contributor':
+        res = utils.get_resource_by_shortkey(short_id)
+        attributes = {
+            "contributors": res.get_contributor_data(res)
+        }
+
     # Define field mappings and transformation rules
     field_map = {
         'abstract': {
@@ -1093,8 +1105,6 @@ def update_payload_for_datacite(form_data):
         # ➕ Add new fields or transformations here as needed
     }
 
-    attributes = {}
-
     for key, config in field_map.items():
         if isinstance(key, str):
             if key in form_data:
@@ -1118,14 +1128,12 @@ def update_payload_for_datacite(form_data):
     }
 
 
-def update_doi_metadata_with_datacite(short_id, payload):
+def update_doi_metadata_with_datacite(short_id, element_name, payload):
     """
     Update existing DOI metadata with DataCite.
     """
-    print("=======================================================")
-    print("Payload for DataCite update:", payload)
-    print("=======================================================")
-    payload = update_payload_for_datacite(payload)
+
+    payload = update_payload_for_datacite(short_id, element_name, payload)
     token = base64.b64encode(f"{settings.DATACITE_USERNAME}:{settings.DATACITE_PASSWORD}".encode()).decode()
 
     headers = {

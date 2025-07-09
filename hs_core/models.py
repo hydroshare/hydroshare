@@ -3986,7 +3986,7 @@ class BaseResource(Page, AbstractResource):
             if not name.last and name_parts:
                 name.last = name_parts[-1]
         return name.first, name.last
-    
+
     @staticmethod
     def get_contributor_data(self):
         contributor_list = []
@@ -4026,7 +4026,6 @@ class BaseResource(Page, AbstractResource):
             contributor_list.append(contributor_data)
 
         return contributor_list
-
 
     @staticmethod
     def get_funding_references(self):
@@ -4077,8 +4076,6 @@ class BaseResource(Page, AbstractResource):
             funding_references.append(funder_data)
 
         return funding_references
-
-
 
     def get_datacite_deposit_json(self):
         """
@@ -4225,7 +4222,7 @@ class BaseResource(Page, AbstractResource):
                     "nameIdentifiers": []
                 }
                 payload["data"]["attributes"]["creators"].append(creator_data)
-        
+
         payload["data"]["attributes"]["contributors"] = self.get_contributor_data(self)
 
         for subject in self.metadata.subjects.all():

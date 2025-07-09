@@ -645,10 +645,8 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                 elif "errors" in response:
                     err_msg = err_msg.format(element_name, response["errors"])
 
-    print("==============add==========")
-    print(request.POST.dict())
-    print("==============add==========")
-    update_doi_metadata_with_datacite(short_id=shortkey, payload={element_name: request.POST.get("value", "")})
+    update_doi_metadata_with_datacite(short_id=shortkey, element_name=element_name,
+                                      payload={element_name: request.POST.get("value", "")})
     if is_ajax(request):
         if is_add_success:
             res_public_status = "public" if res.raccess.public else "not public"
@@ -787,10 +785,7 @@ def update_metadata_element(
             elif "errors" in response:
                 err_msg = err_msg.format(element_name, response["errors"])
 
-    print("==============update==========")
-    print(request.POST.dict())
-    print("==============update==========")
-    update_doi_metadata_with_datacite(short_id=shortkey, payload=request.POST.dict())
+    update_doi_metadata_with_datacite(short_id=shortkey, element_name=element_name, payload=request.POST.dict())
     if is_ajax(request):
         if is_update_success:
             res_public_status = "public" if res.raccess.public else "not public"
@@ -910,6 +905,8 @@ def delete_metadata_element(
     res.update_public_and_discoverable()
     resource_modified(res, request.user, overwrite_bag=False)
     request.session["resource-mode"] = "edit"
+
+    update_doi_metadata_with_datacite(short_id=shortkey, element_name=element_name, payload={})
     return HttpResponseRedirect(request.headers["referer"])
 
 
