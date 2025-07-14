@@ -4077,36 +4077,90 @@ class BaseResource(Page, AbstractResource):
 
         return funding_references
 
+    def get_related_items(self):
+        """
+        Returns two lists:
+        - relatedIdentifiers: list of dictionaries for relatedIdentifiers
+        - relatedItems: list of dictionaries for relatedItems
+        """
+        VALID_RELATION_TYPE_MAP = {
+            RelationTypes.isPartOf: "IsPartOf",
+            RelationTypes.hasPart: "HasPart",
+            RelationTypes.isExecutedBy: "IsSupplementedBy",
+            RelationTypes.isCreatedBy: "IsDocumentedBy",
+            RelationTypes.isVersionOf: "IsVersionOf",
+            RelationTypes.isReplacedBy: "IsNewVersionOf",
+            RelationTypes.isDescribedBy: "IsDescribedBy",
+            RelationTypes.conformsTo: "References",
+            RelationTypes.hasFormat: "HasPart",
+            RelationTypes.isFormatOf: "IsPartOf",
+            RelationTypes.isRequiredBy: "IsRequiredBy",
+            RelationTypes.requires: "Requires",
+            RelationTypes.isReferencedBy: "IsReferencedBy",
+            RelationTypes.references: "References",
+            RelationTypes.replaces: "Replaces",
+            RelationTypes.source: "IsDerivedFrom",
+            RelationTypes.isSimilarTo: "IsIdenticalTo",
+            RelationTypes.relation: "References"
+        }
+
+        RESOURCE_TYPE_MAP = {
+            "CompositeResource": "Dataset",
+            "CollectionResource": "Collection",
+            "ToolResource": "Software",
+            "ModelProgramResource": "Software",
+            "ModelInstanceResource": "Model",
+            "GenericResource": "Dataset",
+            "TimeSeriesResource": "Dataset",
+            "GeographicFeatureResource": "Dataset",
+            "GeographicRasterResource": "Dataset",
+            "MultidimensionalResource": "Dataset",
+            "ScriptResource": "Software",
+            "WebAppResource": "Service"
+        }
+
+        related_identifiers = []
+        related_items = []
+
+        for relation in self.metadata.relations.all():
+            match = re.search(r'(https?://\S+|10\.\d{4,9}/\S+)', relation.value)
+            identifier_value = match.group(0) if match else relation.value
+            identifier_type = "URL" if identifier_value.startswith("http") else "DOI"
+
+            relation_type = VALID_RELATION_TYPE_MAP.get(relation.type)
+
+            related_identifiers.append({
+                "relatedIdentifier": identifier_value,
+                "relatedIdentifierType": identifier_type,
+                "relationType": relation_type
+            })
+
+            related_items.append({
+                "relatedItemType": RESOURCE_TYPE_MAP.get(self.resource_type, "Other"),
+                "relationType": relation_type,
+                "relatedItemIdentifier": {
+                    "relatedItemIdentifierType": identifier_type,
+                    "relatedItemIdentifier": identifier_value
+                }
+            })
+
+        # Optionally add IsIdenticalTo for HydroShare identifier
+        hs_identifier = self.metadata.identifiers.filter(name='hydroShareIdentifier').first()
+        if hs_identifier:
+            related_identifiers.append({
+                "relatedIdentifier": hs_identifier.url,
+                "relatedIdentifierType": "URL",
+                "relationType": "IsIdenticalTo"
+            })
+
+        return related_identifiers, related_items
+
     def get_datacite_deposit_json(self):
         """
         Return JSON payload for creating a DOI with DataCite API.
         Conforms to DataCite REST API for DOI creation: https://support.datacite.org/reference/post_dois
         """
         logger = logging.getLogger(__name__)
-
-        def get_funder_id(funder_name):
-            funder_name = funder_name.lower()
-            encoded_funder_name = urllib.parse.quote(funder_name)
-            url = f"https://api.ror.org/v2/organizations?filter=types:funder&query={encoded_funder_name}"
-            try:
-                response = requests.get(url, verify=False, timeout=10)
-                if response.status_code == 200:
-                    items = response.json().get('items', [])
-                    for item in items:
-                        for name in item['names']:
-                            if name['value'].lower() == funder_name:
-                                return item['id']
-                    return ''
-                else:
-                    logger.error(
-                        f"Failed to get funder_ƒid for '{funder_name}'. "
-                        f"Status code: {response.status_code} for resource id: {self.short_id}"
-                    )
-                    return ''
-            except requests.RequestException as e:
-                logger.error(
-                    f"Error fetching funder_id for '{funder_name}'. Error: {str(e)} for resource id: {self.short_id}")
-                return ''
 
         if not self.metadata.title:
             raise ValidationError(f"No title found for resource {self.short_id}")
@@ -4262,60 +4316,10 @@ class BaseResource(Page, AbstractResource):
                 rights_data["rightsUriStartDate"] = pub_date.strftime("%Y-%m-%d")
             payload["data"]["attributes"]["rightsList"] = [rights_data]
 
-        VALID_RELATION_TYPE_MAP = {
-            RelationTypes.isPartOf: "IsPartOf",
-            RelationTypes.hasPart: "HasPart",
-            RelationTypes.isExecutedBy: "IsSupplementedBy",
-            RelationTypes.isCreatedBy: "IsDocumentedBy",
-            RelationTypes.isVersionOf: "IsVersionOf",
-            RelationTypes.isReplacedBy: "IsNewVersionOf",
-            RelationTypes.isDescribedBy: "IsDescribedBy",
-            RelationTypes.conformsTo: "References",
-            RelationTypes.hasFormat: "HasPart",
-            RelationTypes.isFormatOf: "IsPartOf",
-            RelationTypes.isRequiredBy: "IsRequiredBy",
-            RelationTypes.requires: "Requires",
-            RelationTypes.isReferencedBy: "IsReferencedBy",
-            RelationTypes.references: "References",
-            RelationTypes.replaces: "Replaces",
-            RelationTypes.source: "IsDerivedFrom",
-            RelationTypes.isSimilarTo: "IsIdenticalTo",
-            RelationTypes.relation: "References"
-        }
-        RESOURCE_TYPE_MAP = {
-            "CompositeResource": "Dataset",
-            "CollectionResource": "Collection",
-            "ToolResource": "Software",
-            "ModelProgramResource": "Software",
-            "ModelInstanceResource": "Model",
-            "GenericResource": "Dataset",
-            "TimeSeriesResource": "Dataset",
-            "GeographicFeatureResource": "Dataset",
-            "GeographicRasterResource": "Dataset",
-            "MultidimensionalResource": "Dataset",
-            "ScriptResource": "Software",
-            "WebAppResource": "Service"
-        }
+        related_identifiers, related_items = self.get_related_items()
+        payload["data"]["attributes"]["relatedIdentifiers"] = related_identifiers
+        payload["data"]["attributes"]["relatedItems"] = related_items
 
-        for relation in self.metadata.relations.all():
-            match = re.search(r'(https?://\S+|10\.\d{4,9}/\S+)', relation.value)
-            identifier_value = match.group(0) if match else relation.value
-            identifier_type = "URL" if identifier_value.startswith("http") else "DOI"
-
-            payload["data"]["attributes"]["relatedIdentifiers"].append({
-                "relatedIdentifier": identifier_value,
-                "relatedIdentifierType": identifier_type,
-                "relationType": VALID_RELATION_TYPE_MAP.get(relation.type),
-            })
-
-            payload["data"]["attributes"]["relatedItems"].append({
-                "relatedItemType": RESOURCE_TYPE_MAP.get(self.resource_type, "Other"),
-                "relationType": VALID_RELATION_TYPE_MAP.get(relation.type),
-                "relatedItemIdentifier": {
-                    "relatedItemIdentifierType": identifier_type,
-                    "relatedItemIdentifier": identifier_value
-                }
-            })
         if hs_identifier:
             payload["data"]["attributes"]["relatedIdentifiers"].append({
                 "relatedIdentifier": hs_identifier.url,

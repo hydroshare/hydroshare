@@ -1065,6 +1065,12 @@ def update_payload_for_datacite(short_id, element_name, form_data):
         attributes = {
             "contributors": res.get_contributor_data(res)
         }
+    elif element_name == 'relation':
+        res = utils.get_resource_by_shortkey(short_id)
+        related_identifiers, related_items = res.get_related_items()
+        attributes = {
+            "relatedItems": related_items,
+        }
 
     # Define field mappings and transformation rules
     field_map = {
