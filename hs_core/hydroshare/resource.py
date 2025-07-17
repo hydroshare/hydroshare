@@ -1054,6 +1054,9 @@ def update_payload_for_datacite(short_id, element_name, form_data):
     """
     Transforms QueryDict form input into a DataCite-compliant payload using field mappings.
     """
+    res = utils.get_resource_by_shortkey(short_id)
+    if not res.raccess.published:
+        return False
     attributes = {}
     if element_name == 'fundingagency':
         res = utils.get_resource_by_shortkey(short_id)
@@ -1140,6 +1143,10 @@ def update_doi_metadata_with_datacite(short_id, element_name, payload):
     """
 
     payload = update_payload_for_datacite(short_id, element_name, payload)
+    if not payload:
+        logger.error(f"Failed to update DOI metadata for resource {short_id}. Resource not published or invalid element name.")
+        return None
+    
     token = base64.b64encode(f"{settings.DATACITE_USERNAME}:{settings.DATACITE_PASSWORD}".encode()).decode()
 
     headers = {
