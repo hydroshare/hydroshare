@@ -1,11 +1,13 @@
 import requests
 import logging
+from django_s3.utils import bucket_and_name
 from rest_framework.views import APIView
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework import status
 from hs_core.models import get_user
 from django.conf import settings
+from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 
 logger = logging.getLogger(__name__)
 
@@ -53,3 +55,13 @@ class MinIOServiceAccountsDelete(APIView):
             return Response({"detail": "Service account key not found."}, status=status.HTTP_404_NOT_FOUND)
         response = requests.delete(micro_auth_service_url + service_account_key)
         return Response(status=response.status_code)
+
+
+class MinIOResourceBucketAndPrefix(APIView):
+
+    @swagger_auto_schema(operation_description="Retrieves the MinIO bucket and prefix for the resource")
+    def get(self, request, pk):
+        res, _, user = authorize(request, pk,
+                                 needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+        bucket, prefix = bucket_and_name(res.file_path + "/")
+        return Response({"bucket": bucket, "prefix": prefix}, status=status.HTTP_200_OK)
