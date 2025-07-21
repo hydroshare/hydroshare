@@ -1,10 +1,12 @@
 from django.urls import reverse
 
 from hs_core.tests.api.rest.base import HSRESTTestCase
+from unittest import skip
 
 
 class TestServiceAccountMinIO(HSRESTTestCase):
 
+    @skip("Skipping, micro-auth needs to be configured to use the test database")
     def test_add_list_remove_service_account(self):
         # create
         service_account_url = reverse('minio_service_accounts')
