@@ -29,24 +29,33 @@ if LOCUST_HOST:
         else:
             PORT = 80
 
+FILES = []
+randname = 0
+
+
+def createFile(size, randname=0):
+    """Create a file of a given size in bytes."""
+    filename = f"{randname}-locustfile.py"
+    randname += 1
+    with open(filename, "wb") as f:
+        f.seek(size - 1)
+        f.write(b"\0")
+    FILES.append(filename)
+    logging.info(f"Created file {filename} of size {size} bytes")
+    return filename
+
+
+# create 3 files, # 1 small, 1 1GB, and 1 2GB
+for file_size in [100, 1024 * 1024 * 1024, 2 * 1024 * 1024 * 1024]:
+    createFile(file_size, randname=randname)
+
 
 class HSUser(HttpUser):
     # wait_time = between(1, 2)
     number_of_resources = 5
     resources = {}
     randname = 0
-    files = []
-
-    def createFile(self, size):
-        """Create a file of a given size in bytes."""
-        filename = f"{self.randname}-locustfile.py"
-        self.randname += 1
-        with open(filename, "wb") as f:
-            f.seek(size - 1)
-            f.write(b"\0")
-        self.files.append(filename)
-        logging.info(f"Created file {filename} of size {size} bytes")
-        return filename
+    files = FILES
 
     def on_start(self):
         logging.info(f"Starting a new user with hsclient: HOST: {HOST} PORT: {PORT} PROTOCOL: {PROTOCOL}")
@@ -60,10 +69,6 @@ class HSUser(HttpUser):
             new_res = self.hs.create()
             resIdentifier = new_res.resource_id
             self.resources[resIdentifier] = new_res
-
-        # create 3 files, # 1 small, 1 1GB, and 1 2GB
-        for file_size in [100, 1024 * 1024 * 1024, 2 * 1024 * 1024 * 1024]:
-            self.createFile(file_size)
 
         logging.info(f"Created {len(self.resources)} resources and {len(self.files)} files")
 
