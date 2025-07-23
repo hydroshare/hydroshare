@@ -180,7 +180,7 @@ class HSUser(HttpUser):
             filename = self.files[0]  # use the first file created
             try:
                 self.resources[res_key].file_upload(filename)
-                logging.info(f"uploaded file to {res_key}")
+                logging.info(f"uploaded small file to {res_key}")
                 response.success()
             except Exception as e:
                 logging.error(f"Error adding files to resource: {e}")
@@ -198,7 +198,7 @@ class HSUser(HttpUser):
             filename = self.files[1]  # use the second file created
             try:
                 self.resources[res_key].file_upload(filename)
-                logging.info(f"uploaded file to {res_key}")
+                logging.info(f"uploaded 1GB file to {res_key}")
                 response.success()
             except Exception as e:
                 logging.error(f"Error adding files to resource: {e}")
@@ -216,7 +216,7 @@ class HSUser(HttpUser):
             filename = self.files[2]  # use the third file created
             try:
                 self.resources[res_key].file_upload(filename)
-                logging.info(f"uploaded file to {res_key}")
+                logging.info(f"uploaded 2GB file to {res_key}")
                 response.success()
             except Exception as e:
                 logging.error(f"Error adding files to resource: {e}")
