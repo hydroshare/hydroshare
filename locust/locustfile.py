@@ -35,6 +35,18 @@ class HSUser(HttpUser):
     number_of_resources = 5
     resources = {}
     randname = 0
+    files = []
+
+    def createFile(self, size):
+        """Create a file of a given size in bytes."""
+        filename = f"{self.randname}-locustfile.py"
+        self.randname += 1
+        with open(filename, "wb") as f:
+            f.seek(size - 1)
+            f.write(b"\0")
+        self.files.append(filename)
+        logging.info(f"Created file {filename} of size {size} bytes")
+        return filename
 
     def on_start(self):
         logging.info(f"Starting a new user with hsclient: HOST: {HOST} PORT: {PORT} PROTOCOL: {PROTOCOL}")
@@ -48,6 +60,12 @@ class HSUser(HttpUser):
             new_res = self.hs.create()
             resIdentifier = new_res.resource_id
             self.resources[resIdentifier] = new_res
+
+        # create 3 files, # 1 small, 1 1GB, and 1 2GB
+        for file_size in [100, 1024 * 1024 * 1024, 2 * 1024 * 1024 * 1024]:
+            self.createFile(file_size)
+
+        logging.info(f"Created {len(self.resources)} resources and {len(self.files)} files")
 
     def on_stop(self):
         for res in self.resources.values():
@@ -90,20 +108,20 @@ class HSUser(HttpUser):
     #             response.failure("Failed to get resources")
     #     pass
 
-    @task
-    @tag('post')
-    def create(self):
-        with self.client.post("/create", catch_response=True) as response:
-            try:
-                new_res = self.hs.create()
-                resIdentifier = new_res.resource_id
-                self.resources[resIdentifier] = new_res
-                logging.info(f"created {resIdentifier}")
-                response.success()
-            except Exception as e:
-                logging.error(f"Error creating resource: {e}")
-                # mark as a locust failure
-                response.failure(f"Error creating resource: {e}")
+    # @task
+    # @tag('post')
+    # def create(self):
+    #     with self.client.post("/create", catch_response=True) as response:
+    #         try:
+    #             new_res = self.hs.create()
+    #             resIdentifier = new_res.resource_id
+    #             self.resources[resIdentifier] = new_res
+    #             logging.info(f"created {resIdentifier}")
+    #             response.success()
+    #         except Exception as e:
+    #             logging.error(f"Error creating resource: {e}")
+    #             # mark as a locust failure
+    #             response.failure(f"Error creating resource: {e}")
 
     # @task
     # @tag("async")
@@ -147,12 +165,7 @@ class HSUser(HttpUser):
             return
         with self.client.post("/add_small_file", catch_response=True) as response:
             res_key = random.choice(list(self.resources.keys()))
-            # generate a random file name
-            filename = f"{self.randname}-locustfile.py"
-            self.randname = self.randname + 1
-            # create the file locally
-            with open(filename, "w") as f:
-                f.write("Hello World")
+            filename = self.files[0]  # use the first file created
             try:
                 self.resources[res_key].file_upload(filename)
                 logging.info(f"uploaded file to {res_key}")
@@ -172,13 +185,7 @@ class HSUser(HttpUser):
             return
         with self.client.post("/add_1gb_file", catch_response=True) as response:
             res_key = random.choice(list(self.resources.keys()))
-            # generate a random file name
-            filename = f"{self.randname}-locustfile.py"
-            self.randname = self.randname + 1
-            # create a 1GB file locally
-            with open(filename, "wb") as f:
-                f.seek(1024 * 1024 * 1024 - 1)
-                f.write(b"\0")
+            filename = self.files[1]  # use the second file created
             try:
                 self.resources[res_key].file_upload(filename)
                 logging.info(f"uploaded file to {res_key}")
@@ -198,13 +205,7 @@ class HSUser(HttpUser):
             return
         with self.client.post("/add_2gb_file", catch_response=True) as response:
             res_key = random.choice(list(self.resources.keys()))
-            # generate a random file name
-            filename = f"{self.randname}-locustfile.py"
-            self.randname = self.randname + 1
-            # create a 2GB file locally
-            with open(filename, "wb") as f:
-                f.seek(2 * 1024 * 1024 * 1024 - 1)
-                f.write(b"\0")
+            filename = self.files[2]  # use the third file created
             try:
                 self.resources[res_key].file_upload(filename)
                 logging.info(f"uploaded file to {res_key}")
