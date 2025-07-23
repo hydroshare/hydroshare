@@ -75,7 +75,14 @@ class HSUser(HttpUser):
         files = glob.glob('./*.zip')
         for f in files:
             logging.info(f"Cleanup file {f}")
-            os.remove(f)
+
+        # cleanup the files created
+        for f in self.files:
+            try:
+                os.remove(f)
+                logging.info(f"Removed file {f}")
+            except Exception as e:
+                logging.error(f"Error removing file {f}: {e}")
 
     # @task
     # @tag('get')
@@ -174,8 +181,6 @@ class HSUser(HttpUser):
                 logging.error(f"Error adding files to resource: {e}")
                 # mark as a locust failure
                 response.failure(f"Error adding files to resource: {e}")
-            # cleanup the file
-            os.remove(filename)
 
     @task
     @tag("async")
@@ -194,8 +199,6 @@ class HSUser(HttpUser):
                 logging.error(f"Error adding files to resource: {e}")
                 # mark as a locust failure
                 response.failure(f"Error adding files to resource: {e}")
-            # cleanup the file
-            os.remove(filename)
 
     @task
     @tag("async")
@@ -214,8 +217,6 @@ class HSUser(HttpUser):
                 logging.error(f"Error adding files to resource: {e}")
                 # mark as a locust failure
                 response.failure(f"Error adding files to resource: {e}")
-            # cleanup the file
-            os.remove(filename)
 
     # @task
     # @tag("async")
