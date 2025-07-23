@@ -64,14 +64,6 @@ class HSUser(HttpUser):
         self.hs = hs
         self.resources = {}
 
-        # create 5 resources
-        for _ in range(self.number_of_resources):
-            new_res = self.hs.create()
-            resIdentifier = new_res.resource_id
-            self.resources[resIdentifier] = new_res
-
-        logging.info(f"Created {len(self.resources)} resources and {len(self.files)} files")
-
     def on_stop(self):
         for res in self.resources.values():
             logging.info(f"deleting {res}")
@@ -176,11 +168,13 @@ class HSUser(HttpUser):
         if not self.resources:
             return
         with self.client.post("/add_small_file", catch_response=True) as response:
-            res_key = random.choice(list(self.resources.keys()))
+            new_res = self.hs.create()
+            resIdentifier = new_res.resource_id
+            self.resources[resIdentifier] = new_res
             filename = self.files[0]  # use the first file created
             try:
-                self.resources[res_key].file_upload(filename)
-                logging.info(f"uploaded small file to {res_key}")
+                new_res.file_upload(filename)
+                logging.info(f"uploaded small file to {resIdentifier}")
                 response.success()
             except Exception as e:
                 logging.error(f"Error adding files to resource: {e}")
@@ -194,11 +188,13 @@ class HSUser(HttpUser):
         if not self.resources:
             return
         with self.client.post("/add_1gb_file", catch_response=True) as response:
-            res_key = random.choice(list(self.resources.keys()))
+            new_res = self.hs.create()
+            resIdentifier = new_res.resource_id
+            self.resources[resIdentifier] = new_res
             filename = self.files[1]  # use the second file created
             try:
-                self.resources[res_key].file_upload(filename)
-                logging.info(f"uploaded 1GB file to {res_key}")
+                new_res.file_upload(filename)
+                logging.info(f"uploaded 1GB file to {resIdentifier}")
                 response.success()
             except Exception as e:
                 logging.error(f"Error adding files to resource: {e}")
@@ -212,11 +208,13 @@ class HSUser(HttpUser):
         if not self.resources:
             return
         with self.client.post("/add_2gb_file", catch_response=True) as response:
-            res_key = random.choice(list(self.resources.keys()))
+            new_res = self.hs.create()
+            resIdentifier = new_res.resource_id
+            self.resources[resIdentifier] = new_res
             filename = self.files[2]  # use the third file created
             try:
-                self.resources[res_key].file_upload(filename)
-                logging.info(f"uploaded 2GB file to {res_key}")
+                new_res.file_upload(filename)
+                logging.info(f"uploaded 2GB file to {resIdentifier}")
                 response.success()
             except Exception as e:
                 logging.error(f"Error adding files to resource: {e}")
