@@ -1,11 +1,13 @@
 # import time
 from locust import HttpUser, task, tag  # , between
+from locust.exception import RescheduleTask
 from hsclient import HydroShare
 import os
 import glob
 import urllib3
 import logging
-import random
+
+import base64
 urllib3.disable_warnings()
 
 USERNAME = os.getenv("HS_USERNAME", "asdf")
@@ -81,160 +83,132 @@ class HSUser(HttpUser):
             except Exception as e:
                 logging.error(f"Error removing file {f}: {e}")
 
-    # @task
-    # @tag('get')
-    # def home(self):
-    #     self.client.get("/home", verify=False)
+    def fake_metadata(self, res, file_size=100, file_name="test.txt"):
+        return {
+            "filename": file_name,
+            "hs_res_id": res.resource_id,
+            "path": f"{res.resource_id}/data/contents/{file_name}",
+            "file_size": str(file_size),
+            "username": USERNAME,
+        }
 
-    # @task
-    # @tag('get')
-    # def discover(self):
-    #     self.client.get("/search", verify=False)
+    def create_request_metadata(self, resource, file_size=100, file_name="test.txt"):
+        # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/views.py#L38
+        headers = {}
 
-    # @task
-    # @tag('get')
-    # def my_resources(self):
-    #     self.client.get("/my-resources/?f=owned&f=discovered&f=favorites&f=shared", verify=False)
+        # build the HTTP_UPLOAD_METADATA string as comma and space separated key-value pairs
+        metadata = self.fake_metadata(resource, file_size=file_size, file_name=file_name)
+        encoded_metadata = ",".join(
+            f"{key} {base64.b64encode(value.encode()).decode('utf-8')}" if isinstance(value, str) else f"{key} {value}"
+            for key, value in metadata.items()
+        )
+        headers["HTTP_UPLOAD_METADATA"] = encoded_metadata
+        headers["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        headers["HTTP_CONTENT_LENGTH"] = str(file_size)
+        return headers
 
-    # @task
-    # @tag('get')
-    # def get_resources(self):
-    #     url = f"/hsapi/resource/?owner={USERNAME}&edit_permission=false&published=false&include_obsolete=false"
-    #     with self.client.get(url, verify=False, catch_response=True) as response:
-    #         if response.status_code == 200:
-    #             # get the resources from the json
-    #             resources = response.json().get('results')
-    #             for res in resources:
-    #                 resIdentifier = res.get('resource_id')
-    #                 self.resources[resIdentifier] = self.hs.resource(resIdentifier)
-    #             response.success()
-    #         else:
-    #             response.failure("Failed to get resources")
-    #     pass
+    def _tus_upload(self, file_path, resource, chunk_size=100 * 1024 * 1024):  # 100MB chunks by default
+        """
+        Helper method to handle Tus protocol upload
+        """
+        file_size = os.path.getsize(file_path)
+        file_name = os.path.basename(file_path)
 
-    # @task
-    # @tag('post')
-    # def create(self):
-    #     with self.client.post("/create", catch_response=True) as response:
-    #         try:
-    #             new_res = self.hs.create()
-    #             resIdentifier = new_res.resource_id
-    #             self.resources[resIdentifier] = new_res
-    #             logging.info(f"created {resIdentifier}")
-    #             response.success()
-    #         except Exception as e:
-    #             logging.error(f"Error creating resource: {e}")
-    #             # mark as a locust failure
-    #             response.failure(f"Error creating resource: {e}")
+        # Step 1: Create upload (Tus create extension)
+        headers = self.create_request_metadata(resource, file_size=file_size, file_name=file_name)
 
-    # @task
-    # @tag("async")
-    # @tag('post')
-    # def download(self):
-    #     if not self.resources:
-    #         return
-    #     with self.client.post("/download", catch_response=True) as response:
-    #         res_key = random.choice(list(self.resources.keys()))
-    #         try:
-    #             self.resources[res_key].download()
-    #             logging.info(f"downloaded {res_key}")
-    #             response.success()
-    #         except Exception as e:
-    #             logging.error(f"Error downloading resource: {e}")
-    #             # mark as a locust failure
-    #             response.failure(f"Error downloading resource: {e}")
+        with self.client.post(
+            "/hsapi/tus/",
+            headers=headers,
+            name="/hsapi/tus/ [CREATE]",
+            catch_response=True
+        ) as response:
+            if not response.ok:
+                logging.error(f"Failed to create Tus upload: {resource.resource_id} with response {response}")
+                raise RescheduleTask(f"Failed to create Tus upload {response} with headers {headers}")
+            location = response.headers.get("Location")
+            if not location:
+                raise RescheduleTask("No Location header in Tus create response")
 
-    # @task
-    # @tag("async")
-    # @tag('post')
-    # def copy(self):
-    #     if not self.resources:
-    #         return
-    #     with self.client.post("/copy", catch_response=True) as response:
-    #         res_key = random.choice(list(self.resources.keys()))
-    #         try:
-    #             self.resources[res_key].copy()
-    #             logging.info(f"copied {res_key}")
-    #             response.success()
-    #         except Exception as e:
-    #             logging.error(f"Error copying resource: {e}")
-    #             # mark as a locust failure
-    #             response.failure(f"Error copying resource: {e}")
+            upload_url = location
+
+        # Step 2: Upload chunks
+        offset = 0
+        with open(file_path, 'rb') as f:
+            while offset < file_size:
+                chunk = f.read(chunk_size)
+                if not chunk:
+                    break
+
+                chunk_len = len(chunk)
+                headers = {
+                    "Tus-Resumable": "1.0.0",
+                    "Content-Type": "application/offset+octet-stream",
+                    "Upload-Offset": str(offset)
+                }
+
+                with self.client.patch(
+                    upload_url,
+                    headers=headers,
+                    data=chunk,
+                    name="/hsapi/tus/ [UPLOAD_CHUNK]",
+                    catch_response=True
+                ) as response:
+                    if not response.ok:
+                        raise RescheduleTask(f"Failed to upload chunk: {response.text}")
+
+                    new_offset = int(response.headers.get("Upload-Offset", 0))
+                    if new_offset != offset + chunk_len:
+                        raise RescheduleTask(f"Offset mismatch: expected {offset + chunk_len}, got {new_offset}")
+
+                    offset = new_offset
+
+        return upload_url
 
     @task
     @tag("async")
     @tag('post')
     def add_small_file(self):
-        if not self.resources:
-            return
-        with self.client.post("/add_small_file", catch_response=True) as response:
             new_res = self.hs.create()
             resIdentifier = new_res.resource_id
             self.resources[resIdentifier] = new_res
             filename = self.files[0]  # use the first file created
             try:
-                new_res.file_upload(filename)
+            self._tus_upload(filename, resource=new_res)
                 logging.info(f"uploaded small file to {resIdentifier}")
-                response.success()
             except Exception as e:
                 logging.error(f"Error adding files to resource: {e}")
-                # mark as a locust failure
-                response.failure(f"Error adding files to resource: {e}")
-
-    @task
-    @tag("async")
-    @tag('post')
-    def add_1gb_file(self):
-        if not self.resources:
-            return
-        with self.client.post("/add_1gb_file", catch_response=True) as response:
-            new_res = self.hs.create()
-            resIdentifier = new_res.resource_id
-            self.resources[resIdentifier] = new_res
-            filename = self.files[1]  # use the second file created
-            try:
-                new_res.file_upload(filename)
-                logging.info(f"uploaded 1GB file to {resIdentifier}")
-                response.success()
-            except Exception as e:
-                logging.error(f"Error adding files to resource: {e}")
-                # mark as a locust failure
-                response.failure(f"Error adding files to resource: {e}")
-
-    @task
-    @tag("async")
-    @tag('post')
-    def add_2gb_file(self):
-        if not self.resources:
-            return
-        with self.client.post("/add_2gb_file", catch_response=True) as response:
-            new_res = self.hs.create()
-            resIdentifier = new_res.resource_id
-            self.resources[resIdentifier] = new_res
-            filename = self.files[2]  # use the third file created
-            try:
-                new_res.file_upload(filename)
-                logging.info(f"uploaded 2GB file to {resIdentifier}")
-                response.success()
-            except Exception as e:
-                logging.error(f"Error adding files to resource: {e}")
-                # mark as a locust failure
-                response.failure(f"Error adding files to resource: {e}")
 
     # @task
     # @tag("async")
     # @tag('post')
-    # def delete(self):
-    #     if not self.resources:
-    #         return
-    #     with self.client.post("/delete_res", catch_response=True) as response:
+    # def add_1gb_file(self):
+    #     with self.client.post("/add_1gb_file", catch_response=True) as response:
+    #         new_res = self.hs.create()
+    #         resIdentifier = new_res.resource_id
+    #         self.resources[resIdentifier] = new_res
+    #         filename = self.files[1]  # use the second file created
     #         try:
-    #             res_key = random.choice(list(self.resources.keys()))
-    #             res = self.resources.pop(res_key)
-    #             res.delete()
-    #             print(f"deleted {res}")
+    #             self._tus_upload(filename, chunk_size=10*1024*1024)  # 10MB chunks for larger files
+    #             logging.info(f"uploaded 1GB file to {resIdentifier}")
     #             response.success()
     #         except Exception as e:
-    #             logging.error(f"Error deleting resource: {e}")
-    #             # mark as a locust failure
-    #             response.failure(f"Error deleting resource: {e}")
+    #             logging.error(f"Error adding files to resource: {e}")
+    #             response.failure(f"Error adding files to resource: {e}")
+
+    # @task
+    # @tag("async")
+    # @tag('post')
+    # def add_2gb_file(self):
+    #     with self.client.post("/add_2gb_file", catch_response=True) as response:
+    #         new_res = self.hs.create()
+    #         resIdentifier = new_res.resource_id
+    #         self.resources[resIdentifier] = new_res
+    #         filename = self.files[2]  # use the third file created
+    #         try:
+    #             self._tus_upload(filename, chunk_size=10*1024*1024)  # 10MB chunks for larger files
+    #             logging.info(f"uploaded 2GB file to {resIdentifier}")
+    #             response.success()
+    #         except Exception as e:
+    #             logging.error(f"Error adding files to resource: {e}")
+    #             response.failure(f"Error adding files to resource: {e}")
