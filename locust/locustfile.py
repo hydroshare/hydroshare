@@ -169,15 +169,15 @@ class HSUser(HttpUser):
     @tag("async")
     @tag('post')
     def add_small_file(self):
-            new_res = self.hs.create()
-            resIdentifier = new_res.resource_id
-            self.resources[resIdentifier] = new_res
-            filename = self.files[0]  # use the first file created
-            try:
+        new_res = self.hs.create()
+        resIdentifier = new_res.resource_id
+        self.resources[resIdentifier] = new_res
+        filename = self.files[0]  # use the first file created
+        try:
             self._tus_upload(filename, resource=new_res)
-                logging.info(f"uploaded small file to {resIdentifier}")
-            except Exception as e:
-                logging.error(f"Error adding files to resource: {e}")
+            logging.info(f"uploaded small file to {resIdentifier}")
+        except Exception as e:
+            logging.error(f"Error adding files to resource: {e}")
 
     # @task
     # @tag("async")
