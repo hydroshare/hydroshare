@@ -196,6 +196,10 @@ def check_bucket_names():
     """
     bad_ups = get_user_profiles_missing_bucket_name()
 
+    for up in bad_ups:
+        up._assign_bucket_name()
+        up.save()
+
     if bad_ups and not settings.DISABLE_TASK_EMAILS:
         string_of_bad_users = ', '.join([up.user.username for up in bad_ups])
         email_msg = f'''
