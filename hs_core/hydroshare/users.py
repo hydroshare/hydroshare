@@ -109,6 +109,10 @@ def create_account(
     user_labels.save()
     user_profile = get_profile(u)
 
+    # ensure user has a bucket name
+    user_profile._assign_bucket_name()
+    user_profile.save()
+
     if organization:
         user_profile.organization = organization
         user_profile.save()
