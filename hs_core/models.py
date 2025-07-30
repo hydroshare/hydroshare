@@ -3324,7 +3324,7 @@ class ResourceFile(ResourceFileS3Mixin):
         try:
             self._size = self.resource_file.size
             self.filesize_cache_updated = now()
-        except (SessionException, ValidationError):
+        except (SessionException, ValidationError, FileNotFoundError):
             logger = logging.getLogger(__name__)
             logger.warning("file {} not found in S3".format(self.storage_path))
             self._size = 0
