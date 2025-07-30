@@ -6,6 +6,7 @@ import os
 import glob
 import urllib3
 import logging
+import time
 
 import base64
 urllib3.disable_warnings()
@@ -173,6 +174,8 @@ class HSUser(HttpUser):
         logging.info("Creating a new resource and uploading a small file")
         new_res = self.hs.create()
         logging.info(f"Created resource {new_res.resource_id}")
+        # wait for 10sec
+        time.sleep(10)
         resIdentifier = new_res.resource_id
         self.resources[resIdentifier] = new_res
         filename = self.files[0]  # use the first file created
