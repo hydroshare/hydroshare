@@ -105,6 +105,7 @@ class HSUser(HttpUser):
             for key, value in metadata.items()
         )
         headers["HTTP_UPLOAD_METADATA"] = encoded_metadata
+        headers["UPLOAD_METADATA"] = encoded_metadata
         headers["HTTP_TUS_RESUMABLE"] = "1.0.0"
         headers["HTTP_CONTENT_LENGTH"] = str(file_size)
         return headers
