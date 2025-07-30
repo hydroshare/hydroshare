@@ -65,10 +65,11 @@ class HSUser(HttpUser):
         self.client.get("/accounts/login/", verify=False)
         self.hs = hs
         self.resources = {}
+        logging.info(f"Logged in as {USERNAME} to HydroShare at {HOST}:{PORT} with protocol {PROTOCOL}")
 
     def on_stop(self):
         for res in self.resources.values():
-            logging.info(f"deleting {res}")
+            logging.info(f"Deleting resource {res.resource_id}")
             res.delete()
 
         files = glob.glob('./*.zip')
@@ -169,13 +170,16 @@ class HSUser(HttpUser):
     @tag("async")
     @tag('post')
     def add_small_file(self):
+        logging.info("Creating a new resource and uploading a small file")
         new_res = self.hs.create()
+        logging.info(f"Created resource {new_res.resource_id}")
         resIdentifier = new_res.resource_id
         self.resources[resIdentifier] = new_res
         filename = self.files[0]  # use the first file created
+        logging.info(f"Uploading small file {filename} to resource {resIdentifier}")
         try:
             self._tus_upload(filename, resource=new_res)
-            logging.info(f"uploaded small file to {resIdentifier}")
+            logging.info(f"Uploaded small file {filename} to resource {resIdentifier}")
         except Exception as e:
             logging.error(f"Error adding files to resource: {e}")
 
