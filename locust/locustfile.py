@@ -100,8 +100,14 @@ class HSUser(HttpUser):
 
         # build the HTTP_UPLOAD_METADATA string as comma and space separated key-value pairs
         metadata = self.fake_metadata(resource, file_size=file_size, file_name=file_name)
+        # The Upload-Metadata request and response header MUST consist of one or more comma-separated key-value pairs.
+        # The key and value MUST be separated by a space. 
+        # The key MUST NOT contain spaces and commas and MUST NOT be empty. 
+        # The key SHOULD be ASCII encoded and the value MUST be Base64 encoded. 
+        # All keys MUST be unique. The value MAY be empty. In these cases, the space, which would normally separate the key and the value, MAY be left out.
         encoded_metadata = ",".join(
-            f"{key} {base64.b64encode(value.encode()).decode('utf-8')}" if isinstance(value, str) else f"{key} {value}"
+            f"{key} {base64.b64encode(value.encode()).decode()}"
+            if value else key
             for key, value in metadata.items()
         )
         headers["HTTP_UPLOAD_METADATA"] = encoded_metadata
