@@ -104,9 +104,9 @@ class HSUser(HttpUser):
             f"{key} {base64.b64encode(value.encode()).decode('utf-8')}" if isinstance(value, str) else f"{key} {value}"
             for key, value in metadata.items()
         )
-        headers["HTTP_UPLOAD_METADATA"] = encoded_metadata
-        headers["HTTP_TUS_RESUMABLE"] = "1.0.0"
-        headers["HTTP_CONTENT_LENGTH"] = str(file_size)
+        headers["UPLOAD_METADATA"] = encoded_metadata
+        headers["TUS_RESUMABLE"] = "1.0.0"
+        headers["CONTENT_LENGTH"] = str(file_size)
         return headers
 
     def _tus_upload(self, file_path, resource, chunk_size=100 * 1024 * 1024):  # 100MB chunks by default
