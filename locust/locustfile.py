@@ -170,7 +170,6 @@ class HSUser(HttpUser):
     @tag('post')
     def add_small_file(self):
         new_res = self.hs.create()
-        logging.info(f"Created new resource: {new_res.resource_id}")
         resIdentifier = new_res.resource_id
         self.resources[resIdentifier] = new_res
         filename = self.files[0]  # use the first file created
