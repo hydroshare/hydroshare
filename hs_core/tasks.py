@@ -122,6 +122,7 @@ def setup_periodic_tasks(sender, **kwargs):
     else:
         # Hourly
         sender.add_periodic_task(crontab(minute=45), manage_task_hourly.s(), options={'queue': 'periodic'})
+        sender.add_periodic_task(crontab(minute=0), check_bucket_names.s(), options={'queue': 'periodic'})
 
         # Daily (times in UTC)
         sender.add_periodic_task(crontab(minute=30, hour=2), clear_tokens.s(), options={'queue': 'periodic'})
@@ -142,8 +143,6 @@ def setup_periodic_tasks(sender, **kwargs):
         sender.add_periodic_task(crontab(minute=30, hour=6), nightly_periodic_task_check.s(),
                                  options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=30, hour=7), task_notification_cleanup.s(),
-                                 options={'queue': 'periodic'})
-        sender.add_periodic_task(crontab(minute=0, hour=8), check_bucket_names.s(),
                                  options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=0, hour=9), ensure_published_resources_have_bags.s(),
                                  options={'queue': 'periodic'})
@@ -195,6 +194,10 @@ def check_bucket_names():
     Check to notify when UserProfi`le is missing a bucket name
     """
     bad_ups = get_user_profiles_missing_bucket_name()
+
+    for up in bad_ups:
+        up._assign_bucket_name()
+        up.save()
 
     if bad_ups and not settings.DISABLE_TASK_EMAILS:
         string_of_bad_users = ', '.join([up.user.username for up in bad_ups])
