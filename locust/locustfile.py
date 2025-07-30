@@ -108,6 +108,14 @@ class HSUser(HttpUser):
         headers["UPLOAD_METADATA"] = encoded_metadata
         headers["HTTP_TUS_RESUMABLE"] = "1.0.0"
         headers["HTTP_CONTENT_LENGTH"] = str(file_size)
+
+        # set auth headers using the self.hs._hs_session
+        # _hs_session can have username and password, or a token
+        token = getattr(self.hs._hs_session, "token", None)
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        else:
+            headers["Authorization"] = f"Basic {base64.b64encode(f'{USERNAME}:{PASSWORD}'.encode()).decode()}"
         return headers
 
     def _tus_upload(self, file_path, resource, chunk_size=100 * 1024 * 1024):  # 100MB chunks by default
@@ -175,8 +183,6 @@ class HSUser(HttpUser):
         logging.info("Creating a new resource and uploading a small file")
         new_res = self.hs.create()
         logging.info(f"Created resource {new_res.resource_id}")
-        # wait for 10sec
-        time.sleep(10)
         resIdentifier = new_res.resource_id
         self.resources[resIdentifier] = new_res
         filename = self.files[0]  # use the first file created
