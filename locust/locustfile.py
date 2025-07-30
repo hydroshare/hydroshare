@@ -123,7 +123,11 @@ class HSUser(HttpUser):
         if token:
             headers["Authorization"] = f"Bearer {token}"
         else:
-            headers["Authorization"] = f"Basic {base64.b64encode(f'{USERNAME}:{PASSWORD}'.encode()).decode()}"
+            auth_string = f"{USERNAME}:{PASSWORD}".encode('ascii')
+            base64_auth = base64.b64encode(auth_string).decode('ascii')
+
+            headers["Authorization"] = f"Basic {base64_auth}"
+
         return headers
 
     def _tus_upload(self, file_path, resource, chunk_size=100 * 1024 * 1024):  # 100MB chunks by default
