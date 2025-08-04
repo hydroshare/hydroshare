@@ -4316,3 +4316,15 @@ class CompositeResourceTest(
         expected_query_count = base_query_count + pre_template_query_count
         expected_query_count += per_resource_query_count * number_of_resources
         return expected_query_count
+
+    def test_dangling_resource_file_size(self):
+        self.client.login(username='user1', password='mypassword1')
+        self.create_composite_resource()
+
+        self.add_file_to_resource(file_to_add=self.generic_file)
+        f = self.composite_resource.files.first()
+        self.assertEqual(f.size, 21)
+        # remove the file from S3 but leave db reference intact
+        self.composite_resource.get_s3_storage().delete(f.resource_file.name)
+        f.calculate_size()
+        self.assertEqual(f.size, 0)
