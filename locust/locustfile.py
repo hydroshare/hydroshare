@@ -188,6 +188,58 @@ class HSUser(HttpUser):
 
         return upload_url
 
+    def _test_auth(self, resource):
+        """
+        Helper method to test authentication
+        """
+        with self.client.get(
+            f"/hsapi/resource/{resource.resource_id}/",
+            auth=(USERNAME, PASSWORD),
+            name="/hsapi/resource/auth [GET]",
+            catch_response=True
+        ) as response:
+            if not response.ok:
+                logging.error(f"Failed to get resource: {resource.resource_id} with response {response}")
+                response.failure(f"Failed to get resource {resource.resource_id} with response {response}")
+
+    def _test_no_auth(self, resource):  # 100MB chunks by default
+        """
+        Helper method to test authentication
+        """
+        with self.client.get(
+            f"/hsapi/resource/{resource.resource_id}/",
+            name="/hsapi/resource/no_auth [GET]",
+            catch_response=True
+        ) as response:
+            if not response.ok:
+                logging.info(f"As expected, failed to get resource: {resource.resource_id} with response {response}")
+                if response.status_code == 403:
+                    response.success()
+            else:
+                response.failure(f"Failed to get resource {resource.resource_id} with response {response}")
+
+    @task
+    @tag("async")
+    @tag('get')
+    def test_auth(self):
+        logging.info("Creating a new resource and testing authentication")
+        new_res = self.hs.create()
+        logging.info(f"Created resource {new_res.resource_id}")
+        resIdentifier = new_res.resource_id
+        self.resources[resIdentifier] = new_res
+        self._test_auth(new_res)
+
+    @task
+    @tag("async")
+    @tag('get')
+    def test_no_auth(self):
+        logging.info("Creating a new resource and testing no authentication")
+        new_res = self.hs.create()
+        logging.info(f"Created resource {new_res.resource_id}")
+        resIdentifier = new_res.resource_id
+        self.resources[resIdentifier] = new_res
+        self._test_no_auth(new_res)
+
     @task
     @tag("async")
     @tag('post')
