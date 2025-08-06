@@ -1,6 +1,5 @@
 # import time
 from locust import HttpUser, task, tag  # , between
-from locust.exception import RescheduleTask
 from hsclient import HydroShare
 import os
 import glob
@@ -62,7 +61,7 @@ class HSUser(HttpUser):
     def on_start(self):
         logging.info(f"Starting a new user with hsclient: HOST: {HOST} PORT: {PORT} PROTOCOL: {PROTOCOL}")
         hs = HydroShare(username=USERNAME, password=PASSWORD, host=HOST, port=PORT, protocol=PROTOCOL)
-        self.client.get("/accounts/login/", verify=False)
+        self.client.get("/accounts/login/", verify=False, auth=(USERNAME, PASSWORD))
         self.hs = hs
         self.resources = {}
         logging.info(f"Logged in as {USERNAME} to HydroShare at {HOST}:{PORT} with protocol {PROTOCOL}")
@@ -117,17 +116,6 @@ class HSUser(HttpUser):
         headers["HTTP_TUS_RESUMABLE"] = "1.0.0"
         headers["HTTP_CONTENT_LENGTH"] = str(file_size)
 
-        # set auth headers using the self.hs._hs_session
-        # _hs_session can have username and password, or a token
-        token = getattr(self.hs._hs_session, "token", None)
-        if token:
-            headers["Authorization"] = f"Bearer {token}"
-        else:
-            auth_string = f"{USERNAME}:{PASSWORD}".encode('ascii')
-            base64_auth = base64.b64encode(auth_string).decode('ascii')
-
-            headers["Authorization"] = f"Basic {base64_auth}"
-
         return headers
 
     def _tus_upload(self, file_path, resource, chunk_size=100 * 1024 * 1024):  # 100MB chunks by default
@@ -144,14 +132,15 @@ class HSUser(HttpUser):
             "/hsapi/tus/",
             headers=headers,
             name="/hsapi/tus/ [CREATE]",
-            catch_response=True
+            catch_response=True,
+            auth=(USERNAME, PASSWORD)
         ) as response:
             if not response.ok:
                 logging.error(f"Failed to create Tus upload: {resource.resource_id} with response {response}")
-                raise RescheduleTask(f"Failed to create Tus upload {response} with headers {headers}")
+                response.failure(f"Failed to create Tus upload {response} with headers {headers}")
             location = response.headers.get("Location")
             if not location:
-                raise RescheduleTask("No Location header in Tus create response")
+                response.failure("No Location header in response")
 
             upload_url = location
 
@@ -175,14 +164,17 @@ class HSUser(HttpUser):
                     headers=headers,
                     data=chunk,
                     name="/hsapi/tus/ [UPLOAD_CHUNK]",
-                    catch_response=True
+                    catch_response=True,
+                    auth=(USERNAME, PASSWORD)
                 ) as response:
                     if not response.ok:
-                        raise RescheduleTask(f"Failed to upload chunk: {response.text}")
+                        response.failure(f"Failed to upload chunk: {response.text}")
 
                     new_offset = int(response.headers.get("Upload-Offset", 0))
                     if new_offset != offset + chunk_len:
-                        raise RescheduleTask(f"Offset mismatch: expected {offset + chunk_len}, got {new_offset}")
+                        response.failure(
+                            f"Upload-Offset mismatch: expected {offset + chunk_len}, got {new_offset}"
+                        )
 
                     offset = new_offset
 
@@ -196,7 +188,7 @@ class HSUser(HttpUser):
             f"/hsapi/resource/{resource.resource_id}/",
             auth=(USERNAME, PASSWORD),
             name="/hsapi/resource/auth [GET]",
-            catch_response=True
+            catch_response=True,
         ) as response:
             if not response.ok:
                 logging.error(f"Failed to get resource: {resource.resource_id} with response {response}")
