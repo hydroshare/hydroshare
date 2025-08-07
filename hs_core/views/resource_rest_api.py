@@ -1065,6 +1065,7 @@ class CustomTusUpload(TusUpload):
 
         if not self.request.user.is_authenticated:
             sessionid = self.request.headers.get('HS-SID', None)
+            authorization_header = self.request.headers.get('Authorization', None)
             # use the cookie to get the django session and user
             if sessionid:
                 try:
@@ -1075,6 +1076,20 @@ class CustomTusUpload(TusUpload):
                     self.request.user = user
                 except Exception as ex:
                     err_msg = f"Error in getting user from session: {str(ex)}"
+                    logger.error(err_msg)
+                    return HttpResponseForbidden(err_msg)
+            elif authorization_header:
+                # if the user is not authenticated, but has an authorization header,
+                # try to get the user from the token
+                try:
+                    token = authorization_header.split(' ')[1]
+                    username, password = base64.b64decode(token).decode('utf-8').split(':')
+                    user = User.objects.get(username=username)
+                    if not user.check_password(password):
+                        raise PermissionDenied("Invalid credentials")
+                    self.request.user = user
+                except Exception as ex:
+                    err_msg = f"Error in getting user from token: {str(ex)}"
                     logger.error(err_msg)
                     return HttpResponseForbidden(err_msg)
 
