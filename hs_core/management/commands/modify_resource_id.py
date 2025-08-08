@@ -9,6 +9,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.core.exceptions import ObjectDoesNotExist
 from hs_core.models import BaseResource, short_id
 from hs_core.hydroshare.utils import get_resource_by_shortkey
+from hs_core.hydroshare.resource import create_empty_resource
 from hs_core.hydroshare.hs_bagit import create_bag
 from uuid import UUID
 from django.db import transaction, IntegrityError
@@ -94,8 +95,15 @@ class Command(BaseCommand):
         except IntegrityError:
             raise EnvironmentError("Error occurred  while updating")
 
+        temporary_resource = create_empty_resource(new_res_id, res.quota_holder, action='copy')
+        temporary_resource.short_id = res_id
+        temporary_resource.save()
+
         print("Moving Resource files")
         storage.moveFile(res_id, new_res_id)
+
+        print("Deleting temporary resource")
+        temporary_resource.delete()
 
         print("Creating Bag")
         create_bag(res)
