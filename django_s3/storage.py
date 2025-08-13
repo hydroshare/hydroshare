@@ -457,12 +457,10 @@ class S3Storage(S3Storage):
             src_file_path = file.key
             dst_file_path = file.key.replace(src_name, dest_name)
             try:
-                self.connection.Bucket(dst_bucket).copy(
-                    {
-                        "Bucket": src_bucket,
-                        "Key": src_file_path,
-                    },
-                    dst_file_path,
+                self.connection.meta.client.copy_object(
+                    Bucket=dst_bucket,
+                    Key=dst_file_path,
+                    CopySource={"Bucket": src_bucket, "Key": src_file_path},
                 )
             except ClientError as e:
                 if "XMinioAdminBucketQuotaExceeded" in str(e):
