@@ -59,6 +59,8 @@ urlpatterns += i18n_patterns(
     path("tracking/", tracking.UseTrackingView.as_view(), name="tracking"),
     path("tracking/applaunch/", tracking.AppLaunch.as_view(), name="tracking-applaunch"),
     path("user/", theme.UserProfileView.as_view()),
+    path("csrf-cookie/", theme.csrf_cookie_view, name="csrf_cookie"),
+    path("accounts/vue-login/", theme.vue_login, name="vue_login"),
     re_path(r"^user/(?P<user>.*)/", theme.UserProfileView.as_view()),
     path("comment/", theme.comment),
     re_path(

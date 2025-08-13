@@ -27,6 +27,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, get_object_or_404
 from django.shortcuts import render
 from django.template.response import TemplateResponse
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.http import int_to_base36, urlencode
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
@@ -44,6 +45,7 @@ from mezzanine.utils.email import (
 )
 from mezzanine.utils.urls import login_redirect, next_url
 from mezzanine.utils.views import is_spam
+from mezzanine.accounts.views import login as mezzanine_login
 from mozilla_django_oidc.views import OIDCLogoutView
 
 from hs_access_control.models import GroupMembershipRequest
@@ -57,6 +59,26 @@ from theme.forms import RatingForm, UserProfileForm, UserForm
 from theme.forms import ThreadedCommentForm
 from theme.models import UserProfile, QuotaRequest, QuotaRequestForm, UserQuota
 from .forms import SignupForm
+
+
+@ensure_csrf_cookie
+def csrf_cookie_view(request):
+    return JsonResponse({"detail": "CSRF cookie set"})
+
+
+def vue_login(request, template="accounts/account_login.html",
+              extra_context=None):
+    """
+    Wrapper around Mezzanine's login view that uses
+    next parameter for redirect after successful login.
+    """
+    response = mezzanine_login(request, template=template,
+                                extra_context=extra_context)
+    if request.user.is_authenticated:
+        # Use next parameter from GET or POST, fallback to hydroshare home page
+        next_url = request.GET.get('next') or request.POST.get('next') or "/home/"
+        return redirect(next_url)
+    return response
 
 
 class UserProfileView(TemplateView):
