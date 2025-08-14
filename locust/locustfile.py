@@ -129,9 +129,9 @@ class HSUser(HttpUser):
         headers = self.create_request_metadata(resource, file_size=file_size, file_name=file_name)
 
         with self.client.post(
-            "/hsapi/tus/",
+            "/django_s3/tus/",
             headers=headers,
-            name="/hsapi/tus/ [CREATE]",
+            name="/django_s3/tus/ [CREATE]",
             catch_response=True,
             auth=(USERNAME, PASSWORD)
         ) as response:
@@ -163,7 +163,7 @@ class HSUser(HttpUser):
                     upload_url,
                     headers=headers,
                     data=chunk,
-                    name="/hsapi/tus/ [UPLOAD_CHUNK]",
+                    name="/django_s3/tus/ [UPLOAD_CHUNK]",
                     catch_response=True,
                     auth=(USERNAME, PASSWORD)
                 ) as response:
