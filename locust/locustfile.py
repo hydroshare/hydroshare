@@ -254,17 +254,17 @@ class HSUser(HttpUser):
     @tag('post')
     def add_1gb_file(self):
         logging.info("Creating a new resource and uploading a 1gb file")
-            new_res = self.hs.create()
+        new_res = self.hs.create()
         logging.info(f"Created resource {new_res.resource_id}")
-            resIdentifier = new_res.resource_id
-            self.resources[resIdentifier] = new_res
+        resIdentifier = new_res.resource_id
+        self.resources[resIdentifier] = new_res
         filename = self.files[1]  # use the first file created
         logging.info(f"Uploading 1GB file {filename} to resource {resIdentifier}")
-            try:
-                self._tus_upload(filename, resource=new_res, chunk_size=10 * 1024 * 1024)  # 10MB chunks
-                logging.info(f"uploaded 1GB file to {resIdentifier}")
-            except Exception as e:
-                logging.error(f"Error adding files to resource: {e}")
+        try:
+            self._tus_upload(filename, resource=new_res, chunk_size=10 * 1024 * 1024)  # 10MB chunks
+            logging.info(f"uploaded 1GB file to {resIdentifier}")
+        except Exception as e:
+            logging.error(f"Error adding files to resource: {e}")
 
     @task
     @tag("async")
