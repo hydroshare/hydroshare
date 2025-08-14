@@ -5,7 +5,7 @@ import os
 import glob
 import urllib3
 import logging
-import random
+# import random
 
 import base64
 urllib3.disable_warnings()
