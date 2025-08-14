@@ -109,12 +109,10 @@ class HSUser(HttpUser):
             if value else key
             for key, value in metadata.items()
         )
-        headers["HTTP_UPLOAD_METADATA"] = encoded_metadata
-        headers["HTTP-UPLOAD-METADATA"] = encoded_metadata
         headers["UPLOAD_METADATA"] = encoded_metadata
         headers["UPLOAD-METADATA"] = encoded_metadata
-        headers["HTTP_TUS_RESUMABLE"] = "1.0.0"
-        headers["HTTP_CONTENT_LENGTH"] = str(file_size)
+        headers["TUS-RESUMABLE"] = "1.0.0"
+        headers["CONTENT-LENGTH"] = str(file_size)
 
         return headers
 
