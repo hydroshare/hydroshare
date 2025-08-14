@@ -252,35 +252,35 @@ class HSUser(HttpUser):
     @tag("async")
     @tag('post')
     def add_1gb_file(self):
-        with self.client.post("/add_1gb_file", catch_response=True) as response:
+        logging.info("Creating a new resource and uploading a 1gb file")
             new_res = self.hs.create()
+        logging.info(f"Created resource {new_res.resource_id}")
             resIdentifier = new_res.resource_id
             self.resources[resIdentifier] = new_res
-            filename = self.files[1]  # use the second file created
+        filename = self.files[1]  # use the first file created
+        logging.info(f"Uploading 1GB file {filename} to resource {resIdentifier}")
             try:
                 self._tus_upload(filename, resource=new_res, chunk_size=10 * 1024 * 1024)  # 10MB chunks
                 logging.info(f"uploaded 1GB file to {resIdentifier}")
-                response.success()
             except Exception as e:
                 logging.error(f"Error adding files to resource: {e}")
-                response.failure(f"Error adding files to resource: {e}")
 
-    # @task
-    # @tag("async")
-    # @tag('post')
-    # def add_2gb_file(self):
-    #     with self.client.post("/add_2gb_file", catch_response=True) as response:
-    #         new_res = self.hs.create()
-    #         resIdentifier = new_res.resource_id
-    #         self.resources[resIdentifier] = new_res
-    #         filename = self.files[2]  # use the third file created
-    #         try:
-    #             self._tus_upload(filename, chunk_size=10*1024*1024)  # 10MB chunks for larger files
-    #             logging.info(f"uploaded 2GB file to {resIdentifier}")
-    #             response.success()
-    #         except Exception as e:
-    #             logging.error(f"Error adding files to resource: {e}")
-    #             response.failure(f"Error adding files to resource: {e}")
+    @task
+    @tag("async")
+    @tag('post')
+    def add_2gb_file(self):
+        logging.info("Creating a new resource and uploading a 2gb file")
+        new_res = self.hs.create()
+        logging.info(f"Created resource {new_res.resource_id}")
+        resIdentifier = new_res.resource_id
+        self.resources[resIdentifier] = new_res
+        filename = self.files[2]  # use the second file created
+        logging.info(f"Uploading 2GB file {filename} to resource {resIdentifier}")
+        try:
+            self._tus_upload(filename, resource=new_res, chunk_size=10 * 1024 * 1024)  # 10MB chunks
+            logging.info(f"uploaded 2GB file to {resIdentifier}")
+        except Exception as e:
+            logging.error(f"Error adding files to resource: {e}")
 
     # @task
     # @tag('get')
