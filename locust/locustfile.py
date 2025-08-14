@@ -38,7 +38,6 @@ randname = 0
 def createFile(size, randname=0):
     """Create a file of a given size in bytes."""
     filename = f"{randname}-locustfile.py"
-    randname += 1
     with open(filename, "wb") as f:
         f.seek(size - 1)
         f.write(b"\0")
@@ -50,6 +49,7 @@ def createFile(size, randname=0):
 # create 3 files, # 1 small, 1 1GB, and 1 2GB
 for file_size in [100, 1024 * 1024 * 1024, 2 * 1024 * 1024 * 1024]:
     createFile(file_size, randname=randname)
+    randname += 1
 
 
 class HSUser(HttpUser):
