@@ -10,6 +10,7 @@ import random
 import base64
 urllib3.disable_warnings()
 
+TUS_ENDPOINT = os.getenv("HS_TUS_ENDPOINT", "/django_s3/tus/")
 USERNAME = os.getenv("HS_USERNAME", "asdf")
 PASSWORD = os.getenv("HS_PASSWORD", "asdf")
 
@@ -128,9 +129,9 @@ class HSUser(HttpUser):
         headers = self.create_request_metadata(resource, file_size=file_size, file_name=file_name)
 
         with self.client.post(
-            "/django_s3/tus/",
+            TUS_ENDPOINT,
             headers=headers,
-            name="/django_s3/tus/ [CREATE]",
+            name=f"{TUS_ENDPOINT} [CREATE]",
             catch_response=True,
             auth=(USERNAME, PASSWORD)
         ) as response:
@@ -162,7 +163,7 @@ class HSUser(HttpUser):
                     upload_url,
                     headers=headers,
                     data=chunk,
-                    name="/django_s3/tus/ [UPLOAD_CHUNK]",
+                    name=f"{TUS_ENDPOINT} [UPLOAD_CHUNK]",
                     catch_response=True,
                     auth=(USERNAME, PASSWORD)
                 ) as response:

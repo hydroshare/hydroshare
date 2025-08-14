@@ -7,6 +7,10 @@ on:
         description: 'ORIGIN to target tests (default: https://beta.hydroshare.org).'
         required: false
         default: 'https://beta.hydroshare.org'
+      tus_endpoint:
+        description: 'TUS endpoint to target tests (default: /django_s3/tus/).'
+        required: false
+        default: '/django_s3/tus/'
       users:
         description: 'Number of users to simulate (default: 10).'
         required: false
@@ -43,11 +47,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r locust/requirements.txt
 
-    - name: Run Tests against target = ${{ github.event.inputs.target }}
+    - name: Run Tests against target = ${{ github.event.inputs.target }} with tus_endpoint = ${{ github.event.inputs.tus_endpoint }}
       if: github.event.inputs.target != ''
       env:
         HS_USERNAME: ${{ secrets.HS_USERNAME }}
         HS_PASSWORD: ${{ secrets.HS_PASSWORD }}
+        HS_TUS_ENDPOINT: ${{ github.event.inputs.tus_endpoint }}
         LOCUST_LOCUSTFILE: locust/locustfile.py
         LOCUST_HEADLESS: true
         LOCUST_ONLY_SUMMARY: true
