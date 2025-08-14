@@ -5,6 +5,7 @@ import os
 import glob
 import urllib3
 import logging
+import random
 
 import base64
 urllib3.disable_warnings()
@@ -208,61 +209,61 @@ class HSUser(HttpUser):
             else:
                 response.failure(f"Failed to get resource {resource.resource_id} with response {response}")
 
-    @task
-    @tag("async")
-    @tag('get')
-    def test_auth(self):
-        logging.info("Creating a new resource and testing authentication")
-        new_res = self.hs.create()
-        logging.info(f"Created resource {new_res.resource_id}")
-        resIdentifier = new_res.resource_id
-        self.resources[resIdentifier] = new_res
-        self._test_auth(new_res)
+    # @task
+    # @tag("async")
+    # @tag('get')
+    # def test_auth(self):
+    #     logging.info("Creating a new resource and testing authentication")
+    #     new_res = self.hs.create()
+    #     logging.info(f"Created resource {new_res.resource_id}")
+    #     resIdentifier = new_res.resource_id
+    #     self.resources[resIdentifier] = new_res
+    #     self._test_auth(new_res)
 
-    @task
-    @tag("async")
-    @tag('get')
-    def test_no_auth(self):
-        logging.info("Creating a new resource and testing no authentication")
-        new_res = self.hs.create()
-        logging.info(f"Created resource {new_res.resource_id}")
-        resIdentifier = new_res.resource_id
-        self.resources[resIdentifier] = new_res
-        self._test_no_auth(new_res)
-
-    @task
-    @tag("async")
-    @tag('post')
-    def add_small_file(self):
-        logging.info("Creating a new resource and uploading a small file")
-        new_res = self.hs.create()
-        logging.info(f"Created resource {new_res.resource_id}")
-        resIdentifier = new_res.resource_id
-        self.resources[resIdentifier] = new_res
-        filename = self.files[0]  # use the first file created
-        logging.info(f"Uploading small file {filename} to resource {resIdentifier}")
-        try:
-            self._tus_upload(filename, resource=new_res)
-            logging.info(f"Uploaded small file {filename} to resource {resIdentifier}")
-        except Exception as e:
-            logging.error(f"Error adding files to resource: {e}")
+    # @task
+    # @tag("async")
+    # @tag('get')
+    # def test_no_auth(self):
+    #     logging.info("Creating a new resource and testing no authentication")
+    #     new_res = self.hs.create()
+    #     logging.info(f"Created resource {new_res.resource_id}")
+    #     resIdentifier = new_res.resource_id
+    #     self.resources[resIdentifier] = new_res
+    #     self._test_no_auth(new_res)
 
     # @task
     # @tag("async")
     # @tag('post')
-    # def add_1gb_file(self):
-    #     with self.client.post("/add_1gb_file", catch_response=True) as response:
-    #         new_res = self.hs.create()
-    #         resIdentifier = new_res.resource_id
-    #         self.resources[resIdentifier] = new_res
-    #         filename = self.files[1]  # use the second file created
-    #         try:
-    #             self._tus_upload(filename, chunk_size=10*1024*1024)  # 10MB chunks for larger files
-    #             logging.info(f"uploaded 1GB file to {resIdentifier}")
-    #             response.success()
-    #         except Exception as e:
-    #             logging.error(f"Error adding files to resource: {e}")
-    #             response.failure(f"Error adding files to resource: {e}")
+    # def add_small_file(self):
+    #     logging.info("Creating a new resource and uploading a small file")
+    #     new_res = self.hs.create()
+    #     logging.info(f"Created resource {new_res.resource_id}")
+    #     resIdentifier = new_res.resource_id
+    #     self.resources[resIdentifier] = new_res
+    #     filename = self.files[0]  # use the first file created
+    #     logging.info(f"Uploading small file {filename} to resource {resIdentifier}")
+    #     try:
+    #         self._tus_upload(filename, resource=new_res)
+    #         logging.info(f"Uploaded small file {filename} to resource {resIdentifier}")
+    #     except Exception as e:
+    #         logging.error(f"Error adding files to resource: {e}")
+
+    @task
+    @tag("async")
+    @tag('post')
+    def add_1gb_file(self):
+        with self.client.post("/add_1gb_file", catch_response=True) as response:
+            new_res = self.hs.create()
+            resIdentifier = new_res.resource_id
+            self.resources[resIdentifier] = new_res
+            filename = self.files[1]  # use the second file created
+            try:
+                self._tus_upload(filename, resource=new_res, chunk_size=10 * 1024 * 1024)  # 10MB chunks
+                logging.info(f"uploaded 1GB file to {resIdentifier}")
+                response.success()
+            except Exception as e:
+                logging.error(f"Error adding files to resource: {e}")
+                response.failure(f"Error adding files to resource: {e}")
 
     # @task
     # @tag("async")
@@ -280,3 +281,126 @@ class HSUser(HttpUser):
     #         except Exception as e:
     #             logging.error(f"Error adding files to resource: {e}")
     #             response.failure(f"Error adding files to resource: {e}")
+
+    # @task
+    # @tag('get')
+    # def home(self):
+    #     self.client.get("/home", verify=False)
+
+    # @task
+    # @tag('get')
+    # def discover(self):
+    #     self.client.get("/search", verify=False)
+
+    # @task
+    # @tag('get')
+    # def my_resources(self):
+    #     self.client.get("/my-resources/?f=owned&f=discovered&f=favorites&f=shared", verify=False)
+
+    # @task
+    # @tag('get')
+    # def get_resources(self):
+    #     url = f"/hsapi/resource/?owner={USERNAME}&edit_permission=false&published=false&include_obsolete=false"
+    #     with self.client.get(url, verify=False, catch_response=True) as response:
+    #         if response.status_code == 200:
+    #             # get the resources from the json
+    #             resources = response.json().get('results')
+    #             for res in resources:
+    #                 resIdentifier = res.get('resource_id')
+    #                 self.resources[resIdentifier] = self.hs.resource(resIdentifier)
+    #             response.success()
+    #         else:
+    #             response.failure("Failed to get resources")
+    #     pass
+
+    # @task
+    # @tag('post')
+    # def create(self):
+    #     with self.client.post("/create", catch_response=True) as response:
+    #         try:
+    #             new_res = self.hs.create()
+    #             resIdentifier = new_res.resource_id
+    #             self.resources[resIdentifier] = new_res
+    #             logging.info(f"created {resIdentifier}")
+    #             response.success()
+    #         except Exception as e:
+    #             logging.error(f"Error creating resource: {e}")
+    #             # mark as a locust failure
+    #             response.failure(f"Error creating resource: {e}")
+
+    # @task
+    # @tag("async")
+    # @tag('post')
+    # def download(self):
+    #     if not self.resources:
+    #         return
+    #     with self.client.post("/download", catch_response=True) as response:
+    #         res_key = random.choice(list(self.resources.keys()))
+    #         try:
+    #             self.resources[res_key].download()
+    #             logging.info(f"downloaded {res_key}")
+    #             response.success()
+    #         except Exception as e:
+    #             logging.error(f"Error downloading resource: {e}")
+    #             # mark as a locust failure
+    #             response.failure(f"Error downloading resource: {e}")
+
+    # @task
+    # @tag("async")
+    # @tag('post')
+    # def copy(self):
+    #     if not self.resources:
+    #         return
+    #     with self.client.post("/copy", catch_response=True) as response:
+    #         res_key = random.choice(list(self.resources.keys()))
+    #         try:
+    #             self.resources[res_key].copy()
+    #             logging.info(f"copied {res_key}")
+    #             response.success()
+    #         except Exception as e:
+    #             logging.error(f"Error copying resource: {e}")
+    #             # mark as a locust failure
+    #             response.failure(f"Error copying resource: {e}")
+
+    # @task
+    # @tag("async")
+    # @tag('post')
+    # def add_files(self):
+    #     if not self.resources:
+    #         return
+    #     with self.client.post("/add_files", catch_response=True) as response:
+    #         res_key = random.choice(list(self.resources.keys()))
+    #         # generate a random file name
+    #         filename = f"{self.randname}-locustfile.py"
+    #         self.randname = self.randname + 1
+    #         # create the file locally
+    #         with open(filename, "w") as f:
+    #             f.write("Hello World")
+    #         try:
+    #             self.resources[res_key].file_upload(filename)
+    #             logging.info(f"uploaded file to {res_key}")
+    #             response.success()
+    #         except Exception as e:
+    #             logging.error(f"Error adding files to resource: {e}")
+    #             # mark as a locust failure
+    #             response.failure(f"Error adding files to resource: {e}")
+    #         # cleanup the file
+    #         os.remove(filename)
+
+    # @task
+    # @tag("async")
+    # @tag('post')
+    # def delete(self):
+    #     if not self.resources:
+    #         return
+    #     with self.client.post("/delete_res", catch_response=True) as response:
+    #         try:
+    #             res_key = random.choice(list(self.resources.keys()))
+    #             res = self.resources.pop(res_key)
+    #             res.delete()
+    #             print(f"deleted {res}")
+    #             response.success()
+    #         except Exception as e:
+    #             logging.error(f"Error deleting resource: {e}")
+    #             # mark as a locust failure
+    #             response.failure(f"Error deleting resource: {e}")
