@@ -577,7 +577,6 @@ class UserProfile(models.Model):
         However we only create the bucket once the user has a resource
         '''
         super().__init__(*args, **kwargs)
-        self._assign_bucket_name()
 
     def _assign_bucket_name(self):
         '''Assign a bucket name to the user profile
