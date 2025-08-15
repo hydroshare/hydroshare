@@ -46,8 +46,8 @@ def createFile(size):
     return filename
 
 
-# create 3 files, # 1 small, 1 1GB, and 1 2GB
-for file_size in [100, 1024 * 1024 * 1024, 2 * 1024 * 1024 * 1024]:
+# create 3 files, # 100MB, 1GB, and 2GB
+for file_size in [100 * 1024 * 1024, 1024 * 1024 * 1024, 2 * 1024 * 1024 * 1024]:
     createFile(file_size)
 
 
@@ -205,17 +205,17 @@ class HSUser(HttpUser):
     @tag("upload")
     @tag("tus")
     @tag('post')
-    def add_small_file(self):
-        logging.info("Creating a new resource and uploading a small file")
+    def add_100mb_file(self):
+        logging.info("Creating a new resource and uploading a 100MB file")
         new_res = self.hs.create()
         logging.info(f"Created resource {new_res.resource_id}")
         resIdentifier = new_res.resource_id
         self.resources[resIdentifier] = new_res
         filename = self.files[0]  # use the first file created
-        logging.info(f"Uploading small file {filename} to resource {resIdentifier}")
+        logging.info(f"Uploading 100MB file {filename} to resource {resIdentifier}")
         try:
             self._tus_upload(filename, resource=new_res)
-            logging.info(f"Uploaded small file {filename} to resource {resIdentifier}")
+            logging.info(f"Uploaded 100MB file {filename} to resource {resIdentifier}")
         except Exception as e:
             logging.error(f"Error adding files to resource: {e}")
 
@@ -224,7 +224,7 @@ class HSUser(HttpUser):
     @tag("tus")
     @tag('post')
     def add_1gb_file(self):
-        logging.info("Creating a new resource and uploading a 1gb file")
+        logging.info("Creating a new resource and uploading a 1GB file")
         new_res = self.hs.create()
         logging.info(f"Created resource {new_res.resource_id}")
         resIdentifier = new_res.resource_id
@@ -242,7 +242,7 @@ class HSUser(HttpUser):
     @tag("tus")
     @tag('post')
     def add_2gb_file(self):
-        logging.info("Creating a new resource and uploading a 2gb file")
+        logging.info("Creating a new resource and uploading a 2GB file")
         new_res = self.hs.create()
         logging.info(f"Created resource {new_res.resource_id}")
         resIdentifier = new_res.resource_id
