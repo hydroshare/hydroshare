@@ -426,7 +426,7 @@ def page_permissions_page_processor(request, page):
     parallel_uploads_limit = getattr(settings, 'PARALLEL_UPLOADS_LIMIT', 10)
 
     companion_url = getattr(settings, 'COMPANION_URL', 'https://companion.hydroshare.org/')
-    UPPY_UPLOAD_PATH = getattr(settings, 'UPPY_UPLOAD_PATH', 'https://hydroshare.org/hsapi/tus/')
+    UPPY_UPLOAD_PATH = getattr(settings, 'UPPY_UPLOAD_PATH', 'https://hydroshare.org/django_s3/tus/')
     google_picker_client_id = getattr(settings, 'GOOGLE_PICKER_CLIENT_ID', '')
     google_picker_api_key = getattr(settings, 'GOOGLE_PICKER_API_KEY', '')
     google_picker_app_id = getattr(settings, 'GOOGLE_PICKER_APP_ID', '')
