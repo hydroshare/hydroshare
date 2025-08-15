@@ -591,11 +591,19 @@ class CustomTusUpload(TusUpload):
         # here we modify from django_tus to allow for the file to be marked as complete
         if tus_file.is_complete():
             tus_file.complete_upload()
-            # file transfer complete, rename from resource id to actual filename
-            tus_file.rename()
+
+            # complete_upload() handles putting the file together in S3, so no need to rename
+            # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/tusfile.py#L93
+            # tus_file.rename()
+
+            # clean() handles deleting the cache entries
+            # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/tusfile.py#L111
             tus_file.clean()
 
-            # self.send_signal(tus_file)
+            # signal is not consumed at this point, but we keep it for future use
+            # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/views.py#L112
+            self.send_signal(tus_file)
+
             self.finished()
 
         return TusResponse(status=204, extra_headers={'Upload-Offset': tus_file.offset})
