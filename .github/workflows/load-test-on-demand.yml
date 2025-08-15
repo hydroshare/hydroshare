@@ -11,6 +11,10 @@ on:
         description: 'TUS endpoint to target tests (default: /django_s3/tus/).'
         required: false
         default: '/django_s3/tus/'
+      tags:
+        description: 'Comma-separated list of tags to apply to the test (default: none).'
+        required: false
+        default: ''
       users:
         description: 'Number of users to simulate (default: 10).'
         required: false
@@ -62,6 +66,7 @@ jobs:
         LOCUST_USERS: ${{ github.event.inputs.users }}
         LOCUST_SPAWN_RATE: ${{ github.event.inputs.spawn_rate }}
         LOCUST_RUN_TIME: ${{ github.event.inputs.run_time }}
+        LOCUST_TAGS: ${{ github.event.inputs.tags || '' }}
       run: |
         # even if exit code 1, continue to upload artifacts
         locust || true
