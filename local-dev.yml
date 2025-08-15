@@ -182,7 +182,7 @@ services:
       COMPANION_PATH: '/companion'
       COMPANION_ALLOW_LOCAL_URLS: 'true'
       COMPANION_PROTOCOL: 'https'
-      COMPANION_REDIS_URL: 'redis://redis:6379'
+      COMPANION_REDIS_URL: 'redis://:superSecretPassword@redis:6379'
       COMPANION_CHUNK_SIZE: '100000000'  # ~72MB
       # COMPANION_PREAUTH_SECRET: 'another secret'
       # For 3rd party services like google drive to work locally, you need to set the following:
@@ -207,7 +207,7 @@ services:
       - "6379:6379"
     volumes:
       - "redis_data_vol:/data"
-    command: redis-server
+    command: redis-server --requirepass superSecretPassword
   nginx:
     image: nginx:latest
     container_name: nginx
