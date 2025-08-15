@@ -87,6 +87,10 @@ class HSUser(HttpUser):
         for f in files:
             logging.info(f"Cleanup file {f}")
 
+    # =============================================================================
+    # Tus upload tests
+    # =============================================================================
+
     def fake_tus_metadata(self, res, file_size=100, file_name="test.txt"):
         return {
             "filename": file_name,
@@ -98,6 +102,7 @@ class HSUser(HttpUser):
 
     def create_ini_tus_post_request_metadata(self, resource, file_size=100, file_name="test.txt"):
         # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/views.py#L38
+        # https://tus.io/protocols/resumable-upload#post
         headers = {}
 
         # build the HTTP_UPLOAD_METADATA string as comma and space separated key-value pairs
@@ -113,14 +118,13 @@ class HSUser(HttpUser):
             if value else key
             for key, value in metadata.items()
         )
-        headers["UPLOAD_METADATA"] = encoded_metadata
+        headers["Upload-Length"] = str(file_size)
         headers["UPLOAD-METADATA"] = encoded_metadata
         headers["TUS-RESUMABLE"] = "1.0.0"
-        headers["CONTENT-LENGTH"] = str(file_size)
 
         return headers
 
-    def _tus_upload(self, file_path, resource, chunk_size=100 * 1024 * 1024):  # 100MB chunks by default
+    def _tus_upload(self, file_path, resource, chunk_size=10 * 1024 * 1024):  # 10MB chunks by default
         """
         Helper method to handle Tus protocol upload
         """
@@ -155,17 +159,19 @@ class HSUser(HttpUser):
                     break
 
                 chunk_len = len(chunk)
+                # https://tus.io/protocols/resumable-upload#patch
                 headers = {
                     "Tus-Resumable": "1.0.0",
                     "Content-Type": "application/offset+octet-stream",
-                    "Upload-Offset": str(offset)
+                    "Upload-Offset": str(offset),
+                    "Content-Length": str(chunk_len),
                 }
 
                 with self.client.patch(
                     upload_url,
                     headers=headers,
                     data=chunk,
-                    name=f"{TUS_ENDPOINT} [UPLOAD_CHUNK]",
+                    name=f"{file_name} [UPLOAD_CHUNK]",
                     catch_response=True,
                     auth=(USERNAME, PASSWORD)
                 ) as response:
@@ -181,58 +187,6 @@ class HSUser(HttpUser):
                     offset = new_offset
 
         return upload_url
-
-    def _test_auth(self, resource):
-        """
-        Helper method to test authentication
-        """
-        with self.client.get(
-            f"/hsapi/resource/{resource.resource_id}/",
-            auth=(USERNAME, PASSWORD),
-            name="/hsapi/resource/auth [GET]",
-            catch_response=True,
-        ) as response:
-            if not response.ok:
-                logging.error(f"Failed to get resource: {resource.resource_id} with response {response}")
-                response.failure(f"Failed to get resource {resource.resource_id} with response {response}")
-
-    def _test_no_auth(self, resource):  # 100MB chunks by default
-        """
-        Helper method to test authentication
-        """
-        with self.client.get(
-            f"/hsapi/resource/{resource.resource_id}/",
-            name="/hsapi/resource/no_auth [GET]",
-            catch_response=True
-        ) as response:
-            if not response.ok:
-                logging.info(f"As expected, failed to get resource: {resource.resource_id} with response {response}")
-                if response.status_code == 403:
-                    response.success()
-            else:
-                response.failure(f"Failed to get resource {resource.resource_id} with response {response}")
-
-    @task
-    @tag("auth")
-    @tag('get')
-    def test_auth(self):
-        logging.info("Creating a new resource and testing authentication")
-        new_res = self.hs.create()
-        logging.info(f"Created resource {new_res.resource_id}")
-        resIdentifier = new_res.resource_id
-        self.resources[resIdentifier] = new_res
-        self._test_auth(new_res)
-
-    @task
-    @tag("auth")
-    @tag('get')
-    def test_no_auth(self):
-        logging.info("Creating a new resource and testing no authentication")
-        new_res = self.hs.create()
-        logging.info(f"Created resource {new_res.resource_id}")
-        resIdentifier = new_res.resource_id
-        self.resources[resIdentifier] = new_res
-        self._test_no_auth(new_res)
 
     @task
     @tag("upload")
@@ -288,6 +242,66 @@ class HSUser(HttpUser):
         except Exception as e:
             logging.error(f"Error adding files to resource: {e}")
 
+    # =============================================================================
+    # Auth tests
+    # =============================================================================
+
+    def _test_auth(self, resource):
+        """
+        Helper method to test authentication
+        """
+        with self.client.get(
+            f"/hsapi/resource/{resource.resource_id}/",
+            auth=(USERNAME, PASSWORD),
+            name="/hsapi/resource/auth [GET]",
+            catch_response=True,
+        ) as response:
+            if not response.ok:
+                logging.error(f"Failed to get resource: {resource.resource_id} with response {response}")
+                response.failure(f"Failed to get resource {resource.resource_id} with response {response}")
+
+    def _test_no_auth(self, resource):
+        """
+        Helper method to test authentication
+        """
+        with self.client.get(
+            f"/hsapi/resource/{resource.resource_id}/",
+            name="/hsapi/resource/no_auth [GET]",
+            catch_response=True
+        ) as response:
+            if not response.ok:
+                logging.info(f"As expected, failed to get resource: {resource.resource_id} with response {response}")
+                if response.status_code == 403:
+                    response.success()
+            else:
+                response.failure(f"Failed to get resource {resource.resource_id} with response {response}")
+
+    @task
+    @tag("auth")
+    @tag('get')
+    def test_auth(self):
+        logging.info("Creating a new resource and testing authentication")
+        new_res = self.hs.create()
+        logging.info(f"Created resource {new_res.resource_id}")
+        resIdentifier = new_res.resource_id
+        self.resources[resIdentifier] = new_res
+        self._test_auth(new_res)
+
+    @task
+    @tag("auth")
+    @tag('get')
+    def test_no_auth(self):
+        logging.info("Creating a new resource and testing no authentication")
+        new_res = self.hs.create()
+        logging.info(f"Created resource {new_res.resource_id}")
+        resIdentifier = new_res.resource_id
+        self.resources[resIdentifier] = new_res
+        self._test_no_auth(new_res)
+
+    # =============================================================================
+    # General page render GET tests
+    # =============================================================================
+
     @task
     @tag('get')
     def home(self):
@@ -318,6 +332,10 @@ class HSUser(HttpUser):
             else:
                 response.failure("Failed to get resources")
         pass
+
+    # =============================================================================
+    # Resource manipulation tests
+    # =============================================================================
 
     @task
     @tag('post')
