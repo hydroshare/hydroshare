@@ -137,7 +137,7 @@ class HSUser(HttpUser):
         with self.client.post(
             TUS_ENDPOINT,
             headers=headers,
-            name=f"{TUS_ENDPOINT} [CREATE]",
+            name=f"{resource.resource_id}/{file_name} [CREATE]",
             catch_response=True,
             auth=(USERNAME, PASSWORD)
         ) as response:
@@ -151,8 +151,21 @@ class HSUser(HttpUser):
             upload_url = location
 
         # Step 2: Upload chunks
-        offset = 0
         with open(file_path, 'rb') as f:
+            # use a head request to get the upload offset in case of resuming an upload
+            # https://tus.io/protocols/resumable-upload#head
+            logging.info(f"Conducting HEAD request to get upload offset for {resource.resource_id}/{file_name}")
+            offset = 0
+            with self.client.head(
+                upload_url,
+                headers={"Tus-Resumable": "1.0.0"},
+                name=f"{resource.resource_id}/{file_name} [HEAD]",
+                catch_response=True,
+                auth=(USERNAME, PASSWORD)
+            ) as head_response:
+                if not head_response.ok:
+                    head_response.failure(f"Failed to get upload offset: {head_response.text}")
+                offset = int(head_response.headers.get("Upload-Offset", 0))
             while offset < file_size:
                 chunk = f.read(chunk_size)
                 if not chunk:
@@ -171,7 +184,7 @@ class HSUser(HttpUser):
                     upload_url,
                     headers=headers,
                     data=chunk,
-                    name=f"{file_name} [UPLOAD_CHUNK]",
+                    name=f"{resource.resource_id}/{file_name} [UPLOAD_CHUNK]",
                     catch_response=True,
                     auth=(USERNAME, PASSWORD)
                 ) as response:
