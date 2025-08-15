@@ -1,5 +1,5 @@
 # import time
-from locust import HttpUser, task, tag  # , between
+from locust import HttpUser, task, tag, events  # , between
 from hsclient import HydroShare
 import os
 import glob
@@ -33,12 +33,11 @@ if LOCUST_HOST:
             PORT = 80
 
 FILES = []
-randname = 0
 
 
-def createFile(size, randname=0):
+def createFile(size):
     """Create a file of a given size in bytes."""
-    filename = f"{randname}-locustfile.py"
+    filename = f"{size}-locusttestfile.dat"
     with open(filename, "wb") as f:
         f.seek(size - 1)
         f.write(b"\0")
@@ -49,8 +48,19 @@ def createFile(size, randname=0):
 
 # create 3 files, # 1 small, 1 1GB, and 1 2GB
 for file_size in [100, 1024 * 1024 * 1024, 2 * 1024 * 1024 * 1024]:
-    createFile(file_size, randname=randname)
-    randname += 1
+    createFile(file_size)
+
+
+# https://docs.locust.io/en/stable/api.html#locust.event.Events.test_stop
+@events.test_stop.add_listener
+def test_stop_handler(**kwargs):
+    # cleanup the files created
+    for f in FILES:
+        try:
+            os.remove(f)
+            logging.info(f"Removed file {f}")
+        except Exception as e:
+            logging.warning(f"Error removing file {f}: {e}")
 
 
 class HSUser(HttpUser):
@@ -77,15 +87,7 @@ class HSUser(HttpUser):
         for f in files:
             logging.info(f"Cleanup file {f}")
 
-        # cleanup the files created
-        for f in self.files:
-            try:
-                os.remove(f)
-                logging.info(f"Removed file {f}")
-            except Exception as e:
-                logging.error(f"Error removing file {f}: {e}")
-
-    def fake_metadata(self, res, file_size=100, file_name="test.txt"):
+    def fake_tus_metadata(self, res, file_size=100, file_name="test.txt"):
         return {
             "filename": file_name,
             "hs_res_id": res.resource_id,
@@ -94,12 +96,12 @@ class HSUser(HttpUser):
             "username": USERNAME,
         }
 
-    def create_request_metadata(self, resource, file_size=100, file_name="test.txt"):
+    def create_ini_tus_post_request_metadata(self, resource, file_size=100, file_name="test.txt"):
         # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/views.py#L38
         headers = {}
 
         # build the HTTP_UPLOAD_METADATA string as comma and space separated key-value pairs
-        metadata = self.fake_metadata(resource, file_size=file_size, file_name=file_name)
+        metadata = self.fake_tus_metadata(resource, file_size=file_size, file_name=file_name)
         # The Upload-Metadata request and response header MUST consist of one or more comma-separated key-value pairs.
         # The key and value MUST be separated by a space.
         # The key MUST NOT contain spaces and commas and MUST NOT be empty.
@@ -126,7 +128,7 @@ class HSUser(HttpUser):
         file_name = os.path.basename(file_path)
 
         # Step 1: Create upload (Tus create extension)
-        headers = self.create_request_metadata(resource, file_size=file_size, file_name=file_name)
+        headers = self.create_ini_tus_post_request_metadata(resource, file_size=file_size, file_name=file_name)
 
         with self.client.post(
             TUS_ENDPOINT,
@@ -397,6 +399,7 @@ class HSUser(HttpUser):
     @tag('post')
     def delete(self):
         if not self.resources:
+            logging.warning("No resources available for deletion")
             return
         with self.client.post("/delete_res", catch_response=True) as response:
             try:
