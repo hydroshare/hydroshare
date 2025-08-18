@@ -288,7 +288,7 @@ CACHE_MIDDLEWARE_KEY_PREFIX = PROJECT_DIRNAME
 CACHES = {
     'default': {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://:superSecretPassword@redis:6379",
+        "LOCATION": "redis://redis:6379/0",
     }
 }
 
@@ -465,7 +465,7 @@ TUS_TIMEOUT = 60 * 60 * 24 * 7  # seconds that tus keeps entries in the django c
 # the url for the uppy companion server
 # https://uppy.io/docs/companion/
 COMPANION_URL = 'https://companion.hydroshare.org'
-UPPY_UPLOAD_PATH = '/hsapi/tus/'
+UPPY_UPLOAD_PATH = '/django_s3/tus/'
 MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD = 50
 PARALLEL_UPLOADS_LIMIT = 10
 
