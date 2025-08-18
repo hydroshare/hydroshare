@@ -596,14 +596,6 @@ PACKAGE_NAME_GRAPPELLI = "grappelli_safe"
 # TODO: change this to the actual origins we wish to support
 CORS_ALLOW_ALL_ORIGINS = True
 
-# This is to allow the new landing page Vue app to use CSRF tokens to access hydroshare APIs
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:8080",
-    "http://127.0.0.1:8080",
-]
-CORS_ALLOW_CREDENTIALS = True
-CSRF_COOKIE_HTTPONLY = False  # Must be False so JS (Vue app) can read it
-
 #########################
 # OPTIONAL APPLICATIONS #
 #########################
