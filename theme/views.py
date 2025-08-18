@@ -63,22 +63,12 @@ from .forms import SignupForm
 
 @ensure_csrf_cookie
 def csrf_cookie_view(request):
+    """
+    This view is used to set the CSRF cookie for cookie-based (session-authenticated) API calls.
+    It is typically called by browser-based or JavaScript clients (e.g., Vue, React) that use session authentication and need the CSRF cookie for POST/PUT/DELETE requests.
+    Not needed for token-based authentication (e.g., JWT, OAuth).
+    """
     return JsonResponse({"detail": "CSRF cookie set"})
-
-
-def vue_login(request, template="accounts/account_login.html",
-              extra_context=None):
-    """
-    Wrapper around Mezzanine's login view that uses
-    next parameter for redirect after successful login.
-    """
-    response = mezzanine_login(request, template=template,
-                                extra_context=extra_context)
-    if request.user.is_authenticated:
-        # Use next parameter from GET or POST, fallback to hydroshare home page
-        next_url = request.GET.get('next') or request.POST.get('next') or "/home/"
-        return redirect(next_url)
-    return response
 
 
 class UserProfileView(TemplateView):
@@ -809,6 +799,9 @@ def login(
             login_msg += " - " + add_msg
         info(request, _(login_msg))
         auth_login(request, authenticated_user)
+        next_url = request.GET.get('next') or request.POST.get('next')
+        if next_url:
+            return redirect(next_url)
         return login_redirect(request)
     context = {"form": form, "title": _("Log in")}
     context.update(extra_context or {})
