@@ -4242,7 +4242,7 @@ class CompositeResourceTest(
         # test that db queries for landing page have constant time complexity
 
         # expected number of queries for landing page when the resource has no resource file
-        _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 181
+        _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 171
 
         # expected number of queries for landing page when the resource has resource file
         _LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT = _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT + 16
@@ -4300,7 +4300,7 @@ class CompositeResourceTest(
 
     def _get_expected_query_count(self, number_of_resources):
         # this is the expected number of queries for "my_resources" page with no resources
-        base_query_count = 17
+        base_query_count = 15
 
         # this is additional number of queries per resource
         # 9 are mezzanine queries (can't do much about it)
@@ -4316,3 +4316,15 @@ class CompositeResourceTest(
         expected_query_count = base_query_count + pre_template_query_count
         expected_query_count += per_resource_query_count * number_of_resources
         return expected_query_count
+
+    def test_dangling_resource_file_size(self):
+        self.client.login(username='user1', password='mypassword1')
+        self.create_composite_resource()
+
+        self.add_file_to_resource(file_to_add=self.generic_file)
+        f = self.composite_resource.files.first()
+        self.assertEqual(f.size, 21)
+        # remove the file from S3 but leave db reference intact
+        self.composite_resource.get_s3_storage().delete(f.resource_file.name)
+        f.calculate_size()
+        self.assertEqual(f.size, 0)

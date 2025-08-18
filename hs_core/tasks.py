@@ -122,6 +122,7 @@ def setup_periodic_tasks(sender, **kwargs):
     else:
         # Hourly
         sender.add_periodic_task(crontab(minute=45), manage_task_hourly.s(), options={'queue': 'periodic'})
+        sender.add_periodic_task(crontab(minute=0), check_bucket_names.s(), options={'queue': 'periodic'})
 
         # Daily (times in UTC)
         sender.add_periodic_task(crontab(minute=30, hour=2), clear_tokens.s(), options={'queue': 'periodic'})
@@ -141,11 +142,7 @@ def setup_periodic_tasks(sender, **kwargs):
                                  options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=30, hour=6), nightly_periodic_task_check.s(),
                                  options={'queue': 'periodic'})
-        sender.add_periodic_task(crontab(minute=0, hour=7), daily_cleanup_tus_uploads.s(),
-                                 options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=30, hour=7), task_notification_cleanup.s(),
-                                 options={'queue': 'periodic'})
-        sender.add_periodic_task(crontab(minute=0, hour=8), check_bucket_names.s(),
                                  options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=0, hour=9), ensure_published_resources_have_bags.s(),
                                  options={'queue': 'periodic'})
@@ -198,6 +195,10 @@ def check_bucket_names():
     """
     bad_ups = get_user_profiles_missing_bucket_name()
 
+    for up in bad_ups:
+        up._assign_bucket_name()
+        up.save()
+
     if bad_ups and not settings.DISABLE_TASK_EMAILS:
         string_of_bad_users = ', '.join([up.user.username for up in bad_ups])
         email_msg = f'''
@@ -209,21 +210,6 @@ def check_bucket_names():
                   html_message=email_msg,
                   from_email=settings.DEFAULT_FROM_EMAIL,
                   recipient_list=[settings.DEFAULT_DEVELOPER_EMAIL])
-
-
-@celery_app.task(ignore_result=True, base=HydroshareTask)
-def daily_cleanup_tus_uploads():
-    """Periodic task to cleanup partial TUS uploads that remain in TUS_UPLOAD_DIR.
-    """
-    # remove all files from the TUS_UPLOAD_DIR that are older than 24 hours
-    tus_upload_dir = settings.TUS_UPLOAD_DIR
-    if os.path.exists(tus_upload_dir):
-        for f in os.listdir(tus_upload_dir):
-            file_path = os.path.join(tus_upload_dir, f)
-            if os.path.isfile(file_path):
-                file_time = os.path.getmtime(file_path)
-                if (time.time() - file_time) > 86400:  # 24 hours in seconds
-                    os.remove(file_path)
 
 
 # Currently there are two different cleanups scheduled.
