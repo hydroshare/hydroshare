@@ -62,6 +62,8 @@ else{
       strings: {
         browseFolders: 'upload a folder',
         dropPasteImportBoth: 'Drop files here, %{browseFolders} or import from:',
+        // https://github.com/transloadit/uppy/issues/5542
+        pluginNameGoogleDrive: 'Google Drive',
       }
     },
     onBeforeUpload: (files) => {
