@@ -67,6 +67,7 @@ else{
       }
     },
     onBeforeUpload: (files) => {
+      let totalSize = 0;
       Object.keys(files).forEach((fileId) => {
         // add metadata to the file
         files[fileId].meta.hs_res_id = RES_ID;
@@ -76,7 +77,18 @@ else{
           getCurrentPath()
         );
         files[fileId].meta.file_size = files[fileId].data.size;
+        totalSize += files[fileId].data.size;
       });
+
+      if (totalSize > RESTRICTED_SIZE) {
+        uppy.info(
+          `Total file size ${formatBytes(totalSize)} exceeds the maximum limit of ${formatBytes(parseInt(RESTRICTED_SIZE))}.`,
+          "error",
+          5000
+        );
+        // abort the upload
+        return false;
+      }
       return files;
     },
     onBeforeFileAdded: (currentFile, files) => {
@@ -112,9 +124,20 @@ else{
           return false;
         }
       }
+      
+      const file_size = currentFile.data.size;
+      // check file size against RESTRICTED_SIZE
+      // this is because the Google Drive Picker does not natively enforce the maxFileSize restriction
+      if (file_size > RESTRICTED_SIZE) {
+        uppy.info(
+          `File ${currentFile.name} exceeds the maximum file size of ${formatBytes(parseInt(RESTRICTED_SIZE))}.`,
+          "error",
+          5000
+        );
+        return false;
+      }
 
       // check if the file size needs to be warned
-      const file_size = currentFile.data.size;
       if (file_size >= WARN_ON_FILES_EXCEEDING_SIZE) {
         let message = `File ${currentFile.name} is ${formatBytes(parseInt(file_size))}. ` +
           `For files larger than ${formatBytes(parseInt(WARN_ON_FILES_EXCEEDING_SIZE))}, `+
