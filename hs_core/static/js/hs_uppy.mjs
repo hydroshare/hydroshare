@@ -126,8 +126,6 @@ else{
       }
       
       const file_size = currentFile.data.size;
-      // check file size against RESTRICTED_SIZE
-      // this is because the Google Drive Picker does not natively enforce the maxFileSize restriction
       if (file_size > RESTRICTED_SIZE) {
         uppy.info(
           `File ${currentFile.name} exceeds the maximum file size of ${formatBytes(parseInt(RESTRICTED_SIZE))}.`,
