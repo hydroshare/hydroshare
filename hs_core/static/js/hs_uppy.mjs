@@ -354,6 +354,21 @@ else{
   .on("progress", (progress) => {
     $("#upload-progress").text(`${progress}%`);
   })
+  .on('upload-progress', (file, progress) => {
+    // https://github.com/hydroshare/hydroshare/issues/6033
+    // it seems that restrictions.maxFileSize is not respected during 3rd party Google Drive Uploads
+    // additionally, the file size metadata is null during the initial request
+    // thus the onBeforeUpload and onBeforeFileAdded hooks will not capture the file size correctly for these 3rd party uploads
+    // so we fallback to capturing files that are being uploaded here...
+    if (progress.bytesTotal > RESTRICTED_SIZE) {
+      uppy.removeFile(file.id);
+      uppy.info(
+        `File size ${formatBytes(progress.bytesTotal)} exceeds the maximum limit of ${formatBytes(parseInt(RESTRICTED_SIZE))}.`,
+        "error",
+        5000
+      );
+    }
+  })
   .use(GoogleDrivePicker, {
     // https://uppy.io/docs/google-drive-picker/
     target: Dashboard,
