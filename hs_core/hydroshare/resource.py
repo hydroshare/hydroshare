@@ -1144,9 +1144,9 @@ def update_doi_metadata_with_datacite(short_id, element_name, payload):
 
     payload = update_payload_for_datacite(short_id, element_name, payload)
     if not payload:
-        logger.error(f"Failed to update DOI metadata for resource {short_id}. Resource not published or invalid element name.")
+        logger.error(f"Failed to update DOI metadata for resource {short_id}.")
         return None
-    
+
     token = base64.b64encode(f"{settings.DATACITE_USERNAME}:{settings.DATACITE_PASSWORD}".encode()).decode()
 
     headers = {
