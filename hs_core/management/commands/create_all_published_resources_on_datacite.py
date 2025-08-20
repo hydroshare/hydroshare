@@ -6,15 +6,14 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from hs_core.models import BaseResource
-from hs_core.hydroshare.utils import set_dirty_bag_flag
 
 logger = logging.getLogger(__name__)
+
 
 def deposit_res_metadata_with_datacite(res):
     """
     Deposit resource metadata with DataCite using the Fabrica-style payload.
     """
-
     print(f"Depositing metadata for resource {res.short_id} with DataCite...")
     try:
         token = base64.b64encode(
@@ -25,7 +24,7 @@ def deposit_res_metadata_with_datacite(res):
             "content-type": "application/json",
             "authorization": f"Basic {token}"
         }
-        
+
         response = requests.post(
             url=settings.DATACITE_API_URL,
             data=res.get_datacite_deposit_json(),
@@ -36,7 +35,7 @@ def deposit_res_metadata_with_datacite(res):
         if 400 <= response.status_code < 500:
             print(f"⚠️ Client error (4xx) for resource {res.short_id}: {response.text}")
             return None
-        
+
         print(f"Response status code: {response.status_code} {response.text}")
         response.raise_for_status()
         print(f"✅ Metadata deposited successfully with DataCite for resource {res.short_id}")
@@ -63,7 +62,7 @@ class Command(BaseCommand):
                 continue
 
             print(f"🔄 Processing resource: {res.short_id}")
-            
+
             deposit_res_metadata_with_datacite(res)
 
             print(f"✅ Finished processing resource: {res.short_id}")
