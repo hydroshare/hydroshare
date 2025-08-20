@@ -56,7 +56,7 @@ class Command(BaseCommand):
         print(f"📦 Total published resources to process: {total}")
         count = 0
 
-        for res in BaseResource.public_resources.all().iterator():
+        for res in published_resources.iterator():
             res = res.get_content_model()
             if not res.metadata:
                 logger.warning(f"Resource {res.short_id} has no metadata. Skipping.")
