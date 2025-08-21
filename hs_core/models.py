@@ -4313,7 +4313,7 @@ class BaseResource(Page, AbstractResource):
                 "rightsUri": self.metadata.rights.url
             }
             if pub_date:
-                rights_data["rightsUriStartDate"] = pub_date.strftime("%Y-%m-%d")
+                rights_data["rightsUriStartDate"] = pub_date.start_date.strftime("%Y-%m-%d")
             payload["data"]["attributes"]["rightsList"] = [rights_data]
 
         related_identifiers, related_items = self.get_related_items()
