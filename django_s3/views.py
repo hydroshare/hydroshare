@@ -1,13 +1,28 @@
+import base64
 import datetime
+import json
 import logging
 import os
+import uuid
 from uuid import uuid4
+
+from smart_open import open
+from django_s3.storage import S3Storage
+from django_s3.utils import bucket_and_name
+from django_tus.views import TusUpload
+from django_tus.tusfile import TusFile, TusChunk
+from django_tus.response import TusResponse
 
 from dateutil import tz
 from django.conf import settings
+from django.contrib.sessions.models import Session
+from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import (HttpResponse, HttpResponseRedirect,
-                         JsonResponse)
+                         JsonResponse, HttpResponseForbidden, HttpResponseNotFound)
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -336,3 +351,295 @@ def rest_check_task_status(request, task_id, *args, **kwargs):
             return JsonResponse({"status": 'false'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return JsonResponse({"status": None})
+
+
+def get_path(metadata):
+    hs_res_id = metadata.get('hs_res_id')
+    eventual_relative_path = ''
+    try:
+        # see if there is a path within data/contents that the file should be uploaded to
+        existing_path_in_resource = metadata.get('existing_path_in_resource', '')
+        existing_path_in_resource = json.loads(existing_path_in_resource).get("path")
+        if existing_path_in_resource:
+            # in this case, we are uploading to an existing folder in the resource
+            # existing_path_in_resource is a list of folder names
+            # append them into a path
+            for folder in existing_path_in_resource:
+                eventual_relative_path += folder + '/'
+    except Exception as ex:
+        logger.info(f"Existing path in resource not found: {str(ex)}")
+
+    # handle the case that a folder was uploaded instead of a single file
+    # use the metadata.relativePath to rebuild the folder structure
+    path_within_uploaded_folder = metadata.get('relativePath', '')
+    # path_within_resource_contents will include the name of the file, so we need to remove it
+    path_within_uploaded_folder = os.path.dirname(path_within_uploaded_folder)
+    if path_within_uploaded_folder:
+        eventual_relative_path += path_within_uploaded_folder + '/'
+    path = f'{hs_res_id}/data/contents/{eventual_relative_path}'
+    return path
+
+
+class CustomTusFile(TusFile):
+    # extend TusFile to allow it to write to s3 storage instead of local disk
+    # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/tusfile.py#L52
+
+    def __init__(self, resource_id):
+        self.storage = S3Storage()
+        self.resource_id = resource_id
+        self.filename = cache.get("tus-uploads/{}/filename".format(resource_id))
+        self.path = cache.get("tus-uploads/{}/path".format(resource_id))
+        try:
+            self.file_size = int(cache.get("tus-uploads/{}/file_size".format(resource_id)))
+        except (ValueError, TypeError):
+            self.file_size = None
+        self.metadata = cache.get("tus-uploads/{}/metadata".format(resource_id))
+        self.offset = cache.get("tus-uploads/{}/offset".format(resource_id))
+        self.part_number = cache.get("tus-uploads/{}/part_number".format(resource_id))
+        self.parts = cache.get("tus-uploads/{}/parts".format(resource_id)) or []
+        self.upload_id = cache.get("tus-uploads/{}/upload_id".format(resource_id))
+        bucket, _ = bucket_and_name(self.metadata.get("hs_res_id"))
+        self.bucket = bucket
+
+    def get_storage(self):
+        return self.storage
+
+    @staticmethod
+    def create_initial_file(metadata, file_size):
+        resource_id = str(uuid.uuid4())
+        cache.add("tus-uploads/{}/filename".format(resource_id),
+                  "{}".format(metadata.get("filename")), settings.TUS_TIMEOUT)
+        cache.add("tus-uploads/{}/file_size".format(resource_id), file_size, settings.TUS_TIMEOUT)
+        cache.add("tus-uploads/{}/offset".format(resource_id), 0, settings.TUS_TIMEOUT)
+        cache.add("tus-uploads/{}/metadata".format(resource_id), metadata, settings.TUS_TIMEOUT)
+
+        tus_file = CustomTusFile(resource_id)
+        tus_file.path = metadata.get("path")
+        cache.add("tus-uploads/{}/path".format(resource_id), tus_file.path, settings.TUS_TIMEOUT)
+        tus_file.initiate_multipart_upload()
+        cache.add("tus-uploads/{}/part_number".format(resource_id), tus_file.part_number, settings.TUS_TIMEOUT)
+        cache.add("tus-uploads/{}/parts".format(resource_id), tus_file.parts, settings.TUS_TIMEOUT)
+        cache.add("tus-uploads/{}/upload_id".format(resource_id), tus_file.upload_id, settings.TUS_TIMEOUT)
+        return tus_file
+
+    @staticmethod
+    def check_existing_file(path):
+        return S3Storage().exists(path)
+
+    def is_valid(self):
+        return self.filename is not None
+
+    def _write_file(self, path, offset, content):
+        s3_url = f's3://{self.bucket}/{path}'
+        transport_params = {
+            'client': self.storage.connection.meta.client
+        }
+        with open(s3_url, 'wb', transport_params=transport_params) as out_file:
+            if offset:
+                try:
+                    out_file.seek(offset)
+                except OSError as e:
+                    # https://github.com/piskvorky/smart_open/issues/580
+                    logger.error("Error seeking in file for tus upload", exc_info=e)
+                    raise IOError("Error seeking in file for tus upload")
+            out_file.write(content)
+
+    def initiate_multipart_upload(self):
+        try:
+            response = self.storage.connection.meta.client.create_multipart_upload(
+                Bucket=self.bucket,
+                Key=self.path
+            )
+            self.upload_id = response['UploadId']
+            self.part_number = 1
+            self.parts = []
+        except Exception as e:
+            logger.error("Error writing initial file for tus upload", exc_info=e)
+            raise IOError("Error writing initial file for tus upload")
+
+    def upload_part(self, chunk):
+        try:
+            response = self.storage.connection.meta.client.upload_part(
+                Bucket=self.bucket,
+                Key=self.path,
+                PartNumber=self.part_number,
+                UploadId=self.upload_id,
+                Body=chunk.content
+            )
+            self.parts.append({'PartNumber': self.part_number, 'ETag': response['ETag']})
+            cache.set("tus-uploads/{}/parts".format(self.resource_id), self.parts, settings.TUS_TIMEOUT)
+            self.part_number = cache.incr("tus-uploads/{}/part_number".format(self.resource_id))
+            self.offset = cache.incr("tus-uploads/{}/offset".format(self.resource_id), chunk.chunk_size)
+
+        except Exception as e:
+            logger.error("patch", extra={'request': chunk.META, 'tus': {
+                "resource_id": self.resource_id,
+                "filename": self.filename,
+                "file_size": self.file_size,
+                "metadata": self.metadata,
+                "offset": self.offset,
+                "upload_file_path": self.path,
+            }})
+            raise e
+
+    def complete_upload(self):
+        self.storage.connection.meta.client.complete_multipart_upload(
+            Bucket=self.bucket,
+            Key=self.path,
+            UploadId=self.upload_id,
+            MultipartUpload={
+                'Parts': self.parts
+            }
+        )
+
+
+class CustomTusUpload(TusUpload):
+
+    @method_decorator(csrf_exempt)
+    def dispatch(self, *args, **kwargs):
+        # check that the user has permission to upload a file to the resource
+        from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
+        metadata = self.get_metadata(self.request)
+        if not metadata:
+            # get the tus resource_id from the request
+            tus_resource_id = self.kwargs['resource_id']
+            try:
+                tus_file = CustomTusFile(str(tus_resource_id))
+                # get the resource id from the tus metadata
+                metadata = tus_file.metadata
+            except Exception as ex:
+                err_msg = f"Error in getting metadata for the tus upload: {str(ex)}"
+                logger.error(err_msg)
+                # https://tus.io/protocols/resumable-upload#head
+                # return a 404 not found response
+                return HttpResponseNotFound(err_msg)
+
+        # get the hydroshare resource id from the metadata
+        hs_res_id = metadata.get('hs_res_id')
+
+        if not self.request.user.is_authenticated:
+            sessionid = self.request.headers.get('HS-SID', None)
+            authorization_header = self.request.headers.get('Authorization', None)
+            # use the cookie to get the django session and user
+            if sessionid:
+                try:
+                    # get the user from the session
+                    session = Session.objects.get(session_key=sessionid)
+                    user_id = session.get_decoded().get('_auth_user_id')
+                    user = User.objects.get(pk=user_id)
+                    self.request.user = user
+                except Exception as ex:
+                    err_msg = f"Error in getting user from session: {str(ex)}"
+                    logger.error(err_msg)
+                    return HttpResponseForbidden(err_msg)
+            elif authorization_header:
+                # if the user is not authenticated, but has an authorization header,
+                # try to get the user from the token
+                try:
+                    token = authorization_header.split(' ')[1]
+                    username, password = base64.b64decode(token).decode('utf-8').split(':')
+                    user = User.objects.get(username=username)
+                    if not user.check_password(password):
+                        raise DjangoPermissionDenied("Invalid credentials")
+                    self.request.user = user
+                except Exception as ex:
+                    err_msg = f"Error in getting user from token: {str(ex)}"
+                    logger.error(err_msg)
+                    return HttpResponseForbidden(err_msg)
+
+        # check that the user has permission to upload a file to the resource
+        try:
+            _, _, user = authorize(self.request, hs_res_id,
+                                   needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+            # ensure that the username is the same as the request user
+            # username_from_client = metadata.get('username')
+            # assert (user.username == username_from_client)
+        except (DjangoPermissionDenied, AssertionError):
+            return HttpResponseForbidden()
+
+        return super(CustomTusUpload, self).dispatch(*args, **kwargs)
+
+    def patch(self, request, resource_id, *args, **kwargs):
+        try:
+            tus_file = CustomTusFile(str(resource_id))
+        except Exception as ex:
+            logger.error(f"Error in getting tus_file during patch request: {str(ex)}")
+            return HttpResponseNotFound()
+
+        # when using the google file picker api, the file size is initially set to 0
+        http_upload_length = request.META.get('HTTP_UPLOAD_LENGTH', None)
+        if tus_file.file_size == 0 and http_upload_length:
+            tus_file.file_size = int(http_upload_length)
+        chunk = TusChunk(request)
+
+        if not tus_file.is_valid():
+            return TusResponse(status=410)
+
+        if chunk.offset != tus_file.offset:
+            return TusResponse(status=409)
+
+        if chunk.offset > tus_file.file_size and tus_file.file_size != 0:
+            return TusResponse(status=413)
+        try:
+            tus_file.upload_part(chunk=chunk)
+        except Exception as e:
+            error_message = f"Unable to write chunk for tus upload: {str(e)}"
+            logger.error(error_message, exc_info=True)
+            return TusResponse(status=500, reason=error_message)
+
+        # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/tusfile.py#L151-L152
+        # here we modify from django_tus to allow for the file to be marked as complete
+        if tus_file.is_complete():
+            tus_file.complete_upload()
+
+            # complete_upload() handles putting the file together in S3, so no need to rename
+            # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/tusfile.py#L93
+            # tus_file.rename()
+
+            # clean() handles deleting the cache entries
+            # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/tusfile.py#L111
+            tus_file.clean()
+
+            # signal is not consumed at this point, but we keep it for future use
+            # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/views.py#L112
+            self.send_signal(tus_file)
+
+            self.finished()
+
+        return TusResponse(status=204, extra_headers={'Upload-Offset': tus_file.offset})
+
+    def post(self, request, *args, **kwargs):
+        # adapted from django_tus TusUpload.post
+        # in order to handle missing HTTP_UPLOAD_LENGTH header
+        # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/views.py#L56-L75
+
+        metadata = self.get_metadata(request)
+
+        metadata["filename"] = self.validate_filename(metadata)
+
+        message_id = request.META.get("HTTP_MESSAGE_ID")
+        if message_id:
+            metadata["message_id"] = base64.b64decode(message_id)
+
+        path = f"{get_path(metadata)}{metadata.get('filename', False)}"
+        metadata["path"] = path
+        existing = CustomTusFile.check_existing_file(path)
+
+        if settings.TUS_EXISTING_FILE == 'error' and settings.TUS_FILE_NAME_FORMAT == 'keep' and existing:
+            return TusResponse(status=409, reason="File with same name already exists")
+
+        # set the filesize from HTTP header if it exists, otherwise set it from the metadata
+        file_size = int(request.META.get("HTTP_UPLOAD_LENGTH", "0"))
+        meta_file_size = metadata.get("file_size", None)
+        if meta_file_size and meta_file_size != 'null':
+            file_size = meta_file_size
+        try:
+            tus_file = CustomTusFile.create_initial_file(metadata, file_size)
+        except Exception as e:
+            error_message = f"Unable to create file for tus upload {str(e)}"
+            logger.error(error_message, exc_info=True)
+            return TusResponse(status=500, reason=error_message)
+
+        return TusResponse(
+            status=201,
+            extra_headers={'Location': '{}{}'.format(request.build_absolute_uri(), tus_file.resource_id)})

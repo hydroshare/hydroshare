@@ -54,8 +54,6 @@ from .hs_rdf import (HSTERMS, RDFS1, RDF_MetaData_Mixin, RDF_Term_MixIn,
                      rdf_terms)
 from .languages_iso import languages as iso_languages
 
-from django_tus.signals import tus_upload_finished_signal
-
 
 def clean_abstract(original_string):
     """Clean abstract for XML inclusion.
@@ -428,7 +426,7 @@ def page_permissions_page_processor(request, page):
     parallel_uploads_limit = getattr(settings, 'PARALLEL_UPLOADS_LIMIT', 10)
 
     companion_url = getattr(settings, 'COMPANION_URL', 'https://companion.hydroshare.org/')
-    UPPY_UPLOAD_PATH = getattr(settings, 'UPPY_UPLOAD_PATH', 'https://hydroshare.org/hsapi/tus/')
+    UPPY_UPLOAD_PATH = getattr(settings, 'UPPY_UPLOAD_PATH', 'https://hydroshare.org/django_s3/tus/')
     google_picker_client_id = getattr(settings, 'GOOGLE_PICKER_CLIENT_ID', '')
     google_picker_api_key = getattr(settings, 'GOOGLE_PICKER_API_KEY', '')
     google_picker_app_id = getattr(settings, 'GOOGLE_PICKER_APP_ID', '')
@@ -3326,7 +3324,7 @@ class ResourceFile(ResourceFileS3Mixin):
         try:
             self._size = self.resource_file.size
             self.filesize_cache_updated = now()
-        except (SessionException, ValidationError):
+        except (SessionException, ValidationError, FileNotFoundError):
             logger = logging.getLogger(__name__)
             logger.warning("file {} not found in S3".format(self.storage_path))
             self._size = 0
@@ -5595,88 +5593,3 @@ def resource_creation_signal_handler(sender, instance, created, **kwargs):
 def resource_update_signal_handler(sender, instance, created, **kwargs):
     """Do nothing (noop)."""
     pass
-
-
-@receiver(tus_upload_finished_signal)
-def tus_upload_finished_handler(sender, **kwargs):
-    from hs_core.views.utils import create_folder
-    from rest_framework.exceptions import ValidationError as DRFValidationError
-    """Handle the tus upload finished signal.
-
-    Ingest the files from the TUS_DESTINATION_DIR into the resource.
-
-    https://github.com/alican/django-tus/blob/master/django_tus/signals.py
-    This signal provides the following keyword arguments:
-    metadata
-    filename
-    upload_file_path
-    file_size
-    upload_url
-    destination_folder
-    """
-    from hs_core import hydroshare
-    logger = logging.getLogger(__name__)
-    metadata = kwargs['metadata']
-    tus_destination_folder = kwargs['destination_folder']
-    hs_res_id = metadata['hs_res_id']
-    original_filename = metadata['original_file_name']
-
-    where_tus_put_it = os.path.join(tus_destination_folder, original_filename)
-
-    if original_filename != kwargs['filename']:
-        # rename the file
-        chunk_file_path = os.path.join(tus_destination_folder, kwargs['filename'])
-        os.rename(chunk_file_path, where_tus_put_it)
-
-    # create a file object for the uploaded file
-    file_obj = File(open(where_tus_put_it, 'rb'), name=original_filename)
-
-    resource = hydroshare.utils.get_resource_by_shortkey(hs_res_id)
-
-    eventual_relative_path = ''
-
-    try:
-        # see if there is a path within data/contents that the file should be uploaded to
-        existing_path_in_resource = metadata.get('existing_path_in_resource', '')
-        existing_path_in_resource = json.loads(existing_path_in_resource).get("path")
-        if existing_path_in_resource:
-            # in this case, we are uploading to an existing folder in the resource
-            # existing_path_in_resource is a list of folder names
-            # append them into a path
-            for folder in existing_path_in_resource:
-                eventual_relative_path += folder + '/'
-    except Exception as ex:
-        logger.info(f"Existing path in resource not found: {str(ex)}")
-
-    # handle the case that a folder was uploaded instead of a single file
-    # use the metadata.relativePath to rebuild the folder structure
-    path_within_uploaded_folder = metadata.get('relativePath', '')
-    # path_within_resource_contents will include the name of the file, so we need to remove it
-    path_within_uploaded_folder = os.path.dirname(path_within_uploaded_folder)
-    if path_within_uploaded_folder:
-        eventual_relative_path += path_within_uploaded_folder
-        file_folder = f'data/contents/{eventual_relative_path}'
-        try:
-            create_folder(res_id=hs_res_id, folder_path=file_folder)
-        except DRFValidationError as ex:
-            logger.info(f"Folder {file_folder} already exists for resource {hs_res_id}: {str(ex)}")
-
-    try:
-        hydroshare.utils.resource_file_add_pre_process(
-            resource=resource,
-            files=[file_obj],
-            user=resource.creator,
-            folder=eventual_relative_path,
-        )
-        hydroshare.utils.resource_file_add_process(
-            resource=resource,
-            files=[file_obj],
-            user=resource.creator,
-            folder=eventual_relative_path,
-        )
-        # remove the uploaded file
-        os.remove(where_tus_put_it)
-    except (hydroshare.utils.ResourceFileSizeException,
-            hydroshare.utils.ResourceFileValidationException,
-            Exception) as ex:
-        logger.error(ex)
