@@ -4142,15 +4142,6 @@ class BaseResource(Page, AbstractResource):
                 }
             })
 
-        # Optionally add IsIdenticalTo for HydroShare identifier
-        hs_identifier = self.metadata.identifiers.filter(name='hydroShareIdentifier').first()
-        if hs_identifier:
-            related_identifiers.append({
-                "relatedIdentifier": hs_identifier.url,
-                "relatedIdentifierType": "URL",
-                "relationType": "IsIdenticalTo"
-            })
-
         return related_identifiers, related_items
 
     def get_datacite_deposit_json(self):
@@ -4181,9 +4172,9 @@ class BaseResource(Page, AbstractResource):
                     "creators": [],
                     "titles": [{"title": self.metadata.title.value, "titleType": "Subtitle", "lang": "en"}],
                     "publisher": {
-                        "name": "CUAHSI",
+                        "name": "Consortium of Universities for the Advancement of Hydrologic Science, Inc",
                         "lang": "en",
-                        "publisherIdentifier": "https://ror.org/037ncgg21",
+                        "publisherIdentifier": "https://ror.org/04s2bx355",
                         "publisherIdentifierScheme": "ROR",
                         "schemeUri": "https://ror.org"
                     },
@@ -4287,7 +4278,7 @@ class BaseResource(Page, AbstractResource):
         date_mapping = {
             'created': 'Created',
             'modified': 'Updated',
-            'published': 'Available'
+            'published': 'Accepted',
         }
         for date in self.metadata.dates.all():
             if date.type in date_mapping:
@@ -4318,12 +4309,6 @@ class BaseResource(Page, AbstractResource):
         payload["data"]["attributes"]["relatedIdentifiers"] = related_identifiers
         payload["data"]["attributes"]["relatedItems"] = related_items
 
-        if hs_identifier:
-            payload["data"]["attributes"]["relatedIdentifiers"].append({
-                "relatedIdentifier": hs_identifier.url,
-                "relatedIdentifierType": "URL",
-                "relationType": "IsIdenticalTo"
-            })
 
         for coverage in self.metadata.coverages.all():
             if coverage.type == 'box':
