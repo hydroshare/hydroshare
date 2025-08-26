@@ -4309,7 +4309,6 @@ class BaseResource(Page, AbstractResource):
         payload["data"]["attributes"]["relatedIdentifiers"] = related_identifiers
         payload["data"]["attributes"]["relatedItems"] = related_items
 
-
         for coverage in self.metadata.coverages.all():
             if coverage.type == 'box':
                 box_values = coverage.value
