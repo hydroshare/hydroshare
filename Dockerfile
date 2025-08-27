@@ -1,4 +1,4 @@
-FROM hydroshare/hs_docker_base:e25da0c
+FROM hydroshare/hs_docker_base:69caa0b
 # make sure to update multistage-node dockerfile as well if you update this base image
 
 # Set the locale. TODO - remove once we have a better alternative worked out
