@@ -10,6 +10,7 @@ from hs_access_control.models import PrivilegeCodes
 
 from hs_core import hydroshare
 from hs_core.models import BaseResource
+from hs_core.views.utils import QuotaException 
 from django_s3.views import CustomTusUpload
 import os
 
@@ -392,3 +393,219 @@ class CustomTusUploadTests(TestCase):
                         mock.Mock(side_effect=Exception("fail"))):
             resp = view.post(request)
             self.assertEqual(resp.status_code, 500)
+
+    def test_post_returns_507_when_user_exceeds_quota(self):
+        """Test that POST returns 507 when user exceeds quota"""
+        view = CustomTusUpload()
+        request = self.factory.post("/")
+        request.user = self.user
+        request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        request.META["HTTP_UPLOAD_LENGTH"] = "1000000000"  # Large file size
+        self.create_request_metadata(request)
+        view.request = request
+        view.kwargs = {'resource_id': self.res.short_id}
+
+        # Mock the quota validation to raise QuotaException
+        with mock.patch("django_s3.views.get_resource_by_shortkey", return_value=self.res), \
+             mock.patch("django_s3.views.validate_user_quota", 
+                        side_effect=QuotaException("User quota exceeded")):
+
+            resp = view.post(request)
+            self.assertEqual(resp.status_code, 507)
+            self.assertIn("User quota exceeded", resp.reason)
+
+    def test_post_uses_metadata_file_size_when_no_upload_length(self):
+        """Test that POST uses file_size from metadata when HTTP_UPLOAD_LENGTH is missing"""
+        view = CustomTusUpload()
+        request = self.factory.post("/")
+        request.user = self.user
+        request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        # Don't set HTTP_UPLOAD_LENGTH
+        self.create_request_metadata(request)
+        view.request = request
+        view.kwargs = {'resource_id': self.res.short_id}
+
+        # Mock the quota validation to succeed
+        with mock.patch("django_s3.views.get_resource_by_shortkey", return_value=self.res), \
+             mock.patch("django_s3.views.validate_user_quota", return_value=None), \
+             mock.patch("django_s3.views.CustomTusFile.create_initial_file", 
+                       return_value=mock.Mock(resource_id='test-resource-id')):
+
+            resp = view.post(request)
+            # Should succeed and use file_size from metadata
+            self.assertEqual(resp.status_code, 201)
+
+    def test_post_prioritizes_upload_length_over_metadata_file_size(self):
+        """Test that HTTP_UPLOAD_LENGTH takes precedence over metadata file_size"""
+        view = CustomTusUpload()
+        request = self.factory.post("/")
+        request.user = self.user
+        request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        request.META["HTTP_UPLOAD_LENGTH"] = "500"  # Different from metadata file_size
+        self.create_request_metadata(request)  # Contains file_size = self.file_size
+        view.request = request
+        view.kwargs = {'resource_id': self.res.short_id}
+
+        # Mock to capture which file size was used for quota validation
+        captured_file_size = []
+
+        def mock_validate_quota(user, file_size):
+            captured_file_size.append(file_size)
+            return None
+
+        with mock.patch("django_s3.views.get_resource_by_shortkey", return_value=self.res), \
+             mock.patch("django_s3.views.validate_user_quota", mock_validate_quota), \
+             mock.patch("django_s3.views.CustomTusFile.create_initial_file", 
+                        return_value=mock.Mock(resource_id='test-resource-id')):
+
+            resp = view.post(request)
+            self.assertEqual(resp.status_code, 201)
+            # Should use HTTP_UPLOAD_LENGTH (500) instead of metadata file_size
+            self.assertEqual(captured_file_size[0], 500)
+
+    def test_post_handles_null_metadata_file_size(self):
+        """Test that POST handles 'null' string in metadata file_size"""
+        view = CustomTusUpload()
+        request = self.factory.post("/")
+        request.user = self.user
+        request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        request.META["HTTP_UPLOAD_LENGTH"] = "300"
+        self.create_request_metadata(request)
+
+        # Modify the metadata to have 'null' file_size
+        metadata = self.fake_metadata()
+        metadata['file_size'] = 'null'
+        encoded_metadata = ",".join(
+            f"{key} {base64.b64encode(value.encode()).decode('utf-8')}" if isinstance(value, str) else f"{key} {value}"
+            for key, value in metadata.items()
+        )
+        request.META["HTTP_UPLOAD_METADATA"] = encoded_metadata
+
+        view.request = request
+        view.kwargs = {'resource_id': self.res.short_id}
+
+        # Mock to capture which file size was used
+        captured_file_size = []
+
+        def mock_validate_quota(user, file_size):
+            captured_file_size.append(file_size)
+            return None
+
+        with mock.patch("django_s3.views.get_resource_by_shortkey", return_value=self.res), \
+             mock.patch("django_s3.views.validate_user_quota", mock_validate_quota), \
+             mock.patch("django_s3.views.CustomTusFile.create_initial_file", 
+                        return_value=mock.Mock(resource_id='test-resource-id')):
+
+            resp = view.post(request)
+            self.assertEqual(resp.status_code, 201)
+            # Should use HTTP_UPLOAD_LENGTH (300) since metadata file_size is 'null'
+            self.assertEqual(captured_file_size[0], 300)
+
+    def test_post_uses_metadata_file_size_when_upload_length_zero(self):
+        """Test that POST uses metadata file_size when HTTP_UPLOAD_LENGTH is 0"""
+        view = CustomTusUpload()
+        request = self.factory.post("/")
+        request.user = self.user
+        request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        request.META["HTTP_UPLOAD_LENGTH"] = "0"  # Zero upload length
+        self.create_request_metadata(request)
+        view.request = request
+        view.kwargs = {'resource_id': self.res.short_id}
+
+        # Mock to capture which file size was used
+        captured_file_size = []
+
+        def mock_validate_quota(user, file_size):
+            captured_file_size.append(file_size)
+            return None
+
+        with mock.patch("django_s3.views.get_resource_by_shortkey", return_value=self.res), \
+             mock.patch("django_s3.views.validate_user_quota", mock_validate_quota), \
+             mock.patch("django_s3.views.CustomTusFile.create_initial_file", 
+                        return_value=mock.Mock(resource_id='test-resource-id')):
+
+            resp = view.post(request)
+            self.assertEqual(resp.status_code, 201)
+            # Should use metadata file_size since HTTP_UPLOAD_LENGTH is 0
+            self.assertEqual(captured_file_size[0], self.file_size)
+
+    def test_post_quota_check_for_different_resource_owners(self):
+        """Test that quota is checked against the resource owner, not the uploading user"""
+        # Create a different user who owns the resource
+        resource_owner = hydroshare.create_account(
+            'owner@email.com',
+            username='resourceowner',
+            first_name='Owner',
+            last_name='User',
+            superuser=False,
+            groups=[self.group]
+        )
+
+        # Create a resource owned by resource_owner but editable by test user
+        owned_resource = hydroshare.create_resource(
+            resource_type='CompositeResource',
+            owner=resource_owner,
+            title='Owned Resource',
+            keywords=('test',)
+        )
+
+        # Share edit permission with test user
+        resource_owner.uaccess.share_resource_with_user(
+            owned_resource, self.user, PrivilegeCodes.CHANGE
+        )
+
+        view = CustomTusUpload()
+        request = self.factory.post("/")
+        request.user = self.user  # User with edit permission but not owner
+
+        # Create metadata for the owned resource
+        metadata = self.fake_metadata()
+        metadata['hs_res_id'] = owned_resource.short_id
+        encoded_metadata = ",".join(
+            f"{key} {base64.b64encode(value.encode()).decode('utf-8')}" if isinstance(value, str) else f"{key} {value}"
+            for key, value in metadata.items()
+        )
+        request.META["HTTP_UPLOAD_METADATA"] = encoded_metadata
+        request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        request.META["HTTP_UPLOAD_LENGTH"] = "1000"
+
+        view.request = request
+        view.kwargs = {'resource_id': owned_resource.short_id}
+
+        # Mock to capture which user's quota was checked
+        captured_quota_holder = []
+
+        def mock_validate_quota(quota_holder, file_size):
+            captured_quota_holder.append(quota_holder)
+            return None
+
+        with mock.patch("django_s3.views.get_resource_by_shortkey", return_value=owned_resource), \
+             mock.patch("django_s3.views.validate_user_quota", mock_validate_quota), \
+             mock.patch("django_s3.views.CustomTusFile.create_initial_file", 
+                       return_value=mock.Mock(resource_id='test-resource-id')):
+
+            resp = view.post(request)
+            self.assertEqual(resp.status_code, 201)
+            # Should check quota against resource owner, not uploading user
+            self.assertEqual(captured_quota_holder[0], resource_owner)
+
+    def test_post_quota_exception_message_in_response(self):
+        """Test that QuotaException message is included in the response"""
+        view = CustomTusUpload()
+        request = self.factory.post("/")
+        request.user = self.user
+        request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        request.META["HTTP_UPLOAD_LENGTH"] = "1000000000"
+        self.create_request_metadata(request)
+        view.request = request
+        view.kwargs = {'resource_id': self.res.short_id}
+
+        error_message = "Quota exceeded: You have 50MB remaining but tried to upload 1GB"
+
+        with mock.patch("django_s3.views.get_resource_by_shortkey", return_value=self.res), \
+             mock.patch("django_s3.views.validate_user_quota", 
+                        side_effect=QuotaException(error_message)):
+
+            resp = view.post(request)
+            self.assertEqual(resp.status_code, 507)
+            self.assertEqual(resp.reason, error_message)
