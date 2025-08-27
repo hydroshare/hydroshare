@@ -4278,7 +4278,7 @@ class BaseResource(Page, AbstractResource):
         date_mapping = {
             'created': 'Created',
             'modified': 'Updated',
-            'published': 'Accepted',
+            'published': 'Available',
         }
         for date in self.metadata.dates.all():
             if date.type in date_mapping:
