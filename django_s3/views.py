@@ -28,6 +28,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 
 from hs_core.hydroshare.resource import check_resource_type
+from hs_core.hydroshare.utils import validate_user_quota
 from hs_core.signals import (pre_check_bag_flag, pre_download_file,
                              pre_download_resource)
 from hs_core.task_utils import (get_or_create_task_notification,
@@ -633,6 +634,7 @@ class CustomTusUpload(TusUpload):
         meta_file_size = metadata.get("file_size", None)
         if meta_file_size and meta_file_size != 'null':
             file_size = meta_file_size
+        validate_user_quota(request.user, file_size)
         try:
             tus_file = CustomTusFile.create_initial_file(metadata, file_size)
         except Exception as e:
