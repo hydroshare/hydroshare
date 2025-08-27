@@ -10,7 +10,6 @@ from hs_access_control.models import PrivilegeCodes
 
 from hs_core import hydroshare
 from hs_core.models import BaseResource
-from hs_core.views.utils import QuotaException 
 from django_s3.views import CustomTusUpload
 import os
 
