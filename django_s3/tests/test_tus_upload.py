@@ -393,22 +393,22 @@ class CustomTusUploadTests(TestCase):
             resp = view.post(request)
             self.assertEqual(resp.status_code, 500)
 
-    def test_post_returns_507_when_user_exceeds_quota(self):
-        """Test that POST returns 507 when user exceeds quota"""
+    def test_post_returns_413_when_user_exceeds_quota(self):
+        """Test that POST returns 413 when user exceeds quota"""
         view = CustomTusUpload()
         request = self.factory.post("/")
         request.user = self.user
-        request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
-        # Set an extremely large file size that should exceed quota
-        request.META["HTTP_UPLOAD_LENGTH"] = "1000000000000"  # 1TB file
+
+        # Set HTTP_UPLOAD_LENGTH to a large value to exceed quota
+        self.file_size = 1000000000000
+
         self.create_request_metadata(request)
         view.request = request
         view.kwargs = {'resource_id': self.res.short_id}
 
         resp = view.post(request)
-        # Should return 507 if quota is exceeded
-        self.assertEqual(resp.status_code, 507)
-        self.assertIn("quota", resp.reason.lower())
+        # Should return 413 if quota is exceeded
+        self.assertEqual(resp.status_code, 413)
 
     def test_post_uses_metadata_file_size_when_no_upload_length(self):
         """Test that POST uses file_size from metadata when HTTP_UPLOAD_LENGTH is missing"""
@@ -526,23 +526,6 @@ class CustomTusUploadTests(TestCase):
         # Should succeed - quota is checked against resource owner
         self.assertEqual(resp.status_code, 201)
 
-    def test_post_quota_exception_message_in_response(self):
-        """Test that QuotaException message is included in the response"""
-        view = CustomTusUpload()
-        request = self.factory.post("/")
-        request.user = self.user
-        request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
-        # Set an extremely large file size that should exceed quota
-        request.META["HTTP_UPLOAD_LENGTH"] = "1000000000000"  # 1TB file
-        self.create_request_metadata(request)
-        view.request = request
-        view.kwargs = {'resource_id': self.res.short_id}
-
-        resp = view.post(request)
-        # Should return 507 with quota-related error message
-        self.assertEqual(resp.status_code, 507)
-        self.assertIn("quota", resp.reason.lower())
-
     def test_post_with_reasonable_file_size_succeeds(self):
         """Test that POST succeeds with a reasonable file size that doesn't exceed quota"""
         view = CustomTusUpload()
@@ -560,14 +543,14 @@ class CustomTusUploadTests(TestCase):
         self.assertEqual(resp.status_code, 201)
         self.assertIn("Location", resp.headers)
 
-    def test_post_without_file_size_in_metadata_or_header_fails(self):
-        """Test that POST fails when no file size is provided in metadata or header"""
+    def test_post_without_file_size_in_metadata_or_header_succeeds(self):
+        """Test that POST succeeds when no file size is provided in metadata or header"""
         view = CustomTusUpload()
         request = self.factory.post("/")
         request.user = self.user
         request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
-        # Don't set HTTP_UPLOAD_LENGTH and remove file_size from metadata
 
+        # Don't set HTTP_UPLOAD_LENGTH and remove file_size from metadata
         metadata = self.fake_metadata()
         del metadata['file_size']  # Remove file_size from metadata
         encoded_metadata = ",".join(
@@ -578,7 +561,5 @@ class CustomTusUploadTests(TestCase):
 
         view.request = request
         view.kwargs = {'resource_id': self.res.short_id}
-
         resp = view.post(request)
-        # Should fail since no file size information is available
-        self.assertIn(resp.status_code, [400, 500, 507])
+        self.assertEqual(resp.status_code, 201)

@@ -640,7 +640,7 @@ class CustomTusUpload(TusUpload):
             res = get_resource_by_shortkey(res_id)
             validate_user_quota(res.quota_holder, int(file_size))
         except QuotaException as e:
-            return TusResponse(status=507, reason=str(e))
+            return TusResponse(status=413, reason=str(e))
         try:
             tus_file = CustomTusFile.create_initial_file(metadata, file_size)
         except Exception as e:
