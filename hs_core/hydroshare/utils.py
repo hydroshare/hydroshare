@@ -661,10 +661,10 @@ def validate_user_quota(user_or_username, size):
                 QuotaMessage.objects.create()
             qmsg = QuotaMessage.objects.first()
             used_size = uq.add_to_used_value(size)
-            used_percent = uq.used_percent
-            rounded_percent = round(used_percent, 2)
-            rounded_used_val = round(used_size, 4)
-            if used_percent >= 100:
+            if used_size >= uq.allocated_value:
+                used_percent = used_size / uq.allocated_value * 100
+                rounded_percent = round(used_percent, 2)
+                rounded_used_val = round(used_size, 4)
                 msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
                                                      qmsg.content)
                 msg_str = msg_template_str.format(used=rounded_used_val,
