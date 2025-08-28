@@ -597,8 +597,8 @@ def convert_file_size_to_unit(size, to_unit, from_unit='B'):
     """
     unit = to_unit.lower().replace("i", "")
     if unit not in ('b', 'kb', 'mb', 'gb', 'tb'):
-        raise ValidationError('Pass-in unit for file size conversion must be one of B, KB, MB, GB, '
-                              'or TB')
+        raise ValidationError(f'Pass-in unit for file size conversion must be one of B, KB, MB, GB, '
+                              f'or TB, you supplied {to_unit}')
     from_unit = from_unit.lower().replace("i", "")
     if from_unit not in ('b', 'kb', 'mb', 'gb', 'tb'):
         raise ValidationError('Starting unit for file size conversion must be one of B, KB, MB, GB, '
