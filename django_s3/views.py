@@ -394,7 +394,7 @@ class CustomTusFile(TusFile):
         try:
             self.file_size = int(cache.get("tus-uploads/{}/file_size".format(resource_id)))
         except (ValueError, TypeError):
-            self.file_size = None
+            self.file_size = 0
         self.metadata = cache.get("tus-uploads/{}/metadata".format(resource_id))
         self.offset = cache.get("tus-uploads/{}/offset".format(resource_id))
         self.part_number = cache.get("tus-uploads/{}/part_number".format(resource_id))
@@ -632,7 +632,7 @@ class CustomTusUpload(TusUpload):
 
         # set the filesize from HTTP header if it exists, otherwise set it from the metadata
         file_size = int(request.META.get("HTTP_UPLOAD_LENGTH", "0"))
-        meta_file_size = metadata.get("file_size", None)
+        meta_file_size = metadata.get("file_size", 0)
         if meta_file_size and meta_file_size != 'null':
             file_size = meta_file_size
         try:
