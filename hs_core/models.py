@@ -4170,7 +4170,7 @@ class BaseResource(Page, AbstractResource):
                     "event": "publish",
                     "url": None,
                     "creators": [],
-                    "titles": [{"title": self.metadata.title.value, "titleType": "Subtitle", "lang": "en"}],
+                    "titles": [{"title": self.metadata.title.value, "titleType": "", "lang": "en"}],
                     "publisher": {
                         "name": "Consortium of Universities for the Advancement of Hydrologic Science, Inc",
                         "lang": "en",
@@ -4191,7 +4191,7 @@ class BaseResource(Page, AbstractResource):
                         "bibtex": "misc",
                         "citeproc": "dataset"
                     },
-                    "relatedIdentifiers": [],
+                    # "relatedIdentifiers": [],
                     "relatedItems": [],
                     "sizes": [],
                     "formats": [],
@@ -4306,7 +4306,7 @@ class BaseResource(Page, AbstractResource):
             payload["data"]["attributes"]["rightsList"] = [rights_data]
 
         related_identifiers, related_items = self.get_related_items()
-        payload["data"]["attributes"]["relatedIdentifiers"] = related_identifiers
+        # payload["data"]["attributes"]["relatedIdentifiers"] = related_identifiers
         payload["data"]["attributes"]["relatedItems"] = related_items
 
         for coverage in self.metadata.coverages.all():
@@ -4346,16 +4346,22 @@ class BaseResource(Page, AbstractResource):
         all_identifiers = self.metadata.identifiers.all()
 
         for identifier in all_identifiers:
-            payload["data"]["attributes"].setdefault("identifiers", []).append({
-                "identifier": identifier.url,
-                "identifierType": identifier.name
-            })
+            if identifier.name == 'doi':    
+                payload["data"]["attributes"].setdefault("identifiers", []).append({
+                    "identifier": identifier.url,
+                    "identifierType": identifier.name
+                })
+            else:
+                payload["data"]["attributes"].setdefault("alternateIdentifiers", []).append({
+                    "alternateIdentifier": identifier.url,
+                    "alternateIdentifierType": identifier.name
+                })
 
-        if self.metadata.citation and hasattr(self.metadata.citation, 'value'):
-            payload["data"]["attributes"]["identifiers"].append({
-                "alternateIdentifier": self.metadata.citation.value,
-                "alternateIdentifierType": "Citation"
-            })
+        # if self.metadata.citation and hasattr(self.metadata.citation, 'value'):
+        #     payload["data"]["attributes"]["identifiers"].append({
+        #         "alternateIdentifier": self.metadata.citation.value,
+        #         "alternateIdentifierType": "Citation"
+        #     })
 
         if hasattr(self, 'size') and self.size:
             payload["data"]["attributes"]["sizes"].append(f"{self.size} bytes")
