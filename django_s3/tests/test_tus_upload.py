@@ -440,17 +440,21 @@ class CustomTusUploadTests(TestCase):
         # Should succeed using HTTP_UPLOAD_LENGTH (500) instead of metadata file_size
         self.assertEqual(resp.status_code, 201)
 
-    def test_post_handles_null_metadata_file_size(self):
-        """Test that POST handles 'null' string in metadata file_size"""
+    def test_post_handles_missing_metadata_file_size(self):
+        """Test that POST handles missing metadata file_size"""
         view = CustomTusUpload()
         request = self.factory.post("/")
         request.user = self.user
         request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
         request.META["HTTP_UPLOAD_LENGTH"] = "300"
 
-        # Modify the metadata to have 'null' file_size
-        metadata = self.fake_metadata()
-        metadata['file_size'] = 'null'
+        # Modify the metadata to have missing file_size
+        metadata = {
+            "filename": "test.txt",
+            "hs_res_id": self.res.short_id,
+            "username": self.user.username,
+            "path": f"{self.res.short_id}/data/contents/test.txt",
+        }
         encoded_metadata = ",".join(
             f"{key} {base64.b64encode(value.encode()).decode('utf-8')}" if isinstance(value, str) else f"{key} {value}"
             for key, value in metadata.items()
