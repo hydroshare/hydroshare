@@ -4170,7 +4170,7 @@ class BaseResource(Page, AbstractResource):
                     "event": "publish",
                     "url": None,
                     "creators": [],
-                    "titles": [{"title": self.metadata.title.value, "titleType": "", "lang": "en"}],
+                    "titles": [{"title": self.metadata.title.value, "titleType": "Subtitle", "lang": "en"}],
                     "publisher": {
                         "name": "Consortium of Universities for the Advancement of Hydrologic Science, Inc",
                         "lang": "en",
