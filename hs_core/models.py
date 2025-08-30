@@ -4346,7 +4346,7 @@ class BaseResource(Page, AbstractResource):
         all_identifiers = self.metadata.identifiers.all()
 
         for identifier in all_identifiers:
-            if identifier.name == 'doi':    
+            if identifier.name == 'doi':
                 payload["data"]["attributes"].setdefault("identifiers", []).append({
                     "identifier": identifier.url,
                     "identifierType": identifier.name
