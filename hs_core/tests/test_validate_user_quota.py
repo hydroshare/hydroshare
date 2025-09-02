@@ -31,19 +31,28 @@ class ValidateUserQuotaTestCase(TestCase):
             content="You have used {used} {unit} out of {allocated} {unit} in {zone} ({percent}%)."
         )
 
-        # Mock the MinIO interactions for all tests
-        self.mock_subprocess = patch('theme.models.subprocess.run').start()
-        self.addCleanup(patch.stopall)
+        # Create UserQuota for the user
+        self.user_quota, _ = UserQuota.objects.get_or_create(
+            user=self.user,
+            zone=self.hs_internal_zone
+        )
+
+        # Set up individual test mocks
+        self.mock_subprocess_patcher = patch('theme.models.subprocess.run')
+        self.mock_subprocess = self.mock_subprocess_patcher.start()
 
     def tearDown(self):
-        super(ValidateUserQuotaTestCase, self).tearDown()
+        # Stop all patches
+        self.mock_subprocess_patcher.stop()
+        self.mock_subprocess.reset_mock()
+
+        # Clean up database
         User.objects.all().delete()
         Group.objects.all().delete()
         BaseResource.objects.all().delete()
-        Group.objects.all().delete()
         UserQuota.objects.all().delete()
         QuotaMessage.objects.all().delete()
-        patch.stopall()
+        super().tearDown()
 
     def _mock_quota_info(self, allocated_size, unit):
         """Mock the quota info response from MinIO"""
@@ -125,14 +134,10 @@ class ValidateUserQuotaTestCase(TestCase):
         exception_message = str(context.exception)
         self.assertIn("Quota exceeded", exception_message)
 
-    @patch('hs_core.hydroshare.utils.convert_file_size_to_unit')
-    def test_validate_user_quota_over_quota(self, mock_convert):
+    def test_validate_user_quota_over_quota(self):
         """Test that exception is raised when user exceeds quota"""
         # Setup mock responses
         self._setup_mock_side_effect(100, "MB", 80, "MB")
-
-        # Mock the conversion to return 30MB (the size we're adding)
-        mock_convert.return_value = 30
 
         # Adding 30MB should exceed quota (80 + 30 = 110 > 100)
         with self.assertRaises(QuotaException) as context:
@@ -169,14 +174,10 @@ class ValidateUserQuotaTestCase(TestCase):
         with self.assertRaises(QuotaException):
             validate_user_quota(self.user, 20 * 1024 * 1024)  # 20MB in bytes
 
-    @patch('hs_core.hydroshare.utils.convert_file_size_to_unit')
-    def test_validate_user_quota_with_username_string(self, mock_convert):
+    def test_validate_user_quota_with_username_string(self):
         """Test that function works with username string instead of User object"""
         # Setup mock responses
         self._setup_mock_side_effect(100, "MB", 90, "MB")
-
-        # Mock the conversion to return 20MB (the size we're adding)
-        mock_convert.return_value = 20
 
         # Should raise exception when passing username string
         with self.assertRaises(QuotaException):
