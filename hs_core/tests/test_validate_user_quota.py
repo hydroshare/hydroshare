@@ -102,14 +102,10 @@ class ValidateUserQuotaTestCase(TestCase):
         except Exception as e:
             self.fail(f"validate_user_quota raised unexpected exception: {e}")
 
-    @patch('hs_core.hydroshare.utils.convert_file_size_to_unit')
-    def test_validate_user_quota_within_quota(self, mock_convert):
+    def test_validate_user_quota_within_quota(self):
         """Test that no exception is raised when user is within quota"""
         # Setup mock responses
         self._setup_mock_side_effect(100, "MB", 50, "MB")
-
-        # Mock the conversion to return 25MB (the size we're adding)
-        mock_convert.return_value = 25
 
         # Adding 25MB should be within quota (50 + 25 = 75 < 100)
         try:
@@ -118,14 +114,10 @@ class ValidateUserQuotaTestCase(TestCase):
         except Exception as e:
             self.fail(f"validate_user_quota raised unexpected exception: {e}")
 
-    @patch('hs_core.hydroshare.utils.convert_file_size_to_unit')
-    def test_validate_user_quota_exactly_at_quota(self, mock_convert):
+    def test_validate_user_quota_exactly_at_quota(self):
         """Test that exception is raised when user exactly reaches quota limit"""
         # Setup mock responses
         self._setup_mock_side_effect(100, "MB", 50, "MB")
-
-        # Mock the conversion to return 50MB (the size we're adding)
-        mock_convert.return_value = 50
 
         # Adding exactly 50MB should exceed quota (50 + 50 = 100 >= 100)
         with self.assertRaises(QuotaException) as context:
@@ -158,17 +150,13 @@ class ValidateUserQuotaTestCase(TestCase):
         except Exception as e:
             self.fail(f"validate_user_quota raised unexpected exception: {e}")
 
-    @patch('hs_core.hydroshare.utils.convert_file_size_to_unit')
-    def test_validate_user_quota_no_quota_message(self, mock_convert):
+    def test_validate_user_quota_no_quota_message(self):
         """Test behavior when no QuotaMessage exists"""
         # Delete the quota message
         QuotaMessage.objects.all().delete()
 
         # Setup mock responses
         self._setup_mock_side_effect(10, "MB", 5, "MB")
-
-        # Mock the conversion to return 20MB (the size we're adding)
-        mock_convert.return_value = 20
 
         # Should still raise QuotaException even without QuotaMessage
         with self.assertRaises(QuotaException):
@@ -183,14 +171,10 @@ class ValidateUserQuotaTestCase(TestCase):
         with self.assertRaises(QuotaException):
             validate_user_quota(self.user.username, 20 * 1024 * 1024)  # 20MB in bytes
 
-    @patch('hs_core.hydroshare.utils.convert_file_size_to_unit')
-    def test_validate_user_quota_zero_size(self, mock_convert):
+    def test_validate_user_quota_zero_size(self):
         """Test that zero size doesn't affect quota validation"""
         # Setup mock responses
         self._setup_mock_side_effect(100, "MB", 99, "MB")
-
-        # Mock the conversion to return 0 (the size we're adding)
-        mock_convert.return_value = 0
 
         # Adding zero size should not raise exception
         try:
@@ -199,14 +183,10 @@ class ValidateUserQuotaTestCase(TestCase):
         except Exception as e:
             self.fail(f"validate_user_quota raised unexpected exception for zero size: {e}")
 
-    @patch('hs_core.hydroshare.utils.convert_file_size_to_unit')
-    def test_validate_user_quota_negative_size(self, mock_convert):
+    def test_validate_user_quota_negative_size(self):
         """Test that negative size doesn't affect quota validation"""
         # Setup mock responses
         self._setup_mock_side_effect(100, "MB", 50, "MB")
-
-        # Mock the conversion to return 0 (negative size treated as zero)
-        mock_convert.return_value = 0
 
         # Adding negative size should not raise exception (treated as zero)
         try:
