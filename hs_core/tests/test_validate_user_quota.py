@@ -54,20 +54,11 @@ class ValidateUserQuotaTestCase(TestCase):
         QuotaMessage.objects.all().delete()
         super().tearDown()
 
-    def _mock_quota_info(self, allocated_size, unit):
+    def _mock_minio_info(self, allocated_size, unit):
         """Mock the quota info response from MinIO"""
         mock_result = MagicMock()
         # size_with_unit_str = result.stdout.split("Total size: ")[1].split("\n")[0]
         mock_result.stdout = f"Total size: {allocated_size} {unit}"
-        mock_result.stderr = ""
-        mock_result.returncode = 0
-        return mock_result
-
-    def _mock_stat_info(self, used_size, unit):
-        """Mock the stat info response from MinIO with proper format"""
-        mock_result = MagicMock()
-        # The actual format from mc stat command includes "Total size: " prefix
-        mock_result.stdout = f"Total size: {used_size} {unit}"
         mock_result.stderr = ""
         mock_result.returncode = 0
         return mock_result
@@ -77,9 +68,9 @@ class ValidateUserQuotaTestCase(TestCase):
         def side_effect_func(*args, **kwargs):
             cmd = ' '.join(args[0])
             if 'quota' in cmd:
-                return self._mock_quota_info(allocated_size, allocated_unit)
+                return self._mock_minio_info(allocated_size, allocated_unit)
             elif 'stat' in cmd:
-                return self._mock_stat_info(used_size, used_unit)
+                return self._mock_minio_info(used_size, used_unit)
             return MagicMock()
 
         self.mock_subprocess.side_effect = side_effect_func
