@@ -65,7 +65,7 @@ class Command(BaseCommand):
 
             deposit_res_metadata_with_datacite(res)
 
-            print(f"✅ Finished processing resource: {res.short_id}")
+            print(f"✅ Finished processing resource: {res.short_id} | {res.metadata.title}")
             count += 1
             # break  # Remove this break to process all resources
 
