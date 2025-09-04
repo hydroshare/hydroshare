@@ -1,6 +1,6 @@
-from django.urls import re_path
+from django.urls import re_path, path
 
-from django_s3.views import download, rest_check_task_status, rest_download
+from django_s3.views import download, rest_check_task_status, rest_download, CustomTusUpload
 
 urlpatterns = [
     # for download request from resource landing page
@@ -11,4 +11,7 @@ urlpatterns = [
     re_path(r'^rest_check_task_status/(?P<task_id>[A-z0-9\-]+)$',
             rest_check_task_status,
             name='rest_check_task_status'),
+
+    path("tus/", CustomTusUpload.as_view(), name='tus_upload'),
+    path("tus/<uuid:resource_id>", CustomTusUpload.as_view(), name='tus_upload_chunks'),
 ]

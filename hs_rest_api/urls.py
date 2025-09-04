@@ -16,7 +16,7 @@ from .resources.quota_holder import get_quota_holder_bucket
 
 from .discovery import DiscoverSearchView
 from .views.resource_share import ShareResourceGroup, ShareResourceUser
-from .views.service_account_minio import MinIOServiceAccounts, MinIOServiceAccountsDelete
+from .views.service_account_minio import MinIOResourceBucketAndPrefix, MinIOServiceAccounts, MinIOServiceAccountsDelete
 
 hsapi_urlpatterns = [
     path('hsapi/', include('hs_rest_api.urls')),
@@ -86,6 +86,9 @@ urlpatterns = [
 
     re_path(r'user/service/accounts/s3/(?P<service_account_key>[\w]+)', MinIOServiceAccountsDelete.as_view(),
             name='minio_service_accounts_delete'),
+
+    re_path(r'^resource/s3/(?P<pk>[0-9a-f-]+)/$', MinIOResourceBucketAndPrefix.as_view(),
+            name='minio_resource_bucket_and_prefix'),
 
     # DEPRECATED: use form above instead
     re_path(r'^resource/accessRules/(?P<pk>[0-9a-f-]+)/$',
@@ -251,7 +254,4 @@ urlpatterns = [
             name='model_instance_metadata_in_json'),
 
     re_path(r'^resource/(?P<resource_id>[0-9a-f]+)/quota_holder_bucket_name/$', get_quota_holder_bucket),
-
-    path("tus/", core_views.resource_rest_api.CustomTusUpload.as_view(), name='tus_upload'),
-    path("tus/<uuid:resource_id>", core_views.resource_rest_api.CustomTusUpload.as_view(), name='tus_upload_chunks'),
 ]
