@@ -406,7 +406,8 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
 
     def get_metadata_elements(self):
         elements = super(NetCDFFileMetaData, self).get_metadata_elements()
-        elements += [self.originalCoverage]
+        if self.originalCoverage:
+            elements += [self.originalCoverage]
         elements += list(self.variables.all())
         return elements
 
