@@ -27,9 +27,8 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view
 
-from hs_core.exceptions import QuotaException
 from hs_core.hydroshare.resource import check_resource_type
-from hs_core.hydroshare.utils import validate_user_quota, get_resource_by_shortkey
+from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.signals import (pre_check_bag_flag, pre_download_file,
                              pre_download_resource)
 from hs_core.task_utils import (get_or_create_task_notification,
