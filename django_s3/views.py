@@ -28,6 +28,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 
 from hs_core.hydroshare.resource import check_resource_type
+from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.signals import (pre_check_bag_flag, pre_download_file,
                              pre_download_resource)
 from hs_core.task_utils import (get_or_create_task_notification,
@@ -633,6 +634,11 @@ class CustomTusUpload(TusUpload):
         meta_file_size = metadata.get("file_size", None)
         if meta_file_size and meta_file_size != 'null':
             file_size = meta_file_size
+
+        res_id = metadata.get("hs_res_id")
+        res = get_resource_by_shortkey(res_id)
+        if res.raccess.published:
+            return TusResponse(status=403, reason="Cannot upload file to a published resource")
         try:
             tus_file = CustomTusFile.create_initial_file(metadata, file_size)
         except Exception as e:
