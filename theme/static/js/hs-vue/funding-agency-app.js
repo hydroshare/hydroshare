@@ -309,6 +309,29 @@ let fundingAgenciesApp = new Vue({
       })[0];
       this.deleteUrl = `/hsapi/_internal/${this.resourceId}/fundingagency/${id}/delete-metadata/`;
     },
+    blockInvalidAwardNumberChars(event) {
+      const allowed = /^[a-zA-Z0-9 .-]$/;
+      if (
+        event.ctrlKey || event.metaKey || event.altKey || event.key.length !== 1
+      ) return;
+  
+      if (!allowed.test(event.key)) {
+        event.preventDefault();
+      }
+    },
+    cleanPastedAwardNumber(event) {
+      const paste = (event.clipboardData || window.clipboardData).getData('text');
+      const allowed = /[a-zA-Z0-9 .-]/g;
+      const cleaned = paste.match(allowed)?.join('') || '';
+  
+      if (cleaned !== paste) {
+        event.preventDefault();
+        this.agencyNameInput += cleaned;
+        this.notifications.push({
+          error: "Pasted content contained invalid characters and was cleaned.",
+        });
+      }
+    },
   },
   watch: {
     agencyNameInput: function (funder) {
