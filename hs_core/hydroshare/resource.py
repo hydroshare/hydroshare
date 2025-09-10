@@ -3,6 +3,7 @@ import logging
 import os
 import shutil
 import zipfile
+import base64
 
 import requests
 from dateutil import tz
@@ -998,6 +999,189 @@ def get_crossref_url():
     return main_url
 
 
+def get_datacite_url():
+    main_url = settings.TEST_DATACITE_API_URL
+    if not settings.USE_DATACITE_TEST:
+        main_url = settings.DATACITE_API_URL
+    return main_url
+
+
+def deposit_res_metadata_with_datacite(res):
+    """
+    Deposit resource metadata with DataCite using the Fabrica-style payload.
+    Args:
+        res: Django model instance with metadata
+
+    Returns:
+        Response object or None if error occurred
+    """
+
+    try:
+        token = base64.b64encode(f"{settings.DATACITE_USERNAME}:{settings.DATACITE_PASSWORD}".encode()).decode()
+
+        headers = {
+            "accept": "application/vnd.api+json",
+            "content-type": "application/json",
+            "authorization": f"Basic {token}"
+        }
+        response = requests.post(
+            url=get_datacite_url(),
+            data=res.get_datacite_deposit_json(),
+            headers=headers,
+            timeout=10
+        )
+        print(f"Metadata deposited successfully with DataCite for resource {res.short_id} \n\n {response.text}")
+        response.raise_for_status()
+        logger.info(f"Metadata deposited successfully with DataCite for resource {res.short_id}")
+        return response
+    except requests.exceptions.HTTPError as http_err:
+        logger.error(f"HTTP error occurred: {http_err}")
+        print(f"HTTP error occurred: {http_err}")
+        if response is not None:
+            logger.error(f"Response content: {response.text}")
+            print(f"Response content: {response.text}")
+    except requests.exceptions.RequestException as err:
+        logger.error(f"Request failed: {err}")
+        print(f"Request failed: {err}")
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        print(f"Unexpected error: {e}")
+
+    return None
+
+
+def update_payload_for_datacite(short_id, element_name, form_data):
+    """
+    Transforms QueryDict form input into a DataCite-compliant payload using field mappings.
+    """
+    res = utils.get_resource_by_shortkey(short_id)
+    if not res.raccess.published:
+        return False
+    attributes = {}
+    if element_name == 'fundingagency':
+        res = utils.get_resource_by_shortkey(short_id)
+        attributes = {
+            "fundingReferences": res.get_funding_references(res)
+        }
+    elif element_name == 'contributor':
+        res = utils.get_resource_by_shortkey(short_id)
+        attributes = {
+            "contributors": res.get_contributor_data(res)
+        }
+    elif element_name == 'relation':
+        res = utils.get_resource_by_shortkey(short_id)
+        related_identifiers, related_items = res.get_related_items()
+        attributes = {
+            "relatedItems": related_items,
+        }
+
+    # Define field mappings and transformation rules
+    field_map = {
+        'abstract': {
+            'target': 'descriptions',
+            'transform': lambda val: [{"description": val, "descriptionType": "Abstract"}]
+        },
+        ('type', 'north', 'east', 'northlimit', 'southlimit', 'eastlimit', 'westlimit', 'name'): {
+            'target': 'geoLocations',
+            'transform': lambda type_, north, east, nlimit, slimit, elimit, wlimit, name: (
+                [{
+                    "geoLocationPoint": {
+                        "pointLatitude": str(north),
+                        "pointLongitude": str(east)
+                    },
+                    **({"geoLocationPlace": name} if name else {})
+                }] if type_ == 'point' and north and east else
+                [{
+                    "geoLocationBox": {
+                        "northBoundLatitude": str(nlimit),
+                        "southBoundLatitude": str(slimit),
+                        "eastBoundLongitude": str(elimit),
+                        "westBoundLongitude": str(wlimit)
+                    }
+                }] if type_ == 'box' and all([nlimit, slimit, elimit, wlimit]) else []
+            )
+        },
+        'subject': {
+            'target': 'subjects',
+            'transform': lambda val: [
+                {
+                    "subject": subject.strip(),
+                    "subjectScheme": "HydroShare Keywords",
+                    "schemeUri": "http://www.hydroshare.org/terms"
+                } for subject in val.split(',') if subject.strip()
+            ]
+        }
+        # ➕ Add new fields or transformations here as needed
+    }
+
+    for key, config in field_map.items():
+        if isinstance(key, str):
+            if key in form_data:
+                val = form_data.get(key)
+                attributes[config['target']] = config['transform'](val)
+        elif isinstance(key, tuple):
+            values = [form_data.get(k) for k in key]
+            if any(values):  # Only attempt if at least one field is non-empty
+                try:
+                    result = config['transform'](*values)
+                    if result:
+                        attributes[config['target']] = result
+                except Exception as e:
+                    logger.warning(f"Error transforming field {key}: {e}")
+
+    return {
+        "data": {
+            "type": "dois",
+            "attributes": attributes
+        }
+    }
+
+
+def update_doi_metadata_with_datacite(short_id, element_name, payload):
+    """
+    Update existing DOI metadata with DataCite.
+    """
+
+    payload = update_payload_for_datacite(short_id, element_name, payload)
+    if not payload:
+        logger.error(f"Failed to update DOI metadata for resource {short_id}.")
+        return None
+
+    token = base64.b64encode(f"{settings.DATACITE_USERNAME}:{settings.DATACITE_PASSWORD}".encode()).decode()
+
+    headers = {
+        "accept": "application/vnd.api+json",
+        "content-type": "application/json",
+        "authorization": f"Basic {token}"
+    }
+
+    doi_url = f"{get_datacite_url()}/{settings.DATACITE_PREFIX}/{short_id}"
+
+    try:
+        response = requests.put(
+            url=doi_url,
+            json=payload,
+            headers=headers,
+            timeout=10
+        )
+        print(f"DOI metadata updated successfully with DataCite {response.text}")
+        response.raise_for_status()
+        logger.info(f"DOI {short_id} metadata updated successfully with DataCite.")
+        return response
+
+    except requests.exceptions.HTTPError as http_err:
+        logger.error(f"HTTP error occurred while updating DOI: {http_err}")
+        if response is not None:
+            logger.error(f"Response content: {response.text}")
+    except requests.exceptions.RequestException as err:
+        logger.error(f"Request failed while updating DOI: {err}")
+    except Exception as e:
+        logger.error(f"Unexpected error while updating DOI: {e}")
+        print(f"Unexpected error while updating DOI: {e}")
+
+    return None
+
+
 def deposit_res_metadata_with_crossref(res):
     """
     Deposit resource metadata with CrossRef DOI registration agency.
@@ -1118,17 +1302,17 @@ def publish_resource(user, pk):
     resource.save()
     if settings.DEBUG:
         # in debug mode, making sure we are using the test CrossRef service
-        assert settings.USE_CROSSREF_TEST is True
+        assert settings.USE_DATACITE_TEST is True
     try:
-        response = deposit_res_metadata_with_crossref(resource)
+        response = deposit_res_metadata_with_datacite(resource)
     except ValueError as v:
-        logger.error(f"Failed depositing XML {v} with Crossref for res id {pk}")
+        logger.error(f"Failed depositing XML {v} with Datacite for res id {pk}")
         resource.doi = get_resource_doi(pk)
         resource.save()
         # set the resource back into review_pending
         resource.raccess.alter_review_pending_flags(initiating_review=True)
         raise
-    if not response.status_code == status.HTTP_200_OK:
+    if response.status_code not in (status.HTTP_200_OK, status.HTTP_201_CREATED):
         # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
         # crontab celery task
         logger.error(f"Received a {response.status_code} from Crossref while depositing metadata for res id {pk}")
