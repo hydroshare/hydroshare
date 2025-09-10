@@ -1,7 +1,8 @@
 import logging
 import requests
 import base64
-
+import time
+from datetime import timedelta
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
@@ -49,6 +50,7 @@ class Command(BaseCommand):
     help = "Migrate all resources from Crossref to DataCite"
 
     def handle(self, *args, **options):
+        start_time = time.time()
         published_resources = BaseResource.public_resources.filter(raccess__published=True)
 
         total = published_resources.count()
@@ -60,13 +62,18 @@ class Command(BaseCommand):
             if not res.metadata:
                 logger.warning(f"Resource {res.short_id} has no metadata. Skipping.")
                 continue
-
+            if count < 30:
+                count += 1
+                continue
             print(f"🔄 Processing resource: {res.short_id}")
+            res_start_time = time.time()
 
             deposit_res_metadata_with_datacite(res)
-
-            print(f"✅ Finished processing resource: {res.short_id} | {res.metadata.title}")
+            res_duration = timedelta(seconds=int(time.time() - res_start_time))
+            print(f"✅ Finished processing resource: {res.short_id} | {res.metadata.title} | Time taken: {res_duration}")
             count += 1
+            if count == 130:
+                break
             # break  # Remove this break to process all resources
-
-        print(f"🎉 Finished processing {count} resources.")
+        total_duration = timedelta(seconds=int(time.time() - start_time))
+        print(f"🎉 Finished processing {count} resources | Time taken: {total_duration}")
