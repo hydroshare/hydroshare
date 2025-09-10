@@ -635,6 +635,11 @@ class CustomTusUpload(TusUpload):
         meta_file_size = metadata.get("file_size", 0)
         if meta_file_size and meta_file_size != 'null':
             file_size = meta_file_size
+
+        res_id = metadata.get("hs_res_id")
+        res = get_resource_by_shortkey(res_id)
+        if res.raccess.published:
+            return TusResponse(status=403, reason="Cannot upload file to a published resource")
         try:
             res_id = metadata.get("hs_res_id")
             res = get_resource_by_shortkey(res_id)

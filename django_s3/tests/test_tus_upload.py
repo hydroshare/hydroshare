@@ -393,6 +393,24 @@ class CustomTusUploadTests(TestCase):
             resp = view.post(request)
             self.assertEqual(resp.status_code, 500)
 
+    def test_post_returns_403_when_resource_published(self):
+        """Test that POST returns 403 when resource is published"""
+        view = CustomTusUpload()
+        request = self.factory.post("/")
+        request.user = self.user
+
+        # Set resource to published
+        self.res.raccess.published = True
+        self.res.raccess.save()
+
+        self.create_request_metadata(request)
+        view.request = request
+        view.kwargs = {'resource_id': self.res.short_id}
+
+        resp = view.post(request)
+        # Should return 403 if resource is published
+        self.assertEqual(resp.status_code, 403)
+
     def test_post_returns_413_when_user_exceeds_quota(self):
         """Test that POST returns 413 when user exceeds quota"""
         view = CustomTusUpload()
