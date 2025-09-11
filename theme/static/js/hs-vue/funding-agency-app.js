@@ -309,6 +309,37 @@ let fundingAgenciesApp = new Vue({
       })[0];
       this.deleteUrl = `/hsapi/_internal/${this.resourceId}/fundingagency/${id}/delete-metadata/`;
     },
+    blockInvalidAwardNumberChars(event) {
+      // Allow printable ASCII but exclude quotes and angle brackets
+      const allowed = /^[\x20-\x7E]$/;
+      const exclude = /^['"<>\\]$/; 
+    
+      if (
+        event.ctrlKey || event.metaKey || event.altKey || event.key.length !== 1
+      ) return;
+    
+      if (!allowed.test(event.key) || exclude.test(event.key)) {
+        event.preventDefault();
+      }
+    },
+    
+    cleanPastedAwardNumber(event) {
+      const paste = (event.clipboardData || window.clipboardData).getData('text');
+      paste.trim();
+      // Keep only printable ASCII except quotes and angle brackets
+      const allowed = /[\x20-\x7E]/g;
+      const cleaned = (paste.match(allowed) || [])
+        .filter(ch => !`'"<>\\`.includes(ch))
+        .join('');
+      console.log(`Pasted: "${paste}" Cleaned: "${cleaned}"`);
+      if (cleaned !== paste) {
+        event.preventDefault();
+        this.currentlyEditing.award_number = this.currentlyEditing.award_number??'' + cleaned
+          this.notifications.push({
+            info: "Cleaned the invalid characters.",
+          });
+      }
+    },
   },
   watch: {
     agencyNameInput: function (funder) {
