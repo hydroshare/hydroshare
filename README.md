@@ -162,3 +162,16 @@ Hydroshare is released under the BSD 3-Clause License. This means that [you can 
 
 ©2017 CUAHSI. This material is based upon work supported by the National Science Foundation (NSF) under awards [1148453](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1148453), [1148090](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1148090), [1664061](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1664061), [1664018](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1664018), [1664119](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1664119), [1338606](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1338606), and [1849458](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1849458). Any opinions, findings, conclusions, or recommendations expressed in this material are those of the authors and do not necessarily reflect the views of the NSF.
 
+# Create a dummy resource for landing page work:
+
+First create a resource in the UI.
+export STARTING_RESOURCE_ID=
+export BUCKET=asdfasdfg.com
+
+```
+docker exec -it hydroshare python manage.py modify_resource_id RESOURCE_ID d7b526e24f7e449098b428ae9363f514
+
+docker exec -it hydroshare mc cp dataset_metadata.json hydroshare/$BUCKET/md/d7b526e24f7e449098b428ae9363f514/
+
+docker exec -it hydroshare mc cp hs_user_meta.json hydroshare/$BUCKET/d7b526e24f7e449098b428ae9363f514/data/contents/
+```
