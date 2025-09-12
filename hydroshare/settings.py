@@ -617,6 +617,12 @@ CSRF_TRUSTED_ORIGINS = [
 # Allow credentials (cookies, authorization headers) to be included in CORS requests
 CORS_ALLOW_CREDENTIALS = True
 
+# List of allowed hosts for redirects after login
+ALLOWED_REDIRECT_HOSTS = [
+    # "hydroshare.org",   # Vue app main domain
+    # "www.hydroshare.org",   # Vue app WWW variant
+]
+
 #########################
 # OPTIONAL APPLICATIONS #
 #########################

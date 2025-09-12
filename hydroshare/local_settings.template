@@ -101,6 +101,12 @@ CSRF_TRUSTED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 CSRF_COOKIE_HTTPONLY = False  # Must be False so JS (Vue app) can read it
 
+# List of allowed hosts for redirects after login
+ALLOWED_REDIRECT_HOSTS = [
+    "localhost:8080",  # Vue development server
+    "127.0.0.1:8080",  # Vue development server
+]
+
 #############
 # DATABASES #
 #############
