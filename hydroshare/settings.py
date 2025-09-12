@@ -594,15 +594,15 @@ PACKAGE_NAME_GRAPPELLI = "grappelli_safe"
 #########################
 
 # CORS settings - specify allowed origins for security in production
-# 
+#
 # Cross-origin setup
 # NOTE: If we setup nginx reverse proxy in production, can we remove CORS and CSRF trusted origins?
-# 
+#
 CORS_ALLOWED_ORIGINS = [
     # Vue frontend domains that make requests to Django
     # "https://hydroshare.org",         # Vue app main domain
     # "https://www.hydroshare.org",     # Vue app WWW variant
-    # 
+    #
     # NOTE: Django backend sub domain (e.g., api.hydroshare.org) is NOT included here
 ]
 
@@ -610,7 +610,7 @@ CORS_ALLOWED_ORIGINS = [
 # NOTE: Only include origins that will submit browser requests to Django backend
 CSRF_TRUSTED_ORIGINS = [
     # Vue frontend domains that need CSRF tokens
-    # "https://hydroshare.org",         # Vue app main domain  
+    # "https://hydroshare.org",         # Vue app main domain
     # "https://www.hydroshare.org",     # Vue app WWW variant
 ]
 
