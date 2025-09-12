@@ -23,13 +23,13 @@ from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse, JsonResponse, HttpResponseForbidden, HttpResponseNotAllowed
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.shortcuts import redirect, get_object_or_404
 from django.shortcuts import render
 from django.template.response import TemplateResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET
-from django.utils.http import int_to_base36, urlencode
+from django.utils.http import int_to_base36, urlencode, url_has_allowed_host_and_scheme
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
@@ -801,9 +801,24 @@ def login(
             login_msg += " - " + add_msg
         info(request, _(login_msg))
         auth_login(request, authenticated_user)
+
+        # Secure redirect validation to prevent open redirect attacks
         next_url = request.GET.get('next') or request.POST.get('next')
         if next_url:
-            return redirect(next_url)
+            allowed_redirect_hosts = getattr(settings, "ALLOWED_REDIRECT_HOSTS", [])
+
+            if url_has_allowed_host_and_scheme(
+                url=next_url,
+                allowed_hosts={request.get_host(), *allowed_redirect_hosts},
+                require_https=not settings.DEBUG,  # allow http in dev, require https in prod
+            ):
+                return redirect(next_url)
+            else:
+                logging.warning(
+                    f"Blocked suspicious redirect attempt from user {authenticated_user.username} "
+                    f"to {next_url} from {request.META.get('HTTP_REFERER', 'unknown')}"
+                )
+                return HttpResponseBadRequest("Invalid redirect URL")
         return login_redirect(request)
     context = {"form": form, "title": _("Log in")}
     context.update(extra_context or {})
