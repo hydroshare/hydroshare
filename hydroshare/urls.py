@@ -59,6 +59,7 @@ urlpatterns += i18n_patterns(
     path("tracking/", tracking.UseTrackingView.as_view(), name="tracking"),
     path("tracking/applaunch/", tracking.AppLaunch.as_view(), name="tracking-applaunch"),
     path("user/", theme.UserProfileView.as_view()),
+    path("csrf-cookie/", theme.csrf_cookie_view, name="csrf_cookie"),
     re_path(r"^user/(?P<user>.*)/", theme.UserProfileView.as_view()),
     path("comment/", theme.comment),
     re_path(
@@ -248,6 +249,7 @@ urlpatterns += [
     # Override Mezzanine URLs here, before the Mezzanine URL include
     re_path("^accounts/signup/", theme.signup),
     re_path("^accounts/verify/(?P<uidb36>[-\w]+)/(?P<token>[-\w]+)", theme.signup_verify), # noqa
+    re_path("^accounts/login/", theme.login),
     # MEZZANINE'S URLS
     # ----------------
     # ADD YOUR OWN URLPATTERNS *ABOVE* THE LINE BELOW.
