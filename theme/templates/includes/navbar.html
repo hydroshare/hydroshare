@@ -213,67 +213,70 @@
                                 </li>
                             </ul>
                         </li>
-                    {% else %}
-                        <li id="notifications-dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" style="padding-top:14px;padding-bottom:14px;"
-                            role="button" aria-haspopup="true" aria-expanded="false">
-                                <span class="glyphicon glyphicon-bell"></span>
-                            </a>
-                            <ul class="dropdown-menu arrow_box" style="position:absolute;">
-                                <li class="notifications">
-                                    <div id="app-notifications">
-                                        <div class="notifications--header">
-                                            <h4>Notifications <span v-if="tasks.length">(${tasks.length})</span></h4>
-                                            <a role="button" id="btn-notifications-clear" v-on:click="clear">Clear</a>
-                                        </div>
+                    {% endif %}
 
-                                        <div v-if="loading" class="default-content">
-                                            <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
-                                        </div>
-                                        <div v-if="!loading">
-                                            <div v-if="tasks.length">
-                                                <div class="task" v-for="task in tasks">
-                                                    <div class="notification--content">
-                                                        <div class="notification--name">${taskMessages[task.name].title}
-                                                            <div class="notification--status">
-                                                                <span :class="statusIcons[task.status]"></span>
+                    <li id="notifications-dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" style="padding-top:14px;padding-bottom:14px;"
+                        role="button" aria-haspopup="true" aria-expanded="false">
+                            <span class="glyphicon glyphicon-bell"></span>
+                        </a>
+                        <ul class="dropdown-menu arrow_box" style="position:absolute;">
+                            <li class="notifications">
+                                <div id="app-notifications">
+                                    <div class="notifications--header">
+                                        <h4>Notifications <span v-if="tasks.length">(${tasks.length})</span></h4>
+                                        <a role="button" id="btn-notifications-clear" v-on:click="clear">Clear</a>
+                                    </div>
 
-                                                                <small v-if="canNotifyDownload(task)">
-                                                                    Your download will start in a few seconds. If it does not start click <a
-                                                                        :href="task.payload">here</a>
-                                                                    to download your files directly.
-                                                                </small>
-                                                                <small v-else>${taskMessages[task.name].status[task.status]}.
-                                                                    <span v-if="task.payload && (task.status === 'delivered' || task.status === 'completed')">
-                                                                    Click <a :href="task.payload">here</a> to refresh user interface.
-                                                                    </span>
-                                                                    <span v-else-if="task.payload.includes('FileOverrideException') && task.status === 'failed'">
-                                                                    <a id='btn-file-override' v-on:click="showFileOverrideDialog(task.payload)">Select whether to allow file override</a>
-                                                                    </span>
-                                                                    <span v-else-if="task.status === 'failed'">${task.payload}</span>
-                                                                </small>
-                                                            </div>
+                                    <div v-if="loading" class="default-content">
+                                        <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
+                                    </div>
+                                    <div v-if="!loading">
+                                        <div v-if="tasks.length">
+                                            <div class="task" v-for="task in tasks">
+                                                <div class="notification--content">
+                                                    <div class="notification--name">${taskMessages[task.name].title}
+                                                        <div class="notification--status">
+                                                            <span :class="statusIcons[task.status]"></span>
+
+                                                            <small v-if="canNotifyDownload(task)">
+                                                                Your download will start in a few seconds. If it does not start click <a
+                                                                    :href="task.payload">here</a>
+                                                                to download your files directly.
+                                                            </small>
+                                                            <small v-else>${taskMessages[task.name].status[task.status]}.
+                                                                <span v-if="task.payload && (task.status === 'delivered' || task.status === 'completed')">
+                                                                Click <a :href="task.payload">here</a> to refresh user interface.
+                                                                </span>
+                                                                <span v-else-if="task.payload.includes('FileOverrideException') && task.status === 'failed'">
+                                                                <a id='btn-file-override' v-on:click="showFileOverrideDialog(task.payload)">Select whether to allow file override</a>
+                                                                </span>
+                                                                <span v-else-if="task.status === 'failed'">${task.payload}</span>
+                                                            </small>
                                                         </div>
                                                     </div>
-                                                    <div class="notification--controls">
-                                                        <button type="button" v-if="canBeDismissed(task)" v-on:click="dismissTask(task)" class="close" aria-label="Dismiss"
-                                                            title="Dismiss">
-                                                            <span aria-hidden="true">×</span>
-                                                        </button>
+                                                </div>
+                                                <div class="notification--controls">
+                                                    <button type="button" v-if="canBeDismissed(task)" v-on:click="dismissTask(task)" class="close" aria-label="Dismiss"
+                                                        title="Dismiss">
+                                                        <span aria-hidden="true">×</span>
+                                                    </button>
 
-                                                        <button type="button" v-if="canBeAborted(task)" v-on:click="abortTask(task)" class="close" title="Abort"
-                                                            aria-label="Abort">
-                                                            <span class="glyphicon glyphicon-ban-circle"></span>
-                                                        </button>
-                                                    </div>
+                                                    <button type="button" v-if="canBeAborted(task)" v-on:click="abortTask(task)" class="close" title="Abort"
+                                                        aria-label="Abort">
+                                                        <span class="glyphicon glyphicon-ban-circle"></span>
+                                                    </button>
                                                 </div>
                                             </div>
-                                            <div v-else class="default-content">You don't have any notifications.</div>
                                         </div>
+                                        <div v-else class="default-content">You don't have any notifications.</div>
                                     </div>
-                                </li>
-                            </ul>
-                        </li>
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    {% if not request.user.is_authenticated %}
                         <li id="signin-menu"><a href="{% url 'login' %}"><span
                                 class="glyphicon glyphicon-log-in"></span> Sign In</a>
                         </li>
