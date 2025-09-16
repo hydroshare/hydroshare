@@ -1,0 +1,17 @@
+FROM node:22-alpine
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install @uppy/companion express body-parser express-session
+
+# Copy your custom companion file
+COPY custom-companion.js ./
+
+# Expose port
+EXPOSE 3020
+
+# Run the custom server
+CMD ["node", "custom-companion.js"]
