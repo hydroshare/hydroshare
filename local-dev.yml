@@ -200,9 +200,8 @@ services:
       COMPANION_AWS_SECRET: 'minioadmin'
       COMPANION_AWS_ENDPOINT: 'http://localhost:9000'
       # https://uppy.io/docs/companion/#s3bucket-companion_aws_bucket
-      # TODO REMOVE
-      # COMPANION_AWS_BUCKET: (filename, metadata, req) => {return metadata.bucket || 'tmp'},
-      COMPANION_AWS_BUCKET: asdf2
+      # COMPANION_AWS_BUCKET: asdf2
+      # The bucket is now dynamically calculated in companion-custom-config.js, using the upload metadata
       # https://github.com/hydroshare/hydroshare/pull/5974#issuecomment-2963085209
       COMPANION_AWS_REGION: 'us-central-1'
     ports:
