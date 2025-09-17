@@ -206,7 +206,7 @@ services:
       - "6379:6379"
     volumes:
       - "redis_data_vol:/data"
-    command: redis-server --requirepass superSecretPassword
+    command: redis-server
   nginx:
     image: nginx:latest
     container_name: nginx
