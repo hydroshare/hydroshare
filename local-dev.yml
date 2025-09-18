@@ -18,6 +18,10 @@ services:
       MINIO_BROWSER_REDIRECT: "false"
       MINIO_SCANNER_SPEED: "fastest"
       MINIO_POLICY_PLUGIN_URL: "http://micro-auth/minio/authorization/"
+      MINIO_NOTIFY_KAFKA_ENABLE_RESOURCEFILE: "on"
+      MINIO_NOTIFY_KAFKA_BROKERS_RESOURCEFILE: "redpanda:9092"
+      MINIO_NOTIFY_KAFKA_TOPIC_RESOURCEFILE: "resource_file"
+      # mc event add hydroshare/admin arn:minio:sqs::RESOURCEFILE:kafka --event put,delete
     command: server --console-address ":9001" /data
     depends_on:
       - micro-auth
