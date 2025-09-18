@@ -51,6 +51,7 @@ Add the issues included in the release and update this document as release tasks
 - [ ] Review the search and discovery pages
 - [ ] Create a new user and update profile
 - [ ] Create a new resource, check sharing/permission settings, delete new resource
+- [ ] Update the version in the footer via the [Mezzanine admin](https://www.hydroshare.org/admin/theme/siteconfiguration/1/change/)
 - [ ] Developers test around issues
 - [ ] Close the release checklist (GitHub issue)
 - [ ] Create a [new release in GH](https://github.com/hydroshare/hydroshare/releases)
