@@ -6,7 +6,7 @@ from django.contrib.auth.models import Group, User
 from django.core.cache import cache
 from hs_core import hydroshare
 from hs_core.models import BaseResource
-from hs_core.views.resource_rest_api import CustomTusFile
+from django_s3.views import CustomTusFile
 
 
 class TestCustomTusFile(TestCase):
@@ -57,11 +57,11 @@ class TestCustomTusFile(TestCase):
         self.assertEqual(path, self.metadata["path"])
 
     def test_check_existing_file_true(self):
-        with mock.patch("hs_core.views.resource_rest_api.S3Storage.exists", return_value=True):
+        with mock.patch("django_s3.views.S3Storage.exists", return_value=True):
             self.assertTrue(CustomTusFile.check_existing_file("some/path"))
 
     def test_check_existing_file_false(self):
-        with mock.patch("hs_core.views.resource_rest_api.S3Storage.exists", return_value=False):
+        with mock.patch("django_s3.views.S3Storage.exists", return_value=False):
             self.assertFalse(CustomTusFile.check_existing_file("some/path"))
 
     @mock.patch.object(CustomTusFile, "initiate_multipart_upload")

@@ -10,7 +10,7 @@ from hs_access_control.models import PrivilegeCodes
 
 from hs_core import hydroshare
 from hs_core.models import BaseResource
-from hs_core.views.resource_rest_api import CustomTusUpload
+from django_s3.views import CustomTusUpload
 import os
 
 
@@ -306,8 +306,8 @@ class CustomTusUploadTests(TestCase):
         self.assertEqual(resp.status_code, 204)
 
         # Now try to POST the same file again
-        with mock.patch("hs_core.views.resource_rest_api.settings", mock.Mock(TUS_EXISTING_FILE='error',
-                                                                              TUS_FILE_NAME_FORMAT='keep')):
+        with mock.patch("django_s3.views.settings", mock.Mock(TUS_EXISTING_FILE='error',
+                                                              TUS_FILE_NAME_FORMAT='keep')):
             post_response2 = self.initial_post()
             self.assertEqual(post_response2.status_code, 500)
 
@@ -334,8 +334,8 @@ class CustomTusUploadTests(TestCase):
         self.assertEqual(resp.status_code, 204)
 
         # Now try to POST the same file again
-        with mock.patch("hs_core.views.resource_rest_api.settings", mock.Mock(TUS_EXISTING_FILE='increment',
-                                                                              TUS_FILE_NAME_FORMAT='keep')):
+        with mock.patch("django_s3.views.settings", mock.Mock(TUS_EXISTING_FILE='increment',
+                                                              TUS_FILE_NAME_FORMAT='keep')):
             post_response2 = self.initial_post()
             print(post_response2)
             self.assertEqual(post_response2.status_code, 500)
@@ -372,8 +372,8 @@ class CustomTusUploadTests(TestCase):
         view.kwargs = {'resource_id': 'fakeid'}
         tus_file = mock.Mock(is_valid=lambda: True, offset=0, file_size=10)
         chunk = mock.Mock(offset=0)
-        with mock.patch("hs_core.views.resource_rest_api.CustomTusFile", lambda rid: tus_file), \
-             mock.patch("hs_core.views.resource_rest_api.TusChunk", lambda req: chunk):
+        with mock.patch("django_s3.views.CustomTusFile", lambda rid: tus_file), \
+             mock.patch("django_s3.views.TusChunk", lambda req: chunk):
             tus_file.upload_part.side_effect = Exception("fail")
             resp = view.patch(request, "fakeid")
         self.assertEqual(resp.status_code, 500)
@@ -383,12 +383,205 @@ class CustomTusUploadTests(TestCase):
         request = self.factory.post("/")
         request.META["HTTP_UPLOAD_LENGTH"] = "123"
         with mock.patch.object(view, "get_metadata", return_value=self.fake_metadata()), \
-             mock.patch("hs_core.views.resource_rest_api.get_path", lambda meta: "some/path/"), \
-             mock.patch("hs_core.views.resource_rest_api.CustomTusFile.check_existing_file", lambda path: False), \
-             mock.patch("hs_core.views.resource_rest_api.settings", mock.Mock(TUS_EXISTING_FILE='skip',
-                                                                              TUS_FILE_NAME_FORMAT='keep')), \
+             mock.patch("django_s3.views.get_path", lambda meta: "some/path/"), \
+             mock.patch("django_s3.views.CustomTusFile.check_existing_file", lambda path: False), \
+             mock.patch("django_s3.views.settings", mock.Mock(TUS_EXISTING_FILE='skip',
+                                                              TUS_FILE_NAME_FORMAT='keep')), \
              mock.patch.object(view, "validate_filename", lambda fn: fn["filename"]), \
-             mock.patch("hs_core.views.resource_rest_api.CustomTusFile.create_initial_file",
+             mock.patch("django_s3.views.CustomTusFile.create_initial_file",
                         mock.Mock(side_effect=Exception("fail"))):
             resp = view.post(request)
             self.assertEqual(resp.status_code, 500)
+
+    def test_post_returns_403_when_resource_published(self):
+        """Test that POST returns 403 when resource is published"""
+        view = CustomTusUpload()
+        request = self.factory.post("/")
+        request.user = self.user
+
+        # Set resource to published
+        self.res.raccess.published = True
+        self.res.raccess.save()
+
+        self.create_request_metadata(request)
+        view.request = request
+        view.kwargs = {'resource_id': self.res.short_id}
+
+        resp = view.post(request)
+        # Should return 403 if resource is published
+        self.assertEqual(resp.status_code, 403)
+
+    def test_post_returns_413_when_user_exceeds_quota(self):
+        """Test that POST returns 413 when user exceeds quota"""
+        view = CustomTusUpload()
+        request = self.factory.post("/")
+        request.user = self.user
+
+        # Set HTTP_UPLOAD_LENGTH to a large value to exceed quota
+        self.file_size = 1000000000000
+
+        self.create_request_metadata(request)
+        view.request = request
+        view.kwargs = {'resource_id': self.res.short_id}
+
+        resp = view.post(request)
+        # Should return 413 if quota is exceeded
+        self.assertEqual(resp.status_code, 413)
+
+    def test_post_uses_metadata_file_size_when_no_upload_length(self):
+        """Test that POST uses file_size from metadata when HTTP_UPLOAD_LENGTH is missing"""
+        view = CustomTusUpload()
+        request = self.factory.post("/")
+        request.user = self.user
+        request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        # Don't set HTTP_UPLOAD_LENGTH - should use metadata file_size
+        self.create_request_metadata(request)
+        view.request = request
+        view.kwargs = {'resource_id': self.res.short_id}
+
+        resp = view.post(request)
+        # Should succeed and use file_size from metadata
+        self.assertEqual(resp.status_code, 201)
+
+    def test_post_prioritizes_upload_length_over_metadata_file_size(self):
+        """Test that HTTP_UPLOAD_LENGTH takes precedence over metadata file_size"""
+        view = CustomTusUpload()
+        request = self.factory.post("/")
+        request.user = self.user
+        request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        request.META["HTTP_UPLOAD_LENGTH"] = "500"  # Different from metadata file_size
+        self.create_request_metadata(request)  # Contains file_size = self.file_size
+        view.request = request
+        view.kwargs = {'resource_id': self.res.short_id}
+
+        resp = view.post(request)
+        # Should succeed using HTTP_UPLOAD_LENGTH (500) instead of metadata file_size
+        self.assertEqual(resp.status_code, 201)
+
+    def test_post_handles_missing_metadata_file_size(self):
+        """Test that POST handles missing metadata file_size"""
+        view = CustomTusUpload()
+        request = self.factory.post("/")
+        request.user = self.user
+        request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        request.META["HTTP_UPLOAD_LENGTH"] = "300"
+
+        # Modify the metadata to have missing file_size
+        metadata = {
+            "filename": "test.txt",
+            "hs_res_id": self.res.short_id,
+            "username": self.user.username,
+            "path": f"{self.res.short_id}/data/contents/test.txt",
+        }
+        encoded_metadata = ",".join(
+            f"{key} {base64.b64encode(value.encode()).decode('utf-8')}" if isinstance(value, str) else f"{key} {value}"
+            for key, value in metadata.items()
+        )
+        request.META["HTTP_UPLOAD_METADATA"] = encoded_metadata
+
+        view.request = request
+        view.kwargs = {'resource_id': self.res.short_id}
+
+        resp = view.post(request)
+        # Should succeed using HTTP_UPLOAD_LENGTH (300) since metadata file_size is 'null'
+        self.assertEqual(resp.status_code, 201)
+
+    def test_post_uses_metadata_file_size_when_upload_length_zero(self):
+        """Test that POST uses metadata file_size when HTTP_UPLOAD_LENGTH is 0"""
+        view = CustomTusUpload()
+        request = self.factory.post("/")
+        request.user = self.user
+        request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        request.META["HTTP_UPLOAD_LENGTH"] = "0"  # Zero upload length
+        self.create_request_metadata(request)
+        view.request = request
+        view.kwargs = {'resource_id': self.res.short_id}
+
+        resp = view.post(request)
+        # Should succeed using metadata file_size since HTTP_UPLOAD_LENGTH is 0
+        self.assertEqual(resp.status_code, 201)
+
+    def test_post_quota_check_for_different_resource_owners(self):
+        """Test that quota is checked against the resource owner, not the uploading user"""
+        # Create a different user who owns the resource
+        resource_owner = hydroshare.create_account(
+            'owner@email.com',
+            username='resourceowner',
+            first_name='Owner',
+            last_name='User',
+            superuser=False,
+            groups=[self.group]
+        )
+
+        # Create a resource owned by resource_owner but editable by test user
+        owned_resource = hydroshare.create_resource(
+            resource_type='CompositeResource',
+            owner=resource_owner,
+            title='Owned Resource',
+            keywords=('test',)
+        )
+
+        # Share edit permission with test user
+        resource_owner.uaccess.share_resource_with_user(
+            owned_resource, self.user, PrivilegeCodes.CHANGE
+        )
+
+        view = CustomTusUpload()
+        request = self.factory.post("/")
+        request.user = self.user  # User with edit permission but not owner
+
+        # Create metadata for the owned resource
+        metadata = self.fake_metadata()
+        metadata['hs_res_id'] = owned_resource.short_id
+        encoded_metadata = ",".join(
+            f"{key} {base64.b64encode(value.encode()).decode('utf-8')}" if isinstance(value, str) else f"{key} {value}"
+            for key, value in metadata.items()
+        )
+        request.META["HTTP_UPLOAD_METADATA"] = encoded_metadata
+        request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        request.META["HTTP_UPLOAD_LENGTH"] = "1000"
+
+        view.request = request
+        view.kwargs = {'resource_id': owned_resource.short_id}
+
+        resp = view.post(request)
+        # Should succeed - quota is checked against resource owner
+        self.assertEqual(resp.status_code, 201)
+
+    def test_post_with_reasonable_file_size_succeeds(self):
+        """Test that POST succeeds with a reasonable file size that doesn't exceed quota"""
+        view = CustomTusUpload()
+        request = self.factory.post("/")
+        request.user = self.user
+        request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        # Use a small file size that should be within quota
+        request.META["HTTP_UPLOAD_LENGTH"] = "1000"  # 1KB file
+        self.create_request_metadata(request)
+        view.request = request
+        view.kwargs = {'resource_id': self.res.short_id}
+
+        resp = view.post(request)
+        # Should succeed with 201 status
+        self.assertEqual(resp.status_code, 201)
+        self.assertIn("Location", resp.headers)
+
+    def test_post_without_file_size_in_metadata_or_header_succeeds(self):
+        """Test that POST succeeds when no file size is provided in metadata or header"""
+        view = CustomTusUpload()
+        request = self.factory.post("/")
+        request.user = self.user
+        request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+
+        # Don't set HTTP_UPLOAD_LENGTH and remove file_size from metadata
+        metadata = self.fake_metadata()
+        del metadata['file_size']  # Remove file_size from metadata
+        encoded_metadata = ",".join(
+            f"{key} {base64.b64encode(value.encode()).decode('utf-8')}" if isinstance(value, str) else f"{key} {value}"
+            for key, value in metadata.items()
+        )
+        request.META["HTTP_UPLOAD_METADATA"] = encoded_metadata
+
+        view.request = request
+        view.kwargs = {'resource_id': self.res.short_id}
+        resp = view.post(request)
+        self.assertEqual(resp.status_code, 201)
