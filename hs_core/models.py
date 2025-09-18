@@ -4003,9 +4003,8 @@ class BaseResource(Page, AbstractResource):
                 }
                 if contributor.hydroshare_user_id:
                     contributor_data["nameIdentifiers"].append({
-                        "nameIdentifier": f"hydroshare-user-{contributor.hydroshare_user_id}",
+                        "nameIdentifier": f"https://hydroshare.org{contributor.relative_uri}",
                         "nameIdentifierScheme": "Other",
-                        "schemeUri": None
                     })
                 if contributor.identifiers.get('ORCID'):
                     contributor_data["nameIdentifiers"].append({
@@ -4247,9 +4246,8 @@ class BaseResource(Page, AbstractResource):
                 }
                 if creator.hydroshare_user_id:
                     creator_data["nameIdentifiers"].append({
-                        "nameIdentifier": f"hydroshare-user-{creator.hydroshare_user_id}",
+                        "nameIdentifier": f"https://hydroshare.org{creator.relative_uri}",
                         "nameIdentifierScheme": "Other",
-                        "schemeUri": None
                     })
                 if creator.identifiers.get('ORCID'):
                     creator_data["nameIdentifiers"].append({
@@ -4271,15 +4269,20 @@ class BaseResource(Page, AbstractResource):
         for subject in self.metadata.subjects.all():
             payload["data"]["attributes"]["subjects"].append({
                 "subject": subject.value,
-                "subjectScheme": "HydroShare Keywords",
-                "schemeUri": "http://www.hydroshare.org/terms"
             })
 
         date_mapping = {
             'created': 'Created',
             'modified': 'Updated',
-            'published': 'Available',
+            'published': 'Accepted',
         }
+        temporal_dates = self.metadata.coverages.filter(type='period').first()
+        if temporal_dates and temporal_dates.value.get('start') and temporal_dates.value.get('end'):
+            payload["data"]["attributes"]["dates"].append({
+                "date": f"{temporal_dates.value['start']}/{temporal_dates.value['end']}",
+                "dateType": "Coverage"
+            })
+
         for date in self.metadata.dates.all():
             if date.type in date_mapping:
                 payload["data"]["attributes"]["dates"].append({
