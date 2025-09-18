@@ -5,9 +5,14 @@ postgis:
   container_name: postgis
   volumes:
     - "/var/lib/postgresql/data"
-rabbitmq:
-  image: rabbitmq:3.8.2
-  container_name: rabbitmq
+redpanda:
+  image: docker.redpanda.com/redpandadata/redpanda:v25.2.1
+  container_name: redpanda
+  ports:
+    - "9092:9092"
+    - "9644:9644"
+  volumes:
+    - "/var/lib/redpanda"
 solr:
   image: solr:6.6
   container_name: solr
@@ -51,7 +56,7 @@ hydroshare:
     - "15001:15001"
   links:
     - postgis:postgis
-    - rabbitmq:rabbitmq
+    - redpanda:redpanda
     - solr:solr
   command: /bin/bash init-hydroshare
 defaultworker:
@@ -73,5 +78,5 @@ defaultworker:
     - "/var/run/docker.sock:/docker.sock"
   links:
     - postgis:postgis
-    - rabbitmq:rabbitmq
+    - redpanda:redpanda
   command: /bin/bash init-defaultworker

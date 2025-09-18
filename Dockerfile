@@ -23,6 +23,8 @@ RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc \
 RUN mv $HOME/minio-binaries/mc /usr/local/bin/mc
 RUN chmod +x /usr/local/bin/mc
 
+RUN pip install confluent-kafka
+
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8

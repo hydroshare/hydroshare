@@ -23,7 +23,7 @@ while read line; do export $line; done < <(cat ${CONFIG_DIRECTORY}/hydroshare-co
 ### Docker Variables ###
 HS_DOCKER_CONTAINERS=(hydroshare defaultworker)
 HS_DOCKER_IMAGES=(hydroshare_hydroshare hydroshare_defaultworker)
-OTHER_DOCKER_CONTAINERS=(postgis rabbitmq redis solr)
+OTHER_DOCKER_CONTAINERS=(postgis redpanda redis solr)
 
 ### Pre-flight Variables ###
 DEV_SERVER='runuser -p -u hydro-service -g storage-hydro ./run-server'

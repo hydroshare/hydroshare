@@ -453,7 +453,6 @@ INSTALLED_APPS = (
     "health_check.contrib.celery",
     "health_check.contrib.celery_ping",
     "health_check.contrib.psutil",
-    "health_check.contrib.rabbitmq",
     "mozilla_django_oidc",
     'django_tus',
 )
