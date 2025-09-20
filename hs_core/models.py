@@ -4143,6 +4143,40 @@ class BaseResource(Page, AbstractResource):
 
         return related_identifiers, related_items
 
+    def get_dates_for_doi(self):
+        """
+        Returns a list of date dictionaries formatted for the DOI creation payload,
+        handling both temporal coverage and metadata dates.
+        """
+        date_mapping = {
+            'created': 'Created',
+            'modified': 'Updated',
+            'published': 'Accepted',
+        }
+        dates = []
+        # Handling temporal coverage date
+        temporal_dates = self.metadata.coverages.filter(type='period').first()
+        if temporal_dates and temporal_dates.value.get('start') and temporal_dates.value.get('end'):
+            # Format temporal coverage date as a range
+            coverage_date = {
+                "date": f"{temporal_dates.value['start']}/{temporal_dates.value['end']}",
+                "dateType": "Coverage"
+            }
+            dates.append(coverage_date)
+
+        # Handling individual metadata dates
+        metadata_dates = self.metadata.dates.all()
+        for date in metadata_dates:
+            if date.type in date_mapping:
+                # Mapping the date types (created, modified, published)
+                mapped_date = {
+                    "date": date.start_date.strftime("%Y-%m-%d"),
+                    "dateType": date_mapping[date.type]
+                }
+                dates.append(mapped_date)
+
+        return dates
+
     def get_datacite_deposit_json(self):
         """
         Return JSON payload for creating a DOI with DataCite API.
@@ -4271,24 +4305,7 @@ class BaseResource(Page, AbstractResource):
                 "subject": subject.value,
             })
 
-        date_mapping = {
-            'created': 'Created',
-            'modified': 'Updated',
-            'published': 'Accepted',
-        }
-        temporal_dates = self.metadata.coverages.filter(type='period').first()
-        if temporal_dates and temporal_dates.value.get('start') and temporal_dates.value.get('end'):
-            payload["data"]["attributes"]["dates"].append({
-                "date": f"{temporal_dates.value['start']}/{temporal_dates.value['end']}",
-                "dateType": "Coverage"
-            })
-
-        for date in self.metadata.dates.all():
-            if date.type in date_mapping:
-                payload["data"]["attributes"]["dates"].append({
-                    "date": date.start_date.strftime("%Y-%m-%d"),
-                    "dateType": date_mapping[date.type]
-                })
+        payload["data"]["attributes"]["dates"] = self.get_dates_for_doi()
 
         if self.metadata.description and self.metadata.description.abstract:
             payload["data"]["attributes"]["descriptions"] = [

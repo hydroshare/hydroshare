@@ -1059,20 +1059,21 @@ def update_payload_for_datacite(short_id, element_name, form_data):
         return False
     attributes = {}
     if element_name == 'fundingagency':
-        res = utils.get_resource_by_shortkey(short_id)
         attributes = {
             "fundingReferences": res.get_funding_references(res)
         }
     elif element_name == 'contributor':
-        res = utils.get_resource_by_shortkey(short_id)
         attributes = {
             "contributors": res.get_contributor_data(res)
         }
     elif element_name == 'relation':
-        res = utils.get_resource_by_shortkey(short_id)
         related_identifiers, related_items = res.get_related_items()
         attributes = {
             "relatedItems": related_items,
+        }
+    elif element_name == 'coverage':
+        attributes = {
+            "dates": res.get_dates_for_doi(),
         }
 
     # Define field mappings and transformation rules
