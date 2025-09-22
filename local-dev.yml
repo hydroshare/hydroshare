@@ -218,6 +218,18 @@ services:
     restart: on-failure
     depends_on:
       - postgis
+  discovery-atlas:
+    build:
+      context: ./discovery-atlas
+      dockerfile: frontend/Dockerfile
+    container_name: discovery-atlas
+    platform: linux/amd64
+    environment:
+      VITE_APP_NAME: "Discover"
+      VITE_APP_API_URL: "TODO: set api url"
+      VITE_APP_BASE: "/search/"
+    ports:
+      - "5003:5003"
 volumes:
   postgis_data_vol:
   temp_vol:
