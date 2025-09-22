@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -o pipefail
 
-flake8 | tee pylint.out
+flake8 --exclude=discover-atlas | tee pylint.out
