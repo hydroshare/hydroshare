@@ -1,0 +1,12 @@
+input:
+  kafka_franz:
+    seed_brokers:
+      - "redpanda:9092" # Or your Redpanda broker addresses
+    topics:
+      - "resource_file"
+    consumer_group: "metadata_extractor"
+pipeline:
+  processors:
+  - extract_metadata_processor: {}
+output:
+  stdout: {}
