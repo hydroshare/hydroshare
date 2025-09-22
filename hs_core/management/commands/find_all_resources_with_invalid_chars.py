@@ -69,4 +69,5 @@ class Command(BaseCommand):
             count += 1
 
         total_duration = timedelta(seconds=int(time.time() - start_time))
-        print(f"🎉 Finished processing {count} resources | Resources with issues: {affected} | Time taken: {total_duration}")
+        print(f"🎉 Finished processing {count} resources | "
+              f"Affected Resources: {affected} | Time taken: {total_duration}")
