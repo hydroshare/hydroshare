@@ -373,7 +373,7 @@ class CustomTusUploadTests(TestCase):
         tus_file = mock.Mock(is_valid=lambda: True, offset=0, file_size=10)
         chunk = mock.Mock(offset=0)
         with mock.patch("django_s3.views.CustomTusFile", lambda rid: tus_file), \
-             mock.patch("django_s3.views.TusChunk", lambda req: chunk):
+                mock.patch("django_s3.views.TusChunk", lambda req: chunk):
             tus_file.upload_part.side_effect = Exception("fail")
             resp = view.patch(request, "fakeid")
         self.assertEqual(resp.status_code, 500)
@@ -383,13 +383,13 @@ class CustomTusUploadTests(TestCase):
         request = self.factory.post("/")
         request.META["HTTP_UPLOAD_LENGTH"] = "123"
         with mock.patch.object(view, "get_metadata", return_value=self.fake_metadata()), \
-             mock.patch("django_s3.views.get_path", lambda meta: "some/path/"), \
-             mock.patch("django_s3.views.CustomTusFile.check_existing_file", lambda path: False), \
-             mock.patch("django_s3.views.settings", mock.Mock(TUS_EXISTING_FILE='skip',
-                                                              TUS_FILE_NAME_FORMAT='keep')), \
-             mock.patch.object(view, "validate_filename", lambda fn: fn["filename"]), \
-             mock.patch("django_s3.views.CustomTusFile.create_initial_file",
-                        mock.Mock(side_effect=Exception("fail"))):
+            mock.patch("django_s3.views.get_path", lambda meta: "some/path/"), \
+            mock.patch("django_s3.views.CustomTusFile.check_existing_file", lambda path: False), \
+            mock.patch("django_s3.views.settings", mock.Mock(TUS_EXISTING_FILE='skip',
+                                                             TUS_FILE_NAME_FORMAT='keep')), \
+            mock.patch.object(view, "validate_filename", lambda fn: fn["filename"]), \
+            mock.patch("django_s3.views.CustomTusFile.create_initial_file",
+                       mock.Mock(side_effect=Exception("fail"))):
             resp = view.post(request)
             self.assertEqual(resp.status_code, 500)
 

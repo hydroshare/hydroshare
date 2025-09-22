@@ -36,6 +36,7 @@ class CommunityForm(forms.Form):
 
 class RequestNewCommunityForm(CommunityForm):
     """A form to validate data for RequestCommunity record and create this record"""
+
     def save(self, request):
         form_data = self.cleaned_data
 

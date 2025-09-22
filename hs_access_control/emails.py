@@ -112,6 +112,7 @@ class CommunityGroupEmailNotification:
 
 class CommunityRequestEmailNotification:
     """A class for sending emails related to creating a new community"""
+
     def __init__(self, request: HttpRequest, community_request: RequestCommunity, on_event: CommunityRequestEvents):
         self.request = request
         self.community_request = community_request

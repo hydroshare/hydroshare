@@ -11,6 +11,7 @@ class CheckRequest():
     This middleware creates the body and generages a more sensible response
     Related to https://code.djangoproject.com/ticket/29427
     '''
+
     def __init__(self, get_response):
         self.get_response = get_response
 

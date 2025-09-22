@@ -69,7 +69,7 @@ class Command(BaseCommand):
                 try:
                     generate_bag_files(r)
                     resource_counter_success += 1
-                except: # noqa
+                except:  # noqa
                     msg = "Error processing {}".format(r.short_id)
                     print(msg)
                     continue

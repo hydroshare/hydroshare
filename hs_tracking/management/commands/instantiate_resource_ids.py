@@ -11,10 +11,10 @@ from hs_core.models import BaseResource
 
 # a base RE for identifying the resource_id in a request.
 RESOURCE_RE = {"visit": re.compile('resource/([0-9a-f]{32})/'),
-               "download": re.compile('id=([0-9a-f]{32})\|'), # noqa
-               "app_launch": re.compile('id=([0-9a-f]{32})\|'), # noqa
-               "create": re.compile('id=([0-9a-f]{32})\|'), # noqa
-               "delete": re.compile('id=([0-9a-f]{32})\|')} # noqa
+               "download": re.compile('id=([0-9a-f]{32})\|'),  # noqa
+               "app_launch": re.compile('id=([0-9a-f]{32})\|'),  # noqa
+               "create": re.compile('id=([0-9a-f]{32})\|'),  # noqa
+               "delete": re.compile('id=([0-9a-f]{32})\|')}  # noqa
 # these two REs identify specific kinds of visits
 
 # TODO: Move hostname to session variable to reduce runtime.

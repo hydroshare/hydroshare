@@ -391,7 +391,7 @@ class TopicsView(TemplateView):
             try:
                 delete_topic = Topic.objects.get(id=request.POST.get("id"))
                 delete_topic.delete(keep_parents=False)
-            except: # noqa
+            except:  # noqa
                 print("error")
         else:
             print(

@@ -44,7 +44,7 @@ urlpatterns += i18n_patterns(
         GroupAuthorizationView.as_view(),
         name="group-authorize",
     ),
-    re_path("^r/(?P<shortkey>[A-z0-9\-_]+)", hs_core_views.short_url), # noqa
+    re_path("^r/(?P<shortkey>[A-z0-9\-_]+)", hs_core_views.short_url),  # noqa
     path(
         "tracking/reports/profiles/",
         tracking.VisitorProfileReport.as_view(),
@@ -248,7 +248,7 @@ urlpatterns += [
     # url("^$", "mezzanine.blog.views.blog_post_list", name="home"),
     # Override Mezzanine URLs here, before the Mezzanine URL include
     re_path("^accounts/signup/", theme.signup),
-    re_path("^accounts/verify/(?P<uidb36>[-\w]+)/(?P<token>[-\w]+)", theme.signup_verify), # noqa
+    re_path("^accounts/verify/(?P<uidb36>[-\w]+)/(?P<token>[-\w]+)", theme.signup_verify),  # noqa
     re_path("^accounts/login/", theme.login),
     # MEZZANINE'S URLS
     # ----------------

@@ -130,7 +130,7 @@ def get_dimensions_info(nc_group):
                 dimensions_info[dim_name] = 'UNLIMITED; // ({0} currently)'.format(len(dim_obj))
             else:
                 dimensions_info[dim_name] = len(dim_obj)
-        except: # noqa
+        except:  # noqa
             continue
 
     return dimensions_info

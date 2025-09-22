@@ -123,7 +123,9 @@ USE_TZ = True
 LANGUAGE_CODE = "en"
 
 # Supported languages
-def _(s): return s # noqa
+
+
+def _(s): return s  # noqa
 
 
 LANGUAGES = (("en", _("English")),)

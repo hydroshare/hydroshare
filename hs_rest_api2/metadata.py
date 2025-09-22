@@ -101,7 +101,7 @@ def ingest_resource_metadata(resource, incoming_metadata):
         with transaction.atomic():
             resource.metadata.delete_all_elements()
             resource.metadata.ingest_metadata(graph)
-    except: # noqa
+    except:  # noqa
         logger.exception(
             f"Error processing resource metadata file for resource {resource.short_id}"
         )

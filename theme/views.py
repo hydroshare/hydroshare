@@ -81,13 +81,13 @@ class UserProfileView(TemplateView):
         if "user" in kwargs:
             try:
                 u = User.objects.get(pk=int(kwargs["user"]))
-            except: # noqa
+            except:  # noqa
                 u = User.objects.get(username=kwargs["user"])
 
         elif self.request.GET.get("user", False):
             try:
                 u = User.objects.get(pk=int(self.request.GET["user"]))
-            except: # noqa
+            except:  # noqa
                 u = User.objects.get(username=self.request.GET["user"])
 
         elif not self.request.user.is_anonymous:

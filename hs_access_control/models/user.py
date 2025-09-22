@@ -1248,7 +1248,6 @@ class UserAccess(models.Model):
 
     def get_resources_with_explicit_access(self, this_privilege,
                                            via_user=True, via_group=False):
-
         """
         Get a list of resources over which the user has the specified privilege
 

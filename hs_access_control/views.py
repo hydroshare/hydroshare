@@ -170,6 +170,7 @@ def error_response(err_message):
 
 class GroupCommunityViewMixin(View):
     """A mixin to support group joining a community"""
+
     def approve_to_join(self, request_type, group, community):
         """request/invite for a group to join a community is approved"""
         user = self.request.user

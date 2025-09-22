@@ -426,7 +426,7 @@ class TestPublishResource(MockS3TestCaseMixin, TestCase):
       </dataset>
     </database>
   </body>
-</doi_batch>""" # noqa
+</doi_batch>"""  # noqa
         return expected_xml
 
     def create_xml_test_resource(self):
