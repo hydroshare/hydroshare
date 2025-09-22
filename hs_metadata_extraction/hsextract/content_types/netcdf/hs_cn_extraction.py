@@ -66,7 +66,7 @@ def get_crs_from_dataset_metadata(ds: xarray.Dataset) -> xarray.Dataset:
 
     if crs_var is None:
         return None
-        #raise ValueError("No CRS variable found (expected 'crs' or 'spatial_ref').")
+        # raise ValueError("No CRS variable found (expected 'crs' or 'spatial_ref').")
 
     attrs = crs_var.attrs
 
@@ -95,10 +95,10 @@ def get_spatial_bounds(ds: xarray.Dataset) -> dict[str, float]:
         axis = coord.attrs.get("axis", "").upper()
         name = coord.name.lower()
         return (
-            std == "latitude" or
-            "degrees_north" in units or
-            name in ["lat", "latitude", "y"] or
-            axis == "Y"
+            std == "latitude"
+            or "degrees_north" in units
+            or name in ["lat", "latitude", "y"]
+            or axis == "Y"
         )
 
     def is_lon(coord):
@@ -107,10 +107,10 @@ def get_spatial_bounds(ds: xarray.Dataset) -> dict[str, float]:
         axis = coord.attrs.get("axis", "").upper()
         name = coord.name.lower()
         return (
-            std == "longitude" or
-            "degrees_east" in units or
-            name in ["lon", "longitude", "x"] or
-            axis == "X"
+            std == "longitude"
+            or "degrees_east" in units
+            or name in ["lon", "longitude", "x"]
+            or axis == "X"
         )
 
     lat_coord = None
@@ -146,8 +146,8 @@ def build_dimensions(ds: xarray.Dataset) -> dict[datavariable.Dimension]:
         attrs = var.attrs if var is not None else {}
 
         description = attrs.get('long_name', None)
-        units = attrs.get('units', None)
-        resolution = attrs.get('resolution', None)
+        # units = attrs.get('units', None)
+        # resolution = attrs.get('resolution', None)
 
         dims[dimname] = datavariable.Dimension(name=dimname,
                                                description=description,
@@ -205,7 +205,7 @@ def build_coordinates(ds: xarray.Dataset,
                                                     'long_name', None),
                                                 unit=coord.attrs.get(
                                                     'units', None),
-                                                #resolution = coord.attrs.get('resolution', None),
+                                                # resolution = coord.attrs.get('resolution', None),
                                                 dimensions=coordinate_dimensions,
                                                 )
                       )

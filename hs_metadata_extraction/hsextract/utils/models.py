@@ -7,10 +7,8 @@ from hsextract.utils.s3 import exists, retrieve_file_manifest, write_metadata
 
 
 class MinIOEvent(BaseModel):
-    EventName:
-        str
-    Key:
-        str
+    EventName: str
+    Key: str
 
 
 class ContentType(Enum):
@@ -27,7 +25,8 @@ class ContentType(Enum):
 
 class MetadataObject:
 
-    def __init__(self, file_object_path: str, file_updated: bool, resource_contents_path: str = None, resource_md_path: str = None, resource_md_jsonld_path: str = None):
+    def __init__(self, file_object_path: str, file_updated: bool, resource_contents_path: str = None,
+                 resource_md_path: str = None, resource_md_jsonld_path: str = None):
         self.file_object_path = file_object_path
         self.file_updated = file_updated
 
@@ -105,10 +104,13 @@ class MetadataObject:
         Get a list of media objects associated with this resource.
         """
         media_objects = []
-        if self.content_type in [ContentType.SINGLE_FILE, ContentType.NETCDF, ContentType.REFTIMESERIES, ContentType.TIMESERIES]:
+        if self.content_type in [ContentType.SINGLE_FILE, ContentType.NETCDF, ContentType.REFTIMESERIES,
+                                 ContentType.TIMESERIES]:
             return [m for m in self.resource_associated_media if m["contentUrl"].endswith(self.file_object_path)]
         elif self.content_type in [ContentType.FILE_SET, ContentType.ZARR]:
-            return [m for m in self.resource_associated_media if m["contentUrl"].split(os.environ['AWS_S3_ENDPOINT'])[1].strip("/").startswith(self.content_type_contents_path)]
+            return [m for m in self.resource_associated_media
+                    if m["contentUrl"].split(os.environ['AWS_S3_ENDPOINT'])[1].strip("/").startswith(
+                        self.content_type_contents_path)]
         return media_objects
 
     def extract_metadata(self) -> dict:
@@ -137,9 +139,9 @@ class MetadataObject:
         ".tiff": ContentType.RASTER,
         ".vrt": ContentType.RASTER,
         ".nc": ContentType.NETCDF,
-        #".zarr": ContentType.ZARR,
+        # ".zarr": ContentType.ZARR,
         ".shp": ContentType.FEATURE,
-        #".reftst.json": ContentType.REFTIMESERIES,
+        # ".reftst.json": ContentType.REFTIMESERIES,
         ".csv": ContentType.TIMESERIES,
         ".sqlite": ContentType.TIMESERIES,
     }

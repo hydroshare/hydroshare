@@ -52,9 +52,9 @@ def encode_raster_metadata(filepath, multiband=False, validate_bbox=True):
     # Cell Information
     cell_columns = src.width
     cell_rows = src.height
-    cell_data_type = src.dtypes[0]
-    cell_x_size = src.transform.a
-    cell_y_size = abs(src.transform.e)
+    # cell_data_type = src.dtypes[0]
+    # cell_x_size = src.transform.a
+    # cell_y_size = abs(src.transform.e)
 
     # Build dataset dimensions.
     dimensions = [
@@ -93,7 +93,7 @@ def encode_raster_metadata(filepath, multiband=False, validate_bbox=True):
     extent_west, extent_south, extent_east, extent_north = src.bounds
 
     # Other metadata
-    name = src.name.split('/')[1:][0]
+    # name = src.name.split('/')[1:][0]
     src.close()
 
     # Encode metadata

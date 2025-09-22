@@ -415,8 +415,8 @@ def get_limits_info(nc_dataset, info_source):
         limit_meta = get_limit_meta_by_coor_type(
             nc_dataset, coor_type, coor_type_mapping)
         if limit_meta:
-            limits_info = dict(list(limits_info.items()) +
-                               list(limit_meta.items()))
+            limits_info = dict(list(limits_info.items())
+                               + list(limit_meta.items()))
         else:
             limits_info = {}
             break
@@ -837,8 +837,8 @@ def get_nc_coordinate_bounds_variables(nc_dataset):
         nc_dataset)
     nc_coordinate_bounds_variables = {}
     for var_name, var_obj in list(
-        dict(list(nc_coordinate_variables.items()) +
-             list(nc_auxiliary_coordinate_variables.items())).items()
+        dict(list(nc_coordinate_variables.items())
+             + list(nc_auxiliary_coordinate_variables.items())).items()
     ):
         if hasattr(var_obj, 'bounds') and nc_dataset.variables.get(var_obj.bounds, None):
             nc_coordinate_bounds_variables[

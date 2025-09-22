@@ -21,7 +21,7 @@ def extract_from_tif_file(tif_file):
     full_path = os.path.dirname(tif_file)
     if ext != ".vrt":
         filename = create_vrt_file(local_copy)
-        #s3.put_file(filename, os.path.join(full_path, filename))
+        # s3.put_file(filename, os.path.join(full_path, filename))
         tif_files = [local_copy]
     else:
         filename = local_copy
@@ -43,8 +43,8 @@ def create_vrt_file(tif_file):
     tif_file_name = os.path.basename(tif_file)
     vrt_file_path = os.path.join(temp_dir, f'{tif_file_name}.vrt')
     # os.mknod(vrt_file_path)
-    input_file = gdal.Open(tif_file)
-    output_file = gdal.Translate(vrt_file_path, input_file, format="VRT")
+    # input_file = gdal.Open(tif_file)
+    # output_file = gdal.Translate(vrt_file_path, input_file, format="VRT")
 
     # edit VRT contents
     tree = ET.parse(vrt_file_path)
@@ -92,7 +92,7 @@ def extract_metadata_from_vrt(vrt_file_path):
         b_info["no_data_value"] = band_info["noDataValue"]
         b_info["variable_name"] = band_info["variableName"]
         b_info["variable_unit"] = band_info["variableUnit"]
-        metadata.append({f'band_information': b_info})
+        metadata.append({'band_information': b_info})
 
     metadata_dict = {}
     # use the extracted metadata to populate file metadata
@@ -152,7 +152,7 @@ def get_original_coverage_info(raster_dataset):
     # get horizontal projection and unit info
     try:
         proj_wkt = raster_dataset.GetProjection()
-    except Exception as ex:
+    except Exception:
         # an exception occurs when doing GetGeoTransform, which means an invalid geotiff is
         # uploaded, print exception
         # to log without blocking the main resource creation workflow since we allow user to
@@ -188,7 +188,7 @@ def get_original_coverage_info(raster_dataset):
     # get the bounding box
     try:
         gt = raster_dataset.GetGeoTransform()
-    except Exception as ex:
+    except Exception:
         # an exception occurs when doing GetGeoTransform, which means an invalid geotiff is
         # uploaded, print exception
         # to log without blocking the main resource creation workflow since we allow user to
@@ -243,7 +243,7 @@ def get_wgs84_coverage_info(raster_dataset):
     # get original coordinate system
     try:
         proj = raster_dataset.GetProjection()
-    except Exception as ex:
+    except Exception:
         # an exception occurs when doing GetGeoTransform, which means an invalid geotiff is
         # uploaded, print exception
         # to log without blocking the main resource creation workflow since we allow user to
@@ -272,7 +272,7 @@ def get_wgs84_coverage_info(raster_dataset):
                 # create transform object
                 transform = osr.CoordinateTransformation(original_cs, wgs84_cs)
 
-        except Exception as ex:
+        except Exception:
             pass
 
         # get original bounding box info

@@ -56,11 +56,11 @@ def encode_vector_metadata(filepath, validate_bbox=True):
             meta.update({'min_value': gdf[fname].min().item()})
             meta.update({'max_value': gdf[fname].max().item()})
 
-        except:
+        except Exception:
             pass
         fields[fname] = meta
 
-    geometry_type = gdf.geom_type.unique()[0]
+    # geometry_type = gdf.geom_type.unique()[0]
 
     # extent
     extent_west, extent_south, extent_east, extent_north = gdf.total_bounds
