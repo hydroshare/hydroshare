@@ -9,17 +9,19 @@ from hsextract.utils.s3 import write_metadata, load_metadata, delete_metadata
 
 
 def determine_required_for_content_type(file_object_path: str, content_type: ContentType) -> bool:
-    # For fileset and single file, it only matters if it is the hs_user_meta.json file
+    # For fileset and single file, it only matters if it is the
+    # hs_user_meta.json file
     if file_object_path.endswith("hs_user_meta.json"):
         return True
-    
+
     return True
     with s3.open(content_type_reference, 'r') as s3_file:
         content_type_metadata = json.loads(s3_file.read())
     print(f"Content type metadata: {content_type_metadata}")
-    
+
     _, extension = os.path.splitext(file_object_path)
-    if extension in [".vrt", ".tiff", ".tif", ".nc", ".zarr", ".shp"]: #TODO make list exhaustive for all content types
+    # TODO make list exhaustive for all content types
+    if extension in [".vrt", ".tiff", ".tif", ".nc", ".zarr", ".shp"]:
         return True
     return False
 
@@ -37,22 +39,26 @@ def write_resource_metadata(md: MetadataObject) -> bool:
     has_parts = []
     for file in content_type_metadata_paths:
         content_type_metadata = load_metadata(file)
-        
-        file_prefix = '/'.join(file.split('/')[1:])  # Remove the bucket name from the path
-        has_part = HasPart( # TODO: probably need content type here as well for driving the landing page
-            name=content_type_metadata.get("name", "Not Found and name is required"),
+
+        # Remove the bucket name from the path
+        file_prefix = '/'.join(file.split('/')[1:])
+        has_part = HasPart(  # TODO: probably need content type here as well for driving the landing page
+            name=content_type_metadata.get(
+                "name", "Not Found and name is required"),
             description=content_type_metadata.get("description", None),
-            url= f"{os.environ['AWS_S3_ENDPOINT']}/{file_prefix}",
+            url=f"{os.environ['AWS_S3_ENDPOINT']}/{file_prefix}",
         )
         has_parts.append(has_part.model_dump(exclude_none=True))
 
     # Combine system metadata, user metadata, hasPart, and associatedMedia
-    combined_metadata = {**system_json, **user_json} #TODO evaluate whether we need to merge list properties
+    # TODO evaluate whether we need to merge list properties
+    combined_metadata = {**system_json, **user_json}
     combined_metadata["hasPart"] = has_parts
     combined_metadata["associatedMedia"] = md.resource_associated_media
 
     # Write the combined metadata to the resource metadata file
     write_metadata(md.resource_metadata_path, combined_metadata)
+
 
 def write_content_type_metadata(md: MetadataObject) -> bool:
     # read the part metadata file
@@ -67,19 +73,23 @@ def write_content_type_metadata(md: MetadataObject) -> bool:
 
     # generate content type isPartOf relationships
     resource_md_prefix = '/'.join(md.resource_md_path.split('/')[1:])
-    is_part_of = [f"{os.environ['AWS_S3_ENDPOINT']}/{resource_md_prefix}"] # TODO: determine whether to use IsPartOf
+    # TODO: determine whether to use IsPartOf
+    is_part_of = [f"{os.environ['AWS_S3_ENDPOINT']}/{resource_md_prefix}"]
 
     content_type_associated_media = md.content_type_associated_media()
 
     # Combine part metadata, user metadata, isPartOf, and associatedMedia
-    combined_metadata = {**part_json, **user_json} #TODO evaluate whether we need to merge list properties
+    # TODO evaluate whether we need to merge list properties
+    combined_metadata = {**part_json, **user_json}
     combined_metadata["isPartOf"] = is_part_of
     combined_metadata["associatedMedia"] = content_type_associated_media
 
     # Write the combined metadata to the resource metadata file
     write_metadata(md.content_type_md_jsonld_path, combined_metadata)
 
-def workflow_metadata_extraction(file_object_path: str, file_updated: bool = True, resource_contents_path: str = None, resource_md_path: str = None, resource_md_jsonld_path: str = None) -> None: # if a file is not updated, it is deleted
+
+# if a file is not updated, it is deleted
+def workflow_metadata_extraction(file_object_path: str, file_updated: bool = True, resource_contents_path: str = None, resource_md_path: str = None, resource_md_jsonld_path: str = None) -> None:
     md = MetadataObject(file_object_path, file_updated)
     logging.info(f"content type determined: {md.content_type}")
     # fileset and single file do not have anything to extract
@@ -93,12 +103,14 @@ def workflow_metadata_extraction(file_object_path: str, file_updated: bool = Tru
     logging.info("Writing resource metadata")
     write_resource_metadata(md)
 
+
 @redpanda_connect.processor
 def handle_minio_event(msg: redpanda_connect.Message) -> redpanda_connect.Message:
     json_payload = json.loads(msg.payload)
     if ".hsjsonld" in json_payload['Key']:
         return msg
-    workflow_metadata_extraction(json_payload['Key'], json_payload['EventName'].startswith("s3:ObjectCreated"))
+    workflow_metadata_extraction(json_payload['Key'], json_payload[
+                                 'EventName'].startswith("s3:ObjectCreated"))
 
 import asyncio
 if __name__ == "__main__":

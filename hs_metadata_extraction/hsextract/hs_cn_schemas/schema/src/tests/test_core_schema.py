@@ -38,7 +38,8 @@ async def test_core_schema_creator_cardinality(
     if multiple_creators:
         if creator_type == "person":
             core_data["creator"] = [
-                {"@type": "Person", "name": "John Doe", "email": "john.doe@gmail.com"},
+                {"@type": "Person", "name": "John Doe",
+                    "email": "john.doe@gmail.com"},
                 {
                     "@type": "Person",
                     "name": "Jane Doe",
@@ -95,7 +96,8 @@ async def test_core_schema_creator_cardinality(
             assert core_model_instance.creator[1].name == "Jane Doe"
             assert core_model_instance.creator[0].email == "john.doe@gmail.com"
             assert core_model_instance.creator[1].email == "jan.doe@gmail.com"
-            assert core_model_instance.creator[1].affiliation.type == "Organization"
+            assert core_model_instance.creator[
+                1].affiliation.type == "Organization"
             assert (
                 core_model_instance.creator[1].affiliation.name
                 == "Utah State University"
@@ -104,7 +106,8 @@ async def test_core_schema_creator_cardinality(
                 "https://www.usu.edu/"
             )
             assert (
-                core_model_instance.creator[1].affiliation.address == "Logan, UT 84322"
+                core_model_instance.creator[
+                    1].affiliation.address == "Logan, UT 84322"
             )
         else:
             assert len(core_model_instance.creator) == 2
@@ -193,12 +196,15 @@ async def test_core_schema_creator_person_optional_attributes(
             == "https://orcid.org/0000-0002-1825-0097"
         )
     if "affiliation" in data_format:
-        assert core_model_instance.creator[0].affiliation.type == "Organization"
-        assert core_model_instance.creator[0].affiliation.name == "NC State University"
+        assert core_model_instance.creator[
+            0].affiliation.type == "Organization"
+        assert core_model_instance.creator[
+            0].affiliation.name == "NC State University"
         assert core_model_instance.creator[0].affiliation.url == HttpUrl(
             "https://www.ncsu.edu/"
         )
-        assert core_model_instance.creator[0].affiliation.address == "Raleigh, NC 27695"
+        assert core_model_instance.creator[
+            0].affiliation.address == "Raleigh, NC 27695"
 
 
 @pytest.mark.parametrize(
@@ -257,13 +263,15 @@ async def test_core_schema_creator_affiliation_optional_attributes(
     assert core_model_instance.creator[0].name == "John Doe"
     assert core_model_instance.creator[0].email == "john.doe@gmail.com"
     assert core_model_instance.creator[0].affiliation.type == "Organization"
-    assert core_model_instance.creator[0].affiliation.name == "NC State University"
+    assert core_model_instance.creator[
+        0].affiliation.name == "NC State University"
     if "url" in data_format:
         assert core_model_instance.creator[0].affiliation.url == HttpUrl(
             "https://www.ncsu.edu/"
         )
     if "address" in data_format:
-        assert core_model_instance.creator[0].affiliation.address == "Raleigh, NC 27695"
+        assert core_model_instance.creator[
+            0].affiliation.address == "Raleigh, NC 27695"
 
 
 @pytest.mark.parametrize(
@@ -378,16 +386,20 @@ async def test_core_schema_associated_media_cardinality(
     if multiple_media and multiple_media is not None:
         assert len(core_model_instance.associatedMedia) == 2
         assert (
-            core_model_instance.associatedMedia[0].type == associated_media[0]["@type"]
+            core_model_instance.associatedMedia[
+                0].type == associated_media[0]["@type"]
         )
         assert (
-            core_model_instance.associatedMedia[1].type == associated_media[1]["@type"]
+            core_model_instance.associatedMedia[
+                1].type == associated_media[1]["@type"]
         )
         assert (
-            core_model_instance.associatedMedia[0].name == associated_media[0]["name"]
+            core_model_instance.associatedMedia[
+                0].name == associated_media[0]["name"]
         )
         assert (
-            core_model_instance.associatedMedia[1].name == associated_media[1]["name"]
+            core_model_instance.associatedMedia[
+                1].name == associated_media[1]["name"]
         )
         assert (
             core_model_instance.associatedMedia[0].contentSize
@@ -421,10 +433,12 @@ async def test_core_schema_associated_media_cardinality(
         )
     elif multiple_media is not None:
         assert (
-            core_model_instance.associatedMedia[0].type == associated_media[0]["@type"]
+            core_model_instance.associatedMedia[
+                0].type == associated_media[0]["@type"]
         )
         assert (
-            core_model_instance.associatedMedia[0].name == associated_media[0]["name"]
+            core_model_instance.associatedMedia[
+                0].name == associated_media[0]["name"]
         )
         assert (
             core_model_instance.associatedMedia[0].contentSize
@@ -486,7 +500,8 @@ async def test_core_schema_associated_media_content_size(
 
     # validate the data model
     core_model_instance = await utils.validate_data_model(core_data, core_model)
-    assert core_model_instance.associatedMedia[0].contentSize == content_size_format
+    assert core_model_instance.associatedMedia[
+        0].contentSize == content_size_format
 
 
 @pytest.mark.parametrize("include_coverage", [True, False])
@@ -583,8 +598,10 @@ async def test_core_schema_spatial_coverage_optional(
     if not include_coverage:
         assert core_model_instance.spatialCoverage is None
     else:
-        assert core_model_instance.spatialCoverage.type == coverage_value["@type"]
-        assert core_model_instance.spatialCoverage.name == coverage_value["name"]
+        assert core_model_instance.spatialCoverage.type == coverage_value[
+            "@type"]
+        assert core_model_instance.spatialCoverage.name == coverage_value[
+            "name"]
         geo = core_model_instance.spatialCoverage.geo
         assert geo.type == coverage_value["geo"]["@type"]
         assert geo.latitude == coverage_value["geo"]["latitude"]
@@ -674,7 +691,8 @@ async def test_core_schema_spatial_coverage_value_type(
             )
         elif data_format["geo"]["@type"] == "GeoShape":
             assert (
-                core_model_instance.spatialCoverage.geo.box == data_format["geo"]["box"]
+                core_model_instance.spatialCoverage.geo.box == data_format[
+                    "geo"]["box"]
             )
     if "additionalProperty" in data_format:
         if len(core_model_instance.spatialCoverage.additionalProperty) == 1:
@@ -691,7 +709,8 @@ async def test_core_schema_spatial_coverage_value_type(
                 == "WGS 84 EPSG:4326"
             )
         else:
-            assert len(core_model_instance.spatialCoverage.additionalProperty) == 2
+            assert len(
+                core_model_instance.spatialCoverage.additionalProperty) == 2
             assert (
                 core_model_instance.spatialCoverage.additionalProperty[0].type
                 == "PropertyValue"
@@ -817,7 +836,8 @@ async def test_core_schema_license_value_type(core_data, core_model, data_format
         assert core_model_instance.license.type == data_format["@type"]
         assert core_model_instance.license.name == data_format["name"]
         assert core_model_instance.license.url == HttpUrl(data_format["url"])
-        assert core_model_instance.license.description == data_format["description"]
+        assert core_model_instance.license.description == data_format[
+            "description"]
 
 
 @pytest.mark.parametrize(
@@ -863,7 +883,8 @@ async def test_core_schema_license_optional_attributes(
     if "url" in data_format:
         assert core_model_instance.license.url == HttpUrl(data_format["url"])
     if "description" in data_format:
-        assert core_model_instance.license.description == data_format["description"]
+        assert core_model_instance.license.description == data_format[
+            "description"]
 
 
 @pytest.mark.parametrize("is_multiple", [True, False, None])
@@ -914,16 +935,22 @@ async def test_core_schema_has_part_of_cardinality(core_data, core_model, is_mul
         assert core_model_instance.hasPart[1].type == has_parts[1]["@type"]
         assert core_model_instance.hasPart[0].name == has_parts[0]["name"]
         assert core_model_instance.hasPart[1].name == has_parts[1]["name"]
-        assert core_model_instance.hasPart[0].description == has_parts[0]["description"]
-        assert core_model_instance.hasPart[1].description == has_parts[1]["description"]
-        assert core_model_instance.hasPart[0].url == HttpUrl(has_parts[0]["url"])
-        assert core_model_instance.hasPart[1].url == HttpUrl(has_parts[1]["url"])
+        assert core_model_instance.hasPart[
+            0].description == has_parts[0]["description"]
+        assert core_model_instance.hasPart[
+            1].description == has_parts[1]["description"]
+        assert core_model_instance.hasPart[
+            0].url == HttpUrl(has_parts[0]["url"])
+        assert core_model_instance.hasPart[
+            1].url == HttpUrl(has_parts[1]["url"])
     elif is_multiple is not None:
         assert len(core_model_instance.hasPart) == 1
         assert core_model_instance.hasPart[0].type == has_parts[0]["@type"]
         assert core_model_instance.hasPart[0].name == has_parts[0]["name"]
-        assert core_model_instance.hasPart[0].description == has_parts[0]["description"]
-        assert core_model_instance.hasPart[0].url == HttpUrl(has_parts[0]["url"])
+        assert core_model_instance.hasPart[
+            0].description == has_parts[0]["description"]
+        assert core_model_instance.hasPart[
+            0].url == HttpUrl(has_parts[0]["url"])
     else:
         assert core_model_instance.hasPart is None
 
@@ -969,9 +996,11 @@ async def test_core_schema_has_part_optional_attributes(
     assert core_model_instance.hasPart[0].type == data_format["@type"]
     assert core_model_instance.hasPart[0].name == data_format["name"]
     if "description" in data_format:
-        assert core_model_instance.hasPart[0].description == data_format["description"]
+        assert core_model_instance.hasPart[
+            0].description == data_format["description"]
     if "url" in data_format:
-        assert core_model_instance.hasPart[0].url == HttpUrl(data_format["url"])
+        assert core_model_instance.hasPart[
+            0].url == HttpUrl(data_format["url"])
 
 
 @pytest.mark.parametrize("is_multiple", [True, False, None])
@@ -1022,21 +1051,27 @@ async def test_core_schema_is_part_of_cardinality(core_data, core_model, is_mult
         assert core_model_instance.isPartOf[0].name == is_part_of[0]["name"]
         assert core_model_instance.isPartOf[1].name == is_part_of[1]["name"]
         assert (
-            core_model_instance.isPartOf[0].description == is_part_of[0]["description"]
+            core_model_instance.isPartOf[
+                0].description == is_part_of[0]["description"]
         )
         assert (
-            core_model_instance.isPartOf[1].description == is_part_of[1]["description"]
+            core_model_instance.isPartOf[
+                1].description == is_part_of[1]["description"]
         )
-        assert core_model_instance.isPartOf[0].url == HttpUrl(is_part_of[0]["url"])
-        assert core_model_instance.isPartOf[1].url == HttpUrl(is_part_of[1]["url"])
+        assert core_model_instance.isPartOf[
+            0].url == HttpUrl(is_part_of[0]["url"])
+        assert core_model_instance.isPartOf[
+            1].url == HttpUrl(is_part_of[1]["url"])
     elif is_multiple is not None:
         assert len(core_model_instance.isPartOf) == 1
         assert core_model_instance.isPartOf[0].type == is_part_of[0]["@type"]
         assert core_model_instance.isPartOf[0].name == is_part_of[0]["name"]
         assert (
-            core_model_instance.isPartOf[0].description == is_part_of[0]["description"]
+            core_model_instance.isPartOf[
+                0].description == is_part_of[0]["description"]
         )
-        assert core_model_instance.isPartOf[0].url == HttpUrl(is_part_of[0]["url"])
+        assert core_model_instance.isPartOf[
+            0].url == HttpUrl(is_part_of[0]["url"])
     else:
         assert core_model_instance.isPartOf is None
 
@@ -1082,9 +1117,11 @@ async def test_core_schema_is_part_of_optional_attributes(
     assert core_model_instance.isPartOf[0].type == data_format["@type"]
     assert core_model_instance.isPartOf[0].name == data_format["name"]
     if "description" in data_format:
-        assert core_model_instance.isPartOf[0].description == data_format["description"]
+        assert core_model_instance.isPartOf[
+            0].description == data_format["description"]
     if "url" in data_format:
-        assert core_model_instance.isPartOf[0].url == HttpUrl(data_format["url"])
+        assert core_model_instance.isPartOf[
+            0].url == HttpUrl(data_format["url"])
 
 
 @pytest.mark.parametrize("dt_type", ["datetime", None])
@@ -1098,7 +1135,8 @@ async def test_core_schema_date_value_type(core_data, core_model, dt_type):
     """
     core_data = core_data
     core_model = core_model
-    # TODO: test 'date' type after knowing whether we need to support both date and datetime
+    # TODO: test 'date' type after knowing whether we need to support both
+    # date and datetime
     if dt_type == "date":
         core_data["dateCreated"] = "2020-01-01"
         core_data["dateModified"] = "2020-02-01"
@@ -1202,7 +1240,8 @@ async def test_core_schema_subject_of_cardinality(
             },
         ]
     else:
-        core_data["subjectOf"] = [{"@type": "CreativeWork", "name": "Test subject of"}]
+        core_data["subjectOf"] = [
+            {"@type": "CreativeWork", "name": "Test subject of"}]
 
     # validate the data model
     core_model_instance = await utils.validate_data_model(core_data, core_model)
@@ -1213,11 +1252,13 @@ async def test_core_schema_subject_of_cardinality(
         assert core_model_instance.subjectOf[0].url == HttpUrl(
             "https://www.hydroshare.org/hsapi/resource/c1be74eeea614d65a29a185a66a7552f/scimeta/"
         )
-        assert core_model_instance.subjectOf[0].description == "Test description - 1"
+        assert core_model_instance.subjectOf[
+            0].description == "Test description - 1"
 
         assert core_model_instance.subjectOf[1].type == "CreativeWork"
         assert core_model_instance.subjectOf[1].name == "Test subject of - 2"
-        assert core_model_instance.subjectOf[1].description == "Test description - 2"
+        assert core_model_instance.subjectOf[
+            1].description == "Test description - 2"
     elif multiple_values is not None:
         assert len(core_model_instance.subjectOf) == 1
         assert core_model_instance.subjectOf[0].type == "CreativeWork"
@@ -1331,7 +1372,8 @@ async def test_core_schema_funding_cardinality(core_data, core_model, multiple_f
             core_model_instance.funding[1].name
             == "HDR Institute: Geospatial Understanding through an Integrative Discovery Environment - 2"
         )
-        assert core_model_instance.funding[1].description == "Test grant description"
+        assert core_model_instance.funding[
+            1].description == "Test grant description"
         # assert core_model_instance.funding[1].funder.type == "Person"
         # assert core_model_instance.funding[1].funder.name == "John Doe"
         # assert core_model_instance.funding[1].funder.email == "johnd@gmail.com"
@@ -1345,7 +1387,8 @@ async def test_core_schema_funding_cardinality(core_data, core_model, multiple_f
             core_model_instance.funding[0].identifier
             == "https://nsf.gov/awardsearch/showAward?AWD_ID=2118329"
         )
-        assert core_model_instance.funding[0].description == "Test grant description"
+        assert core_model_instance.funding[
+            0].description == "Test grant description"
         # assert core_model_instance.funding[0].funder.type == "Person"
         # assert core_model_instance.funding[0].funder.name == "John Doe"
         # assert core_model_instance.funding[0].funder.email == "johnd@gmail.com"
@@ -1414,14 +1457,16 @@ async def test_core_schema_funding_funder_optional(
     if include_funder:
         assert core_model_instance.funding[0].funder.type == "Organization"
         assert (
-            core_model_instance.funding[0].funder.name == "National Science Foundation"
+            core_model_instance.funding[
+                0].funder.name == "National Science Foundation"
         )
         assert core_model_instance.funding[0].funder.url == HttpUrl(
             "https://www.nsf.gov"
         )
         assert core_model_instance.funding[1].funder.type == "Organization"
         assert (
-            core_model_instance.funding[1].funder.name == "National Science Foundation"
+            core_model_instance.funding[
+                1].funder.name == "National Science Foundation"
         )
         assert (
             core_model_instance.funding[1].funder.address
@@ -1479,7 +1524,8 @@ async def test_core_schema_publisher_optional(core_data, core_model, include_pub
     if include_publisher:
         assert core_model_instance.publisher.type == "Organization"
         assert core_model_instance.publisher.name == "HydroShare"
-        assert core_model_instance.publisher.url == HttpUrl("https://hydroshare.org")
+        assert core_model_instance.publisher.url == HttpUrl(
+            "https://hydroshare.org")
         assert (
             core_model_instance.publisher.address
             == "1167 Massachusetts Ave Suites 418 & 419, Arlington, MA 02476"

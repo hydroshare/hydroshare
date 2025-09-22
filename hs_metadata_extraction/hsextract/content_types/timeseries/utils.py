@@ -20,9 +20,11 @@ def validate_odm2_db_file(sqlite_file_path):
     try:
         con = sqlite3.connect(sqlite_file_path)
         with con:
-            # TODO: check that each of the core tables has the necessary columns
+            # TODO: check that each of the core tables has the necessary
+            # columns
 
-            # check that the uploaded file has all the tables from ODM2Core and the CV tables
+            # check that the uploaded file has all the tables from ODM2Core and
+            # the CV tables
             cur = con.cursor()
             odm2_core_table_names = [
                 'People',
@@ -54,7 +56,8 @@ def validate_odm2_db_file(sqlite_file_path):
             ]
             # check the tables exist
             for table_name in odm2_core_table_names:
-                cur.execute("SELECT COUNT(*) FROM sqlite_master WHERE type=? AND name=?", ("table", table_name))
+                cur.execute(
+                    "SELECT COUNT(*) FROM sqlite_master WHERE type=? AND name=?", ("table", table_name))
                 result = cur.fetchone()
                 if result[0] <= 0:
                     err_message += " Table '{}' is missing.".format(table_name)
@@ -68,7 +71,8 @@ def validate_odm2_db_file(sqlite_file_path):
                 cur.execute("SELECT COUNT(*) FROM " + table_name)
                 result = cur.fetchone()
                 if result[0] <= 0:
-                    err_message += " Table '{}' has no records.".format(table_name)
+                    err_message += " Table '{}' has no records.".format(
+                        table_name)
                     log.info(err_message)
                     return err_message
         return None
@@ -128,7 +132,8 @@ def validate_csv_file(csv_file_path):
             # check that the first column data is of type datetime
             try:
                 # some numeric values (e.g., 20080101, 1.602652223413681) are recognized by the
-                # the parser as valid date value - we don't allow any such value as valid date
+                # the parser as valid date value - we don't allow any such
+                # value as valid date
                 float(row[0])
                 date_data_error = True
             except ValueError:
@@ -211,7 +216,8 @@ def extract_metadata(sqlite_file_name):
         dataset = cur.fetchone()
         # update title element
         if dataset["DataSetTitle"]:
-            as_json.update({'title': dataset["DataSetTitle"]})  # TODO strip() all at the end?
+            # TODO strip() all at the end?
+            as_json.update({'title': dataset["DataSetTitle"]})
 
         # create abstract/description element
         if dataset["DataSetAbstract"]:
@@ -246,20 +252,24 @@ def extract_metadata(sqlite_file_name):
             variable_elements = extract_variable_elements(cur, result)
             result_json.update({"variable": variable_elements})
 
-            processinglevel_elements = extract_processinglevel_elements(cur, result)
+            processinglevel_elements = extract_processinglevel_elements(
+                cur, result)
             result_json.update({'processing_level': processinglevel_elements})
 
-            timeseriesresult_elements = extract_timeseriesresult_elements(cur, result)
+            timeseriesresult_elements = extract_timeseriesresult_elements(
+                cur, result)
             result_json.update(timeseriesresult_elements)
 
             # query FeatureActions
-            cur.execute("SELECT * FROM FeatureActions WHERE FeatureActionID=?", (result["FeatureActionID"],))
+            cur.execute("SELECT * FROM FeatureActions WHERE FeatureActionID=?",
+                        (result["FeatureActionID"],))
             feature_action = cur.fetchone()
 
             site_elements = extract_site_elements(cur, result, feature_action)
             result_json.update({'site': site_elements})
 
-            method_elements = extract_method_elements(cur, result, feature_action)
+            method_elements = extract_method_elements(
+                cur, result, feature_action)
             result_json.update({'method': method_elements})
             time_series_results.append(result_json)
 
@@ -287,7 +297,8 @@ def extract_timeseriesresult_elements(cur, result):
     data_dict['unit']['name'] = unit["UnitsName"]
     data_dict['unit']['abbreviation'] = unit["UnitsAbbreviation"]
 
-    cur.execute("SELECT AggregationStatisticCV FROM TimeSeriesResults WHERE " "ResultID=?", (result["ResultID"],))
+    cur.execute(
+        "SELECT AggregationStatisticCV FROM TimeSeriesResults WHERE " "ResultID=?", (result["ResultID"],))
     ts_result = cur.fetchone()
     data_dict["aggregation_statistic"] = ts_result["AggregationStatisticCV"]
 
@@ -297,7 +308,8 @@ def extract_timeseriesresult_elements(cur, result):
 def extract_processinglevel_elements(cur, result):
     # extract processinglevel element data
     # Start with Results table to -> ProcessingLevels table
-    cur.execute("SELECT * FROM ProcessingLevels WHERE ProcessingLevelID=?", (result["ProcessingLevelID"],))
+    cur.execute("SELECT * FROM ProcessingLevels WHERE ProcessingLevelID=?",
+                (result["ProcessingLevelID"],))
     pro_level = cur.fetchone()
     data_dict = {}
     # data_dict['series_ids'] = [result["ResultUUID"]]
@@ -315,9 +327,11 @@ def extract_method_elements(cur, result, feature_action):
     # extract method element data
     # Start with Results table -> FeatureActions table to -> Actions table to ->
     # Method table
-    cur.execute("SELECT MethodID from Actions WHERE ActionID=?", (feature_action["ActionID"],))
+    cur.execute("SELECT MethodID from Actions WHERE ActionID=?",
+                (feature_action["ActionID"],))
     action = cur.fetchone()
-    cur.execute("SELECT * FROM Methods WHERE MethodID=?", (action["MethodID"],))
+    cur.execute("SELECT * FROM Methods WHERE MethodID=?",
+                (action["MethodID"],))
     method = cur.fetchone()
 
     data_dict = {}
@@ -338,7 +352,8 @@ def extract_method_elements(cur, result, feature_action):
 def extract_variable_elements(cur, result):
     # extract variable element data
     # Start with Results table to -> Variables table
-    cur.execute("SELECT * FROM Variables WHERE VariableID=?", (result["VariableID"],))
+    cur.execute("SELECT * FROM Variables WHERE VariableID=?",
+                (result["VariableID"],))
     variable = cur.fetchone()
     data_dict = {}
     # data_dict['series_ids'] = [result["ResultUUID"]]
@@ -359,10 +374,12 @@ def extract_site_elements(cur, result, feature_action):
     # extract site element data
     # Start with Results table to -> FeatureActions table -> SamplingFeatures table
     # check if we need to create multiple site elements
-    cur.execute("SELECT * FROM SamplingFeatures WHERE SamplingFeatureID=?", (feature_action["SamplingFeatureID"],))
+    cur.execute("SELECT * FROM SamplingFeatures WHERE SamplingFeatureID=?",
+                (feature_action["SamplingFeatureID"],))
     sampling_feature = cur.fetchone()
 
-    cur.execute("SELECT * FROM Sites WHERE SamplingFeatureID=?", (feature_action["SamplingFeatureID"],))
+    cur.execute("SELECT * FROM Sites WHERE SamplingFeatureID=?",
+                (feature_action["SamplingFeatureID"],))
     site = cur.fetchone()
     data_dict = {}
     # data_dict['series_ids'] = [result["ResultUUID"]]
@@ -413,14 +430,16 @@ def extract_cv_metadata_from_blank_sqlite_file(csv_file):
 
         # create the temporal coverage element
 
-        value_counts['coverage'] = {'type': 'period', 'value': {'start': start_date_str, 'end': end_date_str}}
+        value_counts['coverage'] = {'type': 'period', 'value': {
+            'start': start_date_str, 'end': end_date_str}}
         return value_counts
 
 
 def _extract_creators_contributors(cur):
     # check if the AuthorList table exists
     authorlists_table_exists = False
-    cur.execute("SELECT COUNT(*) FROM sqlite_master WHERE type=? AND name=?", ("table", "AuthorLists"))
+    cur.execute("SELECT COUNT(*) FROM sqlite_master WHERE type=? AND name=?",
+                ("table", "AuthorLists"))
     qry_result = cur.fetchone()
     if qry_result[0] > 0:
         authorlists_table_exists = True
@@ -432,29 +451,37 @@ def _extract_creators_contributors(cur):
     contributors = []
     creators = []
     for result in results:
-        cur.execute("SELECT ActionID FROM FeatureActions WHERE FeatureActionID=?", (result["FeatureActionID"],))
+        cur.execute("SELECT ActionID FROM FeatureActions WHERE FeatureActionID=?", (result[
+                    "FeatureActionID"],))
         feature_actions = cur.fetchall()
         for feature_action in feature_actions:
-            cur.execute("SELECT ActionID FROM Actions WHERE ActionID=?", (feature_action["ActionID"],))
+            cur.execute("SELECT ActionID FROM Actions WHERE ActionID=?",
+                        (feature_action["ActionID"],))
 
             actions = cur.fetchall()
             for action in actions:
-                # get the AffiliationID from the ActionsBy table for the matching ActionID
-                cur.execute("SELECT AffiliationID FROM ActionBy WHERE ActionID=?", (action["ActionID"],))
+                # get the AffiliationID from the ActionsBy table for the
+                # matching ActionID
+                cur.execute(
+                    "SELECT AffiliationID FROM ActionBy WHERE ActionID=?", (action["ActionID"],))
                 actionby_rows = cur.fetchall()
 
                 for actionby in actionby_rows:
                     # get the matching Affiliations records
-                    cur.execute("SELECT * FROM Affiliations WHERE AffiliationID=?", (actionby["AffiliationID"],))
+                    cur.execute(
+                        "SELECT * FROM Affiliations WHERE AffiliationID=?", (actionby["AffiliationID"],))
                     affiliation_rows = cur.fetchall()
                     for affiliation in affiliation_rows:
                         # get records from the People table
                         if affiliation['PersonID'] not in author_ids_already_used:
-                            author_ids_already_used.append(affiliation['PersonID'])
-                            cur.execute("SELECT * FROM People WHERE PersonID=?", (affiliation['PersonID'],))
+                            author_ids_already_used.append(
+                                affiliation['PersonID'])
+                            cur.execute(
+                                "SELECT * FROM People WHERE PersonID=?", (affiliation['PersonID'],))
                             person = cur.fetchone()
 
-                            # get person organization name - get only one organization name
+                            # get person organization name - get only one
+                            # organization name
                             organization = None
                             if affiliation['OrganizationID']:
                                 cur.execute(
@@ -466,37 +493,45 @@ def _extract_creators_contributors(cur):
                             # create contributor metadata elements
                             person_name = person["PersonFirstName"]
                             if person['PersonMiddleName']:
-                                person_name = person_name + " " + person['PersonMiddleName']
+                                person_name = person_name + " " + \
+                                    person['PersonMiddleName']
 
-                            person_name = person_name + " " + person['PersonLastName']
+                            person_name = person_name + \
+                                " " + person['PersonLastName']
                             data_dict = {}
                             data_dict['name'] = person_name
                             if affiliation['PrimaryPhone']:
-                                data_dict["phone"] = affiliation["PrimaryPhone"]
+                                data_dict["phone"] = affiliation[
+                                    "PrimaryPhone"]
                             if affiliation["PrimaryEmail"]:
-                                data_dict["email"] = affiliation["PrimaryEmail"]
+                                data_dict["email"] = affiliation[
+                                    "PrimaryEmail"]
                             if affiliation["PrimaryAddress"]:
-                                data_dict["address"] = affiliation["PrimaryAddress"]
+                                data_dict["address"] = affiliation[
+                                    "PrimaryAddress"]
                             if organization:
                                 data_dict["organization"] = organization[0]
 
                             # check if this person is an author (creator)
                             author = None
                             if authorlists_table_exists:
-                                cur.execute("SELECT * FROM AuthorLists WHERE PersonID=?", (person['PersonID'],))
+                                cur.execute(
+                                    "SELECT * FROM AuthorLists WHERE PersonID=?", (person['PersonID'],))
                                 author = cur.fetchone()
 
                             if author:
                                 # save the extracted creator data in the dictionary
                                 # so that we can later sort it based on author order
                                 # and then create the creator metadata elements
-                                authors_data_dict[author["AuthorOrder"]] = data_dict
+                                authors_data_dict[
+                                    author["AuthorOrder"]] = data_dict
                             else:
                                 contributors.append(data_dict)
 
     # TODO: extraction of creator data has not been tested as the sample database does not have
     #  any records in the AuthorLists table
-    authors_data_dict_sorted_list = sorted(authors_data_dict, key=lambda key: authors_data_dict[key])
+    authors_data_dict_sorted_list = sorted(
+        authors_data_dict, key=lambda key: authors_data_dict[key])
     creators = []
     for data_dict in authors_data_dict_sorted_list:
         creators.append(data_dict)
@@ -512,17 +547,20 @@ def _extract_coverage_metadata(cur):
     if len(sites) == 1:
         site = sites[0]
         if site["Latitude"] and site["Longitude"]:
-            value_dict = {'east': site["Longitude"], 'north': site["Latitude"], 'units': "Decimal degrees"}
+            value_dict = {'east': site["Longitude"], 'north': site[
+                "Latitude"], 'units': "Decimal degrees"}
             # get spatial reference
             if site["SpatialReferenceID"]:
-                cur.execute("SELECT * FROM SpatialReferences WHERE SpatialReferenceID=?", (site["SpatialReferenceID"],))
+                cur.execute(
+                    "SELECT * FROM SpatialReferences WHERE SpatialReferenceID=?", (site["SpatialReferenceID"],))
                 spatialref = cur.fetchone()
                 if spatialref:
                     if spatialref["SRSName"]:
                         value_dict["projection"] = spatialref["SRSName"]
             coverage["spatial_coverage"] = {"type": "point", **value_dict}
     else:
-        # in case of multiple sites we will create one coverage element of type 'box'
+        # in case of multiple sites we will create one coverage element of type
+        # 'box'
         bbox = {
             'northlimit': -90,
             'southlimit': 90,
@@ -548,7 +586,8 @@ def _extract_coverage_metadata(cur):
             if bbox['projection'] == 'Unknown':
                 if site["SpatialReferenceID"]:
                     cur.execute(
-                        "SELECT * FROM SpatialReferences WHERE SpatialReferenceID=?", (site["SpatialReferenceID"],)
+                        "SELECT * FROM SpatialReferences WHERE SpatialReferenceID=?", (site[
+                                                                                       "SpatialReferenceID"],)
                     )
                     spatialref = cur.fetchone()
                     if spatialref:
@@ -569,7 +608,8 @@ def _extract_coverage_metadata(cur):
     end_date = parser.parse(dates['EndDate'])
 
     # create coverage element
-    coverage["period_coverage"] = {"start": begin_date.isoformat(), "end": end_date.isoformat()}
+    coverage["period_coverage"] = {
+        "start": begin_date.isoformat(), "end": end_date.isoformat()}
 
     return coverage
 
@@ -595,12 +635,14 @@ def extract_metadata_csv(csv_file_name):
         # columns starting with the 2nd column are data series names
         time_series_results = []
         for data_col_name in header[1:]:
-            time_series_results.append({"series_id": data_col_name, "value_count": data_row_count})
+            time_series_results.append(
+                {"series_id": data_col_name, "value_count": data_row_count})
 
         metadata_dict.update({"time_series_results": time_series_results})
         start_date = parser.parse(start_date_str)
         end_date = parser.parse(end_date_str)
-        metadata_dict.update({"period_coverage": {'start': start_date.isoformat(), 'end': end_date.isoformat()}})
+        metadata_dict.update({"period_coverage": {
+                             'start': start_date.isoformat(), 'end': end_date.isoformat()}})
 
     metadata_dict["content_files"] = [csv_file_name]
 

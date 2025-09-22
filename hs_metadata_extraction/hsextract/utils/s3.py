@@ -12,7 +12,7 @@ s3_config = {
 }
 s3_client = boto3.client('s3', **s3_config)
 
-        
+
 def write_metadata(metadata_path: str, metadata_json: dict) -> None:
     """=
     write metadata to the specified S3 path.
@@ -20,7 +20,8 @@ def write_metadata(metadata_path: str, metadata_json: dict) -> None:
     bucket_name = metadata_path.split('/')[0]
     key = '/'.join(metadata_path.split('/')[1:])
     try:
-        s3_client.put_object(Bucket=bucket_name, Key=key, Body=json.dumps(metadata_json, indent=2, default=str))
+        s3_client.put_object(Bucket=bucket_name, Key=key, Body=json.dumps(
+            metadata_json, indent=2, default=str))
     except Exception as e:
         print(f"Error writing metadata to {metadata_path}: {e}")
         raise
@@ -64,8 +65,10 @@ def retrieve_file_manifest(resource_root_path: str):
             for obj in page['Contents']:
                 key = obj['Key']
                 size = obj['Size']
-                size = f"{obj['Size']/1000.00} KB"
-                checksum = obj.get('ETag', 'N/A').strip('"') # TODO check this is actually sha256, I think it is etag which is md5
+                size = f"{obj['Size'] / 1000.00} KB"
+                # TODO check this is actually sha256, I think it is etag which
+                # is md5
+                checksum = obj.get('ETag', 'N/A').strip('"')
                 mime_type = mimetypes.guess_type(key)[0]
                 _, extension = os.path.splitext(key)
                 mime_type = mime_type if mime_type else extension
@@ -78,7 +81,8 @@ def retrieve_file_manifest(resource_root_path: str):
                     contentSize=size,
                     encodingFormat=mime_type
                 )
-                file_manifest.append(media_object.model_dump(exclude_none=True))
+                file_manifest.append(
+                    media_object.model_dump(exclude_none=True))
     return file_manifest
 
 
@@ -93,6 +97,7 @@ def find(path: str) -> list[str]:
                 key = f"{bucket}/{key}"
                 keys.append(key)
     return keys
+
 
 def exists(path: str) -> bool:
     """

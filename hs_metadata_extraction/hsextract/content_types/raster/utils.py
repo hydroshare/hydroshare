@@ -26,7 +26,8 @@ def extract_from_tif_file(tif_file):
     else:
         filename = local_copy
         tif_files = list_tif_files(filename)
-        tif_files = [os.path.join(full_path, f) for f in tif_files] + [tif_file]
+        tif_files = [os.path.join(full_path, f)
+                     for f in tif_files] + [tif_file]
     # file validation and metadaadatta extraction
     file_type_metadata = extract_metadata_from_vrt(filename)
     file_type_metadata["content_files"] = tif_files
@@ -67,7 +68,8 @@ def extract_metadata_from_vrt(vrt_file_path):
         metadata.append(box)
 
     # Save extended meta spatial reference
-    orig_cov_info = res_md_dict['spatial_coverage_info']['original_coverage_info']
+    orig_cov_info = res_md_dict['spatial_coverage_info'][
+        'original_coverage_info']
 
     # Here the assumption is that if there is no value for the 'northlimit' then there is no value
     # for the bounding box
@@ -163,7 +165,8 @@ def get_original_coverage_info(raster_dataset):
 
         # get projection string, datum
         projection_string = proj_wkt
-        datum = spatial_ref.GetAttrValue("DATUM", 0) if spatial_ref.GetAttrValue("DATUM", 0) else None
+        datum = spatial_ref.GetAttrValue(
+            "DATUM", 0) if spatial_ref.GetAttrValue("DATUM", 0) else None
 
         # get unit info and check spelling
         unit = spatial_ref.GetAttrValue("UNIT", 0)
@@ -279,7 +282,8 @@ def get_wgs84_coverage_info(raster_dataset):
         original_eastlimit = original_coverage_info['eastlimit']
 
         if transform is not None and transform.this is not None:
-            # Find bounding box that encapsulates tranformed original bounding box
+            # Find bounding box that encapsulates tranformed original bounding
+            # box
             xarr = [original_westlimit, original_eastlimit]
             yarr = [original_northlimit, original_southlimit]
             x_wgs84 = []
@@ -324,8 +328,10 @@ def get_cell_info(raster_file_name):
         rows = raster_dataset.RasterYSize
         columns = raster_dataset.RasterXSize
         proj_wkt = raster_dataset.GetProjection()
-        cell_size_x_value = raster_dataset.GetGeoTransform()[1] if proj_wkt else 0
-        cell_size_y_value = abs(raster_dataset.GetGeoTransform()[5]) if proj_wkt else 0
+        cell_size_x_value = raster_dataset.GetGeoTransform()[
+            1] if proj_wkt else 0
+        cell_size_y_value = abs(raster_dataset.GetGeoTransform()[
+                                5]) if proj_wkt else 0
         band = raster_dataset.GetRasterBand(1)
         cell_data_type = gdal.GetDataTypeName(band.DataType)
 
@@ -421,20 +427,24 @@ def list_tif_files(vrt_file):
     with open(vrt_file, "r") as f:
         vrt_string = f.read()
     root = ET.fromstring(vrt_string)
-    file_names_in_vrt = [file_name.text for file_name in root.iter('SourceFilename')]
+    file_names_in_vrt = [
+        file_name.text for file_name in root.iter('SourceFilename')]
     return file_names_in_vrt
+
 
 def list_tif_files_s3(vrt_file):
     with s3.open(vrt_file, "r") as f:
         vrt_string = f.read()
     root = ET.fromstring(vrt_string)
-    file_names_in_vrt = [file_name.text for file_name in root.iter('SourceFilename')]
+    file_names_in_vrt = [
+        file_name.text for file_name in root.iter('SourceFilename')]
     return file_names_in_vrt
 
 
 def get_vrt_files(raster_path):
     dir_path = os.path.dirname(raster_path)
-    vrt_files = [f for f in os.listdir(dir_path) if str(Path(f).suffix).lower() == ".vrt"]
+    vrt_files = [f for f in os.listdir(dir_path) if str(
+        Path(f).suffix).lower() == ".vrt"]
     vrt_files_for_raster = []
     if vrt_files:
         for vrt_file in vrt_files:

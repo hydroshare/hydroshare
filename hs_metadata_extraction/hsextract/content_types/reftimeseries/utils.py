@@ -54,16 +54,20 @@ def _validate_json_data(json_data):
 
     err_msg = "Invalid json file. {}"
     # validate title
-    _check_for_empty_string(json_data['timeSeriesReferenceFile']['title'], 'title')
+    _check_for_empty_string(
+        json_data['timeSeriesReferenceFile']['title'], 'title')
 
     # validate abstract
-    _check_for_empty_string(json_data['timeSeriesReferenceFile']['abstract'], 'abstract')
+    _check_for_empty_string(json_data['timeSeriesReferenceFile'][
+                            'abstract'], 'abstract')
 
     # validate fileVersion
-    _check_for_empty_string(json_data['timeSeriesReferenceFile']['fileVersion'], 'fileVersion')
+    _check_for_empty_string(json_data['timeSeriesReferenceFile'][
+                            'fileVersion'], 'fileVersion')
 
     # validate symbol
-    _check_for_empty_string(json_data['timeSeriesReferenceFile']['symbol'], 'symbol')
+    _check_for_empty_string(
+        json_data['timeSeriesReferenceFile']['symbol'], 'symbol')
 
     series_data = json_data['timeSeriesReferenceFile']['referencedTimeSeries']
     urls = []
@@ -107,7 +111,8 @@ def _validate_json_data(json_data):
         _check_for_empty_string(series['site']['siteName'], 'siteName')
 
         # validate variableName
-        _check_for_empty_string(series['variable']['variableName'], 'variableName')
+        _check_for_empty_string(
+            series['variable']['variableName'], 'variableName')
 
         ctx = ssl.create_default_context()
         ctx.check_hostname = False
@@ -119,10 +124,12 @@ def _validate_json_data(json_data):
             try:
                 urlopen(url, context=ctx)
             except URLError:
-                raise Exception(err_msg.format("Invalid web service URL found"))
+                raise Exception(err_msg.format(
+                    "Invalid web service URL found"))
 
         #  validate methodDescription for empty string
-        _check_for_empty_string(series['method']['methodDescription'], 'methodDescription')
+        _check_for_empty_string(
+            series['method']['methodDescription'], 'methodDescription')
 
         # validate methodLink
         if series['method']['methodLink'] is not None:
@@ -136,7 +143,8 @@ def _validate_json_data(json_data):
                     try:
                         urlopen(url, context=ctx)
                     except URLError:
-                        raise Exception(err_msg.format("Invalid method link found"))
+                        raise Exception(err_msg.format(
+                            "Invalid method link found"))
 
 
 def _check_for_empty_string(item_to_chk, item_name):
@@ -248,10 +256,12 @@ def make_naive(value, timezone=pytz.utc):
 def period_coverage(json_data):
     # add file level temporal coverage
     start_date = min(
-        [parser.parse(series['beginDate']) for series in json_data['timeSeriesReferenceFile']['referencedTimeSeries']]
+        [parser.parse(series['beginDate']) for series in json_data[
+            'timeSeriesReferenceFile']['referencedTimeSeries']]
     )
     end_date = max(
-        [parser.parse(series['endDate']) for series in json_data['timeSeriesReferenceFile']['referencedTimeSeries']]
+        [parser.parse(series['endDate']) for series in json_data[
+            'timeSeriesReferenceFile']['referencedTimeSeries']]
     )
     if is_aware(start_date):
         start_date = make_naive(start_date)
@@ -263,9 +273,11 @@ def period_coverage(json_data):
 def spatial_coverage(json_data):
     # add file level spatial coverage
     # check if we have single site or multiple sites
-    sites = set([series['site']['siteCode'] for series in json_data['timeSeriesReferenceFile']['referencedTimeSeries']])
+    sites = set([series['site']['siteCode'] for series in json_data[
+                'timeSeriesReferenceFile']['referencedTimeSeries']])
     if len(sites) == 1:
-        series = json_data['timeSeriesReferenceFile']['referencedTimeSeries'][0]
+        series = json_data['timeSeriesReferenceFile'][
+            'referencedTimeSeries'][0]
         value_dict = {
             'east': series['site']['longitude'],
             'north': series['site']['latitude'],
