@@ -11,7 +11,6 @@ import hs_communities.views.communities
 from hs_core import autocomplete_light_registry as alr
 from hs_core import views as hs_core_views
 from hs_core.views.oauth2_view import GroupAuthorizationView
-from hs_discover.views import SearchAPI, SearchView
 from hs_rest_api2.urls import hsapi2_urlpatterns
 from hs_rest_api.urls import hsapi_urlpatterns
 from hs_sitemap.views import sitemap
