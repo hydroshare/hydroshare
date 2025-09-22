@@ -23,7 +23,7 @@ while read line; do export $line; done < <(cat ${CONFIG_DIRECTORY}/hydroshare-co
 ### Docker Variables ###
 HS_DOCKER_CONTAINERS=(hydroshare defaultworker)
 HS_DOCKER_IMAGES=(hydroshare_hydroshare hydroshare_defaultworker)
-OTHER_DOCKER_CONTAINERS=(postgis rabbitmq redis solr)
+OTHER_DOCKER_CONTAINERS=(postgis rabbitmq redis)
 
 ### Pre-flight Variables ###
 DEV_SERVER='runuser -p -u hydro-service -g storage-hydro ./run-server'
@@ -37,13 +37,10 @@ display_usage() {
     echo "usage: $0 managepy [args] # use the arguments in a manage.py [args] call from the hydroshare container"
     echo "usage: $0 rebuild         # deletes hydroshare container contents only and deploys using exsiting database"
     echo "usage: $0 rebuild --db    # deletes all database and container contents and deploys from scratch"
-    echo "usage: $0 rebuild --db --nosolr  # same as 'rebuild --db' but skips solr update"
-    echo "usage: $0 rebuild_index   # rebuild solr index in a non-interactive way"
     echo "usage: $0 reset_all       # remove all data, containers and images that were previously deployed"
     echo "usage: $0 restart         # restarts the hydroshare container without rebuilding (includes preflight)"
     echo "usage: $0 start           # attempts to start all containers (without preflight)"
     echo "usage: $0 stop            # stops all running containers"
-    echo "usage: $0 update_index    # update solr index in a non-interactive way to be run as a cron job"
 }
 
 restart_hs() {
@@ -52,22 +49,6 @@ restart_hs() {
     delete_celerybeat_scheduler
     preflight_hs
     docker-compose start hydroshare defaultworker
-}
-
-solr_schema_hs() {
-    echo "SOLR SCHEMA:"
-    echo " - docker exec solr bin/solr create_core -c collection1 -n basic_config"
-    docker exec solr bin/solr create -c collection1 -d basic_configs
-    echo "  - docker exec hydroshare python manage.py build_solr_schema -f schema.xml"
-    docker exec hydroshare python manage.py build_solr_schema -f schema.xml
-    sleep 1s
-    echo "  - docker exec solr cp /hydroshare/schema.xml /opt/solr/example/solr/collection1/conf/schema.xml"
-    docker exec solr cp /hydroshare/schema.xml /opt/solr/server/solr/collection1/conf/schema.xml
-    echo "  - docker exec solr sed -i '/<schemaFactory class=\"ManagedIndexSchemaFactory\">/,+4d' /opt/solr/server/solr/collection1/conf/solrconfig.xml"
-    docker exec solr sed -i '/<schemaFactory class="ManagedIndexSchemaFactory">/,+4d' /opt/solr/server/solr/collection1/conf/solrconfig.xml
-    echo "  - docker exec solr rm /opt/solr/server/solr/collection1/conf/managed-schema"
-    docker exec solr rm /opt/solr/server/solr/collection1/conf/managed-schema
-
 }
 
 thumbnail_cleanup() {
@@ -203,24 +184,6 @@ manage_py_hs() {
     docker exec -u hydro-service -ti hydroshare python manage.py ${@:2}
 }
 
-solr_reload_hs() {
-    echo "SOLR RELOAD"
-    echo "  - docker exec hydroshare curl \"solr:8983/solr/admin/cores?action=RELOAD&core=collection1\""
-    docker exec hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
-}
-
-update_solr_index() {
-    echo "UPDATE SOLR INDEX:"
-    echo "  - docker exec hydroshare python manage.py solr_update"
-    docker exec hydroshare python manage.py solr_update
-}
-
-rebuild_solr_index() {
-    echo "REBUILD SOLR INDEX:"
-    echo "  - docker exec hydroshare python manage.py rebuild_index --noinput"
-    docker exec hydroshare python manage.py rebuild_index --noinput
-}
-
 remove_hs_components(){
     echo "REMOVE HYDROSHARE COMPONENTS:"
     if [[ -f docker-compose.yml ]]; then
@@ -289,16 +252,7 @@ rebuild_hs() {
     echo "  - docker exec -u hydro-service hydroshare python manage.py prevent_web_crawling"
     docker exec -u hydro-service hydroshare python manage.py prevent_web_crawling
     thumbnail_cleanup
-    solr_schema_hs
     sleep 2s
-    solr_reload_hs
-    sleep 2s
-    if [ "$3" != "--nosolr" ]; then
-        rebuild_solr_index
-        sleep 2s
-    else
-        echo "Skipping filling SOLR index. Fill via './hsctl managepy solr_update'"
-    fi
     restart_hs
     echo "END BUILD"
 }
@@ -308,11 +262,6 @@ reloaddb_hs() {
     migrate_hs
     sleep 3s
     thumbnail_cleanup
-    solr_schema_hs
-    sleep 2s
-    solr_reload_hs
-    sleep 2s
-    rebuild_solr_index
 }
 
 reset_all_hs() {
@@ -416,9 +365,6 @@ case "$1" in
         ;;
     managepy) manage_py_hs "$@"
         ;;
-    update_index) update_solr_index $1
-        ;;
-    rebuild_index) rebuild_solr_index $1 
         ;;
     maint_off) maint_off_hs $1
         ;;

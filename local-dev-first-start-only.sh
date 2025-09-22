@@ -166,9 +166,9 @@ else
 fi
 
 DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
-HYDROSHARE_CONTAINERS=(hydroshare defaultworker rabbitmq solr postgis companion redis nginx minio micro-auth pgbouncer)
-HYDROSHARE_VOLUMES=(hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol hydroshare_minio_data_vol hydroshare_redis_data_vol hydroshare_companion_vol)
-HYDROSHARE_IMAGES=(hydroshare-defaultworker hydroshare-hydroshare solr postgis/postgis rabbitmq nginx redis transloadit/companion minio/minio edoburu/pgbouncer hydroshare/micro-auth)
+HYDROSHARE_CONTAINERS=(hydroshare defaultworker rabbitmq postgis companion redis nginx minio micro-auth pgbouncer)
+HYDROSHARE_VOLUMES=(hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_temp_vol hydroshare_minio_data_vol hydroshare_redis_data_vol hydroshare_companion_vol)
+HYDROSHARE_IMAGES=(hydroshare-defaultworker hydroshare-hydroshare postgis/postgis rabbitmq nginx redis transloadit/companion minio/minio edoburu/pgbouncer hydroshare/micro-auth)
 
 NODE_CONTAINER_RUNNING=`docker ps -a | grep nodejs`
 
@@ -338,37 +338,6 @@ echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py fix_permissions"
 echo
 docker exec -u hydro-service hydroshare python manage.py fix_permissions
-
-echo
-echo '########################################################################################################################'
-echo " Reindexing SOLR"
-echo '########################################################################################################################'
-# TODO - fix hydroshare container permissions to allow use of hydro-service user
-echo
-echo " - docker exec solr bin/solr create_core -c collection1 -n basic_config"
-docker exec solr bin/solr create -c collection1 -d basic_configs
-
-echo
-echo "  - docker exec hydroshare python manage.py build_solr_schema -f schema.xml"
-echo
-docker exec hydroshare python manage.py build_solr_schema -f schema.xml
-
-echo
-echo "  - docker cp schema.xml solr:/opt/solr/server/solr/collection1/conf/schema.xml"
-echo
-docker cp schema.xml solr:/opt/solr/server/solr/collection1/conf/schema.xml
-
-echo
-echo "  - docker exec solr sed -i '/<schemaFactory class=\"ManagedIndexSchemaFactory\">/,+4d' /opt/solr/server/solr/collection1/conf/solrconfig.xml"
-docker exec solr sed -i '/<schemaFactory class="ManagedIndexSchemaFactory">/,+4d' /opt/solr/server/solr/collection1/conf/solrconfig.xml
-
-echo
-echo "  - docker exec solr rm /opt/solr/server/solr/collection1/conf/managed-schema"
-docker exec solr rm /opt/solr/server/solr/collection1/conf/managed-schema
-
-echo '  - docker exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"'
-echo
-docker exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
 
 echo
 echo '########################################################################################################################'

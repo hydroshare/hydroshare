@@ -37,14 +37,6 @@ Note it should have a default branch set to the develop branch
 
     git checkout <branch>
 
-To get current solr revision fixes:
-
-      a. git pull
-
-cd hydroshare
-
-    b. docker exec -u hydro-service -ti hydroshare python manage.py solr_update
-
  
 It’s very important that please DO NOT change the directory name after cloned. Let it be “hydroshare”
 If you are running inside a virtual machine such as HydroDev Ubuntu 18.04 from here, you need to:
@@ -114,7 +106,6 @@ When you activate a new branch, just bring the stack down and up again. Sometime
 ## Usage
 
 For all intents and purposes, Hydroshare is a large Python/Django application with some extra features and technologies added on:
-- SOLR for searching
 - Redis for caching
 - RabbitMQ for concurrency and serialization
 - Minio for a S3 file system
@@ -128,11 +119,9 @@ The `hsctl` script is your primary tool in interacting with and running tasks ag
 - `managepy [args]`: Executes a `python manage.py [args]` call on the running hydroshare container.
 - `rebuild`: Stops, removes and deletes only the hydroshare docker containers and images while retaining the database contents on the subsequent build as defined in the `hydroshare-config.yaml` file
 - `rebuild --db`: Fully stops, removes and deletes any prior hydroshare docker containers, images and database contents prior to installing a clean copy of the hydroshare codebase as defined in the `hydroshare-config.yaml` file.
-- `rebuild_index`: Rebuilds the solr/haystack index in a non-interactive way.
 - `restart`: Restarts the django server only.
 - `start`: Starts all containers as defined in the `docker-compose.yml` file.
 - `stop`: Stops all containers as defined in the `docker-compose.yml` file.
-- `update_index`: Updates the solr/haystack index in a non-interactive way.
 
 ## Testing and Debugging
 
