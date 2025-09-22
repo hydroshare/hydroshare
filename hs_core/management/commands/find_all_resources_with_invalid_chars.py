@@ -23,7 +23,7 @@ def check_for_invalid_character(doc):
 
 
 class Command(BaseCommand):
-    help = "Migrate all resources from Crossref to DataCite"
+    help = "Find all published resources with invalid characters in funding agency names or award numbers."
 
     def handle(self, *args, **options):
         start_time = time.time()
