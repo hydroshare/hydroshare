@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -o pipefail
 
-flake8 --exclude="*/migrations/*,./discovery-atlas" | tee pylint.out
+flake8 --exclude="*/migrations/*,./discovery-atlas,./docs" | tee pylint.out
