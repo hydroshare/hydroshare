@@ -5,15 +5,21 @@ from datetime import timedelta
 from django.core.management.base import BaseCommand
 
 from hs_core.models import BaseResource
+from pyld import jsonld
 
 logger = logging.getLogger(__name__)
 
 
-def check_for_invalid_character(s):
-    return all(
-        0x20 <= ord(c) <= 0x7E and c not in {'"', "'", '<', '>', '\\'}
-        for c in s
-    )
+SCHEMA_VOCAB = {"@vocab": "https://schema.org/"}
+
+
+def check_for_invalid_character(doc):
+    errors = []
+    try:
+        jsonld.expand(doc, options={"expandContext": SCHEMA_VOCAB})
+    except Exception as e:
+        errors.append(("$", f"Expansion failed: {e}"))
+    return errors
 
 
 class Command(BaseCommand):
