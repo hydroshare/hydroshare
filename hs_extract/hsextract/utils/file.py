@@ -1,7 +1,7 @@
 import mimetypes
 import os
 from hsextract import s3_client as s3
-from hsextract.hs_cn_schemas.schema.src.base import MediaObject
+from hs_cloudnative_schemas.schema.base import MediaObject
 
 
 def file_metadata(path: str):

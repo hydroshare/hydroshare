@@ -280,12 +280,13 @@ services:
   hsextract:
     platform: linux/amd64
     build:
-      context: hs_metadata_extraction/
-      dockerfile: Dockerfile
+      context: ./
+      dockerfile: hs_extract/Dockerfile
     volumes:
-      - ./hs_metadata_extraction/hsextract:/app/hsextract
-      - ./hs_metadata_extraction/extract_metadata_pipeline.yaml:/app/extract_metadata_pipeline.yaml
-      - ./hs_metadata_extraction/extract_metadata_plugin.yaml:/app/extract_metadata_plugin.yaml
+      - ./hs_extract/hsextract:/app/hsextract
+      - ./hs_cloudnative_schemas:/app/hs_cloudnative_schemas
+      - ./hs_extract/extract_metadata_pipeline.yaml:/app/extract_metadata_pipeline.yaml
+      - ./hs_extract/extract_metadata_plugin.yaml:/app/extract_metadata_plugin.yaml
     links:
       - redpanda:redpanda
     environment:

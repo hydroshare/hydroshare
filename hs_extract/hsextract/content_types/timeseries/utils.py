@@ -5,7 +5,7 @@ import tempfile
 import os
 
 from dateutil import parser
-from hs_metadata_extraction import s3
+from hsextract import s3
 
 
 def validate_odm2_db_file(sqlite_file_path):

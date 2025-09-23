@@ -3,7 +3,7 @@ import mimetypes
 import os
 
 import boto3
-from hsextract.hs_cn_schemas.schema.src.base import MediaObject
+from hs_cloudnative_schemas.schema.base import MediaObject
 
 s3_config = {
     "endpoint_url": os.environ.get("AWS_S3_ENDPOINT", "https://s3.beta.hydroshare.org"),

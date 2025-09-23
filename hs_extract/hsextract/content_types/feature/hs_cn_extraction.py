@@ -4,9 +4,9 @@ import geopandas
 import mimetypes
 from glob import glob
 
-from hsextract.hs_cn_schemas.schema.src import base
-from hsextract.hs_cn_schemas.schema.src import dataset
-from hsextract.hs_cn_schemas.schema.src import datavariable
+from hs_cloudnative_schemas.schema import base
+from hs_cloudnative_schemas.schema import dataset
+from hs_cloudnative_schemas.schema import datavariable
 from hsextract.utils.file import file_metadata
 from hsextract import s3_client as s3
 

@@ -13,15 +13,16 @@ RUN apt-get -y upgrade
 RUN curl -1sLf 'https://dl.redpanda.com/nzc4ZYQK3WRGd9sy/redpanda/cfg/setup/bash.deb.sh' | bash
 RUN apt install -y redpanda-rpk redpanda-connect
 
-COPY requirements.txt .
+COPY hs_extract/requirements.txt .
 RUN pip install -r requirements.txt
 RUN rm requirements.txt
 
-COPY hsextract .
-COPY extract_metadata_pipeline.yaml .
-COPY extract_metadata_plugin.yaml .
+COPY hs_extract/hsextract .
+COPY hs_extract/extract_metadata_pipeline.yaml .
+COPY hs_extract/extract_metadata_plugin.yaml .
+COPY hs_cloudnative_schemas .
 RUN touch __init__.py
 
-ENV PYTHONPATH "${PYTHONPATH}:/app/hsextract/"
+ENV PYTHONPATH "${PYTHONPATH}:/app/hsextract/:/app/hs_cloudnative_schemas/"
 
 ENTRYPOINT ["rpk", "connect", "run", "--rpc-plugins=/app/extract_metadata_plugin.yaml", "/app/extract_metadata_pipeline.yaml"]

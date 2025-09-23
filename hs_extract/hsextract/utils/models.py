@@ -2,7 +2,7 @@ import os
 from pydantic import BaseModel
 from enum import Enum
 
-from hsextract.hs_cn_schemas.schema.src.base import MediaObject
+from hs_cloudnative_schemas.schema.base import MediaObject
 from hsextract.utils.s3 import exists, retrieve_file_manifest, write_metadata
 from string import Template
 
@@ -39,11 +39,11 @@ class MetadataObject:
             bucket_name=bucket_name, resource_id=resource_id)
 
         resource_md_jsonld_path_template = os.environ.get("RESOURCE_MD_JSONLD_PATH",
-                                                          "hs_metadata/$resource_id/.hsjsonld")
+                                                          "hsmetadata/$resource_id/.hsjsonld")
         resource_md_jsonld_path = Template(resource_md_jsonld_path_template).safe_substitute(
             bucket_name=bucket_name, resource_id=resource_id)
 
-        resource_md_path_template = os.environ.get("RESOURCE_MD_PATH", "hs_metadata/$resource_id/.hs")
+        resource_md_path_template = os.environ.get("RESOURCE_MD_PATH", "hsmetadata/$resource_id/.hs")
         resource_md_path = Template(resource_md_path_template).safe_substitute(
             bucket_name=bucket_name, resource_id=resource_id)
 

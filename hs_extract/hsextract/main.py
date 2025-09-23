@@ -4,7 +4,7 @@ import redpanda_connect
 import logging
 import asyncio
 
-from hsextract.hs_cn_schemas.schema.src.base import HasPart
+from hs_cloudnative_schemas.schema.base import HasPart
 from hsextract.utils.models import ContentType, MetadataObject
 from hsextract.utils.s3 import write_metadata, load_metadata, delete_metadata
 
