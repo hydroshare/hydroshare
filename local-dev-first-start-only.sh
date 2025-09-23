@@ -164,6 +164,9 @@ echo '##########################################################################
 echo " Preparing"                                                                                            
 echo '###############################################################################################################'
 
+echo "Pulling git submodules..."
+git submodule update --init --recursive
+
 echo "Creating init scripts"
 cp scripts/templates/init-defaultworker.template init-defaultworker
 cp scripts/templates/init-hydroshare.template    init-hydroshare
