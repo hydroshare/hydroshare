@@ -295,8 +295,8 @@ services:
       AWS_SECRET_ACCESS_KEY: minioadmin
       AWS_S3_ENDPOINT: http://minio:9000
       RESOURCE_CONTENTS_PATH: "$$bucket_name/$$resource_id/data/contents" # directory for resource files
-      RESOURCE_MD_JSONLD_PATH: "hsmetadata/$$resource_id/.hsjsonld" # directory for schema.org JSON-LD metadata
-      RESOURCE_MD_PATH: "hsmetadata/$$resource_id/.hsmetadata" # directory for user and extracted metadata
+      RESOURCE_MD_JSONLD_PATH: "$$bucket_name/$$resource_id/.hsjsonld" # directory for schema.org JSON-LD metadata
+      RESOURCE_MD_PATH: "$$bucket_name/$$resource_id/.hsmetadata" # directory for user and extracted metadata
 volumes:
   postgis_data_vol:
   solr_data_vol:

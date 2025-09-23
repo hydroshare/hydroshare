@@ -931,6 +931,7 @@ DEFAULT_QUOTA_VALUE = 20
 DEFAULT_QUOTA_UNIT = "GB"
 
 BROKER_URL = 'kafka://redpanda:9092'
+METADATA_EXTRACTION_KAFKA_ENABLED = False
 
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #
