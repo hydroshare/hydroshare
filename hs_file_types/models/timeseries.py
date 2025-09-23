@@ -26,6 +26,7 @@ from hs_core.hydroshare import utils
 from hs_core.models import AbstractMetaDataElement
 from hs_core.signals import post_add_timeseries_aggregation
 from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from ..enums import AggregationMetaFilePath
 
 _SQLITE_FILE_NAME = 'ODM2.sqlite'
 _ODM2_SQLITE_FILE_PATH = f'hs_file_types/files/{_SQLITE_FILE_NAME}'
@@ -1565,7 +1566,7 @@ class TimeSeriesMetaDataMixin(models.Model):
         """
         writes data to a blank sqlite file. This function is executed only in case
         of CSV file upload and executed only once when updating the sqlite file for the first time.
-        :param temp_sqlite_file: this is the sqlite file copied from irods to a temp location on
+        :param temp_sqlite_file: this is the sqlite file copied from S3 to a temp location on
          Django.
         :param user: current user (must have edit permission on resource) who is updating the
         sqlite file to sync metadata changes in django database.
@@ -1588,8 +1589,8 @@ class TimeSeriesMetaDataMixin(models.Model):
             elif f.extension == '.csv':
                 csv_file = f
 
-        # retrieve the csv file from iRODS and save it to temp directory
-        temp_csv_file = utils.get_file_from_irods(resource=self.resource, file_path=csv_file.storage_path)
+        # retrieve the csv file from S3 and save it to temp directory
+        temp_csv_file = utils.get_file_from_s3(resource=self.resource, file_path=csv_file.storage_path)
         try:
             con = sqlite3.connect(temp_sqlite_file)
             with con:
@@ -1642,8 +1643,8 @@ class TimeSeriesMetaDataMixin(models.Model):
 
                 self.update_CV_tables(con, cur)
                 con.commit()
-                # push the updated sqlite file to iRODS
-                utils.replace_resource_file_on_irods(temp_sqlite_file, blank_sqlite_file, user)
+                # push the updated sqlite file to S3
+                utils.replace_resource_file_on_s3(temp_sqlite_file, blank_sqlite_file, user)
                 self.is_dirty = False
                 self.save()
                 log.info("Blank SQLite file was updated successfully.")
@@ -2381,6 +2382,14 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                      or f.extension.lower() == '.csv']
         return res_files[0] if res_files else None
 
+    @property
+    def metadata_json_file_path(self):
+        """Returns the storage path of the aggregation metadata json file"""
+
+        primary_file = self.get_primary_resource_file(self.files.all())
+        meta_file_path = primary_file.storage_path + AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH.value
+        return meta_file_path
+
     @classmethod
     def _validate_set_file_type_inputs(cls, resource, file_id=None, folder_path=''):
         res_file, folder_path = super(TimeSeriesLogicalFile, cls)._validate_set_file_type_inputs(
@@ -2924,9 +2933,9 @@ def extract_cv_metadata_from_blank_sqlite_file(target):
         target.metadata.create_cv_lookup_models(cur)
 
     # save some data from the csv file
-    # get the csv file from iRODS to a temp directory
+    # get the csv file from S3 to a temp directory
     resource = csv_res_file.resource
-    temp_csv_file = utils.get_file_from_irods(resource=resource, file_path=csv_res_file.storage_path)
+    temp_csv_file = utils.get_file_from_s3(resource=resource, file_path=csv_res_file.storage_path)
     with open(temp_csv_file, 'r') as fl_obj:
         csv_reader = csv.reader(fl_obj, delimiter=',')
         # read the first row - header
@@ -3424,8 +3433,8 @@ def sqlite_file_update(instance, sqlite_res_file, user):
 
     sqlite_file_to_update = sqlite_res_file
     resource = sqlite_res_file.resource
-    # retrieve the sqlite file from iRODS and save it to temp directory
-    temp_sqlite_file = utils.get_file_from_irods(resource=resource, file_path=sqlite_file_to_update.storage_path)
+    # retrieve the sqlite file from S3 and save it to temp directory
+    temp_sqlite_file = utils.get_file_from_s3(resource=resource, file_path=sqlite_file_to_update.storage_path)
 
     if instance.has_csv_file and instance.metadata.series_names:
         instance.metadata.populate_blank_sqlite_file(temp_sqlite_file, user)
@@ -3454,9 +3463,9 @@ def sqlite_file_update(instance, sqlite_res_file, user):
                 # update CV terms related tables
                 instance.metadata.update_CV_tables(con, cur)
 
-                # push the updated sqlite file to iRODS
-                utils.replace_resource_file_on_irods(temp_sqlite_file, sqlite_file_to_update,
-                                                     user)
+                # push the updated sqlite file to S3
+                utils.replace_resource_file_on_s3(temp_sqlite_file, sqlite_file_to_update,
+                                                  user)
                 metadata = instance.metadata
                 metadata.is_update_file = False
                 metadata.save()

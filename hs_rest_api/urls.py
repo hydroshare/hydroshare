@@ -12,8 +12,11 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
 
+from .resources.quota_holder import get_quota_holder_bucket
+
 from .discovery import DiscoverSearchView
 from .views.resource_share import ShareResourceGroup, ShareResourceUser
+from .views.service_account_minio import MinIOResourceBucketAndPrefix, MinIOServiceAccounts, MinIOServiceAccountsDelete
 
 hsapi_urlpatterns = [
     path('hsapi/', include('hs_rest_api.urls')),
@@ -78,6 +81,15 @@ urlpatterns = [
     re_path(r'^resource/(?P<pk>[0-9a-f-]+)/share/(?P<privilege>[a-z]+)/user/(?P<user_id>[\w.@+-]+)/$',
             ShareResourceUser.as_view(), name='share_resource_user_public'),
 
+    path('user/service/accounts/s3/', MinIOServiceAccounts.as_view(),
+         name='minio_service_accounts'),
+
+    re_path(r'user/service/accounts/s3/(?P<service_account_key>[\w]+)', MinIOServiceAccountsDelete.as_view(),
+            name='minio_service_accounts_delete'),
+
+    re_path(r'^resource/s3/(?P<pk>[0-9a-f-]+)/$', MinIOResourceBucketAndPrefix.as_view(),
+            name='minio_resource_bucket_and_prefix'),
+
     # DEPRECATED: use form above instead
     re_path(r'^resource/accessRules/(?P<pk>[0-9a-f-]+)/$',
             core_views.resource_rest_api.AccessRulesUpdate.as_view(),
@@ -136,21 +148,6 @@ urlpatterns = [
             core_views.resource_folder_rest_api.ResourceFolders.as_view(),
             name='list_manipulate_folders'),
 
-    # iRODS tickets
-    # write disabled;change (?P<op>read) to (?P<op>read|write) when ready
-
-    re_path(r'^resource/(?P<pk>[0-9a-f-]+)/ticket/(?P<op>read)/(?P<pathname>.*)/$',
-            core_views.resource_ticket_rest_api.CreateResourceTicket.as_view(),
-            name='create_ticket'),
-
-    re_path(r'^resource/(?P<pk>[0-9a-f-]+)/ticket/bag/$',
-            core_views.resource_ticket_rest_api.CreateBagTicket.as_view(),
-            name='create_bag_ticket'),
-
-    re_path(r'^resource/(?P<pk>[0-9a-f-]+)/ticket/(?P<ticket>.*)/$',
-            core_views.resource_ticket_rest_api.ManageResourceTicket.as_view(),
-            name='manage_ticket'),
-
     # public unzip endpoint
     re_path(r'^resource/(?P<pk>[0-9a-f-]+)/functions/unzip/(?P<pathname>.*)/$',
             core_views.resource_folder_hierarchy.data_store_folder_unzip_public),
@@ -208,8 +205,12 @@ urlpatterns = [
     path('userKeycloak/<path:user_identifier>',
          core_views.hsapi_get_user_for_keycloak, name='get_user_for_keycloak'),
 
-    path('dictionary/universities/',
-         dict_views.ListUniversities.as_view(), name="get_dictionary"),
+    path('thredds/',
+         core_views.hsapi_thredds_resource_list, name='get_thredds_resource_list'),
+
+    path('userS3Authorization/', core_views.hsapi_user_s3_authorization, name='user_s3_authorization'),
+
+    path('dictionary/universities/', dict_views.ListUniversities.as_view(), name="get_dictionary"),
 
     path('dictionary/subject_areas/',
          dict_views.ListSubjectAreas.as_view(), name="get_subject_areas"),
@@ -251,6 +252,6 @@ urlpatterns = [
     re_path(r'^resource/(?P<resource_id>[0-9a-f]+)/modelinstance/meta/(?P<aggregation_path>.*)$',
             file_type_views.model_instance_metadata_in_json,
             name='model_instance_metadata_in_json'),
-    path("tus/", core_views.resource_rest_api.CustomTusUpload.as_view(), name='tus_upload'),
-    path("tus/<uuid:resource_id>", core_views.resource_rest_api.CustomTusUpload.as_view(), name='tus_upload_chunks'),
+
+    re_path(r'^resource/(?P<resource_id>[0-9a-f]+)/quota_holder_bucket_name/$', get_quota_holder_bucket),
 ]

@@ -9,10 +9,10 @@ from rest_framework import status
 
 from hs_core import hydroshare
 from hs_core.views import share_resource_with_user, share_resource_with_group
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 
 
-class TestShareResource(MockIRODSTestCaseMixin, TestCase):
+class TestShareResource(MockS3TestCaseMixin, TestCase):
     def setUp(self):
         super(TestShareResource, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')

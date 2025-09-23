@@ -77,7 +77,7 @@ def map_replacements():
 
 
 class Command(BaseCommand):
-    help = "Check synchronization between iRODS and Django."
+    help = "Check synchronization between S3 and Django."
 
     def add_arguments(self, parser):
         # a list of resource id's, or none to check all resources

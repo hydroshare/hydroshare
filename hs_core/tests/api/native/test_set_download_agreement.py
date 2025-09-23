@@ -4,12 +4,12 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
 
 from hs_core.hydroshare import resource
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core import hydroshare
 from hs_access_control.models import PrivilegeCodes
 
 
-class TestSetDownloadAgreement(MockIRODSTestCaseMixin, TestCase):
+class TestSetDownloadAgreement(MockS3TestCaseMixin, TestCase):
     def setUp(self):
         super(TestSetDownloadAgreement, self).setUp()
 

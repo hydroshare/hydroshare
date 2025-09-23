@@ -3,7 +3,7 @@
 
 from django.db import migrations
 from django.core.exceptions import ValidationError
-from django_irods.storage import IrodsStorage
+from django_s3.storage import S3Storage
 import os.path
 
 # This migration converts ResourceFiles from a variety of forms to a consistent form
@@ -149,8 +149,8 @@ def storage_path(rtype, rfile):
     Copy of ResourceFile.storage_path (without model method references)
 
     Return the qualified name for a file in the storage hierarchy.
-    This is a valid input to IrodsStorage for manipulating the file.
-    The output depends upon whether the IrodsStorage instance is running
+    This is a valid input to S3Storage for manipulating the file.
+    The output depends upon whether the S3Storage instance is running
     in federated mode.
 
     """
@@ -186,14 +186,14 @@ def set_storage_path(rtype, rfile, path, test_exists=True):
     :raises ValidationError: if the pathname is inconsistent with resource configuration.
     It is rather important that applications call this rather than simply calling
     resource_file = "text path" because it takes the trouble of making that path
-    fully qualified so that IrodsStorage will work properly.
+    fully qualified so that S3Storage will work properly.
 
     This records file_folder for future possible uploads and searches.
 
     The heavy lifting in this routine is accomplished via path_is_acceptable and get_path,
     which together normalize the file name.  Regardless of whether the internal file name
     is qualified or not, this makes it fully qualified from the point of view of the
-    IrodsStorage module.
+    S3Storage module.
 
     """
     folder, base = path_is_acceptable(rtype, rfile, path, test_exists=test_exists)
@@ -291,7 +291,7 @@ def resource_path_is_acceptable(resource, path, test_exists=True):
     as a folder/filename pair.
     """
     if test_exists:
-        storage = get_irods_storage(resource)
+        storage = get_s3_storage(resource)
     locpath = os.path.join(resource.short_id, "data", "contents") + "/"
     relpath = path
     fedpath = resource.resource_federation_path
@@ -333,12 +333,12 @@ def resource_path_is_acceptable(resource, path, test_exists=True):
     return folder, base
 
 
-def get_irods_storage(resource):
-    """ Copy of BaseResource.get_irods_storage """
+def get_s3_storage(resource):
+    """ Copy of BaseResource.get_s3_storage """
     if is_federated(resource):
-        return IrodsStorage("federated")
+        return S3Storage("federated")
     else:
-        return IrodsStorage()
+        return S3Storage()
 
 
 def migrate_file_paths(apps, schema_editor):
@@ -546,7 +546,7 @@ def migrate_file_paths(apps, schema_editor):
             # This existence test is fouled up by a mangled resource name.
             # Invalid istorage object. A name consisting of spaces is the
             # most likely culprit.
-            # istorage = get_irods_storage(resource)
+            # istorage = get_s3_storage(resource)
             # if not istorage.exists(storage_path(BaseResource, file)):
             #     print("ERROR: name '{}' does not exist".format(storage_path(BaseResource, file)))
             # else:

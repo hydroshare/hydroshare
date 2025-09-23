@@ -22,7 +22,7 @@ from hs_file_types.models import (
 
 
 @pytest.mark.django_db(transaction=True)
-def test_link_model_aggregations_same_resource(composite_resource_with_mi_aggregation, mock_irods):
+def test_link_model_aggregations_same_resource(composite_resource_with_mi_aggregation):
     """Test that we can link one model instance aggregation to one model program aggregation within the same resource"""
 
     res, user = composite_resource_with_mi_aggregation
@@ -56,7 +56,7 @@ def test_link_model_aggregations_same_resource(composite_resource_with_mi_aggreg
 
 
 @pytest.mark.django_db(transaction=True)
-def test_model_instance_on_model_program_delete(composite_resource_with_mi_aggregation, mock_irods):
+def test_model_instance_on_model_program_delete(composite_resource_with_mi_aggregation):
     """Test that when we remove/delete a model program aggregation that the linked model instance aggregation does not
     get deleted and the metadata of the model instance aggregation is set to dirty"""
 
@@ -101,7 +101,7 @@ def test_model_instance_on_model_program_delete(composite_resource_with_mi_aggre
 
 
 @pytest.mark.django_db(transaction=True)
-def test_model_instance_on_model_program_rename_1(composite_resource_with_mi_aggregation, mock_irods):
+def test_model_instance_on_model_program_rename_1(composite_resource_with_mi_aggregation):
     """Test that when we rename a file that represents a model program aggregation then the linked model instance
     aggregation metadata is set to dirty"""
 
@@ -146,7 +146,7 @@ def test_model_instance_on_model_program_rename_1(composite_resource_with_mi_agg
 
 
 @pytest.mark.django_db(transaction=True)
-def test_model_instance_on_model_program_rename_2(composite_resource_with_mi_aggregation, mock_irods):
+def test_model_instance_on_model_program_rename_2(composite_resource_with_mi_aggregation):
     """Test that when we rename a folder that represents a model program aggregation then the linked model instance
     aggregation metadata is set to dirty"""
 
@@ -192,7 +192,7 @@ def test_model_instance_on_model_program_rename_2(composite_resource_with_mi_agg
 
 
 @pytest.mark.django_db(transaction=True)
-def test_set_metadata(composite_resource_with_mi_aggregation, mock_irods):
+def test_set_metadata(composite_resource_with_mi_aggregation):
     """Test that we can store all metadata items for a model instance aggregation"""
 
     res, _ = composite_resource_with_mi_aggregation
@@ -247,7 +247,7 @@ def test_set_metadata(composite_resource_with_mi_aggregation, mock_irods):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_auto_netcdf_aggregation_creation(composite_resource_with_mi_aggregation_folder, mock_irods):
+def test_auto_netcdf_aggregation_creation(composite_resource_with_mi_aggregation_folder):
     """Test that when a netcdf file is uploaded to a folder that represents a model instance aggregation,
     a netcdf aggregation is created automatically"""
 
@@ -272,7 +272,7 @@ def test_auto_netcdf_aggregation_creation(composite_resource_with_mi_aggregation
 
 
 @pytest.mark.django_db(transaction=True)
-def test_auto_raster_aggregation_creation(composite_resource_with_mi_aggregation_folder, mock_irods):
+def test_auto_raster_aggregation_creation(composite_resource_with_mi_aggregation_folder):
     """Test that when a raster file (.tif) is uploaded to a folder that represents a model instance aggregation,
     a raster aggregation is created automatically"""
 
@@ -301,7 +301,7 @@ def test_auto_raster_aggregation_creation(composite_resource_with_mi_aggregation
 
 
 @pytest.mark.django_db(transaction=True)
-def test_auto_geofeature_aggregation_creation(composite_resource_with_mi_aggregation_folder, mock_irods):
+def test_auto_geofeature_aggregation_creation(composite_resource_with_mi_aggregation_folder):
     """Test that when files that represents a geofeature are uploaded to a folder that
     represents a model instance, a geofeature aggregation is created automatically"""
 
@@ -335,7 +335,7 @@ def test_auto_geofeature_aggregation_creation(composite_resource_with_mi_aggrega
 
 
 @pytest.mark.django_db(transaction=True)
-def test_auto_timeseries_aggregation_creation(composite_resource_with_mi_aggregation_folder, mock_irods):
+def test_auto_timeseries_aggregation_creation(composite_resource_with_mi_aggregation_folder):
     """Test that when a timeseries sqlite file is uploaded to a folder that
     represents a model instance, a timeseries aggregation is created automatically from that sqlite file"""
 
@@ -363,7 +363,7 @@ def test_auto_timeseries_aggregation_creation(composite_resource_with_mi_aggrega
 
 
 @pytest.mark.django_db(transaction=True)
-def test_auto_csv_aggregation_creation(composite_resource_with_mi_aggregation_folder, mock_irods):
+def test_auto_csv_aggregation_creation(composite_resource_with_mi_aggregation_folder):
     """Test that when a csv file is uploaded to a folder that represents a model instance aggregation,
     a csv aggregation is created automatically"""
 
@@ -392,7 +392,7 @@ def test_auto_csv_aggregation_creation(composite_resource_with_mi_aggregation_fo
 
 
 @pytest.mark.django_db(transaction=True)
-def test_auto_ref_timeseries_aggregation_creation(composite_resource_with_mi_aggregation_folder, mock_irods):
+def test_auto_ref_timeseries_aggregation_creation(composite_resource_with_mi_aggregation_folder):
     """Test that when a ref timeseries json file is uploaded to a folder that
     represents a model instance aggregation, a ref timeseries aggregation is created automatically
     from that json file"""
@@ -422,7 +422,7 @@ def test_auto_ref_timeseries_aggregation_creation(composite_resource_with_mi_agg
 
 
 @pytest.mark.django_db(transaction=True)
-def test_canot_create_fileset_within_mi_aggregation(composite_resource_with_mi_aggregation_folder, mock_irods):
+def test_canot_create_fileset_within_mi_aggregation(composite_resource_with_mi_aggregation_folder):
     """Test that one can't create a fileset aggregation inside a folder that represents a model instance aggregation"""
 
     resource, user = composite_resource_with_mi_aggregation_folder
@@ -442,7 +442,7 @@ def test_canot_create_fileset_within_mi_aggregation(composite_resource_with_mi_a
 
 
 @pytest.mark.django_db(transaction=True)
-def test_canot_create_mi_aggregation_within_mi_aggregation(composite_resource_with_mi_aggregation_folder, mock_irods):
+def test_canot_create_mi_aggregation_within_mi_aggregation(composite_resource_with_mi_aggregation_folder):
     """Test that one can't create a model instance aggregation inside a folder that represents a model
     instance aggregation"""
 
@@ -464,7 +464,7 @@ def test_canot_create_mi_aggregation_within_mi_aggregation(composite_resource_wi
 
 
 @pytest.mark.django_db(transaction=True)
-def test_move_single_file_aggr_into_model_instance_aggregation(composite_resource, mock_irods):
+def test_move_single_file_aggr_into_model_instance_aggregation(composite_resource):
     """ test that we can move a single file aggregation into a folder that represents a
     model instance aggregation"""
 
@@ -507,7 +507,7 @@ def test_move_single_file_aggr_into_model_instance_aggregation(composite_resourc
 
 
 @pytest.mark.django_db(transaction=True)
-def test_move_single_file_into_model_instance_aggregation(composite_resource, mock_irods):
+def test_move_single_file_into_model_instance_aggregation(composite_resource):
     """ test that we move a single file into a folder that represents a
     model instance aggregation the moved file becomes part of the model instance aggregation"""
 
@@ -552,7 +552,7 @@ def test_move_single_file_into_model_instance_aggregation(composite_resource, mo
 
 
 @pytest.mark.django_db(transaction=True)
-def test_move_single_file_out_of_model_instance_aggregation(composite_resource, mock_irods):
+def test_move_single_file_out_of_model_instance_aggregation(composite_resource):
     """ test that when we move a file out of a folder that represents a
     model instance aggregation the moved file is no more part of the model instance aggregation"""
 
@@ -601,7 +601,7 @@ def test_move_single_file_out_of_model_instance_aggregation(composite_resource, 
 
 
 @pytest.mark.django_db(transaction=True)
-def test_move_folder_into_model_instance_aggregation(composite_resource, mock_irods):
+def test_move_folder_into_model_instance_aggregation(composite_resource):
     """ test that when we move a folder into a folder that represents a
     model instance aggregation the files in the moved folder become part of the model instance aggregation"""
 
@@ -648,7 +648,7 @@ def test_move_folder_into_model_instance_aggregation(composite_resource, mock_ir
 
 
 @pytest.mark.django_db(transaction=True)
-def test_move_folder_out_of_model_instance_aggregation(composite_resource, mock_irods):
+def test_move_folder_out_of_model_instance_aggregation(composite_resource):
     """ test that when we move a folder out of a folder that represents a
     model instance aggregation the files in the moved folder are no mare part of the model instance aggregation"""
 
@@ -699,7 +699,7 @@ def test_move_folder_out_of_model_instance_aggregation(composite_resource, mock_
 
 
 @pytest.mark.django_db(transaction=True)
-def test_update_spatial_coverage_from_children(composite_resource_with_mi_aggregation_folder, mock_irods):
+def test_update_spatial_coverage_from_children(composite_resource_with_mi_aggregation_folder):
     """Here we are testing fileset level spatial coverage update using the spatial data from the
     contained (children) aggregations - two child aggregations"""
 
@@ -723,10 +723,10 @@ def test_update_spatial_coverage_from_children(composite_resource_with_mi_aggreg
     mi_aggr = ModelInstanceLogicalFile.objects.first()
     # model aggr should now have spatial coverage
     assert mi_aggr.metadata.spatial_coverage is not None
-    assert mi_aggr.metadata.spatial_coverage.value['northlimit'] == 42.05002695977342
-    assert mi_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.57773718106199
-    assert mi_aggr.metadata.spatial_coverage.value['southlimit'] == 41.98722286030317
-    assert mi_aggr.metadata.spatial_coverage.value['westlimit'] == -111.6975629308406
+    assert mi_aggr.metadata.spatial_coverage.value['northlimit'] == 42.050026959773426
+    assert mi_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.577737181062
+    assert mi_aggr.metadata.spatial_coverage.value['southlimit'] == 41.98722286030319
+    assert mi_aggr.metadata.spatial_coverage.value['westlimit'] == -111.69756293084063
 
     # auto create a netcdf aggregation inside the model instance aggregation
     assert NetCDFLogicalFile.objects.count() == 0
@@ -742,15 +742,15 @@ def test_update_spatial_coverage_from_children(composite_resource_with_mi_aggreg
     # update model instance aggregation spatial coverage from the contained 2 aggregations
     mi_aggr.update_spatial_coverage()
     # test model instance aggregation spatial coverage data
-    assert mi_aggr.metadata.spatial_coverage.value['northlimit'] == 42.05002695977342
+    assert mi_aggr.metadata.spatial_coverage.value['northlimit'] == 42.050026959773426
     assert mi_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.5059403684569
     assert mi_aggr.metadata.spatial_coverage.value['southlimit'] == 41.86390807452128
-    assert mi_aggr.metadata.spatial_coverage.value['westlimit'] == -111.6975629308406
+    assert mi_aggr.metadata.spatial_coverage.value['westlimit'] == -111.69756293084063
     assert not resource.dangling_aggregations_exist()
 
 
 @pytest.mark.django_db(transaction=True)
-def test_no_auto_update_spatial_coverage_from_children(composite_resource_with_mi_aggregation_folder, mock_irods):
+def test_no_auto_update_spatial_coverage_from_children(composite_resource_with_mi_aggregation_folder):
     """Here we are testing model instance level spatial coverage auto update does not happen when
     a contained aggregation spatial coverage gets created as part of that aggregation creation
     since the  model instance aggregation has spatial coverage prior to the child aggregation
@@ -783,10 +783,10 @@ def test_no_auto_update_spatial_coverage_from_children(composite_resource_with_m
     gr_aggr = GeoRasterLogicalFile.objects.first()
     # raster aggr should have spatial coverage
     assert gr_aggr.metadata.spatial_coverage is not None
-    assert gr_aggr.metadata.spatial_coverage.value['northlimit'] == 42.05002695977342
-    assert gr_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.57773718106199
-    assert gr_aggr.metadata.spatial_coverage.value['southlimit'] == 41.98722286030317
-    assert gr_aggr.metadata.spatial_coverage.value['westlimit'] == -111.6975629308406
+    assert gr_aggr.metadata.spatial_coverage.value['northlimit'] == 42.050026959773426
+    assert gr_aggr.metadata.spatial_coverage.value['eastlimit'] == -111.577737181062
+    assert gr_aggr.metadata.spatial_coverage.value['southlimit'] == 41.98722286030319
+    assert gr_aggr.metadata.spatial_coverage.value['westlimit'] == -111.69756293084063
     # check model instance spatial coverage has not been updated
     assert mi_aggr.metadata.spatial_coverage.value['east'] == value_dict['east']
     assert mi_aggr.metadata.spatial_coverage.value['north'] == value_dict['north']
@@ -794,7 +794,7 @@ def test_no_auto_update_spatial_coverage_from_children(composite_resource_with_m
 
 
 @pytest.mark.django_db(transaction=True)
-def test_auto_update_temporal_coverage_from_children(composite_resource_with_mi_aggregation_folder, mock_irods):
+def test_auto_update_temporal_coverage_from_children(composite_resource_with_mi_aggregation_folder):
     """Here we are testing model instance level temporal coverage auto update when
     a contained aggregation temporal coverage gets created as part of that aggregation creation
     provided the model instance aggregation has no temporal coverage prior to the child aggregation
@@ -828,7 +828,7 @@ def test_auto_update_temporal_coverage_from_children(composite_resource_with_mi_
 
 
 @pytest.mark.django_db(transaction=True)
-def test_no_auto_update_temporal_coverage_from_children(composite_resource_with_mi_aggregation_folder, mock_irods):
+def test_no_auto_update_temporal_coverage_from_children(composite_resource_with_mi_aggregation_folder):
     """Here we are testing model instance level temporal coverage auto update does not happen when
     a contained aggregation temporal coverage gets created as part of that aggregation creation
     since the  model instance aggregation has temporal coverage prior to the child aggregation
@@ -866,7 +866,7 @@ def test_no_auto_update_temporal_coverage_from_children(composite_resource_with_
 
 
 @pytest.mark.django_db(transaction=True)
-def test_update_temporal_coverage_from_children(composite_resource_with_mi_aggregation_folder, mock_irods):
+def test_update_temporal_coverage_from_children(composite_resource_with_mi_aggregation_folder):
     """Here we are testing model instance level temporal coverage can be updated by user if the contained
     aggregations have temporal coverage
     """

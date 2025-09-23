@@ -1,9 +1,9 @@
 from django.contrib.auth.models import User
 from django.db.models import Q
 
-from hs_core.models import BaseResource
 from hs_access_control.models.privilege import UserResourcePrivilege, GroupResourcePrivilege, \
     UserGroupPrivilege, GroupCommunityPrivilege, PrivilegeCodes
+from hs_core.models import BaseResource
 
 
 def coarse_permissions(u, r):
@@ -102,9 +102,21 @@ def access_provenance(u, r):
 
     return output
 
+
 def get_user_resource_privilege(user_id, short_id):
-    # a naive solution with no performance enhancements:
-    # These gets throw exceptions if no user or resource found or if duplicates exist.
+    """
+    Determine the privilege level (permission) of a user for a specific resource.
+
+    Args:
+        user_id (int): The ID of the user.
+        short_id (str): The unique identifier of the resource.
+
+    Returns:
+        int: The privilege code representing the user's access level.
+    """
+
+    if user_id is None:
+        return PrivilegeCodes.NONE
     try:
         user = User.objects.get(id=user_id)
     except User.DoesNotExist:
@@ -126,11 +138,54 @@ def get_user_resource_privilege(user_id, short_id):
         Q(resource=resource,
           group__gaccess__active=True,
           group__g2ugp__user__id=user_id)).values_list('privilege', flat=True)
-    # print(group_privilege)
+
     if len(group_privilege) > 0:
         group_privilege = min(group_privilege)
     else:
         group_privilege = PrivilegeCodes.NONE
 
-    # print(group_privilege)
+    return min(public, user_privilege, group_privilege)
+
+
+def get_user_resource_privilege(user_id, short_id):
+    """
+    Determine the privilege level (permission) of a user for a specific resource.
+
+    Args:
+        user_id (int): The ID of the user.
+        short_id (str): The unique identifier of the resource.
+
+    Returns:
+        int: The privilege code representing the user's access level.
+    """
+
+    if user_id is None:
+        return PrivilegeCodes.NONE
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return PrivilegeCodes.NONE
+    try:
+        resource = BaseResource.objects.get(short_id=short_id)
+    except BaseResource.DoesNotExist:
+        return PrivilegeCodes.NONE
+
+    # public access
+    if resource.raccess.public or resource.raccess.allow_private_sharing:
+        public = PrivilegeCodes.VIEW
+    else:
+        public = PrivilegeCodes.NONE
+    # user access
+    user_privilege = UserResourcePrivilege.get_privilege(user=user, resource=resource)
+
+    group_privilege = GroupResourcePrivilege.objects.filter(
+        Q(resource=resource,
+          group__gaccess__active=True,
+          group__g2ugp__user__id=user_id)).values_list('privilege', flat=True)
+
+    if len(group_privilege) > 0:
+        group_privilege = min(group_privilege)
+    else:
+        group_privilege = PrivilegeCodes.NONE
+
     return min(public, user_privilege, group_privilege)

@@ -1,0 +1,31 @@
+name: Publish docs via GitHub Pages
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "**.py"
+      - "**.md"
+      - "docs/**"
+      - "mkdocs.yml"
+      - ".github/workflows/docs-gh-pages.yml"
+      - "requirements-mkdocs.txt"
+
+jobs:
+  build:
+    name: Deploy docs
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9"]
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v3
+
+      - name: Deploy docs
+        uses: mhausenblas/mkdocs-deploy-gh-pages@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # EXTRA_PACKAGES: 
+          # GITHUB_DOMAIN: 
+          REQUIREMENTS: requirements-mkdocs.txt

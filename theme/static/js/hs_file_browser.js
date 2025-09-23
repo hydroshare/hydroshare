@@ -70,7 +70,7 @@ function getFolderTemplateInstance(folder) {
 
     // Default
     return "<li class='fb-folder droppable draggable' data-url='" + folder.url + "' title='" +
-        hint +" "+folder.name + "&#13;Type: File Folder'>" +
+        hint + folder.name + "&#13;Type: File Folder'>" +
         "<span class='fb-file-icon fa fa-folder icon-blue'></span>" +
         "<span class='fb-file-name'>" + folder.name + "</span>" +
         "<span class='fb-file-type' data-folder-short-path='" + folder['folder_short_path'] + "'>File Folder</span>" +
@@ -127,15 +127,20 @@ function getFileTemplateInstance(file) {
         iconTemplate = fileIcons.DEFAULT;
     }
 
+    let fileTypeStr = '';
+    if(file.type){
+        fileTypeStr = "Type: " + file.type + "&#13;";
+    }
+
     if (file.logical_type.length > 0){
-        var title = hint + file.name + "&#13;Type: " + file.type + "&#13;Size: " +
+        var title = hint + file.name + "&#13;" + fileTypeStr + "Size: " +
             formatBytes(parseInt(file.size)) + "&#13;" + (file.aggregation_name || "");
     }
     else {
-        var title = hint + file.name + "&#13;Type: " + file.type + "&#13;Size: " +
+        var title = hint + file.name + "&#13;" + fileTypeStr + "Size: " +
             formatBytes(parseInt(file.size));
-    }
-    
+    } 
+
     return "<li data-pk='" + file.pk + "' data-url='" + file.url + "' data-ref-url='" +
         file.reference_url + "' data-logical-file-id='" + file.logical_file_id +
         "' class='fb-file draggable' title='" + title + "' is-single-file-aggregation='" +
@@ -143,7 +148,12 @@ function getFileTemplateInstance(file) {
         file.has_model_program_aggr_folder + "' data-has-model-instance-aggr-folder='" +
         file.has_model_instance_aggr_folder + "' data-aggregation-appkey='" + file.aggregation_appkey  + "'>" +
         iconTemplate +
-        "<span class='fb-file-name'>" + file.name + "</span>" +
+        "<span class='fb-file-name' style='display:none'>" + file.name + "</span>" +
+        "<span class='fb-file-name-display'>" + (
+            file.name.length > 15
+                ? file.name.slice(0, 8) + "..." + file.name.slice(file.name.lastIndexOf('.') - 5)
+                : file.name
+        ) + "</span>"  +
         "<span class='fb-file-type'>" + file.type + " File</span>" +
         "<span class='fb-logical-file-type' data-logical-file-type='" + file.logical_type + "' data-logical-file-id='" +
         file.logical_file_id +  "'>" + file.aggregation_name + "</span>" +
@@ -926,11 +936,10 @@ function bindFileBrowserItemEvents() {
                                     extensionApp = aggrApp;
                                 }
                             }
-                            else if ($(this).attr("data-agg-types")) {
-                                // tool has restricted aggregation types but the selected file is not an aggregation
-                                // tool is not applicable/viewable for the selected file
-                                extensionApp = false;
-                            }
+                            // else if ($(this).attr("data-agg-types")) {
+                            //     tool has restricted aggregation types but the selected file is not an aggregation
+                            //     in this case, we explicitly do nothing
+                            // }
                         }
                     }
                     if (!extensionApp) {
@@ -1644,7 +1653,7 @@ function onOpenFolder() {
     pathLogIndex = pathLog.length - 1;
 
     var calls = [];
-    calls.push(get_irods_folder_struct_ajax_submit(SHORT_ID, targetPath));
+    calls.push(get_folder_struct_ajax_submit(SHORT_ID, targetPath));
 
     $.when.apply($, calls).done(function () {
         updateSelectionMenuContext();
@@ -1705,7 +1714,7 @@ function refreshFileBrowser(name) {
         calls.push(get_aggregation_folder_struct(getCurrentPath().aggregation));
     }
     else {
-        calls.push(get_irods_folder_struct_ajax_submit(SHORT_ID, getCurrentPath()));
+        calls.push(get_folder_struct_ajax_submit(SHORT_ID, getCurrentPath()));
     }
 
     $.when.apply($, calls).done(function () {
@@ -1847,7 +1856,7 @@ function onUploadSuccess(file, response) {
 
 $(document).ready(function () {
     // Download All method
-    $("#btn-download-all, #download-bag-btn").click(function (event) {
+    $("#btn-download-all, #download-bag-btn, #btn-toolbar-download-all").click(function (event) {
         const btnDownloadAll = $("#btn-download-all");
         const icon = $('#btn-download-all > span:first-child');
         const initialClass = icon.attr("class");
@@ -1919,7 +1928,7 @@ $(document).ready(function () {
         get_aggregation_folder_struct(currentPath.aggregation);
     }
     else {
-        get_irods_folder_struct_ajax_submit(SHORT_ID, currentPath);
+        get_folder_struct_ajax_submit(SHORT_ID, currentPath);
     }
 
     updateNavigationState();
@@ -1975,7 +1984,7 @@ $(document).ready(function () {
         sessionStorage.currentBrowsepath = JSON.stringify(path);
         pathLog.push(path);
         pathLogIndex = pathLog.length - 1;
-        get_irods_folder_struct_ajax_submit(SHORT_ID, path);
+        get_folder_struct_ajax_submit(SHORT_ID, path);
         $("#fileTypeMetaDataTab").html(file_metadata_alert);
     });
 
@@ -2182,7 +2191,7 @@ $(document).ready(function () {
         if (folderName) {
             var calls = [];
             newFolderPath = {path: getCurrentPath().path.concat(folderName)};
-            calls.push(create_irods_folder_ajax_submit(SHORT_ID, newFolderPath.path.join('/')));
+            calls.push(create_folder_ajax_submit(SHORT_ID, newFolderPath.path.join('/')));
 
             $.when.apply($, calls).done(function () {
                 refreshFileBrowser();
@@ -2270,7 +2279,7 @@ $(document).ready(function () {
         var calls = [];
         var res_id = $("#unzip_res_id").val();
         var zip_with_rel_path = $("#zip_with_rel_path").val();
-        calls.push(unzip_irods_file_ajax_submit(res_id, zip_with_rel_path, overwrite='true', unzip_to_folder='false'));
+        calls.push(unzip_file_ajax_submit(res_id, zip_with_rel_path, overwrite='true', unzip_to_folder='false'));
         // Disable the Cancel button until request has finished
         $(this).parent().find(".btn[data-dismiss='modal']").addClass("disabled");
         function afterDoneRequest() {
@@ -2352,7 +2361,7 @@ $(document).ready(function () {
             get_aggregation_folder_struct(getCurrentPath().aggregation);
         }
         else {
-            get_irods_folder_struct_ajax_submit(SHORT_ID, getCurrentPath());
+            get_folder_struct_ajax_submit(SHORT_ID, getCurrentPath());
         }
         sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
     });
@@ -2369,7 +2378,7 @@ $(document).ready(function () {
                 get_aggregation_folder_struct(getCurrentPath().aggregation);
             }
             else {
-                get_irods_folder_struct_ajax_submit(SHORT_ID, getCurrentPath());
+                get_folder_struct_ajax_submit(SHORT_ID, getCurrentPath());
             }
 
             sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
@@ -2388,7 +2397,7 @@ $(document).ready(function () {
                 get_aggregation_folder_struct(getCurrentPath().aggregation);
             }
             else {
-                get_irods_folder_struct_ajax_submit(SHORT_ID, getCurrentPath());
+                get_folder_struct_ajax_submit(SHORT_ID, getCurrentPath());
             }
             sessionStorage.currentBrowsepath = JSON.stringify(getCurrentPath());
         }
@@ -2671,7 +2680,7 @@ $(document).ready(function () {
             else {
                 const folderName = selected.children(".fb-file-name").text();
                 const path = getCurrentPath().path.concat(folderName);
-                await zip_irods_folder_ajax_submit(SHORT_ID, path.join('/'), fileName);
+                await zip_folder_ajax_submit(SHORT_ID, path.join('/'), fileName);
             }
             refreshFileBrowser();
         }
@@ -2683,7 +2692,7 @@ $(document).ready(function () {
         var calls = [];
         for (let i = 0; i < files.length; i++) {
             let fileName = $(files[i]).children(".fb-file-name").text();
-            calls.push(unzip_irods_file_ajax_submit(SHORT_ID, getCurrentPath().path.concat(fileName).join('/'), overwrite='false', unzip_to_folder='false'));
+            calls.push(unzip_file_ajax_submit(SHORT_ID, getCurrentPath().path.concat(fileName).join('/'), overwrite='false', unzip_to_folder='false'));
         }
 
         // Wait for the asynchronous calls to finish to get new folder structure
@@ -2700,7 +2709,7 @@ $(document).ready(function () {
         var calls = [];
         for (let i = 0; i < files.length; i++) {
             let fileName = $(files[i]).children(".fb-file-name").text();
-            calls.push(unzip_irods_file_ajax_submit(SHORT_ID, getCurrentPath().path.concat(fileName).join('/'), overwrite='false', unzip_to_folder='true'));
+            calls.push(unzip_file_ajax_submit(SHORT_ID, getCurrentPath().path.concat(fileName).join('/'), overwrite='false', unzip_to_folder='true'));
         }
 
         // If asynchronous calls for unzipping failed, refresh file browser; otherwise, if it succeeds which triggers

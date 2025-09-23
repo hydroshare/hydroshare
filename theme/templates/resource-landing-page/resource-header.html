@@ -108,12 +108,12 @@
                 </tr>
                 <tr>
                     <th>Created:</th>
-                    <td>{{ cm.created|date:"M d, Y" }} at {{ cm.created|time }}</td>
+                    <td>{{ cm.created|date:"M d, Y" }} at {{ cm.created|time }} (UTC)</td>
                 </tr>
                 <tr>
                     <th>Last updated:</th>
                     <td>
-                        {{ cm.last_updated|date:"M d, Y" }} at {{ cm.last_updated|time }}
+                        {{ cm.last_updated|date:"M d, Y" }} at {{ cm.last_updated|time }} (UTC)
                         {% if cm.raccess.published and cm.last_updated > cm|published_date and cm.last_updated != cm|published_date %}
                             <span>(Metadata update)</span>
                         {% endif %}
@@ -123,7 +123,7 @@
                 {% if cm.raccess.published %}
                 <tr>
                     <th>Published date:</th>
-                    <td> {{ cm|published_date|date:"M d, Y" }} at {{ cm|published_date|time }}</td>
+                    <td> {{ cm|published_date|date:"M d, Y" }} at {{ cm|published_date|time }} (UTC)</td>
                 </tr>
                 <tr>
                     <th>DOI:</th>

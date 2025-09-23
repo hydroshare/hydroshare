@@ -14,7 +14,9 @@ from .views.metadata import (
     resource_metadata_json,
     single_file_metadata_json,
     time_series_metadata_json,
-    csv_file_metadata_json
+    csv_file_metadata_json,
+    resource_sharing_status_json,
+    resource_permission_json,
 )
 
 app_name = "hsapi2"
@@ -42,6 +44,12 @@ urlpatterns = [
     path('', schema_view_yasg.with_ui('swagger', cache_timeout=None),
          name='schema-swagger-ui'),
     path('redoc/', schema_view_yasg.with_ui('redoc', cache_timeout=None), name='schema-redoc'),
+
+    re_path(r'^resource/(?P<pk>[0-9a-f-]+)/sharing_status/json/$', resource_sharing_status_json,
+            name='resource_sharing_status_json'),
+
+    re_path(r'^resource/(?P<pk>[0-9a-f-]+)/permission/json/$', resource_permission_json,
+            name='resource_permission_json'),
 
     re_path(r'^resource/(?P<pk>[0-9a-f-]+)/json/$',
             resource_metadata_json,

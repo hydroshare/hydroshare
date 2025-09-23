@@ -1283,6 +1283,10 @@ body > .main-container {
     width: auto !important;
 }
 
+#btn-toolbar-download-all.icon-button {
+	padding: 0;
+}
+
 .icon-button:hover{
     text-decoration: none;
 }
@@ -1584,13 +1588,9 @@ body > .main-container {
 	word-break: break-word;
 }
 
-#btn-select-irods-file, #rep-res-bag {
+#rep-res-bag {
 	margin: 10px 0;
 	max-width: 100%;
-}
-
-#btn-select-irods-file.disabled {
-	pointer-events: none;
 }
 
 div#sharing-status .col-sm-12{
@@ -3915,7 +3915,7 @@ form#covereage-search-fields {
 	height: 100px;
 	margin: 10px;
 	border: 1px solid transparent;
-	float: left;
+	float: left;	
 	overflow: hidden;
 	text-overflow: ellipsis;
 	-webkit-user-select: none; /* Chrome/Safari */
@@ -3928,13 +3928,13 @@ form#covereage-search-fields {
 	flex-grow: 1;
 }
 
-#fb-sort a, #irods-group a {
+#fb-sort a, #hs-group a {
 	cursor: pointer;
 	padding: 8px;
 	font-size: 12px;
 }
 
-#fb-sort ul, #irods-group ul {
+#fb-sort ul, #hs-group ul {
 	background :#FFF;
 	padding: 1px;
 }
@@ -3996,6 +3996,9 @@ form#covereage-search-fields {
 ul#fb-files-container li.ui-selected .fb-file-name, #fb-files-container li.ui-selecting .fb-file-name {
 	word-break: break-word;
 }
+ul#fb-files-container li.ui-selected .fb-file-name-display, #fb-files-container li.ui-selecting .fb-file-name-display {
+	word-break: break-word;
+}
 
 ul#fb-files-container {
     min-height: 100%;
@@ -4016,8 +4019,13 @@ ul#fb-files-container .hs-upload-indicator {
 	font-size: 12px;
 	cursor: default;
 }
+.fb-file-name-display {
+	color: #555;
+	font-size: 12px;
+	cursor: default;
+}
 
-.fb-view-list .fb-file-name {
+.fb-view-list .fb-file-name, .fb-view-list .fb-file-name-display {
 	font-size: 14px;
 	white-space: nowrap;
 }
@@ -4248,11 +4256,10 @@ div.fb-upload-caption a {
 	height: 30px;
 }
 
-.fb-view-grid .fb-file-name {
+.fb-view-grid .fb-file-name-display, .fb-view-grid .fb-file-name{
     display: block;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    margin-top: 6px;
+	word-break: break-word;
+	margin-top: 6px;
     line-height: 1.5em;
     max-height: 3em;
 }

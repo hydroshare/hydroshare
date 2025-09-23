@@ -7,14 +7,14 @@ from django.test import TransactionTestCase
 
 from hs_core import hydroshare
 from hs_core.models import Coverage, ResourceFile
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core.views.utils import move_or_rename_file_or_folder, create_folder
 from hs_file_types.models import GenericLogicalFile, GenericFileMetaData
 from ..enums import AggregationMetaFilePath
 from .utils import CompositeResourceTestMixin
 
 
-class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
+class GenericFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
                           CompositeResourceTestMixin):
     def setUp(self):
         super(GenericFileTypeTest, self).setUp()
@@ -680,8 +680,8 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file = res_file.logical_file
         # file name without extension
         res_file_name, _ = os.path.splitext(res_file.file_name)
-        expected_meta_path = '{0}{1}'.format(res_file_name, AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
-        expected_map_path = '{0}{1}'.format(res_file_name, AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
+        expected_meta_path = '{0}{1}'.format(res_file_name, AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)
+        expected_map_path = '{0}{1}'.format(res_file_name, AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
 
@@ -697,9 +697,9 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file = res_file.logical_file
         res_file_name, _ = os.path.splitext(res_file.file_name)
         expected_meta_path = '{0}/{1}{2}'.format(new_folder, res_file_name,
-                                                 AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
+                                                 AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)
         expected_map_path = '{0}/{1}{2}'.format(new_folder, res_file_name,
-                                                AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
+                                                AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
 
@@ -712,9 +712,9 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file = res_file.logical_file
         res_file_name, _ = os.path.splitext(res_file.file_name)
         expected_meta_path = '{0}/{1}{2}'.format(new_folder, res_file_name,
-                                                 AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
+                                                 AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)
         expected_map_path = '{0}/{1}{2}'.format(new_folder, res_file_name,
-                                                AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
+                                                AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
 
@@ -728,9 +728,9 @@ class GenericFileTypeTest(MockIRODSTestCaseMixin, TransactionTestCase,
         logical_file = res_file.logical_file
         res_file_name, _ = os.path.splitext(res_file.file_name)
         expected_meta_path = '{0}/{1}{2}'.format(folder_rename, res_file_name,
-                                                 AggregationMetaFilePath.METADATA_FILE_ENDSWITH)
+                                                 AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)
         expected_map_path = '{0}/{1}{2}'.format(folder_rename, res_file_name,
-                                                AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)
+                                                AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value)
         self.assertEqual(logical_file.metadata_short_file_path, expected_meta_path)
         self.assertEqual(logical_file.map_short_file_path, expected_map_path)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())

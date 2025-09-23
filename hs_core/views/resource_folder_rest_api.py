@@ -10,7 +10,7 @@ from django.core.exceptions import SuspiciousFileOperation
 from hs_core.views import utils as view_utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE
 
-from django_irods.icommands import SessionException
+from django_s3.exceptions import SessionException
 
 
 class ResourceFolders(APIView):
@@ -42,10 +42,11 @@ class ResourceFolders(APIView):
                             status=status.HTTP_403_FORBIDDEN)
 
         try:
-            view_utils.irods_path_is_allowed(pathname)  # check for hacking attempts
+            view_utils.s3_path_is_allowed(pathname)  # check for hacking attempts
         except (ValidationError, SuspiciousFileOperation) as ex:
             return Response(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
+        # if len(pathname.strip()) == 0, it means list the root folder: data/contents
         relpath = os.path.join('data', 'contents', pathname)
         try:
             contents = view_utils.list_folder(pk, relpath)
@@ -77,7 +78,7 @@ class ResourceFolders(APIView):
                             status=status.HTTP_403_FORBIDDEN)
 
         try:
-            view_utils.irods_path_is_allowed(pathname)  # check for hacking attempts
+            view_utils.s3_path_is_allowed(pathname)  # check for hacking attempts
         except (ValidationError, SuspiciousFileOperation) as ex:
             return Response(str(ex), status=status.HTTP_400_BAD_REQUEST)
 
@@ -109,7 +110,7 @@ class ResourceFolders(APIView):
                             status=status.HTTP_403_FORBIDDEN)
 
         try:
-            view_utils.irods_path_is_allowed(pathname)  # check for hacking attempts
+            view_utils.s3_path_is_allowed(pathname)  # check for hacking attempts
         except (ValidationError, SuspiciousFileOperation) as ex:
             return Response(str(ex), status=status.HTTP_400_BAD_REQUEST)
 

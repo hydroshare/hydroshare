@@ -128,6 +128,9 @@
             {% block main %}{% endblock %}
             {% block after_main %}{% endblock %}
             {% include "pages/site-wide-modals.html" %}
+
+            {# ======= Uppy for large file upload ======= #}
+            {% include "uppy.html" %}
         </div>
     {% endblock %}
 

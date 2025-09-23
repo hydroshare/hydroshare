@@ -33,8 +33,7 @@ from mezzanine.utils.urls import next_url
 from rest_framework import status
 from rest_framework.exceptions import NotFound, ValidationError
 
-from django_irods.icommands import SessionException
-from django_irods.storage import IrodsStorage
+from django_s3.exceptions import SessionException
 from hs_access_control.models import PrivilegeCodes
 from hs_core import hydroshare
 from hs_core.enums import RelationTypes
@@ -76,40 +75,6 @@ def json_or_jsonp(r, i, code=200):
                             content_type='text/javascript')
     else:
         return HttpResponse(i, content_type='application/json', status=code)
-
-
-# Since an SessionException will be raised for all irods-related operations from django_irods
-# module, there is no need to raise iRODS SessionException from within this function
-def upload_from_irods(username, password, host, port, zone, irods_fnames, res_files):
-    """
-    use iget to transfer selected data object from irods zone to local as a NamedTemporaryFile
-    :param username: iRODS login account username used to download irods data object for uploading
-    :param password: iRODS login account password used to download irods data object for uploading
-    :param host: iRODS login host used to download irods data object for uploading
-    :param port: iRODS login port used to download irods data object for uploading
-    :param zone: iRODS login zone used to download irods data object for uploading
-    :param irods_fnames: the data object file name to download to local for uploading
-    :param res_files: list of files for uploading to create resources
-    :raises SessionException(proc.returncode, stdout, stderr) defined in django_irods/icommands.py
-            to capture iRODS exceptions raised from iRODS icommand subprocess run triggered from
-            any method calls from IrodsStorage() if an error or exception ever occurs
-    :return: None, but the downloaded file from the iRODS will be appended to res_files list for
-    uploading
-    """
-    irods_storage = IrodsStorage()
-    irods_storage.set_user_session(username=username, password=password, host=host, port=port,
-                                   zone=zone)
-    ifnames = irods_fnames.split(',')
-    for ifname in ifnames:
-        size = irods_storage.size(ifname)
-        tmpFile = irods_storage.download(ifname)
-        fname = os.path.basename(ifname.rstrip(os.sep))
-        fileobj = File(file=tmpFile, name=fname)
-        fileobj.size = size
-        res_files.append(fileobj)
-
-    # delete the user session after iRODS file operations are done
-    irods_storage.delete_user_session()
 
 
 def validate_url(url):
@@ -246,8 +211,8 @@ def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filena
         if not is_valid:
             return status.HTTP_400_BAD_REQUEST, err_msg
 
-    istorage = res.get_irods_storage()
-    # temp path to hold updated url file to be written to iRODS
+    istorage = res.get_s3_storage()
+    # temp path to hold updated url file to be written to S3
     temp_path = istorage.getUniqueTmpPath
 
     prefix_path = 'data/contents'
@@ -277,14 +242,14 @@ def edit_reference_url_in_resource(user, res, new_ref_url, curr_path, url_filena
         else:
             return status.HTTP_500_INTERNAL_SERVER_ERROR, str(ex)
 
-    # update url file in iRODS
+    # update url file in S3
     urlstring = '[InternetShortcut]\nURL=' + new_ref_url + '\n'
     from_file_name = os.path.join(temp_path, ref_name)
     with open(from_file_name, 'w') as out:
         out.write(urlstring)
-    target_irods_file_path = os.path.join(res.root_path, curr_path, ref_name)
+    target_s3_file_path = os.path.join(res.root_path, curr_path, ref_name)
     try:
-        istorage.saveFile(from_file_name, target_irods_file_path)
+        istorage.saveFile(from_file_name, target_s3_file_path)
         shutil.rmtree(temp_path)
         hydroshare.utils.resource_modified(res, user, overwrite_bag=False)
     except SessionException as ex:
@@ -330,16 +295,6 @@ def run_ssh_command(host, uname, exec_cmd, pwd=None, private_key_file=None):
     if output:
         logger.debug(output)
     return output
-
-
-# run the update script on hyrax server via ssh session for netCDF resources on demand
-# when private netCDF resources are made public so that all links of data services
-# provided by Hyrax service are instantaneously available on demand
-def run_script_to_update_hyrax_input_files(shortkey):
-    pwd = settings.HYRAX_SSH_PROXY_USER_PWD,
-    run_ssh_command(host=settings.HYRAX_SSH_HOST, uname=settings.HYRAX_SSH_PROXY_USER,
-                    pwd=pwd,
-                    exec_cmd=settings.HYRAX_SCRIPT_RUN_COMMAND + ' ' + shortkey)
 
 
 def rights_allows_copy(res, user):
@@ -834,8 +789,8 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
         reject_subject = parse.quote("Publication Request Rejected")
         reject_body = parse.quote("Your Publication Request for the following resource was rejected: ")
         href_for_mailto_reject = (
-            f"mailto:{user_from.email}?subject={ reject_subject }&body={ reject_body }"
-            f'{ request.scheme }://{ request.get_host() }/resource/{ resource.short_id }'
+            f"mailto:{user_from.email}?subject={reject_subject}&body={reject_body}"
+            f'{request.scheme}://{request.get_host()}/resource/{resource.short_id}'
         )
         context['href_for_mailto_reject'] = href_for_mailto_reject
     elif action_type == 'act_on_quota_request':
@@ -855,8 +810,8 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
         reject_subject = parse.quote("Quota Increase Request Rejected")
         reject_body = parse.quote("Your Quota Increase Request was rejected. ")
         href_for_mailto_reject = (
-            f"mailto:{user_from.email}?subject={ reject_subject }&body={ reject_body }"
-            f'{ request.scheme }://{ request.get_host() }/user/{ user_from.id }'
+            f"mailto:{user_from.email}?subject={reject_subject}&body={reject_body}"
+            f'{request.scheme}://{request.get_host()}/user/{user_from.id}'
         )
         context['href_for_mailto_reject'] = href_for_mailto_reject
     else:
@@ -893,9 +848,9 @@ def show_relations_section(res_obj):
 
 
 # TODO: no handling of pre_create or post_create signals
-def link_irods_file_to_django(resource, filepath):
+def link_s3_file_to_django(resource, filepath):
     """
-    Link a newly created irods file to Django resource model
+    Link a newly created S3 file to Django resource model
 
     :param filepath: full path to file
     """
@@ -920,8 +875,8 @@ def link_irods_file_to_django(resource, filepath):
         return ret
 
 
-def link_irods_folder_to_django(resource, istorage, foldername, auto_aggregate=True):
-    res_files = _link_irods_folder_to_django(resource, istorage, foldername)
+def link_s3_folder_to_django(resource, istorage, foldername, auto_aggregate=True):
+    res_files = _link_s3_folder_to_django(resource, istorage, foldername)
     if auto_aggregate:
         check_aggregations(resource, res_files)
     return res_files
@@ -937,20 +892,20 @@ def listfolders_recursively(istorage, path):
     return folders
 
 
-def _link_irods_folder_to_django(resource, istorage, foldername):
+def _link_s3_folder_to_django(resource, istorage, foldername):
     """
-    Recursively Link irods folder and all files and sub-folders inside the folder to Django
-    Database after iRODS file and folder operations to get Django and iRODS in sync
+    Recursively Link S3 folder and all files and sub-folders inside the folder to Django
+    Database after S3 file and folder operations to get Django and S3 in sync
 
     :param resource: the BaseResource object representing a HydroShare resource
-    :param istorage: REDUNDANT: IrodsStorage object
+    :param istorage: REDUNDANT: S3Storage object
     :param foldername: the folder name, as a fully qualified path
     :return: List of ResourceFile of newly linked files
     """
     if __debug__:
         assert (isinstance(resource, BaseResource))
     if istorage is None:
-        istorage = resource.get_irods_storage()
+        istorage = resource.get_s3_storage()
 
     res_files = []
     if foldername:
@@ -959,18 +914,18 @@ def _link_irods_folder_to_django(resource, istorage, foldername):
         for file in store[1]:
             file_path = os.path.join(foldername, file)
             # This assumes that file_path is a full path
-            res_files.append(link_irods_file_to_django(resource, file_path))
+            res_files.append(link_s3_file_to_django(resource, file_path))
         # recursively add sub-folders into Django resource model
         for folder in store[0]:
             res_files = res_files + \
-                _link_irods_folder_to_django(resource, istorage,
-                                             os.path.join(foldername, folder))
+                _link_s3_folder_to_django(resource, istorage,
+                                          os.path.join(foldername, folder))
     return res_files
 
 
-def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
+def rename_s3_file_or_folder_in_django(resource, src_name, tgt_name):
     """
-    Rename file in Django DB after the file/folder is renamed in iRODS side
+    Rename file in Django DB after the file/folder is renamed in S3 side
     :param resource: the BaseResource object representing a HydroShare resource
     :param src_name: the file or folder full path name to be renamed
     :param tgt_name: the file or folder full path name to be renamed to
@@ -1047,12 +1002,12 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
                     resource.add_file_to_aggregation(fobj, aggregations=aggregations)
 
 
-def remove_irods_folder_in_django(resource, folder_path, user):
+def remove_s3_folder_in_django(resource, folder_path, user):
     """
-    Remove all files inside a folder in Django DB after the folder is removed from iRODS
+    Remove all files inside a folder in Django DB after the folder is removed from S3
     If the folder contains any aggregations, those are also deleted from DB
     :param resource: the BaseResource object representing a HydroShare resource
-    :param folder_path: full path (starting with resource id) of the folder that has been removed from iRODS
+    :param folder_path: full path (starting with resource id) of the folder that has been removed from S3
     :param user: who initiated the folder delete operation
     :return:
     """
@@ -1127,7 +1082,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.raccess.published:
         raise ValidationError("Folder zipping is not allowed for a published resource")
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_s3_storage()
     res_coll_input = os.path.join(resource.root_path, input_coll_path)
     if not istorage.exists(res_coll_input):
         raise ValidationError(f"Specified folder path ({input_coll_path}) doesn't exist.")
@@ -1157,16 +1112,9 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     if resource.resource_type == "CompositeResource":
         resource.create_aggregation_meta_files()
 
-    istorage.session.run("ibun", None, '-cDzip', '-f', output_zip_full_path, res_coll_input)
+    istorage.zipup(output_zip_full_path, res_coll_input)
     output_zip_size = istorage.size(output_zip_full_path)
-    if not bool_remove_original:
-        try:
-            validate_user_quota(resource.quota_holder, output_zip_size)
-        except QuotaException as ex:
-            # remove the zip file that was created
-            istorage.delete(output_zip_full_path)
-            raise ex
-    zip_res_file = link_irods_file_to_django(resource, output_zip_full_path)
+    zip_res_file = link_s3_file_to_django(resource, output_zip_full_path)
     if resource.resource_type == "CompositeResource":
         # make the newly added zip file part of an aggregation if needed
         resource.add_file_to_aggregation(zip_res_file)
@@ -1185,7 +1133,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
                 else:
                     delete_resource_file(res_id, f.short_path, user)
 
-        # remove empty folder in iRODS
+        # remove empty folder in S3
         istorage.delete(res_coll_input)
 
     # TODO: should check can_be_public_or_discoverable here
@@ -1210,7 +1158,7 @@ def zip_by_aggregation_file(user, res_id, aggregation_name, output_zip_fname):
         raise ValidationError(f"Aggregation zipping is not allowed for resource type:{resource.resource_type}")
     if resource.raccess.published:
         raise ValidationError("Aggregation zipping is not allowed for a published resource")
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_s3_storage()
     if aggregation_name.startswith('data/contents/'):
         _, aggregation_name = aggregation_name.split('data/contents/')
 
@@ -1237,22 +1185,22 @@ def zip_by_aggregation_file(user, res_id, aggregation_name, output_zip_fname):
 
     daily_date = datetime.today().strftime('%Y-%m-%d')
     output_path = f"zips/{daily_date}/{uuid4().hex}/{output_zip_fname}.zip"
-    irods_output_path = resource.get_irods_path(output_path, prepend_short_id=False)
-    irods_aggr_input_path = os.path.join(resource.file_path, aggregation_name)
-    create_temp_zip(resource_id=res_id, input_path=irods_aggr_input_path, output_path=irods_output_path,
+    s3_output_path = resource.get_s3_path(output_path, prepend_short_id=False)
+    s3_aggr_input_path = os.path.join(resource.file_path, aggregation_name)
+    create_temp_zip(resource_id=res_id, input_path=s3_aggr_input_path, output_path=s3_output_path,
                     aggregation_name=aggregation_name)
 
     # validate the size of the zip file with the user quota
-    zip_file_size = istorage.size(irods_output_path)
+    zip_file_size = istorage.size(s3_output_path)
     validate_user_quota(resource.quota_holder, zip_file_size)
 
     # move the zip file to the input path
-    move_zip_file_to = os.path.dirname(irods_aggr_input_path)
-    istorage.moveFile(irods_output_path, move_zip_file_to)
-    zip_file_path = os.path.join(move_zip_file_to, os.path.basename(irods_output_path))
+    basepath = os.path.dirname(s3_aggr_input_path)
+    zip_file_path = os.path.join(basepath, os.path.basename(s3_output_path))
+    istorage.moveFile(s3_output_path, zip_file_path)
 
     # register the zip file in Django
-    zip_res_file = link_irods_file_to_django(resource, zip_file_path)
+    zip_res_file = link_s3_file_to_django(resource, zip_file_path)
     output_zip_size = istorage.size(zip_res_file.storage_path)
     # make the newly added zip file part of an aggregation if needed
     resource.add_file_to_aggregation(zip_res_file)
@@ -1261,9 +1209,9 @@ def zip_by_aggregation_file(user, res_id, aggregation_name, output_zip_fname):
     return zip_file_path, output_zip_size
 
 
-class IrodsFile:
+class S3File:
     """Mimics an uploaded file to allow use of the ingestion logic which expects an uploaded file, rather than a file
-    on irods."""
+    on S3."""
 
     def __init__(self, name, istorage):
         self._name = name
@@ -1308,7 +1256,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.raccess.published:
         raise ValidationError("Unzipping of file is not allowed for a published resource.")
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_s3_storage()
     zip_with_full_path = os.path.join(resource.root_path, zip_with_rel_path)
     if not istorage.exists(zip_with_full_path):
         raise ValidationError(f"Zip file ({zip_with_rel_path}) was not found.")
@@ -1321,9 +1269,8 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
     unzip_temp_folder = ''
     try:
         # unzip to a temporary folder first to validate contents of the zip file
-        unzip_temp_folder = uuid4().hex
-        # Note: unzipping using the irods 'ibun' command seems to fail if the zip file contains files that have
-        # non-english characters.
+        relative_path = os.path.dirname(zip_with_rel_path.split('data/contents/')[1])
+        unzip_temp_folder = os.path.join("tmp", uuid4().hex, relative_path)
         unzip_path_temp = istorage.unzip(zip_with_full_path, unzipped_folder=unzip_temp_folder)
 
         # validate files in the zip file - checking for banned characters
@@ -1351,9 +1298,21 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
         if unzip_to_folder:
             # unzip to the subfolder with zip file base name as the subfolder name. If the subfolder name already
             # exists, a sequential number is appended to the subfolder name to make sure the subfolder name is unique
-            unzip_folder = os.path.splitext(os.path.basename(zip_with_full_path))[0].strip()
+            def _get_nonexistant_path(istorage, path):
+                if not istorage.exists(path):
+                    return path
+                i = 1
+                new_path = "{}-{}".format(path, i)
+                while istorage.exists(new_path):
+                    i += 1
+                    new_path = "{}-{}".format(path, i)
+                return new_path
+            folder_name = os.path.splitext(os.path.basename(zip_with_full_path))[0].strip()
+            unzip_folder = os.path.join(os.path.dirname(zip_with_full_path), folder_name)
+
+            unzip_folder = _get_nonexistant_path(istorage, unzip_folder)
             unzip_to_folder_path = istorage.unzip(zip_with_full_path, unzipped_folder=unzip_folder)
-            res_files = link_irods_folder_to_django(resource, istorage, unzip_to_folder_path, auto_aggregate)
+            res_files = link_s3_folder_to_django(resource, istorage, unzip_to_folder_path, auto_aggregate)
             if resource.resource_type == 'CompositeResource':
                 # make the newly added files part of an aggregation if needed
                 aggregations = list(resource.logical_files)
@@ -1370,13 +1329,13 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
 
             res_files = []
             for unzipped_file in unzipped_files:
-                res_files.append(IrodsFile(unzipped_file, istorage))
+                res_files.append(S3File(unzipped_file, istorage))
             meta_files = []
             if ingest_metadata:
                 res_files, meta_files, map_files = identify_metadata_files(res_files)
 
             for file in res_files:
-                destination_file = _get_destination_filename(file.name, unzip_temp_folder)
+                destination_file = _get_destination_filename(file.name, unzip_temp_folder, zip_with_full_path)
                 if istorage.exists(destination_file):
                     override_tgt_paths.append(destination_file)
 
@@ -1405,25 +1364,25 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                                     remove_folder(user, resource.short_id,
                                                   override_tgt_path.rsplit(f'{resource.short_id}/')[1])
                                 else:
-                                    # it is somehow in iRODS but not in Django, delete it from iRODS to be consistent
+                                    # it is somehow in S3 but not in Django, delete it from S3 to be consistent
                                     istorage.delete(override_tgt_path)
                     else:
                         istorage.delete(override_tgt_path)
-            if not bool_remove_original:
-                size = validate_resource_file_size(res_files)
-                validate_user_quota(resource.quota_holder, size)
+
+            size = validate_resource_file_size(res_files)
+            validate_user_quota(resource.quota_holder, size)
 
             # now move each file to the destination
             for file in res_files:
-                destination_file = _get_destination_filename(file.name, unzip_temp_folder)
+                destination_file = _get_destination_filename(file.name, unzip_temp_folder, zip_with_full_path)
                 istorage.moveFile(file.name, destination_file)
             # and now link them to the resource
             added_resource_files = []
             for file in res_files:
-                destination_file = _get_destination_filename(file.name, unzip_temp_folder)
+                destination_file = _get_destination_filename(file.name, unzip_temp_folder, zip_with_full_path)
                 destination_file = destination_file.replace(res_id + "/", "", 1)
-                destination_file = resource.get_irods_path(destination_file)
-                res_file = link_irods_file_to_django(resource, destination_file)
+                destination_file = resource.get_s3_path(destination_file)
+                res_file = link_s3_file_to_django(resource, destination_file)
                 added_resource_files.append(res_file)
 
             if resource.resource_type == "CompositeResource":
@@ -1477,11 +1436,12 @@ def ingest_bag(resource, bag_file, user):
     from hs_file_types.utils import (identify_metadata_files,
                                      ingest_metadata_files)
 
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_s3_storage()
     zip_with_full_path = os.path.join(resource.file_path, bag_file.short_path)
 
     # unzip to a temporary folder
-    unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=uuid4().hex)
+    tmp_folder = os.path.join("tmp", uuid4().hex)
+    unzip_path = istorage.unzip(zip_with_full_path, unzipped_folder=tmp_folder)
     delete_resource_file(resource.short_id, bag_file.id, user)
 
     # list all files to be moved into the resource
@@ -1509,27 +1469,24 @@ def ingest_bag(resource, bag_file, user):
             logger.error(log_msg)
             err_msg = f"Bag file has file ({base_file}) with name that contains one or more prohibited characters."
             raise SuspiciousFileOperation(err_msg)
-        res_files.append(IrodsFile(unzipped_file, istorage))
+        res_files.append(S3File(unzipped_file, istorage))
     res_files, meta_files, map_files = identify_metadata_files(res_files)
-
     # filter res_files to only files in the data/contents directory
     data_contents_dir = os.path.join("data", "contents")
-    res_files = [res_file for res_file in res_files if res_file.name.count(data_contents_dir) > 1]
-
+    res_files = [res_file for res_file in res_files if res_file.name.count(data_contents_dir) > 0]
     # now move each file to the destination
+
     def destination_filename(resource, file):
         """Parses the temporary filename to the destination filename"""
-        dc_dir = os.path.join("data", "contents")
-        relative_path = dc_dir.join(file.split(dc_dir, 2)[2:])
-        return os.path.join(resource.file_path, relative_path.strip("/"))
+        return os.path.join(resource.file_path, file.split(data_contents_dir, 1)[1].strip("/"))
 
     added_resource_files = []
     for file in res_files:
         destination_file = destination_filename(resource, file.name)
         istorage.moveFile(file.name, destination_file)
 
-        irods_path = resource.get_irods_path(destination_file)
-        res_file = link_irods_file_to_django(resource, irods_path)
+        s3_path = resource.get_s3_path(destination_file)
+        res_file = link_s3_file_to_django(resource, s3_path)
         added_resource_files.append(res_file)
 
     for res_file in added_resource_files:
@@ -1552,18 +1509,22 @@ def ingest_bag(resource, bag_file, user):
     resource.save()
 
 
-def _get_destination_filename(file, unzipped_foldername):
+def _get_destination_filename(file, unzipped_foldername, zip_with_full_path):
     """
     Returns the destination file path by removing the temp unzipped_foldername from the file path.
     Useful for moving files from a temporary unzipped folder to the resource outside of the
     temporary folder.
     :param file: path to a file
-    :param unzipped_foldername: the name of the
+    :param unzipped_foldername: the name of the unzipped folder
+    :param zip_with_full_path: the full path of the zip file
     :return:
     """
-    split = file.split("/" + unzipped_foldername + "/", 1)
+    split = file.split(unzipped_foldername.strip("/"), 1)
     destination_file = os.path.join(split[0], split[1])
-    return destination_file
+    zip_name = os.path.basename(zip_with_full_path)
+    destination_file_path = zip_with_full_path.replace(
+        zip_name, destination_file.strip("/"))
+    return destination_file_path
 
 
 def listfiles_recursively(istorage, path):
@@ -1619,7 +1580,7 @@ def create_folder(res_id, folder_path, migrating_resource=False):
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.raccess.published and not migrating_resource:
         raise ValidationError("Folder creation is not allowed for a published resource")
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_s3_storage()
     input_folder_path = folder_path[len("data/contents/"):]
     folder_path = ResourceFile.validate_new_path(new_path=input_folder_path)
     coll_path = os.path.join(resource.file_path, folder_path)
@@ -1641,7 +1602,8 @@ def create_folder(res_id, folder_path, migrating_resource=False):
             err_msg = f"{err_msg}Prohibited characters are: {folder_banned_chars}"
             raise SuspiciousFileOperation(err_msg)
 
-    istorage.session.run("imkdir", None, '-p', coll_path)
+    istorage.create_folder(resource.short_id, coll_path)
+    # istorage.session.run("imkdir", None, '-p', coll_path)
 
 
 def remove_folder(user, res_id, folder_path):
@@ -1659,15 +1621,15 @@ def remove_folder(user, res_id, folder_path):
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.raccess.published:
         raise ValidationError("Folder deletion is not allowed for a published resource")
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_s3_storage()
     coll_path = os.path.join(resource.root_path, folder_path)
-    if not istorage.exists(coll_path):
-        raise ValidationError(f"Specified folder ({folder_path}) was not found")
+    if not istorage.isDir(coll_path):
+        raise ValidationError(f"Specified folder ({coll_path}) was not found")
 
-    # Seems safest to delete from irods before removing from Django
+    # Seems safest to delete from S3 before removing from Django
     # istorage command is the longest-running and most likely to get interrupted
-    istorage.delete(coll_path)
-    remove_irods_folder_in_django(resource, coll_path, user)
+    istorage.remove_folder(resource.short_id, coll_path)
+    remove_s3_folder_in_django(resource, coll_path, user)
 
     resource.update_public_and_discoverable()  # make private if required
 
@@ -1686,11 +1648,12 @@ def list_folder(res_id, folder_path):
     if __debug__:
         assert (folder_path.startswith("data/contents/"))
 
+    folder_path = folder_path.strip()
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_s3_storage()
     coll_path = os.path.join(resource.root_path, folder_path)
 
-    return istorage.listdir(coll_path)
+    return istorage.listdir(coll_path, remove_metadata=True)
 
 
 # TODO: modify this to take short paths not including data/contents
@@ -1766,7 +1729,7 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.raccess.published and not user.is_superuser:
         raise ValidationError("Operations related to file/folder are allowed only for admin for a published resource")
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_s3_storage()
     tgt_full_path = os.path.join(resource.root_path, tgt_path)
     if not istorage.exists(tgt_full_path):
         raise ValidationError(f"Target path ({tgt_path}) doesn't exist")
@@ -1791,7 +1754,7 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
         tgt_qual_path = os.path.join(tgt_full_path, src_base_name)
 
         istorage.moveFile(src_full_path, tgt_qual_path)
-        rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_qual_path)
+        rename_s3_file_or_folder_in_django(resource, src_full_path, tgt_qual_path)
         if resource.resource_type == "CompositeResource":
             resource.set_flag_to_recreate_aggregation_meta_files(orig_path=src_full_path, new_path=tgt_qual_path)
 
@@ -1800,7 +1763,7 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
 
-def irods_path_is_allowed(path):
+def s3_path_is_allowed(path):
     """ paths containing '/../' are suspicious """
     if path == "":
         raise ValidationError("Empty file paths are not allowed")
@@ -1810,7 +1773,7 @@ def irods_path_is_allowed(path):
         raise SuspiciousFileOperation("File paths cannot contain '/./'")
 
 
-def irods_path_is_directory(istorage, path):
+def s3_path_is_directory(istorage, path):
     """ return True if the path is a directory. """
     folder, base = os.path.split(path.rstrip('/'))
     listing = istorage.listdir(folder)
@@ -1898,7 +1861,7 @@ def _path_move_rename(user, res_id, src_path, tgt_path, validate_move_rename=Tru
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     if resource.raccess.published and not user.is_superuser:
         raise ValidationError("Operations related to file/folder are allowed only for admin for a published resource")
-    istorage = resource.get_irods_storage()
+    istorage = resource.get_s3_storage()
     src_base_name = src_path[len("data/contents/"):]
     src_base_name = ResourceFile.validate_new_path(new_path=src_base_name)
     src_full_path = os.path.join(resource.file_path, src_base_name)
@@ -1934,11 +1897,21 @@ def _path_move_rename(user, res_id, src_path, tgt_path, validate_move_rename=Tru
                 raise SuspiciousFileOperation(err_msg)
 
     istorage.moveFile(src_full_path, tgt_full_path)
-    rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
+    rename_s3_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
     if resource.resource_type == "CompositeResource":
         resource.set_flag_to_recreate_aggregation_meta_files(orig_path=src_full_path, new_path=tgt_full_path)
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
+
+
+def user_from_bucket_name(bucket_name: str) -> User:
+    """
+    Get the user from the bucket name
+    :param bucket_name: the name of the bucket
+    :return: the user
+    :raises: User.DoesNotExist if the user does not exist
+    """
+    return User.objects.get(userprofile___bucket_name=bucket_name)
 
 
 def is_ajax(request):

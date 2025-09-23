@@ -4,7 +4,7 @@ from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import UploadedFile
 
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import resource_file_add_process
 
@@ -19,7 +19,7 @@ from hs_file_types.models import (
 from hs_file_types.tests.utils import CompositeResourceTestMixin
 
 
-class CompositeResourceTestAutoAggregate(MockIRODSTestCaseMixin, TransactionTestCase,
+class CompositeResourceTestAutoAggregate(MockS3TestCaseMixin, TransactionTestCase,
                                          CompositeResourceTestMixin):
     def setUp(self):
         super(CompositeResourceTestAutoAggregate, self).setUp()

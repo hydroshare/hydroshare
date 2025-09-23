@@ -22,19 +22,21 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.mail import send_mail
 from django.db.models import F, Q
 from django.utils import timezone
+from hs_tracking.models import Variable
 from rest_framework import status
 
 from celery import Task, shared_task
-from django_irods.icommands import SessionException
-from django_irods.storage import IrodsStorage
+from django_s3.exceptions import SessionException
+from django_s3.storage import S3Storage
 from hs_access_control.models import GroupMembershipRequest
 from hs_collection_resource.models import CollectionDeletedResource
 from hs_core.enums import (CrossRefSubmissionStatus, CrossRefUpdate,
                            RelationTypes)
+from hs_core.exceptions import ResourceCopyException, ResourceVersioningException
 from hs_core.hydroshare import (create_empty_resource, current_site_url,
                                 set_dirty_bag_flag, utils)
 from hs_core.hydroshare.hs_bagit import (create_bag_metadata_files,
-                                         create_bagit_files_by_irods)
+                                         create_bagit_files_by_s3)
 from hs_core.hydroshare.resource import (deposit_res_metadata_with_crossref,
                                          get_activated_doi, get_crossref_url,
                                          get_resource_doi, update_quota_usage,)
@@ -55,6 +57,7 @@ from hs_file_types.models import (
 from hs_odm2.models import ODM2Variable
 from hydroshare.hydrocelery import app as celery_app
 from theme.models import QuotaMessage, User, UserQuota
+from theme.utils import get_user_profiles_missing_bucket_name
 
 FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
                  "FileSetLogicalFile": FileSetLogicalFile,
@@ -119,9 +122,14 @@ def setup_periodic_tasks(sender, **kwargs):
     else:
         # Hourly
         sender.add_periodic_task(crontab(minute=45), manage_task_hourly.s(), options={'queue': 'periodic'})
+        sender.add_periodic_task(crontab(minute=0), check_bucket_names.s(), options={'queue': 'periodic'})
 
         # Daily (times in UTC)
-        sender.add_periodic_task(crontab(minute=0, hour=3), nightly_metadata_review_reminder.s())
+        sender.add_periodic_task(crontab(minute=30, hour=2), clear_tokens.s(), options={'queue': 'periodic'})
+        sender.add_periodic_task(crontab(minute=0, hour=2), nightly_hs_tracking_cleanup.s(),
+                                 options={'queue': 'periodic'})
+        sender.add_periodic_task(crontab(minute=0, hour=3), nightly_metadata_review_reminder.s(),
+                                 options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=30, hour=3), nightly_zips_cleanup.s(), options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=0, hour=4), daily_odm2_sync.s(), options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=30, hour=4), daily_innactive_group_requests_cleanup.s(),
@@ -134,9 +142,9 @@ def setup_periodic_tasks(sender, **kwargs):
                                  options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=30, hour=6), nightly_periodic_task_check.s(),
                                  options={'queue': 'periodic'})
-        sender.add_periodic_task(crontab(minute=0, hour=7), daily_cleanup_tus_uploads.s(),
-                                 options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=30, hour=7), task_notification_cleanup.s(),
+                                 options={'queue': 'periodic'})
+        sender.add_periodic_task(crontab(minute=0, hour=9), ensure_published_resources_have_bags.s(),
                                  options={'queue': 'periodic'})
 
         # Monthly
@@ -150,18 +158,58 @@ def setup_periodic_tasks(sender, **kwargs):
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
-def daily_cleanup_tus_uploads():
-    """Periodic task to cleanup partial TUS uploads that remain in TUS_UPLOAD_DIR.
+def clear_tokens():
     """
-    # remove all files from the TUS_UPLOAD_DIR that are older than 24 hours
-    tus_upload_dir = settings.TUS_UPLOAD_DIR
-    if os.path.exists(tus_upload_dir):
-        for f in os.listdir(tus_upload_dir):
-            file_path = os.path.join(tus_upload_dir, f)
-            if os.path.isfile(file_path):
-                file_time = os.path.getmtime(file_path)
-                if (time.time() - file_time) > 86400:  # 24 hours in seconds
-                    os.remove(file_path)
+    Clear expired tokens from the database.
+    https://django-oauth-toolkit.readthedocs.io/en/latest/management_commands.html#createapplication
+    """
+    from oauth2_provider.models import clear_expired
+    clear_expired()
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def ensure_published_resources_have_bags():
+    """
+    Ensure that all published resources have bags created.
+    This task is run periodically to ensure that all published resources
+    have bags created for them.
+    """
+    published_res = BaseResource.objects.filter(raccess__published=True)
+    istorage = S3Storage()
+    for res in published_res:
+        logger.info(f"Checking resource {res.short_id} for bag creation...")
+        if res.getAVU("bag_modified") or not istorage.exists(res.bag_path):
+            logger.info(f"Resource {res.short_id} has been modified, creating bag...")
+            try:
+                create_bag_by_s3(res.short_id)
+            except Exception as e:
+                logger.error(f"Error creating bag for resource {res.short_id}: {e}")
+        else:
+            logger.info(f"Resource {res.short_id} has not been modified and bag exists, skipping bag creation.")
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def check_bucket_names():
+    """
+    Check to notify when UserProfi`le is missing a bucket name
+    """
+    bad_ups = get_user_profiles_missing_bucket_name()
+
+    for up in bad_ups:
+        up._assign_bucket_name()
+        up.save()
+
+    if bad_ups and not settings.DISABLE_TASK_EMAILS:
+        string_of_bad_users = ', '.join([up.user.username for up in bad_ups])
+        email_msg = f'''
+        <p>Found {len(bad_ups)} UserProfiles without bucket names</p>:
+        <p>{string_of_bad_users}</p>
+        '''
+        send_mail(subject="UserProfiles missing bucket_name",
+                  message=email_msg,
+                  html_message=email_msg,
+                  from_email=settings.DEFAULT_FROM_EMAIL,
+                  recipient_list=[settings.DEFAULT_DEVELOPER_EMAIL])
 
 
 # Currently there are two different cleanups scheduled.
@@ -174,7 +222,7 @@ def nightly_zips_cleanup():
     zips_daily_date = "zips/{daily_date}".format(daily_date=date_folder)
     if __debug__:
         logger.debug("cleaning up {}".format(zips_daily_date))
-    istorage = IrodsStorage()
+    istorage = S3Storage()
     if istorage.exists(zips_daily_date):
         istorage.delete(zips_daily_date)
 
@@ -183,6 +231,13 @@ def nightly_zips_cleanup():
 def nightly_periodic_task_check():
     with open("celery/periodic_tasks_last_executed.txt", mode='w') as file:
         file.write(timezone.now().strftime('%m/%d/%y %H:%M:%S'))
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def nightly_hs_tracking_cleanup():
+    # trims the hs_tracking tables to the last 60 days
+    time_threshold = timezone.now() - timedelta(days=60)
+    Variable.objects.filter(timestamp__lt=time_threshold).delete()
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
@@ -212,7 +267,7 @@ def nightly_repair_resource_files():
                 _, missing_django, dangling_in_django = repair_resource(res, logger, user=admin_user)
                 is_corrupt = missing_django > 0 or dangling_in_django > 0
             except ObjectDoesNotExist:
-                logger.info("nightly_repair_resource_files encountered dangling iRods files for a nonexistent resource")
+                logger.info("nightly_repair_resource_files encountered dangling S3 files for a nonexistent resource")
             if is_corrupt:
                 repaired_resources.append(res)
 
@@ -230,7 +285,7 @@ def nightly_repair_resource_files():
                 _, missing_django, dangling_in_django = repair_resource(res, logger, user=admin_user)
                 is_corrupt = missing_django > 0 or dangling_in_django > 0
             except ObjectDoesNotExist:
-                logger.info("nightly_repair_resource_files encountered dangling iRods files for a nonexistent resource")
+                logger.info("nightly_repair_resource_files encountered dangling S3 files for a nonexistent resource")
             if is_corrupt:
                 repaired_resources.append(res)
     except TimeoutError:
@@ -257,7 +312,7 @@ def repair_resource_before_publication(res_id):
 
         email_msg = f'''
         <p>We discovered corrupted files in the following resource that is under review for publication:
-        <a href="{ res_url }">{ res_url }</a></p>
+        <a href="{res_url}">{res_url}</a></p>
         <p>We found {missing_django} files missing in Django and {dangling_in_django} files dangling in Django.</p>
         <p>The files issues were fixed automatically. Some logs from the fix are included below:</p>
         <p>{errors}</p>
@@ -277,7 +332,7 @@ def repair_resource_before_publication(res_id):
 
         email_msg = f'''
         <p>We were unable to generate Crossref xml in the following resource that is under review for publication:
-        <a href="{ res_url }">{ res_url }</a></p>
+        <a href="{res_url}">{res_url}</a></p>
         <p>Error details:</p>
         <p>{traceback.format_exc()}</p>
         <p>These issues need to be fixed manually. We have notified {settings.DEFAULT_DEVELOPER_EMAIL}.</p>
@@ -302,8 +357,8 @@ def notify_owners_of_resource_repair(resource):
 
     email_msg = f'''Dear Resource Owner,
     <p>We discovered corrupted files in the following resource that you own:
-    <a href="{ res_url }">
-    { res_url }</a></p>
+    <a href="{res_url}">
+    {res_url}</a></p>
 
     <p>File corruption can occur if upload or delete processes get interrupted. The files have been repaired.</p>
     <p>Please contact us if you notice issues or if you repeatedly receive this message.</p>
@@ -339,14 +394,14 @@ def manage_task_hourly():
             if response.status_code == status.HTTP_200_OK:
                 # retry of metadata deposition succeeds, change resource flag from failure
                 # to pending
-                if CrossRefSubmissionStatus.UPDATE_FAILURE in res.doi:
-                    res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.UPDATE_PENDING)
+                if CrossRefSubmissionStatus.UPDATE_FAILURE.value in res.doi:
+                    res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.UPDATE_PENDING.value)
                 else:
-                    res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.PENDING)
+                    res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.PENDING.value)
                 res.save()
             else:
                 # retry of metadata deposition failed again, notify admin
-                if CrossRefSubmissionStatus.UPDATE_FAILURE not in res.doi:
+                if CrossRefSubmissionStatus.UPDATE_FAILURE.value not in res.doi:
                     # this is the case of retry of initial deposit (deposit when publishing the resource)
                     msg = f"Metadata deposition with CrossRef for the published resource " \
                           f"DOI {act_doi} failed again after retry with first metadata " \
@@ -397,16 +452,16 @@ def manage_task_hourly():
                     res.save()
                     success = True
                     # create bag and compute checksum for published resource to meet DataONE requirement
-                    create_bag_by_irods(res.short_id)
+                    create_bag_by_s3(res.short_id)
                 elif failure_cnt > 0 :
                     # set the doi status to failure
-                    if CrossRefSubmissionStatus.UPDATE_PENDING in res.doi:
-                        res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.UPDATE_FAILURE)
+                    if CrossRefSubmissionStatus.UPDATE_PENDING.value in res.doi:
+                        res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.UPDATE_FAILURE.value)
                     else:
-                        res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.FAILURE)
+                        res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.FAILURE.value)
                     res.save()
             if not success:
-                if CrossRefSubmissionStatus.UPDATE_PENDING not in res.doi:
+                if CrossRefSubmissionStatus.UPDATE_PENDING.value not in res.doi:
                     # this is the case of initial deposit when publishing the resource
                     msg = f"Published resource DOI {act_doi} is not yet activated with request " \
                           f"data deposited since {pub_date}."
@@ -474,10 +529,10 @@ def nightly_metadata_review_reminder():
             if review_date < cutoff_date:
                 res_url = current_site_url() + res.get_absolute_url()
                 subject = f"Metadata review pending since " \
-                    f"{ review_date.strftime('%m/%d/%Y') } for { res.metadata.title }"
+                    f"{review_date.strftime('%m/%d/%Y')} for {res.metadata.title}"
                 email_msg = f'''
-                Metadata review for <a href="{ res_url }">{ res_url }</a>
-                was requested at { review_date.strftime("%Y-%m-%d %H:%M:%S") }.
+                Metadata review for <a href="{res_url}">{res_url}</a>
+                was requested at {review_date.strftime("%Y-%m-%d %H:%M:%S")}.
 
                 This is a reminder to review and approve/reject the publication request.
                 '''
@@ -496,13 +551,13 @@ def notify_owners_of_publication_success(resource):
 
     email_msg = f'''Dear Resource Owner,
     <p>The following resource that you submitted for publication:
-    <a href="{ res_url }">
-    { res_url }</a>
+    <a href="{res_url}">
+    {res_url}</a>
     has been reviewed and determined to meet HydroShare's minimum metadata standards and community guidelines.</p>
 
     <p>The publication request was processed by <a href="https://www.crossref.org/">Crossref.org</a>.
     The Digital Object Identifier (DOI) for your resource is:
-    <a href="{ get_resource_doi(resource.short_id) }">https://doi.org/10.4211/hs.{ resource.short_id }</a></p>
+    <a href="{get_resource_doi(resource.short_id)}">https://doi.org/10.4211/hs.{resource.short_id}</a></p>
 
     <p>Thank you,</p>
     <p>The HydroShare Team</p>
@@ -546,7 +601,7 @@ def send_over_quota_emails():
                     continue
                 support_user = get_default_support_user()
                 msg_str = f'Dear {support_user.first_name}{support_user.last_name}:\n\n'
-                msg_str += f'The following user (#{ u.id }) has exceeded their quota:{u.email}\n\n'
+                msg_str += f'The following user (#{u.id}) has exceeded their quota:{u.email}\n\n'
                 ori_qm = uq.get_quota_message()
                 msg_str += ori_qm
                 subject = f'Quota warning for {u.email}(id#{u.id})'
@@ -571,7 +626,7 @@ def notify_increased_usage_during_quota_enforcement(user_pk, message):
     user = User.objects.get(pk=user_pk)
     support_user = get_default_support_user()
     msg_str = f'Dear {support_user.first_name}{support_user.last_name}:\n\n'
-    msg_str += f'User (#{ user.id }, {user.email}) previously exceeded their quota.\n'
+    msg_str += f'User (#{user.id}, {user.email}) previously exceeded their quota.\n'
     msg_str += 'They have continued to put data in spite of their quota being in enforcement status.\n\n'
     msg_str += message
     msg_str += 'Here is the quota message for the user:\n'
@@ -737,23 +792,20 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
 
 
 @shared_task
-def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None, sf_zip=False, download_path='',
-                    request_username=None):
+def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None, sf_zip=False):
     """ Create temporary zip file from input_path and store in output_path
     :param resource_id: the short_id of a resource
-    :param input_path: full irods path of input starting with federation path
-    :param output_path: full irods path of output starting with federation path
+    :param input_path: full S3 path of input starting with federation path
+    :param output_path: full S3 path of output starting with federation path
     :param aggregation_name: The name of the aggregation to zip
     :param sf_zip: signals a single file to zip
-    :param download_path: download path to return as task payload
-    :param request_username: the username of the requesting user
     """
     from hs_core.hydroshare.utils import get_resource_by_shortkey
     res = get_resource_by_shortkey(resource_id)
     aggregation = None
     if aggregation_name:
         aggregation = res.get_aggregation_by_aggregation_name(aggregation_name)
-    istorage = res.get_irods_storage()  # invoke federated storage as necessary
+    istorage = res.get_s3_storage()  # invoke federated storage as necessary
 
     if res.resource_type == "CompositeResource":
         if '/data/contents/' in input_path:
@@ -763,18 +815,7 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
             res.create_aggregation_meta_files()
 
     if aggregation or sf_zip:
-        # input path points to single file aggregation
-        # ensure that foo.zip contains aggregation metadata
-        # by copying these into a temp subdirectory foo/foo parallel to where foo.zip is stored
-        temp_folder_name, ext = os.path.splitext(output_path)  # strip zip to get scratch dir
-        head, tail = os.path.split(temp_folder_name)  # tail is unqualified folder name "foo"
-        out_with_folder = os.path.join(temp_folder_name, tail)  # foo/foo is subdir to zip
-        # in the case of user provided zip file name, out_with_folder path may not end with
-        # aggregation file name
-        aggr_filename = os.path.basename(input_path)
-        if not out_with_folder.endswith(aggr_filename):
-            out_with_folder = os.path.join(os.path.dirname(out_with_folder), aggr_filename)
-        istorage.copyFiles(input_path, out_with_folder)
+        files_to_zip = [input_path]
         if not aggregation:
             if '/data/contents/' in input_path:
                 short_path = input_path.split('/data/contents/')[1]  # strip /data/contents/
@@ -786,39 +827,29 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
                 pass
 
         if aggregation:
-            try:
-                istorage.copyFiles(aggregation.map_file_path, temp_folder_name)
-            except SessionException:
-                logger.error("cannot copy {}".format(aggregation.map_file_path))
-            try:
-                istorage.copyFiles(aggregation.metadata_file_path, temp_folder_name)
-            except SessionException:
-                logger.error("cannot copy {}".format(aggregation.metadata_file_path))
+            files_to_zip = [input_path]
+            if istorage.exists(aggregation.map_file_path):
+                files_to_zip.append(aggregation.map_file_path)
+            if istorage.exists(aggregation.metadata_file_path):
+                files_to_zip.append(aggregation.metadata_file_path)
             if aggregation.is_model_program or aggregation.is_model_instance:
-                try:
-                    istorage.copyFiles(aggregation.schema_file_path, temp_folder_name)
-                except SessionException:
-                    logger.error("cannot copy {}".format(aggregation.schema_file_path))
+                if istorage.exists(aggregation.schema_file_path):
+                    files_to_zip.append(aggregation.schema_file_path)
                 if aggregation.is_model_instance:
-                    try:
-                        istorage.copyFiles(aggregation.schema_values_file_path, temp_folder_name)
-                    except SessionException:
-                        logger.error("cannot copy {}".format(aggregation.schema_values_file_path))
+                    if istorage.exists(aggregation.schema_values_file_path):
+                        files_to_zip.append(aggregation.schema_values_file_path)
             for file in aggregation.files.all():
-                try:
-                    istorage.copyFiles(file.storage_path, temp_folder_name)
-                except SessionException:
-                    logger.error("cannot copy {}".format(file.storage_path))
-        istorage.zipup(temp_folder_name, output_path)
-        istorage.delete(temp_folder_name)  # delete working directory; this isn't the zipfile
+                if istorage.exists(file.storage_path):
+                    files_to_zip.append(file.storage_path)
+        istorage.zipup(output_path, *set(files_to_zip), in_prefix=os.path.dirname(input_path))
     else:  # regular folder to zip
-        istorage.zipup(input_path, output_path)
-    return download_path
+        istorage.zipup(output_path, input_path)
+    return istorage.signed_url(output_path)
 
 
 @shared_task
-def create_bag_by_irods(resource_id, create_zip=True):
-    """Create a resource bag on iRODS side by running the bagit rule and ibun zip.
+def create_bag_by_s3(resource_id, create_zip=True):
+    """Create a resource bag on S3 side
     This function runs as a celery task, invoked asynchronously so that it does not
     block the main web thread when it creates bags for very large files which will take some time.
     :param
@@ -829,7 +860,7 @@ def create_bag_by_irods(resource_id, create_zip=True):
     """
     res = utils.get_resource_by_shortkey(resource_id)
 
-    istorage = res.get_irods_storage()
+    istorage = res.get_s3_storage()
 
     bag_path = res.bag_path
 
@@ -842,25 +873,25 @@ def create_bag_by_irods(resource_id, create_zip=True):
     bag_modified = res.getAVU("bag_modified")
     bag_modified = bag_modified is None or bag_modified
     if metadata_dirty or bag_modified:
-        create_bagit_files_by_irods(res, istorage)
+        create_bagit_files_by_s3(res, istorage)
 
     if create_zip:
-        irods_bagit_input_path = res.get_irods_path(resource_id, prepend_short_id=False)
+        bagit_input_path = res.get_s3_path(resource_id, prepend_short_id=False)
 
         # only proceed when the resource is not deleted potentially by another request
         # when being downloaded
-        is_exist = istorage.exists(irods_bagit_input_path)
+        is_exist = istorage.exists(bagit_input_path)
         if is_exist:
             try:
                 if istorage.exists(bag_path):
                     istorage.delete(bag_path)
-                istorage.zipup(irods_bagit_input_path, bag_path)
+                istorage.zipup(bag_path, bagit_input_path)
+                res.setAVU("bag_modified", False)
                 if res.raccess.published:
                     # compute checksum to meet DataONE distribution requirement
                     chksum = istorage.checksum(bag_path)
                     res.bag_checksum = chksum
-                res.setAVU("bag_modified", False)
-                return res.bag_url
+                return istorage.signed_url(bag_path)
             except SessionException as ex:
                 raise SessionException(-1, '', ex.stderr)
         else:
@@ -901,7 +932,7 @@ def copy_resource_task(ori_res_id, new_res_id=None, request_username=None):
     except Exception as ex:
         if new_res:
             new_res.delete()
-        raise utils.ResourceCopyException(str(ex))
+        raise ResourceCopyException(str(ex))
 
 
 @shared_task
@@ -960,7 +991,7 @@ def create_new_version_resource_task(ori_res_id, username, new_res_id=None):
     except Exception as ex:
         if new_res:
             new_res.delete()
-        raise utils.ResourceVersioningException(str(ex))
+        raise ResourceVersioningException(str(ex))
     finally:
         # release the lock regardless
         ori_res.locked_time = None
@@ -1087,8 +1118,8 @@ def resource_debug(resource_id):
     """Update web services hosted by GeoServer and HydroServer.
     """
     resource = utils.get_resource_by_shortkey(resource_id)
-    from hs_core.management.utils import check_irods_files
-    return check_irods_files(resource, log_errors=False, return_errors=True)
+    from hs_core.management.utils import check_s3_files
+    return check_s3_files(resource, log_errors=False, return_errors=True)
 
 
 @shared_task
@@ -1114,9 +1145,9 @@ def unzip_task(user_pk, res_id, zip_with_rel_path, bool_remove_original, overwri
 
 @shared_task
 def move_aggregation_task(res_id, file_type_id, file_type, tgt_path):
-    from hs_core.views.utils import rename_irods_file_or_folder_in_django
+    from hs_core.views.utils import rename_s3_file_or_folder_in_django
     res = utils.get_resource_by_shortkey(res_id)
-    istorage = res.get_irods_storage()
+    istorage = res.get_s3_storage()
     res_files = []
     file_type_obj = FILE_TYPE_MAP[file_type]
     aggregation = file_type_obj.objects.get(id=file_type_id)
@@ -1130,7 +1161,7 @@ def move_aggregation_task(res_id, file_type_id, file_type, tgt_path):
             tgt_full_path = os.path.join(res.file_path, os.path.basename(file.storage_path))
 
         istorage.moveFile(file.storage_path, tgt_full_path)
-        rename_irods_file_or_folder_in_django(res, file.storage_path, tgt_full_path)
+        rename_s3_file_or_folder_in_django(res, file.storage_path, tgt_full_path)
     if tgt_path:
         new_aggregation_name = os.path.join(tgt_path, os.path.basename(orig_aggregation_name))
     else:
@@ -1145,7 +1176,7 @@ def move_aggregation_task(res_id, file_type_id, file_type, tgt_path):
 def set_resource_files_system_metadata(resource_id):
     """
     Sets size, checksum, and modified time for resource files by getting these values
-    from iRODS and stores in db
+    from S3 and stores in db
     :param resource_id: the id of the resource for which to set system metadata for all files currently missing
     these metadata in db
     """
@@ -1166,7 +1197,7 @@ def nightly_cache_file_system_metadata():
     from hs_core.management.utils import check_time
 
     def set_res_files_system_metadata(resource):
-        # exclude files with size 0 (file missing in irods)
+        # exclude files with size 0 (file missing in S3)
         res_files = resource.files.filter(
             Q(_checksum__isnull=True)
             | Q(_modified_time__isnull=True)
@@ -1269,7 +1300,7 @@ def update_crossref_meta_deposit(res_id):
 
 def _update_crossref_deposit(resource):
     logger.info(f"Updating Crossref metadata deposit for published resource: {resource.short_id}")
-    resource.doi = get_resource_doi(resource.short_id, CrossRefSubmissionStatus.UPDATE_PENDING)
+    resource.doi = get_resource_doi(resource.short_id, CrossRefSubmissionStatus.UPDATE_PENDING.value)
     resource.save()
     response = deposit_res_metadata_with_crossref(resource)
     if not response.status_code == status.HTTP_200_OK:
@@ -1278,5 +1309,5 @@ def _update_crossref_deposit(resource):
         err_msg = (f"Received a {response.status_code} from Crossref while updating "
                    f"metadata for published resource: {resource.short_id}")
         logger.error(err_msg)
-        resource.doi = get_resource_doi(resource.short_id, CrossRefSubmissionStatus.UPDATE_FAILURE)
+        resource.doi = get_resource_doi(resource.short_id, CrossRefSubmissionStatus.UPDATE_FAILURE.value)
         resource.save()

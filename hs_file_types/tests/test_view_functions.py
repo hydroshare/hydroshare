@@ -7,10 +7,10 @@ from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from rest_framework import status
 
-from django_irods.views import download
+from django_s3.views import download
 from hs_core import hydroshare
 from hs_core.models import ResourceFile
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_file_types.models import (
     FileSetLogicalFile,
     GenericLogicalFile,
@@ -45,7 +45,7 @@ from hs_file_types.views import (
 )
 
 
-class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResourceTestMixin):
+class TestFileTypeViewFunctions(MockS3TestCaseMixin, TestCase, CompositeResourceTestMixin):
     def setUp(self):
         super(TestFileTypeViewFunctions, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -1840,7 +1840,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # compute meta xml file storage path
         meta_file_storage_path = res_file.storage_path[:-4] + '_meta.xml'
         url_params = {'path': meta_file_storage_path}
-        url = reverse('django_irods_download', kwargs=url_params)
+        url = reverse('django_s3_download', kwargs=url_params)
         url = f"{url}?zipped=False&aggregation=False"
         request = self.factory.get(url)
         request.user = self.user
@@ -1848,13 +1848,13 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.add_session_to_request(request)
         response = download(request, path=meta_file_storage_path)
         # check that the download request was successful
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
         # download aggregation resmap xml file
         # compute resmap  storage path
         meta_file_storage_path = res_file.storage_path[:-4] + '_resmap.xml'
         url_params = {'path': meta_file_storage_path}
-        url = reverse('django_irods_download', kwargs=url_params)
+        url = reverse('django_s3_download', kwargs=url_params)
         url = f"{url}?zipped=False&aggregation=False"
         request = self.factory.get(url)
         request.user = self.user
@@ -1862,7 +1862,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.add_session_to_request(request)
         response = download(request, path=meta_file_storage_path)
         # check that the download request was successful
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
     def test_model_program_schema_json_file_download(self):
         # here we are testing that we can download schema json file for a model program aggregation
@@ -1889,7 +1889,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         # compute schema file storage path
         meta_file_storage_path = res_file.storage_path[:-4] + '_schema.json'
         url_params = {'path': meta_file_storage_path}
-        url = reverse('django_irods_download', kwargs=url_params)
+        url = reverse('django_s3_download', kwargs=url_params)
         url = f"{url}?zipped=False&aggregation=False"
         request = self.factory.get(url)
         request.user = self.user
@@ -1897,7 +1897,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.add_session_to_request(request)
         response = download(request, path=meta_file_storage_path)
         # check that the download request was successful
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
     def test_fileset_meta_xml_file_download(self):
         # here we are testing that we can download meta xml file for a folder based aggregation
@@ -1919,7 +1919,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         meta_file_storage_path = os.path.join(self.composite_resource.file_path, new_folder)
         meta_file_storage_path = os.path.join(meta_file_storage_path, f"{new_folder}_meta.xml")
         url_params = {'path': meta_file_storage_path}
-        url = reverse('django_irods_download', kwargs=url_params)
+        url = reverse('django_s3_download', kwargs=url_params)
         url = f"{url}?zipped=False&aggregation=False"
         request = self.factory.get(url)
         request.user = self.user
@@ -1927,14 +1927,14 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.add_session_to_request(request)
         response = download(request, path=meta_file_storage_path)
         # check that the download request was successful
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
         # download aggregation resmap xml file
         # compute resmap  storage path
         meta_file_storage_path = os.path.join(self.composite_resource.file_path, new_folder)
         meta_file_storage_path = os.path.join(meta_file_storage_path, f"{new_folder}_resmap.xml")
         url_params = {'path': meta_file_storage_path}
-        url = reverse('django_irods_download', kwargs=url_params)
+        url = reverse('django_s3_download', kwargs=url_params)
         url = f"{url}?zipped=False&aggregation=False"
         request = self.factory.get(url)
         request.user = self.user
@@ -1942,7 +1942,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase, CompositeResou
         self.add_session_to_request(request)
         response = download(request, path=meta_file_storage_path)
         # check that the download request was successful
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
     @staticmethod
     def add_session_to_request(request):

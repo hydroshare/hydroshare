@@ -215,7 +215,7 @@ class ModelProgramFileMetaData(GenericFileMetaDataMixin):
 
         schema_file = graph.value(subject=subject, predicate=HSTERMS.modelProgramSchema)
         if schema_file:
-            istorage = self.logical_file.resource.get_irods_storage()
+            istorage = self.logical_file.resource.get_s3_storage()
             if istorage.exists(self.logical_file.schema_file_path):
                 with istorage.download(self.logical_file.schema_file_path) as f:
                     json_bytes = f.read()

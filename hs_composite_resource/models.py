@@ -103,11 +103,21 @@ class CompositeResource(BaseResource):
         aggr_types = []
         aggr_type_names = []
         for lf in self.logical_files:
-            if lf.type_name not in aggr_type_names:
-                aggr_type_names.append(lf.type_name)
+            if lf.type_name() not in aggr_type_names:
+                aggr_type_names.append(lf.type_name())
                 aggr_type = lf.get_aggregation_display_name().split(":")[0]
                 aggr_types.append(aggr_type)
         return aggr_types
+
+    @property
+    def aggregation_type_names(self):
+        """Gets a list of all aggregation type names that currently exist in this resource
+        """
+        aggr_type_names = []
+        for lf in self.logical_files:
+            if lf.type_name not in aggr_type_names:
+                aggr_type_names.append(lf.type_name())
+        return aggr_type_names
 
     def get_logical_files(self, logical_file_class_name):
         """Get a list of logical files (aggregations) for a specified logical file class name."""
@@ -361,10 +371,10 @@ class CompositeResource(BaseResource):
 
         meta_file_path = self.get_relative_path(meta_file_path)
         folder, base = os.path.split(meta_file_path)
-        if base.endswith(AggregationMetaFilePath.METADATA_FILE_ENDSWITH):
-            base_file_name_to_match = base[:-len(AggregationMetaFilePath.METADATA_FILE_ENDSWITH)]
-        elif base.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH):
-            base_file_name_to_match = base[:-len(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH)]
+        if base.endswith(AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value):
+            base_file_name_to_match = base[:-len(AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value)]
+        elif base.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value):
+            base_file_name_to_match = base[:-len(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value)]
         else:
             base_file_name_to_match = base[:-len(AggregationMetaFilePath.SCHEMA_JSON_FILE_ENDSWITH)]
 
@@ -465,19 +475,23 @@ class CompositeResource(BaseResource):
         new_path = self.get_relative_path(new_path)
         orig_path = self.get_relative_path(orig_path)
         is_new_path_a_folder = self.is_path_folder(path=new_path)
-        istorage = self.get_irods_storage()
+        istorage = self.get_s3_storage()
 
         # remove file extension from aggregation name (note: aggregation name is a file path
         # for all aggregation types except fileset/model aggregation
         file_name, _ = os.path.splitext(orig_path)
-        schema_json_file_name = file_name + AggregationMetaFilePath.SCHEMA_JSON_FILE_ENDSWITH
-        meta_xml_file_name = file_name + AggregationMetaFilePath.METADATA_FILE_ENDSWITH
-        map_xml_file_name = file_name + AggregationMetaFilePath.RESMAP_FILE_ENDSWITH
+        schema_json_file_name = file_name + AggregationMetaFilePath.SCHEMA_JSON_FILE_ENDSWITH.value
+        meta_xml_file_name = file_name + AggregationMetaFilePath.METADATA_FILE_ENDSWITH.value
+        map_xml_file_name = file_name + AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value
         if not is_new_path_a_folder:
             # case of file rename/move for single file aggregation
             schema_json_file_full_path = os.path.join(self.file_path, schema_json_file_name)
             meta_xml_file_full_path = os.path.join(self.file_path, meta_xml_file_name)
             map_xml_file_full_path = os.path.join(self.file_path, map_xml_file_name)
+            # for single file aggregations, compute the metadata JSON file path using original path
+            metadata_json_file_full_path = os.path.join(
+                self.file_path, orig_path + AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH.value
+            )
         else:
             # case of folder rename - fileset/model aggregation
             _, schema_json_file_name = os.path.split(schema_json_file_name)
@@ -486,6 +500,9 @@ class CompositeResource(BaseResource):
             schema_json_file_full_path = os.path.join(self.file_path, new_path, schema_json_file_name)
             meta_xml_file_full_path = os.path.join(self.file_path, new_path, meta_xml_file_name)
             map_xml_file_full_path = os.path.join(self.file_path, new_path, map_xml_file_name)
+            # No need to delete metadata JSON files for folder rename cases as metadata JSON filename
+            # is not affected by folder rename
+            metadata_json_file_full_path = None
 
         if istorage.exists(schema_json_file_full_path):
             istorage.delete(schema_json_file_full_path)
@@ -495,6 +512,14 @@ class CompositeResource(BaseResource):
 
         if istorage.exists(map_xml_file_full_path):
             istorage.delete(map_xml_file_full_path)
+
+        # delete metadata JSON file only for single file aggregations
+        if (
+            not is_new_path_a_folder
+            and metadata_json_file_full_path is not None
+            and istorage.exists(metadata_json_file_full_path)
+        ):
+            istorage.delete(metadata_json_file_full_path)
 
         # set affected logical file metadata to dirty so that xml meta files will be regenerated at the time of
         # aggregation or bag download
@@ -566,7 +591,7 @@ class CompositeResource(BaseResource):
             # at the root of the resource all file operations are allowed
             return True
 
-        istorage = self.get_irods_storage()
+        istorage = self.get_s3_storage()
         scr_base_name = os.path.basename(src_full_path)
         src_dir_path = os.path.dirname(src_full_path)
         tgt_dir_path = os.path.dirname(tgt_full_path)
@@ -632,11 +657,7 @@ class CompositeResource(BaseResource):
         :param target_full_path: full folder path name where file needs to be uploaded to
         :return: True or False
         """
-        istorage = self.get_irods_storage()
-        if istorage.exists(target_full_path):
-            path_to_check = target_full_path
-        else:
-            return False
+        path_to_check = target_full_path
 
         if not path_to_check.endswith("data/contents"):
             # it is not the base directory - it must be a directory under base dir
@@ -809,7 +830,7 @@ class CompositeResource(BaseResource):
         return False
 
     def is_path_folder(self, path):
-        istorage = self.get_irods_storage()
+        istorage = self.get_s3_storage()
         if not path.startswith(self.file_path):
             path = os.path.join(self.file_path, path)
         return istorage.isDir(path)

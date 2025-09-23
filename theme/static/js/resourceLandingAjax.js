@@ -769,7 +769,7 @@ function get_aggregation_folder_struct(aggregation) {
 }
 
 // This method is called to refresh the loader with the most recent structure after every other call
-function get_irods_folder_struct_ajax_submit(res_id, store_path) {
+function get_folder_struct_ajax_submit(res_id, store_path) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
 
     return $.ajax({
@@ -828,7 +828,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             // Default display message for empty directories
             if (!files.length && !folders.length) {
                 if (mode === "edit") {
-                    if (MAX_FILE_SIZE > 0) {
+                    if (REMAINING_QUOTA > 0 || REMAINING_QUOTA === null) {
                         $('#fb-files-container').append(
                             '<div>' +
                                 '<span class="text-muted fb-empty-dir has-space-bottom">This directory is empty</span>' +
@@ -874,13 +874,13 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                     $('.dz-input').hide();
                     $(".fb-upload-caption").toggleClass("hidden", true);
                     $(".upload-toggle").toggleClass("hidden", true);
-                    $("#irods-group").toggleClass("hidden", true);
+                    $("#hs-group").toggleClass("hidden", true);
                 }
                 else {
                     $('.dz-input').show();
                     $(".fb-upload-caption").toggleClass("hidden", false);
                     $(".upload-toggle").toggleClass("hidden", false);
-                    $("#irods-group").toggleClass("hidden", false);
+                    $("#hs-group").toggleClass("hidden", false);
                 }
             }
 
@@ -902,7 +902,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
     });
 }
 
-function zip_irods_folder_ajax_submit(res_id, input_coll_path, fileName) {
+function zip_folder_ajax_submit(res_id, input_coll_path, fileName) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
@@ -947,7 +947,7 @@ function zip_by_aggregation_file_ajax_submit(res_id, aggregationPath, zipFileNam
     });
 }
 
-function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path, overwrite, unzip_to_folder) {
+function unzip_file_ajax_submit(res_id, zip_with_rel_path, overwrite, unzip_to_folder) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
@@ -975,7 +975,7 @@ function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path, overwrite, unzi
     });
 }
 
-function create_irods_folder_ajax_submit(res_id, folder_path) {
+function create_folder_ajax_submit(res_id, folder_path) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",

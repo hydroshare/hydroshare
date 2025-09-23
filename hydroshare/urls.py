@@ -59,6 +59,7 @@ urlpatterns += i18n_patterns(
     path("tracking/", tracking.UseTrackingView.as_view(), name="tracking"),
     path("tracking/applaunch/", tracking.AppLaunch.as_view(), name="tracking-applaunch"),
     path("user/", theme.UserProfileView.as_view()),
+    path("csrf-cookie/", theme.csrf_cookie_view, name="csrf_cookie"),
     re_path(r"^user/(?P<user>.*)/", theme.UserProfileView.as_view()),
     path("comment/", theme.comment),
     re_path(
@@ -114,7 +115,8 @@ urlpatterns += i18n_patterns(
         name="email_verify_password_reset",
     ),
     re_path(r"^verify/(?P<token>[0-9a-zA-Z:_\-]*)/", hs_core_views.verify),
-    path("django_irods/", include("django_irods.urls")),
+    path("django_s3/", include("django_s3.urls")),
+    path("django_irods/", include("django_s3.urls")),
     # path("autocomplete/", include("autocomplete_light.urls")),
     path("discoverapi/", SearchAPI.as_view(), name="DiscoverAPI"),
     path("search/", SearchView.as_view(), name="Discover"),
@@ -187,14 +189,13 @@ urlpatterns += [
     path("", include("hs_core.resourcemap_urls")),
     path("", include("hs_core.metadata_terms_urls")),
     path("", include("hs_core.debug_urls")),
-    path("irods/", include("irods_browser_app.urls")),
     path("access/", include("hs_access_control.urls")),
     path("hs_metrics/", include("hs_metrics.urls")),
 ]
 
 # robots.txt URLs for django-robots
 urlpatterns += [
-    path(r"robots\.txt", include("robots.urls")),
+    re_path(r"robots\.txt", include("robots.urls")),
 ]
 from django.views.static import serve  # noqa
 
@@ -248,6 +249,7 @@ urlpatterns += [
     # Override Mezzanine URLs here, before the Mezzanine URL include
     re_path("^accounts/signup/", theme.signup),
     re_path("^accounts/verify/(?P<uidb36>[-\w]+)/(?P<token>[-\w]+)", theme.signup_verify), # noqa
+    re_path("^accounts/login/", theme.login),
     # MEZZANINE'S URLS
     # ----------------
     # ADD YOUR OWN URLPATTERNS *ABOVE* THE LINE BELOW.

@@ -70,13 +70,13 @@ Run the following command on completion to launch Hydroshare:
 
     Some WARNINGs are normal. 
 
-    HydroShare is available in your browser at http://localhost:8000 or http://host.docker.internal:8000 (for 3rd party oauth)
+    HydroShare is available in your browser at https://localhost
 
-    The default admin page is http://localhost:8000/admin
+    The default admin page is https://localhost/admin
 
     The default admin account is admin:default
 
-    Swagger API docs http://localhost:8000/hsapi/
+    Swagger API docs https://localhost/hsapi/
 
 6. Start & Stop & Log
 
@@ -117,7 +117,7 @@ For all intents and purposes, Hydroshare is a large Python/Django application wi
 - SOLR for searching
 - Redis for caching
 - RabbitMQ for concurrency and serialization
-- iRODS for a federated file system
+- Minio for a S3 file system
 - PostgreSQL for the database backend
 
 #### The `hsctl` Script
@@ -147,10 +147,6 @@ There are currently over 600 tests in the system, so it is highly recommended th
 You can debug via PyCharm by following the instructions [here](https://docs.google.com/document/d/1w3hWAPMEUBL4qTjpHb5sYMWEiWFqwaarI0NkpKz3r6w/edit#).
 
 ## Other Configuration Options
-
-### Local iRODS
-
-Local iRODS is _not_ required for development unless you are specifically working on the iRODS integration. However,if you want to work with iRODS or you simply want to learn about it, you can enable it locally.
 
 ## Contribute
 

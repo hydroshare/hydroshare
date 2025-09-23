@@ -86,8 +86,6 @@ docker run -i -v $HS_PATH:/hydroshare --name=nodejs node:$n_ver /bin/bash << eof
 cd hydroshare
 cd hs_discover
 npm install
-if [ -z ${VUE_APP_BUCKET_URL_PUBLIC_PATH+x} ]; then VUE_APP_BUCKET_URL_PUBLIC_PATH=/static/static ; fi
-echo "Building with VUE_APP_BUCKET_URL_PUBLIC_PATH: $VUE_APP_BUCKET_URL_PUBLIC_PATH"
 npm run build
 mkdir -p static/js
 mkdir -p static/css
@@ -168,9 +166,9 @@ else
 fi
 
 DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
-HYDROSHARE_CONTAINERS=(hydroshare defaultworker data.local.org rabbitmq solr postgis companion redis)
-HYDROSHARE_VOLUMES=(hydroshare_idata_iconf_vol hydroshare_idata_pgres_vol hydroshare_idata_vault_vol hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol)
-HYDROSHARE_IMAGES=(hydroshare_defaultworker hydroshare_hydroshare solr hydroshare/hs-irods hydroshare/hs_docker_base hydroshare/hs_postgres rabbitmq)
+HYDROSHARE_CONTAINERS=(hydroshare defaultworker rabbitmq solr postgis companion redis nginx minio micro-auth pgbouncer)
+HYDROSHARE_VOLUMES=(hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol hydroshare_minio_data_vol hydroshare_redis_data_vol hydroshare_companion_vol)
+HYDROSHARE_IMAGES=(hydroshare-defaultworker hydroshare-hydroshare solr postgis/postgis rabbitmq nginx redis transloadit/companion minio/minio edoburu/pgbouncer hydroshare/micro-auth)
 
 NODE_CONTAINER_RUNNING=`docker ps -a | grep nodejs`
 
@@ -227,7 +225,9 @@ sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g init-hydroshare
 
 sed -i $SED_EXT s/HS_SSH_SERVER//g init-hydroshare
 sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"python manage.py runserver 0.0.0.0:8000"'!g' init-hydroshare                  
-#sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"/usr/bin/supervisord -n"'!g' init-hydroshare                  
+
+# run using gunicorn
+# sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"/hydroshare/gunicorn_start"'!g' init-hydroshare
 
 sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g init-defaultworker
 sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g init-defaultworker
@@ -236,7 +236,6 @@ echo "Creating django settings and static directories"
 cp hydroshare/local_settings.template hydroshare/local_settings.py 2>/dev/null
 mkdir -p hydroshare/static/static 2>/dev/null
 mkdir -p hydroshare/static/media 2>/dev/null
-rm -fr log .irods 2>/dev/null
 mkdir -p log/nginx 2>/dev/null
 #chmod -R 777 log 2>/dev/null
 
@@ -261,29 +260,7 @@ echo
 echo " - building Node for Discovery in background"
 node_build > /dev/null 2>&1 &
 
-echo
-echo '########################################################################################################################'
-echo -e " Setting up iRODS"
-echo '########################################################################################################################'
-echo
-
-echo " - waiting for iRODS containers to come up..."
-COUNT=0
-SECOND=0
-while [ $COUNT -lt 2 ]
-do
-  DATA=`docker logs data.local.org 2>/dev/null | grep 'iRODS is installed and running'`
-  if [ "$DATA" != "" ]; then
-    COUNT=$(($COUNT + 1))
-  fi
-  SECOND=$(($SECOND + 1))
-  echo -ne "$SECOND ...\033[0K\r" && sleep 1;
-done
-
-cd irods/
-./partial_build.sh 
-cd ..
-sleep 2
+sleep 180
 
 echo
 echo '########################################################################################################################'
@@ -338,6 +315,11 @@ docker exec hydroshare chown -R hydro-service:storage-hydro /tmp /shared_tmp
 echo
 
 echo
+echo "  - docker exec -u hydro-service hydroshare python manage.py rename_app django_irods django_s3"
+echo
+docker exec -u hydro-service hydroshare python manage.py rename_app django_irods django_s3
+
+echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py migrate sites --noinput"
 echo
 docker exec -u hydro-service hydroshare python manage.py migrate sites --noinput
@@ -387,6 +369,15 @@ docker exec solr rm /opt/solr/server/solr/collection1/conf/managed-schema
 echo '  - docker exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"'
 echo
 docker exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
+
+echo
+echo '########################################################################################################################'
+echo " Replacing env vars in static files for Discovery"
+echo '########################################################################################################################'
+echo
+
+echo "  -docker exec -u hydro-service hydroshare ./discover-entrypoint.sh"
+docker exec -u hydro-service hydroshare ./discover-entrypoint.sh
 
 echo
 echo '########################################################################################################################'

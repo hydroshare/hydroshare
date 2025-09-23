@@ -10,10 +10,10 @@ from rest_framework import status
 from hs_core import hydroshare
 from hs_core.models import BaseResource
 from hs_core.views import add_metadata_element, delete_author
-from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
+from hs_core.testing import MockS3TestCaseMixin, ViewTestCase
 
 
-class TestDeleteAuthor(MockIRODSTestCaseMixin, ViewTestCase):
+class TestDeleteAuthor(MockS3TestCaseMixin, ViewTestCase):
     def setUp(self):
         super(TestDeleteAuthor, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')

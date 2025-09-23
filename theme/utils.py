@@ -1,7 +1,6 @@
 import os
 from uuid import uuid4
 
-from datetime import date, timedelta
 from django.db.models import Q
 
 import logging
@@ -46,14 +45,13 @@ def get_quota_message(user):
         QuotaMessage.objects.create()
     qmsg = QuotaMessage.objects.first()
     soft_limit = qmsg.soft_limit_percent
-    hard_limit = qmsg.hard_limit_percent
     return_msg = ''
     for uq in user.quotas.all():
         percent = uq.used_value * 100.0 / uq.allocated_value
         rounded_percent = round(percent, 2)
         rounded_used_val = round(uq.used_value, 4)
 
-        if percent >= hard_limit or (percent >= 100 and uq.remaining_grace_period == 0):
+        if percent >= 100:
             # return quota enforcement message
             msg_template_str = '{}{}\n'.format(qmsg.enforce_content_prepend, qmsg.content)
             return_msg += msg_template_str.format(used=rounded_used_val,
@@ -61,16 +59,6 @@ def get_quota_message(user):
                                                   allocated=uq.allocated_value,
                                                   zone=uq.zone,
                                                   percent=rounded_percent)
-        elif percent >= 100 and uq.remaining_grace_period > 0:
-            # return quota grace period message
-            cut_off_date = date.today() + timedelta(days=uq.remaining_grace_period)
-            msg_template_str = '{}{}\n'.format(qmsg.grace_period_content_prepend, qmsg.content)
-            return_msg += msg_template_str.format(used=rounded_used_val,
-                                                  unit=uq.unit,
-                                                  allocated=uq.allocated_value,
-                                                  zone=uq.zone,
-                                                  percent=rounded_percent,
-                                                  cut_off_date=cut_off_date)
         elif percent >= soft_limit:
             # return quota warning message
             msg_template_str = '{}{}\n'.format(qmsg.warning_content_prepend, qmsg.content)
@@ -103,3 +91,24 @@ def get_user_from_username_or_email(username_or_email, **kwargs):
             | Q(email__iexact=username_or_email), **kwargs)
     except User.DoesNotExist:
         return None
+
+
+def get_user_profiles_missing_bucket_name(usernames=None):
+    """
+    Get all users with UserProfile instances that have missing bucket_name
+    :return a tuple of two lists: a list of users and a list of UserProfile instances
+    """
+    from theme.models import UserProfile
+    bad_ups = []
+    ups = UserProfile.objects.filter(_bucket_name__isnull=True).filter(user__is_active=True)
+    if usernames:
+        ups = ups.filter(user__username__in=usernames)
+    for up in ups:
+        u = up.user
+        resources = u.uaccess.owned_resources
+        for res in resources:
+            # owned is not the same as being the quota_holder
+            if res.quota_holder == u:
+                bad_ups.append(up)
+                break
+    return bad_ups

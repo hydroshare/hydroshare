@@ -13,9 +13,8 @@ This is used to process the vrt raster and to extract max, min value of each ras
 """
 
 
-import gdal
-from gdalconst import GA_ReadOnly
-from osgeo import osr
+from osgeo import gdal, osr
+from osgeo.gdalconst import GA_ReadOnly
 from collections import OrderedDict
 import re
 import logging
@@ -162,7 +161,10 @@ def get_wgs84_coverage_info(raster_dataset):
     """
     # get original coordinate system
     try:
-        proj = raster_dataset.GetProjection()
+        original_cs = raster_dataset.GetSpatialRef()
+        sr = osr.SpatialReference(str(original_cs))
+        srid = sr.GetAuthorityCode(None)
+        original_cs.ImportFromEPSG(int(srid))
     except Exception as ex:
         # an exception occurs when doing GetGeoTransform, which means an invalid geotiff is
         # uploaded, print exception
@@ -175,15 +177,16 @@ def get_wgs84_coverage_info(raster_dataset):
     wgs84_coverage_info = OrderedDict()
     original_coverage_info = get_original_coverage_info(raster_dataset)
 
-    if proj and (None not in list(original_coverage_info.values())):
-
-        original_cs = osr.SpatialReference()
+    if original_cs and (None not in list(original_coverage_info.values())):
         # create wgs84 geographic coordinate system
         wgs84_cs = osr.SpatialReference()
         wgs84_cs.ImportFromEPSG(4326)
+
+        # https://gis.stackexchange.com/questions/421771/ogr-coordinatetransformation-appears-to-be-inverting-xy-coordinates
+        wgs84_cs.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
+
         transform = None
         try:
-            original_cs.ImportFromWkt(proj)
             # create transform object
             transform = osr.CoordinateTransformation(original_cs, wgs84_cs)
             # If there is a problem with a transform object such as occurs with
@@ -289,7 +292,11 @@ def get_band_info(raster_file_name):
 
         for i in range(0, band_count):
             band = raster_dataset.GetRasterBand(i + 1)
-            minimum, maximum, _, _ = band.ComputeStatistics(False)
+            stats = band.GetStatistics(False, True)
+            if stats is not None:
+                minimum, maximum, _, _ = stats
+            else:
+                continue
             no_data = band.GetNoDataValue()
             new_no_data = None
 
@@ -300,7 +307,7 @@ def get_band_info(raster_file_name):
 
             if new_no_data is not None:
                 band.SetNoDataValue(new_no_data)
-                minimum, maximum, _, _ = band.ComputeStatistics(False)
+                minimum, maximum, _, _ = band.GetStatistics(False, False)
 
             band_info[i + 1] = {
                 'name': 'Band_' + str(i + 1),

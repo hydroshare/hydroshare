@@ -9,10 +9,10 @@ from django.core.management import call_command
 
 from hs_composite_resource.models import CompositeResource
 from hs_core import hydroshare
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 
 
-class TestIngestBag(MockIRODSTestCaseMixin, TestCase):
+class TestIngestBag(MockS3TestCaseMixin, TestCase):
 
     def setUp(self):
         super(TestIngestBag, self).setUp()

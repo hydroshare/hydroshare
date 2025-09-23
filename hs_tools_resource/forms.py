@@ -154,7 +154,7 @@ class SupportedFileExtensionsFormHelper(BaseFormHelper):
         layout = Layout(
             Field('value', css_class=field_width)
         )
-        kwargs['element_name_label'] = "Supported File Extensions"
+        kwargs['element_name_label'] = "File Extension Restrictions"
 
         super(SupportedFileExtensionsFormHelper, self). \
             __init__(allow_edit, res_short_id, element_id, element_name, layout, *args, **kwargs)
@@ -594,7 +594,7 @@ class SupportedAggTypeFormHelper(BaseFormHelper):
         # the order in which the model fields are listed for
         # the FieldSet is the order these fields will be displayed
         layout = Layout(MetadataField('supported_agg_types'))
-        kwargs['element_name_label'] = 'Supported Aggregation Types'
+        kwargs['element_name_label'] = 'Aggregation Type Restrictions'
         super(SupportedAggTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id,
                                                          element_name, layout, *args, **kwargs)
 

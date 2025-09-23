@@ -19,6 +19,7 @@ from hs_core.hydroshare import utils
 from hs_core.models import Title, AbstractMetaDataElement
 from hs_core.signals import post_add_geofeature_aggregation
 from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from ..enums import AggregationMetaFilePath
 
 UNKNOWN_STR = "unknown"
 
@@ -410,6 +411,14 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                 ".fbx", ".ain", ".aih", ".atx", ".ixs",
                 ".mxs")
 
+    @property
+    def metadata_json_file_path(self):
+        """Returns the storage path of the aggregation metadata json file"""
+
+        primary_file = self.get_primary_resource_file(self.files.all())
+        meta_file_path = primary_file.storage_path + AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH.value
+        return meta_file_path
+
     @classmethod
     def get_main_file_type(cls):
         """The main file type for this aggregation"""
@@ -578,7 +587,7 @@ def extract_metadata_and_files(resource, res_file, file_type=True):
     :param res_file: an instance of ResourceFile
     :param file_type: A flag to control if extraction being done for file type or resource type
     :return: a dict of extracted metadata, a list file paths of shape related files on the
-    temp directory, a list of resource files retrieved from iRODS for this processing
+    temp directory, a list of resource files retrieved from S3 for this processing
     """
     shape_files, shp_res_files = get_all_related_shp_files(resource, res_file, file_type=file_type)
     temp_dir = os.path.dirname(shape_files[0])
@@ -716,7 +725,7 @@ def get_all_related_shp_files(resource, selected_resource_file, file_type):
                     collect_shape_resource_files(f)
 
         for f in shape_res_files:
-            temp_file = utils.get_file_from_irods(resource=resource, file_path=f.storage_path)
+            temp_file = utils.get_file_from_s3(resource=resource, file_path=f.storage_path)
             if not temp_dir:
                 temp_dir = os.path.dirname(temp_file)
             else:
@@ -728,7 +737,7 @@ def get_all_related_shp_files(resource, selected_resource_file, file_type):
             shape_temp_files.append(temp_file)
 
     elif selected_resource_file.extension.lower() == '.zip':
-        temp_file = utils.get_file_from_irods(resource=resource, file_path=selected_resource_file.storage_path)
+        temp_file = utils.get_file_from_s3(resource=resource, file_path=selected_resource_file.storage_path)
         temp_dir = os.path.dirname(temp_file)
         if not zipfile.is_zipfile(temp_file):
             if os.path.isdir(temp_dir):
@@ -1001,6 +1010,9 @@ def parse_shp(shp_file_path):
     # target SpatialReference
     target = osr.SpatialReference()
     target.ImportFromEPSG(4326)
+
+    # https://gis.stackexchange.com/questions/421771/ogr-coordinatetransformation-appears-to-be-inverting-xy-coordinates
+    target.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
 
     # create two key points from layer extent
     left_upper_point = ogr.Geometry(ogr.wkbPoint)

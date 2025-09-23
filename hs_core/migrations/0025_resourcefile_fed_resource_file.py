@@ -2,7 +2,7 @@
 
 
 from django.db import migrations, models
-import django_irods.storage
+import django_s3.storage
 import hs_core.models
 
 
@@ -16,6 +16,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='resourcefile',
             name='fed_resource_file',
-            field=models.FileField(storage=django_irods.storage.IrodsStorage('federated'), max_length=500, null=True, upload_to=hs_core.models.get_path, blank=True),
+            field=models.FileField(storage=django_s3.storage.S3Storage(), max_length=500, null=True, upload_to=hs_core.models.get_path, blank=True),
         ),
     ]

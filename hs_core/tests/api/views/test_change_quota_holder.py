@@ -1,22 +1,23 @@
 import json
+import uuid
 
 from django.contrib.auth.models import Group
 from django.urls import reverse
 
 from hs_core import hydroshare
 from hs_core.views import change_quota_holder
-from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
+from hs_core.testing import MockS3TestCaseMixin, ViewTestCase
 from hs_access_control.models import PrivilegeCodes
 
 
-class TestChangeQuotaHolder(MockIRODSTestCaseMixin, ViewTestCase):
+class TestChangeQuotaHolder(MockS3TestCaseMixin, ViewTestCase):
     def setUp(self):
         super(TestChangeQuotaHolder, self).setUp()
         self.hs_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         # create two users
         self.user1 = hydroshare.create_account(
             'test_user1@email.com',
-            username='owner1',
+            username='owner1' + str(uuid.uuid4()),
             first_name='owner1_first_name',
             last_name='owner1_last_name',
             superuser=False,
@@ -24,13 +25,12 @@ class TestChangeQuotaHolder(MockIRODSTestCaseMixin, ViewTestCase):
         )
         self.user2 = hydroshare.create_account(
             'test_user2@email.com',
-            username='owner2',
+            username='owner2' + str(uuid.uuid4()),
             first_name='owner2_first_name',
             last_name='owner2_last_name',
             superuser=False,
             groups=[self.hs_group]
         )
-
         self.res = hydroshare.create_resource(
             resource_type='CompositeResource',
             owner=self.user1,
@@ -43,7 +43,7 @@ class TestChangeQuotaHolder(MockIRODSTestCaseMixin, ViewTestCase):
         # here we are testing the change_quota_holder view function
         url_params = {'shortkey': self.res.short_id}
         url = reverse('change_quota_holder', kwargs=url_params)
-        request = self.factory.post(url, data={'new_holder_username': 'owner2'})
+        request = self.factory.post(url, data={'new_holder_username': self.user2.username})
         request.user = self.user1
 
         self.add_session_to_request(request)

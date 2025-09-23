@@ -10,11 +10,11 @@ from django.urls import reverse
 from hs_composite_resource.views import check_aggregation_files_to_sync
 from hs_core import hydroshare
 from hs_core.hydroshare import add_file_to_resource, create_resource
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_file_types.models import NetCDFLogicalFile, TimeSeriesLogicalFile
 
 
-class AggregationFilesToUpdateViewFunctionTest(MockIRODSTestCaseMixin, TransactionTestCase,):
+class AggregationFilesToUpdateViewFunctionTest(MockS3TestCaseMixin, TransactionTestCase,):
     def setUp(self):
         super(AggregationFilesToUpdateViewFunctionTest, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')

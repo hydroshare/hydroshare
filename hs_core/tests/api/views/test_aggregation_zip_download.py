@@ -1,21 +1,23 @@
 import json
 import os
+from time import sleep
 
 from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import UploadedFile
 from django.urls import reverse
 from rest_framework import status
 
-from django_irods.views import download
+from django_s3.views import download, rest_check_task_status
+from hs_core.views import file_download_url_mapper
 from hs_core import hydroshare
 from hs_core.hydroshare import resource_file_add_process
 from hs_core.models import ResourceFile
-from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
+from hs_core.testing import MockS3TestCaseMixin, ViewTestCase
 from hs_core.views.utils import move_or_rename_file_or_folder
 from hs_file_types.models import GeoRasterLogicalFile
 
 
-class TestAggregationZipDownload(MockIRODSTestCaseMixin, ViewTestCase):
+class TestAggregationZipDownload(MockS3TestCaseMixin, ViewTestCase):
     def setUp(self):
         super(TestAggregationZipDownload, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -102,7 +104,7 @@ class TestAggregationZipDownload(MockIRODSTestCaseMixin, ViewTestCase):
         aggr_main_file = raster_aggr.get_main_file
         aggr_main_file_path = aggr_main_file.storage_path
         url_params = {'path': aggr_main_file_path}
-        url = reverse('django_irods_download', kwargs=url_params)
+        url = reverse('django_s3_download', kwargs=url_params)
         url = f"{url}?zipped=True&aggregation=True"
         request = self.factory.get(url)
         request.user = self.user
@@ -118,3 +120,25 @@ class TestAggregationZipDownload(MockIRODSTestCaseMixin, ViewTestCase):
         # verify the download path
         download_path = response_json["download_path"]
         self.assertTrue(download_path.endswith(f"{aggr_main_file_path}.zip"))
+
+        aggr_main_file_path = aggr_main_file.get_short_path()
+        url_params = {'shortkey': self.resource.short_id, 'filepath': aggr_main_file_path}
+        url = reverse('get_resource_file', kwargs=url_params)
+        url = f"{url}/?zipped=True&aggregation=True"
+
+        request = self.factory.get(url)
+        request.user = self.user
+        self.add_session_to_request(request)
+        response = file_download_url_mapper(request, shortkey=self.resource.short_id, filepath=aggr_main_file_path)
+        # check that the download request was successful
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.content.decode())
+        # check that a task id was generated
+        task_id = response_json["task_id"]
+        self.assertTrue(len(task_id) > 0, msg='ensure a task_id is returned for async zipping')
+        # verify the zip creation succeeded
+        sleep(10)
+        status_response = rest_check_task_status(request, task_id)
+        # check that the download request was successful
+        status_content = json.loads(status_response.content.decode())
+        self.assertTrue(status_content['status'])

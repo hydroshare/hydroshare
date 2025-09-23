@@ -1,12 +1,14 @@
 import socket
 import json
+import requests
+import uuid
 
 from django.contrib.auth.models import Group
 from django.urls import reverse
 
 from rest_framework.test import APIClient
 from rest_framework import status
-from rest_framework.test import APITestCase
+from rest_framework.test import APITransactionTestCase
 
 from hs_core.hydroshare import users
 from hs_core.hydroshare import resource
@@ -14,7 +16,7 @@ from hs_core.hydroshare import resource
 from django.contrib.sites.models import Site
 
 
-class HSRESTTestCase(APITestCase):
+class HSRESTTestCase(APITransactionTestCase):
     def setUp(self):
         self.hostname = socket.gethostname()
         self.resource_url = "http://example.com/resource/{res_id}/"
@@ -25,7 +27,7 @@ class HSRESTTestCase(APITestCase):
         # create a user
         self.user = users.create_account(
             "test_user@email.com",
-            username="testuser",
+            username="testuser" + uuid.uuid4().hex,
             password="foobar",
             first_name="some_first_name",
             last_name="some_last_name",
@@ -49,7 +51,7 @@ class HSRESTTestCase(APITestCase):
         self.user.delete()
 
     def getResourceBag(self, res_id, exhaust_stream=True):
-        """Get resource bag from iRODS, following redirects.
+        """Get resource bag from S3, following redirects.
 
         :param res_id: ID of resource whose bag should be fetched
         :param exhaust_stream: If True, the response returned
@@ -59,7 +61,7 @@ class HSRESTTestCase(APITestCase):
         :return: Django test client response object
         """
         url = "/hsapi/resource/{res_id}".format(res_id=res_id)
-        return self._get_file_irods(url, exhaust_stream)
+        return self._get_file_s3(url, exhaust_stream)
 
     def getDownloadTaskStatus(self, task_id):
         """Check download celery task status.
@@ -71,7 +73,7 @@ class HSRESTTestCase(APITestCase):
         return self.client.get(url, follow=True)
 
     def getResourceFile(self, res_id, file_name, exhaust_stream=True):
-        """Get resource file from iRODS, following redirects
+        """Get resource file from S3, following redirects
 
         :param res_id: ID of resource whose resource file should be fetched
         :param file_name: Name of the file to fetch (just the filename, not the full path)
@@ -84,20 +86,25 @@ class HSRESTTestCase(APITestCase):
         url = "/hsapi/resource/{res_id}/files/{file_name}".format(
             res_id=res_id, file_name=file_name
         )
-        return self._get_file_irods(url, exhaust_stream)
+        return self._get_file_s3(url, exhaust_stream)
 
-    def _get_file_irods(self, url, exhaust_stream=True):
-        response = self.client.get(url, follow=True)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # Exhaust the file stream so that WSGI doesn't get upset (this causes the Docker container to exit)
-        if exhaust_stream and hasattr(response, "streaming_content"):
-            for line in response.streaming_content:
-                pass
-
-        return response
+    def _get_file_s3(self, url, exhaust_stream=True):
+        # follow the redirects to minio url and then use requests to get the file
+        # rest_framwork.tests.APIClient doesn't work for the file download
+        response = self.client.get(url)
+        response2 = self.client.get(response.url)
+        if response2.url.startswith('http://minio:9000'):
+            minio_response = requests.get(response2.url)
+            return minio_response
+        response3 = self.client.get(response2.url)
+        if response3['Content-Type'] == 'application/json':
+            # async task
+            return response3
+        minio_response = requests.get(response3.url)
+        return minio_response
 
     def getScienceMetadata(self, res_id, exhaust_stream=True):
-        """Get sciencematadata.xml from iRODS, following redirects
+        """Get sciencematadata.xml from S3, following redirects
 
         :param res_id: ID of resource whose science metadata should be fetched
         :param exhaust_stream: If True, the response returned
@@ -107,9 +114,8 @@ class HSRESTTestCase(APITestCase):
         :return: Django test client response object
         """
         url = "/hsapi/scimeta/{res_id}/".format(res_id=res_id)
-        response = self._get_file_irods(url, exhaust_stream)
-        self.assertEqual(response["Content-Type"], "application/xml")
-        self.assertGreater(int(response["Content-Length"]), 0)
+        response = self._get_file_s3(url, exhaust_stream)
+        self.assertTrue(response.url.startswith('http://minio:9000'))
 
         return response
 

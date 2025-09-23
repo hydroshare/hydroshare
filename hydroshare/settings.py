@@ -1,11 +1,9 @@
-# TEST_RUNNER='django_nose.NoseTestSuiteRunner'
 import os
 import sys
 
 from PIL import ImageFile
 
 TEST_RUNNER = "hs_core.tests.runner.CustomTestSuiteRunner"
-TEST_WITHOUT_MIGRATIONS_COMMAND = "django_nose.management.commands.test.Command"
 
 
 # import importlib
@@ -241,7 +239,7 @@ FILE_UPLOAD_PERMISSIONS = 0o644
 # Alternative tmp folder
 FILE_UPLOAD_TEMP_DIR = "/tmp"
 
-FILE_UPLOAD_MAX_SIZE = 25 * 1024  # 25GB in MB
+FILE_UPLOAD_MAX_SIZE = 25 * 1024 ** 3  # 25GB in BYTES
 
 # https://docs.djangoproject.com/en/3.2/ref/settings/#data-upload-max-memory-size
 DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100 MB in Bytes
@@ -285,6 +283,14 @@ PROJECT_DIRNAME = PROJECT_ROOT.split(os.sep)[-1]
 # the name of the directory the project is in to try and use something
 # project specific.
 CACHE_MIDDLEWARE_KEY_PREFIX = PROJECT_DIRNAME
+
+# https://docs.djangoproject.com/en/4.2/topics/cache/#redis
+CACHES = {
+    'default': {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://redis:6379/0",
+    }
+}
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
@@ -345,8 +351,6 @@ ENABLE_STATIC_CLOUD_STORAGE = False
 # To enable Google Cloud Storage, the following settings should be added to local_settings.py
 # Additionally, a google service account json file should be placed at the root of the project
 # Service account should have permissions to write to the bucket
-# lastly, when you build the discover VUE app, you should set export the VUE_APP_BUCKET_URL_PUBLIC_PATH env var
-# this value should be the same as the STATIC_URL that you set in django local_settings.py
 
 # ENABLE_STATIC_CLOUD_STORAGE = True
 # from google.oauth2 import service_account
@@ -402,8 +406,7 @@ INSTALLED_APPS = (
     "django.contrib.gis",
     "django.contrib.postgres",
     "django.contrib.messages",
-    "django_nose",
-    "django_irods",
+    "django_s3",
     "drf_yasg",
     "theme",
     "theme.blog_mods",
@@ -427,7 +430,6 @@ INSTALLED_APPS = (
     "hs_access_control",
     "hs_labels",
     "hs_metrics",
-    "irods_browser_app",
     "widget_tweaks",
     "hs_tools_resource",
     "hs_sitemap",
@@ -456,29 +458,35 @@ INSTALLED_APPS = (
     'django_tus',
 )
 
-TUS_UPLOAD_DIR = '/tmp/tus_upload'
-TUS_DESTINATION_DIR = '/tmp/tus_completed'
-TUS_FILE_NAME_FORMAT = 'increment'  # Other options are: 'random-suffix', 'random', 'keep'
+TUS_FILE_NAME_FORMAT = 'keep'  # Other options are: 'random-suffix', 'random', 'increment'
 TUS_EXISTING_FILE = 'error'  # Other options are: 'overwrite',  'error', 'rename'
+TUS_TIMEOUT = 60 * 60 * 24 * 7  # seconds that tus keeps entries in the django cache
 
 # the url for the uppy companion server
 # https://uppy.io/docs/companion/
-COMPANION_URL = 'https://companion.hydroshare.org/'
-UPPY_UPLOAD_ENDPOINT = 'https://hydroshare.org/hsapi/tus/'
+COMPANION_URL = 'https://companion.hydroshare.org'
+UPPY_UPLOAD_PATH = '/django_s3/tus/'
+MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD = 50
+PARALLEL_UPLOADS_LIMIT = 10
+
+GOOGLE_PICKER_CLIENT_ID = 'GOOGLE_PICKER_CLIENT_ID'
+GOOGLE_PICKER_API_KEY = 'GOOGLE_PICKER_API_KEY'
+GOOGLE_PICKER_APP_ID = 'GOOGLE_PICKER_APP_ID'
 
 SWAGGER_SETTINGS = {
     "DEFAULT_GENERATOR_CLASS": "hs_rest_api2.serializers.NestedSchemaGenerator"
 }
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = "oauth2_provider.Application"
+# https://django-oauth-toolkit.readthedocs.io/en/3.0.1/settings.html#refresh-token-expire-seconds
+REFRESH_TOKEN_EXPIRE_SECONDS = 60 * 60 * 24 * 30  # 30 days
 
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
 # All apps beginning with "django." or "mezzanine." are also excluded by default
 APPS_TO_NOT_RUN = (
     "rest_framework",
-    "django_nose",
     "grappelli_safe",
-    "django_irods",
+    "django_s3",
     "crispy_forms",
     "autocomplete_light",
     "widget_tweaks",
@@ -534,8 +542,14 @@ TEMPLATES = [
 # List of middleware classes to use. Order is important; in the request phase,
 # these middleware classes will be applied in the order given, and in the
 # response phase the middleware will be applied in reverse order.
+
+# We have disabled the cacheMiddleware
+# To enable it, we will need to figure out cache invalidation strategy
+# VARY on cookie is not adequate for our use case
+# https://docs.djangoproject.com/en/4.2/topics/http/decorators/#django.views.decorators.vary.vary_on_cookie
+# alternatively, we could choose to implement cache at the view level -- this would likely be the best approach
 MIDDLEWARE = (
-    "mezzanine.core.middleware.UpdateCacheMiddleware",
+    # "mezzanine.core.middleware.UpdateCacheMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -551,10 +565,13 @@ MIDDLEWARE = (
     # Uncomment the following if using any of the SSL settings:
     # "mezzanine.core.middleware.SSLRedirectMiddleware",
     "mezzanine.pages.middleware.PageMiddleware",
-    "mezzanine.core.middleware.FetchFromCacheMiddleware",
+    # "mezzanine.core.middleware.FetchFromCacheMiddleware",
     "hs_core.robots.RobotFilter",
     "hs_tracking.middleware.Tracking",
+    "hs_core.middleware.HSClientMiddleware",
 )
+
+HSCLIENT_MIN_VERSION = "1.1.6"
 
 # security settings
 USE_SECURITY = False
@@ -576,8 +593,35 @@ PACKAGE_NAME_GRAPPELLI = "grappelli_safe"
 #  CORS/OAUTH SETTINGS  #
 #########################
 
-# TODO: change this to the actual origins we wish to support
-CORS_ORIGIN_ALLOW_ALL = True
+# CORS settings - specify allowed origins for security in production
+#
+# Cross-origin setup
+# NOTE: If we setup nginx reverse proxy in production, can we remove CORS and CSRF trusted origins?
+#
+CORS_ALLOWED_ORIGINS = [
+    # Vue frontend domains that make requests to Django
+    # "https://hydroshare.org",         # Vue app main domain
+    # "https://www.hydroshare.org",     # Vue app WWW variant
+    #
+    # NOTE: Django backend sub domain (e.g., api.hydroshare.org) is NOT included here
+]
+
+# CSRF trusted origins - should match CORS origins for cross-origin setup
+# NOTE: Only include origins that will submit browser requests to Django backend
+CSRF_TRUSTED_ORIGINS = [
+    # Vue frontend domains that need CSRF tokens
+    # "https://hydroshare.org",         # Vue app main domain
+    # "https://www.hydroshare.org",     # Vue app WWW variant
+]
+
+# Allow credentials (cookies, authorization headers) to be included in CORS requests
+CORS_ALLOW_CREDENTIALS = True
+
+# List of allowed hosts for redirects after login
+ALLOWED_REDIRECT_HOSTS = [
+    # "hydroshare.org",   # Vue app main domain
+    # "www.hydroshare.org",   # Vue app WWW variant
+]
 
 #########################
 # OPTIONAL APPLICATIONS #
@@ -662,7 +706,7 @@ HAYSTACK_SIGNAL_PROCESSOR = (
 # to expire in 7 days
 PASSWORD_RESET_TIMEOUT = 60 * 60 * 24 * 7
 
-# customized temporary file path for large files retrieved from iRODS user zone for metadata
+# customized temporary file path for large files retrieved from S3 user zone for metadata
 # extraction
 TEMP_FILE_DIR = "/tmp"
 
@@ -886,7 +930,7 @@ HSWS_GEOSERVER_URL = "https://geoserver.hydroshare.org/geoserver"
 
 # celery task names to be recorded in task notification model
 TASK_NAME_LIST = [
-    "hs_core.tasks.create_bag_by_irods",
+    "hs_core.tasks.create_bag_by_s3",
     "hs_core.tasks.create_temp_zip",
     "hs_core.tasks.unzip_task",
     "hs_core.tasks.copy_resource_task",
@@ -894,6 +938,25 @@ TASK_NAME_LIST = [
     "hs_core.tasks.delete_resource_task",
     "hs_core.tasks.move_aggregation_task",
 ]
+
+MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
+    "/hydroshare/hs_file_types/model_meta_schema_templates"
+)
+
+BULK_UPDATE_CREATE_BATCH_SIZE = 1000
+
+
+AWS_S3_ACCESS_KEY_ID = 'minioadmin'
+AWS_S3_SECRET_ACCESS_KEY = 'minioadmin'
+AWS_S3_ENDPOINT_URL = 'http://minio:9000'
+# Only enable this if you are using minio in local development
+# AWS_S3_USE_LOCAL = True
+
+ACCESS_CONTROL_CHANGE_ENDPOINT = None
+PUBLISHER_USER_NAME = "published"
+MINIO_LIFECYCLE_POLICY = None
+DEFAULT_QUOTA_VALUE = 20
+DEFAULT_QUOTA_UNIT = "GB"
 
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #
@@ -910,13 +973,24 @@ local_settings = __import__(local_settings_module, globals(), locals(), ["*"])
 for k in dir(local_settings):
     locals()[k] = getattr(local_settings, k)
 
-if 'test' in sys.argv:
+if any('pytest' in arg for arg in sys.argv) or 'test' in sys.argv:
     import logging
 
     logging.disable(logging.CRITICAL)
     PASSWORD_HASHERS = [
         'django.contrib.auth.hashers.MD5PasswordHasher',
     ]
+
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': 'postgis',
+        'PORT': '5432',
+    }
+
+    TESTING = True
 
 ####################
 # DYNAMIC SETTINGS #
@@ -941,12 +1015,6 @@ else:
 # import codecs
 # sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 # sys.stderr = codecs.getwriter('utf8')(sys.stderr)
-
-MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
-    "/hydroshare/hs_file_types/model_meta_schema_templates"
-)
-
-BULK_UPDATE_CREATE_BATCH_SIZE = 1000
 
 if ENABLE_OIDC_AUTHENTICATION:
     # The order of the authentication classes is important. The OIDC authentication class

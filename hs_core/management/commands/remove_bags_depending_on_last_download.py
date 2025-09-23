@@ -88,7 +88,7 @@ class Command(BaseCommand):
                 continue
             try:
                 src_file = res.bag_path
-                istorage = res.get_irods_storage()
+                istorage = res.get_s3_storage()
                 fsize = istorage.size(src_file)
                 if not dryrun:
                     delete_bag(res, istorage, raise_on_exception=True)

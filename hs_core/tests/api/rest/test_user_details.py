@@ -81,3 +81,48 @@ class TestUserDetails(APITestCase):
         response = self.client.get(f'/hsapi/userDetails/{self.user.email.upper()}/', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self._verify_user(response)
+
+    def test_no_bucketname_transformation(self):
+        willow = users.create_account(
+            'dog@fetchastick.org',
+            username='dog',
+            first_name='willow',
+            last_name='winter',
+            superuser=False)
+        self.assertEqual(willow.userprofile.bucket_name, 'dog')
+
+    def test_safe_bucketname_transformation(self):
+        willow = users.create_account(
+            'dog@fetchastick.org',
+            username='dog@stick',
+            first_name='willow',
+            last_name='winter',
+            superuser=False)
+        self.assertEqual(willow.userprofile.bucket_name, 'dogstick')
+
+    def test_safe_bucketname_transformation_with_collision(self):
+        willow = users.create_account(
+            'dog@fetchastick.org',
+            username='dogstick',
+            first_name='willow',
+            last_name='winter',
+            superuser=False)
+        self.assertEqual(willow.userprofile.bucket_name, 'dogstick')
+
+        juniper = users.create_account(
+            'dog@fetchanotherstick.org',
+            username='dog@stick',
+            first_name='juniper',
+            last_name='tree',
+            superuser=False)
+
+        self.assertEqual(juniper.userprofile.bucket_name, 'dogstick-1')
+
+        wendy = users.create_account(
+            'dog@fetchabone.org',
+            username='dog@_stick',
+            first_name='wendy',
+            last_name='winter',
+            superuser=False)
+
+        self.assertEqual(wendy.userprofile.bucket_name, 'dogstick-2')

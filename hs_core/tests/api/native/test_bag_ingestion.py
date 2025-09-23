@@ -11,7 +11,7 @@ from rdflib.namespace import DCTERMS, RDF, DC
 from hs_core import hydroshare
 from hs_core.hs_rdf import HSTERMS
 from hs_core.hydroshare import resource, current_site_url
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core.tests.api.utils import prepare_resource as prepare_resource_util
 from hs_file_types.models import (
     GenericLogicalFile,
@@ -71,14 +71,14 @@ def compare_metadatas(self, short_id, new_metadata_str, original_metadata_file):
     self.assertEqual(graph_len(new_graph) + 2, original_count)
 
     for (new_triple, original_triple) in _squashed_graphs_triples(new_graph, original_graph):
-        self.assertEquals(new_triple, original_triple, "Ingested metadata does not match original")
+        self.assertEqual(new_triple, original_triple, "Ingested metadata does not match original")
 
 
 def prepare_resource(self, folder, upload_to=""):
     prepare_resource_util(folder, self.res, self.user, self.extracted_directory, self.test_bag_path, upload_to)
 
 
-class TestIngestMetadata(MockIRODSTestCaseMixin, TestCase):
+class TestIngestMetadata(MockS3TestCaseMixin, TestCase):
     def setUp(self):
         super(TestIngestMetadata, self).setUp()
 

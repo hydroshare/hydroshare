@@ -7,10 +7,10 @@ from hs_collection_resource.models import CollectionResource
 from hs_composite_resource.models import CompositeResource
 from hs_core import hydroshare
 from hs_core.enums import RelationTypes
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 
 
-class TestRelationTypeUpdateCommand(MockIRODSTestCaseMixin, TestCase):
+class TestRelationTypeUpdateCommand(MockS3TestCaseMixin, TestCase):
 
     def setUp(self):
         super(TestRelationTypeUpdateCommand, self).setUp()

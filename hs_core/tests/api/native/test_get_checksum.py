@@ -4,10 +4,10 @@
 from django.contrib.auth.models import Group
 from django.test import TestCase
 from hs_core import hydroshare
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 
 
-class TestGetChecksum(MockIRODSTestCaseMixin, TestCase):
+class TestGetChecksum(MockS3TestCaseMixin, TestCase):
     def setUp(self):
         super(TestGetChecksum, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')

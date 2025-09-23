@@ -9,10 +9,10 @@ from rest_framework import status
 
 from hs_core import hydroshare
 from hs_core.views import update_key_value_metadata
-from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
+from hs_core.testing import MockS3TestCaseMixin, ViewTestCase
 
 
-class TestUpdateKeyValueMetadata(MockIRODSTestCaseMixin, ViewTestCase):
+class TestUpdateKeyValueMetadata(MockS3TestCaseMixin, ViewTestCase):
     def setUp(self):
         super(TestUpdateKeyValueMetadata, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')

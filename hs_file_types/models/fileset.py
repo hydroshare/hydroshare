@@ -7,6 +7,7 @@ from django.db import models
 from hs_core.models import ResourceFile
 from .base import AbstractLogicalFile, FileTypeContext, NestedLogicalFileMixin
 from .generic import GenericFileMetaDataMixin
+from ..enums import AggregationMetaFilePath
 
 
 class FileSetMetaData(GenericFileMetaDataMixin):
@@ -125,9 +126,9 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
             # go to next parent folder
             path = os.path.dirname(path)
 
-        irods_path = dir_path
+        s3_path = dir_path
 
-        files_in_path = ResourceFile.list_folder(resource, folder=irods_path, sub_folders=True)
+        files_in_path = ResourceFile.list_folder(resource, folder=s3_path, sub_folders=True)
         # if there are any files in the dir_path, we can set the folder to fileset aggregation
         return len(files_in_path) > 0
 
@@ -236,6 +237,14 @@ class FileSetLogicalFile(NestedLogicalFileMixin, AbstractLogicalFile):
         super(FileSetLogicalFile, self).create_aggregation_xml_documents(create_map_xml=create_map_xml)
         for child_aggr in self.get_children():
             child_aggr.create_aggregation_xml_documents(create_map_xml=create_map_xml)
+
+    @property
+    def metadata_json_file_path(self):
+        """Returns the url path of the aggregation metadata json file"""
+
+        meta_file_path = os.path.join(self.resource.file_path, self.folder,
+                                      AggregationMetaFilePath.METADATA_JSON_FILE_NAME.value)
+        return meta_file_path
 
     def get_copy(self, copied_resource):
         """Overrides the base class method"""

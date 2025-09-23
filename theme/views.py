@@ -23,11 +23,13 @@ from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse, JsonResponse, HttpResponseForbidden, HttpResponseNotAllowed
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.shortcuts import redirect, get_object_or_404
 from django.shortcuts import render
 from django.template.response import TemplateResponse
-from django.utils.http import int_to_base36, urlencode
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.http import require_GET
+from django.utils.http import int_to_base36, urlencode, url_has_allowed_host_and_scheme
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
@@ -57,6 +59,18 @@ from theme.forms import RatingForm, UserProfileForm, UserForm
 from theme.forms import ThreadedCommentForm
 from theme.models import UserProfile, QuotaRequest, QuotaRequestForm, UserQuota
 from .forms import SignupForm
+
+
+@require_GET
+@ensure_csrf_cookie
+def csrf_cookie_view(request):
+    """
+    This view is used to set the CSRF cookie for cookie-based (session-authenticated) API calls.
+    It is typically called by browser-based or JavaScript clients (e.g., Vue, React)
+    that use session authentication and need the CSRF cookie for POST/PUT/DELETE requests.
+    Not needed for token-based authentication (e.g., JWT, OAuth).
+    """
+    return JsonResponse({"detail": "CSRF cookie set"})
 
 
 class UserProfileView(TemplateView):
@@ -761,9 +775,7 @@ def home_router(request):
 
 @login_required
 def dashboard(request, template="pages/dashboard.html"):
-    my_username = request.user.username
-    user = User.objects.get(username=my_username)
-    my_recent = Variable.recent_resources(user, days=60, n_resources=5)
+    my_recent = Variable.recent_resources(request.user, days=60, n_resources=5)
 
     context = {"recent": my_recent}
     return render(request, template, context)
@@ -789,6 +801,24 @@ def login(
             login_msg += " - " + add_msg
         info(request, _(login_msg))
         auth_login(request, authenticated_user)
+
+        # Secure redirect validation to prevent open redirect attacks
+        next_url = request.GET.get('next') or request.POST.get('next')
+        if next_url:
+            allowed_redirect_hosts = getattr(settings, "ALLOWED_REDIRECT_HOSTS", [])
+
+            if url_has_allowed_host_and_scheme(
+                url=next_url,
+                allowed_hosts={request.get_host(), *allowed_redirect_hosts},
+                require_https=not settings.DEBUG,  # allow http in dev, require https in prod
+            ):
+                return redirect(next_url)
+            else:
+                logging.warning(
+                    f"Blocked suspicious redirect attempt from user {authenticated_user.username} "
+                    f"to {next_url} from {request.META.get('HTTP_REFERER', 'unknown')}"
+                )
+                return HttpResponseBadRequest("Invalid redirect URL")
         return login_redirect(request)
     context = {"form": form, "title": _("Log in")}
     context.update(extra_context or {})

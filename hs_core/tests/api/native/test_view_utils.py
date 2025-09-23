@@ -1,12 +1,12 @@
 from django.contrib.auth.models import Group
 from django.test import TestCase
 
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockS3TestCaseMixin
 from hs_core import hydroshare
 from hs_core.views.utils import create_folder, move_to_folder, list_folder, rename_file_or_folder
 
 
-class TestViewUtils(MockIRODSTestCaseMixin, TestCase):
+class TestViewUtils(MockS3TestCaseMixin, TestCase):
     def test_move_to_folder_basic(self):
         group, _ = Group.objects.get_or_create(name='Hydroshare Author')
 
@@ -85,4 +85,4 @@ class TestViewUtils(MockIRODSTestCaseMixin, TestCase):
 
         resource.delete()
 
-    # TODO: test_irods_path_is_directory(self):
+    # TODO: test_s3_path_is_directory(self):

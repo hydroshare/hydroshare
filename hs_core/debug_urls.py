@@ -12,8 +12,8 @@ urlpatterns = [
         name="debug_resource",
     ),
     re_path(
-        r"^debug/resource/(?P<shortkey>[0-9a-f-]+)/irods-issues/$",
-        views.debug_resource_view.irods_issues,
+        r"^debug/resource/(?P<shortkey>[0-9a-f-]+)/s3-issues/$",
+        views.debug_resource_view.s3_issues,
         name="debug_resource",
     ),
     re_path(
