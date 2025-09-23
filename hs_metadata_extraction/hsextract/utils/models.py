@@ -1,9 +1,11 @@
+import logging
 import os
 from pydantic import BaseModel
 from enum import Enum
 
 from hsextract.hs_cn_schemas.schema.src.base import MediaObject
 from hsextract.utils.s3 import exists, retrieve_file_manifest, write_metadata
+from string import Template
 
 
 class MinIOEvent(BaseModel):
@@ -25,20 +27,26 @@ class ContentType(Enum):
 
 class MetadataObject:
 
-    def __init__(self, file_object_path: str, file_updated: bool, resource_contents_path: str = None,
-                 resource_md_path: str = None, resource_md_jsonld_path: str = None):
+    def __init__(self, file_object_path: str, file_updated: bool):
         self.file_object_path = file_object_path
         self.file_updated = file_updated
 
         bucket_name = file_object_path.split('/')[0]
         resource_id = file_object_path.split('/')[1]
-        if not resource_contents_path:
-            resource_contents_path = f"{
-                bucket_name}/{resource_id}/data/contents"
-        if not resource_md_jsonld_path:
-            resource_md_jsonld_path = f"{bucket_name}/{resource_id}/.hsjsonld"
-        if not resource_md_path:
-            resource_md_path = f"{bucket_name}/{resource_id}/.hs"
+        resource_contents_path_template = os.environ.get("RESOURCE_CONTENTS_PATH",
+                                                "$bucket_name/$resource_id/data/contents")
+        resource_contents_path = Template(resource_contents_path_template).safe_substitute(
+            bucket_name=bucket_name, resource_id=resource_id
+        )
+        resource_md_jsonld_path_template = os.environ.get("RESOURCE_MD_JSONLD_PATH",
+                                                 "hs_metadata/$resource_id/.hsjsonld")
+        resource_md_jsonld_path = Template(resource_md_jsonld_path_template).safe_substitute(
+            bucket_name=bucket_name, resource_id=resource_id
+        )
+        resource_md_path_template = os.environ.get("RESOURCE_MD_PATH", "hs_metadata/$resource_id/.hs")
+        resource_md_path = Template(resource_md_path_template).safe_substitute(
+            bucket_name=bucket_name, resource_id=resource_id
+        )
 
         # bucket/resource_id/data/contents
         self.resource_contents_path = resource_contents_path

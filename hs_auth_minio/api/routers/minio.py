@@ -95,8 +95,6 @@ async def hs_s3_authorization_check(auth_request: AuthRequest):
         user_is_superuser, user_id = is_superuser_and_id(username)
     except Exception:
         user_is_superuser, user_id = is_superuser_and_id(username)
-        logger.warning(f"Backfilling cache: {username}: (is_superuser: {
-                       user_is_superuser}, user_id: {user_id})")
         backfill_superuser_and_id(username, user_is_superuser, user_id)
     if user_is_superuser:
         return {"result": {"allow": True}}

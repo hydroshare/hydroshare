@@ -79,8 +79,7 @@ def write_content_type_metadata(md: MetadataObject) -> bool:
 
 
 # if a file is not updated, it is deleted
-def workflow_metadata_extraction(file_object_path: str, file_updated: bool = True, resource_contents_path: str = None,
-                                 resource_md_path: str = None, resource_md_jsonld_path: str = None) -> None:
+def workflow_metadata_extraction(file_object_path: str, file_updated: bool = True) -> None:
     md = MetadataObject(file_object_path, file_updated)
     logging.info(f"content type determined: {md.content_type}")
     # fileset and single file do not have anything to extract

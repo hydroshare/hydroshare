@@ -67,8 +67,7 @@ async def create_service_account(key_request: KeyRequest, response: Response) ->
         logger.error(f"CLI command failed with error: {e}")
         raise e
     if "Access Key:" not in output:
-        logger.error(f"Failed to create service account for {
-                     key_request.username}")
+        logger.error(f"Failed to create service account for {key_request.username}")
         raise Exception(f"Failed to create service account {output}")
     access_key = output.split("Access Key: ")[1].split("\n")[0]
     secret_key = output.split("Secret Key: ")[1].split("\n")[0]

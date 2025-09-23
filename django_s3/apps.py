@@ -1,5 +1,7 @@
 from django.apps import AppConfig
 
+from hydroshare import settings
+
 
 class DjangoS3AppConfig(AppConfig):
     name = "django_s3"
@@ -10,3 +12,5 @@ class DjangoS3AppConfig(AppConfig):
         istorage.create_bucket('bags')
         istorage.create_bucket('zips')
         istorage.create_bucket('tmp')
+        if settings.DEBUG:
+            istorage.create_bucket('hsmetadata')
