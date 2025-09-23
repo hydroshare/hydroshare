@@ -58,6 +58,9 @@ def create_account(
     from hs_access_control.models import UserAccess
     from hs_labels.models import UserLabels
 
+    if username.strip().lower() in ["zips", "bags", "tmp"]:
+        raise ValidationError(f"Invalid username {username}")
+
     try:
         _ = User.objects.get(Q(username__iexact=username))
         raise ValidationError("User with provided username already exists.")
