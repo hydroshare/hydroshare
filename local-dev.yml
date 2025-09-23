@@ -220,7 +220,7 @@ services:
       - postgis
   discovery-atlas:
     build:
-      context: ./discovery-atlas
+      context: discovery-atlas
       dockerfile: frontend/Dockerfile
     container_name: discovery-atlas
     hostname: discovery-atlas
