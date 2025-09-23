@@ -166,9 +166,9 @@ else
 fi
 
 DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
-HYDROSHARE_CONTAINERS=(hydroshare defaultworker rabbitmq postgis companion redis nginx minio micro-auth pgbouncer)
+HYDROSHARE_CONTAINERS=(hydroshare defaultworker rabbitmq postgis companion redis nginx minio micro-auth pgbouncer discovery-atlas)
 HYDROSHARE_VOLUMES=(hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_temp_vol hydroshare_minio_data_vol hydroshare_redis_data_vol hydroshare_companion_vol)
-HYDROSHARE_IMAGES=(hydroshare-defaultworker hydroshare-hydroshare postgis/postgis rabbitmq nginx redis transloadit/companion minio/minio edoburu/pgbouncer hydroshare/micro-auth)
+HYDROSHARE_IMAGES=(hydroshare-defaultworker hydroshare-hydroshare postgis/postgis rabbitmq nginx redis transloadit/companion minio/minio edoburu/pgbouncer hydroshare/micro-auth hydroshare-discovery-atlas)
 
 NODE_CONTAINER_RUNNING=`docker ps -a | grep nodejs`
 

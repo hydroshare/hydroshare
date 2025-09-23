@@ -223,6 +223,7 @@ services:
       context: ./discovery-atlas
       dockerfile: frontend/Dockerfile
     container_name: discovery-atlas
+    hostname: discovery-atlas
     platform: linux/amd64
     environment:
       VITE_APP_NAME: "Discover"
