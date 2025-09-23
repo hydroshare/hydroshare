@@ -201,7 +201,7 @@ echo
 echo "  - docker-compose -f ${DOCKER_COMPOSER_YAML_FILE} up -d ${REBUILD_IMAGE}"
 docker-compose -f $DOCKER_COMPOSER_YAML_FILE up -d $REBUILD_IMAGE
 
-sleep 60
+sleep 180
 
 echo
 echo '########################################################################################################################'
