@@ -17,10 +17,10 @@ COPY hs_extract/requirements.txt .
 RUN pip install -r requirements.txt
 RUN rm requirements.txt
 
-COPY hs_extract/hsextract .
+COPY hs_extract/hsextract hsextract
 COPY hs_extract/extract_metadata_pipeline.yaml .
 COPY hs_extract/extract_metadata_plugin.yaml .
-COPY hs_cloudnative_schemas .
+COPY hs_cloudnative_schemas hs_cloudnative_schemas
 RUN touch __init__.py
 
 ENV PYTHONPATH "${PYTHONPATH}:/app/hsextract/:/app/hs_cloudnative_schemas/"
