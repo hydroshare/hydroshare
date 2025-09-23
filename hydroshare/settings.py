@@ -224,6 +224,24 @@ OIDC_KEYCLOAK_REALM = "CUAHSI"
 # project with the name service-account-pubsub.json
 PUBLISH_DISCOVERABLE = False
 
+# THESE SOLR SETTINGS ARE FAKED IN ORDER TO ENABLE DISCOVER PUBSUB
+SOLR_HOST = os.environ.get("SOLR_PORT_8983_TCP_ADDR", "localhost")
+SOLR_PORT = "8983"
+HAYSTACK_CONNECTIONS = {
+    "default": {
+        "ENGINE": "haystack.backends.solr_backend.SolrEngine",
+        "URL": "http://{SOLR_HOST}:{SOLR_PORT}/solr/collection1".format(**globals()),
+        "ADMIN_URL": "http://{SOLR_HOST}:{SOLR_PORT}/solr/admin/cores".format(
+            **globals()
+        ),
+        # ...or for multicore...
+        # 'URL': 'http://127.0.0.1:8983/solr/mysite',
+    },
+}
+HAYSTACK_SIGNAL_PROCESSOR = (
+    "hs_core.hydro_realtime_signal_processor.HydroRealtimeSignalProcessor"
+)
+
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (
