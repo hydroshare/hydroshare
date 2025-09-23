@@ -12,7 +12,8 @@ client = TestClient(service_accounts_router)
 @pytest.fixture
 def mock_service_account_data():
     return {
-        "username": "testuser" + str(uuid.uuid4()),  # Generate a unique username for each test
+        # Generate a unique username for each test
+        "username": "testuser" + str(uuid.uuid4()),
     }
 
 
@@ -28,7 +29,8 @@ def test_get_service_accounts(mock_service_account_data):
     response = client.post("/auth/minio/sa/", json=mock_service_account_data)
     assert response.status_code == 201
     access_key = response.json()["access_key"]
-    response = client.get(f"/auth/minio/sa/{mock_service_account_data['username']}")
+    response = client.get(
+        f"/auth/minio/sa/{mock_service_account_data['username']}")
     assert response.status_code == 200
     service_accounts = response.json().get("service_accounts")
     assert isinstance(service_accounts, list)
@@ -38,18 +40,21 @@ def test_get_service_accounts(mock_service_account_data):
     assert service_account["access_key"] == access_key
     assert "expiry" in service_account
     expiry_date = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
-    assert service_account["expiry"] == f"{expiry_date} 00:00:00 +0000 UTC"
+    expiry_date = expiry_date + " 00:00:00 +0000 UTC"
+    assert service_account["expiry"] == expiry_date
 
 
 def test_delete_service_account(mock_service_account_data):
     response = client.post("/auth/minio/sa/", json=mock_service_account_data)
     assert response.status_code == 201
     access_key = response.json()["access_key"]
-    response = client.get(f"/auth/minio/sa/{mock_service_account_data['username']}")
+    response = client.get(
+        f"/auth/minio/sa/{mock_service_account_data['username']}")
     assert response.status_code == 200
     assert len(response.json()["service_accounts"]) == 1
     response = client.delete(f"/auth/minio/sa/{access_key}")
     assert response.status_code == 204
-    response = client.get(f"/auth/minio/sa/{mock_service_account_data['username']}")
+    response = client.get(
+        f"/auth/minio/sa/{mock_service_account_data['username']}")
     assert response.status_code == 200
     assert len(response.json()["service_accounts"]) == 0

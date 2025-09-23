@@ -10,10 +10,10 @@ from api.cache import (
     backfill_resource_discoverability,
     backfill_superuser_and_id,
     backfill_view_access,
-    is_superuser_and_id_cache,
-    resource_discoverability_cache,
-    user_has_edit_access_cache,
-    user_has_view_access_cache,
+    # is_superuser_and_id_cache,
+    # resource_discoverability_cache,
+    # user_has_edit_access_cache,
+    # user_has_view_access_cache,
 )
 from api.database import is_superuser_and_id, resource_discoverability, user_has_edit_access, user_has_view_access
 
@@ -93,14 +93,16 @@ async def hs_s3_authorization_check(auth_request: AuthRequest):
 
     try:
         user_is_superuser, user_id = is_superuser_and_id(username)
-    except:
+    except Exception:
         user_is_superuser, user_id = is_superuser_and_id(username)
-        logger.warning(f"Backfilling cache: {username}:(is_superuser:{user_is_superuser},user_id:{user_id})")
+        logger.warning(f"Backfilling cache: {username}: (is_superuser: {
+                       user_is_superuser}, user_id: {user_id})")
         backfill_superuser_and_id(username, user_is_superuser, user_id)
     if user_is_superuser:
         return {"result": {"allow": True}}
 
-    # users access the objects in these buckets through presigned urls, admins are approved above
+    # users access the objects in these buckets through presigned urls, admins
+    # are approved above
     if bucket in ["zips", "tmp", "bags"]:
         return {"result": {"allow": False}}
 
@@ -108,14 +110,17 @@ async def hs_s3_authorization_check(auth_request: AuthRequest):
     prefixes = auth_request.input.conditions.prefixes
     if not prefixes:
         if auth_request.input.object:
-            # if there is an object but no prefix, it is a file in the root of the bucket
+            # if there is an object but no prefix, it is a file in the root of
+            # the bucket
             prefixes = [auth_request.input.object]
         else:
             return {"result": {"allow": False}}
 
-    # extracted metadata has a prefix of "md/resource_id" and should be view only
+    # extracted metadata has a prefix of "md/resource_id" and should be view
+    # only
     resource_ids_and_is_md_path = [
-        (prefix.split("/")[0], False) if prefix.split("/")[0] != "md" else (prefix.split("/")[1], True)
+        (prefix.split(
+            "/")[0], False) if prefix.split("/")[0] != "md" else (prefix.split("/")[1], True)
         for prefix in prefixes
     ]
     # check the user and each resource against the action
@@ -132,19 +137,23 @@ def _check_user_authorization(user_id, resource_id, action, is_md_path):
     # Break this down into just view and edit for now.
     # We may need to make owners distinct from edit at some point
 
-    # List of actions https://docs.aws.amazon.com/AmazonS3/latest/API/API_Operations.html
+    # List of actions
+    # https://docs.aws.amazon.com/AmazonS3/latest/API/API_Operations.html
 
     # view actions
     if action in VIEW_ACTIONS:
         try:
-            public, allow_private_sharing, discoverable = resource_discoverability(resource_id)
-        except:
-            public, allow_private_sharing, discoverable = resource_discoverability(resource_id)
-            backfill_resource_discoverability(resource_id, public, allow_private_sharing, discoverable)
+            public, allow_private_sharing, discoverable = resource_discoverability(
+                resource_id)
+        except Exception:
+            public, allow_private_sharing, discoverable = resource_discoverability(
+                resource_id)
+            backfill_resource_discoverability(
+                resource_id, public, allow_private_sharing, discoverable)
 
         try:
             view_access = user_has_view_access(user_id, resource_id)
-        except:
+        except Exception:
             view_access = user_has_view_access(user_id, resource_id)
             backfill_view_access(user_id, resource_id, view_access)
 
@@ -155,14 +164,16 @@ def _check_user_authorization(user_id, resource_id, action, is_md_path):
             return public or allow_private_sharing or discoverable or view_access
 
     # Check if edit actions are enabled via environment variable
-    enable_edit_actions = os.environ.get("ENABLE_EDIT_ACTIONS", "false").lower() == "true"
+    enable_edit_actions = os.environ.get(
+        "ENABLE_EDIT_ACTIONS", "false").lower() == "true"
     if enable_edit_actions and action in EDIT_ACTIONS:
         if is_md_path:
-            # if the prefix request is a metadata path, we do not allow edit access
+            # if the prefix request is a metadata path, we do not allow edit
+            # access
             return False
         try:
             edit_access = user_has_edit_access(user_id, resource_id)
-        except:
+        except Exception:
             edit_access = user_has_edit_access(user_id, resource_id)
             backfill_edit_access(user_id, resource_id, edit_access)
         print(f"Edit access {user_id} {resource_id} {edit_access}")

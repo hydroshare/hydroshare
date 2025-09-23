@@ -36,7 +36,7 @@ async def set_auth(access_control_changed: AccessControlChanged, response: Respo
             for user_access in resource.user_access:
                 user_id = user_access.id
                 access = user_access.access
-                cache.set_cache_xx(f"{user_id}:{resource_id}", access)
+                cache.set_cache_xx(f"{user_id}: {resource_id}", access)
 
             if resource.public:
                 resource_access = "PUBLIC"
@@ -54,6 +54,6 @@ async def set_auth(access_control_changed: AccessControlChanged, response: Respo
             )
             response.status_code = status.HTTP_204_NO_CONTENT
 
-    except Exception as e:
+    except Exception:
         logger.exception("Error processing request")
         raise

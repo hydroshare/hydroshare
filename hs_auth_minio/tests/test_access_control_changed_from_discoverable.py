@@ -38,11 +38,13 @@ def test_discoverable_get_to_public_view(action_json):
     assert response.status_code == 204
 
     # check public view authorization
-    check_public_view_authorization(request_body, "5670903e39d54026a729abd4cc148f99")
+    check_public_view_authorization(
+        request_body, "5670903e39d54026a729abd4cc148f99")
 
 
 @pytest.mark.parametrize(
-    "action_json", ["user1_list_bucket.json", "user1_list_objects.json", "user1_list_objects_v2.json"]
+    "action_json", ["user1_list_bucket.json",
+                    "user1_list_objects.json", "user1_list_objects_v2.json"]
 )
 def test_discoverable_view_to_public_view(action_json):
     # populate the cache
@@ -57,7 +59,8 @@ def test_discoverable_view_to_public_view(action_json):
     assert response.status_code == 204
 
     # check public view authorization
-    check_public_view_authorization(request_body, "5670903e39d54026a729abd4cc148f99")
+    check_public_view_authorization(
+        request_body, "5670903e39d54026a729abd4cc148f99")
 
 
 @pytest.mark.parametrize(
@@ -83,7 +86,8 @@ def test_discoverable_to_public_edit(action_json):
     assert response.status_code == 204
 
     # check public edit authorization
-    check_public_edit_authorization(request_body, "5670903e39d54026a729abd4cc148f99")
+    check_public_edit_authorization(
+        request_body, "5670903e39d54026a729abd4cc148f99")
 
 
 @pytest.mark.parametrize("action_json", ["user1_get_object_legal_hold.json", "user1_get_object_retention.json"])
@@ -100,11 +104,13 @@ def test_discoverable_get_to_private_sharing_view(action_json):
     assert response.status_code == 204
 
     # check private link view authorization
-    check_private_link_view_authorization(request_body, "5670903e39d54026a729abd4cc148f99")
+    check_private_link_view_authorization(
+        request_body, "5670903e39d54026a729abd4cc148f99")
 
 
 @pytest.mark.parametrize(
-    "action_json", ["user1_list_bucket.json", "user1_list_objects.json", "user1_list_objects_v2.json"]
+    "action_json", ["user1_list_bucket.json",
+                    "user1_list_objects.json", "user1_list_objects_v2.json"]
 )
 def test_discoverable_view_to_private_sharing_view(action_json):
     # populate the cache
@@ -119,7 +125,8 @@ def test_discoverable_view_to_private_sharing_view(action_json):
     assert response.status_code == 204
 
     # check private link view authorization
-    check_private_link_view_authorization(request_body, "5670903e39d54026a729abd4cc148f99")
+    check_private_link_view_authorization(
+        request_body, "5670903e39d54026a729abd4cc148f99")
 
 
 @pytest.mark.parametrize(
@@ -145,11 +152,13 @@ def test_discoverable_to_private_sharing_edit(action_json):
     assert response.status_code == 204
 
     # check private link edit authorization
-    check_private_link_edit_authorization(request_body, "5670903e39d54026a729abd4cc148f99")
+    check_private_link_edit_authorization(
+        request_body, "5670903e39d54026a729abd4cc148f99")
 
 
 @pytest.mark.parametrize(
-    "action_json", ["user1_list_bucket.json", "user1_list_objects.json", "user1_list_objects_v2.json"]
+    "action_json", ["user1_list_bucket.json",
+                    "user1_list_objects.json", "user1_list_objects_v2.json"]
 )
 def test_discoverable_to_private_view(action_json):
     # populate the cache
@@ -164,7 +173,8 @@ def test_discoverable_to_private_view(action_json):
     assert response.status_code == 204
 
     # check private view authorization
-    check_private_view_authorization(request_body, "5670903e39d54026a729abd4cc148f99")
+    check_private_view_authorization(
+        request_body, "5670903e39d54026a729abd4cc148f99")
 
 
 @pytest.mark.parametrize("action_json", ["user1_get_object_legal_hold.json", "user1_get_object_retention.json"])
@@ -181,7 +191,8 @@ def test_discoverable_to_private_get(action_json):
     assert response.status_code == 204
 
     # check private view authorization
-    check_private_view_authorization(request_body, "5670903e39d54026a729abd4cc148f99")
+    check_private_view_authorization(
+        request_body, "5670903e39d54026a729abd4cc148f99")
 
 
 @pytest.mark.parametrize(
@@ -207,4 +218,5 @@ def test_discoverable_to_private_edit(action_json):
     assert response.status_code == 204
 
     # check private edit authorization
-    check_private_edit_authorization(request_body, "5670903e39d54026a729abd4cc148f99")
+    check_private_edit_authorization(
+        request_body, "5670903e39d54026a729abd4cc148f99")

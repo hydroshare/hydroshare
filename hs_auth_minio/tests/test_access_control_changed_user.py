@@ -38,7 +38,8 @@ def test_view_user_access_change_view(action_json):
     # update user2 to have view access
     with open("tests/json_payloads/access_control_changed/user_access/to_view.json", "r") as file:
         access_control_changed_payload = file.read()
-    response = access_control_changed_client.post("/hook/", data=access_control_changed_payload)
+    response = access_control_changed_client.post(
+        "/hook/", data=access_control_changed_payload)
     assert response.status_code == 204
 
     # user2 has view access
@@ -76,7 +77,8 @@ def test_edit_user_access_change_edit(action_json):
     # update user2 to have edit access
     with open("tests/json_payloads/access_control_changed/user_access/to_edit.json", "r") as file:
         access_control_changed_payload = file.read()
-    response = access_control_changed_client.post("/hook/", data=access_control_changed_payload)
+    response = access_control_changed_client.post(
+        "/hook/", data=access_control_changed_payload)
     assert response.status_code == 204
 
     # user2 has edit access

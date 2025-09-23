@@ -1,6 +1,5 @@
 import logging
 import secrets
-import subprocess
 import asyncio
 from datetime import datetime, timedelta
 
@@ -39,22 +38,27 @@ async def create_service_account(key_request: KeyRequest, response: Response) ->
                                                          stdout=asyncio.subprocess.PIPE,
                                                          stderr=asyncio.subprocess.PIPE)
             stdout, stderr = await proc.communicate()
-            if "Specified user does not exist" in stdout.decode('utf-8') or "Specified user does not exist" in stderr.decode('utf-8'):
+            if "Specified user does not exist" in stdout.decode('utf-8') or \
+               "Specified user does not exist" in stderr.decode('utf-8'):
                 print(f"Creating user for {key_request.username}")
                 await asyncio.create_subprocess_shell(
-                    "mc admin user add hydroshare '" + key_request.username + "' " + secrets.token_urlsafe(16),
+                    "mc admin user add hydroshare '" + key_request.username
+                    + "' " + secrets.token_urlsafe(16),
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE)
-        except:
+        except Exception:
             print(f"Creating user for {key_request.username}")
             await asyncio.create_subprocess_shell(
-                "mc admin user add hydroshare '" + key_request.username + "' " + secrets.token_urlsafe(16),
+                "mc admin user add hydroshare '" + key_request.username
+                + "' " + secrets.token_urlsafe(16),
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE)
         print(f"Creating Service Account for {key_request.username}")
-        expiry_date = (datetime.now() + timedelta(days=key_request.expiry_days)).strftime("%Y-%m-%d")
+        expiry_date = (
+            datetime.now() + timedelta(days=key_request.expiry_days)).strftime("%Y-%m-%d")
         proc = await asyncio.create_subprocess_shell(
-            "mc admin user svcacct add hydroshare '" + key_request.username + "' --expiry " + expiry_date,
+            "mc admin user svcacct add hydroshare '"
+            + key_request.username + "' --expiry " + expiry_date,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE)
         stdout, stderr = await proc.communicate()
@@ -63,7 +67,8 @@ async def create_service_account(key_request: KeyRequest, response: Response) ->
         logger.error(f"CLI command failed with error: {e}")
         raise e
     if "Access Key:" not in output:
-        logger.error(f"Failed to create service account for {key_request.username}")
+        logger.error(f"Failed to create service account for {
+                     key_request.username}")
         raise Exception(f"Failed to create service account {output}")
     access_key = output.split("Access Key: ")[1].split("\n")[0]
     secret_key = output.split("Secret Key: ")[1].split("\n")[0]
@@ -89,7 +94,8 @@ async def get_service_accounts(username: str) -> ServiceAccountListResponse:
     service_accounts = []
     for line in lines:
         parts = line.split("|")
-        service_account = {"access_key": parts[0].strip(), "expiry": parts[1].strip()}
+        service_account = {"access_key": parts[
+            0].strip(), "expiry": parts[1].strip()}
         service_accounts.append(service_account)
     return {"service_accounts": service_accounts}
 
@@ -102,7 +108,7 @@ async def delete_service_account(service_account_key: str, response: Response):
             "mc admin user svcacct remove hydroshare " + service_account_key,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE)
-        stdout, stderr = await proc.communicate()
+        _, _ = await proc.communicate()
         print("Service Account deleted successfully")
         response.status_code = status.HTTP_204_NO_CONTENT
     except Exception as e:

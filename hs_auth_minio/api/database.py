@@ -15,7 +15,8 @@ def is_superuser_and_id(username: str):
     WHERE theme_userprofile._bucket_name = :username"""
 
     with engine.connect() as con:
-        rs = con.execute(statement=text(query), parameters=dict(username=username))
+        rs = con.execute(statement=text(query),
+                         parameters=dict(username=username))
         row = rs.fetchone()
         if row:
             return row
@@ -24,14 +25,16 @@ def is_superuser_and_id(username: str):
 
 def resource_discoverability(resource_id: str):
     # return public, allow_private_sharing, discoverable as tuple
-    query = """SELECT hs_access_control_resourceaccess.public, hs_access_control_resourceaccess.allow_private_sharing, hs_access_control_resourceaccess.discoverable
+    query = """SELECT hs_access_control_resourceaccess.public, hs_access_control_resourceaccess.allow_private_sharing,
+        hs_access_control_resourceaccess.discoverable
     FROM hs_access_control_resourceaccess
     INNER JOIN hs_core_genericresource
     ON (hs_core_genericresource.page_ptr_id = hs_access_control_resourceaccess.resource_id)
     WHERE hs_core_genericresource.short_id = :resource_id"""
 
     with engine.connect() as con:
-        rs = con.execute(statement=text(query), parameters=dict(resource_id=resource_id))
+        rs = con.execute(statement=text(query),
+                         parameters=dict(resource_id=resource_id))
         row = rs.fetchone()
         if row:
             return row

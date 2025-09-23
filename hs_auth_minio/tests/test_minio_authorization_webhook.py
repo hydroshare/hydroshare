@@ -20,12 +20,14 @@ client = TestClient(minio_router)
 
 
 # view group has view access to f211b93642f84c55a0bdd1b12880e32e with user6 as a member
-# edit group has edit access to f211b93642f84c55a0bdd1b12880e32e with user7 as a member
+# edit group has edit access to f211b93642f84c55a0bdd1b12880e32e with
+# user7 as a member
 
 # f211b93642f84c55a0bdd1b12880e32e is the resource id for the private resource
 # d5c432ae01eb4f03a73d589e54d341b3 is the resource id for the private link resource
 # a2c0df5bf3eb4d8c8a34beaffe169f91 is the resource id for the public resource
-# 5670903e39d54026a729abd4cc148f99 is the resource id for the discoverable resource
+# 5670903e39d54026a729abd4cc148f99 is the resource id for the discoverable
+# resource
 
 
 @pytest.fixture(autouse=True)
@@ -37,7 +39,8 @@ def clear_redis_cache():
 # private resource checks
 def check_private_view_authorization(request_body, resource_id=None):
     if resource_id:
-        request_body = request_body.replace("f211b93642f84c55a0bdd1b12880e32e", resource_id)
+        request_body = request_body.replace(
+            "f211b93642f84c55a0bdd1b12880e32e", resource_id)
     # user1 is the owner and quota holder
     response = client.post("/authorization/", data=request_body)
     assert response.status_code == 200
@@ -82,7 +85,8 @@ def check_private_view_authorization(request_body, resource_id=None):
 
 def check_private_edit_authorization(request_body, resource_id=None):
     if resource_id:
-        request_body = request_body.replace("f211b93642f84c55a0bdd1b12880e32e", resource_id)
+        request_body = request_body.replace(
+            "f211b93642f84c55a0bdd1b12880e32e", resource_id)
     # user1 is the owner and quota holder
     response = client.post("/authorization/", data=request_body)
     assert response.status_code == 200
@@ -159,7 +163,8 @@ def test_private_edit(action_json):
 
 # private link actions
 def check_private_link_view_authorization(request_body, resource_id="d5c432ae01eb4f03a73d589e54d341b3"):
-    request_body = request_body.replace("f211b93642f84c55a0bdd1b12880e32e", resource_id)
+    request_body = request_body.replace(
+        "f211b93642f84c55a0bdd1b12880e32e", resource_id)
     # user1 is owner and quota holder
     response = client.post("/authorization/", data=request_body)
     assert response.status_code == 200
@@ -203,7 +208,8 @@ def check_private_link_view_authorization(request_body, resource_id="d5c432ae01e
 
 
 def check_private_link_edit_authorization(request_body, resource_id="d5c432ae01eb4f03a73d589e54d341b3"):
-    request_body = request_body.replace("f211b93642f84c55a0bdd1b12880e32e", resource_id)
+    request_body = request_body.replace(
+        "f211b93642f84c55a0bdd1b12880e32e", resource_id)
     # user1 is owner and quota holder
     response = client.post("/authorization/", data=request_body)
     assert response.status_code == 200
@@ -279,7 +285,8 @@ def test_private_link_edit(action_json):
 
 # public actions
 def check_public_view_authorization(request_body, resource_id="a2c0df5bf3eb4d8c8a34beaffe169f91"):
-    request_body = request_body.replace("f211b93642f84c55a0bdd1b12880e32e", resource_id)
+    request_body = request_body.replace(
+        "f211b93642f84c55a0bdd1b12880e32e", resource_id)
     # user1 is owner and quota holder
     response = client.post("/authorization/", data=request_body)
     assert response.status_code == 200
@@ -323,7 +330,8 @@ def check_public_view_authorization(request_body, resource_id="a2c0df5bf3eb4d8c8
 
 
 def check_public_edit_authorization(request_body, resource_id="a2c0df5bf3eb4d8c8a34beaffe169f91"):
-    request_body = request_body.replace("f211b93642f84c55a0bdd1b12880e32e", resource_id)
+    request_body = request_body.replace(
+        "f211b93642f84c55a0bdd1b12880e32e", resource_id)
     # user1 is owner and quota holder
     response = client.post("/authorization/", data=request_body)
     assert response.status_code == 200
@@ -399,7 +407,8 @@ def test_public_edit(action_json):
 
 # discoverable actions
 def check_discoverable_view_get_authorization(request_body, resource_id="5670903e39d54026a729abd4cc148f99"):
-    request_body = request_body.replace("f211b93642f84c55a0bdd1b12880e32e", resource_id)
+    request_body = request_body.replace(
+        "f211b93642f84c55a0bdd1b12880e32e", resource_id)
     # user1 is owner and quota holder
     response = client.post("/authorization/", data=request_body)
     assert response.status_code == 200
@@ -444,7 +453,8 @@ def check_discoverable_view_get_authorization(request_body, resource_id="5670903
 
 # discoverable actions
 def check_discoverable_view_authorization(request_body, resource_id="5670903e39d54026a729abd4cc148f99"):
-    request_body = request_body.replace("f211b93642f84c55a0bdd1b12880e32e", resource_id)
+    request_body = request_body.replace(
+        "f211b93642f84c55a0bdd1b12880e32e", resource_id)
     # user1 is owner and quota holder
     response = client.post("/authorization/", data=request_body)
     assert response.status_code == 200
@@ -488,7 +498,8 @@ def check_discoverable_view_authorization(request_body, resource_id="5670903e39d
 
 
 def check_discoverable_edit_authorization(request_body, resource_id="5670903e39d54026a729abd4cc148f99"):
-    request_body = request_body.replace("f211b93642f84c55a0bdd1b12880e32e", resource_id)
+    request_body = request_body.replace(
+        "f211b93642f84c55a0bdd1b12880e32e", resource_id)
     # user1 is owner and quota holder
     response = client.post("/authorization/", data=request_body)
     assert response.status_code == 200
@@ -545,7 +556,8 @@ def test_discoverable_view_get(action_json):
 
 
 @pytest.mark.parametrize(
-    "action_json", ["user1_list_bucket.json", "user1_list_objects.json", "user1_list_objects_v2.json"]
+    "action_json", ["user1_list_bucket.json",
+                    "user1_list_objects.json", "user1_list_objects_v2.json"]
 )
 def test_discoverable_view(action_json):
     with open(f"tests/json_payloads/view_authorization/{action_json}", "r") as file:
