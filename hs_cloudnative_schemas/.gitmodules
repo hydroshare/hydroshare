@@ -1,6 +1,0 @@
-[submodule "containers/cfe/ngen-cal"]
-	path = containers/cfe/deps/neg-cal
-	url = https://github.com/NOAA-OWP/ngen-cal.git
-[submodule "containers/cfe/t-route"]
-	path = containers/cfe/deps/t-route
-	url = https://github.com/NOAA-OWP/t-route.git
