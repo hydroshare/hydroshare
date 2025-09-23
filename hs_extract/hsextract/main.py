@@ -6,7 +6,7 @@ import asyncio
 
 from hs_cloudnative_schemas.schema.base import HasPart
 from hsextract.utils.models import ContentType, MetadataObject
-from hsextract.utils.s3 import write_metadata, load_metadata, delete_metadata
+from hsextract.utils.s3 import find, write_metadata, load_metadata, delete_metadata
 
 
 def determine_required_for_content_type(file_object_path: str, content_type: ContentType) -> bool:
@@ -23,20 +23,17 @@ def write_resource_metadata(md: MetadataObject) -> bool:
     user_json = load_metadata(md.user_metadata_path)
 
     # generate content type hasPart relationships
-    # content_type_metadata_paths: list[str] = [file for file in find(md.resource_md_path)
-    # if file != f"{md.resource_md_path}/dataset_metadata.json"]
-    content_type_metadata_paths = []
+    content_type_metadata_paths: list[str] = [file for file in find(md.resource_md_jsonld_path)
+    if file != f"{md.resource_md_jsonld_path}/dataset_metadata.json"]
     has_parts = []
     for file in content_type_metadata_paths:
         content_type_metadata = load_metadata(file)
 
         # Remove the bucket name from the path
-        file_prefix = '/'.join(file.split('/')[1:])
         has_part = HasPart(  # TODO: probably need content type here as well for driving the landing page
-            name=content_type_metadata.get(
-                "name", "Not Found and name is required"),
+            name=content_type_metadata.get("name", None),
             description=content_type_metadata.get("description", None),
-            url=f"{os.environ['AWS_S3_ENDPOINT']}/{file_prefix}",
+            url=f"{os.environ['AWS_S3_ENDPOINT']}/{file}",
         )
         has_parts.append(has_part.model_dump(exclude_none=True))
 
@@ -62,9 +59,7 @@ def write_content_type_metadata(md: MetadataObject) -> bool:
         user_json = load_metadata(md.content_type_md_user_path)
 
     # generate content type isPartOf relationships
-    resource_md_prefix = '/'.join(md.resource_md_path.split('/')[1:])
-    # TODO: determine whether to use IsPartOf
-    is_part_of = [f"{os.environ['AWS_S3_ENDPOINT']}/{resource_md_prefix}"]
+    is_part_of = [f"{os.environ['AWS_S3_ENDPOINT']}/{md.resource_md_jsonld_path}/dataset_metadata.json"]
 
     content_type_associated_media = md.content_type_associated_media()
 
@@ -86,18 +81,19 @@ def workflow_metadata_extraction(file_object_path: str, file_updated: bool = Tru
     if md.content_type != ContentType.UNKNOWN:
         if file_updated:
             md.extract_metadata()
+            logging.info(f"Extracted metadata for {file_object_path}, writing content type metadata")
             write_content_type_metadata(md)
         else:
             delete_metadata(md.content_type_md_path)
 
-    logging.info("Writing resource metadata")
+    logging.info(f"Writing resource metadata for {file_object_path}")
     write_resource_metadata(md)
 
 
 @redpanda_connect.processor
 def handle_minio_event(msg: redpanda_connect.Message) -> redpanda_connect.Message:
     json_payload = json.loads(msg.payload)
-    if ".hsjsonld" in json_payload['Key']:
+    if ".hsjsonld" in json_payload['Key'] or ".hsmetadata" in json_payload['Key']:
         return msg
     workflow_metadata_extraction(json_payload['Key'], json_payload[
                                  'EventName'].startswith("s3:ObjectCreated"))

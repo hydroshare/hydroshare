@@ -43,7 +43,7 @@ class MetadataObject:
         resource_md_jsonld_path = Template(resource_md_jsonld_path_template).safe_substitute(
             bucket_name=bucket_name, resource_id=resource_id)
 
-        resource_md_path_template = os.environ.get("RESOURCE_MD_PATH", "hsmetadata/$resource_id/.hs")
+        resource_md_path_template = os.environ.get("RESOURCE_MD_PATH", "hsmetadata/$resource_id/.hsmetadata")
         resource_md_path = Template(resource_md_path_template).safe_substitute(
             bucket_name=bucket_name, resource_id=resource_id)
 
@@ -59,7 +59,7 @@ class MetadataObject:
         self.system_metadata_path = os.path.join(
             self.resource_md_path, "system_metadata.json")
         self.user_metadata_path = os.path.join(
-            self.resource_contents_path, "hs_user_meta.json")
+            self.resource_md_path, "user_metadata.json")
         self.resource_metadata_path = os.path.join(
             self.resource_md_jsonld_path, "dataset_metadata.json")
         self.content_type = self.determine_content_type()
@@ -82,7 +82,7 @@ class MetadataObject:
                 self.resource_contents_path, relative_path)
             # TODO make this a file in the .hs metadata directory
             self.content_type_md_user_path = os.path.join(
-                self.resource_contents_path, relative_path, "hs_user_meta.json")
+                self.resource_md_path, relative_path, "user_metadata.json")
         # check all other content types
         elif self.content_type != ContentType.UNKNOWN:
             relative_path = os.path.relpath(
@@ -97,7 +97,7 @@ class MetadataObject:
             self.content_type_main_file_path = os.path.join(
                 self.resource_contents_path, relative_path)
             self.content_type_md_user_path = os.path.join(
-                self.resource_contents_path, relative_path + ".hs_user_meta.json")
+                self.resource_md_path, relative_path + ".user_metadata.json")
 
     @property
     def resource_associated_media(self):
@@ -123,8 +123,8 @@ class MetadataObject:
     def extract_metadata(self) -> dict:
         if self.content_type == ContentType.NETCDF:
             from hsextract.content_types.netcdf.hs_cn_extraction import encode_netcdf
-            metadata = encode_netcdf(
-                self.file_object_path).model_dump(exclude_none=True)
+            metadata = encode_netcdf(self.file_object_path)
+            metadata = metadata.model_dump(exclude_none=True)
         elif self.content_type == ContentType.RASTER:
             from hsextract.content_types.raster.hs_cn_extraction import encode_raster_metadata
             metadata = encode_raster_metadata(
@@ -133,7 +133,7 @@ class MetadataObject:
             from hsextract.content_types.feature.hs_cn_extraction import encode_vector_metadata
             metadata = encode_vector_metadata(
                 self.file_object_path).model_dump(exclude_none=True)
-        if self.content_type == ContentType.TIMESERIES:
+        elif self.content_type == ContentType.TIMESERIES:
             from hsextract.content_types.timeseries.utils import extract_metadata
             metadata = extract_metadata(
                 self.file_object_path).model_dump(exclude_none=True)
@@ -163,14 +163,14 @@ class MetadataObject:
 
         if content_type == ContentType.UNKNOWN:
             # check singlefile
-            single_file_user_path = self.file_object_path + ".hs_user_meta.json"
+            single_file_user_path = self.file_object_path + ".user_metadata.json"
             if exists(single_file_user_path):
                 return ContentType.SINGLE_FILE
             # check fileset
             parent_directory = os.path.dirname(self.file_object_path)
             while parent_directory:
                 file_set_user_path = os.path.join(
-                    parent_directory, "hs_user_meta.json")
+                    parent_directory, "user_metadata.json")
                 if file_set_user_path == self.user_metadata_path:
                     break
                 if exists(file_set_user_path):

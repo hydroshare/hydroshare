@@ -284,6 +284,7 @@ services:
       dockerfile: hs_extract/Dockerfile
     volumes:
       - ./hs_extract/hsextract:/app/hsextract
+      - ./hs_extract/tests:/app/tests
       - ./hs_cloudnative_schemas:/app/hs_cloudnative_schemas
       - ./hs_extract/extract_metadata_pipeline.yaml:/app/extract_metadata_pipeline.yaml
       - ./hs_extract/extract_metadata_plugin.yaml:/app/extract_metadata_plugin.yaml
@@ -293,9 +294,9 @@ services:
       AWS_ACCESS_KEY_ID: minioadmin
       AWS_SECRET_ACCESS_KEY: minioadmin
       AWS_S3_ENDPOINT: http://minio:9000
-      RESOURCE_CONTENTS_PATH: "$$bucket_name/$$resource_id/data/contents"
-      RESOURCE_MD_JSONLD_PATH: "hsmetadata/$$resource_id/.hsjsonld"
-      RESOURCE_MD_PATH: "hsmetadata/$$resource_id/.hs"
+      RESOURCE_CONTENTS_PATH: "$$bucket_name/$$resource_id/data/contents" # directory for resource files
+      RESOURCE_MD_JSONLD_PATH: "hsmetadata/$$resource_id/.hsjsonld" # directory for schema.org JSON-LD metadata
+      RESOURCE_MD_PATH: "hsmetadata/$$resource_id/.hsmetadata" # directory for user and extracted metadata
 volumes:
   postgis_data_vol:
   solr_data_vol:

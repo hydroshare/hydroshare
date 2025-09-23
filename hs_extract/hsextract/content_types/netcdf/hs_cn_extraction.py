@@ -7,7 +7,7 @@ from pyproj import CRS
 from hs_cloudnative_schemas.schema import base
 from hs_cloudnative_schemas.schema import dataset
 from hs_cloudnative_schemas.schema import datavariable
-from hsextract import s3_client
+from hsextract.utils.s3 import s3_client
 
 
 def inspect_dimensions(ds: xarray.Dataset) -> None:
