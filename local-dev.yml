@@ -293,9 +293,9 @@ services:
       AWS_ACCESS_KEY_ID: minioadmin
       AWS_SECRET_ACCESS_KEY: minioadmin
       AWS_S3_ENDPOINT: http://minio:9000
-      # RESOURCE_CONTENTS_PATH: "$bucket_name/$resource_id/data/contents"
-      # RESOURCE_MD_JSONLD_PATH: "bucket_name/$resource_id/.hsjsonld"
-      # RESOURCE_MD_PATH: "&bucket_name/$resource_id/.hs"
+      RESOURCE_CONTENTS_PATH: "$$bucket_name/$$resource_id/data/contents"
+      RESOURCE_MD_JSONLD_PATH: "hsmetadata/$$resource_id/.hsjsonld"
+      RESOURCE_MD_PATH: "hsmetadata/$$resource_id/.hs"
 volumes:
   postgis_data_vol:
   solr_data_vol:
