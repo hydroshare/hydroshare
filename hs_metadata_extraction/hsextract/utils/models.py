@@ -1,4 +1,3 @@
-import logging
 import os
 from pydantic import BaseModel
 from enum import Enum
@@ -33,20 +32,20 @@ class MetadataObject:
 
         bucket_name = file_object_path.split('/')[0]
         resource_id = file_object_path.split('/')[1]
+
         resource_contents_path_template = os.environ.get("RESOURCE_CONTENTS_PATH",
-                                                "$bucket_name/$resource_id/data/contents")
+                                                         "$bucket_name/$resource_id/data/contents")
         resource_contents_path = Template(resource_contents_path_template).safe_substitute(
-            bucket_name=bucket_name, resource_id=resource_id
-        )
+            bucket_name=bucket_name, resource_id=resource_id)
+
         resource_md_jsonld_path_template = os.environ.get("RESOURCE_MD_JSONLD_PATH",
-                                                 "hs_metadata/$resource_id/.hsjsonld")
+                                                          "hs_metadata/$resource_id/.hsjsonld")
         resource_md_jsonld_path = Template(resource_md_jsonld_path_template).safe_substitute(
-            bucket_name=bucket_name, resource_id=resource_id
-        )
+            bucket_name=bucket_name, resource_id=resource_id)
+
         resource_md_path_template = os.environ.get("RESOURCE_MD_PATH", "hs_metadata/$resource_id/.hs")
         resource_md_path = Template(resource_md_path_template).safe_substitute(
-            bucket_name=bucket_name, resource_id=resource_id
-        )
+            bucket_name=bucket_name, resource_id=resource_id)
 
         # bucket/resource_id/data/contents
         self.resource_contents_path = resource_contents_path
