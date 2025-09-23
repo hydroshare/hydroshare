@@ -424,7 +424,6 @@ INSTALLED_APPS = (
     "crispy_forms",
     "crispy_bootstrap3",
     "mezzanine.accounts",
-    "haystack",
     "rest_framework",
     "robots",
     "sorl.thumbnail",
@@ -497,7 +496,7 @@ APPS_TO_NOT_RUN = (
     "corsheaders",
     "security",
     "django_comments",
-    "haystack" "test_without_migrations",
+    "test_without_migrations",
     "robots",
     "heartbeat",
     "filebrowser_safe"

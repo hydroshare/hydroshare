@@ -1,10 +1,7 @@
-import os
 import tempfile
 
 from django.contrib.auth.models import Group
 from django.test import TestCase
-from unittest import skip
-from haystack.query import SearchQuerySet
 
 from hs_core.hydroshare import resource
 from hs_core.hydroshare import users
@@ -43,32 +40,3 @@ class TestDeleteResource(MockS3TestCaseMixin, TestCase):
         # there should be no resource at this point
         self.assertEqual(BaseResource.objects.all().count(), 0, msg="Number of resources not equal to 0")
 
-    @skip("TODO: https://github.com/hydroshare/hydroshare/issues/5736")
-    def test_delete_resource_public(self):
-        # create files
-        file_one = os.path.join(self.tmp_dir, "test1.txt")
-
-        file_one_write = open(file_one, "w")
-        file_one_write.write("Putting something inside")
-        file_one_write.close()
-
-        # open files for read and upload
-        self.file_one = open(file_one, "rb")
-
-        # indexing is turned off during test run - however, using the keyword 'INDEX-FOR-TESTING',
-        # this specific resource will get indexed.
-        new_res = resource.create_resource(
-            'CompositeResource',
-            self.user,
-            'My Test Resource',
-            files=(self.file_one,),
-            keywords=("one", "two", "INDEX-FOR-TESTING"),
-            metadata=[{"description": {"abstract": "myabstract"}}]
-        )
-        current_index_count = len(SearchQuerySet().all())
-
-        new_res.set_public(True)
-        self.assertEqual(len(SearchQuerySet().all()), current_index_count + 1)
-
-        resource.delete_resource(new_res.short_id)
-        self.assertEqual(len(SearchQuerySet().all()), current_index_count)
