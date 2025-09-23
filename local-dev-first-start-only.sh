@@ -319,16 +319,6 @@ echo
 docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput
 
 echo
-echo "  - docker restart hydroshare defaultworker"
-echo
-docker restart hydroshare defaultworker
-
-echo
-echo "  - docker exec -u hydro-service hydroshare python manage.py add_missing_bucket_names"
-echo
-docker exec -u hydro-service hydroshare python manage.py add_missing_bucket_names
-
-echo
 echo '########################################################################################################################'
 echo -e " All done, run `green '\"docker-compose -f local-dev.yml restart\"'` to restart HydroShare"
 echo '########################################################################################################################'
