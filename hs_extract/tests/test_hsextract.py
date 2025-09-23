@@ -14,14 +14,15 @@ s3_config = {
 }
 s3_client = boto3.client('s3', **s3_config)
 
+
 def test_metadataobject():
     md = MetadataObject("test-bucket/resourceid/data/contents/file.txt", True)
     assert md.file_object_path == "test-bucket/resourceid/data/contents/file.txt"
-    assert md.file_updated == True
+    assert md.file_updated is True
     assert md.resource_contents_path == "test-bucket/resourceid/data/contents"
     assert md.resource_md_path == "hsmetadata/resourceid/.hsmetadata"
     assert md.resource_md_jsonld_path == "hsmetadata/resourceid/.hsjsonld"
-    assert md.content_type_md_jsonld_path == None
+    assert md.content_type_md_jsonld_path is None
     assert md.content_type == ContentType.UNKNOWN
     assert md.system_metadata_path == "hsmetadata/resourceid/.hsmetadata/system_metadata.json"
     assert md.user_metadata_path == "hsmetadata/resourceid/.hsmetadata/user_metadata.json"
@@ -59,42 +60,69 @@ def s3_resource_setup_teardown():
 def test_resource_extraction():
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
     # Stage system metadata to test
-    write_s3_json(f"hsmetadata/{resource_id}/.hsmetadata/system_metadata.json", {"system_metadata": "this is system metadata"})
-    write_s3_json(f"hsmetadata/{resource_id}/.hsmetadata/user_metadata.json", {"user_metadata": "this is user metadata"})
+    write_s3_json(f"hsmetadata/{resource_id}/.hsmetadata/system_metadata.json", {
+                  "system_metadata": "this is system metadata"})
+    write_s3_json(f"hsmetadata/{resource_id}/.hsmetadata/user_metadata.json", {
+                  "user_metadata": "this is user metadata"})
 
-    write_s3_json(f"admin/{resource_id}/data/contents/file.txt", {"file_metadata": "this is file metadata"})
+    write_s3_json(f"admin/{resource_id}/data/contents/file.txt",
+                  {"file_metadata": "this is file metadata"})
 
     # Wait for metadata to be consistent
     sleep(1)
     # read in the resulting resource metadata file
-    result_resource_metadata = read_s3_json(f"hsmetadata/{resource_id}/.hsjsonld/dataset_metadata.json")
+    result_resource_metadata = read_s3_json(
+        f"hsmetadata/{resource_id}/.hsjsonld/dataset_metadata.json")
 
-    assert result_resource_metadata["system_metadata"] == "this is system metadata"
+    assert result_resource_metadata[
+        "system_metadata"] == "this is system metadata"
     assert result_resource_metadata["user_metadata"] == "this is user metadata"
     assert len(result_resource_metadata["associatedMedia"]) == 1
     assert result_resource_metadata["associatedMedia"][0]["name"] == "file.txt"
 
+
 def test_resource_netcdf_extraction():
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
     # Stage system metadata to test
-    write_s3_json(f"hsmetadata/{resource_id}/.hsmetadata/system_metadata.json", {"system_metadata": "this is system metadata"})
-    write_s3_json(f"hsmetadata/{resource_id}/.hsmetadata/user_metadata.json", {"user_metadata": "this is user metadata"})
+    write_s3_json(f"hsmetadata/{resource_id}/.hsmetadata/system_metadata.json", {
+                  "system_metadata": "this is system metadata"})
+    write_s3_json(f"hsmetadata/{resource_id}/.hsmetadata/user_metadata.json", {
+                  "user_metadata": "this is user metadata"})
+    write_s3_json(f"hsmetadata/{resource_id}/.hsmetadata/netcdf_valid.nc.user_metadata.json", {
+                  "user_metadata": "this is netcdf user metadata"})
 
-    sleep(2)
+    sleep(1)
     with open("tests/test_files/netcdf/netcdf_valid.nc", "rb") as f:
-        s3_client.upload_fileobj(f, "admin", f"{resource_id}/data/contents/netcdf_valid.nc")
+        s3_client.upload_fileobj(
+            f, "admin", f"{resource_id}/data/contents/netcdf_valid.nc")
 
     # Wait for metadata to be consistent
-    sleep(2)
+    sleep(1)
     # read in the resulting resource metadata file
-    result_resource_metadata = read_s3_json(f"hsmetadata/{resource_id}/.hsjsonld/dataset_metadata.json")
+    result_resource_metadata = read_s3_json(
+        f"hsmetadata/{resource_id}/.hsjsonld/dataset_metadata.json")
 
-    assert result_resource_metadata["system_metadata"] == "this is system metadata"
+    assert result_resource_metadata[
+        "system_metadata"] == "this is system metadata"
     assert result_resource_metadata["user_metadata"] == "this is user metadata"
     assert len(result_resource_metadata["associatedMedia"]) == 1
-    assert result_resource_metadata["associatedMedia"][0]["name"] == "netcdf_valid.nc"
+    assert result_resource_metadata["associatedMedia"][
+        0]["name"] == "netcdf_valid.nc"
     assert len(result_resource_metadata["hasPart"]) == 1
-    assert result_resource_metadata["hasPart"][0]["url"].endswith("netcdf_valid.nc.json")
+    assert result_resource_metadata["hasPart"][
+        0]["url"].endswith("netcdf_valid.nc.json")
+
+    result_netcdf_metadata = read_s3_json(
+        f"hsmetadata/{resource_id}/.hsjsonld/netcdf_valid.nc.json")
+    assert len(result_netcdf_metadata["associatedMedia"]) == 1
+    assert result_netcdf_metadata["associatedMedia"][
+        0]["name"] == "netcdf_valid.nc"
+    assert len(result_netcdf_metadata["isPartOf"]) == 1
+    assert result_netcdf_metadata["isPartOf"][
+        0].endswith("dataset_metadata.json")
+    assert result_netcdf_metadata[
+        "user_metadata"] == "this is netcdf user metadata"
+
 
 def read_s3_json(path: str):
     bucket, key = path.split("/", 1)
@@ -105,6 +133,7 @@ def read_s3_json(path: str):
     file_content = response['Body'].read().decode('utf-8')
     metadata_json = json.loads(file_content)
     return metadata_json
+
 
 def write_s3_json(path: str, metadata_json: dict):
     bucket, key = path.split("/", 1)

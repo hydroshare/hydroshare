@@ -9,12 +9,6 @@ from hsextract.utils.models import ContentType, MetadataObject
 from hsextract.utils.s3 import find, write_metadata, load_metadata, delete_metadata
 
 
-def determine_required_for_content_type(file_object_path: str, content_type: ContentType) -> bool:
-    # For fileset and single file, it only matters if it is the
-    # hs_user_meta.json file
-    return True
-
-
 def write_resource_metadata(md: MetadataObject) -> bool:
     # read the system metadata file
     system_json = load_metadata(md.system_metadata_path)
@@ -24,7 +18,7 @@ def write_resource_metadata(md: MetadataObject) -> bool:
 
     # generate content type hasPart relationships
     content_type_metadata_paths: list[str] = [file for file in find(md.resource_md_jsonld_path)
-    if file != f"{md.resource_md_jsonld_path}/dataset_metadata.json"]
+                                              if file != f"{md.resource_md_jsonld_path}/dataset_metadata.json"]
     has_parts = []
     for file in content_type_metadata_paths:
         content_type_metadata = load_metadata(file)
@@ -49,17 +43,17 @@ def write_resource_metadata(md: MetadataObject) -> bool:
 
 def write_content_type_metadata(md: MetadataObject) -> bool:
     # read the part metadata file
-    part_json = {}
-    if md.content_type_md_path:
-        part_json = load_metadata(md.content_type_md_path)
+    part_json = load_metadata(md.content_type_md_path)
 
     # read the content type user metadata file
-    user_json = {}
-    if md.content_type_md_user_path:
-        user_json = load_metadata(md.content_type_md_user_path)
+    logging.info(f"Reading content type user metadata from {
+                 md.content_type_md_user_path}")
+    user_json = load_metadata(md.content_type_md_user_path)
+    logging.info(f"Read content type user metadata: {user_json}")
 
     # generate content type isPartOf relationships
-    is_part_of = [f"{os.environ['AWS_S3_ENDPOINT']}/{md.resource_md_jsonld_path}/dataset_metadata.json"]
+    is_part_of = [f"{os.environ['AWS_S3_ENDPOINT']
+                     }/{md.resource_md_jsonld_path}/dataset_metadata.json"]
 
     content_type_associated_media = md.content_type_associated_media()
 
@@ -76,27 +70,39 @@ def write_content_type_metadata(md: MetadataObject) -> bool:
 # if a file is not updated, it is deleted
 def workflow_metadata_extraction(file_object_path: str, file_updated: bool = True) -> None:
     md = MetadataObject(file_object_path, file_updated)
-    logging.info(f"content type determined: {md.content_type}")
     # fileset and single file do not have anything to extract
     if md.content_type != ContentType.UNKNOWN:
         if file_updated:
             md.extract_metadata()
-            logging.info(f"Extracted metadata for {file_object_path}, writing content type metadata")
             write_content_type_metadata(md)
         else:
             delete_metadata(md.content_type_md_path)
-
-    logging.info(f"Writing resource metadata for {file_object_path}")
     write_resource_metadata(md)
 
 
 @redpanda_connect.processor
 def handle_minio_event(msg: redpanda_connect.Message) -> redpanda_connect.Message:
     json_payload = json.loads(msg.payload)
-    if ".hsjsonld" in json_payload['Key'] or ".hsmetadata" in json_payload['Key']:
-        return msg
-    workflow_metadata_extraction(json_payload['Key'], json_payload[
-                                 'EventName'].startswith("s3:ObjectCreated"))
+    key = json_payload['Key']
+    directory = key.split('/')[2]
+    # 0 is bucket
+    # 1 is resource id
+    if directory == ".hsjsonld":
+        return
+    if directory == ".hsmetadata":
+        if key.endswith("system_metadata.json"):
+            # TODO create resource metadata
+            pass
+        elif key.endswith("user_metadata.json"):
+            # TODO determine if content type user metadata to create content
+            # type metadata or resource metadata
+            pass
+        else:
+            # no event for all other files in .hsmetadata (they are metadata
+            # extracted from content types)
+            return
+    workflow_metadata_extraction(
+        key, json_payload['EventName'].startswith("s3:ObjectCreated"))
 
 
 if __name__ == "__main__":

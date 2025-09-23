@@ -43,7 +43,8 @@ class MetadataObject:
         resource_md_jsonld_path = Template(resource_md_jsonld_path_template).safe_substitute(
             bucket_name=bucket_name, resource_id=resource_id)
 
-        resource_md_path_template = os.environ.get("RESOURCE_MD_PATH", "hsmetadata/$resource_id/.hsmetadata")
+        resource_md_path_template = os.environ.get(
+            "RESOURCE_MD_PATH", "hsmetadata/$resource_id/.hsmetadata")
         resource_md_path = Template(resource_md_path_template).safe_substitute(
             bucket_name=bucket_name, resource_id=resource_id)
 
@@ -82,7 +83,7 @@ class MetadataObject:
                 self.resource_contents_path, relative_path)
             # TODO make this a file in the .hs metadata directory
             self.content_type_md_user_path = os.path.join(
-                self.resource_md_path, relative_path, "user_metadata.json")
+                self.resource_md_path, relative_path, ".user_metadata.json")
         # check all other content types
         elif self.content_type != ContentType.UNKNOWN:
             relative_path = os.path.relpath(
