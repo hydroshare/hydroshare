@@ -59,56 +59,6 @@ function getImageID() {
     docker images | grep $1 | tr -s ' ' | cut -f3 -d' '
 }
 
-##nodejs build for discovery
-
-node_build() {
-
-HS_PATH=`pwd`
-#### Set version pin variable ####
-#n_ver="15.0.0"
-n_ver="14.14.0"
-
-echo '####################################################################################################'
-echo "Starting Node Build .... "
-echo '####################################################################################################'
-
-### Create Directory structure outside to maintain correct permissions
-cd hs_discover
-rm -rf static templates
-mkdir static templates
-mkdir templates/hs_discover
-mkdir static/js
-mkdir static/css
-
-# Start Docker container and Run build
-docker run -i -v $HS_PATH:/hydroshare --name=nodejs node:$n_ver /bin/bash << eof
-
-cd hydroshare
-cd hs_discover
-npm install
-npm run build
-mkdir -p static/js
-mkdir -p static/css
-cp -rp templates/hs_discover/js static/
-cp -rp templates/hs_discover/css static/
-cp -p templates/hs_discover/map.js static/js/
-echo "----------------js--------------------"
-ls -l static/js
-echo "--------------------------------------"
-echo "----------------css-------------------"
-ls -l static/css
-echo "--------------------------------------"
-eof
-
-echo "Node Build completed ..."
-echo
-echo "Removing node container"
-docker container rm nodejs
-cd $HS_PATH
-
-}
-
-
 ### Clean-up | Setup hydroshare environment
 
 REMOVE_CONTAINER=YES
@@ -169,8 +119,6 @@ DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
 HYDROSHARE_CONTAINERS=(hydroshare defaultworker rabbitmq postgis companion redis nginx minio micro-auth pgbouncer discovery-atlas)
 HYDROSHARE_VOLUMES=(hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_temp_vol hydroshare_minio_data_vol hydroshare_redis_data_vol hydroshare_companion_vol)
 HYDROSHARE_IMAGES=(hydroshare-defaultworker hydroshare-hydroshare postgis/postgis rabbitmq nginx redis transloadit/companion minio/minio edoburu/pgbouncer hydroshare/micro-auth hydroshare-discovery-atlas)
-
-NODE_CONTAINER_RUNNING=`docker ps -a | grep nodejs`
 
 if [ "$REMOVE_CONTAINER" == "YES" ]; then
   echo "  Removing HydroShare container..."
@@ -249,18 +197,6 @@ echo
 
 echo "  - docker-compose -f ${DOCKER_COMPOSER_YAML_FILE} up -d ${REBUILD_IMAGE}"
 docker-compose -f $DOCKER_COMPOSER_YAML_FILE up -d $REBUILD_IMAGE
-
-echo
-echo '########################################################################################################################'
-echo " Starting backround tasks..."
-echo '########################################################################################################################'
-echo
-
-echo
-echo " - building Node for Discovery in background"
-node_build > /dev/null 2>&1 &
-
-sleep 180
 
 echo
 echo '########################################################################################################################'
@@ -352,18 +288,6 @@ echo
 echo '########################################################################################################################'
 echo " Collect static files"
 echo '########################################################################################################################'
-
-# check to see if the node container is still running
-# if it is, wait until it is removed
-echo "Waiting for nodejs container to be removed..."
-while [ 1 -eq 1 ]
-do
-  if [ "$NODE_CONTAINER_RUNNING" == "" ]; then
-    break
-  fi
-  echo -n "."
-  sleep 1
-done
 
 echo "  -docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput"
 echo
