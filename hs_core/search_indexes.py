@@ -3,7 +3,6 @@
 # NOTE: this has been optimized for the current and future discovery pages.
 # Features that are not used have been commented out temporarily
 
-import logging
 import re
 
 import probablepeople

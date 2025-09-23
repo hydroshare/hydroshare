@@ -39,4 +39,3 @@ class TestDeleteResource(MockS3TestCaseMixin, TestCase):
 
         # there should be no resource at this point
         self.assertEqual(BaseResource.objects.all().count(), 0, msg="Number of resources not equal to 0")
-
