@@ -1,4 +1,4 @@
 [submodule "discovery-atlas"]
 	path = discovery-atlas
 	url = https://github.com/hydroshare/discovery-atlas.git
-	branch = hs-integration
+	branch = develop
