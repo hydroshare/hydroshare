@@ -222,6 +222,10 @@ services:
     build:
       context: discovery-atlas
       dockerfile: frontend/Dockerfile
+      args:
+        - VITE_APP_BASE=/search/
+        - VITE_APP_API_URL=https://localhost/api
+        - VITE_APP_NAME=Discover
     container_name: discovery-atlas
     hostname: discovery-atlas
     platform: linux/amd64
