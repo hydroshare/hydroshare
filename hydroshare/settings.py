@@ -445,7 +445,6 @@ INSTALLED_APPS = (
     "security",
     "markdown",
     "hs_communities",
-    "hs_discover",
     "health_check",
     "health_check.db",
     "health_check.cache",
