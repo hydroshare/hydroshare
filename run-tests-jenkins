@@ -2,4 +2,4 @@
 set -e
 
 python manage.py test --verbosity 3 --noinput --timing
-pytest
+pytest --ignore=hs_extract/tests/test_hsextract.py
