@@ -2,4 +2,3 @@
 set -e
 
 python manage.py test test_gh_env --failfast --verbosity 3 --noinput --timing
-pytest
