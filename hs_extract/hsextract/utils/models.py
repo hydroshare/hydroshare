@@ -123,22 +123,31 @@ class MetadataObject:
     def extract_metadata(self) -> dict:
         if self.content_type == ContentType.NETCDF:
             from hsextract.content_types.netcdf.hs_cn_extraction import encode_netcdf
+            # nothing special for netcdf, just a single file to extract from
             metadata = encode_netcdf(self.file_object_path)
-            metadata = metadata.model_dump(exclude_none=True)
         elif self.content_type == ContentType.RASTER:
             from hsextract.content_types.raster.hs_cn_extraction import encode_raster_metadata
-            metadata = encode_raster_metadata(
-                self.file_object_path).model_dump(exclude_none=True)
+            # TODO if tif, find a vrt file in directory that references the file
+            # if vrt file exists, extract metadata from that instead
+            # if vrt does not exist, extract from the tif file
+
+            # if vrt, extract metadata from the vrt file
+            # find tif references and delete any metadata extracted from the referenced tifs
+            # this ensures the metadata is extracted correctly no matter the order the files are processed
+            metadata = encode_raster_metadata(self.file_object_path)
         elif self.content_type == ContentType.FEATURE:
             from hsextract.content_types.feature.hs_cn_extraction import encode_vector_metadata
-            metadata = encode_vector_metadata(
-                self.file_object_path).model_dump(exclude_none=True)
+            # TODO do all the files need to be present for extraction?
+            # e.g. shp, shx, dbf, prj
+            metadata = encode_vector_metadata(self.file_object_path)
         elif self.content_type == ContentType.TIMESERIES:
             from hsextract.content_types.timeseries.utils import extract_metadata
-            metadata = extract_metadata(
-                self.file_object_path).model_dump(exclude_none=True)
+            # nothing special for timeseries (csv, sqlite), just a single file to extract from
+            metadata = extract_metadata(self.file_object_path)
         else:
+            # shouldn't get here, all recognized content types should be handled above
             return
+        metadata = metadata.model_dump(exclude_none=True)
         write_metadata(self.content_type_md_path, metadata)
 
     _extension_mapping = {
