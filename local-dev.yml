@@ -100,6 +100,8 @@ services:
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       VUE_APP_BUCKET_URL_PUBLIC_PATH: "/static/static"
       MC_HOST_hydroshare: "http://minioadmin:minioadmin@minio:9000"
+      DATACITE_USERNAME: ${DATACITE_USERNAME}
+      DATACITE_PASSWORD: ${DATACITE_PASSWORD}
     volumes:
       # hydroshare repository
       - ".:/hydroshare"
