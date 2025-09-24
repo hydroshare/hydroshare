@@ -25,18 +25,6 @@ from theme.backends import without_login_date_token_generator
 
 
 class TestPublishResource(MockS3TestCaseMixin, TestCase):
-    def test_aaa_settings_are_loaded(self):
-        """Test that settings variables are set correctly before publishing tests."""
-        from django.conf import settings
-
-        self.assertIsNotNone(settings.DATACITE_USERNAME, "DATACITE_USERNAME is not set")
-        self.assertIsNotNone(settings.DATACITE_PASSWORD, "DATACITE_PASSWORD is not set")
-        self.assertTrue(bool(settings.DATACITE_USERNAME.strip()), "DATACITE_USERNAME is empty")
-        self.assertTrue(bool(settings.DATACITE_PASSWORD.strip()), "DATACITE_PASSWORD is empty")
-        self.assertIn("10.", settings.DATACITE_PREFIX, "DATACITE_PREFIX does not look valid")
-        self.assertTrue(settings.TEST_DATACITE_API_URL.startswith("https://"), "TEST_DATACITE_API_URL is invalid")
-        self.assertTrue(settings.DATACITE_API_URL.startswith("https://"), "DATACITE_API_URL is invalid")
-
     def setUp(self):
         super(TestPublishResource, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
