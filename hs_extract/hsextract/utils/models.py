@@ -15,9 +15,8 @@ class MinIOEvent(BaseModel):
 class ContentType(Enum):
     RASTER = "raster"
     NETCDF = "netcdf"
-    ZARR = "zarr"
+    # ZARR = "zarr"
     FEATURE = "feature"
-    REFTIMESERIES = "reftimeseries"
     TIMESERIES = "timeseries"
     UNKNOWN = "unknown"
     SINGLE_FILE = "single_file"
@@ -149,7 +148,6 @@ class MetadataObject:
         ".nc": ContentType.NETCDF,
         # ".zarr": ContentType.ZARR,
         ".shp": ContentType.FEATURE,
-        # ".reftst.json": ContentType.REFTIMESERIES,
         ".csv": ContentType.TIMESERIES,
         ".sqlite": ContentType.TIMESERIES,
     }
