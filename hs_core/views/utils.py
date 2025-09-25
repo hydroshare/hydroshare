@@ -35,6 +35,10 @@ from rest_framework.exceptions import NotFound, ValidationError
 
 from django_s3.exceptions import SessionException
 from hs_access_control.models import PrivilegeCodes
+from hs_access_control.models.user import UserResourcePermission
+from hs_access_control.models.utilities import get_user_resources
+from hs_access_control.models.user import UserResourcePermission
+from hs_access_control.models.utilities import get_user_resources
 from hs_core import hydroshare
 from hs_core.enums import RelationTypes
 from hs_core.hydroshare import (add_resource_files, check_resource_type,
@@ -369,14 +373,17 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
             authorized = True
         elif user.is_authenticated and user.is_active:
             # authorized = user.uaccess.can_view_resource(res)
-            authorized = user.uaccess.has_resource_permission(resource=res, privilege=PrivilegeCodes.VIEW)
+            authorized = user.uaccess.has_resource_permission(resource=res, privilege=PrivilegeCodes.VIEW,
+                                                              check_superuser=True)
     elif user.is_authenticated and user.is_active:
         if needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE:
             # authorized = user.uaccess.can_view_resource(res)
-            authorized = user.uaccess.has_resource_permission(resource=res, privilege=PrivilegeCodes.VIEW)
+            authorized = user.uaccess.has_resource_permission(resource=res, privilege=PrivilegeCodes.VIEW,
+                                                              check_superuser=True)
         elif needed_permission == ACTION_TO_AUTHORIZE.EDIT_RESOURCE:
             # authorized = user.uaccess.can_change_resource(res)
-            authorized = user.uaccess.has_resource_permission(resource=res, privilege=PrivilegeCodes.CHANGE)
+            authorized = user.uaccess.has_resource_permission(resource=res, privilege=PrivilegeCodes.CHANGE,
+                                                              check_superuser=True)
         elif needed_permission == ACTION_TO_AUTHORIZE.DELETE_RESOURCE:
             authorized = user.uaccess.can_delete_resource(res)
         elif needed_permission == ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG:
@@ -386,7 +393,8 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
             authorized = user.uaccess.has_resource_permission(resource=res, privilege=PrivilegeCodes.OWNER)
         elif needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE_ACCESS:
             # authorized = user.uaccess.can_view_resource(res)
-            authorized = user.uaccess.has_resource_permission(resource=res, privilege=PrivilegeCodes.VIEW)
+            authorized = user.uaccess.has_resource_permission(resource=res, privilege=PrivilegeCodes.VIEW,
+                                                              check_superuser=True)
         elif needed_permission == ACTION_TO_AUTHORIZE.EDIT_RESOURCE_ACCESS:
             authorized = user.uaccess.can_share_resource(res, PrivilegeCodes.CHANGE)
     elif needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE:
