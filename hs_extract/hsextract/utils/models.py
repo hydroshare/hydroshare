@@ -111,7 +111,7 @@ class MetadataObject:
         Get a list of media objects associated with this resource.
         """
         media_objects = []
-        if self.content_type in [ContentType.SINGLE_FILE, ContentType.NETCDF, ContentType.REFTIMESERIES,
+        if self.content_type in [ContentType.SINGLE_FILE, ContentType.NETCDF,
                                  ContentType.TIMESERIES]:
             return [m for m in self.resource_associated_media if m["contentUrl"].endswith(self.file_object_path)]
         elif self.content_type in [ContentType.FILE_SET, ContentType.ZARR]:
@@ -125,6 +125,7 @@ class MetadataObject:
             from hsextract.content_types.netcdf.hs_cn_extraction import encode_netcdf
             # nothing special for netcdf, just a single file to extract from
             metadata = encode_netcdf(self.file_object_path)
+            metadata = metadata.model_dump(exclude_none=True)
         elif self.content_type == ContentType.RASTER:
             from hsextract.content_types.raster.hs_cn_extraction import encode_raster_metadata
             # TODO if tif, find a vrt file in directory that references the file
@@ -141,13 +142,16 @@ class MetadataObject:
             # e.g. shp, shx, dbf, prj
             metadata = encode_vector_metadata(self.file_object_path)
         elif self.content_type == ContentType.TIMESERIES:
-            from hsextract.content_types.timeseries.utils import extract_metadata
             # nothing special for timeseries (csv, sqlite), just a single file to extract from
-            metadata = extract_metadata(self.file_object_path)
+            if self.file_object_path.endswith(".csv"):
+                from hsextract.content_types.timeseries.utils import extract_metadata_csv
+                metadata = extract_metadata_csv(self.file_object_path)
+            else:
+                from hsextract.content_types.timeseries.utils import extract_metadata
+                metadata = extract_metadata(self.file_object_path)
         else:
             # shouldn't get here, all recognized content types should be handled above
             return
-        metadata = metadata.model_dump(exclude_none=True)
         write_metadata(self.content_type_md_path, metadata)
 
     _extension_mapping = {

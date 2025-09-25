@@ -5,7 +5,7 @@ import tempfile
 import os
 
 from dateutil import parser
-from hsextract import s3
+from hsextract.utils.s3 import s3_client as s3
 
 
 def validate_odm2_db_file(sqlite_file_path):
@@ -196,10 +196,10 @@ def extract_metadata(sqlite_file_name):
     :param sqlite_file_name: path of the sqlite file
     :return: extracted_metadata as dictionary
     """
-
     temp_dir = tempfile.gettempdir()
     local_copy = os.path.join(temp_dir, os.path.basename(sqlite_file_name))
-    s3.get_file(sqlite_file_name, local_copy)
+    bucket, key = sqlite_file_name.split("/", 1)
+    s3.download_file(bucket, key, local_copy)
     with sqlite3.connect(local_copy) as con:
         # get the records in python dictionary format
         con.row_factory = sqlite3.Row
@@ -616,9 +616,12 @@ def _extract_coverage_metadata(cur):
 
 def extract_metadata_csv(csv_file_name):
     """Extracts CV metadata from a csv file"""
-
     metadata_dict = {}
-    with s3.open(csv_file_name, 'r') as fl_obj:
+    temp_dir = tempfile.gettempdir()
+    local_copy = os.path.join(temp_dir, os.path.basename(csv_file_name))
+    bucket, key = csv_file_name.split("/", 1)
+    s3.download_file(bucket, key, local_copy)
+    with open(local_copy, 'r') as fl_obj:
         csv_reader = csv.reader(fl_obj, delimiter=',')
         # read the first row - header
         header = next(csv_reader)

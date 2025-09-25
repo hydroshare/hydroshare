@@ -43,7 +43,7 @@ def write_resource_metadata(md: MetadataObject) -> bool:
 
 def write_content_type_metadata(md: MetadataObject) -> bool:
     # read the part metadata file
-    part_json = load_metadata(md.content_type_md_path)
+    content_type_metadata = load_metadata(md.content_type_md_path)
 
     # read the content type user metadata file
     logging.info(f"Reading content type user metadata from {
@@ -59,7 +59,7 @@ def write_content_type_metadata(md: MetadataObject) -> bool:
 
     # Combine part metadata, user metadata, isPartOf, and associatedMedia
     # TODO evaluate whether we need to merge list properties
-    combined_metadata = {**part_json, **user_json}
+    combined_metadata = {**content_type_metadata, **user_json}
     combined_metadata["isPartOf"] = is_part_of
     combined_metadata["associatedMedia"] = content_type_associated_media
 
