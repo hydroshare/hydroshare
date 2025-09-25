@@ -21,7 +21,7 @@ from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
                                     SuspiciousFileOperation)
 from django.core.files.base import File
 from django.core.validators import URLValidator
-from django.db.models import BooleanField, Case, Prefetch, Value, When
+from django.db.models import BooleanField, Case, Prefetch, Q, Value, When, TextField
 from django.db.models.query import prefetch_related_objects
 from django.http import HttpResponse, QueryDict
 from django.urls import reverse
@@ -35,8 +35,6 @@ from rest_framework.exceptions import NotFound, ValidationError
 
 from django_s3.exceptions import SessionException
 from hs_access_control.models import PrivilegeCodes
-from hs_access_control.models.user import UserResourcePermission
-from hs_access_control.models.utilities import get_user_resources
 from hs_access_control.models.user import UserResourcePermission
 from hs_access_control.models.utilities import get_user_resources
 from hs_core import hydroshare
@@ -747,6 +745,139 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
                                          )
 
     return resource_collection
+
+def get_my_resources_list_new(user, annotate=False, filter=None, **kwargs):
+    """
+    Gets a QuerySet object for listing resources that belong to a given user.
+    :param user: an instance of User - user who wants to see his/her resources
+    :param annotate: whether to annotate for my resources page listing.
+    :param filter: an array containing filters that determine the type of resources fetched
+    :return: an instance of QuerySet of resources
+    """
+
+    discovered_resources = BaseResource.objects.none()
+
+    owned = not filter or 'owned' in filter
+    shared = not filter or 'editable' in filter or 'viewable' in filter
+    user_resources = get_user_resources(user.id, owned=owned, shared=shared)
+
+    if not filter or 'discovered' in filter:
+        discovered_resources = user.ulabels.my_resources
+
+    favorite_resources = user.ulabels.favorited_resources
+
+    # join all queryset objects.
+    resource_collection = user_resources.distinct() | \
+        discovered_resources.distinct()
+    if not filter or 'favorites' in filter:
+        resource_collection = resource_collection | favorite_resources.distinct()
+
+    # remove obsoleted resources
+    resource_collection = resource_collection.exclude(object_id__in=Relation.objects.filter(
+        type='isReplacedBy').values('object_id')).exclude(extra_data__to_be_deleted__isnull=False)
+
+    # When used in the My Resources page, annotate for speed
+    if annotate:
+        # The annotated field 'has_labels' would allow us to query the DB for labels only if the
+        # resource has labels - that means we won't hit the DB for each resource listed on the page
+        # to get the list of labels for a resource
+        labeled_resources = user.ulabels.labeled_resources
+        resource_collection = resource_collection.annotate(has_labels=Case(
+            When(short_id__in=labeled_resources.values_list('short_id', flat=True),
+                 then=Value(True, BooleanField()))))
+
+        resource_collection = resource_collection.annotate(
+            is_favorite=Case(When(short_id__in=favorite_resources.values_list('short_id', flat=True),
+                                  then=Value(True, BooleanField()))))
+
+        resource_collection = resource_collection.only('short_id', 'resource_type', 'created', 'content_type')
+        # we won't hit the DB for each resource to know if it's status is public/private/discoverable
+        # etc
+        resource_collection = resource_collection.select_related('raccess', 'rlabels', 'content_type')
+        meta_contenttypes = get_metadata_contenttypes()
+
+        for ct in meta_contenttypes:
+            # get a list of resources having metadata that is an instance of a specific
+            # metadata class (e.g., CoreMetaData) - we have to prefetch by content_type as
+            # prefetch works only for the same object type (type of 'content_object' in this case)
+            res_list = [res for res in resource_collection if res.content_type == ct]
+
+            # prefetch metadata items - creators, keywords(subjects), dates, and title
+            # this will generate 4 queries for the 4 Prefetch + 1 for each resource to retrieve 'content_object'
+            if res_list:
+                prefetch_related_objects(res_list,
+                                         Prefetch('content_object__creators'),
+                                         Prefetch('content_object__subjects'),
+                                         Prefetch('content_object__dates'),
+                                         Prefetch('content_object___title'),
+                                         )
+
+    return resource_collection
+
+def get_my_resources(user, annotate=False, filter=None, **kwargs):
+    """
+    Gets a ValuesQuerySet object for listing resources that belong to a given user.
+    :param user: an instance of User - user who wants to see his/her resources
+    :param annotate: whether to annotate for my resources page listing.
+    :param filter: an array containing filters that determine the type of resources fetched
+    :return: an instance of ValuesQuerySet of resources attributes
+    """
+
+    user_resources = UserResourcePermission.objects.filter(user_id=user.id).exclude(privilege=PrivilegeCodes.NONE)
+
+    # Apply filters - combine them with OR
+    if filter:
+        filter_query = Q()  # Initialize an empty Q object for OR combinations
+
+        # Build filter conditions using OR operations
+        if 'owned' in filter:
+            filter_query |= Q(privilege=PrivilegeCodes.OWNER)
+        if 'editable' in filter:
+            filter_query |= Q(privilege=PrivilegeCodes.CHANGE)
+        if 'viewable' in filter:
+            filter_query |= Q(privilege=PrivilegeCodes.VIEW)
+
+        # Apply the filter query to the user_resources
+        user_resources = user_resources.filter(filter_query)
+
+    user_resource_ids = user_resources.values_list('resource_id', flat=True)
+
+    # Get the actual resources
+    # Use foreign key relationship directly to get BaseResource objects
+    resource_collection = BaseResource.objects.filter(short_id__in=user_resource_ids)
+
+    # Remove obsoleted resources
+    resource_collection = resource_collection.exclude(
+        object_id__in=Relation.objects.filter(type='isReplacedBy').values('object_id')
+    ).exclude(extra_data__to_be_deleted__isnull=False)
+
+    if annotate:
+        # The annotated field 'has_labels' would allow us to query the DB for labels only if the
+        # resource has labels - that means we won't hit the DB for each resource listed on the page
+        # to get the list of labels for a resource
+        labeled_resources = user.ulabels.labeled_resources
+        resource_collection = resource_collection.annotate(has_labels=Case(
+            When(short_id__in=labeled_resources.values_list('short_id', flat=True),
+                 then=Value(True, BooleanField()))))
+        resource_collection = resource_collection.annotate(
+            is_favorite=Case(When(short_id__in=user.ulabels.favorited_resources.values_list('short_id', flat=True),
+                                  then=Value(True, BooleanField()))))
+        # annotate resource sharing status
+        resource_collection = resource_collection.annotate(
+            sharing_status=Case(When(raccess__published=True, then=Value('published', TextField())),
+                                When(raccess__public=True, then=Value('public', TextField())),
+                                When(raccess__discoverable=True, then=Value('discoverable', TextField())),
+                                default=Value('private', TextField()))
+        )
+    # TODO: Once we store the needed resource metadata for my-resources page as new json field as part of the BaseResource model, the collected resource
+    # will automatically have the metadata for each of the resources. Need to add the new json metadata field to the values below:
+    if annotate:
+        my_resources = resource_collection.values(
+            'short_id', 'resource_type', 'created', 'has_labels', 'is_favorite', 'sharing_status'
+        )
+    else:
+        my_resources = resource_collection.values('short_id', 'resource_type', 'created')
+    return my_resources
 
 
 def send_action_to_take_email(request, user, action_type, **kwargs):
