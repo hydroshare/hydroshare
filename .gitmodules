@@ -2,3 +2,7 @@
 	path = discovery-atlas
 	url = https://github.com/hydroshare/discovery-atlas.git
 	branch = develop
+[submodule "landing-page"]
+	path = landing-page
+	url = https://github.com/hydroshare/landing-page.git
+	branch = develop
