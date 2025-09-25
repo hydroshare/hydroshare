@@ -240,7 +240,7 @@ services:
       context: landing-page
       dockerfile: Dockerfile
       args:
-        - VITE_APP_BASE=/landing-page/
+        - VITE_APP_BASE=/resource/
         - VITE_APP_API_URL=POINT_ME_AT_API_URL
         - VITE_APP_NAME=hs-landing-page
         - VITE_APP_ORIGIN=https://localhost
@@ -250,7 +250,7 @@ services:
     environment:
       VITE_APP_NAME: "hs-landing-page"
       VITE_APP_ORIGIN: "https://localhost"
-      VITE_APP_BASE: "/landing-page/"
+      VITE_APP_BASE: "/resource/"
       VITE_APP_API_URL: "POINT_ME_AT_API_URL"
     ports:
       - "5004:5004"
