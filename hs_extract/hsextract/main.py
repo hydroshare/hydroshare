@@ -43,6 +43,7 @@ def write_resource_metadata(md: MetadataObject) -> bool:
 
 def write_content_type_metadata(md: MetadataObject) -> bool:
     # read the part metadata file
+    logging.info(f"Reading content type metadata from {md.content_type_md_path}")
     content_type_metadata = load_metadata(md.content_type_md_path)
 
     # read the content type user metadata file
@@ -52,8 +53,7 @@ def write_content_type_metadata(md: MetadataObject) -> bool:
     logging.info(f"Read content type user metadata: {user_json}")
 
     # generate content type isPartOf relationships
-    is_part_of = [f"{os.environ['AWS_S3_ENDPOINT']
-                     }/{md.resource_md_jsonld_path}/dataset_metadata.json"]
+    is_part_of = [f"{os.environ['AWS_S3_ENDPOINT']}/{md.resource_md_jsonld_path}/dataset_metadata.json"]
 
     content_type_associated_media = md.content_type_associated_media()
 
@@ -70,10 +70,13 @@ def write_content_type_metadata(md: MetadataObject) -> bool:
 # if a file is not updated, it is deleted
 def workflow_metadata_extraction(file_object_path: str, file_updated: bool = True) -> None:
     md = MetadataObject(file_object_path, file_updated)
+    logging.info(f"content type determined: {md.content_type}")
     # fileset and single file do not have anything to extract
     if md.content_type != ContentType.UNKNOWN:
         if file_updated:
+            logging.info(f"Extracting metadata for {md.file_object_path}")
             md.extract_metadata()
+            logging.info(f"Extracted metadata for {md.file_object_path}")
             write_content_type_metadata(md)
         else:
             delete_metadata(md.content_type_md_path)
@@ -85,25 +88,27 @@ def handle_minio_event(msg: redpanda_connect.Message) -> redpanda_connect.Messag
     json_payload = json.loads(msg.payload)
     key = json_payload['Key']
     directory = key.split('/')[2]
+    logging.info(f"Received event for key: {key}, directory: {directory}")
     # 0 is bucket
     # 1 is resource id
     if directory == ".hsjsonld":
         return
     if directory == ".hsmetadata":
+        logging.info("Event in .hsmetadata directory")
         if key.endswith("system_metadata.json"):
+            logging.info("System metadata change, updating resource metadata")
             # TODO create resource metadata
-            pass
         elif key.endswith("user_metadata.json"):
+            logging.info("User metadata change, updating content type metadata")
             # TODO determine if content type user metadata to create content
             # type metadata or resource metadata
-            pass
         else:
-            # no event for all other files in .hsmetadata (they are metadata
-            # extracted from content types)
-            return
+            logging.info(f"No event for all other files in .hsmetadata (they are metadata extracted from content types): {key}")
+        return
     workflow_metadata_extraction(
         key, json_payload['EventName'].startswith("s3:ObjectCreated"))
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     asyncio.run(redpanda_connect.processor_main(handle_minio_event))

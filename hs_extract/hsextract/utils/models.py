@@ -1,3 +1,4 @@
+import logging
 import os
 from pydantic import BaseModel
 from enum import Enum
@@ -67,15 +68,20 @@ class MetadataObject:
 
     def _determine_paths(self):
         # content_type_md_path
-        parent_directory = os.path.dirname(self.file_object_path)
-        relative_path = os.path.relpath(
-            parent_directory, self.resource_contents_path)
         # TODO check directory content types (e.g. fileset, zarr)
         if self.content_type == ContentType.FILE_SET:
+            import logging
+            parent_directory = os.path.dirname(self.file_object_path)
+            logging.info(f"Determining paths for fileset, parent_directory: {parent_directory}")
+            relative_path = os.path.relpath(
+                parent_directory, self.resource_contents_path)
+            logging.info(f"Relative path: {relative_path}")
             self.content_type_md_jsonld_path = os.path.join(
                 self.resource_md_jsonld_path, relative_path, "dataset_metadata.json")
+            logging.info(f"Content type md jsonld path: {self.content_type_md_jsonld_path}")
             self.content_type_md_path = os.path.join(
-                self.resource_md_path, relative_path, "dataset_metadata.json")
+                self.resource_md_path, relative_path, "user_metadata.json")
+            logging.info(f"Content type md path: {self.content_type_md_path}")
             self.content_type_contents_path = os.path.join(
                 self.resource_contents_path, relative_path)
             self.content_type_main_file_path = os.path.join(
@@ -114,7 +120,7 @@ class MetadataObject:
         if self.content_type in [ContentType.SINGLE_FILE, ContentType.NETCDF,
                                  ContentType.TIMESERIES]:
             return [m for m in self.resource_associated_media if m["contentUrl"].endswith(self.file_object_path)]
-        elif self.content_type in [ContentType.FILE_SET, ContentType.ZARR]:
+        elif self.content_type in [ContentType.FILE_SET]: # , ContentType.ZARR]:
             return [m for m in self.resource_associated_media
                     if m["contentUrl"].split(os.environ['AWS_S3_ENDPOINT'])[1].strip("/").startswith(
                         self.content_type_contents_path)]
@@ -150,7 +156,7 @@ class MetadataObject:
                 from hsextract.content_types.timeseries.utils import extract_metadata
                 metadata = extract_metadata(self.file_object_path)
         else:
-            # shouldn't get here, all recognized content types should be handled above
+            # FILE_SET, SINGLE_FILE do not have extraction implemented
             return
         write_metadata(self.content_type_md_path, metadata)
 
@@ -174,18 +180,28 @@ class MetadataObject:
             extension, ContentType.UNKNOWN)
 
         if content_type == ContentType.UNKNOWN:
+            relative_path = os.path.relpath(self.file_object_path, self.resource_contents_path)
+            
             # check singlefile
-            single_file_user_path = self.file_object_path + ".user_metadata.json"
+            logging.info(f"Determining content type for unknown extension: {extension}")
+            single_file_user_path = os.path.join(self.resource_md_path, relative_path + ".user_metadata.json")
+            logging.info(f"Checking for single file user metadata at: {single_file_user_path}")
             if exists(single_file_user_path):
+                logging.info("Determined content type: SINGLE_FILE")
                 return ContentType.SINGLE_FILE
             # check fileset
-            parent_directory = os.path.dirname(self.file_object_path)
+            logging.info(f"Relative path to resource contents: {relative_path}")
+            # TODO: pick up back here for fileset self.content_type_md_path
+            parent_directory = os.path.dirname(relative_path)
+            logging.info(f"Checking parent directories for fileset, starting at: {parent_directory}")
             while parent_directory:
-                file_set_user_path = os.path.join(
-                    parent_directory, "user_metadata.json")
-                if file_set_user_path == self.user_metadata_path:
+                fileset_user_path = os.path.join(self.resource_md_path, parent_directory, "user_metadata.json")
+                logging.info(f"Checking for fileset user metadata at: {fileset_user_path}")
+                logging.info(f"Comparing to resource user metadata path: {self.user_metadata_path}")
+                if fileset_user_path == self.user_metadata_path:
                     break
-                if exists(file_set_user_path):
+                if exists(fileset_user_path):
+                    logging.info(f"Determined content type: FILE_SET")
                     return ContentType.FILE_SET
                 parent_directory = os.path.dirname(parent_directory)
 
