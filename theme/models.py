@@ -295,7 +295,8 @@ class UserQuota(models.Model):
                 text=True,
             )
         except (subprocess.CalledProcessError, ValueError, IndexError):
-            raise ValidationError("Error retrieving quota information.")
+            # return a default value of 0 and default unit
+            return float(0), settings.DEFAULT_QUOTA_UNIT
         size_with_unit_str = result.stdout.split("Total size: ")[1].split("\n")[0]
         size_and_unit = size_with_unit_str.split(" ")
         size = size_and_unit[0]
@@ -576,7 +577,6 @@ class UserProfile(models.Model):
         However we only create the bucket once the user has a resource
         '''
         super().__init__(*args, **kwargs)
-        self._assign_bucket_name()
 
     def _assign_bucket_name(self):
         '''Assign a bucket name to the user profile

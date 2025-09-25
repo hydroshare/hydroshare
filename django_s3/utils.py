@@ -1,3 +1,4 @@
+import os
 from django.db import connection
 
 
@@ -61,3 +62,37 @@ def is_metadata_xml_file(file_path):
             or file_path.endswith(AggregationMetaFilePath.RESMAP_FILE_ENDSWITH.value)):
         return False
     return True
+
+
+def is_metadata_json_file(file_path):
+    """Determine whether a given file is a metadata json file.
+    Note: this will return true for any file that ends with the metadata endings or
+    has the same name as the metadata json file
+    """
+    from hs_file_types.enums import AggregationMetaFilePath
+
+    if file_path.endswith(AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH.value):
+        return True
+
+    file_name = os.path.basename(file_path)
+    return file_name == AggregationMetaFilePath.METADATA_JSON_FILE_NAME.value
+
+
+def is_schema_json_file(file_path):
+    """Determine whether a given file is a schema.json file.
+    Note: this will return true for any file that ends with the _schema.json ending
+    We are taking the risk that user might create a file with the same filename ending
+    """
+    from hs_file_types.enums import AggregationMetaFilePath
+
+    return file_path.endswith(AggregationMetaFilePath.SCHEMA_JSON_FILE_ENDSWITH.value)
+
+
+def is_schema_json_values_file(file_path):
+    """Determine whether a given file is a schema_values.json file.
+    Note: this will return true for any file that ends with the _schema_values.json ending
+    We are taking the risk that user might create a file with the same filename ending
+    """
+    from hs_file_types.enums import AggregationMetaFilePath
+
+    return file_path.endswith(AggregationMetaFilePath.SCHEAMA_JSON_VALUES_FILE_ENDSWITH.value)

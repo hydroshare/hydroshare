@@ -1117,7 +1117,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     if resource.resource_type == "CompositeResource":
         resource.create_aggregation_meta_files()
 
-    istorage.zipup(res_coll_input, output_zip_full_path)
+    istorage.zipup(output_zip_full_path, res_coll_input)
     output_zip_size = istorage.size(output_zip_full_path)
     zip_res_file = link_s3_file_to_django(resource, output_zip_full_path)
     if resource.resource_type == "CompositeResource":

@@ -16,7 +16,11 @@ if (HS_S_ID === "") {
 }
 else{
   const WARN_ON_FILES_EXCEEDING_SIZE = 10 * 1024**3; // 10 GB
-  let MAX_CHUNK = MAX_CHUNK_SIZE; // in bytes
+  // MAX_CHUNK should be less than the DATA_UPLOAD_MAX_MEMORY_SIZE but > 0
+  let MAX_CHUNK = MAX_CHUNK_SIZE - 1000000; // 1 MB less than the max chunk size, in bytes
+  if (MAX_CHUNK <= 0) {
+    MAX_CHUNK = 1;
+  }
 
   // Make sure the chunk size is not larger than the max file size
   if (MAX_CHUNK > FILE_UPLOAD_MAX_SIZE) {
@@ -58,9 +62,12 @@ else{
       strings: {
         browseFolders: 'upload a folder',
         dropPasteImportBoth: 'Drop files here, %{browseFolders} or import from:',
+        // https://github.com/transloadit/uppy/issues/5542
+        pluginNameGoogleDrive: 'Google Drive',
       }
     },
     onBeforeUpload: (files) => {
+      let totalSize = 0;
       Object.keys(files).forEach((fileId) => {
         // add metadata to the file
         files[fileId].meta.hs_res_id = RES_ID;
@@ -70,7 +77,18 @@ else{
           getCurrentPath()
         );
         files[fileId].meta.file_size = files[fileId].data.size;
+        totalSize += files[fileId].data.size;
       });
+
+      if (totalSize > RESTRICTED_SIZE) {
+        uppy.info(
+          `Total file size ${formatBytes(totalSize)} exceeds the maximum limit of ${formatBytes(parseInt(RESTRICTED_SIZE))}.`,
+          "error",
+          5000
+        );
+        // abort the upload
+        return false;
+      }
       return files;
     },
     onBeforeFileAdded: (currentFile, files) => {
@@ -106,9 +124,18 @@ else{
           return false;
         }
       }
+      
+      const file_size = currentFile.data.size;
+      if (file_size > RESTRICTED_SIZE) {
+        uppy.info(
+          `File ${currentFile.name} exceeds the maximum file size of ${formatBytes(parseInt(RESTRICTED_SIZE))}.`,
+          "error",
+          5000
+        );
+        return false;
+      }
 
       // check if the file size needs to be warned
-      const file_size = currentFile.data.size;
       if (file_size >= WARN_ON_FILES_EXCEEDING_SIZE) {
         let message = `File ${currentFile.name} is ${formatBytes(parseInt(file_size))}. ` +
           `For files larger than ${formatBytes(parseInt(WARN_ON_FILES_EXCEEDING_SIZE))}, `+
@@ -324,6 +351,21 @@ else{
   })
   .on("progress", (progress) => {
     $("#upload-progress").text(`${progress}%`);
+  })
+  .on('upload-progress', (file, progress) => {
+    // https://github.com/hydroshare/hydroshare/issues/6033
+    // it seems that restrictions.maxFileSize is not respected during 3rd party Google Drive Uploads
+    // additionally, the file size metadata is null during the initial request
+    // thus the onBeforeUpload and onBeforeFileAdded hooks will not capture the file size correctly for these 3rd party uploads
+    // so we fallback to capturing files that are being uploaded here...
+    if (progress.bytesTotal > RESTRICTED_SIZE) {
+      uppy.removeFile(file.id);
+      uppy.info(
+        `File size ${formatBytes(progress.bytesTotal)} exceeds the maximum limit of ${formatBytes(parseInt(RESTRICTED_SIZE))}.`,
+        "error",
+        5000
+      );
+    }
   })
   .use(GoogleDrivePicker, {
     // https://uppy.io/docs/google-drive-picker/

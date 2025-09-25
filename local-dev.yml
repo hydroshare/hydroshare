@@ -1,8 +1,9 @@
-version: '3'
 services:
   minio:
-    image: minio/minio
+    # this is the last release before the admin features were removed from the console
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
     platform: linux/amd64
+    container_name: minio
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -16,7 +17,10 @@ services:
       MINIO_ROOT_PASSWORD: minioadmin
       MINIO_BROWSER_REDIRECT: "false"
       MINIO_SCANNER_SPEED: "fastest"
+      MINIO_POLICY_PLUGIN_URL: "http://micro-auth/minio/authorization/"
     command: server --console-address ":9001" /data
+    depends_on:
+      - micro-auth
   postgis:
     image: postgis/postgis:15-3.3
     platform: linux/amd64
@@ -32,6 +36,7 @@ services:
     tty: true
   pgbouncer:
     image: edoburu/pgbouncer:latest
+    platform: linux/amd64
     container_name: pgbouncer
     environment:
       DB_HOST: postgis
@@ -116,6 +121,7 @@ services:
       - solr
       - rabbitmq
       - minio
+      - redis
     stdin_open: true
     tty: true
     command: /bin/bash init-hydroshare
@@ -143,6 +149,7 @@ services:
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       COLUMNS: 80
+      MC_HOST_hydroshare: "http://minioadmin:minioadmin@minio:9000"
     ports:
       - "5555:5555"
     volumes:
@@ -169,13 +176,13 @@ services:
       COMPANION_CLIENT_ORIGINS: 'https://localhost'
       # when testing 3rd party services like google drive, you will access hydroshare at http://host.docker.internal:8000
       # you will need to add a line in your /etc/hosts file to map host.docker.internal to localhost
-      COMPANION_UPLOAD_URLS: 'https://localhost/hsapi/tus/*'
+      COMPANION_UPLOAD_URLS: 'https://localhost/django_s3/tus/*'
       COMPANION_DATADIR: '/mnt/companion-data'
       COMPANION_DOMAIN: 'localhost'
       COMPANION_PATH: '/companion'
       COMPANION_ALLOW_LOCAL_URLS: 'true'
       COMPANION_PROTOCOL: 'https'
-      COMPANION_REDIS_URL: 'redis://:superSecretPassword@redis:6379'
+      COMPANION_REDIS_URL: 'redis://redis:6379'
       COMPANION_CHUNK_SIZE: '100000000'  # ~72MB
       # COMPANION_PREAUTH_SECRET: 'another secret'
       # For 3rd party services like google drive to work locally, you need to set the following:
@@ -196,12 +203,11 @@ services:
     platform: linux/amd64
     container_name: redis
     hostname: redis
-    environment:
-      REDIS_PASSWORD: 'superSecretPassword'
     ports:
       - "6379:6379"
     volumes:
       - "redis_data_vol:/data"
+    command: redis-server
   nginx:
     image: nginx:latest
     container_name: nginx
@@ -214,6 +220,22 @@ services:
     depends_on:
       - hydroshare
       - companion
+  micro-auth:
+    image: hydroshare/micro-auth:latest
+    platform: linux/amd64
+    container_name: micro-auth
+    environment:
+      HS_DATABASE_URL: "postgresql://postgres:postgres@postgis:5432/postgres"
+      MC_HOST_hydroshare: "http://minioadmin:minioadmin@minio:9000"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    ports:
+      - 8001:8001
+    links:
+      - postgis:postgis
+    restart: on-failure
+    depends_on:
+      - postgis
 volumes:
   postgis_data_vol:
   solr_data_vol:

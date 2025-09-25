@@ -980,14 +980,14 @@ def get_activated_doi(doi):
         the activated DOI with all flags removed if any
     """
 
-    if doi.endswith(CrossRefSubmissionStatus.UPDATE_PENDING):
-        return doi[:-len(CrossRefSubmissionStatus.UPDATE_PENDING)]
-    if doi.endswith(CrossRefSubmissionStatus.UPDATE_FAILURE):
-        return doi[:-len(CrossRefSubmissionStatus.UPDATE_FAILURE)]
-    if doi.endswith(CrossRefSubmissionStatus.PENDING):
-        return doi[:-len(CrossRefSubmissionStatus.PENDING)]
-    if doi.endswith(CrossRefSubmissionStatus.FAILURE):
-        return doi[:-len(CrossRefSubmissionStatus.FAILURE)]
+    if doi.endswith(CrossRefSubmissionStatus.UPDATE_PENDING.value):
+        return doi[:-len(CrossRefSubmissionStatus.UPDATE_PENDING.value)]
+    if doi.endswith(CrossRefSubmissionStatus.UPDATE_FAILURE.value):
+        return doi[:-len(CrossRefSubmissionStatus.UPDATE_FAILURE.value)]
+    if doi.endswith(CrossRefSubmissionStatus.PENDING.value):
+        return doi[:-len(CrossRefSubmissionStatus.PENDING.value)]
+    if doi.endswith(CrossRefSubmissionStatus.FAILURE.value):
+        return doi[:-len(CrossRefSubmissionStatus.FAILURE.value)]
     return doi
 
 
@@ -1114,7 +1114,7 @@ def publish_resource(user, pk):
     resource.set_quota_holder(resource.quota_holder, publisher_user_account)
     # append pending to the doi field to indicate DOI is not activated yet. Upon successful
     # activation, "pending" will be removed from DOI field
-    resource.doi = get_resource_doi(pk, CrossRefSubmissionStatus.PENDING)
+    resource.doi = get_resource_doi(pk, CrossRefSubmissionStatus.PENDING.value)
     resource.save()
     if settings.DEBUG:
         # in debug mode, making sure we are using the test CrossRef service
@@ -1132,7 +1132,7 @@ def publish_resource(user, pk):
         # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
         # crontab celery task
         logger.error(f"Received a {response.status_code} from Crossref while depositing metadata for res id {pk}")
-        resource.doi = get_resource_doi(pk, CrossRefSubmissionStatus.FAILURE)
+        resource.doi = get_resource_doi(pk, CrossRefSubmissionStatus.FAILURE.value)
         resource.save()
 
     resource.set_public(True)  # also sets discoverable to True
@@ -1157,6 +1157,10 @@ def publish_resource(user, pk):
     md_args = {'name': 'doi',
                'url': get_activated_doi(resource.doi)}
     resource.metadata.create_element('Identifier', **md_args)
+
+    from hs_core.tasks import create_bag_by_s3
+    create_bag_by_s3.apply_async((pk,))
+
     return pk
 
 

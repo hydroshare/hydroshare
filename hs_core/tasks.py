@@ -122,6 +122,7 @@ def setup_periodic_tasks(sender, **kwargs):
     else:
         # Hourly
         sender.add_periodic_task(crontab(minute=45), manage_task_hourly.s(), options={'queue': 'periodic'})
+        sender.add_periodic_task(crontab(minute=0), check_bucket_names.s(), options={'queue': 'periodic'})
 
         # Daily (times in UTC)
         sender.add_periodic_task(crontab(minute=30, hour=2), clear_tokens.s(), options={'queue': 'periodic'})
@@ -141,11 +142,9 @@ def setup_periodic_tasks(sender, **kwargs):
                                  options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=30, hour=6), nightly_periodic_task_check.s(),
                                  options={'queue': 'periodic'})
-        sender.add_periodic_task(crontab(minute=0, hour=7), daily_cleanup_tus_uploads.s(),
-                                 options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=30, hour=7), task_notification_cleanup.s(),
                                  options={'queue': 'periodic'})
-        sender.add_periodic_task(crontab(minute=0, hour=8), check_bucket_names.s(),
+        sender.add_periodic_task(crontab(minute=0, hour=9), ensure_published_resources_have_bags.s(),
                                  options={'queue': 'periodic'})
 
         # Monthly
@@ -169,11 +168,36 @@ def clear_tokens():
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
+def ensure_published_resources_have_bags():
+    """
+    Ensure that all published resources have bags created.
+    This task is run periodically to ensure that all published resources
+    have bags created for them.
+    """
+    published_res = BaseResource.objects.filter(raccess__published=True)
+    istorage = S3Storage()
+    for res in published_res:
+        logger.info(f"Checking resource {res.short_id} for bag creation...")
+        if res.getAVU("bag_modified") or not istorage.exists(res.bag_path):
+            logger.info(f"Resource {res.short_id} has been modified, creating bag...")
+            try:
+                create_bag_by_s3(res.short_id)
+            except Exception as e:
+                logger.error(f"Error creating bag for resource {res.short_id}: {e}")
+        else:
+            logger.info(f"Resource {res.short_id} has not been modified and bag exists, skipping bag creation.")
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def check_bucket_names():
     """
     Check to notify when UserProfi`le is missing a bucket name
     """
     bad_ups = get_user_profiles_missing_bucket_name()
+
+    for up in bad_ups:
+        up._assign_bucket_name()
+        up.save()
 
     if bad_ups and not settings.DISABLE_TASK_EMAILS:
         string_of_bad_users = ', '.join([up.user.username for up in bad_ups])
@@ -186,21 +210,6 @@ def check_bucket_names():
                   html_message=email_msg,
                   from_email=settings.DEFAULT_FROM_EMAIL,
                   recipient_list=[settings.DEFAULT_DEVELOPER_EMAIL])
-
-
-@celery_app.task(ignore_result=True, base=HydroshareTask)
-def daily_cleanup_tus_uploads():
-    """Periodic task to cleanup partial TUS uploads that remain in TUS_UPLOAD_DIR.
-    """
-    # remove all files from the TUS_UPLOAD_DIR that are older than 24 hours
-    tus_upload_dir = settings.TUS_UPLOAD_DIR
-    if os.path.exists(tus_upload_dir):
-        for f in os.listdir(tus_upload_dir):
-            file_path = os.path.join(tus_upload_dir, f)
-            if os.path.isfile(file_path):
-                file_time = os.path.getmtime(file_path)
-                if (time.time() - file_time) > 86400:  # 24 hours in seconds
-                    os.remove(file_path)
 
 
 # Currently there are two different cleanups scheduled.
@@ -385,14 +394,14 @@ def manage_task_hourly():
             if response.status_code == status.HTTP_200_OK:
                 # retry of metadata deposition succeeds, change resource flag from failure
                 # to pending
-                if CrossRefSubmissionStatus.UPDATE_FAILURE in res.doi:
-                    res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.UPDATE_PENDING)
+                if CrossRefSubmissionStatus.UPDATE_FAILURE.value in res.doi:
+                    res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.UPDATE_PENDING.value)
                 else:
-                    res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.PENDING)
+                    res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.PENDING.value)
                 res.save()
             else:
                 # retry of metadata deposition failed again, notify admin
-                if CrossRefSubmissionStatus.UPDATE_FAILURE not in res.doi:
+                if CrossRefSubmissionStatus.UPDATE_FAILURE.value not in res.doi:
                     # this is the case of retry of initial deposit (deposit when publishing the resource)
                     msg = f"Metadata deposition with CrossRef for the published resource " \
                           f"DOI {act_doi} failed again after retry with first metadata " \
@@ -446,13 +455,13 @@ def manage_task_hourly():
                     create_bag_by_s3(res.short_id)
                 elif failure_cnt > 0 :
                     # set the doi status to failure
-                    if CrossRefSubmissionStatus.UPDATE_PENDING in res.doi:
-                        res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.UPDATE_FAILURE)
+                    if CrossRefSubmissionStatus.UPDATE_PENDING.value in res.doi:
+                        res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.UPDATE_FAILURE.value)
                     else:
-                        res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.FAILURE)
+                        res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.FAILURE.value)
                     res.save()
             if not success:
-                if CrossRefSubmissionStatus.UPDATE_PENDING not in res.doi:
+                if CrossRefSubmissionStatus.UPDATE_PENDING.value not in res.doi:
                     # this is the case of initial deposit when publishing the resource
                     msg = f"Published resource DOI {act_doi} is not yet activated with request " \
                           f"data deposited since {pub_date}."
@@ -806,18 +815,7 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
             res.create_aggregation_meta_files()
 
     if aggregation or sf_zip:
-        # input path points to single file aggregation
-        # ensure that foo.zip contains aggregation metadata
-        # by copying these into a temp subdirectory foo/foo parallel to where foo.zip is stored
-        temp_folder_name, ext = os.path.splitext(output_path)  # strip zip to get scratch dir
-        head, tail = os.path.split(temp_folder_name)  # tail is unqualified folder name "foo"
-        out_with_folder = os.path.join(temp_folder_name, tail)  # foo/foo is subdir to zip
-        # in the case of user provided zip file name, out_with_folder path may not end with
-        # aggregation file name
-        aggr_filename = os.path.basename(input_path)
-        if not out_with_folder.endswith(aggr_filename):
-            out_with_folder = os.path.join(os.path.dirname(out_with_folder), aggr_filename)
-        istorage.copyFiles(input_path, out_with_folder)
+        files_to_zip = [input_path]
         if not aggregation:
             if '/data/contents/' in input_path:
                 short_path = input_path.split('/data/contents/')[1]  # strip /data/contents/
@@ -829,39 +827,23 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
                 pass
 
         if aggregation:
-            try:
-                istorage.copyFiles(aggregation.map_file_path,
-                                   os.path.join(temp_folder_name, os.path.basename(aggregation.map_file_path)))
-            except SessionException:
-                logger.error("cannot copy {}".format(aggregation.map_file_path))
-            try:
-                istorage.copyFiles(aggregation.metadata_file_path,
-                                   os.path.join(temp_folder_name, os.path.basename(aggregation.metadata_file_path)))
-            except SessionException:
-                logger.error("cannot copy {}".format(aggregation.metadata_file_path))
+            files_to_zip = [input_path]
+            if istorage.exists(aggregation.map_file_path):
+                files_to_zip.append(aggregation.map_file_path)
+            if istorage.exists(aggregation.metadata_file_path):
+                files_to_zip.append(aggregation.metadata_file_path)
             if aggregation.is_model_program or aggregation.is_model_instance:
-                try:
-                    istorage.copyFiles(aggregation.schema_file_path,
-                                       os.path.join(temp_folder_name, os.path.basename(aggregation.schema_file_path)))
-                except SessionException:
-                    logger.error("cannot copy {}".format(aggregation.schema_file_path))
+                if istorage.exists(aggregation.schema_file_path):
+                    files_to_zip.append(aggregation.schema_file_path)
                 if aggregation.is_model_instance:
-                    try:
-                        basename = os.path.basename(aggregation.schema_values_file_path)
-                        istorage.copyFiles(aggregation.schema_values_file_path,
-                                           os.path.join(temp_folder_name, basename))
-                    except SessionException:
-                        logger.error("cannot copy {}".format(aggregation.schema_values_file_path))
+                    if istorage.exists(aggregation.schema_values_file_path):
+                        files_to_zip.append(aggregation.schema_values_file_path)
             for file in aggregation.files.all():
-                try:
-                    istorage.copyFiles(file.storage_path,
-                                       os.path.join(temp_folder_name, os.path.basename(file.storage_path)))
-                except SessionException:
-                    logger.error("cannot copy {}".format(file.storage_path))
-        istorage.zipup(temp_folder_name, output_path)
-        istorage.delete(temp_folder_name)  # delete working directory; this isn't the zipfile
+                if istorage.exists(file.storage_path):
+                    files_to_zip.append(file.storage_path)
+        istorage.zipup(output_path, *set(files_to_zip), in_prefix=os.path.dirname(input_path))
     else:  # regular folder to zip
-        istorage.zipup(input_path, output_path)
+        istorage.zipup(output_path, input_path)
     return istorage.signed_url(output_path)
 
 
@@ -903,12 +885,12 @@ def create_bag_by_s3(resource_id, create_zip=True):
             try:
                 if istorage.exists(bag_path):
                     istorage.delete(bag_path)
-                istorage.zipup(bagit_input_path, bag_path)
+                istorage.zipup(bag_path, bagit_input_path)
+                res.setAVU("bag_modified", False)
                 if res.raccess.published:
                     # compute checksum to meet DataONE distribution requirement
                     chksum = istorage.checksum(bag_path)
                     res.bag_checksum = chksum
-                res.setAVU("bag_modified", False)
                 return istorage.signed_url(bag_path)
             except SessionException as ex:
                 raise SessionException(-1, '', ex.stderr)
@@ -1318,7 +1300,7 @@ def update_crossref_meta_deposit(res_id):
 
 def _update_crossref_deposit(resource):
     logger.info(f"Updating Crossref metadata deposit for published resource: {resource.short_id}")
-    resource.doi = get_resource_doi(resource.short_id, CrossRefSubmissionStatus.UPDATE_PENDING)
+    resource.doi = get_resource_doi(resource.short_id, CrossRefSubmissionStatus.UPDATE_PENDING.value)
     resource.save()
     response = deposit_res_metadata_with_crossref(resource)
     if not response.status_code == status.HTTP_200_OK:
@@ -1327,5 +1309,5 @@ def _update_crossref_deposit(resource):
         err_msg = (f"Received a {response.status_code} from Crossref while updating "
                    f"metadata for published resource: {resource.short_id}")
         logger.error(err_msg)
-        resource.doi = get_resource_doi(resource.short_id, CrossRefSubmissionStatus.UPDATE_FAILURE)
+        resource.doi = get_resource_doi(resource.short_id, CrossRefSubmissionStatus.UPDATE_FAILURE.value)
         resource.save()

@@ -284,10 +284,11 @@ PROJECT_DIRNAME = PROJECT_ROOT.split(os.sep)[-1]
 # project specific.
 CACHE_MIDDLEWARE_KEY_PREFIX = PROJECT_DIRNAME
 
+# https://docs.djangoproject.com/en/4.2/topics/cache/#redis
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': 'django_cache',
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://redis:6379/0",
     }
 }
 
@@ -457,15 +458,14 @@ INSTALLED_APPS = (
     'django_tus',
 )
 
-TUS_UPLOAD_DIR = '/tmp/tus_upload'
-TUS_DESTINATION_DIR = '/tmp/tus_completed'
-TUS_FILE_NAME_FORMAT = 'increment'  # Other options are: 'random-suffix', 'random', 'keep'
+TUS_FILE_NAME_FORMAT = 'keep'  # Other options are: 'random-suffix', 'random', 'increment'
 TUS_EXISTING_FILE = 'error'  # Other options are: 'overwrite',  'error', 'rename'
+TUS_TIMEOUT = 60 * 60 * 24 * 7  # seconds that tus keeps entries in the django cache
 
 # the url for the uppy companion server
 # https://uppy.io/docs/companion/
 COMPANION_URL = 'https://companion.hydroshare.org'
-UPPY_UPLOAD_PATH = '/hsapi/tus/'
+UPPY_UPLOAD_PATH = '/django_s3/tus/'
 MAX_NUMBER_OF_FILES_IN_SINGLE_LOCAL_UPLOAD = 50
 PARALLEL_UPLOADS_LIMIT = 10
 
@@ -593,8 +593,35 @@ PACKAGE_NAME_GRAPPELLI = "grappelli_safe"
 #  CORS/OAUTH SETTINGS  #
 #########################
 
-# TODO: change this to the actual origins we wish to support
-CORS_ORIGIN_ALLOW_ALL = True
+# CORS settings - specify allowed origins for security in production
+#
+# Cross-origin setup
+# NOTE: If we setup nginx reverse proxy in production, can we remove CORS and CSRF trusted origins?
+#
+CORS_ALLOWED_ORIGINS = [
+    # Vue frontend domains that make requests to Django
+    # "https://hydroshare.org",         # Vue app main domain
+    # "https://www.hydroshare.org",     # Vue app WWW variant
+    #
+    # NOTE: Django backend sub domain (e.g., api.hydroshare.org) is NOT included here
+]
+
+# CSRF trusted origins - should match CORS origins for cross-origin setup
+# NOTE: Only include origins that will submit browser requests to Django backend
+CSRF_TRUSTED_ORIGINS = [
+    # Vue frontend domains that need CSRF tokens
+    # "https://hydroshare.org",         # Vue app main domain
+    # "https://www.hydroshare.org",     # Vue app WWW variant
+]
+
+# Allow credentials (cookies, authorization headers) to be included in CORS requests
+CORS_ALLOW_CREDENTIALS = True
+
+# List of allowed hosts for redirects after login
+ALLOWED_REDIRECT_HOSTS = [
+    # "hydroshare.org",   # Vue app main domain
+    # "www.hydroshare.org",   # Vue app WWW variant
+]
 
 #########################
 # OPTIONAL APPLICATIONS #

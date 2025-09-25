@@ -27,6 +27,7 @@ from hs_core.hydroshare import utils
 from hs_core.models import Creator, Contributor, AbstractMetaDataElement
 from hs_core.signals import post_add_netcdf_aggregation
 from .base import AbstractFileMetaData, AbstractLogicalFile, FileTypeContext
+from ..enums import AggregationMetaFilePath
 
 
 @rdf_terms(HSTERMS.spatialReference)
@@ -405,7 +406,8 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
 
     def get_metadata_elements(self):
         elements = super(NetCDFFileMetaData, self).get_metadata_elements()
-        elements += [self.originalCoverage]
+        if self.originalCoverage:
+            elements += [self.originalCoverage]
         elements += list(self.variables.all())
         return elements
 
@@ -1037,6 +1039,14 @@ class NetCDFLogicalFile(AbstractLogicalFile):
 
         res_files = [f for f in resource_files if f.extension.lower() == ".nc"]
         return res_files[0] if res_files else None
+
+    @property
+    def metadata_json_file_path(self):
+        """Returns the storage path of the aggregation metadata json file"""
+
+        nc_file = self.get_primary_resource_file(self.files.all())
+        meta_file_path = nc_file.storage_path + AggregationMetaFilePath.METADATA_JSON_FILE_ENDSWITH.value
+        return meta_file_path
 
 
 def add_metadata_to_list(

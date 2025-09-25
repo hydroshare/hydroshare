@@ -15,7 +15,14 @@ from smart_open import open
 
 from hs_core.exceptions import QuotaException
 from . import models as m
-from .utils import bucket_and_name, normalized_bucket_name, is_metadata_xml_file
+from .utils import (
+    bucket_and_name,
+    normalized_bucket_name,
+    is_metadata_xml_file,
+    is_metadata_json_file,
+    is_schema_json_file,
+    is_schema_json_values_file,
+)
 
 from uuid import uuid4
 
@@ -51,6 +58,7 @@ class S3Storage(S3Storage):
         """
         list the contents of the directory
         :param path: the directory path to list
+        :param remove_metadata: if True, remove metadata files from the list
         :return: a list of files in the directory
         """
         path = path.strip("/") + "/"  # ensure a folder is matched
@@ -68,16 +76,38 @@ class S3Storage(S3Storage):
         directories = list(set(directories + additional_directories))
 
         if remove_metadata:
-            # remove .xml metadata files from the list
-            files = [f for f in files if not is_metadata_xml_file(f)]
+            # remove .xml metadata, json metadata, json schema and json schema values files from the list
+            def is_metadata_file(file_path: str) -> bool:
+                """
+                Check if a file is a metadata or schema file that should be excluded.
+                """
+                return any([
+                    is_metadata_xml_file(file_path),
+                    is_metadata_json_file(file_path),
+                    is_schema_json_file(file_path),
+                    is_schema_json_values_file(file_path)
+                ])
+
+            # filter out metadata files from the list and corresponding file sizes
+            filtered_files = []
+            filtered_file_sizes = []
+            for i, f in enumerate(files):
+                if not is_metadata_file(f):
+                    filtered_files.append(f)
+                    # Only add file size if it exists (in case of length mismatch)
+                    if i < len(file_sizes):
+                        filtered_file_sizes.append(file_sizes[i])
+            files = filtered_files
+            file_sizes = filtered_file_sizes
 
         return (directories, files, file_sizes)
 
-    def zipup(self, in_name, out_name):
+    def zipup(self, out_name, *in_names, in_prefix=None):
         """
         run command to generate zip file for the bag
-        :param in_name: input parameter to indicate the collection path to generate zip
         :param out_name: the output zipped file name
+        :param in_names: input parameters to indicate one or more collection paths to generate zip
+        :param in_prefix: the prefix of the input files to be zipped
         :return: None
         """
         def chunk_request(zip_archive_file, bucket, key):
@@ -106,21 +136,24 @@ class S3Storage(S3Storage):
                         chunk_end += chunk_size
                         chunk_end = min(chunk_end, object_size)
 
-        in_bucket_name, in_path = bucket_and_name(in_name)
         out_bucket, out_path = bucket_and_name(out_name)
-        in_bucket = self.connection.Bucket(in_bucket_name)
 
-        filesCollection = in_bucket.objects.filter(Prefix=in_path).all()
-
-        in_prefix = os.path.dirname(in_path) if self.isDir(in_name) else in_path
         try:
             with open(f's3://{out_bucket}/{out_path}', 'wb',
                       transport_params={'client': self.connection.meta.client}) as out_file:
                 with zipfile.ZipFile(out_file, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
-                    for file_key in filesCollection:
-                        relative_path = file_key.key[len(in_prefix):]
-                        with zip_archive.open(relative_path, 'w', force_zip64=True) as zip_archive_file:
-                            chunk_request(zip_archive_file, in_bucket_name, file_key.key)
+                    for in_name in in_names:
+                        in_bucket_name, in_path = bucket_and_name(in_name)
+                        in_bucket = self.connection.Bucket(in_bucket_name)
+                        filesCollection = in_bucket.objects.filter(Prefix=in_path).all()
+                        if not in_prefix:
+                            in_prefix = os.path.dirname(in_path) if self.isDir(in_name) else in_path
+                        for file_key in filesCollection:
+                            if is_metadata_json_file(file_key.key):
+                                continue
+                            relative_path = file_key.key[len(in_prefix):].strip("/")
+                            with zip_archive.open(relative_path, 'w', force_zip64=True) as zip_archive_file:
+                                chunk_request(zip_archive_file, in_bucket_name, file_key.key)
         except ClientError as e:
             if "An error occurred (InvalidRequest) when calling the CompleteMultipartUpload operation:" in str(e):
                 raise QuotaException("Bucket quota exceeded. Please contact your system administrator.")
@@ -399,6 +432,7 @@ class S3Storage(S3Storage):
     def create_bucket(self, bucket_name):
         if not self.bucket_exists(bucket_name):
             self.connection.create_bucket(Bucket=bucket_name)
+            # TODO: to run tests locally, comment out these lines
             subprocess.run(["mc", "quota", "set", f"hydroshare/{bucket_name}", "--size", "20GiB"], check=True)
             if settings.MINIO_LIFECYCLE_POLICY:
                 subprocess.run(["mc", "ilm", "rule", "add" "--transition-days", "0", "--transition-tier",
@@ -424,12 +458,10 @@ class S3Storage(S3Storage):
             src_file_path = file.key
             dst_file_path = file.key.replace(src_name, dest_name)
             try:
-                self.connection.Bucket(dst_bucket).copy(
-                    {
-                        "Bucket": src_bucket,
-                        "Key": src_file_path,
-                    },
-                    dst_file_path,
+                self.connection.meta.client.copy_object(
+                    Bucket=dst_bucket,
+                    Key=dst_file_path,
+                    CopySource={"Bucket": src_bucket, "Key": src_file_path},
                 )
             except ClientError as e:
                 if "XMinioAdminBucketQuotaExceeded" in str(e):
