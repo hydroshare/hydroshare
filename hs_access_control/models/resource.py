@@ -55,16 +55,6 @@ class ResourceAccess(models.Model):
                                                 help_text='whether to allow anonymous user to '
                                                           'access private resource in view mode')
 
-   # override the default save method
-    def save(self, *args, **kwargs):
-        pre_save_public = self.public
-        pre_allow_private_sharing = self.allow_private_sharing
-        super(ResourceAccess, self).save(*args, **kwargs)
-        self.refresh_from_db()
-        if pre_save_public != self.public or pre_allow_private_sharing != self.allow_private_sharing:
-            from hs_access_control.models.user import UserResourcePermission
-            UserResourcePermission.update_on_resource_status_update(resource=self.resource)
-
 
     #############################################
     # workalike queries adapt to old access control system
