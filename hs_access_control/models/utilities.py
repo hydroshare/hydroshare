@@ -103,13 +103,14 @@ def access_provenance(u, r):
     return output
 
 
-def get_user_resource_privilege(user_id, short_id):
+def get_user_resource_privilege(user_id, short_id, check_resource_status=True):
     """
     Determine the privilege level (permission) of a user for a specific resource.
 
     Args:
         user_id (int): The ID of the user.
         short_id (str): The unique identifier of the resource.
+        check_resource_status (bool): Whether to check the resource's status.
 
     Returns:
         int: The privilege code representing the user's access level.
@@ -126,11 +127,12 @@ def get_user_resource_privilege(user_id, short_id):
     except BaseResource.DoesNotExist:
         return PrivilegeCodes.NONE
 
-    # public access
-    if resource.raccess.public or resource.raccess.allow_private_sharing:
-        public = PrivilegeCodes.VIEW
-    else:
-        public = PrivilegeCodes.NONE
+    public = PrivilegeCodes.NONE
+    if check_resource_status:
+        # public access
+        if resource.raccess.public or resource.raccess.allow_private_sharing:
+            public = PrivilegeCodes.VIEW
+
     # user access
     user_privilege = UserResourcePrivilege.get_privilege(user=user, resource=resource)
 
