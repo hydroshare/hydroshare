@@ -73,6 +73,7 @@ class Feature(models.Model):
 class UserResourcePermission(models.Model):
     user_id = models.PositiveIntegerField()
     resource_id = models.CharField(max_length=32)
+    # assigned privilege only
     privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
                                     editable=False,
                                     default=PrivilegeCodes.NONE)
@@ -84,57 +85,57 @@ class UserResourcePermission(models.Model):
 
     @classmethod
     def update_on_user_resource_update(cls, *, user, resource):
-        # compute privilege
-        privilege = get_user_resource_privilege(user_id=user.id, short_id=resource.short_id)
+        # compute user privilege on the resource when a user is granted/revoked access to the resource
+        privilege = get_user_resource_privilege(user_id=user.id, short_id=resource.short_id, check_resource_status=False)
         try:
             obj = cls.objects.get(user_id=user.id, resource_id=resource.short_id)
-            obj.privilege = privilege
-            obj.save()
-        except cls.DoesNotExist:
-            cls.objects.create(user_id=user.id, resource_id=resource.short_id, privilege=privilege)
-
-    @classmethod
-    def update_on_user_group_update(cls, *, user, group):
-        # compute privilege for each resource in the group
-        def update(resources):
-            for resource in resources:
-                privilege = get_user_resource_privilege(user_id=user.id, short_id=resource.short_id)
-                try:
-                    obj = cls.objects.get(user_id=user.id, resource_id=resource.short_id)
-                    obj.privilege = privilege
-                    obj.save()
-                except cls.DoesNotExist:
-                    cls.objects.create(user_id=user.id, resource_id=resource.short_id, privilege=privilege)
-
-        update(group.gaccess.view_resources)
-        update(group.gaccess.edit_resources)
-        update(group.gaccess.owned_resources)
-
-    @classmethod
-    def update_on_group_resource_update(cls, *, group, resource):
-        # compute privilege for each user in the group
-        for user in group.gaccess.members:
-            privilege = get_user_resource_privilege(user_id=user.id, short_id=resource.short_id)
-            try:
-                obj = cls.objects.get(user_id=user.id, resource_id=resource.short_id)
+            if privilege == PrivilegeCodes.NONE:
+                obj.delete()
+            else:
                 obj.privilege = privilege
                 obj.save()
-            except cls.DoesNotExist:
+        except cls.DoesNotExist:
+            if privilege != PrivilegeCodes.NONE:
                 cls.objects.create(user_id=user.id, resource_id=resource.short_id, privilege=privilege)
 
     @classmethod
-    def update_on_resource_status_update(cls, *, resource):
-        # find all records for this resource and update privilege
-        for obj in cls.objects.filter(resource_id=resource.short_id):
-            obj.privilege = get_user_resource_privilege(user_id=obj.user_id, short_id=resource.short_id)
-            obj.save()
+    def update_on_user_group_update(cls, *, user, group):
+        # compute user privilege for each resource in the group when a user joins/leaves a group
+        def update(resources):
+            # TODO: bulk update
+            for resource in resources:
+                privilege = get_user_resource_privilege(user_id=user.id, short_id=resource.short_id, check_resource_status=False)
+                try:
+                    obj = cls.objects.get(user_id=user.id, resource_id=resource.short_id)
+                    if privilege == PrivilegeCodes.NONE:
+                        obj.delete()
+                    else:
+                        obj.privilege = privilege
+                        obj.save()
+                except cls.DoesNotExist:
+                    if privilege != PrivilegeCodes.NONE:
+                        cls.objects.create(user_id=user.id, resource_id=resource.short_id, privilege=privilege)
+
+        # since a group can only have view or change privilege over a resource, we don't need to check for group.gaccess.owned_resources
+        update(group.gaccess.view_resources)
+        update(group.gaccess.edit_resources)
 
     @classmethod
-    def update_on_user_status_update(cls, *, user):
-        # find all records for this user and update privilege
-        for obj in cls.objects.filter(user_id=user.id):
-            obj.privilege = get_user_resource_privilege(user_id=user.id, short_id=obj.resource_id)
-            obj.save()
+    def update_on_group_resource_update(cls, *, group, resource):
+        # compute user privilege for the resource for each user in the group when a group is shared/unshared with a resource
+        # TODO: bulk update
+        for user in group.gaccess.members:
+            privilege = get_user_resource_privilege(user_id=user.id, short_id=resource.short_id, check_resource_status=False)
+            try:
+                obj = cls.objects.get(user_id=user.id, resource_id=resource.short_id)
+                if privilege == PrivilegeCodes.NONE:
+                    obj.delete()
+                else:
+                    obj.privilege = privilege
+                    obj.save()
+            except cls.DoesNotExist:
+                if privilege != PrivilegeCodes.NONE:
+                    cls.objects.create(user_id=user.id, resource_id=resource.short_id, privilege=privilege)
 
     @classmethod
     def update_on_resource_delete(cls, resource_id):
@@ -143,14 +144,40 @@ class UserResourcePermission(models.Model):
 
     @classmethod
     def get_privilege(cls, *, user_id, resource_id):
+        # get assigned privilege - ignores resource public status
         try:
             return cls.objects.get(user_id=user_id, resource_id=resource_id).privilege
         except cls.DoesNotExist:
             return PrivilegeCodes.NONE
 
     @classmethod
-    def has_permission(cls, *, user_id, resource_id, privilege):
-        return cls.get_privilege(user_id=user_id, resource_id=resource_id) <= privilege
+    def has_permission(cls, *, user_id, resource_id, privilege, check_resource_status=True):
+        current_privilege = cls.get_privilege(user_id=user_id, resource_id=resource_id)
+        if not check_resource_status:
+            return current_privilege <= privilege
+        elif privilege == PrivilegeCodes.VIEW and current_privilege == PrivilegeCodes.NONE:
+            # check resource public status only if privilege is PrivilegeCodes.VIEW
+            try:
+                resource = BaseResource.objects.get(short_id=resource_id)
+                if resource.raccess.public or resource.raccess.allow_private_sharing:
+                    public = PrivilegeCodes.VIEW
+                else:
+                    public = PrivilegeCodes.NONE
+            except BaseResource.DoesNotExist:
+                public = PrivilegeCodes.NONE
+            return min(public, current_privilege) <= privilege
+        else:
+            return current_privilege <= privilege
+
+    @classmethod
+    def has_view_permission(cls, *, user_id, resource_id):
+        return cls.has_permission(user_id=user_id, resource_id=resource_id, privilege=PrivilegeCodes.VIEW,
+                                  check_resource_status=True)
+
+    @classmethod
+    def has_change_permission(cls, *, user_id, resource_id):
+        return cls.has_permission(user_id=user_id, resource_id=resource_id, privilege=PrivilegeCodes.CHANGE,
+                                  check_resource_status=False)
 
 class UserAccess(models.Model):
 
@@ -172,15 +199,15 @@ class UserAccess(models.Model):
         related_query_name="uaccess",
     )
 
-    def update_resource_permissions(self):
-        UserResourcePermission.update_on_user_status_update(user=self.user)
+
     ##########################################
     # PUBLIC METHODS: groups
     ##########################################
-    def has_resource_permission(self, *, resource, privilege):
-        # print(f"""UserAccess.has_resource_permission(resource={resource.short_id}, privilege={privilege})""")
+    def has_resource_permission(self, *, resource, privilege, check_superuser=False):
+        if check_superuser and self.user.is_superuser:
+            return True
         return UserResourcePermission.has_permission(user_id=self.user.id, resource_id=resource.short_id,
-                                                     privilege=privilege)
+                                                     privilege=privilege, check_resource_status=False)
 
     def create_group_membership_request(
         self, this_group, this_user=None, explanation=None
@@ -1332,6 +1359,7 @@ class UserAccess(models.Model):
                 r2grp__privilege=PrivilegeCodes.CHANGE,
             )
         ).distinct()
+
 
     def get_resources_with_explicit_access(self, this_privilege,
                                            via_user=True, via_group=False):
