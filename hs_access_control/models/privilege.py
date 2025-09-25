@@ -342,6 +342,7 @@ class UserGroupPrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import UserGroupProvenance
+        from hs_access_control.models.user import UserResourcePermission
         if __debug__:
             assert 'group' in kwargs
             assert isinstance(kwargs['group'], Group)
@@ -357,6 +358,10 @@ class UserGroupPrivilege(PrivilegeBase):
         # read that record and post to privilege table.
         r = UserGroupProvenance.get_current_record(**kwargs)
         cls.update(user=r.user, group=r.group, privilege=r.privilege, grantor=r.grantor)
+        user = kwargs['user']
+        group = kwargs['group']
+        UserResourcePermission.update_on_user_group_update(user=user, group=group)
+
 
     @classmethod
     def get_undo_users(cls, **kwargs):
@@ -520,6 +525,7 @@ class UserResourcePrivilege(PrivilegeBase):
         """
         # prevent import loops
         from hs_access_control.models.provenance import UserResourceProvenance
+        from hs_access_control.models.user import UserResourcePermission
         if __debug__:
             assert 'resource' in kwargs
             assert isinstance(kwargs['resource'], BaseResource)
@@ -534,6 +540,9 @@ class UserResourcePrivilege(PrivilegeBase):
         r = UserResourceProvenance.get_current_record(**kwargs)
         # post to privilege table.
         cls.update(user=r.user, resource=r.resource, privilege=r.privilege, grantor=r.grantor, exhibit=r.exhibit)
+        user = kwargs['user']
+        resource = kwargs['resource']
+        UserResourcePermission.update_on_user_resource_update(user=user, resource=resource)
 
     @classmethod
     def get_undo_users(cls, **kwargs):
