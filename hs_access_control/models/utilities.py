@@ -147,3 +147,47 @@ def get_user_resource_privilege(user_id, short_id, check_resource_status=True):
         group_privilege = PrivilegeCodes.NONE
 
     return min(public, user_privilege, group_privilege)
+
+
+def get_user_resources(user_id, owned=True, shared=True):
+    """
+    Get a list of resources that a user has access to, owned or shared, or both.
+
+    Args:
+        user_id (int): The ID of the user.
+        owned (bool): Whether to include only owned resources.
+        shared (bool): Whether to include only shared resources (edit or view).
+
+    Returns:
+        list: A list of resources that the user has access to, owned or shared, or both.
+    """
+    if not owned and not shared:
+        return BaseResource.objects.none()
+
+    if user_id is None:
+        return BaseResource.objects.none()
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return BaseResource.objects.none()
+
+    group_resources = GroupResourcePrivilege.objects.filter(
+            group__g2ugp__user=user, group__gaccess__active=True).values_list('resource', flat=True)
+
+    if owned and shared:
+        user_resources = UserResourcePrivilege.objects.filter(user=user).values_list('resource', flat=True)
+    elif shared:
+        user_resources = UserResourcePrivilege.objects.filter(
+            user=user,
+            privilege__gt=PrivilegeCodes.OWNER
+        )
+        user_resources = user_resources.values_list('resource', flat=True)
+    else:
+        user_resources = UserResourcePrivilege.objects.filter(
+            user=user,
+            privilege=PrivilegeCodes.OWNER
+        )
+        user_resources = user_resources.values_list('resource', flat=True)
+        group_resources = []
+
+    return BaseResource.objects.filter(Q(id__in=user_resources) | Q(id__in=group_resources))
