@@ -5,4 +5,4 @@
 [submodule "landing-page"]
 	path = landing-page
 	url = https://github.com/hydroshare/landing-page.git
-	branch = develop
+	branch = hs-integration
