@@ -3,7 +3,7 @@ from .privilege import PrivilegeCodes, \
     UserCommunityPrivilege, GroupCommunityPrivilege, CommunityResourcePrivilege
 from .provenance import UserResourceProvenance, UserGroupProvenance, GroupResourceProvenance, \
     UserCommunityProvenance, GroupCommunityProvenance, CommunityResourceProvenance
-from .user import UserAccess, FeatureCodes, Feature
+from .user import UserAccess, FeatureCodes, Feature, UserResourcePermission
 from .group import GroupAccess, GroupMembershipRequest
 from .resource import ResourceAccess
 from .community import Community, RequestCommunity
