@@ -2291,7 +2291,13 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         if field_name == 'creators':
             creators = metadata.creators.all()
             self.denormalized_metadata['creators'] = [
-                {"name": c.name, "order": c.order, "hs_user_id": c.hydroshare_user_id}
+                {
+                    'name': c.name,
+                    'order': c.order,
+                    'hs_user_id': c.hydroshare_user_id,
+                    'is_active_user': c.is_active_user,
+                    'relative_uri': c.relative_uri
+                }
                 for c in creators
             ]
         elif field_name == 'title':
