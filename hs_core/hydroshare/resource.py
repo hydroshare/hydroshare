@@ -1072,10 +1072,10 @@ def update_payload_for_datacite(short_id, element_name, form_data):
         attributes = {
             "relatedItems": related_items,
         }
-    elif element_name == 'coverage':
-        attributes = {
-            "dates": res.get_dates_for_doi(),
-        }
+
+    attributes = {
+        "dates": res.get_dates_for_doi(),
+    }
 
     # Define field mappings and transformation rules
     field_map = {
@@ -1311,7 +1311,6 @@ def publish_resource(user, pk):
     created_metadata_elements = []
 
     try:
-        
 
         resource.set_public(True)  # also sets discoverable to True
         resource.set_published(True)
