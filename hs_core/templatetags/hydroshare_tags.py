@@ -1,5 +1,6 @@
 
 from json import dumps
+from datetime import datetime
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -446,3 +447,33 @@ def show_publication_status(resource):
         return True
 
     return False
+
+
+@register.simple_tag
+def get_resource_url(short_id):
+    """
+    Returns the absolute URL for a resource given its short_id.
+    """
+    if not short_id:
+        return ""
+    return "/resource/{}/".format(short_id)
+
+
+@register.filter(name='to_date')
+def to_date(value):
+    """
+    Converts an ISO format date string into a datetime object.
+    """
+    if isinstance(value, str):
+        try:
+            # Handle ISO format with or without microseconds
+            if '.' in value:
+                return datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%f%z')
+            return datetime.strptime(value, '%Y-%m-%dT%H:%M:%S%z')
+        except (ValueError, TypeError):
+            try:
+                # Fallback for different ISO 8601 format
+                return datetime.fromisoformat(value.replace('Z', '+00:00'))
+            except (ValueError, TypeError):
+                return None
+    return value
