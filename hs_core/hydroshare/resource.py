@@ -15,7 +15,6 @@ from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.db import transaction
 from django.db.models import Sum
-from rest_framework import status
 
 from hs_core.hydroshare import hs_bagit
 from hs_core.models import ResourceFile, BaseResource
