@@ -21,13 +21,15 @@ from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
                                     SuspiciousFileOperation)
 from django.core.files.base import File
 from django.core.validators import URLValidator
-from django.db.models import BooleanField, Case, Prefetch, Value, When, Subquery, OuterRef, Exists, Q
+from django.db.models import BooleanField, Case, Prefetch, Value, When, Subquery, OuterRef, Exists, TextField
 from django.db import models
 from django.db.models.query import prefetch_related_objects
+from django.contrib.postgres.aggregates import ArrayAgg
 from django.http import HttpResponse, QueryDict
 from django.urls import reverse
 from django.utils.encoding import force_bytes
 from django.utils.http import int_to_base36, urlsafe_base64_encode
+
 from hs_labels.models import UserResourceLabels
 from mezzanine.conf import settings
 from mezzanine.utils.email import send_mail_template, subject_template
@@ -37,6 +39,7 @@ from rest_framework.exceptions import NotFound, ValidationError
 
 from django_s3.exceptions import SessionException
 from hs_access_control.models import PrivilegeCodes
+from hs_access_control.models.utilities import get_user_resources
 from hs_core import hydroshare
 from hs_core.enums import RelationTypes
 from hs_core.hydroshare import (add_resource_files, check_resource_type,
@@ -581,6 +584,30 @@ def get_my_resources_filter_counts(user, **kwargs):
     }
 
 
+def get_my_resources_filter_counts_optimized(user, **kwargs):
+    """
+    Gets counts of resources that belong to a given user.
+    :param user: an instance of User - user who wants to see his/her resources
+    :return: an json object with counts for specific filter cases
+    """
+    user_resources = get_user_resources(user.id)
+    # remove obsoleted resources from the user_resources
+    user_resources = user_resources.exclude(object_id__in=Relation.objects.filter(
+        type='isReplacedBy').values('object_id')).exclude(extra_data__to_be_deleted__isnull=False)
+    owned_resources = user_resources.filter(user_permission=PrivilegeCodes.OWNER)
+    editable_resources = user_resources.filter(user_permission=PrivilegeCodes.CHANGE)
+    viewable_resources = user_resources.filter(user_permission=PrivilegeCodes.VIEW)
+    discovered_resources = user.ulabels.my_resources
+    favorite_resources = user.ulabels.favorited_resources
+
+    return {
+        'favorites': favorite_resources.count(),
+        'ownedCount': owned_resources.count(),
+        'addedCount': discovered_resources.count(),
+        'sharedCount': viewable_resources.count() + editable_resources.count()
+    }
+
+
 def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
     """
     Gets a QuerySet object for listing resources that belong to a given user.
@@ -666,7 +693,7 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
 
     return resource_collection
 
-
+# TODO: Needs to be deleted
 def get_my_resources_list_new(user, annotate=False, filter=None, **kwargs):
     """
     Gets a QuerySet object for listing resources that belong to a given user.
@@ -744,6 +771,67 @@ def get_my_resources_list_new(user, annotate=False, filter=None, **kwargs):
         # resource_collection = resource_collection.select_related('raccess', 'content_type')
 
     return resource_collection
+
+
+def get_my_resources_list_optimized(user, annotate=False, filter=None, **kwargs):
+    """
+    Gets a ValuesQuerySet object for listing resources that belong to a given user.
+    :param user: an instance of User - user who wants to see his/her resources
+    :param annotate: whether to annotate for my resources page listing.
+    :param filter: an array containing filters that determine the type of resources fetched
+    :return: an instance of ValuesQuerySet of resources attributes
+    """
+
+    discovered_resources = BaseResource.objects.none()
+
+    owned = not filter or 'owned' in filter
+    shared = not filter or 'editable' in filter or 'viewable' in filter
+    user_resources = get_user_resources(user.id, owned=owned, shared=shared)
+    if not filter or 'discovered' in filter:
+        discovered_resources = user.ulabels.my_resources
+
+    favorite_resources = user.ulabels.favorited_resources
+
+    # join all queryset objects.
+    resource_collection = user_resources.distinct() | \
+        discovered_resources.distinct()
+    if not filter or 'favorites' in filter:
+        resource_collection = resource_collection | favorite_resources.distinct()
+
+    # remove obsoleted resources
+    resource_collection = resource_collection.exclude(object_id__in=Relation.objects.filter(
+        type='isReplacedBy').values('object_id')).exclude(extra_data__to_be_deleted__isnull=False)
+
+    # When used in the My Resources page, annotate for speed
+    if annotate:
+        resource_collection = resource_collection.annotate(
+            resource_labels=ArrayAgg(
+                'r2url__label',  # follow BaseResource → UserResourceLabels (FK related_name='r2url')
+                filter=models.Q(r2url__user=user),  # only labels from this user
+                distinct=True,
+            )
+        )
+        resource_collection = resource_collection.annotate(
+            is_favorite=Case(When(short_id__in=favorite_resources.values_list('short_id', flat=True),
+                                  then=Value(True, BooleanField()))))
+
+    # annotate resource sharing status
+    resource_collection = resource_collection.annotate(
+        sharing_status=Case(When(raccess__published=True, then=Value('published', TextField())),
+                            When(raccess__public=True, then=Value('public', TextField())),
+                            When(raccess__discoverable=True, then=Value('discoverable', TextField())),
+                            default=Value('private', TextField())))
+    if annotate:
+        my_resources = resource_collection.values(
+            'short_id', 'resource_type', 'created', 'resource_labels', 'is_favorite', 'sharing_status',
+            'denormalized_metadata', 'user_permission'
+        )
+    else:
+        my_resources = resource_collection.values(
+            'short_id', 'resource_type', 'created', 'sharing_status', 'denormalized_metadata',
+            'user_permission'
+        )
+    return my_resources
 
 
 def send_action_to_take_email(request, user, action_type, **kwargs):
