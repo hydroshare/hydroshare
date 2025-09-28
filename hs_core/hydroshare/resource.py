@@ -1040,14 +1040,15 @@ def deposit_res_metadata_with_datacite(res):
         if response is not None:
             logger.error(f"Response content: {response.text}")
             print(f"Response content: {response.text}")
+        raise
     except requests.exceptions.RequestException as err:
         logger.error(f"Request failed: {err}")
         print(f"Request failed: {err}")
+        raise
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
         print(f"Unexpected error: {e}")
-
-    return None
+        raise
 
 
 def update_payload_for_datacite(short_id, element_name, form_data):
@@ -1296,6 +1297,8 @@ def publish_resource(user, pk):
     publisher_user_account = User.objects.get(username=settings.PUBLISHER_USER_NAME)
     UserResourcePrivilege.share(user=publisher_user_account, resource=resource,
                                 privilege=PrivilegeCodes.OWNER, grantor=resource.quota_holder)
+    original_doi = resource.doi
+    original_quota_holder = resource.quota_holder
     resource.set_quota_holder(resource.quota_holder, publisher_user_account)
     # append pending to the doi field to indicate DOI is not activated yet. Upon successful
     # activation, "pending" will be removed from DOI field
@@ -1304,44 +1307,58 @@ def publish_resource(user, pk):
     if settings.DEBUG:
         # in debug mode, making sure we are using the test CrossRef service
         assert settings.USE_DATACITE_TEST is True
+
+    created_metadata_elements = []
+
     try:
-        response = deposit_res_metadata_with_datacite(resource)
-    except ValueError as v:
-        logger.error(f"Failed depositing XML {v} with Datacite for res id {pk}")
-        resource.doi = get_resource_doi(pk)
-        resource.save()
-        # set the resource back into review_pending
+        
+
+        resource.set_public(True)  # also sets discoverable to True
+        resource.set_published(True)
+        resource.raccess.save()
+
+        # change "Publisher" element of science metadata to CUAHSI
+        md_args = {'name': 'Consortium of Universities for the Advancement of Hydrologic Science, '
+                           'Inc. (CUAHSI)',
+                   'url': 'https://www.cuahsi.org'}
+        publisher_elem = resource.metadata.create_element('Publisher', **md_args)
+        created_metadata_elements.append(publisher_elem)
+
+        # Here we publish the resource on behalf of the last_changed_by user
+        # This ensures that the modified date closely matches the date that the metadata are submitted to Crossref
+        last_modified = resource.last_changed_by
+        utils.resource_modified(resource, by_user=last_modified, overwrite_bag=False)
+
+        # create published date
+        date_elem = resource.metadata.create_element('date', type='published', start_date=resource.updated)
+        created_metadata_elements.append(date_elem)
+
+        # add doi to "Identifier" element of science metadata
+        md_args = {'name': 'doi', 'url': get_activated_doi(resource.doi)}
+        identifier_elem = resource.metadata.create_element('Identifier', **md_args)
+        created_metadata_elements.append(identifier_elem)
+        deposit_res_metadata_with_datacite(resource)
+
+    except Exception as e:
+        logger.error(f"Failed publishing resource {pk}: {e}")
+        # Revert changes made so far
+        resource.doi = original_doi
+        resource.set_quota_holder(publisher_user_account, original_quota_holder)
+        resource.set_public(False)
+        resource.set_published(False)
         resource.raccess.alter_review_pending_flags(initiating_review=True)
-        raise
-    if response.status_code not in (status.HTTP_200_OK, status.HTTP_201_CREATED):
-        # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
-        # crontab celery task
-        logger.error(f"Received a {response.status_code} from Crossref while depositing metadata for res id {pk}")
-        resource.doi = get_resource_doi(pk, CrossRefSubmissionStatus.FAILURE.value)
+
+        # Delete metadata elements created
+        for elem in created_metadata_elements:
+            try:
+                elem.delete()
+            except Exception as delete_err:
+                logger.warning(f"Failed to delete metadata element during rollback: {delete_err}")
+
+        resource.raccess.save()
         resource.save()
+        raise
 
-    resource.set_public(True)  # also sets discoverable to True
-    resource.set_published(True)
-    resource.raccess.save()
-
-    # change "Publisher" element of science metadata to CUAHSI
-    md_args = {'name': 'Consortium of Universities for the Advancement of Hydrologic Science, '
-                       'Inc. (CUAHSI)',
-               'url': 'https://www.cuahsi.org'}
-    resource.metadata.create_element('Publisher', **md_args)
-
-    # Here we publish the resource on behalf of the last_changed_by user
-    # This ensures that the modified date closely matches the date that the metadata are submitted to Crossref
-    last_modified = resource.last_changed_by
-    utils.resource_modified(resource, by_user=last_modified, overwrite_bag=False)
-
-    # create published date
-    resource.metadata.create_element('date', type='published', start_date=resource.updated)
-
-    # add doi to "Identifier" element of science metadata
-    md_args = {'name': 'doi',
-               'url': get_activated_doi(resource.doi)}
-    resource.metadata.create_element('Identifier', **md_args)
     return pk
 
 
