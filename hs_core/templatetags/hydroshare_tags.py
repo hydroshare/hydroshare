@@ -114,6 +114,11 @@ def published_date(res_obj):
 
 @register.filter
 def resource_type(content):
+    if isinstance(content, dict) and 'resource_type' in content:
+        if  content['resource_type'] in RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS:
+            return RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS[content['resource_type']]
+        else:
+            return content['resource_type']
     content_model = content.get_content_model()
     if content_model.resource_type in RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS:
         return RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS[content_model.resource_type]
