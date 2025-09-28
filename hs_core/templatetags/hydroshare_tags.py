@@ -66,6 +66,18 @@ def get_user_privilege(resource, user):
 
 
 @register.filter
+def privilege_code_to_name(privilege_code):
+    if privilege_code == PrivilegeCodes.OWNER:
+        return 'Owned'
+    elif privilege_code == PrivilegeCodes.CHANGE:
+        return 'Editable'
+    elif privilege_code == PrivilegeCodes.VIEW:
+        return 'Viewable'
+    else:
+        return 'Discovered'
+
+
+@register.filter
 def app_on_open_with_list(content, arg):
     """
     Check whether a webapp resource is on current user's open-with list
