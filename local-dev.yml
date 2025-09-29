@@ -211,6 +211,7 @@ services:
       MC_HOST_hydroshare: "http://minioadmin:minioadmin@minio:9000"
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      ENABLE_EDIT_ACTIONS: "true"
     ports:
       - 8001:8001
     links:
