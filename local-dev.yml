@@ -156,12 +156,12 @@ services:
     environment:
       COMPANION_PORT: '3020'
       COMPANION_CLIENT_ORIGINS: 'https://localhost'
-      # when testing 3rd party services like google drive, you will access hydroshare at http://host.docker.internal:8000
-      # you will need to add a line in your /etc/hosts file to map host.docker.internal to localhost
+      # when using the landing page in vite dev, use this instead:
+      # COMPANION_CLIENT_ORIGINS: 'http://localhost:5004'
       COMPANION_UPLOAD_URLS: 'https://localhost/django_s3/tus/*'
       COMPANION_DATADIR: '/mnt/companion-data'
       COMPANION_DOMAIN: 'localhost'
-      COMPANION_PATH: '/companion'
+      # COMPANION_PATH: '/companion'
       COMPANION_ALLOW_LOCAL_URLS: 'true'
       COMPANION_PROTOCOL: 'https'
       COMPANION_REDIS_URL: 'redis://redis:6379'
