@@ -1336,6 +1336,8 @@ def publish_resource(user, pk):
         identifier_elem = resource.metadata.create_element('Identifier', **md_args)
         created_metadata_elements.append(identifier_elem)
         deposit_res_metadata_with_datacite(resource)
+        from hs_core.tasks import create_bag_by_s3
+        create_bag_by_s3.apply_async((pk,))
 
     except Exception as e:
         logger.error(f"Failed publishing resource {pk}: {e}")
