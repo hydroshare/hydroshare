@@ -208,15 +208,21 @@ echo '##########################################################################
 echo
 
 echo "  - waiting for database system to be ready..."
-while [ 1 -eq 1 ]
-do
-  sleep 1
-  echo -n "."
-  LOG=`docker logs postgis 2>&1`
-  if [[ $LOG == *"PostgreSQL init process complete; ready for start up"* ]]; then
-    break
-  fi
-done
+if [ "$REMOVE_VOLUME" == "YES" ]; then
+  echo -n " waiting for database system init process to complete"
+  while [ 1 -eq 1 ]
+  do
+    sleep 1
+    echo -n "."
+    LOG=`docker logs postgis 2>&1`
+    if [[ $LOG == *"PostgreSQL init process complete; ready for start up"* ]]; then
+      echo " db system init process complete"
+      break
+    fi
+  done
+else
+  echo "    (this may take a while if the database is being restarted)"
+fi
 
 # wait for the final log line to show "database system is ready to accept connections"
 while [ 1 -eq 1 ]
