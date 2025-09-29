@@ -1117,6 +1117,7 @@ class Date(AbstractMetaDataElement):
 
             dt = super(Date, cls).create(**kwargs)
             if dt.type == 'created' or dt.type == 'modified':
+                resource = dt.metadata.resource
                 resource.update_denormalized_metadata_field('dates')
             return dt
 
@@ -2286,11 +2287,11 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         """
 
         metadata = self.metadata
-
+        copied_metadata = copy.deepcopy(self.denormalized_metadata)
         # Update only the specified field
         if field_name == 'creators':
             creators = metadata.creators.all()
-            self.denormalized_metadata['creators'] = [
+            copied_metadata['creators'] = [
                 {
                     'name': c.name,
                     'order': c.order,
@@ -2302,28 +2303,31 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             ]
         elif field_name == 'title':
             title = metadata.title.value if hasattr(metadata, 'title') and metadata.title else ""
-            self.denormalized_metadata['title'] = title
+            copied_metadata['title'] = title
         elif field_name == 'subjects':
             subjects = list(metadata.subjects.all())
-            self.denormalized_metadata['subjects'] = [s.value for s in subjects]
+            copied_metadata['subjects'] = [s.value for s in subjects]
         elif field_name == 'dates':
-            created_date = metadata.dates.filter(type='created').first()
-            if created_date:
-                self.denormalized_metadata['created'] = created_date.start_date.isoformat()
-            modified_date = metadata.dates.filter(type='modified').first()
-            if modified_date:
-                self.denormalized_metadata['modified'] = modified_date.start_date.isoformat()
+            if 'created' not in copied_metadata:
+                created_date = metadata.dates.filter(type='created').first()
+                if created_date:
+                    copied_metadata['created'] = created_date.start_date.isoformat()
+                else:
+                    copied_metadata['created'] = self.created.isoformat()
         elif field_name == 'status':
-            self.denormalized_metadata['status'] = {
+            copied_metadata['status'] = {
                 "public": self.raccess.public,
                 "discoverable": self.raccess.discoverable,
                 "published": self.raccess.published
             }
 
-        if 'subjects' not in self.denormalized_metadata:
-            self.denormalized_metadata['subjects'] = []
+        if 'subjects' not in copied_metadata:
+            copied_metadata['subjects'] = []
 
-        type(self).objects.filter(id=self.id).update(denormalized_metadata=self.denormalized_metadata)
+        # TODO: Though the modified date is updated here when any metadata is updated, for some reason it sticks only when
+        # when Title, Subjects, Creators, and Status are updated. For example, updating Abstract wont update the modified date.
+        copied_metadata['modified'] = now().isoformat()
+        type(self).objects.filter(id=self.id).update(denormalized_metadata=copied_metadata)
 
     def update_all_denormalized_metadata(self):
         """Update all fields in the denormalized metadata"""
