@@ -3,3 +3,7 @@ FROM docker.io/transloadit/companion:6.0.0
 RUN mv /app/lib/config/companion.js /app/lib/config/default-config.js
 
 COPY companion-custom-config.js /app/lib/config/companion.js
+
+RUN mv /app/lib/server/helpers/utils.js /app/lib/server/helpers/default-utils.js
+
+COPY companion-custom-utils.js /app/lib/server/helpers/utils.js
