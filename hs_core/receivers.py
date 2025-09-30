@@ -1,10 +1,8 @@
 """Signal receivers for the hs_core app."""
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save, pre_delete, post_delete
-from django.db import models
 from django.dispatch import receiver
 from django_s3.storage import S3Storage
-from hs_access_control.models.privilege import UserResourcePrivilege, GroupResourcePrivilege, UserGroupPrivilege
 from hs_access_control.models.resource import ResourceAccess
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update, \
     pre_delete_resource, post_add_geofeature_aggregation, post_add_generic_aggregation, \
@@ -12,10 +10,9 @@ from hs_core.signals import pre_metadata_element_create, pre_metadata_element_up
     post_add_reftimeseries_aggregation, post_remove_file_aggregation, post_raccess_change, \
     post_delete_file_from_resource, post_add_csv_aggregation
 from hs_core.tasks import update_web_services
-from hs_core.models import BaseResource, Creator, Contributor, Party, UserResource
+from hs_core.models import BaseResource, Creator, Contributor, Party, AbstractMetaDataElement
 from django.conf import settings
 
-from hs_labels.models import FlagCodes, UserResourceFlags
 from .forms import SubjectsForm, AbstractValidationForm, CreatorValidationForm, \
     ContributorValidationForm, RelationValidationForm, RightsValidationForm, \
     LanguageValidationForm, ValidDateValidationForm, FundingAgencyValidationForm, \
@@ -237,304 +234,23 @@ def pre_delete_user_handler(sender, instance, **kwargs):
 
 @receiver(post_save, sender=ResourceAccess)
 def resource_access_post_save_handler(sender, instance, **kwargs):
-    """Update status in denormalized metadata when resource sharing 
+    """Update status in cached metadata when resource sharing
     status (public, discoverable, published) changes"""
     try:
         resource = instance.resource
-        resource.update_denormalized_metadata_field('status')
+        resource.update_cached_metadata_field('status')
     except Exception as ex:
-        logger.error(f"Error updating status in denormalized metadata: {str(ex)}")
+        logger.error(f"Error updating status in cached metadata: {str(ex)}")
 
 
-@receiver(post_save, sender=UserResourcePrivilege)
-def update_user_resource_permission(sender, instance, **kwargs):
-    """Update UserResource when user permissions change on a resource"""
+@receiver(post_save)
+def metadata_element_saved(sender, instance, **kwargs):
+    if isinstance(instance, AbstractMetaDataElement):
+        resource = instance.metadata.resource
+        resource.update_cached_metadata_field(instance.__class__.__name__.lower())
 
-    # Calculate effective user privilege on the resource (combines user and group permissions)
-    effective_privilege = instance.resource.raccess.get_effective_privilege(instance.user)
-    UserResource.objects.update_or_create(
-        user=instance.user,
-        resource=instance.resource,
-        defaults={
-            'permission': effective_privilege,
-        }
-    )
-
-
-@receiver(post_delete, sender=UserResourcePrivilege)
-def remove_user_resource_permission(sender, instance, **kwargs):
-    """
-    Update UserResource when user permission is removed from a resource.
-    Check if user still has access to the resource via group permissions on the resource.
-    """
-    from hs_access_control.models.privilege import PrivilegeCodes
-
-    # Calculate effective user privilege on the resource (group permissions may still exist)
-    effective_privilege = instance.resource.raccess.get_effective_privilege(instance.user)
-
-    try:
-        ur = UserResource.objects.get(user=instance.user, resource=instance.resource)
-        if effective_privilege == PrivilegeCodes.NONE:
-            # No permissions left - remove entry if the resource is not favorited/discovered by the user
-            if not (ur.is_favorite or ur.is_discovered):
-                ur.delete()
-            else:
-                ur.permission = PrivilegeCodes.NONE
-                ur.save()
-        else:
-            # Still has group-based permissions on the resource
-            ur.permission = effective_privilege
-            ur.save()
-    except UserResource.DoesNotExist:
-        pass
-
-
-@receiver(post_save, sender=UserResourceFlags)
-def update_user_resource_flags(sender, instance, **kwargs):
-    """Update UserResource table when flags change"""
-    defaults = {}
-
-    if instance.kind == FlagCodes.FAVORITE:
-        defaults['is_favorite'] = True
-    elif instance.kind == FlagCodes.MINE:
-        defaults['is_discovered'] = True
-
-    # Calculate user effective privilege on the resource (includes both user and group permissions)
-    effective_privilege = instance.resource.raccess.get_effective_privilege(instance.user)
-    defaults['permission'] = effective_privilege
-
-    UserResource.objects.update_or_create(
-        user=instance.user,
-        resource=instance.resource,
-        defaults=defaults
-    )
-
-
-@receiver(post_delete, sender=UserResourceFlags)
-def remove_user_resource_flags(sender, instance, **kwargs):
-    """Update UserResource table when flags are removed"""
-    from hs_access_control.models.privilege import PrivilegeCodes
-
-    try:
-        ur = UserResource.objects.get(user=instance.user, resource=instance.resource)
-
-        # Update the appropriate flag
-        if instance.kind == FlagCodes.FAVORITE:
-            ur.is_favorite = False
-        elif instance.kind == FlagCodes.MINE:
-            ur.is_discovered = False
-
-        # Check if UserResource record should be removed entirely
-        if (ur.permission == PrivilegeCodes.NONE and 
-            not ur.is_favorite and not ur.is_discovered):
-            ur.delete()
-        else:
-            ur.save()
-
-    except UserResource.DoesNotExist:
-        # No UserResource entry exists, nothing to update
-        pass
-
-
-def update_group_based_user_resources(group, resource):
-    """
-    Helper function to update UserResource table entries for all users in a group
-    when group permissions on a resource change.
-    """
-    from hs_access_control.models.privilege import PrivilegeCodes
-
-    # Get all active users in the group
-    users_in_group = User.objects.filter(
-        u2ugp__group=group,
-        is_active=True
-    ).distinct()
-
-    for user in users_in_group:
-        # Calculate effective permission for this user on the resource
-        # This combines direct user permissions and via group permissions
-        effective_permission = resource.raccess.get_effective_privilege(user)
-
-        if effective_permission < PrivilegeCodes.NONE:  # User has some permission
-            UserResource.objects.update_or_create(
-                user=user,
-                resource=resource,
-                defaults={'permission': effective_permission}
-            )
-        else:
-            # User has no effective permission on the resource, check if UserResource record should be removed
-            try:
-                ur = UserResource.objects.get(user=user, resource=resource)
-                if not (ur.is_favorite or ur.is_discovered):
-                    ur.delete()
-                else:
-                    ur.permission = PrivilegeCodes.NONE
-                    ur.save()
-            except UserResource.DoesNotExist:
-                pass
-
-
-@receiver(post_save, sender=GroupResourcePrivilege)
-def update_group_resource_permission(sender, instance, **kwargs):
-    """
-    Update UserResource table for all users in group when group permission on a resource changes
-    """
-    update_group_based_user_resources(instance.group, instance.resource)
-
-
-@receiver(post_delete, sender=GroupResourcePrivilege)  
-def remove_group_resource_permission(sender, instance, **kwargs):
-    """
-    Update UserResource table for all users in group when group permission on a resource is removed
-    """
-    update_group_based_user_resources(instance.group, instance.resource)
-
-
-@receiver(post_save, sender=UserGroupPrivilege)
-def update_user_group_membership(sender, instance, **kwargs):
-    """
-    Update UserResource table for user when they join/leave a group or privilege on a resource changes
-    """
-    from hs_access_control.models.privilege import PrivilegeCodes
-
-    # Get all resources that the group has access to
-    group_resources = GroupResourcePrivilege.objects.filter(
-        group=instance.group
-    ).select_related('resource', 'resource__raccess')
-
-    # Pre-fetch user's direct privileges on all these resources to avoid N+1 queries
-    resource_ids = [grp.resource_id for grp in group_resources]
-    user_res_privileges_dict = {
-        urp.resource_id: urp.privilege 
-        for urp in UserResourcePrivilege.objects.filter(
-            user=instance.user, 
-            resource_id__in=resource_ids
-        )
-    }
-
-    # Pre-fetch user's group privileges on all these resources to avoid N+1 queries
-    user_group_res_privileges = GroupResourcePrivilege.objects.filter(
-        resource_id__in=resource_ids,
-        group__gaccess__active=True,
-        group__g2ugp__user=instance.user
-    ).values('resource_id').annotate(
-        min_privilege=models.Min('privilege')
-    )
-    user_group_res_privileges_dict = {ugrp['resource_id']: ugrp['min_privilege'] for ugrp in user_group_res_privileges}
-
-    for grp in group_resources:
-        # Calculate effective permission for this user on each resource
-        # Using pre-fetched data instead of making individual queries
-        user_res_priv = user_res_privileges_dict.get(grp.resource_id, PrivilegeCodes.NONE)
-        group_res_priv = user_group_res_privileges_dict.get(grp.resource_id, PrivilegeCodes.NONE)
-
-        # Apply resource flags (immutable check)
-        if grp.resource.raccess.immutable:
-            if user_res_priv == PrivilegeCodes.CHANGE:
-                user_res_priv = PrivilegeCodes.VIEW
-            if group_res_priv == PrivilegeCodes.CHANGE:
-                group_res_priv = PrivilegeCodes.VIEW
-
-        # Apply superuser privileges
-        if instance.user.is_superuser:
-            effective_permission = PrivilegeCodes.OWNER
-        else:
-            effective_permission = min(user_res_priv, group_res_priv)
-
-        if effective_permission < PrivilegeCodes.NONE:  # User has some permission
-            UserResource.objects.update_or_create(
-                user=instance.user,
-                resource=grp.resource,
-                defaults={'permission': effective_permission}
-            )
-        else:
-            # User has no effective permission on the resource, check if UserResource record should be removed
-            try:
-                ur = UserResource.objects.get(
-                    user=instance.user, 
-                    resource=grp.resource
-                )
-                if not (ur.is_favorite or ur.is_discovered):
-                    ur.delete()
-                else:
-                    ur.permission = PrivilegeCodes.NONE
-                    ur.save()
-            except UserResource.DoesNotExist:
-                pass
-
-
-@receiver(post_delete, sender=UserGroupPrivilege)
-def remove_user_group_membership(sender, instance, **kwargs):
-    """
-    Update UserResource table for user when they are removed from a group
-    """
-    from hs_access_control.models.privilege import PrivilegeCodes
-
-    # Get all resources that the group has access to
-    group_resources = GroupResourcePrivilege.objects.filter(
-        group=instance.group
-    ).select_related('resource', 'resource__raccess')
-
-    if not group_resources:
-        return
-
-    # Get resource IDs for bulk queries
-    resource_ids = [grp.resource.id for grp in group_resources]
-
-    # Pre-fetch user privileges for all resources
-    user_res_privileges = {}
-    if not instance.user.is_superuser:
-        user_priv_qs = UserResourcePrivilege.objects.filter(
-            user=instance.user,
-            resource_id__in=resource_ids
-        ).values('resource_id', 'privilege')
-        for priv in user_priv_qs:
-            user_res_privileges[priv['resource_id']] = priv['privilege']
-
-    # Pre-fetch group privileges for all resources (excluding the removed group)
-    user_group_res_privileges = {}
-    if not instance.user.is_superuser:
-        # Get user's groups excluding the one they were removed from
-        user_groups = instance.user.uaccess.my_groups.exclude(id=instance.group.id)
-        if user_groups.exists():
-            group_priv_qs = GroupResourcePrivilege.objects.filter(
-                resource_id__in=resource_ids,
-                group__in=user_groups
-            ).values('resource_id').annotate(
-                min_privilege=models.Min('privilege')
-            )
-            for priv in group_priv_qs:
-                user_group_res_privileges[priv['resource_id']] = priv['min_privilege']
-
-    for grp in group_resources:
-        # Skip immutable resources if user is not superuser
-        if grp.resource.raccess.immutable and not instance.user.is_superuser:
-            continue
-
-        # Calculate effective permission manually to avoid N+1 queries
-        if instance.user.is_superuser:
-            effective_permission = PrivilegeCodes.OWNER
-        else:
-            user_priv = user_res_privileges.get(grp.resource.id, PrivilegeCodes.NONE)
-            group_priv = user_group_res_privileges.get(grp.resource.id, PrivilegeCodes.NONE)
-            effective_permission = min(user_priv, group_priv)
-
-        if effective_permission < PrivilegeCodes.NONE:  # User still has some permission
-            UserResource.objects.update_or_create(
-                user=instance.user,
-                resource=grp.resource,
-                defaults={'permission': effective_permission}
-            )
-        else:
-            # User has no effective permission on the resource, check if UserResource record should be removed
-            try:
-                ur = UserResource.objects.get(
-                    user=instance.user, 
-                    resource=grp.resource
-                )
-                if not (ur.is_favorite or ur.is_discovered):
-                    ur.delete()
-                else:
-                    ur.permission = PrivilegeCodes.NONE
-                    ur.save()
-            except UserResource.DoesNotExist:
-                pass
+@receiver(post_delete)
+def metadata_element_deleted(sender, instance, **kwargs):
+    if isinstance(instance, AbstractMetaDataElement):
+        resource = instance.metadata.resource
+        resource.update_cached_metadata_field(instance.__class__.__name__.lower())
