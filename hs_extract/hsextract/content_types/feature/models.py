@@ -2,10 +2,10 @@ import os
 
 from hsextract.utils.models import ContentType, FileMetadataObject
 
-class FeatureMetadataObject(FileMetadataObject):
 
+class FeatureMetadataObject(FileMetadataObject):
     content_type = ContentType.FEATURE
-    
+
     @classmethod
     def _extensions(cls) -> list[str]:
         return [".shp", ".shx", ".dbf", ".prj"]

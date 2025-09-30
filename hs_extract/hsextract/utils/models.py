@@ -9,6 +9,11 @@ from hsextract.utils.s3 import retrieve_file_manifest
 from string import Template
 
 
+resource_contents_path_template = os.environ.get("RESOURCE_CONTENTS_PATH", "$bucket_name/$resource_id/data/contents")
+resource_md_jsonld_path_template = os.environ.get("RESOURCE_MD_JSONLD_PATH", "$bucket_name/$resource_id/.hsjsonld")
+resource_md_path_template = os.environ.get("RESOURCE_MD_PATH", "$bucket_name/$resource_id/.hsmetadata")
+
+
 class MinIOEvent(BaseModel):
     EventName: str
     Key: str
@@ -24,14 +29,10 @@ class ContentType(Enum):
     SINGLE_FILE = "single_file"
     FILE_SET = "file_set"
 
-resource_contents_path_template = os.environ.get("RESOURCE_CONTENTS_PATH", "$bucket_name/$resource_id/data/contents")
-resource_md_jsonld_path_template = os.environ.get("RESOURCE_MD_JSONLD_PATH", "$bucket_name/$resource_id/.hsjsonld")
-resource_md_path_template = os.environ.get("RESOURCE_MD_PATH", "$bucket_name/$resource_id/.hsmetadata")
 
 class BaseMetadataObject:
-    
     content_type = ContentType.UNKNOWN
-    
+
     def __init__(self, file_object_path: str, file_updated: bool):
         self.file_object_path = file_object_path
         self.file_updated = file_updated
@@ -54,7 +55,7 @@ class BaseMetadataObject:
         self.content_type_contents_path = None
         self.content_type_main_file_path = None
         self.content_type_md_user_path = None
-    
+
     @property
     def resource_associated_media(self):
         if not self._resource_associated_media:
@@ -69,7 +70,7 @@ class BaseMetadataObject:
     @classmethod
     def _resource_id(cls, file_object_path: str) -> str:
         return file_object_path.split('/')[1]
-    
+
     @classmethod
     def _resource_contents_path(cls, file_object_path: str) -> str:
         bucket_name = cls._bucket_name(file_object_path)
@@ -106,16 +107,17 @@ class BaseMetadataObject:
     @classmethod
     def _extensions(cls) -> list[str]:
         return []
-    
+
     def content_type_associated_media(self) -> list[MediaObject]:
         return []
 
     def extract_metadata(self) -> dict:
         return {}
-    
+
     def clean_up_extracted_metadata(self) -> list:
         # used to cleanup no longer relevant metadata files (e.g. tif files referenced by vrt)
         return []
+
 
 class FileMetadataObject(BaseMetadataObject):
     def __init__(self, resource_id: str, bucket_name: str):
@@ -127,10 +129,11 @@ class FileMetadataObject(BaseMetadataObject):
         self.content_type_main_file_path = os.path.join(self.resource_contents_path, relative_path)
         self.content_type_md_user_path = os.path.join(self.resource_md_path, relative_path + ".user_metadata.json")
 
+
 class FolderMetadataObject(BaseMetadataObject):
     def __init__(self, resource_id: str, bucket_name: str):
         super().__init__(resource_id, bucket_name)
-        
+
         parent_directory = os.path.dirname(self.file_object_path)
         relative_path = os.path.relpath(parent_directory, self.resource_contents_path)
         self.content_type_md_jsonld_path = os.path.join(self.resource_md_jsonld_path, relative_path,
@@ -140,20 +143,15 @@ class FolderMetadataObject(BaseMetadataObject):
         self.content_type_main_file_path = os.path.join(self.resource_contents_path, relative_path)
         self.content_type_md_user_path = os.path.join(self.resource_md_path, relative_path, ".user_metadata.json")
 
+
 def determine_metadata_object(file_object_path: str, file_updated: bool) -> BaseMetadataObject:
     logging.info(f"determining content type for {file_object_path}")
     from hsextract.content_types.raster.models import RasterMetadataObject
-    logging.info(f"imported RasterMetadataObject")
     from hsextract.content_types.singlefile.models import SingleFileMetadataObject
-    logging.info(f"imported SingleFileMetadataObject")
     from hsextract.content_types.fileset.models import FileSetMetadataObject
-    logging.info(f"imported FileSetMetadataObject")
     from hsextract.content_types.timeseries.models import TimeSeriesMetadataObject
-    logging.info(f"imported TimeSeriesMetadataObject")
     from hsextract.content_types.netcdf.models import NetCDFMetadataObject
-    logging.info(f"imported NetCDFMetadataObject")
     from hsextract.content_types.feature.models import FeatureMetadataObject
-    logging.info(f"imported FeatureMetadataObject")
 
     metadata_classes = [
         RasterMetadataObject,

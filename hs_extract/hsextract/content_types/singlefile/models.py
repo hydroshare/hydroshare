@@ -5,12 +5,11 @@ from hsextract.utils.s3 import exists
 
 
 class SingleFileMetadataObject(FileMetadataObject):
-    
     content_type = ContentType.SINGLE_FILE
 
     def content_type_associated_media(self):
         return [m for m in self.resource_associated_media if m["contentUrl"].endswith(self.file_object_path)]
-    
+
     def extract_metadata(self):
         return {}
 

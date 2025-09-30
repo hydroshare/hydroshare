@@ -153,6 +153,7 @@ def test_resource_timeseries_csv_extraction():
     assert result_netcdf_metadata[
         "user_metadata"] == "this is timeseries user metadata"
 
+
 def test_resource_timeseries_sqlite_extraction():
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
     write_s3_json(f"admin/{resource_id}/.hsmetadata/ODM2_Multi_Site_One_Variable.sqlite.user_metadata.json", {
@@ -185,6 +186,7 @@ def test_resource_timeseries_sqlite_extraction():
         0].endswith("dataset_metadata.json")
     assert result_netcdf_metadata[
         "user_metadata"] == "this is timeseries user metadata"
+
 
 def test_fileset():
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
@@ -250,6 +252,7 @@ def test_singlefile():
     assert result_metadata[
         "user_metadata"] == "this is singlefile user metadata"
 
+
 def test_raster():
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
     print(resource_id)
@@ -283,6 +286,7 @@ def test_raster():
         0].endswith("dataset_metadata.json")
     assert result_metadata[
         "user_metadata"] == "this is raster user metadata"
+
 
 def test_raster_vrt():
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
@@ -318,6 +322,7 @@ def test_raster_vrt():
     assert len(result_metadata["isPartOf"]) == 1
     assert result_metadata["isPartOf"][0].endswith("dataset_metadata.json")
     assert result_metadata["user_metadata"] == "this is raster user metadata"
+
 
 def read_s3_json(path: str):
     bucket, key = path.split("/", 1)

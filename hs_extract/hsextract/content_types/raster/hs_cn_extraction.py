@@ -9,7 +9,6 @@ from pyproj import CRS
 from hs_cloudnative_schemas.schema.base import GeoShape, SpatialReference, Place
 from hs_cloudnative_schemas.schema.dataset import ScientificDataset, AdditionalType
 from hs_cloudnative_schemas.schema.datavariable import DataVariable, Dimension
-from hsextract.utils.file import file_metadata
 from hsextract.utils.s3 import find, s3_client as s3
 
 
@@ -21,6 +20,7 @@ mimetypes.add_type("text/plain", ".cpg")
 mimetypes.add_type("text/plain", ".asc")
 mimetypes.add_type("application/geo+json", ".geojson")
 mimetypes.add_type("application/gml+xml", ".gml")
+
 
 def list_tif_files_s3(raster_file):
     temp_dir = tempfile.gettempdir()

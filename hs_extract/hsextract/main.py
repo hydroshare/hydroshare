@@ -81,7 +81,6 @@ def workflow_metadata_extraction(file_object_path: str, file_updated: bool = Tru
                 write_metadata(md.content_type_md_path, content_type_metadata)
             logging.info(f"Extracted metadata for {md.file_object_path}")
             write_content_type_jsonld_metadata(md)
-            logging.info(f"Wrote content type jsonld metadata for {md.file_object_path} at {md.content_type_md_jsonld_path}")
             files_to_cleanup = md.clean_up_extracted_metadata()
             for f in files_to_cleanup:
                 logging.info(f"Cleaning up extracted metadata file {f}")
@@ -113,7 +112,7 @@ def handle_minio_event(msg: redpanda_connect.Message) -> redpanda_connect.Messag
             # TODO determine if content type user metadata to create content
             # type metadata or resource metadata
         else:
-            logging.info(f"No event for all other files in .hsmetadata (they are metadata extracted from content types): {key}")
+            logging.info(f"No event for all other files in .hsmetadata: {key}")
         return
     workflow_metadata_extraction(
         key, json_payload['EventName'].startswith("s3:ObjectCreated"))
