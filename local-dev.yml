@@ -164,7 +164,7 @@ services:
       COMPANION_UPLOAD_URLS: '*localhost*'
       COMPANION_DATADIR: '/mnt/companion-data'
       COMPANION_DOMAIN: 'localhost'
-      # COMPANION_PATH: '/companion'
+      COMPANION_PATH: '/companion'
       COMPANION_ALLOW_LOCAL_URLS: 'true'
       COMPANION_PROTOCOL: 'https'
       COMPANION_REDIS_URL: 'redis://redis:6379'
