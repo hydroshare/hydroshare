@@ -1,4 +1,4 @@
-from hsextract.utils.models import ContentType, FileMetadataObject
+from hsextract.content_types.models import ContentType, FileMetadataObject
 from hsextract.content_types.netcdf.hs_cn_extraction import encode_netcdf
 
 

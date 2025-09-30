@@ -1,6 +1,6 @@
 import os
 
-from hsextract.utils.models import ContentType, FileMetadataObject
+from hsextract.content_types.models import ContentType, FileMetadataObject
 from hsextract.utils.s3 import exists
 
 

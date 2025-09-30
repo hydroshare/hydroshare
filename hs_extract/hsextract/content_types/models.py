@@ -1,6 +1,5 @@
 import os
 import logging
-from pydantic import BaseModel
 from enum import Enum
 
 from hs_cloudnative_schemas.schema.base import MediaObject
@@ -12,11 +11,6 @@ from string import Template
 resource_contents_path_template = os.environ.get("RESOURCE_CONTENTS_PATH", "$bucket_name/$resource_id/data/contents")
 resource_md_jsonld_path_template = os.environ.get("RESOURCE_MD_JSONLD_PATH", "$bucket_name/$resource_id/.hsjsonld")
 resource_md_path_template = os.environ.get("RESOURCE_MD_PATH", "$bucket_name/$resource_id/.hsmetadata")
-
-
-class MinIOEvent(BaseModel):
-    EventName: str
-    Key: str
 
 
 class ContentType(Enum):
@@ -142,30 +136,3 @@ class FolderMetadataObject(BaseMetadataObject):
         self.content_type_contents_path = os.path.join(self.resource_contents_path, relative_path)
         self.content_type_main_file_path = os.path.join(self.resource_contents_path, relative_path)
         self.content_type_md_user_path = os.path.join(self.resource_md_path, relative_path, ".user_metadata.json")
-
-
-def determine_metadata_object(file_object_path: str, file_updated: bool) -> BaseMetadataObject:
-    logging.info(f"determining content type for {file_object_path}")
-    from hsextract.content_types.raster.models import RasterMetadataObject
-    from hsextract.content_types.singlefile.models import SingleFileMetadataObject
-    from hsextract.content_types.fileset.models import FileSetMetadataObject
-    from hsextract.content_types.timeseries.models import TimeSeriesMetadataObject
-    from hsextract.content_types.netcdf.models import NetCDFMetadataObject
-    from hsextract.content_types.feature.models import FeatureMetadataObject
-
-    metadata_classes = [
-        RasterMetadataObject,
-        TimeSeriesMetadataObject,
-        NetCDFMetadataObject,
-        FeatureMetadataObject,
-        # single file and fileset go last since they are more general
-        SingleFileMetadataObject,
-        FileSetMetadataObject,
-    ]
-    for metadata_class in metadata_classes:
-        logging.info(f"checking content type {metadata_class.content_type} for {file_object_path}")
-        if metadata_class.is_content_type(file_object_path):
-            logging.info(f"determined content type {metadata_class.content_type} for {file_object_path}")
-            return metadata_class(file_object_path, file_updated)
-    logging.info(f"could not determine content type for {file_object_path}, returning unknown")
-    return BaseMetadataObject(file_object_path, file_updated)

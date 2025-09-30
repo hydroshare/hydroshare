@@ -1,6 +1,6 @@
 import os
 import logging
-from hsextract.utils.models import ContentType, FolderMetadataObject
+from hsextract.content_types.models import ContentType, FolderMetadataObject
 from hsextract.utils.s3 import exists
 
 

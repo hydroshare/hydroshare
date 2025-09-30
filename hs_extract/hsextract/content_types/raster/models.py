@@ -1,6 +1,6 @@
 import os
 import logging
-from hsextract.utils.models import ContentType, FileMetadataObject
+from hsextract.content_types.models import ContentType, FileMetadataObject
 from hsextract.content_types.raster.hs_cn_extraction import list_tif_files_s3, encode_raster_metadata
 
 

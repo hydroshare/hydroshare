@@ -5,7 +5,8 @@ import logging
 import asyncio
 
 from hs_cloudnative_schemas.schema.base import HasPart
-from hsextract.utils.models import ContentType, BaseMetadataObject, determine_metadata_object
+from hsextract.content_types.models import ContentType
+from hsextract.content_types import determine_metadata_object, BaseMetadataObject
 from hsextract.utils.s3 import find, write_metadata, load_metadata, delete_metadata
 
 

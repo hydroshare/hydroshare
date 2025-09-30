@@ -1,4 +1,4 @@
-from hsextract.utils.models import ContentType, FileMetadataObject
+from hsextract.content_types.models import ContentType, FileMetadataObject
 from hsextract.content_types.timeseries.utils import extract_metadata_csv, extract_metadata
 
 
