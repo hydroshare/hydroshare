@@ -95,8 +95,10 @@ from .utils import (
     ACTION_TO_AUTHORIZE,
     authorize,
     get_coverage_data_dict,
-    get_my_resources_filter_counts,
-    get_my_resources_list,
+    # get_my_resources_filter_counts,
+    get_my_resources_filter_counts_optimized,
+    # get_my_resources_list,
+    get_my_resources_list_optimized,
     send_action_to_take_email,
     get_default_support_user,
     user_from_bucket_name,
@@ -568,7 +570,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
             is_add_success = True
             res.update_public_and_discoverable()
             resource_modified(res, request.user, overwrite_bag=False)
-            res.update_denormalized_metadata_field('subjects')
+            res.update_cached_metadata_field('subject')
     else:
 
         if element_name.lower() == "subject":
@@ -643,7 +645,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                     if is_add_success:
                         resource_modified(res, request.user, overwrite_bag=False)
                         if element_name == "subject":
-                            res.update_denormalized_metadata_field('subjects')
+                            res.update_cached_metadata_field('subject')
                 elif "errors" in response:
                     err_msg = err_msg.format(element_name, response["errors"])
 
@@ -2885,7 +2887,7 @@ def my_resources_filter_counts(request, *args, **kwargs):
     _ = request.GET.getlist("filter", default=None)
     u = User.objects.select_related("uaccess").get(pk=request.user.id)
 
-    filter_counts = get_my_resources_filter_counts(u)
+    filter_counts = get_my_resources_filter_counts_optimized(u)
 
     return JsonResponse({"filter_counts": filter_counts})
 
@@ -2913,7 +2915,7 @@ def my_resources(request, *args, **kwargs):
         filter.append("viewable")
         filter.append("editable")
 
-    resource_collection = get_my_resources_list(u, annotate=True, filter=filter)
+    resource_collection = get_my_resources_list_optimized(u, annotate=True, filter=filter)
 
     context = {"collection": resource_collection}
 
