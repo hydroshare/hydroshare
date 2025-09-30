@@ -1,6 +1,6 @@
 import mimetypes
 import os
-from hsextract import s3_client as s3
+from hsextract.utils.s3 import s3_client as s3
 from hs_cloudnative_schemas.schema.base import MediaObject
 
 

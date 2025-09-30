@@ -1,16 +1,16 @@
+import logging
 import os
 import tempfile
 import rasterio
 import mimetypes
 import xml.etree.ElementTree as ET
-from glob import glob
 from pyproj import CRS
 
-from hs_cloudnative_schemas.schema import base
-from hs_cloudnative_schemas.schema import dataset
-from hs_cloudnative_schemas.schema import datavariable
+from hs_cloudnative_schemas.schema.base import GeoShape, SpatialReference, Place
+from hs_cloudnative_schemas.schema.dataset import ScientificDataset, AdditionalType
+from hs_cloudnative_schemas.schema.datavariable import DataVariable, Dimension
 from hsextract.utils.file import file_metadata
-from hsextract import s3_client as s3
+from hsextract.utils.s3 import find, s3_client as s3
 
 
 mimetypes.add_type("application/x-esri-shapefile", ".shp")
@@ -21,6 +21,30 @@ mimetypes.add_type("text/plain", ".cpg")
 mimetypes.add_type("text/plain", ".asc")
 mimetypes.add_type("application/geo+json", ".geojson")
 mimetypes.add_type("application/gml+xml", ".gml")
+
+def list_tif_files_s3(raster_file):
+    temp_dir = tempfile.gettempdir()
+    vrt_file = raster_file if raster_file.endswith('.vrt') else None
+    if not vrt_file:
+        parent_dir = os.path.dirname(raster_file)
+        vrt_files = [file for file in find(parent_dir) if file.endswith('.vrt')]
+        for file in vrt_files:
+            local_copy = os.path.join(temp_dir, os.path.basename(file))
+            bucket, key = file.split("/", 1)
+            s3.download_file(bucket, key, local_copy)
+            tif_files = list_tif_files(local_copy)
+            if os.path.basename(raster_file) in tif_files:
+                vrt_file = file
+                break
+    local_copy = os.path.join(temp_dir, os.path.basename(vrt_file))
+    bucket, key = vrt_file.split("/", 1)
+    s3.download_file(bucket, key, local_copy)
+    with open(local_copy, "r") as f:
+        vrt_string = f.read()
+    root = ET.fromstring(vrt_string)
+    file_names_in_vrt = [
+        file_name.text for file_name in root.iter('SourceFilename')]
+    return file_names_in_vrt
 
 
 def list_tif_files(vrt_file):
@@ -37,15 +61,18 @@ def encode_raster_metadata(filepath, multiband=False, validate_bbox=True):
     local_copy = os.path.join(temp_dir, os.path.basename(filepath))
     bucket, key = filepath.split("/", 1)
     s3.download_file(bucket, key, local_copy)
+    logging.info(f"Downloaded {filepath} to {local_copy}")
     if filepath.endswith('.vrt'):
         # If the file is a VRT, we need to extract the TIF files it references
-        tif_files = list_tif_files(local_copy)
-        for tif_file in tif_files:
-            local_copy_tif_file = os.path.join(
-                temp_dir, os.path.basename(tif_file))
-            bucket, key = tif_file.split("/", 1)
-            s3.download_file(bucket, key, local_copy)
-            s3.get_file(bucket, key, local_copy_tif_file)
+        tif_file = list_tif_files(local_copy)[0]
+        tif_file = os.path.join(os.path.dirname(filepath), tif_file)
+        logging.info(f"VRT references the following TIF files: {tif_file}")
+        local_copy_tif_file = os.path.join(
+            temp_dir, os.path.basename(tif_file))
+        logging.info(f"Downloading referenced TIF file {tif_file} to {local_copy_tif_file}")
+        bucket, key = tif_file.split("/", 1)
+        s3.download_file(bucket, key, local_copy_tif_file)
+        local_copy = local_copy_tif_file
 
     src = rasterio.open(local_copy)
 
@@ -58,17 +85,17 @@ def encode_raster_metadata(filepath, multiband=False, validate_bbox=True):
 
     # Build dataset dimensions.
     dimensions = [
-        datavariable.Dimension(
+        Dimension(
             name='columns',
             shape=cell_columns
         ),
-        datavariable.Dimension(
+        Dimension(
             name='rows',
             shape=cell_rows)
     ]
 
     if multiband:
-        dimensions.insert(0, datavariable.Dimension(
+        dimensions.insert(0, Dimension(
             name='band',
             shape=src.count
         ))
@@ -98,24 +125,24 @@ def encode_raster_metadata(filepath, multiband=False, validate_bbox=True):
 
     # Encode metadata
     box_str = f'{extent_south} {extent_west} {extent_north} {extent_east}'
-    geo = base.GeoShape(box=box_str, validate_bbox=validate_bbox)
+    geo = GeoShape(box=box_str, validate_bbox=validate_bbox)
 
     crs = CRS.from_wkt(src.crs.wkt)
-    srs = base.SpatialReference(
+    srs = SpatialReference(
         name=crs.name,
         srsType=crs.type_name.split(' ')[0],
         code=crs.to_string(),
         wktString=crs.to_wkt()
     )
 
-    place = base.Place(
+    place = Place(
         geo=geo,
         srs=srs
     )
 
     gridvariables = []
     for band_idx in band_data.keys():
-        variables = datavariable.DataVariable(
+        variables = DataVariable(
             name=f'Band {band_idx}',
             dataType=band_data[band_idx]['dtype'],
             minValue=band_data[band_idx]['min_value'],
@@ -126,18 +153,9 @@ def encode_raster_metadata(filepath, multiband=False, validate_bbox=True):
         )
         gridvariables.append(variables)
 
-    # get all file names that match the patter of the input filepath
-    search_path = f"{'.'.join(filepath.split('.')[:-1])}.*"
-    associated_files = glob(search_path)
-    files = []
-    for fpath in associated_files:
-        file_md, _ = file_metadata(fpath)
-        files.append(file_md)
-
-    return dataset.ScientificDataset(
+    return ScientificDataset(
         variableMeasured=gridvariables,
         dimensions=dimensions,
-        associatedMedia=files,
         spatialCoverage=place,
-        additionalType=dataset.AdditionalType.GEOGRAPHIC_RASTER,
+        additionalType=AdditionalType.GEOGRAPHIC_RASTER,
     )

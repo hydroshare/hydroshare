@@ -5,11 +5,11 @@ import logging
 import asyncio
 
 from hs_cloudnative_schemas.schema.base import HasPart
-from hsextract.utils.models import ContentType, MetadataObject
+from hsextract.utils.models import ContentType, BaseMetadataObject, determine_metadata_object
 from hsextract.utils.s3 import find, write_metadata, load_metadata, delete_metadata
 
 
-def write_resource_metadata(md: MetadataObject) -> bool:
+def write_resource_jsonld_metadata(md: BaseMetadataObject) -> bool:
     # read the system metadata file
     system_json = load_metadata(md.system_metadata_path)
 
@@ -38,10 +38,10 @@ def write_resource_metadata(md: MetadataObject) -> bool:
     combined_metadata["associatedMedia"] = md.resource_associated_media
 
     # Write the combined metadata to the resource metadata file
-    write_metadata(md.resource_metadata_path, combined_metadata)
+    write_metadata(md.resource_metadata_jsonld_path, combined_metadata)
 
 
-def write_content_type_metadata(md: MetadataObject) -> bool:
+def write_content_type_jsonld_metadata(md: BaseMetadataObject) -> bool:
     # read the part metadata file
     logging.info(f"Reading content type metadata from {md.content_type_md_path}")
     content_type_metadata = load_metadata(md.content_type_md_path)
@@ -50,18 +50,19 @@ def write_content_type_metadata(md: MetadataObject) -> bool:
     logging.info(f"Reading content type user metadata from {
                  md.content_type_md_user_path}")
     user_json = load_metadata(md.content_type_md_user_path)
-    logging.info(f"Read content type user metadata: {user_json}")
+    logging.info(f"Read content type user metadata: {user_json} for {md.content_type_md_user_path}")
 
     # generate content type isPartOf relationships
     is_part_of = [f"{os.environ['AWS_S3_ENDPOINT']}/{md.resource_md_jsonld_path}/dataset_metadata.json"]
 
     content_type_associated_media = md.content_type_associated_media()
+    print(f"Content type associated media: {content_type_associated_media}")
 
     # Combine part metadata, user metadata, isPartOf, and associatedMedia
     # TODO evaluate whether we need to merge list properties
     combined_metadata = {**content_type_metadata, **user_json}
     combined_metadata["isPartOf"] = is_part_of
-    combined_metadata["associatedMedia"] = content_type_associated_media
+    combined_metadata["associatedMedia"] = combined_metadata.get("associatedMedia", []) + content_type_associated_media
 
     # Write the combined metadata to the resource metadata file
     write_metadata(md.content_type_md_jsonld_path, combined_metadata)
@@ -69,18 +70,27 @@ def write_content_type_metadata(md: MetadataObject) -> bool:
 
 # if a file is not updated, it is deleted
 def workflow_metadata_extraction(file_object_path: str, file_updated: bool = True) -> None:
-    md = MetadataObject(file_object_path, file_updated)
+    md = determine_metadata_object(file_object_path, file_updated)
     logging.info(f"content type determined: {md.content_type}")
     # fileset and single file do not have anything to extract
     if md.content_type != ContentType.UNKNOWN:
         if file_updated:
             logging.info(f"Extracting metadata for {md.file_object_path}")
-            md.extract_metadata()
+            content_type_metadata = md.extract_metadata()
+            if content_type_metadata:
+                write_metadata(md.content_type_md_path, content_type_metadata)
             logging.info(f"Extracted metadata for {md.file_object_path}")
-            write_content_type_metadata(md)
+            write_content_type_jsonld_metadata(md)
+            logging.info(f"Wrote content type jsonld metadata for {md.file_object_path} at {md.content_type_md_jsonld_path}")
+            files_to_cleanup = md.clean_up_extracted_metadata()
+            for f in files_to_cleanup:
+                logging.info(f"Cleaning up extracted metadata file {f}")
+                delete_metadata(f)
         else:
+            logging.info(f"Deleting metadata for {md.file_object_path}")
             delete_metadata(md.content_type_md_path)
-    write_resource_metadata(md)
+            delete_metadata(md.content_type_md_jsonld_path)
+    write_resource_jsonld_metadata(md)
 
 
 @redpanda_connect.processor
