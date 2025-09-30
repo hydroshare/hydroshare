@@ -671,13 +671,11 @@ class Party(AbstractMetaDataElement):
                 kwargs['order'] = creator_order
 
         party = super(Party, cls).create(**kwargs)
-        resource = party.content_object.resource
 
         if party.hydroshare_user_id:
             user = User.objects.get(id=party.hydroshare_user_id)
             party.is_active_user = user.is_active
             party.save()
-        resource.update_denormalized_metadata_field('creators')
         return party
 
     @classmethod
@@ -732,8 +730,6 @@ class Party(AbstractMetaDataElement):
 
                 party.order = creator_order
                 party.save(update_fields=["order"])
-        if isinstance(party, Creator):
-            resource.update_denormalized_metadata_field('creators')
 
     @property
     def relative_uri(self):
@@ -767,14 +763,11 @@ class Party(AbstractMetaDataElement):
                     cr.save(update_fields=["order"])
         if delete:
             party.delete()
-            resource.update_denormalized_metadata_field('creators')
 
     def delete(self, using=None, keep_parents=False):
         """Overriding the django model delete() method"""
-        resource = self.content_object.resource
         self.remove(element_id=self.id, delete=False)
         super(Party, self).delete(using=using, keep_parents=keep_parents)
-        resource.update_denormalized_metadata_field('creators')
 
 
     @classmethod
@@ -965,22 +958,17 @@ class Title(AbstractMetaDataElement):
     def create(cls, **kwargs):
         """Define custom create method for Title model."""
         metadata_obj = kwargs['content_object']
-        resource = metadata_obj.resource
         # get the title from Title model
-        title = cls.objects.filter(object_id=metadata_obj.id).first()   
+        title = cls.objects.filter(object_id=metadata_obj.id).first()
         if title:
             raise ValidationError("Title element already exists.")
         title = super(Title, cls).create(**kwargs)
-        resource.update_denormalized_metadata_field('title')
         return title
 
     @classmethod
     def update(cls, element_id, **kwargs):
         """Define custom update method for Title model."""
         super(Title, cls).update(element_id, **kwargs)
-        title = Title.objects.get(id=element_id)
-        resource = title.metadata.resource
-        resource.update_denormalized_metadata_field('title')
 
     @classmethod
     def remove(cls, element_id):
@@ -1116,9 +1104,6 @@ class Date(AbstractMetaDataElement):
                                               "after the start date.")
 
             dt = super(Date, cls).create(**kwargs)
-            if dt.type == 'created' or dt.type == 'modified':
-                resource = dt.metadata.resource
-                resource.update_denormalized_metadata_field('dates')
             return dt
 
         else:
@@ -1160,9 +1145,6 @@ class Date(AbstractMetaDataElement):
         elif dt.type == 'modified':
             dt.start_date = now().isoformat()
             dt.save()
-        if dt.type == 'created' or dt.type == 'modified':
-            resource = dt.metadata.resource
-            resource.update_denormalized_metadata_field('dates')
 
     @classmethod
     def remove(cls, element_id):
@@ -2105,8 +2087,6 @@ class Subject(AbstractMetaDataElement):
                 raise ValidationError("Subject element already exists.")
 
         subject = super(Subject, cls).create(**kwargs)
-        resource = metadata_obj.resource
-        resource.update_denormalized_metadata_field('subjects')
         return subject
 
     @classmethod
@@ -2120,14 +2100,11 @@ class Subject(AbstractMetaDataElement):
             raise ValidationError("The only subject element of the resource can't be deleted.")
         if delete:
             sub.delete()
-            resource.update_denormalized_metadata_field('subjects')
 
     def delete(self, *args, **kwargs):
         """Define custom delete method for Subject model."""
         self.remove(self.id, delete=False)
-        resource = self.metadata.resource
         super(Subject, self).delete(*args, **kwargs)
-        resource.update_denormalized_metadata_field('subjects')
 
     def rdf_triples(self, subject, graph):
         graph.add((subject, self.get_class_term(), Literal(self.value)))
