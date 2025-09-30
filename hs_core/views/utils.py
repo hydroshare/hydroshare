@@ -21,7 +21,7 @@ from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
                                     SuspiciousFileOperation)
 from django.core.files.base import File
 from django.core.validators import URLValidator
-from django.db.models import BooleanField, Case, Prefetch, Value, When, Subquery, OuterRef, Exists, TextField
+from django.db.models import BooleanField, Case, Prefetch, Value, When, TextField
 from django.db import models
 from django.db.models.query import prefetch_related_objects
 from django.contrib.postgres.aggregates import ArrayAgg
@@ -48,7 +48,7 @@ from hs_core.hydroshare import (add_resource_files, check_resource_type,
 from hs_core.hydroshare.utils import (QuotaException, check_aggregations,
                                       get_file_mime_type, validate_user_quota)
 from hs_core.models import (AbstractMetaDataElement, BaseResource,
-                            CoreMetaData, Relation, ResourceFile, UserResource, get_user)
+                            CoreMetaData, Relation, ResourceFile, get_user)
 from hs_core.signals import (post_delete_file_from_resource,
                              pre_metadata_element_create)
 from hs_core.tasks import FileOverrideException, create_temp_zip
@@ -745,11 +745,11 @@ def get_my_resources_list_optimized(user, annotate=False, filter=None, **kwargs)
     if annotate:
         my_resources = resource_collection.values(
             'short_id', 'resource_type', 'created', 'resource_labels', 'is_favorite', 'sharing_status',
-            'denormalized_metadata', 'user_permission'
+            'cached_metadata', 'user_permission'
         )
     else:
         my_resources = resource_collection.values(
-            'short_id', 'resource_type', 'created', 'sharing_status', 'denormalized_metadata',
+            'short_id', 'resource_type', 'created', 'sharing_status', 'cached_metadata',
             'user_permission'
         )
     return my_resources
