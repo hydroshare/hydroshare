@@ -114,8 +114,8 @@ class BaseMetadataObject:
 
 
 class FileMetadataObject(BaseMetadataObject):
-    def __init__(self, resource_id: str, bucket_name: str):
-        super().__init__(resource_id, bucket_name)
+    def __init__(self, file_object_path: str, file_updated: bool):
+        super().__init__(file_object_path, file_updated)
         relative_path = os.path.relpath(self.file_object_path, self.resource_contents_path)
         self.content_type_md_jsonld_path = os.path.join(self.resource_md_jsonld_path, relative_path + ".json")
         self.content_type_md_path = os.path.join(self.resource_md_path, relative_path + ".json")
@@ -125,8 +125,8 @@ class FileMetadataObject(BaseMetadataObject):
 
 
 class FolderMetadataObject(BaseMetadataObject):
-    def __init__(self, resource_id: str, bucket_name: str):
-        super().__init__(resource_id, bucket_name)
+    def __init__(self, file_object_path: str, file_updated: bool):
+        super().__init__(file_object_path, file_updated)
 
         parent_directory = os.path.dirname(self.file_object_path)
         relative_path = os.path.relpath(parent_directory, self.resource_contents_path)

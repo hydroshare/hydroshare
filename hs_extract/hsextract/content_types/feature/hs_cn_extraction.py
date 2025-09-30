@@ -8,7 +8,7 @@ from hs_cloudnative_schemas.schema import base
 from hs_cloudnative_schemas.schema import dataset
 from hs_cloudnative_schemas.schema import datavariable
 from hsextract.utils.file import file_metadata
-from hsextract import s3_client as s3
+from hsextract.utils.s3 import s3_client as s3
 
 
 mimetypes.add_type("image/tiff", ".tif")
@@ -28,9 +28,9 @@ def encode_vector_metadata(filepath, validate_bbox=True):
     # Copy shapefile and .shx file to a temporary location
     temp_dir = tempfile.gettempdir()
     local_copy = os.path.join(temp_dir, os.path.basename(filepath))
-    s3.get_file(filepath, local_copy)
-    s3.get_file(replace_extension(filepath, ".shx"),
-                replace_extension(local_copy, ".shx"))
+    bucket, key = filepath.split("/", 1)
+    s3.download_file(bucket, key, local_copy)
+    s3.download_file(bucket, replace_extension(key, ".shx"), replace_extension(local_copy, ".shx"))
     # Read the Shapefile
     gdf = geopandas.read_file(local_copy)
 

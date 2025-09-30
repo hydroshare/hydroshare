@@ -7,8 +7,8 @@ from hsextract.content_types.raster.hs_cn_extraction import list_tif_files_s3, e
 class RasterMetadataObject(FileMetadataObject):
     content_type = ContentType.RASTER
 
-    def __init__(self, resource_id: str, bucket_name: str):
-        super().__init__(resource_id, bucket_name)
+    def __init__(self, file_object_path: str, file_updated: bool):
+        super().__init__(file_object_path, file_updated)
         logging.info(f"Initializing RasterMetadataObject for {self.file_object_path}")
         vrt_path = self._determine_vrt_path()
         logging.info(f"Determined vrt path: {vrt_path}")
