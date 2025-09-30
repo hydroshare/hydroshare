@@ -1,0 +1,5 @@
+FROM docker.io/transloadit/companion:5.5.0
+
+RUN mv /app/lib/config/companion.js /app/lib/config/default-config.js
+
+COPY companion-custom-config.js /app/lib/config/companion.js
