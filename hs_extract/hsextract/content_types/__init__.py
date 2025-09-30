@@ -6,6 +6,7 @@ from hsextract.content_types.netcdf.models import NetCDFMetadataObject
 from hsextract.content_types.feature.models import FeatureMetadataObject
 from hsextract.content_types.models import BaseMetadataObject
 
+
 def determine_metadata_object(file_object_path: str, file_updated: bool) -> BaseMetadataObject:
     metadata_classes = [
         RasterMetadataObject,
