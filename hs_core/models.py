@@ -2280,17 +2280,18 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         # using update query api to update instead of self.save() to avoid triggering solr realtime indexing
         type(self).objects.filter(id=self.id).update(download_count=self.download_count)
 
-    def update_denormalized_metadata_field(self, field_name):
+    def update_cached_metadata_field(self, field_name):
         """
-        Update a specific field in the denormalized metadata
+        Update a specific field in the cached metadata
 
-        :param field_name: The field to update ('creators', 'subjects', etc.)
+        :param field_name: The field to update ('creator', 'subject', etc.)
         """
 
+        self.refresh_from_db()
         metadata = self.metadata
-        copied_metadata = copy.deepcopy(self.denormalized_metadata)
+        copied_metadata = copy.deepcopy(self.cached_metadata)
         # Update only the specified field
-        if field_name == 'creators':
+        if field_name == 'creator':
             creators = metadata.creators.all()
             copied_metadata['creators'] = [
                 {
@@ -2305,10 +2306,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         elif field_name == 'title':
             title = metadata.title.value if hasattr(metadata, 'title') and metadata.title else ""
             copied_metadata['title'] = title
-        elif field_name == 'subjects':
+        elif field_name == 'subject':
             subjects = list(metadata.subjects.all())
             copied_metadata['subjects'] = [s.value for s in subjects]
-        elif field_name == 'dates':
+        elif field_name == 'date':
             if 'created' not in copied_metadata:
                 created_date = metadata.dates.filter(type='created').first()
                 if created_date:
@@ -2316,24 +2317,55 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
                 else:
                     copied_metadata['created'] = self.created.isoformat()
         elif field_name == 'status':
-            copied_metadata['status'] = {
-                "public": self.raccess.public,
-                "discoverable": self.raccess.discoverable,
-                "published": self.raccess.published
-            }
+            if hasattr(self, 'raccess'):
+                copied_metadata['status'] = {
+                    "public": self.raccess.public,
+                    "discoverable": self.raccess.discoverable,
+                    "published": self.raccess.published
+                }
 
+        if 'title' not in copied_metadata:
+            title = metadata.title.value if hasattr(metadata, 'title') and metadata.title else ""
+            copied_metadata['title'] = title
+        if 'creators' not in copied_metadata:
+            creators = metadata.creators.all()
+            copied_metadata['creators'] = [
+                {
+                    'name': c.name,
+                    'order': c.order,
+                    'hs_user_id': c.hydroshare_user_id,
+                    'is_active_user': c.is_active_user,
+                    'relative_uri': c.relative_uri
+                }
+                for c in creators
+            ]
+
+        if 'created' not in copied_metadata:
+            created_date = metadata.dates.filter(type='created').first()
+            if created_date:
+                copied_metadata['created'] = created_date.start_date.isoformat()
+            else:
+                copied_metadata['created'] = self.created.isoformat()
         if 'subjects' not in copied_metadata:
-            copied_metadata['subjects'] = []
-
+            subjects = list(metadata.subjects.all())
+            copied_metadata['subjects'] = [s.value for s in subjects]
+        if 'status' not in copied_metadata:
+            if hasattr(self, 'raccess'):
+                copied_metadata['status'] = {
+                    "public": self.raccess.public,
+                    "discoverable": self.raccess.discoverable,
+                    "published": self.raccess.published
+                }
         # TODO: Though the modified date is updated here when any metadata is updated, for some reason it sticks only when
-        # when Title, Subjects, Creators, and Status are updated. For example, updating Abstract wont update the modified date.
+        # when Title, Subjects, Creator, and Status are updated. For example, updating Abstract wont update the modified date.
         copied_metadata['modified'] = now().isoformat()
-        type(self).objects.filter(id=self.id).update(denormalized_metadata=copied_metadata)
+        type(self).objects.filter(id=self.id).update(cached_metadata=copied_metadata)
+        self.refresh_from_db()
 
-    def update_all_denormalized_metadata(self):
-        """Update all fields in the denormalized metadata"""
-        for field in ['creators', 'title', 'subjects', 'dates', 'status']:
-            self.update_denormalized_metadata_field(field)
+    def update_all_cached_metadata(self):
+        """Update all fields in the cached metadata"""
+        for field in ['creator', 'title', 'subject', 'date', 'status']:
+            self.update_cached_metadata_field(field)
 
     # definition of resource logic
     @property
