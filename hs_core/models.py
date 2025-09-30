@@ -2298,7 +2298,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
                 copied_metadata['status'] = {
                     "public": self.raccess.public,
                     "discoverable": self.raccess.discoverable,
-                    "published": self.raccess.published
+                    "published": self.raccess.published,
+                    "shareable": self.raccess.shareable
                 }
 
         if 'title' not in copied_metadata:
@@ -2331,7 +2332,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
                 copied_metadata['status'] = {
                     "public": self.raccess.public,
                     "discoverable": self.raccess.discoverable,
-                    "published": self.raccess.published
+                    "published": self.raccess.published,
+                    "shareable": self.raccess.shareable
                 }
         # TODO: Though the modified date is updated here when any metadata is updated, for some reason it sticks only when
         # when Title, Subjects, Creator, and Status are updated. For example, updating Abstract wont update the modified date.
