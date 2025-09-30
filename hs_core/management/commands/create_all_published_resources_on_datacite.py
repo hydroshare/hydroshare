@@ -7,6 +7,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from hs_core.models import BaseResource
+from hs_core.hydroshare.resource import get_datacite_url
 
 logger = logging.getLogger(__name__)
 
@@ -25,14 +26,21 @@ def deposit_res_metadata_with_datacite(res):
             "content-type": "application/json",
             "authorization": f"Basic {token}"
         }
+        doi_url = f"{get_datacite_url()}/{settings.DATACITE_PREFIX}/{res.short_id}"
 
-        response = requests.post(
-            url=settings.DATACITE_API_URL,
+        response = requests.put(
+            url=doi_url,
             data=res.get_datacite_deposit_json(),
             headers=headers,
-            timeout=10,
-            verify=False,
+            timeout=10
         )
+        # response = requests.post(
+        #     url=settings.DATACITE_API_URL,
+        #     data=res.get_datacite_deposit_json(),
+        #     headers=headers,
+        #     timeout=10,
+        #     verify=False,
+        # )
         if 400 <= response.status_code < 500:
             print(f"⚠️ Client error (4xx) for resource {res.short_id}: {response.text}")
             return None
@@ -62,9 +70,7 @@ class Command(BaseCommand):
             if not res.metadata:
                 logger.warning(f"Resource {res.short_id} has no metadata. Skipping.")
                 continue
-            if count < 30:
-                count += 1
-                continue
+
             print(f"🔄 Processing resource: {res.short_id}")
             res_start_time = time.time()
 
@@ -72,8 +78,6 @@ class Command(BaseCommand):
             res_duration = timedelta(seconds=int(time.time() - res_start_time))
             print(f"✅ Finished processing resource: {res.short_id} | {res.metadata.title} | Time taken: {res_duration}")
             count += 1
-            if count == 130:
-                break
-            # break  # Remove this break to process all resources
+
         total_duration = timedelta(seconds=int(time.time() - start_time))
         print(f"🎉 Finished processing {count} resources | Time taken: {total_duration}")
