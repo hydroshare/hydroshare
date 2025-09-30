@@ -156,9 +156,11 @@ services:
     environment:
       COMPANION_PORT: '3020'
       COMPANION_CLIENT_ORIGINS: 'https://localhost'
-      # when using the landing page in vite dev, use this instead:
+      # when using the landing page in vite dev, you can use this instead:
       # COMPANION_CLIENT_ORIGINS: 'http://localhost:5004'
       COMPANION_UPLOAD_URLS: 'https://localhost/django_s3/tus/*'
+      # when testing 3rd party uploads with companion, you need to use host.docker.internal
+      # COMPANION_UPLOAD_URLS: http://host.docker.internal/django_s3/tus/*
       COMPANION_DATADIR: '/mnt/companion-data'
       COMPANION_DOMAIN: 'localhost'
       COMPANION_PATH: '/companion'

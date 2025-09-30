@@ -109,6 +109,10 @@ CSRF_TRUSTED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 CSRF_COOKIE_HTTPONLY = False  # Must be False so JS (Vue app) can read it
 
+# https://docs.djangoproject.com/en/5.2/ref/settings/#std-setting-SESSION_COOKIE_HTTPONLY
+SESSION_COOKIE_HTTPONLY = False  # Must be False so JS (Vue app) can read it
+SESSION_COOKIE_SAMESITE = 'Strict'
+
 # List of allowed hosts for redirects after login
 ALLOWED_REDIRECT_HOSTS = [
     "localhost:5003",  # Vue development server
