@@ -2250,8 +2250,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
     # this field WILL NOT get recorded in bag and SHOULD NEVER be used for storing metadata
     extra_data = HStoreField(default=dict)
 
-    # add denormalized meatadata for performance optimization (my-resource page)
-    denormalized_metadata = models.JSONField(default=dict)
+    # cache metadata for performance optimization of my-resources page
+    cached_metadata = models.JSONField(default=dict)
+
 
     # for tracking number of times resource and its files have been downloaded
     download_count = models.PositiveIntegerField(default=0)
