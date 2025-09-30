@@ -1,4 +1,4 @@
-FROM docker.io/transloadit/companion:5.5.0
+FROM docker.io/transloadit/companion:6.0.0
 
 RUN mv /app/lib/config/companion.js /app/lib/config/default-config.js
 

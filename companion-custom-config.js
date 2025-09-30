@@ -1,7 +1,5 @@
 // https://uppy.io/docs/companion/#s3bucket-companion_aws_bucket
-const defaultOptions = require('./default-config.js').defaultOptions;
-const getMaskableSecrets = require('./default-config.js').getMaskableSecrets;
-const validateConfig = require('./default-config.js').validateConfig;
+import { defaultOptions, getMaskableSecrets, validateConfig } from './default-config.js';
 
 const bucket = ({ filename, metadata, req }) => {
   // https://uppy.io/docs/companion/#s3bucket-companion_aws_bucket
@@ -15,6 +13,8 @@ const bucket = ({ filename, metadata, req }) => {
   return bucket;
 }
 
+// TODO: getkey doesn't seem to get triggered
+// https://uppy.io/docs/companion/#s3getkey-filename-metadata-req-
 const getKey = ({ filename, metadata, req }) => {
   console.log('dynamically setting key for filename:', filename, 'metadata:', metadata);
   // Use dynamic key from metadata or default to filename
@@ -44,8 +44,4 @@ defaultOptions.providerOptions = {
 };
 console.log('Custom companion config loaded with options:', defaultOptions);
 
-module.exports = {
-    defaultOptions,
-    getMaskableSecrets,
-    validateConfig,
-};
+export { defaultOptions, getMaskableSecrets, validateConfig };
