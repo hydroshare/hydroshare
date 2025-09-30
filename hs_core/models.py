@@ -5278,69 +5278,6 @@ class TaskNotification(models.Model):
     status = models.CharField(max_length=20, choices=TASK_STATUS_CHOICES, default='progress')
 
 
-class UserResource(models.Model):
-    """
-    Denormalized table to track user-resource relationships for efficient listing
-    """
-    from hs_access_control.models.privilege import PrivilegeCodes
-
-    PERMISSION_CHOICES = (
-        (PrivilegeCodes.OWNER, 'Owner'),
-        (PrivilegeCodes.CHANGE, 'Change'),
-        (PrivilegeCodes.VIEW, 'View'),
-        (PrivilegeCodes.NONE, 'None')
-    )
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_resources')
-    resource = models.ForeignKey(BaseResource, on_delete=models.CASCADE, related_name='resource_users')
-
-    # Effective (group and user combined) permission level (1=owner, 2=edit, 3=view, 4=none)
-    permission = models.IntegerField(choices=PERMISSION_CHOICES, default=PrivilegeCodes.NONE)
-
-    # Flags - used in my resources listing
-    is_favorite = models.BooleanField(default=False)
-    is_discovered = models.BooleanField(default=False)
-
-    class Meta:
-        unique_together = ('user', 'resource')
-        indexes = [
-            models.Index(fields=['user', 'permission']),
-            models.Index(fields=['user', 'is_favorite']),
-            models.Index(fields=['user', 'is_discovered']),
-        ]
-
-    @classmethod
-    def get_permission_level(cls, user: Union[User, int], resource: Union[BaseResource, str]):
-        """Get the assigned permission level of a user for a resource.
-        NOTE: It ignores user status (superuser, active etc) and resource status (public, discoverable etc).
-        """
-        from hs_access_control.models.privilege import PrivilegeCodes
-        filter_conditions = Q()
-        if isinstance(user, User):
-            filter_conditions &= Q(user=user)
-        else:
-            filter_conditions &= Q(user__id=user)
-        if isinstance(resource, BaseResource):
-            filter_conditions &= Q(resource=resource)
-        else:
-            filter_conditions &= Q(resource__short_id=resource)
-        try:
-            return cls.objects.get(filter_conditions).permission
-        except cls.DoesNotExist:
-            return PrivilegeCodes.NONE
-
-    @classmethod
-    def has_permission_to_view(cls, user: Union[User, int], resource: Union[BaseResource, str]):
-        """Check if a user has view permission to a resource."""
-        from hs_access_control.models.privilege import PrivilegeCodes
-        return cls.get_permission_level(user, resource) <= PrivilegeCodes.VIEW
-
-    @classmethod
-    def has_permission_to_edit(cls, user: Union[User, int], resource: Union[BaseResource, str]):
-        """Check if a user has edit permission to a resource."""
-        from hs_access_control.models.privilege import PrivilegeCodes
-        return cls.get_permission_level(user, resource) <= PrivilegeCodes.CHANGE
-
 
 def resource_processor(request, page):
     """Return mezzanine page processor for resource page."""
