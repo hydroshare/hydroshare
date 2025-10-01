@@ -35,10 +35,14 @@ class TestDenormalizedMetadataSync(TestCase):
             owner=self.user,
             title='Test Resource'
         )
+        self.new_resource = None
+
 
     def tearDown(self):
         """Clean up after tests."""
         self.resource.delete()
+        if self.new_resource:
+            self.new_resource.delete()
         self.user.delete()
         self.group.delete()
 
@@ -481,3 +485,62 @@ class TestDenormalizedMetadataSync(TestCase):
         modified_date3 = self.resource.cached_metadata['modified']
         modified_date3 = datetime.fromisoformat(modified_date3)
         self.assertGreater(modified_date3, modified_date2)
+
+    def test_cached_metadata_for_copied_resource(self):
+        """Test that cached metadata is generated correctly when a resource is copied over to a new resource."""
+
+        self._test_cached_metadata_for_copyed_or_versioned_resource(action='copy')
+
+    def test_cached_metadata_for_versioned_resource(self):
+        """Test that cached metadata is generated correctly when a resource is versioned."""
+
+        self._test_cached_metadata_for_copyed_or_versioned_resource(action='version')
+
+    def _test_cached_metadata_for_copyed_or_versioned_resource(self, action='version'):
+        """Test that cached metadata is generated correctly when a resource is copied or versioned."""
+
+        # Create multiple metadata elements
+        subjects_to_create = ['subject1', 'subject2', 'subject3', 'subject4', 'subject5']
+
+        for subject_value in subjects_to_create:
+            self.resource.metadata.create_element('subject', value=subject_value)
+        # add another creator
+        self.resource.metadata.create_element(
+            'creator',
+            name='Creator1',
+            email='creator1@example.com'
+        )
+        # Verify cached metadata is consistent
+        self.resource.refresh_from_db()
+        cached_subjects = self.resource.cached_metadata.get('subjects', [])
+        self.assertEqual(len(cached_subjects), 5)
+        self.assertEqual(set(cached_subjects), set(subjects_to_create))
+
+        # create a version/copy of the resource
+        self.new_resource = hydroshare.create_empty_resource(self.resource.short_id, self.user, action=action)
+        if action == 'version':
+            new_resource = hydroshare.create_new_version_resource(self.resource, self.new_resource, self.user)
+        else:
+            new_resource = hydroshare.copy_resource(self.resource, self.new_resource)
+
+        # Verify cached metadata is consistent for the new resource
+        new_resource.refresh_from_db()
+        cached_subjects = new_resource.cached_metadata.get('subjects', [])
+        self.assertEqual(len(cached_subjects), 5)
+        self.assertEqual(set(cached_subjects), set(subjects_to_create))
+        self.assertEqual(new_resource.cached_metadata['title'], self.resource.cached_metadata['title'])
+        self.assertEqual(new_resource.cached_metadata['creators'], self.resource.cached_metadata['creators'])
+        # check the number of creators in the new resource
+        self.assertEqual(len(new_resource.metadata.creators.all()), 2)
+        self.assertEqual(new_resource.cached_metadata['subjects'], self.resource.cached_metadata['subjects'])
+        # check the number of subjects in the new resource
+        self.assertEqual(len(new_resource.metadata.subjects.all()), 5)
+        self.assertEqual(new_resource.cached_metadata['status'], self.resource.cached_metadata['status'])
+        # check that the new resource created date is after the original resource created date
+        original_resource_created_date = datetime.fromisoformat(self.resource.cached_metadata['created'])
+        new_resource_created_date = datetime.fromisoformat(new_resource.cached_metadata['created'])
+        self.assertGreater(new_resource_created_date, original_resource_created_date)
+        # check that the new resource modified date is after the original resource modified date
+        original_resource_modified_date = datetime.fromisoformat(self.resource.cached_metadata['modified'])
+        new_resource_modified_date = datetime.fromisoformat(new_resource.cached_metadata['modified'])
+        self.assertGreater(new_resource_modified_date, original_resource_modified_date)
