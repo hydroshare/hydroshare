@@ -5,7 +5,6 @@ import logging
 import os.path
 import re
 import sys
-from typing import Union
 import unicodedata
 import urllib.parse
 from uuid import uuid4
@@ -701,8 +700,6 @@ class Party(AbstractMetaDataElement):
             kwargs['identifiers'] = identifiers
 
         party = super(Party, cls).update(element_id, **kwargs)
-        resource = party.content_object.resource
-
         if party.hydroshare_user_id is not None:
             user = User.objects.get(id=party.hydroshare_user_id)
             party.is_active_user = user.is_active
@@ -743,7 +740,6 @@ class Party(AbstractMetaDataElement):
     def remove(cls, element_id, delete=True):
         """Define custom remove method for Party model."""
         party = cls.objects.get(id=element_id)
-        resource = party.content_object.resource
 
         # if we are deleting a creator, then we have to update the order attribute of remaining
         # creators associated with a resource
@@ -768,7 +764,6 @@ class Party(AbstractMetaDataElement):
         """Overriding the django model delete() method"""
         self.remove(element_id=self.id, delete=False)
         super(Party, self).delete(using=using, keep_parents=keep_parents)
-
 
     @classmethod
     def validate_identifiers(cls, identifiers):
@@ -2093,8 +2088,6 @@ class Subject(AbstractMetaDataElement):
     def remove(cls, element_id, delete=True):
         """Define custom remove method for Subject model."""
         sub = Subject.objects.get(id=element_id)
-        resource = sub.metadata.resource
-
         if Subject.objects.filter(object_id=sub.object_id,
                                   content_type__pk=sub.content_type.id).count() == 1:
             raise ValidationError("The only subject element of the resource can't be deleted.")
@@ -2230,7 +2223,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
     # cache metadata for performance optimization of my-resources page
     cached_metadata = models.JSONField(default=dict)
 
-
     # for tracking number of times resource and its files have been downloaded
     download_count = models.PositiveIntegerField(default=0)
     bag_last_downloaded = models.DateTimeField(null=True, blank=True)
@@ -2262,7 +2254,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         Update a specific field in the cached metadata
 
         :param field_name: The field to update ('creator', 'subject', etc.)
-        NOTE: This method gets called from post_save and post_delete signal handler for 
+        NOTE: This method gets called from post_save and post_delete signal handler for
         any core metadata elements. We need to update the 'modified' field in cached metadata
         for any change to core metadata elements. The Date metadata element gets updated for the
         modified date type by the system as needed. We are depending on that change to modified date
@@ -5308,7 +5300,6 @@ class TaskNotification(models.Model):
     name = models.CharField(max_length=1000, blank=True)
     payload = models.CharField(max_length=1000, blank=True)
     status = models.CharField(max_length=20, choices=TASK_STATUS_CHOICES, default='progress')
-
 
 
 def resource_processor(request, page):

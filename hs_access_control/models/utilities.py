@@ -172,7 +172,7 @@ def get_user_resources(user_id, owned=True, shared=True):
         return BaseResource.objects.none()
 
     group_resources = GroupResourcePrivilege.objects.filter(
-            group__g2ugp__user=user, group__gaccess__active=True).values_list('resource', flat=True)
+        group__g2ugp__user=user, group__gaccess__active=True).values_list('resource', flat=True)
 
     if owned and shared:
         user_resources = UserResourcePrivilege.objects.filter(user=user).values_list('resource', flat=True)

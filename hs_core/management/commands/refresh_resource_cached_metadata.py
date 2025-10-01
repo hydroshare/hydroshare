@@ -1,9 +1,9 @@
 """
 Management command to refresh the cached metadata for a specific resource or all resources.
 
-This command iterates through all resources and updates their cached metadata 
+This command iterates through all resources and updates their cached metadata
 using the update_all_cached_metadata method.
-It tracks failed resources and their errors, and prints success information for 
+It tracks failed resources and their errors, and prints success information for
 each successfully updated resource.
 """
 
@@ -102,8 +102,9 @@ class Command(BaseCommand):
                     success_count += 1
 
                     # Print updated metadata for each successful resource
+                    success_msg = f"[{index}/{total_resources}] Successfully updated resource {resource.short_id}"
                     self.stdout.write(
-                        self.style.SUCCESS(f"[{index}/{total_resources}] Successfully updated resource {resource.short_id}")
+                        self.style.SUCCESS(success_msg)
                     )
                     self.stdout.write(f"  Updated cached metadata: {resource.cached_metadata}")
 
@@ -113,7 +114,8 @@ class Command(BaseCommand):
                 except Exception as e:
                     # Track the failed resource and its error
                     failed_resources[base_resource.short_id] = str(e)
-                    err_msg = f"[{index}/{total_resources}] Failed to update resource {base_resource.short_id}: {str(e)}"
+                    res_id = base_resource.short_id
+                    err_msg = f"[{index}/{total_resources}] Failed to update resource {res_id}: {str(e)}"
                     self.stdout.write(
                         self.style.ERROR(err_msg)
                     )

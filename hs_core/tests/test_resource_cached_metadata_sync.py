@@ -37,7 +37,6 @@ class TestDenormalizedMetadataSync(TestCase):
         )
         self.new_resource = None
 
-
     def tearDown(self):
         """Clean up after tests."""
         self.resource.delete()

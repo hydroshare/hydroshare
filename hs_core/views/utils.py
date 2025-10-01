@@ -30,7 +30,6 @@ from django.urls import reverse
 from django.utils.encoding import force_bytes
 from django.utils.http import int_to_base36, urlsafe_base64_encode
 
-from hs_labels.models import UserResourceLabels
 from mezzanine.conf import settings
 from mezzanine.utils.email import send_mail_template, subject_template
 from mezzanine.utils.urls import next_url
