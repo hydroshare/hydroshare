@@ -159,22 +159,36 @@ Hydroshare is released under the BSD 3-Clause License. This means that [you can 
 
 Then...
 
+### create a new user `asdf2`
+Go to https://localhost/sign-up
+This is a necessary step right now because perhaps the `asdf` user in the dev database doesn't have a bucket or maybe it is missing a quota?
+
+### Create a new resource using the UI
+Create a new empty resource (or add metadata and files if you want)
+Make note of this resource's ID, this will be your "STARTING_RESOURCE_ID"
+In the following steps, we will call this resource id "STARTING_RESOURCE_ID"
+
 ### stage a resource with necessary metadata files
-Assuming that you have HS running locally, with a user `asdf2` and a resource `691cd6fc77e6403299bf5ea51ef4698f`
-"move" the resource to the expected default:
+Here we are moving your resource to a standard resource id. We do this because the landing page currently uses this `DEFAULT_RESOURCE_ID` for its examples. This just makes it easier for you to be able to click the "EXAMPLE" button on the landing page.
 ```
-export STARTING_RESOURCE_ID=691cd6fc77e6403299bf5ea51ef4698f
+export STARTING_RESOURCE_ID= [ ...replace with your STARTING_RESOURCE_ID ]
 export DEFAULT_RESOURCE_ID=d7b526e24f7e449098b428ae9363f514
 docker exec -it hydroshare python manage.py modify_resource_id $STARTING_RESOURCE_ID $DEFAULT_RESOURCE_ID
 ```
 
+### move the metadata .json files to the appropriate locations
 ```
 # the bucket is your hs username
 export BUCKET=asdf2
-
 mc alias set local-hydroshare http://localhost:9000 minioadmin minioadmin
-
 mc cp landing-page/example_metadata/dataset_metadata.json local-hydroshare/$BUCKET/md/$DEFAULT_RESOURCE_ID/
-
 mc cp landing-page/example_metadata/hs_user_meta.json local-hydroshare/$BUCKET/$DEFAULT_RESOURCE_ID/data/contents/
 ```
+
+### go checkout the resource
+* https://localhost/resource/d7b526e24f7e449098b428ae9363f514
+* You should see the resource landing page.
+* Click "Login" this will redirect you to: the [HS sign-in page](https://localhost/accounts/login/?next=https%3A%2F%2Flocalhost%2Fresource%2Fd7b526e24f7e449098b428ae9363f514)
+* After login, it should redirect you back to the [landing page](https://localhost/resource/d7b526e24f7e449098b428ae9363f514)
+* If you get an error, check the "Settings" in the upper RH corneer
+Sometimes clicking the APPLY button will resolve the issue. This is a known bug that we need to resolve ![APPLY](apply_resource_landing_settings.png)
