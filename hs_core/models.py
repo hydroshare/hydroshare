@@ -2262,84 +2262,97 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         Update a specific field in the cached metadata
 
         :param field_name: The field to update ('creator', 'subject', etc.)
+        NOTE: This method gets called from post_save and post_delete signal handler for 
+        any core metadata elements. We need to update the 'modified' field in cached metadata
+        for any change to core metadata elements. The Date metadata element gets updated for the
+        modified date type by the system as needed. We are depending on that change to modified date
+        to update the 'modified' field in cached metadata.
         """
-
         self.refresh_from_db()
         metadata = self.metadata
         copied_metadata = copy.deepcopy(self.cached_metadata)
-        # Update only the specified field
-        if field_name == 'creator':
-            creators = metadata.creators.all()
-            copied_metadata['creators'] = [
-                {
-                    'name': c.name,
-                    'order': c.order,
-                    'hs_user_id': c.hydroshare_user_id,
-                    'is_active_user': c.is_active_user,
-                    'relative_uri': c.relative_uri
-                }
-                for c in creators
-            ]
-        elif field_name == 'title':
-            title = metadata.title.value if hasattr(metadata, 'title') and metadata.title else ""
-            copied_metadata['title'] = title
-        elif field_name == 'subject':
-            subjects = list(metadata.subjects.all())
-            copied_metadata['subjects'] = [s.value for s in subjects]
-        elif field_name == 'date':
-            if 'created' not in copied_metadata:
-                created_date = metadata.dates.filter(type='created').first()
-                if created_date:
-                    copied_metadata['created'] = created_date.start_date.isoformat()
-                else:
-                    copied_metadata['created'] = self.created.isoformat()
-        elif field_name == 'status':
-            if hasattr(self, 'raccess'):
-                copied_metadata['status'] = {
-                    "public": self.raccess.public,
-                    "discoverable": self.raccess.discoverable,
-                    "published": self.raccess.published,
-                    "shareable": self.raccess.shareable
-                }
 
-        if 'title' not in copied_metadata:
-            title = metadata.title.value if hasattr(metadata, 'title') and metadata.title else ""
-            copied_metadata['title'] = title
-        if 'creators' not in copied_metadata:
-            creators = metadata.creators.all()
-            copied_metadata['creators'] = [
-                {
-                    'name': c.name,
-                    'order': c.order,
-                    'hs_user_id': c.hydroshare_user_id,
-                    'is_active_user': c.is_active_user,
-                    'relative_uri': c.relative_uri
-                }
-                for c in creators
-            ]
+        # These are the fields that need to be updated in cached metadata
+        field_updaters = {
+            'creator': self._update_creators_field,
+            'title': self._update_title_field,
+            'subject': self._update_subjects_field,
+            'date': self._update_date_field,
+            'status': self._update_status_field
+        }
 
+        # Update the specified field
+        if field_name in field_updaters:
+            field_updaters[field_name](copied_metadata, metadata)
+
+        # Ensure all required fields are present
+        self._ensure_required_fields(copied_metadata, metadata)
+
+        # Update the modified date every time a metadata element is updated/deleted
+        copied_metadata['modified'] = now().isoformat()
+        type(self).objects.filter(id=self.id).update(cached_metadata=copied_metadata)
+        self.refresh_from_db(fields=['cached_metadata'])
+
+    def _update_creators_field(self, copied_metadata, metadata):
+        """Update creators field in cached metadata"""
+        creators = metadata.creators.all()
+        copied_metadata['creators'] = [
+            {
+                'name': c.name,
+                'order': c.order,
+                'hs_user_id': c.hydroshare_user_id,
+                'is_active_user': c.is_active_user,
+                'relative_uri': c.relative_uri
+            }
+            for c in creators
+        ]
+
+    def _update_title_field(self, copied_metadata, metadata):
+        """Update title field in cached metadata"""
+        title = metadata.title.value if hasattr(metadata, 'title') and metadata.title else ""
+        copied_metadata['title'] = title
+
+    def _update_subjects_field(self, copied_metadata, metadata):
+        """Update subjects field in cached metadata"""
+        subjects = list(metadata.subjects.all())
+        copied_metadata['subjects'] = [s.value for s in subjects]
+
+    def _update_date_field(self, copied_metadata, metadata):
+        """Update date field in cached metadata"""
         if 'created' not in copied_metadata:
             created_date = metadata.dates.filter(type='created').first()
             if created_date:
                 copied_metadata['created'] = created_date.start_date.isoformat()
             else:
                 copied_metadata['created'] = self.created.isoformat()
-        if 'subjects' not in copied_metadata:
-            subjects = list(metadata.subjects.all())
-            copied_metadata['subjects'] = [s.value for s in subjects]
+
+    def _update_status_field(self, copied_metadata, metadata):
+        """Update status field in cached metadata"""
+        if hasattr(self, 'raccess'):
+            copied_metadata['status'] = {
+                "public": self.raccess.public,
+                "discoverable": self.raccess.discoverable,
+                "published": self.raccess.published,
+                "shareable": self.raccess.shareable
+            }
+
+    def _ensure_required_fields(self, copied_metadata, metadata):
+        """Ensure all required fields are present in cached metadata"""
+
+        if 'title' not in copied_metadata or copied_metadata['title'] == '':
+            self._update_title_field(copied_metadata, metadata)
+
+        if 'creators' not in copied_metadata or len(copied_metadata['creators']) == 0:
+            self._update_creators_field(copied_metadata, metadata)
+
+        if 'created' not in copied_metadata or copied_metadata['created'] == '':
+            self._update_date_field(copied_metadata, metadata)
+
+        if 'subjects' not in copied_metadata or len(copied_metadata['subjects']) == 0:
+            self._update_subjects_field(copied_metadata, metadata)
+
         if 'status' not in copied_metadata:
-            if hasattr(self, 'raccess'):
-                copied_metadata['status'] = {
-                    "public": self.raccess.public,
-                    "discoverable": self.raccess.discoverable,
-                    "published": self.raccess.published,
-                    "shareable": self.raccess.shareable
-                }
-        # TODO: Though the modified date is updated here when any metadata is updated, for some reason it sticks only when
-        # when Title, Subjects, Creator, and Status are updated. For example, updating Abstract wont update the modified date.
-        copied_metadata['modified'] = now().isoformat()
-        type(self).objects.filter(id=self.id).update(cached_metadata=copied_metadata)
-        self.refresh_from_db()
+            self._update_status_field(copied_metadata, metadata)
 
     def update_all_cached_metadata(self):
         """Update all fields in the cached metadata"""
