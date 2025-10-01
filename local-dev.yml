@@ -184,9 +184,9 @@ services:
 
       # TODO compute the aws endpoint dynamically based on where minio is running
       # For local uploads to work for local dev, use:
-      # COMPANION_AWS_ENDPOINT: 'http://localhost:9000'
+      COMPANION_AWS_ENDPOINT: 'http://localhost:9000'
       # For 3rd party uploads to work from within docker on a mac, use:
-      COMPANION_AWS_ENDPOINT: 'http://host.docker.internal:9000'
+      # COMPANION_AWS_ENDPOINT: 'http://host.docker.internal:9000'
 
       # https://uppy.io/docs/companion/#s3bucket-companion_aws_bucket
       # COMPANION_AWS_BUCKET: asdf2
