@@ -235,22 +235,35 @@ def pre_delete_user_handler(sender, instance, **kwargs):
 @receiver(post_save, sender=ResourceAccess)
 def resource_access_post_save_handler(sender, instance, **kwargs):
     """Update status in cached metadata when resource sharing
-    status (public, discoverable, published) changes"""
-    try:
-        resource = instance.resource
-        resource.update_cached_metadata_field('status')
-    except Exception as ex:
-        logger.error(f"Error updating status in cached metadata: {str(ex)}")
+    status (public, discoverable, published, shareable) changes"""
+
+    resource = instance.resource
+    # when making a copy of a resource, the copy resource may not have raccess attribute when
+    # the post_save signal is sent for ResourceAccess
+    if resource is not None and hasattr(resource, 'raccess') and resource.raccess is not None:
+        try:
+            resource.update_cached_metadata_field('status')
+        except Exception as ex:
+            logger.error(f"Error updating status in cached metadata for resource {resource.short_id}: {str(ex)}")
 
 
 @receiver(post_save)
 def metadata_element_saved(sender, instance, **kwargs):
     if isinstance(instance, AbstractMetaDataElement):
-        resource = instance.metadata.resource
-        resource.update_cached_metadata_field(instance.__class__.__name__.lower())
+        if hasattr(instance, 'metadata') and instance.metadata is not None:
+            resource = instance.metadata.resource
+            try:
+                resource.update_cached_metadata_field(instance.__class__.__name__.lower())
+            except Exception as ex:
+                logger.error(f"Error updating cached metadata for resource {resource.short_id}: {str(ex)}")
+
 
 @receiver(post_delete)
 def metadata_element_deleted(sender, instance, **kwargs):
     if isinstance(instance, AbstractMetaDataElement):
-        resource = instance.metadata.resource
-        resource.update_cached_metadata_field(instance.__class__.__name__.lower())
+        if hasattr(instance, 'metadata') and instance.metadata is not None:
+            resource = instance.metadata.resource
+            try:
+                resource.update_cached_metadata_field(instance.__class__.__name__.lower())
+            except Exception as ex:
+                logger.error(f"Error updating cached metadata for resource {resource.short_id}: {str(ex)}")
