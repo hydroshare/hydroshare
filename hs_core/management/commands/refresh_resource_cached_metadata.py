@@ -14,7 +14,7 @@ from hs_core.models import BaseResource
 
 
 class Command(BaseCommand):
-    help = "Refresh the cached metadata for all resources or a specific resource using each resource's update_all_cached_metadata method"
+    help = "Refresh the cached metadata for all resources or a specific resource"
 
     def add_arguments(self, parser):
         # Optional verbose flag
@@ -71,7 +71,8 @@ class Command(BaseCommand):
             total_resources = BaseResource.objects.count()
 
             # Prompt for confirmation when updating all resources
-            confirm = input(f"This will update cached metadata for all {total_resources} resources. Do you want to continue? (yes/no): ")
+            prompt_message = "Do you want to continue? (yes/no): "
+            confirm = input(f"This will update cached metadata for all {total_resources} resources. {prompt_message}")
             if confirm.lower() not in ['yes', 'y']:
                 self.stdout.write("Operation cancelled.")
                 return
@@ -112,8 +113,9 @@ class Command(BaseCommand):
                 except Exception as e:
                     # Track the failed resource and its error
                     failed_resources[base_resource.short_id] = str(e)
+                    err_msg = f"[{index}/{total_resources}] Failed to update resource {base_resource.short_id}: {str(e)}"
                     self.stdout.write(
-                        self.style.ERROR(f"[{index}/{total_resources}] Failed to update resource {base_resource.short_id}: {str(e)}")
+                        self.style.ERROR(err_msg)
                     )
 
             # Print summary
