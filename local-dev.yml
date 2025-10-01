@@ -177,10 +177,10 @@ services:
       COMPANION_GOOGLE_SECRET: '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'
       # https://uppy.io/docs/companion/#enablegooglepickerendpoint-companion_enable_google_picker_endpoint
       COMPANION_ENABLE_GOOGLE_PICKER_ENDPOINT: 'true'
-
       COMPANION_AWS_FORCE_PATH_STYLE: 'true'
-      COMPANION_AWS_KEY: 'minioadmin'
-      COMPANION_AWS_SECRET: 'minioadmin'
+      # the key and secret are now dynamically calculated in companion-custom-s3-client.js
+      # COMPANION_AWS_KEY: 'minioadmin'
+      # COMPANION_AWS_SECRET: 'minioadmin'
       COMPANION_AWS_ENDPOINT: 'http://host.docker.internal:9000'
       # https://uppy.io/docs/companion/#s3bucket-companion_aws_bucket
       # COMPANION_AWS_BUCKET: asdf2

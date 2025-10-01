@@ -26,13 +26,25 @@ const getKey = ({ filename, metadata, req }) => {
   return key;
 }
 
+const getDefaultAwsKey = () => {
+  const awsKey = process.env.COMPANION_AWS_KEY || 'temporarykey';
+  console.log('Using default AWS key:', awsKey);
+  return awsKey;
+}
+
+const getDefaultAwsSecret = () => {
+  const awsSecret = process.env.COMPANION_AWS_SECRET || 'temporarysecret';
+  console.log('Using default AWS secret:', awsSecret);
+  return awsSecret;
+}
+
 defaultOptions.s3.bucket = bucket;
 defaultOptions.s3.getKey = getKey;
 // defaultOptions.s3.forcePathStyle = true; // needed for minio
 // defaultOptions.s3.region = process.env.COMPANION_AWS_REGION || 'us-east-1';
 // defaultOptions.s3.endpoint = process.env.COMPANION_AWS_ENDPOINT || 'http://host.docker.internal:9000';
-// defaultOptions.s3.key = process.env.COMPANION_AWS_KEY || 'minioadmin';
-// defaultOptions.s3.secret = process.env.COMPANION_AWS_SECRET || 'minioadmin';
+defaultOptions.s3.key = getDefaultAwsKey();
+defaultOptions.s3.secret = getDefaultAwsSecret();
 // defaultOptions.s3.forcePathStyle = process.env.COMPANION_AWS_FORCE_PATH_STYLE || 'true';
 
 // providerOptions
@@ -42,6 +54,6 @@ defaultOptions.providerOptions = {
     bucket,
   },
 };
-console.log('Custom companion config loaded with options:', defaultOptions);
+console.log('Custom companion config loaded');
 
 export { defaultOptions, getMaskableSecrets, validateConfig };
