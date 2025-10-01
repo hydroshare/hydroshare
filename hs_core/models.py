@@ -4632,7 +4632,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     @property
     def title(self):
         """Return the first title object from metadata."""
-        return self._title.all()[0]
+        return self._title.all().first()
 
     @property
     def description(self):
