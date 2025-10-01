@@ -2281,9 +2281,14 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             'status': self._update_status_field
         }
 
-        # Update the specified field
-        if field_name in field_updaters:
-            field_updaters[field_name](copied_metadata, metadata)
+        # Update all fields if 'all' is specified
+        if field_name == 'all':
+            for updater in field_updaters.values():
+                updater(copied_metadata, metadata)
+        else:
+            # Update the specified field
+            if field_name in field_updaters:
+                field_updaters[field_name](copied_metadata, metadata)
 
         # Ensure all required fields are present
         self._ensure_required_fields(copied_metadata, metadata)
@@ -2355,9 +2360,11 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             self._update_status_field(copied_metadata, metadata)
 
     def update_all_cached_metadata(self):
-        """Update all fields in the cached metadata"""
-        for field in ['creator', 'title', 'subject', 'date', 'status']:
-            self.update_cached_metadata_field(field)
+        """
+        Update all fields in the cached metadata
+        This method is primarily for use in management commands to refresh cached metadata
+        """
+        self.update_cached_metadata_field(field_name='all')
 
     # definition of resource logic
     @property
