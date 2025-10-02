@@ -11,6 +11,13 @@ RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc \
 RUN mv $HOME/minio-binaries/mc /usr/local/bin/mc
 RUN chmod +x /usr/local/bin/mc
 
+RUN apt-get update
+RUN apt-get -y upgrade
+RUN curl -1sLf 'https://dl.redpanda.com/nzc4ZYQK3WRGd9sy/redpanda/cfg/setup/bash.deb.sh' | bash
+RUN apt install -y redpanda-rpk redpanda-connect
+
+RUN pip install redpanda-connect
+
 RUN pip install confluent-kafka
 
 ENV LANG en_US.UTF-8
