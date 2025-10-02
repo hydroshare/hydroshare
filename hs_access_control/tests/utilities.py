@@ -19,7 +19,7 @@ from hs_access_control.models import UserAccess, GroupAccess, ResourceAccess, \
 
 
 # from hs_core import hydroshare
-from hs_core.models import BaseResource, UserResource
+from hs_core.models import BaseResource
 
 
 def global_reset():
@@ -32,7 +32,6 @@ def global_reset():
     UserAccess.objects.all().delete()
     GroupAccess.objects.all().delete()
     ResourceAccess.objects.all().delete()
-    UserResource.objects.all().delete()
     User.objects.all().delete()
     Group.objects.all().delete()
     Community.objects.all().delete()
