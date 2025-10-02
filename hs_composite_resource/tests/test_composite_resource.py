@@ -4147,8 +4147,10 @@ class CompositeResourceTest(
             shutil.rmtree(os.path.dirname(temp_zip_file))
 
     def test_composite_resource_my_resources_none(self):
-        # test that only a fixed number of db queries (based on the number of resources) are
-        # generated for "my_resources" page - this test is with no resource.
+        # test that only a fixed number of db queries are
+        # generated for "my_resources" page - the number of queries should not depend
+        # on the number of user's resources.
+        # this test is with no resource.
 
         # there should not be any resource at this point
         self.assertEqual(BaseResource.objects.count(), 0)
@@ -4161,7 +4163,7 @@ class CompositeResourceTest(
         # there should be no resources at this point
         number_of_resources = BaseResource.objects.count()
         self.assertEqual(number_of_resources, 0)
-        expected_query_count = self._get_expected_query_count(number_of_resources)
+        expected_query_count = self._get_expected_query_count()
         with self.assertNumQueries(expected_query_count):
             response = self.client.get(reverse("my_resources"), follow=True)
             self.assertTrue(response.status_code == 200)
@@ -4169,8 +4171,10 @@ class CompositeResourceTest(
         self.composite_resource = None
 
     def test_composite_resource_my_resources_one(self):
-        # test that only a fixed number of db queries (based on the number of resources) are
-        # generated for "my_resources" page - this test is with one resource.
+        # test that only a fixed number of db queries are
+        # generated for "my_resources" page - the number of queries should not depend
+        # on the number of user's resources.
+        # this test is with one resource.
 
         # there should not be any resource at this point
         self.assertEqual(BaseResource.objects.count(), 0)
@@ -4185,14 +4189,16 @@ class CompositeResourceTest(
         # there should be one resource at this point
         number_of_resources = BaseResource.objects.count()
         self.assertEqual(number_of_resources, 1)
-        expected_query_count = self._get_expected_query_count(number_of_resources)
+        expected_query_count = self._get_expected_query_count()
         with self.assertNumQueries(expected_query_count):
             response = self.client.get(reverse("my_resources"), follow=True)
             self.assertTrue(response.status_code == 200)
 
     def test_composite_resource_my_resources_two(self):
-        # test that only a fixed number of db queries (based on the number of resources) are
-        # generated for "my_resources" page - this test is with two resources.
+        # test that only a fixed number of db queries are
+        # generated for "my_resources" page - the number of queries should not depend
+        # on the number of user's resources.
+        # this test is with two resources.
 
         # there should not be any resource at this point
         self.assertEqual(BaseResource.objects.count(), 0)
@@ -4209,14 +4215,16 @@ class CompositeResourceTest(
         # there should be 2 resources at this point
         number_of_resources = BaseResource.objects.count()
         self.assertEqual(number_of_resources, 2)
-        expected_query_count = self._get_expected_query_count(number_of_resources)
+        expected_query_count = self._get_expected_query_count()
         with self.assertNumQueries(expected_query_count):
             response = self.client.get(reverse("my_resources"), follow=True)
             self.assertTrue(response.status_code == 200)
 
     def test_composite_resource_my_resources_three(self):
-        # test that only a fixed number of db queries (based on the number of resources) are
-        # generated for "my_resources" page - this test is with three resources.
+        # test that only a fixed number of db queries are
+        # generated for "my_resources" page - the number of queries should not depend
+        # on the number of user's resources.
+        # this test is with three resources.
 
         # there should not be any resource at this point
         self.assertEqual(BaseResource.objects.count(), 0)
@@ -4233,7 +4241,7 @@ class CompositeResourceTest(
         # there should be 3 resources at this point
         number_of_resources = BaseResource.objects.count()
         self.assertEqual(number_of_resources, 3)
-        expected_query_count = self._get_expected_query_count(number_of_resources)
+        expected_query_count = self._get_expected_query_count()
         with self.assertNumQueries(expected_query_count):
             response = self.client.get(reverse("my_resources"), follow=True)
             self.assertTrue(response.status_code == 200)
@@ -4298,23 +4306,17 @@ class CompositeResourceTest(
         with self.assertNumQueries(3):
             _ = self.composite_resource.readme_file
 
-    def _get_expected_query_count(self, number_of_resources):
-        # this is the expected number of queries for "my_resources" page with no resources
-        base_query_count = 15
+    def _get_expected_query_count(self):
+        # gets the expected number of queries for "my_resources" page
+        # the number of queries does not depend on the number of resources
 
-        # this is additional number of queries per resource
-        # 9 are mezzanine queries (can't do much about it)
-        # 3 queries are our code in template
-        per_resource_query_count = 12
+        # base query count - mostly mezzanine queries
+        base_query_count = 12
 
-        # these are additional queries generated by get_my_resources_list() function
-        if number_of_resources > 0:
-            pre_template_query_count = 4 + number_of_resources
-        else:
-            pre_template_query_count = 0
+        # number of queries to get the list of user's resources
+        resource_list_query_count = 2
 
-        expected_query_count = base_query_count + pre_template_query_count
-        expected_query_count += per_resource_query_count * number_of_resources
+        expected_query_count = base_query_count + resource_list_query_count
         return expected_query_count
 
     def test_dangling_resource_file_size(self):
