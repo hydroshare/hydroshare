@@ -251,19 +251,21 @@ def resource_access_post_save_handler(sender, instance, **kwargs):
 def metadata_element_saved(sender, instance, **kwargs):
     if isinstance(instance, AbstractMetaDataElement):
         if hasattr(instance, 'metadata') and instance.metadata is not None:
-            resource = instance.metadata.resource
-            try:
-                resource.update_cached_metadata_field(instance.__class__.__name__.lower())
-            except Exception as ex:
-                logger.error(f"Error updating cached metadata for resource {resource.short_id}: {str(ex)}")
+            if hasattr(instance.metadata, 'resource') and instance.metadata.resource is not None:
+                resource = instance.metadata.resource
+                try:
+                    resource.update_cached_metadata_field(instance.__class__.__name__.lower())
+                except Exception as ex:
+                    logger.error(f"Error updating cached metadata for resource {resource.short_id}: {str(ex)}")
 
 
 @receiver(post_delete)
 def metadata_element_deleted(sender, instance, **kwargs):
     if isinstance(instance, AbstractMetaDataElement):
         if hasattr(instance, 'metadata') and instance.metadata is not None:
-            resource = instance.metadata.resource
-            try:
-                resource.update_cached_metadata_field(instance.__class__.__name__.lower())
-            except Exception as ex:
-                logger.error(f"Error updating cached metadata for resource {resource.short_id}: {str(ex)}")
+            if hasattr(instance.metadata, 'resource') and instance.metadata.resource is not None:
+                resource = instance.metadata.resource
+                try:
+                    resource.update_cached_metadata_field(instance.__class__.__name__.lower())
+                except Exception as ex:
+                    logger.error(f"Error updating cached metadata for resource {resource.short_id}: {str(ex)}")
