@@ -69,6 +69,8 @@ def create_account(
         raise ValidationError("User with provided email already exists.")
     except User.DoesNotExist:
         pass
+    if username in ['zips', 'tmp', 'bags']:
+        raise ValidationError(f"{username} is not allowed as a username.")
     groups = groups if groups else []
     groups = (
         Group.objects.in_bulk(*groups)

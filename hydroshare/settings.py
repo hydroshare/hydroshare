@@ -453,7 +453,6 @@ INSTALLED_APPS = (
     "health_check.contrib.celery",
     "health_check.contrib.celery_ping",
     "health_check.contrib.psutil",
-    "health_check.contrib.rabbitmq",
     "mozilla_django_oidc",
     'django_tus',
 )
@@ -957,6 +956,8 @@ PUBLISHER_USER_NAME = "published"
 MINIO_LIFECYCLE_POLICY = None
 DEFAULT_QUOTA_VALUE = 20
 DEFAULT_QUOTA_UNIT = "GB"
+
+BROKER_URL = 'kafka://redpanda:9092'
 
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #

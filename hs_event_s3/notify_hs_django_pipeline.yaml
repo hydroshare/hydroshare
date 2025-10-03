@@ -1,0 +1,12 @@
+input:
+  kafka_franz:
+    seed_brokers:
+      - "redpanda:9092" # Or your Redpanda broker addresses
+    topics:
+      - "resource_file"
+    consumer_group: "hs_django"
+pipeline:
+  processors:
+  - notify_hs_django_processor: {}
+output:
+  stdout: {}
