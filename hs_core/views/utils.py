@@ -21,9 +21,8 @@ from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
                                     SuspiciousFileOperation)
 from django.core.files.base import File
 from django.core.validators import URLValidator
-from django.db.models import BooleanField, Case, Prefetch, Value, When, TextField
+from django.db.models import BooleanField, Case, Value, When, TextField
 from django.db import models
-from django.db.models.query import prefetch_related_objects
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.http import HttpResponse, QueryDict
 from django.urls import reverse
