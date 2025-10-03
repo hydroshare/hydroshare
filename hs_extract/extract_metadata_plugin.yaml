@@ -1,0 +1,5 @@
+name: extract_metadata_processor
+summary: Evaluates files and extracts metadata for json-ld files
+command: ["python", "hsextract/main.py"]
+type: processor
+fields: []
