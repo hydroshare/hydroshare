@@ -131,10 +131,30 @@ def resource_first_author(content):
         return ''
 
     first_creator = None
-    for creator in content.metadata.creators.all():
-        if creator.order == 1:
-            first_creator = creator
-            break
+
+    # Handle list of dictionaries (creator data)
+    if isinstance(content, list):
+        for creator_dict in content:
+            if creator_dict.get('order') == 1:
+                # Create a simple object-like structure from the dictionary
+                class CreatorFromDict:
+                    def __init__(self, data):
+                        self.name = data.get('name', '')
+                        self.organization = data.get('organization', '')
+                        self.relative_uri = data.get('relative_uri', '')
+                        self.is_active_user = data.get('is_active_user', False)
+
+                first_creator = CreatorFromDict(creator_dict)
+                break
+    else:
+        # Handle BaseResource object
+        for creator in content.metadata.creators.all():
+            if creator.order == 1:
+                first_creator = creator
+                break
+
+    if not first_creator:
+        return ''
 
     if first_creator.name:
         if first_creator.relative_uri and first_creator.is_active_user:
