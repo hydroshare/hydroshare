@@ -52,17 +52,7 @@
     </strong>
   </td>
   {# First Author #} 
-  <td>
-    {% for creator in metadata.creators %}
-      {% if creator.order == 1 %}
-        {% if creator.relative_uri and creator.is_active_user %}
-          <a href="{{ creator.relative_uri }}">{{ creator.name }}</a>
-        {% else %}
-          {{ creator.name }}
-        {% endif %}
-      {% endif %}
-    {% endfor %}
-  </td>
+  <td>{{ metadata.creators|resource_first_author }}</td>
 
   {# Date Created #}
   <td>{{ metadata.created|to_date|date:"M d, Y" }} at {{ metadata.created|to_date|date:"h:i A" }}</td>
