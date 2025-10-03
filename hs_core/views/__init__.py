@@ -95,10 +95,8 @@ from .utils import (
     ACTION_TO_AUTHORIZE,
     authorize,
     get_coverage_data_dict,
-    # get_my_resources_filter_counts,
-    get_my_resources_filter_counts_optimized,
-    # get_my_resources_list,
-    get_my_resources_list_optimized,
+    get_my_resources_filter_counts,
+    get_my_resources_list,
     send_action_to_take_email,
     get_default_support_user,
     user_from_bucket_name,
@@ -2887,7 +2885,7 @@ def my_resources_filter_counts(request, *args, **kwargs):
     _ = request.GET.getlist("filter", default=None)
     u = User.objects.select_related("uaccess").get(pk=request.user.id)
 
-    filter_counts = get_my_resources_filter_counts_optimized(u)
+    filter_counts = get_my_resources_filter_counts(u)
 
     return JsonResponse({"filter_counts": filter_counts})
 
@@ -2915,7 +2913,7 @@ def my_resources(request, *args, **kwargs):
         filter.append("viewable")
         filter.append("editable")
 
-    resource_collection = get_my_resources_list_optimized(u, annotate=True, filter=filter)
+    resource_collection = get_my_resources_list(u, annotate=True, filter=filter)
 
     context = {"collection": resource_collection}
 
