@@ -2299,7 +2299,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
                 'order': c.order,
                 'hs_user_id': c.hydroshare_user_id,
                 'is_active_user': c.is_active_user,
-                'relative_uri': c.relative_uri
+                'relative_uri': c.relative_uri,
+                'organization': c.organization
             }
             for c in creators
         ]
