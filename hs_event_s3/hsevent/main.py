@@ -53,7 +53,7 @@ def handle_minio_event(msg: redpanda_connect.Message) -> redpanda_connect.Messag
     bucket_name = key.split('/')[0]
     resource_id = key.split('/')[1]
     username = json_payload['Records'][0]['userIdentity']['principalId']
-    if username in ["minioadmin", "cuahsi"]:
+    if username == "cuahsi":
         return
     if not key.startswith(f'{bucket_name}/{resource_id}/data/contents/'):
         # TODO: tests around this check, possibly tighten up

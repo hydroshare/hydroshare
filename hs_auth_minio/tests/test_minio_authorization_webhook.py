@@ -590,7 +590,6 @@ def test_admin_request():
     assert response.json() == {"result": {"allow": True}}
 
     # assert cuahsi has authorization
-    request_body = request_body.replace("minioadmin", "cuahsi")
     response = client.post("/authorization/", data=request_body)
     assert response.status_code == 200
     assert response.json() == {"result": {"allow": True}}

@@ -83,7 +83,7 @@ async def hs_s3_authorization_check(auth_request: AuthRequest):
     bucket = auth_request.input.bucket
     action = auth_request.input.action
 
-    if username == "cuahsi" or username == "minioadmin":
+    if username == "cuahsi":
         # allow cuahsi admin account always
         return {"result": {"allow": True}}
 
