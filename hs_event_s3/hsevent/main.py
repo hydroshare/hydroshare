@@ -25,15 +25,16 @@ def link_s3_files_to_resource(resource, fullpath):
         print(f"Error syncing resource {resource.short_id}: {e}")
 
 
-def sync_resource(file_updated, key, resource_id, username):
+def sync_resource(file_created, key, resource_id, username):
     short_path = key.split(f'{resource_id}/data/contents/')[1]
-    if file_updated:
+    if file_created:
         try:
             resource = BaseResource.objects.get(short_id=resource_id)
             link_s3_files_to_resource(resource, short_path)
         except Exception as e:
             print(f"Error syncing resource {resource_id}: {e}")
     else:
+        # assume file deleted, only tracking put,delete events in kafka
         try:
             print(f"Deleting file {key} for resource {resource_id}")
             # the user identity from minio is equivalent to bucket name
@@ -49,7 +50,7 @@ def handle_minio_event(msg: redpanda_connect.Message) -> redpanda_connect.Messag
     print("Received message from Redpanda print")
     json_payload = json.loads(msg.payload)
     key = json_payload['Key']
-    file_updated = json_payload['EventName'].startswith("s3:ObjectCreated")
+    file_created = json_payload['EventName'].startswith("s3:ObjectCreated")
     bucket_name = key.split('/')[0]
     resource_id = key.split('/')[1]
     username = json_payload['Records'][0]['userIdentity']['principalId']
@@ -60,7 +61,7 @@ def handle_minio_event(msg: redpanda_connect.Message) -> redpanda_connect.Messag
         print(f"Ignoring event for key {key} not in contents directory")
         return
     print(f"Processing event for resource id: {resource_id}")
-    fetch_thread = threading.Thread(target=sync_resource, args=(file_updated, key, resource_id, username))
+    fetch_thread = threading.Thread(target=sync_resource, args=(file_created, key, resource_id, username))
     fetch_thread.start()
     fetch_thread.join()
 

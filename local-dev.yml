@@ -14,7 +14,7 @@ services:
       - minio_data_vol:/data
     environment:
       MINIO_ROOT_USER: cuahsi
-      MINIO_ROOT_PASSWORD: cuahsi
+      MINIO_ROOT_PASSWORD: devpassword
       MINIO_BROWSER_REDIRECT: "false"
       MINIO_SCANNER_SPEED: "fastest"
       MINIO_POLICY_PLUGIN_URL: "http://micro-auth/minio/authorization/"
