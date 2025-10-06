@@ -1,14 +1,14 @@
 .DEFAULT_GOAL := all
-DISCOVER_CONTAINER = discovery-atlas
-.PHONY: up-front
-up-front:
+PM2_PROJECT = discovery-atlas
+.PHONY: up-discover
+up-discover:
 	export VITE_APP_BASE=/search/
-	cd discovery-atlas/frontend && npx pm2 start npm --name $(DISCOVER_CONTAINER) -- run serve
+	cd discovery-atlas/frontend && npx pm2 start npm --name $(PM2_PROJECT) -- run serve
 
-.PHONY: down-front
-down-front:
-	npx pm2 delete $(DISCOVER_CONTAINER)
+.PHONY: down-discover
+down-discover:
+	npx pm2 delete $(PM2_PROJECT)
 
-.PHONY: logs-front
-logs-front:
-	npx pm2 logs $(DISCOVER_CONTAINER)
+.PHONY: logs-discover
+logs-discover:
+	npx pm2 logs $(PM2_PROJECT)

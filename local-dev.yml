@@ -220,7 +220,7 @@ services:
       - postgis
   # for local dev, we run discover using pm2 and a vite dev server
   # this allows for better developer experience with features like HMR
-  # the discovery-atlas service is run using "make up-front"
+  # the discovery-atlas service is run using "make up-discover"
   # discovery-atlas:
   #   build:
   #     context: discovery-atlas
