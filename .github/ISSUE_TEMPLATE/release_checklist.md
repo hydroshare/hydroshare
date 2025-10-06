@@ -18,7 +18,6 @@ Add the issues included in the release and update this document as release tasks
 <!-- Update the checklist as items are completed -->
 ### Beta Deployment
 - [ ] Diff RC to master to identify and update helm chart for the following files:
-  * scripts/templates/docker-compose.template
   * hydroshare/settings.py
   * hydroshare/local_settings.py
 - [ ] Determine whether maintenance page will be needed (db migrations etc)
