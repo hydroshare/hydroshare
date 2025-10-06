@@ -12,7 +12,7 @@ from hs_core.hydroshare.resource import get_datacite_url
 logger = logging.getLogger(__name__)
 
 
-def deposit_res_metadata_with_datacite(res):
+def deposit_res_metadata_with_datacite(res, datacite_url):
     """
     Deposit resource metadata with DataCite using the Fabrica-style payload.
     """
@@ -26,7 +26,7 @@ def deposit_res_metadata_with_datacite(res):
             "content-type": "application/json",
             "authorization": f"Basic {token}"
         }
-        doi_url = f"{get_datacite_url()}/{settings.DATACITE_PREFIX}/{res.short_id}"
+        doi_url = f"{datacite_url}/{res.short_id}"
 
         response = requests.put(
             url=doi_url,
@@ -58,6 +58,7 @@ class Command(BaseCommand):
     help = "Migrate all resources from Crossref to DataCite"
 
     def handle(self, *args, **options):
+        datacite_url = f"{get_datacite_url()}/{settings.DATACITE_PREFIX}"
         start_time = time.time()
         published_resources = BaseResource.filter(raccess__published=True)
 
@@ -74,7 +75,7 @@ class Command(BaseCommand):
             print(f"🔄 Processing resource: {res.short_id}")
             res_start_time = time.time()
 
-            deposit_res_metadata_with_datacite(res)
+            deposit_res_metadata_with_datacite(res, datacite_url)
             res_duration = timedelta(seconds=int(time.time() - res_start_time))
             print(f"✅ Finished processing resource: {res.short_id} | {res.metadata.title} | Time taken: {res_duration}")
             count += 1
