@@ -1050,13 +1050,10 @@ def deposit_res_metadata_with_datacite(res):
         raise
 
 
-def update_payload_for_datacite(short_id, element_name, form_data):
+def update_payload_for_datacite(res, element_name, form_data):
     """
     Transforms QueryDict form input into a DataCite-compliant payload using field mappings.
     """
-    res = utils.get_resource_by_shortkey(short_id)
-    if not res.raccess.published:
-        return False
     attributes = {}
     if element_name == 'fundingagency':
         attributes = {
@@ -1142,8 +1139,11 @@ def update_doi_metadata_with_datacite(short_id, element_name, payload):
     """
     Update existing DOI metadata with DataCite.
     """
+    res = utils.get_resource_by_shortkey(short_id)
+    if not res.raccess.published:
+        return False
 
-    payload = update_payload_for_datacite(short_id, element_name, payload)
+    payload = update_payload_for_datacite(res, element_name, payload)
     if not payload:
         logger.error(f"Failed to update DOI metadata for resource {short_id}.")
         return None
@@ -1319,8 +1319,7 @@ def publish_resource(user, pk):
         md_args = {'name': 'Consortium of Universities for the Advancement of Hydrologic Science, '
                            'Inc. (CUAHSI)',
                    'url': 'https://www.cuahsi.org'}
-        publisher_elem = resource.metadata.create_element('Publisher', **md_args)
-        created_metadata_elements.append(publisher_elem)
+        resource.metadata.create_element('Publisher', **md_args)
 
         # Here we publish the resource on behalf of the last_changed_by user
         # This ensures that the modified date closely matches the date that the metadata are submitted to Crossref
@@ -1333,8 +1332,7 @@ def publish_resource(user, pk):
 
         # add doi to "Identifier" element of science metadata
         md_args = {'name': 'doi', 'url': get_activated_doi(resource.doi)}
-        identifier_elem = resource.metadata.create_element('Identifier', **md_args)
-        created_metadata_elements.append(identifier_elem)
+        resource.metadata.create_element('Identifier', **md_args)
         deposit_res_metadata_with_datacite(resource)
         from hs_core.tasks import create_bag_by_s3
         create_bag_by_s3.apply_async((pk,))
@@ -1344,7 +1342,6 @@ def publish_resource(user, pk):
         # Revert changes made so far
         resource.doi = original_doi
         resource.set_quota_holder(publisher_user_account, original_quota_holder)
-        resource.set_public(False)
         resource.set_published(False)
         resource.raccess.alter_review_pending_flags(initiating_review=True)
 

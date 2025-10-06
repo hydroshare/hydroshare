@@ -59,7 +59,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         start_time = time.time()
-        published_resources = BaseResource.public_resources.filter(raccess__published=True)
+        published_resources = BaseResource.filter(raccess__published=True)
 
         total = published_resources.count()
         print(f"📦 Total published resources to process: {total}")
