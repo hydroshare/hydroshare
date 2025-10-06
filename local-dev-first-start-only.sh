@@ -198,6 +198,12 @@ echo " Starting system"
 echo '########################################################################################################################'
 echo
 
+echo " -make down-front"
+make down-front
+
+echo " - make up-front"
+make up-front
+
 echo "  - docker-compose -f ${DOCKER_COMPOSER_YAML_FILE} up -d ${REBUILD_IMAGE}"
 docker-compose -f $DOCKER_COMPOSER_YAML_FILE up -d $REBUILD_IMAGE
 
@@ -321,6 +327,8 @@ docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noi
 echo
 echo '########################################################################################################################'
 echo -e " All done, run `green '\"docker-compose -f local-dev.yml restart\"'` to restart HydroShare"
+echo -e " You are running discovery-atlas using PM2 and the Vite dev server."
+echo -e " Run `green '\"make down-front\"'` to cleanup the PM2 service when you're done."
 echo '########################################################################################################################'
 echo
 

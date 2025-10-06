@@ -218,23 +218,26 @@ services:
     restart: on-failure
     depends_on:
       - postgis
-  discovery-atlas:
-    build:
-      context: discovery-atlas
-      dockerfile: frontend/Dockerfile
-      args:
-        - VITE_APP_BASE=/search/
-        - VITE_APP_API_URL=https://localhost/api
-        - VITE_APP_NAME=Discover
-    container_name: discovery-atlas
-    hostname: discovery-atlas
-    platform: linux/amd64
-    environment:
-      VITE_APP_NAME: "Discover"
-      VITE_APP_API_URL: "TODO: set api url"
-      VITE_APP_BASE: "/search/"
-    ports:
-      - "5003:5003"
+  # for local dev, we run discover using pm2 and a vite dev server
+  # this allows for better developer experience with features like HMR
+  # the discovery-atlas service is run using "make up-front"
+  # discovery-atlas:
+  #   build:
+  #     context: discovery-atlas
+  #     dockerfile: frontend/Dockerfile
+  #     args:
+  #       - VITE_APP_BASE=/search/
+  #       - VITE_APP_API_URL=https://localhost/api
+  #       - VITE_APP_NAME=Discover
+  #   container_name: discovery-atlas
+  #   hostname: discovery-atlas
+  #   platform: linux/amd64
+  #   environment:
+  #     VITE_APP_NAME: "Discover"
+  #     VITE_APP_API_URL: "TODO: set api url"
+  #     VITE_APP_BASE: "/search/"
+  #   ports:
+  #     - "5003:5003"
 volumes:
   postgis_data_vol:
   temp_vol:
