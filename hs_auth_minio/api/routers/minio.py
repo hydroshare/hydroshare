@@ -116,22 +116,22 @@ async def hs_s3_authorization_check(auth_request: AuthRequest):
 
     # extracted metadata has a prefix of "md/resource_id" and should be view
     # only
-    resource_ids_and_is_md_path = [
+    resource_ids_and_is_contents_path = [
         (prefix.split(
-            "/")[0], False) if prefix.split("/")[0] != "md" else (prefix.split("/")[1], True)
+            "/")[0], True) if prefix.split("/", 1)[1].startswith("data/contents/") else (prefix.split("/")[0], False)
         for prefix in prefixes
     ]
     # check the user and each resource against the action
-    for resource_id, is_md_path in resource_ids_and_is_md_path:
-        if not _check_user_authorization(user_id, resource_id, action, is_md_path):
+    for resource_id, is_contents_path in resource_ids_and_is_contents_path:
+        if not _check_user_authorization(user_id, resource_id, action, is_contents_path):
             return {"result": {"allow": False}}
-    if resource_ids_and_is_md_path:
+    if resource_ids_and_is_contents_path:
         return {"result": {"allow": True}}
 
     return {"result": {"allow": False}}
 
 
-def _check_user_authorization(user_id, resource_id, action, is_md_path):
+def _check_user_authorization(user_id, resource_id, action, is_contents_path):
     # Break this down into just view and edit for now.
     # We may need to make owners distinct from edit at some point
 
@@ -165,9 +165,8 @@ def _check_user_authorization(user_id, resource_id, action, is_md_path):
     enable_edit_actions = os.environ.get(
         "ENABLE_EDIT_ACTIONS", "false").lower() == "true"
     if enable_edit_actions and action in EDIT_ACTIONS:
-        if is_md_path:
-            # if the prefix request is a metadata path, we do not allow edit
-            # access
+        if not is_contents_path:
+            # if the prefix request is not in the contents path, do not allow edit
             return False
         try:
             edit_access = user_has_edit_access(user_id, resource_id)
