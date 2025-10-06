@@ -166,9 +166,9 @@ else
 fi
 
 DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
-HYDROSHARE_CONTAINERS=(hydroshare defaultworker redpanda solr postgis companion redis nginx minio micro-auth pgbouncer)
+HYDROSHARE_CONTAINERS=(hydroshare defaultworker redpanda redpanda-console s3eventworker solr postgis companion redis nginx minio micro-auth pgbouncer)
 HYDROSHARE_VOLUMES=(hydroshare_postgis_data_vol hydroshare_redpanda_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol hydroshare_minio_data_vol hydroshare_redis_data_vol hydroshare_companion_vol)
-HYDROSHARE_IMAGES=(hydroshare-defaultworker hydroshare-hydroshare solr postgis/postgis redpanda nginx redis transloadit/companion minio/minio edoburu/pgbouncer hydroshare/micro-auth)
+HYDROSHARE_IMAGES=(hydroshare-defaultworker hydroshare-hydroshare solr postgis/postgis redpanda redpanda-console hydroshare-s3eventworker nginx redis transloadit/companion minio/minio edoburu/pgbouncer hydroshare-micro-auth)
 
 NODE_CONTAINER_RUNNING=`docker ps -a | grep nodejs`
 
