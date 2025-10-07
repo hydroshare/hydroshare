@@ -1332,7 +1332,8 @@ def publish_resource(user, pk):
 
         # add doi to "Identifier" element of science metadata
         md_args = {'name': 'doi', 'url': get_activated_doi(resource.doi)}
-        resource.metadata.create_element('Identifier', **md_args)
+        if not resource.metadata.identifiers.filter(name='doi').exists():
+            resource.metadata.create_element('Identifier', **md_args)
         deposit_res_metadata_with_datacite(resource)
         from hs_core.tasks import create_bag_by_s3
         create_bag_by_s3.apply_async((pk,))
