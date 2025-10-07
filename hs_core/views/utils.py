@@ -37,7 +37,6 @@ from rest_framework.exceptions import NotFound, ValidationError
 
 from django_s3.exceptions import SessionException
 from hs_access_control.models import PrivilegeCodes
-from hs_access_control.models.utilities import get_user_resources
 from hs_core import hydroshare
 from hs_core.enums import RelationTypes
 from hs_core.hydroshare import (add_resource_files, check_resource_type,
@@ -549,6 +548,8 @@ def get_my_resources_filter_counts(user, **kwargs):
     :param user: an instance of User - user who wants to see his/her resources
     :return: an json object with counts for specific filter cases
     """
+    from hs_access_control.models.utilities import get_user_resources
+
     user_resources = get_user_resources(user.id)
     # remove obsoleted resources from the user_resources
     user_resources = user_resources.exclude(object_id__in=Relation.objects.filter(
@@ -575,6 +576,7 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
     :param filter: an array containing filters that determine the type of resources fetched
     :return: an instance of ValuesQuerySet of resources attributes
     """
+    from hs_access_control.models.utilities import get_user_resources
 
     discovered_resources = BaseResource.objects.none()
 
