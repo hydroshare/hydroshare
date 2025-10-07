@@ -737,7 +737,7 @@ class Party(AbstractMetaDataElement):
         return self.is_active_user
 
     @classmethod
-    def remove(cls, element_id, delete=True):
+    def remove(cls, element_id):
         """Define custom remove method for Party model."""
         party = cls.objects.get(id=element_id)
 
@@ -757,13 +757,7 @@ class Party(AbstractMetaDataElement):
                 if cr.order > party.order:
                     cr.order -= 1
                     cr.save(update_fields=["order"])
-        if delete:
-            party.delete()
-
-    def delete(self, using=None, keep_parents=False):
-        """Overriding the django model delete() method"""
-        self.remove(element_id=self.id, delete=False)
-        super(Party, self).delete(using=using, keep_parents=keep_parents)
+        party.delete()
 
     @classmethod
     def validate_identifiers(cls, identifiers):
@@ -950,22 +944,6 @@ class Title(AbstractMetaDataElement):
         unique_together = ("content_type", "object_id")
 
     @classmethod
-    def create(cls, **kwargs):
-        """Define custom create method for Title model."""
-        metadata_obj = kwargs['content_object']
-        # get the title from Title model
-        title = cls.objects.filter(object_id=metadata_obj.id).first()
-        if title:
-            raise ValidationError("Title element already exists.")
-        title = super(Title, cls).create(**kwargs)
-        return title
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        """Define custom update method for Title model."""
-        super(Title, cls).update(element_id, **kwargs)
-
-    @classmethod
     def remove(cls, element_id):
         """Define custom remove function for Title class."""
         raise ValidationError("Title element of a resource can't be deleted.")
@@ -1098,8 +1076,7 @@ class Date(AbstractMetaDataElement):
                         raise ValidationError("For date type valid, end date must be a date "
                                               "after the start date.")
 
-            dt = super(Date, cls).create(**kwargs)
-            return dt
+            return super(Date, cls).create(**kwargs)
 
         else:
             raise ValidationError("Type of date element is missing.")
@@ -2081,23 +2058,16 @@ class Subject(AbstractMetaDataElement):
             if metadata_obj.subjects.filter(value__iexact=value).exists():
                 raise ValidationError("Subject element already exists.")
 
-        subject = super(Subject, cls).create(**kwargs)
-        return subject
+        return super(Subject, cls).create(**kwargs)
 
     @classmethod
-    def remove(cls, element_id, delete=True):
+    def remove(cls, element_id):
         """Define custom remove method for Subject model."""
         sub = Subject.objects.get(id=element_id)
         if Subject.objects.filter(object_id=sub.object_id,
                                   content_type__pk=sub.content_type.id).count() == 1:
             raise ValidationError("The only subject element of the resource can't be deleted.")
-        if delete:
-            sub.delete()
-
-    def delete(self, *args, **kwargs):
-        """Define custom delete method for Subject model."""
-        self.remove(self.id, delete=False)
-        super(Subject, self).delete(*args, **kwargs)
+        sub.delete()
 
     def rdf_triples(self, subject, graph):
         graph.add((subject, self.get_class_term(), Literal(self.value)))
