@@ -46,7 +46,14 @@ logger = logging.getLogger(__name__)
 class ResourceFileToListItemMixin(object):
     # URLs in metadata should be fully qualified.
     # ALWAYS qualify them with www.hydroshare.org, rather than the local server name.
-    site_url = hydroshare.utils.current_site_url()
+    _site_url = None
+
+    @property
+    def site_url(self):
+        """Lazy-load site_url to avoid database access at module import time."""
+        if self._site_url is None:
+            ResourceFileToListItemMixin._site_url = hydroshare.utils.current_site_url()
+        return self._site_url
 
     def resourceFileToListItem(self, f):
         url = self.site_url + f.url
