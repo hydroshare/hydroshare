@@ -737,7 +737,7 @@ class Party(AbstractMetaDataElement):
         return self.is_active_user
 
     @classmethod
-    def remove(cls, element_id):
+    def remove(cls, element_id, delete=True):
         """Define custom remove method for Party model."""
         party = cls.objects.get(id=element_id)
 
@@ -757,7 +757,14 @@ class Party(AbstractMetaDataElement):
                 if cr.order > party.order:
                     cr.order -= 1
                     cr.save(update_fields=["order"])
-        party.delete()
+        if delete:
+            party.delete()
+
+    def delete(self, using=None, keep_parents=False):
+        """Overriding the django model delete() method to update creator order attribute for
+        remaining creators."""
+        self.remove(element_id=self.id, delete=False)
+        super(Party, self).delete(using=using, keep_parents=keep_parents)
 
     @classmethod
     def validate_identifiers(cls, identifiers):
