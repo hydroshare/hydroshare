@@ -164,9 +164,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: s3eventworker
     platform: linux/amd64
-    hostname: s3eventworker
     environment:
       POSTGIS_HOST: pgbouncer
       POSTGIS_PORT: 6432
@@ -196,7 +194,52 @@ services:
       - redpanda
     stdin_open: true
     tty: true
-    command: rpk connect run --rpc-plugins=/hydroshare/hs_event_s3/notify_hs_django_plugin.yaml /hydroshare/hs_event_s3/notify_hs_django_pipeline.yaml
+    command:
+      - rpk
+      - connect
+      - run
+      - --rpc-plugins=/hydroshare/hs_event_s3/notify_hs_django_plugin.yaml
+      - /hydroshare/hs_event_s3/notify_hs_django_pipeline.yaml
+  discovery_collection_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    environment:
+      POSTGIS_HOST: pgbouncer
+      POSTGIS_PORT: 6432
+      POSTGIS_PASSWORD: postgres
+      POSTGIS_DB: postgres
+      POSTGIS_USER: postgres
+      PGPASSWORD: postgres
+      C_FORCE_ROOT: 1
+      SOLR_PORT_8983_TCP_ADDR: solr
+      SOLR_HOST: solr
+      POSTGIS_PORT_5432_TCP_ADDR: pgbouncer
+      POSTGIS_DISABLE_SERVER_SIDE_CURSORS: "True"
+      HS_PATH: ${PWD}
+      PYTHONPATH: /hydroshare
+      DJANGO_SETTINGS_MODULE: hydroshare.settings
+      COLUMNS: 80
+      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
+    volumes:
+      - ".:/hydroshare"
+    links:
+      - pgbouncer:pgbouncer
+      - redpanda:redpanda
+    depends_on:
+      - hydroshare
+      - pgbouncer
+      - solr
+      - redpanda
+    stdin_open: true
+    tty: true
+    command:
+      - rpk
+      - connect
+      - run
+      - --rpc-plugins=/hydroshare/hs_event_s3/discovery_collection_plugin.yaml
+      - /hydroshare/hs_event_s3/discovery_collection_pipeline.yaml
   redpanda:
     command:
       - redpanda
