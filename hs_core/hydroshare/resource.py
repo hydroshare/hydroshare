@@ -991,13 +991,6 @@ def get_activated_doi(doi):
     return doi
 
 
-def get_crossref_url():
-    main_url = 'https://test.crossref.org/'
-    if not settings.USE_CROSSREF_TEST:
-        main_url = 'https://doi.crossref.org/'
-    return main_url
-
-
 def get_datacite_url():
     main_url = settings.TEST_DATACITE_API_URL
     if not settings.USE_DATACITE_TEST:
@@ -1181,32 +1174,6 @@ def update_doi_metadata_with_datacite(short_id, element_name, payload):
         print(f"Unexpected error while updating DOI: {e}")
 
     return None
-
-
-def deposit_res_metadata_with_crossref(res):
-    """
-    Deposit resource metadata with CrossRef DOI registration agency.
-    Args:
-        res: the resource object with its metadata to be deposited for publication
-
-    Returns:
-        response returned for the metadata deposition request from CrossRef
-
-    """
-    xml_file_name = '{uuid}_deposit_metadata.xml'.format(uuid=res.short_id)
-    # using HTTP to POST deposit xml file to crossref
-    post_data = {
-        'operation': 'doMDUpload',
-        'login_id': settings.CROSSREF_LOGIN_ID,
-        'login_passwd': settings.CROSSREF_LOGIN_PWD
-    }
-    files = {'file': (xml_file_name, res.get_crossref_deposit_xml())}
-    # exceptions will be raised if POST request fails
-    main_url = get_crossref_url()
-    post_url = '{MAIN_URL}servlet/deposit'.format(MAIN_URL=main_url)
-    # TODO turning off verify for crossref until our ssl dependencies are updated
-    response = requests.post(post_url, data=post_data, files=files, verify=False)
-    return response
 
 
 def submit_resource_for_review(pk, user):
