@@ -796,9 +796,10 @@ def login(
         login_msg = "Successfully logged in"
         authenticated_user = form.save()
         uq = authenticated_user.quotas.first()
-        add_msg = uq.get_quota_message()
-        if add_msg:
-            login_msg += " - " + add_msg
+        if uq:
+            add_msg = uq.get_quota_message()
+            if add_msg:
+                login_msg += " - " + add_msg
         info(request, _(login_msg))
         auth_login(request, authenticated_user)
 

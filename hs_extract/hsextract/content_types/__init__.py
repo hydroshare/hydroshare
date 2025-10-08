@@ -4,8 +4,8 @@ from hsextract.content_types.fileset.models import FileSetMetadataObject
 from hsextract.content_types.timeseries.models import TimeSeriesMetadataObject
 from hsextract.content_types.netcdf.models import NetCDFMetadataObject
 from hsextract.content_types.feature.models import FeatureMetadataObject
-from hsextract.content_types.models import BaseMetadataObject, SystemMetadataObject, ResourceUserMetadataObject, \
-    ContentTypeFileUserMetadataObject, ContentTypeFolderUserMetadataObject
+from hsextract.content_types.models import BaseMetadataObject, SystemMetadataObject, ResourceUserMetadataObject#, \
+#    ContentTypeFileUserMetadataObject, ContentTypeFolderUserMetadataObject
 
 metadata_classes = [
     RasterMetadataObject,
@@ -17,8 +17,8 @@ metadata_classes = [
     FileSetMetadataObject,
     SystemMetadataObject,
     ResourceUserMetadataObject,
-    ContentTypeFileUserMetadataObject,
-    ContentTypeFolderUserMetadataObject
+#    ContentTypeFileUserMetadataObject,
+#    ContentTypeFolderUserMetadataObject
 ]
 
 
