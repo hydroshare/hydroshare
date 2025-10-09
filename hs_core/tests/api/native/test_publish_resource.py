@@ -1,6 +1,5 @@
 import tempfile
 import os
-import difflib
 import shutil
 import json
 import re
@@ -17,7 +16,6 @@ from django.utils.http import urlsafe_base64_encode
 
 from hs_access_control.models.privilege import UserResourcePrivilege, PrivilegeCodes
 from hs_core import hydroshare
-from hs_core.hydroshare import get_resource_doi
 from hs_core.models import BaseResource
 from hs_core.testing import MockS3TestCaseMixin
 from hs_core.views.utils import get_default_admin_user, get_default_support_user
@@ -27,6 +25,8 @@ from theme.backends import without_login_date_token_generator
 
 # Control-char sanitizer used by tests to assert expected sanitized form.
 _CONTROL_CHARS = re.compile(r'[\x00-\x1f\x7f]')
+
+
 def _sanitize(s: str) -> str:
     return _CONTROL_CHARS.sub(' ', s) if isinstance(s, str) else s
 
