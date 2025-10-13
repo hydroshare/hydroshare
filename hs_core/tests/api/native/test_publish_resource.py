@@ -495,4 +495,5 @@ class TestPublishResource(MockS3TestCaseMixin, TestCase):
         self.assertTrue(descs, "descriptions should include Abstract")
         got = descs[0].get("description", "")
         self.assertNotRegex(got, _CONTROL_CHARS, "Control characters must be sanitized from abstract")
-        self.assertEqual(got, _sanitize('This is a test abstract\x1F'))
+        expected = _CONTROL_CHARS.sub('', 'This is a test abstract\x1F').strip()
+        self.assertEqual(got, expected)
