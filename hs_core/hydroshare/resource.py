@@ -1296,7 +1296,6 @@ def publish_resource(user, pk):
     publisher_user_account = User.objects.get(username=settings.PUBLISHER_USER_NAME)
     UserResourcePrivilege.share(user=publisher_user_account, resource=resource,
                                 privilege=PrivilegeCodes.OWNER, grantor=resource.quota_holder)
-    original_doi = resource.doi
     original_quota_holder = resource.quota_holder
     resource.set_quota_holder(resource.quota_holder, publisher_user_account)
     # append pending to the doi field to indicate DOI is not activated yet. Upon successful
@@ -1332,14 +1331,14 @@ def publish_resource(user, pk):
         md_args = {'name': 'doi', 'url': get_activated_doi(resource.doi)}
         if not resource.metadata.identifiers.filter(name='doi').exists():
             resource.metadata.create_element('Identifier', **md_args)
+        else:
+            resource.doi = get_activated_doi(resource.doi)
         deposit_res_metadata_with_datacite(resource)
         from hs_core.tasks import create_bag_by_s3
         create_bag_by_s3.apply_async((pk,))
 
     except Exception as e:
         logger.error(f"Failed publishing resource {pk}: {e}")
-        # Revert changes made so far
-        resource.doi = original_doi
         resource.set_quota_holder(publisher_user_account, original_quota_holder)
         resource.set_published(False)
         resource.raccess.alter_review_pending_flags(initiating_review=True)
