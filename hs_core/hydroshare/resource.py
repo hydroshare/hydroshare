@@ -1306,15 +1306,13 @@ def publish_resource(user, pk):
     if settings.DEBUG:
         # in debug mode, making sure we are using the test CrossRef service
         assert settings.USE_DATACITE_TEST is True
-
     created_metadata_elements = []
 
     try:
-
         resource.set_public(True)  # also sets discoverable to True
         resource.set_published(True)
+        resource.raccess.alter_review_pending_flags(initiating_review=False)
         resource.raccess.save()
-
         # change "Publisher" element of science metadata to CUAHSI
         md_args = {'name': 'Consortium of Universities for the Advancement of Hydrologic Science, '
                            'Inc. (CUAHSI)',
