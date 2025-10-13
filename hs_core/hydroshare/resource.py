@@ -1333,6 +1333,7 @@ def publish_resource(user, pk):
             resource.metadata.create_element('Identifier', **md_args)
         else:
             resource.doi = get_activated_doi(resource.doi)
+            resource.save()
         deposit_res_metadata_with_datacite(resource)
         from hs_core.tasks import create_bag_by_s3
         create_bag_by_s3.apply_async((pk,))
