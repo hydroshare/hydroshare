@@ -1331,7 +1331,7 @@ def publish_resource(user, pk):
         md_args = {'name': 'doi', 'url': get_activated_doi(resource.doi)}
         if not resource.metadata.identifiers.filter(name='doi').exists():
             resource.metadata.create_element('Identifier', **md_args)
-    
+
         resource.doi = get_activated_doi(resource.doi)
         resource.save()
         deposit_res_metadata_with_datacite(resource)
