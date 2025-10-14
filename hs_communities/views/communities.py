@@ -119,7 +119,13 @@ class CommunityView(TemplateView):
                 community_resources_by_group.setdefault(res.group_id, []).append(res.short_id)
 
             # Both authenticated and anonymous users can make use of the data below
-            context["community_resources"] = community_resources.order_by("short_id").distinct("short_id")
+            # TODO: Why are we ordering by short_id?
+            community_resources = community_resources.order_by("short_id").distinct("short_id")
+            community_resources = community_resources.values(
+                'short_id', 'resource_type', 'created', 'cached_metadata'
+            )
+
+            context["community_resources"] = community_resources
             data["community_resources_by_group"] = community_resources_by_group
             context["denied"] = denied
             context["message"] = message
