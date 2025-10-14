@@ -311,7 +311,7 @@ class TestDenormalizedMetadataSync(TestCase):
         modified_date3 = datetime.fromisoformat(modified_date3)
         self.assertGreater(modified_date3, modified_date2)
 
-        # Delete another subject using remove method this time - note deleteing all subjects is not allowed
+        # Delete another subject using remove method this time
         subject3.remove(element_id=subject3.id)
 
         # Check that cached metadata reflects only one subject
@@ -321,6 +321,16 @@ class TestDenormalizedMetadataSync(TestCase):
         modified_date4 = self.resource.cached_metadata['modified']
         modified_date4 = datetime.fromisoformat(modified_date4)
         self.assertGreater(modified_date4, modified_date3)
+
+        # delete all subjects
+        self.resource.metadata.subjects.all().delete()
+        self.resource.refresh_from_db()
+        subjects = self.resource.cached_metadata.get('subjects', [])
+        self.assertEqual(len(subjects), 0)
+        modified_date5 = self.resource.cached_metadata['modified']
+        modified_date5 = datetime.fromisoformat(modified_date5)
+        self.assertGreater(modified_date5, modified_date4)
+
 
     def test_date_post_delete_updates_cached_metadata(self):
         """Test that deleting Date elements triggers cached metadata update."""
