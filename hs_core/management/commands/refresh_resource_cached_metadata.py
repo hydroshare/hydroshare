@@ -82,7 +82,9 @@ class Command(BaseCommand):
             # Prompt for confirmation when updating all resources (unless --no-prompt is used)
             if not no_prompt:
                 prompt_message = "Do you want to continue? (yes/no): "
-                confirm = input(f"This will update cached metadata for all {total_resources} resources. {prompt_message}")
+                confirm = input(
+                    f"This will update cached metadata for all {total_resources} resources. {prompt_message}"
+                )
                 if confirm.lower() not in ['yes', 'y']:
                     self.stdout.write("Operation cancelled.")
                     return

@@ -331,7 +331,6 @@ class TestDenormalizedMetadataSync(TestCase):
         modified_date5 = datetime.fromisoformat(modified_date5)
         self.assertGreater(modified_date5, modified_date4)
 
-
     def test_date_post_delete_updates_cached_metadata(self):
         """Test that deleting Date elements triggers cached metadata update."""
 
