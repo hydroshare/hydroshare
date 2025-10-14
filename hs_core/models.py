@@ -44,8 +44,7 @@ from rdflib.namespace import DC, DCTERMS, RDF
 from spam_patterns.worst_patterns_re import patterns
 
 from django_s3.storage import S3Storage
-from hs_core.enums import (CrossRefSubmissionStatus, CrossRefUpdate,
-                           RelationTypes)
+from hs_core.enums import (CrossRefSubmissionStatus, RelationTypes)
 from hs_core.s3 import ResourceFileS3Mixin, ResourceS3Mixin
 
 from .hs_rdf import (HSTERMS, RDFS1, RDF_MetaData_Mixin, RDF_Term_MixIn,
@@ -4654,32 +4653,6 @@ class BaseResource(Page, AbstractResource):
             dir_path = dir_path[len(self.file_path) + 1:]
         return dir_path
 
-    def update_crossref_deposit(self):
-        """
-        Update crossref deposit xml file for this published resource
-        Used when metadata (abstract or funding agency) for a published resource is updated
-        """
-        from hs_core.tasks import update_crossref_meta_deposit
-
-        if not self.raccess.published:
-            err_msg = "Crossref deposit can be updated only for a published resource. "
-            err_msg += f"Resource {self.short_id} is not a published resource."
-            raise ValidationError(err_msg)
-
-        if self.doi.endswith(self.short_id):
-            # doi has no crossref status
-            self.extra_data[CrossRefUpdate.UPDATE.value] = 'False'
-            update_crossref_meta_deposit.apply_async((self.short_id,))
-
-        # check for both 'pending' and 'update_pending' status in doi
-        if CrossRefSubmissionStatus.PENDING.value in self.doi:
-            # setting this flag will update the crossref deposit when the hourly celery task runs
-            self.extra_data[CrossRefUpdate.UPDATE.value] = 'True'
-
-        # if the resource crossref deposit is in a 'failure' or 'update_failure' state, then update of the
-        # crossref deposit will be attempted when the hourly celery task runs
-        self.save()
-
 
 old_get_content_model = Page.get_content_model
 
@@ -5237,9 +5210,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 if date_type and date_type not in ('modified', 'published'):
                     raise ValidationError("{} date can't be created for a published resource".format(date_type))
         element = model_type.model_class().create(**kwargs)
-        if resource.raccess.published:
-            if element_model_name in ('fundingagency',):
-                resource.update_crossref_deposit()
+
         return element
 
     def update_element(self, element_model_name, element_id, **kwargs):
@@ -5256,9 +5227,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 if date_type and date_type != 'modified':
                     raise ValidationError("{} date can't be updated for a published resource".format(date_type))
         model_type.model_class().update(element_id, **kwargs)
-        if resource.raccess.published:
-            if element_model_name in ('description', 'fundingagency',):
-                resource.update_crossref_deposit()
 
     def delete_element(self, element_model_name, element_id):
         """Delete Metadata element."""
@@ -5269,9 +5237,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
             if element_model_name not in ('subject', 'contributor', 'source', 'relation', 'fundingagency', 'format'):
                 raise ValidationError("{} can't be deleted for a published resource".format(element_model_name))
         model_type.model_class().remove(element_id)
-        if resource.raccess.published:
-            if element_model_name in ('fundingagency',):
-                resource.update_crossref_deposit()
 
     def _get_metadata_element_model_type(self, element_model_name):
         """Get type of metadata element based on model type."""

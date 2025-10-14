@@ -39,9 +39,3 @@ class CrossRefSubmissionStatus(str, enum.Enum):
     PENDING = 'pending'
     # 'update_pending' flag indicates the metadata update with CrossRef succeeds, but pending to be available
     UPDATE_PENDING = 'update_pending'
-
-
-class CrossRefUpdate(str, enum.Enum):
-    """CrossRef metadata deposit update trigger flag"""
-
-    UPDATE = 'CROSSREF_UPDATE'
