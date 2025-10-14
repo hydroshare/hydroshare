@@ -361,10 +361,6 @@ class TestPublishResource(MockS3TestCaseMixin, TestCase):
         # last_updated date should be updated when the resource is published, even though the last_changed_by is not
         self.assertGreater(res.last_updated, time_after_submit)
 
-    # =========================
-    # DataCite JSON replacements for Crossref XML tests
-    # =========================
-
     def create_json_test_resource(self):
         """
         Build metadata that get_datacite_deposit_json() expects:
@@ -471,12 +467,12 @@ class TestPublishResource(MockS3TestCaseMixin, TestCase):
         freezer.stop()
 
     def test_datacite_deposit_json(self):
-        """Replacement for test_crossref_deposit_xml (clean abstract -> valid JSON)"""
+        """Datacite JSON generation test (clean abstract)"""
         self.create_json_test_resource()
         self.freeze_and_assert_json()
 
     def test_datacite_deposit_dirty_json(self):
-        """Replacement for test_crossref_deposit_dirty_xml (dirty abstract sanitized)"""
+        """Datacite JSON generation test (dirty abstract)"""
         self.create_json_test_resource()
 
         # inject control char like old XML test

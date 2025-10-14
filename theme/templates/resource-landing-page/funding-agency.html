@@ -19,8 +19,8 @@
                                         Agency Name<span class="asteriskField">*</span>
                                     </label>
                                     <div id="add-agency-wrapper"
-                                        class="input-group"
-                                        @focusin="clearSelectedAgency"
+                                         class="input-group"
+                                         @focusin="clearSelectedAgency"
                                         tabindex="0"
                                     >
                                         {# https://github.com/alexurquhart/vue-bootstrap-typeahead #}
@@ -35,15 +35,15 @@
                                             :maxMatches="MAX_MATCHES"
                                             :minMatchingChars="MIN_SEARCH_LEN"
                                         >
-                                        <template slot="append">
-                                            <div v-if="isPending && !crossreffApiDown">
-                                                <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
+                                            <template slot="append">
+                                                <div v-if="isPending && !rorApiDown">
+                                                    <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
                                                 Searching known funders
-                                            </div>
-                                            <div class="text-info small" v-if="crossreffApiDown">
-                                                We are having trouble reaching the Open Funder Registry. To add funders from the registry, please try again later.
-                                            </div>
-                                        </template>
+                                                </div>
+                                                <div class="text-info small" v-if="rorApiDown">
+                                                    We are having trouble reaching the Open Funder Registry. To add funders from the registry, please try again later.                                                
+                                                </div>
+                                            </template>
                                         </vue-bootstrap-typeahead>
                                         <div class="text-muted small" v-if="filteredWords.length > 0">Words not included in Funder Registry Search: <strong v-for="word in filteredWords">${word}</strong></div>
                                     </div>
@@ -55,7 +55,7 @@
                                     <label for="award_title" class="control-label">Award Title</label>
                                     <div class="controls">
                                         <input class="form-control input-sm" maxlength="250"
-                                            name="award_title" v-model="currentlyEditing.award_title" @keyup="checkAgencyName">
+                                               name="award_title" v-model="currentlyEditing.award_title" @keyup="checkAgencyName">
                                     </div>
                                 </div>
 
@@ -64,7 +64,7 @@
                                     <label for="award_number" class="control-label">Award Number</label>
                                     <div class="controls">
                                         <input class="form-control input-sm textinput textInput" maxlength="100"
-                                            name="award_number" type="text" v-model="currentlyEditing.award_number" @keyup="checkAgencyName">
+                                               name="award_number" type="text" v-model="currentlyEditing.award_number" @keyup="checkAgencyName">
                                     </div>
                                 </div>
 
@@ -74,17 +74,17 @@
 
                                     <div class="controls">
                                         <input class="form-control input-sm urlinput" maxlength="200"
-                                            name="agency_url" type="url" v-model="currentlyEditing.agency_url" @keyup="checkAgencyName">
+                                               name="agency_url" type="url" v-model="currentlyEditing.agency_url" @keyup="checkAgencyName">
                                     </div>
                                 </div>
 
                             </fieldset>
                         </div>
                         <div id="agency-inline-notification">
-                            <p class="text-danger" v-for="error in errorNotifications"> 
+                            <p class="text-danger" v-for="error in errorNotifications">
                                 <i class="glyphicon glyphicon-info-sign" style="margin-right: 5px;"></i>${ error.error }
                             </p>
-                            <p class="text-info" v-for="info in infoNotifications"> 
+                            <p class="text-info" v-for="info in infoNotifications">
                                 <i class="glyphicon glyphicon-info-sign" style="margin-right: 5px;"></i>${ info.info }
                             </p>
                         </div>
@@ -101,7 +101,7 @@
 
     {# DELETE FUNDING AGENCY MODAL #}
     <div class="modal fade in" id="delete-funding-agency-modal" tabindex="-1" role="dialog"
-        aria-labelledby="delete-source" aria-hidden="false">
+         aria-labelledby="delete-source" aria-hidden="false">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -164,7 +164,7 @@
         <div class="col-sm-12 content-block">
             <h4>Funding Agencies
                 <a id="btn-add-funding-agency" type="button" class="btn btn-success btn-xs" data-toggle="modal"
-                title="Add Funding Agency" data-target="#funding-agency-modal" @click="openAddModal">
+                   title="Add Funding Agency" data-target="#funding-agency-modal" @click="openAddModal">
                     <span class="glyphicon glyphicon-plus"></span>
                 </a>
             </h4>
@@ -175,11 +175,11 @@
                 <div class="flex">
                     <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
                     <em style="padding-right:20px;">
-                        This resource contains funders (listed below) that do not exist in the <a href="https://www.crossref.org/services/funder-registry" target="_blank">Open Funder Registry</a>:
+                        This resource contains funders (listed below) that do not exist in the <a href="https://ror.org/" target="_blank">Open Funder Registry</a>:
                         <ul>
                             <li v-for="funder in unmatchedFunders">${funder}</li>
                         </ul>
-                        We recommend updating the funders to conform to the <a href="https://www.crossref.org/services/funder-registry" target="_blank">Open Funder Registry</a> to ensure consistency and ease of reporting.
+                        We recommend updating the funders to conform to the <a href="https://ror.org/" target="_blank">Open Funder Registry</a> to ensure consistency and ease of reporting.
                     </em>
                 </div>
             </div>
@@ -205,11 +205,11 @@
                             <td>${ agency.award_number }</td>
                             <td>
                                 <span data-toggle="modal" data-placement="auto" title="Edit"
-                                    class="glyphicon glyphicon-pencil icon-button icon-blue table-icon"
-                                    data-target="#funding-agency-modal" @click="openEditModal(agency.agency_id)"></span>
+                                      class="glyphicon glyphicon-pencil icon-button icon-blue table-icon"
+                                      data-target="#funding-agency-modal" @click="openEditModal(agency.agency_id)"></span>
                                 <span data-toggle="modal" data-placement="auto" title="Remove"
-                                    class="glyphicon glyphicon-trash icon-button btn-remove table-icon"
-                                    data-target="#delete-funding-agency-modal" @click="openDeleteModal(agency.agency_id)"></span>
+                                      class="glyphicon glyphicon-trash icon-button btn-remove table-icon"
+                                      data-target="#delete-funding-agency-modal" @click="openDeleteModal(agency.agency_id)"></span>
                             </td>
                         </tr>
                     </tbody>
