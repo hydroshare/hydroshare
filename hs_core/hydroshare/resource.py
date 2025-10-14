@@ -1310,7 +1310,6 @@ def publish_resource(user, pk):
     try:
         resource.set_public(True)  # also sets discoverable to True
         resource.set_published(True)
-        resource.raccess.alter_review_pending_flags(initiating_review=False)
         resource.raccess.save()
         # change "Publisher" element of science metadata to CUAHSI
         md_args = {'name': 'Consortium of Universities for the Advancement of Hydrologic Science, '
