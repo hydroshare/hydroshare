@@ -21,7 +21,7 @@ from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
                                     SuspiciousFileOperation)
 from django.core.files.base import File
 from django.core.validators import URLValidator
-from django.db.models import BooleanField, Case, Value, When, TextField
+from django.db.models import BooleanField, Case, Value, When
 from django.db import models
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.http import HttpResponse, QueryDict
@@ -610,21 +610,14 @@ def get_my_resources_list(user, annotate=False, filter=None, **kwargs):
         resource_collection = resource_collection.annotate(
             is_favorite=Case(When(short_id__in=favorite_resources.values_list('short_id', flat=True),
                                   then=Value(True, BooleanField()))))
-
-    # annotate resource sharing status
-    resource_collection = resource_collection.annotate(
-        sharing_status=Case(When(raccess__published=True, then=Value('published', TextField())),
-                            When(raccess__public=True, then=Value('public', TextField())),
-                            When(raccess__discoverable=True, then=Value('discoverable', TextField())),
-                            default=Value('private', TextField())))
     if annotate:
         my_resources = resource_collection.values(
-            'short_id', 'resource_type', 'created', 'resource_labels', 'is_favorite', 'sharing_status',
+            'short_id', 'resource_type', 'created', 'resource_labels', 'is_favorite',
             'cached_metadata', 'user_permission'
         )
     else:
         my_resources = resource_collection.values(
-            'short_id', 'resource_type', 'created', 'sharing_status', 'cached_metadata',
+            'short_id', 'resource_type', 'created', 'cached_metadata',
             'user_permission'
         )
     return my_resources
