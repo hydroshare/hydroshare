@@ -27,10 +27,6 @@ from theme.backends import without_login_date_token_generator
 _CONTROL_CHARS = re.compile(r'[\x00-\x1f\x7f]')
 
 
-def _sanitize(s: str) -> str:
-    return _CONTROL_CHARS.sub(' ', s) if isinstance(s, str) else s
-
-
 class TestPublishResource(MockS3TestCaseMixin, TestCase):
     def test_aaa_settings_are_loaded(self):
         """Test that settings variables are set correctly before publishing tests."""
