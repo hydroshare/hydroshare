@@ -55,9 +55,9 @@
   <td>{{ metadata.creators|resource_first_author }}</td>
 
   {# Date Created #}
-  <td>{{ metadata.created|to_date|date:"M d, Y" }} at {{ metadata.created|to_date|date:"h:i A" }}</td>
+  <td>{{ metadata.created|to_date|date:"M d, Y" }} at {{ metadata.created|to_date|date:"h:i a" }}</td>
   {# Last Modified #}
-  <td>{{ metadata.modified|to_date|date:"M d, Y" }} at {{ metadata.modified|to_date|date:"h:i A" }}</td>
+  <td>{{ metadata.modified|to_date|date:"M d, Y" }} at {{ metadata.modified|to_date|date:"h:i a" }}</td>
   <td>
     {% for kw in metadata.subjects %}
     {% if forloop.counter0 > 0 %},{% endif %}{{ kw }}
@@ -97,8 +97,8 @@
     {% endif %}
   </td>
   <td>{{ metadata.created|to_date|date:"U" }}</td>
-  {# TODO: Check if grantor ever used on my resource page as resource does not have a grantor attribute #}
-  <td>{{ res.grantor.id }}</td>
+  {# NOTE: grantor_id is applicable to listing of resources for a group, not for my resource listing or community resources #}
+  <td>{{ res.grantor_id }}</td>
   {% endwith %}
 </tr>
 {% endfor %}
