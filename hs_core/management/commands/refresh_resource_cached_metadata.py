@@ -32,9 +32,18 @@ class Command(BaseCommand):
             help="Optional. Process only the resource with this ID (short_id)"
         )
 
+        # Optional no-prompt flag to skip confirmation
+        parser.add_argument(
+            "--no-prompt",
+            action="store_true",
+            default=False,
+            help="Skip confirmation prompt when updating all resources"
+        )
+
     def handle(self, *args, **options):
         verbose = options.get("verbose", False)
         resource_id = options.get("resource_id")
+        no_prompt = options.get("no_prompt", False)
         start_time = time.time()
 
         if resource_id:
@@ -70,12 +79,13 @@ class Command(BaseCommand):
             # Process all resources with confirmation
             total_resources = BaseResource.objects.count()
 
-            # Prompt for confirmation when updating all resources
-            prompt_message = "Do you want to continue? (yes/no): "
-            confirm = input(f"This will update cached metadata for all {total_resources} resources. {prompt_message}")
-            if confirm.lower() not in ['yes', 'y']:
-                self.stdout.write("Operation cancelled.")
-                return
+            # Prompt for confirmation when updating all resources (unless --no-prompt is used)
+            if not no_prompt:
+                prompt_message = "Do you want to continue? (yes/no): "
+                confirm = input(f"This will update cached metadata for all {total_resources} resources. {prompt_message}")
+                if confirm.lower() not in ['yes', 'y']:
+                    self.stdout.write("Operation cancelled.")
+                    return
 
             # Get all resources using iterator for memory efficiency and performance
             resources = BaseResource.objects.iterator()
