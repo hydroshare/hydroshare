@@ -326,7 +326,7 @@ def repair_resource_before_publication(res_id):
         res_url = current_site_url() + res.get_absolute_url()
 
         email_msg = f'''
-        <p>We were unable to generate Crossref xml in the following resource that is under review for publication:
+        <p>We were unable to generate Datacite xml in the following resource that is under review for publication:
         <a href="{res_url}">{res_url}</a></p>
         <p>Error details:</p>
         <p>{traceback.format_exc()}</p>
@@ -400,36 +400,6 @@ def nightly_metadata_review_reminder():
                 '''
                 recipients = [settings.DEFAULT_SUPPORT_EMAIL]
                 send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, recipients)
-
-
-def notify_owners_of_publication_success(resource):
-    """
-    Sends email notification to resource owners on publication success
-
-    :param resource: a resource that has been published
-    :return:
-    """
-    res_url = current_site_url() + resource.get_absolute_url()
-
-    email_msg = f'''Dear Resource Owner,
-    <p>The following resource that you submitted for publication:
-    <a href="{res_url}">
-    {res_url}</a>
-    has been reviewed and determined to meet HydroShare's minimum metadata standards and community guidelines.</p>
-
-    <p>The publication request was processed by <a href="https://www.crossref.org/">Crossref.org</a>.
-    The Digital Object Identifier (DOI) for your resource is:
-    <a href="{get_resource_doi(resource.short_id)}">https://doi.org/10.4211/hs.{resource.short_id}</a></p>
-
-    <p>Thank you,</p>
-    <p>The HydroShare Team</p>
-    '''
-    if not settings.DISABLE_TASK_EMAILS:
-        send_mail(subject="HydroShare resource metadata review completed",
-                  message=email_msg,
-                  html_message=email_msg,
-                  from_email=settings.DEFAULT_FROM_EMAIL,
-                  recipient_list=[o.email for o in resource.raccess.owners.all()])
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
@@ -1148,12 +1118,3 @@ def task_notification_cleanup():
     day_ago = datetime.today() - timedelta(days=1)
     TaskNotification.objects.filter(created__lte=day_ago).delete()
 
-
-@shared_task
-def update_crossref_meta_deposit(res_id):
-    """
-    Update the metadata deposit for a published resource with Crossref
-    """
-    resource = utils.get_resource_by_shortkey(res_id)
-    if not resource.raccess.published:
-        raise ValidationError("Resource {} is not a published resource".format(res_id))

@@ -1270,7 +1270,6 @@ def publish_resource(user, pk):
     resource.doi = get_resource_doi(pk, CrossRefSubmissionStatus.PENDING.value)
     resource.save()
     if settings.DEBUG:
-        # in debug mode, making sure we are using the test CrossRef service
         assert settings.USE_DATACITE_TEST is True
     created_metadata_elements = []
 
@@ -1285,7 +1284,7 @@ def publish_resource(user, pk):
         resource.metadata.create_element('Publisher', **md_args)
 
         # Here we publish the resource on behalf of the last_changed_by user
-        # This ensures that the modified date closely matches the date that the metadata are submitted to Crossref
+        # This ensures that the modified date closely matches the date that the metadata are submitted to Datacite
         last_modified = resource.last_changed_by
         utils.resource_modified(resource, by_user=last_modified, overwrite_bag=False)
 
