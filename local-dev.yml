@@ -227,6 +227,9 @@ services:
     image: hydroshare/micro-auth:latest
     platform: linux/amd64
     container_name: micro-auth
+    build:
+      context: ./hs_auth_minio
+      dockerfile: Dockerfile
     environment:
       HS_DATABASE_URL: "postgresql://postgres:postgres@postgis:5432/postgres"
       MC_HOST_hydroshare: "http://minioadmin:minioadmin@minio:9000"

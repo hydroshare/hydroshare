@@ -2867,7 +2867,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         if readme_file.exists:
             readme_file_content = readme_file.read().decode('utf-8', 'ignore')
             if readme_file.extension.lower() == '.md':
-                markdown_file_content = markdown(readme_file_content)
+                markdown_file_content = markdown(readme_file_content, extensions=['tables'])
                 return {'content': markdown_file_content,
                         'file_name': readme_file.file_name, 'file_type': 'md'}
             else:
