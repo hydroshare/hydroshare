@@ -43,7 +43,7 @@ Add the issues included in the release and update this document as release tasks
 - [ ] check for unreleased changes in helm charts
   - `helm diff upgrade hydroshare . --reset-values --values values.prod.yaml`
 - [ ] Retag if needed (for example if it was tagged as an "rc-")
-  * Add a tag in the [Cloud Artifact Registry](https://console.cloud.google.com/artifacts/docker/hydroshare-403701/us-central1/hydroshare/hydroshare?project=hydroshare-403701)![alt text](cloud_tag.png) or using `gcloud artifacts docker tags add us-central1-docker.pkg.dev/hydroshare-403701/hydroshare/hydroshare:old-tag new-tag`
+  * Add a tag in the [Cloud Artifact Registry](https://console.cloud.google.com/artifacts/docker/hydroshare-403701/us-central1/hydroshare/hydroshare?project=hydroshare-403701)![alt text](cloud_tag.png) or using `gcloud artifacts docker tags add us-central1-docker.pkg.dev/hydroshare-403701/hydroshare/hydroshare:old-tag us-central1-docker.pkg.dev/hydroshare-403701/hydroshare/hydroshare:new-tag`
   * Also add a tag in the Hydroshare repository if it hasn't been added yet, for example: `git tag 3.9.0 <rc_commit_hash> && git push origin 3.9.0`
 - [ ] Deploy to Production
   * Run collectstatic if it is not run as part of the deployment
