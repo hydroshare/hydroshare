@@ -386,6 +386,7 @@ def get_path(metadata):
     return path
 
 
+# TODO: Tus endpoints can be removed once we switch to using S3 multipart upload directly from our landing page
 class CustomTusFile(TusFile):
     # extend TusFile to allow it to write to s3 storage instead of local disk
     # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/tusfile.py#L52
