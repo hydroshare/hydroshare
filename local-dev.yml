@@ -330,15 +330,14 @@ services:
     hostname: companion
     environment:
       COMPANION_PORT: '3020'
-      COMPANION_CLIENT_ORIGINS: 'https://localhost,http://localhost:5004'
-      # when using the landing page in vite dev, use this instead:
-      # COMPANION_CLIENT_ORIGINS: 'http://localhost:5004'
+      # COMPANION_CLIENT_ORIGINS: 'https://localhost,http://localhost:5004'
+      COMPANION_CLIENT_ORIGINS: 'http://localhost,http://localhost:5004'
       COMPANION_UPLOAD_URLS: '*localhost*'
       COMPANION_DATADIR: '/mnt/companion-data'
       COMPANION_DOMAIN: 'localhost'
       COMPANION_PATH: '/companion'
       COMPANION_ALLOW_LOCAL_URLS: 'true'
-      COMPANION_PROTOCOL: 'https'
+      COMPANION_PROTOCOL: 'http'
       COMPANION_REDIS_URL: 'redis://redis:6379'
       COMPANION_CHUNK_SIZE: '100000000'  # ~72MB
       # COMPANION_PREAUTH_SECRET: 'another secret'
@@ -353,13 +352,7 @@ services:
       # the key and secret are now dynamically calculated in companion-custom-s3-client.js
       # COMPANION_AWS_KEY: 'minioadmin'
       # COMPANION_AWS_SECRET: 'minioadmin'
-
-      # TODO compute the aws endpoint dynamically based on where minio is running
-      # For local uploads to work for local dev, use:
-      COMPANION_AWS_ENDPOINT: 'http://localhost:9000'
-      # For 3rd party uploads to work from within docker on a mac, use:
-      # COMPANION_AWS_ENDPOINT: 'http://host.docker.internal:9000'
-
+      COMPANION_AWS_ENDPOINT: 'http://host.docker.internal:9000'
       # https://uppy.io/docs/companion/#s3bucket-companion_aws_bucket
       # COMPANION_AWS_BUCKET: asdf2
       # The bucket is now dynamically calculated in companion-custom-config.js, using the upload metadata

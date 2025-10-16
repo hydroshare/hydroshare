@@ -195,7 +195,7 @@ using a OneToOneField.
 """
 # SILENCED_SYSTEM_CHECKS = ["mezzanine.core.W03", "fields.W342"]
 
-COMPANION_URL = 'https://localhost/companion'
+COMPANION_URL = 'http://localhost/companion'
 UPPY_UPLOAD_PATH = '/django_s3/tus/'
 
 # Intentionally added to repo for testing purposes
