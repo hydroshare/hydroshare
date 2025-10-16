@@ -4,7 +4,10 @@ import { S3Client } from '@aws-sdk/client-s3'
 
 /**
  * instantiates the aws-sdk s3 client that will be used for s3 uploads.
+ * We customize the default companion s3 client to take a request parameter
+ * so we can get user specific s3 keys and secrets from the request headers.
  *
+ * @param {object} req the express request object 
  * @param {object} companionOptions the companion options object
  * @param {boolean} createPresignedPostMode whether this s3 client is for createPresignedPost
  */
@@ -81,12 +84,9 @@ export default function s3Client(
       ...rawClientOptions,
     }
 
-    // TODO: use the request to get the user specific key and secret
+    // Customization: use the request to get the user specific key and secret
     // then override the s3.key and s3.secret for this client instance
     console.log('Overriding s3.key and s3.secret')
-    // get the headers from the request
-    // print all the headers
-    console.log('Request headers:', req.headers)
     // get the "s3-key" and "s3-secret" from the headers
     s3.key = req.headers['s3-key']
     s3.secret = req.headers['s3-secret']
@@ -94,11 +94,6 @@ export default function s3Client(
     if (!s3.key || !s3.secret) {
       throw new Error('No S3 key or secret provided in request headers');
     }
-    
-    console.log('s3.endpoint:', s3.endpoint)
-    console.log('s3.region:', s3.region)
-    console.log('s3.key:', s3.key)
-    console.log('s3.secret:', s3.secret)
 
     // Use credentials to allow assumed roles to pass STS sessions in.
     // If the user doesn't specify key and secret, the default credentials (process-env)

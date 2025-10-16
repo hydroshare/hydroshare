@@ -1,4 +1,6 @@
+// Cusomized Companion config to allow dynamic S3 bucket and key
 // https://uppy.io/docs/companion/#s3bucket-companion_aws_bucket
+// https://github.com/transloadit/uppy/blob/6f764122a947fc69aedf8e5ca18166ffb2643d03/packages/%40uppy/companion/src/config/companion.js
 import { defaultOptions, getMaskableSecrets, validateConfig } from './default-config.js';
 
 const bucket = ({ filename, metadata, req }) => {
@@ -13,7 +15,6 @@ const bucket = ({ filename, metadata, req }) => {
   return bucket;
 }
 
-// TODO: getkey doesn't seem to get triggered
 // https://uppy.io/docs/companion/#s3getkey-filename-metadata-req-
 const getKey = ({ filename, metadata, req }) => {
   console.log('dynamically setting key for filename:', filename, 'metadata:', metadata);
@@ -40,12 +41,9 @@ const getDefaultAwsSecret = () => {
 
 defaultOptions.s3.bucket = bucket;
 defaultOptions.s3.getKey = getKey;
-// defaultOptions.s3.forcePathStyle = true; // needed for minio
-// defaultOptions.s3.region = process.env.COMPANION_AWS_REGION || 'us-east-1';
-// defaultOptions.s3.endpoint = process.env.COMPANION_AWS_ENDPOINT || 'http://host.docker.internal:9000';
 defaultOptions.s3.key = getDefaultAwsKey();
 defaultOptions.s3.secret = getDefaultAwsSecret();
-// defaultOptions.s3.forcePathStyle = process.env.COMPANION_AWS_FORCE_PATH_STYLE || 'true';
+// defaultOptions.s3.forcePathStyle = process.env.COMPANION_AWS_FORCE_PATH_STYLE || 'true'; // needed for minio
 
 // providerOptions
 defaultOptions.providerOptions = {
