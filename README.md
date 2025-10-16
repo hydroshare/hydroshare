@@ -162,3 +162,44 @@ Hydroshare is released under the BSD 3-Clause License. This means that [you can 
 
 ©2017 CUAHSI. This material is based upon work supported by the National Science Foundation (NSF) under awards [1148453](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1148453), [1148090](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1148090), [1664061](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1664061), [1664018](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1664018), [1664119](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1664119), [1338606](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1338606), and [1849458](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1849458). Any opinions, findings, conclusions, or recommendations expressed in this material are those of the authors and do not necessarily reflect the views of the NSF.
 
+## Create a dummy resource for landing page work
+
+* Pull the [6016/landing-page](https://github.com/hydroshare/hydroshare/tree/6016/landing-page) branch
+* run `./local-dev-first-start-only.sh`
+* Access hydroshare at https://localhost
+
+Then...
+
+### create a new user `asdf2`
+Go to https://localhost/sign-up
+This is a necessary step right now because perhaps the `asdf` user in the dev database doesn't have a bucket or maybe it is missing a quota?
+
+### Create a new resource using the UI
+Create a new empty resource (or add metadata and files if you want)
+Make note of this resource's ID, this will be your "STARTING_RESOURCE_ID"
+In the following steps, we will call this resource id "STARTING_RESOURCE_ID"
+
+### stage a resource with necessary metadata files
+Here we are moving your resource to a standard resource id. We do this because the landing page currently uses this `DEFAULT_RESOURCE_ID` for its examples. This just makes it easier for you to be able to click the "EXAMPLE" button on the landing page.
+```
+export STARTING_RESOURCE_ID= [ ...replace with your STARTING_RESOURCE_ID ]
+export DEFAULT_RESOURCE_ID=d7b526e24f7e449098b428ae9363f514
+docker exec -it hydroshare python manage.py modify_resource_id $STARTING_RESOURCE_ID $DEFAULT_RESOURCE_ID
+```
+
+### move the metadata .json files to the appropriate locations
+```
+# the bucket is your hs username
+export BUCKET=asdf2
+mc alias set local-hydroshare http://localhost:9000 minioadmin minioadmin
+mc cp landing-page/example_metadata/dataset_metadata.json local-hydroshare/$BUCKET/md/$DEFAULT_RESOURCE_ID/
+mc cp landing-page/example_metadata/hs_user_meta.json local-hydroshare/$BUCKET/$DEFAULT_RESOURCE_ID/data/contents/
+```
+
+### go checkout the resource
+* https://localhost/resource/d7b526e24f7e449098b428ae9363f514
+* You should see the resource landing page.
+* Click "Login" this will redirect you to: the [HS sign-in page](https://localhost/accounts/login/?next=https%3A%2F%2Flocalhost%2Fresource%2Fd7b526e24f7e449098b428ae9363f514)
+* After login, it should redirect you back to the [landing page](https://localhost/resource/d7b526e24f7e449098b428ae9363f514)
+* If you get an error, check the "Settings" in the upper RH corneer
+Sometimes clicking the APPLY button will resolve the issue. This is a known bug that we need to resolve ![APPLY](apply_resource_landing_settings.png)
