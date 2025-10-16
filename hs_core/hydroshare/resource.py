@@ -24,7 +24,7 @@ from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
 from theme.models import UserQuota
-from hs_core.enums import CrossRefSubmissionStatus
+from hs_core.enums import DataciteSubmissionStatus
 
 FILE_UPLOAD_MAX_SIZE = getattr(settings, 'FILE_UPLOAD_MAX_SIZE', 25 * 1024**3)  # FILE_UPLOAD_MAX_SIZE is in bytes
 FILE_SIZE_LIMIT_FOR_DISPLAY = f"{round(FILE_UPLOAD_MAX_SIZE / 1024**3)}GB"
@@ -953,7 +953,7 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
 def get_resource_doi(res_id, flag=''):
     doi_str = "https://doi.org/10.4211/hs.{shortkey}".format(shortkey=res_id)
     if flag:
-        if flag not in CrossRefSubmissionStatus:
+        if flag not in DataciteSubmissionStatus:
             raise ValidationError("Invalid flag value: {}".format(flag))
         return "{doi}{append_flag}".format(doi=doi_str, append_flag=flag)
     else:
@@ -964,14 +964,14 @@ def get_activated_doi(doi):
     """
     Get activated DOI with flags removed. The following four flags are appended
     to the DOI string to indicate publication status for internal use:
-    'pending' flag indicates the metadata deposition with CrossRef succeeds when the resource is published, but
-     pending activation with CrossRef for DOI to take effect.
-    'failure' flag indicates the metadata deposition failed with CrossRef due to
-    network or system issues with CrossRef when the resource is published.
-    'update_pending' flag indicates the metadata update with CrossRef succeeds when the resource metadata is updated,
+    'pending' flag indicates the metadata deposition with Datacite succeeds when the resource is published, but
+     pending activation with Datacite for DOI to take effect.
+    'failure' flag indicates the metadata deposition failed with Datacite due to
+    network or system issues with Datacite when the resource is published.
+    'update_pending' flag indicates the metadata update with Datacite succeeds when the resource metadata is updated,
     but pending to take effect.
-    'update_failure' flag indicates the metadata update failed with CrossRef due to
-    network or system issues with CrossRef when the resource metadata is updated.
+    'update_failure' flag indicates the metadata update failed with Datacite due to
+    network or system issues with Datacite when the resource metadata is updated.
 
     Args:
         doi: the DOI string with possible status flags appended
@@ -980,14 +980,14 @@ def get_activated_doi(doi):
         the activated DOI with all flags removed if any
     """
 
-    if doi.endswith(CrossRefSubmissionStatus.UPDATE_PENDING.value):
-        return doi[:-len(CrossRefSubmissionStatus.UPDATE_PENDING.value)]
-    if doi.endswith(CrossRefSubmissionStatus.UPDATE_FAILURE.value):
-        return doi[:-len(CrossRefSubmissionStatus.UPDATE_FAILURE.value)]
-    if doi.endswith(CrossRefSubmissionStatus.PENDING.value):
-        return doi[:-len(CrossRefSubmissionStatus.PENDING.value)]
-    if doi.endswith(CrossRefSubmissionStatus.FAILURE.value):
-        return doi[:-len(CrossRefSubmissionStatus.FAILURE.value)]
+    if doi.endswith(DataciteSubmissionStatus.UPDATE_PENDING.value):
+        return doi[:-len(DataciteSubmissionStatus.UPDATE_PENDING.value)]
+    if doi.endswith(DataciteSubmissionStatus.UPDATE_FAILURE.value):
+        return doi[:-len(DataciteSubmissionStatus.UPDATE_FAILURE.value)]
+    if doi.endswith(DataciteSubmissionStatus.PENDING.value):
+        return doi[:-len(DataciteSubmissionStatus.PENDING.value)]
+    if doi.endswith(DataciteSubmissionStatus.FAILURE.value):
+        return doi[:-len(DataciteSubmissionStatus.FAILURE.value)]
     return doi
 
 
@@ -1267,7 +1267,7 @@ def publish_resource(user, pk):
     resource.set_quota_holder(resource.quota_holder, publisher_user_account)
     # append pending to the doi field to indicate DOI is not activated yet. Upon successful
     # activation, "pending" will be removed from DOI field
-    resource.doi = get_resource_doi(pk, CrossRefSubmissionStatus.PENDING.value)
+    resource.doi = get_resource_doi(pk, DataciteSubmissionStatus.PENDING.value)
     resource.save()
     if settings.DEBUG:
         assert settings.USE_DATACITE_TEST is True
@@ -1300,7 +1300,8 @@ def publish_resource(user, pk):
         resource.doi = get_activated_doi(resource.doi)
         resource.save()
         deposit_res_metadata_with_datacite(resource)
-        from hs_core.tasks import create_bag_by_s3
+        from hs_core.tasks import create_bag_by_s3, notify_owners_of_publication_success
+        notify_owners_of_publication_success.apply_async((resource))
         create_bag_by_s3.apply_async((pk,))
 
     except Exception as e:

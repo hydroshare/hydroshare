@@ -402,6 +402,36 @@ def nightly_metadata_review_reminder():
                 send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, recipients)
 
 
+def notify_owners_of_publication_success(resource):
+    """
+    Sends email notification to resource owners on publication success
+
+    :param resource: a resource that has been published
+    :return:
+    """
+    res_url = current_site_url() + resource.get_absolute_url()
+    doi = f"{settings.DATACITE_PREFIX}/{resource.short_id}"
+
+    email_msg = f'''Dear Resource Owner,
+    <p>The following resource that you submitted for publication:
+    <a href="{res_url}">
+    {res_url}</a>
+    has been reviewed and determined to meet HydroShare's minimum metadata standards and community guidelines.</p>
+
+    <p>The publication request was processed by <a href="https://www.Datacite.org/">Datacite.org</a>.
+    The Digital Object Identifier (DOI) for your resource is:
+    <a href="{get_resource_doi(resource.short_id)}">https://doi.org/{doi}</a></p>
+    <p>Thank you,</p>
+    <p>The HydroShare Team</p>
+    '''
+    if not settings.DISABLE_TASK_EMAILS:
+        send_mail(subject="HydroShare resource metadata review completed",
+                  message=email_msg,
+                  html_message=email_msg,
+                  from_email=settings.DEFAULT_FROM_EMAIL,
+                  recipient_list=[o.email for o in resource.raccess.owners.all()])
+
+
 @celery_app.task(ignore_result=True, base=HydroshareTask)
 def send_over_quota_emails():
     """
@@ -1117,4 +1147,3 @@ def task_notification_cleanup():
     """
     day_ago = datetime.today() - timedelta(days=1)
     TaskNotification.objects.filter(created__lte=day_ago).delete()
-

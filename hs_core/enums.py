@@ -26,16 +26,16 @@ class RelationTypes(str, enum.Enum):
     relation = 'relation'
 
 
-class CrossRefSubmissionStatus(str, enum.Enum):
-    """CrossRef metadata deposit submission status"""
+class DataciteSubmissionStatus(str, enum.Enum):
+    """Datacite metadata deposit submission status"""
 
-    # 'failure' flag indicates the metadata deposition with CrossRef failed when the resource was first published
+    # 'failure' flag indicates the metadata deposition with Datacite failed when the resource was first published
     FAILURE = 'failure'
-    # 'update_failure' flag indicates the metadata update with CrossRef failed
+    # 'update_failure' flag indicates the metadata update with Datacite failed
     UPDATE_FAILURE = 'update_failure'
-    # 'pending' flag indicates the metadata deposition with CrossRef succeeds, but
-    # pending activation with CrossRef for DOI to take effect. this is the initial deposit when the resource
+    # 'pending' flag indicates the metadata deposition with Datacite succeeds, but
+    # pending activation with Datacite for DOI to take effect. this is the initial deposit when the resource
     # is first published
     PENDING = 'pending'
-    # 'update_pending' flag indicates the metadata update with CrossRef succeeds, but pending to be available
+    # 'update_pending' flag indicates the metadata update with Datacite succeeds, but pending to be available
     UPDATE_PENDING = 'update_pending'

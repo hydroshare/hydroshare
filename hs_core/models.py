@@ -44,7 +44,7 @@ from rdflib.namespace import DC, DCTERMS, RDF
 from spam_patterns.worst_patterns_re import patterns
 
 from django_s3.storage import S3Storage
-from hs_core.enums import (CrossRefSubmissionStatus, RelationTypes)
+from hs_core.enums import (DataciteSubmissionStatus, RelationTypes)
 from hs_core.s3 import ResourceFileS3Mixin, ResourceS3Mixin
 
 from .hs_rdf import (HSTERMS, RDFS1, RDF_MetaData_Mixin, RDF_Term_MixIn,
@@ -2757,8 +2757,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
 
         if doi and not forceHydroshareURI:
             hs_identifier = doi[0]
-            if (self.doi.find(CrossRefSubmissionStatus.PENDING.value) >= 0
-                    or self.doi.find(CrossRefSubmissionStatus.FAILURE.value) >= 0):
+            if (self.doi.find(DataciteSubmissionStatus.PENDING.value) >= 0
+                    or self.doi.find(DataciteSubmissionStatus.FAILURE.value) >= 0):
                 isPendingActivation = True
         else:
             hs_identifier = [idn for idn in identifiers if idn.name == "hydroShareIdentifier"]
