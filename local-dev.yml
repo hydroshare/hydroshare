@@ -322,8 +322,8 @@ services:
   companion:
   # https://github.com/transloadit/uppy/blob/main/packages/%40uppy/companion/KUBERNETES.md
     build:
-      context: .
-      dockerfile: Dockerfile-companion
+      context: companion
+      dockerfile: Dockerfile
     # image: docker.io/transloadit/companion:5.5.0
     platform: linux/amd64
     container_name: companion
