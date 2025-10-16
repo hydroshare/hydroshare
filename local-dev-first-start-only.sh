@@ -241,6 +241,12 @@ mkdir -p log/nginx 2>/dev/null
 
 find . -name '*.hydro-bk' -exec rm -f {} \; 2>/dev/null
 
+echo " - make down-landing"
+make down-landing
+
+echo " - make up-landing"
+make up-landing
+
 echo
 echo '########################################################################################################################'
 echo " Starting system"
