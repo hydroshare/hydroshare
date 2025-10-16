@@ -24,12 +24,19 @@ jobs:
     name: Run on ${{ inputs.instance }}
     runs-on: ubuntu-latest
     steps:
+    - name: Extract namespace from instance input
+      id: extract-namespace
+      run: |
+        INSTANCE="${{ inputs.instance }}"
+        NAMESPACE=$(echo "$INSTANCE" | awk -F'\\' '{print $2}')
+        echo "Extracted namespace: $NAMESPACE"
+        echo "namespace=$NAMESPACE" >> $GITHUB_OUTPUT
+
     - name: code checkout
       uses: actions/checkout@v3
 
     - uses: 'google-github-actions/auth@v2'
       with:
-        #credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
         credentials_json: ${{ secrets.HYDROSHARE_STORAGEREADER_KEY}}
 
     - name: Setup GKE credentials for dev-
@@ -46,33 +53,19 @@ jobs:
         cluster_name: hydroshare-beta
         location: us-central1
         
-    - name: Set context for dev-0
-      if: ${{ contains(inputs.instance, 'dev-0') }}
+    - name: Set context for dev cluster
+      if: ${{ contains(inputs.instance, 'dev-') }}
       run: |
-        echo "setting context to dev-0"
+        echo "setting context to hydroshare-dev with namespace: ${{ steps.extract-namespace.outputs.namespace }}"
         kubectl config use-context gke_hydroshare-403701_us-central1_hydroshare-dev 
-        kubectl config set-context --current --namespace=dev-0
-
-    - name: Set context for dev-1
-      if: ${{ contains(inputs.instance, 'dev-1') }}
-      run: |
-        echo "setting context to dev-1"
-        kubectl config use-context gke_hydroshare-403701_us-central1_hydroshare-dev 
-        kubectl config set-context --current --namespace=dev-1
-    
-    - name: Set context for dev-2
-      if: ${{ contains(inputs.instance, 'dev-2') }}
-      run: |
-        echo "setting context to dev-2"
-        kubectl config use-context gke_hydroshare-403701_us-central1_hydroshare-dev 
-        kubectl config set-context --current --namespace=dev-2
+        kubectl config set-context --current --namespace=${{ steps.extract-namespace.outputs.namespace }}
 
     - name: Set context for beta
       if: ${{ contains(inputs.instance, 'beta') }}
       run: |
-        echo "setting context to beta"
+        echo "setting context to hydroshare-beta with namespace: ${{ steps.extract-namespace.outputs.namespace }}"
         kubectl config use-context gke_hydroshare-403701_us-central1_hydroshare-beta
-        kubectl config set-context --current --namespace=default
+        kubectl config set-context --current --namespace=${{ steps.extract-namespace.outputs.namespace }}
 
     - name: Load django db into environment
       run: |
@@ -82,7 +75,8 @@ jobs:
         
         BUCKET_NAME="hydroshare-postgis-dumps"
         echo "Finding  backup in bucket: $BUCKET_NAME"
-        NAMESPACE=$(echo "${{ inputs.instance }}" | awk -F'\\' '{print $2}')
+        NAMESPACE="${{ steps.extract-namespace.outputs.namespace }}"
+        echo "Using namespace: $NAMESPACE"
                      
         # Retrieves the name of the first Kubernetes pod labeled with 'app=postgis' and stores it in the POSTGIS_POD variable.  
         POSTGIS_POD=$(kubectl get pods -l app=postgis -n $NAMESPACE -o jsonpath="{.items[0].metadata.name}")
@@ -201,5 +195,3 @@ jobs:
         echo "Running solr_update in Hydroshare pod: $HYDROSHARE_POD"
         kubectl exec -n $NAMESPACE $HYDROSHARE_POD -- python manage.py solr_update
         echo "Database snapshot load and solr update completed successfully."
-
-       
