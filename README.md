@@ -70,13 +70,13 @@ Run the following command on completion to launch Hydroshare:
 
     Some WARNINGs are normal. 
 
-    HydroShare is available in your browser at https://localhost
+    HydroShare is available in your browser at http://localhost
 
-    The default admin page is https://localhost/admin
+    The default admin page is http://localhost/admin
 
     The default admin account is admin:default
 
-    Swagger API docs https://localhost/hsapi/
+    Swagger API docs http://localhost/hsapi/
 
 6. Start & Stop & Log
 
@@ -166,12 +166,12 @@ Hydroshare is released under the BSD 3-Clause License. This means that [you can 
 
 * Pull the [6016/landing-page](https://github.com/hydroshare/hydroshare/tree/6016/landing-page) branch
 * run `./local-dev-first-start-only.sh`
-* Access hydroshare at https://localhost
+* Access hydroshare at http://localhost
 
 Then...
 
 ### create a new user `asdf2`
-Go to https://localhost/sign-up
+Go to http://localhost/sign-up
 This is a necessary step right now because perhaps the `asdf` user in the dev database doesn't have a bucket or maybe it is missing a quota?
 
 ### Create a new resource using the UI
@@ -197,9 +197,9 @@ mc cp landing-page/example_metadata/hs_user_meta.json local-hydroshare/$BUCKET/$
 ```
 
 ### go checkout the resource
-* https://localhost/resource/d7b526e24f7e449098b428ae9363f514
+* http://localhost/resource/d7b526e24f7e449098b428ae9363f514
 * You should see the resource landing page.
-* Click "Login" this will redirect you to: the [HS sign-in page](https://localhost/accounts/login/?next=https%3A%2F%2Flocalhost%2Fresource%2Fd7b526e24f7e449098b428ae9363f514)
-* After login, it should redirect you back to the [landing page](https://localhost/resource/d7b526e24f7e449098b428ae9363f514)
+* Click "Login" this will redirect you to: the [HS sign-in page](http://localhost/accounts/login/?next=http%3A%2F%2Flocalhost%2Fresource%2Fd7b526e24f7e449098b428ae9363f514)
+* After login, it should redirect you back to the [landing page](http://localhost/resource/d7b526e24f7e449098b428ae9363f514)
 * If you get an error, check the "Settings" in the upper RH corneer
 Sometimes clicking the APPLY button will resolve the issue. This is a known bug that we need to resolve ![APPLY](apply_resource_landing_settings.png)
