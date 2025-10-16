@@ -363,25 +363,28 @@ services:
     restart: on-failure
     depends_on:
       - postgis
-  landing-page:
-    build:
-      context: landing-page
-      dockerfile: Dockerfile
-      args:
-        - VITE_APP_BASE=/resource/
-        - VITE_APP_API_URL=POINT_ME_AT_API_URL
-        - VITE_APP_NAME=hs-landing-page
-        - VITE_APP_ORIGIN=https://localhost
-    container_name: landing-page
-    hostname: landing-page
-    platform: linux/amd64
-    environment:
-      VITE_APP_NAME: "hs-landing-page"
-      VITE_APP_ORIGIN: "https://localhost"
-      VITE_APP_BASE: "/resource/"
-      VITE_APP_API_URL: "POINT_ME_AT_API_URL"
-    ports:
-      - "5004:5004"
+  # Instead of running the landing page in docker compose, we run it using PM2
+  # This is done via "make up-landing"
+  # This has the benefit of HMR and other vite dev server features
+  # landing-page:
+  #   build:
+  #     context: landing-page
+  #     dockerfile: Dockerfile
+  #     args:
+  #       - VITE_APP_BASE=/resource/
+  #       - VITE_APP_API_URL=POINT_ME_AT_API_URL
+  #       - VITE_APP_NAME=hs-landing-page
+  #       - VITE_APP_ORIGIN=https://localhost
+  #   container_name: landing-page
+  #   hostname: landing-page
+  #   platform: linux/amd64
+  #   environment:
+  #     VITE_APP_NAME: "hs-landing-page"
+  #     VITE_APP_ORIGIN: "https://localhost"
+  #     VITE_APP_BASE: "/resource/"
+  #     VITE_APP_API_URL: "POINT_ME_AT_API_URL"
+  #   ports:
+  #     - "5004:5004"
 volumes:
   postgis_data_vol:
   solr_data_vol:
