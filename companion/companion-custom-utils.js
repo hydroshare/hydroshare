@@ -5,7 +5,6 @@
 import * as defaultUtils from './default-utils.js';
 
 const getKey = ({ filename, metadata, req }) => {
-  console.log('dynamically setting key for filename:', filename, 'metadata:', metadata);
   const key = metadata?.dynamic_key || filename;
 
   if (!key) {
