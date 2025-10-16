@@ -321,16 +321,19 @@ services:
     tty: true
   companion:
   # https://github.com/transloadit/uppy/blob/main/packages/%40uppy/companion/KUBERNETES.md
-    image:  docker.io/transloadit/companion:5.5.0
+    build:
+      context: .
+      dockerfile: Dockerfile-companion
+    # image: docker.io/transloadit/companion:5.5.0
     platform: linux/amd64
     container_name: companion
     hostname: companion
     environment:
       COMPANION_PORT: '3020'
-      COMPANION_CLIENT_ORIGINS: 'https://localhost'
-      # when testing 3rd party services like google drive, you will access hydroshare at http://host.docker.internal:8000
-      # you will need to add a line in your /etc/hosts file to map host.docker.internal to localhost
-      COMPANION_UPLOAD_URLS: 'https://localhost/django_s3/tus/*'
+      COMPANION_CLIENT_ORIGINS: 'https://localhost,http://localhost:5004'
+      # when using the landing page in vite dev, use this instead:
+      # COMPANION_CLIENT_ORIGINS: 'http://localhost:5004'
+      COMPANION_UPLOAD_URLS: '*localhost*'
       COMPANION_DATADIR: '/mnt/companion-data'
       COMPANION_DOMAIN: 'localhost'
       COMPANION_PATH: '/companion'
@@ -346,6 +349,22 @@ services:
       COMPANION_GOOGLE_SECRET: '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'
       # https://uppy.io/docs/companion/#enablegooglepickerendpoint-companion_enable_google_picker_endpoint
       COMPANION_ENABLE_GOOGLE_PICKER_ENDPOINT: 'true'
+      COMPANION_AWS_FORCE_PATH_STYLE: 'true'
+      # the key and secret are now dynamically calculated in companion-custom-s3-client.js
+      # COMPANION_AWS_KEY: 'minioadmin'
+      # COMPANION_AWS_SECRET: 'minioadmin'
+
+      # TODO compute the aws endpoint dynamically based on where minio is running
+      # For local uploads to work for local dev, use:
+      COMPANION_AWS_ENDPOINT: 'http://localhost:9000'
+      # For 3rd party uploads to work from within docker on a mac, use:
+      # COMPANION_AWS_ENDPOINT: 'http://host.docker.internal:9000'
+
+      # https://uppy.io/docs/companion/#s3bucket-companion_aws_bucket
+      # COMPANION_AWS_BUCKET: asdf2
+      # The bucket is now dynamically calculated in companion-custom-config.js, using the upload metadata
+      # https://github.com/hydroshare/hydroshare/pull/5974#issuecomment-2963085209
+      COMPANION_AWS_REGION: 'us-central-1'
     ports:
       - "3020:3020"
     volumes:
@@ -405,6 +424,25 @@ services:
     volumes:
       - mongodb_data_vol:/data/db
       - mongodb_config_vol:/data/configdb
+  landing-page:
+    build:
+      context: landing-page
+      dockerfile: Dockerfile
+      args:
+        - VITE_APP_BASE=/resource/
+        - VITE_APP_API_URL=POINT_ME_AT_API_URL
+        - VITE_APP_NAME=hs-landing-page
+        - VITE_APP_ORIGIN=https://localhost
+    container_name: landing-page
+    hostname: landing-page
+    platform: linux/amd64
+    environment:
+      VITE_APP_NAME: "hs-landing-page"
+      VITE_APP_ORIGIN: "https://localhost"
+      VITE_APP_BASE: "/resource/"
+      VITE_APP_API_URL: "POINT_ME_AT_API_URL"
+    ports:
+      - "5004:5004"
 volumes:
   postgis_data_vol:
   solr_data_vol:
