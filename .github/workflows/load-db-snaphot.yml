@@ -94,8 +94,7 @@ jobs:
         # It uses the `gcloud storage sign-url` command with a specified service account for impersonation,
         # and sets the URL to be valid for 1 hour. The resulting signed URL is extracted from the command output.
         SIGNED_URL=$(gcloud storage sign-url --impersonate-service-account=hydroshare-storagereader@hydroshare-403701.iam.gserviceaccount.com --duration=1h "$LATEST_FILE" | awk -F' ' '{print $2}')
-          
-        #echo $SIGNED_URL
+
         # Extracts the fourth field from the SIGNED_URL variable (assuming it contains space-separated values)
         # and assigns it back to SIGNED_URL. This is typically used to isolate a specific part of a command output.
         SIGNED_URL=$(echo $SIGNED_URL | awk -F' ' '{print $4}')
@@ -106,9 +105,6 @@ jobs:
         # effectively stopping the associated pods. This is often done to ensure that no active connections
         # are present while performing database operations.
         # This is important for maintaining data integrity during the database snapshot loading process.
-        
-        #Get number of replicas before scaling down
-        #STS_NAME=$(kubectl get statefulset -n $NAMESPACE -o name | grep "hydroshare")
 
         DEFAULTWORKER_REPLICAS=$(kubectl get statefulset defaultworker-worker -n $NAMESPACE -o jsonpath="{.spec.replicas}")
         echo "defaultworker replicas before scale down: $DEFAULTWORKER_REPLICAS"
@@ -162,7 +158,7 @@ jobs:
           
         kubectl exec $POSTGIS_POD -- psql -U postgres -d hydroshare -f /init/00/init.sql
         kubectl exec $POSTGIS_POD -- psql -U postgres -d postgres -f /tmp/01/pg.development.sql
-        #---
+
         # The following commands scale the specified Kubernetes statefulsets back to their original number of replicas,
         # effectively restarting the associated pods. This is done after completing database operations to restore
         # normal application functionality.
