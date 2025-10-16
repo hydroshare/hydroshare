@@ -252,7 +252,6 @@ services:
     hostname: companion
     environment:
       COMPANION_PORT: '3020'
-      # COMPANION_CLIENT_ORIGINS: 'https://localhost,http://localhost:5004'
       COMPANION_CLIENT_ORIGINS: 'http://localhost,http://localhost:5004'
       COMPANION_UPLOAD_URLS: '*localhost*'
       COMPANION_DATADIR: '/mnt/companion-data'
