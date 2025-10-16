@@ -60,8 +60,6 @@ jobs:
         CURRENT_CONTEXT=$(kubectl config current-context)
         echo "Current kubectl context: $CURRENT_CONTEXT"
         
-        BUCKET_NAME="hydroshare-postgis-dumps"
-        echo "Finding backup in bucket: $BUCKET_NAME"
         NAMESPACE="${{ steps.extract-cluster-info.outputs.namespace }}"
         CLUSTER="${{ steps.extract-cluster-info.outputs.cluster }}"
         echo "Using cluster: $CLUSTER"
@@ -76,6 +74,8 @@ jobs:
                  
         # Retrieves the most recently modified file from the specified Google Cloud Storage bucket by
         # listing all files recursively, sorting them, and selecting the last entry.
+        BUCKET_NAME="hydroshare-postgis-dumps"
+        echo "Finding backup in bucket: $BUCKET_NAME"
         if [ "${{ inputs.snapshot }}" = "latest" ]; then
           echo "Getting latest"
           LATEST_FILE=$(gcloud storage ls --recursive gs://$BUCKET_NAME/** | sort | tail -n 1)
