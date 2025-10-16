@@ -13,11 +13,14 @@ services:
     volumes:
       - minio_data_vol:/data
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_ROOT_USER: cuahsi
+      MINIO_ROOT_PASSWORD: devpassword
       MINIO_BROWSER_REDIRECT: "false"
       MINIO_SCANNER_SPEED: "fastest"
       MINIO_POLICY_PLUGIN_URL: "http://micro-auth/minio/authorization/"
+      MINIO_NOTIFY_KAFKA_ENABLE_RESOURCEFILE: "on"
+      MINIO_NOTIFY_KAFKA_BROKERS_RESOURCEFILE: "redpanda:9092"
+      MINIO_NOTIFY_KAFKA_TOPIC_RESOURCEFILE: "resource_file"
     command: server --console-address ":9001" /data
     depends_on:
       - micro-auth
@@ -55,12 +58,6 @@ services:
       - "6432:6432"
     depends_on:
       - postgis
-  rabbitmq:
-    image: rabbitmq:3.8.2
-    platform: linux/amd64
-    container_name: rabbitmq
-    volumes:
-      - "rabbitmq_data_vol:/var/lib/rabbitmq"
   solr:
     image: solr:6.6
     platform: linux/amd64
@@ -89,7 +86,6 @@ services:
       POSTGIS_DB: postgres
       POSTGIS_USER: postgres
       PGPASSWORD: postgres
-      RABBITMQ_PORT_5672_TCP_ADDR: rabbitmq
       SOLR_PORT_8983_TCP_ADDR: solr
       SOLR_HOST: solr
       TMP: /tmp
@@ -99,7 +95,7 @@ services:
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       VUE_APP_BUCKET_URL_PUBLIC_PATH: "/static/static"
-      MC_HOST_hydroshare: "http://minioadmin:minioadmin@minio:9000"
+      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
     volumes:
       # hydroshare repository
       - ".:/hydroshare"
@@ -113,13 +109,13 @@ services:
     links:
       - postgis:postgis
       - solr:solr
-      - rabbitmq:rabbitmq
+      - redpanda:redpanda
       - minio:minio
     depends_on:
       - postgis
       - pgbouncer
       - solr
-      - rabbitmq
+      - redpanda
       - minio
       - redis
     stdin_open: true
@@ -140,7 +136,6 @@ services:
       POSTGIS_USER: postgres
       PGPASSWORD: postgres
       C_FORCE_ROOT: 1
-      RABBITMQ_PORT_5672_TCP_ADDR: rabbitmq
       SOLR_PORT_8983_TCP_ADDR: solr
       SOLR_HOST: solr
       POSTGIS_PORT_5432_TCP_ADDR: pgbouncer
@@ -149,22 +144,103 @@ services:
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       COLUMNS: 80
-      MC_HOST_hydroshare: "http://minioadmin:minioadmin@minio:9000"
+      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
     ports:
       - "5555:5555"
     volumes:
       - ".:/hydroshare"
     links:
       - pgbouncer:pgbouncer
-      - rabbitmq:rabbitmq
+      - redpanda:redpanda
     depends_on:
       - hydroshare
       - pgbouncer
       - solr
-      - rabbitmq
+      - redpanda
     stdin_open: true
     tty: true
     command: /bin/bash init-defaultworker
+  hs_event_s3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: s3eventworker
+    platform: linux/amd64
+    hostname: s3eventworker
+    environment:
+      POSTGIS_HOST: pgbouncer
+      POSTGIS_PORT: 6432
+      POSTGIS_PASSWORD: postgres
+      POSTGIS_DB: postgres
+      POSTGIS_USER: postgres
+      PGPASSWORD: postgres
+      C_FORCE_ROOT: 1
+      SOLR_PORT_8983_TCP_ADDR: solr
+      SOLR_HOST: solr
+      POSTGIS_PORT_5432_TCP_ADDR: pgbouncer
+      POSTGIS_DISABLE_SERVER_SIDE_CURSORS: "True"
+      HS_PATH: ${PWD}
+      PYTHONPATH: /hydroshare
+      DJANGO_SETTINGS_MODULE: hydroshare.settings
+      COLUMNS: 80
+      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
+    volumes:
+      - ".:/hydroshare"
+    links:
+      - pgbouncer:pgbouncer
+      - redpanda:redpanda
+    depends_on:
+      - hydroshare
+      - pgbouncer
+      - solr
+      - redpanda
+    stdin_open: true
+    tty: true
+    command: rpk connect run --rpc-plugins=/hydroshare/hs_event_s3/notify_hs_django_plugin.yaml /hydroshare/hs_event_s3/notify_hs_django_pipeline.yaml
+  redpanda:
+    command:
+      - redpanda
+      - start
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+      - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18082
+      - --advertise-pandaproxy-addr internal://redpanda:8082,external://localhost:18082
+      - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:18081
+      - --rpc-addr redpanda:33145
+      - --advertise-rpc-addr redpanda:33145
+      - --mode dev-container
+      - --smp 1
+      - --default-log-level=info
+    image: docker.redpanda.com/redpandadata/redpanda:v25.2.5
+    container_name: redpanda
+    volumes:
+      - redpanda_data_vol:/var/lib/redpanda/data
+    ports:
+      - 18081:18081
+      - 18082:18082
+      - 19092:19092
+      - 19644:9644
+  redpanda-console:
+    container_name: redpanda-console
+    image: docker.redpanda.com/redpandadata/console:v3.2.2
+    entrypoint: /bin/sh
+    command: -c 'echo "$$CONSOLE_CONFIG_FILE" > /tmp/config.yml; /app/console'
+    environment:
+      CONFIG_FILEPATH: /tmp/config.yml
+      CONSOLE_CONFIG_FILE: |
+        kafka:
+          brokers: ["redpanda:9092"]
+        schemaRegistry:
+          enabled: true
+          urls: ["http://redpanda:8081"]
+        redpanda:
+          adminApi:
+            enabled: true
+            urls: ["http://redpanda:9644"]
+    ports:
+      - 8080:8080
+    depends_on:
+      - redpanda
   companion:
   # https://github.com/transloadit/uppy/blob/main/packages/%40uppy/companion/KUBERNETES.md
     image:  docker.io/transloadit/companion:5.5.0
@@ -229,9 +305,10 @@ services:
       dockerfile: Dockerfile
     environment:
       HS_DATABASE_URL: "postgresql://postgres:postgres@postgis:5432/postgres"
-      MC_HOST_hydroshare: "http://minioadmin:minioadmin@minio:9000"
+      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      ENABLE_EDIT_ACTIONS: "true"
     ports:
       - 8001:8001
     links:
@@ -244,7 +321,7 @@ volumes:
   solr_data_vol:
   temp_vol:
   share_vol:
-  rabbitmq_data_vol:
+  redpanda_data_vol:
   minio_data_vol:
   redis_data_vol:
   companion_vol:
