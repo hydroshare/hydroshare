@@ -402,6 +402,7 @@ def nightly_metadata_review_reminder():
                 send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, recipients)
 
 
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def notify_owners_of_publication_success(resource):
     """
     Sends email notification to resource owners on publication success
@@ -430,6 +431,88 @@ def notify_owners_of_publication_success(resource):
                   html_message=email_msg,
                   from_email=settings.DEFAULT_FROM_EMAIL,
                   recipient_list=[o.email for o in resource.raccess.owners.all()])
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
+def notify_developers_of_publication_failure(resource, error=None, exc_info=None, extra_context=None):
+    """
+    Sends a failure notification email to developers/admins when a resource publication fails.
+
+    :param resource: the resource that failed to publish
+    :param error: optional short error message (str)
+    :param exc_info: optional exception (Exception) or a tuple as from sys.exc_info()
+    :param extra_context: optional dict with extra diagnostic info (e.g., {'task_id': '...', 'worker': '...'})
+    :return: None
+    """
+    if getattr(settings, "DISABLE_TASK_EMAILS", False):
+        return
+
+    res_url = current_site_url() + resource.get_absolute_url()
+    doi = f"{settings.DATACITE_PREFIX}/{resource.short_id}"
+    owners = ", ".join([o.email for o in resource.raccess.owners.all()])
+
+    # Build a concise text/HTML body with diagnostics
+    when = timezone.now().strftime("%Y-%m-%d %H:%M:%S %Z")
+    error_text = str(error).strip() if error else "N/A"
+
+    tb_text = ""
+    if exc_info:
+        if isinstance(exc_info, BaseException):
+            tb_text = "".join(traceback.format_exception(type(exc_info), exc_info, exc_info.__traceback__))
+        elif isinstance(exc_info, tuple):
+            tb_text = "".join(traceback.format_exception(*exc_info))
+
+    extra_html = ""
+    if extra_context:
+        rows = "".join(
+            f"<tr><td style='padding:4px 8px;'><strong>{k}</strong></td><td style='padding:4px 8px;'>{v}</td></tr>"
+            for k, v in extra_context.items()
+        )
+        extra_html = f"""
+        <h4>Extra Context</h4>
+        <table border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+            {rows}
+        </table>
+        """
+
+    html_msg = f"""<p><strong>Publication Failure Detected</strong></p>
+    <p><strong>When:</strong> {when}</p>
+    <p><strong>Resource:</strong> <a href="{res_url}">{res_url}</a></p>
+    <p><strong>Resource ID:</strong> {resource.short_id}</p>
+    <p><strong>Title:</strong> {getattr(resource, 'title', '(unknown)')}</p>
+    <p><strong>Owners:</strong> {owners or '(none found)'}</p>
+    <p><strong>Intended DOI:</strong> <a href="{get_resource_doi(resource.short_id)}">https://doi.org/{doi}</a></p>
+    <p><strong>Error:</strong> {error_text}</p>
+    {"<pre style='white-space:pre-wrap;border:1px solid #ddd;padding:8px;'>" + tb_text + "</pre>" if tb_text else ""}
+    {extra_html}
+    <p>Please investigate and re-run as appropriate.</p>
+    """
+
+    text_msg = (
+        "Publication Failure Detected\n"
+        f"When: {when}\n"
+        f"Resource: {res_url}\n"
+        f"Resource ID: {resource.short_id}\n"
+        f"Title: {getattr(resource, 'title', '(unknown)')}\n"
+        f"Owners: {owners or '(none found)'}\n"
+        f"Intended DOI: https://doi.org/{doi}\n"
+        f"Error: {error_text}\n\n"
+        f"{tb_text if tb_text else ''}\n"
+        f"{'Extra Context: ' + str(extra_context) if extra_context else ''}\n"
+        "Please investigate and re-run as appropriate.\n"
+    )
+
+    subject = f"[HydroShare] Publication FAILED for resource {resource.short_id}"
+
+    recipients = getattr(settings, "DEFAULT_DEVELOPER_EMAIL", None)
+    if recipients:
+        send_mail(
+            subject=subject,
+            message=text_msg,
+            html_message=html_msg,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=recipients,
+        )
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)

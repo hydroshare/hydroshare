@@ -1319,6 +1319,8 @@ def publish_resource(user, pk):
 
         resource.raccess.save()
         resource.save()
+        from hs_core.tasks import notify_developers_of_publication_failure
+        notify_developers_of_publication_failure.apply_async((resource, str(e)))
         raise
 
     return pk
