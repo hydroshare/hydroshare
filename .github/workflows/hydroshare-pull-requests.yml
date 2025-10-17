@@ -58,6 +58,10 @@ jobs:
       run: |
         printf "%s\n" c | ./local-dev-first-start-only.sh
 
+    - name: Run HydroShare Tests
+      run: |
+        docker exec hydroshare ./run-tests-jenkins
+
     - name: Save Docker images to tarball
       if: steps.cache-images-restore.outputs.cache-hit != 'true'
       run: |
@@ -92,7 +96,3 @@ jobs:
         path: |
           /tmp/docker-cache/images.tar
         key: ${{ steps.cache-images-restore.outputs.cache-primary-key }}
-
-    - name: Run HydroShare Tests
-      run: |
-        docker exec hydroshare ./run-tests-jenkins
