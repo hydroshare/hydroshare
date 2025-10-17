@@ -1,3 +1,4 @@
+import logging
 import os
 
 from hsextract.content_types.models import ContentType, FileMetadataObject
@@ -15,10 +16,15 @@ class SingleFileMetadataObject(FileMetadataObject):
 
     @classmethod
     def is_content_type(cls, file_object_path: str) -> bool:
+        logging.info(f"Checking if {file_object_path} is of content type {cls.content_type}")
         relative_path = os.path.relpath(file_object_path, cls._resource_contents_path(file_object_path))
+        logging.info(f"Relative path for {file_object_path} is {relative_path}")
         # check singlefile
         single_file_user_path = os.path.join(cls._resource_md_path(file_object_path),
                                              relative_path + ".user_metadata.json")
+        logging.info(f"Checking for single file user metadata at {single_file_user_path}")
         if exists(single_file_user_path):
+            logging.info(f"Found user metadata for {file_object_path} at {single_file_user_path}")
             return True
+        logging.info(f"No user metadata found for {file_object_path}")
         return False

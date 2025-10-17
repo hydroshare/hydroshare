@@ -17,12 +17,9 @@ COPY hs_extract/requirements.txt .
 RUN pip install -r requirements.txt
 RUN rm requirements.txt
 
-COPY hs_extract/hsextract hsextract
-COPY hs_extract/extract_metadata_pipeline.yaml .
-COPY hs_extract/extract_metadata_plugin.yaml .
+COPY hs_extract/hsextract hs_extract/hsextract
 COPY hs_cloudnative_schemas hs_cloudnative_schemas
-RUN touch __init__.py
 
-ENV PYTHONPATH "${PYTHONPATH}:/app/hsextract/:/app/hs_cloudnative_schemas/"
+ENV PYTHONPATH "${PYTHONPATH}:/app/hs_extract/hsextract/:/app/hs_extract/hs_cloudnative_schemas/"
 
-ENTRYPOINT ["rpk", "connect", "run", "--rpc-plugins=/app/extract_metadata_plugin.yaml", "/app/extract_metadata_pipeline.yaml"]
+ENTRYPOINT ["rpk", "connect", "run", "--rpc-plugins=/app/hs_extract/extract_metadata_plugin.yaml", "/app/hs_extract/extract_metadata_pipeline.yaml"]

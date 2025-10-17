@@ -6,7 +6,7 @@ from tests import s3_client, read_s3_json, write_s3_json
 
 def test_feature():
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
-    print(resource_id)
+    logging.info(resource_id)
     write_s3_json(f"admin/{resource_id}/.hsmetadata/feature_aggregation/watersheds.shp.user_metadata.json", {
                   "user_metadata": "this is feature user metadata"})
     sleep(1)

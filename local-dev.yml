@@ -256,7 +256,8 @@ services:
       AWS_ACCESS_KEY_ID: cuahsi
       AWS_SECRET_ACCESS_KEY: devpassword
     volumes:
-      - ".:/hydroshare"
+      - "./hs_extract:/app/hs_extract"
+      - "./hs_cloudnative_schemas:/app/hs_extract/hs_cloudnative_schemas"
     links:
       - pgbouncer:pgbouncer
       - redpanda:redpanda

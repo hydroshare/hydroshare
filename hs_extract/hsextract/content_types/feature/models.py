@@ -1,3 +1,4 @@
+import logging
 import os
 
 from hsextract.content_types.models import ContentType, FileMetadataObject
@@ -27,10 +28,12 @@ class FeatureMetadataObject(FileMetadataObject):
 
     @classmethod
     def is_content_type(cls, file_object_path: str) -> bool:
+        logging.info(f"Checking if {file_object_path} is of content type {cls.content_type}")
         sub_file_object_path, extension = os.path.splitext(file_object_path.lower())
         if extension == ".xml":
             _, sub_extension = os.path.splitext(sub_file_object_path.lower())
             extension = sub_extension + extension
+        logging.info(f"Extension is {extension}, valid extensions are {cls._extensions()}")
         return extension in cls._extensions()
 
     def content_type_associated_media(self) -> list[dict]:
