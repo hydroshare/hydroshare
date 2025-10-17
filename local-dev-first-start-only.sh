@@ -215,20 +215,8 @@ fi
 echo '###############################################################################################################'
 echo " Preparing"                                                                                            
 echo '###############################################################################################################'
-
 echo "Creating init scripts"
 cp scripts/templates/init-defaultworker.template init-defaultworker
-cp scripts/templates/init-hydroshare.template    init-hydroshare
-
-sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g init-hydroshare
-sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g init-hydroshare
-
-sed -i $SED_EXT s/HS_SSH_SERVER//g init-hydroshare
-sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"python manage.py runserver 0.0.0.0:8000"'!g' init-hydroshare                  
-
-# run using gunicorn
-# sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"/hydroshare/gunicorn_start"'!g' init-hydroshare
-
 sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g init-defaultworker
 sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g init-defaultworker
 
@@ -260,13 +248,33 @@ echo
 echo " - building Node for Discovery in background"
 node_build > /dev/null 2>&1 &
 
-sleep 180
-
 echo
 echo '########################################################################################################################'
 echo -e " Setting up PostgreSQL container and Importing Django DB"
 echo '########################################################################################################################'
 echo
+
+echo "  - waiting for database system to be ready..."
+while [ 1 -eq 1 ]
+do
+  sleep 1
+  echo -n "."
+  LOG=`docker logs postgis 2>&1`
+  if [[ $LOG == *"PostgreSQL init process complete; ready for start up"* ]]; then
+    break
+  fi
+done
+
+# wait for the final log line to show "database system is ready to accept connections"
+while [ 1 -eq 1 ]
+do
+  sleep 1
+  echo -n "."
+  LOG=`docker logs postgis 2>&1 | tail -1`
+  if [[ $LOG == *"database system is ready to accept connections"* ]]; then
+    break
+  fi
+done
 
 echo " - docker exec -u postgres postgis psql -c \"REVOKE CONNECT ON DATABASE postgres FROM public;\""
 echo
