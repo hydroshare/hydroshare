@@ -232,16 +232,6 @@ def pre_delete_user_handler(sender, instance, **kwargs):
         istorage.delete_bucket(user.username)
 
 
-@receiver(post_save)
-def resource_post_save_handler(sender, instance, **kwargs):
-    """Update cached metadata when resource is created or updated"""
-    if isinstance(instance, BaseResource):
-        try:
-            instance.update_all_cached_metadata()
-        except Exception as ex:
-            logger.error(f"Error updating cached metadata for resource {instance.short_id}: {str(ex)}")
-
-
 @receiver(post_save, sender=ResourceAccess)
 def resource_access_post_save_handler(sender, instance, **kwargs):
     """Update status in cached metadata when resource sharing

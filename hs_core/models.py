@@ -2216,6 +2216,14 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
     quota_holder = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                      related_name='quota_holder')
 
+    def save(self, *args, **kwargs):
+        """Refresh cached metadata before resource is saved to prevent stale cached metadata in memory getting
+        written to DB"""
+        # Only refresh cached_metadata from DB if object already exists
+        if not self._state.adding:
+            self.refresh_from_db(fields=['cached_metadata'])
+        super(AbstractResource, self).save(*args, **kwargs)
+
     def update_view_count(self):
         self.view_count += 1
         # using update query api to update instead of self.save() to avoid triggering solr realtime indexing
