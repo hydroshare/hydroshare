@@ -2363,9 +2363,15 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
     @property
     def last_updated(self):
         """Return the last updated date stored in metadata"""
-        for dt in self.metadata.dates.all():
-            if dt.type == 'modified':
-                return dt.start_date
+        # get the modified date from the cached metadata
+        modified_date = self.cached_metadata.get('modified', None)
+        if modified_date:
+            return parser.parse(modified_date)
+        else:
+            # get the modified date from the Date metadata element
+            for dt in self.metadata.dates.all():
+                if dt.type == 'modified':
+                    return dt.start_date
 
     @property
     def has_required_metadata(self):
