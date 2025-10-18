@@ -2236,9 +2236,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
 
     def update_cached_metadata_field(self, field_name):
         """
-        Update a specific field in the cached metadata
+        Update a specific field in the cached metadata or all fields if 'all' is specified
 
-        :param field_name: The field to update ('creator', 'subject', etc.)
+        :param field_name: The field to update ('creator', 'subject', etc.). If 'all', update all fields.
+
         NOTE: This method gets called from post_save and post_delete signal handler for
         any core metadata elements. We need to update the 'modified' field in cached metadata
         for any change to core metadata elements. The Date metadata element gets updated for the
@@ -2270,10 +2271,19 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         # Ensure all required fields are present
         self._ensure_required_fields(copied_metadata, metadata)
 
-        # Update the modified date every time a metadata element is updated/deleted
-        copied_metadata['modified'] = now().isoformat()
+        # Update the modified date every time a metadata element is updated/deleted, or when 'all' is specified
+        if field_name != 'all':
+            # this is the case of updating cached metadata as part of metadata save/delete signal handler
+            copied_metadata['modified'] = now().isoformat()
+        else:
+            # this is the case of updating cached metadata as part of management command
+            modified_date = metadata.dates.filter(type='modified').first()
+            if modified_date:
+                copied_metadata['modified'] = modified_date.start_date.isoformat()
+            else:
+                copied_metadata['modified'] = self.updated.isoformat()
+
         type(self).objects.filter(id=self.id).update(cached_metadata=copied_metadata)
-        self.refresh_from_db(fields=['cached_metadata'])
 
     def _update_creators_field(self, copied_metadata, metadata):
         """Update creators field in cached metadata"""
