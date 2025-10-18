@@ -30,7 +30,10 @@ def set_s3_events(username, istorage):
     bucket_name = user.userprofile.bucket_name
     if istorage.bucket_exists(bucket_name):
         print(f"Setting S3 events for bucket: {bucket_name}")
-        subprocess.run(["mc", "event", "add", f"hydroshare/{bucket_name}",
-                        "arn:minio:sqs::RESOURCEFILE:kafka", "--event", "put,delete"], check=True)
+        try:
+            subprocess.run(["mc", "event", "add", f"hydroshare/{bucket_name}",
+                            "arn:minio:sqs::RESOURCEFILE:kafka", "--event", "put,delete"], check=True)
+        except Exception as e:
+            print(f"Eventing may already exist for {bucket_name}: {e}")
     else:
         print(f"Bucket {bucket_name} does not exist, cannot set S3 events")
