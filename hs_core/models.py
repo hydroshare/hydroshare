@@ -2272,12 +2272,15 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         self._ensure_required_fields(copied_metadata, metadata)
 
         # Update the modified date every time a metadata element is updated/deleted, or when 'all' is specified
+        modified_date = metadata.dates.filter(type='modified').first()
         if field_name != 'all':
             # this is the case of updating cached metadata as part of metadata save/delete signal handler
             copied_metadata['modified'] = now().isoformat()
+            if modified_date:
+                # this update won't trigger the post_save signal for Date model since we are using update query api
+                type(modified_date).objects.filter(id=modified_date.id).update(start_date=copied_metadata['modified'])
         else:
             # this is the case of updating cached metadata as part of management command
-            modified_date = metadata.dates.filter(type='modified').first()
             if modified_date:
                 copied_metadata['modified'] = modified_date.start_date.isoformat()
             else:
