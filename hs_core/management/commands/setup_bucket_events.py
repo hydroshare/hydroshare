@@ -17,7 +17,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         istorage = S3Storage()
-        if len(options['usernames']) > 0:  # an array of resource short_id to check.
+        if len(options['usernames']) > 0:
             for username in options['usernames']:
                 set_s3_events(username, istorage)
         else:
