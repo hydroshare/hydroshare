@@ -2,31 +2,22 @@
 -- PostgreSQL database dump
 --
 
+-- Dumped from database version 15.4 (Debian 15.4-1.pgdg110+1)
+-- Dumped by pg_dump version 15.1
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
+SET row_security = off;
 
 --
--- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
---
-
-CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
-
-
---
--- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
---
-
-COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
-
-
---
--- Name: hstore; Type: EXTENSION; Schema: -; Owner: 
+-- Name: hstore; Type: EXTENSION; Schema: -; Owner: -
 --
 
 CREATE EXTENSION IF NOT EXISTS hstore WITH SCHEMA public;
@@ -40,7 +31,7 @@ COMMENT ON EXTENSION hstore IS 'data type for storing sets of (key, value) pairs
 
 
 --
--- Name: postgis; Type: EXTENSION; Schema: -; Owner: 
+-- Name: postgis; Type: EXTENSION; Schema: -; Owner: -
 --
 
 CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
@@ -55,15 +46,15 @@ COMMENT ON EXTENSION postgis IS 'PostGIS geometry, geography, and raster spatial
 
 SET default_tablespace = '';
 
-SET default_with_oids = false;
+SET default_table_access_method = heap;
 
 --
--- Name: auth_group; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_group; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.auth_group (
     id integer NOT NULL,
-    name character varying(80) NOT NULL
+    name character varying(150) NOT NULL
 );
 
 
@@ -91,7 +82,7 @@ ALTER SEQUENCE public.auth_group_id_seq OWNED BY public.auth_group.id;
 
 
 --
--- Name: auth_group_permissions; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_group_permissions; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.auth_group_permissions (
@@ -125,7 +116,7 @@ ALTER SEQUENCE public.auth_group_permissions_id_seq OWNED BY public.auth_group_p
 
 
 --
--- Name: auth_permission; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_permission; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.auth_permission (
@@ -160,7 +151,7 @@ ALTER SEQUENCE public.auth_permission_id_seq OWNED BY public.auth_permission.id;
 
 
 --
--- Name: auth_user; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_user; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.auth_user (
@@ -169,8 +160,8 @@ CREATE TABLE public.auth_user (
     last_login timestamp with time zone,
     is_superuser boolean NOT NULL,
     username character varying(150) NOT NULL,
-    first_name character varying(30) NOT NULL,
-    last_name character varying(30) NOT NULL,
+    first_name character varying(150) NOT NULL,
+    last_name character varying(150) NOT NULL,
     email character varying(254) NOT NULL,
     is_staff boolean NOT NULL,
     is_active boolean NOT NULL,
@@ -181,7 +172,7 @@ CREATE TABLE public.auth_user (
 ALTER TABLE public.auth_user OWNER TO postgres;
 
 --
--- Name: auth_user_groups; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_user_groups; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.auth_user_groups (
@@ -236,7 +227,7 @@ ALTER SEQUENCE public.auth_user_id_seq OWNED BY public.auth_user.id;
 
 
 --
--- Name: auth_user_user_permissions; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_user_user_permissions; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.auth_user_user_permissions (
@@ -270,7 +261,7 @@ ALTER SEQUENCE public.auth_user_user_permissions_id_seq OWNED BY public.auth_use
 
 
 --
--- Name: blog_blogcategory; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: blog_blogcategory; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.blog_blogcategory (
@@ -305,7 +296,7 @@ ALTER SEQUENCE public.blog_blogcategory_id_seq OWNED BY public.blog_blogcategory
 
 
 --
--- Name: blog_blogpost; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: blog_blogpost; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.blog_blogpost (
@@ -338,7 +329,7 @@ CREATE TABLE public.blog_blogpost (
 ALTER TABLE public.blog_blogpost OWNER TO postgres;
 
 --
--- Name: blog_blogpost_categories; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: blog_blogpost_categories; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.blog_blogpost_categories (
@@ -393,7 +384,7 @@ ALTER SEQUENCE public.blog_blogpost_id_seq OWNED BY public.blog_blogpost.id;
 
 
 --
--- Name: blog_blogpost_related_posts; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: blog_blogpost_related_posts; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.blog_blogpost_related_posts (
@@ -427,7 +418,7 @@ ALTER SEQUENCE public.blog_blogpost_related_posts_id_seq OWNED BY public.blog_bl
 
 
 --
--- Name: celery_taskmeta; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: celery_taskmeta; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.celery_taskmeta (
@@ -466,7 +457,7 @@ ALTER SEQUENCE public.celery_taskmeta_id_seq OWNED BY public.celery_taskmeta.id;
 
 
 --
--- Name: celery_tasksetmeta; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: celery_tasksetmeta; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.celery_tasksetmeta (
@@ -502,7 +493,7 @@ ALTER SEQUENCE public.celery_tasksetmeta_id_seq OWNED BY public.celery_tasksetme
 
 
 --
--- Name: conf_setting; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: conf_setting; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.conf_setting (
@@ -537,7 +528,7 @@ ALTER SEQUENCE public.conf_setting_id_seq OWNED BY public.conf_setting.id;
 
 
 --
--- Name: core_sitepermission; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: core_sitepermission; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.core_sitepermission (
@@ -570,7 +561,7 @@ ALTER SEQUENCE public.core_sitepermission_id_seq OWNED BY public.core_sitepermis
 
 
 --
--- Name: core_sitepermission_sites; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: core_sitepermission_sites; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.core_sitepermission_sites (
@@ -604,7 +595,7 @@ ALTER SEQUENCE public.core_sitepermission_sites_id_seq OWNED BY public.core_site
 
 
 --
--- Name: corsheaders_corsmodel; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: corsheaders_corsmodel; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.corsheaders_corsmodel (
@@ -637,7 +628,7 @@ ALTER SEQUENCE public.corsheaders_corsmodel_id_seq OWNED BY public.corsheaders_c
 
 
 --
--- Name: django_admin_log; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_admin_log; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.django_admin_log (
@@ -677,7 +668,7 @@ ALTER SEQUENCE public.django_admin_log_id_seq OWNED BY public.django_admin_log.i
 
 
 --
--- Name: django_comment_flags; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_comment_flags; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.django_comment_flags (
@@ -713,13 +704,13 @@ ALTER SEQUENCE public.django_comment_flags_id_seq OWNED BY public.django_comment
 
 
 --
--- Name: django_comments; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_comments; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.django_comments (
     id integer NOT NULL,
     content_type_id integer NOT NULL,
-    object_pk text NOT NULL,
+    object_pk character varying(64) NOT NULL,
     site_id integer NOT NULL,
     user_id integer,
     user_name character varying(50) NOT NULL,
@@ -757,7 +748,7 @@ ALTER SEQUENCE public.django_comments_id_seq OWNED BY public.django_comments.id;
 
 
 --
--- Name: django_content_type; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_content_type; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.django_content_type (
@@ -791,7 +782,7 @@ ALTER SEQUENCE public.django_content_type_id_seq OWNED BY public.django_content_
 
 
 --
--- Name: django_docker_processes_containeroverrides; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_containeroverrides; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.django_docker_processes_containeroverrides (
@@ -835,7 +826,7 @@ ALTER SEQUENCE public.django_docker_processes_containeroverrides_id_seq OWNED BY
 
 
 --
--- Name: django_docker_processes_dockerenvvar; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockerenvvar; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.django_docker_processes_dockerenvvar (
@@ -870,7 +861,7 @@ ALTER SEQUENCE public.django_docker_processes_dockerenvvar_id_seq OWNED BY publi
 
 
 --
--- Name: django_docker_processes_dockerlink; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockerlink; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.django_docker_processes_dockerlink (
@@ -906,7 +897,7 @@ ALTER SEQUENCE public.django_docker_processes_dockerlink_id_seq OWNED BY public.
 
 
 --
--- Name: django_docker_processes_dockerport; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockerport; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.django_docker_processes_dockerport (
@@ -941,7 +932,7 @@ ALTER SEQUENCE public.django_docker_processes_dockerport_id_seq OWNED BY public.
 
 
 --
--- Name: django_docker_processes_dockerprocess; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockerprocess; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.django_docker_processes_dockerprocess (
@@ -980,7 +971,7 @@ ALTER SEQUENCE public.django_docker_processes_dockerprocess_id_seq OWNED BY publ
 
 
 --
--- Name: django_docker_processes_dockerprofile; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockerprofile; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.django_docker_processes_dockerprofile (
@@ -1019,7 +1010,7 @@ ALTER SEQUENCE public.django_docker_processes_dockerprofile_id_seq OWNED BY publ
 
 
 --
--- Name: django_docker_processes_dockervolume; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockervolume; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.django_docker_processes_dockervolume (
@@ -1055,7 +1046,7 @@ ALTER SEQUENCE public.django_docker_processes_dockervolume_id_seq OWNED BY publi
 
 
 --
--- Name: django_docker_processes_overrideenvvar; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_overrideenvvar; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.django_docker_processes_overrideenvvar (
@@ -1090,7 +1081,7 @@ ALTER SEQUENCE public.django_docker_processes_overrideenvvar_id_seq OWNED BY pub
 
 
 --
--- Name: django_docker_processes_overridelink; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_overridelink; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.django_docker_processes_overridelink (
@@ -1125,7 +1116,7 @@ ALTER SEQUENCE public.django_docker_processes_overridelink_id_seq OWNED BY publi
 
 
 --
--- Name: django_docker_processes_overrideport; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_overrideport; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.django_docker_processes_overrideport (
@@ -1160,7 +1151,7 @@ ALTER SEQUENCE public.django_docker_processes_overrideport_id_seq OWNED BY publi
 
 
 --
--- Name: django_docker_processes_overridevolume; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_overridevolume; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.django_docker_processes_overridevolume (
@@ -1195,48 +1186,7 @@ ALTER SEQUENCE public.django_docker_processes_overridevolume_id_seq OWNED BY pub
 
 
 --
--- Name: django_irods_rodsenvironment; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE public.django_irods_rodsenvironment (
-    id integer NOT NULL,
-    host character varying(255) NOT NULL,
-    port integer NOT NULL,
-    def_res character varying(255) NOT NULL,
-    home_coll character varying(255) NOT NULL,
-    cwd text NOT NULL,
-    username character varying(255) NOT NULL,
-    zone text NOT NULL,
-    auth text NOT NULL,
-    owner_id integer NOT NULL
-);
-
-
-ALTER TABLE public.django_irods_rodsenvironment OWNER TO postgres;
-
---
--- Name: django_irods_rodsenvironment_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.django_irods_rodsenvironment_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.django_irods_rodsenvironment_id_seq OWNER TO postgres;
-
---
--- Name: django_irods_rodsenvironment_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.django_irods_rodsenvironment_id_seq OWNED BY public.django_irods_rodsenvironment.id;
-
-
---
--- Name: django_migrations; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_migrations; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.django_migrations (
@@ -1271,7 +1221,7 @@ ALTER SEQUENCE public.django_migrations_id_seq OWNED BY public.django_migrations
 
 
 --
--- Name: django_redirect; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_redirect; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.django_redirect (
@@ -1306,7 +1256,35 @@ ALTER SEQUENCE public.django_redirect_id_seq OWNED BY public.django_redirect.id;
 
 
 --
--- Name: django_session; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_s3_avu; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.django_s3_avu (
+    id integer NOT NULL,
+    name text NOT NULL,
+    "attName" text NOT NULL,
+    "attVal" text
+);
+
+
+ALTER TABLE public.django_s3_avu OWNER TO postgres;
+
+--
+-- Name: django_s3_avu_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.django_s3_avu ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.django_s3_avu_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: django_session; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.django_session (
@@ -1319,7 +1297,7 @@ CREATE TABLE public.django_session (
 ALTER TABLE public.django_session OWNER TO postgres;
 
 --
--- Name: django_site; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_site; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.django_site (
@@ -1353,7 +1331,7 @@ ALTER SEQUENCE public.django_site_id_seq OWNED BY public.django_site.id;
 
 
 --
--- Name: djcelery_crontabschedule; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_crontabschedule; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.djcelery_crontabschedule (
@@ -1390,7 +1368,7 @@ ALTER SEQUENCE public.djcelery_crontabschedule_id_seq OWNED BY public.djcelery_c
 
 
 --
--- Name: djcelery_intervalschedule; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_intervalschedule; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.djcelery_intervalschedule (
@@ -1424,7 +1402,7 @@ ALTER SEQUENCE public.djcelery_intervalschedule_id_seq OWNED BY public.djcelery_
 
 
 --
--- Name: djcelery_periodictask; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_periodictask; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.djcelery_periodictask (
@@ -1472,7 +1450,7 @@ ALTER SEQUENCE public.djcelery_periodictask_id_seq OWNED BY public.djcelery_peri
 
 
 --
--- Name: djcelery_periodictasks; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_periodictasks; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.djcelery_periodictasks (
@@ -1484,7 +1462,7 @@ CREATE TABLE public.djcelery_periodictasks (
 ALTER TABLE public.djcelery_periodictasks OWNER TO postgres;
 
 --
--- Name: djcelery_taskstate; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_taskstate; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.djcelery_taskstate (
@@ -1530,7 +1508,7 @@ ALTER SEQUENCE public.djcelery_taskstate_id_seq OWNED BY public.djcelery_tasksta
 
 
 --
--- Name: djcelery_workerstate; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_workerstate; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.djcelery_workerstate (
@@ -1564,7 +1542,7 @@ ALTER SEQUENCE public.djcelery_workerstate_id_seq OWNED BY public.djcelery_worke
 
 
 --
--- Name: forms_field; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: forms_field; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.forms_field (
@@ -1606,7 +1584,7 @@ ALTER SEQUENCE public.forms_field_id_seq OWNED BY public.forms_field.id;
 
 
 --
--- Name: forms_fieldentry; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: forms_fieldentry; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.forms_fieldentry (
@@ -1641,7 +1619,7 @@ ALTER SEQUENCE public.forms_fieldentry_id_seq OWNED BY public.forms_fieldentry.i
 
 
 --
--- Name: forms_form; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: forms_form; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.forms_form (
@@ -1660,7 +1638,7 @@ CREATE TABLE public.forms_form (
 ALTER TABLE public.forms_form OWNER TO postgres;
 
 --
--- Name: forms_formentry; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: forms_formentry; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.forms_formentry (
@@ -1694,7 +1672,7 @@ ALTER SEQUENCE public.forms_formentry_id_seq OWNED BY public.forms_formentry.id;
 
 
 --
--- Name: ga_ows_ogrdataset; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_ows_ogrdataset; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.ga_ows_ogrdataset (
@@ -1732,7 +1710,7 @@ ALTER SEQUENCE public.ga_ows_ogrdataset_id_seq OWNED BY public.ga_ows_ogrdataset
 
 
 --
--- Name: ga_ows_ogrdatasetcollection; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_ows_ogrdatasetcollection; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.ga_ows_ogrdatasetcollection (
@@ -1765,7 +1743,7 @@ ALTER SEQUENCE public.ga_ows_ogrdatasetcollection_id_seq OWNED BY public.ga_ows_
 
 
 --
--- Name: ga_ows_ogrlayer; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_ows_ogrlayer; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.ga_ows_ogrlayer (
@@ -1801,7 +1779,7 @@ ALTER SEQUENCE public.ga_ows_ogrlayer_id_seq OWNED BY public.ga_ows_ogrlayer.id;
 
 
 --
--- Name: ga_resources_catalogpage; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_catalogpage; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.ga_resources_catalogpage (
@@ -1814,7 +1792,7 @@ CREATE TABLE public.ga_resources_catalogpage (
 ALTER TABLE public.ga_resources_catalogpage OWNER TO postgres;
 
 --
--- Name: ga_resources_dataresource; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_dataresource; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.ga_resources_dataresource (
@@ -1844,7 +1822,7 @@ CREATE TABLE public.ga_resources_dataresource (
 ALTER TABLE public.ga_resources_dataresource OWNER TO postgres;
 
 --
--- Name: ga_resources_orderedresource; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_orderedresource; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.ga_resources_orderedresource (
@@ -1879,7 +1857,7 @@ ALTER SEQUENCE public.ga_resources_orderedresource_id_seq OWNED BY public.ga_res
 
 
 --
--- Name: ga_resources_relatedresource; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_relatedresource; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.ga_resources_relatedresource (
@@ -1900,7 +1878,7 @@ CREATE TABLE public.ga_resources_relatedresource (
 ALTER TABLE public.ga_resources_relatedresource OWNER TO postgres;
 
 --
--- Name: ga_resources_renderedlayer; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_renderedlayer; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.ga_resources_renderedlayer (
@@ -1917,7 +1895,7 @@ CREATE TABLE public.ga_resources_renderedlayer (
 ALTER TABLE public.ga_resources_renderedlayer OWNER TO postgres;
 
 --
--- Name: ga_resources_renderedlayer_styles; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_renderedlayer_styles; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.ga_resources_renderedlayer_styles (
@@ -1951,7 +1929,7 @@ ALTER SEQUENCE public.ga_resources_renderedlayer_styles_id_seq OWNED BY public.g
 
 
 --
--- Name: ga_resources_resourcegroup; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_resourcegroup; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.ga_resources_resourcegroup (
@@ -1965,7 +1943,7 @@ CREATE TABLE public.ga_resources_resourcegroup (
 ALTER TABLE public.ga_resources_resourcegroup OWNER TO postgres;
 
 --
--- Name: ga_resources_style; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_style; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.ga_resources_style (
@@ -1982,7 +1960,7 @@ CREATE TABLE public.ga_resources_style (
 ALTER TABLE public.ga_resources_style OWNER TO postgres;
 
 --
--- Name: galleries_gallery; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: galleries_gallery; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.galleries_gallery (
@@ -1995,7 +1973,7 @@ CREATE TABLE public.galleries_gallery (
 ALTER TABLE public.galleries_gallery OWNER TO postgres;
 
 --
--- Name: galleries_galleryimage; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: galleries_galleryimage; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.galleries_galleryimage (
@@ -2031,7 +2009,7 @@ ALTER SEQUENCE public.galleries_galleryimage_id_seq OWNED BY public.galleries_ga
 
 
 --
--- Name: generic_assignedkeyword; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: generic_assignedkeyword; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.generic_assignedkeyword (
@@ -2067,7 +2045,7 @@ ALTER SEQUENCE public.generic_assignedkeyword_id_seq OWNED BY public.generic_ass
 
 
 --
--- Name: generic_keyword; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: generic_keyword; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.generic_keyword (
@@ -2102,7 +2080,7 @@ ALTER SEQUENCE public.generic_keyword_id_seq OWNED BY public.generic_keyword.id;
 
 
 --
--- Name: generic_rating; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: generic_rating; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.generic_rating (
@@ -2139,7 +2117,7 @@ ALTER SEQUENCE public.generic_rating_id_seq OWNED BY public.generic_rating.id;
 
 
 --
--- Name: generic_threadedcomment; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: generic_threadedcomment; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.generic_threadedcomment (
@@ -2155,7 +2133,33 @@ CREATE TABLE public.generic_threadedcomment (
 ALTER TABLE public.generic_threadedcomment OWNER TO postgres;
 
 --
--- Name: hs_access_control_community; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: health_check_db_testmodel; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.health_check_db_testmodel (
+    id integer NOT NULL,
+    title character varying(128) NOT NULL
+);
+
+
+ALTER TABLE public.health_check_db_testmodel OWNER TO postgres;
+
+--
+-- Name: health_check_db_testmodel_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.health_check_db_testmodel ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.health_check_db_testmodel_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: hs_access_control_community; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_access_control_community (
@@ -2163,9 +2167,15 @@ CREATE TABLE public.hs_access_control_community (
     name text NOT NULL,
     description text NOT NULL,
     purpose text,
-    auto_approve boolean NOT NULL,
+    auto_approve_group boolean NOT NULL,
     date_created timestamp with time zone NOT NULL,
-    picture character varying(100)
+    picture character varying(100),
+    closed boolean NOT NULL,
+    email text,
+    url text,
+    active boolean NOT NULL,
+    auto_approve_resource boolean NOT NULL,
+    banner character varying(100)
 );
 
 
@@ -2193,7 +2203,7 @@ ALTER SEQUENCE public.hs_access_control_community_id_seq OWNED BY public.hs_acce
 
 
 --
--- Name: hs_access_control_communityresourceprivilege; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_communityresourceprivilege; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_access_control_communityresourceprivilege (
@@ -2231,7 +2241,7 @@ ALTER SEQUENCE public.hs_access_control_communityresourceprivilege_id_seq OWNED 
 
 
 --
--- Name: hs_access_control_communityresourceprovenance; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_communityresourceprovenance; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_access_control_communityresourceprovenance (
@@ -2270,7 +2280,7 @@ ALTER SEQUENCE public.hs_access_control_communityresourceprovenance_id_seq OWNED
 
 
 --
--- Name: hs_access_control_feature; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_feature; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_access_control_feature (
@@ -2305,7 +2315,7 @@ ALTER SEQUENCE public.hs_access_control_feature_id_seq OWNED BY public.hs_access
 
 
 --
--- Name: hs_access_control_groupaccess; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupaccess; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_access_control_groupaccess (
@@ -2320,7 +2330,9 @@ CREATE TABLE public.hs_access_control_groupaccess (
     picture character varying(100),
     purpose text,
     auto_approve boolean NOT NULL,
-    requires_explanation boolean NOT NULL
+    requires_explanation boolean NOT NULL,
+    email character varying(254),
+    url character varying(200)
 );
 
 
@@ -2348,7 +2360,7 @@ ALTER SEQUENCE public.hs_access_control_groupaccess_id_seq OWNED BY public.hs_ac
 
 
 --
--- Name: hs_access_control_groupcommunityprivilege; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupcommunityprivilege; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_access_control_groupcommunityprivilege (
@@ -2386,7 +2398,7 @@ ALTER SEQUENCE public.hs_access_control_groupcommunityprivilege_id_seq OWNED BY 
 
 
 --
--- Name: hs_access_control_groupcommunityprovenance; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupcommunityprovenance; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_access_control_groupcommunityprovenance (
@@ -2425,7 +2437,7 @@ ALTER SEQUENCE public.hs_access_control_groupcommunityprovenance_id_seq OWNED BY
 
 
 --
--- Name: hs_access_control_groupcommunityrequest; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupcommunityrequest; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_access_control_groupcommunityrequest (
@@ -2437,8 +2449,8 @@ CREATE TABLE public.hs_access_control_groupcommunityrequest (
     community_owner_id integer,
     group_id integer NOT NULL,
     group_owner_id integer,
-    when_requested timestamp with time zone,
-    when_responded timestamp with time zone
+    when_community timestamp with time zone,
+    when_group timestamp with time zone
 );
 
 
@@ -2466,7 +2478,7 @@ ALTER SEQUENCE public.hs_access_control_groupcommunityrequest_id_seq OWNED BY pu
 
 
 --
--- Name: hs_access_control_groupmembershiprequest; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupmembershiprequest; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_access_control_groupmembershiprequest (
@@ -2504,7 +2516,7 @@ ALTER SEQUENCE public.hs_access_control_groupmembershiprequest_id_seq OWNED BY p
 
 
 --
--- Name: hs_access_control_groupresourceprivilege; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupresourceprivilege; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_access_control_groupresourceprivilege (
@@ -2542,7 +2554,7 @@ ALTER SEQUENCE public.hs_access_control_groupresourceprivilege_id_seq OWNED BY p
 
 
 --
--- Name: hs_access_control_groupresourceprovenance; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupresourceprovenance; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_access_control_groupresourceprovenance (
@@ -2581,7 +2593,40 @@ ALTER SEQUENCE public.hs_access_control_groupresourceprovenance_id_seq OWNED BY 
 
 
 --
--- Name: hs_access_control_resourceaccess; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_requestcommunity; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.hs_access_control_requestcommunity (
+    id integer NOT NULL,
+    date_requested timestamp with time zone NOT NULL,
+    date_processed timestamp with time zone,
+    pending_approval boolean NOT NULL,
+    declined boolean NOT NULL,
+    decline_reason text,
+    community_to_approve_id integer NOT NULL,
+    requested_by_id integer NOT NULL,
+    cancelled boolean NOT NULL
+);
+
+
+ALTER TABLE public.hs_access_control_requestcommunity OWNER TO postgres;
+
+--
+-- Name: hs_access_control_requestcommunity_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.hs_access_control_requestcommunity ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.hs_access_control_requestcommunity_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: hs_access_control_resourceaccess; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_access_control_resourceaccess (
@@ -2594,7 +2639,8 @@ CREATE TABLE public.hs_access_control_resourceaccess (
     immutable boolean NOT NULL,
     resource_id integer NOT NULL,
     require_download_agreement boolean NOT NULL,
-    allow_private_sharing boolean NOT NULL
+    allow_private_sharing boolean NOT NULL,
+    review_pending boolean DEFAULT false NOT NULL
 );
 
 
@@ -2622,7 +2668,7 @@ ALTER SEQUENCE public.hs_access_control_resourceaccess_id_seq OWNED BY public.hs
 
 
 --
--- Name: hs_access_control_useraccess; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_useraccess; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_access_control_useraccess (
@@ -2655,7 +2701,7 @@ ALTER SEQUENCE public.hs_access_control_useraccess_id_seq OWNED BY public.hs_acc
 
 
 --
--- Name: hs_access_control_usercommunityprivilege; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usercommunityprivilege; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_access_control_usercommunityprivilege (
@@ -2692,7 +2738,7 @@ ALTER SEQUENCE public.hs_access_control_usercommunityprivilege_id_seq OWNED BY p
 
 
 --
--- Name: hs_access_control_usercommunityprovenance; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usercommunityprovenance; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_access_control_usercommunityprovenance (
@@ -2731,7 +2777,7 @@ ALTER SEQUENCE public.hs_access_control_usercommunityprovenance_id_seq OWNED BY 
 
 
 --
--- Name: hs_access_control_usergroupprivilege; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usergroupprivilege; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_access_control_usergroupprivilege (
@@ -2768,7 +2814,7 @@ ALTER SEQUENCE public.hs_access_control_usergroupprivilege_id_seq OWNED BY publi
 
 
 --
--- Name: hs_access_control_usergroupprovenance; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usergroupprovenance; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_access_control_usergroupprovenance (
@@ -2807,7 +2853,7 @@ ALTER SEQUENCE public.hs_access_control_usergroupprovenance_id_seq OWNED BY publ
 
 
 --
--- Name: hs_access_control_userresourceprivilege; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_userresourceprivilege; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_access_control_userresourceprivilege (
@@ -2845,7 +2891,7 @@ ALTER SEQUENCE public.hs_access_control_userresourceprivilege_id_seq OWNED BY pu
 
 
 --
--- Name: hs_access_control_userresourceprovenance; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_userresourceprovenance; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_access_control_userresourceprovenance (
@@ -2884,7 +2930,7 @@ ALTER SEQUENCE public.hs_access_control_userresourceprovenance_id_seq OWNED BY p
 
 
 --
--- Name: hs_file_types_originalcoverage; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_originalcoverage; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_originalcoverage (
@@ -2923,7 +2969,7 @@ ALTER SEQUENCE public."hs_app_netCDF_originalcoverage_id_seq" OWNED BY public.hs
 
 
 --
--- Name: hs_file_types_variable; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_variable; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_variable (
@@ -2965,7 +3011,7 @@ ALTER SEQUENCE public."hs_app_netCDF_variable_id_seq" OWNED BY public.hs_file_ty
 
 
 --
--- Name: hs_file_types_method; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_method; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_method (
@@ -3007,7 +3053,7 @@ ALTER SEQUENCE public.hs_app_timeseries_method_id_seq OWNED BY public.hs_file_ty
 
 
 --
--- Name: hs_file_types_processinglevel; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_processinglevel; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_processinglevel (
@@ -3047,7 +3093,7 @@ ALTER SEQUENCE public.hs_app_timeseries_processinglevel_id_seq OWNED BY public.h
 
 
 --
--- Name: hs_file_types_site; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_site; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_site (
@@ -3091,7 +3137,7 @@ ALTER SEQUENCE public.hs_app_timeseries_site_id_seq OWNED BY public.hs_file_type
 
 
 --
--- Name: hs_file_types_timeseriesresult; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_timeseriesresult; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_timeseriesresult (
@@ -3136,7 +3182,7 @@ ALTER SEQUENCE public.hs_app_timeseries_timeseriesresult_id_seq OWNED BY public.
 
 
 --
--- Name: hs_file_types_utcoffset; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_utcoffset; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_utcoffset (
@@ -3174,7 +3220,7 @@ ALTER SEQUENCE public.hs_app_timeseries_utcoffset_id_seq OWNED BY public.hs_file
 
 
 --
--- Name: hs_file_types_variabletimeseries; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_variabletimeseries; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_variabletimeseries (
@@ -3217,7 +3263,7 @@ ALTER SEQUENCE public.hs_app_timeseries_variable_id_seq OWNED BY public.hs_file_
 
 
 --
--- Name: hs_collection_resource_collectiondeletedresource; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_collection_resource_collectiondeletedresource; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_collection_resource_collectiondeletedresource (
@@ -3255,7 +3301,7 @@ ALTER SEQUENCE public.hs_collection_resource_collectiondeletedresource_id_seq OW
 
 
 --
--- Name: hs_collection_resource_collectiondeletedresource_resource_od9f5; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_collection_resource_collectiondeletedresource_resource_od9f5; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_collection_resource_collectiondeletedresource_resource_od9f5 (
@@ -3289,7 +3335,7 @@ ALTER SEQUENCE public.hs_collection_resource_collectiondeletedresource_resourc_i
 
 
 --
--- Name: hs_communities_topic; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_communities_topic; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_communities_topic (
@@ -3322,7 +3368,7 @@ ALTER SEQUENCE public.hs_communities_topic_id_seq OWNED BY public.hs_communities
 
 
 --
--- Name: hs_core_citation; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_citation; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_core_citation (
@@ -3358,7 +3404,7 @@ ALTER SEQUENCE public.hs_core_citation_id_seq OWNED BY public.hs_core_citation.i
 
 
 --
--- Name: hs_core_contributor; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_contributor; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_core_contributor (
@@ -3373,6 +3419,7 @@ CREATE TABLE public.hs_core_contributor (
     content_type_id integer NOT NULL,
     identifiers public.hstore NOT NULL,
     hydroshare_user_id integer,
+    is_active_user boolean DEFAULT false NOT NULL,
     CONSTRAINT hs_core_contributor_object_id_check CHECK ((object_id >= 0))
 );
 
@@ -3401,7 +3448,7 @@ ALTER SEQUENCE public.hs_core_contributor_id_seq OWNED BY public.hs_core_contrib
 
 
 --
--- Name: hs_core_coremetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_coremetadata; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_core_coremetadata (
@@ -3433,7 +3480,7 @@ ALTER SEQUENCE public.hs_core_coremetadata_id_seq OWNED BY public.hs_core_coreme
 
 
 --
--- Name: hs_core_coverage; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_coverage; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_core_coverage (
@@ -3470,7 +3517,7 @@ ALTER SEQUENCE public.hs_core_coverage_id_seq OWNED BY public.hs_core_coverage.i
 
 
 --
--- Name: hs_core_creator; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_creator; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_core_creator (
@@ -3486,6 +3533,7 @@ CREATE TABLE public.hs_core_creator (
     content_type_id integer NOT NULL,
     identifiers public.hstore NOT NULL,
     hydroshare_user_id integer,
+    is_active_user boolean DEFAULT false NOT NULL,
     CONSTRAINT hs_core_creator_object_id_check CHECK ((object_id >= 0)),
     CONSTRAINT hs_core_creator_order_check CHECK (("order" >= 0))
 );
@@ -3515,7 +3563,7 @@ ALTER SEQUENCE public.hs_core_creator_id_seq OWNED BY public.hs_core_creator.id;
 
 
 --
--- Name: hs_core_date; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_date; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_core_date (
@@ -3553,7 +3601,7 @@ ALTER SEQUENCE public.hs_core_date_id_seq OWNED BY public.hs_core_date.id;
 
 
 --
--- Name: hs_core_description; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_description; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_core_description (
@@ -3589,7 +3637,7 @@ ALTER SEQUENCE public.hs_core_description_id_seq OWNED BY public.hs_core_descrip
 
 
 --
--- Name: hs_core_format; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_format; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_core_format (
@@ -3625,7 +3673,7 @@ ALTER SEQUENCE public.hs_core_format_id_seq OWNED BY public.hs_core_format.id;
 
 
 --
--- Name: hs_core_fundingagency; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_fundingagency; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_core_fundingagency (
@@ -3664,7 +3712,7 @@ ALTER SEQUENCE public.hs_core_fundingagency_id_seq OWNED BY public.hs_core_fundi
 
 
 --
--- Name: hs_core_genericresource; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_genericresource; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_core_genericresource (
@@ -3686,10 +3734,14 @@ CREATE TABLE public.hs_core_genericresource (
     file_unpack_status character varying(7),
     locked_time timestamp with time zone,
     extra_metadata public.hstore NOT NULL,
-    resource_federation_path character varying(100) NOT NULL,
     extra_data public.hstore NOT NULL,
     download_count integer NOT NULL,
     view_count integer NOT NULL,
+    repaired timestamp with time zone,
+    files_checked timestamp with time zone,
+    spam_allowlisted boolean NOT NULL,
+    bag_last_downloaded timestamp with time zone,
+    quota_holder_id integer,
     CONSTRAINT hs_core_genericresource_download_count_check CHECK ((download_count >= 0)),
     CONSTRAINT hs_core_genericresource_object_id_check CHECK ((object_id >= 0)),
     CONSTRAINT hs_core_genericresource_view_count_check CHECK ((view_count >= 0))
@@ -3699,7 +3751,7 @@ CREATE TABLE public.hs_core_genericresource (
 ALTER TABLE public.hs_core_genericresource OWNER TO postgres;
 
 --
--- Name: hs_core_genericresource_collections; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_genericresource_collections; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_core_genericresource_collections (
@@ -3733,7 +3785,38 @@ ALTER SEQUENCE public.hs_core_genericresource_collections_id_seq OWNED BY public
 
 
 --
--- Name: hs_core_groupownership; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_geospatialrelation; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.hs_core_geospatialrelation (
+    id integer NOT NULL,
+    object_id integer NOT NULL,
+    type character varying(100) NOT NULL,
+    value text NOT NULL,
+    text text NOT NULL,
+    content_type_id integer NOT NULL,
+    CONSTRAINT hs_core_geospatialrelation_object_id_check CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE public.hs_core_geospatialrelation OWNER TO postgres;
+
+--
+-- Name: hs_core_geospatialrelation_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.hs_core_geospatialrelation ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.hs_core_geospatialrelation_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: hs_core_groupownership; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_core_groupownership (
@@ -3767,7 +3850,7 @@ ALTER SEQUENCE public.hs_core_groupownership_id_seq OWNED BY public.hs_core_grou
 
 
 --
--- Name: hs_core_identifier; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_identifier; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_core_identifier (
@@ -3804,13 +3887,13 @@ ALTER SEQUENCE public.hs_core_identifier_id_seq OWNED BY public.hs_core_identifi
 
 
 --
--- Name: hs_core_language; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_language; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_core_language (
     id integer NOT NULL,
     object_id integer NOT NULL,
-    code character varying(3) NOT NULL,
+    code character varying(7) NOT NULL,
     content_type_id integer NOT NULL,
     CONSTRAINT hs_core_language_object_id_check CHECK ((object_id >= 0))
 );
@@ -3840,7 +3923,7 @@ ALTER SEQUENCE public.hs_core_language_id_seq OWNED BY public.hs_core_language.i
 
 
 --
--- Name: hs_core_publisher; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_publisher; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_core_publisher (
@@ -3877,7 +3960,7 @@ ALTER SEQUENCE public.hs_core_publisher_id_seq OWNED BY public.hs_core_publisher
 
 
 --
--- Name: hs_core_relation; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_relation; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_core_relation (
@@ -3914,19 +3997,21 @@ ALTER SEQUENCE public.hs_core_relation_id_seq OWNED BY public.hs_core_relation.i
 
 
 --
--- Name: hs_core_resourcefile; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_resourcefile; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_core_resourcefile (
     id integer NOT NULL,
     object_id integer NOT NULL,
-    resource_file character varying(4096),
+    resource_file character varying(4096) NOT NULL,
     content_type_id integer NOT NULL,
-    fed_resource_file character varying(4096),
     file_folder character varying(4096) NOT NULL,
     logical_file_content_type_id integer,
     logical_file_object_id integer,
     _size bigint NOT NULL,
+    _checksum character varying(255),
+    _modified_time timestamp with time zone,
+    filesize_cache_updated timestamp with time zone,
     CONSTRAINT hs_core_resourcefile_logical_file_object_id_check CHECK ((logical_file_object_id >= 0)),
     CONSTRAINT hs_core_resourcefile_object_id_check CHECK ((object_id >= 0))
 );
@@ -3956,7 +4041,7 @@ ALTER SEQUENCE public.hs_core_resourcefile_id_seq OWNED BY public.hs_core_resour
 
 
 --
--- Name: hs_core_rights; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_rights; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_core_rights (
@@ -3993,7 +4078,7 @@ ALTER SEQUENCE public.hs_core_rights_id_seq OWNED BY public.hs_core_rights.id;
 
 
 --
--- Name: hs_core_subject; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_subject; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_core_subject (
@@ -4029,7 +4114,7 @@ ALTER SEQUENCE public.hs_core_subject_id_seq OWNED BY public.hs_core_subject.id;
 
 
 --
--- Name: hs_core_tasknotification; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_tasknotification; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_core_tasknotification (
@@ -4067,7 +4152,7 @@ ALTER SEQUENCE public.hs_core_tasknotification_id_seq OWNED BY public.hs_core_ta
 
 
 --
--- Name: hs_core_title; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_title; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_core_title (
@@ -4103,7 +4188,7 @@ ALTER SEQUENCE public.hs_core_title_id_seq OWNED BY public.hs_core_title.id;
 
 
 --
--- Name: hs_core_type; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_type; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_core_type (
@@ -4139,7 +4224,33 @@ ALTER SEQUENCE public.hs_core_type_id_seq OWNED BY public.hs_core_type.id;
 
 
 --
--- Name: hs_dictionary_uncategorizedterm; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_dictionary_subjectarea; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.hs_dictionary_subjectarea (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL
+);
+
+
+ALTER TABLE public.hs_dictionary_subjectarea OWNER TO postgres;
+
+--
+-- Name: hs_dictionary_subjectarea_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.hs_dictionary_subjectarea ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.hs_dictionary_subjectarea_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: hs_dictionary_uncategorizedterm; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_dictionary_uncategorizedterm (
@@ -4172,7 +4283,7 @@ ALTER SEQUENCE public.hs_dictionary_uncategorizedterm_id_seq OWNED BY public.hs_
 
 
 --
--- Name: hs_dictionary_university; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_dictionary_university; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_dictionary_university (
@@ -4207,7 +4318,7 @@ ALTER SEQUENCE public.hs_dictionary_university_id_seq OWNED BY public.hs_diction
 
 
 --
--- Name: hs_file_types_bandinformation; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_bandinformation; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_bandinformation (
@@ -4229,7 +4340,7 @@ CREATE TABLE public.hs_file_types_bandinformation (
 ALTER TABLE public.hs_file_types_bandinformation OWNER TO postgres;
 
 --
--- Name: hs_file_types_cellinformation; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cellinformation; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_cellinformation (
@@ -4249,7 +4360,66 @@ CREATE TABLE public.hs_file_types_cellinformation (
 ALTER TABLE public.hs_file_types_cellinformation OWNER TO postgres;
 
 --
--- Name: hs_file_types_cvaggregationstatistic; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_csvfilemetadata; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.hs_file_types_csvfilemetadata (
+    id integer NOT NULL,
+    extra_metadata public.hstore NOT NULL,
+    keywords character varying(100)[] NOT NULL,
+    is_dirty boolean NOT NULL,
+    "tableSchema" jsonb NOT NULL
+);
+
+
+ALTER TABLE public.hs_file_types_csvfilemetadata OWNER TO postgres;
+
+--
+-- Name: hs_file_types_csvfilemetadata_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.hs_file_types_csvfilemetadata ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.hs_file_types_csvfilemetadata_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: hs_file_types_csvlogicalfile; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.hs_file_types_csvlogicalfile (
+    id integer NOT NULL,
+    dataset_name character varying(255),
+    extra_data public.hstore NOT NULL,
+    preview_data text NOT NULL,
+    metadata_id integer NOT NULL,
+    resource_id integer NOT NULL
+);
+
+
+ALTER TABLE public.hs_file_types_csvlogicalfile OWNER TO postgres;
+
+--
+-- Name: hs_file_types_csvlogicalfile_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.hs_file_types_csvlogicalfile ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.hs_file_types_csvlogicalfile_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: hs_file_types_cvaggregationstatistic; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_cvaggregationstatistic (
@@ -4285,7 +4455,7 @@ ALTER SEQUENCE public.hs_file_types_cvaggregationstatistic_id_seq OWNED BY publi
 
 
 --
--- Name: hs_file_types_cvelevationdatum; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvelevationdatum; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_cvelevationdatum (
@@ -4321,7 +4491,7 @@ ALTER SEQUENCE public.hs_file_types_cvelevationdatum_id_seq OWNED BY public.hs_f
 
 
 --
--- Name: hs_file_types_cvmedium; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvmedium; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_cvmedium (
@@ -4357,7 +4527,7 @@ ALTER SEQUENCE public.hs_file_types_cvmedium_id_seq OWNED BY public.hs_file_type
 
 
 --
--- Name: hs_file_types_cvmethodtype; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvmethodtype; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_cvmethodtype (
@@ -4393,7 +4563,7 @@ ALTER SEQUENCE public.hs_file_types_cvmethodtype_id_seq OWNED BY public.hs_file_
 
 
 --
--- Name: hs_file_types_cvsitetype; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvsitetype; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_cvsitetype (
@@ -4429,7 +4599,7 @@ ALTER SEQUENCE public.hs_file_types_cvsitetype_id_seq OWNED BY public.hs_file_ty
 
 
 --
--- Name: hs_file_types_cvspeciation; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvspeciation; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_cvspeciation (
@@ -4465,7 +4635,7 @@ ALTER SEQUENCE public.hs_file_types_cvspeciation_id_seq OWNED BY public.hs_file_
 
 
 --
--- Name: hs_file_types_cvstatus; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvstatus; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_cvstatus (
@@ -4501,7 +4671,7 @@ ALTER SEQUENCE public.hs_file_types_cvstatus_id_seq OWNED BY public.hs_file_type
 
 
 --
--- Name: hs_file_types_cvunitstype; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvunitstype; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_cvunitstype (
@@ -4537,7 +4707,7 @@ ALTER SEQUENCE public.hs_file_types_cvunitstype_id_seq OWNED BY public.hs_file_t
 
 
 --
--- Name: hs_file_types_cvvariablename; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvvariablename; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_cvvariablename (
@@ -4573,7 +4743,7 @@ ALTER SEQUENCE public.hs_file_types_cvvariablename_id_seq OWNED BY public.hs_fil
 
 
 --
--- Name: hs_file_types_cvvariabletype; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvvariabletype; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_cvvariabletype (
@@ -4609,7 +4779,7 @@ ALTER SEQUENCE public.hs_file_types_cvvariabletype_id_seq OWNED BY public.hs_fil
 
 
 --
--- Name: hs_file_types_fieldinformation; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_fieldinformation; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_fieldinformation (
@@ -4628,7 +4798,7 @@ CREATE TABLE public.hs_file_types_fieldinformation (
 ALTER TABLE public.hs_file_types_fieldinformation OWNER TO postgres;
 
 --
--- Name: hs_file_types_filesetlogicalfile; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_filesetlogicalfile; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_filesetlogicalfile (
@@ -4665,7 +4835,7 @@ ALTER SEQUENCE public.hs_file_types_filesetlogicalfile_id_seq OWNED BY public.hs
 
 
 --
--- Name: hs_file_types_filesetmetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_filesetmetadata; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_filesetmetadata (
@@ -4700,7 +4870,7 @@ ALTER SEQUENCE public.hs_file_types_filesetmetadata_id_seq OWNED BY public.hs_fi
 
 
 --
--- Name: hs_file_types_genericfilemetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_genericfilemetadata; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_genericfilemetadata (
@@ -4735,7 +4905,7 @@ ALTER SEQUENCE public.hs_file_types_genericfilemetadata_id_seq OWNED BY public.h
 
 
 --
--- Name: hs_file_types_genericlogicalfile; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_genericlogicalfile; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_genericlogicalfile (
@@ -4771,7 +4941,7 @@ ALTER SEQUENCE public.hs_file_types_genericlogicalfile_id_seq OWNED BY public.hs
 
 
 --
--- Name: hs_file_types_geofeaturefilemetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_geofeaturefilemetadata; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_geofeaturefilemetadata (
@@ -4806,7 +4976,7 @@ ALTER SEQUENCE public.hs_file_types_geofeaturefilemetadata_id_seq OWNED BY publi
 
 
 --
--- Name: hs_file_types_geofeaturelogicalfile; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_geofeaturelogicalfile; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_geofeaturelogicalfile (
@@ -4842,7 +5012,7 @@ ALTER SEQUENCE public.hs_file_types_geofeaturelogicalfile_id_seq OWNED BY public
 
 
 --
--- Name: hs_file_types_geometryinformation; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_geometryinformation; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_geometryinformation (
@@ -4858,7 +5028,7 @@ CREATE TABLE public.hs_file_types_geometryinformation (
 ALTER TABLE public.hs_file_types_geometryinformation OWNER TO postgres;
 
 --
--- Name: hs_file_types_georasterfilemetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_georasterfilemetadata; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_georasterfilemetadata (
@@ -4893,7 +5063,7 @@ ALTER SEQUENCE public.hs_file_types_georasterfilemetadata_id_seq OWNED BY public
 
 
 --
--- Name: hs_file_types_georasterlogicalfile; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_georasterlogicalfile; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_georasterlogicalfile (
@@ -4929,7 +5099,7 @@ ALTER SEQUENCE public.hs_file_types_georasterlogicalfile_id_seq OWNED BY public.
 
 
 --
--- Name: hs_file_types_modelinstancefilemetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_modelinstancefilemetadata; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_modelinstancefilemetadata (
@@ -4967,7 +5137,7 @@ ALTER SEQUENCE public.hs_file_types_modelinstancefilemetadata_id_seq OWNED BY pu
 
 
 --
--- Name: hs_file_types_modelinstancelogicalfile; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_modelinstancelogicalfile; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_modelinstancelogicalfile (
@@ -5005,7 +5175,7 @@ ALTER SEQUENCE public.hs_file_types_modelinstancelogicalfile_id_seq OWNED BY pub
 
 
 --
--- Name: hs_file_types_modelprogramfilemetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_modelprogramfilemetadata; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_modelprogramfilemetadata (
@@ -5046,7 +5216,7 @@ ALTER SEQUENCE public.hs_file_types_modelprogramfilemetadata_id_seq OWNED BY pub
 
 
 --
--- Name: hs_file_types_modelprogramlogicalfile; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_modelprogramlogicalfile; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_modelprogramlogicalfile (
@@ -5084,7 +5254,7 @@ ALTER SEQUENCE public.hs_file_types_modelprogramlogicalfile_id_seq OWNED BY publ
 
 
 --
--- Name: hs_file_types_modelprogramresourcefiletype; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_modelprogramresourcefiletype; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_modelprogramresourcefiletype (
@@ -5120,7 +5290,7 @@ ALTER SEQUENCE public.hs_file_types_modelprogramresourcefiletype_id_seq OWNED BY
 
 
 --
--- Name: hs_file_types_netcdffilemetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_netcdffilemetadata; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_netcdffilemetadata (
@@ -5156,7 +5326,7 @@ ALTER SEQUENCE public.hs_file_types_netcdffilemetadata_id_seq OWNED BY public.hs
 
 
 --
--- Name: hs_file_types_netcdflogicalfile; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_netcdflogicalfile; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_netcdflogicalfile (
@@ -5192,7 +5362,7 @@ ALTER SEQUENCE public.hs_file_types_netcdflogicalfile_id_seq OWNED BY public.hs_
 
 
 --
--- Name: hs_file_types_originalcoveragegeofeature; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_originalcoveragegeofeature; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_originalcoveragegeofeature (
@@ -5214,7 +5384,7 @@ CREATE TABLE public.hs_file_types_originalcoveragegeofeature (
 ALTER TABLE public.hs_file_types_originalcoveragegeofeature OWNER TO postgres;
 
 --
--- Name: hs_file_types_originalcoverageraster; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_originalcoverageraster; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_originalcoverageraster (
@@ -5229,7 +5399,7 @@ CREATE TABLE public.hs_file_types_originalcoverageraster (
 ALTER TABLE public.hs_file_types_originalcoverageraster OWNER TO postgres;
 
 --
--- Name: hs_file_types_reftimeseriesfilemetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_reftimeseriesfilemetadata; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_reftimeseriesfilemetadata (
@@ -5266,7 +5436,7 @@ ALTER SEQUENCE public.hs_file_types_reftimeseriesfilemetadata_id_seq OWNED BY pu
 
 
 --
--- Name: hs_file_types_reftimeserieslogicalfile; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_reftimeserieslogicalfile; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_reftimeserieslogicalfile (
@@ -5302,7 +5472,7 @@ ALTER SEQUENCE public.hs_file_types_reftimeserieslogicalfile_id_seq OWNED BY pub
 
 
 --
--- Name: hs_file_types_timeseriesfilemetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_timeseriesfilemetadata; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_timeseriesfilemetadata (
@@ -5340,7 +5510,7 @@ ALTER SEQUENCE public.hs_file_types_timeseriesfilemetadata_id_seq OWNED BY publi
 
 
 --
--- Name: hs_file_types_timeserieslogicalfile; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_timeserieslogicalfile; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_file_types_timeserieslogicalfile (
@@ -5502,7 +5672,7 @@ ALTER SEQUENCE public.hs_geographic_feature_resource_originalcoverage_id_seq OWN
 
 
 --
--- Name: hs_labels_resourcelabels; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_labels_resourcelabels; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_labels_resourcelabels (
@@ -5535,7 +5705,7 @@ ALTER SEQUENCE public.hs_labels_resourcelabels_id_seq OWNED BY public.hs_labels_
 
 
 --
--- Name: hs_labels_userlabels; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_labels_userlabels; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_labels_userlabels (
@@ -5568,7 +5738,7 @@ ALTER SEQUENCE public.hs_labels_userlabels_id_seq OWNED BY public.hs_labels_user
 
 
 --
--- Name: hs_labels_userresourceflags; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_labels_userresourceflags; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_labels_userresourceflags (
@@ -5604,7 +5774,7 @@ ALTER SEQUENCE public.hs_labels_userresourceflags_id_seq OWNED BY public.hs_labe
 
 
 --
--- Name: hs_labels_userresourcelabels; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_labels_userresourcelabels; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_labels_userresourcelabels (
@@ -5640,7 +5810,7 @@ ALTER SEQUENCE public.hs_labels_userresourcelabels_id_seq OWNED BY public.hs_lab
 
 
 --
--- Name: hs_labels_userstoredlabels; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_labels_userstoredlabels; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_labels_userstoredlabels (
@@ -5674,7 +5844,7 @@ ALTER SEQUENCE public.hs_labels_userstoredlabels_id_seq OWNED BY public.hs_label
 
 
 --
--- Name: hs_odm2_odm2variable; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_odm2_odm2variable; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_odm2_odm2variable (
@@ -5710,7 +5880,7 @@ ALTER SEQUENCE public.hs_odm2_odm2variable_id_seq OWNED BY public.hs_odm2_odm2va
 
 
 --
--- Name: hs_tools_resource_apphomepageurl; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_apphomepageurl; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_apphomepageurl (
@@ -5746,7 +5916,7 @@ ALTER SEQUENCE public.hs_tools_resource_apphomepageurl_id_seq OWNED BY public.hs
 
 
 --
--- Name: hs_tools_resource_helppageurl; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_helppageurl; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_helppageurl (
@@ -5782,7 +5952,7 @@ ALTER SEQUENCE public.hs_tools_resource_helppageurl_id_seq OWNED BY public.hs_to
 
 
 --
--- Name: hs_tools_resource_issuespageurl; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_issuespageurl; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_issuespageurl (
@@ -5818,7 +5988,7 @@ ALTER SEQUENCE public.hs_tools_resource_issuespageurl_id_seq OWNED BY public.hs_
 
 
 --
--- Name: hs_tools_resource_mailinglisturl; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_mailinglisturl; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_mailinglisturl (
@@ -5854,7 +6024,7 @@ ALTER SEQUENCE public.hs_tools_resource_mailinglisturl_id_seq OWNED BY public.hs
 
 
 --
--- Name: hs_tools_resource_requesturlbase; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_requesturlbase; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_requesturlbase (
@@ -5890,7 +6060,7 @@ ALTER SEQUENCE public.hs_tools_resource_requesturlbase_id_seq OWNED BY public.hs
 
 
 --
--- Name: hs_tools_resource_requesturlbaseaggregation; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_requesturlbaseaggregation; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_requesturlbaseaggregation (
@@ -5926,7 +6096,7 @@ ALTER SEQUENCE public.hs_tools_resource_requesturlbaseaggregation_id_seq OWNED B
 
 
 --
--- Name: hs_tools_resource_requesturlbasefile; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_requesturlbasefile; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_requesturlbasefile (
@@ -5962,7 +6132,7 @@ ALTER SEQUENCE public.hs_tools_resource_requesturlbasefile_id_seq OWNED BY publi
 
 
 --
--- Name: hs_tools_resource_roadmap; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_roadmap; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_roadmap (
@@ -5998,7 +6168,7 @@ ALTER SEQUENCE public.hs_tools_resource_roadmap_id_seq OWNED BY public.hs_tools_
 
 
 --
--- Name: hs_tools_resource_showonopenwithlist; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_showonopenwithlist; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_showonopenwithlist (
@@ -6034,7 +6204,7 @@ ALTER SEQUENCE public.hs_tools_resource_showonopenwithlist_id_seq OWNED BY publi
 
 
 --
--- Name: hs_tools_resource_sourcecodeurl; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_sourcecodeurl; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_sourcecodeurl (
@@ -6070,7 +6240,7 @@ ALTER SEQUENCE public.hs_tools_resource_sourcecodeurl_id_seq OWNED BY public.hs_
 
 
 --
--- Name: hs_tools_resource_supportedaggtypechoices; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedaggtypechoices; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_supportedaggtypechoices (
@@ -6103,7 +6273,7 @@ ALTER SEQUENCE public.hs_tools_resource_supportedaggtypechoices_id_seq OWNED BY 
 
 
 --
--- Name: hs_tools_resource_supportedaggtypes; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedaggtypes; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_supportedaggtypes (
@@ -6138,7 +6308,7 @@ ALTER SEQUENCE public.hs_tools_resource_supportedaggtypes_id_seq OWNED BY public
 
 
 --
--- Name: hs_tools_resource_supportedaggtypes_supported_agg_types; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedaggtypes_supported_agg_types; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_supportedaggtypes_supported_agg_types (
@@ -6172,7 +6342,7 @@ ALTER SEQUENCE public.hs_tools_resource_supportedaggtypes_supported_agg_types_id
 
 
 --
--- Name: hs_tools_resource_supportedfileextensions; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedfileextensions; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_supportedfileextensions (
@@ -6208,7 +6378,7 @@ ALTER SEQUENCE public.hs_tools_resource_supportedfileextensions_id_seq OWNED BY 
 
 
 --
--- Name: hs_tools_resource_supportedrestypechoices; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedrestypechoices; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_supportedrestypechoices (
@@ -6241,7 +6411,7 @@ ALTER SEQUENCE public.hs_tools_resource_supportedrestypechoices_id_seq OWNED BY 
 
 
 --
--- Name: hs_tools_resource_supportedrestypes; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedrestypes; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_supportedrestypes (
@@ -6276,7 +6446,7 @@ ALTER SEQUENCE public.hs_tools_resource_supportedrestypes_id_seq OWNED BY public
 
 
 --
--- Name: hs_tools_resource_supportedrestypes_supported_res_types; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedrestypes_supported_res_types; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_supportedrestypes_supported_res_types (
@@ -6310,7 +6480,7 @@ ALTER SEQUENCE public.hs_tools_resource_supportedrestypes_supported_res_types_id
 
 
 --
--- Name: hs_tools_resource_supportedsharingstatus; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedsharingstatus; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_supportedsharingstatus (
@@ -6345,7 +6515,7 @@ ALTER SEQUENCE public.hs_tools_resource_supportedsharingstatus_id_seq OWNED BY p
 
 
 --
--- Name: hs_tools_resource_supportedsharingstatus_sharing_status; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedsharingstatus_sharing_status; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_supportedsharingstatus_sharing_status (
@@ -6379,7 +6549,7 @@ ALTER SEQUENCE public.hs_tools_resource_supportedsharingstatus_sharing_status_id
 
 
 --
--- Name: hs_tools_resource_supportedsharingstatuschoices; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedsharingstatuschoices; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_supportedsharingstatuschoices (
@@ -6412,7 +6582,7 @@ ALTER SEQUENCE public.hs_tools_resource_supportedsharingstatuschoices_id_seq OWN
 
 
 --
--- Name: hs_tools_resource_testingprotocolurl; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_testingprotocolurl; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_testingprotocolurl (
@@ -6448,7 +6618,7 @@ ALTER SEQUENCE public.hs_tools_resource_testingprotocolurl_id_seq OWNED BY publi
 
 
 --
--- Name: hs_tools_resource_toolicon; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_toolicon; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_toolicon (
@@ -6485,7 +6655,7 @@ ALTER SEQUENCE public.hs_tools_resource_toolicon_id_seq OWNED BY public.hs_tools
 
 
 --
--- Name: hs_tools_resource_toolmetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_toolmetadata; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_toolmetadata (
@@ -6497,7 +6667,7 @@ CREATE TABLE public.hs_tools_resource_toolmetadata (
 ALTER TABLE public.hs_tools_resource_toolmetadata OWNER TO postgres;
 
 --
--- Name: hs_tools_resource_toolversion; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_toolversion; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tools_resource_toolversion (
@@ -6533,7 +6703,7 @@ ALTER SEQUENCE public.hs_tools_resource_toolversion_id_seq OWNED BY public.hs_to
 
 
 --
--- Name: hs_tracking_session; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tracking_session; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tracking_session (
@@ -6567,7 +6737,7 @@ ALTER SEQUENCE public.hs_tracking_session_id_seq OWNED BY public.hs_tracking_ses
 
 
 --
--- Name: hs_tracking_variable; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tracking_variable; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tracking_variable (
@@ -6608,7 +6778,7 @@ ALTER SEQUENCE public.hs_tracking_variable_id_seq OWNED BY public.hs_tracking_va
 
 
 --
--- Name: hs_tracking_visitor; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tracking_visitor; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.hs_tracking_visitor (
@@ -6656,19 +6826,21 @@ CREATE SEQUENCE public.oauth2_provider_accesstoken_id_seq
 ALTER TABLE public.oauth2_provider_accesstoken_id_seq OWNER TO postgres;
 
 --
--- Name: oauth2_provider_accesstoken; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_accesstoken; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.oauth2_provider_accesstoken (
     id bigint DEFAULT nextval('public.oauth2_provider_accesstoken_id_seq'::regclass) NOT NULL,
-    token character varying(255) NOT NULL,
+    token text NOT NULL,
     expires timestamp with time zone NOT NULL,
     scope text NOT NULL,
     application_id bigint,
     user_id integer,
     created timestamp with time zone NOT NULL,
     updated timestamp with time zone NOT NULL,
-    source_refresh_token_id bigint
+    source_refresh_token_id bigint,
+    id_token_id bigint,
+    token_checksum character varying(64) NOT NULL
 );
 
 
@@ -6689,7 +6861,7 @@ CREATE SEQUENCE public.oauth2_provider_application_id_seq
 ALTER TABLE public.oauth2_provider_application_id_seq OWNER TO postgres;
 
 --
--- Name: oauth2_provider_application; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_application; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.oauth2_provider_application (
@@ -6703,7 +6875,11 @@ CREATE TABLE public.oauth2_provider_application (
     user_id integer,
     skip_authorization boolean NOT NULL,
     created timestamp with time zone NOT NULL,
-    updated timestamp with time zone NOT NULL
+    updated timestamp with time zone NOT NULL,
+    algorithm character varying(5) NOT NULL,
+    post_logout_redirect_uris text NOT NULL,
+    hash_client_secret boolean NOT NULL,
+    allowed_origins text NOT NULL
 );
 
 
@@ -6724,23 +6900,59 @@ CREATE SEQUENCE public.oauth2_provider_grant_id_seq
 ALTER TABLE public.oauth2_provider_grant_id_seq OWNER TO postgres;
 
 --
--- Name: oauth2_provider_grant; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_grant; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.oauth2_provider_grant (
     id bigint DEFAULT nextval('public.oauth2_provider_grant_id_seq'::regclass) NOT NULL,
     code character varying(255) NOT NULL,
     expires timestamp with time zone NOT NULL,
-    redirect_uri character varying(255) NOT NULL,
+    redirect_uri text NOT NULL,
     scope text NOT NULL,
     application_id bigint NOT NULL,
     user_id integer NOT NULL,
     created timestamp with time zone NOT NULL,
-    updated timestamp with time zone NOT NULL
+    updated timestamp with time zone NOT NULL,
+    code_challenge character varying(128) NOT NULL,
+    code_challenge_method character varying(10) NOT NULL,
+    nonce character varying(255) NOT NULL,
+    claims text NOT NULL
 );
 
 
 ALTER TABLE public.oauth2_provider_grant OWNER TO postgres;
+
+--
+-- Name: oauth2_provider_idtoken; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.oauth2_provider_idtoken (
+    id bigint NOT NULL,
+    jti uuid NOT NULL,
+    expires timestamp with time zone NOT NULL,
+    scope text NOT NULL,
+    created timestamp with time zone NOT NULL,
+    updated timestamp with time zone NOT NULL,
+    application_id bigint,
+    user_id integer
+);
+
+
+ALTER TABLE public.oauth2_provider_idtoken OWNER TO postgres;
+
+--
+-- Name: oauth2_provider_idtoken_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.oauth2_provider_idtoken ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.oauth2_provider_idtoken_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
 
 --
 -- Name: oauth2_provider_refreshtoken_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -6757,7 +6969,7 @@ CREATE SEQUENCE public.oauth2_provider_refreshtoken_id_seq
 ALTER TABLE public.oauth2_provider_refreshtoken_id_seq OWNER TO postgres;
 
 --
--- Name: oauth2_provider_refreshtoken; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_refreshtoken; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.oauth2_provider_refreshtoken (
@@ -6768,14 +6980,15 @@ CREATE TABLE public.oauth2_provider_refreshtoken (
     user_id integer NOT NULL,
     created timestamp with time zone NOT NULL,
     updated timestamp with time zone NOT NULL,
-    revoked timestamp with time zone
+    revoked timestamp with time zone,
+    token_family uuid
 );
 
 
 ALTER TABLE public.oauth2_provider_refreshtoken OWNER TO postgres;
 
 --
--- Name: pages_link; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: pages_link; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.pages_link (
@@ -6786,7 +6999,7 @@ CREATE TABLE public.pages_link (
 ALTER TABLE public.pages_link OWNER TO postgres;
 
 --
--- Name: pages_page; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: pages_page; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.pages_page (
@@ -6838,7 +7051,7 @@ ALTER SEQUENCE public.pages_page_id_seq OWNED BY public.pages_page.id;
 
 
 --
--- Name: pages_richtextpage; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: pages_richtextpage; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.pages_richtextpage (
@@ -6850,11 +7063,11 @@ CREATE TABLE public.pages_richtextpage (
 ALTER TABLE public.pages_richtextpage OWNER TO postgres;
 
 --
--- Name: robots_rule; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: robots_rule; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.robots_rule (
-    id integer NOT NULL,
+    id bigint NOT NULL,
     robot character varying(255) NOT NULL,
     crawl_delay numeric(3,1)
 );
@@ -6863,13 +7076,13 @@ CREATE TABLE public.robots_rule (
 ALTER TABLE public.robots_rule OWNER TO postgres;
 
 --
--- Name: robots_rule_allowed; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: robots_rule_allowed; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.robots_rule_allowed (
     id integer NOT NULL,
-    rule_id integer NOT NULL,
-    url_id integer NOT NULL
+    rule_id bigint NOT NULL,
+    url_id bigint NOT NULL
 );
 
 
@@ -6897,13 +7110,13 @@ ALTER SEQUENCE public.robots_rule_allowed_id_seq OWNED BY public.robots_rule_all
 
 
 --
--- Name: robots_rule_disallowed; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: robots_rule_disallowed; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.robots_rule_disallowed (
     id integer NOT NULL,
-    rule_id integer NOT NULL,
-    url_id integer NOT NULL
+    rule_id bigint NOT NULL,
+    url_id bigint NOT NULL
 );
 
 
@@ -6952,12 +7165,12 @@ ALTER SEQUENCE public.robots_rule_id_seq OWNED BY public.robots_rule.id;
 
 
 --
--- Name: robots_rule_sites; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: robots_rule_sites; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.robots_rule_sites (
     id integer NOT NULL,
-    rule_id integer NOT NULL,
+    rule_id bigint NOT NULL,
     site_id integer NOT NULL
 );
 
@@ -6986,11 +7199,11 @@ ALTER SEQUENCE public.robots_rule_sites_id_seq OWNED BY public.robots_rule_sites
 
 
 --
--- Name: robots_url; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: robots_url; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.robots_url (
-    id integer NOT NULL,
+    id bigint NOT NULL,
     pattern character varying(255) NOT NULL
 );
 
@@ -7019,7 +7232,7 @@ ALTER SEQUENCE public.robots_url_id_seq OWNED BY public.robots_url.id;
 
 
 --
--- Name: security_cspreport; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: security_cspreport; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.security_cspreport (
@@ -7059,7 +7272,7 @@ ALTER SEQUENCE public.security_cspreport_id_seq OWNED BY public.security_csprepo
 
 
 --
--- Name: security_passwordexpiry; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: security_passwordexpiry; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.security_passwordexpiry (
@@ -7093,7 +7306,7 @@ ALTER SEQUENCE public.security_passwordexpiry_id_seq OWNED BY public.security_pa
 
 
 --
--- Name: theme_homepage; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: theme_homepage; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.theme_homepage (
@@ -7122,7 +7335,7 @@ CREATE TABLE public.theme_homepage (
 ALTER TABLE public.theme_homepage OWNER TO postgres;
 
 --
--- Name: theme_iconbox; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: theme_iconbox; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.theme_iconbox (
@@ -7160,19 +7373,17 @@ ALTER SEQUENCE public.theme_iconbox_id_seq OWNED BY public.theme_iconbox.id;
 
 
 --
--- Name: theme_quotamessage; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: theme_quotamessage; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.theme_quotamessage (
     id integer NOT NULL,
     warning_content_prepend text NOT NULL,
-    grace_period_content_prepend text NOT NULL,
     enforce_content_prepend text NOT NULL,
     content text NOT NULL,
     soft_limit_percent integer NOT NULL,
-    hard_limit_percent integer NOT NULL,
-    grace_period integer NOT NULL,
-    enforce_quota boolean NOT NULL
+    published_resource_percent integer NOT NULL,
+    quota_usage_info text NOT NULL
 );
 
 
@@ -7200,7 +7411,38 @@ ALTER SEQUENCE public.theme_quotamessage_id_seq OWNED BY public.theme_quotamessa
 
 
 --
--- Name: theme_siteconfiguration; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: theme_quotarequest; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.theme_quotarequest (
+    id integer NOT NULL,
+    date_requested timestamp with time zone NOT NULL,
+    justification text,
+    storage integer NOT NULL,
+    quota_id integer NOT NULL,
+    request_from_id integer NOT NULL,
+    status character varying(20) NOT NULL
+);
+
+
+ALTER TABLE public.theme_quotarequest OWNER TO postgres;
+
+--
+-- Name: theme_quotarequest_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.theme_quotarequest ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.theme_quotarequest_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: theme_siteconfiguration; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.theme_siteconfiguration (
@@ -7249,18 +7491,18 @@ ALTER SEQUENCE public.theme_siteconfiguration_id_seq OWNED BY public.theme_sitec
 
 
 --
--- Name: theme_userprofile; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: theme_userprofile; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.theme_userprofile (
     id integer NOT NULL,
     picture character varying(100),
     title character varying(1024),
-    subject_areas character varying(1024),
+    subject_areas character varying(1024)[],
     organization character varying(1024),
-    phone_1 character varying(16),
+    phone_1 character varying(32),
     phone_1_type character varying(1024),
-    phone_2 character varying(16),
+    phone_2 character varying(32),
     phone_2_type character varying(1024),
     public boolean NOT NULL,
     cv character varying(100),
@@ -7271,9 +7513,9 @@ CREATE TABLE public.theme_userprofile (
     state character varying(1024),
     user_type character varying(1024),
     website character varying(200),
-    create_irods_user_account boolean NOT NULL,
     identifiers public.hstore,
-    email_opt_out boolean NOT NULL
+    email_opt_out boolean NOT NULL,
+    _bucket_name character varying(63)
 );
 
 
@@ -7301,16 +7543,12 @@ ALTER SEQUENCE public.theme_userprofile_id_seq OWNED BY public.theme_userprofile
 
 
 --
--- Name: theme_userquota; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: theme_userquota; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.theme_userquota (
     id integer NOT NULL,
-    allocated_value double precision NOT NULL,
-    used_value double precision NOT NULL,
-    unit character varying(10) NOT NULL,
     zone character varying(100) NOT NULL,
-    remaining_grace_period integer NOT NULL,
     user_id integer NOT NULL
 );
 
@@ -7339,7 +7577,7 @@ ALTER SEQUENCE public.theme_userquota_id_seq OWNED BY public.theme_userquota.id;
 
 
 --
--- Name: thumbnail_kvstore; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: thumbnail_kvstore; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.thumbnail_kvstore (
@@ -7351,1295 +7589,1288 @@ CREATE TABLE public.thumbnail_kvstore (
 ALTER TABLE public.thumbnail_kvstore OWNER TO postgres;
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: auth_group id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_group ALTER COLUMN id SET DEFAULT nextval('public.auth_group_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: auth_group_permissions id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_group_permissions ALTER COLUMN id SET DEFAULT nextval('public.auth_group_permissions_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: auth_permission id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_permission ALTER COLUMN id SET DEFAULT nextval('public.auth_permission_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: auth_user id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_user ALTER COLUMN id SET DEFAULT nextval('public.auth_user_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: auth_user_groups id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_user_groups ALTER COLUMN id SET DEFAULT nextval('public.auth_user_groups_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: auth_user_user_permissions id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_user_user_permissions ALTER COLUMN id SET DEFAULT nextval('public.auth_user_user_permissions_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: blog_blogcategory id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.blog_blogcategory ALTER COLUMN id SET DEFAULT nextval('public.blog_blogcategory_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: blog_blogpost id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.blog_blogpost ALTER COLUMN id SET DEFAULT nextval('public.blog_blogpost_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: blog_blogpost_categories id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.blog_blogpost_categories ALTER COLUMN id SET DEFAULT nextval('public.blog_blogpost_categories_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: blog_blogpost_related_posts id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.blog_blogpost_related_posts ALTER COLUMN id SET DEFAULT nextval('public.blog_blogpost_related_posts_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: celery_taskmeta id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.celery_taskmeta ALTER COLUMN id SET DEFAULT nextval('public.celery_taskmeta_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: celery_tasksetmeta id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.celery_tasksetmeta ALTER COLUMN id SET DEFAULT nextval('public.celery_tasksetmeta_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: conf_setting id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.conf_setting ALTER COLUMN id SET DEFAULT nextval('public.conf_setting_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: core_sitepermission id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.core_sitepermission ALTER COLUMN id SET DEFAULT nextval('public.core_sitepermission_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: core_sitepermission_sites id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.core_sitepermission_sites ALTER COLUMN id SET DEFAULT nextval('public.core_sitepermission_sites_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: corsheaders_corsmodel id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.corsheaders_corsmodel ALTER COLUMN id SET DEFAULT nextval('public.corsheaders_corsmodel_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: django_admin_log id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_admin_log ALTER COLUMN id SET DEFAULT nextval('public.django_admin_log_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: django_comment_flags id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_comment_flags ALTER COLUMN id SET DEFAULT nextval('public.django_comment_flags_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: django_comments id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_comments ALTER COLUMN id SET DEFAULT nextval('public.django_comments_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: django_content_type id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_content_type ALTER COLUMN id SET DEFAULT nextval('public.django_content_type_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_containeroverrides id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_containeroverrides ALTER COLUMN id SET DEFAULT nextval('public.django_docker_processes_containeroverrides_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_dockerenvvar id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_dockerenvvar ALTER COLUMN id SET DEFAULT nextval('public.django_docker_processes_dockerenvvar_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_dockerlink id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_dockerlink ALTER COLUMN id SET DEFAULT nextval('public.django_docker_processes_dockerlink_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_dockerport id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_dockerport ALTER COLUMN id SET DEFAULT nextval('public.django_docker_processes_dockerport_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_dockerprocess id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_dockerprocess ALTER COLUMN id SET DEFAULT nextval('public.django_docker_processes_dockerprocess_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_dockerprofile id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_dockerprofile ALTER COLUMN id SET DEFAULT nextval('public.django_docker_processes_dockerprofile_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_dockervolume id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_dockervolume ALTER COLUMN id SET DEFAULT nextval('public.django_docker_processes_dockervolume_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_overrideenvvar id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_overrideenvvar ALTER COLUMN id SET DEFAULT nextval('public.django_docker_processes_overrideenvvar_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_overridelink id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_overridelink ALTER COLUMN id SET DEFAULT nextval('public.django_docker_processes_overridelink_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_overrideport id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_overrideport ALTER COLUMN id SET DEFAULT nextval('public.django_docker_processes_overrideport_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_overridevolume id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_overridevolume ALTER COLUMN id SET DEFAULT nextval('public.django_docker_processes_overridevolume_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.django_irods_rodsenvironment ALTER COLUMN id SET DEFAULT nextval('public.django_irods_rodsenvironment_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: django_migrations id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_migrations ALTER COLUMN id SET DEFAULT nextval('public.django_migrations_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: django_redirect id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_redirect ALTER COLUMN id SET DEFAULT nextval('public.django_redirect_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: django_site id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_site ALTER COLUMN id SET DEFAULT nextval('public.django_site_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: djcelery_crontabschedule id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.djcelery_crontabschedule ALTER COLUMN id SET DEFAULT nextval('public.djcelery_crontabschedule_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: djcelery_intervalschedule id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.djcelery_intervalschedule ALTER COLUMN id SET DEFAULT nextval('public.djcelery_intervalschedule_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: djcelery_periodictask id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.djcelery_periodictask ALTER COLUMN id SET DEFAULT nextval('public.djcelery_periodictask_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: djcelery_taskstate id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.djcelery_taskstate ALTER COLUMN id SET DEFAULT nextval('public.djcelery_taskstate_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: djcelery_workerstate id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.djcelery_workerstate ALTER COLUMN id SET DEFAULT nextval('public.djcelery_workerstate_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: forms_field id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.forms_field ALTER COLUMN id SET DEFAULT nextval('public.forms_field_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: forms_fieldentry id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.forms_fieldentry ALTER COLUMN id SET DEFAULT nextval('public.forms_fieldentry_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: forms_formentry id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.forms_formentry ALTER COLUMN id SET DEFAULT nextval('public.forms_formentry_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: ga_ows_ogrdataset id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_ows_ogrdataset ALTER COLUMN id SET DEFAULT nextval('public.ga_ows_ogrdataset_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: ga_ows_ogrdatasetcollection id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_ows_ogrdatasetcollection ALTER COLUMN id SET DEFAULT nextval('public.ga_ows_ogrdatasetcollection_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: ga_ows_ogrlayer id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_ows_ogrlayer ALTER COLUMN id SET DEFAULT nextval('public.ga_ows_ogrlayer_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: ga_resources_orderedresource id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_orderedresource ALTER COLUMN id SET DEFAULT nextval('public.ga_resources_orderedresource_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: ga_resources_renderedlayer_styles id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_renderedlayer_styles ALTER COLUMN id SET DEFAULT nextval('public.ga_resources_renderedlayer_styles_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: galleries_galleryimage id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.galleries_galleryimage ALTER COLUMN id SET DEFAULT nextval('public.galleries_galleryimage_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: generic_assignedkeyword id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.generic_assignedkeyword ALTER COLUMN id SET DEFAULT nextval('public.generic_assignedkeyword_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: generic_keyword id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.generic_keyword ALTER COLUMN id SET DEFAULT nextval('public.generic_keyword_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: generic_rating id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.generic_rating ALTER COLUMN id SET DEFAULT nextval('public.generic_rating_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_access_control_community id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_community ALTER COLUMN id SET DEFAULT nextval('public.hs_access_control_community_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_access_control_communityresourceprivilege id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_communityresourceprivilege ALTER COLUMN id SET DEFAULT nextval('public.hs_access_control_communityresourceprivilege_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_access_control_communityresourceprovenance id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_communityresourceprovenance ALTER COLUMN id SET DEFAULT nextval('public.hs_access_control_communityresourceprovenance_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_access_control_feature id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_feature ALTER COLUMN id SET DEFAULT nextval('public.hs_access_control_feature_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupaccess id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupaccess ALTER COLUMN id SET DEFAULT nextval('public.hs_access_control_groupaccess_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupcommunityprivilege id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupcommunityprivilege ALTER COLUMN id SET DEFAULT nextval('public.hs_access_control_groupcommunityprivilege_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupcommunityprovenance id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupcommunityprovenance ALTER COLUMN id SET DEFAULT nextval('public.hs_access_control_groupcommunityprovenance_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupcommunityrequest id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupcommunityrequest ALTER COLUMN id SET DEFAULT nextval('public.hs_access_control_groupcommunityrequest_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupmembershiprequest id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupmembershiprequest ALTER COLUMN id SET DEFAULT nextval('public.hs_access_control_groupmembershiprequest_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupresourceprivilege id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupresourceprivilege ALTER COLUMN id SET DEFAULT nextval('public.hs_access_control_groupresourceprivilege_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupresourceprovenance id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupresourceprovenance ALTER COLUMN id SET DEFAULT nextval('public.hs_access_control_groupresourceprovenance_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_access_control_resourceaccess id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_resourceaccess ALTER COLUMN id SET DEFAULT nextval('public.hs_access_control_resourceaccess_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_access_control_useraccess id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_useraccess ALTER COLUMN id SET DEFAULT nextval('public.hs_access_control_useraccess_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_access_control_usercommunityprivilege id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usercommunityprivilege ALTER COLUMN id SET DEFAULT nextval('public.hs_access_control_usercommunityprivilege_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_access_control_usercommunityprovenance id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usercommunityprovenance ALTER COLUMN id SET DEFAULT nextval('public.hs_access_control_usercommunityprovenance_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_access_control_usergroupprivilege id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usergroupprivilege ALTER COLUMN id SET DEFAULT nextval('public.hs_access_control_usergroupprivilege_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_access_control_usergroupprovenance id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usergroupprovenance ALTER COLUMN id SET DEFAULT nextval('public.hs_access_control_usergroupprovenance_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_access_control_userresourceprivilege id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_userresourceprivilege ALTER COLUMN id SET DEFAULT nextval('public.hs_access_control_userresourceprivilege_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_access_control_userresourceprovenance id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_userresourceprovenance ALTER COLUMN id SET DEFAULT nextval('public.hs_access_control_userresourceprovenance_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_collection_resource_collectiondeletedresource id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_collection_resource_collectiondeletedresource ALTER COLUMN id SET DEFAULT nextval('public.hs_collection_resource_collectiondeletedresource_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_collection_resource_collectiondeletedresource_resource_od9f5 id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_collection_resource_collectiondeletedresource_resource_od9f5 ALTER COLUMN id SET DEFAULT nextval('public.hs_collection_resource_collectiondeletedresource_resourc_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_communities_topic id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_communities_topic ALTER COLUMN id SET DEFAULT nextval('public.hs_communities_topic_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_core_citation id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_citation ALTER COLUMN id SET DEFAULT nextval('public.hs_core_citation_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_core_contributor id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_contributor ALTER COLUMN id SET DEFAULT nextval('public.hs_core_contributor_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_core_coremetadata id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_coremetadata ALTER COLUMN id SET DEFAULT nextval('public.hs_core_coremetadata_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_core_coverage id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_coverage ALTER COLUMN id SET DEFAULT nextval('public.hs_core_coverage_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_core_creator id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_creator ALTER COLUMN id SET DEFAULT nextval('public.hs_core_creator_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_core_date id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_date ALTER COLUMN id SET DEFAULT nextval('public.hs_core_date_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_core_description id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_description ALTER COLUMN id SET DEFAULT nextval('public.hs_core_description_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_core_format id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_format ALTER COLUMN id SET DEFAULT nextval('public.hs_core_format_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_core_fundingagency id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_fundingagency ALTER COLUMN id SET DEFAULT nextval('public.hs_core_fundingagency_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_core_genericresource_collections id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_genericresource_collections ALTER COLUMN id SET DEFAULT nextval('public.hs_core_genericresource_collections_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_core_groupownership id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_groupownership ALTER COLUMN id SET DEFAULT nextval('public.hs_core_groupownership_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_core_identifier id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_identifier ALTER COLUMN id SET DEFAULT nextval('public.hs_core_identifier_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_core_language id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_language ALTER COLUMN id SET DEFAULT nextval('public.hs_core_language_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_core_publisher id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_publisher ALTER COLUMN id SET DEFAULT nextval('public.hs_core_publisher_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_core_relation id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_relation ALTER COLUMN id SET DEFAULT nextval('public.hs_core_relation_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_core_resourcefile id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_resourcefile ALTER COLUMN id SET DEFAULT nextval('public.hs_core_resourcefile_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_core_rights id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_rights ALTER COLUMN id SET DEFAULT nextval('public.hs_core_rights_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_core_subject id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_subject ALTER COLUMN id SET DEFAULT nextval('public.hs_core_subject_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_core_tasknotification id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_tasknotification ALTER COLUMN id SET DEFAULT nextval('public.hs_core_tasknotification_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_core_title id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_title ALTER COLUMN id SET DEFAULT nextval('public.hs_core_title_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_core_type id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_type ALTER COLUMN id SET DEFAULT nextval('public.hs_core_type_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_dictionary_uncategorizedterm id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_dictionary_uncategorizedterm ALTER COLUMN id SET DEFAULT nextval('public.hs_dictionary_uncategorizedterm_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_dictionary_university id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_dictionary_university ALTER COLUMN id SET DEFAULT nextval('public.hs_dictionary_university_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_bandinformation id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_bandinformation ALTER COLUMN id SET DEFAULT nextval('public.hs_geo_raster_resource_bandinformation_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_cellinformation id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cellinformation ALTER COLUMN id SET DEFAULT nextval('public.hs_geo_raster_resource_cellinformation_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_cvaggregationstatistic id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvaggregationstatistic ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_cvaggregationstatistic_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_cvelevationdatum id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvelevationdatum ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_cvelevationdatum_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_cvmedium id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvmedium ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_cvmedium_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_cvmethodtype id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvmethodtype ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_cvmethodtype_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_cvsitetype id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvsitetype ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_cvsitetype_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_cvspeciation id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvspeciation ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_cvspeciation_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_cvstatus id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvstatus ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_cvstatus_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_cvunitstype id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvunitstype ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_cvunitstype_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_cvvariablename id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvvariablename ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_cvvariablename_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_cvvariabletype id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvvariabletype ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_cvvariabletype_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_fieldinformation id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_fieldinformation ALTER COLUMN id SET DEFAULT nextval('public.hs_geographic_feature_resource_fieldinformation_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_filesetlogicalfile id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_filesetlogicalfile ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_filesetlogicalfile_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_filesetmetadata id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_filesetmetadata ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_filesetmetadata_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_genericfilemetadata id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_genericfilemetadata ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_genericfilemetadata_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_genericlogicalfile id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_genericlogicalfile ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_genericlogicalfile_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_geofeaturefilemetadata id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_geofeaturefilemetadata ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_geofeaturefilemetadata_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_geofeaturelogicalfile id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_geofeaturelogicalfile ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_geofeaturelogicalfile_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_geometryinformation id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_geometryinformation ALTER COLUMN id SET DEFAULT nextval('public.hs_geographic_feature_resource_geometryinformation_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_georasterfilemetadata id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_georasterfilemetadata ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_georasterfilemetadata_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_georasterlogicalfile id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_georasterlogicalfile ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_georasterlogicalfile_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_method id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_method ALTER COLUMN id SET DEFAULT nextval('public.hs_app_timeseries_method_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_modelinstancefilemetadata id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_modelinstancefilemetadata ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_modelinstancefilemetadata_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_modelinstancelogicalfile id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_modelinstancelogicalfile ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_modelinstancelogicalfile_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_modelprogramfilemetadata id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_modelprogramfilemetadata ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_modelprogramfilemetadata_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_modelprogramlogicalfile id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_modelprogramlogicalfile ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_modelprogramlogicalfile_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_modelprogramresourcefiletype id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_modelprogramresourcefiletype ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_modelprogramresourcefiletype_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_netcdffilemetadata id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_netcdffilemetadata ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_netcdffilemetadata_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_netcdflogicalfile id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_netcdflogicalfile ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_netcdflogicalfile_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_originalcoverage id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_originalcoverage ALTER COLUMN id SET DEFAULT nextval('public."hs_app_netCDF_originalcoverage_id_seq"'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_originalcoveragegeofeature id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_originalcoveragegeofeature ALTER COLUMN id SET DEFAULT nextval('public.hs_geographic_feature_resource_originalcoverage_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_originalcoverageraster id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_originalcoverageraster ALTER COLUMN id SET DEFAULT nextval('public.hs_geo_raster_resource_originalcoverage_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_processinglevel id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_processinglevel ALTER COLUMN id SET DEFAULT nextval('public.hs_app_timeseries_processinglevel_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_reftimeseriesfilemetadata id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_reftimeseriesfilemetadata ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_reftimeseriesfilemetadata_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_reftimeserieslogicalfile id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_reftimeserieslogicalfile ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_reftimeserieslogicalfile_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_site id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_site ALTER COLUMN id SET DEFAULT nextval('public.hs_app_timeseries_site_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_timeseriesfilemetadata id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_timeseriesfilemetadata ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_timeseriesfilemetadata_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_timeserieslogicalfile id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_timeserieslogicalfile ALTER COLUMN id SET DEFAULT nextval('public.hs_file_types_timeserieslogicalfile_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_timeseriesresult id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_timeseriesresult ALTER COLUMN id SET DEFAULT nextval('public.hs_app_timeseries_timeseriesresult_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_utcoffset id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_utcoffset ALTER COLUMN id SET DEFAULT nextval('public.hs_app_timeseries_utcoffset_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_variable id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_variable ALTER COLUMN id SET DEFAULT nextval('public."hs_app_netCDF_variable_id_seq"'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_file_types_variabletimeseries id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_variabletimeseries ALTER COLUMN id SET DEFAULT nextval('public.hs_app_timeseries_variable_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_labels_resourcelabels id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_labels_resourcelabels ALTER COLUMN id SET DEFAULT nextval('public.hs_labels_resourcelabels_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_labels_userlabels id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_labels_userlabels ALTER COLUMN id SET DEFAULT nextval('public.hs_labels_userlabels_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_labels_userresourceflags id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_labels_userresourceflags ALTER COLUMN id SET DEFAULT nextval('public.hs_labels_userresourceflags_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_labels_userresourcelabels id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_labels_userresourcelabels ALTER COLUMN id SET DEFAULT nextval('public.hs_labels_userresourcelabels_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_labels_userstoredlabels id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_labels_userstoredlabels ALTER COLUMN id SET DEFAULT nextval('public.hs_labels_userstoredlabels_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_odm2_odm2variable id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_odm2_odm2variable ALTER COLUMN id SET DEFAULT nextval('public.hs_odm2_odm2variable_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_apphomepageurl id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_apphomepageurl ALTER COLUMN id SET DEFAULT nextval('public.hs_tools_resource_apphomepageurl_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_helppageurl id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_helppageurl ALTER COLUMN id SET DEFAULT nextval('public.hs_tools_resource_helppageurl_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_issuespageurl id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_issuespageurl ALTER COLUMN id SET DEFAULT nextval('public.hs_tools_resource_issuespageurl_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_mailinglisturl id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_mailinglisturl ALTER COLUMN id SET DEFAULT nextval('public.hs_tools_resource_mailinglisturl_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_requesturlbase id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_requesturlbase ALTER COLUMN id SET DEFAULT nextval('public.hs_tools_resource_requesturlbase_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_requesturlbaseaggregation id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_requesturlbaseaggregation ALTER COLUMN id SET DEFAULT nextval('public.hs_tools_resource_requesturlbaseaggregation_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_requesturlbasefile id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_requesturlbasefile ALTER COLUMN id SET DEFAULT nextval('public.hs_tools_resource_requesturlbasefile_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_roadmap id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_roadmap ALTER COLUMN id SET DEFAULT nextval('public.hs_tools_resource_roadmap_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_showonopenwithlist id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_showonopenwithlist ALTER COLUMN id SET DEFAULT nextval('public.hs_tools_resource_showonopenwithlist_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_sourcecodeurl id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_sourcecodeurl ALTER COLUMN id SET DEFAULT nextval('public.hs_tools_resource_sourcecodeurl_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_supportedaggtypechoices id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedaggtypechoices ALTER COLUMN id SET DEFAULT nextval('public.hs_tools_resource_supportedaggtypechoices_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_supportedaggtypes id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedaggtypes ALTER COLUMN id SET DEFAULT nextval('public.hs_tools_resource_supportedaggtypes_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_supportedaggtypes_supported_agg_types id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedaggtypes_supported_agg_types ALTER COLUMN id SET DEFAULT nextval('public.hs_tools_resource_supportedaggtypes_supported_agg_types_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_supportedfileextensions id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedfileextensions ALTER COLUMN id SET DEFAULT nextval('public.hs_tools_resource_supportedfileextensions_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_supportedrestypechoices id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedrestypechoices ALTER COLUMN id SET DEFAULT nextval('public.hs_tools_resource_supportedrestypechoices_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_supportedrestypes id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes ALTER COLUMN id SET DEFAULT nextval('public.hs_tools_resource_supportedrestypes_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_supportedrestypes_supported_res_types id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes_supported_res_types ALTER COLUMN id SET DEFAULT nextval('public.hs_tools_resource_supportedrestypes_supported_res_types_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_supportedsharingstatus id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedsharingstatus ALTER COLUMN id SET DEFAULT nextval('public.hs_tools_resource_supportedsharingstatus_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_supportedsharingstatus_sharing_status id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedsharingstatus_sharing_status ALTER COLUMN id SET DEFAULT nextval('public.hs_tools_resource_supportedsharingstatus_sharing_status_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_supportedsharingstatuschoices id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedsharingstatuschoices ALTER COLUMN id SET DEFAULT nextval('public.hs_tools_resource_supportedsharingstatuschoices_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_testingprotocolurl id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_testingprotocolurl ALTER COLUMN id SET DEFAULT nextval('public.hs_tools_resource_testingprotocolurl_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_toolicon id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_toolicon ALTER COLUMN id SET DEFAULT nextval('public.hs_tools_resource_toolicon_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_toolversion id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_toolversion ALTER COLUMN id SET DEFAULT nextval('public.hs_tools_resource_toolversion_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tracking_session id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tracking_session ALTER COLUMN id SET DEFAULT nextval('public.hs_tracking_session_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tracking_variable id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tracking_variable ALTER COLUMN id SET DEFAULT nextval('public.hs_tracking_variable_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: hs_tracking_visitor id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tracking_visitor ALTER COLUMN id SET DEFAULT nextval('public.hs_tracking_visitor_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: pages_page id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.pages_page ALTER COLUMN id SET DEFAULT nextval('public.pages_page_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: robots_rule id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.robots_rule ALTER COLUMN id SET DEFAULT nextval('public.robots_rule_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: robots_rule_allowed id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.robots_rule_allowed ALTER COLUMN id SET DEFAULT nextval('public.robots_rule_allowed_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: robots_rule_disallowed id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.robots_rule_disallowed ALTER COLUMN id SET DEFAULT nextval('public.robots_rule_disallowed_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: robots_rule_sites id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.robots_rule_sites ALTER COLUMN id SET DEFAULT nextval('public.robots_rule_sites_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: robots_url id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.robots_url ALTER COLUMN id SET DEFAULT nextval('public.robots_url_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: security_cspreport id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.security_cspreport ALTER COLUMN id SET DEFAULT nextval('public.security_cspreport_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: security_passwordexpiry id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.security_passwordexpiry ALTER COLUMN id SET DEFAULT nextval('public.security_passwordexpiry_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: theme_iconbox id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.theme_iconbox ALTER COLUMN id SET DEFAULT nextval('public.theme_iconbox_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: theme_quotamessage id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.theme_quotamessage ALTER COLUMN id SET DEFAULT nextval('public.theme_quotamessage_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: theme_siteconfiguration id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.theme_siteconfiguration ALTER COLUMN id SET DEFAULT nextval('public.theme_siteconfiguration_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: theme_userprofile id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.theme_userprofile ALTER COLUMN id SET DEFAULT nextval('public.theme_userprofile_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: theme_userquota id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.theme_userquota ALTER COLUMN id SET DEFAULT nextval('public.theme_userquota_id_seq'::regclass);
@@ -8664,13 +8895,6 @@ COPY public.auth_group (id, name) FROM stdin;
 11	CZO Calhoun
 12	CZO National
 \.
-
-
---
--- Name: auth_group_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.auth_group_id_seq', 13, true);
 
 
 --
@@ -9075,13 +9299,6 @@ COPY public.auth_group_permissions (id, group_id, permission_id) FROM stdin;
 2351	1	661
 2352	1	662
 \.
-
-
---
--- Name: auth_group_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.auth_group_permissions_id_seq', 2352, true);
 
 
 --
@@ -9658,6 +9875,7 @@ COPY public.auth_permission (id, name, content_type_id, codename) FROM stdin;
 570	Can add cv method type	178	add_cvmethodtype
 571	Can change cv method type	178	change_cvmethodtype
 572	Can delete cv method type	178	delete_cvmethodtype
+920	Can view rule	171	view_rule
 573	Can add cv units type	179	add_cvunitstype
 574	Can change cv units type	179	change_cvunitstype
 575	Can delete cv units type	179	delete_cvunitstype
@@ -9970,14 +10188,208 @@ COPY public.auth_permission (id, name, content_type_id, codename) FROM stdin;
 882	Can add variable timeseries	280	add_variabletimeseries
 883	Can change variable timeseries	280	change_variabletimeseries
 884	Can delete variable timeseries	280	delete_variabletimeseries
+885	Can view permission	1	view_permission
+886	Can view group	2	view_group
+887	Can view user	3	view_user
+888	Can view application	4	view_application
+889	Can view access token	6	view_accesstoken
+890	Can view grant	5	view_grant
+891	Can view refresh token	7	view_refreshtoken
+892	Can view content type	9	view_contenttype
+893	Can view redirect	10	view_redirect
+894	Can view session	11	view_session
+895	Can view site	12	view_site
+896	Can view iRODS Environment	15	view_rodsenvironment
+897	Can view Home page	17	view_homepage
+898	Can view icon box	18	view_iconbox
+899	Can view Site Configuration	16	view_siteconfiguration
+900	Can view user profile	19	view_userprofile
+901	Can view User quota	208	view_userquota
+902	Can view quota message	207	view_quotamessage
+903	Can view Setting	20	view_setting
+904	Can view Site permission	21	view_sitepermission
+905	Can view assigned keyword	24	view_assignedkeyword
+906	Can view Keyword	23	view_keyword
+907	Can view Rating	25	view_rating
+908	Can view Comment	22	view_threadedcomment
+909	Can view Blog Category	27	view_blogcategory
+910	Can view Blog post	26	view_blogpost
+911	Can view Field	29	view_field
+912	Can view Form field entry	31	view_fieldentry
+913	Can view Form	28	view_form
+914	Can view Form entry	30	view_formentry
+915	Can view Page	32	view_page
+916	Can view Link	34	view_link
+917	Can view Rich text page	33	view_richtextpage
+918	Can view Gallery	35	view_gallery
+919	Can view Image	36	view_galleryimage
+921	Can view url	170	view_url
+922	Can view kv store	256	view_kvstore
+923	Can view contributor	49	view_contributor
+924	Can view core meta data	68	view_coremetadata
+925	Can view coverage	59	view_coverage
+926	Can view creator	50	view_creator
+927	Can view date	54	view_date
+928	Can view description	51	view_description
+929	Can view format	60	view_format
+930	Can view group ownership	47	view_groupownership
+931	Can view identifier	56	view_identifier
+932	Can view language	58	view_language
+933	Can view publisher	57	view_publisher
+934	Can view relation	55	view_relation
+935	Can view resource file	64	view_resourcefile
+936	Can view rights	63	view_rights
+937	Can view subject	61	view_subject
+938	Can view title	52	view_title
+939	Can view type	53	view_type
+940	Can view Generic	66	view_baseresource
+941	Can view Generic	67	view_genericresource
+942	Can view funding agency	163	view_fundingagency
+943	Can view task notification	257	view_tasknotification
+944	Can view citation	258	view_citation
+945	Can view group access	73	view_groupaccess
+946	Can view group resource privilege	71	view_groupresourceprivilege
+947	Can view resource access	74	view_resourceaccess
+948	Can view user access	72	view_useraccess
+949	Can view user group privilege	69	view_usergroupprivilege
+950	Can view user resource privilege	70	view_userresourceprivilege
+951	Can view group membership request	164	view_groupmembershiprequest
+952	Can view group resource provenance	211	view_groupresourceprovenance
+953	Can view user group provenance	209	view_usergroupprovenance
+954	Can view user resource provenance	210	view_userresourceprovenance
+955	Can view community	223	view_community
+956	Can view group community privilege	222	view_groupcommunityprivilege
+957	Can view group community provenance	221	view_groupcommunityprovenance
+958	Can view user community privilege	220	view_usercommunityprivilege
+959	Can view user community provenance	224	view_usercommunityprovenance
+960	Can view feature	255	view_feature
+961	Can view community resource privilege	259	view_communityresourceprivilege
+962	Can view community resource provenance	260	view_communityresourceprovenance
+963	Can view group community request	261	view_groupcommunityrequest
+964	Can view resource labels	79	view_resourcelabels
+965	Can view user labels	78	view_userlabels
+966	Can view user resource flags	76	view_userresourceflags
+967	Can view user resource labels	75	view_userresourcelabels
+968	Can view user stored labels	77	view_userstoredlabels
+969	Can view request url base	130	view_requesturlbase
+970	Can view Application Approval	135	view_toolmetadata
+971	Can view tool version	131	view_toolversion
+972	Can view Web App Resource	129	view_toolresource
+973	Can view supported res type choices	132	view_supportedrestypechoices
+974	Can view supported res types	133	view_supportedrestypes
+975	Can view tool icon	134	view_toolicon
+976	Can view supported sharing status	185	view_supportedsharingstatus
+977	Can view supported sharing status choices	184	view_supportedsharingstatuschoices
+978	Can view app home page url	183	view_apphomepageurl
+979	Can view help page url	227	view_helppageurl
+980	Can view issues page url	230	view_issuespageurl
+981	Can view mailing list url	233	view_mailinglisturl
+982	Can view roadmap	232	view_roadmap
+983	Can view source code url	234	view_sourcecodeurl
+984	Can view testing protocol url	236	view_testingprotocolurl
+985	Can view show on open with list	235	view_showonopenwithlist
+986	Can view supported agg type choices	229	view_supportedaggtypechoices
+987	Can view supported agg types	226	view_supportedaggtypes
+988	Can view supported file extensions	228	view_supportedfileextensions
+989	Can view request url base aggregation	225	view_requesturlbaseaggregation
+990	Can view request url base file	231	view_requesturlbasefile
+991	Can view collection deleted resource	165	view_collectiondeletedresource
+992	Can view Collection Resource	166	view_collectionresource
+993	Can view session	168	view_session
+994	Can view variable	169	view_variable
+995	Can view visitor	167	view_visitor
+996	Can view generic file meta data	202	view_genericfilemetadata
+997	Can view generic logical file	203	view_genericlogicalfile
+998	Can view geo raster file meta data	204	view_georasterfilemetadata
+999	Can view geo raster logical file	205	view_georasterlogicalfile
+1000	Can view net cdf file meta data	212	view_netcdffilemetadata
+1001	Can view net cdf logical file	213	view_netcdflogicalfile
+1002	Can view geo feature file meta data	216	view_geofeaturefilemetadata
+1003	Can view geo feature logical file	217	view_geofeaturelogicalfile
+1004	Can view ref timeseries file meta data	218	view_reftimeseriesfilemetadata
+1005	Can view ref timeseries logical file	219	view_reftimeserieslogicalfile
+1006	Can view cv aggregation statistic	239	view_cvaggregationstatistic
+1007	Can view cv elevation datum	249	view_cvelevationdatum
+1008	Can view cv medium	241	view_cvmedium
+1009	Can view cv method type	237	view_cvmethodtype
+1010	Can view cv site type	250	view_cvsitetype
+1011	Can view cv speciation	242	view_cvspeciation
+1012	Can view cv status	246	view_cvstatus
+1013	Can view cv units type	243	view_cvunitstype
+1014	Can view cv variable name	244	view_cvvariablename
+1015	Can view cv variable type	240	view_cvvariabletype
+1016	Can view time series file meta data	248	view_timeseriesfilemetadata
+1017	Can view time series logical file	238	view_timeserieslogicalfile
+1018	Can view file set logical file	245	view_filesetlogicalfile
+1019	Can view file set meta data	247	view_filesetmetadata
+1020	Can view model instance file meta data	262	view_modelinstancefilemetadata
+1021	Can view model instance logical file	263	view_modelinstancelogicalfile
+1022	Can view model program file meta data	264	view_modelprogramfilemetadata
+1023	Can view model program logical file	265	view_modelprogramlogicalfile
+1024	Can view model program resource file type	266	view_modelprogramresourcefiletype
+1025	Can view original coverage	267	view_originalcoverage
+1026	Can view variable	268	view_variable
+1027	Can view band information	269	view_bandinformation
+1028	Can view cell information	270	view_cellinformation
+1029	Can view original coverage raster	271	view_originalcoverageraster
+1030	Can view field information	272	view_fieldinformation
+1031	Can view geometry information	273	view_geometryinformation
+1032	Can view original coverage geofeature	274	view_originalcoveragegeofeature
+1033	Can view method	275	view_method
+1034	Can view processing level	276	view_processinglevel
+1035	Can view site	277	view_site
+1036	Can view time series result	278	view_timeseriesresult
+1037	Can view utc off set	279	view_utcoffset
+1038	Can view variable timeseries	280	view_variabletimeseries
+1039	Can view Composite Resource	206	view_compositeresource
+1040	Can view university	251	view_university
+1041	Can view uncategorized term	252	view_uncategorizedterm
+1042	Can view od m2 variable	253	view_odm2variable
+1043	Can view csp report	215	view_cspreport
+1044	Can view password expiry	214	view_passwordexpiry
+1045	Can view topic	254	view_topic
+1046	Can view log entry	156	view_logentry
+1047	Can view comment	161	view_comment
+1048	Can view comment flag	162	view_commentflag
+1049	Can add id token	281	add_idtoken
+1050	Can change id token	281	change_idtoken
+1051	Can delete id token	281	delete_idtoken
+1052	Can view id token	281	view_idtoken
+1053	Can add AVU	282	add_avu
+1054	Can change AVU	282	change_avu
+1055	Can delete AVU	282	delete_avu
+1056	Can view AVU	282	view_avu
+1057	Can add quota request	283	add_quotarequest
+1058	Can change quota request	283	change_quotarequest
+1059	Can delete quota request	283	delete_quotarequest
+1060	Can view quota request	283	view_quotarequest
+1061	Can add geospatial relation	284	add_geospatialrelation
+1062	Can change geospatial relation	284	change_geospatialrelation
+1063	Can delete geospatial relation	284	delete_geospatialrelation
+1064	Can view geospatial relation	284	view_geospatialrelation
+1065	Can add request community	285	add_requestcommunity
+1066	Can change request community	285	change_requestcommunity
+1067	Can delete request community	285	delete_requestcommunity
+1068	Can view request community	285	view_requestcommunity
+1069	Can add csv file meta data	286	add_csvfilemetadata
+1070	Can change csv file meta data	286	change_csvfilemetadata
+1071	Can delete csv file meta data	286	delete_csvfilemetadata
+1072	Can view csv file meta data	286	view_csvfilemetadata
+1073	Can add csv logical file	287	add_csvlogicalfile
+1074	Can change csv logical file	287	change_csvlogicalfile
+1075	Can delete csv logical file	287	delete_csvlogicalfile
+1076	Can view csv logical file	287	view_csvlogicalfile
+1077	Can add subject area	288	add_subjectarea
+1078	Can change subject area	288	change_subjectarea
+1079	Can delete subject area	288	delete_subjectarea
+1080	Can view subject area	288	view_subjectarea
+1081	Can add test model	289	add_testmodel
+1082	Can change test model	289	change_testmodel
+1083	Can delete test model	289	delete_testmodel
+1084	Can view test model	289	view_testmodel
+1085	Can view post gis geometry columns	13	view_postgisgeometrycolumns
+1086	Can view post gis spatial ref sys	14	view_postgisspatialrefsys
 \.
-
-
---
--- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.auth_permission_id_seq', 884, true);
 
 
 --
@@ -9986,7 +10398,6 @@ SELECT pg_catalog.setval('public.auth_permission_id_seq', 884, true);
 
 COPY public.auth_user (id, password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined) FROM stdin;
 4	pbkdf2_sha256$20000$zWpscL2LEyIq$lU5ALtHtJIeE+GKzxE1g3/y5ING28gAzY0S2CJdUn54=	2017-09-01 18:11:00.078101+00	t	admin	HydroShare	Administrator	admin@example.com	t	t	2016-01-25 19:47:54+00
-5	pbkdf2_sha256$36000$WSw1gHgY7fDm$F8P0mHmvNimp0paOEaJCVyl9nuuJM99eMqwHwXsGatk=	2019-09-30 18:13:23.083531+00	f	asdf	asdf	asdf	asdf@asdf.asdf	f	t	2019-09-30 17:58:17.622678+00
 17	pbkdf2_sha256$36000$KbKKALVOyvFF$rgM+8Wnv1aKT2LFn/RL6Jm2MI8lSY0sFu4bbpPBAv+0=	2019-12-11 20:06:35.837434+00	f	czo_iml	CZO	IML	czoiml@noreply.org	f	t	2019-12-11 18:19:19.603719+00
 7	pbkdf2_sha256$36000$yrCAXSJAFJVn$he/+avTvWYF0aWDtIukaFRvtE2XrNzpEHwC2NCTiaSc=	2019-12-11 18:51:30.831587+00	f	czo_boulder	CZO	Boulder	czoboulder@noreply.org	f	t	2019-09-30 18:17:11.143995+00
 8	pbkdf2_sha256$36000$z1MGjTEjVdN6$QUfaqlxjzcXamiJD1CBsvzHKYwRThnIJmGvWUE1/x3A=	2019-12-11 18:53:53.049402+00	f	czo_eel	CZO	Eel	czoeel@noreply.org	f	t	2019-09-30 18:17:54.553497+00
@@ -9999,6 +10410,7 @@ COPY public.auth_user (id, password, last_login, is_superuser, username, first_n
 15	pbkdf2_sha256$36000$Cnpajji9lyBB$/RkElvxwJoIbRwlP/hbeOSeDKUCEVBry0IU8VGvpJWg=	2019-12-11 19:08:06.306799+00	f	czo_calhoun	CZO	Calhoun	czocal@noreply.org	f	t	2019-09-30 18:23:26.010694+00
 6	pbkdf2_sha256$36000$9XNl8kxBmJJx$GH5oyljtmBqH28icRe8NoBc5MWEgubmBuRmGex1VxE4=	2019-12-11 19:08:57.679021+00	f	czo_national	CZO	National	czonational@noreply.com	f	t	2019-09-30 18:16:28.302142+00
 16	pbkdf2_sha256$36000$ZzdIp9MWeEx8$LIaH51xFoewvpAHuUujbGVVjyUESzgJgrJx+M7e6t9M=	2019-12-11 20:21:26.016073+00	f	czo	CZO	Default	czo@noreply.org	f	t	2019-09-30 18:24:12.689202+00
+5	pbkdf2_sha256$600000$GA2uAMF86bDLYPP0O3gURG$e8NcO1QjLjAnYYQskLzXCLo4+HHE03cSrkDSiFpOk/Y=	2025-10-20 17:39:07.892514+00	f	asdf	asdf	asdf	asdf@asdf.asdf	f	t	2019-09-30 17:58:17.622678+00
 \.
 
 
@@ -10025,20 +10437,6 @@ COPY public.auth_user_groups (id, user_id, group_id) FROM stdin;
 
 
 --
--- Name: auth_user_groups_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.auth_user_groups_id_seq', 15, true);
-
-
---
--- Name: auth_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.auth_user_id_seq', 17, true);
-
-
---
 -- Data for Name: auth_user_user_permissions; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -10047,25 +10445,11 @@ COPY public.auth_user_user_permissions (id, user_id, permission_id) FROM stdin;
 
 
 --
--- Name: auth_user_user_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.auth_user_user_permissions_id_seq', 1, false);
-
-
---
 -- Data for Name: blog_blogcategory; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.blog_blogcategory (id, site_id, title, slug) FROM stdin;
 \.
-
-
---
--- Name: blog_blogcategory_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.blog_blogcategory_id_seq', 1, false);
 
 
 --
@@ -10085,32 +10469,11 @@ COPY public.blog_blogpost_categories (id, blogpost_id, blogcategory_id) FROM std
 
 
 --
--- Name: blog_blogpost_categories_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.blog_blogpost_categories_id_seq', 1, false);
-
-
---
--- Name: blog_blogpost_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.blog_blogpost_id_seq', 1, false);
-
-
---
 -- Data for Name: blog_blogpost_related_posts; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.blog_blogpost_related_posts (id, from_blogpost_id, to_blogpost_id) FROM stdin;
 \.
-
-
---
--- Name: blog_blogpost_related_posts_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.blog_blogpost_related_posts_id_seq', 1, false);
 
 
 --
@@ -10122,25 +10485,11 @@ COPY public.celery_taskmeta (id, task_id, status, result, date_done, traceback, 
 
 
 --
--- Name: celery_taskmeta_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.celery_taskmeta_id_seq', 1, false);
-
-
---
 -- Data for Name: celery_tasksetmeta; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.celery_tasksetmeta (id, taskset_id, result, date_done, hidden) FROM stdin;
 \.
-
-
---
--- Name: celery_tasksetmeta_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.celery_tasksetmeta_id_seq', 1, false);
 
 
 --
@@ -10152,25 +10501,11 @@ COPY public.conf_setting (id, site_id, name, value) FROM stdin;
 
 
 --
--- Name: conf_setting_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.conf_setting_id_seq', 1, false);
-
-
---
 -- Data for Name: core_sitepermission; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.core_sitepermission (id, user_id) FROM stdin;
 \.
-
-
---
--- Name: core_sitepermission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.core_sitepermission_id_seq', 1, false);
 
 
 --
@@ -10182,25 +10517,11 @@ COPY public.core_sitepermission_sites (id, sitepermission_id, site_id) FROM stdi
 
 
 --
--- Name: core_sitepermission_sites_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.core_sitepermission_sites_id_seq', 1, false);
-
-
---
 -- Data for Name: corsheaders_corsmodel; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.corsheaders_corsmodel (id, cors) FROM stdin;
 \.
-
-
---
--- Name: corsheaders_corsmodel_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.corsheaders_corsmodel_id_seq', 1, false);
 
 
 --
@@ -10231,13 +10552,6 @@ COPY public.django_admin_log (id, action_time, object_id, object_repr, action_fl
 
 
 --
--- Name: django_admin_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.django_admin_log_id_seq', 49, true);
-
-
---
 -- Data for Name: django_comment_flags; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -10246,25 +10560,11 @@ COPY public.django_comment_flags (id, user_id, comment_id, flag, flag_date) FROM
 
 
 --
--- Name: django_comment_flags_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.django_comment_flags_id_seq', 1, false);
-
-
---
 -- Data for Name: django_comments; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.django_comments (id, content_type_id, object_pk, site_id, user_id, user_name, user_email, user_url, comment, submit_date, ip_address, is_public, is_removed) FROM stdin;
 \.
-
-
---
--- Name: django_comments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.django_comments_id_seq', 1, false);
 
 
 --
@@ -10286,7 +10586,6 @@ COPY public.django_content_type (id, app_label, model) FROM stdin;
 12	sites	site
 13	gis	postgisgeometrycolumns
 14	gis	postgisspatialrefsys
-15	django_irods	rodsenvironment
 16	theme	siteconfiguration
 17	theme	homepage
 18	theme	iconbox
@@ -10551,14 +10850,17 @@ COPY public.django_content_type (id, app_label, model) FROM stdin;
 278	hs_file_types	timeseriesresult
 279	hs_file_types	utcoffset
 280	hs_file_types	variabletimeseries
+15	django_s3	rodsenvironment
+281	oauth2_provider	idtoken
+282	django_s3	avu
+283	theme	quotarequest
+284	hs_core	geospatialrelation
+285	hs_access_control	requestcommunity
+286	hs_file_types	csvfilemetadata
+287	hs_file_types	csvlogicalfile
+288	hs_dictionary	subjectarea
+289	db	testmodel
 \.
-
-
---
--- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.django_content_type_id_seq', 280, true);
 
 
 --
@@ -10570,25 +10872,11 @@ COPY public.django_docker_processes_containeroverrides (id, name, command, worki
 
 
 --
--- Name: django_docker_processes_containeroverrides_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.django_docker_processes_containeroverrides_id_seq', 1, false);
-
-
---
 -- Data for Name: django_docker_processes_dockerenvvar; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.django_docker_processes_dockerenvvar (id, name, value, docker_profile_id) FROM stdin;
 \.
-
-
---
--- Name: django_docker_processes_dockerenvvar_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.django_docker_processes_dockerenvvar_id_seq', 1, false);
 
 
 --
@@ -10600,25 +10888,11 @@ COPY public.django_docker_processes_dockerlink (id, link_name, docker_overrides_
 
 
 --
--- Name: django_docker_processes_dockerlink_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.django_docker_processes_dockerlink_id_seq', 1, false);
-
-
---
 -- Data for Name: django_docker_processes_dockerport; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.django_docker_processes_dockerport (id, host, container, docker_profile_id) FROM stdin;
 \.
-
-
---
--- Name: django_docker_processes_dockerport_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.django_docker_processes_dockerport_id_seq', 1, false);
 
 
 --
@@ -10630,25 +10904,11 @@ COPY public.django_docker_processes_dockerprocess (id, container_id, token, logs
 
 
 --
--- Name: django_docker_processes_dockerprocess_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.django_docker_processes_dockerprocess_id_seq', 1, false);
-
-
---
 -- Data for Name: django_docker_processes_dockerprofile; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.django_docker_processes_dockerprofile (id, name, git_repository, git_use_submodules, git_username, git_password, commit_id, branch) FROM stdin;
 \.
-
-
---
--- Name: django_docker_processes_dockerprofile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.django_docker_processes_dockerprofile_id_seq', 1, false);
 
 
 --
@@ -10660,25 +10920,11 @@ COPY public.django_docker_processes_dockervolume (id, host, container, readonly,
 
 
 --
--- Name: django_docker_processes_dockervolume_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.django_docker_processes_dockervolume_id_seq', 1, false);
-
-
---
 -- Data for Name: django_docker_processes_overrideenvvar; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.django_docker_processes_overrideenvvar (id, name, value, container_overrides_id) FROM stdin;
 \.
-
-
---
--- Name: django_docker_processes_overrideenvvar_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.django_docker_processes_overrideenvvar_id_seq', 1, false);
 
 
 --
@@ -10690,25 +10936,11 @@ COPY public.django_docker_processes_overridelink (id, link_name, container_overr
 
 
 --
--- Name: django_docker_processes_overridelink_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.django_docker_processes_overridelink_id_seq', 1, false);
-
-
---
 -- Data for Name: django_docker_processes_overrideport; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.django_docker_processes_overrideport (id, host, container, container_overrides_id) FROM stdin;
 \.
-
-
---
--- Name: django_docker_processes_overrideport_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.django_docker_processes_overrideport_id_seq', 1, false);
 
 
 --
@@ -10720,28 +10952,6 @@ COPY public.django_docker_processes_overridevolume (id, host, container, contain
 
 
 --
--- Name: django_docker_processes_overridevolume_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.django_docker_processes_overridevolume_id_seq', 1, false);
-
-
---
--- Data for Name: django_irods_rodsenvironment; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.django_irods_rodsenvironment (id, host, port, def_res, home_coll, cwd, username, zone, auth, owner_id) FROM stdin;
-\.
-
-
---
--- Name: django_irods_rodsenvironment_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.django_irods_rodsenvironment_id_seq', 1, false);
-
-
---
 -- Data for Name: django_migrations; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -10750,7 +10960,6 @@ COPY public.django_migrations (id, app, name, applied) FROM stdin;
 2	auth	0001_initial	2016-01-25 19:11:57.121386+00
 3	admin	0001_initial	2016-01-25 19:11:57.247222+00
 4	django_docker_processes	0001_initial	2016-01-25 19:11:58.730572+00
-5	django_irods	0001_initial	2016-01-25 19:11:58.841429+00
 6	ga_ows	0001_initial	2016-01-25 19:11:59.076346+00
 7	ga_resources	0001_initial	2016-01-25 19:11:59.934826+00
 8	hs_core	0001_initial	2016-01-25 19:12:02.460395+00
@@ -11006,7 +11215,6 @@ COPY public.django_migrations (id, app, name, applied) FROM stdin;
 258	theme	0013_auto_20180222_1700	2019-09-30 17:50:57.00372+00
 259	theme	0014_comma_semicolon_delimiter	2019-09-30 17:50:57.220111+00
 260	hs_access_control	0025_auto_20190924_1622	2019-10-01 18:20:37.61755+00
-261	django_irods	0002_auto_20200603_2110	2022-09-12 14:34:00.17392+00
 262	hs_core	0046_auto_20191104_2035	2022-09-12 14:34:00.556444+00
 263	hs_core	0047_auto_20200512_1509	2022-09-12 14:34:00.836919+00
 264	hs_core	0048_auto_20200603_2110	2022-09-12 14:34:01.914728+00
@@ -11067,14 +11275,103 @@ COPY public.django_migrations (id, app, name, applied) FROM stdin;
 319	theme	0018_auto_20220217_2304	2022-09-12 14:34:36.752301+00
 320	theme	0019_auto_20220510_1213	2022-09-12 14:34:36.850045+00
 321	thumbnail	0001_initial	2022-09-12 14:34:36.925219+00
+5	django_s3	0001_initial	2016-01-25 19:11:58.841429+00
+261	django_s3	0002_auto_20200603_2110	2022-09-12 14:34:00.17392+00
+322	admin	0003_logentry_add_action_flag_choices	2025-10-20 17:31:48.114+00
+323	auth	0009_alter_user_last_name_max_length	2025-10-20 17:31:48.371291+00
+324	auth	0010_alter_group_name_max_length	2025-10-20 17:31:48.688882+00
+325	auth	0011_update_proxy_permissions	2025-10-20 17:31:49.064982+00
+326	auth	0012_alter_user_first_name_max_length	2025-10-20 17:31:49.303268+00
+327	health_check_db	0001_initial	2025-10-20 17:31:49.407079+00
+328	django_comments	0004_add_object_pk_is_removed_index	2025-10-20 17:31:49.846484+00
+329	django_s3	0003_auto_20240809_1412	2025-10-20 17:31:49.908546+00
+330	django_s3	0004_delete_rodsenvironment	2025-10-20 17:31:49.943179+00
+331	django_s3	0005_alter_avu_attval	2025-10-20 17:31:49.993481+00
+332	hs_access_control	0033_auto_20211018_1440	2025-10-20 17:31:51.225194+00
+333	hs_access_control	0034_auto_20211018_1707	2025-10-20 17:31:52.544073+00
+334	hs_access_control	0035_auto_20211025_1948	2025-10-20 17:31:52.816515+00
+335	hs_access_control	0033_auto_20211118_1919	2025-10-20 17:31:52.917768+00
+336	hs_access_control	0036_merge_20220401_2241	2025-10-20 17:31:52.9851+00
+337	hs_access_control	0037_auto_20220401_2243	2025-10-20 17:31:53.049158+00
+338	hs_access_control	0038_merge_20220403_1230	2025-10-20 17:31:53.066222+00
+339	hs_access_control	0039_community_email	2025-10-20 17:31:53.116558+00
+340	hs_access_control	0040_community_url	2025-10-20 17:31:53.164197+00
+341	hs_access_control	0041_community_active	2025-10-20 17:31:53.207109+00
+342	hs_access_control	0042_communityrequest	2025-10-20 17:31:53.447459+00
+343	hs_access_control	0043_auto_20220520_2047	2025-10-20 17:31:53.648237+00
+344	hs_access_control	0037_resourceaccess_review_pending	2025-10-20 17:31:53.745047+00
+345	hs_access_control	0044_merge_20220729_2007	2025-10-20 17:31:53.772865+00
+346	hs_access_control	0045_auto_20221103_0330	2025-10-20 17:31:54.561977+00
+347	hs_access_control	0046_requestcommunity_cancelled	2025-10-20 17:31:54.64135+00
+348	hs_core	0065_auto_20221004_2012	2025-10-20 17:31:54.721193+00
+349	hs_core	0065_auto_20221004_1707	2025-10-20 17:31:55.306406+00
+350	hs_core	0066_merge_20221014_1428	2025-10-20 17:31:55.324262+00
+351	hs_core	0065_auto_20220922_1352	2025-10-20 17:31:57.503617+00
+352	hs_core	0067_merge_20221104_1342	2025-10-20 17:31:57.572051+00
+353	hs_core	0068_alter_date_type	2025-10-20 17:31:57.717517+00
+354	hs_core	0067_auto_20221107_1513	2025-10-20 17:31:58.495083+00
+355	hs_core	0069_merge_0067_auto_20221107_1513_0068_alter_date_type	2025-10-20 17:31:58.547733+00
+356	hs_core	0070_delete_genericresource	2025-10-20 17:31:58.57656+00
+357	hs_core	0071_alter_date_type	2025-10-20 17:31:58.801923+00
+358	hs_core	0072_baseresource_repaired	2025-10-20 17:31:58.987661+00
+359	hs_core	0073_baseresource_checked	2025-10-20 17:31:59.192277+00
+360	hs_core	0074_auto_20230905_1959	2025-10-20 17:31:59.453992+00
+361	hs_core	0075_remove_duplicate_res_files	2025-10-20 17:31:59.748158+00
+362	hs_core	0076_resource_file_unique_constraint	2025-10-20 17:31:59.945155+00
+363	hs_core	0077_baseresource_spam_allowlisted	2025-10-20 17:32:00.257054+00
+364	hs_core	0078_alter_description_abstract	2025-10-20 17:32:00.433883+00
+365	hs_core	0079_baseresource_bag_last_downloaded	2025-10-20 17:32:01.094994+00
+366	hs_core	0080_baseresource_quota_holder	2025-10-20 17:32:01.394155+00
+367	hs_core	0081_alter_baseresource_quota_holder	2025-10-20 17:32:01.626675+00
+368	hs_core	0080_resourcefile_filesize_cache_updated	2025-10-20 17:32:01.747657+00
+369	hs_core	0082_merge_20240509_1646	2025-10-20 17:32:01.789354+00
+370	hs_core	0083_auto_20240702_2038	2025-10-20 17:32:02.563503+00
+371	hs_core	0084_remove_federation_from_db	2025-10-20 17:32:02.6453+00
+372	hs_core	0085_alter_baseresource_creator_and_more	2025-10-20 17:32:10.181518+00
+373	hs_dictionary	0006_subjectarea	2025-10-20 17:32:10.209709+00
+374	hs_file_types	0019_auto_20220922_1356	2025-10-20 17:32:12.234503+00
+375	hs_file_types	0020_csvfilemetadata_csvlogicalfile	2025-10-20 17:32:12.590163+00
+376	hs_file_types	0021_alter_bandinformation_content_type_and_more	2025-10-20 17:32:17.164551+00
+377	hs_tools_resource	0022_alter_apphomepageurl_content_type_and_more	2025-10-20 17:32:22.553557+00
+378	oauth2_provider	0002_auto_20190406_1805	2025-10-20 17:32:23.17353+00
+379	oauth2_provider	0003_auto_20201211_1314	2025-10-20 17:32:23.314001+00
+380	oauth2_provider	0004_auto_20200902_2022	2025-10-20 17:32:24.57139+00
+381	oauth2_provider	0005_auto_20211222_2352	2025-10-20 17:32:26.344916+00
+382	oauth2_provider	0006_alter_application_client_secret	2025-10-20 17:32:26.91838+00
+383	oauth2_provider	0007_application_post_logout_redirect_uris	2025-10-20 17:32:27.067199+00
+384	oauth2_provider	0008_alter_accesstoken_token	2025-10-20 17:32:27.266472+00
+385	oauth2_provider	0009_add_hash_client_secret	2025-10-20 17:32:27.381304+00
+386	oauth2_provider	0010_application_allowed_origins	2025-10-20 17:32:27.676365+00
+387	oauth2_provider	0011_refreshtoken_token_family	2025-10-20 17:32:27.814231+00
+388	oauth2_provider	0012_add_token_checksum	2025-10-20 17:32:28.399615+00
+389	redirects	0002_alter_redirect_new_path_help_text	2025-10-20 17:32:28.79476+00
+390	robots	0002_alter_id_fields	2025-10-20 17:32:29.686703+00
+391	security	0002_convert_pass_expiry_user_to_one2one	2025-10-20 17:32:29.948275+00
+392	theme	0020_auto_20220922_1400	2025-10-20 17:32:30.096226+00
+393	theme	0021_auto_20221229_2200	2025-10-20 17:32:30.26507+00
+394	theme	0022_alter_userprofile_subject_areas	2025-10-20 17:32:30.373043+00
+395	theme	0023_alter_userprofile_subject_areas	2025-10-20 17:32:32.299842+00
+396	theme	0024_quotamessage_published_resource_percent	2025-10-20 17:32:32.355078+00
+397	theme	0025_quotarequest	2025-10-20 17:32:32.708045+00
+398	theme	0026_auto_20231106_0031	2025-10-20 17:32:32.891848+00
+399	theme	0027_remove_quotarequest_org_info	2025-10-20 17:32:33.276448+00
+400	theme	0028_auto_20240104_2002	2025-10-20 17:32:33.479056+00
+401	theme	0029_auto_20240118_1956	2025-10-20 17:32:33.839758+00
+402	theme	0030_auto_20240125_1422	2025-10-20 17:32:34.104709+00
+403	theme	0032_alter_userquota_grace_period_ends	2025-10-20 17:32:34.244585+00
+404	theme	0033_auto_20240201_1947	2025-10-20 17:32:34.426153+00
+405	theme	0034_auto_20240312_1449	2025-10-20 17:32:34.546358+00
+406	theme	0035_remove_userquota_data_zone_value	2025-10-20 17:32:34.70778+00
+407	theme	0036_auto_20240702_1847	2025-10-20 17:32:35.20731+00
+408	theme	0037_remove_userprofile_create_irods_user_account	2025-10-20 17:32:35.221308+00
+409	theme	0037_remove_userquota_and_userprofile_from_db	2025-10-20 17:32:35.258012+00
+410	theme	0038_userprofile__bucket_name	2025-10-20 17:32:35.361714+00
+411	theme	0039_alter_userprofile__bucket_name	2025-10-20 17:32:35.498997+00
+412	theme	0040_remove_userquota_allocated_value_and_more	2025-10-20 17:32:35.807944+00
+413	theme	0041_remove_quotamessage_enforce_quota_and_more	2025-10-20 17:32:35.984843+00
+414	theme	0036_auto_20240702_1847_squashed_0037_remove_userprofile_create_irods_user_account	2025-10-20 17:32:36.438328+00
+415	db	0001_initial	2025-10-20 17:32:36.460087+00
 \.
-
-
---
--- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.django_migrations_id_seq', 321, true);
 
 
 --
@@ -11088,10 +11385,19 @@ COPY public.django_redirect (id, site_id, old_path, new_path) FROM stdin;
 
 
 --
--- Name: django_redirect_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Data for Name: django_s3_avu; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.django_redirect_id_seq', 2, true);
+COPY public.django_s3_avu (id, name, "attName", "attVal") FROM stdin;
+1	5811e1e045e44c92b91bf9127b54e768	isPublic	false
+2	5811e1e045e44c92b91bf9127b54e768	resourceType	CompositeResource
+3	5811e1e045e44c92b91bf9127b54e768	bag_modified	true
+4	5811e1e045e44c92b91bf9127b54e768	metadata_dirty	true
+5	e87139446c944148be6d99d0d9b8f25b	isPublic	false
+6	e87139446c944148be6d99d0d9b8f25b	resourceType	CompositeResource
+7	d7b526e24f7e449098b428ae9363f514	metadata_dirty	false
+8	d7b526e24f7e449098b428ae9363f514	bag_modified	true
+\.
 
 
 --
@@ -11112,6 +11418,7 @@ ai5pypf6ufbtf1wobzovk50smkh0zt7x	YzgxN2U1MTQ3Y2UzZGJiNWUwOGNkOWVhYjQ4YzI3ZGU2MzA
 rnct33ybltwnp198u98nduk30s46zh7k	Y2IwYjcyMzQ4MmJkMGE5ODM4NTU2OWM5OTFhZjJlNDU1ZGIxNDQ1Mjp7ImhzX3RyYWNraW5nX2lkIjoiZXlKcFpDSTZNemQ5OjFpRk1rSjpsUkRHaHdhUzc2X3RjR2hEX3dySmhjSEpMU2sifQ==	2019-10-15 18:19:35.552835+00
 k8bwx8kmurevqximm9pj97fhxxcor7ew	YWNkOWMwY2FlNDhmMjdmN2MwNDJiZmNhNDEwN2EyYzZlNzRlMDdhODp7ImhzX3RyYWNraW5nX2lkIjoiZXlKcFpDSTZOVE45OjFpZjdNZDp5Qy1fQURfWHd3RXQ2ekQzYVZqT2U5ZHM3amcifQ==	2019-12-25 19:09:35.295893+00
 roqyglg95asvcqghfwrzd8zxz36p17kj	NTc4ZTU1ZTk5YWZjZDQyM2FiNWQ2YmEyOTJjZTNjOTg0MzU1NTI3Zjp7ImhzX3RyYWNraW5nX2lkIjoiZXlKcFpDSTZOVFo5OjFpZjhVYTpIdkhOWTdvb2h6ZnRvT3hSZERvSWxSNmFndFEifQ==	2019-12-25 20:21:52.612063+00
+jjs6sh08bxstswcie4oe7h5w580mzard	.eJxVjckOgjAABf-lZ0Nsoa1wcyWayEGIMV6abggugFBUMP67uB28vpnMu4OkYqbk8pBmO5Yq4AHdLIrteE6CSLkevAzNeePlzjXAmNHcDxrTn4RtHEXFhB6nxLSr0I_Xg5m_n97KIlqCHmC8NgmrK11-ivh_E92bzl7gpNuWZ2mmLZmX2norX1pZyx8cff2_SMKrpCsoCCGWiFMuNJUxJ46UOFYCEpdw2xZQIIQUgZRIrLDu2x2VA2SLTqMOguDxBNjhVf8:1vAtrM:yKbkIgZhU6WwREM6_GkkaJCYWA2v01tJDFV7yqvlHu8	2025-11-03 17:39:52.063323+00
 \.
 
 
@@ -11125,25 +11432,11 @@ COPY public.django_site (id, domain, name) FROM stdin;
 
 
 --
--- Name: django_site_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.django_site_id_seq', 1, true);
-
-
---
 -- Data for Name: djcelery_crontabschedule; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.djcelery_crontabschedule (id, minute, hour, day_of_week, day_of_month, month_of_year) FROM stdin;
 \.
-
-
---
--- Name: djcelery_crontabschedule_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.djcelery_crontabschedule_id_seq', 1, false);
 
 
 --
@@ -11155,25 +11448,11 @@ COPY public.djcelery_intervalschedule (id, every, period) FROM stdin;
 
 
 --
--- Name: djcelery_intervalschedule_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.djcelery_intervalschedule_id_seq', 1, false);
-
-
---
 -- Data for Name: djcelery_periodictask; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.djcelery_periodictask (id, name, task, interval_id, crontab_id, args, kwargs, queue, exchange, routing_key, expires, enabled, last_run_at, total_run_count, date_changed, description) FROM stdin;
 \.
-
-
---
--- Name: djcelery_periodictask_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.djcelery_periodictask_id_seq', 1, false);
 
 
 --
@@ -11193,25 +11472,11 @@ COPY public.djcelery_taskstate (id, state, task_id, name, tstamp, args, kwargs, 
 
 
 --
--- Name: djcelery_taskstate_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.djcelery_taskstate_id_seq', 1, false);
-
-
---
 -- Data for Name: djcelery_workerstate; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.djcelery_workerstate (id, hostname, last_heartbeat) FROM stdin;
 \.
-
-
---
--- Name: djcelery_workerstate_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.djcelery_workerstate_id_seq', 1, false);
 
 
 --
@@ -11223,25 +11488,11 @@ COPY public.forms_field (id, _order, form_id, label, field_type, required, visib
 
 
 --
--- Name: forms_field_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.forms_field_id_seq', 1, false);
-
-
---
 -- Data for Name: forms_fieldentry; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.forms_fieldentry (id, entry_id, field_id, value) FROM stdin;
 \.
-
-
---
--- Name: forms_fieldentry_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.forms_fieldentry_id_seq', 1, false);
 
 
 --
@@ -11262,25 +11513,11 @@ COPY public.forms_formentry (id, form_id, entry_time) FROM stdin;
 
 
 --
--- Name: forms_formentry_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.forms_formentry_id_seq', 1, false);
-
-
---
 -- Data for Name: ga_ows_ogrdataset; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.ga_ows_ogrdataset (id, location, checksum, name, human_name, extent, collection_id) FROM stdin;
 \.
-
-
---
--- Name: ga_ows_ogrdataset_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.ga_ows_ogrdataset_id_seq', 1, false);
 
 
 --
@@ -11292,25 +11529,11 @@ COPY public.ga_ows_ogrdatasetcollection (id, name) FROM stdin;
 
 
 --
--- Name: ga_ows_ogrdatasetcollection_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.ga_ows_ogrdatasetcollection_id_seq', 1, false);
-
-
---
 -- Data for Name: ga_ows_ogrlayer; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.ga_ows_ogrlayer (id, name, human_name, extent, dataset_id) FROM stdin;
 \.
-
-
---
--- Name: ga_ows_ogrlayer_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.ga_ows_ogrlayer_id_seq', 1, false);
 
 
 --
@@ -11338,13 +11561,6 @@ COPY public.ga_resources_orderedresource (id, ordering, data_resource_id, resour
 
 
 --
--- Name: ga_resources_orderedresource_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.ga_resources_orderedresource_id_seq', 1, false);
-
-
---
 -- Data for Name: ga_resources_relatedresource; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -11366,13 +11582,6 @@ COPY public.ga_resources_renderedlayer (page_ptr_id, content, default_class, pub
 
 COPY public.ga_resources_renderedlayer_styles (id, renderedlayer_id, style_id) FROM stdin;
 \.
-
-
---
--- Name: ga_resources_renderedlayer_styles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.ga_resources_renderedlayer_styles_id_seq', 1, false);
 
 
 --
@@ -11408,25 +11617,11 @@ COPY public.galleries_galleryimage (id, _order, gallery_id, file, description) F
 
 
 --
--- Name: galleries_galleryimage_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.galleries_galleryimage_id_seq', 1, false);
-
-
---
 -- Data for Name: generic_assignedkeyword; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.generic_assignedkeyword (id, _order, keyword_id, content_type_id, object_pk) FROM stdin;
 \.
-
-
---
--- Name: generic_assignedkeyword_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.generic_assignedkeyword_id_seq', 1, false);
 
 
 --
@@ -11438,25 +11633,11 @@ COPY public.generic_keyword (id, site_id, title, slug) FROM stdin;
 
 
 --
--- Name: generic_keyword_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.generic_keyword_id_seq', 1, false);
-
-
---
 -- Data for Name: generic_rating; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.generic_rating (id, value, rating_date, content_type_id, object_pk, user_id) FROM stdin;
 \.
-
-
---
--- Name: generic_rating_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.generic_rating_id_seq', 1, false);
 
 
 --
@@ -11468,19 +11649,20 @@ COPY public.generic_threadedcomment (comment_ptr_id, rating_count, rating_sum, r
 
 
 --
--- Data for Name: hs_access_control_community; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: health_check_db_testmodel; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.hs_access_control_community (id, name, description, purpose, auto_approve, date_created, picture) FROM stdin;
-1	CZO National Community	No description	\N	f	2019-09-30 18:58:41.754407+00	
+COPY public.health_check_db_testmodel (id, title) FROM stdin;
 \.
 
 
 --
--- Name: hs_access_control_community_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Data for Name: hs_access_control_community; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.hs_access_control_community_id_seq', 1, true);
+COPY public.hs_access_control_community (id, name, description, purpose, auto_approve_group, date_created, picture, closed, email, url, active, auto_approve_resource, banner) FROM stdin;
+1	CZO National Community	No description	\N	f	2019-09-30 18:58:41.754407+00		t	\N	\N	t	f	\N
+\.
 
 
 --
@@ -11492,25 +11674,11 @@ COPY public.hs_access_control_communityresourceprivilege (id, privilege, start, 
 
 
 --
--- Name: hs_access_control_communityresourceprivilege_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_access_control_communityresourceprivilege_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_access_control_communityresourceprovenance; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_access_control_communityresourceprovenance (id, privilege, start, undone, community_id, grantor_id, resource_id, exhibit) FROM stdin;
 \.
-
-
---
--- Name: hs_access_control_communityresourceprovenance_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_access_control_communityresourceprovenance_id_seq', 1, false);
 
 
 --
@@ -11522,37 +11690,23 @@ COPY public.hs_access_control_feature (id, feature, enabled, user_id) FROM stdin
 
 
 --
--- Name: hs_access_control_feature_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_access_control_feature_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_access_control_groupaccess; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.hs_access_control_groupaccess (id, active, discoverable, public, shareable, group_id, date_created, description, picture, purpose, auto_approve, requires_explanation) FROM stdin;
-1	f	t	t	t	2	2019-09-30 17:58:37.339406+00	test			f	f
-12	t	t	t	t	13	2019-12-11 18:21:22.541752+00	CZO			f	f
-2	t	t	t	t	3	2019-09-30 18:40:46.766027+00	CZO			f	f
-3	t	t	t	t	4	2019-09-30 18:41:24.748712+00	CZO			f	f
-4	t	t	t	t	5	2019-09-30 18:42:01.579278+00	CZO			f	f
-5	t	t	t	t	6	2019-09-30 18:42:35.504115+00	CZO			f	f
-6	t	t	t	t	7	2019-09-30 18:43:16.453598+00	CZO			f	f
-7	t	t	t	t	8	2019-09-30 18:44:19.811601+00	CZO			f	f
-8	t	t	t	t	9	2019-09-30 18:45:36.392849+00	CZO			f	f
-9	t	t	t	t	10	2019-09-30 18:50:37.898332+00	CZO			f	f
-10	t	t	t	t	11	2019-09-30 18:51:05.912584+00	CZO			f	f
-11	t	t	t	t	12	2019-10-01 18:19:20.888702+00	CZO			f	f
+COPY public.hs_access_control_groupaccess (id, active, discoverable, public, shareable, group_id, date_created, description, picture, purpose, auto_approve, requires_explanation, email, url) FROM stdin;
+1	f	t	t	t	2	2019-09-30 17:58:37.339406+00	test			f	f	\N	\N
+12	t	t	t	t	13	2019-12-11 18:21:22.541752+00	CZO			f	f	\N	\N
+2	t	t	t	t	3	2019-09-30 18:40:46.766027+00	CZO			f	f	\N	\N
+3	t	t	t	t	4	2019-09-30 18:41:24.748712+00	CZO			f	f	\N	\N
+4	t	t	t	t	5	2019-09-30 18:42:01.579278+00	CZO			f	f	\N	\N
+5	t	t	t	t	6	2019-09-30 18:42:35.504115+00	CZO			f	f	\N	\N
+6	t	t	t	t	7	2019-09-30 18:43:16.453598+00	CZO			f	f	\N	\N
+7	t	t	t	t	8	2019-09-30 18:44:19.811601+00	CZO			f	f	\N	\N
+8	t	t	t	t	9	2019-09-30 18:45:36.392849+00	CZO			f	f	\N	\N
+9	t	t	t	t	10	2019-09-30 18:50:37.898332+00	CZO			f	f	\N	\N
+10	t	t	t	t	11	2019-09-30 18:51:05.912584+00	CZO			f	f	\N	\N
+11	t	t	t	t	12	2019-10-01 18:19:20.888702+00	CZO			f	f	\N	\N
 \.
-
-
---
--- Name: hs_access_control_groupaccess_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_access_control_groupaccess_id_seq', 12, true);
 
 
 --
@@ -11575,13 +11729,6 @@ COPY public.hs_access_control_groupcommunityprivilege (id, privilege, start, com
 
 
 --
--- Name: hs_access_control_groupcommunityprivilege_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_access_control_groupcommunityprivilege_id_seq', 11, true);
-
-
---
 -- Data for Name: hs_access_control_groupcommunityprovenance; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -11601,25 +11748,11 @@ COPY public.hs_access_control_groupcommunityprovenance (id, privilege, start, un
 
 
 --
--- Name: hs_access_control_groupcommunityprovenance_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_access_control_groupcommunityprovenance_id_seq', 11, true);
-
-
---
 -- Data for Name: hs_access_control_groupcommunityrequest; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.hs_access_control_groupcommunityrequest (id, privilege, redeemed, approved, community_id, community_owner_id, group_id, group_owner_id, when_requested, when_responded) FROM stdin;
+COPY public.hs_access_control_groupcommunityrequest (id, privilege, redeemed, approved, community_id, community_owner_id, group_id, group_owner_id, when_community, when_group) FROM stdin;
 \.
-
-
---
--- Name: hs_access_control_groupcommunityrequest_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_access_control_groupcommunityrequest_id_seq', 1, false);
 
 
 --
@@ -11631,25 +11764,11 @@ COPY public.hs_access_control_groupmembershiprequest (id, date_requested, group_
 
 
 --
--- Name: hs_access_control_groupmembershiprequest_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_access_control_groupmembershiprequest_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_access_control_groupresourceprivilege; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_access_control_groupresourceprivilege (id, privilege, start, grantor_id, group_id, resource_id, exhibit) FROM stdin;
 \.
-
-
---
--- Name: hs_access_control_groupresourceprivilege_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_access_control_groupresourceprivilege_id_seq', 1, false);
 
 
 --
@@ -11661,25 +11780,20 @@ COPY public.hs_access_control_groupresourceprovenance (id, privilege, start, gra
 
 
 --
--- Name: hs_access_control_groupresourceprovenance_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Data for Name: hs_access_control_requestcommunity; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.hs_access_control_groupresourceprovenance_id_seq', 1, false);
+COPY public.hs_access_control_requestcommunity (id, date_requested, date_processed, pending_approval, declined, decline_reason, community_to_approve_id, requested_by_id, cancelled) FROM stdin;
+\.
 
 
 --
 -- Data for Name: hs_access_control_resourceaccess; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.hs_access_control_resourceaccess (id, active, discoverable, public, shareable, published, immutable, resource_id, require_download_agreement, allow_private_sharing) FROM stdin;
+COPY public.hs_access_control_resourceaccess (id, active, discoverable, public, shareable, published, immutable, resource_id, require_download_agreement, allow_private_sharing, review_pending) FROM stdin;
+1	t	f	f	t	f	f	16	f	f	f
 \.
-
-
---
--- Name: hs_access_control_resourceaccess_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_access_control_resourceaccess_id_seq', 1, false);
 
 
 --
@@ -11705,13 +11819,6 @@ COPY public.hs_access_control_useraccess (id, user_id) FROM stdin;
 
 
 --
--- Name: hs_access_control_useraccess_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_access_control_useraccess_id_seq', 14, true);
-
-
---
 -- Data for Name: hs_access_control_usercommunityprivilege; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -11722,13 +11829,6 @@ COPY public.hs_access_control_usercommunityprivilege (id, privilege, start, comm
 
 
 --
--- Name: hs_access_control_usercommunityprivilege_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_access_control_usercommunityprivilege_id_seq', 2, true);
-
-
---
 -- Data for Name: hs_access_control_usercommunityprovenance; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -11736,13 +11836,6 @@ COPY public.hs_access_control_usercommunityprovenance (id, privilege, start, und
 1	1	2019-09-30 18:58:41.783727+00	f	1	4	4	f
 2	1	2019-12-11 19:11:08.764307+00	f	1	6	6	f
 \.
-
-
---
--- Name: hs_access_control_usercommunityprovenance_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_access_control_usercommunityprovenance_id_seq', 2, true);
 
 
 --
@@ -11766,13 +11859,6 @@ COPY public.hs_access_control_usergroupprivilege (id, privilege, start, grantor_
 
 
 --
--- Name: hs_access_control_usergroupprivilege_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_access_control_usergroupprivilege_id_seq', 12, true);
-
-
---
 -- Data for Name: hs_access_control_usergroupprovenance; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -11793,25 +11879,12 @@ COPY public.hs_access_control_usergroupprovenance (id, privilege, start, grantor
 
 
 --
--- Name: hs_access_control_usergroupprovenance_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_access_control_usergroupprovenance_id_seq', 12, true);
-
-
---
 -- Data for Name: hs_access_control_userresourceprivilege; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_access_control_userresourceprivilege (id, privilege, start, grantor_id, resource_id, user_id, exhibit) FROM stdin;
+1	1	2025-10-20 17:39:21.953491+00	5	16	5	f
 \.
-
-
---
--- Name: hs_access_control_userresourceprivilege_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_access_control_userresourceprivilege_id_seq', 1, false);
 
 
 --
@@ -11819,70 +11892,8 @@ SELECT pg_catalog.setval('public.hs_access_control_userresourceprivilege_id_seq'
 --
 
 COPY public.hs_access_control_userresourceprovenance (id, privilege, start, grantor_id, resource_id, user_id, undone, exhibit) FROM stdin;
+1	1	2025-10-20 17:39:21.964949+00	5	16	5	f	f
 \.
-
-
---
--- Name: hs_access_control_userresourceprovenance_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_access_control_userresourceprovenance_id_seq', 1, false);
-
-
---
--- Name: hs_app_netCDF_originalcoverage_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public."hs_app_netCDF_originalcoverage_id_seq"', 1, false);
-
-
---
--- Name: hs_app_netCDF_variable_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public."hs_app_netCDF_variable_id_seq"', 1, false);
-
-
---
--- Name: hs_app_timeseries_method_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_app_timeseries_method_id_seq', 1, false);
-
-
---
--- Name: hs_app_timeseries_processinglevel_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_app_timeseries_processinglevel_id_seq', 1, false);
-
-
---
--- Name: hs_app_timeseries_site_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_app_timeseries_site_id_seq', 1, false);
-
-
---
--- Name: hs_app_timeseries_timeseriesresult_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_app_timeseries_timeseriesresult_id_seq', 1, false);
-
-
---
--- Name: hs_app_timeseries_utcoffset_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_app_timeseries_utcoffset_id_seq', 1, false);
-
-
---
--- Name: hs_app_timeseries_variable_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_app_timeseries_variable_id_seq', 1, false);
 
 
 --
@@ -11891,20 +11902,6 @@ SELECT pg_catalog.setval('public.hs_app_timeseries_variable_id_seq', 1, false);
 
 COPY public.hs_collection_resource_collectiondeletedresource (id, resource_title, date_deleted, resource_id, resource_type, collection_id, deleted_by_id) FROM stdin;
 \.
-
-
---
--- Name: hs_collection_resource_collectiondeletedresource_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_collection_resource_collectiondeletedresource_id_seq', 1, false);
-
-
---
--- Name: hs_collection_resource_collectiondeletedresource_resourc_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_collection_resource_collectiondeletedresource_resourc_id_seq', 1, false);
 
 
 --
@@ -11999,13 +11996,6 @@ COPY public.hs_communities_topic (id, name) FROM stdin;
 
 
 --
--- Name: hs_communities_topic_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_communities_topic_id_seq', 75, true);
-
-
---
 -- Data for Name: hs_core_citation; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -12014,25 +12004,11 @@ COPY public.hs_core_citation (id, object_id, value, content_type_id) FROM stdin;
 
 
 --
--- Name: hs_core_citation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_core_citation_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_core_contributor; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.hs_core_contributor (id, object_id, name, organization, email, address, phone, homepage, content_type_id, identifiers, hydroshare_user_id) FROM stdin;
+COPY public.hs_core_contributor (id, object_id, name, organization, email, address, phone, homepage, content_type_id, identifiers, hydroshare_user_id, is_active_user) FROM stdin;
 \.
-
-
---
--- Name: hs_core_contributor_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_core_contributor_id_seq', 1, false);
 
 
 --
@@ -12040,14 +12016,8 @@ SELECT pg_catalog.setval('public.hs_core_contributor_id_seq', 1, false);
 --
 
 COPY public.hs_core_coremetadata (id) FROM stdin;
+1
 \.
-
-
---
--- Name: hs_core_coremetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_core_coremetadata_id_seq', 1, false);
 
 
 --
@@ -12059,25 +12029,12 @@ COPY public.hs_core_coverage (id, object_id, type, _value, content_type_id) FROM
 
 
 --
--- Name: hs_core_coverage_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_core_coverage_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_core_creator; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.hs_core_creator (id, object_id, name, organization, email, address, phone, homepage, "order", content_type_id, identifiers, hydroshare_user_id) FROM stdin;
+COPY public.hs_core_creator (id, object_id, name, organization, email, address, phone, homepage, "order", content_type_id, identifiers, hydroshare_user_id, is_active_user) FROM stdin;
+1	1	asdf, asdf	asdf	asdf@asdf.asdf	\N	\N	\N	1	68		5	t
 \.
-
-
---
--- Name: hs_core_creator_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_core_creator_id_seq', 1, false);
 
 
 --
@@ -12085,14 +12042,9 @@ SELECT pg_catalog.setval('public.hs_core_creator_id_seq', 1, false);
 --
 
 COPY public.hs_core_date (id, object_id, type, start_date, end_date, content_type_id) FROM stdin;
+1	1	created	2025-10-20 17:39:11.412751+00	\N	68
+2	1	modified	2025-10-20 17:39:22.418272+00	\N	68
 \.
-
-
---
--- Name: hs_core_date_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_core_date_id_seq', 1, false);
 
 
 --
@@ -12104,25 +12056,11 @@ COPY public.hs_core_description (id, object_id, abstract, content_type_id) FROM 
 
 
 --
--- Name: hs_core_description_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_core_description_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_core_format; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_core_format (id, object_id, value, content_type_id) FROM stdin;
 \.
-
-
---
--- Name: hs_core_format_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_core_format_id_seq', 1, false);
 
 
 --
@@ -12134,17 +12072,11 @@ COPY public.hs_core_fundingagency (id, object_id, agency_name, award_title, awar
 
 
 --
--- Name: hs_core_fundingagency_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_core_fundingagency_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_core_genericresource; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.hs_core_genericresource (page_ptr_id, comments_count, rating_count, rating_sum, rating_average, content, short_id, doi, object_id, content_type_id, creator_id, last_changed_by_id, user_id, resource_type, file_unpack_message, file_unpack_status, locked_time, extra_metadata, resource_federation_path, extra_data, download_count, view_count) FROM stdin;
+COPY public.hs_core_genericresource (page_ptr_id, comments_count, rating_count, rating_sum, rating_average, content, short_id, doi, object_id, content_type_id, creator_id, last_changed_by_id, user_id, resource_type, file_unpack_message, file_unpack_status, locked_time, extra_metadata, extra_data, download_count, view_count, repaired, files_checked, spam_allowlisted, bag_last_downloaded, quota_holder_id) FROM stdin;
+16	0	0	0	0	Untitled Resource	d7b526e24f7e449098b428ae9363f514		1	68	5	5	5	CompositeResource	\N	\N	\N			0	0	\N	\N	f	\N	5
 \.
 
 
@@ -12157,10 +12089,11 @@ COPY public.hs_core_genericresource_collections (id, from_baseresource_id, to_ba
 
 
 --
--- Name: hs_core_genericresource_collections_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Data for Name: hs_core_geospatialrelation; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.hs_core_genericresource_collections_id_seq', 1, false);
+COPY public.hs_core_geospatialrelation (id, object_id, type, value, text, content_type_id) FROM stdin;
+\.
 
 
 --
@@ -12172,25 +12105,12 @@ COPY public.hs_core_groupownership (id, group_id, owner_id) FROM stdin;
 
 
 --
--- Name: hs_core_groupownership_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_core_groupownership_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_core_identifier; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_core_identifier (id, object_id, name, url, content_type_id) FROM stdin;
+1	1	hydroShareIdentifier	http://localhost:8000/resource/d7b526e24f7e449098b428ae9363f514	68
 \.
-
-
---
--- Name: hs_core_identifier_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_core_identifier_id_seq', 1, false);
 
 
 --
@@ -12198,14 +12118,8 @@ SELECT pg_catalog.setval('public.hs_core_identifier_id_seq', 1, false);
 --
 
 COPY public.hs_core_language (id, object_id, code, content_type_id) FROM stdin;
+1	1	eng	68
 \.
-
-
---
--- Name: hs_core_language_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_core_language_id_seq', 1, false);
 
 
 --
@@ -12217,13 +12131,6 @@ COPY public.hs_core_publisher (id, object_id, name, url, content_type_id) FROM s
 
 
 --
--- Name: hs_core_publisher_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_core_publisher_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_core_relation; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -12232,25 +12139,11 @@ COPY public.hs_core_relation (id, object_id, type, value, content_type_id) FROM 
 
 
 --
--- Name: hs_core_relation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_core_relation_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_core_resourcefile; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.hs_core_resourcefile (id, object_id, resource_file, content_type_id, fed_resource_file, file_folder, logical_file_content_type_id, logical_file_object_id, _size) FROM stdin;
+COPY public.hs_core_resourcefile (id, object_id, resource_file, content_type_id, file_folder, logical_file_content_type_id, logical_file_object_id, _size, _checksum, _modified_time, filesize_cache_updated) FROM stdin;
 \.
-
-
---
--- Name: hs_core_resourcefile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_core_resourcefile_id_seq', 1, false);
 
 
 --
@@ -12258,14 +12151,8 @@ SELECT pg_catalog.setval('public.hs_core_resourcefile_id_seq', 1, false);
 --
 
 COPY public.hs_core_rights (id, object_id, statement, url, content_type_id) FROM stdin;
+1	1	This resource is shared under the Creative Commons Attribution CC BY.	http://creativecommons.org/licenses/by/4.0/	68
 \.
-
-
---
--- Name: hs_core_rights_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_core_rights_id_seq', 1, false);
 
 
 --
@@ -12277,13 +12164,6 @@ COPY public.hs_core_subject (id, object_id, value, content_type_id) FROM stdin;
 
 
 --
--- Name: hs_core_subject_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_core_subject_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_core_tasknotification; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -12292,25 +12172,12 @@ COPY public.hs_core_tasknotification (id, task_id, name, payload, status, userna
 
 
 --
--- Name: hs_core_tasknotification_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_core_tasknotification_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_core_title; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_core_title (id, object_id, value, content_type_id) FROM stdin;
+1	1	Untitled Resource	68
 \.
-
-
---
--- Name: hs_core_title_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_core_title_id_seq', 1, false);
 
 
 --
@@ -12318,14 +12185,152 @@ SELECT pg_catalog.setval('public.hs_core_title_id_seq', 1, false);
 --
 
 COPY public.hs_core_type (id, object_id, url, content_type_id) FROM stdin;
+1	1	http://localhost:8000/terms/CompositeResource	68
 \.
 
 
 --
--- Name: hs_core_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Data for Name: hs_dictionary_subjectarea; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.hs_core_type_id_seq', 1, false);
+COPY public.hs_dictionary_subjectarea (id, name) FROM stdin;
+1	Aerosol-cloud interaction
+2	Aerosol instrumentation development
+3	Atmospheric chemistry and aerosols
+4	Chemical transport modeling
+5	Climate and global change
+6	Data assimilation
+7	Drought science and applications
+8	Frozen solution chemistry
+9	Global and regional climate modeling
+10	Hurricanes and tropical meteorology
+11	Land-atmosphere-ocean interaction
+12	Lightning and atmospheric electricity
+13	Lightning and detection systems (land- and space-based)
+14	Marine atmospheric boundary in climate models
+15	North American Monsoon system
+16	Numerical weather modeling and ensemble forecasting
+17	Precipitation
+18	Radiation and remote sensing
+19	Role of land and ocean surface processes in seasonal precipitation
+20	Urban air quality
+21	Weather analysis and predictability of large-scale systems
+22	Aqueous geochemistry
+23	Biogeochemistry
+24	Characterization of contaminated sites
+25	Contaminant transport
+26	Critical Zone Processes
+27	Ecohydrology
+28	Ground-water chemistry
+29	Hydrochemical modeling
+30	Hydrogeochemistry
+31	Integrated physical-chemical modeling
+32	Isotopic analysis
+33	Paleoclimate reconstruction
+34	Paleohydrology
+35	Soil and groundwater remediation
+36	Snow and ice
+37	Water quality and quantity
+38	Watershed ecohydrology
+39	Watershed studies
+40	Earth hydrogeologic analogs of Mars and other worlds
+41	Exoplanet atmospheres
+42	Jovian atmospheric dynamics
+43	Large-scale dynamics
+44	Mars glacial geomorphology
+45	Mars paleohydrology
+46	Computational methods
+47	Conjunctive use
+48	Decision making and uncertainty
+49	Extreme value statistics
+50	Fractured rock hydrology
+51	Geological CO2 storage
+52	Geostatistical analysis
+53	Ground-water modeling
+54	Hydraulics, tracer tomography, and data fusion
+55	Hydrobiogeochemistry
+56	Hydrogeology
+57	Hydrogeophysics
+58	Integrated physical-economic modeling
+59	Isotopic tracers
+60	Mathematical programming and simulation
+61	Microbial carbon cycle
+62	Multiphase flow and transport in porous media
+63	Natural and anthropogenic tracers
+64	Network design
+65	Numerical modeling
+66	Pumping test design and analysis
+67	Residence time tracers
+68	Scaling of geophysical variables
+69	Stochastic subsurface hydrology
+70	Subsurface contamination
+71	Subsurface flow and transport
+72	Unconventional oil/gas production
+73	Unsaturated media
+74	Vadose zone hydrology
+75	Water-rock-microbial reactions
+76	Catchment hydrobiogeochemistry
+77	Catchment hydrology
+78	Cold region hydrology
+79	Computational hydraulics
+80	Computational river mechanics and sediment transport
+81	Evapotranspiration of riparian systems
+82	Drought monitoring and prediction
+83	Flood forecasting
+84	Fluvial geomorphology
+85	Hydraulics and river engineering
+86	Hydroclimatology
+87	Hydrologic extremes
+88	Hydrometeorology
+89	Mesoscale coupled modeling
+90	Mountain hydrology
+91	Paleoflood hydrology
+92	Parameter estimation
+93	Precipitation-runoff modeling
+94	Probabilistic precipitation forecasting
+95	Remote sensing applications
+96	Stochastic surface hydrology
+97	Transit time tracers
+98	Water quality
+99	Climate data record
+100	Cold region remote sensing and modeling
+101	Coupled modeling
+102	Flash flood forecasting
+103	Land-atmosphere feedbacks and coupling
+104	Mesoscale water, energy, and carbon balances
+105	Monsoon predictability
+106	Ocean-atmosphere-continent teleconnections
+107	Polar region hydrometeorology
+108	Predictability of precipitation and convective parameters and indices
+109	Remote sensing and in situ snowfall measurement
+110	Remote sensing by weather radar
+111	Role of ecosystem dynamics
+112	Topographic influences
+113	Weather and climate extremes
+114	Advanced methods for model sensitivity analysis
+115	Applications of remotely-sensed data
+116	Artificial neural networks
+117	Diagnostic analysis of hydrologic models
+118	Hazards relationship to climate change
+119	Hydrologic impacts of projected climate change
+120	Information theory approach to learning
+121	International water development
+122	Legal and institutional issues
+123	Mathematical and goal programming
+124	Maximum entropy approach to modeling
+125	Merging models with data
+126	Model calibration
+127	Model structural improvement
+128	Parameter and state estimation
+129	Risk analysis and uncertainty
+130	Stochastic physically-based modeling
+131	Stochastic data-based- and hybrid data-physics-based modeling
+132	Surface-subsurface water quality modeling
+133	Systems approach to hydrologic modeling
+134	Transdisciplinary analysis of water issues
+135	Water conflict analysis
+136	Water resources systems
+\.
 
 
 --
@@ -12360,13 +12365,6 @@ COPY public.hs_dictionary_uncategorizedterm (id, name) FROM stdin;
 25	CZO
 26	CZO
 \.
-
-
---
--- Name: hs_dictionary_uncategorizedterm_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_dictionary_uncategorizedterm_id_seq', 26, true);
 
 
 --
@@ -21741,13 +21739,6 @@ COPY public.hs_dictionary_university (id, country_code, name, url) FROM stdin;
 
 
 --
--- Name: hs_dictionary_university_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_dictionary_university_id_seq', 18726, true);
-
-
---
 -- Data for Name: hs_file_types_bandinformation; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -21764,18 +21755,27 @@ COPY public.hs_file_types_cellinformation (id, object_id, name, rows, columns, "
 
 
 --
+-- Data for Name: hs_file_types_csvfilemetadata; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.hs_file_types_csvfilemetadata (id, extra_metadata, keywords, is_dirty, "tableSchema") FROM stdin;
+\.
+
+
+--
+-- Data for Name: hs_file_types_csvlogicalfile; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.hs_file_types_csvlogicalfile (id, dataset_name, extra_data, preview_data, metadata_id, resource_id) FROM stdin;
+\.
+
+
+--
 -- Data for Name: hs_file_types_cvaggregationstatistic; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_file_types_cvaggregationstatistic (id, term, name, is_dirty, metadata_id) FROM stdin;
 \.
-
-
---
--- Name: hs_file_types_cvaggregationstatistic_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_cvaggregationstatistic_id_seq', 1, false);
 
 
 --
@@ -21787,25 +21787,11 @@ COPY public.hs_file_types_cvelevationdatum (id, term, name, is_dirty, metadata_i
 
 
 --
--- Name: hs_file_types_cvelevationdatum_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_cvelevationdatum_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_file_types_cvmedium; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_file_types_cvmedium (id, term, name, is_dirty, metadata_id) FROM stdin;
 \.
-
-
---
--- Name: hs_file_types_cvmedium_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_cvmedium_id_seq', 1, false);
 
 
 --
@@ -21817,25 +21803,11 @@ COPY public.hs_file_types_cvmethodtype (id, term, name, is_dirty, metadata_id) F
 
 
 --
--- Name: hs_file_types_cvmethodtype_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_cvmethodtype_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_file_types_cvsitetype; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_file_types_cvsitetype (id, term, name, is_dirty, metadata_id) FROM stdin;
 \.
-
-
---
--- Name: hs_file_types_cvsitetype_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_cvsitetype_id_seq', 1, false);
 
 
 --
@@ -21847,25 +21819,11 @@ COPY public.hs_file_types_cvspeciation (id, term, name, is_dirty, metadata_id) F
 
 
 --
--- Name: hs_file_types_cvspeciation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_cvspeciation_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_file_types_cvstatus; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_file_types_cvstatus (id, term, name, is_dirty, metadata_id) FROM stdin;
 \.
-
-
---
--- Name: hs_file_types_cvstatus_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_cvstatus_id_seq', 1, false);
 
 
 --
@@ -21877,13 +21835,6 @@ COPY public.hs_file_types_cvunitstype (id, term, name, is_dirty, metadata_id) FR
 
 
 --
--- Name: hs_file_types_cvunitstype_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_cvunitstype_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_file_types_cvvariablename; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -21892,25 +21843,11 @@ COPY public.hs_file_types_cvvariablename (id, term, name, is_dirty, metadata_id)
 
 
 --
--- Name: hs_file_types_cvvariablename_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_cvvariablename_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_file_types_cvvariabletype; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_file_types_cvvariabletype (id, term, name, is_dirty, metadata_id) FROM stdin;
 \.
-
-
---
--- Name: hs_file_types_cvvariabletype_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_cvvariabletype_id_seq', 1, false);
 
 
 --
@@ -21930,25 +21867,11 @@ COPY public.hs_file_types_filesetlogicalfile (id, dataset_name, extra_data, fold
 
 
 --
--- Name: hs_file_types_filesetlogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_filesetlogicalfile_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_file_types_filesetmetadata; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_file_types_filesetmetadata (id, extra_metadata, keywords, is_dirty) FROM stdin;
 \.
-
-
---
--- Name: hs_file_types_filesetmetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_filesetmetadata_id_seq', 1, false);
 
 
 --
@@ -21960,25 +21883,11 @@ COPY public.hs_file_types_genericfilemetadata (id, extra_metadata, keywords, is_
 
 
 --
--- Name: hs_file_types_genericfilemetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_genericfilemetadata_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_file_types_genericlogicalfile; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_file_types_genericlogicalfile (id, dataset_name, metadata_id, extra_data, resource_id) FROM stdin;
 \.
-
-
---
--- Name: hs_file_types_genericlogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_genericlogicalfile_id_seq', 1, false);
 
 
 --
@@ -21990,25 +21899,11 @@ COPY public.hs_file_types_geofeaturefilemetadata (id, extra_metadata, keywords, 
 
 
 --
--- Name: hs_file_types_geofeaturefilemetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_geofeaturefilemetadata_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_file_types_geofeaturelogicalfile; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_file_types_geofeaturelogicalfile (id, dataset_name, metadata_id, extra_data, resource_id) FROM stdin;
 \.
-
-
---
--- Name: hs_file_types_geofeaturelogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_geofeaturelogicalfile_id_seq', 1, false);
 
 
 --
@@ -22028,25 +21923,11 @@ COPY public.hs_file_types_georasterfilemetadata (id, extra_metadata, keywords, i
 
 
 --
--- Name: hs_file_types_georasterfilemetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_georasterfilemetadata_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_file_types_georasterlogicalfile; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_file_types_georasterlogicalfile (id, dataset_name, metadata_id, extra_data, resource_id) FROM stdin;
 \.
-
-
---
--- Name: hs_file_types_georasterlogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_georasterlogicalfile_id_seq', 1, false);
 
 
 --
@@ -22066,25 +21947,11 @@ COPY public.hs_file_types_modelinstancefilemetadata (id, extra_metadata, keyword
 
 
 --
--- Name: hs_file_types_modelinstancefilemetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_modelinstancefilemetadata_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_file_types_modelinstancelogicalfile; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_file_types_modelinstancelogicalfile (id, dataset_name, extra_data, folder, metadata_schema_json, metadata_id, resource_id) FROM stdin;
 \.
-
-
---
--- Name: hs_file_types_modelinstancelogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_modelinstancelogicalfile_id_seq', 1, false);
 
 
 --
@@ -22096,25 +21963,11 @@ COPY public.hs_file_types_modelprogramfilemetadata (id, extra_metadata, keywords
 
 
 --
--- Name: hs_file_types_modelprogramfilemetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_modelprogramfilemetadata_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_file_types_modelprogramlogicalfile; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_file_types_modelprogramlogicalfile (id, dataset_name, extra_data, folder, metadata_schema_json, metadata_id, resource_id) FROM stdin;
 \.
-
-
---
--- Name: hs_file_types_modelprogramlogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_modelprogramlogicalfile_id_seq', 1, false);
 
 
 --
@@ -22126,13 +21979,6 @@ COPY public.hs_file_types_modelprogramresourcefiletype (id, file_type, mp_metada
 
 
 --
--- Name: hs_file_types_modelprogramresourcefiletype_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_modelprogramresourcefiletype_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_file_types_netcdffilemetadata; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -22141,25 +21987,11 @@ COPY public.hs_file_types_netcdffilemetadata (id, extra_metadata, keywords, is_d
 
 
 --
--- Name: hs_file_types_netcdffilemetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_netcdffilemetadata_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_file_types_netcdflogicalfile; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_file_types_netcdflogicalfile (id, dataset_name, metadata_id, extra_data, resource_id) FROM stdin;
 \.
-
-
---
--- Name: hs_file_types_netcdflogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_netcdflogicalfile_id_seq', 1, false);
 
 
 --
@@ -22203,25 +22035,11 @@ COPY public.hs_file_types_reftimeseriesfilemetadata (id, extra_metadata, keyword
 
 
 --
--- Name: hs_file_types_reftimeseriesfilemetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_reftimeseriesfilemetadata_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_file_types_reftimeserieslogicalfile; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_file_types_reftimeserieslogicalfile (id, dataset_name, metadata_id, extra_data, resource_id) FROM stdin;
 \.
-
-
---
--- Name: hs_file_types_reftimeserieslogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_reftimeserieslogicalfile_id_seq', 1, false);
 
 
 --
@@ -22241,25 +22059,11 @@ COPY public.hs_file_types_timeseriesfilemetadata (id, value_counts, extra_metada
 
 
 --
--- Name: hs_file_types_timeseriesfilemetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_timeseriesfilemetadata_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_file_types_timeserieslogicalfile; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_file_types_timeserieslogicalfile (id, dataset_name, metadata_id, extra_data, resource_id) FROM stdin;
 \.
-
-
---
--- Name: hs_file_types_timeserieslogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_file_types_timeserieslogicalfile_id_seq', 1, false);
 
 
 --
@@ -22295,60 +22099,12 @@ COPY public.hs_file_types_variabletimeseries (id, object_id, variable_code, vari
 
 
 --
--- Name: hs_geo_raster_resource_bandinformation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_geo_raster_resource_bandinformation_id_seq', 1, false);
-
-
---
--- Name: hs_geo_raster_resource_cellinformation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_geo_raster_resource_cellinformation_id_seq', 1, false);
-
-
---
--- Name: hs_geo_raster_resource_originalcoverage_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_geo_raster_resource_originalcoverage_id_seq', 1, false);
-
-
---
--- Name: hs_geographic_feature_resource_fieldinformation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_geographic_feature_resource_fieldinformation_id_seq', 1, false);
-
-
---
--- Name: hs_geographic_feature_resource_geometryinformation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_geographic_feature_resource_geometryinformation_id_seq', 1, false);
-
-
---
--- Name: hs_geographic_feature_resource_originalcoverage_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_geographic_feature_resource_originalcoverage_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_labels_resourcelabels; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_labels_resourcelabels (id, resource_id) FROM stdin;
+1	16
 \.
-
-
---
--- Name: hs_labels_resourcelabels_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_labels_resourcelabels_id_seq', 1, false);
 
 
 --
@@ -22374,25 +22130,11 @@ COPY public.hs_labels_userlabels (id, user_id) FROM stdin;
 
 
 --
--- Name: hs_labels_userlabels_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_labels_userlabels_id_seq', 14, true);
-
-
---
 -- Data for Name: hs_labels_userresourceflags; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_labels_userresourceflags (id, kind, start, resource_id, user_id) FROM stdin;
 \.
-
-
---
--- Name: hs_labels_userresourceflags_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_labels_userresourceflags_id_seq', 1, false);
 
 
 --
@@ -22404,25 +22146,11 @@ COPY public.hs_labels_userresourcelabels (id, start, label, resource_id, user_id
 
 
 --
--- Name: hs_labels_userresourcelabels_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_labels_userresourcelabels_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_labels_userstoredlabels; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_labels_userstoredlabels (id, label, user_id) FROM stdin;
 \.
-
-
---
--- Name: hs_labels_userstoredlabels_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_labels_userstoredlabels_id_seq', 1, false);
 
 
 --
@@ -23419,25 +23147,11 @@ COPY public.hs_odm2_odm2variable (id, name, definition, provenance_uri, resource
 
 
 --
--- Name: hs_odm2_odm2variable_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_odm2_odm2variable_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_tools_resource_apphomepageurl; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_tools_resource_apphomepageurl (id, object_id, value, content_type_id) FROM stdin;
 \.
-
-
---
--- Name: hs_tools_resource_apphomepageurl_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tools_resource_apphomepageurl_id_seq', 1, false);
 
 
 --
@@ -23449,25 +23163,11 @@ COPY public.hs_tools_resource_helppageurl (id, object_id, value, content_type_id
 
 
 --
--- Name: hs_tools_resource_helppageurl_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tools_resource_helppageurl_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_tools_resource_issuespageurl; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_tools_resource_issuespageurl (id, object_id, value, content_type_id) FROM stdin;
 \.
-
-
---
--- Name: hs_tools_resource_issuespageurl_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tools_resource_issuespageurl_id_seq', 1, false);
 
 
 --
@@ -23479,25 +23179,11 @@ COPY public.hs_tools_resource_mailinglisturl (id, object_id, value, content_type
 
 
 --
--- Name: hs_tools_resource_mailinglisturl_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tools_resource_mailinglisturl_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_tools_resource_requesturlbase; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_tools_resource_requesturlbase (id, object_id, value, content_type_id) FROM stdin;
 \.
-
-
---
--- Name: hs_tools_resource_requesturlbase_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tools_resource_requesturlbase_id_seq', 1, false);
 
 
 --
@@ -23509,25 +23195,11 @@ COPY public.hs_tools_resource_requesturlbaseaggregation (id, object_id, value, c
 
 
 --
--- Name: hs_tools_resource_requesturlbaseaggregation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tools_resource_requesturlbaseaggregation_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_tools_resource_requesturlbasefile; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_tools_resource_requesturlbasefile (id, object_id, value, content_type_id) FROM stdin;
 \.
-
-
---
--- Name: hs_tools_resource_requesturlbasefile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tools_resource_requesturlbasefile_id_seq', 1, false);
 
 
 --
@@ -23539,25 +23211,11 @@ COPY public.hs_tools_resource_roadmap (id, object_id, value, content_type_id) FR
 
 
 --
--- Name: hs_tools_resource_roadmap_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tools_resource_roadmap_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_tools_resource_showonopenwithlist; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_tools_resource_showonopenwithlist (id, object_id, value, content_type_id) FROM stdin;
 \.
-
-
---
--- Name: hs_tools_resource_showonopenwithlist_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tools_resource_showonopenwithlist_id_seq', 1, false);
 
 
 --
@@ -23569,25 +23227,11 @@ COPY public.hs_tools_resource_sourcecodeurl (id, object_id, value, content_type_
 
 
 --
--- Name: hs_tools_resource_sourcecodeurl_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tools_resource_sourcecodeurl_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_tools_resource_supportedaggtypechoices; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_tools_resource_supportedaggtypechoices (id, description) FROM stdin;
 \.
-
-
---
--- Name: hs_tools_resource_supportedaggtypechoices_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tools_resource_supportedaggtypechoices_id_seq', 1, false);
 
 
 --
@@ -23599,25 +23243,11 @@ COPY public.hs_tools_resource_supportedaggtypes (id, object_id, content_type_id)
 
 
 --
--- Name: hs_tools_resource_supportedaggtypes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tools_resource_supportedaggtypes_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_tools_resource_supportedaggtypes_supported_agg_types; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_tools_resource_supportedaggtypes_supported_agg_types (id, supportedaggtypes_id, supportedaggtypechoices_id) FROM stdin;
 \.
-
-
---
--- Name: hs_tools_resource_supportedaggtypes_supported_agg_types_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tools_resource_supportedaggtypes_supported_agg_types_id_seq', 1, false);
 
 
 --
@@ -23629,25 +23259,11 @@ COPY public.hs_tools_resource_supportedfileextensions (id, object_id, value, con
 
 
 --
--- Name: hs_tools_resource_supportedfileextensions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tools_resource_supportedfileextensions_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_tools_resource_supportedrestypechoices; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_tools_resource_supportedrestypechoices (id, description) FROM stdin;
 \.
-
-
---
--- Name: hs_tools_resource_supportedrestypechoices_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tools_resource_supportedrestypechoices_id_seq', 1, false);
 
 
 --
@@ -23659,25 +23275,11 @@ COPY public.hs_tools_resource_supportedrestypes (id, object_id, content_type_id)
 
 
 --
--- Name: hs_tools_resource_supportedrestypes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tools_resource_supportedrestypes_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_tools_resource_supportedrestypes_supported_res_types; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_tools_resource_supportedrestypes_supported_res_types (id, supportedrestypes_id, supportedrestypechoices_id) FROM stdin;
 \.
-
-
---
--- Name: hs_tools_resource_supportedrestypes_supported_res_types_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tools_resource_supportedrestypes_supported_res_types_id_seq', 1, false);
 
 
 --
@@ -23689,25 +23291,11 @@ COPY public.hs_tools_resource_supportedsharingstatus (id, object_id, content_typ
 
 
 --
--- Name: hs_tools_resource_supportedsharingstatus_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tools_resource_supportedsharingstatus_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_tools_resource_supportedsharingstatus_sharing_status; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_tools_resource_supportedsharingstatus_sharing_status (id, supportedsharingstatus_id, supportedsharingstatuschoices_id) FROM stdin;
 \.
-
-
---
--- Name: hs_tools_resource_supportedsharingstatus_sharing_status_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tools_resource_supportedsharingstatus_sharing_status_id_seq', 1, false);
 
 
 --
@@ -23719,13 +23307,6 @@ COPY public.hs_tools_resource_supportedsharingstatuschoices (id, description) FR
 
 
 --
--- Name: hs_tools_resource_supportedsharingstatuschoices_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tools_resource_supportedsharingstatuschoices_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_tools_resource_testingprotocolurl; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -23734,25 +23315,11 @@ COPY public.hs_tools_resource_testingprotocolurl (id, object_id, value, content_
 
 
 --
--- Name: hs_tools_resource_testingprotocolurl_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tools_resource_testingprotocolurl_id_seq', 1, false);
-
-
---
 -- Data for Name: hs_tools_resource_toolicon; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.hs_tools_resource_toolicon (id, object_id, content_type_id, value, data_url) FROM stdin;
 \.
-
-
---
--- Name: hs_tools_resource_toolicon_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tools_resource_toolicon_id_seq', 1, false);
 
 
 --
@@ -23769,13 +23336,6 @@ COPY public.hs_tools_resource_toolmetadata (coremetadata_ptr_id, approved) FROM 
 
 COPY public.hs_tools_resource_toolversion (id, object_id, value, content_type_id) FROM stdin;
 \.
-
-
---
--- Name: hs_tools_resource_toolversion_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tools_resource_toolversion_id_seq', 1, false);
 
 
 --
@@ -23839,14 +23399,8 @@ COPY public.hs_tracking_session (id, begin, visitor_id) FROM stdin;
 54	2019-12-11 20:03:19.887428+00	38
 55	2019-12-11 20:09:19.687242+00	23
 56	2019-12-11 20:21:52.603499+00	56
+57	2025-10-20 17:39:01.469739+00	11
 \.
-
-
---
--- Name: hs_tracking_session_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tracking_session_id_seq', 56, true);
 
 
 --
@@ -24749,14 +24303,42 @@ COPY public.hs_tracking_variable (id, "timestamp", name, type, value, session_id
 893	2019-12-11 20:21:52.606076+00	begin_session	2	user_ip=172.18.0.1|user_type=None|user_email_domain=None	56	\N	\N	f	f
 894	2019-12-11 20:21:52.608679+00	visit	2	user_ip=172.18.0.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/user/16/	56	\N	\N	f	f
 895	2019-12-11 20:21:52.812806+00	visit	2	user_ip=172.18.0.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/hsapi/userInfo/	56	\N	\N	t	f
+896	2025-10-20 17:39:01.472948+00	begin_session	2	user_ip=192.168.65.1|user_type=None|user_email_domain=None|user_email_domain_full=None|is_human=True|user_agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:144.0) Gecko/20100101 Firefox/144.0	57	\N	\N	f	f
+897	2025-10-20 17:39:01.476993+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/	57	\N	\N	f	f
+898	2025-10-20 17:39:02.550571+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/hsapi/_internal/get_tasks_by_user/	57	\N	\N	f	f
+899	2025-10-20 17:39:04.587277+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/accounts/login/	57	\N	\N	f	f
+900	2025-10-20 17:39:04.755322+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/hsapi/_internal/get_tasks_by_user/	57	\N	\N	f	f
+901	2025-10-20 17:39:07.914679+00	login	2	user_ip=192.168.65.1|user_type=None|user_email_domain=asdf|user_email_domain_full=asdf.asdf|is_human=True|user_agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:144.0) Gecko/20100101 Firefox/144.0	57	\N	\N	f	f
+902	2025-10-20 17:39:08.071987+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/home/	57	\N	\N	f	f
+903	2025-10-20 17:39:08.618633+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/get_tasks_by_user/	57	\N	\N	f	f
+904	2025-10-20 17:39:08.624158+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/userInfo/	57	\N	\N	t	f
+905	2025-10-20 17:39:22.643708+00	create	2	user_ip=192.168.65.1|user_type=None|user_email_domain=asdf|user_email_domain_full=asdf.asdf|is_human=True|user_agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:144.0) Gecko/20100101 Firefox/144.0|resource_size_bytes=0|resource_type=CompositeResource|resource_guid=5811e1e045e44c92b91bf9127b54e768	57	5811e1e045e44c92b91bf9127b54e768	16	f	f
+906	2025-10-20 17:39:22.662135+00	visit	2	user_ip=192.168.65.1|http_method=POST|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/create-resource/do/	57	\N	\N	f	f
+907	2025-10-20 17:39:36.824832+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/userInfo/	57	\N	\N	t	f
+908	2025-10-20 17:39:36.884634+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/userInfo/	57	\N	\N	t	f
+909	2025-10-20 17:39:36.931075+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/resource/s3/5811e1e045e44c92b91bf9127b54e768/	57	\N	\N	t	f
+910	2025-10-20 17:39:36.955378+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/csrf-cookie/	57	\N	\N	f	f
+911	2025-10-20 17:39:52.06007+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/resource/5811e1e045e44c92b91bf9127b54e768/	57	5811e1e045e44c92b91bf9127b54e768	16	f	t
+915	2025-10-20 17:39:53.262858+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/5811e1e045e44c92b91bf9127b54e768/list-referenced-content/	57	\N	\N	f	f
+916	2025-10-20 17:39:53.343765+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/5811e1e045e44c92b91bf9127b54e768/aggregation-files-to-sync/	57	\N	\N	f	f
+917	2025-10-20 17:39:53.823006+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/5811e1e045e44c92b91bf9127b54e768/non-preferred-paths/	57	\N	\N	f	f
+918	2025-10-20 17:39:55.845259+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/userInfo/	57	\N	\N	t	f
+919	2025-10-20 17:39:55.875288+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/csrf-cookie/	57	\N	\N	f	f
+920	2025-10-20 17:39:55.917482+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/resource/s3/5811e1e045e44c92b91bf9127b54e768/	57	\N	\N	t	f
+912	2025-10-20 17:39:52.820865+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/get_tasks_by_user/	57	\N	\N	f	f
+913	2025-10-20 17:39:52.826691+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/5811e1e045e44c92b91bf9127b54e768/list-referenced-content/	57	\N	\N	f	f
+914	2025-10-20 17:39:53.16931+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/userInfo/	57	\N	\N	t	f
+921	2025-10-20 17:42:23.914521+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/home/	57	\N	\N	f	f
+922	2025-10-20 17:42:24.111987+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/get_tasks_by_user/	57	\N	\N	f	f
+923	2025-10-20 17:42:24.201196+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/userInfo/	57	\N	\N	t	f
+924	2025-10-20 17:42:33.865896+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/my-resources/	57	\N	\N	f	f
+925	2025-10-20 17:42:34.203118+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/get_tasks_by_user/	57	\N	\N	f	f
+926	2025-10-20 17:42:34.353575+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/userInfo/	57	\N	\N	t	f
+927	2025-10-20 17:42:34.420601+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/my-resources-counts/	57	\N	\N	f	f
+928	2025-10-20 17:42:36.777459+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/userInfo/	57	\N	\N	t	f
+929	2025-10-20 17:42:36.838203+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/csrf-cookie/	57	\N	\N	f	f
+930	2025-10-20 17:42:36.88363+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/resource/s3/5811e1e045e44c92b91bf9127b54e768/	57	\N	\N	t	f
 \.
-
-
---
--- Name: hs_tracking_variable_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tracking_variable_id_seq', 895, true);
 
 
 --
@@ -24820,74 +24402,48 @@ COPY public.hs_tracking_visitor (id, first_seen, user_id) FROM stdin;
 54	2019-12-11 20:03:19.846108+00	\N
 55	2019-12-11 20:09:19.68388+00	\N
 56	2019-12-11 20:21:52.600769+00	\N
+57	2025-10-20 17:39:01.466394+00	\N
 \.
-
-
---
--- Name: hs_tracking_visitor_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.hs_tracking_visitor_id_seq', 56, true);
 
 
 --
 -- Data for Name: oauth2_provider_accesstoken; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.oauth2_provider_accesstoken (id, token, expires, scope, application_id, user_id, created, updated, source_refresh_token_id) FROM stdin;
+COPY public.oauth2_provider_accesstoken (id, token, expires, scope, application_id, user_id, created, updated, source_refresh_token_id, id_token_id, token_checksum) FROM stdin;
 \.
-
-
---
--- Name: oauth2_provider_accesstoken_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.oauth2_provider_accesstoken_id_seq', 1, false);
 
 
 --
 -- Data for Name: oauth2_provider_application; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.oauth2_provider_application (id, client_id, redirect_uris, client_type, authorization_grant_type, client_secret, name, user_id, skip_authorization, created, updated) FROM stdin;
+COPY public.oauth2_provider_application (id, client_id, redirect_uris, client_type, authorization_grant_type, client_secret, name, user_id, skip_authorization, created, updated, algorithm, post_logout_redirect_uris, hash_client_secret, allowed_origins) FROM stdin;
 \.
-
-
---
--- Name: oauth2_provider_application_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.oauth2_provider_application_id_seq', 1, false);
 
 
 --
 -- Data for Name: oauth2_provider_grant; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.oauth2_provider_grant (id, code, expires, redirect_uri, scope, application_id, user_id, created, updated) FROM stdin;
+COPY public.oauth2_provider_grant (id, code, expires, redirect_uri, scope, application_id, user_id, created, updated, code_challenge, code_challenge_method, nonce, claims) FROM stdin;
 \.
 
 
 --
--- Name: oauth2_provider_grant_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Data for Name: oauth2_provider_idtoken; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.oauth2_provider_grant_id_seq', 1, false);
+COPY public.oauth2_provider_idtoken (id, jti, expires, scope, created, updated, application_id, user_id) FROM stdin;
+\.
 
 
 --
 -- Data for Name: oauth2_provider_refreshtoken; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.oauth2_provider_refreshtoken (id, token, access_token_id, application_id, user_id, created, updated, revoked) FROM stdin;
+COPY public.oauth2_provider_refreshtoken (id, token, access_token_id, application_id, user_id, created, updated, revoked, token_family) FROM stdin;
 \.
-
-
---
--- Name: oauth2_provider_refreshtoken_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.oauth2_provider_refreshtoken_id_seq', 1, false);
 
 
 --
@@ -24919,14 +24475,8 @@ COPY public.pages_page (id, keywords_string, site_id, title, slug, _meta_title, 
 14		1	Help	http://help.hydroshare.org/	\N	Help	t	2017-09-01 18:12:49.579765+00	2017-09-01 18:13:50.018396+00	2	2017-09-01 18:12:49+00	\N	\N	f	5	\N	1	Help	link	f
 15		1	About	http://help.hydroshare.org//about-hydroshare/	\N	About	t	2017-09-01 18:13:41.539301+00	2017-09-01 18:13:50.015184+00	2	2017-09-01 18:13:41.539168+00	\N	\N	f	6	\N	1	About	link	f
 7		1	Verify Account	verify-account	Verify Account	Thank you for signing up for HydroShare! We have sent you an email from hydroshare.org to verify your account.  Please click on the link within the email and verify your account with us and you can get started sharing data and models with HydroShare.	t	2016-01-25 19:28:12.867432+00	2016-01-25 19:28:12.867432+00	2	2016-01-25 19:28:12.866419+00	\N	\N	t	7	\N		Verify Account	richtextpage	f
+16		1	Untitled Resource	resource/d7b526e24f7e449098b428ae9363f514	\N	Untitled Resource	t	2025-10-20 17:39:11.412751+00	2025-10-20 17:43:00.981555+00	2	2025-10-20 17:39:11.407813+00	\N	\N	t	13	\N		Untitled Resource	compositeresource	f
 \.
-
-
---
--- Name: pages_page_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.pages_page_id_seq', 15, true);
 
 
 --
@@ -24950,6 +24500,7 @@ COPY public.pages_richtextpage (page_ptr_id, content) FROM stdin;
 --
 
 COPY public.robots_rule (id, robot, crawl_delay) FROM stdin;
+1	*	5.0
 \.
 
 
@@ -24962,32 +24513,12 @@ COPY public.robots_rule_allowed (id, rule_id, url_id) FROM stdin;
 
 
 --
--- Name: robots_rule_allowed_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.robots_rule_allowed_id_seq', 1, false);
-
-
---
 -- Data for Name: robots_rule_disallowed; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.robots_rule_disallowed (id, rule_id, url_id) FROM stdin;
+1	1	1
 \.
-
-
---
--- Name: robots_rule_disallowed_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.robots_rule_disallowed_id_seq', 1, false);
-
-
---
--- Name: robots_rule_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.robots_rule_id_seq', 1, false);
 
 
 --
@@ -24995,14 +24526,8 @@ SELECT pg_catalog.setval('public.robots_rule_id_seq', 1, false);
 --
 
 COPY public.robots_rule_sites (id, rule_id, site_id) FROM stdin;
+1	1	1
 \.
-
-
---
--- Name: robots_rule_sites_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.robots_rule_sites_id_seq', 1, false);
 
 
 --
@@ -25010,14 +24535,8 @@ SELECT pg_catalog.setval('public.robots_rule_sites_id_seq', 1, false);
 --
 
 COPY public.robots_url (id, pattern) FROM stdin;
+1	/
 \.
-
-
---
--- Name: robots_url_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.robots_url_id_seq', 1, false);
 
 
 --
@@ -25029,13 +24548,6 @@ COPY public.security_cspreport (id, document_uri, referrer, blocked_uri, violate
 
 
 --
--- Name: security_cspreport_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.security_cspreport_id_seq', 1, false);
-
-
---
 -- Data for Name: security_passwordexpiry; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -25044,17 +24556,10 @@ COPY public.security_passwordexpiry (id, password_expiry_date, user_id) FROM std
 
 
 --
--- Name: security_passwordexpiry_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.security_passwordexpiry_id_seq', 1, false);
-
-
---
 -- Data for Name: spatial_ref_sys; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.spatial_ref_sys  FROM stdin;
+COPY public.spatial_ref_sys (srid, auth_name, auth_srid, srtext, proj4text) FROM stdin;
 \.
 
 
@@ -25076,26 +24581,20 @@ COPY public.theme_iconbox (id, _order, icon, title, link_text, link, homepage_id
 
 
 --
--- Name: theme_iconbox_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.theme_iconbox_id_seq', 1, false);
-
-
---
 -- Data for Name: theme_quotamessage; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.theme_quotamessage (id, warning_content_prepend, grace_period_content_prepend, enforce_content_prepend, content, soft_limit_percent, hard_limit_percent, grace_period, enforce_quota) FROM stdin;
-1	Your quota for HydroShare resources is {allocated}{unit} in {zone} zone. You currently have resources that consume {used}{unit}, {percent}% of your quota. Once your quota reaches 100% you will no longer be able to create new resources in HydroShare. 	You have exceeded your HydroShare quota. Your quota for HydroShare resources is {allocated}{unit} in {zone} zone. You currently have resources that consume {used}{unit}, {percent}% of your quota. You have a grace period until {cut_off_date} to reduce your use to below your quota, or to acquire additional quota, after which you will no longer be able to create new resources in HydroShare. 	Your action was refused because you have exceeded your quota. Your quota for HydroShare resources is {allocated}{unit} in {zone} zone. You currently have resources that consume {used}{unit}, {percent}% of your quota. 	To request additional quota, please contact help@cuahsi.org. We will try to accommodate reasonable requests for additional quota. If you have a large quota request you may need to contribute toward the costs of providing the additional space you need. See https://help.hydroshare.org/about-hydroshare/policies/quota/ for more information about the quota policy.	80	125	7	f
+COPY public.theme_quotamessage (id, warning_content_prepend, enforce_content_prepend, content, soft_limit_percent, published_resource_percent, quota_usage_info) FROM stdin;
+1	Your quota for HydroShare resources is {allocated}{unit} in {zone} zone. You currently have resources that consume {used}{unit}, {percent}% of your quota. Once your quota reaches 100% you will no longer be able to create new resources in HydroShare. 	Your action was refused because you have exceeded your quota. Your quota for HydroShare resources is {allocated}{unit} in {zone} zone. You currently have resources that consume {used}{unit}, {percent}% of your quota. 	To request additional quota, please contact help@cuahsi.org. We will try to accommodate reasonable requests for additional quota. If you have a large quota request you may need to contribute toward the costs of providing the additional space you need. See https://help.hydroshare.org/about-hydroshare/policies/quota/ for more information about the quota policy.	80	0	Your quota for HydroShare resources is {allocated}{unit}. You currently have resources that consume {used}{unit}, {percent}% of your quota. 
 \.
 
 
 --
--- Name: theme_quotamessage_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Data for Name: theme_quotarequest; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.theme_quotamessage_id_seq', 1, true);
+COPY public.theme_quotarequest (id, date_requested, justification, storage, quota_id, request_from_id, status) FROM stdin;
+\.
 
 
 --
@@ -25108,67 +24607,46 @@ COPY public.theme_siteconfiguration (id, col1_heading, col1_content, col2_headin
 
 
 --
--- Name: theme_siteconfiguration_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.theme_siteconfiguration_id_seq', 1, true);
-
-
---
 -- Data for Name: theme_userprofile; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.theme_userprofile (id, picture, title, subject_areas, organization, phone_1, phone_1_type, phone_2, phone_2_type, public, cv, details, user_id, country, middle_name, state, user_type, website, create_irods_user_account, identifiers, email_opt_out) FROM stdin;
-4		Research Software Engineer		RENCI		Mobile		Mobile	t			4	Unspecified		Unspecified			f		f
-5		\N	\N	asdf	\N	Mobile	\N	Mobile	t			5	Unspecified	\N	Unspecified	\N	\N	f		f
-6		\N	\N	CZO	\N	Mobile	\N	Mobile	t			6	Unspecified	\N	Unspecified	\N	\N	f		f
-7		\N	\N	CZO	\N	Mobile	\N	Mobile	t			7	Unspecified	\N	Unspecified	\N	\N	f		f
-8		\N	\N	CZO	\N	Mobile	\N	Mobile	t			8	Unspecified	\N	Unspecified	\N	\N	f		f
-9		\N	\N	CZO	\N	Mobile	\N	Mobile	t			9	Unspecified	\N	Unspecified	\N	\N	f		f
-10		\N	\N	CZO	\N	Mobile	\N	Mobile	t			10	Unspecified	\N	Unspecified	\N	\N	f		f
-11		\N	\N	CZO	\N	Mobile	\N	Mobile	t			11	Unspecified	\N	Unspecified	\N	\N	f		f
-12		\N	\N	CZO	\N	Mobile	\N	Mobile	t			12	Unspecified	\N	Unspecified	\N	\N	f		f
-13		\N	\N	CZO	\N	Mobile	\N	Mobile	t			13	Unspecified	\N	Unspecified	\N	\N	f		f
-14		\N	\N	CZO	\N	Mobile	\N	Mobile	t			14	Unspecified	\N	Unspecified	\N	\N	f		f
-15		\N	\N	CZO	\N	Mobile	\N	Mobile	t			15	Unspecified	\N	Unspecified	\N	\N	f		f
-16		\N	\N	CZO	\N	Mobile	\N	Mobile	t			16	Unspecified	\N	Unspecified	\N	\N	f		f
-17		\N	\N	CZO	\N	Mobile	\N	Mobile	t			17	Unspecified	\N	Unspecified	\N	\N	f		f
+COPY public.theme_userprofile (id, picture, title, subject_areas, organization, phone_1, phone_1_type, phone_2, phone_2_type, public, cv, details, user_id, country, middle_name, state, user_type, website, identifiers, email_opt_out, _bucket_name) FROM stdin;
+4		Research Software Engineer	\N	RENCI		Mobile		Mobile	t			4	Unspecified		Unspecified				f	admin
+5		\N	\N	asdf	\N	Mobile	\N	Mobile	t			5	Unspecified	\N	Unspecified	\N	\N		f	asdf
+17		\N	\N	CZO	\N	Mobile	\N	Mobile	t			17	Unspecified	\N	Unspecified	\N	\N		f	czoiml
+7		\N	\N	CZO	\N	Mobile	\N	Mobile	t			7	Unspecified	\N	Unspecified	\N	\N		f	czoboulder
+8		\N	\N	CZO	\N	Mobile	\N	Mobile	t			8	Unspecified	\N	Unspecified	\N	\N		f	czoeel
+9		\N	\N	CZO	\N	Mobile	\N	Mobile	t			9	Unspecified	\N	Unspecified	\N	\N		f	czocatalina-jemez
+10		\N	\N	CZO	\N	Mobile	\N	Mobile	t			10	Unspecified	\N	Unspecified	\N	\N		f	czoreynolds
+11		\N	\N	CZO	\N	Mobile	\N	Mobile	t			11	Unspecified	\N	Unspecified	\N	\N		f	czoluquillo
+12		\N	\N	CZO	\N	Mobile	\N	Mobile	t			12	Unspecified	\N	Unspecified	\N	\N		f	czosierra
+13		\N	\N	CZO	\N	Mobile	\N	Mobile	t			13	Unspecified	\N	Unspecified	\N	\N		f	czochristina
+14		\N	\N	CZO	\N	Mobile	\N	Mobile	t			14	Unspecified	\N	Unspecified	\N	\N		f	czoshale-hills
+15		\N	\N	CZO	\N	Mobile	\N	Mobile	t			15	Unspecified	\N	Unspecified	\N	\N		f	czocalhoun
+6		\N	\N	CZO	\N	Mobile	\N	Mobile	t			6	Unspecified	\N	Unspecified	\N	\N		f	czonational
+16		\N	\N	CZO	\N	Mobile	\N	Mobile	t			16	Unspecified	\N	Unspecified	\N	\N		f	czo
 \.
-
-
---
--- Name: theme_userprofile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.theme_userprofile_id_seq', 17, true);
 
 
 --
 -- Data for Name: theme_userquota; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.theme_userquota (id, allocated_value, used_value, unit, zone, remaining_grace_period, user_id) FROM stdin;
-1	20	0	GB	hydroshare	-1	5
-2	20	0	GB	hydroshare	-1	6
-3	20	0	GB	hydroshare	-1	7
-4	20	0	GB	hydroshare	-1	8
-5	20	0	GB	hydroshare	-1	9
-6	20	0	GB	hydroshare	-1	10
-7	20	0	GB	hydroshare	-1	11
-8	20	0	GB	hydroshare	-1	12
-9	20	0	GB	hydroshare	-1	13
-10	20	0	GB	hydroshare	-1	14
-11	20	0	GB	hydroshare	-1	15
-12	20	0	GB	hydroshare	-1	16
-13	20	0	GB	hydroshare	-1	17
+COPY public.theme_userquota (id, zone, user_id) FROM stdin;
+1	hydroshare	5
+2	hydroshare	6
+3	hydroshare	7
+4	hydroshare	8
+5	hydroshare	9
+6	hydroshare	10
+7	hydroshare	11
+8	hydroshare	12
+9	hydroshare	13
+10	hydroshare	14
+11	hydroshare	15
+12	hydroshare	16
+13	hydroshare	17
 \.
-
-
---
--- Name: theme_userquota_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.theme_userquota_id_seq', 13, true);
 
 
 --
@@ -25180,7 +24658,1386 @@ COPY public.thumbnail_kvstore (key, value) FROM stdin;
 
 
 --
--- Name: auth_group_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_group_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.auth_group_id_seq', 13, true);
+
+
+--
+-- Name: auth_group_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.auth_group_permissions_id_seq', 2352, true);
+
+
+--
+-- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.auth_permission_id_seq', 1086, true);
+
+
+--
+-- Name: auth_user_groups_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.auth_user_groups_id_seq', 15, true);
+
+
+--
+-- Name: auth_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.auth_user_id_seq', 17, true);
+
+
+--
+-- Name: auth_user_user_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.auth_user_user_permissions_id_seq', 1, false);
+
+
+--
+-- Name: blog_blogcategory_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.blog_blogcategory_id_seq', 1, false);
+
+
+--
+-- Name: blog_blogpost_categories_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.blog_blogpost_categories_id_seq', 1, false);
+
+
+--
+-- Name: blog_blogpost_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.blog_blogpost_id_seq', 1, false);
+
+
+--
+-- Name: blog_blogpost_related_posts_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.blog_blogpost_related_posts_id_seq', 1, false);
+
+
+--
+-- Name: celery_taskmeta_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.celery_taskmeta_id_seq', 1, false);
+
+
+--
+-- Name: celery_tasksetmeta_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.celery_tasksetmeta_id_seq', 1, false);
+
+
+--
+-- Name: conf_setting_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.conf_setting_id_seq', 1, false);
+
+
+--
+-- Name: core_sitepermission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.core_sitepermission_id_seq', 1, false);
+
+
+--
+-- Name: core_sitepermission_sites_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.core_sitepermission_sites_id_seq', 1, false);
+
+
+--
+-- Name: corsheaders_corsmodel_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.corsheaders_corsmodel_id_seq', 1, false);
+
+
+--
+-- Name: django_admin_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.django_admin_log_id_seq', 49, true);
+
+
+--
+-- Name: django_comment_flags_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.django_comment_flags_id_seq', 1, false);
+
+
+--
+-- Name: django_comments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.django_comments_id_seq', 1, false);
+
+
+--
+-- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.django_content_type_id_seq', 289, true);
+
+
+--
+-- Name: django_docker_processes_containeroverrides_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.django_docker_processes_containeroverrides_id_seq', 1, false);
+
+
+--
+-- Name: django_docker_processes_dockerenvvar_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.django_docker_processes_dockerenvvar_id_seq', 1, false);
+
+
+--
+-- Name: django_docker_processes_dockerlink_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.django_docker_processes_dockerlink_id_seq', 1, false);
+
+
+--
+-- Name: django_docker_processes_dockerport_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.django_docker_processes_dockerport_id_seq', 1, false);
+
+
+--
+-- Name: django_docker_processes_dockerprocess_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.django_docker_processes_dockerprocess_id_seq', 1, false);
+
+
+--
+-- Name: django_docker_processes_dockerprofile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.django_docker_processes_dockerprofile_id_seq', 1, false);
+
+
+--
+-- Name: django_docker_processes_dockervolume_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.django_docker_processes_dockervolume_id_seq', 1, false);
+
+
+--
+-- Name: django_docker_processes_overrideenvvar_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.django_docker_processes_overrideenvvar_id_seq', 1, false);
+
+
+--
+-- Name: django_docker_processes_overridelink_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.django_docker_processes_overridelink_id_seq', 1, false);
+
+
+--
+-- Name: django_docker_processes_overrideport_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.django_docker_processes_overrideport_id_seq', 1, false);
+
+
+--
+-- Name: django_docker_processes_overridevolume_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.django_docker_processes_overridevolume_id_seq', 1, false);
+
+
+--
+-- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.django_migrations_id_seq', 415, true);
+
+
+--
+-- Name: django_redirect_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.django_redirect_id_seq', 2, true);
+
+
+--
+-- Name: django_s3_avu_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.django_s3_avu_id_seq', 8, true);
+
+
+--
+-- Name: django_site_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.django_site_id_seq', 1, true);
+
+
+--
+-- Name: djcelery_crontabschedule_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.djcelery_crontabschedule_id_seq', 1, false);
+
+
+--
+-- Name: djcelery_intervalschedule_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.djcelery_intervalschedule_id_seq', 1, false);
+
+
+--
+-- Name: djcelery_periodictask_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.djcelery_periodictask_id_seq', 1, false);
+
+
+--
+-- Name: djcelery_taskstate_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.djcelery_taskstate_id_seq', 1, false);
+
+
+--
+-- Name: djcelery_workerstate_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.djcelery_workerstate_id_seq', 1, false);
+
+
+--
+-- Name: forms_field_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.forms_field_id_seq', 1, false);
+
+
+--
+-- Name: forms_fieldentry_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.forms_fieldentry_id_seq', 1, false);
+
+
+--
+-- Name: forms_formentry_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.forms_formentry_id_seq', 1, false);
+
+
+--
+-- Name: ga_ows_ogrdataset_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.ga_ows_ogrdataset_id_seq', 1, false);
+
+
+--
+-- Name: ga_ows_ogrdatasetcollection_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.ga_ows_ogrdatasetcollection_id_seq', 1, false);
+
+
+--
+-- Name: ga_ows_ogrlayer_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.ga_ows_ogrlayer_id_seq', 1, false);
+
+
+--
+-- Name: ga_resources_orderedresource_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.ga_resources_orderedresource_id_seq', 1, false);
+
+
+--
+-- Name: ga_resources_renderedlayer_styles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.ga_resources_renderedlayer_styles_id_seq', 1, false);
+
+
+--
+-- Name: galleries_galleryimage_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.galleries_galleryimage_id_seq', 1, false);
+
+
+--
+-- Name: generic_assignedkeyword_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.generic_assignedkeyword_id_seq', 1, false);
+
+
+--
+-- Name: generic_keyword_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.generic_keyword_id_seq', 1, false);
+
+
+--
+-- Name: generic_rating_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.generic_rating_id_seq', 1, false);
+
+
+--
+-- Name: health_check_db_testmodel_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.health_check_db_testmodel_id_seq', 1, false);
+
+
+--
+-- Name: hs_access_control_community_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_access_control_community_id_seq', 1, true);
+
+
+--
+-- Name: hs_access_control_communityresourceprivilege_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_access_control_communityresourceprivilege_id_seq', 1, false);
+
+
+--
+-- Name: hs_access_control_communityresourceprovenance_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_access_control_communityresourceprovenance_id_seq', 1, false);
+
+
+--
+-- Name: hs_access_control_feature_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_access_control_feature_id_seq', 1, false);
+
+
+--
+-- Name: hs_access_control_groupaccess_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_access_control_groupaccess_id_seq', 12, true);
+
+
+--
+-- Name: hs_access_control_groupcommunityprivilege_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_access_control_groupcommunityprivilege_id_seq', 11, true);
+
+
+--
+-- Name: hs_access_control_groupcommunityprovenance_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_access_control_groupcommunityprovenance_id_seq', 11, true);
+
+
+--
+-- Name: hs_access_control_groupcommunityrequest_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_access_control_groupcommunityrequest_id_seq', 1, false);
+
+
+--
+-- Name: hs_access_control_groupmembershiprequest_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_access_control_groupmembershiprequest_id_seq', 1, false);
+
+
+--
+-- Name: hs_access_control_groupresourceprivilege_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_access_control_groupresourceprivilege_id_seq', 1, false);
+
+
+--
+-- Name: hs_access_control_groupresourceprovenance_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_access_control_groupresourceprovenance_id_seq', 1, false);
+
+
+--
+-- Name: hs_access_control_requestcommunity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_access_control_requestcommunity_id_seq', 1, false);
+
+
+--
+-- Name: hs_access_control_resourceaccess_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_access_control_resourceaccess_id_seq', 2, true);
+
+
+--
+-- Name: hs_access_control_useraccess_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_access_control_useraccess_id_seq', 14, true);
+
+
+--
+-- Name: hs_access_control_usercommunityprivilege_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_access_control_usercommunityprivilege_id_seq', 2, true);
+
+
+--
+-- Name: hs_access_control_usercommunityprovenance_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_access_control_usercommunityprovenance_id_seq', 2, true);
+
+
+--
+-- Name: hs_access_control_usergroupprivilege_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_access_control_usergroupprivilege_id_seq', 12, true);
+
+
+--
+-- Name: hs_access_control_usergroupprovenance_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_access_control_usergroupprovenance_id_seq', 12, true);
+
+
+--
+-- Name: hs_access_control_userresourceprivilege_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_access_control_userresourceprivilege_id_seq', 2, true);
+
+
+--
+-- Name: hs_access_control_userresourceprovenance_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_access_control_userresourceprovenance_id_seq', 2, true);
+
+
+--
+-- Name: hs_app_netCDF_originalcoverage_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public."hs_app_netCDF_originalcoverage_id_seq"', 1, false);
+
+
+--
+-- Name: hs_app_netCDF_variable_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public."hs_app_netCDF_variable_id_seq"', 1, false);
+
+
+--
+-- Name: hs_app_timeseries_method_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_app_timeseries_method_id_seq', 1, false);
+
+
+--
+-- Name: hs_app_timeseries_processinglevel_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_app_timeseries_processinglevel_id_seq', 1, false);
+
+
+--
+-- Name: hs_app_timeseries_site_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_app_timeseries_site_id_seq', 1, false);
+
+
+--
+-- Name: hs_app_timeseries_timeseriesresult_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_app_timeseries_timeseriesresult_id_seq', 1, false);
+
+
+--
+-- Name: hs_app_timeseries_utcoffset_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_app_timeseries_utcoffset_id_seq', 1, false);
+
+
+--
+-- Name: hs_app_timeseries_variable_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_app_timeseries_variable_id_seq', 1, false);
+
+
+--
+-- Name: hs_collection_resource_collectiondeletedresource_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_collection_resource_collectiondeletedresource_id_seq', 1, false);
+
+
+--
+-- Name: hs_collection_resource_collectiondeletedresource_resourc_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_collection_resource_collectiondeletedresource_resourc_id_seq', 1, false);
+
+
+--
+-- Name: hs_communities_topic_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_communities_topic_id_seq', 75, true);
+
+
+--
+-- Name: hs_core_citation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_core_citation_id_seq', 1, false);
+
+
+--
+-- Name: hs_core_contributor_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_core_contributor_id_seq', 1, false);
+
+
+--
+-- Name: hs_core_coremetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_core_coremetadata_id_seq', 2, true);
+
+
+--
+-- Name: hs_core_coverage_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_core_coverage_id_seq', 1, false);
+
+
+--
+-- Name: hs_core_creator_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_core_creator_id_seq', 1, true);
+
+
+--
+-- Name: hs_core_date_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_core_date_id_seq', 2, true);
+
+
+--
+-- Name: hs_core_description_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_core_description_id_seq', 1, false);
+
+
+--
+-- Name: hs_core_format_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_core_format_id_seq', 1, false);
+
+
+--
+-- Name: hs_core_fundingagency_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_core_fundingagency_id_seq', 1, false);
+
+
+--
+-- Name: hs_core_genericresource_collections_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_core_genericresource_collections_id_seq', 1, false);
+
+
+--
+-- Name: hs_core_geospatialrelation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_core_geospatialrelation_id_seq', 1, false);
+
+
+--
+-- Name: hs_core_groupownership_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_core_groupownership_id_seq', 1, false);
+
+
+--
+-- Name: hs_core_identifier_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_core_identifier_id_seq', 1, true);
+
+
+--
+-- Name: hs_core_language_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_core_language_id_seq', 1, true);
+
+
+--
+-- Name: hs_core_publisher_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_core_publisher_id_seq', 1, false);
+
+
+--
+-- Name: hs_core_relation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_core_relation_id_seq', 1, false);
+
+
+--
+-- Name: hs_core_resourcefile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_core_resourcefile_id_seq', 1, false);
+
+
+--
+-- Name: hs_core_rights_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_core_rights_id_seq', 1, true);
+
+
+--
+-- Name: hs_core_subject_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_core_subject_id_seq', 1, false);
+
+
+--
+-- Name: hs_core_tasknotification_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_core_tasknotification_id_seq', 1, false);
+
+
+--
+-- Name: hs_core_title_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_core_title_id_seq', 1, true);
+
+
+--
+-- Name: hs_core_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_core_type_id_seq', 1, true);
+
+
+--
+-- Name: hs_dictionary_subjectarea_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_dictionary_subjectarea_id_seq', 136, true);
+
+
+--
+-- Name: hs_dictionary_uncategorizedterm_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_dictionary_uncategorizedterm_id_seq', 26, true);
+
+
+--
+-- Name: hs_dictionary_university_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_dictionary_university_id_seq', 18726, true);
+
+
+--
+-- Name: hs_file_types_csvfilemetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_csvfilemetadata_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_csvlogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_csvlogicalfile_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_cvaggregationstatistic_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_cvaggregationstatistic_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_cvelevationdatum_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_cvelevationdatum_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_cvmedium_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_cvmedium_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_cvmethodtype_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_cvmethodtype_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_cvsitetype_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_cvsitetype_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_cvspeciation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_cvspeciation_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_cvstatus_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_cvstatus_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_cvunitstype_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_cvunitstype_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_cvvariablename_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_cvvariablename_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_cvvariabletype_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_cvvariabletype_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_filesetlogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_filesetlogicalfile_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_filesetmetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_filesetmetadata_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_genericfilemetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_genericfilemetadata_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_genericlogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_genericlogicalfile_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_geofeaturefilemetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_geofeaturefilemetadata_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_geofeaturelogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_geofeaturelogicalfile_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_georasterfilemetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_georasterfilemetadata_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_georasterlogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_georasterlogicalfile_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_modelinstancefilemetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_modelinstancefilemetadata_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_modelinstancelogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_modelinstancelogicalfile_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_modelprogramfilemetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_modelprogramfilemetadata_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_modelprogramlogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_modelprogramlogicalfile_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_modelprogramresourcefiletype_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_modelprogramresourcefiletype_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_netcdffilemetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_netcdffilemetadata_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_netcdflogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_netcdflogicalfile_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_reftimeseriesfilemetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_reftimeseriesfilemetadata_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_reftimeserieslogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_reftimeserieslogicalfile_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_timeseriesfilemetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_timeseriesfilemetadata_id_seq', 1, false);
+
+
+--
+-- Name: hs_file_types_timeserieslogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_file_types_timeserieslogicalfile_id_seq', 1, false);
+
+
+--
+-- Name: hs_geo_raster_resource_bandinformation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_geo_raster_resource_bandinformation_id_seq', 1, false);
+
+
+--
+-- Name: hs_geo_raster_resource_cellinformation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_geo_raster_resource_cellinformation_id_seq', 1, false);
+
+
+--
+-- Name: hs_geo_raster_resource_originalcoverage_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_geo_raster_resource_originalcoverage_id_seq', 1, false);
+
+
+--
+-- Name: hs_geographic_feature_resource_fieldinformation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_geographic_feature_resource_fieldinformation_id_seq', 1, false);
+
+
+--
+-- Name: hs_geographic_feature_resource_geometryinformation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_geographic_feature_resource_geometryinformation_id_seq', 1, false);
+
+
+--
+-- Name: hs_geographic_feature_resource_originalcoverage_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_geographic_feature_resource_originalcoverage_id_seq', 1, false);
+
+
+--
+-- Name: hs_labels_resourcelabels_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_labels_resourcelabels_id_seq', 2, true);
+
+
+--
+-- Name: hs_labels_userlabels_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_labels_userlabels_id_seq', 14, true);
+
+
+--
+-- Name: hs_labels_userresourceflags_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_labels_userresourceflags_id_seq', 1, false);
+
+
+--
+-- Name: hs_labels_userresourcelabels_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_labels_userresourcelabels_id_seq', 1, false);
+
+
+--
+-- Name: hs_labels_userstoredlabels_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_labels_userstoredlabels_id_seq', 1, false);
+
+
+--
+-- Name: hs_odm2_odm2variable_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_odm2_odm2variable_id_seq', 1, false);
+
+
+--
+-- Name: hs_tools_resource_apphomepageurl_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tools_resource_apphomepageurl_id_seq', 1, false);
+
+
+--
+-- Name: hs_tools_resource_helppageurl_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tools_resource_helppageurl_id_seq', 1, false);
+
+
+--
+-- Name: hs_tools_resource_issuespageurl_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tools_resource_issuespageurl_id_seq', 1, false);
+
+
+--
+-- Name: hs_tools_resource_mailinglisturl_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tools_resource_mailinglisturl_id_seq', 1, false);
+
+
+--
+-- Name: hs_tools_resource_requesturlbase_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tools_resource_requesturlbase_id_seq', 1, false);
+
+
+--
+-- Name: hs_tools_resource_requesturlbaseaggregation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tools_resource_requesturlbaseaggregation_id_seq', 1, false);
+
+
+--
+-- Name: hs_tools_resource_requesturlbasefile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tools_resource_requesturlbasefile_id_seq', 1, false);
+
+
+--
+-- Name: hs_tools_resource_roadmap_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tools_resource_roadmap_id_seq', 1, false);
+
+
+--
+-- Name: hs_tools_resource_showonopenwithlist_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tools_resource_showonopenwithlist_id_seq', 1, false);
+
+
+--
+-- Name: hs_tools_resource_sourcecodeurl_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tools_resource_sourcecodeurl_id_seq', 1, false);
+
+
+--
+-- Name: hs_tools_resource_supportedaggtypechoices_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tools_resource_supportedaggtypechoices_id_seq', 1, false);
+
+
+--
+-- Name: hs_tools_resource_supportedaggtypes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tools_resource_supportedaggtypes_id_seq', 1, false);
+
+
+--
+-- Name: hs_tools_resource_supportedaggtypes_supported_agg_types_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tools_resource_supportedaggtypes_supported_agg_types_id_seq', 1, false);
+
+
+--
+-- Name: hs_tools_resource_supportedfileextensions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tools_resource_supportedfileextensions_id_seq', 1, false);
+
+
+--
+-- Name: hs_tools_resource_supportedrestypechoices_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tools_resource_supportedrestypechoices_id_seq', 1, false);
+
+
+--
+-- Name: hs_tools_resource_supportedrestypes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tools_resource_supportedrestypes_id_seq', 1, false);
+
+
+--
+-- Name: hs_tools_resource_supportedrestypes_supported_res_types_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tools_resource_supportedrestypes_supported_res_types_id_seq', 1, false);
+
+
+--
+-- Name: hs_tools_resource_supportedsharingstatus_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tools_resource_supportedsharingstatus_id_seq', 1, false);
+
+
+--
+-- Name: hs_tools_resource_supportedsharingstatus_sharing_status_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tools_resource_supportedsharingstatus_sharing_status_id_seq', 1, false);
+
+
+--
+-- Name: hs_tools_resource_supportedsharingstatuschoices_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tools_resource_supportedsharingstatuschoices_id_seq', 1, false);
+
+
+--
+-- Name: hs_tools_resource_testingprotocolurl_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tools_resource_testingprotocolurl_id_seq', 1, false);
+
+
+--
+-- Name: hs_tools_resource_toolicon_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tools_resource_toolicon_id_seq', 1, false);
+
+
+--
+-- Name: hs_tools_resource_toolversion_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tools_resource_toolversion_id_seq', 1, false);
+
+
+--
+-- Name: hs_tracking_session_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tracking_session_id_seq', 57, true);
+
+
+--
+-- Name: hs_tracking_variable_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tracking_variable_id_seq', 930, true);
+
+
+--
+-- Name: hs_tracking_visitor_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.hs_tracking_visitor_id_seq', 57, true);
+
+
+--
+-- Name: oauth2_provider_accesstoken_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.oauth2_provider_accesstoken_id_seq', 1, false);
+
+
+--
+-- Name: oauth2_provider_application_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.oauth2_provider_application_id_seq', 1, false);
+
+
+--
+-- Name: oauth2_provider_grant_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.oauth2_provider_grant_id_seq', 1, false);
+
+
+--
+-- Name: oauth2_provider_idtoken_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.oauth2_provider_idtoken_id_seq', 1, false);
+
+
+--
+-- Name: oauth2_provider_refreshtoken_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.oauth2_provider_refreshtoken_id_seq', 1, false);
+
+
+--
+-- Name: pages_page_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.pages_page_id_seq', 17, true);
+
+
+--
+-- Name: robots_rule_allowed_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.robots_rule_allowed_id_seq', 1, false);
+
+
+--
+-- Name: robots_rule_disallowed_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.robots_rule_disallowed_id_seq', 1, true);
+
+
+--
+-- Name: robots_rule_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.robots_rule_id_seq', 1, true);
+
+
+--
+-- Name: robots_rule_sites_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.robots_rule_sites_id_seq', 1, true);
+
+
+--
+-- Name: robots_url_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.robots_url_id_seq', 1, true);
+
+
+--
+-- Name: security_cspreport_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.security_cspreport_id_seq', 1, false);
+
+
+--
+-- Name: security_passwordexpiry_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.security_passwordexpiry_id_seq', 1, false);
+
+
+--
+-- Name: theme_iconbox_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.theme_iconbox_id_seq', 1, false);
+
+
+--
+-- Name: theme_quotamessage_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.theme_quotamessage_id_seq', 1, true);
+
+
+--
+-- Name: theme_quotarequest_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.theme_quotarequest_id_seq', 1, false);
+
+
+--
+-- Name: theme_siteconfiguration_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.theme_siteconfiguration_id_seq', 1, true);
+
+
+--
+-- Name: theme_userprofile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.theme_userprofile_id_seq', 17, true);
+
+
+--
+-- Name: theme_userquota_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.theme_userquota_id_seq', 13, true);
+
+
+--
+-- Name: auth_group auth_group_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_group
@@ -25188,7 +26045,7 @@ ALTER TABLE ONLY public.auth_group
 
 
 --
--- Name: auth_group_permissions_group_id_permission_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_group_permissions auth_group_permissions_group_id_permission_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_group_permissions
@@ -25196,7 +26053,7 @@ ALTER TABLE ONLY public.auth_group_permissions
 
 
 --
--- Name: auth_group_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_group_permissions auth_group_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_group_permissions
@@ -25204,7 +26061,7 @@ ALTER TABLE ONLY public.auth_group_permissions
 
 
 --
--- Name: auth_group_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_group auth_group_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_group
@@ -25212,7 +26069,7 @@ ALTER TABLE ONLY public.auth_group
 
 
 --
--- Name: auth_permission_content_type_id_codename_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_permission auth_permission_content_type_id_codename_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_permission
@@ -25220,7 +26077,7 @@ ALTER TABLE ONLY public.auth_permission
 
 
 --
--- Name: auth_permission_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_permission auth_permission_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_permission
@@ -25228,7 +26085,7 @@ ALTER TABLE ONLY public.auth_permission
 
 
 --
--- Name: auth_user_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_user_groups auth_user_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_user_groups
@@ -25236,7 +26093,7 @@ ALTER TABLE ONLY public.auth_user_groups
 
 
 --
--- Name: auth_user_groups_user_id_group_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_user_groups auth_user_groups_user_id_group_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_user_groups
@@ -25244,7 +26101,7 @@ ALTER TABLE ONLY public.auth_user_groups
 
 
 --
--- Name: auth_user_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_user auth_user_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_user
@@ -25252,7 +26109,7 @@ ALTER TABLE ONLY public.auth_user
 
 
 --
--- Name: auth_user_user_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_user_user_permissions auth_user_user_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_user_user_permissions
@@ -25260,7 +26117,7 @@ ALTER TABLE ONLY public.auth_user_user_permissions
 
 
 --
--- Name: auth_user_user_permissions_user_id_permission_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_user_user_permissions auth_user_user_permissions_user_id_permission_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_user_user_permissions
@@ -25268,7 +26125,7 @@ ALTER TABLE ONLY public.auth_user_user_permissions
 
 
 --
--- Name: auth_user_username_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_user auth_user_username_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_user
@@ -25276,7 +26133,7 @@ ALTER TABLE ONLY public.auth_user
 
 
 --
--- Name: blog_blogcategory_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: blog_blogcategory blog_blogcategory_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.blog_blogcategory
@@ -25284,7 +26141,7 @@ ALTER TABLE ONLY public.blog_blogcategory
 
 
 --
--- Name: blog_blogpost_categories_blogpost_id_blogcategory_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: blog_blogpost_categories blog_blogpost_categories_blogpost_id_blogcategory_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.blog_blogpost_categories
@@ -25292,7 +26149,7 @@ ALTER TABLE ONLY public.blog_blogpost_categories
 
 
 --
--- Name: blog_blogpost_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: blog_blogpost_categories blog_blogpost_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.blog_blogpost_categories
@@ -25300,7 +26157,7 @@ ALTER TABLE ONLY public.blog_blogpost_categories
 
 
 --
--- Name: blog_blogpost_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: blog_blogpost blog_blogpost_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.blog_blogpost
@@ -25308,7 +26165,7 @@ ALTER TABLE ONLY public.blog_blogpost
 
 
 --
--- Name: blog_blogpost_related_posts_from_blogpost_id_to_blogpost_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: blog_blogpost_related_posts blog_blogpost_related_posts_from_blogpost_id_to_blogpost_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.blog_blogpost_related_posts
@@ -25316,7 +26173,7 @@ ALTER TABLE ONLY public.blog_blogpost_related_posts
 
 
 --
--- Name: blog_blogpost_related_posts_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: blog_blogpost_related_posts blog_blogpost_related_posts_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.blog_blogpost_related_posts
@@ -25324,7 +26181,7 @@ ALTER TABLE ONLY public.blog_blogpost_related_posts
 
 
 --
--- Name: celery_taskmeta_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: celery_taskmeta celery_taskmeta_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.celery_taskmeta
@@ -25332,7 +26189,7 @@ ALTER TABLE ONLY public.celery_taskmeta
 
 
 --
--- Name: celery_taskmeta_task_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: celery_taskmeta celery_taskmeta_task_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.celery_taskmeta
@@ -25340,7 +26197,7 @@ ALTER TABLE ONLY public.celery_taskmeta
 
 
 --
--- Name: celery_tasksetmeta_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: celery_tasksetmeta celery_tasksetmeta_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.celery_tasksetmeta
@@ -25348,7 +26205,7 @@ ALTER TABLE ONLY public.celery_tasksetmeta
 
 
 --
--- Name: celery_tasksetmeta_taskset_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: celery_tasksetmeta celery_tasksetmeta_taskset_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.celery_tasksetmeta
@@ -25356,7 +26213,7 @@ ALTER TABLE ONLY public.celery_tasksetmeta
 
 
 --
--- Name: conf_setting_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: conf_setting conf_setting_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.conf_setting
@@ -25364,7 +26221,7 @@ ALTER TABLE ONLY public.conf_setting
 
 
 --
--- Name: core_sitepermission_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: core_sitepermission core_sitepermission_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.core_sitepermission
@@ -25372,7 +26229,7 @@ ALTER TABLE ONLY public.core_sitepermission
 
 
 --
--- Name: core_sitepermission_sites_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: core_sitepermission_sites core_sitepermission_sites_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.core_sitepermission_sites
@@ -25380,7 +26237,7 @@ ALTER TABLE ONLY public.core_sitepermission_sites
 
 
 --
--- Name: core_sitepermission_sites_sitepermission_id_site_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: core_sitepermission_sites core_sitepermission_sites_sitepermission_id_site_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.core_sitepermission_sites
@@ -25388,7 +26245,7 @@ ALTER TABLE ONLY public.core_sitepermission_sites
 
 
 --
--- Name: core_sitepermission_user_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: core_sitepermission core_sitepermission_user_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.core_sitepermission
@@ -25396,7 +26253,7 @@ ALTER TABLE ONLY public.core_sitepermission
 
 
 --
--- Name: corsheaders_corsmodel_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: corsheaders_corsmodel corsheaders_corsmodel_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.corsheaders_corsmodel
@@ -25404,7 +26261,7 @@ ALTER TABLE ONLY public.corsheaders_corsmodel
 
 
 --
--- Name: django_admin_log_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_admin_log django_admin_log_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_admin_log
@@ -25412,7 +26269,7 @@ ALTER TABLE ONLY public.django_admin_log
 
 
 --
--- Name: django_comment_flags_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_comment_flags django_comment_flags_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_comment_flags
@@ -25420,7 +26277,7 @@ ALTER TABLE ONLY public.django_comment_flags
 
 
 --
--- Name: django_comment_flags_user_id_comment_id_flag_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_comment_flags django_comment_flags_user_id_comment_id_flag_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_comment_flags
@@ -25428,7 +26285,7 @@ ALTER TABLE ONLY public.django_comment_flags
 
 
 --
--- Name: django_comments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_comments django_comments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_comments
@@ -25436,7 +26293,7 @@ ALTER TABLE ONLY public.django_comments
 
 
 --
--- Name: django_content_type_app_label_45f3b1d93ec8c61c_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_content_type django_content_type_app_label_45f3b1d93ec8c61c_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_content_type
@@ -25444,7 +26301,7 @@ ALTER TABLE ONLY public.django_content_type
 
 
 --
--- Name: django_content_type_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_content_type django_content_type_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_content_type
@@ -25452,7 +26309,7 @@ ALTER TABLE ONLY public.django_content_type
 
 
 --
--- Name: django_docker_processes_containeroverrides_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_containeroverrides django_docker_processes_containeroverrides_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_containeroverrides
@@ -25460,7 +26317,7 @@ ALTER TABLE ONLY public.django_docker_processes_containeroverrides
 
 
 --
--- Name: django_docker_processes_dockerenvvar_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockerenvvar django_docker_processes_dockerenvvar_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_dockerenvvar
@@ -25468,7 +26325,7 @@ ALTER TABLE ONLY public.django_docker_processes_dockerenvvar
 
 
 --
--- Name: django_docker_processes_dockerlink_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockerlink django_docker_processes_dockerlink_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_dockerlink
@@ -25476,7 +26333,7 @@ ALTER TABLE ONLY public.django_docker_processes_dockerlink
 
 
 --
--- Name: django_docker_processes_dockerport_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockerport django_docker_processes_dockerport_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_dockerport
@@ -25484,7 +26341,7 @@ ALTER TABLE ONLY public.django_docker_processes_dockerport
 
 
 --
--- Name: django_docker_processes_dockerprocess_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockerprocess django_docker_processes_dockerprocess_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_dockerprocess
@@ -25492,7 +26349,7 @@ ALTER TABLE ONLY public.django_docker_processes_dockerprocess
 
 
 --
--- Name: django_docker_processes_dockerprocess_token_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockerprocess django_docker_processes_dockerprocess_token_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_dockerprocess
@@ -25500,7 +26357,7 @@ ALTER TABLE ONLY public.django_docker_processes_dockerprocess
 
 
 --
--- Name: django_docker_processes_dockerprofile_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockerprofile django_docker_processes_dockerprofile_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_dockerprofile
@@ -25508,7 +26365,7 @@ ALTER TABLE ONLY public.django_docker_processes_dockerprofile
 
 
 --
--- Name: django_docker_processes_dockerprofile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockerprofile django_docker_processes_dockerprofile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_dockerprofile
@@ -25516,7 +26373,7 @@ ALTER TABLE ONLY public.django_docker_processes_dockerprofile
 
 
 --
--- Name: django_docker_processes_dockervolume_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockervolume django_docker_processes_dockervolume_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_dockervolume
@@ -25524,7 +26381,7 @@ ALTER TABLE ONLY public.django_docker_processes_dockervolume
 
 
 --
--- Name: django_docker_processes_overrideenvvar_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_overrideenvvar django_docker_processes_overrideenvvar_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_overrideenvvar
@@ -25532,7 +26389,7 @@ ALTER TABLE ONLY public.django_docker_processes_overrideenvvar
 
 
 --
--- Name: django_docker_processes_overridelink_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_overridelink django_docker_processes_overridelink_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_overridelink
@@ -25540,7 +26397,7 @@ ALTER TABLE ONLY public.django_docker_processes_overridelink
 
 
 --
--- Name: django_docker_processes_overrideport_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_overrideport django_docker_processes_overrideport_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_overrideport
@@ -25548,7 +26405,7 @@ ALTER TABLE ONLY public.django_docker_processes_overrideport
 
 
 --
--- Name: django_docker_processes_overridevolume_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_overridevolume django_docker_processes_overridevolume_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_overridevolume
@@ -25556,15 +26413,7 @@ ALTER TABLE ONLY public.django_docker_processes_overridevolume
 
 
 --
--- Name: django_irods_rodsenvironment_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY public.django_irods_rodsenvironment
-    ADD CONSTRAINT django_irods_rodsenvironment_pkey PRIMARY KEY (id);
-
-
---
--- Name: django_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_migrations django_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_migrations
@@ -25572,7 +26421,7 @@ ALTER TABLE ONLY public.django_migrations
 
 
 --
--- Name: django_redirect_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_redirect django_redirect_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_redirect
@@ -25580,7 +26429,7 @@ ALTER TABLE ONLY public.django_redirect
 
 
 --
--- Name: django_redirect_site_id_old_path_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_redirect django_redirect_site_id_old_path_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_redirect
@@ -25588,7 +26437,15 @@ ALTER TABLE ONLY public.django_redirect
 
 
 --
--- Name: django_session_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_s3_avu django_s3_avu_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.django_s3_avu
+    ADD CONSTRAINT django_s3_avu_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: django_session django_session_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_session
@@ -25596,7 +26453,7 @@ ALTER TABLE ONLY public.django_session
 
 
 --
--- Name: django_site_domain_a2e37b91_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_site django_site_domain_a2e37b91_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_site
@@ -25604,7 +26461,7 @@ ALTER TABLE ONLY public.django_site
 
 
 --
--- Name: django_site_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_site django_site_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_site
@@ -25612,7 +26469,7 @@ ALTER TABLE ONLY public.django_site
 
 
 --
--- Name: djcelery_crontabschedule_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_crontabschedule djcelery_crontabschedule_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.djcelery_crontabschedule
@@ -25620,7 +26477,7 @@ ALTER TABLE ONLY public.djcelery_crontabschedule
 
 
 --
--- Name: djcelery_intervalschedule_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_intervalschedule djcelery_intervalschedule_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.djcelery_intervalschedule
@@ -25628,7 +26485,7 @@ ALTER TABLE ONLY public.djcelery_intervalschedule
 
 
 --
--- Name: djcelery_periodictask_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_periodictask djcelery_periodictask_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.djcelery_periodictask
@@ -25636,7 +26493,7 @@ ALTER TABLE ONLY public.djcelery_periodictask
 
 
 --
--- Name: djcelery_periodictask_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_periodictask djcelery_periodictask_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.djcelery_periodictask
@@ -25644,7 +26501,7 @@ ALTER TABLE ONLY public.djcelery_periodictask
 
 
 --
--- Name: djcelery_periodictasks_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_periodictasks djcelery_periodictasks_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.djcelery_periodictasks
@@ -25652,7 +26509,7 @@ ALTER TABLE ONLY public.djcelery_periodictasks
 
 
 --
--- Name: djcelery_taskstate_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_taskstate djcelery_taskstate_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.djcelery_taskstate
@@ -25660,7 +26517,7 @@ ALTER TABLE ONLY public.djcelery_taskstate
 
 
 --
--- Name: djcelery_taskstate_task_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_taskstate djcelery_taskstate_task_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.djcelery_taskstate
@@ -25668,7 +26525,7 @@ ALTER TABLE ONLY public.djcelery_taskstate
 
 
 --
--- Name: djcelery_workerstate_hostname_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_workerstate djcelery_workerstate_hostname_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.djcelery_workerstate
@@ -25676,7 +26533,7 @@ ALTER TABLE ONLY public.djcelery_workerstate
 
 
 --
--- Name: djcelery_workerstate_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_workerstate djcelery_workerstate_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.djcelery_workerstate
@@ -25684,7 +26541,7 @@ ALTER TABLE ONLY public.djcelery_workerstate
 
 
 --
--- Name: forms_field_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: forms_field forms_field_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.forms_field
@@ -25692,7 +26549,7 @@ ALTER TABLE ONLY public.forms_field
 
 
 --
--- Name: forms_fieldentry_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: forms_fieldentry forms_fieldentry_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.forms_fieldentry
@@ -25700,7 +26557,7 @@ ALTER TABLE ONLY public.forms_fieldentry
 
 
 --
--- Name: forms_form_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: forms_form forms_form_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.forms_form
@@ -25708,7 +26565,7 @@ ALTER TABLE ONLY public.forms_form
 
 
 --
--- Name: forms_formentry_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: forms_formentry forms_formentry_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.forms_formentry
@@ -25716,7 +26573,7 @@ ALTER TABLE ONLY public.forms_formentry
 
 
 --
--- Name: ga_ows_ogrdataset_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_ows_ogrdataset ga_ows_ogrdataset_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_ows_ogrdataset
@@ -25724,7 +26581,7 @@ ALTER TABLE ONLY public.ga_ows_ogrdataset
 
 
 --
--- Name: ga_ows_ogrdatasetcollection_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_ows_ogrdatasetcollection ga_ows_ogrdatasetcollection_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_ows_ogrdatasetcollection
@@ -25732,7 +26589,7 @@ ALTER TABLE ONLY public.ga_ows_ogrdatasetcollection
 
 
 --
--- Name: ga_ows_ogrlayer_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_ows_ogrlayer ga_ows_ogrlayer_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_ows_ogrlayer
@@ -25740,7 +26597,7 @@ ALTER TABLE ONLY public.ga_ows_ogrlayer
 
 
 --
--- Name: ga_resources_catalogpage_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_catalogpage ga_resources_catalogpage_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_catalogpage
@@ -25748,7 +26605,7 @@ ALTER TABLE ONLY public.ga_resources_catalogpage
 
 
 --
--- Name: ga_resources_dataresource_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_dataresource ga_resources_dataresource_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_dataresource
@@ -25756,7 +26613,7 @@ ALTER TABLE ONLY public.ga_resources_dataresource
 
 
 --
--- Name: ga_resources_orderedresource_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_orderedresource ga_resources_orderedresource_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_orderedresource
@@ -25764,7 +26621,7 @@ ALTER TABLE ONLY public.ga_resources_orderedresource
 
 
 --
--- Name: ga_resources_relatedresource_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_relatedresource ga_resources_relatedresource_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_relatedresource
@@ -25772,7 +26629,7 @@ ALTER TABLE ONLY public.ga_resources_relatedresource
 
 
 --
--- Name: ga_resources_renderedlayer_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_renderedlayer ga_resources_renderedlayer_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_renderedlayer
@@ -25780,7 +26637,7 @@ ALTER TABLE ONLY public.ga_resources_renderedlayer
 
 
 --
--- Name: ga_resources_renderedlayer_styles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_renderedlayer_styles ga_resources_renderedlayer_styles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_renderedlayer_styles
@@ -25788,7 +26645,7 @@ ALTER TABLE ONLY public.ga_resources_renderedlayer_styles
 
 
 --
--- Name: ga_resources_renderedlayer_styles_renderedlayer_id_style_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_renderedlayer_styles ga_resources_renderedlayer_styles_renderedlayer_id_style_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_renderedlayer_styles
@@ -25796,7 +26653,7 @@ ALTER TABLE ONLY public.ga_resources_renderedlayer_styles
 
 
 --
--- Name: ga_resources_resourcegroup_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_resourcegroup ga_resources_resourcegroup_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_resourcegroup
@@ -25804,7 +26661,7 @@ ALTER TABLE ONLY public.ga_resources_resourcegroup
 
 
 --
--- Name: ga_resources_style_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_style ga_resources_style_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_style
@@ -25812,7 +26669,7 @@ ALTER TABLE ONLY public.ga_resources_style
 
 
 --
--- Name: galleries_gallery_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: galleries_gallery galleries_gallery_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.galleries_gallery
@@ -25820,7 +26677,7 @@ ALTER TABLE ONLY public.galleries_gallery
 
 
 --
--- Name: galleries_galleryimage_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: galleries_galleryimage galleries_galleryimage_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.galleries_galleryimage
@@ -25828,7 +26685,7 @@ ALTER TABLE ONLY public.galleries_galleryimage
 
 
 --
--- Name: generic_assignedkeyword_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: generic_assignedkeyword generic_assignedkeyword_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.generic_assignedkeyword
@@ -25836,7 +26693,7 @@ ALTER TABLE ONLY public.generic_assignedkeyword
 
 
 --
--- Name: generic_keyword_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: generic_keyword generic_keyword_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.generic_keyword
@@ -25844,7 +26701,7 @@ ALTER TABLE ONLY public.generic_keyword
 
 
 --
--- Name: generic_rating_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: generic_rating generic_rating_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.generic_rating
@@ -25852,7 +26709,7 @@ ALTER TABLE ONLY public.generic_rating
 
 
 --
--- Name: generic_threadedcomment_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: generic_threadedcomment generic_threadedcomment_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.generic_threadedcomment
@@ -25860,7 +26717,15 @@ ALTER TABLE ONLY public.generic_threadedcomment
 
 
 --
--- Name: hs_access_control_commun_community_id_resource_id_8c98adee_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: health_check_db_testmodel health_check_db_testmodel_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.health_check_db_testmodel
+    ADD CONSTRAINT health_check_db_testmodel_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_access_control_communityresourceprivilege hs_access_control_commun_community_id_resource_id_8c98adee_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_communityresourceprivilege
@@ -25868,7 +26733,7 @@ ALTER TABLE ONLY public.hs_access_control_communityresourceprivilege
 
 
 --
--- Name: hs_access_control_commun_resource_id_community_id_33fe6f26_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_communityresourceprovenance hs_access_control_commun_resource_id_community_id_33fe6f26_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_communityresourceprovenance
@@ -25876,7 +26741,7 @@ ALTER TABLE ONLY public.hs_access_control_communityresourceprovenance
 
 
 --
--- Name: hs_access_control_community_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_community hs_access_control_community_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_community
@@ -25884,7 +26749,7 @@ ALTER TABLE ONLY public.hs_access_control_community
 
 
 --
--- Name: hs_access_control_communityresourceprivilege_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_communityresourceprivilege hs_access_control_communityresourceprivilege_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_communityresourceprivilege
@@ -25892,7 +26757,7 @@ ALTER TABLE ONLY public.hs_access_control_communityresourceprivilege
 
 
 --
--- Name: hs_access_control_communityresourceprovenance_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_communityresourceprovenance hs_access_control_communityresourceprovenance_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_communityresourceprovenance
@@ -25900,7 +26765,7 @@ ALTER TABLE ONLY public.hs_access_control_communityresourceprovenance
 
 
 --
--- Name: hs_access_control_feature_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_feature hs_access_control_feature_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_feature
@@ -25908,7 +26773,7 @@ ALTER TABLE ONLY public.hs_access_control_feature
 
 
 --
--- Name: hs_access_control_feature_user_id_feature_a873c754_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_feature hs_access_control_feature_user_id_feature_a873c754_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_feature
@@ -25916,7 +26781,7 @@ ALTER TABLE ONLY public.hs_access_control_feature
 
 
 --
--- Name: hs_access_control_groupaccess_group_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupaccess hs_access_control_groupaccess_group_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupaccess
@@ -25924,7 +26789,7 @@ ALTER TABLE ONLY public.hs_access_control_groupaccess
 
 
 --
--- Name: hs_access_control_groupaccess_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupaccess hs_access_control_groupaccess_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupaccess
@@ -25932,7 +26797,7 @@ ALTER TABLE ONLY public.hs_access_control_groupaccess
 
 
 --
--- Name: hs_access_control_groupc_community_id_group_id_9ab7aa21_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupcommunityprivilege hs_access_control_groupc_community_id_group_id_9ab7aa21_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupcommunityprivilege
@@ -25940,7 +26805,7 @@ ALTER TABLE ONLY public.hs_access_control_groupcommunityprivilege
 
 
 --
--- Name: hs_access_control_groupc_community_id_group_id_st_9112e561_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupcommunityprovenance hs_access_control_groupc_community_id_group_id_st_9112e561_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupcommunityprovenance
@@ -25948,7 +26813,7 @@ ALTER TABLE ONLY public.hs_access_control_groupcommunityprovenance
 
 
 --
--- Name: hs_access_control_groupcommunityprivilege_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupcommunityprivilege hs_access_control_groupcommunityprivilege_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupcommunityprivilege
@@ -25956,7 +26821,7 @@ ALTER TABLE ONLY public.hs_access_control_groupcommunityprivilege
 
 
 --
--- Name: hs_access_control_groupcommunityprovenance_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupcommunityprovenance hs_access_control_groupcommunityprovenance_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupcommunityprovenance
@@ -25964,7 +26829,7 @@ ALTER TABLE ONLY public.hs_access_control_groupcommunityprovenance
 
 
 --
--- Name: hs_access_control_groupcommunityrequest_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupcommunityrequest hs_access_control_groupcommunityrequest_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupcommunityrequest
@@ -25972,7 +26837,7 @@ ALTER TABLE ONLY public.hs_access_control_groupcommunityrequest
 
 
 --
--- Name: hs_access_control_groupmembershiprequest_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupmembershiprequest hs_access_control_groupmembershiprequest_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupmembershiprequest
@@ -25980,7 +26845,7 @@ ALTER TABLE ONLY public.hs_access_control_groupmembershiprequest
 
 
 --
--- Name: hs_access_control_groupresourcep_group_id_157babc573be246e_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupresourceprovenance hs_access_control_groupresourcep_group_id_157babc573be246e_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupresourceprovenance
@@ -25988,7 +26853,7 @@ ALTER TABLE ONLY public.hs_access_control_groupresourceprovenance
 
 
 --
--- Name: hs_access_control_groupresourcepr_group_id_51ccf8b056500a7_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupresourceprivilege hs_access_control_groupresourcepr_group_id_51ccf8b056500a7_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupresourceprivilege
@@ -25996,7 +26861,7 @@ ALTER TABLE ONLY public.hs_access_control_groupresourceprivilege
 
 
 --
--- Name: hs_access_control_groupresourceprivilege_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupresourceprivilege hs_access_control_groupresourceprivilege_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupresourceprivilege
@@ -26004,7 +26869,7 @@ ALTER TABLE ONLY public.hs_access_control_groupresourceprivilege
 
 
 --
--- Name: hs_access_control_groupresourceprovenance_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupresourceprovenance hs_access_control_groupresourceprovenance_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupresourceprovenance
@@ -26012,7 +26877,15 @@ ALTER TABLE ONLY public.hs_access_control_groupresourceprovenance
 
 
 --
--- Name: hs_access_control_resourceaccess_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_requestcommunity hs_access_control_requestcommunity_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_access_control_requestcommunity
+    ADD CONSTRAINT hs_access_control_requestcommunity_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_access_control_resourceaccess hs_access_control_resourceaccess_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_resourceaccess
@@ -26020,7 +26893,7 @@ ALTER TABLE ONLY public.hs_access_control_resourceaccess
 
 
 --
--- Name: hs_access_control_resourceaccess_resource_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_resourceaccess hs_access_control_resourceaccess_resource_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_resourceaccess
@@ -26028,7 +26901,7 @@ ALTER TABLE ONLY public.hs_access_control_resourceaccess
 
 
 --
--- Name: hs_access_control_useraccess_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_useraccess hs_access_control_useraccess_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_useraccess
@@ -26036,7 +26909,7 @@ ALTER TABLE ONLY public.hs_access_control_useraccess
 
 
 --
--- Name: hs_access_control_useraccess_user_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_useraccess hs_access_control_useraccess_user_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_useraccess
@@ -26044,7 +26917,7 @@ ALTER TABLE ONLY public.hs_access_control_useraccess
 
 
 --
--- Name: hs_access_control_userco_community_id_user_id_52fe2ea6_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usercommunityprivilege hs_access_control_userco_community_id_user_id_52fe2ea6_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usercommunityprivilege
@@ -26052,7 +26925,7 @@ ALTER TABLE ONLY public.hs_access_control_usercommunityprivilege
 
 
 --
--- Name: hs_access_control_userco_community_id_user_id_sta_4ec553da_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usercommunityprovenance hs_access_control_userco_community_id_user_id_sta_4ec553da_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usercommunityprovenance
@@ -26060,7 +26933,7 @@ ALTER TABLE ONLY public.hs_access_control_usercommunityprovenance
 
 
 --
--- Name: hs_access_control_usercommunityprivilege_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usercommunityprivilege hs_access_control_usercommunityprivilege_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usercommunityprivilege
@@ -26068,7 +26941,7 @@ ALTER TABLE ONLY public.hs_access_control_usercommunityprivilege
 
 
 --
--- Name: hs_access_control_usercommunityprovenance_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usercommunityprovenance hs_access_control_usercommunityprovenance_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usercommunityprovenance
@@ -26076,7 +26949,7 @@ ALTER TABLE ONLY public.hs_access_control_usercommunityprovenance
 
 
 --
--- Name: hs_access_control_usergroupprivil_user_id_48a0f7a1b974b91b_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usergroupprivilege hs_access_control_usergroupprivil_user_id_48a0f7a1b974b91b_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usergroupprivilege
@@ -26084,7 +26957,7 @@ ALTER TABLE ONLY public.hs_access_control_usergroupprivilege
 
 
 --
--- Name: hs_access_control_usergroupprivilege_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usergroupprivilege hs_access_control_usergroupprivilege_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usergroupprivilege
@@ -26092,7 +26965,7 @@ ALTER TABLE ONLY public.hs_access_control_usergroupprivilege
 
 
 --
--- Name: hs_access_control_usergroupproven_user_id_548c10e220120a3e_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usergroupprovenance hs_access_control_usergroupproven_user_id_548c10e220120a3e_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usergroupprovenance
@@ -26100,7 +26973,7 @@ ALTER TABLE ONLY public.hs_access_control_usergroupprovenance
 
 
 --
--- Name: hs_access_control_usergroupprovenance_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usergroupprovenance hs_access_control_usergroupprovenance_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usergroupprovenance
@@ -26108,7 +26981,7 @@ ALTER TABLE ONLY public.hs_access_control_usergroupprovenance
 
 
 --
--- Name: hs_access_control_userresourcepri_user_id_424814b34310c9d3_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_userresourceprivilege hs_access_control_userresourcepri_user_id_424814b34310c9d3_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_userresourceprivilege
@@ -26116,7 +26989,7 @@ ALTER TABLE ONLY public.hs_access_control_userresourceprivilege
 
 
 --
--- Name: hs_access_control_userresourceprivilege_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_userresourceprivilege hs_access_control_userresourceprivilege_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_userresourceprivilege
@@ -26124,7 +26997,7 @@ ALTER TABLE ONLY public.hs_access_control_userresourceprivilege
 
 
 --
--- Name: hs_access_control_userresourcepro_user_id_52195a50359334ec_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_userresourceprovenance hs_access_control_userresourcepro_user_id_52195a50359334ec_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_userresourceprovenance
@@ -26132,7 +27005,7 @@ ALTER TABLE ONLY public.hs_access_control_userresourceprovenance
 
 
 --
--- Name: hs_access_control_userresourceprovenance_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_userresourceprovenance hs_access_control_userresourceprovenance_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_userresourceprovenance
@@ -26140,7 +27013,7 @@ ALTER TABLE ONLY public.hs_access_control_userresourceprovenance
 
 
 --
--- Name: hs_app_netCDF_originalcov_content_type_id_6aeae6195249cfcf_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_originalcoverage hs_app_netCDF_originalcov_content_type_id_6aeae6195249cfcf_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_originalcoverage
@@ -26148,7 +27021,7 @@ ALTER TABLE ONLY public.hs_file_types_originalcoverage
 
 
 --
--- Name: hs_app_netCDF_originalcoverage_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_originalcoverage hs_app_netCDF_originalcoverage_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_originalcoverage
@@ -26156,7 +27029,7 @@ ALTER TABLE ONLY public.hs_file_types_originalcoverage
 
 
 --
--- Name: hs_app_netCDF_variable_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_variable hs_app_netCDF_variable_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_variable
@@ -26164,7 +27037,7 @@ ALTER TABLE ONLY public.hs_file_types_variable
 
 
 --
--- Name: hs_app_timeseries_method_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_method hs_app_timeseries_method_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_method
@@ -26172,7 +27045,7 @@ ALTER TABLE ONLY public.hs_file_types_method
 
 
 --
--- Name: hs_app_timeseries_processinglevel_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_processinglevel hs_app_timeseries_processinglevel_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_processinglevel
@@ -26180,7 +27053,7 @@ ALTER TABLE ONLY public.hs_file_types_processinglevel
 
 
 --
--- Name: hs_app_timeseries_site_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_site hs_app_timeseries_site_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_site
@@ -26188,7 +27061,7 @@ ALTER TABLE ONLY public.hs_file_types_site
 
 
 --
--- Name: hs_app_timeseries_timeseriesresult_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_timeseriesresult hs_app_timeseries_timeseriesresult_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_timeseriesresult
@@ -26196,7 +27069,7 @@ ALTER TABLE ONLY public.hs_file_types_timeseriesresult
 
 
 --
--- Name: hs_app_timeseries_utcoffset_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_utcoffset hs_app_timeseries_utcoffset_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_utcoffset
@@ -26204,7 +27077,7 @@ ALTER TABLE ONLY public.hs_file_types_utcoffset
 
 
 --
--- Name: hs_app_timeseries_variable_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_variabletimeseries hs_app_timeseries_variable_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_variabletimeseries
@@ -26212,7 +27085,7 @@ ALTER TABLE ONLY public.hs_file_types_variabletimeseries
 
 
 --
--- Name: hs_collection_resource_collec_collectiondeletedresource_id__key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_collection_resource_collectiondeletedresource_resource_od9f5 hs_collection_resource_collec_collectiondeletedresource_id__key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_collection_resource_collectiondeletedresource_resource_od9f5
@@ -26220,7 +27093,7 @@ ALTER TABLE ONLY public.hs_collection_resource_collectiondeletedresource_resourc
 
 
 --
--- Name: hs_collection_resource_collectiondeletedresource_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_collection_resource_collectiondeletedresource hs_collection_resource_collectiondeletedresource_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_collection_resource_collectiondeletedresource
@@ -26228,7 +27101,7 @@ ALTER TABLE ONLY public.hs_collection_resource_collectiondeletedresource
 
 
 --
--- Name: hs_collection_resource_collectiondeletedresource_resource__pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_collection_resource_collectiondeletedresource_resource_od9f5 hs_collection_resource_collectiondeletedresource_resource__pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_collection_resource_collectiondeletedresource_resource_od9f5
@@ -26236,7 +27109,7 @@ ALTER TABLE ONLY public.hs_collection_resource_collectiondeletedresource_resourc
 
 
 --
--- Name: hs_communities_topic_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_communities_topic hs_communities_topic_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_communities_topic
@@ -26244,7 +27117,7 @@ ALTER TABLE ONLY public.hs_communities_topic
 
 
 --
--- Name: hs_core_citation_content_type_id_object_id_7681c663_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_citation hs_core_citation_content_type_id_object_id_7681c663_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_citation
@@ -26252,7 +27125,7 @@ ALTER TABLE ONLY public.hs_core_citation
 
 
 --
--- Name: hs_core_citation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_citation hs_core_citation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_citation
@@ -26260,7 +27133,7 @@ ALTER TABLE ONLY public.hs_core_citation
 
 
 --
--- Name: hs_core_contributor_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_contributor hs_core_contributor_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_contributor
@@ -26268,7 +27141,7 @@ ALTER TABLE ONLY public.hs_core_contributor
 
 
 --
--- Name: hs_core_coremetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_coremetadata hs_core_coremetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_coremetadata
@@ -26276,7 +27149,7 @@ ALTER TABLE ONLY public.hs_core_coremetadata
 
 
 --
--- Name: hs_core_coverage_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_coverage hs_core_coverage_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_coverage
@@ -26284,7 +27157,7 @@ ALTER TABLE ONLY public.hs_core_coverage
 
 
 --
--- Name: hs_core_coverage_type_5e44b8195dffb14e_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_coverage hs_core_coverage_type_5e44b8195dffb14e_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_coverage
@@ -26292,7 +27165,7 @@ ALTER TABLE ONLY public.hs_core_coverage
 
 
 --
--- Name: hs_core_creator_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_creator hs_core_creator_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_creator
@@ -26300,7 +27173,7 @@ ALTER TABLE ONLY public.hs_core_creator
 
 
 --
--- Name: hs_core_date_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_date hs_core_date_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_date
@@ -26308,7 +27181,7 @@ ALTER TABLE ONLY public.hs_core_date
 
 
 --
--- Name: hs_core_date_type_51dc7e471f315ec_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_date hs_core_date_type_51dc7e471f315ec_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_date
@@ -26316,7 +27189,7 @@ ALTER TABLE ONLY public.hs_core_date
 
 
 --
--- Name: hs_core_description_content_type_id_101f8a6db2013e88_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_description hs_core_description_content_type_id_101f8a6db2013e88_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_description
@@ -26324,7 +27197,7 @@ ALTER TABLE ONLY public.hs_core_description
 
 
 --
--- Name: hs_core_description_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_description hs_core_description_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_description
@@ -26332,7 +27205,7 @@ ALTER TABLE ONLY public.hs_core_description
 
 
 --
--- Name: hs_core_format_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_format hs_core_format_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_format
@@ -26340,7 +27213,7 @@ ALTER TABLE ONLY public.hs_core_format
 
 
 --
--- Name: hs_core_format_value_8b10e84db4524d5_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_format hs_core_format_value_8b10e84db4524d5_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_format
@@ -26348,7 +27221,7 @@ ALTER TABLE ONLY public.hs_core_format
 
 
 --
--- Name: hs_core_fundingagency_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_fundingagency hs_core_fundingagency_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_fundingagency
@@ -26356,7 +27229,7 @@ ALTER TABLE ONLY public.hs_core_fundingagency
 
 
 --
--- Name: hs_core_genericresource_colle_from_baseresource_id_to_baser_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_genericresource_collections hs_core_genericresource_colle_from_baseresource_id_to_baser_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_genericresource_collections
@@ -26364,7 +27237,7 @@ ALTER TABLE ONLY public.hs_core_genericresource_collections
 
 
 --
--- Name: hs_core_genericresource_collections_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_genericresource_collections hs_core_genericresource_collections_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_genericresource_collections
@@ -26372,7 +27245,7 @@ ALTER TABLE ONLY public.hs_core_genericresource_collections
 
 
 --
--- Name: hs_core_genericresource_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_genericresource hs_core_genericresource_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_genericresource
@@ -26380,7 +27253,15 @@ ALTER TABLE ONLY public.hs_core_genericresource
 
 
 --
--- Name: hs_core_groupownership_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_geospatialrelation hs_core_geospatialrelation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_core_geospatialrelation
+    ADD CONSTRAINT hs_core_geospatialrelation_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_core_groupownership hs_core_groupownership_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_groupownership
@@ -26388,7 +27269,7 @@ ALTER TABLE ONLY public.hs_core_groupownership
 
 
 --
--- Name: hs_core_identifier_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_identifier hs_core_identifier_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_identifier
@@ -26396,7 +27277,7 @@ ALTER TABLE ONLY public.hs_core_identifier
 
 
 --
--- Name: hs_core_identifier_url_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_identifier hs_core_identifier_url_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_identifier
@@ -26404,7 +27285,7 @@ ALTER TABLE ONLY public.hs_core_identifier
 
 
 --
--- Name: hs_core_language_content_type_id_3effcbe0af54718f_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_language hs_core_language_content_type_id_3effcbe0af54718f_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_language
@@ -26412,7 +27293,7 @@ ALTER TABLE ONLY public.hs_core_language
 
 
 --
--- Name: hs_core_language_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_language hs_core_language_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_language
@@ -26420,7 +27301,7 @@ ALTER TABLE ONLY public.hs_core_language
 
 
 --
--- Name: hs_core_publisher_content_type_id_1d402c032dd55330_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_publisher hs_core_publisher_content_type_id_1d402c032dd55330_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_publisher
@@ -26428,7 +27309,7 @@ ALTER TABLE ONLY public.hs_core_publisher
 
 
 --
--- Name: hs_core_publisher_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_publisher hs_core_publisher_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_publisher
@@ -26436,7 +27317,7 @@ ALTER TABLE ONLY public.hs_core_publisher
 
 
 --
--- Name: hs_core_relation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_relation hs_core_relation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_relation
@@ -26444,7 +27325,7 @@ ALTER TABLE ONLY public.hs_core_relation
 
 
 --
--- Name: hs_core_resourcefile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_resourcefile hs_core_resourcefile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_resourcefile
@@ -26452,7 +27333,15 @@ ALTER TABLE ONLY public.hs_core_resourcefile
 
 
 --
--- Name: hs_core_rights_content_type_id_ef5b26c774a3f32_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_resourcefile hs_core_resourcefile_resource_file_ab307f6e_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_core_resourcefile
+    ADD CONSTRAINT hs_core_resourcefile_resource_file_ab307f6e_uniq UNIQUE (resource_file);
+
+
+--
+-- Name: hs_core_rights hs_core_rights_content_type_id_ef5b26c774a3f32_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_rights
@@ -26460,7 +27349,7 @@ ALTER TABLE ONLY public.hs_core_rights
 
 
 --
--- Name: hs_core_rights_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_rights hs_core_rights_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_rights
@@ -26468,7 +27357,7 @@ ALTER TABLE ONLY public.hs_core_rights
 
 
 --
--- Name: hs_core_subject_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_subject hs_core_subject_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_subject
@@ -26476,7 +27365,7 @@ ALTER TABLE ONLY public.hs_core_subject
 
 
 --
--- Name: hs_core_subject_value_4ec0e8f3e12395cd_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_subject hs_core_subject_value_4ec0e8f3e12395cd_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_subject
@@ -26484,7 +27373,7 @@ ALTER TABLE ONLY public.hs_core_subject
 
 
 --
--- Name: hs_core_tasknotification_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_tasknotification hs_core_tasknotification_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_tasknotification
@@ -26492,7 +27381,7 @@ ALTER TABLE ONLY public.hs_core_tasknotification
 
 
 --
--- Name: hs_core_tasknotification_task_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_tasknotification hs_core_tasknotification_task_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_tasknotification
@@ -26500,7 +27389,7 @@ ALTER TABLE ONLY public.hs_core_tasknotification
 
 
 --
--- Name: hs_core_title_content_type_id_558a1cad4b729d8a_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_title hs_core_title_content_type_id_558a1cad4b729d8a_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_title
@@ -26508,7 +27397,7 @@ ALTER TABLE ONLY public.hs_core_title
 
 
 --
--- Name: hs_core_title_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_title hs_core_title_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_title
@@ -26516,7 +27405,7 @@ ALTER TABLE ONLY public.hs_core_title
 
 
 --
--- Name: hs_core_type_content_type_id_18ed89604613f1ed_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_type hs_core_type_content_type_id_18ed89604613f1ed_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_type
@@ -26524,7 +27413,7 @@ ALTER TABLE ONLY public.hs_core_type
 
 
 --
--- Name: hs_core_type_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_type hs_core_type_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_type
@@ -26532,7 +27421,15 @@ ALTER TABLE ONLY public.hs_core_type
 
 
 --
--- Name: hs_dictionary_uncategorizedterm_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_dictionary_subjectarea hs_dictionary_subjectarea_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_dictionary_subjectarea
+    ADD CONSTRAINT hs_dictionary_subjectarea_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_dictionary_uncategorizedterm hs_dictionary_uncategorizedterm_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_dictionary_uncategorizedterm
@@ -26540,7 +27437,7 @@ ALTER TABLE ONLY public.hs_dictionary_uncategorizedterm
 
 
 --
--- Name: hs_dictionary_university_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_dictionary_university hs_dictionary_university_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_dictionary_university
@@ -26548,7 +27445,31 @@ ALTER TABLE ONLY public.hs_dictionary_university
 
 
 --
--- Name: hs_file_types_cvaggregationstatistic_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_csvfilemetadata hs_file_types_csvfilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_csvfilemetadata
+    ADD CONSTRAINT hs_file_types_csvfilemetadata_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_csvlogicalfile hs_file_types_csvlogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_csvlogicalfile
+    ADD CONSTRAINT hs_file_types_csvlogicalfile_metadata_id_key UNIQUE (metadata_id);
+
+
+--
+-- Name: hs_file_types_csvlogicalfile hs_file_types_csvlogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_csvlogicalfile
+    ADD CONSTRAINT hs_file_types_csvlogicalfile_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_cvaggregationstatistic hs_file_types_cvaggregationstatistic_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvaggregationstatistic
@@ -26556,7 +27477,7 @@ ALTER TABLE ONLY public.hs_file_types_cvaggregationstatistic
 
 
 --
--- Name: hs_file_types_cvelevationdatum_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvelevationdatum hs_file_types_cvelevationdatum_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvelevationdatum
@@ -26564,7 +27485,7 @@ ALTER TABLE ONLY public.hs_file_types_cvelevationdatum
 
 
 --
--- Name: hs_file_types_cvmedium_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvmedium hs_file_types_cvmedium_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvmedium
@@ -26572,7 +27493,7 @@ ALTER TABLE ONLY public.hs_file_types_cvmedium
 
 
 --
--- Name: hs_file_types_cvmethodtype_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvmethodtype hs_file_types_cvmethodtype_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvmethodtype
@@ -26580,7 +27501,7 @@ ALTER TABLE ONLY public.hs_file_types_cvmethodtype
 
 
 --
--- Name: hs_file_types_cvsitetype_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvsitetype hs_file_types_cvsitetype_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvsitetype
@@ -26588,7 +27509,7 @@ ALTER TABLE ONLY public.hs_file_types_cvsitetype
 
 
 --
--- Name: hs_file_types_cvspeciation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvspeciation hs_file_types_cvspeciation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvspeciation
@@ -26596,7 +27517,7 @@ ALTER TABLE ONLY public.hs_file_types_cvspeciation
 
 
 --
--- Name: hs_file_types_cvstatus_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvstatus hs_file_types_cvstatus_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvstatus
@@ -26604,7 +27525,7 @@ ALTER TABLE ONLY public.hs_file_types_cvstatus
 
 
 --
--- Name: hs_file_types_cvunitstype_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvunitstype hs_file_types_cvunitstype_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvunitstype
@@ -26612,7 +27533,7 @@ ALTER TABLE ONLY public.hs_file_types_cvunitstype
 
 
 --
--- Name: hs_file_types_cvvariablename_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvvariablename hs_file_types_cvvariablename_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvvariablename
@@ -26620,7 +27541,7 @@ ALTER TABLE ONLY public.hs_file_types_cvvariablename
 
 
 --
--- Name: hs_file_types_cvvariabletype_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvvariabletype hs_file_types_cvvariabletype_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvvariabletype
@@ -26628,7 +27549,7 @@ ALTER TABLE ONLY public.hs_file_types_cvvariabletype
 
 
 --
--- Name: hs_file_types_filesetlogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_filesetlogicalfile hs_file_types_filesetlogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_filesetlogicalfile
@@ -26636,7 +27557,7 @@ ALTER TABLE ONLY public.hs_file_types_filesetlogicalfile
 
 
 --
--- Name: hs_file_types_filesetlogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_filesetlogicalfile hs_file_types_filesetlogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_filesetlogicalfile
@@ -26644,7 +27565,7 @@ ALTER TABLE ONLY public.hs_file_types_filesetlogicalfile
 
 
 --
--- Name: hs_file_types_filesetmetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_filesetmetadata hs_file_types_filesetmetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_filesetmetadata
@@ -26652,7 +27573,7 @@ ALTER TABLE ONLY public.hs_file_types_filesetmetadata
 
 
 --
--- Name: hs_file_types_genericfilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_genericfilemetadata hs_file_types_genericfilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_genericfilemetadata
@@ -26660,7 +27581,7 @@ ALTER TABLE ONLY public.hs_file_types_genericfilemetadata
 
 
 --
--- Name: hs_file_types_genericlogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_genericlogicalfile hs_file_types_genericlogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_genericlogicalfile
@@ -26668,7 +27589,7 @@ ALTER TABLE ONLY public.hs_file_types_genericlogicalfile
 
 
 --
--- Name: hs_file_types_genericlogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_genericlogicalfile hs_file_types_genericlogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_genericlogicalfile
@@ -26676,7 +27597,7 @@ ALTER TABLE ONLY public.hs_file_types_genericlogicalfile
 
 
 --
--- Name: hs_file_types_geofeaturefilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_geofeaturefilemetadata hs_file_types_geofeaturefilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_geofeaturefilemetadata
@@ -26684,7 +27605,7 @@ ALTER TABLE ONLY public.hs_file_types_geofeaturefilemetadata
 
 
 --
--- Name: hs_file_types_geofeaturelogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_geofeaturelogicalfile hs_file_types_geofeaturelogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_geofeaturelogicalfile
@@ -26692,7 +27613,7 @@ ALTER TABLE ONLY public.hs_file_types_geofeaturelogicalfile
 
 
 --
--- Name: hs_file_types_geofeaturelogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_geofeaturelogicalfile hs_file_types_geofeaturelogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_geofeaturelogicalfile
@@ -26700,7 +27621,7 @@ ALTER TABLE ONLY public.hs_file_types_geofeaturelogicalfile
 
 
 --
--- Name: hs_file_types_georasterfilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_georasterfilemetadata hs_file_types_georasterfilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_georasterfilemetadata
@@ -26708,7 +27629,7 @@ ALTER TABLE ONLY public.hs_file_types_georasterfilemetadata
 
 
 --
--- Name: hs_file_types_georasterlogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_georasterlogicalfile hs_file_types_georasterlogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_georasterlogicalfile
@@ -26716,7 +27637,7 @@ ALTER TABLE ONLY public.hs_file_types_georasterlogicalfile
 
 
 --
--- Name: hs_file_types_georasterlogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_georasterlogicalfile hs_file_types_georasterlogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_georasterlogicalfile
@@ -26724,7 +27645,7 @@ ALTER TABLE ONLY public.hs_file_types_georasterlogicalfile
 
 
 --
--- Name: hs_file_types_modelinstancefilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_modelinstancefilemetadata hs_file_types_modelinstancefilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_modelinstancefilemetadata
@@ -26732,7 +27653,7 @@ ALTER TABLE ONLY public.hs_file_types_modelinstancefilemetadata
 
 
 --
--- Name: hs_file_types_modelinstancelogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_modelinstancelogicalfile hs_file_types_modelinstancelogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_modelinstancelogicalfile
@@ -26740,7 +27661,7 @@ ALTER TABLE ONLY public.hs_file_types_modelinstancelogicalfile
 
 
 --
--- Name: hs_file_types_modelinstancelogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_modelinstancelogicalfile hs_file_types_modelinstancelogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_modelinstancelogicalfile
@@ -26748,7 +27669,7 @@ ALTER TABLE ONLY public.hs_file_types_modelinstancelogicalfile
 
 
 --
--- Name: hs_file_types_modelprogramfilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_modelprogramfilemetadata hs_file_types_modelprogramfilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_modelprogramfilemetadata
@@ -26756,7 +27677,7 @@ ALTER TABLE ONLY public.hs_file_types_modelprogramfilemetadata
 
 
 --
--- Name: hs_file_types_modelprogramlogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_modelprogramlogicalfile hs_file_types_modelprogramlogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_modelprogramlogicalfile
@@ -26764,7 +27685,7 @@ ALTER TABLE ONLY public.hs_file_types_modelprogramlogicalfile
 
 
 --
--- Name: hs_file_types_modelprogramlogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_modelprogramlogicalfile hs_file_types_modelprogramlogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_modelprogramlogicalfile
@@ -26772,7 +27693,7 @@ ALTER TABLE ONLY public.hs_file_types_modelprogramlogicalfile
 
 
 --
--- Name: hs_file_types_modelprogramresourcefiletype_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_modelprogramresourcefiletype hs_file_types_modelprogramresourcefiletype_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_modelprogramresourcefiletype
@@ -26780,7 +27701,7 @@ ALTER TABLE ONLY public.hs_file_types_modelprogramresourcefiletype
 
 
 --
--- Name: hs_file_types_netcdffilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_netcdffilemetadata hs_file_types_netcdffilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_netcdffilemetadata
@@ -26788,7 +27709,7 @@ ALTER TABLE ONLY public.hs_file_types_netcdffilemetadata
 
 
 --
--- Name: hs_file_types_netcdflogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_netcdflogicalfile hs_file_types_netcdflogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_netcdflogicalfile
@@ -26796,7 +27717,7 @@ ALTER TABLE ONLY public.hs_file_types_netcdflogicalfile
 
 
 --
--- Name: hs_file_types_netcdflogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_netcdflogicalfile hs_file_types_netcdflogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_netcdflogicalfile
@@ -26804,7 +27725,7 @@ ALTER TABLE ONLY public.hs_file_types_netcdflogicalfile
 
 
 --
--- Name: hs_file_types_reftimeseriesfilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_reftimeseriesfilemetadata hs_file_types_reftimeseriesfilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_reftimeseriesfilemetadata
@@ -26812,7 +27733,7 @@ ALTER TABLE ONLY public.hs_file_types_reftimeseriesfilemetadata
 
 
 --
--- Name: hs_file_types_reftimeserieslogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_reftimeserieslogicalfile hs_file_types_reftimeserieslogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_reftimeserieslogicalfile
@@ -26820,7 +27741,7 @@ ALTER TABLE ONLY public.hs_file_types_reftimeserieslogicalfile
 
 
 --
--- Name: hs_file_types_reftimeserieslogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_reftimeserieslogicalfile hs_file_types_reftimeserieslogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_reftimeserieslogicalfile
@@ -26828,7 +27749,7 @@ ALTER TABLE ONLY public.hs_file_types_reftimeserieslogicalfile
 
 
 --
--- Name: hs_file_types_timeseriesfilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_timeseriesfilemetadata hs_file_types_timeseriesfilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_timeseriesfilemetadata
@@ -26836,7 +27757,7 @@ ALTER TABLE ONLY public.hs_file_types_timeseriesfilemetadata
 
 
 --
--- Name: hs_file_types_timeserieslogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_timeserieslogicalfile hs_file_types_timeserieslogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_timeserieslogicalfile
@@ -26844,7 +27765,7 @@ ALTER TABLE ONLY public.hs_file_types_timeserieslogicalfile
 
 
 --
--- Name: hs_file_types_timeserieslogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_timeserieslogicalfile hs_file_types_timeserieslogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_timeserieslogicalfile
@@ -26852,7 +27773,7 @@ ALTER TABLE ONLY public.hs_file_types_timeserieslogicalfile
 
 
 --
--- Name: hs_geo_raster_resource_bandinformation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_bandinformation hs_geo_raster_resource_bandinformation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_bandinformation
@@ -26860,7 +27781,7 @@ ALTER TABLE ONLY public.hs_file_types_bandinformation
 
 
 --
--- Name: hs_geo_raster_resource_ce_content_type_id_2a5663531ffdbfc0_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cellinformation hs_geo_raster_resource_ce_content_type_id_2a5663531ffdbfc0_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cellinformation
@@ -26868,7 +27789,7 @@ ALTER TABLE ONLY public.hs_file_types_cellinformation
 
 
 --
--- Name: hs_geo_raster_resource_cellinformation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cellinformation hs_geo_raster_resource_cellinformation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cellinformation
@@ -26876,7 +27797,7 @@ ALTER TABLE ONLY public.hs_file_types_cellinformation
 
 
 --
--- Name: hs_geo_raster_resource_or_content_type_id_721e66b15ced348a_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_originalcoverageraster hs_geo_raster_resource_or_content_type_id_721e66b15ced348a_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_originalcoverageraster
@@ -26884,7 +27805,7 @@ ALTER TABLE ONLY public.hs_file_types_originalcoverageraster
 
 
 --
--- Name: hs_geo_raster_resource_originalcoverage_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_originalcoverageraster hs_geo_raster_resource_originalcoverage_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_originalcoverageraster
@@ -26892,7 +27813,7 @@ ALTER TABLE ONLY public.hs_file_types_originalcoverageraster
 
 
 --
--- Name: hs_geographic_feature_res_content_type_id_304dc81d9f5c66f1_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_originalcoveragegeofeature hs_geographic_feature_res_content_type_id_304dc81d9f5c66f1_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_originalcoveragegeofeature
@@ -26900,7 +27821,7 @@ ALTER TABLE ONLY public.hs_file_types_originalcoveragegeofeature
 
 
 --
--- Name: hs_geographic_feature_res_content_type_id_580ebce926dd9f27_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_geometryinformation hs_geographic_feature_res_content_type_id_580ebce926dd9f27_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_geometryinformation
@@ -26908,7 +27829,7 @@ ALTER TABLE ONLY public.hs_file_types_geometryinformation
 
 
 --
--- Name: hs_geographic_feature_resource_fieldinformation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_fieldinformation hs_geographic_feature_resource_fieldinformation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_fieldinformation
@@ -26916,7 +27837,7 @@ ALTER TABLE ONLY public.hs_file_types_fieldinformation
 
 
 --
--- Name: hs_geographic_feature_resource_geometryinformation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_geometryinformation hs_geographic_feature_resource_geometryinformation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_geometryinformation
@@ -26924,7 +27845,7 @@ ALTER TABLE ONLY public.hs_file_types_geometryinformation
 
 
 --
--- Name: hs_geographic_feature_resource_originalcoverage_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_originalcoveragegeofeature hs_geographic_feature_resource_originalcoverage_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_originalcoveragegeofeature
@@ -26932,7 +27853,7 @@ ALTER TABLE ONLY public.hs_file_types_originalcoveragegeofeature
 
 
 --
--- Name: hs_labels_resourcelabels_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_labels_resourcelabels hs_labels_resourcelabels_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_labels_resourcelabels
@@ -26940,7 +27861,7 @@ ALTER TABLE ONLY public.hs_labels_resourcelabels
 
 
 --
--- Name: hs_labels_resourcelabels_resource_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_labels_resourcelabels hs_labels_resourcelabels_resource_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_labels_resourcelabels
@@ -26948,7 +27869,7 @@ ALTER TABLE ONLY public.hs_labels_resourcelabels
 
 
 --
--- Name: hs_labels_userlabels_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_labels_userlabels hs_labels_userlabels_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_labels_userlabels
@@ -26956,7 +27877,7 @@ ALTER TABLE ONLY public.hs_labels_userlabels
 
 
 --
--- Name: hs_labels_userlabels_user_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_labels_userlabels hs_labels_userlabels_user_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_labels_userlabels
@@ -26964,7 +27885,7 @@ ALTER TABLE ONLY public.hs_labels_userlabels
 
 
 --
--- Name: hs_labels_userresourceflags_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_labels_userresourceflags hs_labels_userresourceflags_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_labels_userresourceflags
@@ -26972,7 +27893,7 @@ ALTER TABLE ONLY public.hs_labels_userresourceflags
 
 
 --
--- Name: hs_labels_userresourceflags_user_id_69a243739138a875_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_labels_userresourceflags hs_labels_userresourceflags_user_id_69a243739138a875_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_labels_userresourceflags
@@ -26980,7 +27901,7 @@ ALTER TABLE ONLY public.hs_labels_userresourceflags
 
 
 --
--- Name: hs_labels_userresourcelabels_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_labels_userresourcelabels hs_labels_userresourcelabels_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_labels_userresourcelabels
@@ -26988,7 +27909,7 @@ ALTER TABLE ONLY public.hs_labels_userresourcelabels
 
 
 --
--- Name: hs_labels_userresourcelabels_user_id_b650ac9425073db_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_labels_userresourcelabels hs_labels_userresourcelabels_user_id_b650ac9425073db_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_labels_userresourcelabels
@@ -26996,7 +27917,7 @@ ALTER TABLE ONLY public.hs_labels_userresourcelabels
 
 
 --
--- Name: hs_labels_userstoredlabels_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_labels_userstoredlabels hs_labels_userstoredlabels_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_labels_userstoredlabels
@@ -27004,7 +27925,7 @@ ALTER TABLE ONLY public.hs_labels_userstoredlabels
 
 
 --
--- Name: hs_labels_userstoredlabels_user_id_7fcfa0bbb19f026e_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_labels_userstoredlabels hs_labels_userstoredlabels_user_id_7fcfa0bbb19f026e_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_labels_userstoredlabels
@@ -27012,7 +27933,7 @@ ALTER TABLE ONLY public.hs_labels_userstoredlabels
 
 
 --
--- Name: hs_odm2_odm2variable_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_odm2_odm2variable hs_odm2_odm2variable_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_odm2_odm2variable
@@ -27020,7 +27941,7 @@ ALTER TABLE ONLY public.hs_odm2_odm2variable
 
 
 --
--- Name: hs_tools_resource_apphome_content_type_id_41aff373ca64806a_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_apphomepageurl hs_tools_resource_apphome_content_type_id_41aff373ca64806a_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_apphomepageurl
@@ -27028,7 +27949,7 @@ ALTER TABLE ONLY public.hs_tools_resource_apphomepageurl
 
 
 --
--- Name: hs_tools_resource_apphomepageurl_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_apphomepageurl hs_tools_resource_apphomepageurl_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_apphomepageurl
@@ -27036,7 +27957,7 @@ ALTER TABLE ONLY public.hs_tools_resource_apphomepageurl
 
 
 --
--- Name: hs_tools_resource_helppa_content_type_id_object_i_d2e33058_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_helppageurl hs_tools_resource_helppa_content_type_id_object_i_d2e33058_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_helppageurl
@@ -27044,7 +27965,7 @@ ALTER TABLE ONLY public.hs_tools_resource_helppageurl
 
 
 --
--- Name: hs_tools_resource_helppageurl_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_helppageurl hs_tools_resource_helppageurl_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_helppageurl
@@ -27052,7 +27973,7 @@ ALTER TABLE ONLY public.hs_tools_resource_helppageurl
 
 
 --
--- Name: hs_tools_resource_issues_content_type_id_object_i_d06c4981_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_issuespageurl hs_tools_resource_issues_content_type_id_object_i_d06c4981_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_issuespageurl
@@ -27060,7 +27981,7 @@ ALTER TABLE ONLY public.hs_tools_resource_issuespageurl
 
 
 --
--- Name: hs_tools_resource_issuespageurl_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_issuespageurl hs_tools_resource_issuespageurl_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_issuespageurl
@@ -27068,7 +27989,7 @@ ALTER TABLE ONLY public.hs_tools_resource_issuespageurl
 
 
 --
--- Name: hs_tools_resource_mailin_content_type_id_object_i_578164dc_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_mailinglisturl hs_tools_resource_mailin_content_type_id_object_i_578164dc_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_mailinglisturl
@@ -27076,7 +27997,7 @@ ALTER TABLE ONLY public.hs_tools_resource_mailinglisturl
 
 
 --
--- Name: hs_tools_resource_mailinglisturl_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_mailinglisturl hs_tools_resource_mailinglisturl_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_mailinglisturl
@@ -27084,7 +28005,7 @@ ALTER TABLE ONLY public.hs_tools_resource_mailinglisturl
 
 
 --
--- Name: hs_tools_resource_reques_content_type_id_object_i_7138d2d0_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_requesturlbaseaggregation hs_tools_resource_reques_content_type_id_object_i_7138d2d0_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_requesturlbaseaggregation
@@ -27092,7 +28013,7 @@ ALTER TABLE ONLY public.hs_tools_resource_requesturlbaseaggregation
 
 
 --
--- Name: hs_tools_resource_reques_content_type_id_object_i_c19d6e42_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_requesturlbasefile hs_tools_resource_reques_content_type_id_object_i_c19d6e42_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_requesturlbasefile
@@ -27100,7 +28021,7 @@ ALTER TABLE ONLY public.hs_tools_resource_requesturlbasefile
 
 
 --
--- Name: hs_tools_resource_request_content_type_id_4247c7cfc01d751b_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_requesturlbase hs_tools_resource_request_content_type_id_4247c7cfc01d751b_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_requesturlbase
@@ -27108,7 +28029,7 @@ ALTER TABLE ONLY public.hs_tools_resource_requesturlbase
 
 
 --
--- Name: hs_tools_resource_requesturlbase_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_requesturlbase hs_tools_resource_requesturlbase_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_requesturlbase
@@ -27116,7 +28037,7 @@ ALTER TABLE ONLY public.hs_tools_resource_requesturlbase
 
 
 --
--- Name: hs_tools_resource_requesturlbaseaggregation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_requesturlbaseaggregation hs_tools_resource_requesturlbaseaggregation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_requesturlbaseaggregation
@@ -27124,7 +28045,7 @@ ALTER TABLE ONLY public.hs_tools_resource_requesturlbaseaggregation
 
 
 --
--- Name: hs_tools_resource_requesturlbasefile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_requesturlbasefile hs_tools_resource_requesturlbasefile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_requesturlbasefile
@@ -27132,7 +28053,7 @@ ALTER TABLE ONLY public.hs_tools_resource_requesturlbasefile
 
 
 --
--- Name: hs_tools_resource_roadma_content_type_id_object_i_1dfe8d00_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_roadmap hs_tools_resource_roadma_content_type_id_object_i_1dfe8d00_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_roadmap
@@ -27140,7 +28061,7 @@ ALTER TABLE ONLY public.hs_tools_resource_roadmap
 
 
 --
--- Name: hs_tools_resource_roadmap_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_roadmap hs_tools_resource_roadmap_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_roadmap
@@ -27148,7 +28069,7 @@ ALTER TABLE ONLY public.hs_tools_resource_roadmap
 
 
 --
--- Name: hs_tools_resource_showon_content_type_id_object_i_e9bb40a3_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_showonopenwithlist hs_tools_resource_showon_content_type_id_object_i_e9bb40a3_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_showonopenwithlist
@@ -27156,7 +28077,7 @@ ALTER TABLE ONLY public.hs_tools_resource_showonopenwithlist
 
 
 --
--- Name: hs_tools_resource_showonopenwithlist_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_showonopenwithlist hs_tools_resource_showonopenwithlist_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_showonopenwithlist
@@ -27164,7 +28085,7 @@ ALTER TABLE ONLY public.hs_tools_resource_showonopenwithlist
 
 
 --
--- Name: hs_tools_resource_source_content_type_id_object_i_6528c94e_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_sourcecodeurl hs_tools_resource_source_content_type_id_object_i_6528c94e_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_sourcecodeurl
@@ -27172,7 +28093,7 @@ ALTER TABLE ONLY public.hs_tools_resource_sourcecodeurl
 
 
 --
--- Name: hs_tools_resource_sourcecodeurl_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_sourcecodeurl hs_tools_resource_sourcecodeurl_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_sourcecodeurl
@@ -27180,7 +28101,7 @@ ALTER TABLE ONLY public.hs_tools_resource_sourcecodeurl
 
 
 --
--- Name: hs_tools_resource_suppor_content_type_id_object_i_1896ba1a_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedrestypes hs_tools_resource_suppor_content_type_id_object_i_1896ba1a_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes
@@ -27188,7 +28109,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes
 
 
 --
--- Name: hs_tools_resource_suppor_content_type_id_object_i_5504ea35_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedsharingstatus hs_tools_resource_suppor_content_type_id_object_i_5504ea35_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedsharingstatus
@@ -27196,7 +28117,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedsharingstatus
 
 
 --
--- Name: hs_tools_resource_suppor_content_type_id_object_i_607791ba_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedfileextensions hs_tools_resource_suppor_content_type_id_object_i_607791ba_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedfileextensions
@@ -27204,7 +28125,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedfileextensions
 
 
 --
--- Name: hs_tools_resource_suppor_content_type_id_object_i_caea8f65_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedaggtypes hs_tools_resource_suppor_content_type_id_object_i_caea8f65_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedaggtypes
@@ -27212,7 +28133,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedaggtypes
 
 
 --
--- Name: hs_tools_resource_suppor_supportedaggtypes_id_sup_a893b005_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedaggtypes_supported_agg_types hs_tools_resource_suppor_supportedaggtypes_id_sup_a893b005_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedaggtypes_supported_agg_types
@@ -27220,7 +28141,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedaggtypes_supported_agg_types
 
 
 --
--- Name: hs_tools_resource_supportedaggtypechoices_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedaggtypechoices hs_tools_resource_supportedaggtypechoices_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedaggtypechoices
@@ -27228,7 +28149,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedaggtypechoices
 
 
 --
--- Name: hs_tools_resource_supportedaggtypes_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedaggtypes hs_tools_resource_supportedaggtypes_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedaggtypes
@@ -27236,7 +28157,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedaggtypes
 
 
 --
--- Name: hs_tools_resource_supportedaggtypes_supported_agg_types_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedaggtypes_supported_agg_types hs_tools_resource_supportedaggtypes_supported_agg_types_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedaggtypes_supported_agg_types
@@ -27244,7 +28165,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedaggtypes_supported_agg_types
 
 
 --
--- Name: hs_tools_resource_supportedfileextensions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedfileextensions hs_tools_resource_supportedfileextensions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedfileextensions
@@ -27252,7 +28173,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedfileextensions
 
 
 --
--- Name: hs_tools_resource_supportedre_supportedrestypes_id_supporte_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedrestypes_supported_res_types hs_tools_resource_supportedre_supportedrestypes_id_supporte_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes_supported_res_types
@@ -27260,7 +28181,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes_supported_res_types
 
 
 --
--- Name: hs_tools_resource_supportedrestypechoices_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedrestypechoices hs_tools_resource_supportedrestypechoices_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedrestypechoices
@@ -27268,7 +28189,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedrestypechoices
 
 
 --
--- Name: hs_tools_resource_supportedrestypes_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedrestypes hs_tools_resource_supportedrestypes_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes
@@ -27276,7 +28197,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes
 
 
 --
--- Name: hs_tools_resource_supportedrestypes_supported_res_types_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedrestypes_supported_res_types hs_tools_resource_supportedrestypes_supported_res_types_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes_supported_res_types
@@ -27284,7 +28205,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes_supported_res_types
 
 
 --
--- Name: hs_tools_resource_supportedsh_supportedsharingstatus_id_sup_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedsharingstatus_sharing_status hs_tools_resource_supportedsh_supportedsharingstatus_id_sup_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedsharingstatus_sharing_status
@@ -27292,7 +28213,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedsharingstatus_sharing_status
 
 
 --
--- Name: hs_tools_resource_supportedsharingstatus_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedsharingstatus hs_tools_resource_supportedsharingstatus_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedsharingstatus
@@ -27300,7 +28221,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedsharingstatus
 
 
 --
--- Name: hs_tools_resource_supportedsharingstatus_sharing_status_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedsharingstatus_sharing_status hs_tools_resource_supportedsharingstatus_sharing_status_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedsharingstatus_sharing_status
@@ -27308,7 +28229,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedsharingstatus_sharing_status
 
 
 --
--- Name: hs_tools_resource_supportedsharingstatuschoices_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedsharingstatuschoices hs_tools_resource_supportedsharingstatuschoices_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedsharingstatuschoices
@@ -27316,7 +28237,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedsharingstatuschoices
 
 
 --
--- Name: hs_tools_resource_testin_content_type_id_object_i_7784dfe6_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_testingprotocolurl hs_tools_resource_testin_content_type_id_object_i_7784dfe6_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_testingprotocolurl
@@ -27324,7 +28245,7 @@ ALTER TABLE ONLY public.hs_tools_resource_testingprotocolurl
 
 
 --
--- Name: hs_tools_resource_testingprotocolurl_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_testingprotocolurl hs_tools_resource_testingprotocolurl_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_testingprotocolurl
@@ -27332,7 +28253,7 @@ ALTER TABLE ONLY public.hs_tools_resource_testingprotocolurl
 
 
 --
--- Name: hs_tools_resource_toolico_content_type_id_2eb114df398af35f_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_toolicon hs_tools_resource_toolico_content_type_id_2eb114df398af35f_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_toolicon
@@ -27340,7 +28261,7 @@ ALTER TABLE ONLY public.hs_tools_resource_toolicon
 
 
 --
--- Name: hs_tools_resource_toolicon_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_toolicon hs_tools_resource_toolicon_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_toolicon
@@ -27348,7 +28269,7 @@ ALTER TABLE ONLY public.hs_tools_resource_toolicon
 
 
 --
--- Name: hs_tools_resource_toolmetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_toolmetadata hs_tools_resource_toolmetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_toolmetadata
@@ -27356,7 +28277,7 @@ ALTER TABLE ONLY public.hs_tools_resource_toolmetadata
 
 
 --
--- Name: hs_tools_resource_toolver_content_type_id_2a1bdb955c1a5eb5_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_toolversion hs_tools_resource_toolver_content_type_id_2a1bdb955c1a5eb5_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_toolversion
@@ -27364,7 +28285,7 @@ ALTER TABLE ONLY public.hs_tools_resource_toolversion
 
 
 --
--- Name: hs_tools_resource_toolversion_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_toolversion hs_tools_resource_toolversion_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_toolversion
@@ -27372,7 +28293,7 @@ ALTER TABLE ONLY public.hs_tools_resource_toolversion
 
 
 --
--- Name: hs_tracking_session_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tracking_session hs_tracking_session_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tracking_session
@@ -27380,7 +28301,7 @@ ALTER TABLE ONLY public.hs_tracking_session
 
 
 --
--- Name: hs_tracking_variable_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tracking_variable hs_tracking_variable_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tracking_variable
@@ -27388,7 +28309,7 @@ ALTER TABLE ONLY public.hs_tracking_variable
 
 
 --
--- Name: hs_tracking_visitor_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tracking_visitor hs_tracking_visitor_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tracking_visitor
@@ -27396,7 +28317,7 @@ ALTER TABLE ONLY public.hs_tracking_visitor
 
 
 --
--- Name: hs_tracking_visitor_user_id_e219697e1ed13ee_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tracking_visitor hs_tracking_visitor_user_id_e219697e1ed13ee_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tracking_visitor
@@ -27404,7 +28325,15 @@ ALTER TABLE ONLY public.hs_tracking_visitor
 
 
 --
--- Name: oauth2_provider_accesstoken_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_accesstoken oauth2_provider_accesstoken_id_token_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.oauth2_provider_accesstoken
+    ADD CONSTRAINT oauth2_provider_accesstoken_id_token_id_key UNIQUE (id_token_id);
+
+
+--
+-- Name: oauth2_provider_accesstoken oauth2_provider_accesstoken_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.oauth2_provider_accesstoken
@@ -27412,7 +28341,7 @@ ALTER TABLE ONLY public.oauth2_provider_accesstoken
 
 
 --
--- Name: oauth2_provider_accesstoken_source_refresh_token_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_accesstoken oauth2_provider_accesstoken_source_refresh_token_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.oauth2_provider_accesstoken
@@ -27420,15 +28349,15 @@ ALTER TABLE ONLY public.oauth2_provider_accesstoken
 
 
 --
--- Name: oauth2_provider_accesstoken_token_8af090f8_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_accesstoken oauth2_provider_accesstoken_token_checksum_85319a26_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.oauth2_provider_accesstoken
-    ADD CONSTRAINT oauth2_provider_accesstoken_token_8af090f8_uniq UNIQUE (token);
+    ADD CONSTRAINT oauth2_provider_accesstoken_token_checksum_85319a26_uniq UNIQUE (token_checksum);
 
 
 --
--- Name: oauth2_provider_application_client_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_application oauth2_provider_application_client_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.oauth2_provider_application
@@ -27436,7 +28365,7 @@ ALTER TABLE ONLY public.oauth2_provider_application
 
 
 --
--- Name: oauth2_provider_application_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_application oauth2_provider_application_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.oauth2_provider_application
@@ -27444,7 +28373,7 @@ ALTER TABLE ONLY public.oauth2_provider_application
 
 
 --
--- Name: oauth2_provider_grant_code_49ab4ddf_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_grant oauth2_provider_grant_code_49ab4ddf_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.oauth2_provider_grant
@@ -27452,7 +28381,7 @@ ALTER TABLE ONLY public.oauth2_provider_grant
 
 
 --
--- Name: oauth2_provider_grant_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_grant oauth2_provider_grant_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.oauth2_provider_grant
@@ -27460,7 +28389,23 @@ ALTER TABLE ONLY public.oauth2_provider_grant
 
 
 --
--- Name: oauth2_provider_refreshtoken_access_token_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_idtoken oauth2_provider_idtoken_jti_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.oauth2_provider_idtoken
+    ADD CONSTRAINT oauth2_provider_idtoken_jti_key UNIQUE (jti);
+
+
+--
+-- Name: oauth2_provider_idtoken oauth2_provider_idtoken_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.oauth2_provider_idtoken
+    ADD CONSTRAINT oauth2_provider_idtoken_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: oauth2_provider_refreshtoken oauth2_provider_refreshtoken_access_token_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.oauth2_provider_refreshtoken
@@ -27468,7 +28413,7 @@ ALTER TABLE ONLY public.oauth2_provider_refreshtoken
 
 
 --
--- Name: oauth2_provider_refreshtoken_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_refreshtoken oauth2_provider_refreshtoken_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.oauth2_provider_refreshtoken
@@ -27476,7 +28421,7 @@ ALTER TABLE ONLY public.oauth2_provider_refreshtoken
 
 
 --
--- Name: oauth2_provider_refreshtoken_token_revoked_af8a5134_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_refreshtoken oauth2_provider_refreshtoken_token_revoked_af8a5134_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.oauth2_provider_refreshtoken
@@ -27484,7 +28429,7 @@ ALTER TABLE ONLY public.oauth2_provider_refreshtoken
 
 
 --
--- Name: pages_link_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: pages_link pages_link_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.pages_link
@@ -27492,7 +28437,7 @@ ALTER TABLE ONLY public.pages_link
 
 
 --
--- Name: pages_page_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: pages_page pages_page_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.pages_page
@@ -27500,7 +28445,7 @@ ALTER TABLE ONLY public.pages_page
 
 
 --
--- Name: pages_richtextpage_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: pages_richtextpage pages_richtextpage_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.pages_richtextpage
@@ -27508,7 +28453,7 @@ ALTER TABLE ONLY public.pages_richtextpage
 
 
 --
--- Name: robots_rule_allowed_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: robots_rule_allowed robots_rule_allowed_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.robots_rule_allowed
@@ -27516,7 +28461,7 @@ ALTER TABLE ONLY public.robots_rule_allowed
 
 
 --
--- Name: robots_rule_allowed_rule_id_url_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: robots_rule_allowed robots_rule_allowed_rule_id_url_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.robots_rule_allowed
@@ -27524,7 +28469,7 @@ ALTER TABLE ONLY public.robots_rule_allowed
 
 
 --
--- Name: robots_rule_disallowed_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: robots_rule_disallowed robots_rule_disallowed_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.robots_rule_disallowed
@@ -27532,7 +28477,7 @@ ALTER TABLE ONLY public.robots_rule_disallowed
 
 
 --
--- Name: robots_rule_disallowed_rule_id_url_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: robots_rule_disallowed robots_rule_disallowed_rule_id_url_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.robots_rule_disallowed
@@ -27540,7 +28485,7 @@ ALTER TABLE ONLY public.robots_rule_disallowed
 
 
 --
--- Name: robots_rule_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: robots_rule robots_rule_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.robots_rule
@@ -27548,7 +28493,7 @@ ALTER TABLE ONLY public.robots_rule
 
 
 --
--- Name: robots_rule_sites_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: robots_rule_sites robots_rule_sites_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.robots_rule_sites
@@ -27556,7 +28501,7 @@ ALTER TABLE ONLY public.robots_rule_sites
 
 
 --
--- Name: robots_rule_sites_rule_id_site_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: robots_rule_sites robots_rule_sites_rule_id_site_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.robots_rule_sites
@@ -27564,7 +28509,7 @@ ALTER TABLE ONLY public.robots_rule_sites
 
 
 --
--- Name: robots_url_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: robots_url robots_url_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.robots_url
@@ -27572,7 +28517,7 @@ ALTER TABLE ONLY public.robots_url
 
 
 --
--- Name: security_cspreport_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: security_cspreport security_cspreport_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.security_cspreport
@@ -27580,7 +28525,7 @@ ALTER TABLE ONLY public.security_cspreport
 
 
 --
--- Name: security_passwordexpiry_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: security_passwordexpiry security_passwordexpiry_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.security_passwordexpiry
@@ -27588,7 +28533,7 @@ ALTER TABLE ONLY public.security_passwordexpiry
 
 
 --
--- Name: security_passwordexpiry_user_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: security_passwordexpiry security_passwordexpiry_user_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.security_passwordexpiry
@@ -27596,7 +28541,7 @@ ALTER TABLE ONLY public.security_passwordexpiry
 
 
 --
--- Name: theme_homepage_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: theme_homepage theme_homepage_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.theme_homepage
@@ -27604,7 +28549,7 @@ ALTER TABLE ONLY public.theme_homepage
 
 
 --
--- Name: theme_iconbox_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: theme_iconbox theme_iconbox_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.theme_iconbox
@@ -27612,7 +28557,7 @@ ALTER TABLE ONLY public.theme_iconbox
 
 
 --
--- Name: theme_quotamessage_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: theme_quotamessage theme_quotamessage_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.theme_quotamessage
@@ -27620,7 +28565,15 @@ ALTER TABLE ONLY public.theme_quotamessage
 
 
 --
--- Name: theme_siteconfiguration_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: theme_quotarequest theme_quotarequest_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.theme_quotarequest
+    ADD CONSTRAINT theme_quotarequest_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: theme_siteconfiguration theme_siteconfiguration_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.theme_siteconfiguration
@@ -27628,7 +28581,15 @@ ALTER TABLE ONLY public.theme_siteconfiguration
 
 
 --
--- Name: theme_userprofile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: theme_userprofile theme_userprofile__bucket_name_b8e43ed3_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.theme_userprofile
+    ADD CONSTRAINT theme_userprofile__bucket_name_b8e43ed3_uniq UNIQUE (_bucket_name);
+
+
+--
+-- Name: theme_userprofile theme_userprofile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.theme_userprofile
@@ -27636,7 +28597,7 @@ ALTER TABLE ONLY public.theme_userprofile
 
 
 --
--- Name: theme_userprofile_user_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: theme_userprofile theme_userprofile_user_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.theme_userprofile
@@ -27644,7 +28605,7 @@ ALTER TABLE ONLY public.theme_userprofile
 
 
 --
--- Name: theme_userquota_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: theme_userquota theme_userquota_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.theme_userquota
@@ -27652,7 +28613,7 @@ ALTER TABLE ONLY public.theme_userquota
 
 
 --
--- Name: theme_userquota_user_id_329a4f07aa9f15a4_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: theme_userquota theme_userquota_user_id_329a4f07aa9f15a4_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.theme_userquota
@@ -27660,7 +28621,7 @@ ALTER TABLE ONLY public.theme_userquota
 
 
 --
--- Name: thumbnail_kvstore_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: thumbnail_kvstore thumbnail_kvstore_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.thumbnail_kvstore
@@ -27668,1988 +28629,2080 @@ ALTER TABLE ONLY public.thumbnail_kvstore
 
 
 --
--- Name: auth_group_name_253ae2a6331666e8_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_s3_avu unique_avu; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.django_s3_avu
+    ADD CONSTRAINT unique_avu UNIQUE (name, "attName");
+
+
+--
+-- Name: auth_group_name_253ae2a6331666e8_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX auth_group_name_253ae2a6331666e8_like ON public.auth_group USING btree (name varchar_pattern_ops);
 
 
 --
--- Name: auth_group_permissions_0e939a4f; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_group_permissions_0e939a4f; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX auth_group_permissions_0e939a4f ON public.auth_group_permissions USING btree (group_id);
 
 
 --
--- Name: auth_group_permissions_8373b171; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_group_permissions_8373b171; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX auth_group_permissions_8373b171 ON public.auth_group_permissions USING btree (permission_id);
 
 
 --
--- Name: auth_permission_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_permission_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX auth_permission_417f1b1c ON public.auth_permission USING btree (content_type_id);
 
 
 --
--- Name: auth_user_groups_0e939a4f; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_user_groups_0e939a4f; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX auth_user_groups_0e939a4f ON public.auth_user_groups USING btree (group_id);
 
 
 --
--- Name: auth_user_groups_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_user_groups_e8701ad4; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX auth_user_groups_e8701ad4 ON public.auth_user_groups USING btree (user_id);
 
 
 --
--- Name: auth_user_user_permissions_8373b171; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_user_user_permissions_8373b171; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX auth_user_user_permissions_8373b171 ON public.auth_user_user_permissions USING btree (permission_id);
 
 
 --
--- Name: auth_user_user_permissions_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_user_user_permissions_e8701ad4; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX auth_user_user_permissions_e8701ad4 ON public.auth_user_user_permissions USING btree (user_id);
 
 
 --
--- Name: auth_user_username_51b3b110094b8aae_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: auth_user_username_51b3b110094b8aae_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX auth_user_username_51b3b110094b8aae_like ON public.auth_user USING btree (username varchar_pattern_ops);
 
 
 --
--- Name: blog_blogcategory_site_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: blog_blogcategory_site_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX blog_blogcategory_site_id ON public.blog_blogcategory USING btree (site_id);
 
 
 --
--- Name: blog_blogpost_categories_blogcategory_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: blog_blogpost_categories_blogcategory_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX blog_blogpost_categories_blogcategory_id ON public.blog_blogpost_categories USING btree (blogcategory_id);
 
 
 --
--- Name: blog_blogpost_categories_blogpost_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: blog_blogpost_categories_blogpost_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX blog_blogpost_categories_blogpost_id ON public.blog_blogpost_categories USING btree (blogpost_id);
 
 
 --
--- Name: blog_blogpost_publish_date_1015da2554a8e97f_uniq; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: blog_blogpost_publish_date_1015da2554a8e97f_uniq; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX blog_blogpost_publish_date_1015da2554a8e97f_uniq ON public.blog_blogpost USING btree (publish_date);
 
 
 --
--- Name: blog_blogpost_related_posts_from_blogpost_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: blog_blogpost_related_posts_from_blogpost_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX blog_blogpost_related_posts_from_blogpost_id ON public.blog_blogpost_related_posts USING btree (from_blogpost_id);
 
 
 --
--- Name: blog_blogpost_related_posts_to_blogpost_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: blog_blogpost_related_posts_to_blogpost_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX blog_blogpost_related_posts_to_blogpost_id ON public.blog_blogpost_related_posts USING btree (to_blogpost_id);
 
 
 --
--- Name: blog_blogpost_site_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: blog_blogpost_site_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX blog_blogpost_site_id ON public.blog_blogpost USING btree (site_id);
 
 
 --
--- Name: blog_blogpost_user_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: blog_blogpost_user_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX blog_blogpost_user_id ON public.blog_blogpost USING btree (user_id);
 
 
 --
--- Name: celery_taskmeta_hidden; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: celery_taskmeta_hidden; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX celery_taskmeta_hidden ON public.celery_taskmeta USING btree (hidden);
 
 
 --
--- Name: celery_taskmeta_task_id_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: celery_taskmeta_task_id_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX celery_taskmeta_task_id_like ON public.celery_taskmeta USING btree (task_id varchar_pattern_ops);
 
 
 --
--- Name: celery_tasksetmeta_hidden; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: celery_tasksetmeta_hidden; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX celery_tasksetmeta_hidden ON public.celery_tasksetmeta USING btree (hidden);
 
 
 --
--- Name: celery_tasksetmeta_taskset_id_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: celery_tasksetmeta_taskset_id_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX celery_tasksetmeta_taskset_id_like ON public.celery_tasksetmeta USING btree (taskset_id varchar_pattern_ops);
 
 
 --
--- Name: conf_setting_site_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: conf_setting_site_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX conf_setting_site_id ON public.conf_setting USING btree (site_id);
 
 
 --
--- Name: core_sitepermission_sites_site_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: core_sitepermission_sites_site_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX core_sitepermission_sites_site_id ON public.core_sitepermission_sites USING btree (site_id);
 
 
 --
--- Name: core_sitepermission_sites_sitepermission_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: core_sitepermission_sites_sitepermission_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX core_sitepermission_sites_sitepermission_id ON public.core_sitepermission_sites USING btree (sitepermission_id);
 
 
 --
--- Name: django_admin_log_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_admin_log_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_admin_log_417f1b1c ON public.django_admin_log USING btree (content_type_id);
 
 
 --
--- Name: django_admin_log_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_admin_log_e8701ad4; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_admin_log_e8701ad4 ON public.django_admin_log USING btree (user_id);
 
 
 --
--- Name: django_comment_flags_comment_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_comment_flags_comment_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_comment_flags_comment_id ON public.django_comment_flags USING btree (comment_id);
 
 
 --
--- Name: django_comment_flags_flag; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_comment_flags_flag; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_comment_flags_flag ON public.django_comment_flags USING btree (flag);
 
 
 --
--- Name: django_comment_flags_flag_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_comment_flags_flag_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_comment_flags_flag_like ON public.django_comment_flags USING btree (flag varchar_pattern_ops);
 
 
 --
--- Name: django_comment_flags_user_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_comment_flags_user_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_comment_flags_user_id ON public.django_comment_flags USING btree (user_id);
 
 
 --
--- Name: django_comments_content_type_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_comments_content_type_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_comments_content_type_id ON public.django_comments USING btree (content_type_id);
 
 
 --
--- Name: django_comments_site_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_comments_is_removed_52a03ae3; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX django_comments_is_removed_52a03ae3 ON public.django_comments USING btree (is_removed);
+
+
+--
+-- Name: django_comments_object_pk_7fc98e83; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX django_comments_object_pk_7fc98e83 ON public.django_comments USING btree (object_pk);
+
+
+--
+-- Name: django_comments_object_pk_7fc98e83_like; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX django_comments_object_pk_7fc98e83_like ON public.django_comments USING btree (object_pk varchar_pattern_ops);
+
+
+--
+-- Name: django_comments_site_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_comments_site_id ON public.django_comments USING btree (site_id);
 
 
 --
--- Name: django_comments_submit_date_514ed2d9; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_comments_submit_date_514ed2d9; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_comments_submit_date_514ed2d9 ON public.django_comments USING btree (submit_date);
 
 
 --
--- Name: django_comments_user_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_comments_user_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_comments_user_id ON public.django_comments USING btree (user_id);
 
 
 --
--- Name: django_docker_processes_containeroverrides_3885db4e; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_containeroverrides_3885db4e; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_docker_processes_containeroverrides_3885db4e ON public.django_docker_processes_containeroverrides USING btree (docker_profile_id);
 
 
 --
--- Name: django_docker_processes_dockerenvvar_3885db4e; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockerenvvar_3885db4e; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_docker_processes_dockerenvvar_3885db4e ON public.django_docker_processes_dockerenvvar USING btree (docker_profile_id);
 
 
 --
--- Name: django_docker_processes_dockerlink_3885db4e; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockerlink_3885db4e; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_docker_processes_dockerlink_3885db4e ON public.django_docker_processes_dockerlink USING btree (docker_profile_id);
 
 
 --
--- Name: django_docker_processes_dockerlink_621534b3; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockerlink_621534b3; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_docker_processes_dockerlink_621534b3 ON public.django_docker_processes_dockerlink USING btree (docker_overrides_id);
 
 
 --
--- Name: django_docker_processes_dockerlink_f4faa4b8; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockerlink_f4faa4b8; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_docker_processes_dockerlink_f4faa4b8 ON public.django_docker_processes_dockerlink USING btree (docker_profile_from_id);
 
 
 --
--- Name: django_docker_processes_dockerport_3885db4e; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockerport_3885db4e; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_docker_processes_dockerport_3885db4e ON public.django_docker_processes_dockerport USING btree (docker_profile_id);
 
 
 --
--- Name: django_docker_processes_dockerproce_token_1211961caacdde18_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockerproce_token_1211961caacdde18_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_docker_processes_dockerproce_token_1211961caacdde18_like ON public.django_docker_processes_dockerprocess USING btree (token varchar_pattern_ops);
 
 
 --
--- Name: django_docker_processes_dockerprocess_83a0eb3f; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockerprocess_83a0eb3f; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_docker_processes_dockerprocess_83a0eb3f ON public.django_docker_processes_dockerprocess USING btree (profile_id);
 
 
 --
--- Name: django_docker_processes_dockerprocess_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockerprocess_e8701ad4; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_docker_processes_dockerprocess_e8701ad4 ON public.django_docker_processes_dockerprocess USING btree (user_id);
 
 
 --
--- Name: django_docker_processes_dockerprofil_name_75d7d5a2a3b969e3_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockerprofil_name_75d7d5a2a3b969e3_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_docker_processes_dockerprofil_name_75d7d5a2a3b969e3_like ON public.django_docker_processes_dockerprofile USING btree (name varchar_pattern_ops);
 
 
 --
--- Name: django_docker_processes_dockervolume_3885db4e; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_dockervolume_3885db4e; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_docker_processes_dockervolume_3885db4e ON public.django_docker_processes_dockervolume USING btree (docker_profile_id);
 
 
 --
--- Name: django_docker_processes_overrideenvvar_064a291d; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_overrideenvvar_064a291d; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_docker_processes_overrideenvvar_064a291d ON public.django_docker_processes_overrideenvvar USING btree (container_overrides_id);
 
 
 --
--- Name: django_docker_processes_overridelink_064a291d; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_overridelink_064a291d; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_docker_processes_overridelink_064a291d ON public.django_docker_processes_overridelink USING btree (container_overrides_id);
 
 
 --
--- Name: django_docker_processes_overridelink_f4faa4b8; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_overridelink_f4faa4b8; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_docker_processes_overridelink_f4faa4b8 ON public.django_docker_processes_overridelink USING btree (docker_profile_from_id);
 
 
 --
--- Name: django_docker_processes_overrideport_064a291d; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_overrideport_064a291d; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_docker_processes_overrideport_064a291d ON public.django_docker_processes_overrideport USING btree (container_overrides_id);
 
 
 --
--- Name: django_docker_processes_overridevolume_064a291d; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_docker_processes_overridevolume_064a291d; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_docker_processes_overridevolume_064a291d ON public.django_docker_processes_overridevolume USING btree (container_overrides_id);
 
 
 --
--- Name: django_irods_rodsenvironment_5e7b1936; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX django_irods_rodsenvironment_5e7b1936 ON public.django_irods_rodsenvironment USING btree (owner_id);
-
-
---
--- Name: django_redirect_91a0b591; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_redirect_91a0b591; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_redirect_91a0b591 ON public.django_redirect USING btree (old_path);
 
 
 --
--- Name: django_redirect_9365d6e7; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_redirect_9365d6e7; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_redirect_9365d6e7 ON public.django_redirect USING btree (site_id);
 
 
 --
--- Name: django_redirect_old_path_9db3e423470cdaf_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_redirect_old_path_9db3e423470cdaf_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_redirect_old_path_9db3e423470cdaf_like ON public.django_redirect USING btree (old_path varchar_pattern_ops);
 
 
 --
--- Name: django_session_de54fa62; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_session_de54fa62; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_session_de54fa62 ON public.django_session USING btree (expire_date);
 
 
 --
--- Name: django_session_session_key_461cfeaa630ca218_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_session_session_key_461cfeaa630ca218_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_session_session_key_461cfeaa630ca218_like ON public.django_session USING btree (session_key varchar_pattern_ops);
 
 
 --
--- Name: django_site_domain_a2e37b91_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: django_site_domain_a2e37b91_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX django_site_domain_a2e37b91_like ON public.django_site USING btree (domain varchar_pattern_ops);
 
 
 --
--- Name: djcelery_periodictask_crontab_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_periodictask_crontab_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX djcelery_periodictask_crontab_id ON public.djcelery_periodictask USING btree (crontab_id);
 
 
 --
--- Name: djcelery_periodictask_interval_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_periodictask_interval_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX djcelery_periodictask_interval_id ON public.djcelery_periodictask USING btree (interval_id);
 
 
 --
--- Name: djcelery_periodictask_name_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_periodictask_name_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX djcelery_periodictask_name_like ON public.djcelery_periodictask USING btree (name varchar_pattern_ops);
 
 
 --
--- Name: djcelery_taskstate_hidden; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_taskstate_hidden; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX djcelery_taskstate_hidden ON public.djcelery_taskstate USING btree (hidden);
 
 
 --
--- Name: djcelery_taskstate_name; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_taskstate_name; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX djcelery_taskstate_name ON public.djcelery_taskstate USING btree (name);
 
 
 --
--- Name: djcelery_taskstate_name_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_taskstate_name_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX djcelery_taskstate_name_like ON public.djcelery_taskstate USING btree (name varchar_pattern_ops);
 
 
 --
--- Name: djcelery_taskstate_state; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_taskstate_state; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX djcelery_taskstate_state ON public.djcelery_taskstate USING btree (state);
 
 
 --
--- Name: djcelery_taskstate_state_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_taskstate_state_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX djcelery_taskstate_state_like ON public.djcelery_taskstate USING btree (state varchar_pattern_ops);
 
 
 --
--- Name: djcelery_taskstate_task_id_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_taskstate_task_id_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX djcelery_taskstate_task_id_like ON public.djcelery_taskstate USING btree (task_id varchar_pattern_ops);
 
 
 --
--- Name: djcelery_taskstate_tstamp; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_taskstate_tstamp; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX djcelery_taskstate_tstamp ON public.djcelery_taskstate USING btree (tstamp);
 
 
 --
--- Name: djcelery_taskstate_worker_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_taskstate_worker_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX djcelery_taskstate_worker_id ON public.djcelery_taskstate USING btree (worker_id);
 
 
 --
--- Name: djcelery_workerstate_hostname_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_workerstate_hostname_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX djcelery_workerstate_hostname_like ON public.djcelery_workerstate USING btree (hostname varchar_pattern_ops);
 
 
 --
--- Name: djcelery_workerstate_last_heartbeat; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: djcelery_workerstate_last_heartbeat; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX djcelery_workerstate_last_heartbeat ON public.djcelery_workerstate USING btree (last_heartbeat);
 
 
 --
--- Name: forms_field_form_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: forms_field_form_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX forms_field_form_id ON public.forms_field USING btree (form_id);
 
 
 --
--- Name: forms_fieldentry_entry_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: forms_fieldentry_entry_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX forms_fieldentry_entry_id ON public.forms_fieldentry USING btree (entry_id);
 
 
 --
--- Name: forms_formentry_form_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: forms_formentry_form_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX forms_formentry_form_id ON public.forms_formentry USING btree (form_id);
 
 
 --
--- Name: ga_ows_ogrdataset_0a1a4dd8; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_ows_ogrdataset_0a1a4dd8; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_ows_ogrdataset_0a1a4dd8 ON public.ga_ows_ogrdataset USING btree (collection_id);
 
 
 --
--- Name: ga_ows_ogrdataset_81aebe41; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_ows_ogrdataset_81aebe41; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_ows_ogrdataset_81aebe41 ON public.ga_ows_ogrdataset USING btree (human_name);
 
 
 --
--- Name: ga_ows_ogrdataset_b068931c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_ows_ogrdataset_b068931c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_ows_ogrdataset_b068931c ON public.ga_ows_ogrdataset USING btree (name);
 
 
 --
--- Name: ga_ows_ogrdataset_extent_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_ows_ogrdataset_extent_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_ows_ogrdataset_extent_id ON public.ga_ows_ogrdataset USING gist (extent);
 
 
 --
--- Name: ga_ows_ogrdataset_human_name_2718979caa46bdd6_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_ows_ogrdataset_human_name_2718979caa46bdd6_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_ows_ogrdataset_human_name_2718979caa46bdd6_like ON public.ga_ows_ogrdataset USING btree (human_name text_pattern_ops);
 
 
 --
--- Name: ga_ows_ogrdataset_name_5ef251b0d7fbd366_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_ows_ogrdataset_name_5ef251b0d7fbd366_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_ows_ogrdataset_name_5ef251b0d7fbd366_like ON public.ga_ows_ogrdataset USING btree (name varchar_pattern_ops);
 
 
 --
--- Name: ga_ows_ogrlayer_81aebe41; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_ows_ogrlayer_81aebe41; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_ows_ogrlayer_81aebe41 ON public.ga_ows_ogrlayer USING btree (human_name);
 
 
 --
--- Name: ga_ows_ogrlayer_b068931c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_ows_ogrlayer_b068931c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_ows_ogrlayer_b068931c ON public.ga_ows_ogrlayer USING btree (name);
 
 
 --
--- Name: ga_ows_ogrlayer_d366d308; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_ows_ogrlayer_d366d308; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_ows_ogrlayer_d366d308 ON public.ga_ows_ogrlayer USING btree (dataset_id);
 
 
 --
--- Name: ga_ows_ogrlayer_extent_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_ows_ogrlayer_extent_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_ows_ogrlayer_extent_id ON public.ga_ows_ogrlayer USING gist (extent);
 
 
 --
--- Name: ga_ows_ogrlayer_human_name_517fb130c5bed6d7_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_ows_ogrlayer_human_name_517fb130c5bed6d7_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_ows_ogrlayer_human_name_517fb130c5bed6d7_like ON public.ga_ows_ogrlayer USING btree (human_name text_pattern_ops);
 
 
 --
--- Name: ga_ows_ogrlayer_name_440515aa32d1fbcb_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_ows_ogrlayer_name_440515aa32d1fbcb_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_ows_ogrlayer_name_440515aa32d1fbcb_like ON public.ga_ows_ogrlayer USING btree (name varchar_pattern_ops);
 
 
 --
--- Name: ga_resources_catalogpage_5e7b1936; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_catalogpage_5e7b1936; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_resources_catalogpage_5e7b1936 ON public.ga_resources_catalogpage USING btree (owner_id);
 
 
 --
--- Name: ga_resources_dataresource_5e7b1936; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_dataresource_5e7b1936; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_resources_dataresource_5e7b1936 ON public.ga_resources_dataresource USING btree (owner_id);
 
 
 --
--- Name: ga_resources_dataresource_bounding_box_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_dataresource_bounding_box_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_resources_dataresource_bounding_box_id ON public.ga_resources_dataresource USING gist (bounding_box);
 
 
 --
--- Name: ga_resources_dataresource_c17888f6; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_dataresource_c17888f6; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_resources_dataresource_c17888f6 ON public.ga_resources_dataresource USING btree (next_refresh);
 
 
 --
--- Name: ga_resources_dataresource_native_bounding_box_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_dataresource_native_bounding_box_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_resources_dataresource_native_bounding_box_id ON public.ga_resources_dataresource USING gist (native_bounding_box);
 
 
 --
--- Name: ga_resources_orderedresource_6cfffab0; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_orderedresource_6cfffab0; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_resources_orderedresource_6cfffab0 ON public.ga_resources_orderedresource USING btree (data_resource_id);
 
 
 --
--- Name: ga_resources_orderedresource_e46a33dd; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_orderedresource_e46a33dd; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_resources_orderedresource_e46a33dd ON public.ga_resources_orderedresource USING btree (resource_group_id);
 
 
 --
--- Name: ga_resources_relatedresource_51211265; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_relatedresource_51211265; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_resources_relatedresource_51211265 ON public.ga_resources_relatedresource USING btree (foreign_resource_id);
 
 
 --
--- Name: ga_resources_renderedlayer_5e7b1936; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_renderedlayer_5e7b1936; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_resources_renderedlayer_5e7b1936 ON public.ga_resources_renderedlayer USING btree (owner_id);
 
 
 --
--- Name: ga_resources_renderedlayer_6cfffab0; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_renderedlayer_6cfffab0; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_resources_renderedlayer_6cfffab0 ON public.ga_resources_renderedlayer USING btree (data_resource_id);
 
 
 --
--- Name: ga_resources_renderedlayer_d3785984; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_renderedlayer_d3785984; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_resources_renderedlayer_d3785984 ON public.ga_resources_renderedlayer USING btree (default_style_id);
 
 
 --
--- Name: ga_resources_renderedlayer_styles_066f4da0; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_renderedlayer_styles_066f4da0; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_resources_renderedlayer_styles_066f4da0 ON public.ga_resources_renderedlayer_styles USING btree (renderedlayer_id);
 
 
 --
--- Name: ga_resources_renderedlayer_styles_528292b4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_renderedlayer_styles_528292b4; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_resources_renderedlayer_styles_528292b4 ON public.ga_resources_renderedlayer_styles USING btree (style_id);
 
 
 --
--- Name: ga_resources_style_5e7b1936; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: ga_resources_style_5e7b1936; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX ga_resources_style_5e7b1936 ON public.ga_resources_style USING btree (owner_id);
 
 
 --
--- Name: galleries_galleryimage_gallery_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: galleries_galleryimage_gallery_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX galleries_galleryimage_gallery_id ON public.galleries_galleryimage USING btree (gallery_id);
 
 
 --
--- Name: generic_assignedkeyword_content_type_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: generic_assignedkeyword_content_type_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX generic_assignedkeyword_content_type_id ON public.generic_assignedkeyword USING btree (content_type_id);
 
 
 --
--- Name: generic_assignedkeyword_keyword_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: generic_assignedkeyword_keyword_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX generic_assignedkeyword_keyword_id ON public.generic_assignedkeyword USING btree (keyword_id);
 
 
 --
--- Name: generic_keyword_site_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: generic_keyword_site_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX generic_keyword_site_id ON public.generic_keyword USING btree (site_id);
 
 
 --
--- Name: generic_rating_content_type_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: generic_rating_content_type_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX generic_rating_content_type_id ON public.generic_rating USING btree (content_type_id);
 
 
 --
--- Name: generic_rating_user_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: generic_rating_user_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX generic_rating_user_id ON public.generic_rating USING btree (user_id);
 
 
 --
--- Name: generic_threadedcomment_replied_to_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: generic_threadedcomment_replied_to_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX generic_threadedcomment_replied_to_id ON public.generic_threadedcomment USING btree (replied_to_id);
 
 
 --
--- Name: hs_access_control_communit_community_id_6b0528e5; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_communit_community_id_6b0528e5; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_communit_community_id_6b0528e5 ON public.hs_access_control_communityresourceprivilege USING btree (community_id);
 
 
 --
--- Name: hs_access_control_communit_community_id_d99cfdf0; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_communit_community_id_d99cfdf0; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_communit_community_id_d99cfdf0 ON public.hs_access_control_communityresourceprovenance USING btree (community_id);
 
 
 --
--- Name: hs_access_control_communit_grantor_id_3ec5bad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_communit_grantor_id_3ec5bad4; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_communit_grantor_id_3ec5bad4 ON public.hs_access_control_communityresourceprovenance USING btree (grantor_id);
 
 
 --
--- Name: hs_access_control_communit_grantor_id_451d7a0c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_communit_grantor_id_451d7a0c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_communit_grantor_id_451d7a0c ON public.hs_access_control_communityresourceprivilege USING btree (grantor_id);
 
 
 --
--- Name: hs_access_control_communit_resource_id_454c9c9f; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_communit_resource_id_454c9c9f; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_communit_resource_id_454c9c9f ON public.hs_access_control_communityresourceprovenance USING btree (resource_id);
 
 
 --
--- Name: hs_access_control_communit_resource_id_c2e3d0e4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_communit_resource_id_c2e3d0e4; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_communit_resource_id_c2e3d0e4 ON public.hs_access_control_communityresourceprivilege USING btree (resource_id);
 
 
 --
--- Name: hs_access_control_feature_user_id_f7b54071; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_feature_user_id_f7b54071; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_feature_user_id_f7b54071 ON public.hs_access_control_feature USING btree (user_id);
 
 
 --
--- Name: hs_access_control_groupcom_community_id_84dd001c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupcom_community_id_84dd001c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_groupcom_community_id_84dd001c ON public.hs_access_control_groupcommunityprovenance USING btree (community_id);
 
 
 --
--- Name: hs_access_control_groupcom_community_owner_id_1dc22dbe; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupcom_community_owner_id_1dc22dbe; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_groupcom_community_owner_id_1dc22dbe ON public.hs_access_control_groupcommunityrequest USING btree (community_owner_id);
 
 
 --
--- Name: hs_access_control_groupcommunityprivilege_community_id_9ead4ef2; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupcommunityprivilege_community_id_9ead4ef2; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_groupcommunityprivilege_community_id_9ead4ef2 ON public.hs_access_control_groupcommunityprivilege USING btree (community_id);
 
 
 --
--- Name: hs_access_control_groupcommunityprivilege_grantor_id_19665fe3; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupcommunityprivilege_grantor_id_19665fe3; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_groupcommunityprivilege_grantor_id_19665fe3 ON public.hs_access_control_groupcommunityprivilege USING btree (grantor_id);
 
 
 --
--- Name: hs_access_control_groupcommunityprivilege_group_id_ff0f35d5; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupcommunityprivilege_group_id_ff0f35d5; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_groupcommunityprivilege_group_id_ff0f35d5 ON public.hs_access_control_groupcommunityprivilege USING btree (group_id);
 
 
 --
--- Name: hs_access_control_groupcommunityprovenance_grantor_id_9aa4c4fe; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupcommunityprovenance_grantor_id_9aa4c4fe; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_groupcommunityprovenance_grantor_id_9aa4c4fe ON public.hs_access_control_groupcommunityprovenance USING btree (grantor_id);
 
 
 --
--- Name: hs_access_control_groupcommunityprovenance_group_id_b09a2f11; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupcommunityprovenance_group_id_b09a2f11; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_groupcommunityprovenance_group_id_b09a2f11 ON public.hs_access_control_groupcommunityprovenance USING btree (group_id);
 
 
 --
--- Name: hs_access_control_groupcommunityrequest_community_id_68acef01; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupcommunityrequest_community_id_68acef01; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_groupcommunityrequest_community_id_68acef01 ON public.hs_access_control_groupcommunityrequest USING btree (community_id);
 
 
 --
--- Name: hs_access_control_groupcommunityrequest_group_id_cc4bb20b; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupcommunityrequest_group_id_cc4bb20b; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_groupcommunityrequest_group_id_cc4bb20b ON public.hs_access_control_groupcommunityrequest USING btree (group_id);
 
 
 --
--- Name: hs_access_control_groupcommunityrequest_group_owner_id_b005fc64; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupcommunityrequest_group_owner_id_b005fc64; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_groupcommunityrequest_group_owner_id_b005fc64 ON public.hs_access_control_groupcommunityrequest USING btree (group_owner_id);
 
 
 --
--- Name: hs_access_control_groupmembershiprequest_0c4f5cd1; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupmembershiprequest_0c4f5cd1; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_groupmembershiprequest_0c4f5cd1 ON public.hs_access_control_groupmembershiprequest USING btree (request_from_id);
 
 
 --
--- Name: hs_access_control_groupmembershiprequest_4561f31b; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupmembershiprequest_4561f31b; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_groupmembershiprequest_4561f31b ON public.hs_access_control_groupmembershiprequest USING btree (group_to_join_id);
 
 
 --
--- Name: hs_access_control_groupmembershiprequest_a3f20815; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupmembershiprequest_a3f20815; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_groupmembershiprequest_a3f20815 ON public.hs_access_control_groupmembershiprequest USING btree (invitation_to_id);
 
 
 --
--- Name: hs_access_control_groupresourceprivilege_82c60f9f; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupresourceprivilege_82c60f9f; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_groupresourceprivilege_82c60f9f ON public.hs_access_control_groupresourceprivilege USING btree (resource_id);
 
 
 --
--- Name: hs_access_control_groupresourceprivilege_9e767b7c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupresourceprivilege_9e767b7c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_groupresourceprivilege_9e767b7c ON public.hs_access_control_groupresourceprivilege USING btree (grantor_id);
 
 
 --
--- Name: hs_access_control_groupresourceprivilege_dc2a4728; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupresourceprivilege_dc2a4728; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_groupresourceprivilege_dc2a4728 ON public.hs_access_control_groupresourceprivilege USING btree (group_id);
 
 
 --
--- Name: hs_access_control_groupresourceprovenance_0e939a4f; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupresourceprovenance_0e939a4f; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_groupresourceprovenance_0e939a4f ON public.hs_access_control_groupresourceprovenance USING btree (group_id);
 
 
 --
--- Name: hs_access_control_groupresourceprovenance_7e847bf8; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupresourceprovenance_7e847bf8; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_groupresourceprovenance_7e847bf8 ON public.hs_access_control_groupresourceprovenance USING btree (grantor_id);
 
 
 --
--- Name: hs_access_control_groupresourceprovenance_e2f3ef5b; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupresourceprovenance_e2f3ef5b; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_groupresourceprovenance_e2f3ef5b ON public.hs_access_control_groupresourceprovenance USING btree (resource_id);
 
 
 --
--- Name: hs_access_control_usercommunityprivilege_community_id_14d5752b; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_requestc_community_to_approve_id_4670cdbb; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_access_control_requestc_community_to_approve_id_4670cdbb ON public.hs_access_control_requestcommunity USING btree (community_to_approve_id);
+
+
+--
+-- Name: hs_access_control_requestcommunity_requested_by_id_88bc04ee; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_access_control_requestcommunity_requested_by_id_88bc04ee ON public.hs_access_control_requestcommunity USING btree (requested_by_id);
+
+
+--
+-- Name: hs_access_control_usercommunityprivilege_community_id_14d5752b; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_usercommunityprivilege_community_id_14d5752b ON public.hs_access_control_usercommunityprivilege USING btree (community_id);
 
 
 --
--- Name: hs_access_control_usercommunityprivilege_grantor_id_b75f8636; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usercommunityprivilege_grantor_id_b75f8636; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_usercommunityprivilege_grantor_id_b75f8636 ON public.hs_access_control_usercommunityprivilege USING btree (grantor_id);
 
 
 --
--- Name: hs_access_control_usercommunityprivilege_user_id_85f37b5b; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usercommunityprivilege_user_id_85f37b5b; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_usercommunityprivilege_user_id_85f37b5b ON public.hs_access_control_usercommunityprivilege USING btree (user_id);
 
 
 --
--- Name: hs_access_control_usercommunityprovenance_community_id_847d4e07; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usercommunityprovenance_community_id_847d4e07; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_usercommunityprovenance_community_id_847d4e07 ON public.hs_access_control_usercommunityprovenance USING btree (community_id);
 
 
 --
--- Name: hs_access_control_usercommunityprovenance_grantor_id_a80855ea; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usercommunityprovenance_grantor_id_a80855ea; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_usercommunityprovenance_grantor_id_a80855ea ON public.hs_access_control_usercommunityprovenance USING btree (grantor_id);
 
 
 --
--- Name: hs_access_control_usercommunityprovenance_user_id_6bfff69e; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usercommunityprovenance_user_id_6bfff69e; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_usercommunityprovenance_user_id_6bfff69e ON public.hs_access_control_usercommunityprovenance USING btree (user_id);
 
 
 --
--- Name: hs_access_control_usergroupprivilege_80b9f3ef; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usergroupprivilege_80b9f3ef; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_usergroupprivilege_80b9f3ef ON public.hs_access_control_usergroupprivilege USING btree (user_id);
 
 
 --
--- Name: hs_access_control_usergroupprivilege_9e767b7c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usergroupprivilege_9e767b7c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_usergroupprivilege_9e767b7c ON public.hs_access_control_usergroupprivilege USING btree (grantor_id);
 
 
 --
--- Name: hs_access_control_usergroupprivilege_dc2a4728; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usergroupprivilege_dc2a4728; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_usergroupprivilege_dc2a4728 ON public.hs_access_control_usergroupprivilege USING btree (group_id);
 
 
 --
--- Name: hs_access_control_usergroupprovenance_0e939a4f; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usergroupprovenance_0e939a4f; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_usergroupprovenance_0e939a4f ON public.hs_access_control_usergroupprovenance USING btree (group_id);
 
 
 --
--- Name: hs_access_control_usergroupprovenance_7e847bf8; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usergroupprovenance_7e847bf8; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_usergroupprovenance_7e847bf8 ON public.hs_access_control_usergroupprovenance USING btree (grantor_id);
 
 
 --
--- Name: hs_access_control_usergroupprovenance_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usergroupprovenance_e8701ad4; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_usergroupprovenance_e8701ad4 ON public.hs_access_control_usergroupprovenance USING btree (user_id);
 
 
 --
--- Name: hs_access_control_userresourceprivilege_80b9f3ef; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_userresourceprivilege_80b9f3ef; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_userresourceprivilege_80b9f3ef ON public.hs_access_control_userresourceprivilege USING btree (user_id);
 
 
 --
--- Name: hs_access_control_userresourceprivilege_82c60f9f; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_userresourceprivilege_82c60f9f; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_userresourceprivilege_82c60f9f ON public.hs_access_control_userresourceprivilege USING btree (resource_id);
 
 
 --
--- Name: hs_access_control_userresourceprivilege_9e767b7c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_userresourceprivilege_9e767b7c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_userresourceprivilege_9e767b7c ON public.hs_access_control_userresourceprivilege USING btree (grantor_id);
 
 
 --
--- Name: hs_access_control_userresourceprovenance_7e847bf8; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_userresourceprovenance_7e847bf8; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_userresourceprovenance_7e847bf8 ON public.hs_access_control_userresourceprovenance USING btree (grantor_id);
 
 
 --
--- Name: hs_access_control_userresourceprovenance_e2f3ef5b; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_userresourceprovenance_e2f3ef5b; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_userresourceprovenance_e2f3ef5b ON public.hs_access_control_userresourceprovenance USING btree (resource_id);
 
 
 --
--- Name: hs_access_control_userresourceprovenance_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_userresourceprovenance_e8701ad4; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_access_control_userresourceprovenance_e8701ad4 ON public.hs_access_control_userresourceprovenance USING btree (user_id);
 
 
 --
--- Name: hs_app_netCDF_originalcoverage_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_app_netCDF_originalcoverage_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX "hs_app_netCDF_originalcoverage_417f1b1c" ON public.hs_file_types_originalcoverage USING btree (content_type_id);
 
 
 --
--- Name: hs_app_netCDF_variable_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_app_netCDF_variable_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX "hs_app_netCDF_variable_417f1b1c" ON public.hs_file_types_variable USING btree (content_type_id);
 
 
 --
--- Name: hs_app_timeseries_method_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_app_timeseries_method_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_app_timeseries_method_417f1b1c ON public.hs_file_types_method USING btree (content_type_id);
 
 
 --
--- Name: hs_app_timeseries_processinglevel_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_app_timeseries_processinglevel_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_app_timeseries_processinglevel_417f1b1c ON public.hs_file_types_processinglevel USING btree (content_type_id);
 
 
 --
--- Name: hs_app_timeseries_site_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_app_timeseries_site_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_app_timeseries_site_417f1b1c ON public.hs_file_types_site USING btree (content_type_id);
 
 
 --
--- Name: hs_app_timeseries_timeseriesresult_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_app_timeseries_timeseriesresult_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_app_timeseries_timeseriesresult_417f1b1c ON public.hs_file_types_timeseriesresult USING btree (content_type_id);
 
 
 --
--- Name: hs_app_timeseries_utcoffset_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_app_timeseries_utcoffset_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_app_timeseries_utcoffset_417f1b1c ON public.hs_file_types_utcoffset USING btree (content_type_id);
 
 
 --
--- Name: hs_app_timeseries_variable_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_app_timeseries_variable_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_app_timeseries_variable_417f1b1c ON public.hs_file_types_variabletimeseries USING btree (content_type_id);
 
 
 --
--- Name: hs_collection_resource_collectiondeletedresource_0a1a4dd8; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_collection_resource_collectiondeletedresource_0a1a4dd8; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_collection_resource_collectiondeletedresource_0a1a4dd8 ON public.hs_collection_resource_collectiondeletedresource USING btree (collection_id);
 
 
 --
--- Name: hs_collection_resource_collectiondeletedresource_d19ec81d; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_collection_resource_collectiondeletedresource_d19ec81d; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_collection_resource_collectiondeletedresource_d19ec81d ON public.hs_collection_resource_collectiondeletedresource USING btree (deleted_by_id);
 
 
 --
--- Name: hs_collection_resource_collectiondeletedresource_resource_o2660; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_collection_resource_collectiondeletedresource_resource_o2660; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_collection_resource_collectiondeletedresource_resource_o2660 ON public.hs_collection_resource_collectiondeletedresource_resource_od9f5 USING btree (collectiondeletedresource_id);
 
 
 --
--- Name: hs_collection_resource_collectiondeletedresource_resource_ocd4f; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_collection_resource_collectiondeletedresource_resource_ocd4f; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_collection_resource_collectiondeletedresource_resource_ocd4f ON public.hs_collection_resource_collectiondeletedresource_resource_od9f5 USING btree (user_id);
 
 
 --
--- Name: hs_core_citation_content_type_id_972d87c6; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_citation_content_type_id_972d87c6; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_citation_content_type_id_972d87c6 ON public.hs_core_citation USING btree (content_type_id);
 
 
 --
--- Name: hs_core_contributor_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_contributor_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_contributor_417f1b1c ON public.hs_core_contributor USING btree (content_type_id);
 
 
 --
--- Name: hs_core_coverage_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_coverage_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_coverage_417f1b1c ON public.hs_core_coverage USING btree (content_type_id);
 
 
 --
--- Name: hs_core_creator_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_creator_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_creator_417f1b1c ON public.hs_core_creator USING btree (content_type_id);
 
 
 --
--- Name: hs_core_date_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_date_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_date_417f1b1c ON public.hs_core_date USING btree (content_type_id);
 
 
 --
--- Name: hs_core_description_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_description_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_description_417f1b1c ON public.hs_core_description USING btree (content_type_id);
 
 
 --
--- Name: hs_core_format_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_format_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_format_417f1b1c ON public.hs_core_format USING btree (content_type_id);
 
 
 --
--- Name: hs_core_fundingagency_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_fundingagency_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_fundingagency_417f1b1c ON public.hs_core_fundingagency USING btree (content_type_id);
 
 
 --
--- Name: hs_core_genericresource_3700153c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_genericresource_3700153c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_genericresource_3700153c ON public.hs_core_genericresource USING btree (creator_id);
 
 
 --
--- Name: hs_core_genericresource_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_genericresource_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_genericresource_417f1b1c ON public.hs_core_genericresource USING btree (content_type_id);
 
 
 --
--- Name: hs_core_genericresource_44cc026e; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_genericresource_44cc026e; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_genericresource_44cc026e ON public.hs_core_genericresource USING btree (doi);
 
 
 --
--- Name: hs_core_genericresource_6e3c2cc2; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_genericresource_6e3c2cc2; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_genericresource_6e3c2cc2 ON public.hs_core_genericresource USING btree (last_changed_by_id);
 
 
 --
--- Name: hs_core_genericresource_7258c37c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_genericresource_7258c37c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_genericresource_7258c37c ON public.hs_core_genericresource USING btree (short_id);
 
 
 --
--- Name: hs_core_genericresource_collections_169f7fce; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_genericresource_collections_169f7fce; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_genericresource_collections_169f7fce ON public.hs_core_genericresource_collections USING btree (from_baseresource_id);
 
 
 --
--- Name: hs_core_genericresource_collections_91410dc4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_genericresource_collections_91410dc4; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_genericresource_collections_91410dc4 ON public.hs_core_genericresource_collections USING btree (to_baseresource_id);
 
 
 --
--- Name: hs_core_genericresource_doi_1fd041a54c9b75f0_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_genericresource_doi_1fd041a54c9b75f0_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_genericresource_doi_1fd041a54c9b75f0_like ON public.hs_core_genericresource USING btree (doi varchar_pattern_ops);
 
 
 --
--- Name: hs_core_genericresource_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_genericresource_e8701ad4; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_genericresource_e8701ad4 ON public.hs_core_genericresource USING btree (user_id);
 
 
 --
--- Name: hs_core_genericresource_short_id_1ccf03b27239c9d9_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_genericresource_quota_holder_id_83c8873b; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_core_genericresource_quota_holder_id_83c8873b ON public.hs_core_genericresource USING btree (quota_holder_id);
+
+
+--
+-- Name: hs_core_genericresource_short_id_1ccf03b27239c9d9_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_genericresource_short_id_1ccf03b27239c9d9_like ON public.hs_core_genericresource USING btree (short_id varchar_pattern_ops);
 
 
 --
--- Name: hs_core_groupownership_0e939a4f; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_geospatialrelation_content_type_id_fc62c5a5; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_core_geospatialrelation_content_type_id_fc62c5a5 ON public.hs_core_geospatialrelation USING btree (content_type_id);
+
+
+--
+-- Name: hs_core_groupownership_0e939a4f; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_groupownership_0e939a4f ON public.hs_core_groupownership USING btree (group_id);
 
 
 --
--- Name: hs_core_groupownership_5e7b1936; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_groupownership_5e7b1936; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_groupownership_5e7b1936 ON public.hs_core_groupownership USING btree (owner_id);
 
 
 --
--- Name: hs_core_identifier_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_identifier_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_identifier_417f1b1c ON public.hs_core_identifier USING btree (content_type_id);
 
 
 --
--- Name: hs_core_identifier_url_5612dd61d821222e_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_identifier_url_5612dd61d821222e_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_identifier_url_5612dd61d821222e_like ON public.hs_core_identifier USING btree (url varchar_pattern_ops);
 
 
 --
--- Name: hs_core_language_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_language_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_language_417f1b1c ON public.hs_core_language USING btree (content_type_id);
 
 
 --
--- Name: hs_core_publisher_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_publisher_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_publisher_417f1b1c ON public.hs_core_publisher USING btree (content_type_id);
 
 
 --
--- Name: hs_core_relation_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_relation_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_relation_417f1b1c ON public.hs_core_relation USING btree (content_type_id);
 
 
 --
--- Name: hs_core_resourcefile_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_resourcefile_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_resourcefile_417f1b1c ON public.hs_core_resourcefile USING btree (content_type_id);
 
 
 --
--- Name: hs_core_resourcefile_af839760; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_resourcefile_af839760; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_resourcefile_af839760 ON public.hs_core_resourcefile USING btree (logical_file_content_type_id);
 
 
 --
--- Name: hs_core_resourcefile_object_id_fed_resource_file_15f4618e_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX hs_core_resourcefile_object_id_fed_resource_file_15f4618e_idx ON public.hs_core_resourcefile USING btree (object_id, fed_resource_file);
-
-
---
--- Name: hs_core_resourcefile_object_id_resource_file_908610e9_idx; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_resourcefile_object_id_resource_file_908610e9_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_resourcefile_object_id_resource_file_908610e9_idx ON public.hs_core_resourcefile USING btree (object_id, resource_file);
 
 
 --
--- Name: hs_core_rights_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_resourcefile_resource_file_ab307f6e_like; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_core_resourcefile_resource_file_ab307f6e_like ON public.hs_core_resourcefile USING btree (resource_file varchar_pattern_ops);
+
+
+--
+-- Name: hs_core_rights_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_rights_417f1b1c ON public.hs_core_rights USING btree (content_type_id);
 
 
 --
--- Name: hs_core_subject_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_subject_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_subject_417f1b1c ON public.hs_core_subject USING btree (content_type_id);
 
 
 --
--- Name: hs_core_tasknotification_task_id_b755952a_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_tasknotification_task_id_b755952a_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_tasknotification_task_id_b755952a_like ON public.hs_core_tasknotification USING btree (task_id varchar_pattern_ops);
 
 
 --
--- Name: hs_core_tasknotification_username_1ea0ae30; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_tasknotification_username_1ea0ae30; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_tasknotification_username_1ea0ae30 ON public.hs_core_tasknotification USING btree (username);
 
 
 --
--- Name: hs_core_tasknotification_username_1ea0ae30_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_tasknotification_username_1ea0ae30_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_tasknotification_username_1ea0ae30_like ON public.hs_core_tasknotification USING btree (username varchar_pattern_ops);
 
 
 --
--- Name: hs_core_title_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_title_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_title_417f1b1c ON public.hs_core_title USING btree (content_type_id);
 
 
 --
--- Name: hs_core_type_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_core_type_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_core_type_417f1b1c ON public.hs_core_type USING btree (content_type_id);
 
 
 --
--- Name: hs_file_types_cvaggregationstatistic_metadata_id_251a5892; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_csvlogicalfile_resource_id_6e34890f; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX hs_file_types_csvlogicalfile_resource_id_6e34890f ON public.hs_file_types_csvlogicalfile USING btree (resource_id);
+
+
+--
+-- Name: hs_file_types_cvaggregationstatistic_metadata_id_251a5892; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_file_types_cvaggregationstatistic_metadata_id_251a5892 ON public.hs_file_types_cvaggregationstatistic USING btree (metadata_id);
 
 
 --
--- Name: hs_file_types_cvelevationdatum_metadata_id_99cb1db8; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvelevationdatum_metadata_id_99cb1db8; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_file_types_cvelevationdatum_metadata_id_99cb1db8 ON public.hs_file_types_cvelevationdatum USING btree (metadata_id);
 
 
 --
--- Name: hs_file_types_cvmedium_metadata_id_382a1b6d; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvmedium_metadata_id_382a1b6d; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_file_types_cvmedium_metadata_id_382a1b6d ON public.hs_file_types_cvmedium USING btree (metadata_id);
 
 
 --
--- Name: hs_file_types_cvmethodtype_metadata_id_244a33f0; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvmethodtype_metadata_id_244a33f0; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_file_types_cvmethodtype_metadata_id_244a33f0 ON public.hs_file_types_cvmethodtype USING btree (metadata_id);
 
 
 --
--- Name: hs_file_types_cvsitetype_metadata_id_4f0047b9; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvsitetype_metadata_id_4f0047b9; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_file_types_cvsitetype_metadata_id_4f0047b9 ON public.hs_file_types_cvsitetype USING btree (metadata_id);
 
 
 --
--- Name: hs_file_types_cvspeciation_metadata_id_25e79d42; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvspeciation_metadata_id_25e79d42; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_file_types_cvspeciation_metadata_id_25e79d42 ON public.hs_file_types_cvspeciation USING btree (metadata_id);
 
 
 --
--- Name: hs_file_types_cvstatus_metadata_id_13261b95; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvstatus_metadata_id_13261b95; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_file_types_cvstatus_metadata_id_13261b95 ON public.hs_file_types_cvstatus USING btree (metadata_id);
 
 
 --
--- Name: hs_file_types_cvunitstype_metadata_id_8dd379c0; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvunitstype_metadata_id_8dd379c0; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_file_types_cvunitstype_metadata_id_8dd379c0 ON public.hs_file_types_cvunitstype USING btree (metadata_id);
 
 
 --
--- Name: hs_file_types_cvvariablename_metadata_id_6390cd41; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvvariablename_metadata_id_6390cd41; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_file_types_cvvariablename_metadata_id_6390cd41 ON public.hs_file_types_cvvariablename USING btree (metadata_id);
 
 
 --
--- Name: hs_file_types_cvvariabletype_metadata_id_ff268daa; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_cvvariabletype_metadata_id_ff268daa; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_file_types_cvvariabletype_metadata_id_ff268daa ON public.hs_file_types_cvvariabletype USING btree (metadata_id);
 
 
 --
--- Name: hs_file_types_filesetlogicalfile_resource_id_7032df73; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_filesetlogicalfile_resource_id_7032df73; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_file_types_filesetlogicalfile_resource_id_7032df73 ON public.hs_file_types_filesetlogicalfile USING btree (resource_id);
 
 
 --
--- Name: hs_file_types_genericlogicalfile_resource_id_b5915dec; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_genericlogicalfile_resource_id_b5915dec; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_file_types_genericlogicalfile_resource_id_b5915dec ON public.hs_file_types_genericlogicalfile USING btree (resource_id);
 
 
 --
--- Name: hs_file_types_geofeaturelogicalfile_resource_id_05b89011; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_geofeaturelogicalfile_resource_id_05b89011; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_file_types_geofeaturelogicalfile_resource_id_05b89011 ON public.hs_file_types_geofeaturelogicalfile USING btree (resource_id);
 
 
 --
--- Name: hs_file_types_georasterlogicalfile_resource_id_ec57a3c3; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_georasterlogicalfile_resource_id_ec57a3c3; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_file_types_georasterlogicalfile_resource_id_ec57a3c3 ON public.hs_file_types_georasterlogicalfile USING btree (resource_id);
 
 
 --
--- Name: hs_file_types_modelinstancefilemetadata_executed_by_id_4d181869; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_modelinstancefilemetadata_executed_by_id_4d181869; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_file_types_modelinstancefilemetadata_executed_by_id_4d181869 ON public.hs_file_types_modelinstancefilemetadata USING btree (executed_by_id);
 
 
 --
--- Name: hs_file_types_modelinstancelogicalfile_resource_id_7ff2e26d; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_modelinstancelogicalfile_resource_id_7ff2e26d; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_file_types_modelinstancelogicalfile_resource_id_7ff2e26d ON public.hs_file_types_modelinstancelogicalfile USING btree (resource_id);
 
 
 --
--- Name: hs_file_types_modelprogram_mp_metadata_id_7d558023; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_modelprogram_mp_metadata_id_7d558023; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_file_types_modelprogram_mp_metadata_id_7d558023 ON public.hs_file_types_modelprogramresourcefiletype USING btree (mp_metadata_id);
 
 
 --
--- Name: hs_file_types_modelprogramlogicalfile_resource_id_cfc1a9d6; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_modelprogramlogicalfile_resource_id_cfc1a9d6; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_file_types_modelprogramlogicalfile_resource_id_cfc1a9d6 ON public.hs_file_types_modelprogramlogicalfile USING btree (resource_id);
 
 
 --
--- Name: hs_file_types_modelprogramresourcefiletype_res_file_id_9cd12298; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_modelprogramresourcefiletype_res_file_id_9cd12298; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_file_types_modelprogramresourcefiletype_res_file_id_9cd12298 ON public.hs_file_types_modelprogramresourcefiletype USING btree (res_file_id);
 
 
 --
--- Name: hs_file_types_netcdflogicalfile_resource_id_fa54b4db; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_netcdflogicalfile_resource_id_fa54b4db; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_file_types_netcdflogicalfile_resource_id_fa54b4db ON public.hs_file_types_netcdflogicalfile USING btree (resource_id);
 
 
 --
--- Name: hs_file_types_reftimeserieslogicalfile_resource_id_a9ded1ff; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_reftimeserieslogicalfile_resource_id_a9ded1ff; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_file_types_reftimeserieslogicalfile_resource_id_a9ded1ff ON public.hs_file_types_reftimeserieslogicalfile USING btree (resource_id);
 
 
 --
--- Name: hs_file_types_timeserieslogicalfile_resource_id_cc4550ba; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_file_types_timeserieslogicalfile_resource_id_cc4550ba; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_file_types_timeserieslogicalfile_resource_id_cc4550ba ON public.hs_file_types_timeserieslogicalfile USING btree (resource_id);
 
 
 --
--- Name: hs_geo_raster_resource_bandinformation_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_geo_raster_resource_bandinformation_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_geo_raster_resource_bandinformation_417f1b1c ON public.hs_file_types_bandinformation USING btree (content_type_id);
 
 
 --
--- Name: hs_geo_raster_resource_cellinformation_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_geo_raster_resource_cellinformation_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_geo_raster_resource_cellinformation_417f1b1c ON public.hs_file_types_cellinformation USING btree (content_type_id);
 
 
 --
--- Name: hs_geo_raster_resource_originalcoverage_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_geo_raster_resource_originalcoverage_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_geo_raster_resource_originalcoverage_417f1b1c ON public.hs_file_types_originalcoverageraster USING btree (content_type_id);
 
 
 --
--- Name: hs_geographic_feature_resource_fieldinformation_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_geographic_feature_resource_fieldinformation_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_geographic_feature_resource_fieldinformation_417f1b1c ON public.hs_file_types_fieldinformation USING btree (content_type_id);
 
 
 --
--- Name: hs_geographic_feature_resource_geometryinformation_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_geographic_feature_resource_geometryinformation_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_geographic_feature_resource_geometryinformation_417f1b1c ON public.hs_file_types_geometryinformation USING btree (content_type_id);
 
 
 --
--- Name: hs_geographic_feature_resource_originalcoverage_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_geographic_feature_resource_originalcoverage_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_geographic_feature_resource_originalcoverage_417f1b1c ON public.hs_file_types_originalcoveragegeofeature USING btree (content_type_id);
 
 
 --
--- Name: hs_labels_userresourceflags_e2f3ef5b; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_labels_userresourceflags_e2f3ef5b; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_labels_userresourceflags_e2f3ef5b ON public.hs_labels_userresourceflags USING btree (resource_id);
 
 
 --
--- Name: hs_labels_userresourceflags_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_labels_userresourceflags_e8701ad4; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_labels_userresourceflags_e8701ad4 ON public.hs_labels_userresourceflags USING btree (user_id);
 
 
 --
--- Name: hs_labels_userresourcelabels_e2f3ef5b; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_labels_userresourcelabels_e2f3ef5b; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_labels_userresourcelabels_e2f3ef5b ON public.hs_labels_userresourcelabels USING btree (resource_id);
 
 
 --
--- Name: hs_labels_userresourcelabels_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_labels_userresourcelabels_e8701ad4; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_labels_userresourcelabels_e8701ad4 ON public.hs_labels_userresourcelabels USING btree (user_id);
 
 
 --
--- Name: hs_labels_userstoredlabels_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_labels_userstoredlabels_e8701ad4; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_labels_userstoredlabels_e8701ad4 ON public.hs_labels_userstoredlabels USING btree (user_id);
 
 
 --
--- Name: hs_tools_resource_apphomepageurl_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_apphomepageurl_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tools_resource_apphomepageurl_417f1b1c ON public.hs_tools_resource_apphomepageurl USING btree (content_type_id);
 
 
 --
--- Name: hs_tools_resource_helppageurl_content_type_id_fd68ab0a; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_helppageurl_content_type_id_fd68ab0a; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tools_resource_helppageurl_content_type_id_fd68ab0a ON public.hs_tools_resource_helppageurl USING btree (content_type_id);
 
 
 --
--- Name: hs_tools_resource_issuespageurl_content_type_id_79144377; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_issuespageurl_content_type_id_79144377; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tools_resource_issuespageurl_content_type_id_79144377 ON public.hs_tools_resource_issuespageurl USING btree (content_type_id);
 
 
 --
--- Name: hs_tools_resource_mailinglisturl_content_type_id_4ba8ca5a; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_mailinglisturl_content_type_id_4ba8ca5a; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tools_resource_mailinglisturl_content_type_id_4ba8ca5a ON public.hs_tools_resource_mailinglisturl USING btree (content_type_id);
 
 
 --
--- Name: hs_tools_resource_requestu_content_type_id_774b809e; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_requestu_content_type_id_774b809e; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tools_resource_requestu_content_type_id_774b809e ON public.hs_tools_resource_requesturlbaseaggregation USING btree (content_type_id);
 
 
 --
--- Name: hs_tools_resource_requesturlbase_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_requesturlbase_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tools_resource_requesturlbase_417f1b1c ON public.hs_tools_resource_requesturlbase USING btree (content_type_id);
 
 
 --
--- Name: hs_tools_resource_requesturlbasefile_content_type_id_8ee7ab04; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_requesturlbasefile_content_type_id_8ee7ab04; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tools_resource_requesturlbasefile_content_type_id_8ee7ab04 ON public.hs_tools_resource_requesturlbasefile USING btree (content_type_id);
 
 
 --
--- Name: hs_tools_resource_roadmap_content_type_id_2b28b9e3; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_roadmap_content_type_id_2b28b9e3; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tools_resource_roadmap_content_type_id_2b28b9e3 ON public.hs_tools_resource_roadmap USING btree (content_type_id);
 
 
 --
--- Name: hs_tools_resource_showonopenwithlist_content_type_id_46647bfc; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_showonopenwithlist_content_type_id_46647bfc; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tools_resource_showonopenwithlist_content_type_id_46647bfc ON public.hs_tools_resource_showonopenwithlist USING btree (content_type_id);
 
 
 --
--- Name: hs_tools_resource_sourcecodeurl_content_type_id_e38d6841; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_sourcecodeurl_content_type_id_e38d6841; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tools_resource_sourcecodeurl_content_type_id_e38d6841 ON public.hs_tools_resource_sourcecodeurl USING btree (content_type_id);
 
 
 --
--- Name: hs_tools_resource_supporte_content_type_id_ec21b8f5; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supporte_content_type_id_ec21b8f5; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tools_resource_supporte_content_type_id_ec21b8f5 ON public.hs_tools_resource_supportedfileextensions USING btree (content_type_id);
 
 
 --
--- Name: hs_tools_resource_supporte_supportedaggtypechoices_id_a4b8b2e0; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supporte_supportedaggtypechoices_id_a4b8b2e0; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tools_resource_supporte_supportedaggtypechoices_id_a4b8b2e0 ON public.hs_tools_resource_supportedaggtypes_supported_agg_types USING btree (supportedaggtypechoices_id);
 
 
 --
--- Name: hs_tools_resource_supporte_supportedaggtypes_id_763fc392; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supporte_supportedaggtypes_id_763fc392; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tools_resource_supporte_supportedaggtypes_id_763fc392 ON public.hs_tools_resource_supportedaggtypes_supported_agg_types USING btree (supportedaggtypes_id);
 
 
 --
--- Name: hs_tools_resource_supportedaggtypes_content_type_id_4d8a44dd; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedaggtypes_content_type_id_4d8a44dd; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tools_resource_supportedaggtypes_content_type_id_4d8a44dd ON public.hs_tools_resource_supportedaggtypes USING btree (content_type_id);
 
 
 --
--- Name: hs_tools_resource_supportedrestypes_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedrestypes_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tools_resource_supportedrestypes_417f1b1c ON public.hs_tools_resource_supportedrestypes USING btree (content_type_id);
 
 
 --
--- Name: hs_tools_resource_supportedrestypes_supported_res_types_a538657; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedrestypes_supported_res_types_a538657; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tools_resource_supportedrestypes_supported_res_types_a538657 ON public.hs_tools_resource_supportedrestypes_supported_res_types USING btree (supportedrestypechoices_id);
 
 
 --
--- Name: hs_tools_resource_supportedrestypes_supported_res_types_ae94a0b; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedrestypes_supported_res_types_ae94a0b; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tools_resource_supportedrestypes_supported_res_types_ae94a0b ON public.hs_tools_resource_supportedrestypes_supported_res_types USING btree (supportedrestypes_id);
 
 
 --
--- Name: hs_tools_resource_supportedsharingstatus_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedsharingstatus_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tools_resource_supportedsharingstatus_417f1b1c ON public.hs_tools_resource_supportedsharingstatus USING btree (content_type_id);
 
 
 --
--- Name: hs_tools_resource_supportedsharingstatus_sharing_status_ba95e5d; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedsharingstatus_sharing_status_ba95e5d; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tools_resource_supportedsharingstatus_sharing_status_ba95e5d ON public.hs_tools_resource_supportedsharingstatus_sharing_status USING btree (supportedsharingstatuschoices_id);
 
 
 --
--- Name: hs_tools_resource_supportedsharingstatus_sharing_status_c4e90cb; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_supportedsharingstatus_sharing_status_c4e90cb; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tools_resource_supportedsharingstatus_sharing_status_c4e90cb ON public.hs_tools_resource_supportedsharingstatus_sharing_status USING btree (supportedsharingstatus_id);
 
 
 --
--- Name: hs_tools_resource_testingprotocolurl_content_type_id_65c76ca0; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_testingprotocolurl_content_type_id_65c76ca0; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tools_resource_testingprotocolurl_content_type_id_65c76ca0 ON public.hs_tools_resource_testingprotocolurl USING btree (content_type_id);
 
 
 --
--- Name: hs_tools_resource_toolicon_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_toolicon_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tools_resource_toolicon_417f1b1c ON public.hs_tools_resource_toolicon USING btree (content_type_id);
 
 
 --
--- Name: hs_tools_resource_toolversion_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tools_resource_toolversion_417f1b1c; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tools_resource_toolversion_417f1b1c ON public.hs_tools_resource_toolversion USING btree (content_type_id);
 
 
 --
--- Name: hs_tracking_session_bfc2f125; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tracking_session_bfc2f125; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tracking_session_bfc2f125 ON public.hs_tracking_session USING btree (visitor_id);
 
 
 --
--- Name: hs_tracking_variable_7fc8ef54; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tracking_variable_7fc8ef54; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tracking_variable_7fc8ef54 ON public.hs_tracking_variable USING btree (session_id);
 
 
 --
--- Name: hs_tracking_variable_resource_id_1e36eb64; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tracking_variable_resource_id_1e36eb64; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tracking_variable_resource_id_1e36eb64 ON public.hs_tracking_variable USING btree (resource_id);
 
 
 --
--- Name: hs_tracking_visitor_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_tracking_visitor_e8701ad4; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX hs_tracking_visitor_e8701ad4 ON public.hs_tracking_visitor USING btree (user_id);
 
 
 --
--- Name: oauth2_provider_accesstoken_6bc0a4eb; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_accesstoken_6bc0a4eb; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX oauth2_provider_accesstoken_6bc0a4eb ON public.oauth2_provider_accesstoken USING btree (application_id);
 
 
 --
--- Name: oauth2_provider_accesstoken_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_accesstoken_e8701ad4; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX oauth2_provider_accesstoken_e8701ad4 ON public.oauth2_provider_accesstoken USING btree (user_id);
 
 
 --
--- Name: oauth2_provider_accesstoken_token_8af090f8_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_accesstoken_token_checksum_85319a26_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
-CREATE INDEX oauth2_provider_accesstoken_token_8af090f8_like ON public.oauth2_provider_accesstoken USING btree (token varchar_pattern_ops);
+CREATE INDEX oauth2_provider_accesstoken_token_checksum_85319a26_like ON public.oauth2_provider_accesstoken USING btree (token_checksum varchar_pattern_ops);
 
 
 --
--- Name: oauth2_provider_application_9d667c2b; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_application_9d667c2b; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX oauth2_provider_application_9d667c2b ON public.oauth2_provider_application USING btree (client_secret);
 
 
 --
--- Name: oauth2_provider_application_client_id_58c909672dac14b2_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_application_client_id_58c909672dac14b2_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX oauth2_provider_application_client_id_58c909672dac14b2_like ON public.oauth2_provider_application USING btree (client_id varchar_pattern_ops);
 
 
 --
--- Name: oauth2_provider_application_client_secret_7a03c41cdcace5e9_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_application_client_secret_7a03c41cdcace5e9_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX oauth2_provider_application_client_secret_7a03c41cdcace5e9_like ON public.oauth2_provider_application USING btree (client_secret varchar_pattern_ops);
 
 
 --
--- Name: oauth2_provider_application_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_application_e8701ad4; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX oauth2_provider_application_e8701ad4 ON public.oauth2_provider_application USING btree (user_id);
 
 
 --
--- Name: oauth2_provider_grant_6bc0a4eb; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_grant_6bc0a4eb; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX oauth2_provider_grant_6bc0a4eb ON public.oauth2_provider_grant USING btree (application_id);
 
 
 --
--- Name: oauth2_provider_grant_code_49ab4ddf_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_grant_code_49ab4ddf_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX oauth2_provider_grant_code_49ab4ddf_like ON public.oauth2_provider_grant USING btree (code varchar_pattern_ops);
 
 
 --
--- Name: oauth2_provider_grant_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_grant_e8701ad4; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX oauth2_provider_grant_e8701ad4 ON public.oauth2_provider_grant USING btree (user_id);
 
 
 --
--- Name: oauth2_provider_refreshtoken_6bc0a4eb; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_idtoken_application_id_08c5ff4f; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX oauth2_provider_idtoken_application_id_08c5ff4f ON public.oauth2_provider_idtoken USING btree (application_id);
+
+
+--
+-- Name: oauth2_provider_idtoken_user_id_dd512b59; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX oauth2_provider_idtoken_user_id_dd512b59 ON public.oauth2_provider_idtoken USING btree (user_id);
+
+
+--
+-- Name: oauth2_provider_refreshtoken_6bc0a4eb; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX oauth2_provider_refreshtoken_6bc0a4eb ON public.oauth2_provider_refreshtoken USING btree (application_id);
 
 
 --
--- Name: oauth2_provider_refreshtoken_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: oauth2_provider_refreshtoken_e8701ad4; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX oauth2_provider_refreshtoken_e8701ad4 ON public.oauth2_provider_refreshtoken USING btree (user_id);
 
 
 --
--- Name: pages_page_parent_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: pages_page_parent_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX pages_page_parent_id ON public.pages_page USING btree (parent_id);
 
 
 --
--- Name: pages_page_publish_date_4b581dded15f4cdf_uniq; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: pages_page_publish_date_4b581dded15f4cdf_uniq; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX pages_page_publish_date_4b581dded15f4cdf_uniq ON public.pages_page USING btree (publish_date);
 
 
 --
--- Name: pages_page_site_id; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: pages_page_site_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX pages_page_site_id ON public.pages_page USING btree (site_id);
 
 
 --
--- Name: robots_rule_allowed_29608e0a; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: robots_rule_allowed_29608e0a; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX robots_rule_allowed_29608e0a ON public.robots_rule_allowed USING btree (url_id);
 
 
 --
--- Name: robots_rule_allowed_e1150e65; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: robots_rule_allowed_e1150e65; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX robots_rule_allowed_e1150e65 ON public.robots_rule_allowed USING btree (rule_id);
 
 
 --
--- Name: robots_rule_disallowed_29608e0a; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: robots_rule_disallowed_29608e0a; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX robots_rule_disallowed_29608e0a ON public.robots_rule_disallowed USING btree (url_id);
 
 
 --
--- Name: robots_rule_disallowed_e1150e65; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: robots_rule_disallowed_e1150e65; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX robots_rule_disallowed_e1150e65 ON public.robots_rule_disallowed USING btree (rule_id);
 
 
 --
--- Name: robots_rule_sites_9365d6e7; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: robots_rule_sites_9365d6e7; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX robots_rule_sites_9365d6e7 ON public.robots_rule_sites USING btree (site_id);
 
 
 --
--- Name: robots_rule_sites_e1150e65; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: robots_rule_sites_e1150e65; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX robots_rule_sites_e1150e65 ON public.robots_rule_sites USING btree (rule_id);
 
 
 --
--- Name: theme_iconbox_a6c7fe0b; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: theme_iconbox_a6c7fe0b; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX theme_iconbox_a6c7fe0b ON public.theme_iconbox USING btree (homepage_id);
 
 
 --
--- Name: theme_siteconfiguration_9365d6e7; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: theme_quotarequest_quota_id_b3e948d9; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX theme_quotarequest_quota_id_b3e948d9 ON public.theme_quotarequest USING btree (quota_id);
+
+
+--
+-- Name: theme_quotarequest_request_from_id_020f329b; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX theme_quotarequest_request_from_id_020f329b ON public.theme_quotarequest USING btree (request_from_id);
+
+
+--
+-- Name: theme_siteconfiguration_9365d6e7; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX theme_siteconfiguration_9365d6e7 ON public.theme_siteconfiguration USING btree (site_id);
 
 
 --
--- Name: theme_userquota_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: theme_userprofile__bucket_name_b8e43ed3_like; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX theme_userprofile__bucket_name_b8e43ed3_like ON public.theme_userprofile USING btree (_bucket_name varchar_pattern_ops);
+
+
+--
+-- Name: theme_userquota_e8701ad4; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX theme_userquota_e8701ad4 ON public.theme_userquota USING btree (user_id);
 
 
 --
--- Name: thumbnail_kvstore_key_3f850178_like; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: thumbnail_kvstore_key_3f850178_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
 CREATE INDEX thumbnail_kvstore_key_3f850178_like ON public.thumbnail_kvstore USING btree (key varchar_pattern_ops);
 
 
 --
--- Name: D08b32ecb2a1f6c60231933ce1770ca8; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_overridelink D08b32ecb2a1f6c60231933ce1770ca8; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_overridelink
@@ -29657,7 +30710,7 @@ ALTER TABLE ONLY public.django_docker_processes_overridelink
 
 
 --
--- Name: D0d41531a62e8a1740c2e8b57a4309ae; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ga_resources_orderedresource D0d41531a62e8a1740c2e8b57a4309ae; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_orderedresource
@@ -29665,7 +30718,7 @@ ALTER TABLE ONLY public.ga_resources_orderedresource
 
 
 --
--- Name: D14f4d644c6fd8096a3e6064242122ef; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_geofeaturelogicalfile D14f4d644c6fd8096a3e6064242122ef; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_geofeaturelogicalfile
@@ -29673,7 +30726,7 @@ ALTER TABLE ONLY public.hs_file_types_geofeaturelogicalfile
 
 
 --
--- Name: D16cd563c928a22ccbdb7c425a399b3c; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_dockerlink D16cd563c928a22ccbdb7c425a399b3c; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_dockerlink
@@ -29681,7 +30734,7 @@ ALTER TABLE ONLY public.django_docker_processes_dockerlink
 
 
 --
--- Name: D1c0b5309109a103589fe605907962d9; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_dockerprocess D1c0b5309109a103589fe605907962d9; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_dockerprocess
@@ -29689,7 +30742,7 @@ ALTER TABLE ONLY public.django_docker_processes_dockerprocess
 
 
 --
--- Name: D1cd11468aed7088c8176baf1733f0a9; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_dockervolume D1cd11468aed7088c8176baf1733f0a9; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_dockervolume
@@ -29697,7 +30750,7 @@ ALTER TABLE ONLY public.django_docker_processes_dockervolume
 
 
 --
--- Name: D22dcb573d00d765370a2f5986bb9bec; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_userresourceprivilege D22dcb573d00d765370a2f5986bb9bec; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_userresourceprivilege
@@ -29705,7 +30758,7 @@ ALTER TABLE ONLY public.hs_access_control_userresourceprivilege
 
 
 --
--- Name: D2339626414192982538d20c2f5e41c1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_labels_userresourcelabels D2339626414192982538d20c2f5e41c1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_labels_userresourcelabels
@@ -29713,7 +30766,7 @@ ALTER TABLE ONLY public.hs_labels_userresourcelabels
 
 
 --
--- Name: D31151cd560fcd8a9d7eac2bbb5b84c9; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_genericresource_collections D31151cd560fcd8a9d7eac2bbb5b84c9; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_genericresource_collections
@@ -29721,7 +30774,7 @@ ALTER TABLE ONLY public.hs_core_genericresource_collections
 
 
 --
--- Name: D31c29d49b8f7ec3acaeadd6d03d4a4f; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_dockerlink D31c29d49b8f7ec3acaeadd6d03d4a4f; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_dockerlink
@@ -29729,7 +30782,7 @@ ALTER TABLE ONLY public.django_docker_processes_dockerlink
 
 
 --
--- Name: D33ece86ac4d6b9f723a21fc5ee52956; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_dockerport D33ece86ac4d6b9f723a21fc5ee52956; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_dockerport
@@ -29737,7 +30790,7 @@ ALTER TABLE ONLY public.django_docker_processes_dockerport
 
 
 --
--- Name: D3774497fc72c82be6a35a3e9797e2da; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ga_resources_orderedresource D3774497fc72c82be6a35a3e9797e2da; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_orderedresource
@@ -29745,7 +30798,7 @@ ALTER TABLE ONLY public.ga_resources_orderedresource
 
 
 --
--- Name: D3ddf29327dcf888bd232c7b0fc88c25; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ga_resources_relatedresource D3ddf29327dcf888bd232c7b0fc88c25; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_relatedresource
@@ -29753,7 +30806,7 @@ ALTER TABLE ONLY public.ga_resources_relatedresource
 
 
 --
--- Name: D4174b69c892f2b9a3bd164e041c7307; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_toolmetadata D4174b69c892f2b9a3bd164e041c7307; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_toolmetadata
@@ -29761,7 +30814,7 @@ ALTER TABLE ONLY public.hs_tools_resource_toolmetadata
 
 
 --
--- Name: D4494202da9df682a8acda71be9628f3; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ga_resources_renderedlayer D4494202da9df682a8acda71be9628f3; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_renderedlayer
@@ -29769,7 +30822,7 @@ ALTER TABLE ONLY public.ga_resources_renderedlayer
 
 
 --
--- Name: D5b97bbd43dc74b22e279a355699342b; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_overridelink D5b97bbd43dc74b22e279a355699342b; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_overridelink
@@ -29777,7 +30830,7 @@ ALTER TABLE ONLY public.django_docker_processes_overridelink
 
 
 --
--- Name: D608e8d602265386bd6d7afacb14cc09; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_containeroverrides D608e8d602265386bd6d7afacb14cc09; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_containeroverrides
@@ -29785,7 +30838,7 @@ ALTER TABLE ONLY public.django_docker_processes_containeroverrides
 
 
 --
--- Name: D61444138ccc9b7ca512515523d0160b; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_resourcefile D61444138ccc9b7ca512515523d0160b; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_resourcefile
@@ -29793,7 +30846,7 @@ ALTER TABLE ONLY public.hs_core_resourcefile
 
 
 --
--- Name: D66495776709e8754037f4f18d4258ac; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_genericresource_collections D66495776709e8754037f4f18d4258ac; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_genericresource_collections
@@ -29801,7 +30854,7 @@ ALTER TABLE ONLY public.hs_core_genericresource_collections
 
 
 --
--- Name: D66abd734664aa960007027384fa6de8; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ga_ows_ogrdataset D66abd734664aa960007027384fa6de8; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_ows_ogrdataset
@@ -29809,7 +30862,7 @@ ALTER TABLE ONLY public.ga_ows_ogrdataset
 
 
 --
--- Name: D6b8a9e44c81b6ef0edc08ba3acdf181; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ga_resources_renderedlayer_styles D6b8a9e44c81b6ef0edc08ba3acdf181; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_renderedlayer_styles
@@ -29817,7 +30870,7 @@ ALTER TABLE ONLY public.ga_resources_renderedlayer_styles
 
 
 --
--- Name: D6f5f0817512c0e51eb157b953080433; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_dockerenvvar D6f5f0817512c0e51eb157b953080433; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_dockerenvvar
@@ -29825,7 +30878,7 @@ ALTER TABLE ONLY public.django_docker_processes_dockerenvvar
 
 
 --
--- Name: D763f5ed6fe4d4d08ecfcae173cbca3d; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupresourceprovenance D763f5ed6fe4d4d08ecfcae173cbca3d; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupresourceprovenance
@@ -29833,7 +30886,7 @@ ALTER TABLE ONLY public.hs_access_control_groupresourceprovenance
 
 
 --
--- Name: D7e7cede746315ab9e08ce902995fd0e; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ga_resources_renderedlayer D7e7cede746315ab9e08ce902995fd0e; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_renderedlayer
@@ -29841,7 +30894,7 @@ ALTER TABLE ONLY public.ga_resources_renderedlayer
 
 
 --
--- Name: D939acd71ef4c768cad03ae2dffa0298; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_collection_resource_collectiondeletedresource D939acd71ef4c768cad03ae2dffa0298; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_collection_resource_collectiondeletedresource
@@ -29849,7 +30902,7 @@ ALTER TABLE ONLY public.hs_collection_resource_collectiondeletedresource
 
 
 --
--- Name: a7a04a83e3272ec48b241a40cc3fe88d; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupresourceprivilege a7a04a83e3272ec48b241a40cc3fe88d; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupresourceprivilege
@@ -29857,7 +30910,7 @@ ALTER TABLE ONLY public.hs_access_control_groupresourceprivilege
 
 
 --
--- Name: auth_content_type_id_508cf46651277a81_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: auth_permission auth_content_type_id_508cf46651277a81_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_permission
@@ -29865,7 +30918,7 @@ ALTER TABLE ONLY public.auth_permission
 
 
 --
--- Name: auth_group_permissio_group_id_689710a9a73b7457_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: auth_group_permissions auth_group_permissio_group_id_689710a9a73b7457_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_group_permissions
@@ -29873,7 +30926,7 @@ ALTER TABLE ONLY public.auth_group_permissions
 
 
 --
--- Name: auth_group_permission_id_1f49ccbbdc69d2fc_fk_auth_permission_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: auth_group_permissions auth_group_permission_id_1f49ccbbdc69d2fc_fk_auth_permission_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_group_permissions
@@ -29881,7 +30934,7 @@ ALTER TABLE ONLY public.auth_group_permissions
 
 
 --
--- Name: auth_user__permission_id_384b62483d7071f0_fk_auth_permission_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: auth_user_user_permissions auth_user__permission_id_384b62483d7071f0_fk_auth_permission_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_user_user_permissions
@@ -29889,7 +30942,7 @@ ALTER TABLE ONLY public.auth_user_user_permissions
 
 
 --
--- Name: auth_user_groups_group_id_33ac548dcf5f8e37_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: auth_user_groups auth_user_groups_group_id_33ac548dcf5f8e37_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_user_groups
@@ -29897,7 +30950,7 @@ ALTER TABLE ONLY public.auth_user_groups
 
 
 --
--- Name: auth_user_groups_user_id_4b5ed4ffdb8fd9b0_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: auth_user_groups auth_user_groups_user_id_4b5ed4ffdb8fd9b0_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_user_groups
@@ -29905,7 +30958,7 @@ ALTER TABLE ONLY public.auth_user_groups
 
 
 --
--- Name: auth_user_user_permiss_user_id_7f0938558328534a_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: auth_user_user_permissions auth_user_user_permiss_user_id_7f0938558328534a_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.auth_user_user_permissions
@@ -29913,7 +30966,7 @@ ALTER TABLE ONLY public.auth_user_user_permissions
 
 
 --
--- Name: b20d482030b02e9f2ccb0e6458b6c281; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_reftimeserieslogicalfile b20d482030b02e9f2ccb0e6458b6c281; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_reftimeserieslogicalfile
@@ -29921,7 +30974,7 @@ ALTER TABLE ONLY public.hs_file_types_reftimeserieslogicalfile
 
 
 --
--- Name: b517e4a4254c99705d2ef3b2b833cff4; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_netcdflogicalfile b517e4a4254c99705d2ef3b2b833cff4; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_netcdflogicalfile
@@ -29929,7 +30982,7 @@ ALTER TABLE ONLY public.hs_file_types_netcdflogicalfile
 
 
 --
--- Name: b63b96a572d7b3efb2f8fb476540a554; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_resourceaccess b63b96a572d7b3efb2f8fb476540a554; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_resourceaccess
@@ -29937,7 +30990,7 @@ ALTER TABLE ONLY public.hs_access_control_resourceaccess
 
 
 --
--- Name: b880a3861b1b4ee955080e12d158b7e7; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_labels_userresourceflags b880a3861b1b4ee955080e12d158b7e7; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_labels_userresourceflags
@@ -29945,7 +30998,7 @@ ALTER TABLE ONLY public.hs_labels_userresourceflags
 
 
 --
--- Name: blogcategory_id_refs_id_91693b1c; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: blog_blogpost_categories blogcategory_id_refs_id_91693b1c; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.blog_blogpost_categories
@@ -29953,7 +31006,7 @@ ALTER TABLE ONLY public.blog_blogpost_categories
 
 
 --
--- Name: blogpost_id_refs_id_6a2ad936; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: blog_blogpost_categories blogpost_id_refs_id_6a2ad936; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.blog_blogpost_categories
@@ -29961,7 +31014,7 @@ ALTER TABLE ONLY public.blog_blogpost_categories
 
 
 --
--- Name: ca4a9cd99a95a85ce7365a740304c84e; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_dockerlink ca4a9cd99a95a85ce7365a740304c84e; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_dockerlink
@@ -29969,7 +31022,7 @@ ALTER TABLE ONLY public.django_docker_processes_dockerlink
 
 
 --
--- Name: cf0442e99cc22aab4bc90b95654d14ab; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_georasterlogicalfile cf0442e99cc22aab4bc90b95654d14ab; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_georasterlogicalfile
@@ -29977,7 +31030,7 @@ ALTER TABLE ONLY public.hs_file_types_georasterlogicalfile
 
 
 --
--- Name: cf79e6373a5ffeee73541ef57e96090d; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_genericlogicalfile cf79e6373a5ffeee73541ef57e96090d; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_genericlogicalfile
@@ -29985,7 +31038,7 @@ ALTER TABLE ONLY public.hs_file_types_genericlogicalfile
 
 
 --
--- Name: comment_ptr_id_refs_id_d4c241e5; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: generic_threadedcomment comment_ptr_id_refs_id_d4c241e5; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.generic_threadedcomment
@@ -29993,7 +31046,7 @@ ALTER TABLE ONLY public.generic_threadedcomment
 
 
 --
--- Name: d4e9b3137507001988ea891be22e9789; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_labels_resourcelabels d4e9b3137507001988ea891be22e9789; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_labels_resourcelabels
@@ -30001,7 +31054,7 @@ ALTER TABLE ONLY public.hs_labels_resourcelabels
 
 
 --
--- Name: djan_content_type_id_697914295151027a_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: django_admin_log djan_content_type_id_697914295151027a_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_admin_log
@@ -30009,7 +31062,7 @@ ALTER TABLE ONLY public.django_admin_log
 
 
 --
--- Name: django_admin_log_user_id_52fdd58701c5f563_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: django_admin_log django_admin_log_user_id_52fdd58701c5f563_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_admin_log
@@ -30017,7 +31070,7 @@ ALTER TABLE ONLY public.django_admin_log
 
 
 --
--- Name: django_comment_flags_comment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: django_comment_flags django_comment_flags_comment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_comment_flags
@@ -30025,7 +31078,7 @@ ALTER TABLE ONLY public.django_comment_flags
 
 
 --
--- Name: django_docker_processe_user_id_4bc3352b630db9d6_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_dockerprocess django_docker_processe_user_id_4bc3352b630db9d6_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_dockerprocess
@@ -30033,15 +31086,7 @@ ALTER TABLE ONLY public.django_docker_processes_dockerprocess
 
 
 --
--- Name: django_irods_rodsenvi_owner_id_390560bddc5c0167_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.django_irods_rodsenvironment
-    ADD CONSTRAINT django_irods_rodsenvi_owner_id_390560bddc5c0167_fk_auth_user_id FOREIGN KEY (owner_id) REFERENCES public.auth_user(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: django_redirect_site_id_121a4403f653e524_fk_django_site_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: django_redirect django_redirect_site_id_121a4403f653e524_fk_django_site_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_redirect
@@ -30049,7 +31094,7 @@ ALTER TABLE ONLY public.django_redirect
 
 
 --
--- Name: djcelery_periodictask_crontab_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: djcelery_periodictask djcelery_periodictask_crontab_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.djcelery_periodictask
@@ -30057,7 +31102,7 @@ ALTER TABLE ONLY public.djcelery_periodictask
 
 
 --
--- Name: djcelery_periodictask_interval_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: djcelery_periodictask djcelery_periodictask_interval_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.djcelery_periodictask
@@ -30065,7 +31110,7 @@ ALTER TABLE ONLY public.djcelery_periodictask
 
 
 --
--- Name: djcelery_taskstate_worker_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: djcelery_taskstate djcelery_taskstate_worker_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.djcelery_taskstate
@@ -30073,7 +31118,7 @@ ALTER TABLE ONLY public.djcelery_taskstate
 
 
 --
--- Name: e19cf6cec3169736eacf85ac0d3461fb; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_userresourceprovenance e19cf6cec3169736eacf85ac0d3461fb; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_userresourceprovenance
@@ -30081,7 +31126,7 @@ ALTER TABLE ONLY public.hs_access_control_userresourceprovenance
 
 
 --
--- Name: e5fed3f499b0200346f7d75572f21043; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_overrideenvvar e5fed3f499b0200346f7d75572f21043; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_overrideenvvar
@@ -30089,7 +31134,7 @@ ALTER TABLE ONLY public.django_docker_processes_overrideenvvar
 
 
 --
--- Name: ed07907c5bbff48aa33f866d15220f0a; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_overrideport ed07907c5bbff48aa33f866d15220f0a; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_overrideport
@@ -30097,7 +31142,7 @@ ALTER TABLE ONLY public.django_docker_processes_overrideport
 
 
 --
--- Name: fdb8bb299277d4067f76710058feb68c; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_collection_resource_collectiondeletedresource_resource_od9f5 fdb8bb299277d4067f76710058feb68c; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_collection_resource_collectiondeletedresource_resource_od9f5
@@ -30105,7 +31150,7 @@ ALTER TABLE ONLY public.hs_collection_resource_collectiondeletedresource_resourc
 
 
 --
--- Name: fffc21cda66b01603a10a01bdad6da7a; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: django_docker_processes_overridevolume fffc21cda66b01603a10a01bdad6da7a; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.django_docker_processes_overridevolume
@@ -30113,7 +31158,7 @@ ALTER TABLE ONLY public.django_docker_processes_overridevolume
 
 
 --
--- Name: forms_field_form_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: forms_field forms_field_form_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.forms_field
@@ -30121,7 +31166,7 @@ ALTER TABLE ONLY public.forms_field
 
 
 --
--- Name: forms_fieldentry_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: forms_fieldentry forms_fieldentry_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.forms_fieldentry
@@ -30129,7 +31174,7 @@ ALTER TABLE ONLY public.forms_fieldentry
 
 
 --
--- Name: forms_formentry_form_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: forms_formentry forms_formentry_form_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.forms_formentry
@@ -30137,7 +31182,7 @@ ALTER TABLE ONLY public.forms_formentry
 
 
 --
--- Name: from_blogpost_id_refs_id_6404941b; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: blog_blogpost_related_posts from_blogpost_id_refs_id_6404941b; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.blog_blogpost_related_posts
@@ -30145,7 +31190,7 @@ ALTER TABLE ONLY public.blog_blogpost_related_posts
 
 
 --
--- Name: ga__style_id_5936d77d79781cb3_fk_ga_resources_style_page_ptr_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ga_resources_renderedlayer_styles ga__style_id_5936d77d79781cb3_fk_ga_resources_style_page_ptr_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_renderedlayer_styles
@@ -30153,7 +31198,7 @@ ALTER TABLE ONLY public.ga_resources_renderedlayer_styles
 
 
 --
--- Name: ga_ows_ogrl_dataset_id_6e73ed83065ab28e_fk_ga_ows_ogrdataset_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ga_ows_ogrlayer ga_ows_ogrl_dataset_id_6e73ed83065ab28e_fk_ga_ows_ogrdataset_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_ows_ogrlayer
@@ -30161,7 +31206,7 @@ ALTER TABLE ONLY public.ga_ows_ogrlayer
 
 
 --
--- Name: ga_resources_cata_page_ptr_id_3a34c22b98e9c9d9_fk_pages_page_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ga_resources_catalogpage ga_resources_cata_page_ptr_id_3a34c22b98e9c9d9_fk_pages_page_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_catalogpage
@@ -30169,7 +31214,7 @@ ALTER TABLE ONLY public.ga_resources_catalogpage
 
 
 --
--- Name: ga_resources_catalogp_owner_id_1f14a105abf0305d_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ga_resources_catalogpage ga_resources_catalogp_owner_id_1f14a105abf0305d_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_catalogpage
@@ -30177,7 +31222,7 @@ ALTER TABLE ONLY public.ga_resources_catalogpage
 
 
 --
--- Name: ga_resources_data_page_ptr_id_4f03f820364cc814_fk_pages_page_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ga_resources_dataresource ga_resources_data_page_ptr_id_4f03f820364cc814_fk_pages_page_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_dataresource
@@ -30185,7 +31230,7 @@ ALTER TABLE ONLY public.ga_resources_dataresource
 
 
 --
--- Name: ga_resources_datareso_owner_id_73f783a9e0765a16_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ga_resources_dataresource ga_resources_datareso_owner_id_73f783a9e0765a16_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_dataresource
@@ -30193,7 +31238,7 @@ ALTER TABLE ONLY public.ga_resources_dataresource
 
 
 --
--- Name: ga_resources_rela_page_ptr_id_5b6dd4b2b1bc4396_fk_pages_page_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ga_resources_relatedresource ga_resources_rela_page_ptr_id_5b6dd4b2b1bc4396_fk_pages_page_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_relatedresource
@@ -30201,7 +31246,7 @@ ALTER TABLE ONLY public.ga_resources_relatedresource
 
 
 --
--- Name: ga_resources_rend_page_ptr_id_79d7ddc1ebb5949d_fk_pages_page_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ga_resources_renderedlayer ga_resources_rend_page_ptr_id_79d7ddc1ebb5949d_fk_pages_page_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_renderedlayer
@@ -30209,7 +31254,7 @@ ALTER TABLE ONLY public.ga_resources_renderedlayer
 
 
 --
--- Name: ga_resources_renderedl_owner_id_b1ea62c22422ddf_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ga_resources_renderedlayer ga_resources_renderedl_owner_id_b1ea62c22422ddf_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_renderedlayer
@@ -30217,7 +31262,7 @@ ALTER TABLE ONLY public.ga_resources_renderedlayer
 
 
 --
--- Name: ga_resources_reso_page_ptr_id_4a4164112cf8cc60_fk_pages_page_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ga_resources_resourcegroup ga_resources_reso_page_ptr_id_4a4164112cf8cc60_fk_pages_page_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_resourcegroup
@@ -30225,7 +31270,7 @@ ALTER TABLE ONLY public.ga_resources_resourcegroup
 
 
 --
--- Name: ga_resources_styl_page_ptr_id_1c486a7554041e16_fk_pages_page_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ga_resources_style ga_resources_styl_page_ptr_id_1c486a7554041e16_fk_pages_page_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_style
@@ -30233,7 +31278,7 @@ ALTER TABLE ONLY public.ga_resources_style
 
 
 --
--- Name: ga_resources_style_owner_id_25e12844a4baec14_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ga_resources_style ga_resources_style_owner_id_25e12844a4baec14_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.ga_resources_style
@@ -30241,7 +31286,7 @@ ALTER TABLE ONLY public.ga_resources_style
 
 
 --
--- Name: galleries_gallery_page_ptr_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: galleries_gallery galleries_gallery_page_ptr_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.galleries_gallery
@@ -30249,7 +31294,7 @@ ALTER TABLE ONLY public.galleries_gallery
 
 
 --
--- Name: galleries_galleryimage_gallery_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: galleries_galleryimage galleries_galleryimage_gallery_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.galleries_galleryimage
@@ -30257,7 +31302,7 @@ ALTER TABLE ONLY public.galleries_galleryimage
 
 
 --
--- Name: generic_assignedkeyword_keyword_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: generic_assignedkeyword generic_assignedkeyword_keyword_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.generic_assignedkeyword
@@ -30265,7 +31310,7 @@ ALTER TABLE ONLY public.generic_assignedkeyword
 
 
 --
--- Name: generic_threadedcomment_replied_to_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: generic_threadedcomment generic_threadedcomment_replied_to_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.generic_threadedcomment
@@ -30273,7 +31318,7 @@ ALTER TABLE ONLY public.generic_threadedcomment
 
 
 --
--- Name: hs_a_content_type_id_1c8d1eac05f91712_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_originalcoverage hs_a_content_type_id_1c8d1eac05f91712_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_originalcoverage
@@ -30281,7 +31326,7 @@ ALTER TABLE ONLY public.hs_file_types_originalcoverage
 
 
 --
--- Name: hs_a_content_type_id_1f7b7e7568a47f65_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_utcoffset hs_a_content_type_id_1f7b7e7568a47f65_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_utcoffset
@@ -30289,7 +31334,7 @@ ALTER TABLE ONLY public.hs_file_types_utcoffset
 
 
 --
--- Name: hs_a_content_type_id_20e32c2b2e7f28d2_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_method hs_a_content_type_id_20e32c2b2e7f28d2_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_method
@@ -30297,7 +31342,7 @@ ALTER TABLE ONLY public.hs_file_types_method
 
 
 --
--- Name: hs_a_content_type_id_451721750e25a0b3_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_processinglevel hs_a_content_type_id_451721750e25a0b3_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_processinglevel
@@ -30305,7 +31350,7 @@ ALTER TABLE ONLY public.hs_file_types_processinglevel
 
 
 --
--- Name: hs_a_content_type_id_5883e361b4531c3c_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_timeseriesresult hs_a_content_type_id_5883e361b4531c3c_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_timeseriesresult
@@ -30313,7 +31358,7 @@ ALTER TABLE ONLY public.hs_file_types_timeseriesresult
 
 
 --
--- Name: hs_a_content_type_id_6bea7582e11ffdc9_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_variabletimeseries hs_a_content_type_id_6bea7582e11ffdc9_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_variabletimeseries
@@ -30321,7 +31366,7 @@ ALTER TABLE ONLY public.hs_file_types_variabletimeseries
 
 
 --
--- Name: hs_a_content_type_id_6c3a0d31ca8f2ee2_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_site hs_a_content_type_id_6c3a0d31ca8f2ee2_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_site
@@ -30329,7 +31374,7 @@ ALTER TABLE ONLY public.hs_file_types_site
 
 
 --
--- Name: hs_access_co_group_to_join_id_5cf445aa01ee1f48_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupmembershiprequest hs_access_co_group_to_join_id_5cf445aa01ee1f48_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupmembershiprequest
@@ -30337,7 +31382,7 @@ ALTER TABLE ONLY public.hs_access_control_groupmembershiprequest
 
 
 --
--- Name: hs_access_con_invitation_to_id_5cdd6acd6d11df75_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupmembershiprequest hs_access_con_invitation_to_id_5cdd6acd6d11df75_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupmembershiprequest
@@ -30345,7 +31390,7 @@ ALTER TABLE ONLY public.hs_access_control_groupmembershiprequest
 
 
 --
--- Name: hs_access_cont_request_from_id_3447b6ef4a91ce7d_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupmembershiprequest hs_access_cont_request_from_id_3447b6ef4a91ce7d_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupmembershiprequest
@@ -30353,7 +31398,7 @@ ALTER TABLE ONLY public.hs_access_control_groupmembershiprequest
 
 
 --
--- Name: hs_access_control_co_community_id_6b0528e5_fk_hs_access; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_communityresourceprivilege hs_access_control_co_community_id_6b0528e5_fk_hs_access; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_communityresourceprivilege
@@ -30361,7 +31406,7 @@ ALTER TABLE ONLY public.hs_access_control_communityresourceprivilege
 
 
 --
--- Name: hs_access_control_co_community_id_d99cfdf0_fk_hs_access; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_communityresourceprovenance hs_access_control_co_community_id_d99cfdf0_fk_hs_access; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_communityresourceprovenance
@@ -30369,7 +31414,7 @@ ALTER TABLE ONLY public.hs_access_control_communityresourceprovenance
 
 
 --
--- Name: hs_access_control_co_grantor_id_3ec5bad4_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_communityresourceprovenance hs_access_control_co_grantor_id_3ec5bad4_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_communityresourceprovenance
@@ -30377,7 +31422,7 @@ ALTER TABLE ONLY public.hs_access_control_communityresourceprovenance
 
 
 --
--- Name: hs_access_control_co_grantor_id_451d7a0c_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_communityresourceprivilege hs_access_control_co_grantor_id_451d7a0c_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_communityresourceprivilege
@@ -30385,7 +31430,7 @@ ALTER TABLE ONLY public.hs_access_control_communityresourceprivilege
 
 
 --
--- Name: hs_access_control_co_resource_id_454c9c9f_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_communityresourceprovenance hs_access_control_co_resource_id_454c9c9f_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_communityresourceprovenance
@@ -30393,7 +31438,7 @@ ALTER TABLE ONLY public.hs_access_control_communityresourceprovenance
 
 
 --
--- Name: hs_access_control_co_resource_id_c2e3d0e4_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_communityresourceprivilege hs_access_control_co_resource_id_c2e3d0e4_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_communityresourceprivilege
@@ -30401,7 +31446,7 @@ ALTER TABLE ONLY public.hs_access_control_communityresourceprivilege
 
 
 --
--- Name: hs_access_control_feature_user_id_f7b54071_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_feature hs_access_control_feature_user_id_f7b54071_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_feature
@@ -30409,7 +31454,7 @@ ALTER TABLE ONLY public.hs_access_control_feature
 
 
 --
--- Name: hs_access_control_g_grantor_id_1e68e0395847f2b3_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupresourceprivilege hs_access_control_g_grantor_id_1e68e0395847f2b3_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupresourceprivilege
@@ -30417,7 +31462,7 @@ ALTER TABLE ONLY public.hs_access_control_groupresourceprivilege
 
 
 --
--- Name: hs_access_control_g_grantor_id_3e5d815f5ca90e8a_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupresourceprovenance hs_access_control_g_grantor_id_3e5d815f5ca90e8a_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupresourceprovenance
@@ -30425,7 +31470,7 @@ ALTER TABLE ONLY public.hs_access_control_groupresourceprovenance
 
 
 --
--- Name: hs_access_control_gr_community_id_68acef01_fk_hs_access; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupcommunityrequest hs_access_control_gr_community_id_68acef01_fk_hs_access; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupcommunityrequest
@@ -30433,7 +31478,7 @@ ALTER TABLE ONLY public.hs_access_control_groupcommunityrequest
 
 
 --
--- Name: hs_access_control_gr_community_id_84dd001c_fk_hs_access; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupcommunityprovenance hs_access_control_gr_community_id_84dd001c_fk_hs_access; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupcommunityprovenance
@@ -30441,7 +31486,7 @@ ALTER TABLE ONLY public.hs_access_control_groupcommunityprovenance
 
 
 --
--- Name: hs_access_control_gr_community_id_9ead4ef2_fk_hs_access; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupcommunityprivilege hs_access_control_gr_community_id_9ead4ef2_fk_hs_access; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupcommunityprivilege
@@ -30449,7 +31494,7 @@ ALTER TABLE ONLY public.hs_access_control_groupcommunityprivilege
 
 
 --
--- Name: hs_access_control_gr_community_owner_id_1dc22dbe_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupcommunityrequest hs_access_control_gr_community_owner_id_1dc22dbe_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupcommunityrequest
@@ -30457,7 +31502,7 @@ ALTER TABLE ONLY public.hs_access_control_groupcommunityrequest
 
 
 --
--- Name: hs_access_control_gr_grantor_id_19665fe3_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupcommunityprivilege hs_access_control_gr_grantor_id_19665fe3_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupcommunityprivilege
@@ -30465,7 +31510,7 @@ ALTER TABLE ONLY public.hs_access_control_groupcommunityprivilege
 
 
 --
--- Name: hs_access_control_gr_grantor_id_9aa4c4fe_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupcommunityprovenance hs_access_control_gr_grantor_id_9aa4c4fe_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupcommunityprovenance
@@ -30473,7 +31518,7 @@ ALTER TABLE ONLY public.hs_access_control_groupcommunityprovenance
 
 
 --
--- Name: hs_access_control_gr_group_id_1bd0754af26faaf7_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupaccess hs_access_control_gr_group_id_1bd0754af26faaf7_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupaccess
@@ -30481,7 +31526,7 @@ ALTER TABLE ONLY public.hs_access_control_groupaccess
 
 
 --
--- Name: hs_access_control_gr_group_id_3d9dbfade29a5ab5_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupresourceprivilege hs_access_control_gr_group_id_3d9dbfade29a5ab5_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupresourceprivilege
@@ -30489,7 +31534,7 @@ ALTER TABLE ONLY public.hs_access_control_groupresourceprivilege
 
 
 --
--- Name: hs_access_control_gr_group_id_b09a2f11_fk_auth_grou; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupcommunityprovenance hs_access_control_gr_group_id_b09a2f11_fk_auth_grou; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupcommunityprovenance
@@ -30497,7 +31542,7 @@ ALTER TABLE ONLY public.hs_access_control_groupcommunityprovenance
 
 
 --
--- Name: hs_access_control_gr_group_id_cc4bb20b_fk_auth_grou; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupcommunityrequest hs_access_control_gr_group_id_cc4bb20b_fk_auth_grou; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupcommunityrequest
@@ -30505,7 +31550,7 @@ ALTER TABLE ONLY public.hs_access_control_groupcommunityrequest
 
 
 --
--- Name: hs_access_control_gr_group_id_ff0f35d5_fk_auth_grou; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupcommunityprivilege hs_access_control_gr_group_id_ff0f35d5_fk_auth_grou; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupcommunityprivilege
@@ -30513,7 +31558,7 @@ ALTER TABLE ONLY public.hs_access_control_groupcommunityprivilege
 
 
 --
--- Name: hs_access_control_gr_group_owner_id_b005fc64_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupcommunityrequest hs_access_control_gr_group_owner_id_b005fc64_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupcommunityrequest
@@ -30521,7 +31566,7 @@ ALTER TABLE ONLY public.hs_access_control_groupcommunityrequest
 
 
 --
--- Name: hs_access_control_gro_group_id_71a5c4d23eb742c_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_groupresourceprovenance hs_access_control_gro_group_id_71a5c4d23eb742c_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_groupresourceprovenance
@@ -30529,7 +31574,23 @@ ALTER TABLE ONLY public.hs_access_control_groupresourceprovenance
 
 
 --
--- Name: hs_access_control_u_grantor_id_2b562b352020c1dd_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_requestcommunity hs_access_control_re_community_to_approve_4670cdbb_fk_hs_access; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_access_control_requestcommunity
+    ADD CONSTRAINT hs_access_control_re_community_to_approve_4670cdbb_fk_hs_access FOREIGN KEY (community_to_approve_id) REFERENCES public.hs_access_control_community(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_access_control_requestcommunity hs_access_control_re_requested_by_id_88bc04ee_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_access_control_requestcommunity
+    ADD CONSTRAINT hs_access_control_re_requested_by_id_88bc04ee_fk_auth_user FOREIGN KEY (requested_by_id) REFERENCES public.auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_access_control_userresourceprovenance hs_access_control_u_grantor_id_2b562b352020c1dd_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_userresourceprovenance
@@ -30537,7 +31598,7 @@ ALTER TABLE ONLY public.hs_access_control_userresourceprovenance
 
 
 --
--- Name: hs_access_control_u_grantor_id_4701883fe2eecd92_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_userresourceprivilege hs_access_control_u_grantor_id_4701883fe2eecd92_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_userresourceprivilege
@@ -30545,7 +31606,7 @@ ALTER TABLE ONLY public.hs_access_control_userresourceprivilege
 
 
 --
--- Name: hs_access_control_u_grantor_id_4f35ffdf779659db_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_usergroupprovenance hs_access_control_u_grantor_id_4f35ffdf779659db_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usergroupprovenance
@@ -30553,7 +31614,7 @@ ALTER TABLE ONLY public.hs_access_control_usergroupprovenance
 
 
 --
--- Name: hs_access_control_u_grantor_id_742a65bf460606de_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_usergroupprivilege hs_access_control_u_grantor_id_742a65bf460606de_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usergroupprivilege
@@ -30561,7 +31622,7 @@ ALTER TABLE ONLY public.hs_access_control_usergroupprivilege
 
 
 --
--- Name: hs_access_control_us_community_id_14d5752b_fk_hs_access; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_usercommunityprivilege hs_access_control_us_community_id_14d5752b_fk_hs_access; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usercommunityprivilege
@@ -30569,7 +31630,7 @@ ALTER TABLE ONLY public.hs_access_control_usercommunityprivilege
 
 
 --
--- Name: hs_access_control_us_community_id_847d4e07_fk_hs_access; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_usercommunityprovenance hs_access_control_us_community_id_847d4e07_fk_hs_access; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usercommunityprovenance
@@ -30577,7 +31638,7 @@ ALTER TABLE ONLY public.hs_access_control_usercommunityprovenance
 
 
 --
--- Name: hs_access_control_us_grantor_id_a80855ea_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_usercommunityprovenance hs_access_control_us_grantor_id_a80855ea_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usercommunityprovenance
@@ -30585,7 +31646,7 @@ ALTER TABLE ONLY public.hs_access_control_usercommunityprovenance
 
 
 --
--- Name: hs_access_control_us_grantor_id_b75f8636_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_usercommunityprivilege hs_access_control_us_grantor_id_b75f8636_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usercommunityprivilege
@@ -30593,7 +31654,7 @@ ALTER TABLE ONLY public.hs_access_control_usercommunityprivilege
 
 
 --
--- Name: hs_access_control_us_group_id_7a23b411f5887d80_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_usergroupprivilege hs_access_control_us_group_id_7a23b411f5887d80_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usergroupprivilege
@@ -30601,7 +31662,7 @@ ALTER TABLE ONLY public.hs_access_control_usergroupprivilege
 
 
 --
--- Name: hs_access_control_us_user_id_6bfff69e_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_usercommunityprovenance hs_access_control_us_user_id_6bfff69e_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usercommunityprovenance
@@ -30609,7 +31670,7 @@ ALTER TABLE ONLY public.hs_access_control_usercommunityprovenance
 
 
 --
--- Name: hs_access_control_us_user_id_85f37b5b_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_usercommunityprivilege hs_access_control_us_user_id_85f37b5b_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usercommunityprivilege
@@ -30617,7 +31678,7 @@ ALTER TABLE ONLY public.hs_access_control_usercommunityprivilege
 
 
 --
--- Name: hs_access_control_user_group_id_e4144ab68f857d_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_usergroupprovenance hs_access_control_user_group_id_e4144ab68f857d_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usergroupprovenance
@@ -30625,7 +31686,7 @@ ALTER TABLE ONLY public.hs_access_control_usergroupprovenance
 
 
 --
--- Name: hs_access_control_user_user_id_243e1d62fa0c4421_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_useraccess hs_access_control_user_user_id_243e1d62fa0c4421_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_useraccess
@@ -30633,7 +31694,7 @@ ALTER TABLE ONLY public.hs_access_control_useraccess
 
 
 --
--- Name: hs_access_control_user_user_id_2f4a1c58f99f6ed2_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_userresourceprovenance hs_access_control_user_user_id_2f4a1c58f99f6ed2_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_userresourceprovenance
@@ -30641,7 +31702,7 @@ ALTER TABLE ONLY public.hs_access_control_userresourceprovenance
 
 
 --
--- Name: hs_access_control_user_user_id_4569a2ddb14e3c0a_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_usergroupprovenance hs_access_control_user_user_id_4569a2ddb14e3c0a_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usergroupprovenance
@@ -30649,7 +31710,7 @@ ALTER TABLE ONLY public.hs_access_control_usergroupprovenance
 
 
 --
--- Name: hs_access_control_user_user_id_5009f3b148778457_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_userresourceprivilege hs_access_control_user_user_id_5009f3b148778457_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_userresourceprivilege
@@ -30657,7 +31718,7 @@ ALTER TABLE ONLY public.hs_access_control_userresourceprivilege
 
 
 --
--- Name: hs_access_control_userg_user_id_d8086f326b13647_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_usergroupprivilege hs_access_control_userg_user_id_d8086f326b13647_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_access_control_usergroupprivilege
@@ -30665,7 +31726,7 @@ ALTER TABLE ONLY public.hs_access_control_usergroupprivilege
 
 
 --
--- Name: hs_ap_content_type_id_321744f4b1f2b5d_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_variable hs_ap_content_type_id_321744f4b1f2b5d_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_variable
@@ -30673,7 +31734,7 @@ ALTER TABLE ONLY public.hs_file_types_variable
 
 
 --
--- Name: hs_c_content_type_id_15a9d2f60f693357_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_description hs_c_content_type_id_15a9d2f60f693357_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_description
@@ -30681,7 +31742,7 @@ ALTER TABLE ONLY public.hs_core_description
 
 
 --
--- Name: hs_c_content_type_id_1958c85a8a2ac493_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_title hs_c_content_type_id_1958c85a8a2ac493_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_title
@@ -30689,7 +31750,7 @@ ALTER TABLE ONLY public.hs_core_title
 
 
 --
--- Name: hs_c_content_type_id_26443469fd65abd2_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_contributor hs_c_content_type_id_26443469fd65abd2_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_contributor
@@ -30697,7 +31758,7 @@ ALTER TABLE ONLY public.hs_core_contributor
 
 
 --
--- Name: hs_c_content_type_id_296a972a9ca195a8_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_coverage hs_c_content_type_id_296a972a9ca195a8_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_coverage
@@ -30705,7 +31766,7 @@ ALTER TABLE ONLY public.hs_core_coverage
 
 
 --
--- Name: hs_c_content_type_id_2c6549c3389e1640_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_language hs_c_content_type_id_2c6549c3389e1640_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_language
@@ -30713,7 +31774,7 @@ ALTER TABLE ONLY public.hs_core_language
 
 
 --
--- Name: hs_c_content_type_id_2e3e6f5f1647294b_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_identifier hs_c_content_type_id_2e3e6f5f1647294b_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_identifier
@@ -30721,7 +31782,7 @@ ALTER TABLE ONLY public.hs_core_identifier
 
 
 --
--- Name: hs_c_content_type_id_2ebca0f0d370a961_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_publisher hs_c_content_type_id_2ebca0f0d370a961_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_publisher
@@ -30729,7 +31790,7 @@ ALTER TABLE ONLY public.hs_core_publisher
 
 
 --
--- Name: hs_c_content_type_id_387c72dac133e70a_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_type hs_c_content_type_id_387c72dac133e70a_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_type
@@ -30737,7 +31798,7 @@ ALTER TABLE ONLY public.hs_core_type
 
 
 --
--- Name: hs_c_content_type_id_393df80b6039f971_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_fundingagency hs_c_content_type_id_393df80b6039f971_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_fundingagency
@@ -30745,7 +31806,7 @@ ALTER TABLE ONLY public.hs_core_fundingagency
 
 
 --
--- Name: hs_c_content_type_id_425582f505cae13e_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_genericresource hs_c_content_type_id_425582f505cae13e_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_genericresource
@@ -30753,7 +31814,7 @@ ALTER TABLE ONLY public.hs_core_genericresource
 
 
 --
--- Name: hs_c_content_type_id_52f2f9c2122dcd99_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_format hs_c_content_type_id_52f2f9c2122dcd99_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_format
@@ -30761,7 +31822,7 @@ ALTER TABLE ONLY public.hs_core_format
 
 
 --
--- Name: hs_c_content_type_id_5a61162ae031c50f_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_subject hs_c_content_type_id_5a61162ae031c50f_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_subject
@@ -30769,7 +31830,7 @@ ALTER TABLE ONLY public.hs_core_subject
 
 
 --
--- Name: hs_c_content_type_id_6b579f99df9842ef_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_rights hs_c_content_type_id_6b579f99df9842ef_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_rights
@@ -30777,7 +31838,7 @@ ALTER TABLE ONLY public.hs_core_rights
 
 
 --
--- Name: hs_c_content_type_id_70ad608f2be0cb50_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_resourcefile hs_c_content_type_id_70ad608f2be0cb50_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_resourcefile
@@ -30785,7 +31846,7 @@ ALTER TABLE ONLY public.hs_core_resourcefile
 
 
 --
--- Name: hs_c_content_type_id_77574a4e7e85b859_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_creator hs_c_content_type_id_77574a4e7e85b859_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_creator
@@ -30793,7 +31854,7 @@ ALTER TABLE ONLY public.hs_core_creator
 
 
 --
--- Name: hs_c_content_type_id_775b5304ceb81cfe_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_relation hs_c_content_type_id_775b5304ceb81cfe_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_relation
@@ -30801,7 +31862,7 @@ ALTER TABLE ONLY public.hs_core_relation
 
 
 --
--- Name: hs_co_content_type_id_9c7365e54949ce2_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_date hs_co_content_type_id_9c7365e54949ce2_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_date
@@ -30809,7 +31870,7 @@ ALTER TABLE ONLY public.hs_core_date
 
 
 --
--- Name: hs_collection_re_deleted_by_id_14f506bd7f16121a_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_collection_resource_collectiondeletedresource hs_collection_re_deleted_by_id_14f506bd7f16121a_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_collection_resource_collectiondeletedresource
@@ -30817,7 +31878,7 @@ ALTER TABLE ONLY public.hs_collection_resource_collectiondeletedresource
 
 
 --
--- Name: hs_collection_resource__user_id_e3a8b375cc0cf7a_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_collection_resource_collectiondeletedresource_resource_od9f5 hs_collection_resource__user_id_e3a8b375cc0cf7a_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_collection_resource_collectiondeletedresource_resource_od9f5
@@ -30825,7 +31886,7 @@ ALTER TABLE ONLY public.hs_collection_resource_collectiondeletedresource_resourc
 
 
 --
--- Name: hs_core_baseresourc_creator_id_306123f66b8ed448_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_genericresource hs_core_baseresourc_creator_id_306123f66b8ed448_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_genericresource
@@ -30833,7 +31894,7 @@ ALTER TABLE ONLY public.hs_core_genericresource
 
 
 --
--- Name: hs_core_baseresource_user_id_38abc1be206c7b0a_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_genericresource hs_core_baseresource_user_id_38abc1be206c7b0a_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_genericresource
@@ -30841,7 +31902,7 @@ ALTER TABLE ONLY public.hs_core_genericresource
 
 
 --
--- Name: hs_core_citation_content_type_id_972d87c6_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_citation hs_core_citation_content_type_id_972d87c6_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_citation
@@ -30849,7 +31910,7 @@ ALTER TABLE ONLY public.hs_core_citation
 
 
 --
--- Name: hs_core_genericre_page_ptr_id_61d7ef1ac505649e_fk_pages_page_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_genericresource hs_core_genericre_page_ptr_id_61d7ef1ac505649e_fk_pages_page_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_genericresource
@@ -30857,7 +31918,7 @@ ALTER TABLE ONLY public.hs_core_genericresource
 
 
 --
--- Name: hs_core_genericresou_last_changed_by_id_f9ce5919_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_genericresource hs_core_genericresou_last_changed_by_id_f9ce5919_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_genericresource
@@ -30865,7 +31926,23 @@ ALTER TABLE ONLY public.hs_core_genericresource
 
 
 --
--- Name: hs_core_groupownersh_group_id_73ab445f0d3ce28a_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_genericresource hs_core_genericresou_quota_holder_id_83c8873b_fk_auth_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_core_genericresource
+    ADD CONSTRAINT hs_core_genericresou_quota_holder_id_83c8873b_fk_auth_user FOREIGN KEY (quota_holder_id) REFERENCES public.auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_core_geospatialrelation hs_core_geospatialre_content_type_id_fc62c5a5_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_core_geospatialrelation
+    ADD CONSTRAINT hs_core_geospatialre_content_type_id_fc62c5a5_fk_django_co FOREIGN KEY (content_type_id) REFERENCES public.django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_core_groupownership hs_core_groupownersh_group_id_73ab445f0d3ce28a_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_groupownership
@@ -30873,7 +31950,7 @@ ALTER TABLE ONLY public.hs_core_groupownership
 
 
 --
--- Name: hs_core_groupownershi_owner_id_1c73b09f1651e342_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_core_groupownership hs_core_groupownershi_owner_id_1c73b09f1651e342_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_core_groupownership
@@ -30881,7 +31958,23 @@ ALTER TABLE ONLY public.hs_core_groupownership
 
 
 --
--- Name: hs_file_types_cvaggr_metadata_id_251a5892_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_csvlogicalfile hs_file_types_csvlog_metadata_id_5a258cc1_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_csvlogicalfile
+    ADD CONSTRAINT hs_file_types_csvlog_metadata_id_5a258cc1_fk_hs_file_t FOREIGN KEY (metadata_id) REFERENCES public.hs_file_types_csvfilemetadata(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_file_types_csvlogicalfile hs_file_types_csvlog_resource_id_6e34890f_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.hs_file_types_csvlogicalfile
+    ADD CONSTRAINT hs_file_types_csvlog_resource_id_6e34890f_fk_hs_core_g FOREIGN KEY (resource_id) REFERENCES public.hs_core_genericresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_file_types_cvaggregationstatistic hs_file_types_cvaggr_metadata_id_251a5892_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvaggregationstatistic
@@ -30889,7 +31982,7 @@ ALTER TABLE ONLY public.hs_file_types_cvaggregationstatistic
 
 
 --
--- Name: hs_file_types_cvelev_metadata_id_99cb1db8_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_cvelevationdatum hs_file_types_cvelev_metadata_id_99cb1db8_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvelevationdatum
@@ -30897,7 +31990,7 @@ ALTER TABLE ONLY public.hs_file_types_cvelevationdatum
 
 
 --
--- Name: hs_file_types_cvmedi_metadata_id_382a1b6d_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_cvmedium hs_file_types_cvmedi_metadata_id_382a1b6d_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvmedium
@@ -30905,7 +31998,7 @@ ALTER TABLE ONLY public.hs_file_types_cvmedium
 
 
 --
--- Name: hs_file_types_cvmeth_metadata_id_244a33f0_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_cvmethodtype hs_file_types_cvmeth_metadata_id_244a33f0_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvmethodtype
@@ -30913,7 +32006,7 @@ ALTER TABLE ONLY public.hs_file_types_cvmethodtype
 
 
 --
--- Name: hs_file_types_cvsite_metadata_id_4f0047b9_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_cvsitetype hs_file_types_cvsite_metadata_id_4f0047b9_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvsitetype
@@ -30921,7 +32014,7 @@ ALTER TABLE ONLY public.hs_file_types_cvsitetype
 
 
 --
--- Name: hs_file_types_cvspec_metadata_id_25e79d42_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_cvspeciation hs_file_types_cvspec_metadata_id_25e79d42_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvspeciation
@@ -30929,7 +32022,7 @@ ALTER TABLE ONLY public.hs_file_types_cvspeciation
 
 
 --
--- Name: hs_file_types_cvstat_metadata_id_13261b95_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_cvstatus hs_file_types_cvstat_metadata_id_13261b95_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvstatus
@@ -30937,7 +32030,7 @@ ALTER TABLE ONLY public.hs_file_types_cvstatus
 
 
 --
--- Name: hs_file_types_cvunit_metadata_id_8dd379c0_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_cvunitstype hs_file_types_cvunit_metadata_id_8dd379c0_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvunitstype
@@ -30945,7 +32038,7 @@ ALTER TABLE ONLY public.hs_file_types_cvunitstype
 
 
 --
--- Name: hs_file_types_cvvari_metadata_id_6390cd41_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_cvvariablename hs_file_types_cvvari_metadata_id_6390cd41_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvvariablename
@@ -30953,7 +32046,7 @@ ALTER TABLE ONLY public.hs_file_types_cvvariablename
 
 
 --
--- Name: hs_file_types_cvvari_metadata_id_ff268daa_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_cvvariabletype hs_file_types_cvvari_metadata_id_ff268daa_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cvvariabletype
@@ -30961,7 +32054,7 @@ ALTER TABLE ONLY public.hs_file_types_cvvariabletype
 
 
 --
--- Name: hs_file_types_filese_metadata_id_7affa8aa_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_filesetlogicalfile hs_file_types_filese_metadata_id_7affa8aa_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_filesetlogicalfile
@@ -30969,7 +32062,7 @@ ALTER TABLE ONLY public.hs_file_types_filesetlogicalfile
 
 
 --
--- Name: hs_file_types_filese_resource_id_7032df73_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_filesetlogicalfile hs_file_types_filese_resource_id_7032df73_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_filesetlogicalfile
@@ -30977,7 +32070,7 @@ ALTER TABLE ONLY public.hs_file_types_filesetlogicalfile
 
 
 --
--- Name: hs_file_types_generi_resource_id_b5915dec_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_genericlogicalfile hs_file_types_generi_resource_id_b5915dec_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_genericlogicalfile
@@ -30985,7 +32078,7 @@ ALTER TABLE ONLY public.hs_file_types_genericlogicalfile
 
 
 --
--- Name: hs_file_types_geofea_resource_id_05b89011_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_geofeaturelogicalfile hs_file_types_geofea_resource_id_05b89011_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_geofeaturelogicalfile
@@ -30993,7 +32086,7 @@ ALTER TABLE ONLY public.hs_file_types_geofeaturelogicalfile
 
 
 --
--- Name: hs_file_types_georas_resource_id_ec57a3c3_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_georasterlogicalfile hs_file_types_georas_resource_id_ec57a3c3_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_georasterlogicalfile
@@ -31001,7 +32094,7 @@ ALTER TABLE ONLY public.hs_file_types_georasterlogicalfile
 
 
 --
--- Name: hs_file_types_modeli_executed_by_id_4d181869_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_modelinstancefilemetadata hs_file_types_modeli_executed_by_id_4d181869_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_modelinstancefilemetadata
@@ -31009,7 +32102,7 @@ ALTER TABLE ONLY public.hs_file_types_modelinstancefilemetadata
 
 
 --
--- Name: hs_file_types_modeli_metadata_id_a4aeb5ca_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_modelinstancelogicalfile hs_file_types_modeli_metadata_id_a4aeb5ca_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_modelinstancelogicalfile
@@ -31017,7 +32110,7 @@ ALTER TABLE ONLY public.hs_file_types_modelinstancelogicalfile
 
 
 --
--- Name: hs_file_types_modeli_resource_id_7ff2e26d_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_modelinstancelogicalfile hs_file_types_modeli_resource_id_7ff2e26d_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_modelinstancelogicalfile
@@ -31025,7 +32118,7 @@ ALTER TABLE ONLY public.hs_file_types_modelinstancelogicalfile
 
 
 --
--- Name: hs_file_types_modelp_metadata_id_ee63921b_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_modelprogramlogicalfile hs_file_types_modelp_metadata_id_ee63921b_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_modelprogramlogicalfile
@@ -31033,7 +32126,7 @@ ALTER TABLE ONLY public.hs_file_types_modelprogramlogicalfile
 
 
 --
--- Name: hs_file_types_modelp_mp_metadata_id_7d558023_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_modelprogramresourcefiletype hs_file_types_modelp_mp_metadata_id_7d558023_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_modelprogramresourcefiletype
@@ -31041,7 +32134,7 @@ ALTER TABLE ONLY public.hs_file_types_modelprogramresourcefiletype
 
 
 --
--- Name: hs_file_types_modelp_res_file_id_9cd12298_fk_hs_core_r; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_modelprogramresourcefiletype hs_file_types_modelp_res_file_id_9cd12298_fk_hs_core_r; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_modelprogramresourcefiletype
@@ -31049,7 +32142,7 @@ ALTER TABLE ONLY public.hs_file_types_modelprogramresourcefiletype
 
 
 --
--- Name: hs_file_types_modelp_resource_id_cfc1a9d6_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_modelprogramlogicalfile hs_file_types_modelp_resource_id_cfc1a9d6_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_modelprogramlogicalfile
@@ -31057,7 +32150,7 @@ ALTER TABLE ONLY public.hs_file_types_modelprogramlogicalfile
 
 
 --
--- Name: hs_file_types_netcdf_resource_id_fa54b4db_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_netcdflogicalfile hs_file_types_netcdf_resource_id_fa54b4db_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_netcdflogicalfile
@@ -31065,7 +32158,7 @@ ALTER TABLE ONLY public.hs_file_types_netcdflogicalfile
 
 
 --
--- Name: hs_file_types_reftim_resource_id_a9ded1ff_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_reftimeserieslogicalfile hs_file_types_reftim_resource_id_a9ded1ff_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_reftimeserieslogicalfile
@@ -31073,7 +32166,7 @@ ALTER TABLE ONLY public.hs_file_types_reftimeserieslogicalfile
 
 
 --
--- Name: hs_file_types_timese_metadata_id_7cb28920_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_timeserieslogicalfile hs_file_types_timese_metadata_id_7cb28920_fk_hs_file_t; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_timeserieslogicalfile
@@ -31081,7 +32174,7 @@ ALTER TABLE ONLY public.hs_file_types_timeserieslogicalfile
 
 
 --
--- Name: hs_file_types_timese_resource_id_cc4550ba_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_timeserieslogicalfile hs_file_types_timese_resource_id_cc4550ba_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_timeserieslogicalfile
@@ -31089,7 +32182,7 @@ ALTER TABLE ONLY public.hs_file_types_timeserieslogicalfile
 
 
 --
--- Name: hs_g_content_type_id_2f01db94cd029b0f_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_cellinformation hs_g_content_type_id_2f01db94cd029b0f_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_cellinformation
@@ -31097,7 +32190,7 @@ ALTER TABLE ONLY public.hs_file_types_cellinformation
 
 
 --
--- Name: hs_g_content_type_id_322c34901bfae5cb_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_fieldinformation hs_g_content_type_id_322c34901bfae5cb_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_fieldinformation
@@ -31105,7 +32198,7 @@ ALTER TABLE ONLY public.hs_file_types_fieldinformation
 
 
 --
--- Name: hs_g_content_type_id_3c68392c27f3db93_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_originalcoverageraster hs_g_content_type_id_3c68392c27f3db93_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_originalcoverageraster
@@ -31113,7 +32206,7 @@ ALTER TABLE ONLY public.hs_file_types_originalcoverageraster
 
 
 --
--- Name: hs_g_content_type_id_4dbd862ddd6248f6_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_geometryinformation hs_g_content_type_id_4dbd862ddd6248f6_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_geometryinformation
@@ -31121,7 +32214,7 @@ ALTER TABLE ONLY public.hs_file_types_geometryinformation
 
 
 --
--- Name: hs_g_content_type_id_63f5acc301191318_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_bandinformation hs_g_content_type_id_63f5acc301191318_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_bandinformation
@@ -31129,7 +32222,7 @@ ALTER TABLE ONLY public.hs_file_types_bandinformation
 
 
 --
--- Name: hs_g_content_type_id_66d126c2b3cf7352_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_file_types_originalcoveragegeofeature hs_g_content_type_id_66d126c2b3cf7352_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_file_types_originalcoveragegeofeature
@@ -31137,7 +32230,7 @@ ALTER TABLE ONLY public.hs_file_types_originalcoveragegeofeature
 
 
 --
--- Name: hs_labels_userlabels_user_id_67d4ad8ba6073785_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_labels_userlabels hs_labels_userlabels_user_id_67d4ad8ba6073785_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_labels_userlabels
@@ -31145,7 +32238,7 @@ ALTER TABLE ONLY public.hs_labels_userlabels
 
 
 --
--- Name: hs_labels_userresource_user_id_17c2ac15d94c26f8_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_labels_userresourceflags hs_labels_userresource_user_id_17c2ac15d94c26f8_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_labels_userresourceflags
@@ -31153,7 +32246,7 @@ ALTER TABLE ONLY public.hs_labels_userresourceflags
 
 
 --
--- Name: hs_labels_userresourcel_user_id_ca1355f4a3868e3_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_labels_userresourcelabels hs_labels_userresourcel_user_id_ca1355f4a3868e3_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_labels_userresourcelabels
@@ -31161,7 +32254,7 @@ ALTER TABLE ONLY public.hs_labels_userresourcelabels
 
 
 --
--- Name: hs_labels_userstoredla_user_id_534d602d9683725a_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_labels_userstoredlabels hs_labels_userstoredla_user_id_534d602d9683725a_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_labels_userstoredlabels
@@ -31169,7 +32262,7 @@ ALTER TABLE ONLY public.hs_labels_userstoredlabels
 
 
 --
--- Name: hs_t_content_type_id_4054d4b11537b3be_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_toolicon hs_t_content_type_id_4054d4b11537b3be_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_toolicon
@@ -31177,7 +32270,7 @@ ALTER TABLE ONLY public.hs_tools_resource_toolicon
 
 
 --
--- Name: hs_t_content_type_id_51e17884abf9eddc_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_toolversion hs_t_content_type_id_51e17884abf9eddc_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_toolversion
@@ -31185,7 +32278,7 @@ ALTER TABLE ONLY public.hs_tools_resource_toolversion
 
 
 --
--- Name: hs_t_content_type_id_62b8f4790407354c_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_requesturlbase hs_t_content_type_id_62b8f4790407354c_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_requesturlbase
@@ -31193,7 +32286,7 @@ ALTER TABLE ONLY public.hs_tools_resource_requesturlbase
 
 
 --
--- Name: hs_t_content_type_id_767d162d9152deeb_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_supportedrestypes hs_t_content_type_id_767d162d9152deeb_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes
@@ -31201,7 +32294,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes
 
 
 --
--- Name: hs_t_content_type_id_7b1338cffe685cdf_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_supportedsharingstatus hs_t_content_type_id_7b1338cffe685cdf_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedsharingstatus
@@ -31209,7 +32302,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedsharingstatus
 
 
 --
--- Name: hs_t_content_type_id_7ded22f42d3aa879_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_apphomepageurl hs_t_content_type_id_7ded22f42d3aa879_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_apphomepageurl
@@ -31217,7 +32310,7 @@ ALTER TABLE ONLY public.hs_tools_resource_apphomepageurl
 
 
 --
--- Name: hs_tools_resource_he_content_type_id_fd68ab0a_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_helppageurl hs_tools_resource_he_content_type_id_fd68ab0a_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_helppageurl
@@ -31225,7 +32318,7 @@ ALTER TABLE ONLY public.hs_tools_resource_helppageurl
 
 
 --
--- Name: hs_tools_resource_is_content_type_id_79144377_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_issuespageurl hs_tools_resource_is_content_type_id_79144377_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_issuespageurl
@@ -31233,7 +32326,7 @@ ALTER TABLE ONLY public.hs_tools_resource_issuespageurl
 
 
 --
--- Name: hs_tools_resource_ma_content_type_id_4ba8ca5a_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_mailinglisturl hs_tools_resource_ma_content_type_id_4ba8ca5a_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_mailinglisturl
@@ -31241,7 +32334,7 @@ ALTER TABLE ONLY public.hs_tools_resource_mailinglisturl
 
 
 --
--- Name: hs_tools_resource_re_content_type_id_774b809e_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_requesturlbaseaggregation hs_tools_resource_re_content_type_id_774b809e_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_requesturlbaseaggregation
@@ -31249,7 +32342,7 @@ ALTER TABLE ONLY public.hs_tools_resource_requesturlbaseaggregation
 
 
 --
--- Name: hs_tools_resource_re_content_type_id_8ee7ab04_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_requesturlbasefile hs_tools_resource_re_content_type_id_8ee7ab04_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_requesturlbasefile
@@ -31257,7 +32350,7 @@ ALTER TABLE ONLY public.hs_tools_resource_requesturlbasefile
 
 
 --
--- Name: hs_tools_resource_ro_content_type_id_2b28b9e3_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_roadmap hs_tools_resource_ro_content_type_id_2b28b9e3_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_roadmap
@@ -31265,7 +32358,7 @@ ALTER TABLE ONLY public.hs_tools_resource_roadmap
 
 
 --
--- Name: hs_tools_resource_sh_content_type_id_46647bfc_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_showonopenwithlist hs_tools_resource_sh_content_type_id_46647bfc_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_showonopenwithlist
@@ -31273,7 +32366,7 @@ ALTER TABLE ONLY public.hs_tools_resource_showonopenwithlist
 
 
 --
--- Name: hs_tools_resource_so_content_type_id_e38d6841_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_sourcecodeurl hs_tools_resource_so_content_type_id_e38d6841_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_sourcecodeurl
@@ -31281,7 +32374,7 @@ ALTER TABLE ONLY public.hs_tools_resource_sourcecodeurl
 
 
 --
--- Name: hs_tools_resource_su_content_type_id_4d8a44dd_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_supportedaggtypes hs_tools_resource_su_content_type_id_4d8a44dd_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedaggtypes
@@ -31289,7 +32382,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedaggtypes
 
 
 --
--- Name: hs_tools_resource_su_content_type_id_ec21b8f5_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_supportedfileextensions hs_tools_resource_su_content_type_id_ec21b8f5_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedfileextensions
@@ -31297,7 +32390,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedfileextensions
 
 
 --
--- Name: hs_tools_resource_su_supportedaggtypechoi_a4b8b2e0_fk_hs_tools_; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_supportedaggtypes_supported_agg_types hs_tools_resource_su_supportedaggtypechoi_a4b8b2e0_fk_hs_tools_; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedaggtypes_supported_agg_types
@@ -31305,7 +32398,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedaggtypes_supported_agg_types
 
 
 --
--- Name: hs_tools_resource_su_supportedaggtypes_id_763fc392_fk_hs_tools_; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_supportedaggtypes_supported_agg_types hs_tools_resource_su_supportedaggtypes_id_763fc392_fk_hs_tools_; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedaggtypes_supported_agg_types
@@ -31313,7 +32406,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedaggtypes_supported_agg_types
 
 
 --
--- Name: hs_tools_resource_su_supportedrestypechoi_ecec13a3_fk_hs_tools_; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_supportedrestypes_supported_res_types hs_tools_resource_su_supportedrestypechoi_ecec13a3_fk_hs_tools_; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes_supported_res_types
@@ -31321,7 +32414,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes_supported_res_types
 
 
 --
--- Name: hs_tools_resource_su_supportedrestypes_id_322fa62c_fk_hs_tools_; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_supportedrestypes_supported_res_types hs_tools_resource_su_supportedrestypes_id_322fa62c_fk_hs_tools_; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes_supported_res_types
@@ -31329,7 +32422,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes_supported_res_types
 
 
 --
--- Name: hs_tools_resource_su_supportedsharingstat_349cb667_fk_hs_tools_; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_supportedsharingstatus_sharing_status hs_tools_resource_su_supportedsharingstat_349cb667_fk_hs_tools_; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedsharingstatus_sharing_status
@@ -31337,7 +32430,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedsharingstatus_sharing_status
 
 
 --
--- Name: hs_tools_resource_su_supportedsharingstat_4e4477a3_fk_hs_tools_; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_supportedsharingstatus_sharing_status hs_tools_resource_su_supportedsharingstat_4e4477a3_fk_hs_tools_; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_supportedsharingstatus_sharing_status
@@ -31345,7 +32438,7 @@ ALTER TABLE ONLY public.hs_tools_resource_supportedsharingstatus_sharing_status
 
 
 --
--- Name: hs_tools_resource_te_content_type_id_65c76ca0_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tools_resource_testingprotocolurl hs_tools_resource_te_content_type_id_65c76ca0_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tools_resource_testingprotocolurl
@@ -31353,7 +32446,7 @@ ALTER TABLE ONLY public.hs_tools_resource_testingprotocolurl
 
 
 --
--- Name: hs_tracking_session_visitor_id_53849c82_fk_hs_tracki; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tracking_session hs_tracking_session_visitor_id_53849c82_fk_hs_tracki; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tracking_session
@@ -31361,7 +32454,7 @@ ALTER TABLE ONLY public.hs_tracking_session
 
 
 --
--- Name: hs_tracking_variable_resource_id_1e36eb64_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tracking_variable hs_tracking_variable_resource_id_1e36eb64_fk_hs_core_g; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tracking_variable
@@ -31369,7 +32462,7 @@ ALTER TABLE ONLY public.hs_tracking_variable
 
 
 --
--- Name: hs_tracking_variable_session_id_3c66f572_fk_hs_tracki; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tracking_variable hs_tracking_variable_session_id_3c66f572_fk_hs_tracki; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tracking_variable
@@ -31377,7 +32470,7 @@ ALTER TABLE ONLY public.hs_tracking_variable
 
 
 --
--- Name: hs_tracking_visitor_user_id_faa35031_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_tracking_visitor hs_tracking_visitor_user_id_faa35031_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.hs_tracking_visitor
@@ -31385,7 +32478,15 @@ ALTER TABLE ONLY public.hs_tracking_visitor
 
 
 --
--- Name: oauth2_provider_acce_source_refresh_token_e66fbc72_fk_oauth2_pr; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: oauth2_provider_accesstoken oauth2_provider_acce_id_token_id_85db651b_fk_oauth2_pr; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.oauth2_provider_accesstoken
+    ADD CONSTRAINT oauth2_provider_acce_id_token_id_85db651b_fk_oauth2_pr FOREIGN KEY (id_token_id) REFERENCES public.oauth2_provider_idtoken(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: oauth2_provider_accesstoken oauth2_provider_acce_source_refresh_token_e66fbc72_fk_oauth2_pr; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.oauth2_provider_accesstoken
@@ -31393,7 +32494,7 @@ ALTER TABLE ONLY public.oauth2_provider_accesstoken
 
 
 --
--- Name: oauth2_provider_accesstoken_application_id_b22886e1_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: oauth2_provider_accesstoken oauth2_provider_accesstoken_application_id_b22886e1_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.oauth2_provider_accesstoken
@@ -31401,7 +32502,7 @@ ALTER TABLE ONLY public.oauth2_provider_accesstoken
 
 
 --
--- Name: oauth2_provider_accesstoken_user_id_6e4c9a65_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: oauth2_provider_accesstoken oauth2_provider_accesstoken_user_id_6e4c9a65_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.oauth2_provider_accesstoken
@@ -31409,7 +32510,7 @@ ALTER TABLE ONLY public.oauth2_provider_accesstoken
 
 
 --
--- Name: oauth2_provider_application_user_id_79829054_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: oauth2_provider_application oauth2_provider_application_user_id_79829054_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.oauth2_provider_application
@@ -31417,7 +32518,7 @@ ALTER TABLE ONLY public.oauth2_provider_application
 
 
 --
--- Name: oauth2_provider_grant_application_id_81923564_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: oauth2_provider_grant oauth2_provider_grant_application_id_81923564_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.oauth2_provider_grant
@@ -31425,7 +32526,7 @@ ALTER TABLE ONLY public.oauth2_provider_grant
 
 
 --
--- Name: oauth2_provider_grant_user_id_e8f62af8_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: oauth2_provider_grant oauth2_provider_grant_user_id_e8f62af8_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.oauth2_provider_grant
@@ -31433,7 +32534,23 @@ ALTER TABLE ONLY public.oauth2_provider_grant
 
 
 --
--- Name: oauth2_provider_refr_access_token_id_775e84e8_fk_oauth2_pr; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: oauth2_provider_idtoken oauth2_provider_idto_application_id_08c5ff4f_fk_oauth2_pr; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.oauth2_provider_idtoken
+    ADD CONSTRAINT oauth2_provider_idto_application_id_08c5ff4f_fk_oauth2_pr FOREIGN KEY (application_id) REFERENCES public.oauth2_provider_application(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: oauth2_provider_idtoken oauth2_provider_idtoken_user_id_dd512b59_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.oauth2_provider_idtoken
+    ADD CONSTRAINT oauth2_provider_idtoken_user_id_dd512b59_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES public.auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: oauth2_provider_refreshtoken oauth2_provider_refr_access_token_id_775e84e8_fk_oauth2_pr; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.oauth2_provider_refreshtoken
@@ -31441,7 +32558,7 @@ ALTER TABLE ONLY public.oauth2_provider_refreshtoken
 
 
 --
--- Name: oauth2_provider_refreshtoken_application_id_2d1c311b_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: oauth2_provider_refreshtoken oauth2_provider_refreshtoken_application_id_2d1c311b_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.oauth2_provider_refreshtoken
@@ -31449,7 +32566,7 @@ ALTER TABLE ONLY public.oauth2_provider_refreshtoken
 
 
 --
--- Name: oauth2_provider_refreshtoken_user_id_da837fce_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: oauth2_provider_refreshtoken oauth2_provider_refreshtoken_user_id_da837fce_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.oauth2_provider_refreshtoken
@@ -31457,7 +32574,7 @@ ALTER TABLE ONLY public.oauth2_provider_refreshtoken
 
 
 --
--- Name: page_ptr_id_refs_id_fe19b67b; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: forms_form page_ptr_id_refs_id_fe19b67b; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.forms_form
@@ -31465,7 +32582,7 @@ ALTER TABLE ONLY public.forms_form
 
 
 --
--- Name: pages_link_page_ptr_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: pages_link pages_link_page_ptr_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.pages_link
@@ -31473,7 +32590,7 @@ ALTER TABLE ONLY public.pages_link
 
 
 --
--- Name: pages_page_parent_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: pages_page pages_page_parent_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.pages_page
@@ -31481,7 +32598,7 @@ ALTER TABLE ONLY public.pages_page
 
 
 --
--- Name: pages_richtextpage_page_ptr_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: pages_richtextpage pages_richtextpage_page_ptr_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.pages_richtextpage
@@ -31489,47 +32606,47 @@ ALTER TABLE ONLY public.pages_richtextpage
 
 
 --
--- Name: robots_rule_allowed_rule_id_b79a8840929e6aa_fk_robots_rule_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: robots_rule_allowed robots_rule_allowed_rule_id_aa90358c_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.robots_rule_allowed
-    ADD CONSTRAINT robots_rule_allowed_rule_id_b79a8840929e6aa_fk_robots_rule_id FOREIGN KEY (rule_id) REFERENCES public.robots_rule(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT robots_rule_allowed_rule_id_aa90358c_fk FOREIGN KEY (rule_id) REFERENCES public.robots_rule(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
--- Name: robots_rule_allowed_url_id_24e75e80d27a928_fk_robots_url_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: robots_rule_allowed robots_rule_allowed_url_id_6157f60a_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.robots_rule_allowed
-    ADD CONSTRAINT robots_rule_allowed_url_id_24e75e80d27a928_fk_robots_url_id FOREIGN KEY (url_id) REFERENCES public.robots_url(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT robots_rule_allowed_url_id_6157f60a_fk FOREIGN KEY (url_id) REFERENCES public.robots_url(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
--- Name: robots_rule_disallow_rule_id_50048ff97fa79eef_fk_robots_rule_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.robots_rule_disallowed
-    ADD CONSTRAINT robots_rule_disallow_rule_id_50048ff97fa79eef_fk_robots_rule_id FOREIGN KEY (rule_id) REFERENCES public.robots_rule(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: robots_rule_disallowed_url_id_2f1c369bbebea01d_fk_robots_url_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: robots_rule_disallowed robots_rule_disallowed_rule_id_fad7328c_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.robots_rule_disallowed
-    ADD CONSTRAINT robots_rule_disallowed_url_id_2f1c369bbebea01d_fk_robots_url_id FOREIGN KEY (url_id) REFERENCES public.robots_url(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT robots_rule_disallowed_rule_id_fad7328c_fk FOREIGN KEY (rule_id) REFERENCES public.robots_rule(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
--- Name: robots_rule_sites_rule_id_55fc54e5f62b7264_fk_robots_rule_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: robots_rule_disallowed robots_rule_disallowed_url_id_8e02db92_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.robots_rule_disallowed
+    ADD CONSTRAINT robots_rule_disallowed_url_id_8e02db92_fk FOREIGN KEY (url_id) REFERENCES public.robots_url(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: robots_rule_sites robots_rule_sites_rule_id_7921a799_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.robots_rule_sites
-    ADD CONSTRAINT robots_rule_sites_rule_id_55fc54e5f62b7264_fk_robots_rule_id FOREIGN KEY (rule_id) REFERENCES public.robots_rule(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT robots_rule_sites_rule_id_7921a799_fk FOREIGN KEY (rule_id) REFERENCES public.robots_rule(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
--- Name: robots_rule_sites_site_id_3274a4d8ebfc398f_fk_django_site_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: robots_rule_sites robots_rule_sites_site_id_3274a4d8ebfc398f_fk_django_site_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.robots_rule_sites
@@ -31537,15 +32654,15 @@ ALTER TABLE ONLY public.robots_rule_sites
 
 
 --
--- Name: security_passwordexpiry_user_id_64321ff9e3cc9b_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: security_passwordexpiry security_passwordexpiry_user_id_366560db_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.security_passwordexpiry
-    ADD CONSTRAINT security_passwordexpiry_user_id_64321ff9e3cc9b_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES public.auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT security_passwordexpiry_user_id_366560db_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES public.auth_user(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
--- Name: sitepermission_id_refs_id_7dccdcbd; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: core_sitepermission_sites sitepermission_id_refs_id_7dccdcbd; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.core_sitepermission_sites
@@ -31553,7 +32670,7 @@ ALTER TABLE ONLY public.core_sitepermission_sites
 
 
 --
--- Name: theme_homepage_id_7a358283d1fd2d7_fk_theme_homepage_page_ptr_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: theme_iconbox theme_homepage_id_7a358283d1fd2d7_fk_theme_homepage_page_ptr_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.theme_iconbox
@@ -31561,7 +32678,7 @@ ALTER TABLE ONLY public.theme_iconbox
 
 
 --
--- Name: theme_homepage_page_ptr_id_10fe08bd3bddde20_fk_pages_page_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: theme_homepage theme_homepage_page_ptr_id_10fe08bd3bddde20_fk_pages_page_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.theme_homepage
@@ -31569,7 +32686,23 @@ ALTER TABLE ONLY public.theme_homepage
 
 
 --
--- Name: theme_siteconfigurat_site_id_71aa83f18a4be0eb_fk_django_site_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: theme_quotarequest theme_quotarequest_quota_id_b3e948d9_fk_theme_userquota_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.theme_quotarequest
+    ADD CONSTRAINT theme_quotarequest_quota_id_b3e948d9_fk_theme_userquota_id FOREIGN KEY (quota_id) REFERENCES public.theme_userquota(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: theme_quotarequest theme_quotarequest_request_from_id_020f329b_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.theme_quotarequest
+    ADD CONSTRAINT theme_quotarequest_request_from_id_020f329b_fk_auth_user_id FOREIGN KEY (request_from_id) REFERENCES public.auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: theme_siteconfiguration theme_siteconfigurat_site_id_71aa83f18a4be0eb_fk_django_site_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.theme_siteconfiguration
@@ -31577,7 +32710,7 @@ ALTER TABLE ONLY public.theme_siteconfiguration
 
 
 --
--- Name: theme_userprofile_user_id_4e02d2b427b5e510_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: theme_userprofile theme_userprofile_user_id_4e02d2b427b5e510_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.theme_userprofile
@@ -31585,7 +32718,7 @@ ALTER TABLE ONLY public.theme_userprofile
 
 
 --
--- Name: theme_userquota_user_id_4ef704d14e5a5ddd_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: theme_userquota theme_userquota_user_id_4ef704d14e5a5ddd_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.theme_userquota
@@ -31593,7 +32726,7 @@ ALTER TABLE ONLY public.theme_userquota
 
 
 --
--- Name: to_blogpost_id_refs_id_6404941b; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: blog_blogpost_related_posts to_blogpost_id_refs_id_6404941b; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.blog_blogpost_related_posts
@@ -31601,11 +32734,10 @@ ALTER TABLE ONLY public.blog_blogpost_related_posts
 
 
 --
--- Name: SCHEMA public; Type: ACL; Schema: -; Owner: postgres
+-- Name: SCHEMA public; Type: ACL; Schema: -; Owner: pg_database_owner
 --
 
-REVOKE ALL ON SCHEMA public FROM PUBLIC;
-REVOKE ALL ON SCHEMA public FROM postgres;
+REVOKE USAGE ON SCHEMA public FROM PUBLIC;
 GRANT ALL ON SCHEMA public TO postgres;
 GRANT ALL ON SCHEMA public TO PUBLIC;
 
