@@ -795,7 +795,7 @@ else:
                 "propagate": False,
             },
             # Catch-all logger for HydroShare apps
-            "": {"handlers": ["hydrosharelog"], "propagate": False, "level": "DEBUG"},
+            "": {"handlers": ["hydrosharelog"], "propagate": False, "level": "WARNING"},
         },
     }
 
