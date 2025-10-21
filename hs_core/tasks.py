@@ -403,13 +403,14 @@ def nightly_metadata_review_reminder():
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
-def notify_owners_of_publication_success(resource):
+def notify_owners_of_publication_success(short_id):
     """
     Sends email notification to resource owners on publication success
 
     :param resource: a resource that has been published
     :return:
     """
+    resource = utils.get_resource_by_shortkey(short_id)
     res_url = current_site_url() + resource.get_absolute_url()
     doi = f"{settings.DATACITE_PREFIX}/{resource.short_id}"
 
@@ -434,7 +435,7 @@ def notify_owners_of_publication_success(resource):
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
-def notify_developers_of_publication_failure(resource, error=None, exc_info=None, extra_context=None):
+def notify_developers_of_publication_failure(short_id, error=None, exc_info=None, extra_context=None):
     """
     Sends a failure notification email to developers/admins when a resource publication fails.
 
@@ -447,6 +448,7 @@ def notify_developers_of_publication_failure(resource, error=None, exc_info=None
     if getattr(settings, "DISABLE_TASK_EMAILS", False):
         return
 
+    resource = utils.get_resource_by_shortkey(short_id)
     res_url = current_site_url() + resource.get_absolute_url()
     doi = f"{settings.DATACITE_PREFIX}/{resource.short_id}"
     owners = ", ".join([o.email for o in resource.raccess.owners.all()])

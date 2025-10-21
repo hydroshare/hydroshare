@@ -1301,7 +1301,7 @@ def publish_resource(user, pk):
         resource.save()
         deposit_res_metadata_with_datacite(resource)
         from hs_core.tasks import create_bag_by_s3, notify_owners_of_publication_success
-        notify_owners_of_publication_success.apply_async((resource))
+        notify_owners_of_publication_success.apply_async(args=(pk,))
         create_bag_by_s3.apply_async((pk,))
 
     except Exception as e:
@@ -1320,7 +1320,7 @@ def publish_resource(user, pk):
         resource.raccess.save()
         resource.save()
         from hs_core.tasks import notify_developers_of_publication_failure
-        notify_developers_of_publication_failure.apply_async((resource, str(e)))
+        notify_developers_of_publication_failure.apply_async((pk, str(e)))
         raise
 
     return pk
