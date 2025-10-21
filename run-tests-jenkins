@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 set -e
 
-python manage.py test hs_core.tests.test_publish_resource.TestPublishResource.test_publish_resource --verbosity 3 --noinput --timing
+python manage.py test --verbosity 3 --noinput --timing
 pytest
