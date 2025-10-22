@@ -434,6 +434,8 @@ class S3Storage(S3Storage):
             self.connection.create_bucket(Bucket=bucket_name)
             # TODO: to run tests locally, comment out these lines
             subprocess.run(["mc", "quota", "set", f"hydroshare/{bucket_name}", "--size", "20GiB"], check=True)
+            subprocess.run(["mc", "event", "add", f"hydroshare/{bucket_name}",
+                            "arn:minio:sqs::RESOURCEFILE:kafka", "--event", "put,delete"], check=True)
             if settings.MINIO_LIFECYCLE_POLICY:
                 subprocess.run(["mc", "ilm", "rule", "add" "--transition-days", "0", "--transition-tier",
                                 settings.MINIO_LIFECYCLE_POLICY, f"hydroshare/{bucket_name}"], check=True)
