@@ -1152,6 +1152,8 @@ def update_doi_metadata_with_datacite(short_id, element_name, payload):
     doi_url = f"{get_datacite_url()}/{settings.DATACITE_PREFIX}/{short_id}"
 
     try:
+        res.doi = get_resource_doi(short_id, DataciteSubmissionStatus.UPDATE_PENDING.value)
+        res.save()
         response = requests.put(
             url=doi_url,
             json=payload,
@@ -1170,6 +1172,8 @@ def update_doi_metadata_with_datacite(short_id, element_name, payload):
     except requests.exceptions.RequestException as err:
         logger.error(f"Request failed while updating DOI: {err}")
     except Exception as e:
+        res.doi = get_resource_doi(short_id, DataciteSubmissionStatus.UPDATE_FAILURE.value)
+        res.save()
         logger.error(f"Unexpected error while updating DOI: {e}")
         print(f"Unexpected error while updating DOI: {e}")
 
@@ -1318,6 +1322,7 @@ def publish_resource(user, pk):
                 logger.warning(f"Failed to delete metadata element during rollback: {delete_err}")
 
         resource.raccess.save()
+        resource.doi = get_resource_doi(pk, DataciteSubmissionStatus.FAILURE.value)
         resource.save()
         from hs_core.tasks import notify_developers_of_publication_failure
         notify_developers_of_publication_failure.apply_async((pk, str(e)))
