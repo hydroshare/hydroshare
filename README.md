@@ -116,7 +116,7 @@ When you activate a new branch, just bring the stack down and up again. Sometime
 For all intents and purposes, Hydroshare is a large Python/Django application with some extra features and technologies added on:
 - SOLR for searching
 - Redis for caching
-- RabbitMQ for concurrency and serialization
+- RedPanda for concurrency and serialization
 - Minio for a S3 file system
 - PostgreSQL for the database backend
 

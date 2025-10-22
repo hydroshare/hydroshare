@@ -2313,7 +2313,7 @@ def hsapi_user_s3_authorization(request):
     logger.info(f"Checking {username} {bucket} {action}")
 
     # admin account for minio
-    if username == "minioadmin" or username == "cuahsi":
+    if username == "cuahsi":
         return JsonResponse({"result" : {"allow": True}})
     user: User = User.objects.get(username=username)
     # admin hydroshare account
