@@ -354,7 +354,17 @@ docker exec hydroshare python manage.py add_missing_bucket_names
 
 echo
 echo '########################################################################################################################'
-echo -e " All done, run `green '\"docker compose -f local-dev.yml restart\"'` to restart HydroShare"
+echo " Create test S3 metadata"
+echo '########################################################################################################################'
+export BUCKET=asdf
+mc alias set local-hydroshare http://localhost:9000 cuahsi devpassword
+docker exec -u hydro-service hydroshare python manage.py create_buckets $BUCKET
+mc cp landing-page/example_metadata/dataset_metadata.json local-hydroshare/$BUCKET/md/$DEFAULT_RESOURCE_ID/
+mc cp landing-page/example_metadata/hs_user_meta.json local-hydroshare/$BUCKET/$DEFAULT_RESOURCE_ID/data/contents/
+
+echo
+echo '########################################################################################################################'
+echo -e " All done, run `green '\"docker-compose -f local-dev.yml restart\"'` to restart HydroShare"
 echo '########################################################################################################################'
 echo
 

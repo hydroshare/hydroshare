@@ -170,16 +170,6 @@ Hydroshare is released under the BSD 3-Clause License. This means that [you can 
 
 Then...
 
-### move the metadata .json files to the appropriate locations in minio
-```
-# the bucket is your hs username
-export BUCKET=asdf
-mc alias set local-hydroshare http://localhost:9000 cuahsi devpassword
-docker exec -u hydro-service hydroshare python manage.py create_buckets asdf
-mc cp landing-page/example_metadata/dataset_metadata.json local-hydroshare/$BUCKET/md/$DEFAULT_RESOURCE_ID/
-mc cp landing-page/example_metadata/hs_user_meta.json local-hydroshare/$BUCKET/$DEFAULT_RESOURCE_ID/data/contents/
-```
-
 ### go checkout the resource
 * http://localhost/resource/d7b526e24f7e449098b428ae9363f514
 * You should see the resource landing page.
