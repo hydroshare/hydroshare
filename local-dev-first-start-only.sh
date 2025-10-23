@@ -422,6 +422,7 @@ echo '##########################################################################
 echo " Create test S3 metadata"
 echo '########################################################################################################################'
 export BUCKET=asdf
+export DEFAULT_RESOURCE_ID=d7b526e24f7e449098b428ae9363f514
 mc alias set local-hydroshare http://localhost:9000 cuahsi devpassword
 docker exec -u hydro-service hydroshare python manage.py create_buckets $BUCKET
 mc cp landing-page/example_metadata/dataset_metadata.json local-hydroshare/$BUCKET/md/$DEFAULT_RESOURCE_ID/
