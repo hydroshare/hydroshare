@@ -2,7 +2,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.management.base import BaseCommand, CommandError
 
 from hs_core.enums import DataciteSubmissionStatus
-from hs_core.hydroshare import (deposit_res_metadata_with_datacite,
+from hs_core.hydroshare import (update_res_metadata_with_datacite,
                                 get_resource_doi)
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 
@@ -33,7 +33,7 @@ class Command(BaseCommand):
             raise CommandError("Resource has a pending datacite deposit request. Please try again later.")
 
         print(f"Updating Datacite metadata for resource id {resource.short_id}")
-        response = deposit_res_metadata_with_datacite(resource)
+        response = update_res_metadata_with_datacite(resource)
         if not response.status_code == 200:
             err_msg = (f"Failed to update. Received a {response.status_code} from Datacite while depositing "
                        f"metadata for res id {resource.short_id}")

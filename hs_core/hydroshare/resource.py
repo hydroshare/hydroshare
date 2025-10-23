@@ -1043,6 +1043,52 @@ def deposit_res_metadata_with_datacite(res):
         raise
 
 
+def update_res_metadata_with_datacite(res):
+    """
+    Update resource metadata with DataCite using the Fabrica-style payload.
+    Args:
+        res: Django model instance with metadata
+
+    Returns:
+        Response object or None if error occurred
+    """
+
+    try:
+        token = base64.b64encode(f"{settings.DATACITE_USERNAME}:{settings.DATACITE_PASSWORD}".encode()).decode()
+
+        headers = {
+            "accept": "application/vnd.api+json",
+            "content-type": "application/json",
+            "authorization": f"Basic {token}"
+        }
+        doi_url = f"{get_datacite_url()}/{settings.DATACITE_PREFIX}/{res.short_id}"
+        response = requests.put(
+            url=doi_url,
+            data=res.get_datacite_deposit_json(),
+            headers=headers,
+            timeout=10
+        )
+        print(f"Metadata updated successfully with DataCite for resource {res.short_id} \n\n {response.text}")
+        response.raise_for_status()
+        logger.info(f"Metadata updated successfully with DataCite for resource {res.short_id}")
+        return response
+    except requests.exceptions.HTTPError as http_err:
+        logger.error(f"HTTP error occurred: {http_err}")
+        print(f"HTTP error occurred: {http_err}")
+        if response is not None:
+            logger.error(f"Response content: {response.text}")
+            print(f"Response content: {response.text}")
+        raise
+    except requests.exceptions.RequestException as err:
+        logger.error(f"Request failed: {err}")
+        print(f"Request failed: {err}")
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        print(f"Unexpected error: {e}")
+        raise
+
+
 def update_payload_for_datacite(res, element_name, form_data):
     """
     Transforms QueryDict form input into a DataCite-compliant payload using field mappings.
