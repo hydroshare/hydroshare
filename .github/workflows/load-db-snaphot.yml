@@ -1,6 +1,9 @@
 name: Get and Load django db snapshot into environment
 
 on:
+  push:
+    branches:
+      - run-load-db
   workflow_dispatch:
     inputs:
       instance:
