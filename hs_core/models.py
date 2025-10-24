@@ -2256,7 +2256,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             'title': self._update_title_field,
             'subject': self._update_subjects_field,
             'date': self._update_date_field,
-            'status': self._update_status_field
+            'status': self._update_status_field,
+            'description': self._update_abstract_field,
         }
 
         # Update all fields if 'all' is specified
@@ -2332,6 +2333,11 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
                 "shareable": self.raccess.shareable
             }
 
+    def _update_abstract_field(self, copied_metadata, metadata):
+        """Update abstract field in cached metadata"""
+        abstract = metadata.description.abstract if hasattr(metadata, 'description') and metadata.description else ""
+        copied_metadata['abstract'] = abstract
+
     def _ensure_required_fields(self, copied_metadata, metadata):
         """Ensure all required fields are present in cached metadata"""
 
@@ -2349,6 +2355,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
 
         if 'status' not in copied_metadata:
             self._update_status_field(copied_metadata, metadata)
+
+        if 'abstract' not in copied_metadata:
+            self._update_abstract_field(copied_metadata, metadata)
 
     def update_all_cached_metadata(self):
         """
