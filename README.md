@@ -167,7 +167,6 @@ Hydroshare is released under the BSD 3-Clause License. This means that [you can 
 * Pull the [6016/landing-page-squash-rebase](https://github.com/hydroshare/hydroshare/tree/6016/landing-page-squash-rebase) branch
 * run `./local-dev-first-start-only.sh`
 * Access hydroshare at http://localhost
-* Login as the `asdf` user
 
 Then...
 
