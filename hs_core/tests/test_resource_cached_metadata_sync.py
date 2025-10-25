@@ -523,7 +523,7 @@ class TestDenormalizedMetadataSync(TestCase):
 
         # Update the description (abstract)
         description = self.resource.metadata.description
-        abstract='This is an updated test resource abstract'
+        abstract = 'This is an updated test resource abstract'
         self.resource.metadata.update_element('description', description.id, abstract=abstract)
 
         # Check that cached metadata was updated for the new abstract
