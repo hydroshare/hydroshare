@@ -494,6 +494,48 @@ class TestDenormalizedMetadataSync(TestCase):
         modified_date3 = datetime.fromisoformat(modified_date3)
         self.assertGreater(modified_date3, modified_date2)
 
+    def test_description_post_save_updates_cached_metadata(self):
+        """Test that creating/updating a Description (abstract) element triggers cached metadata
+        update for abstract field.
+        """
+
+        # Initially, cached metadata should have empty abstract since no description was created
+        # as part of creating the resource
+        self.resource.refresh_from_db()
+        initial_abstract = self.resource.cached_metadata.get('abstract', '')
+        self.assertEqual(initial_abstract, '')
+        modified_date1 = self.resource.cached_metadata['modified']
+        modified_date1 = datetime.fromisoformat(modified_date1)
+
+        # Create a description (abstract)
+        abstract = 'This is a test resource abstract'
+        self.resource.metadata.create_element('description', abstract=abstract)
+
+        # Check that cached metadata was updated for abstract
+        self.resource.refresh_from_db()
+        cached_abstract = self.resource.cached_metadata.get('abstract', '')
+        self.assertEqual(cached_abstract, abstract)
+
+        # Test that the modified date was updated
+        modified_date2 = self.resource.cached_metadata['modified']
+        modified_date2 = datetime.fromisoformat(modified_date2)
+        self.assertGreater(modified_date2, modified_date1)
+
+        # Update the description (abstract)
+        description = self.resource.metadata.description
+        abstract='This is an updated test resource abstract'
+        self.resource.metadata.update_element('description', description.id, abstract=abstract)
+
+        # Check that cached metadata was updated for the new abstract
+        self.resource.refresh_from_db()
+        cached_abstract = self.resource.cached_metadata.get('abstract', '')
+        self.assertEqual(cached_abstract, abstract)
+
+        # Test that the modified date was updated again
+        modified_date3 = self.resource.cached_metadata['modified']
+        modified_date3 = datetime.fromisoformat(modified_date3)
+        self.assertGreater(modified_date3, modified_date2)
+
     def test_cached_metadata_for_copied_resource(self):
         """Test that cached metadata is generated correctly when a resource is copied over to a new resource."""
 
@@ -518,6 +560,9 @@ class TestDenormalizedMetadataSync(TestCase):
             name='Creator1',
             email='creator1@example.com'
         )
+        # create description (abstract)
+        abstract = 'This is a test resource abstract'
+        self.resource.metadata.create_element('description', abstract=abstract)
         # Verify cached metadata is consistent
         self.resource.refresh_from_db()
         cached_subjects = self.resource.cached_metadata.get('subjects', [])
@@ -544,6 +589,8 @@ class TestDenormalizedMetadataSync(TestCase):
         # check the number of subjects in the new resource
         self.assertEqual(len(new_resource.metadata.subjects.all()), 5)
         self.assertEqual(new_resource.cached_metadata['status'], self.resource.cached_metadata['status'])
+        # check the abstract in cached metadata for the new resource
+        self.assertEqual(new_resource.cached_metadata['abstract'], self.resource.cached_metadata['abstract'])
         # check that the new resource created date is after the original resource created date
         original_resource_created_date = datetime.fromisoformat(self.resource.cached_metadata['created'])
         new_resource_created_date = datetime.fromisoformat(new_resource.cached_metadata['created'])
