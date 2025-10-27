@@ -24,7 +24,7 @@ from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
 from theme.models import UserQuota
-from hs_core.enums import CrossRefSubmissionStatus
+from hs_core.enums import DataciteSubmissionStatus
 
 FILE_UPLOAD_MAX_SIZE = getattr(settings, 'FILE_UPLOAD_MAX_SIZE', 25 * 1024**3)  # FILE_UPLOAD_MAX_SIZE is in bytes
 FILE_SIZE_LIMIT_FOR_DISPLAY = f"{round(FILE_UPLOAD_MAX_SIZE / 1024**3)}GB"
@@ -953,7 +953,7 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
 def get_resource_doi(res_id, flag=''):
     doi_str = "https://doi.org/10.4211/hs.{shortkey}".format(shortkey=res_id)
     if flag:
-        if flag not in CrossRefSubmissionStatus:
+        if flag not in DataciteSubmissionStatus:
             raise ValidationError("Invalid flag value: {}".format(flag))
         return "{doi}{append_flag}".format(doi=doi_str, append_flag=flag)
     else:
@@ -964,14 +964,14 @@ def get_activated_doi(doi):
     """
     Get activated DOI with flags removed. The following four flags are appended
     to the DOI string to indicate publication status for internal use:
-    'pending' flag indicates the metadata deposition with CrossRef succeeds when the resource is published, but
-     pending activation with CrossRef for DOI to take effect.
-    'failure' flag indicates the metadata deposition failed with CrossRef due to
-    network or system issues with CrossRef when the resource is published.
-    'update_pending' flag indicates the metadata update with CrossRef succeeds when the resource metadata is updated,
+    'pending' flag indicates the metadata deposition with Datacite succeeds when the resource is published, but
+     pending activation with Datacite for DOI to take effect.
+    'failure' flag indicates the metadata deposition failed with Datacite due to
+    network or system issues with Datacite when the resource is published.
+    'update_pending' flag indicates the metadata update with Datacite succeeds when the resource metadata is updated,
     but pending to take effect.
-    'update_failure' flag indicates the metadata update failed with CrossRef due to
-    network or system issues with CrossRef when the resource metadata is updated.
+    'update_failure' flag indicates the metadata update failed with Datacite due to
+    network or system issues with Datacite when the resource metadata is updated.
 
     Args:
         doi: the DOI string with possible status flags appended
@@ -980,22 +980,15 @@ def get_activated_doi(doi):
         the activated DOI with all flags removed if any
     """
 
-    if doi.endswith(CrossRefSubmissionStatus.UPDATE_PENDING.value):
-        return doi[:-len(CrossRefSubmissionStatus.UPDATE_PENDING.value)]
-    if doi.endswith(CrossRefSubmissionStatus.UPDATE_FAILURE.value):
-        return doi[:-len(CrossRefSubmissionStatus.UPDATE_FAILURE.value)]
-    if doi.endswith(CrossRefSubmissionStatus.PENDING.value):
-        return doi[:-len(CrossRefSubmissionStatus.PENDING.value)]
-    if doi.endswith(CrossRefSubmissionStatus.FAILURE.value):
-        return doi[:-len(CrossRefSubmissionStatus.FAILURE.value)]
+    if doi.endswith(DataciteSubmissionStatus.UPDATE_PENDING.value):
+        return doi[:-len(DataciteSubmissionStatus.UPDATE_PENDING.value)]
+    if doi.endswith(DataciteSubmissionStatus.UPDATE_FAILURE.value):
+        return doi[:-len(DataciteSubmissionStatus.UPDATE_FAILURE.value)]
+    if doi.endswith(DataciteSubmissionStatus.PENDING.value):
+        return doi[:-len(DataciteSubmissionStatus.PENDING.value)]
+    if doi.endswith(DataciteSubmissionStatus.FAILURE.value):
+        return doi[:-len(DataciteSubmissionStatus.FAILURE.value)]
     return doi
-
-
-def get_crossref_url():
-    main_url = 'https://test.crossref.org/'
-    if not settings.USE_CROSSREF_TEST:
-        main_url = 'https://doi.crossref.org/'
-    return main_url
 
 
 def get_datacite_url():
@@ -1032,6 +1025,52 @@ def deposit_res_metadata_with_datacite(res):
         print(f"Metadata deposited successfully with DataCite for resource {res.short_id} \n\n {response.text}")
         response.raise_for_status()
         logger.info(f"Metadata deposited successfully with DataCite for resource {res.short_id}")
+        return response
+    except requests.exceptions.HTTPError as http_err:
+        logger.error(f"HTTP error occurred: {http_err}")
+        print(f"HTTP error occurred: {http_err}")
+        if response is not None:
+            logger.error(f"Response content: {response.text}")
+            print(f"Response content: {response.text}")
+        raise
+    except requests.exceptions.RequestException as err:
+        logger.error(f"Request failed: {err}")
+        print(f"Request failed: {err}")
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        print(f"Unexpected error: {e}")
+        raise
+
+
+def update_res_metadata_with_datacite(res):
+    """
+    Update resource metadata with DataCite using the Fabrica-style payload.
+    Args:
+        res: Django model instance with metadata
+
+    Returns:
+        Response object or None if error occurred
+    """
+
+    try:
+        token = base64.b64encode(f"{settings.DATACITE_USERNAME}:{settings.DATACITE_PASSWORD}".encode()).decode()
+
+        headers = {
+            "accept": "application/vnd.api+json",
+            "content-type": "application/json",
+            "authorization": f"Basic {token}"
+        }
+        doi_url = f"{get_datacite_url()}/{settings.DATACITE_PREFIX}/{res.short_id}"
+        response = requests.put(
+            url=doi_url,
+            data=res.get_datacite_deposit_json(),
+            headers=headers,
+            timeout=10
+        )
+        print(f"Metadata updated successfully with DataCite for resource {res.short_id} \n\n {response.text}")
+        response.raise_for_status()
+        logger.info(f"Metadata updated successfully with DataCite for resource {res.short_id}")
         return response
     except requests.exceptions.HTTPError as http_err:
         logger.error(f"HTTP error occurred: {http_err}")
@@ -1159,6 +1198,8 @@ def update_doi_metadata_with_datacite(short_id, element_name, payload):
     doi_url = f"{get_datacite_url()}/{settings.DATACITE_PREFIX}/{short_id}"
 
     try:
+        res.doi = get_resource_doi(short_id, DataciteSubmissionStatus.UPDATE_PENDING.value)
+        res.save()
         response = requests.put(
             url=doi_url,
             json=payload,
@@ -1177,36 +1218,12 @@ def update_doi_metadata_with_datacite(short_id, element_name, payload):
     except requests.exceptions.RequestException as err:
         logger.error(f"Request failed while updating DOI: {err}")
     except Exception as e:
+        res.doi = get_resource_doi(short_id, DataciteSubmissionStatus.UPDATE_FAILURE.value)
+        res.save()
         logger.error(f"Unexpected error while updating DOI: {e}")
         print(f"Unexpected error while updating DOI: {e}")
 
     return None
-
-
-def deposit_res_metadata_with_crossref(res):
-    """
-    Deposit resource metadata with CrossRef DOI registration agency.
-    Args:
-        res: the resource object with its metadata to be deposited for publication
-
-    Returns:
-        response returned for the metadata deposition request from CrossRef
-
-    """
-    xml_file_name = '{uuid}_deposit_metadata.xml'.format(uuid=res.short_id)
-    # using HTTP to POST deposit xml file to crossref
-    post_data = {
-        'operation': 'doMDUpload',
-        'login_id': settings.CROSSREF_LOGIN_ID,
-        'login_passwd': settings.CROSSREF_LOGIN_PWD
-    }
-    files = {'file': (xml_file_name, res.get_crossref_deposit_xml())}
-    # exceptions will be raised if POST request fails
-    main_url = get_crossref_url()
-    post_url = '{MAIN_URL}servlet/deposit'.format(MAIN_URL=main_url)
-    # TODO turning off verify for crossref until our ssl dependencies are updated
-    response = requests.post(post_url, data=post_data, files=files, verify=False)
-    return response
 
 
 def submit_resource_for_review(pk, user):
@@ -1300,10 +1317,9 @@ def publish_resource(user, pk):
     resource.set_quota_holder(resource.quota_holder, publisher_user_account)
     # append pending to the doi field to indicate DOI is not activated yet. Upon successful
     # activation, "pending" will be removed from DOI field
-    resource.doi = get_resource_doi(pk, CrossRefSubmissionStatus.PENDING.value)
+    resource.doi = get_resource_doi(pk, DataciteSubmissionStatus.PENDING.value)
     resource.save()
     if settings.DEBUG:
-        # in debug mode, making sure we are using the test CrossRef service
         assert settings.USE_DATACITE_TEST is True
     created_metadata_elements = []
 
@@ -1318,7 +1334,7 @@ def publish_resource(user, pk):
         resource.metadata.create_element('Publisher', **md_args)
 
         # Here we publish the resource on behalf of the last_changed_by user
-        # This ensures that the modified date closely matches the date that the metadata are submitted to Crossref
+        # This ensures that the modified date closely matches the date that the metadata are submitted to Datacite
         last_modified = resource.last_changed_by
         utils.resource_modified(resource, by_user=last_modified, overwrite_bag=False)
 
@@ -1334,7 +1350,8 @@ def publish_resource(user, pk):
         resource.doi = get_activated_doi(resource.doi)
         resource.save()
         deposit_res_metadata_with_datacite(resource)
-        from hs_core.tasks import create_bag_by_s3
+        from hs_core.tasks import create_bag_by_s3, notify_owners_of_publication_success
+        notify_owners_of_publication_success.apply_async(args=(pk,))
         create_bag_by_s3.apply_async((pk,))
 
     except Exception as e:
@@ -1351,7 +1368,10 @@ def publish_resource(user, pk):
                 logger.warning(f"Failed to delete metadata element during rollback: {delete_err}")
 
         resource.raccess.save()
+        resource.doi = get_resource_doi(pk, DataciteSubmissionStatus.FAILURE.value)
         resource.save()
+        from hs_core.tasks import notify_developers_of_publication_failure
+        notify_developers_of_publication_failure.apply_async((pk, str(e)))
         raise
 
     return pk

@@ -1,7 +1,6 @@
 import urllib.parse
 
 import requests
-from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.management.base import BaseCommand, CommandError
 
@@ -10,7 +9,7 @@ from hs_core.models import BaseResource
 
 
 class Command(BaseCommand):
-    help = "List unknown funder names (names that are not in crossref funders registry for published resource(s)"
+    help = "List unknown funder names (names that are not in ROR funders registry for published resource(s)"
 
     def add_arguments(self, parser):
 
@@ -31,18 +30,18 @@ class Command(BaseCommand):
             '--num_near_to_show',
             type=int,
             dest='num_near_to_show',  # value is options['num_near_to_show']
-            help='number of near matches to show from the Crossref Funders list',
+            help='number of near matches to show from the ROR Funders list',
         )
 
     def handle(self, *args, **options):
         requests.packages.urllib3.disable_warnings()    # turn off SSL warnings
-        existing_crossref_queries = {}
+        existing_ror_queries = {}
         name_filter = options['name_filter']
         site_url = current_site_url()
 
         def check_funder_name(funder_name):
-            """Checks if the funder name exits in Crossref funders registry.
-            Crossref API Documentation: https://api.crossref.org/swagger-ui/index.html#/Funders/get_funders
+            """Checks if the funder name exists in ROR funders registry.
+            ROR API Documentation: https://ror.readme.io/docs/schema-v2
             """
             # url encode the funder name for the query parameter
             words = funder_name.split()
@@ -50,35 +49,33 @@ class Command(BaseCommand):
             words = [word for word in words if '.' not in word]
             encoded_words = [urllib.parse.quote(word) for word in words]
             # match all words in the funder name
-            query = "+".join(encoded_words)
-            if query in existing_crossref_queries:
-                response = existing_crossref_queries[query]
-            else:
-                # if we can't find a match in first 50 search records then we are not going to find a match
-                max_record_count = 50
-                email = settings.DEFAULT_DEVELOPER_EMAIL
-                url = f"https://api.crossref.org/funders?query={query}&rows={max_record_count}&mailto={email}"
-                funder_name = funder_name.lower()
-                response = requests.get(url, verify=False)
-                existing_crossref_queries[query] = response
             found_match = False
+            query = "+".join(encoded_words)
+            if query in existing_ror_queries:
+                response = existing_ror_queries[query]
+            else:
+                # ROR API endpoint for funders
+                url = f"https://api.ror.org/funders?query={query}"
+                response = requests.get(url)
+                existing_ror_queries[query] = response
             error_msg = ""
             items = []
             if response.status_code == 200:
                 response_json = response.json()
-                if response_json['status'] == 'ok':
-                    items = response_json['message']['items']
-                    for item in items:
-                        if item['name'].lower() == funder_name:
+                items = response_json['items']
+                for item in items:
+                    if item['name'].lower() == funder_name.lower():
+                        found_match = True
+                        break
+                    for alt_name in item.get('alternate_names', []):
+                        if alt_name.lower() == funder_name.lower():
                             found_match = True
-                            break
-                        for alt_name in item['alt-names']:
-                            if alt_name.lower() == funder_name:
-                                found_match = True
-                                return found_match, error_msg, items
+                        return found_match, error_msg, items
             else:
-                error_msg = "Failed to check funder_name: '{}' from Crossref funders registry. " \
-                            "Status code: {}".format(funder_name, response.status_code)
+                error_msg = (
+                    f"Failed to check funder_name: {funder_name} "
+                    f"from ROR funders registry. Status code: {response.status_code}"
+                )
             return found_match, error_msg, items
 
         def check_funders(funders, unmatched_res_counter):
@@ -116,7 +113,7 @@ class Command(BaseCommand):
                       f" Owners:{owners_details_str}")
                 if near_matches:
                     for name, matches in near_matches.items():
-                        print(f"* {len(matches)} near matches found for '{name}' from the Crossref Funders list:")
+                        print(f"* {len(matches)} near matches found for '{name}' from the ROR Funders list:")
                         for match in matches:
                             print(f" - {match}")
             else:
