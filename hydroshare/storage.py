@@ -36,14 +36,6 @@ class ForgivingManifestStaticFilesStorage(ForgivingManifestFilesMixin, ManifestS
 class ManifestGoogleCloudStorage(ForgivingManifestFilesMixin, GoogleCloudStorage):
     support_js_module_import_aggregation = True
 
-    def path(self, name):
-        # https://docs.djangoproject.com/en/3.2/ref/files/storage/#django.core.files.storage.Storage.path
-        # https://github.com/jschneier/django-storages/issues/1149
-        # The path() method is not implemented for GoogleCloudStorage.
-        # The storage backend does not have a local filesystem path.
-        # Here we avoid https://docs.python.org/3/library/exceptions.html#NotImplementedError by returning the name.
-        return name
-
 
 class MediaGoogleCloudStorage(GoogleCloudStorage):
     '''
