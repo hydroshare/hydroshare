@@ -40,40 +40,53 @@ class ForgivingManifestStaticFilesStorage(ForgivingManifestFilesMixin, ManifestS
 class ManifestGoogleCloudStorage(ForgivingManifestFilesMixin, GoogleCloudStorage):
     support_js_module_import_aggregation = True
 
+    @property
+    def local_manifest_path(self):
+        """Always return the current local manifest path"""
+        return os.path.join(settings.PROJECT_ROOT, self.manifest_name)
+
     def path(self, name):
-        # https://docs.djangoproject.com/en/3.2/ref/files/storage/#django.core.files.storage.Storage.path
-        # https://github.com/jschneier/django-storages/issues/1149
-        # The path() method is not implemented for GoogleCloudStorage.
-        # The storage backend does not have a local filesystem path.
-        # Here we avoid https://docs.python.org/3/library/exceptions.html#NotImplementedError by returning the name.
         return name
 
     def read_manifest(self):
         """
-        Looks up staticfiles.json in Project directory
+        Looks up staticfiles.json in Project directory (local filesystem)
         """
-        manifest_location = os.path.abspath(
-            os.path.join(settings.PROJECT_ROOT, self.manifest_name)
-        )
         try:
-            with open(manifest_location) as manifest:
-                return manifest.read().decode('utf-8')
-        except IOError:
+            with open(self.local_manifest_path, 'r') as manifest:
+                return manifest.read()
+        except (IOError, FileNotFoundError):
             return None
 
     def save_manifest(self):
+        """
+        Save the manifest to local filesystem instead of cloud storage
+        """
+        # Ensure the directory exists
+        os.makedirs(settings.PROJECT_ROOT, exist_ok=True)
+
+        # Calculate manifest hash
         self.manifest_hash = self.file_hash(
             None, ContentFile(json.dumps(sorted(self.hashed_files.items())).encode())
         )
+
+        # Prepare payload
         payload = {
             "paths": self.hashed_files,
             "version": self.manifest_version,
             "hash": self.manifest_hash,
         }
-        if self.manifest_storage.exists(self.manifest_name):
-            self.manifest_storage.delete(self.manifest_name)
-        contents = json.dumps(payload).encode()
-        self.manifest_storage._save(self.manifest_name, ContentFile(contents))
+
+        # Save to local filesystem
+        contents = json.dumps(payload, indent=2)
+        try:
+            with open(self.local_manifest_path, 'w') as manifest_file:
+                manifest_file.write(contents)
+        except IOError as e:
+            logging.getLogger('django.contrib.staticfiles').error(
+                f"Error saving manifest file: {e}"
+            )
+            raise
 
 
 class MediaGoogleCloudStorage(GoogleCloudStorage):
