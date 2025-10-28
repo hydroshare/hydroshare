@@ -368,9 +368,17 @@ ENABLE_STATIC_CLOUD_STORAGE = False
 # GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
 #     os.path.join(BASE_DIR, GS_SERVICE_ACCOUNT_FILENAME)
 # )
-# STATICFILES_STORAGE = 'hydroshare.storage.Static'
+# STORAGES = {
+#     "default": {
+#         "BACKEND": "hydroshare.storage.MediaGoogleCloudStorage",
+#     },
+#     "staticfiles": {
+#         "BACKEND": "hydroshare.storage.Static",
+#     },
+# }
 # THUMBNAIL_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
-# DEFAULT_FILE_STORAGE = 'hydroshare.storage.MediaeGoogleCloudStorage'
+# THUMBNAIL_DUMMY = True
+# THUMBNAIL_DUMMY_RATIO = 1
 # # the media is served from the root of the bucket
 # MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
 # # the static files are served from a static/ dir in the bucket
