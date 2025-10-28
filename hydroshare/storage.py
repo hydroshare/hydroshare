@@ -24,7 +24,7 @@ class ForgivingManifestFilesMixin(ManifestFilesMixin):
             result = super().hashed_name(name, content, filename)
         except ValueError as ex:
             # When the file is missing, let's forgive and ignore that.
-            msg = f"Ignoring ValueError for missing file: {name}, during static collection. \nError: {str(ex)}"
+            msg = f"Ignoring ValueError: {str(ex)}"
             print(msg)
             self.logger.warning(msg)
             result = name
