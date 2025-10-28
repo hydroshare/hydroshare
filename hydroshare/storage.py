@@ -39,6 +39,7 @@ class ForgivingManifestStaticFilesStorage(ForgivingManifestFilesMixin, ManifestS
 
 class ManifestGoogleCloudStorage(ForgivingManifestFilesMixin, GoogleCloudStorage):
     support_js_module_import_aggregation = True
+    logger = logging.getLogger('django.contrib.staticfiles')
 
     @property
     def local_manifest_path(self):
@@ -52,6 +53,7 @@ class ManifestGoogleCloudStorage(ForgivingManifestFilesMixin, GoogleCloudStorage
         """
         Looks up staticfiles.json in Project directory (local filesystem)
         """
+        self.logger.info(f"Reading manifest from {self.local_manifest_path}")
         try:
             with open(self.local_manifest_path, 'r') as manifest:
                 return manifest.read()
@@ -62,6 +64,7 @@ class ManifestGoogleCloudStorage(ForgivingManifestFilesMixin, GoogleCloudStorage
         """
         Save the manifest to local filesystem instead of cloud storage
         """
+        self.logger.info(f"Saving manifest to {self.local_manifest_path}")
         # Ensure the directory exists
         os.makedirs(settings.PROJECT_ROOT, exist_ok=True)
 
@@ -83,7 +86,7 @@ class ManifestGoogleCloudStorage(ForgivingManifestFilesMixin, GoogleCloudStorage
             with open(self.local_manifest_path, 'w') as manifest_file:
                 manifest_file.write(contents)
         except IOError as e:
-            logging.getLogger('django.contrib.staticfiles').error(
+            self.logger.error(
                 f"Error saving manifest file: {e}"
             )
             raise
