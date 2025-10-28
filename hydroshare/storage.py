@@ -39,7 +39,7 @@ class ForgivingManifestStaticFilesStorage(ForgivingManifestFilesMixin, ManifestS
 
 class ManifestGoogleCloudStorage(ForgivingManifestFilesMixin, GoogleCloudStorage):
     support_js_module_import_aggregation = True
-    logger = logging.getLogger('django.contrib.staticfiles')
+    logger = logging.getLogger(__name__)
 
     @property
     def local_manifest_path(self):
