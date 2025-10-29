@@ -328,6 +328,8 @@ services:
     platform: linux/amd64
     container_name: companion
     hostname: companion
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       COMPANION_PORT: '3020'
       COMPANION_CLIENT_ORIGINS: 'http://localhost,http://localhost:5004'
