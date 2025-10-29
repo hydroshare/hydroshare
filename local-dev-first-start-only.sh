@@ -241,6 +241,20 @@ mkdir -p log/nginx 2>/dev/null
 
 find . -name '*.hydro-bk' -exec rm -f {} \; 2>/dev/null
 
+echo "Installing npm modules for landing page"
+cd landing-page
+npm install
+cd ..
+
+# Check to make sure that pm2 is installed
+echo "Checking for pm2 installation..."
+PM2_INSTALLED=`npm list -g pm2 | grep pm2@ | wc -l`
+if [ "$PM2_INSTALLED" == "0" ]; then
+  echo "Installing pm2 globally"
+  npm install -g pm2
+fi
+echo "PM2 is installed"
+
 echo " - make down-landing"
 make down-landing
 
@@ -423,10 +437,10 @@ echo " Create test S3 metadata"
 echo '########################################################################################################################'
 export BUCKET=asdf
 export DEFAULT_RESOURCE_ID=d7b526e24f7e449098b428ae9363f514
-mc alias set local-hydroshare http://localhost:9000 cuahsi devpassword
+docker exec -u hydro-service hydroshare mc alias set local-hydroshare http://localhost:9000 cuahsi devpassword
 docker exec -u hydro-service hydroshare python manage.py create_buckets $BUCKET
-mc cp landing-page/example_metadata/dataset_metadata.json local-hydroshare/$BUCKET/md/$DEFAULT_RESOURCE_ID/
-mc cp landing-page/example_metadata/hs_user_meta.json local-hydroshare/$BUCKET/$DEFAULT_RESOURCE_ID/data/contents/
+docker exec -u hydro-service hydroshare mc cp landing-page/example_metadata/dataset_metadata.json local-hydroshare/$BUCKET/md/$DEFAULT_RESOURCE_ID/
+docker exec -u hydro-service hydroshare mc cp landing-page/example_metadata/hs_user_meta.json local-hydroshare/$BUCKET/$DEFAULT_RESOURCE_ID/data/contents/
 
 echo
 echo '########################################################################################################################'
