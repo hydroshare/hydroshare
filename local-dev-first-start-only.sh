@@ -464,7 +464,7 @@ docker exec -u hydro-service hydroshare mc cp landing-page/example_metadata/hs_u
 
 echo
 echo '########################################################################################################################'
-echo -e " All done, run `green '\"docker-compose -f local-dev.yml restart\"'` to restart HydroShare"
+echo -e " All done! You can now access your local HydroShare instance at `green 'http://localhost'`"
 echo '########################################################################################################################'
 echo
 
