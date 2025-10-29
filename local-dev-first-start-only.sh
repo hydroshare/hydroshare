@@ -442,9 +442,9 @@ docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noi
 
 
 echo
-echo "  - docker restart hydroshare defaultworker"
+echo "  - docker restart hydroshare defaultworker s3eventworker"
 echo
-docker restart hydroshare defaultworker
+docker restart hydroshare defaultworker s3eventworker
 
 echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py add_missing_bucket_names"
