@@ -457,10 +457,24 @@ echo " Create test S3 metadata"
 echo '########################################################################################################################'
 export BUCKET=asdf
 export DEFAULT_RESOURCE_ID=d7b526e24f7e449098b428ae9363f514
-docker exec -u hydro-service hydroshare mc alias set local-hydroshare http://localhost:9000 cuahsi devpassword
+docker exec -u hydro-service hydroshare mc alias set local-hydroshare http://host.docker.internal:9000 cuahsi devpassword
 docker exec -u hydro-service hydroshare python manage.py create_buckets $BUCKET
 docker exec -u hydro-service hydroshare mc cp landing-page/example_metadata/dataset_metadata.json local-hydroshare/$BUCKET/md/$DEFAULT_RESOURCE_ID/
 docker exec -u hydro-service hydroshare mc cp landing-page/example_metadata/hs_user_meta.json local-hydroshare/$BUCKET/$DEFAULT_RESOURCE_ID/data/contents/
+
+echo
+echo " waiting for hydroshare container to be ready..."
+echo " you can check your logs by running: `blue 'docker logs -f hydroshare'`"
+
+while [ 1 -eq 1 ]
+do
+  sleep 1
+  echo -n "."
+  LOG=`docker logs hydroshare 2>&1 | tail -20`
+  if [[ $LOG == *"Starting development server at http://0.0.0.0:8000/"* ]]; then
+    break
+  fi
+done
 
 echo
 echo '########################################################################################################################'
