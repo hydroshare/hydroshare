@@ -166,15 +166,16 @@ Hydroshare is released under the BSD 3-Clause License. This means that [you can 
 
 * Pull the [6016/landing-page-squash-rebase](https://github.com/hydroshare/hydroshare/tree/6016/landing-page-squash-rebase) branch
 * run `./local-dev-first-start-only.sh`
-* Access hydroshare at http://localhost
 
 Then...
 
 ### go checkout the resource
-* http://localhost/resource/d7b526e24f7e449098b428ae9363f514
-* You should see the resource landing page.
+* http://localhost/resource/d7b526e24f7e449098b428ae9363f514 (**it is important that you use http not https!! **)
+* You should see the resource landing page. It will give an error saying that the metadata couldn't be loaded from S3. That's expected when you're not logged in.
 * Click "Login" this will redirect you to: the [HS sign-in page](http://localhost/accounts/login/?next=http%3A%2F%2Flocalhost%2Fresource%2Fd7b526e24f7e449098b428ae9363f514)
 * After login, it should redirect you back to the [landing page](http://localhost/resource/d7b526e24f7e449098b428ae9363f514)
 * If you get an error, check the "Settings" in the upper RH corneer
 Sometimes clicking the APPLY button will resolve the issue. This is a known bug that we need to resolve ![APPLY](apply_resource_landing_settings.png)
 * If you want to see the old version of the resource, you can do so at http://localhost:8000/resource/d7b526e24f7e449098b428ae9363f514
+* You can view the minio console at http:localhost:9000 (user = cuahsi, password = devpassword)
+* If you experience issues, try a private browser window. Clear your local storage.
