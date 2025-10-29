@@ -280,13 +280,33 @@ echo
 echo " - building Node for Discovery in background"
 node_build > /dev/null 2>&1 &
 
-sleep 180
-
 echo
 echo '########################################################################################################################'
 echo -e " Setting up PostgreSQL container and Importing Django DB"
 echo '########################################################################################################################'
 echo
+
+echo "  - waiting for database system to be ready..."
+while [ 1 -eq 1 ]
+do
+  sleep 1
+  echo -n "."
+  LOG=`docker logs postgis 2>&1`
+  if [[ $LOG == *"PostgreSQL init process complete; ready for start up"* ]]; then
+    break
+  fi
+done
+
+# wait for the final log line to show "database system is ready to accept connections"
+while [ 1 -eq 1 ]
+do
+  sleep 1
+  echo -n "."
+  LOG=`docker logs postgis 2>&1 | tail -1`
+  if [[ $LOG == *"database system is ready to accept connections"* ]]; then
+    break
+  fi
+done
 
 echo " - docker exec -u postgres postgis psql -c \"REVOKE CONNECT ON DATABASE postgres FROM public;\""
 echo
