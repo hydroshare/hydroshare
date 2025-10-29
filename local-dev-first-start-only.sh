@@ -357,7 +357,7 @@ docker exec hydroshare python manage.py collectstatic -v0 --noinput
 
 
 echo
-echo "  - docker restart hydroshare defaultworker"
+echo "  - docker restart hydroshare defaultworker s3eventworker"
 echo
 docker restart hydroshare defaultworker hydroshare-hs_event_s3-1 hydroshare-discovery_collection_worker-1
 
