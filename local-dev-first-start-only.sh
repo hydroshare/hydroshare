@@ -459,8 +459,8 @@ export BUCKET=asdf
 export DEFAULT_RESOURCE_ID=d7b526e24f7e449098b428ae9363f514
 docker exec -u hydro-service hydroshare mc alias set local-hydroshare http://host.docker.internal:9000 cuahsi devpassword
 docker exec -u hydro-service hydroshare python manage.py create_buckets $BUCKET
-docker exec -u hydro-service hydroshare mc cp landing-page/example_metadata/dataset_metadata.json local-hydroshare/$BUCKET/md/$DEFAULT_RESOURCE_ID/
-docker exec -u hydro-service hydroshare mc cp landing-page/example_metadata/hs_user_meta.json local-hydroshare/$BUCKET/$DEFAULT_RESOURCE_ID/data/contents/
+docker exec -u hydro-service hydroshare mc cp landing-page/example_metadata/dataset_metadata.json local-hydroshare/$BUCKET/$DEFAULT_RESOURCE_ID/.hsjsonld/
+docker exec -u hydro-service hydroshare mc cp landing-page/example_metadata/user_metadata.json local-hydroshare/$BUCKET/$DEFAULT_RESOURCE_ID/.hsmetadata/
 
 echo
 echo " waiting for hydroshare container to be ready..."
