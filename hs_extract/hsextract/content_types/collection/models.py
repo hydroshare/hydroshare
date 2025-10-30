@@ -9,7 +9,7 @@ class FileSetMetadataObject(FolderMetadataObject):
 
     def content_type_associated_media(self):
         return [m for m in self.resource_associated_media
-                if m["contentUrl"].split(os.environ.get('AWS_S3_ENDPOINT', ''))[1].strip("/").startswith(
+                if m["contentUrl"].split(os.environ.get('AWS_S3_ENDPOINT_URL', ''))[1].strip("/").startswith(
                     self.content_type_contents_path)]
 
     def extract_metadata(self):
@@ -17,7 +17,7 @@ class FileSetMetadataObject(FolderMetadataObject):
 
     @classmethod
     def is_content_type(cls, file_object_path: str) -> bool:
-        logging.info(f"Checking if fileset for {file_object_path}")
+        print(f"Checking if fileset for {file_object_path}")
         resource_user_metadata_path = cls._resource_user_metadata_path(file_object_path)
         relative_path = os.path.relpath(file_object_path, cls._resource_contents_path(file_object_path))
         parent_directory = os.path.dirname(relative_path)

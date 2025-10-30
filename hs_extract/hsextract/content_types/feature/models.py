@@ -13,7 +13,11 @@ class FeatureMetadataObject(FileMetadataObject):
         # ensure we are working with the .shp file
         file_name, file_extension = os.path.splitext(self.file_object_path.lower())
         if file_extension != ".shp":
-            self.file_object_path = file_name + ".shp"
+            if file_extension == ".xml":
+                sub_file_name, _ = os.path.splitext(file_name)
+                self.file_object_path = sub_file_name + ".shp"
+            else:
+                self.file_object_path = file_name + ".shp"
         relative_path = os.path.relpath(self.file_object_path, self.resource_contents_path)
         self.content_type_md_jsonld_path = os.path.join(self.resource_md_jsonld_path, relative_path + ".json")
         self.content_type_md_path = os.path.join(self.resource_md_path, relative_path + ".json")
@@ -28,19 +32,19 @@ class FeatureMetadataObject(FileMetadataObject):
 
     @classmethod
     def is_content_type(cls, file_object_path: str) -> bool:
-        logging.info(f"Checking if {file_object_path} is of content type {cls.content_type}")
+        print(f"Checking if {file_object_path} is of content type {cls.content_type}")
         sub_file_object_path, extension = os.path.splitext(file_object_path.lower())
         if extension == ".xml":
             _, sub_extension = os.path.splitext(sub_file_object_path.lower())
             extension = sub_extension + extension
-        logging.info(f"Extension is {extension}, valid extensions are {cls._extensions()}")
+        print(f"Extension is {extension}, valid extensions are {cls._extensions()}")
         return extension in cls._extensions()
 
     def content_type_associated_media(self) -> list[dict]:
         media_objects = []
         file_object_name, _ = os.path.splitext(self.file_object_path)
         for m in self.resource_associated_media:
-            file_path = m["contentUrl"].split(os.environ.get('AWS_S3_ENDPOINT', ''))[1].strip("/")
+            file_path = m["contentUrl"].split(os.environ.get('AWS_S3_ENDPOINT_URL', ''))[1].strip("/")
             sub_file_name, extension = os.path.splitext(file_path.lower())
             if extension == ".xml":
                 sub_file_name, sub_extension = os.path.splitext(sub_file_name.lower())
@@ -50,6 +54,9 @@ class FeatureMetadataObject(FileMetadataObject):
         return media_objects
 
     def extract_metadata(self):
+        print(f"Extracting feature metadata for {self.file_object_path}")
         metadata = encode_vector_metadata(self.file_object_path)
+        print(f"Extracted feature metadata: {metadata} for {self.file_object_path}")
         metadata = metadata.model_dump(exclude_none=True)
+        print(f"Feature metadata dict: {metadata} for {self.file_object_path}")
         return metadata

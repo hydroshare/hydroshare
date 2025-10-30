@@ -9,11 +9,11 @@ class RasterMetadataObject(FileMetadataObject):
 
     def __init__(self, file_object_path: str, file_updated: bool):
         super().__init__(file_object_path, file_updated)
-        logging.info(f"Initializing RasterMetadataObject for {self.file_object_path}")
+        print(f"Initializing RasterMetadataObject for {self.file_object_path}")
         vrt_path = self._determine_vrt_path()
-        logging.info(f"Determined vrt path: {vrt_path}")
+        print(f"Determined vrt path: {vrt_path}")
         if vrt_path:
-            logging.info(f"Using vrt path {vrt_path} for raster metadata extraction instead of {self.file_object_path}")
+            print(f"Using vrt path {vrt_path} for raster metadata extraction instead of {self.file_object_path}")
             self.file_object_path = vrt_path
         relative_path = os.path.relpath(self.file_object_path, self.resource_contents_path)
         self.content_type_md_jsonld_path = os.path.join(self.resource_md_jsonld_path, relative_path + ".json")
@@ -32,19 +32,19 @@ class RasterMetadataObject(FileMetadataObject):
         # determine vrt file if a tif file
         if self.file_object_path.endswith(".tif") or self.file_object_path.endswith(".tiff"):
             vrt_paths = []
-            logging.info(f"Looking for vrt files associated with {self.file_object_path}")
+            print(f"Looking for vrt files associated with {self.file_object_path}")
             directory = os.path.dirname(self.file_object_path)
             for media in self.resource_associated_media:
-                vrt_path = media["contentUrl"].split(os.environ['AWS_S3_ENDPOINT'])[1].strip("/")
+                vrt_path = media["contentUrl"].split(os.environ['AWS_S3_ENDPOINT_URL'])[1].strip("/")
                 if os.path.dirname(vrt_path) == directory and vrt_path.endswith(".vrt"):
-                    logging.info(f"Found vrt file in directory: {vrt_path}")
+                    print(f"Found vrt file in directory: {vrt_path}")
                     vrt_paths.append(vrt_path)
             for vrt_path in vrt_paths:
-                logging.info(f"Looking for tif files associated with {vrt_path}")
+                print(f"Looking for tif files associated with {vrt_path}")
                 tif_files = list_tif_files_s3(vrt_path)
-                logging.info(f"Found tif files associated with {vrt_path}: {tif_files}")
+                print(f"Found tif files associated with {vrt_path}: {tif_files}")
                 if os.path.basename(self.file_object_path) in tif_files:
-                    logging.info(f"Found tif file associated with {vrt_path}: {self.file_object_path}")
+                    print(f"Found tif file associated with {vrt_path}: {self.file_object_path}")
                     return vrt_path
         return None
 
@@ -56,7 +56,7 @@ class RasterMetadataObject(FileMetadataObject):
             for f in tif_files:
                 content_type_files.append(self.file_object_path.replace(os.path.basename(self.file_object_path), f))
         for media in self.resource_associated_media:
-            file_path = media["contentUrl"].split(os.environ['AWS_S3_ENDPOINT'])[1].strip("/")
+            file_path = media["contentUrl"].split(os.environ['AWS_S3_ENDPOINT_URL'])[1].strip("/")
             if file_path in content_type_files:
                 media_objects.append(media)
         return media_objects
@@ -66,7 +66,7 @@ class RasterMetadataObject(FileMetadataObject):
         content_type_media = self.content_type_associated_media()
         vrt_file = [f for f in content_type_media if f["contentUrl"].endswith(".vrt")]
         if vrt_file:
-            file_to_extract = vrt_file[0]["contentUrl"].split(os.environ['AWS_S3_ENDPOINT'])[1].strip("/")
+            file_to_extract = vrt_file[0]["contentUrl"].split(os.environ['AWS_S3_ENDPOINT_URL'])[1].strip("/")
 
         metadata = encode_raster_metadata(file_to_extract)
         metadata = metadata.model_dump(exclude_none=True)
@@ -76,7 +76,7 @@ class RasterMetadataObject(FileMetadataObject):
         if not self.file_object_path.endswith(".vrt"):
             return []
         content_type_media = self.content_type_associated_media()
-        tif_files = [f["contentUrl"].split(os.environ['AWS_S3_ENDPOINT'])[1].strip("/")
+        tif_files = [f["contentUrl"].split(os.environ['AWS_S3_ENDPOINT_URL'])[1].strip("/")
                      for f in content_type_media
                      if f["contentUrl"].endswith(".tif") or f["contentUrl"].endswith(".tiff")]
         cleanup_files = []

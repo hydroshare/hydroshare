@@ -18,14 +18,14 @@ def write_metadata(metadata_path: str, metadata_json: dict) -> None:
     """=
     write metadata to the specified S3 path.
     """
-    logging.info(f"writing metadata to {metadata_path}: {metadata_json}")
+    print(f"writing metadata to {metadata_path}: {metadata_json}")
     bucket_name = metadata_path.split('/')[0]
     key = '/'.join(metadata_path.split('/')[1:])
     try:
         s3_client.put_object(Bucket=bucket_name, Key=key, Body=json.dumps(
             metadata_json, indent=2, default=str))
     except Exception as e:
-        logging.info(f"Error writing metadata to {metadata_path}: {e}")
+        print(f"Error writing metadata to {metadata_path}: {e}")
         raise
 
 
@@ -38,13 +38,13 @@ def delete_metadata(metadata_path: str) -> None:
     try:
         s3_client.delete_object(Bucket=bucket_name, Key=key)
     except Exception as e:
-        logging.info(f"Error deleting metadata from {metadata_path}: {e}")
+        print(f"Error deleting metadata from {metadata_path}: {e}")
         raise
 
 
 def load_metadata(metadata_path):
     bucket, key = metadata_path.split('/', 1)
-    logging.info(f"Loading metadata from {bucket}/{key}")
+    print(f"Loading metadata from {bucket}/{key}")
     metadata_json = {}
     try:
         response = s3_client.get_object(Bucket=bucket, Key=key)
@@ -52,8 +52,8 @@ def load_metadata(metadata_path):
             content = stream.read()
             metadata_json = json.loads(content.decode("utf-8"))
     except Exception as e:
-        logging.info(f"Metadata file not found {metadata_path}: {e}")
-    logging.info(f"Loaded metadata: {metadata_json} from {metadata_path}")
+        print(f"Metadata file not found {metadata_path}: {e}")
+    print(f"Loaded metadata: {metadata_json} from {metadata_path}")
     return metadata_json
 
 
@@ -63,7 +63,7 @@ def retrieve_file_manifest(resource_root_path: str):
     """
     paginator = s3_client.get_paginator('list_objects_v2')
     bucket, resource_path = resource_root_path.split('/', 1)
-    logging.info(f"Retrieving file manifest from S3 at {bucket}/{resource_path}")
+    print(f"Retrieving file manifest from S3 at {bucket}/{resource_path}")
     file_manifest = []
     try:
         for page in paginator.paginate(Bucket=bucket, Prefix=resource_path):
@@ -79,7 +79,7 @@ def retrieve_file_manifest(resource_root_path: str):
                     _, extension = os.path.splitext(key)
                     mime_type = mime_type if mime_type else extension
                     _, name = os.path.split(key)
-                    content_url = f"{os.environ['AWS_S3_ENDPOINT']}/{bucket}/{key}"
+                    content_url = f"{os.environ['AWS_S3_ENDPOINT_URL']}/{bucket}/{key}"
                     media_object = MediaObject(
                         contentUrl=content_url,
                         name=name,
@@ -90,8 +90,8 @@ def retrieve_file_manifest(resource_root_path: str):
                     file_manifest.append(
                         media_object.model_dump(exclude_none=True))
     except Exception as e:
-        logging.info(f"Error retrieving file manifest from {resource_root_path}: {e}")
-    logging.info(f"Retrieved file manifest: {file_manifest} from {resource_root_path}")
+        print(f"Error retrieving file manifest from {resource_root_path}: {e}")
+    print(f"Retrieved file manifest: {file_manifest} from {resource_root_path}")
     return file_manifest
 
 
@@ -99,19 +99,19 @@ def find(path: str) -> list[str]:
     paginator = s3_client.get_paginator('list_objects_v2')
     bucket, resource_path = path.split('/', 1)
     keys = []
-    logging.info(f"Finding files in S3 at {bucket}/{resource_path}")
+    print(f"Finding files in S3 at {bucket}/{resource_path}")
     try:
         for page in paginator.paginate(Bucket=bucket, Prefix=resource_path):
-            logging.info(f"Found files in S3 at {bucket}/{resource_path}")
+            print(f"Found files in S3 at {bucket}/{resource_path}")
             if 'Contents' in page:
-                logging.info(f"Processing page with {len(page['Contents'])} items")
+                print(f"Processing page with {len(page['Contents'])} items")
                 for obj in page['Contents']:
                     key = obj['Key']
                     key = f"{bucket}/{key}"
                     keys.append(key)
     except Exception as e:
-        logging.info(f"path not found {path}: {e}")
-    logging.info(f"Found files: {keys}")
+        print(f"path not found {path}: {e}")
+    print(f"Found files: {keys}")
     return keys
 
 
@@ -124,5 +124,5 @@ def exists(path: str) -> bool:
         s3_client.head_object(Bucket=bucket, Key=key)
         return True
     except Exception as e:
-        logging.info(f"Error checking existence of {path}: {e}")
+        print(f"Error checking existence of {path}: {e}")
         return False

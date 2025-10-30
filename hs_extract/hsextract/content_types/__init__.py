@@ -4,7 +4,7 @@ from hsextract.content_types.fileset.models import FileSetMetadataObject
 from hsextract.content_types.timeseries.models import TimeSeriesMetadataObject
 from hsextract.content_types.netcdf.models import NetCDFMetadataObject
 from hsextract.content_types.feature.models import FeatureMetadataObject
-from hsextract.content_types.models import BaseMetadataObject, SystemMetadataObject, ResourceUserMetadataObject
+from hsextract.content_types.models import BaseMetadataObject, FileMetadataObject, FolderMetadataObject
 
 metadata_classes = [
     RasterMetadataObject,
@@ -13,9 +13,7 @@ metadata_classes = [
     FeatureMetadataObject,
     # single file and fileset go last since they are more general
     SingleFileMetadataObject,
-    FileSetMetadataObject,
-    SystemMetadataObject,
-    ResourceUserMetadataObject
+    FileSetMetadataObject
 ]
 
 
@@ -24,3 +22,9 @@ def determine_metadata_object(file_object_path: str, file_updated: bool) -> Base
         if metadata_class.is_content_type(file_object_path):
             return metadata_class(file_object_path, file_updated)
     return BaseMetadataObject(file_object_path, file_updated)
+
+def determine_content_type_from_user_metadata(file_object_path: str, file_updated: bool) -> str | None:
+    if file_object_path.endswith("/user_metadata.json"):
+        return FolderMetadataObject(file_object_path, file_updated)
+    else:
+        return FileMetadataObject(file_object_path, file_updated)

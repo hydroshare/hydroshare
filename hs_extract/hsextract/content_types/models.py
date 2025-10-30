@@ -92,14 +92,10 @@ class BaseMetadataObject:
 
     @classmethod
     def is_content_type(cls, file_object_path: str) -> bool:
-        logging.info(f"Checking if {file_object_path} is of content type {cls.content_type}")
+        print(f"Checking if {file_object_path} is of content type {cls.content_type}")
         _, extension = os.path.splitext(file_object_path.lower())
-        logging.info(f"Extension is {extension}, valid extensions are {cls._extensions()}")
+        print(f"Extension is {extension}, valid extensions are {cls._extensions()}")
         return extension in cls._extensions()
-
-    @classmethod
-    def is_user_metadata(cls, file_object_path: str) -> bool:
-        return False
 
     # Methods to be overridden by subclasses below
     @classmethod
@@ -120,18 +116,12 @@ class BaseMetadataObject:
 class FileMetadataObject(BaseMetadataObject):
     def __init__(self, file_object_path: str, file_updated: bool):
         super().__init__(file_object_path, file_updated)
-        relative_path = os.path.relpath(self.file_object_path, self.resource_contents_path)
+        relative_path = os.path.relpath(self.file_object_path, self.resource_md_path)
         self.content_type_md_jsonld_path = os.path.join(self.resource_md_jsonld_path, relative_path + ".json")
         self.content_type_md_path = os.path.join(self.resource_md_path, relative_path + ".json")
         self.content_type_contents_path = None
         self.content_type_main_file_path = os.path.join(self.resource_contents_path, relative_path)
         self.content_type_md_user_path = os.path.join(self.resource_md_path, relative_path + ".user_metadata.json")
-
-    @classmethod
-    def is_user_metadata(cls, file_object_path: str) -> bool:
-        if not file_object_path.startswith(cls._resource_md_path(file_object_path)):
-            return False
-        return file_object_path.endswith(".user_metadata.json")
 
 
 class FolderMetadataObject(BaseMetadataObject):
@@ -139,19 +129,13 @@ class FolderMetadataObject(BaseMetadataObject):
         super().__init__(file_object_path, file_updated)
 
         parent_directory = os.path.dirname(self.file_object_path)
-        relative_path = os.path.relpath(parent_directory, self.resource_contents_path)
+        relative_path = os.path.relpath(parent_directory, self.resource_md_path)
         self.content_type_md_jsonld_path = os.path.join(self.resource_md_jsonld_path, relative_path,
                                                         "dataset_metadata.json")
         self.content_type_md_path = os.path.join(self.resource_md_path, relative_path, "user_metadata.json")
         self.content_type_contents_path = os.path.join(self.resource_contents_path, relative_path)
         self.content_type_main_file_path = os.path.join(self.resource_contents_path, relative_path)
         self.content_type_md_user_path = os.path.join(self.resource_md_path, relative_path, ".user_metadata.json")
-
-    @classmethod
-    def is_user_metadata(cls, file_object_path: str) -> bool:
-        if not file_object_path.startswith(cls._resource_md_path(file_object_path)):
-            return False
-        return file_object_path.endswith("/user_metadata.json")
 
 
 class SystemMetadataObject(BaseMetadataObject):

@@ -255,6 +255,7 @@ services:
       AWS_S3_ENDPOINT_URL: "http://minio:9000"
       AWS_ACCESS_KEY_ID: cuahsi
       AWS_SECRET_ACCESS_KEY: devpassword
+      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
     volumes:
       - "./hs_extract:/app/hs_extract"
       - "./hs_cloudnative_schemas:/app/hs_extract/hs_cloudnative_schemas"
