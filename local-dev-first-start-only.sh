@@ -163,6 +163,15 @@ find . -name '*.hydro-bk' -exec rm -f {} \; 2>/dev/null
 echo "Installing npm modules for landing page"
 cd landing-page
 npm install
+
+# if the landing-page/.env file does not exist, create it from the template
+echo "Checking for landing-page/.env file..."
+if [ ! -f .env ]; then
+  echo "Creating landing-page/.env from template"
+  cp .env.template .env
+else
+  echo "landing-page/.env file already exists, skipping creation from template"
+fi
 cd ..
 
 # Check to make sure that pm2 is installed
