@@ -84,9 +84,10 @@ class HydroshareRequest(Request):
     https://docs.celeryq.dev/en/v5.2.7/userguide/tasks.html#requests-and-custom-requests
     '''
     def on_failure(self, exc_info, send_failed_event=True, return_ok=False):
+        # Get the exception value from the ExceptionInfo object
+        exc_value = exc_info.exception
 
         # Check for various time limit related scenarios
-        _, exc_value, _ = exc_info
         is_time_limit_related = (
             isinstance(exc_value, TimeLimitExceeded)
             or (isinstance(exc_value, SystemExit) and exc_value.code == -9)
