@@ -116,6 +116,9 @@ def setup_periodic_tasks(sender, **kwargs):
     if (hasattr(settings, 'DISABLE_PERIODIC_TASKS') and settings.DISABLE_PERIODIC_TASKS):
         logger.debug("Periodic tasks are disabled in SETTINGS")
     else:
+        # every min for testing
+        sender.add_periodic_task(crontab(minute='*'), nightly_repair_resource_files.s(),
+                                 options={'queue': 'periodic'})
         # Hourly
         sender.add_periodic_task(crontab(minute=0), check_bucket_names.s(), options={'queue': 'periodic'})
 
@@ -131,8 +134,8 @@ def setup_periodic_tasks(sender, **kwargs):
                                  options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=0, hour=5), check_geoserver_registrations.s(),
                                  options={'queue': 'periodic'})
-        sender.add_periodic_task(crontab(minute=30, hour=5), nightly_repair_resource_files.s(),
-                                 options={'queue': 'periodic'})
+        # sender.add_periodic_task(crontab(minute=30, hour=5), nightly_repair_resource_files.s(),
+        #                          options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=0, hour=6), nightly_cache_file_system_metadata.s(),
                                  options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=30, hour=6), nightly_periodic_task_check.s(),
