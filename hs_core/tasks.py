@@ -11,7 +11,7 @@ import zipfile
 from datetime import date, datetime, timedelta
 
 import requests
-from celery.exceptions import TaskError
+from celery.exceptions import TaskError, TimeLimitExceeded
 from celery.result import states
 from celery.schedules import crontab
 from celery.signals import task_postrun
@@ -84,17 +84,41 @@ class HydroshareRequest(Request):
     https://docs.celeryq.dev/en/v5.2.7/userguide/tasks.html#requests-and-custom-requests
     '''
     def on_failure(self, exc_info, send_failed_event=True, return_ok=False):
-        super(HydroshareRequest, self).on_failure(
-            exc_info,
-            # always mark failed
-            send_failed_event=True,
-            return_ok=False
+        # Get the exception value from the ExceptionInfo object
+        exc_value = exc_info.exception
+
+        # Check for various time limit related scenarios
+        is_time_limit_related = (
+            isinstance(exc_value, TimeLimitExceeded)
+            or (isinstance(exc_value, SystemExit) and exc_value.code == -9)
+            or (isinstance(exc_value, Exception) and "SIGKILL" in str(exc_value))
         )
-        warning_message = f"Failure detected for task {self.task.name}. Exception: {exc_info}"
-        logger.warning(warning_message)
-        if not settings.DISABLE_TASK_EMAILS:
-            subject = 'Notification of failing Celery task'
-            send_mail(subject, warning_message, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_DEVELOPER_EMAIL])
+
+        if is_time_limit_related:
+            # Log as info instead of warning, no email
+            logger.info(
+                f"Task {self.task.name} was terminated due to time limit constraints. "
+                f"This is expected behavior for long-running tasks."
+            )
+            # Process the failure but don't send events that might trigger emails
+            super(HydroshareRequest, self).on_failure(
+                exc_info,
+                send_failed_event=False,  # prevents email triggers
+                return_ok=False
+            )
+        else:
+            # handle non timeout related failures
+            warning_message = f"Failure detected for task {self.task.name}. Exception: {exc_info}"
+            logger.warning(warning_message)
+            if not settings.DISABLE_TASK_EMAILS:
+                subject = 'Notification of failing Celery task'
+                send_mail(subject, warning_message, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_DEVELOPER_EMAIL])
+
+            super(HydroshareRequest, self).on_failure(
+                exc_info,
+                send_failed_event=True,
+                return_ok=False
+            )
 
 
 class HydroshareTask(Task):
@@ -107,8 +131,14 @@ class HydroshareTask(Task):
     retry_backoff = True
     retry_backoff_max = 600
     retry_jitter = True
-    # soft_time_limit = 60 * 60 * 2  # 2 hours
-    time_limit = 60 * 60 * 2  # 2 hours
+    soft_time_limit = 30  # 30 sec for testing
+    time_limit = 45  # 45 sec for testing
+
+    # # Set the time limit to be the greater of 2hrs or the specific task limits
+    # time_limit = max(time_limit,
+    #                  settings.NIGHTLY_RESOURCE_REPAIR_DURATION,
+    #                  settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION
+    #                  )
 
 
 @celery_app.on_after_finalize.connect
@@ -116,6 +146,9 @@ def setup_periodic_tasks(sender, **kwargs):
     if (hasattr(settings, 'DISABLE_PERIODIC_TASKS') and settings.DISABLE_PERIODIC_TASKS):
         logger.debug("Periodic tasks are disabled in SETTINGS")
     else:
+        # every min for testing
+        sender.add_periodic_task(crontab(minute='*'), nightly_repair_resource_files.s(),
+                                 options={'queue': 'periodic'})
         # Hourly
         sender.add_periodic_task(crontab(minute=0), check_bucket_names.s(), options={'queue': 'periodic'})
 
@@ -131,8 +164,8 @@ def setup_periodic_tasks(sender, **kwargs):
                                  options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=0, hour=5), check_geoserver_registrations.s(),
                                  options={'queue': 'periodic'})
-        sender.add_periodic_task(crontab(minute=30, hour=5), nightly_repair_resource_files.s(),
-                                 options={'queue': 'periodic'})
+        # sender.add_periodic_task(crontab(minute=30, hour=5), nightly_repair_resource_files.s(),
+        #                          options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=0, hour=6), nightly_cache_file_system_metadata.s(),
                                  options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=30, hour=6), nightly_periodic_task_check.s(),
