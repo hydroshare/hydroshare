@@ -1,8 +1,8 @@
-
 import tempfile
 import os
-import difflib
 import shutil
+import json
+import re
 
 import arrow
 from freezegun import freeze_time
@@ -16,7 +16,6 @@ from django.utils.http import urlsafe_base64_encode
 
 from hs_access_control.models.privilege import UserResourcePrivilege, PrivilegeCodes
 from hs_core import hydroshare
-from hs_core.hydroshare import get_resource_doi
 from hs_core.models import BaseResource
 from hs_core.testing import MockS3TestCaseMixin
 from hs_core.views.utils import get_default_admin_user, get_default_support_user
@@ -24,7 +23,33 @@ from django.core.exceptions import ValidationError, PermissionDenied
 from theme.backends import without_login_date_token_generator
 
 
+# Control-char sanitizer used by tests to assert expected sanitized form.
+_CONTROL_CHARS = re.compile(r'[\x00-\x1f\x7f]')
+
+
 class TestPublishResource(MockS3TestCaseMixin, TestCase):
+    def test_aaa_settings_are_loaded(self):
+        """Test that settings variables are set correctly before publishing tests."""
+        print("\n--- Django Settings Dump ---")
+        for setting in dir(settings):
+            if setting.isupper():
+                try:
+                    value = getattr(settings, setting)
+                    if any(s in setting for s in ['PASSWORD', 'SECRET', 'TOKEN', 'KEY']):
+                        print(f"{setting}: [REDACTED]")
+                    else:
+                        print(f"{setting}: {value}")
+                except Exception as e:
+                    print(f"{setting}: [ERROR] {e}")
+        print("--- End of Settings Dump ---\n")
+        self.assertIsNotNone(settings.DATACITE_USERNAME, "DATACITE_USERNAME is not set")
+        self.assertIsNotNone(settings.DATACITE_PASSWORD, "DATACITE_PASSWORD is not set")
+        self.assertTrue(bool(settings.DATACITE_USERNAME.strip()), "DATACITE_USERNAME is empty")
+        self.assertTrue(bool(settings.DATACITE_PASSWORD.strip()), "DATACITE_PASSWORD is empty")
+        self.assertIn("10.", settings.DATACITE_PREFIX, "DATACITE_PREFIX does not look valid")
+        self.assertTrue(settings.TEST_DATACITE_API_URL.startswith("https://"), "TEST_DATACITE_API_URL is invalid")
+        self.assertTrue(settings.DATACITE_API_URL.startswith("https://"), "DATACITE_API_URL is invalid")
+
     def setUp(self):
         super(TestPublishResource, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -336,143 +361,131 @@ class TestPublishResource(MockS3TestCaseMixin, TestCase):
         # last_updated date should be updated when the resource is published, even though the last_changed_by is not
         self.assertGreater(res.last_updated, time_after_submit)
 
-    def test_crossref_deposit_xml(self):
-        """Test that the crossref deposit xml is generated correctly for a resource"""
+    def create_json_test_resource(self):
+        """
+        Build metadata that get_datacite_deposit_json() expects:
+          - description.abstract
+          - multiple creators (org + person w/ ORCID)
+          - hydroShareIdentifier (REQUIRED for attributes.url)
+          - rights (optional)
+        """
+        # abstract
+        if not getattr(self.res.metadata, "description", None):
+            self.res.metadata.create_element('description', abstract='This is a test abstract')
+        else:
+            self.res.metadata.update_element(
+                'description', self.res.metadata.description.id, abstract='This is a test abstract'
+            )
 
-        self.create_xml_test_resource()
-        self.freeze_and_assert()
-
-    def test_crossref_deposit_dirty_xml(self):
-        """Test that the crossref deposit xml is generated correctly for a resource with dirty abstract"""
-        self.create_xml_test_resource()
-        self.res.metadata.update_element('description', self.res.metadata.description.id,
-                                         abstract='This is a test abstract\x1F')
-        self.freeze_and_assert()
-
-    @staticmethod
-    def _get_expected_crossref_xml(res_id, timestamp, created_date, updated_date, published_date, site_url,
-                                   support_email):
-        expected_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
-<doi_batch xmlns="http://www.crossref.org/schema/5.3.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:fr="http://www.crossref.org/fundref.xsd" xmlns:ai="http://www.crossref.org/AccessIndicators.xsd" version="5.3.1" xsi:schemaLocation="http://www.crossref.org/schema/5.3.1 http://www.crossref.org/schemas/crossref5.3.1.xsd">
-  <head>
-    <doi_batch_id>{res_id}</doi_batch_id>
-    <timestamp>{timestamp}</timestamp>
-    <depositor>
-      <depositor_name>HydroShare</depositor_name>
-      <email_address>{support_email}</email_address>
-    </depositor>
-    <registrant>Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)</registrant>
-  </head>
-  <body>
-    <database>
-      <database_metadata language="en">
-        <titles>
-          <title>HydroShare Resources</title>
-        </titles>
-        <publisher>
-          <publisher_name>HydroShare</publisher_name>
-        </publisher>
-      </database_metadata>
-      <dataset dataset_type="record">
-        <contributors>
-          <person_name contributor_role="author" sequence="first">
-            <given_name>Creator_FirstName</given_name>
-            <surname>Creator_LastName</surname>
-          </person_name>
-          <organization contributor_role="author" sequence="additional">Utah State University</organization>
-          <person_name contributor_role="author" sequence="additional">
-            <given_name>John</given_name>
-            <surname>Smith</surname>
-            <ORCID>https://orcid.org/0000-0002-1825-0097</ORCID>
-          </person_name>
-        </contributors>
-        <titles>
-          <title>Test Resource</title>
-        </titles>
-        <database_date>
-          <creation_date>
-            <month>{created_date.month}</month>
-            <day>{created_date.day}</day>
-            <year>{created_date.year}</year>
-          </creation_date>
-          <publication_date>
-            <month>{published_date.month}</month>
-            <day>{published_date.day}</day>
-            <year>{published_date.year}</year>
-          </publication_date>
-          <update_date>
-            <month>{updated_date.month}</month>
-            <day>{updated_date.day}</day>
-            <year>{updated_date.year}</year>
-          </update_date>
-        </database_date>
-        <description>This is a test abstract</description>
-        <fr:program name="fundref">
-          <fr:assertion name="fundgroup">
-            <fr:assertion name="funder_name">National Science Foundation<fr:assertion name="funder_identifier">https://ror.org/021nxhr62</fr:assertion></fr:assertion>
-            <fr:assertion name="award_number">12345</fr:assertion>
-          </fr:assertion>
-          <fr:assertion name="fundgroup">
-            <fr:assertion name="funder_name">Utah Water Research Laboratory</fr:assertion>
-          </fr:assertion>
-        </fr:program>
-        <ai:program name="AccessIndicators">
-          <ai:license_ref applies_to="vor" start_date="{published_date.strftime("%Y-%m-%d")}">http://creativecommons.org/licenses/by/4.0/</ai:license_ref>
-        </ai:program>
-        <doi_data>
-          <doi>10.4211/hs.{res_id}</doi>
-          <resource>{site_url}/resource/{res_id}</resource>
-        </doi_data>
-      </dataset>
-    </database>
-  </body>
-</doi_batch>""" # noqa
-        return expected_xml
-
-    def create_xml_test_resource(self):
-        # create abstract metadata element
-        self.res.metadata.create_element('description', abstract='This is a test abstract')
-        # add an organization as an author
+        # creators: organization + person with ORCID
         self.res.metadata.create_element('creator', organization='Utah State University')
-        # add a person with ORCID identifier as an author
         identifiers = {"ORCID": 'https://orcid.org/0000-0002-1825-0097'}
         self.res.metadata.create_element('creator', name='John Smith', identifiers=identifiers)
-        # add a funder that can be found in crossref funders registry
-        self.res.metadata.create_element('fundingagency', agency_name='National Science Foundation',
-                                         award_title='NSF Award', award_number='12345', agency_url='https://nsf.gov')
-        # add a funder that can't be found in crossref funders registry
+
+        # funders (optional; covered via get_funding_references downstream)
+        self.res.metadata.create_element(
+            'fundingagency',
+            agency_name='National Science Foundation',
+            award_title='NSF Award',
+            award_number='12345',
+            agency_url='https://nsf.gov'
+        )
         self.res.metadata.create_element('fundingagency', agency_name='Utah Water Research Laboratory')
 
-        if not hasattr(settings, 'DEFAULT_SUPPORT_EMAIL'):
-            settings.DEFAULT_SUPPORT_EMAIL = "help@cuahsi.org"
+        # REQUIRED: hydroShareIdentifier used for attributes.url
+        site_url = hydroshare.utils.current_site_url()
+        if not self.res.metadata.identifiers.filter(name='hydroShareIdentifier').exists():
+            self.res.metadata.create_element(
+                'identifier',
+                name='hydroShareIdentifier',
+                url=f'{site_url}/resource/{self.res.short_id}'
+            )
 
-    def freeze_and_assert(self):
+        # optional rights for wider coverage
+        if not getattr(self.res.metadata, "rights", None):
+            self.res.metadata.create_element('rights', statement='CC-BY 4.0',
+                                             url='http://creativecommons.org/licenses/by/4.0/')
+
+    def freeze_and_assert_json(self):
+        """
+        Freeze (to mimic prior pattern) and assert key DataCite JSON fields.
+        Unlike XML, we assert field-by-field (JSON ordering is not guaranteed).
+        """
         freeze = arrow.now().format("YYYY-MM-DD HH:mm:ss")
         freezer = freeze_time(freeze)
         freezer.start()
 
-        # set doi - simulating published resource
-        self.res.doi = get_resource_doi(self.res.short_id)
-        self.res.save()
-        crossref_xml = self.res.get_crossref_deposit_xml()
-        crossref_xml = crossref_xml.strip()
-        timestamp = arrow.now().format("YYYYMMDDHHmmss")
-        res_id = self.res.short_id
-        created_date = self.res.created
-        updated_date = self.res.updated
-        # use updated date as published date as we don't have a published date for this test resource
-        # also when we do real publication the publication date is the same as updated date at the time of publication
-        published_date = updated_date
+        raw = self.res.get_datacite_deposit_json()
+        payload = json.loads(raw)
+
+        # Core shape
+        self.assertIn("data", payload)
+        data = payload["data"]
+        self.assertEqual(data.get("type"), "dois")
+        attrs = data.get("attributes", {})
+
+        # Publisher
+        pub = attrs.get("publisher", {})
+        self.assertEqual(pub.get("name"),
+                         "Consortium of Universities for the Advancement of Hydrologic Science, Inc")
+        self.assertEqual(pub.get("publisherIdentifier"), "https://ror.org/04s2bx355")
+        self.assertEqual(pub.get("publisherIdentifierScheme"), "ROR")
+        self.assertEqual(pub.get("schemeUri"), "https://ror.org")
+
+        # DOI / prefix / suffix
+        self.assertEqual(attrs.get("prefix"), f"{settings.DATACITE_PREFIX}")
+        self.assertEqual(attrs.get("suffix"), self.res.short_id)
+        self.assertEqual(attrs.get("doi"), f"{settings.DATACITE_PREFIX}/{self.res.short_id}")
+
+        # URL from hydroShareIdentifier
         site_url = hydroshare.utils.current_site_url()
-        support_email = settings.DEFAULT_SUPPORT_EMAIL
-        expected_xml = self._get_expected_crossref_xml(res_id=res_id, timestamp=timestamp,
-                                                       created_date=created_date, updated_date=updated_date,
-                                                       published_date=published_date, site_url=site_url,
-                                                       support_email=support_email)
-        expected_xml = expected_xml.strip()
+        expected_url = f"{site_url}/resource/{self.res.short_id}"
+        self.assertEqual(attrs.get("url"), expected_url)
+
+        # Titles / language / state
+        self.assertTrue(attrs.get("titles"))
+        self.assertIn("title", attrs["titles"][0])
+        self.assertEqual(attrs.get("language"), "en")
+        self.assertEqual(attrs.get("state"), "findable")
+
+        # Publication year (string in your builder)
+        self.assertEqual(attrs.get("publicationYear"), str(self.res.updated.year))
+
+        # Creators present
+        creators = attrs.get("creators", [])
+        self.assertTrue(creators, "creators must not be empty")
+        self.assertIn("name", creators[0])
+        self.assertIn("nameType", creators[0])
+
+        # Description present and clean for the clean test
+        descs = attrs.get("descriptions", [])
+        self.assertTrue(descs, "descriptions should include Abstract")
+        self.assertEqual(descs[0].get("descriptionType"), "Abstract")
+        self.assertNotRegex(descs[0].get("description", ""), _CONTROL_CHARS,
+                            "Abstract should not contain control characters")
 
         freezer.stop()
 
-        self.assertTrue(len(crossref_xml) == len(expected_xml))
-        match_ratio = difflib.SequenceMatcher(None, crossref_xml.splitlines(), expected_xml.splitlines()).ratio()
-        self.assertTrue(match_ratio == 1.0, msg="crossref xml is not as expected")
+    def test_datacite_deposit_json(self):
+        """Datacite JSON generation test (clean abstract)"""
+        self.create_json_test_resource()
+        self.freeze_and_assert_json()
+
+    def test_datacite_deposit_dirty_json(self):
+        """Datacite JSON generation test (dirty abstract)"""
+        self.create_json_test_resource()
+
+        # inject control char like old XML test
+        self.res.metadata.update_element(
+            'description', self.res.metadata.description.id, abstract='This is a test abstract\x1F'
+        )
+
+        raw = self.res.get_datacite_deposit_json()
+        payload = json.loads(raw)
+        attrs = payload["data"]["attributes"]
+        descs = attrs.get("descriptions", [])
+        self.assertTrue(descs, "descriptions should include Abstract")
+        got = descs[0].get("description", "")
+        self.assertNotRegex(got, _CONTROL_CHARS, "Control characters must be sanitized from abstract")
+        expected = _CONTROL_CHARS.sub('', 'This is a test abstract\x1F').strip()
+        self.assertEqual(got, expected)
