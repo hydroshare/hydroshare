@@ -166,9 +166,9 @@ else
 fi
 
 DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
-HYDROSHARE_CONTAINERS=(hydroshare defaultworker redpanda redpanda-console s3eventworker solr postgis companion redis nginx minio micro-auth pgbouncer)
+HYDROSHARE_CONTAINERS=(hydroshare defaultworker redpanda redpanda-console s3eventworker solr postgis companion redis nginx minio micro-auth pgbouncer discovery-atlas)
 HYDROSHARE_VOLUMES=(hydroshare_postgis_data_vol hydroshare_redpanda_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol hydroshare_minio_data_vol hydroshare_redis_data_vol hydroshare_companion_vol)
-HYDROSHARE_IMAGES=(hydroshare-defaultworker hydroshare-hydroshare solr postgis/postgis redpanda redpanda-console hydroshare-s3eventworker nginx redis transloadit/companion minio/minio edoburu/pgbouncer hydroshare-micro-auth)
+HYDROSHARE_IMAGES=(hydroshare-defaultworker hydroshare-hydroshare solr postgis/postgis redpanda redpanda-console hydroshare-s3eventworker nginx redis transloadit/companion minio/minio edoburu/pgbouncer hydroshare-micro-auth hydroshare-discovery-atlas)
 
 NODE_CONTAINER_RUNNING=`docker ps -a | grep nodejs`
 
@@ -216,6 +216,9 @@ echo '##########################################################################
 echo " Preparing"                                                                                            
 echo '###############################################################################################################'
 
+echo "Pulling git submodules..."
+git submodule update --init --recursive
+
 echo "Creating init scripts"
 cp scripts/templates/init-defaultworker.template init-defaultworker
 cp scripts/templates/init-hydroshare.template    init-hydroshare
@@ -247,6 +250,12 @@ echo " Starting system"
 echo '########################################################################################################################'
 echo
 
+echo " -make down-discover"
+make down-discover
+
+echo " - make up-discover"
+make up-discover
+
 echo "  - docker-compose -f ${DOCKER_COMPOSER_YAML_FILE} up -d ${REBUILD_IMAGE}"
 docker-compose -f $DOCKER_COMPOSER_YAML_FILE up -d $REBUILD_IMAGE
 
@@ -267,6 +276,28 @@ echo '##########################################################################
 echo -e " Setting up PostgreSQL container and Importing Django DB"
 echo '########################################################################################################################'
 echo
+
+echo "  - waiting for database system to be ready..."
+while [ 1 -eq 1 ]
+do
+  sleep 1
+  echo -n "."
+  LOG=`docker logs postgis 2>&1`
+  if [[ $LOG == *"PostgreSQL init process complete; ready for start up"* ]]; then
+    break
+  fi
+done
+
+# wait for the final log line to show "database system is ready to accept connections"
+while [ 1 -eq 1 ]
+do
+  sleep 1
+  echo -n "."
+  LOG=`docker logs postgis 2>&1 | tail -1`
+  if [[ $LOG == *"database system is ready to accept connections"* ]]; then
+    break
+  fi
+done
 
 echo " - docker exec -u postgres postgis psql -c \"REVOKE CONNECT ON DATABASE postgres FROM public;\""
 echo
@@ -414,6 +445,8 @@ docker exec -u hydro-service hydroshare python manage.py add_missing_bucket_name
 echo
 echo '########################################################################################################################'
 echo -e " All done, run `green '\"docker-compose -f local-dev.yml restart\"'` to restart HydroShare"
+echo -e " You are running discovery-atlas using PM2 and the Vite dev server."
+echo -e " Run `green '\"make down-discover\"'` to cleanup the PM2 service when you're done."
 echo '########################################################################################################################'
 echo
 
