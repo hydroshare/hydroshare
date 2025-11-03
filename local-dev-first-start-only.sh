@@ -269,8 +269,6 @@ echo
 echo " - building Node for Discovery in background"
 node_build > /dev/null 2>&1 &
 
-sleep 180
-
 echo
 echo '########################################################################################################################'
 echo -e " Setting up PostgreSQL container and Importing Django DB"
