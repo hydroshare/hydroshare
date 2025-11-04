@@ -1,5 +1,4 @@
 import os
-import logging
 from enum import Enum
 
 from hs_cloudnative_schemas.schema.base import MediaObject
