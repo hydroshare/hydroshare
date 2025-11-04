@@ -51,6 +51,6 @@ def test_fileset_user_metadata():
     write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/folder_aggregation/user_metadata.json", {
                   "user_metadata": "this is fileset user metadata"})
     sleep(1)
-
-    result_netcdf_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/folder_aggregation/dataset_metadata.json")
+    result_metadata_path = f"test-bucket/{resource_id}/.hsjsonld/folder_aggregation/dataset_metadata.json"
+    result_netcdf_metadata = read_s3_json(result_metadata_path)
     assert result_netcdf_metadata["user_metadata"] == "this is fileset user metadata"

@@ -56,6 +56,7 @@ def test_resource_netcdf_user_metadata():
     result_netcdf_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/netcdf_valid.nc.json")
     assert "user_metadata" not in result_netcdf_metadata
 
-    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/user_metadata.json", {"user_metadata": "this is user metadata"})
+    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/user_metadata.json",
+                  {"user_metadata": "this is user metadata"})
     sleep(1)
     assert result_netcdf_metadata["user_metadata"] == "this is netcdf user metadata"

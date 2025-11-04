@@ -47,14 +47,16 @@ def test_resource_timeseries_csv_usermetadata():
     with open("tests/test_files/timeseries/ODM2_Multi_Site_One_Variable_Test.csv", "rb") as f:
         s3_client.upload_fileobj(f, "test-bucket", f"{resource_id}/data/contents/ODM2_Multi_Site_One_Variable_Test.csv")
 
-    result_netcdf_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable_Test.csv.json")
+    result_metadata_path = f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable_Test.csv.json"
+    result_netcdf_metadata = read_s3_json(result_metadata_path)
     assert "user_metadata" not in result_netcdf_metadata
     sleep(1)
 
     write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/ODM2_Multi_Site_One_Variable_Test.csv.user_metadata.json", {
                   "user_metadata": "this is timeseries user metadata"})
     sleep(1)
-    result_netcdf_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable_Test.csv.json")
+    result_metadata_path = f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable_Test.csv.json"
+    result_netcdf_metadata = read_s3_json(result_metadata_path)
     assert result_netcdf_metadata["user_metadata"] == "this is timeseries user metadata"
 
 

@@ -1,4 +1,3 @@
-import logging
 import os
 
 from hsextract.content_types.models import ContentType, FileMetadataObject
