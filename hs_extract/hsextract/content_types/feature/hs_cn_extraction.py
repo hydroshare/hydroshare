@@ -31,9 +31,7 @@ def encode_vector_metadata(filepath, validate_bbox=True):
     temp_dir = tempfile.gettempdir()
     local_copy = os.path.join(temp_dir, os.path.basename(filepath))
     bucket, key = filepath.split("/", 1)
-    print(f"Downloading {bucket}/{key} to {local_copy}")
     s3.download_file(bucket, key, local_copy)
-    print(f"Downloading {bucket}/{replace_extension(key, '.shx')} to {replace_extension(local_copy, '.shx')}")
     s3.download_file(bucket, replace_extension(key, ".shx"), replace_extension(local_copy, ".shx"))
     # Read the Shapefile
     gdf = geopandas.read_file(local_copy)

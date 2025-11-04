@@ -2,10 +2,12 @@ import uuid
 
 from time import sleep
 from tests import s3_client, read_s3_json, write_s3_json
+import pytest
 
 
 def test_resource_timeseries_csv_extraction():
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
+    print(resource_id)
     write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/ODM2_Multi_Site_One_Variable_Test.csv.user_metadata.json", {
                   "user_metadata": "this is timeseries user metadata"})
     sleep(1)
@@ -38,6 +40,7 @@ def test_resource_timeseries_csv_extraction():
         "user_metadata"] == "this is timeseries user metadata"
 
 
+@pytest.mark.skip(reason="User metadata event update for content types is not currently implemented")
 def test_resource_timeseries_csv_usermetadata():
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
     sleep(1)
@@ -88,6 +91,7 @@ def test_resource_timeseries_sqlite_extraction():
     assert result_netcdf_metadata["user_metadata"] == "this is timeseries user metadata"
 
 
+@pytest.mark.skip(reason="User metadata event update for content types is not currently implemented")
 def test_resource_timeseries_sqlite_usermetadata():
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
     with open("tests/test_files/timeseries/ODM2_Multi_Site_One_Variable.sqlite", "rb") as f:

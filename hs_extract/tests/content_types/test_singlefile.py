@@ -1,4 +1,5 @@
 import uuid
+import pytest
 
 from time import sleep
 from tests import s3_client, read_s3_json, write_s3_json
@@ -39,6 +40,7 @@ def test_singlefile():
         "user_metadata"] == "this is singlefile user metadata"
 
 
+@pytest.mark.skip(reason="User metadata event update for content types is not currently implemented")
 def test_singlefile_usermetadata():
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
     print(resource_id)

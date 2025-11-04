@@ -17,7 +17,6 @@ class FileSetMetadataObject(FolderMetadataObject):
 
     @classmethod
     def is_content_type(cls, file_object_path: str) -> bool:
-        print(f"Checking if fileset for {file_object_path}")
         resource_user_metadata_path = cls._resource_user_metadata_path(file_object_path)
         relative_path = os.path.relpath(file_object_path, cls._resource_contents_path(file_object_path))
         parent_directory = os.path.dirname(relative_path)

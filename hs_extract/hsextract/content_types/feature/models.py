@@ -32,12 +32,10 @@ class FeatureMetadataObject(FileMetadataObject):
 
     @classmethod
     def is_content_type(cls, file_object_path: str) -> bool:
-        print(f"Checking if {file_object_path} is of content type {cls.content_type}")
         sub_file_object_path, extension = os.path.splitext(file_object_path.lower())
         if extension == ".xml":
             _, sub_extension = os.path.splitext(sub_file_object_path.lower())
             extension = sub_extension + extension
-        print(f"Extension is {extension}, valid extensions are {cls._extensions()}")
         return extension in cls._extensions()
 
     def content_type_associated_media(self) -> list[dict]:
@@ -54,9 +52,6 @@ class FeatureMetadataObject(FileMetadataObject):
         return media_objects
 
     def extract_metadata(self):
-        print(f"Extracting feature metadata for {self.file_object_path}")
         metadata = encode_vector_metadata(self.file_object_path)
-        print(f"Extracted feature metadata: {metadata} for {self.file_object_path}")
         metadata = metadata.model_dump(exclude_none=True)
-        print(f"Feature metadata dict: {metadata} for {self.file_object_path}")
         return metadata

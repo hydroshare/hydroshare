@@ -61,15 +61,12 @@ def encode_raster_metadata(filepath, multiband=False, validate_bbox=True):
     local_copy = os.path.join(temp_dir, os.path.basename(filepath))
     bucket, key = filepath.split("/", 1)
     s3.download_file(bucket, key, local_copy)
-    print(f"Downloaded {filepath} to {local_copy}")
     if filepath.endswith('.vrt'):
         # If the file is a VRT, we need to extract the TIF files it references
         tif_file = list_tif_files(local_copy)[0]
         tif_file = os.path.join(os.path.dirname(filepath), tif_file)
-        print(f"VRT references the following TIF files: {tif_file}")
         local_copy_tif_file = os.path.join(
             temp_dir, os.path.basename(tif_file))
-        print(f"Downloading referenced TIF file {tif_file} to {local_copy_tif_file}")
         bucket, key = tif_file.split("/", 1)
         s3.download_file(bucket, key, local_copy_tif_file)
         local_copy = local_copy_tif_file
