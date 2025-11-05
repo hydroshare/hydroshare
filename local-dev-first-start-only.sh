@@ -241,6 +241,10 @@ mkdir -p log/nginx 2>/dev/null
 
 find . -name '*.hydro-bk' -exec rm -f {} \; 2>/dev/null
 
+# run a git submodule init and update to make sure landing-page is present
+echo "Initializing git submodules"
+git submodule update --init --recursive
+
 echo "Installing npm modules for landing page"
 cd landing-page
 npm install
