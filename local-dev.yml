@@ -122,7 +122,7 @@ services:
       - redis
     stdin_open: true
     tty: true
-    command: /bin/bash init-hydroshare
+    command: python manage.py runserver 0.0.0.0:8000
   defaultworker:
     build:
       context: .

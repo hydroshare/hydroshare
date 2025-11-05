@@ -148,20 +148,8 @@ docker compose -f ${DOCKER_COMPOSER_YAML_FILE} down -v --rmi local --remove-orph
 echo '###############################################################################################################'
 echo " Preparing"                                                                                            
 echo '###############################################################################################################'
-
 echo "Creating init scripts"
 cp scripts/templates/init-defaultworker.template init-defaultworker
-cp scripts/templates/init-hydroshare.template    init-hydroshare
-
-sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g init-hydroshare
-sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g init-hydroshare
-
-sed -i $SED_EXT s/HS_SSH_SERVER//g init-hydroshare
-sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"python manage.py runserver 0.0.0.0:8000"'!g' init-hydroshare                  
-
-# run using gunicorn
-# sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"/hydroshare/gunicorn_start"'!g' init-hydroshare
-
 sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g init-defaultworker
 sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g init-defaultworker
 
@@ -193,13 +181,33 @@ echo
 echo " - building Node for Discovery in background"
 node_build > /dev/null 2>&1 &
 
-sleep 180
-
 echo
 echo '########################################################################################################################'
 echo -e " Setting up PostgreSQL container and Importing Django DB"
 echo '########################################################################################################################'
 echo
+
+echo "  - waiting for database system to be ready..."
+while [ 1 -eq 1 ]
+do
+  sleep 1
+  echo -n "."
+  LOG=`docker logs postgis 2>&1`
+  if [[ $LOG == *"PostgreSQL init process complete; ready for start up"* ]]; then
+    break
+  fi
+done
+
+# wait for the final log line to show "database system is ready to accept connections"
+while [ 1 -eq 1 ]
+do
+  sleep 1
+  echo -n "."
+  LOG=`docker logs postgis 2>&1 | tail -1`
+  if [[ $LOG == *"database system is ready to accept connections"* ]]; then
+    break
+  fi
+done
 
 echo " - docker compose -f local-dev.yml exec -u postgres postgis psql -c \"REVOKE CONNECT ON DATABASE postgres FROM public;\""
 echo
@@ -210,74 +218,69 @@ echo "  - docker compose -f local-dev.yml exec -u postgres postgis psql -c \"SEL
 echo
 docker compose -f local-dev.yml exec -u postgres postgis psql -c "SELECT pid, pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();"
 
-echo "  - docker compose -f local-dev.yml exec -u hydro-service hydroshare dropdb -U postgres -h postgis postgres"
+echo "  - docker compose -f local-dev.yml exec hydroshare dropdb -U postgres -h postgis postgres"
 echo
-docker compose -f local-dev.yml exec -u hydro-service hydroshare dropdb -U postgres -h postgis postgres
+docker compose -f local-dev.yml exec hydroshare dropdb -U postgres -h postgis postgres
 
-echo "  - docker compose -f local-dev.yml exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'"
+echo "  - docker compose -f local-dev.yml exec hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'"
 echo
-docker compose -f local-dev.yml exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'
-
-echo
-echo "  - docker compose -f local-dev.yml exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION hstore;'"
-echo
-docker compose -f local-dev.yml exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION hstore;'
+docker compose -f local-dev.yml exec hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'
 
 echo
-echo "  - docker compose -f local-dev.yml exec -u hydro-service hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template1"
+echo "  - docker compose -f local-dev.yml exec hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION hstore;'"
 echo
-docker compose -f local-dev.yml exec -u hydro-service hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template1
-
-echo "  - docker compose -f local-dev.yml exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'"
-echo
-docker compose -f local-dev.yml exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'
+docker compose -f local-dev.yml exec hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION hstore;'
 
 echo
-echo "  - docker compose -f local-dev.yml exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}"
+echo "  - docker compose -f local-dev.yml exec hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template1"
 echo
-docker compose -f local-dev.yml exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}
+docker compose -f local-dev.yml exec hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template1
 
-sleep 10
+echo "  - docker compose -f local-dev.yml exec hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'"
+echo
+docker compose -f local-dev.yml exec hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'
+
+echo
+echo "  - docker compose -f local-dev.yml exec hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}"
+echo
+docker compose -f local-dev.yml exec hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}
+
 echo
 echo '########################################################################################################################'
 echo " Migrating data"
 echo '########################################################################################################################'
 echo
 
-echo "  - docker compose -f local-dev.yml exec hydroshare chown -R hydro-service:storage-hydro /tmp /shared_tmp"
-docker compose -f local-dev.yml exec hydroshare chown -R hydro-service:storage-hydro /tmp /shared_tmp
 echo
+echo "  - docker compose -f local-dev.yml exec hydroshare python manage.py rename_app django_irods django_s3"
+echo
+docker compose -f local-dev.yml exec hydroshare python manage.py rename_app django_irods django_s3
 
 echo
-echo "  - docker compose -f local-dev.yml exec -u hydro-service hydroshare python manage.py rename_app django_irods django_s3"
+echo "  - docker compose -f local-dev.yml exec hydroshare python manage.py migrate sites --noinput"
 echo
-docker compose -f local-dev.yml exec -u hydro-service hydroshare python manage.py rename_app django_irods django_s3
+docker compose -f local-dev.yml exec hydroshare python manage.py migrate sites --noinput
 
 echo
-echo "  - docker compose -f local-dev.yml exec -u hydro-service hydroshare python manage.py migrate sites --noinput"
-echo
-docker compose -f local-dev.yml exec -u hydro-service hydroshare python manage.py migrate sites --noinput
-
-echo
-echo "  - docker compose -f local-dev.yml exec -u hydro-service hydroshare python manage.py migrate --fake-initial --noinput"
+echo "  - docker compose -f local-dev.yml exec hydroshare python manage.py migrate --fake-initial --noinput"
 echo
 docker compose -f local-dev.yml exec hydroshare python manage.py migrate --fake-initial --noinput
 
 echo
-echo "  - docker compose -f local-dev.yml exec -u hydro-service hydroshare python manage.py prevent_web_crawling"
+echo "  - docker compose -f local-dev.yml exec hydroshare python manage.py prevent_web_crawling"
 echo
-docker compose -f local-dev.yml exec -u hydro-service hydroshare python manage.py prevent_web_crawling
+docker compose -f local-dev.yml exec hydroshare python manage.py prevent_web_crawling
 
 echo
-echo "  - docker compose -f local-dev.yml exec -u hydro-service hydroshare python manage.py fix_permissions"
+echo "  - docker compose -f local-dev.yml exec hydroshare python manage.py fix_permissions"
 echo
-docker compose -f local-dev.yml exec -u hydro-service hydroshare python manage.py fix_permissions
+docker compose -f local-dev.yml exec hydroshare python manage.py fix_permissions
 
 echo
 echo '########################################################################################################################'
 echo " Reindexing SOLR"
 echo '########################################################################################################################'
-# TODO - fix hydroshare container permissions to allow use of hydro-service user
+
 echo
 echo " - docker compose -f local-dev.yml exec solr bin/solr create_core -c collection1 -n basic_config"
 docker compose -f local-dev.yml exec solr bin/solr create -c collection1 -d basic_configs
@@ -288,9 +291,9 @@ echo
 docker compose -f local-dev.yml exec hydroshare python manage.py build_solr_schema -f schema.xml
 
 echo
-echo "  - docker cp schema.xml solr:/opt/solr/server/solr/collection1/conf/schema.xml"
+echo "  - docker compose -f local-dev.yml cp schema.xml solr:/opt/solr/server/solr/collection1/conf/schema.xml"
 echo
-docker cp schema.xml solr:/opt/solr/server/solr/collection1/conf/schema.xml
+docker compose -f local-dev.yml cp schema.xml solr:/opt/solr/server/solr/collection1/conf/schema.xml
 
 echo
 echo "  - docker compose -f local-dev.yml exec solr sed -i '/<schemaFactory class=\"ManagedIndexSchemaFactory\">/,+4d' /opt/solr/server/solr/collection1/conf/solrconfig.xml"
@@ -300,9 +303,9 @@ echo
 echo "  - docker compose -f local-dev.yml exec solr rm /opt/solr/server/solr/collection1/conf/managed-schema"
 docker compose -f local-dev.yml exec solr rm /opt/solr/server/solr/collection1/conf/managed-schema
 
-echo '  - docker compose -f local-dev.yml exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"'
+echo '  - docker compose -f local-dev.yml exec hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"'
 echo
-docker compose -f local-dev.yml exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
+docker compose -f local-dev.yml exec hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
 
 echo
 echo '########################################################################################################################'
@@ -310,8 +313,8 @@ echo " Replacing env vars in static files for Discovery"
 echo '########################################################################################################################'
 echo
 
-echo "  -docker compose -f local-dev.yml exec -u hydro-service hydroshare ./discover-entrypoint.sh"
-docker compose -f local-dev.yml exec -u hydro-service hydroshare ./discover-entrypoint.sh
+echo "  -docker exec hydroshare ./discover-entrypoint.sh"
+docker compose -f local-dev.yml exec hydroshare ./discover-entrypoint.sh
 
 echo
 echo '########################################################################################################################'
@@ -330,15 +333,15 @@ do
   sleep 1
 done
 
-echo "  -docker compose -f local-dev.yml exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput"
+echo "  -docker exec hydroshare python manage.py collectstatic -v0 --noinput"
 echo
-docker compose -f local-dev.yml exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput
+docker compose -f local-dev.yml exec hydroshare python manage.py collectstatic -v0 --noinput
 
 
 echo
 echo "  - docker restart hydroshare defaultworker"
 echo
-docker restart hydroshare defaultworker s3eventworker
+docker compose -f local-dev.yml restart hydroshare defaultworker s3eventworker
 
 echo
 echo "  - docker compose -f local-dev.yml exec -u hydro-service hydroshare python manage.py add_missing_bucket_names"
@@ -346,9 +349,9 @@ echo
 docker compose -f local-dev.yml exec -u hydro-service hydroshare python manage.py add_missing_bucket_names
 
 echo
-echo "  - docker compose -f local-dev.yml exec -u hydro-service hydroshare python manage.py add_missing_bucket_names"
+echo "  - docker exec hydroshare python manage.py add_missing_bucket_names"
 echo
-docker compose -f local-dev.yml exec -u hydro-service hydroshare mc mb hydroshare/admin
+docker compose -f local-dev.yml exec hydroshare python manage.py add_missing_bucket_names
 
 echo
 echo '########################################################################################################################'
