@@ -1,18 +1,18 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.management.base import BaseCommand, CommandError
 
-from hs_core.enums import CrossRefSubmissionStatus
-from hs_core.hydroshare import (deposit_res_metadata_with_crossref,
+from hs_core.enums import DataciteSubmissionStatus
+from hs_core.hydroshare import (update_res_metadata_with_datacite,
                                 get_resource_doi)
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 
 
 class Command(BaseCommand):
-    help = "Update crossref metadata deposit for a published resource"
+    help = "Update Datacite metadata deposit for a published resource"
 
     def add_arguments(self, parser):
 
-        # ID of a published resource for which crossref metadata needs to be updated
+        # ID of a published resource for which datacite metadata needs to be updated
         parser.add_argument('resource_id', type=str, help=('Required. The existing id (short_id) of'
                                                            ' the published resource'))
 
@@ -29,16 +29,16 @@ class Command(BaseCommand):
             raise CommandError("Resource is not a published resource")
 
         # this should check both 'pending' and 'update_pending' flags in doi
-        if CrossRefSubmissionStatus.PENDING.value in resource.doi:
-            raise CommandError("Resource has a pending crossref deposit request. Please try again later.")
+        if DataciteSubmissionStatus.PENDING.value in resource.doi:
+            raise CommandError("Resource has a pending datacite deposit request. Please try again later.")
 
-        print(f"Updating CrossRef metadata for resource id {resource.short_id}")
-        response = deposit_res_metadata_with_crossref(resource)
+        print(f"Updating Datacite metadata for resource id {resource.short_id}")
+        response = update_res_metadata_with_datacite(resource)
         if not response.status_code == 200:
-            err_msg = (f"Failed to update. Received a {response.status_code} from CrossRef while depositing "
+            err_msg = (f"Failed to update. Received a {response.status_code} from Datacite while depositing "
                        f"metadata for res id {resource.short_id}")
             raise CommandError(err_msg)
         else:
-            resource.doi = get_resource_doi(resource.short_id, flag=CrossRefSubmissionStatus.UPDATE_PENDING.value)
+            resource.doi = get_resource_doi(resource.short_id, flag=DataciteSubmissionStatus.UPDATE_PENDING.value)
             resource.save()
-        print(f"Successfully deposited metadata to CrossRef for resource id {resource.short_id}")
+        print(f"Successfully deposited metadata to Datacite for resource id {resource.short_id}")
