@@ -299,11 +299,10 @@
                                         <h3 class="panel-title"><span class="glyphicon glyphicon-time">&nbsp;</span>Recent Activity</h3>
                                    </div>
                                     <div class="panel-body">
-                                        {% if resources %}
+                                        {% if my_recent_resources %}
 
-                                        {% for res in resources reversed %}
-                                            {# Show only the last five #}
-                                            {% if forloop.counter0 < 5 %}
+                                        {% for res in my_recent_resources %}
+                                            {# There should be only 5 recent resources #}
                                             <div class="activity-block">
                                                 {% if profile.picture and profile.picture.url %}
                                                     <div style="background-image: url('{{ profile.picture.url }}');"
@@ -312,17 +311,18 @@
                                                 {% else %}
                                                     <div class="profile-pic-thumbnail round-image user-icon"></div>
                                                 {% endif %}
-                                                {% with metadata=res.metadata %}
+                                                {% with metadata=res.cached_metadata %}
                                                     <div class="metadata-wrapper">
                                                         <div class="shared-resource-info">
                                                             <strong>{{ profile_user|contact }}</strong>
                                                             <span class="text-muted"> shared </span>
-                                                            <span><a href="{{ res.get_absolute_url }}">{{ metadata.title }}</a></span>
+                                                            {% get_resource_url res.short_id as resource_url %}
+                                                            <span><a href="{{ resource_url }}">{{ metadata.title }}</a></span>
                                                         </div>
                                                         <h5><span class="text-muted">Type: </span>{{ res|resource_type }}</h5>
                                                         <h5><span class="text-muted">Date: </span>{{ res.created }}</h5>
                                                     </div>
-                                                    {% with abstract=metadata.description %}
+                                                    {% with abstract=metadata.abstract %}
                                                         {% if abstract %}
                                                             <div class="activity-description col-sm-12">
                                                                 <p class="description">
@@ -334,7 +334,6 @@
                                                     {% endwith %}
                                                     </div>
                                                 {% endwith %}
-                                            {% endif %}
                                         {% endfor %}
                                         {% else %}
                                             <span class="text-muted">This user has no recent activity.</span>
@@ -698,8 +697,8 @@
                                 </table>
                             </div>
                             <div class="col-sm-12 col-md-9">
-                                {% if resources %}
-                                {% for res in resources %}
+                                {% if my_resources %}
+                                {% for res in my_resources %}
                                     {% with res|resource_type as resource_type %}
                                     <div data-type="type-{{ resource_type }}" class="contribution">
                                         <div class="icon-resource-type-wrapper">
@@ -722,12 +721,13 @@
                                         </span>
                                         </div>
                                         <div class="activity-block row">
-                                            {% with metadata=res.metadata %}
+                                            {% with metadata=res.cached_metadata %}
                                                 <div class="activity-info col-sm-12">
-                                                    <span class="title"><a href="{{ res.get_absolute_url }}">{{ metadata.title }}</a></span>
+                                                    {% get_resource_url res.short_id as resource_url %}
+                                                    <span class="title"><a href="{{ resource_url }}">{{ metadata.title }}</a></span>
                                                     <h5><span class="text-muted">Created: </span>{{ res.created }}</h5>
                                                     <h5><span class="text-muted">Authors: </span>
-                                                        {% for creator in metadata.creators.all %}
+                                                        {% for creator in metadata.creators %}
                                                             {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
                                                             {% if creator.relative_uri and creator.is_active_user %}
                                                                 <a href="{{ creator.relative_uri }}">{{ creator.name }}</a>
@@ -737,7 +737,7 @@
                                                         {% endfor %}
                                                     </h5>
                                                 </div>
-                                                {%  with abstract=metadata.description %}
+                                                {%  with abstract=metadata.abstract %}
                                                     {% if abstract %}
                                                         <div class="activity-description col-sm-12">
                                                             <p>
