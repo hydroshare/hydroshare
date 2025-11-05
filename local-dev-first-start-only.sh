@@ -224,7 +224,7 @@ docker compose -f local-dev.yml exec hydroshare dropdb -U postgres -h postgis po
 
 echo "  - docker compose -f local-dev.yml exec hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'"
 echo
-docker compose -f local-dev.yml exec hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'
+docker compose -f local-dev.ymlexec hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'
 
 echo
 echo "  - docker compose -f local-dev.yml exec hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION hstore;'"
@@ -313,7 +313,7 @@ echo " Replacing env vars in static files for Discovery"
 echo '########################################################################################################################'
 echo
 
-echo "  -docker exec hydroshare ./discover-entrypoint.sh"
+echo "  -docker compose -f local-dev.yml exec hydroshare ./discover-entrypoint.sh"
 docker compose -f local-dev.yml exec hydroshare ./discover-entrypoint.sh
 
 echo
@@ -333,13 +333,13 @@ do
   sleep 1
 done
 
-echo "  -docker exec hydroshare python manage.py collectstatic -v0 --noinput"
+echo "  -docker compose -f local-dev.yml exec hydroshare python manage.py collectstatic -v0 --noinput"
 echo
 docker compose -f local-dev.yml exec hydroshare python manage.py collectstatic -v0 --noinput
 
 
 echo
-echo "  - docker restart hydroshare defaultworker"
+echo "  - docker compose -f local-dev.yml restart hydroshare defaultworker"
 echo
 docker compose -f local-dev.yml restart hydroshare defaultworker s3eventworker
 
@@ -349,7 +349,7 @@ echo
 docker compose -f local-dev.yml exec -u hydro-service hydroshare python manage.py add_missing_bucket_names
 
 echo
-echo "  - docker exec hydroshare python manage.py add_missing_bucket_names"
+echo "  - docker compose -f local-dev.yml exec hydroshare python manage.py add_missing_bucket_names"
 echo
 docker compose -f local-dev.yml exec hydroshare python manage.py add_missing_bucket_names
 

@@ -20,8 +20,7 @@ from django.core.exceptions import (
 from django.core.mail import send_mail
 from django.urls import reverse
 from django.db import transaction
-from django.db.models import Q, Prefetch
-from django.db.models.query import prefetch_related_objects
+from django.db.models import Q
 from django.http import HttpResponse, JsonResponse, HttpResponseForbidden, HttpResponseNotAllowed
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.shortcuts import redirect, get_object_or_404
@@ -126,13 +125,19 @@ class UserProfileView(TemplateView):
         if hasattr(settings, 'OIDC_CHANGE_PASSWORD_URL'):
             oidc_change_password_url = settings.OIDC_CHANGE_PASSWORD_URL
 
-        # get resource attributes used in profile page
-        resources = resources.only("title", "resource_type", "created")
-        prefetch_related_objects(
-            resources,
-            Prefetch("content_object__creators"),
-            Prefetch("content_object___description"),
-            Prefetch("content_object___title"),
+        # get the 5 most recently created resources
+        my_recent_resources = resources.order_by("-created")[:5]
+        my_recent_resources = my_recent_resources.values(
+            "short_id",
+            "resource_type",
+            "created",
+            "cached_metadata",
+        )
+        my_resources = resources.values(
+            "short_id",
+            "resource_type",
+            "created",
+            "cached_metadata",
         )
         quota_requests = QuotaRequest.objects.filter(
             request_from=u,
@@ -162,7 +167,8 @@ class UserProfileView(TemplateView):
             message = uq.get_quota_message(quota_data, include_quota_usage_info=False)
         return {
             "profile_user": u,
-            "resources": resources,
+            "my_recent_resources": my_recent_resources,
+            "my_resources": my_resources,
             "quota_message": message,
             "quota_data": quota_data,
             "quota_requests": quota_requests,
