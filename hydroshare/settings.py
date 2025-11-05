@@ -748,7 +748,7 @@ else:
         },
         "handlers": {
             "djangolog": {
-                "level": "DEBUG",
+                "level": "INFO",
                 "class": "logging.handlers.RotatingFileHandler",
                 "filename": "/hydroshare/log/django.log",
                 "formatter": "verbose",
@@ -756,27 +756,19 @@ else:
                 "backupCount": 10,
             },
             "hydrosharelog": {
-                "level": "DEBUG",
+                "level": "INFO",
                 "class": "logging.handlers.RotatingFileHandler",
                 "filename": "/hydroshare/log/hydroshare.log",
                 "formatter": "verbose",
                 "maxBytes": 1024 * 1024 * 15,  # 15MB
                 "backupCount": 10,
-            },
-            "celerylog": {
-                "level": "DEBUG",
-                "class": "logging.handlers.RotatingFileHandler",
-                "filename": "/hydroshare/log/celery.log",
-                "formatter": "verbose",
-                "maxBytes": 1024 * 1024 * 15,  # 15MB
-                "backupCount": 10,
-            },
+            }
         },
         "loggers": {
             "django": {
                 "handlers": ["djangolog"],
                 "propagate": False,
-                "level": "DEBUG",
+                "level": "INFO",
             },
             # https://docs.djangoproject.com/en/1.11/topics/logging/#django-template
             "django.template": {
