@@ -10410,7 +10410,7 @@ COPY public.auth_user (id, password, last_login, is_superuser, username, first_n
 15	pbkdf2_sha256$36000$Cnpajji9lyBB$/RkElvxwJoIbRwlP/hbeOSeDKUCEVBry0IU8VGvpJWg=	2019-12-11 19:08:06.306799+00	f	czo_calhoun	CZO	Calhoun	czocal@noreply.org	f	t	2019-09-30 18:23:26.010694+00
 6	pbkdf2_sha256$36000$9XNl8kxBmJJx$GH5oyljtmBqH28icRe8NoBc5MWEgubmBuRmGex1VxE4=	2019-12-11 19:08:57.679021+00	f	czo_national	CZO	National	czonational@noreply.com	f	t	2019-09-30 18:16:28.302142+00
 16	pbkdf2_sha256$36000$ZzdIp9MWeEx8$LIaH51xFoewvpAHuUujbGVVjyUESzgJgrJx+M7e6t9M=	2019-12-11 20:21:26.016073+00	f	czo	CZO	Default	czo@noreply.org	f	t	2019-09-30 18:24:12.689202+00
-5	pbkdf2_sha256$600000$GA2uAMF86bDLYPP0O3gURG$e8NcO1QjLjAnYYQskLzXCLo4+HHE03cSrkDSiFpOk/Y=	2025-10-20 17:39:07.892514+00	f	asdf	asdf	asdf	asdf@asdf.asdf	f	t	2019-09-30 17:58:17.622678+00
+5	pbkdf2_sha256$600000$GA2uAMF86bDLYPP0O3gURG$e8NcO1QjLjAnYYQskLzXCLo4+HHE03cSrkDSiFpOk/Y=	2025-11-05 17:47:45.98744+00	f	asdf	asdf	asdf	asdf@asdf.asdf	f	t	2019-09-30 17:58:17.622678+00
 \.
 
 
@@ -11395,8 +11395,8 @@ COPY public.django_s3_avu (id, name, "attName", "attVal") FROM stdin;
 4	5811e1e045e44c92b91bf9127b54e768	metadata_dirty	true
 5	e87139446c944148be6d99d0d9b8f25b	isPublic	false
 6	e87139446c944148be6d99d0d9b8f25b	resourceType	CompositeResource
-7	d7b526e24f7e449098b428ae9363f514	metadata_dirty	false
 8	d7b526e24f7e449098b428ae9363f514	bag_modified	true
+7	d7b526e24f7e449098b428ae9363f514	metadata_dirty	true
 \.
 
 
@@ -11419,6 +11419,7 @@ rnct33ybltwnp198u98nduk30s46zh7k	Y2IwYjcyMzQ4MmJkMGE5ODM4NTU2OWM5OTFhZjJlNDU1ZGI
 k8bwx8kmurevqximm9pj97fhxxcor7ew	YWNkOWMwY2FlNDhmMjdmN2MwNDJiZmNhNDEwN2EyYzZlNzRlMDdhODp7ImhzX3RyYWNraW5nX2lkIjoiZXlKcFpDSTZOVE45OjFpZjdNZDp5Qy1fQURfWHd3RXQ2ekQzYVZqT2U5ZHM3amcifQ==	2019-12-25 19:09:35.295893+00
 roqyglg95asvcqghfwrzd8zxz36p17kj	NTc4ZTU1ZTk5YWZjZDQyM2FiNWQ2YmEyOTJjZTNjOTg0MzU1NTI3Zjp7ImhzX3RyYWNraW5nX2lkIjoiZXlKcFpDSTZOVFo5OjFpZjhVYTpIdkhOWTdvb2h6ZnRvT3hSZERvSWxSNmFndFEifQ==	2019-12-25 20:21:52.612063+00
 jjs6sh08bxstswcie4oe7h5w580mzard	.eJxVjckOgjAABf-lZ0Nsoa1wcyWayEGIMV6abggugFBUMP67uB28vpnMu4OkYqbk8pBmO5Yq4AHdLIrteE6CSLkevAzNeePlzjXAmNHcDxrTn4RtHEXFhB6nxLSr0I_Xg5m_n97KIlqCHmC8NgmrK11-ivh_E92bzl7gpNuWZ2mmLZmX2norX1pZyx8cff2_SMKrpCsoCCGWiFMuNJUxJ46UOFYCEpdw2xZQIIQUgZRIrLDu2x2VA2SLTqMOguDxBNjhVf8:1vAtrM:yKbkIgZhU6WwREM6_GkkaJCYWA2v01tJDFV7yqvlHu8	2025-11-03 17:39:52.063323+00
+tgt2yqwxkr59vdo6363hsy7xknd1tfiw	.eJxVjcluwjAURf_F6xLVTuyQLJlCK4VJCUJsIg8PHGgdsBlEEP9OaGHB9p6jc69Iu-JgudyWZl2UCsUILt-7ZfeLjbKfKManpExdPF9o27-kSZZF2-UYFtPNLJ_bOjf74UBXQWvWOk2qNul1Rmf0gQp-POji6MD-F-n7Jpo3MA_wC3XNTWnAk5UF7095UuelL9h5-m8RzZ1uCgpjTCXhIRcQyhVngZR0pQRmEeO-L7AghCiGQyapovDpN1S2iS8aLQwIRrc78TFWDQ:1vGiQ3:Ka3_FsMLf2b3Zyh43zeyygcv5WkF6gsMyIbQ42xSn-8	2025-11-19 18:39:43.244258+00
 \.
 
 
@@ -12008,6 +12009,8 @@ COPY public.hs_core_citation (id, object_id, value, content_type_id) FROM stdin;
 --
 
 COPY public.hs_core_contributor (id, object_id, name, organization, email, address, phone, homepage, content_type_id, identifiers, hydroshare_user_id, is_active_user) FROM stdin;
+1	1	asdf, asdf	asdf	asdf@asdf.asdf				68		5	t
+2	1	Other contributor	Other contributor org	other@contributor.org	contributor address	09232394	http://www.contributor.org	68		\N	f
 \.
 
 
@@ -12025,6 +12028,8 @@ COPY public.hs_core_coremetadata (id) FROM stdin;
 --
 
 COPY public.hs_core_coverage (id, object_id, type, _value, content_type_id) FROM stdin;
+2	1	period	{"start": "2025-11-04", "end": "2025-11-05"}	68
+1	1	point	{"projection": "WGS 84 EPSG:4326", "east": -111.7969, "north": 43.6313, "units": "Decimal degrees", "name": "Place name"}	68
 \.
 
 
@@ -12043,7 +12048,7 @@ COPY public.hs_core_creator (id, object_id, name, organization, email, address, 
 
 COPY public.hs_core_date (id, object_id, type, start_date, end_date, content_type_id) FROM stdin;
 1	1	created	2025-10-20 17:39:11.412751+00	\N	68
-2	1	modified	2025-10-20 17:39:22.418272+00	\N	68
+2	1	modified	2025-11-05 18:40:16.41383+00	\N	68
 \.
 
 
@@ -12052,6 +12057,7 @@ COPY public.hs_core_date (id, object_id, type, start_date, end_date, content_typ
 --
 
 COPY public.hs_core_description (id, object_id, abstract, content_type_id) FROM stdin;
+1	1	Here is the abstract	68
 \.
 
 
@@ -12060,6 +12066,7 @@ COPY public.hs_core_description (id, object_id, abstract, content_type_id) FROM 
 --
 
 COPY public.hs_core_format (id, object_id, value, content_type_id) FROM stdin;
+1	1	application/pdf	68
 \.
 
 
@@ -12068,6 +12075,7 @@ COPY public.hs_core_format (id, object_id, value, content_type_id) FROM stdin;
 --
 
 COPY public.hs_core_fundingagency (id, object_id, agency_name, award_title, award_number, agency_url, content_type_id) FROM stdin;
+1	1	Cornell University	award title	award number	https://ror.org/05bnh6r87	68
 \.
 
 
@@ -12076,7 +12084,7 @@ COPY public.hs_core_fundingagency (id, object_id, agency_name, award_title, awar
 --
 
 COPY public.hs_core_genericresource (page_ptr_id, comments_count, rating_count, rating_sum, rating_average, content, short_id, doi, object_id, content_type_id, creator_id, last_changed_by_id, user_id, resource_type, file_unpack_message, file_unpack_status, locked_time, extra_metadata, extra_data, download_count, view_count, repaired, files_checked, spam_allowlisted, bag_last_downloaded, quota_holder_id) FROM stdin;
-16	0	0	0	0	Untitled Resource	d7b526e24f7e449098b428ae9363f514		1	68	5	5	5	CompositeResource	\N	\N	\N			0	0	\N	\N	f	\N	5
+16	0	0	0	0	Untitled Resource	d7b526e24f7e449098b428ae9363f514		1	68	5	5	5	CompositeResource	\N	\N	\N	"additional_metatadata_key"=>"additional_metatadata_value"		0	1	\N	\N	f	\N	5
 \.
 
 
@@ -12093,6 +12101,7 @@ COPY public.hs_core_genericresource_collections (id, from_baseresource_id, to_ba
 --
 
 COPY public.hs_core_geospatialrelation (id, object_id, type, value, text, content_type_id) FROM stdin;
+1	1	relation	https://geoconnex.us/ref/hu02/19	Alaska Region [hu02/19]	68
 \.
 
 
@@ -12135,6 +12144,7 @@ COPY public.hs_core_publisher (id, object_id, name, url, content_type_id) FROM s
 --
 
 COPY public.hs_core_relation (id, object_id, type, value, content_type_id) FROM stdin;
+1	1	isExecutedBy	related resource	68
 \.
 
 
@@ -12143,6 +12153,7 @@ COPY public.hs_core_relation (id, object_id, type, value, content_type_id) FROM 
 --
 
 COPY public.hs_core_resourcefile (id, object_id, resource_file, content_type_id, file_folder, logical_file_content_type_id, logical_file_object_id, _size, _checksum, _modified_time, filesize_cache_updated) FROM stdin;
+1	16	d7b526e24f7e449098b428ae9363f514/data/contents/TAP Student Participant Agreement Form_encrypted_.pdf	66		\N	\N	135875	\N	\N	2025-11-05 18:38:09.711409+00
 \.
 
 
@@ -12160,6 +12171,9 @@ COPY public.hs_core_rights (id, object_id, statement, url, content_type_id) FROM
 --
 
 COPY public.hs_core_subject (id, object_id, value, content_type_id) FROM stdin;
+4	1	keyword3	68
+5	1	keyword2	68
+6	1	keyword1	68
 \.
 
 
@@ -12176,7 +12190,7 @@ COPY public.hs_core_tasknotification (id, task_id, name, payload, status, userna
 --
 
 COPY public.hs_core_title (id, object_id, value, content_type_id) FROM stdin;
-1	1	Untitled Resource	68
+1	1	THIS IS A TITLE	68
 \.
 
 
@@ -23400,6 +23414,8 @@ COPY public.hs_tracking_session (id, begin, visitor_id) FROM stdin;
 55	2019-12-11 20:09:19.687242+00	23
 56	2019-12-11 20:21:52.603499+00	56
 57	2025-10-20 17:39:01.469739+00	11
+58	2025-11-05 17:47:39.403527+00	11
+59	2025-11-05 18:36:26.749907+00	11
 \.
 
 
@@ -24338,6 +24354,100 @@ COPY public.hs_tracking_variable (id, "timestamp", name, type, value, session_id
 928	2025-10-20 17:42:36.777459+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/userInfo/	57	\N	\N	t	f
 929	2025-10-20 17:42:36.838203+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/csrf-cookie/	57	\N	\N	f	f
 930	2025-10-20 17:42:36.88363+00	visit	2	user_ip=192.168.65.1|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/resource/s3/5811e1e045e44c92b91bf9127b54e768/	57	\N	\N	t	f
+931	2025-11-05 17:47:39.408878+00	begin_session	2	user_ip=178.128.69.202|user_type=None|user_email_domain=None|user_email_domain_full=None|is_human=True|user_agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:144.0) Gecko/20100101 Firefox/144.0	58	\N	\N	f	f
+932	2025-11-05 17:47:39.413649+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/	58	\N	\N	f	f
+933	2025-11-05 17:47:40.710173+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/hsapi/_internal/get_tasks_by_user/	58	\N	\N	f	f
+934	2025-11-05 17:47:42.543506+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/accounts/login/	58	\N	\N	f	f
+935	2025-11-05 17:47:42.761587+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/hsapi/_internal/get_tasks_by_user/	58	\N	\N	f	f
+936	2025-11-05 17:47:46.012264+00	login	2	user_ip=178.128.69.202|user_type=None|user_email_domain=asdf|user_email_domain_full=asdf.asdf|is_human=True|user_agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:144.0) Gecko/20100101 Firefox/144.0	58	\N	\N	f	f
+937	2025-11-05 17:47:46.166651+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/home/	58	\N	\N	f	f
+938	2025-11-05 17:47:46.636251+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/get_tasks_by_user/	58	\N	\N	f	f
+939	2025-11-05 17:47:46.646629+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/userInfo/	58	\N	\N	t	f
+940	2025-11-05 17:48:13.647467+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/my-resources/	58	\N	\N	f	f
+941	2025-11-05 17:48:13.850946+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/get_tasks_by_user/	58	\N	\N	f	f
+942	2025-11-05 17:48:14.167567+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/userInfo/	58	\N	\N	t	f
+943	2025-11-05 17:48:14.266547+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/my-resources-counts/	58	\N	\N	f	f
+944	2025-11-05 17:48:17.916822+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/userInfo/	58	\N	\N	t	f
+945	2025-11-05 17:48:17.994981+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/userInfo/	58	\N	\N	t	f
+946	2025-11-05 17:48:18.053982+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/resource/s3/d7b526e24f7e449098b428ae9363f514/	58	\N	\N	t	f
+947	2025-11-05 17:48:18.300774+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/csrf-cookie/	58	\N	\N	f	f
+948	2025-11-05 17:48:36.290068+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/userInfo/	58	\N	\N	t	f
+949	2025-11-05 17:48:36.344491+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/csrf-cookie/	58	\N	\N	f	f
+950	2025-11-05 17:48:36.38169+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/resource/s3/d7b526e24f7e449098b428ae9363f514/	58	\N	\N	t	f
+951	2025-11-05 17:48:59.619325+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/userInfo/	58	\N	\N	t	f
+952	2025-11-05 17:48:59.669751+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/csrf-cookie/	58	\N	\N	f	f
+953	2025-11-05 17:48:59.702667+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/resource/s3/d7b526e24f7e449098b428ae9363f514/	58	\N	\N	t	f
+954	2025-11-05 17:50:04.885615+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/userInfo/	58	\N	\N	t	f
+955	2025-11-05 17:50:04.927992+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/csrf-cookie/	58	\N	\N	f	f
+956	2025-11-05 17:50:04.965065+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/resource/s3/d7b526e24f7e449098b428ae9363f514/	58	\N	\N	t	f
+957	2025-11-05 17:51:11.201534+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/userInfo/	58	\N	\N	t	f
+958	2025-11-05 17:51:11.255457+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/csrf-cookie/	58	\N	\N	f	f
+959	2025-11-05 17:51:11.309573+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/resource/s3/d7b526e24f7e449098b428ae9363f514/	58	\N	\N	t	f
+960	2025-11-05 17:51:19.856234+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/resource/s3/d7b526e24f7e449098b428ae9363f514/	58	\N	\N	t	f
+961	2025-11-05 18:36:26.755391+00	begin_session	2	user_ip=178.128.69.202|user_type=None|user_email_domain=asdf|user_email_domain_full=asdf.asdf|is_human=True|user_agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:144.0) Gecko/20100101 Firefox/144.0	59	\N	\N	f	f
+962	2025-11-05 18:36:26.764325+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/resource/d7b526e24f7e449098b428ae9363f514/	59	d7b526e24f7e449098b428ae9363f514	16	f	t
+963	2025-11-05 18:36:27.587167+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/get_tasks_by_user/	59	\N	\N	f	f
+964	2025-11-05 18:36:27.605051+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/list-referenced-content/	59	\N	\N	f	f
+966	2025-11-05 18:36:28.080099+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/list-referenced-content/	59	\N	\N	f	f
+967	2025-11-05 18:36:28.104277+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/userInfo/	59	\N	\N	t	f
+972	2025-11-05 18:36:32.127678+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/list-referenced-content/	59	\N	\N	f	f
+973	2025-11-05 18:36:32.897082+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/userInfo/	59	\N	\N	t	f
+974	2025-11-05 18:36:33.104721+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/aggregation-files-to-sync/	59	\N	\N	f	f
+975	2025-11-05 18:36:33.152951+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/list-referenced-content/	59	\N	\N	f	f
+976	2025-11-05 18:36:33.950312+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/non-preferred-paths/	59	\N	\N	f	f
+977	2025-11-05 18:36:37.72388+00	visit	2	user_ip=178.128.69.202|http_method=POST|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/title/1/update-metadata/	59	\N	\N	f	f
+978	2025-11-05 18:36:49.642874+00	visit	2	user_ip=178.128.69.202|http_method=POST|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/description/add-metadata/	59	\N	\N	f	f
+979	2025-11-05 18:37:08.27209+00	visit	2	user_ip=178.128.69.202|http_method=POST|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/subject/add-metadata/	59	\N	\N	f	f
+980	2025-11-05 18:37:11.526093+00	visit	2	user_ip=178.128.69.202|http_method=POST|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/subject/add-metadata/	59	\N	\N	f	f
+981	2025-11-05 18:37:15.344917+00	visit	2	user_ip=178.128.69.202|http_method=POST|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/subject/add-metadata/	59	\N	\N	f	f
+982	2025-11-05 18:37:33.957262+00	visit	2	user_ip=178.128.69.202|http_method=POST|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/data-store-structure/	59	\N	\N	f	f
+983	2025-11-05 18:37:34.048747+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/list-referenced-content/	59	\N	\N	f	f
+984	2025-11-05 18:37:47.147813+00	visit	2	user_ip=178.128.69.202|http_method=POST|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/update-key-value-metadata/	59	\N	\N	f	f
+985	2025-11-05 18:37:57.07988+00	visit	2	user_ip=178.128.69.202|http_method=POST|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/geospatialrelation/add-metadata/	59	\N	\N	f	f
+986	2025-11-05 18:38:10.046947+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/resource/d7b526e24f7e449098b428ae9363f514/	59	d7b526e24f7e449098b428ae9363f514	16	f	t
+987	2025-11-05 18:38:10.566192+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/get_tasks_by_user/	59	\N	\N	f	f
+965	2025-11-05 18:36:27.787778+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/relevant-tools/	59	\N	\N	f	f
+968	2025-11-05 18:36:28.187898+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/aggregation-files-to-sync/	59	\N	\N	f	f
+969	2025-11-05 18:36:28.939388+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/non-preferred-paths/	59	\N	\N	f	f
+970	2025-11-05 18:36:31.879051+00	visit	2	user_ip=178.128.69.202|http_method=POST|http_code=200|user_type=None|user_email_domain=asdf|request_url=/resource/d7b526e24f7e449098b428ae9363f514/	59	d7b526e24f7e449098b428ae9363f514	16	f	t
+971	2025-11-05 18:36:32.094957+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/get_tasks_by_user/	59	\N	\N	f	f
+990	2025-11-05 18:38:11.193139+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/list-referenced-content/	59	\N	\N	f	f
+991	2025-11-05 18:38:11.228584+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/aggregation-files-to-sync/	59	\N	\N	f	f
+992	2025-11-05 18:38:11.956361+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/non-preferred-paths/	59	\N	\N	f	f
+993	2025-11-05 18:38:12.050511+00	visit	2	user_ip=178.128.69.202|http_method=POST|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/data-store-structure/	59	\N	\N	f	f
+994	2025-11-05 18:38:33.759893+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/resource/d7b526e24f7e449098b428ae9363f514/	59	d7b526e24f7e449098b428ae9363f514	16	f	t
+997	2025-11-05 18:38:34.366064+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/list-referenced-content/	59	\N	\N	f	f
+998	2025-11-05 18:38:34.420377+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/userInfo/	59	\N	\N	t	f
+999	2025-11-05 18:38:34.510166+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/aggregation-files-to-sync/	59	\N	\N	f	f
+1000	2025-11-05 18:38:35.040777+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/non-preferred-paths/	59	\N	\N	f	f
+1001	2025-11-05 18:38:35.381797+00	visit	2	user_ip=178.128.69.202|http_method=POST|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/data-store-structure/	59	\N	\N	f	f
+1002	2025-11-05 18:38:48.462846+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/user-autocomplete/	59	\N	\N	f	f
+1003	2025-11-05 18:38:50.529874+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/user-autocomplete/	59	\N	\N	f	f
+1004	2025-11-05 18:38:52.885115+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/user-autocomplete/	59	\N	\N	f	f
+1005	2025-11-05 18:38:57.808744+00	visit	2	user_ip=178.128.69.202|http_method=POST|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/get-user-or-group-data/5/false	59	\N	\N	f	f
+1006	2025-11-05 18:38:58.832527+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/resource/d7b526e24f7e449098b428ae9363f514/	59	d7b526e24f7e449098b428ae9363f514	16	f	t
+1007	2025-11-05 18:38:59.304353+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/get_tasks_by_user/	59	\N	\N	f	f
+1008	2025-11-05 18:38:59.330497+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/list-referenced-content/	59	\N	\N	f	f
+988	2025-11-05 18:38:10.578068+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/list-referenced-content/	59	\N	\N	f	f
+989	2025-11-05 18:38:10.969834+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/userInfo/	59	\N	\N	t	f
+995	2025-11-05 18:38:33.948708+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/get_tasks_by_user/	59	\N	\N	f	f
+996	2025-11-05 18:38:33.972483+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/list-referenced-content/	59	\N	\N	f	f
+1009	2025-11-05 18:38:59.766385+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/userInfo/	59	\N	\N	t	f
+1010	2025-11-05 18:38:59.797496+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/list-referenced-content/	59	\N	\N	f	f
+1011	2025-11-05 18:38:59.873632+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/aggregation-files-to-sync/	59	\N	\N	f	f
+1012	2025-11-05 18:39:00.700912+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/non-preferred-paths/	59	\N	\N	f	f
+1013	2025-11-05 18:39:00.897677+00	visit	2	user_ip=178.128.69.202|http_method=POST|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/data-store-structure/	59	\N	\N	f	f
+1014	2025-11-05 18:39:43.241568+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/resource/d7b526e24f7e449098b428ae9363f514/	59	d7b526e24f7e449098b428ae9363f514	16	f	t
+1015	2025-11-05 18:39:43.436804+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/get_tasks_by_user/	59	\N	\N	f	f
+1016	2025-11-05 18:39:43.455612+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/list-referenced-content/	59	\N	\N	f	f
+1017	2025-11-05 18:39:43.801684+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/non-preferred-paths/	59	\N	\N	f	f
+1018	2025-11-05 18:39:43.950004+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/userInfo/	59	\N	\N	t	f
+1019	2025-11-05 18:39:43.999293+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/list-referenced-content/	59	\N	\N	f	f
+1020	2025-11-05 18:39:44.042798+00	visit	2	user_ip=178.128.69.202|http_method=GET|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/aggregation-files-to-sync/	59	\N	\N	f	f
+1021	2025-11-05 18:39:44.310992+00	visit	2	user_ip=178.128.69.202|http_method=POST|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/data-store-structure/	59	\N	\N	f	f
+1022	2025-11-05 18:40:07.666784+00	visit	2	user_ip=178.128.69.202|http_method=POST|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/coverage/add-metadata/	59	\N	\N	f	f
+1023	2025-11-05 18:40:09.09384+00	visit	2	user_ip=178.128.69.202|http_method=POST|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/coverage/add-metadata/	59	\N	\N	f	f
+1024	2025-11-05 18:40:16.520898+00	visit	2	user_ip=178.128.69.202|http_method=POST|http_code=200|user_type=None|user_email_domain=asdf|request_url=/hsapi/_internal/d7b526e24f7e449098b428ae9363f514/coverage/1/update-metadata/	59	\N	\N	f	f
 \.
 
 
@@ -24403,6 +24513,7 @@ COPY public.hs_tracking_visitor (id, first_seen, user_id) FROM stdin;
 55	2019-12-11 20:09:19.68388+00	\N
 56	2019-12-11 20:21:52.600769+00	\N
 57	2025-10-20 17:39:01.466394+00	\N
+58	2025-11-05 17:47:39.397226+00	\N
 \.
 
 
@@ -24475,7 +24586,7 @@ COPY public.pages_page (id, keywords_string, site_id, title, slug, _meta_title, 
 14		1	Help	http://help.hydroshare.org/	\N	Help	t	2017-09-01 18:12:49.579765+00	2017-09-01 18:13:50.018396+00	2	2017-09-01 18:12:49+00	\N	\N	f	5	\N	1	Help	link	f
 15		1	About	http://help.hydroshare.org//about-hydroshare/	\N	About	t	2017-09-01 18:13:41.539301+00	2017-09-01 18:13:50.015184+00	2	2017-09-01 18:13:41.539168+00	\N	\N	f	6	\N	1	About	link	f
 7		1	Verify Account	verify-account	Verify Account	Thank you for signing up for HydroShare! We have sent you an email from hydroshare.org to verify your account.  Please click on the link within the email and verify your account with us and you can get started sharing data and models with HydroShare.	t	2016-01-25 19:28:12.867432+00	2016-01-25 19:28:12.867432+00	2	2016-01-25 19:28:12.866419+00	\N	\N	t	7	\N		Verify Account	richtextpage	f
-16		1	Untitled Resource	resource/d7b526e24f7e449098b428ae9363f514	\N	Untitled Resource	t	2025-10-20 17:39:11.412751+00	2025-10-20 17:43:00.981555+00	2	2025-10-20 17:39:11.407813+00	\N	\N	t	13	\N		Untitled Resource	compositeresource	f
+16		1	THIS IS A TITLE	resource/d7b526e24f7e449098b428ae9363f514	\N	Untitled Resource	t	2025-10-20 17:39:11.412751+00	2025-11-05 18:40:16.448149+00	2	2025-10-20 17:39:11.407813+00	\N	\N	t	13	\N		THIS IS A TITLE	compositeresource	f
 \.
 
 
@@ -24501,6 +24612,7 @@ COPY public.pages_richtextpage (page_ptr_id, content) FROM stdin;
 
 COPY public.robots_rule (id, robot, crawl_delay) FROM stdin;
 1	*	5.0
+2	*	5.0
 \.
 
 
@@ -24518,6 +24630,7 @@ COPY public.robots_rule_allowed (id, rule_id, url_id) FROM stdin;
 
 COPY public.robots_rule_disallowed (id, rule_id, url_id) FROM stdin;
 1	1	1
+2	2	2
 \.
 
 
@@ -24527,6 +24640,7 @@ COPY public.robots_rule_disallowed (id, rule_id, url_id) FROM stdin;
 
 COPY public.robots_rule_sites (id, rule_id, site_id) FROM stdin;
 1	1	1
+2	2	1
 \.
 
 
@@ -24536,6 +24650,7 @@ COPY public.robots_rule_sites (id, rule_id, site_id) FROM stdin;
 
 COPY public.robots_url (id, pattern) FROM stdin;
 1	/
+2	/
 \.
 
 
@@ -25256,7 +25371,7 @@ SELECT pg_catalog.setval('public.hs_core_citation_id_seq', 1, false);
 -- Name: hs_core_contributor_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.hs_core_contributor_id_seq', 1, false);
+SELECT pg_catalog.setval('public.hs_core_contributor_id_seq', 2, true);
 
 
 --
@@ -25270,7 +25385,7 @@ SELECT pg_catalog.setval('public.hs_core_coremetadata_id_seq', 2, true);
 -- Name: hs_core_coverage_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.hs_core_coverage_id_seq', 1, false);
+SELECT pg_catalog.setval('public.hs_core_coverage_id_seq', 2, true);
 
 
 --
@@ -25291,21 +25406,21 @@ SELECT pg_catalog.setval('public.hs_core_date_id_seq', 2, true);
 -- Name: hs_core_description_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.hs_core_description_id_seq', 1, false);
+SELECT pg_catalog.setval('public.hs_core_description_id_seq', 1, true);
 
 
 --
 -- Name: hs_core_format_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.hs_core_format_id_seq', 1, false);
+SELECT pg_catalog.setval('public.hs_core_format_id_seq', 1, true);
 
 
 --
 -- Name: hs_core_fundingagency_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.hs_core_fundingagency_id_seq', 1, false);
+SELECT pg_catalog.setval('public.hs_core_fundingagency_id_seq', 1, true);
 
 
 --
@@ -25319,7 +25434,7 @@ SELECT pg_catalog.setval('public.hs_core_genericresource_collections_id_seq', 1,
 -- Name: hs_core_geospatialrelation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.hs_core_geospatialrelation_id_seq', 1, false);
+SELECT pg_catalog.setval('public.hs_core_geospatialrelation_id_seq', 1, true);
 
 
 --
@@ -25354,14 +25469,14 @@ SELECT pg_catalog.setval('public.hs_core_publisher_id_seq', 1, false);
 -- Name: hs_core_relation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.hs_core_relation_id_seq', 1, false);
+SELECT pg_catalog.setval('public.hs_core_relation_id_seq', 1, true);
 
 
 --
 -- Name: hs_core_resourcefile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.hs_core_resourcefile_id_seq', 1, false);
+SELECT pg_catalog.setval('public.hs_core_resourcefile_id_seq', 1, true);
 
 
 --
@@ -25375,7 +25490,7 @@ SELECT pg_catalog.setval('public.hs_core_rights_id_seq', 1, true);
 -- Name: hs_core_subject_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.hs_core_subject_id_seq', 1, false);
+SELECT pg_catalog.setval('public.hs_core_subject_id_seq', 6, true);
 
 
 --
@@ -25886,21 +26001,21 @@ SELECT pg_catalog.setval('public.hs_tools_resource_toolversion_id_seq', 1, false
 -- Name: hs_tracking_session_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.hs_tracking_session_id_seq', 57, true);
+SELECT pg_catalog.setval('public.hs_tracking_session_id_seq', 59, true);
 
 
 --
 -- Name: hs_tracking_variable_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.hs_tracking_variable_id_seq', 930, true);
+SELECT pg_catalog.setval('public.hs_tracking_variable_id_seq', 1024, true);
 
 
 --
 -- Name: hs_tracking_visitor_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.hs_tracking_visitor_id_seq', 57, true);
+SELECT pg_catalog.setval('public.hs_tracking_visitor_id_seq', 58, true);
 
 
 --
@@ -25956,28 +26071,28 @@ SELECT pg_catalog.setval('public.robots_rule_allowed_id_seq', 1, false);
 -- Name: robots_rule_disallowed_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.robots_rule_disallowed_id_seq', 1, true);
+SELECT pg_catalog.setval('public.robots_rule_disallowed_id_seq', 2, true);
 
 
 --
 -- Name: robots_rule_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.robots_rule_id_seq', 1, true);
+SELECT pg_catalog.setval('public.robots_rule_id_seq', 2, true);
 
 
 --
 -- Name: robots_rule_sites_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.robots_rule_sites_id_seq', 1, true);
+SELECT pg_catalog.setval('public.robots_rule_sites_id_seq', 2, true);
 
 
 --
 -- Name: robots_url_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.robots_url_id_seq', 1, true);
+SELECT pg_catalog.setval('public.robots_url_id_seq', 2, true);
 
 
 --
