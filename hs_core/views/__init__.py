@@ -15,7 +15,7 @@ from django.core import signing
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
 from django.core.mail import send_mail
 from django.db import Error, IntegrityError
-from django.db.models import Q
+from django.db.models import Q, F
 from django.forms.models import model_to_dict
 from django.http import (
     HttpResponse,
@@ -52,6 +52,7 @@ from hs_core.hydroshare.resource import (
     METADATA_STATUS_INSUFFICIENT,
     METADATA_STATUS_SUFFICIENT,
     update_quota_usage as update_quota_usage_utility,
+    update_doi_metadata_with_datacite
 )
 from hs_core.tasks import create_bag_by_s3, create_temp_zip
 from hs_core.hydroshare.utils import (
@@ -644,6 +645,8 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                 elif "errors" in response:
                     err_msg = err_msg.format(element_name, response["errors"])
 
+    update_doi_metadata_with_datacite(short_id=shortkey, element_name=element_name,
+                                      payload={element_name: request.POST.get("value", "")})
     if is_ajax(request):
         if is_add_success:
             res_public_status = "public" if res.raccess.public else "not public"
@@ -739,8 +742,10 @@ def update_metadata_element(
         element_id=element_id,
         request=request,
     )
+
     is_update_success = False
     err_msg = "Failed to update metadata element '{}'. {}."
+
     for receiver, response in handler_response:
         if "is_valid" in response:
             if response["is_valid"]:
@@ -780,6 +785,7 @@ def update_metadata_element(
             elif "errors" in response:
                 err_msg = err_msg.format(element_name, response["errors"])
 
+    update_doi_metadata_with_datacite(short_id=shortkey, element_name=element_name, payload=request.POST.dict())
     if is_ajax(request):
         if is_update_success:
             res_public_status = "public" if res.raccess.public else "not public"
@@ -899,6 +905,8 @@ def delete_metadata_element(
     res.update_public_and_discoverable()
     resource_modified(res, request.user, overwrite_bag=False)
     request.session["resource-mode"] = "edit"
+
+    update_doi_metadata_with_datacite(short_id=shortkey, element_name=element_name, payload={})
     return HttpResponseRedirect(request.headers["referer"])
 
 
@@ -2807,25 +2815,22 @@ class GroupView(TemplateView):
             context["denied"] = denied
             return context
 
-        group_resources = []
-        # for each of the resources this group has access to, set resource dynamic
-        # attributes (grantor - group member who granted access to the resource) and (date_granted)
-        view_resources = group.gaccess.view_resources
-        res_ids = [res.short_id for res in view_resources]
-        grp_qs = GroupResourcePrivilege.objects \
-            .filter(group=group, resource__short_id__in=res_ids) \
-            .select_related("grantor", "resource")
-
-        for res in view_resources:
-            for grp in grp_qs:
-                if res.short_id == grp.resource.short_id:
-                    res.grantor = grp.grantor
-                    res.date_granted = grp.start
-                    group_resources.append(res)
-                    break
-
-        group_resources = sorted(
-            group_resources, key=lambda x: x.date_granted, reverse=True
+        # annotate grantor information - user who granted group access to the resource
+        # grantor information is needed for resource facets by grantor
+        # NOTE: The following query results in 3 queries - independent of the number of resources
+        group_resources = (
+            group.gaccess.view_resources
+            .prefetch_related('r2grp__grantor__userprofile')
+            .annotate(
+                grantor_id=F('r2grp__grantor__id'),
+                date_granted=F('r2grp__start'),
+                grantor_first_name=F('r2grp__grantor__first_name'),
+                grantor_middle_name=F('r2grp__grantor__userprofile__middle_name'),
+                grantor_last_name=F('r2grp__grantor__last_name'),
+                grantor_username=F('r2grp__grantor__username'),
+            )
+            .filter(r2grp__group=group)
+            .order_by("-r2grp__start")  # sort by date the resource was shared with the group
         )
 
         context["group"] = group
@@ -2854,12 +2859,9 @@ class GroupView(TemplateView):
                 Q(invitation_to=None) | Q(invitation_to__is_active=True),
             )
 
-            if u.is_group_member:
-                context["group_resources"] = group_resources
-            elif group.gaccess.public:
+            if not u.is_group_member and group.gaccess.public:
                 # If the group is public, anyone can see the group's public and published resources and group membership
-                group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
-                context["group_resources"] = group_resources
+                group_resources = group_resources.filter(Q(raccess__public=True) | Q(raccess__discoverable=True))
 
             context["profile_user"] = u
             context["add_view_user_form"] = AddUserForm()
@@ -2867,9 +2869,15 @@ class GroupView(TemplateView):
         else:
             # If the group is public, anonymous users can see discoverable and public resources shared with the group
             if group.gaccess.public:
-                public_group_resources = [r for r in group_resources if r.raccess.public or r.raccess.discoverable]
-                context["group_resources"] = public_group_resources
+                group_resources = group_resources.filter(Q(raccess__public=True) | Q(raccess__discoverable=True))
 
+        group_resources = group_resources.values(
+            'short_id', 'resource_type', 'created', 'cached_metadata',
+            'grantor_id', 'grantor_first_name', 'grantor_middle_name', 'grantor_last_name', 'grantor_username',
+            'date_granted'
+        )
+
+        context["group_resources"] = list(group_resources)
         context["data"] = data
         return context
 

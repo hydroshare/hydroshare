@@ -8,9 +8,10 @@ from django.core.files.uploadedfile import UploadedFile
 from django.db.models import Q
 
 from hs_access_control.models import PrivilegeCodes
+from hs_core.models import BaseResource, Relation
 from hs_core.hydroshare.resource import add_resource_files, delete_resource_file_only
 from hs_core.hydroshare.utils import current_site_url, resource_modified
-from hs_core.views.utils import get_my_resources_list
+from hs_access_control.models.utilities import get_user_resources
 
 logger = logging.getLogger(__name__)
 
@@ -129,26 +130,45 @@ def update_collection_list_csv(collection_obj):
 
 
 def get_collectable_resources(user, coll_resource):
-    # resource is collectable if
-    # 1) shareable=True and resource is public in my resources, --or--
-    # 2) shareable=True and resource is accessible with view privilege, --or--
-    # 2) current user owns the resource.
-    # Also exclude this resource as well as resources already in the collection
-    # Start with both my resources and favorited public resources; so no need to
-    # check that user can view resources.
+    """
+    Returns a queryset of resources that are collectable based on:
+    1) Resources accessible to the user (owned or shared via get_user_resources), --or--
+    2) Resources discovered by the user (via user labels), --or--
+    3) Resources favorited by the user (via user labels)
 
-    collectable_resources = get_my_resources_list(user)
-    collectable_resources = collectable_resources \
-        .filter(Q(raccess__shareable=True)  # shareable and viewable, --or--
-                | Q(raccess__discoverable=True)  # discoverable, public, and/or published --or--
-                | Q(r2urp__user=user, r2urp__privilege=PrivilegeCodes.OWNER)) \
+    Then filters to include only resources that are:
+    - Shareable, --or--
+    - Discoverable/public, --or--
+    - Owned by the user
+
+    Excludes the collection resource itself, resources already in the collection,
+    obsoleted resources (replaced by newer versions), and resources marked for deletion.
+    """
+    discovered_resources = BaseResource.objects.none()
+    user_resources = get_user_resources(user.id, owned=True, shared=True)
+    discovered_resources = user.ulabels.my_resources
+    favorite_resources = user.ulabels.favorited_resources
+
+    # join all queryset objects.
+    resource_collection = user_resources.distinct() | \
+        discovered_resources.distinct() | favorite_resources.distinct()
+
+    # remove obsoleted resources
+    resource_collection = resource_collection.exclude(object_id__in=Relation.objects.filter(
+        type='isReplacedBy').values('object_id')).exclude(extra_data__to_be_deleted__isnull=False)
+
+    # filter out resources that are not collectable
+    resource_collection = resource_collection.filter(
+        Q(raccess__shareable=True)  # shareable and viewable, --or--
+        | Q(raccess__discoverable=True)  # discoverable, public, and/or published --or--
+        | Q(r2urp__user=user, r2urp__privilege=PrivilegeCodes.OWNER)) \
         .exclude(short_id=coll_resource.short_id) \
         .exclude(id__in=coll_resource.resources.values_list("id", flat=True))  # no duplicates!
 
-    collectable_resources = collectable_resources.only('short_id', 'title', 'resource_type', 'created')
-    collectable_resources = collectable_resources.select_related('raccess')
-
-    return collectable_resources
+    resource_collection = resource_collection.only('short_id', 'title', 'resource_type', 'created')
+    resource_collection = resource_collection.select_related('raccess')
+    resource_collection = resource_collection.order_by('title', 'short_id')
+    return resource_collection
 
 
 def _get_owners_string(owners_list):
