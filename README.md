@@ -70,13 +70,13 @@ Run the following command on completion to launch Hydroshare:
 
     Some WARNINGs are normal. 
 
-    HydroShare is available in your browser at https://localhost
+    HydroShare is available in your browser at http://localhost
 
-    The default admin page is https://localhost/admin
+    The default admin page is http://localhost/admin
 
     The default admin account is admin:default
 
-    Swagger API docs https://localhost/hsapi/
+    Swagger API docs http://localhost/hsapi/
 
 6. Start & Stop & Log
 
@@ -162,3 +162,22 @@ Hydroshare is released under the BSD 3-Clause License. This means that [you can 
 
 ©2017 CUAHSI. This material is based upon work supported by the National Science Foundation (NSF) under awards [1148453](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1148453), [1148090](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1148090), [1664061](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1664061), [1664018](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1664018), [1664119](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1664119), [1338606](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1338606), and [1849458](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1849458). Any opinions, findings, conclusions, or recommendations expressed in this material are those of the authors and do not necessarily reflect the views of the NSF.
 
+## Create a dummy resource for landing page work
+
+* Pull the [6016/landing-page-metadata-extraction](https://github.com/hydroshare/hydroshare/tree/6016/landing-page-metadata-extraction) branch
+* run `./local-dev-first-start-only.sh`
+
+Then...
+
+### go checkout the resource
+* http://localhost/resource/d7b526e24f7e449098b428ae9363f514 (**it is important that you use http not https!! **)
+* You should see the resource landing page. It will give an error saying that the metadata couldn't be loaded from S3. That's expected when you're not logged in.
+  * If you see a 504 from nginx instead of the resource landing page, try `make down-landing` and then `make up-landing` to restart the pm2 process
+  * Check `npx pm2 logs` to see if the vue/vite process is running as expected
+* Click "Login" this will redirect you to: the [HS sign-in page](http://localhost/accounts/login/?next=http%3A%2F%2Flocalhost%2Fresource%2Fd7b526e24f7e449098b428ae9363f514)
+* After login, it should redirect you back to the [landing page](http://localhost/resource/d7b526e24f7e449098b428ae9363f514)
+* If you get an error, check the "Settings" in the upper RH corneer
+Sometimes clicking the APPLY button will resolve the issue. This is a known bug that we need to resolve ![APPLY](apply_resource_landing_settings.png)
+* If you want to see the old version of the resource, you can do so at http://localhost:8000/resource/d7b526e24f7e449098b428ae9363f514
+* You can view the minio console at http:localhost:9000 (user = cuahsi, password = devpassword)
+* If you experience issues, try a private browser window. Clear your local storage.

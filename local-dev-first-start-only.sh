@@ -166,9 +166,9 @@ else
 fi
 
 DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
-HYDROSHARE_CONTAINERS=(hydroshare defaultworker redpanda redpanda-console s3eventworker solr postgis companion redis nginx minio micro-auth pgbouncer)
+HYDROSHARE_CONTAINERS=(hydroshare defaultworker redpanda redpanda-console s3eventworker solr postgis companion redis nginx minio micro-auth pgbouncer landing-page)
 HYDROSHARE_VOLUMES=(hydroshare_postgis_data_vol hydroshare_redpanda_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol hydroshare_minio_data_vol hydroshare_redis_data_vol hydroshare_companion_vol)
-HYDROSHARE_IMAGES=(hydroshare-defaultworker hydroshare-hydroshare solr postgis/postgis redpanda redpanda-console hydroshare-s3eventworker nginx redis transloadit/companion minio/minio edoburu/pgbouncer hydroshare-micro-auth)
+HYDROSHARE_IMAGES=(hydroshare-defaultworker hydroshare-hydroshare solr postgis/postgis redpanda redpanda-console hydroshare-s3eventworker nginx redis transloadit/companion minio/minio edoburu/pgbouncer hydroshare-micro-auth hydroshare-landing-page hydroshare-companion)
 
 NODE_CONTAINER_RUNNING=`docker ps -a | grep nodejs`
 
@@ -241,6 +241,39 @@ mkdir -p log/nginx 2>/dev/null
 
 find . -name '*.hydro-bk' -exec rm -f {} \; 2>/dev/null
 
+# run a git submodule init and update to make sure landing-page is present
+echo "Initializing git submodules"
+git submodule update --init --recursive
+
+echo "Installing npm modules for landing page"
+cd landing-page
+npm install
+
+# if the landing-page/.env file does not exist, create it from the template
+echo "Checking for landing-page/.env file..."
+if [ ! -f .env ]; then
+  echo "Creating landing-page/.env from template"
+  cp .env.template .env
+else
+  echo "landing-page/.env file already exists, skipping creation from template"
+fi
+cd ..
+
+# Check to make sure that pm2 is installed
+echo "Checking for pm2 installation..."
+PM2_INSTALLED=`npm list -g pm2 | grep pm2@ | wc -l`
+if [ "$PM2_INSTALLED" == "0" ]; then
+  echo "Installing pm2 globally"
+  npm install -g pm2
+fi
+echo "PM2 is installed"
+
+echo " - make down-landing"
+make down-landing
+
+echo " - make up-landing"
+make up-landing
+
 echo
 echo '########################################################################################################################'
 echo " Starting system"
@@ -260,13 +293,33 @@ echo
 echo " - building Node for Discovery in background"
 node_build > /dev/null 2>&1 &
 
-sleep 180
-
 echo
 echo '########################################################################################################################'
 echo -e " Setting up PostgreSQL container and Importing Django DB"
 echo '########################################################################################################################'
 echo
+
+echo "  - waiting for database system to be ready..."
+while [ 1 -eq 1 ]
+do
+  sleep 1
+  echo -n "."
+  LOG=`docker logs postgis 2>&1`
+  if [[ $LOG == *"PostgreSQL init process complete; ready for start up"* ]]; then
+    break
+  fi
+done
+
+# wait for the final log line to show "database system is ready to accept connections"
+while [ 1 -eq 1 ]
+do
+  sleep 1
+  echo -n "."
+  LOG=`docker logs postgis 2>&1 | tail -1`
+  if [[ $LOG == *"database system is ready to accept connections"* ]]; then
+    break
+  fi
+done
 
 echo " - docker exec -u postgres postgis psql -c \"REVOKE CONNECT ON DATABASE postgres FROM public;\""
 echo
@@ -402,9 +455,9 @@ docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noi
 
 
 echo
-echo "  - docker restart hydroshare defaultworker"
+echo "  - docker restart hydroshare defaultworker s3eventworker"
 echo
-docker restart hydroshare defaultworker
+docker restart hydroshare defaultworker s3eventworker
 
 echo
 echo "  - docker exec -u hydro-service hydroshare python manage.py add_missing_bucket_names"
@@ -413,7 +466,32 @@ docker exec -u hydro-service hydroshare python manage.py add_missing_bucket_name
 
 echo
 echo '########################################################################################################################'
-echo -e " All done, run `green '\"docker-compose -f local-dev.yml restart\"'` to restart HydroShare"
+echo " Create test S3 metadata"
+echo '########################################################################################################################'
+export BUCKET=asdf
+export DEFAULT_RESOURCE_ID=d7b526e24f7e449098b428ae9363f514
+docker exec -u hydro-service hydroshare mc alias set local-hydroshare http://host.docker.internal:9000 cuahsi devpassword
+docker exec -u hydro-service hydroshare python manage.py create_buckets $BUCKET
+docker exec -u hydro-service hydroshare mc cp landing-page/example_metadata/dataset_metadata.json local-hydroshare/$BUCKET/$DEFAULT_RESOURCE_ID/.hsjsonld/
+docker exec -u hydro-service hydroshare mc cp landing-page/example_metadata/user_metadata.json local-hydroshare/$BUCKET/$DEFAULT_RESOURCE_ID/.hsmetadata/
+
+echo
+echo " waiting for hydroshare container to be ready..."
+echo " you can check your logs by running: `blue 'docker logs -f hydroshare'`"
+
+while [ 1 -eq 1 ]
+do
+  sleep 1
+  echo -n "."
+  LOG=`docker logs hydroshare 2>&1 | tail -20`
+  if [[ $LOG == *"Starting development server at http://0.0.0.0:8000/"* ]]; then
+    break
+  fi
+done
+
+echo
+echo '########################################################################################################################'
+echo -e " All done! You can now access your local HydroShare instance at `green 'http://localhost'`"
 echo '########################################################################################################################'
 echo
 
