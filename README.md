@@ -164,7 +164,7 @@ Hydroshare is released under the BSD 3-Clause License. This means that [you can 
 
 ## Create a dummy resource for landing page work
 
-* Pull the [6016/landing-page-squash-rebase](https://github.com/hydroshare/hydroshare/tree/6016/landing-page-squash-rebase) branch
+* Pull the [6016/landing-page-metadata-extraction](https://github.com/hydroshare/hydroshare/tree/6016/landing-page-metadata-extraction) branch
 * run `./local-dev-first-start-only.sh`
 
 Then...
@@ -172,6 +172,8 @@ Then...
 ### go checkout the resource
 * http://localhost/resource/d7b526e24f7e449098b428ae9363f514 (**it is important that you use http not https!! **)
 * You should see the resource landing page. It will give an error saying that the metadata couldn't be loaded from S3. That's expected when you're not logged in.
+  * If you see a 504 from nginx instead of the resource landing page, try `make down-landing` and then `make up-landing` to restart the pm2 process
+  * Check `npx pm2 logs` to see if the vue/vite process is running as expected
 * Click "Login" this will redirect you to: the [HS sign-in page](http://localhost/accounts/login/?next=http%3A%2F%2Flocalhost%2Fresource%2Fd7b526e24f7e449098b428ae9363f514)
 * After login, it should redirect you back to the [landing page](http://localhost/resource/d7b526e24f7e449098b428ae9363f514)
 * If you get an error, check the "Settings" in the upper RH corneer
