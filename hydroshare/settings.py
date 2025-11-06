@@ -762,7 +762,15 @@ else:
                 "formatter": "verbose",
                 "maxBytes": 1024 * 1024 * 15,  # 15MB
                 "backupCount": 10,
-            }
+            },
+            "celerylog": {
+                "level": "INFO",
+                "class": "logging.handlers.RotatingFileHandler",
+                "filename": "/hydroshare/log/celery.log",
+                "formatter": "verbose",
+                "maxBytes": 1024 * 1024 * 15,  # 15MB
+                "backupCount": 10,
+            },
         },
         "loggers": {
             "django": {
