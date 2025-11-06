@@ -966,6 +966,21 @@ div.readme .readme-content {
 	font-size: 14px;
 	font-family: 'Roboto', sans-serif;
 	word-break: break-word;
+
+	/* support for tables embedded in readme */
+	table {
+		width: 100%;
+		border-collapse: collapse;
+	}
+
+	th, td {
+		padding: 8px 12px;
+		border: 1px solid #DDD;
+	}
+
+	th {
+		background-color: #F1F1F1;
+	}
 }
 
 div.readme .readme-header {

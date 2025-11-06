@@ -453,7 +453,6 @@ INSTALLED_APPS = (
     "health_check.contrib.celery",
     "health_check.contrib.celery_ping",
     "health_check.contrib.psutil",
-    "health_check.contrib.rabbitmq",
     "mozilla_django_oidc",
     'django_tus',
 )
@@ -593,8 +592,35 @@ PACKAGE_NAME_GRAPPELLI = "grappelli_safe"
 #  CORS/OAUTH SETTINGS  #
 #########################
 
-# TODO: change this to the actual origins we wish to support
-CORS_ORIGIN_ALLOW_ALL = True
+# CORS settings - specify allowed origins for security in production
+#
+# Cross-origin setup
+# NOTE: If we setup nginx reverse proxy in production, can we remove CORS and CSRF trusted origins?
+#
+CORS_ALLOWED_ORIGINS = [
+    # Vue frontend domains that make requests to Django
+    # "https://hydroshare.org",         # Vue app main domain
+    # "https://www.hydroshare.org",     # Vue app WWW variant
+    #
+    # NOTE: Django backend sub domain (e.g., api.hydroshare.org) is NOT included here
+]
+
+# CSRF trusted origins - should match CORS origins for cross-origin setup
+# NOTE: Only include origins that will submit browser requests to Django backend
+CSRF_TRUSTED_ORIGINS = [
+    # Vue frontend domains that need CSRF tokens
+    # "https://hydroshare.org",         # Vue app main domain
+    # "https://www.hydroshare.org",     # Vue app WWW variant
+]
+
+# Allow credentials (cookies, authorization headers) to be included in CORS requests
+CORS_ALLOW_CREDENTIALS = True
+
+# List of allowed hosts for redirects after login
+ALLOWED_REDIRECT_HOSTS = [
+    # "hydroshare.org",   # Vue app main domain
+    # "www.hydroshare.org",   # Vue app WWW variant
+]
 
 #########################
 # OPTIONAL APPLICATIONS #
@@ -919,8 +945,8 @@ MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
 BULK_UPDATE_CREATE_BATCH_SIZE = 1000
 
 
-AWS_S3_ACCESS_KEY_ID = 'minioadmin'
-AWS_S3_SECRET_ACCESS_KEY = 'minioadmin'
+AWS_S3_ACCESS_KEY_ID = 'cuahsi'
+AWS_S3_SECRET_ACCESS_KEY = 'devpassword'
 AWS_S3_ENDPOINT_URL = 'http://minio:9000'
 # Only enable this if you are using minio in local development
 # AWS_S3_USE_LOCAL = True
@@ -930,6 +956,8 @@ PUBLISHER_USER_NAME = "published"
 MINIO_LIFECYCLE_POLICY = None
 DEFAULT_QUOTA_VALUE = 20
 DEFAULT_QUOTA_UNIT = "GB"
+
+BROKER_URL = 'kafka://redpanda:9092'
 
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #

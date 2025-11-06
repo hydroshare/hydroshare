@@ -25,9 +25,6 @@ COMMENTS_ACCOUNT_REQUIRED = True
 RATINGS_ACCOUNT_REQUIRED = True
 COMMENTS_USE_RATINGS = True
 
-RABBITMQ_HOST = os.environ.get('RABBITMQ_PORT_5672_TCP_ADDR', 'localhost')
-RABBITMQ_PORT = '5672'
-
 POSTGIS_HOST = os.environ.get('POSTGIS_PORT_5432_TCP_ADDR', 'localhost')
 POSTGIS_PORT = os.environ.get('POSTGIS_PORT', 5432)
 POSTGIS_DB = os.environ.get('POSTGIS_DB', 'postgres')
@@ -52,8 +49,7 @@ IPYTHON_HOST = '127.0.0.1'
 # Celery settings
 # customizations: we need a special queue for broadcast signals to all docker daemons.
 # we also need a special queue for direct messages to all docker daemons.
-BROKER_URL = 'amqp://guest:guest@{RABBITMQ_HOST}:{RABBITMQ_PORT}//'.format(RABBITMQ_HOST=RABBITMQ_HOST,
-                                                                           RABBITMQ_PORT=RABBITMQ_PORT)
+BROKER_URL = 'kafka://redpanda:9092'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
@@ -81,6 +77,31 @@ USE_SOUTH = False
 SITE_TITLE = "CUAHSI HydroShare"
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+#########################
+#  CORS SETTINGS  #
+#########################
+
+# Override CORS settings for local development
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8080",   # Vue development server
+    "http://127.0.0.1:8080",   # Vue development server
+]
+
+# This is to allow the new landing page Vue app to use CSRF tokens to access hydroshare APIs
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:8080",   # Vue development server
+    "http://127.0.0.1:8080",   # Vue development server
+]
+
+CORS_ALLOW_CREDENTIALS = True
+CSRF_COOKIE_HTTPONLY = False  # Must be False so JS (Vue app) can read it
+
+# List of allowed hosts for redirects after login
+ALLOWED_REDIRECT_HOSTS = [
+    "localhost:8080",  # Vue development server
+    "127.0.0.1:8080",  # Vue development server
+]
 
 #############
 # DATABASES #

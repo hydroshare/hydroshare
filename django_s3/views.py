@@ -27,8 +27,9 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view
 
+from hs_core.exceptions import QuotaException
 from hs_core.hydroshare.resource import check_resource_type
-from hs_core.hydroshare.utils import get_resource_by_shortkey
+from hs_core.hydroshare.utils import validate_user_quota, get_resource_by_shortkey
 from hs_core.signals import (pre_check_bag_flag, pre_download_file,
                              pre_download_resource)
 from hs_core.task_utils import (get_or_create_task_notification,
@@ -393,7 +394,7 @@ class CustomTusFile(TusFile):
         try:
             self.file_size = int(cache.get("tus-uploads/{}/file_size".format(resource_id)))
         except (ValueError, TypeError):
-            self.file_size = None
+            self.file_size = 0
         self.metadata = cache.get("tus-uploads/{}/metadata".format(resource_id))
         self.offset = cache.get("tus-uploads/{}/offset".format(resource_id))
         self.part_number = cache.get("tus-uploads/{}/part_number".format(resource_id))
@@ -631,7 +632,7 @@ class CustomTusUpload(TusUpload):
 
         # set the filesize from HTTP header if it exists, otherwise set it from the metadata
         file_size = int(request.META.get("HTTP_UPLOAD_LENGTH", "0"))
-        meta_file_size = metadata.get("file_size", None)
+        meta_file_size = metadata.get("file_size", 0)
         if meta_file_size and meta_file_size != 'null':
             file_size = meta_file_size
 
@@ -639,6 +640,12 @@ class CustomTusUpload(TusUpload):
         res = get_resource_by_shortkey(res_id)
         if res.raccess.published:
             return TusResponse(status=403, reason="Cannot upload file to a published resource")
+        try:
+            res_id = metadata.get("hs_res_id")
+            res = get_resource_by_shortkey(res_id)
+            validate_user_quota(res.quota_holder, int(file_size))
+        except QuotaException as e:
+            return TusResponse(status=413, reason=str(e))
         try:
             tus_file = CustomTusFile.create_initial_file(metadata, file_size)
         except Exception as e:

@@ -166,9 +166,9 @@ else
 fi
 
 DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
-HYDROSHARE_CONTAINERS=(hydroshare defaultworker rabbitmq solr postgis companion redis nginx minio micro-auth pgbouncer)
-HYDROSHARE_VOLUMES=(hydroshare_postgis_data_vol hydroshare_rabbitmq_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol hydroshare_minio_data_vol hydroshare_redis_data_vol hydroshare_companion_vol)
-HYDROSHARE_IMAGES=(hydroshare-defaultworker hydroshare-hydroshare solr postgis/postgis rabbitmq nginx redis transloadit/companion minio/minio edoburu/pgbouncer hydroshare/micro-auth)
+HYDROSHARE_CONTAINERS=(hydroshare defaultworker redpanda redpanda-console s3eventworker solr postgis companion redis nginx minio micro-auth pgbouncer)
+HYDROSHARE_VOLUMES=(hydroshare_postgis_data_vol hydroshare_redpanda_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol hydroshare_minio_data_vol hydroshare_redis_data_vol hydroshare_companion_vol)
+HYDROSHARE_IMAGES=(hydroshare-defaultworker hydroshare-hydroshare solr postgis/postgis redpanda redpanda-console hydroshare-s3eventworker nginx redis transloadit/companion minio/minio edoburu/pgbouncer hydroshare-micro-auth)
 
 NODE_CONTAINER_RUNNING=`docker ps -a | grep nodejs`
 
@@ -399,6 +399,17 @@ done
 echo "  -docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput"
 echo
 docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput
+
+
+echo
+echo "  - docker restart hydroshare defaultworker"
+echo
+docker restart hydroshare defaultworker
+
+echo
+echo "  - docker exec -u hydro-service hydroshare python manage.py add_missing_bucket_names"
+echo
+docker exec -u hydro-service hydroshare python manage.py add_missing_bucket_names
 
 echo
 echo '########################################################################################################################'
