@@ -122,35 +122,13 @@ clear
 
 echo
 echo '########################################################################################################################'
-echo -e " `red 'For fewer problems during setup all HydroShare containers, images and volumes should be deleted.\n Make sure you understand the impact of this is not reversible and could result in the loss of work.'`"
+echo -e " `red 'For fewer problems during setup all HydroShare containers, images and volumes will be deleted.\n Make sure you understand the impact of this is not reversible and could result in the loss of work.'`"
 echo '########################################################################################################################'
 echo
-echo -e " (1) Remove all HydroShare container: `green $REMOVE_CONTAINER`"
-echo -e " (2) Remove all HydroShare volume:    `green $REMOVE_VOLUME`"
-echo -e " (3) Remove all HydroShare image:     `green $REMOVE_IMAGE`"
-echo
-echo -ne " There are three options you can combine to make a configuratin. What you see here is the default.\n\n Enter (1) or (2) or (3) to toggle the first, second and third option. Type 'c' to continue or press Ctrl+C to exit: "; read A
+echo -ne " Type 'c' to continue or press Ctrl+C to exit: "; read A
 echo
 
 case "$A" in
-  1)  if [ "$REMOVE_CONTAINER" == "YES" ]; then
-        REMOVE_CONTAINER=NO
-      else
-        REMOVE_CONTAINER=YES
-      fi
-  ;;
-  2)  if [ "$REMOVE_VOLUME" == "YES" ]; then
-        REMOVE_VOLUME=NO
-      else
-        REMOVE_VOLUME=YES
-      fi
-  ;;
-  3)  if [ "$REMOVE_IMAGE" == "YES" ]; then
-        REMOVE_IMAGE=NO
-      else
-        REMOVE_IMAGE=YES
-      fi
-  ;;
   c)  break
   ;;
   C)  break
@@ -159,58 +137,11 @@ esac
 
 done
 
-if [ "$REMOVE_IMAGE" == "YES" ]; then
-  REBUILD_IMAGE='--build'
-else
-  REBUILD_IMAGE=
-fi
-
 DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
-HYDROSHARE_CONTAINERS=(hydroshare defaultworker redpanda redpanda-console s3eventworker solr postgis companion redis nginx minio micro-auth pgbouncer)
-HYDROSHARE_VOLUMES=(hydroshare_postgis_data_vol hydroshare_redpanda_data_vol hydroshare_share_vol hydroshare_solr_data_vol hydroshare_temp_vol hydroshare_minio_data_vol hydroshare_redis_data_vol hydroshare_companion_vol)
-HYDROSHARE_IMAGES=(hydroshare-defaultworker hydroshare-hydroshare solr postgis/postgis redpanda redpanda-console hydroshare-s3eventworker nginx redis transloadit/companion minio/minio edoburu/pgbouncer hydroshare-micro-auth)
 
 NODE_CONTAINER_RUNNING=`docker ps -a | grep nodejs`
 
-if [ "$REMOVE_CONTAINER" == "YES" ]; then
-  echo "  Removing HydroShare container..."
-  for i in "${HYDROSHARE_CONTAINERS[@]}"; do
-    echo -e "    Removing $i container if existed..."
-    echo -e "     - docker rm -f `green $i`"
-    docker rm -f $i 2>/dev/null 1>&2
-  done
-fi
-
-if [ "$REMOVE_VOLUME" == "YES" ]; then
-  echo "  Removing HydroShare volume..."
-  for i in "${HYDROSHARE_VOLUMES[@]}"; do
-    echo -e "    Removing $i volume if existed..."
-    echo -e "     - docker volume rm `green $i`"
-    docker volume rm $i 2>/dev/null 1>&2
-  done
-fi
-
-if [ "$REMOVE_IMAGE" == "YES" ]; then
-  echo "  Removing all HydroShare image..."
-  for i in "${HYDROSHARE_IMAGES[@]}"; do    
-    echo -e "    Removing $i image if existed..."
-    IMAGE_ID=`getImageID $i`
-    if [ "$IMAGE_ID" != "" ]; then
-      echo -e "     - docker rmi -f `green $IMAGE_ID`"
-      docker rmi -f $IMAGE_ID 2>/dev/null 1>&2
-    fi
-  done
-else
-  echo "  Removing only hydroshare_hydroshare and hydroshare_defaultwoker image..."
-  for i in hydroshare_hydroshare hydroshare_defaultworker; do    
-    echo -e "    Removing $i image if existed..."
-    IMAGE_ID=`getImageID $i`
-    if [ "$IMAGE_ID" != "" ]; then
-      echo -e "     - docker rmi -f `green $IMAGE_ID`"
-      docker rmi -f $IMAGE_ID 2>/dev/null 1>&2
-    fi
-  done
-fi
+docker compose -f ${DOCKER_COMPOSER_YAML_FILE} down -v --rmi local --remove-orphans
 
 echo '###############################################################################################################'
 echo " Preparing"                                                                                            
@@ -235,8 +166,8 @@ echo " Starting system"
 echo '########################################################################################################################'
 echo
 
-echo "  - docker-compose -f ${DOCKER_COMPOSER_YAML_FILE} up -d ${REBUILD_IMAGE}"
-docker-compose -f $DOCKER_COMPOSER_YAML_FILE up -d $REBUILD_IMAGE
+echo "  - docker compose -f ${DOCKER_COMPOSER_YAML_FILE} up -d ${REBUILD_IMAGE}"
+docker compose -f $DOCKER_COMPOSER_YAML_FILE up -d $REBUILD_IMAGE
 
 echo
 echo '########################################################################################################################'
@@ -417,7 +348,7 @@ docker exec hydroshare python manage.py add_missing_bucket_names
 
 echo
 echo '########################################################################################################################'
-echo -e " All done, run `green '\"docker-compose -f local-dev.yml restart\"'` to restart HydroShare"
+echo -e " All done, run `green '\"docker compose -f local-dev.yml restart\"'` to restart HydroShare"
 echo '########################################################################################################################'
 echo
 
