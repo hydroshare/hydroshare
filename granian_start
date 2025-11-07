@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+NAME="hydroshare_app"                               # Name of the application
+DJANGODIR=/hydroshare                               # Django project directory
+USER=hydro-service                                  # the user to run as
+GROUP=storage-hydro                                 # the group to run as
+NUM_WORKERS=$(($(nproc) * 2 + 1))                   # Calculate workers based on CPU cores
+HOST=0.0.0.0                                        # Host IP address
+PORT=8000                                           # Port number
+DJANGO_SETTINGS_MODULE=hydroshare.settings          # which settings file should Django use
+DJANGO_WSGI_MODULE=hydroshare.wsgi                  # WSGI module name
+
+echo "Starting $NAME as `whoami`"
+
+# Activate the virtual environment
+cd $DJANGODIR || exit 1
+source /hydroshare/init/env/bin/activate || exit 1
+export DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE
+export PYTHONPATH=$DJANGODIR:$PYTHONPATH
+
+# Start your Django Granian
+exec granian \
+  --interface wsgi \
+  --host $HOST \
+  --port $PORT \
+  --workers $NUM_WORKERS \
+  --runtime-threads 1 \
+  --backlog 2048 \
+  --max-requests 1000 \
+  --max-requests-jitter 50 \
+  --timeout 300 \
+  --access-log \
+  --gzip \
+  $DJANGO_WSGI_MODULE:application

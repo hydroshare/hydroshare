@@ -224,9 +224,9 @@ sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g init-hydroshare
 sed -i $SED_EXT s/HS_SERVICE_GID/$HS_SERVICE_GID/g init-hydroshare
 
 sed -i $SED_EXT s/HS_SSH_SERVER//g init-hydroshare
-sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"python manage.py runserver 0.0.0.0:8000"'!g' init-hydroshare                  
+sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"granian --interface wsgi --host 0.0.0.0 --port 8000 --workers 1 --runtime-threads 1 --reload --reload-paths /hydroshare --access-log --log-level info hydroshare.wsgi:application"'!g' init-hydroshare                  
 
-# run using gunicorn
+# run using gunicorn (commented out in favor of granian)
 # sed -i $SED_EXT 's!HS_DJANGO_SERVER!'"/hydroshare/gunicorn_start"'!g' init-hydroshare
 
 sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g init-defaultworker
