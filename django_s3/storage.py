@@ -247,15 +247,11 @@ class S3Storage(S3Storage):
     def create_folder(self, coll_path, path):
         folder_path = os.path.join(coll_path, path)
         bucket_name, folder_path = bucket_and_name(folder_path)
-        if not folder_path.endswith("/"):
-            folder_path += "/"
         self.connection.Bucket(bucket_name).put_object(Key=folder_path, Body=b"")
 
     def remove_folder(self, res_id, path, AVU_only=False):
         folder_path = os.path.join(res_id, path)
         bucket_name, folder_path = bucket_and_name(folder_path)
-        if not folder_path.endswith("/"):
-            folder_path += "/"
         self.connection.Bucket(bucket_name).delete_objects(Delete={"Objects": [{"Key": folder_path}]})
 
     def copyFiles(self, src_path, dest_path, delete_src=False):
