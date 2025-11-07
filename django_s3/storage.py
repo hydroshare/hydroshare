@@ -65,10 +65,6 @@ class S3Storage(S3Storage):
         directories, files, file_sizes = super().listdir(path)
         directories = [d for d in directories if d != os.path.basename(path)]
 
-        resource_id = "/".join(path.split("/")[:1])
-        additional_directories = self._empty_folders(resource_id, path)
-        if not directories and not files and not additional_directories:
-            raise SessionException(f"Path {path} does not exist")
         path = path.strip("/")
         additional_directories = [d[len(path):].strip("/").split("/")[0]
                                   for d in additional_directories
@@ -224,17 +220,21 @@ class S3Storage(S3Storage):
         except m.AVU.DoesNotExist:
             return None
 
-    def _empty_folders(self, resource_id, filter=None):
-        folders = self.getAVU(resource_id, "empty_folders")
-        if not folders:
-            return []
-        folders = folders.split(folder_delimiter)
-        if filter:
-            if not filter.endswith("/"):
-                filter += "/"
-            # folders = [f for f in folders if f.startswith(filter) and filter.split("/")[-1] in f.split("/")]
-            folders = [f for f in folders if f"{f}/".startswith(filter)]
-        return folders
+    def removeAVU(self, name, attName):
+        """
+        remove AVU in database - this is used for on-demand bagging by indicating
+        whether the resource has been modified via AVU pairs
+
+        Parameters:
+        :param
+        name: the resource collection name to set AVU.
+        attName: the attribute name to set
+        """
+        try:
+            avu = m.AVU.objects.get(name=name, attName=attName)
+            avu.delete()
+        except m.AVU.DoesNotExist:
+            pass
 
     def exists(self, name):
         if super().exists(name):
@@ -246,33 +246,21 @@ class S3Storage(S3Storage):
                 return True
             elif f.key.startswith(key.strip("/") + "/"):
                 return True
-
-        resource_id_and_relative_path = key.split("/data/contents/")
-        resource_id = resource_id_and_relative_path[0]
-        empty_dirs = self._empty_folders(resource_id)
-        if name in empty_dirs:
-            return True
-
         return False
 
     def create_folder(self, coll_path, path):
-        folders = self._empty_folders(coll_path)
-        folders.append(path.strip("/"))
-        # remove duplicates
-        folders = list(set(folders))
-        self.setAVU(coll_path, "empty_folders", folder_delimiter.join(folders))
+        folder_path = os.path.join(coll_path, path)
+        bucket_name, folder_path = bucket_and_name(folder_path)
+        if not folder_path.endswith("/"):
+            folder_path += "/"
+        self.connection.Bucket(bucket_name).put_object(Key=folder_path, Body=b"")
 
     def remove_folder(self, res_id, path, AVU_only=False):
-        folders = self._empty_folders(res_id)
-        for folder in folders:
-            if folder.startswith(path):
-                folders.remove(folder)
-        self.setAVU(res_id, "empty_folders", folder_delimiter.join(folders))
-        if not AVU_only:
-            src_bucket, src_name = bucket_and_name(path)
-            src_name = src_name.strip("/") + "/"
-            for file in self.connection.Bucket(src_bucket).objects.filter(Prefix=src_name):
-                self.connection.Object(src_bucket, file.key).delete()
+        folder_path = os.path.join(res_id, path)
+        bucket_name, folder_path = bucket_and_name(folder_path)
+        if not folder_path.endswith("/"):
+            folder_path += "/"
+        self.connection.Bucket(bucket_name).delete_objects(Delete={"Objects": [{"Key": folder_path}]})
 
     def copyFiles(self, src_path, dest_path, delete_src=False):
         """
@@ -323,13 +311,6 @@ class S3Storage(S3Storage):
                     raise e
                 if delete_src:
                     self.connection.Object(src_bucket, src_file_path).delete()
-
-            # update empty_folders AVU
-            res_id = "/".join(dest_name.split("/")[:1])
-            for empty_folder in self._empty_folders(res_id, filter=src_name):
-                new_folder = empty_folder.replace(src_name, dest_name)
-                self.remove_folder(res_id, empty_folder, AVU_only=True)
-                self.create_folder(res_id, new_folder)
 
     def moveFile(self, src_path, dest_path):
         """
