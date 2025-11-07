@@ -96,6 +96,8 @@ services:
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       VUE_APP_BUCKET_URL_PUBLIC_PATH: "/static/static"
       MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
+      DATACITE_USERNAME: ${DATACITE_USERNAME}
+      DATACITE_PASSWORD: ${DATACITE_PASSWORD}
     volumes:
       # hydroshare repository
       - ".:/hydroshare"
@@ -284,6 +286,29 @@ services:
       - 8080:8080
     depends_on:
       - redpanda
+  hs_extract:
+    build:
+      context: .
+      dockerfile: hs_extract/Dockerfile
+    platform: linux/amd64
+    environment:
+      AWS_S3_ENDPOINT_URL: "http://minio:9000"
+      AWS_ACCESS_KEY_ID: cuahsi
+      AWS_SECRET_ACCESS_KEY: devpassword
+      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
+    volumes:
+      - "./hs_extract:/app/hs_extract"
+      - "./hs_cloudnative_schemas:/app/hs_extract/hs_cloudnative_schemas"
+    links:
+      - pgbouncer:pgbouncer
+      - redpanda:redpanda
+    depends_on:
+      - hydroshare
+      - pgbouncer
+      - solr
+      - redpanda
+    stdin_open: true
+    tty: true
   companion:
   # https://github.com/transloadit/uppy/blob/main/packages/%40uppy/companion/KUBERNETES.md
     image:  docker.io/transloadit/companion:5.5.0

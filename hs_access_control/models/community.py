@@ -166,7 +166,7 @@ class Community(models.Model):
 
         if not self.active:
             return BaseResource.objects.none()
-        res = BaseResource\
+        res_qs = BaseResource\
             .objects\
             .filter(Q(r2grp__group__g2gcp__community=self,
                       r2grp__group__gaccess__active=True)
@@ -179,28 +179,7 @@ class Community(models.Model):
                       published=F("raccess__published"),
                       discoverable=F("raccess__discoverable"))
 
-        res = res.only('title', 'resource_type', 'created', 'updated', 'short_id')
-
-        # collect generics from resources
-        generics = {}
-        for item in res:
-            generics.setdefault(item.content_type.id, set()).add(item.object_id)
-
-        # fetch all content types in one query
-        content_types = ContentType.objects.in_bulk(list(generics.keys()))
-
-        # build a map between content types and the objects that use them.
-        relations = {}
-        for ct, fk_list in list(generics.items()):
-            ct_model = content_types[ct].model_class()
-            relations[ct] = ct_model.objects.in_bulk(list(fk_list))
-
-        # force-populate the cache of content type objects.
-        for item in res:
-            setattr(item, '_content_object_cache',
-                    relations[item.content_type.id][item.object_id])
-
-        return res
+        return res_qs
 
     # TODO: this currently contains OWNER privilege only
     def get_effective_user_privilege(self, this_user):
