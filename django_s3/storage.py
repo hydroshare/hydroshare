@@ -66,10 +66,6 @@ class S3Storage(S3Storage):
         directories = [d for d in directories if d != os.path.basename(path)]
 
         path = path.strip("/")
-        additional_directories = [d[len(path):].strip("/").split("/")[0]
-                                  for d in additional_directories
-                                  if d[len(path):].strip("/")]
-        directories = list(set(directories + additional_directories))
 
         if remove_metadata:
             # remove .xml metadata, json metadata, json schema and json schema values files from the list
