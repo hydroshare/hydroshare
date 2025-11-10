@@ -319,6 +319,7 @@ def download(request, path, use_async=True,
     # OR the user specifically requested a non-proxied download.
     filename = output_path.split('/')[-1]
     signed_url = istorage.signed_url(s3_output_path, ResponseContentDisposition=f'attachment; filename="{filename}"')
+    res.update_download_count()
     return HttpResponseRedirect(signed_url)
 
 
