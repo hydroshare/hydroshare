@@ -177,6 +177,8 @@ def download(request, path, use_async=True,
     resource_cls = check_resource_type(res.resource_type)
 
     if is_zip_request:
+
+        res.update_download_count()
         download_path = '/django_s3/rest_download/' + output_path
         if use_async:
             user_id = get_task_user_id(request)
@@ -208,6 +210,7 @@ def download(request, path, use_async=True,
     elif is_bag_download:
         now = datetime.datetime.now(tz.UTC)
         res.bag_last_downloaded = now
+        res.update_download_count()
         res.save()
         # Shorten request if it contains extra junk at the end
         bag_file_name = res_id + '.zip'
@@ -276,6 +279,7 @@ def download(request, path, use_async=True,
             }
             return JsonResponse(task_dict)
     else:  # regular file download
+        res.update_download_count()
         # if fetching main metadata files, then these need to be refreshed.
         if path in [f"{res_id}/data/resourcemap.xml", f"{res_id}/data/resourcemetadata.xml",
                     f"{res_id}/manifest-md5.txt", f"{res_id}/tagmanifest-md5.txt", f"{res_id}/readme.txt",
@@ -319,7 +323,6 @@ def download(request, path, use_async=True,
     # OR the user specifically requested a non-proxied download.
     filename = output_path.split('/')[-1]
     signed_url = istorage.signed_url(s3_output_path, ResponseContentDisposition=f'attachment; filename="{filename}"')
-    res.update_download_count()
     return HttpResponseRedirect(signed_url)
 
 
