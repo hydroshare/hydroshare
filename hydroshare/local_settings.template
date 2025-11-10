@@ -223,8 +223,6 @@ DEFAULT_AUTHENTICATION_CLASSES = (
 # OIDC_OP_LOGOUT_URL_METHOD = 'hs_core.authentication.provider_logout'
 # OIDC_STORE_ID_TOKEN = True
 
-# Only enable this if you are using minio in local development
-AWS_S3_USE_LOCAL = True
 # Todo: Change for production deployment
 USE_DATACITE_TEST=os.environ.get("USE_DATACITE_TEST", True)
 DATACITE_PREFIX = os.environ.get("DATACITE_PREFIX", "10.83165")
