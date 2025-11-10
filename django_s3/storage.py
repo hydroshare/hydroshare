@@ -398,6 +398,9 @@ class S3Storage(S3Storage):
 
     def signed_url(self, name, **kwargs):
         super_url = super().url(name.strip("/"), kwargs)
+        if settings.TESTING:
+            # keep the internal URL during testing so the tests can download files
+            return super_url
         return super_url.replace(settings.AWS_S3_ENDPOINT_URL, settings.AWS_S3_ENDPOINT_URL_PUBLIC)
 
     def url(self, name, url_download=False, zipped=False, aggregation=False):
