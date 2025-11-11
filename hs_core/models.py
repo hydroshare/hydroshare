@@ -5366,13 +5366,17 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         """
 
         missing_recommended_elements = []
-        if not self.funding_agencies.count():
+        resource = self.resource
+        if not resource.cached_metadata.get('funding_agencies', []):
             missing_recommended_elements.append('Funding Agency')
-        if not self.resource.readme_file and self.resource.resource_type == "CompositeResource":
+
+        if not resource.readme_file and resource.resource_type == "CompositeResource":
             missing_recommended_elements.append('Readme file containing variables, '
                                                 'abbreviations/acronyms, and non-standard file formats')
-        if not self.coverages.count():
+        if not resource.cached_metadata.get('spatial_coverage', {}) and \
+                not resource.cached_metadata.get('temporal_coverage', {}):
             missing_recommended_elements.append('Coverage that describes locations that are related to the dataset')
+
         return missing_recommended_elements
 
     def delete_all_elements(self):
