@@ -224,11 +224,17 @@ services:
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       COLUMNS: 80
       MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
+      MONGO_CONNECTION_URL: "mongodb://user:pass@mongodb:27017/"
+      AWS_ENDPOINT_URL: "http://minio:9000"
+      AWS_ACCESS_KEY_ID: cuahsi
+      AWS_SECRET_ACCESS_KEY: devpassword
     volumes:
       - ".:/hydroshare"
     links:
       - pgbouncer:pgbouncer
       - redpanda:redpanda
+      - minio:minio
+      - mongodb:mongodb
     depends_on:
       - hydroshare
       - pgbouncer
@@ -384,9 +390,22 @@ services:
     restart: on-failure
     depends_on:
       - postgis
+  mongodb:
+    image: mongodb/mongodb-atlas-local
+    container_name: mongodb
+    environment:
+      - MONGODB_INITDB_ROOT_USERNAME=user
+      - MONGODB_INITDB_ROOT_PASSWORD=pass
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data_vol:/data/db
+      - mongodb_config_vol:/data/configdb
 volumes:
   postgis_data_vol:
   solr_data_vol:
+  mongodb_data_vol:
+  mongodb_config_vol:
   temp_vol:
   share_vol:
   redpanda_data_vol:

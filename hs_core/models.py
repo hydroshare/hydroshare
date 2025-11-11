@@ -2297,9 +2297,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         hs_json = self.metadata.get_json().model_dump_json(indent=2)
         hs_json = json.loads(hs_json)  # validate json
         from hs_core.hydroshare_schemaorg_adapter import HydroshareMetadataAdapter
-        hs_json = HydroshareMetadataAdapter.to_catalog_record(hs_json)
+        hs_json = HydroshareMetadataAdapter.to_catalog_record(hs_json).dict()
+        hs_json = json.dumps(hs_json, indent=2, default=str)
         with NamedTemporaryFile(mode='w+') as temp_file:
-            temp_file.write(json.dumps(hs_json, indent=2))
+            temp_file.write(hs_json)
             temp_file.flush()
             istorage.saveFile(temp_file.name, user_metadata_path)
 
