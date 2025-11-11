@@ -500,9 +500,6 @@ class CustomTusFile(TusFile):
 
 
 class CustomTusUpload(TusUpload):
-    user = None
-    resource = None
-
     @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):
         # check that the user has permission to upload a file to the resource
@@ -559,8 +556,6 @@ class CustomTusUpload(TusUpload):
         try:
             res, _, user = authorize(self.request, hs_res_id,
                                      needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-            self.user = user
-            self.resource = res
         except (DjangoPermissionDenied, AssertionError):
             return HttpResponseForbidden()
 
@@ -607,10 +602,14 @@ class CustomTusUpload(TusUpload):
             # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/tusfile.py#L111
             tus_file.clean()
 
-            resource_modified(self.resource, self.user, overwrite_bag=False)
+            # get the resource and user...
+            user = self.request.user
+            resource = get_resource_by_shortkey(tus_file.metadata.get('hs_res_id'))
+
+            resource_modified(resource, user, overwrite_bag=False)
 
             # store file level system metadata in Django DB (async task)
-            set_resource_files_system_metadata.apply_async((self.resource.short_id,))
+            set_resource_files_system_metadata.apply_async((resource.short_id,))
 
             # signal is not consumed at this point, but we keep it for future use
             # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/views.py#L112
