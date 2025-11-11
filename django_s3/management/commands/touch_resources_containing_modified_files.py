@@ -6,7 +6,7 @@ from hs_core.hydroshare.utils import resource_modified, get_resource_by_shortkey
 
 
 class Command(BaseCommand):
-    help = 'Find and process resources modified since a given date'
+    help = 'Find resources containing files added since a given date and mark them as modified.'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -62,7 +62,7 @@ class Command(BaseCommand):
         resource_data = {}
 
         for bucket in buckets:
-            self.stdout.write(f"Processing bucket: {bucket}")
+            self.stdout.write(f"Checking bucket: {bucket}")
 
             # Get all objects in this bucket with their modification dates
             # Use the formatted date string for mc find command
@@ -80,7 +80,7 @@ class Command(BaseCommand):
             stdout, stderr = await proc.communicate()
 
             if proc.returncode != 0:
-                self.stderr.write(f"Error processing bucket {bucket}: {stderr.decode('utf-8')}")
+                self.stderr.write(f"Error checking bucket {bucket}: {stderr.decode('utf-8')}")
                 continue
 
             output = stdout.decode('utf-8').strip()
@@ -105,15 +105,15 @@ class Command(BaseCommand):
         # Convert to list of tuples (resource_id, last_modified)
         return list(resource_data.items())
 
-    async def process_resources(self, resource_data):
-        """Process each resource ID with its last modified date"""
+    async def check_resources(self, resource_data):
+        """Check each resource ID with its last modified date"""
         for resource_id, last_modified in resource_data:
             if resource_id.strip():  # Skip empty lines
                 try:
                     # Use sync_to_async to call the synchronous Django function
-                    await self.set_bag_dirty(resource_id.strip(), last_modified)
+                    await self.check_resource(resource_id.strip(), last_modified)
                 except Exception as e:
-                    self.stderr.write(f"Error processing {resource_id}: {e}")
+                    self.stderr.write(f"Error checking {resource_id}: {e}")
 
     def handle(self, *args, **options):
         date_str = options['date']
@@ -128,7 +128,7 @@ class Command(BaseCommand):
 
         try:
             resource_data = loop.run_until_complete(self.run_mc_command(full_date_string))
-            self.stdout.write(f"Found {len(resource_data)} resource(s) to process")
+            self.stdout.write(f"Found {len(resource_data)} resource(s) to check")
 
             if resource_data:
                 # Sort by last modified date (most recent first)
@@ -138,14 +138,14 @@ class Command(BaseCommand):
                 for resource_id, last_modified in resource_data:
                     self.stdout.write(f"  - {resource_id}: {last_modified}")
 
-                loop.run_until_complete(self.process_resources(resource_data))
+                loop.run_until_complete(self.check_resources(resource_data))
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f"Successfully processed {len(resource_data)} resource(s)"
+                        f"Successfully checked {len(resource_data)} resource(s)"
                     )
                 )
             else:
-                self.stdout.write("No resources to process")
+                self.stdout.write("No resources to check")
 
         except Exception as e:
             self.stderr.write(f"Error: {e}")
@@ -154,9 +154,9 @@ class Command(BaseCommand):
 
     # Wrap the synchronous function with sync_to_async
     @sync_to_async
-    def set_bag_dirty(self, resource_id, last_modified):
-        """Process a single resource by updating its metadata and marking it as modified"""
-        self.stdout.write(f"Processing resource: {resource_id}")
+    def check_resource(self, resource_id, last_modified):
+        """Check a single resource by updating its metadata and marking it as modified"""
+        self.stdout.write(f"Checking resource: {resource_id}")
 
         resource = get_resource_by_shortkey(resource_id, or_404=False)
         if not resource:
