@@ -39,7 +39,7 @@ Verify that the development server is running by navigating to:
 
 Invoke the resource-details log dump  
 
-`docker exec -u hydro-service hydroshare python manage.py stats --resources-details > resource-details.log 2> resource-details.err &`
+`docker exec  hydroshare python manage.py stats --resources-details > resource-details.log 2> resource-details.err &`
 
 Watch the log populate (this could take a while)
 
@@ -50,7 +50,7 @@ Watch the log populate (this could take a while)
 
 Invoke the user-details log dump  
 
-`docker exec -u hydro-service hydroshare python manage.py stats --users-details > user-details.log 2> user-details.err &`
+`docker exec  hydroshare python manage.py stats --users-details > user-details.log 2> user-details.err &`
 
 Watch the log populate (this could take a while)
 
@@ -61,7 +61,7 @@ Watch the log populate (this could take a while)
 
 Invoke the activity-details log dump  
 
-`docker exec -u hydro-service hydroshare python manage.py stats --yesterdays-variables > activity.log 2> activity.err &`
+`docker exec  hydroshare python manage.py stats --yesterdays-variables > activity.log 2> activity.err &`
 
 Watch the log populate (this could take a while)
 
