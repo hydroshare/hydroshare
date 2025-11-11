@@ -12,7 +12,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--date',
             type=str,
-            default='2025-08-18',
+            required=True,
             help='Date in YYYY-MM-DD format (e.g., 2025-08-18)'
         )
         parser.add_argument(
