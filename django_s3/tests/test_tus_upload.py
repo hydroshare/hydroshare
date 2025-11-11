@@ -59,11 +59,9 @@ class CustomTusUploadTests(TestCase):
         )
         # create file
         self.n1 = "test.txt"
-
-        test_file = open(self.n1, 'w')
+        with open(self.n1, 'w') as test_file:
         test_file.write("Test text file in test.txt")
         self.file_size = os.path.getsize(self.n1)
-        test_file.close()
 
         # open files for read and upload
         self.myfile1 = open(self.n1, "rb")
