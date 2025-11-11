@@ -5333,25 +5333,29 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         if desired_state not in resource_states:
             raise ValidationError(f"Desired resource state is not in: {','.join(resource_states)}")
 
+        resource = self.resource
         missing_required_elements = []
         if desired_state != 'published':
-            if not self.title:
+            # check for title, abstract, rights, and keywords using cached_metadata
+            if not resource.cached_metadata.get('title', {}):
                 missing_required_elements.append('Title (at least 30 characters)')
-            elif self.title.value.lower() == 'untitled resource':
+            elif resource.cached_metadata['title']['value'].lower() == 'untitled resource':
                 missing_required_elements.append('Title (at least 30 characters)')
-            if not self.description:
+            if not resource.cached_metadata.get('abstract', {}):
                 missing_required_elements.append('Abstract (at least 150 characters)')
-            if not self.rights:
+            if not resource.cached_metadata.get('rights', {}):
                 missing_required_elements.append('Rights')
-            if self.subjects.count() == 0:
+            if not resource.cached_metadata.get('subjects', []):
                 missing_required_elements.append('Keywords (at least 3)')
         else:
-            if not self.title or len(self.title.value) < 30:
+            # check for title, abstract, and keywords using cached_metadata
+            if not resource.cached_metadata.get('title', {}) or len(resource.cached_metadata['title']['value']) < 30:
                 missing_required_elements.append('The title must be at least 30 characters.')
-            if not self.description or len(self.description.abstract) < 150:
+            if not resource.cached_metadata.get('abstract', {}) or len(resource.cached_metadata['abstract']['value']) < 150:
                 missing_required_elements.append('The abstract must be at least 150 characters.')
-            if self.subjects.count() < 3:
+            if not resource.cached_metadata.get('subjects', []) or len(resource.cached_metadata['subjects']) < 3:
                 missing_required_elements.append('You must include at least 3 keywords.')
+
         return missing_required_elements
 
     def get_recommended_missing_elements(self):
