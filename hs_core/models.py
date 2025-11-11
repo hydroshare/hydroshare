@@ -5298,25 +5298,26 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         This method needs to be overriden by any subclass of this class
         if they implement additional metadata elements that are required
         """
-        if not self.title:
+        resource = self.resource
+        if not resource.cached_metadata.get('title', {}):
             return False
-        elif self.title.value.lower() == 'untitled resource':
-            return False
-
-        if not self.description:
-            return False
-        elif len(self.description.abstract.strip()) == 0:
+        elif resource.cached_metadata['title']['value'].lower() == 'untitled resource':
             return False
 
-        if self.creators.count() == 0:
+        if not resource.cached_metadata.get('abstract', {}):
+            return False
+        elif len(resource.cached_metadata['abstract']['value'].strip()) == 0:
             return False
 
-        if not self.rights:
-            return False
-        elif len(self.rights.statement.strip()) == 0:
+        if not resource.cached_metadata.get('creators', []):
             return False
 
-        if self.subjects.count() == 0:
+        if not resource.cached_metadata.get('rights', {}):
+            return False
+        elif len(resource.cached_metadata['rights']['statement'].strip()) == 0:
+            return False
+
+        if not resource.cached_metadata.get('subjects', []):
             return False
 
         return True
