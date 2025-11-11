@@ -554,8 +554,11 @@ class CustomTusUpload(TusUpload):
 
         # check that the user has permission to upload a file to the resource
         try:
-            res, _, user = authorize(self.request, hs_res_id,
-                                     needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+            _, _, user = authorize(self.request, hs_res_id,
+                                   needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+            # ensure that the username is the same as the request user
+            # username_from_client = metadata.get('username')
+            # assert (user.username == username_from_client)
         except (DjangoPermissionDenied, AssertionError):
             return HttpResponseForbidden()
 
@@ -602,7 +605,6 @@ class CustomTusUpload(TusUpload):
             # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/tusfile.py#L111
             tus_file.clean()
 
-            # get the resource and user...
             user = self.request.user
             resource = get_resource_by_shortkey(tus_file.metadata.get('hs_res_id'))
 
