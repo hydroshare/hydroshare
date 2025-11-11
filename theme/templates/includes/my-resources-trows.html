@@ -48,7 +48,7 @@
   {% with metadata=res.cached_metadata %}
   <td>
     {% get_resource_url res.short_id as resource_url %}
-    <strong><a href="{{ resource_url }}">{{ metadata.title|escape }}</a>
+    <strong><a href="{{ resource_url }}">{{ metadata.title.value|escape }}</a>
     </strong>
   </td>
   {# First Author #} 
