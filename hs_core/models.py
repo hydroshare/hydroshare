@@ -5,6 +5,7 @@ import logging
 import os.path
 import re
 import sys
+from tempfile import NamedTemporaryFile
 import unicodedata
 import urllib.parse
 from uuid import uuid4
@@ -2285,6 +2286,43 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
                 copied_metadata['modified'] = self.updated.isoformat()
 
         type(self).objects.filter(id=self.id).update(cached_metadata=copied_metadata)
+
+    def write_django_metadata_json_files(self):
+        self.write_user_metadata_json_file()
+
+    def write_user_metadata_json_file(self):
+        """Write user metadata JSON file to resource .hsmetadata directory in S3"""
+        istorage = self.get_s3_storage()
+        user_metadata_path = f"{self.short_id}/.hsmetadata/user_metadata.json"
+        hs_json = self.metadata.get_json().model_dump_json(indent=2)
+        hs_json = json.loads(hs_json)  # validate json
+        from hs_core.hydroshare_schemaorg_adapter import HydroshareMetadataAdapter
+        hs_json = HydroshareMetadataAdapter.to_catalog_record(hs_json)
+        with NamedTemporaryFile(mode='w+') as temp_file:
+            temp_file.write(json.dumps(hs_json, indent=2))
+            temp_file.flush()
+            istorage.saveFile(temp_file.name, user_metadata_path)
+
+    def write_system_metadata_json_file(self):
+        """Write system metadata JSON file to resource .hsmetadata directory in S3"""
+        json_dict = {
+            "resource_id": self.short_id,
+            "doi": self.doi,
+            "created": self.created.isoformat(),
+            "modified": self.updated.isoformat(),
+            "status": {
+                "public": self.raccess.public,
+                "discoverable": self.raccess.discoverable,
+                "published": self.raccess.published,
+                "shareable": self.raccess.shareable
+            }
+        }
+        istorage = self.get_s3_storage()
+        system_metadata_path = f"{self.short_id}/.hsmetadata/system_metadata.json"
+        with NamedTemporaryFile(mode='w+') as temp_file:
+            temp_file.write(json.dumps(json_dict, indent=2))
+            temp_file.flush()
+            istorage.saveFile(temp_file.name, system_metadata_path)
 
     def _update_creators_field(self, copied_metadata, metadata):
         """Update creators field in cached metadata"""
