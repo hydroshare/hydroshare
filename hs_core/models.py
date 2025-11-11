@@ -3045,51 +3045,80 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         return str(self.metadata.citation.first())
 
     def get_citation(self, forceHydroshareURI=True):
-        """Get citation or citations from resource metadata."""
+        """Get citation or citations from resource metadata using cached_metadata."""
 
+        logger = logging.getLogger(__name__)
         citation_str_lst = []
-
         CITATION_ERROR = "Failed to generate citation."
 
-        creators = self.metadata.creators.all()
-        first_author = [cr for cr in creators if cr.order == 1][0]
-        if first_author.organization and not first_author.name:
-            citation_str_lst.append(first_author.organization + ", ")
+        # Get creators from cached_metadata
+        cached_creators = self.cached_metadata.get('creators', [])
+        if not cached_creators:
+            logger.error(f"{CITATION_ERROR} No creators found in cached_metadata for resource {self.short_id}")
+            return CITATION_ERROR
+
+        # Find first creator (order == 1)
+        first_creator = next((c for c in cached_creators if c.get('order') == 1), None)
+        if not first_creator:
+            logger.error(f"{CITATION_ERROR} No first creator found in cached_metadata for resource {self.short_id}")
+            return CITATION_ERROR
+
+        # Format first creator name
+        creator_name = first_creator.get('name', '').strip()
+        if first_creator.get('organization', '') and not creator_name:
+            citation_str_lst.append(first_creator['organization'] + ", ")
         else:
-            citation_str_lst.append(self.parse_citation_name(first_author.name, first_author=True))
+            citation_str_lst.append(self.parse_citation_name(creator_name, first_author=True))
 
-        other_authors = [cr for cr in creators if cr.order > 1]
-        for author in other_authors:
-            if author.organization and not author.name:
-                citation_str_lst.append(author.organization + ", ")
-            elif author.name and len(author.name.strip()) != 0:
-                citation_str_lst.append(self.parse_citation_name(author.name))
+        # Add other creators
+        other_creators = [c for c in cached_creators if c.get('order', 0) > 1]
+        for author in other_creators:
+            author_name = author.get('name', '').strip()
+            if author.get('organization', '') and not author_name:
+                citation_str_lst.append(author['organization'] + ", ")
+            elif author_name and len(author_name) != 0:
+                citation_str_lst.append(self.parse_citation_name(author_name))
 
-        # remove the last added comma and the space
+        # Remove the last added comma and space
         if len(citation_str_lst[-1]) > 2:
             citation_str_lst[-1] = citation_str_lst[-1][:-2]
         else:
+            logger.error(f"{CITATION_ERROR} No valid creator names found in cached_metadata for resource {self.short_id}")
             return CITATION_ERROR
 
-        meta_dates = self.metadata.dates.all()
-        published_date = [dt for dt in meta_dates if dt.type == "published"]
+        # Get citation date from cached_metadata
         citation_date = None
-        if published_date:
-            citation_date = published_date[0]
-        else:
-            modified_date = [dt for dt in meta_dates if dt.type == "modified"]
-            if modified_date:
-                citation_date = modified_date[0]
+        if self.cached_metadata.get('published', ''):
+            citation_date = self.cached_metadata['published']
+        elif self.cached_metadata.get('modified'):
+            citation_date = self.cached_metadata['modified']
 
-        if citation_date is None:
+        if not citation_date:
+            logger.error(f"{CITATION_ERROR} No published or modified date found in cached_metadata for resource {self.short_id}")
             return CITATION_ERROR
 
-        citation_str_lst.append(" ({year}). ".format(year=citation_date.start_date.year))
-        citation_str_lst.append(self.metadata.title.value)
+        # Parse the date and extract year
+        try:
+            citation_date_obj = parser.parse(citation_date)
+            citation_year = citation_date_obj.year
+        except (ValueError, TypeError):
+            logger.error(f"{CITATION_ERROR} Invalid date found in cached_metadata for resource {self.short_id}")
+            return CITATION_ERROR
 
+        citation_str_lst.append(" ({year}). ".format(year=citation_year))
+        title = self.cached_metadata.get('title', {})
+        if not title:
+            logger.error(f"{CITATION_ERROR} No title found in cached_metadata for resource {self.short_id}")
+            return CITATION_ERROR
+        if not title.get('value', ''):
+            logger.error(f"{CITATION_ERROR} No title value found in cached_metadata for resource {self.short_id}")
+            return CITATION_ERROR
+        citation_str_lst.append(title.get('value'))
+
+        # Check for DOI identifier
         isPendingActivation = False
-        identifiers = self.metadata.identifiers.all()
-        doi = [idn for idn in identifiers if idn.name == "doi"]
+        identifiers = self.cached_metadata.get('identifiers', [])
+        doi = [idn for idn in identifiers if idn.get('name') == "doi"]
 
         if doi and not forceHydroshareURI:
             hs_identifier = doi[0]
@@ -3097,13 +3126,14 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
                     or self.doi.find(DataciteSubmissionStatus.FAILURE.value) >= 0):
                 isPendingActivation = True
         else:
-            hs_identifier = [idn for idn in identifiers if idn.name == "hydroShareIdentifier"]
+            hs_identifier = [idn for idn in identifiers if idn.get('name') == "hydroShareIdentifier"]
             if hs_identifier:
                 hs_identifier = hs_identifier[0]
             else:
+                logger.error(f"{CITATION_ERROR} No hydroShareIdentifier found in cached_metadata for resource {self.short_id}")
                 return CITATION_ERROR
 
-        citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
+        citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.get('url', '')))
 
         if isPendingActivation and not forceHydroshareURI:
             citation_str_lst.append(", DOI for this published resource is pending activation.")
