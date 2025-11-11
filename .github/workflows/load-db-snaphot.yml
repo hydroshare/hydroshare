@@ -24,55 +24,35 @@ jobs:
     name: Run on ${{ inputs.instance }}
     runs-on: ubuntu-latest
     steps:
+    - name: Extract cluster and namespace from instance input
+      id: extract-cluster-info
+      run: |
+        INSTANCE="${{ inputs.instance }}"
+        CLUSTER=$(echo "$INSTANCE" | awk -F'\\' '{print $1}')
+        NAMESPACE=$(echo "$INSTANCE" | awk -F'\\' '{print $2}')
+        echo "Extracted cluster: $CLUSTER"
+        echo "Extracted namespace: $NAMESPACE"
+        echo "cluster=$CLUSTER" >> $GITHUB_OUTPUT
+        echo "namespace=$NAMESPACE" >> $GITHUB_OUTPUT
+
     - name: code checkout
       uses: actions/checkout@v3
 
     - uses: 'google-github-actions/auth@v2'
       with:
-        #credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
         credentials_json: ${{ secrets.HYDROSHARE_STORAGEREADER_KEY}}
 
-    - name: Setup GKE credentials for dev-
-      if: ${{ contains(inputs.instance, 'dev-') }}
+    - name: Setup GKE credentials
       uses: google-github-actions/get-gke-credentials@v2
       with:
-        cluster_name: hydroshare-dev
+        cluster_name: ${{ steps.extract-cluster-info.outputs.cluster }}
         location: us-central1
 
-    - name: Setup GKE credentials for beta
-      if: ${{ contains(inputs.instance, 'beta') }}
-      uses: google-github-actions/get-gke-credentials@v2
-      with:
-        cluster_name: hydroshare-beta
-        location: us-central1
-        
-    - name: Set context for dev-0
-      if: ${{ contains(inputs.instance, 'dev-0') }}
+    - name: Set Kubernetes context
       run: |
-        echo "setting context to dev-0"
-        kubectl config use-context gke_hydroshare-403701_us-central1_hydroshare-dev 
-        kubectl config set-context --current --namespace=dev-0
-
-    - name: Set context for dev-1
-      if: ${{ contains(inputs.instance, 'dev-1') }}
-      run: |
-        echo "setting context to dev-1"
-        kubectl config use-context gke_hydroshare-403701_us-central1_hydroshare-dev 
-        kubectl config set-context --current --namespace=dev-1
-    
-    - name: Set context for dev-2
-      if: ${{ contains(inputs.instance, 'dev-2') }}
-      run: |
-        echo "setting context to dev-2"
-        kubectl config use-context gke_hydroshare-403701_us-central1_hydroshare-dev 
-        kubectl config set-context --current --namespace=dev-2
-
-    - name: Set context for beta
-      if: ${{ contains(inputs.instance, 'beta') }}
-      run: |
-        echo "setting context to beta"
-        kubectl config use-context gke_hydroshare-403701_us-central1_hydroshare-beta
-        kubectl config set-context --current --namespace=default
+        echo "Setting context to cluster: ${{ steps.extract-cluster-info.outputs.cluster }} with namespace: ${{ steps.extract-cluster-info.outputs.namespace }}"
+        kubectl config use-context gke_hydroshare-403701_us-central1_${{ steps.extract-cluster-info.outputs.cluster }}
+        kubectl config set-context --current --namespace=${{ steps.extract-cluster-info.outputs.namespace }}
 
     - name: Load django db into environment
       run: |
@@ -80,9 +60,10 @@ jobs:
         CURRENT_CONTEXT=$(kubectl config current-context)
         echo "Current kubectl context: $CURRENT_CONTEXT"
         
-        BUCKET_NAME="hydroshare-postgis-dumps"
-        echo "Finding  backup in bucket: $BUCKET_NAME"
-        NAMESPACE=$(echo "${{ inputs.instance }}" | awk -F'\\' '{print $2}')
+        NAMESPACE="${{ steps.extract-cluster-info.outputs.namespace }}"
+        CLUSTER="${{ steps.extract-cluster-info.outputs.cluster }}"
+        echo "Using cluster: $CLUSTER"
+        echo "Using namespace: $NAMESPACE"
                      
         # Retrieves the name of the first Kubernetes pod labeled with 'app=postgis' and stores it in the POSTGIS_POD variable.  
         POSTGIS_POD=$(kubectl get pods -l app=postgis -n $NAMESPACE -o jsonpath="{.items[0].metadata.name}")
@@ -93,6 +74,8 @@ jobs:
                  
         # Retrieves the most recently modified file from the specified Google Cloud Storage bucket by
         # listing all files recursively, sorting them, and selecting the last entry.
+        BUCKET_NAME="hydroshare-postgis-dumps"
+        echo "Finding backup in bucket: $BUCKET_NAME"
         if [ "${{ inputs.snapshot }}" = "latest" ]; then
           echo "Getting latest"
           LATEST_FILE=$(gcloud storage ls --recursive gs://$BUCKET_NAME/** | sort | tail -n 1)
@@ -111,8 +94,7 @@ jobs:
         # It uses the `gcloud storage sign-url` command with a specified service account for impersonation,
         # and sets the URL to be valid for 1 hour. The resulting signed URL is extracted from the command output.
         SIGNED_URL=$(gcloud storage sign-url --impersonate-service-account=hydroshare-storagereader@hydroshare-403701.iam.gserviceaccount.com --duration=1h "$LATEST_FILE" | awk -F' ' '{print $2}')
-          
-        #echo $SIGNED_URL
+
         # Extracts the fourth field from the SIGNED_URL variable (assuming it contains space-separated values)
         # and assigns it back to SIGNED_URL. This is typically used to isolate a specific part of a command output.
         SIGNED_URL=$(echo $SIGNED_URL | awk -F' ' '{print $4}')
@@ -123,9 +105,6 @@ jobs:
         # effectively stopping the associated pods. This is often done to ensure that no active connections
         # are present while performing database operations.
         # This is important for maintaining data integrity during the database snapshot loading process.
-        
-        #Get number of replicas before scaling down
-        #STS_NAME=$(kubectl get statefulset -n $NAMESPACE -o name | grep "hydroshare")
 
         DEFAULTWORKER_REPLICAS=$(kubectl get statefulset defaultworker-worker -n $NAMESPACE -o jsonpath="{.spec.replicas}")
         echo "defaultworker replicas before scale down: $DEFAULTWORKER_REPLICAS"
@@ -179,7 +158,7 @@ jobs:
           
         kubectl exec $POSTGIS_POD -- psql -U postgres -d hydroshare -f /init/00/init.sql
         kubectl exec $POSTGIS_POD -- psql -U postgres -d postgres -f /tmp/01/pg.development.sql
-        #---
+
         # The following commands scale the specified Kubernetes statefulsets back to their original number of replicas,
         # effectively restarting the associated pods. This is done after completing database operations to restore
         # normal application functionality.
@@ -201,5 +180,3 @@ jobs:
         echo "Running solr_update in Hydroshare pod: $HYDROSHARE_POD"
         kubectl exec -n $NAMESPACE $HYDROSHARE_POD -- python manage.py solr_update
         echo "Database snapshot load and solr update completed successfully."
-
-       
