@@ -1,6 +1,9 @@
 name: Get and Load django db snapshot into environment
 
 on:
+  push:
+    branches:
+      - test-load-db
   workflow_dispatch:
     inputs:
       instance:
@@ -24,10 +27,23 @@ jobs:
     name: Run on ${{ inputs.instance }}
     runs-on: ubuntu-latest
     steps:
+    - name: Set inputs for push event
+      if: github.event_name == 'push'
+      id: set-inputs
+      run: |
+        # Set default values for push event
+        echo "instance=hydroshare-beta\default" >> $GITHUB_OUTPUT
+        echo "snapshot=latest" >> $GITHUB_OUTPUT
+        
     - name: Extract cluster and namespace from instance input
       id: extract-cluster-info
       run: |
-        INSTANCE="${{ inputs.instance }}"
+        # Use inputs from workflow_dispatch or the ones we set for push
+        if [ "${{ github.event_name }}" = "push" ]; then
+          INSTANCE="${{ steps.set-inputs.outputs.instance }}"
+        else
+          INSTANCE="${{ inputs.instance }}"
+        fi
         CLUSTER=$(echo "$INSTANCE" | awk -F'\\' '{print $1}')
         NAMESPACE=$(echo "$INSTANCE" | awk -F'\\' '{print $2}')
         echo "Extracted cluster: $CLUSTER"
@@ -56,6 +72,13 @@ jobs:
 
     - name: Load django db into environment
       run: |
+        # Get snapshot value - use from workflow_dispatch or the one we set for push
+        if [ "${{ github.event_name }}" = "push" ]; then
+          SNAPSHOT="${{ steps.set-inputs.outputs.snapshot }}"
+        else
+          SNAPSHOT="${{ inputs.snapshot }}"
+        fi
+        
         # Get the current kubectl context
         CURRENT_CONTEXT=$(kubectl config current-context)
         echo "Current kubectl context: $CURRENT_CONTEXT"
@@ -76,15 +99,15 @@ jobs:
         # listing all files recursively, sorting them, and selecting the last entry.
         BUCKET_NAME="hydroshare-postgis-dumps"
         echo "Finding backup in bucket: $BUCKET_NAME"
-        if [ "${{ inputs.snapshot }}" = "latest" ]; then
+        if [ "$SNAPSHOT" = "latest" ]; then
           echo "Getting latest"
           LATEST_FILE=$(gcloud storage ls --recursive gs://$BUCKET_NAME/** | sort | tail -n 1)
         else
           # Try to find a file matching the provided snapshot date or name
-          echo "Finding backup matching '${{ inputs.snapshot }}'"
-          LATEST_FILE=$(gcloud storage ls --recursive gs://$BUCKET_NAME/** | grep "${{ inputs.snapshot }}" | sort | tail -n 1)
+          echo "Finding backup matching '$SNAPSHOT'"
+          LATEST_FILE=$(gcloud storage ls --recursive gs://$BUCKET_NAME/** | grep "$SNAPSHOT" | sort | tail -n 1)
           if [ -z "$LATEST_FILE" ]; then
-            echo "No snapshot found matching '${{ inputs.snapshot }}'"
+            echo "No snapshot found matching '$SNAPSHOT'"
             exit 1
           fi
         fi
