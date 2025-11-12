@@ -23,6 +23,7 @@ def datetime_parser(dct):
             dct[k] = datetime.datetime.strptime(v, datetime_format)
     return dct
 
+
 def collect_file_to_catalog(filepath: str):
     bucket_name, object_key = filepath.split('/', 1)
     response = s3.get_object(Bucket=bucket_name, Key=object_key)

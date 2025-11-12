@@ -48,6 +48,7 @@ class HydroRealtimeSignalProcessor(BaseSignalProcessor):
         except Exception as e:
             logger.exception("{} exception: {}".format(type(instance), str(e)))
 
+
 def file_path(resource: BaseResource):
     bucket = resource.quota_holder.userprofile.bucket_name
     return f"{bucket}/{resource.short_id}/.hsjsonld/dataset_metadata.json"

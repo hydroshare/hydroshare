@@ -130,7 +130,7 @@ class ContentFile(BaseModel):
         media_object = schema.MediaObject.construct()
         media_object.contentUrl = self.path
         media_object.encodingFormat = self.mime_type
-        media_object.contentSize = f"{self.size/1000.00} KB"
+        media_object.contentSize = f"{self.size / 1000.00} KB"
         media_object.name = self.path.split("/")[-1]
         return media_object
 
