@@ -21,6 +21,11 @@ class Command(BaseCommand):
             default='00:00:00 UTC',
             help='Time component (default: 00:00:00 UTC)'
         )
+        parser.add_argument(
+            '--dry-run',
+            action='store_true',
+            help='Run without making any changes, just show what would be done'
+        )
 
     async def run_mc_command(self, date_string):
         """Run the mc command and return resource IDs with their latest modification dates"""
@@ -105,20 +110,24 @@ class Command(BaseCommand):
         # Convert to list of tuples (resource_id, last_modified)
         return list(resource_data.items())
 
-    async def check_resources(self, resource_data):
+    async def check_resources(self, resource_data, dry_run=False):
         """Check each resource ID with its last modified date"""
         for resource_id, last_modified in resource_data:
             if resource_id.strip():  # Skip empty lines
                 try:
                     # Use sync_to_async to call the synchronous Django function
-                    await self.check_resource(resource_id.strip(), last_modified)
+                    await self.check_resource(resource_id.strip(), last_modified, dry_run)
                 except Exception as e:
                     self.stderr.write(f"Error checking {resource_id}: {e}")
 
     def handle(self, *args, **options):
         date_str = options['date']
         time_str = options['time']
+        dry_run = options['dry_run']
         full_date_string = f"{date_str}T{time_str}"
+
+        if dry_run:
+            self.stdout.write(self.style.WARNING("DRY RUN MODE - No changes will be made"))
 
         self.stdout.write(f"Finding resources modified since: {full_date_string}")
 
@@ -138,7 +147,7 @@ class Command(BaseCommand):
                 for resource_id, last_modified in resource_data:
                     self.stdout.write(f"  - {resource_id}: {last_modified}")
 
-                loop.run_until_complete(self.check_resources(resource_data))
+                loop.run_until_complete(self.check_resources(resource_data, dry_run))
                 self.stdout.write(
                     self.style.SUCCESS(
                         f"Successfully checked {len(resource_data)} resource(s)"
@@ -154,7 +163,7 @@ class Command(BaseCommand):
 
     # Wrap the synchronous function with sync_to_async
     @sync_to_async
-    def check_resource(self, resource_id, last_modified):
+    def check_resource(self, resource_id, last_modified, dry_run=False):
         """Check a single resource by updating its metadata and marking it as modified"""
         self.stdout.write(f"Checking resource: {resource_id}")
 
@@ -172,13 +181,15 @@ class Command(BaseCommand):
             self.stdout.write(f"Resource {resource_id} metadata is up to date, skipping.")
             return
 
-        print(f"Updating resource_files_system_metadata {resource_id}")
-        print(f"Minio files modified:{minio_modified}")
-        print(f"Django resource has updated: {last_updated}")
-        set_resource_files_system_metadata.apply_async((resource.short_id,))
-
+        self.stdout.write(f"Minio files modified: {minio_modified}")
+        self.stdout.write(f"Django resource has updated: {last_updated}")
         # we assume the user is the same as the last modified user
         user = resource.last_changed_by
-        print(f"Marking resource {resource_id} as last modified by "
-              f"{user.username}")
-        resource_modified(resource, user, overwrite_bag=False)
+        if dry_run:
+            self.stdout.write(f"DRY RUN: Would update resource_files_system_metadata for {resource_id}")
+            self.stdout.write(f"DRY RUN: Would mark resource {resource_id} as last modified by {user.username}")
+        else:
+            self.stdout.write(f"Updating resource_files_system_metadata for {resource_id}")
+            set_resource_files_system_metadata.apply_async((resource_id,))
+            self.stdout.write(f"Marking resource {resource_id} as last modified by {user.username}")
+            resource_modified(resource, user, overwrite_bag=False)
