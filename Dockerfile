@@ -14,7 +14,7 @@ RUN chmod +x /usr/local/bin/mc
 RUN apt-get update
 RUN apt-get -y upgrade
 RUN curl -1sLf 'https://dl.redpanda.com/nzc4ZYQK3WRGd9sy/redpanda/cfg/setup/bash.deb.sh' | bash
-RUN apt install -y redpanda-rpk redpanda-connect
+RUN apt install -y redpanda-rpk redpanda-connect jq
 
 RUN pip install redpanda-connect
 
