@@ -8,8 +8,6 @@ import sys
 import unicodedata
 import urllib.parse
 from uuid import uuid4
-
-import arrow
 import requests
 from dateutil import parser
 from django.conf import settings
@@ -46,8 +44,7 @@ from rdflib.namespace import DC, DCTERMS, RDF
 from spam_patterns.worst_patterns_re import patterns
 
 from django_s3.storage import S3Storage
-from hs_core.enums import (CrossRefSubmissionStatus, CrossRefUpdate,
-                           RelationTypes)
+from hs_core.enums import (DataciteSubmissionStatus, RelationTypes)
 from hs_core.s3 import ResourceFileS3Mixin, ResourceS3Mixin
 
 from .hs_rdf import (HSTERMS, RDFS1, RDF_MetaData_Mixin, RDF_Term_MixIn,
@@ -700,7 +697,6 @@ class Party(AbstractMetaDataElement):
             kwargs['identifiers'] = identifiers
 
         party = super(Party, cls).update(element_id, **kwargs)
-
         if party.hydroshare_user_id is not None:
             user = User.objects.get(id=party.hydroshare_user_id)
             party.is_active_user = user.is_active
@@ -738,7 +734,7 @@ class Party(AbstractMetaDataElement):
         return self.is_active_user
 
     @classmethod
-    def remove(cls, element_id):
+    def remove(cls, element_id, delete=True):
         """Define custom remove method for Party model."""
         party = cls.objects.get(id=element_id)
 
@@ -758,7 +754,14 @@ class Party(AbstractMetaDataElement):
                 if cr.order > party.order:
                     cr.order -= 1
                     cr.save(update_fields=["order"])
-        party.delete()
+        if delete:
+            party.delete()
+
+    def delete(self, using=None, keep_parents=False):
+        """Overriding the django model delete() method to update creator order attribute for
+        remaining creators."""
+        self.remove(element_id=self.id, delete=False)
+        super(Party, self).delete(using=using, keep_parents=keep_parents)
 
     @classmethod
     def validate_identifiers(cls, identifiers):
@@ -2065,7 +2068,6 @@ class Subject(AbstractMetaDataElement):
     def remove(cls, element_id):
         """Define custom remove method for Subject model."""
         sub = Subject.objects.get(id=element_id)
-
         if Subject.objects.filter(object_id=sub.object_id,
                                   content_type__pk=sub.content_type.id).count() == 1:
             raise ValidationError("The only subject element of the resource can't be deleted.")
@@ -2192,6 +2194,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
     # this field WILL NOT get recorded in bag and SHOULD NEVER be used for storing metadata
     extra_data = HStoreField(default=dict)
 
+    # cache metadata for performance optimization of my-resources page
+    cached_metadata = models.JSONField(default=dict)
+
     # for tracking number of times resource and its files have been downloaded
     download_count = models.PositiveIntegerField(default=0)
     bag_last_downloaded = models.DateTimeField(null=True, blank=True)
@@ -2208,6 +2213,14 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
     quota_holder = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                      related_name='quota_holder')
 
+    def save(self, *args, **kwargs):
+        """Refresh cached metadata before resource is saved to prevent stale cached metadata in memory getting
+        written to DB"""
+        # Only refresh cached_metadata from DB if object already exists
+        if not self._state.adding:
+            self.refresh_from_db(fields=['cached_metadata'])
+        super(AbstractResource, self).save(*args, **kwargs)
+
     def update_view_count(self):
         self.view_count += 1
         # using update query api to update instead of self.save() to avoid triggering solr realtime indexing
@@ -2218,6 +2231,138 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         # using update query api to update instead of self.save() to avoid triggering solr realtime indexing
         type(self).objects.filter(id=self.id).update(download_count=self.download_count)
 
+    def update_cached_metadata_field(self, field_name):
+        """
+        Update a specific field in the cached metadata or all fields if 'all' is specified
+
+        :param field_name: The field to update ('creator', 'subject', etc.). If 'all', update all fields.
+
+        NOTE: This method gets called from post_save and post_delete signal handler for
+        any core metadata elements. We need to update the 'modified' field in cached metadata
+        for any change to core metadata elements. The Date metadata element gets updated for the
+        modified date type by the system as needed. We are depending on that change to modified date
+        to update the 'modified' field in cached metadata.
+        """
+        self.refresh_from_db()
+        metadata = self.metadata
+        copied_metadata = copy.deepcopy(self.cached_metadata)
+
+        # These are the fields that need to be updated in cached metadata
+        field_updaters = {
+            'creator': self._update_creators_field,
+            'title': self._update_title_field,
+            'subject': self._update_subjects_field,
+            'date': self._update_date_field,
+            'status': self._update_status_field,
+            'description': self._update_abstract_field,
+        }
+
+        # Update all fields if 'all' is specified
+        if field_name == 'all':
+            for updater in field_updaters.values():
+                updater(copied_metadata, metadata)
+        else:
+            # Update the specified field
+            if field_name in field_updaters:
+                field_updaters[field_name](copied_metadata, metadata)
+
+        # Ensure all required fields are present
+        self._ensure_required_fields(copied_metadata, metadata)
+
+        # Update the modified date every time a metadata element is updated/deleted, or when 'all' is specified
+        modified_date = metadata.dates.filter(type='modified').first()
+        if field_name != 'all':
+            # this is the case of updating cached metadata as part of metadata save/delete signal handler
+            copied_metadata['modified'] = now().isoformat()
+            if modified_date:
+                # this update won't trigger the post_save signal for Date model since we are using update query api
+                type(modified_date).objects.filter(id=modified_date.id).update(start_date=copied_metadata['modified'])
+        else:
+            # this is the case of updating cached metadata as part of management command
+            if modified_date:
+                copied_metadata['modified'] = modified_date.start_date.isoformat()
+            else:
+                copied_metadata['modified'] = self.updated.isoformat()
+
+        type(self).objects.filter(id=self.id).update(cached_metadata=copied_metadata)
+
+    def _update_creators_field(self, copied_metadata, metadata):
+        """Update creators field in cached metadata"""
+        creators = metadata.creators.all()
+        copied_metadata['creators'] = [
+            {
+                'name': c.name,
+                'order': c.order,
+                'hs_user_id': c.hydroshare_user_id,
+                'is_active_user': c.is_active_user,
+                'relative_uri': c.relative_uri,
+                'organization': c.organization
+            }
+            for c in creators
+        ]
+
+    def _update_title_field(self, copied_metadata, metadata):
+        """Update title field in cached metadata"""
+        title = metadata.title.value if hasattr(metadata, 'title') and metadata.title else ""
+        copied_metadata['title'] = title
+
+    def _update_subjects_field(self, copied_metadata, metadata):
+        """Update subjects field in cached metadata"""
+        subjects = list(metadata.subjects.all())
+        copied_metadata['subjects'] = [s.value for s in subjects]
+
+    def _update_date_field(self, copied_metadata, metadata):
+        """Update date field in cached metadata"""
+        if 'created' not in copied_metadata:
+            created_date = metadata.dates.filter(type='created').first()
+            if created_date:
+                copied_metadata['created'] = created_date.start_date.isoformat()
+            else:
+                copied_metadata['created'] = self.created.isoformat()
+
+    def _update_status_field(self, copied_metadata, metadata):
+        """Update status field in cached metadata"""
+        if hasattr(self, 'raccess'):
+            copied_metadata['status'] = {
+                "public": self.raccess.public,
+                "discoverable": self.raccess.discoverable,
+                "published": self.raccess.published,
+                "shareable": self.raccess.shareable
+            }
+
+    def _update_abstract_field(self, copied_metadata, metadata):
+        """Update abstract field in cached metadata"""
+        abstract = metadata.description.abstract if hasattr(metadata, 'description') and metadata.description else ""
+        copied_metadata['abstract'] = abstract
+
+    def _ensure_required_fields(self, copied_metadata, metadata):
+        """Ensure all required fields are present in cached metadata"""
+
+        if 'title' not in copied_metadata or copied_metadata['title'] == '':
+            self._update_title_field(copied_metadata, metadata)
+
+        if 'creators' not in copied_metadata or len(copied_metadata['creators']) == 0:
+            self._update_creators_field(copied_metadata, metadata)
+
+        if 'created' not in copied_metadata or copied_metadata['created'] == '':
+            self._update_date_field(copied_metadata, metadata)
+
+        if 'subjects' not in copied_metadata or len(copied_metadata['subjects']) == 0:
+            self._update_subjects_field(copied_metadata, metadata)
+
+        if 'status' not in copied_metadata:
+            self._update_status_field(copied_metadata, metadata)
+
+        if 'abstract' not in copied_metadata:
+            self._update_abstract_field(copied_metadata, metadata)
+
+    def update_all_cached_metadata(self):
+        """
+        Update all fields in the cached metadata
+        This method is primarily for use in management commands to refresh cached metadata
+        """
+        self.update_cached_metadata_field(field_name='all')
+
     # definition of resource logic
     @property
     def supports_folders(self):
@@ -2227,9 +2372,15 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
     @property
     def last_updated(self):
         """Return the last updated date stored in metadata"""
-        for dt in self.metadata.dates.all():
-            if dt.type == 'modified':
-                return dt.start_date
+        # get the modified date from the cached metadata
+        modified_date = self.cached_metadata.get('modified', None)
+        if modified_date:
+            return parser.parse(modified_date)
+        else:
+            # get the modified date from the Date metadata element
+            for dt in self.metadata.dates.all():
+                if dt.type == 'modified':
+                    return dt.start_date
 
     @property
     def has_required_metadata(self):
@@ -2760,8 +2911,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
 
         if doi and not forceHydroshareURI:
             hs_identifier = doi[0]
-            if (self.doi.find(CrossRefSubmissionStatus.PENDING.value) >= 0
-                    or self.doi.find(CrossRefSubmissionStatus.FAILURE.value) >= 0):
+            if (self.doi.find(DataciteSubmissionStatus.PENDING.value) >= 0
+                    or self.doi.find(DataciteSubmissionStatus.FAILURE.value) >= 0):
                 isPendingActivation = True
         else:
             hs_identifier = [idn for idn in identifiers if idn.name == "hydroShareIdentifier"]
@@ -3973,188 +4124,423 @@ class BaseResource(Page, AbstractResource):
     # def file_uri(self):
     #     return os.path.join(self.root_uri, 'files')
 
-    # create crossref deposit xml for resource publication
-    def get_crossref_deposit_xml(self, pretty_print=True):
-        """Return XML structure describing crossref deposit.
-        The mapping of hydroshare resource metadata to crossref metadata has been implemented here as per
-        the specification in this repo: https://github.com/hydroshare/hs_doi_deposit_metadata
-        """
-        # importing here to avoid circular import problem
-        from .hydroshare.resource import get_activated_doi
+    @staticmethod
+    def parse_creator_name(creator):
+        creator_name = creator.name.strip()
+        name = HumanName(creator_name)
+        if not name.first or not name.last:
+            name_parts = creator_name.split()
+            if not name.first and name_parts:
+                name.first = name_parts[0]
+            if not name.last and name_parts:
+                name.last = name_parts[-1]
+        return name.first, name.last
 
+    @staticmethod
+    def get_contributor_data(self):
+        contributor_list = []
+
+        for contributor in self.metadata.contributors.all():
+            if contributor.name:
+                first_name, last_name = self.parse_creator_name(contributor)
+                contributor_data = {
+                    "name": contributor.name,
+                    "nameType": "Personal",
+                    "givenName": first_name,
+                    "familyName": last_name,
+                    "contributorType": "Other",
+                    "affiliation": [{"name": contributor.organization or "CUAHSI"}],
+                    "nameIdentifiers": []
+                }
+                if contributor.hydroshare_user_id:
+                    contributor_data["nameIdentifiers"].append({
+                        "nameIdentifier": f"https://hydroshare.org{contributor.relative_uri}",
+                        "nameIdentifierScheme": "Other",
+                    })
+                if contributor.identifiers.get('ORCID'):
+                    contributor_data["nameIdentifiers"].append({
+                        "nameIdentifier": contributor.identifiers['ORCID'],
+                        "nameIdentifierScheme": "ORCID",
+                        "schemeUri": "https://orcid.org"
+                    })
+            else:
+                contributor_data = {
+                    "name": contributor.organization or "CUAHSI",
+                    "nameType": "Organizational",
+                    "contributorType": "Other",
+                    "nameIdentifiers": []
+                }
+
+            contributor_list.append(contributor_data)
+
+        return contributor_list
+
+    @staticmethod
+    def get_funding_references(self):
+        """
+        Build fundingReferences list for the DataCite JSON payload.
+        """
         logger = logging.getLogger(__name__)
+        funding_references = []
 
         def get_funder_id(funder_name):
-            """Return funder_uri for a given funder_name from ror funders registry.
-            ROR API Documentation: https://ror.readme.io/docs/api-query
-            """
-            funder_name = funder_name.lower()
-            encoded_funder_name = urllib.parse.quote(funder_name)
+            funder_name_lower = funder_name.lower()
+            encoded_funder_name = urllib.parse.quote(funder_name_lower)
             url = f"https://api.ror.org/v2/organizations?filter=types:funder&query={encoded_funder_name}"
-            response = requests.get(url, verify=False)
-            if response.status_code == 200:
-                response_json = response.json()
-                items = response_json['items']
-                for item in items:
-                    for name in item['names']:
-                        if name['value'].lower() == funder_name:
-                            return item['id']
-                return ''
-            else:
-                msg = "Failed to get funder_id for funder_name: '{}' from ror funders registry. " \
-                      "Status code: {} for resource id: {}"
-                msg = msg.format(funder_name, response.status_code, self.short_id)
-                logger.error(msg)
-                return ''
 
-        def parse_creator_name(_creator):
-            creator_name = _creator.name.strip()
-            name = HumanName(creator_name)
-            # both first name ane last name are required for crossref deposit
-            if not name.first or not name.last:
-                name_parts = creator_name.split()
-                if not name.first:
-                    name.first = name_parts[0]
-                if not name.last:
-                    name.last = name_parts[-1]
-            return name.first, name.last
+            try:
+                response = requests.get(url, verify=False, timeout=10)
+                if response.status_code == 200:
+                    items = response.json().get('items', [])
+                    for item in items:
+                        for name in item.get('names', []):
+                            if name.get('value', '').lower() == funder_name_lower:
+                                return item.get('id')
+                else:
+                    logger.error(f"Failed to get funder ID for '{funder_name}'. Status: {response.status_code}")
+            except requests.RequestException as e:
+                logger.error(f"Error fetching funder ID for '{funder_name}': {str(e)}")
 
-        def create_contributor_node(_creator, sequence="additional"):
-            if _creator.name:
-                first_name, last_name = parse_creator_name(_creator)
-                creator_node = etree.SubElement(contributors_node, 'person_name', contributor_role="author",
-                                                sequence=sequence)
-                etree.SubElement(creator_node, 'given_name').text = first_name
-                etree.SubElement(creator_node, 'surname').text = last_name
-                orcid = _creator.identifiers.get('ORCID', "")
-                if orcid:
-                    etree.SubElement(creator_node, 'ORCID').text = orcid
-            else:
-                org = etree.SubElement(contributors_node, 'organization', contributor_role="author",
-                                       sequence=sequence)
-                org.text = _creator.organization
+            return ''
 
-        def create_date_node(date, date_type):
-            date_node = etree.SubElement(database_dates_node, date_type)
-            etree.SubElement(date_node, 'month').text = str(date.month)
-            etree.SubElement(date_node, 'day').text = str(date.day)
-            etree.SubElement(date_node, 'year').text = str(date.year)
+        for funder in self.metadata.funding_agencies.all():
+            funder_data = {
+                "funderName": funder.agency_name
+            }
 
-        xsi = "http://www.w3.org/2001/XMLSchema-instance"
-        schemaLocation = 'http://www.crossref.org/schema/5.3.1 ' \
-                         'http://www.crossref.org/schemas/crossref5.3.1.xsd'
-        ns = "http://www.crossref.org/schema/5.3.1"
-        fr = "http://www.crossref.org/fundref.xsd"
-        ai = "http://www.crossref.org/AccessIndicators.xsd"
-        ROOT = etree.Element('{%s}doi_batch' % ns, version="5.3.1", nsmap={None: ns, "xsi": xsi, "fr": fr, "ai": ai},
-                             attrib={"{%s}schemaLocation" % xsi: schemaLocation})
+            funder_id = get_funder_id(funder.agency_name)
+            if funder_id:
+                funder_data["funderIdentifier"] = funder_id
+                funder_data["funderIdentifierType"] = "ROR"
+            elif funder.agency_url:
+                funder_data["funderIdentifier"] = funder.agency_url
+                funder_data["funderIdentifierType"] = "Other"
 
-        # get the resource object associated with this metadata container object - needed
-        # to get the verbose_name
+            if funder.award_number:
+                funder_data["awardNumber"] = funder.award_number
+            if funder.award_title:
+                funder_data["awardTitle"] = funder.award_title
 
-        # create the head sub element
-        head_node = etree.SubElement(ROOT, 'head')
-        etree.SubElement(head_node, 'doi_batch_id').text = self.short_id
-        etree.SubElement(head_node, 'timestamp').text = arrow.now().format("YYYYMMDDHHmmss")
-        depositor_node = etree.SubElement(head_node, 'depositor')
-        etree.SubElement(depositor_node, 'depositor_name').text = 'HydroShare'
-        etree.SubElement(depositor_node, 'email_address').text = settings.DEFAULT_SUPPORT_EMAIL
-        # The organization that owns the information being registered.
-        organization = 'Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)'
-        etree.SubElement(head_node, 'registrant').text = organization
+            funding_references.append(funder_data)
 
-        # create the body sub element
-        body_node = etree.SubElement(ROOT, 'body')
-        # create the database sub element
-        db_node = etree.SubElement(body_node, 'database')
-        # create the database_metadata sub element
-        db_md_node = etree.SubElement(db_node, 'database_metadata', language="en")
-        # titles is required element for database_metadata
-        titles_node = etree.SubElement(db_md_node, 'titles')
-        etree.SubElement(titles_node, 'title').text = "HydroShare Resources"
-        # add publisher element to database_metadata
-        pub_node = etree.SubElement(db_md_node, 'publisher')
-        etree.SubElement(pub_node, 'publisher_name').text = "HydroShare"
+        return funding_references
 
-        # create the dataset sub element, dataset_type can be record or collection, set it to
-        # collection for HydroShare resources
-        dataset_node = etree.SubElement(db_node, 'dataset', dataset_type="record")
-        # create contributors sub element
-        contributors_node = etree.SubElement(dataset_node, 'contributors')
-        # creators are required element for contributors
-        creators = self.metadata.creators.all()
-        first_author = [cr for cr in creators if cr.order == 1][0]
-        create_contributor_node(first_author, sequence="first")
-        other_authors = [cr for cr in creators if cr.order > 1]
-        for auth in other_authors:
-            create_contributor_node(auth, sequence="additional")
+    def get_related_items(self):
+        """
+        Returns two lists:
+        - relatedIdentifiers: list of dictionaries for relatedIdentifiers
+        - relatedItems: list of dictionaries for relatedItems
+        """
+        VALID_RELATION_TYPE_MAP = {
+            RelationTypes.isPartOf: "IsPartOf",
+            RelationTypes.hasPart: "HasPart",
+            RelationTypes.isExecutedBy: "IsSupplementedBy",
+            RelationTypes.isCreatedBy: "IsDocumentedBy",
+            RelationTypes.isVersionOf: "IsVersionOf",
+            RelationTypes.isReplacedBy: "IsNewVersionOf",
+            RelationTypes.isDescribedBy: "IsDescribedBy",
+            RelationTypes.conformsTo: "References",
+            RelationTypes.hasFormat: "HasPart",
+            RelationTypes.isFormatOf: "IsPartOf",
+            RelationTypes.isRequiredBy: "IsRequiredBy",
+            RelationTypes.requires: "Requires",
+            RelationTypes.isReferencedBy: "IsReferencedBy",
+            RelationTypes.references: "References",
+            RelationTypes.replaces: "Replaces",
+            RelationTypes.source: "IsDerivedFrom",
+            RelationTypes.isSimilarTo: "IsIdenticalTo",
+            RelationTypes.relation: "References"
+        }
 
-        # create dataset title
-        dataset_titles_node = etree.SubElement(dataset_node, 'titles')
-        etree.SubElement(dataset_titles_node, 'title').text = self.metadata.title.value
-        # create dataset date sub element
-        database_dates_node = etree.SubElement(dataset_node, 'database_date')
-        # create creation_date sub element
-        create_date_node(date=self.created, date_type="creation_date")
-        # create a publication_date sub element
-        pub_date_meta = self.metadata.dates.all().filter(type='published').first()
-        if pub_date_meta:
-            # this is a published resource - generating crossref xml for updating crossref deposit
-            pub_date = pub_date_meta.start_date
+        RESOURCE_TYPE_MAP = {
+            "CompositeResource": "Dataset",
+            "CollectionResource": "Collection",
+            "ToolResource": "Software",
+            "ModelProgramResource": "Software",
+            "ModelInstanceResource": "Model",
+            "GenericResource": "Dataset",
+            "TimeSeriesResource": "Dataset",
+            "GeographicFeatureResource": "Dataset",
+            "GeographicRasterResource": "Dataset",
+            "MultidimensionalResource": "Dataset",
+            "ScriptResource": "Software",
+            "WebAppResource": "Service"
+        }
+
+        related_identifiers = []
+        related_items = []
+
+        for relation in self.metadata.relations.all():
+            match = re.search(r'(https?://\S+|10\.\d{4,9}/\S+)', relation.value)
+            identifier_value = match.group(0) if match else relation.value
+            identifier_type = "URL" if identifier_value.startswith("http") else "DOI"
+
+            relation_type = VALID_RELATION_TYPE_MAP.get(relation.type)
+
+            related_identifiers.append({
+                "relatedIdentifier": identifier_value,
+                "relatedIdentifierType": identifier_type,
+                "relationType": relation_type
+            })
+
+            related_items.append({
+                "relatedItemType": RESOURCE_TYPE_MAP.get(self.resource_type, "Other"),
+                "relationType": relation_type,
+                "relatedItemIdentifier": {
+                    "relatedItemIdentifierType": identifier_type,
+                    "relatedItemIdentifier": identifier_value
+                }
+            })
+
+        return related_identifiers, related_items
+
+    def get_dates_for_doi(self):
+        """
+        Returns a list of date dictionaries formatted for the DOI creation payload,
+        handling both temporal coverage and metadata dates.
+        """
+        date_mapping = {
+            'created': 'Created',
+            'modified': 'Updated',
+            'published': 'Accepted',
+        }
+        dates = []
+        # Handling temporal coverage date
+        temporal_dates = self.metadata.coverages.filter(type='period').first()
+        if temporal_dates and temporal_dates.value.get('start') and temporal_dates.value.get('end'):
+            # Format temporal coverage date as a range
+            coverage_date = {
+                "date": f"{temporal_dates.value['start']}/{temporal_dates.value['end']}",
+                "dateType": "Coverage"
+            }
+            dates.append(coverage_date)
+
+        # Handling individual metadata dates
+        metadata_dates = self.metadata.dates.all()
+        for date in metadata_dates:
+            if date.type in date_mapping:
+                # Mapping the date types (created, modified, published)
+                mapped_date = {
+                    "date": date.start_date.strftime("%Y-%m-%d"),
+                    "dateType": date_mapping[date.type]
+                }
+                dates.append(mapped_date)
+
+        return dates
+
+    def get_datacite_deposit_json(self):
+        """
+        Return JSON payload for creating a DOI with DataCite API.
+        Conforms to DataCite REST API for DOI creation: https://support.datacite.org/reference/post_dois
+        """
+        logger = logging.getLogger(__name__)
+
+        if not self.metadata.title:
+            raise ValidationError(f"No title found for resource {self.short_id}")
+        if not self.metadata.creators.count():
+            raise ValidationError(f"No creators found for resource {self.short_id}")
+        if not self.metadata.description or not self.metadata.description.abstract:
+            logger.warning(f"No abstract found for resource {self.short_id}. Using empty string.")
+            self.metadata.description = type('obj', (), {'abstract': ''})()
+
+        doi = f"{settings.DATACITE_PREFIX}/{self.short_id}"
+        payload = {
+            "data": {
+                "type": "dois",
+                "attributes": {
+                    "doi": doi,
+                    "prefix": f"{settings.DATACITE_PREFIX}",
+                    "suffix": self.short_id,
+                    "event": "publish",
+                    "url": None,
+                    "creators": [],
+                    "titles": [{"title": self.metadata.title.value, "lang": "en"}],
+                    "publisher": {
+                        "name": "Consortium of Universities for the Advancement of Hydrologic Science, Inc",
+                        "lang": "en",
+                        "publisherIdentifier": "https://ror.org/04s2bx355",
+                        "publisherIdentifierScheme": "ROR",
+                        "schemeUri": "https://ror.org"
+                    },
+                    "publicationYear": None,
+                    "subjects": [],
+                    "contributors": [],
+                    "identifiers": [],
+                    "dates": [],
+                    "language": "en",
+                    "types": {
+                        "resourceTypeGeneral": "Dataset",
+                        "resourceType": self.resource_type,
+                        "schemaOrg": "Dataset",
+                        "bibtex": "misc",
+                        "citeproc": "dataset"
+                    },
+                    # "relatedIdentifiers": [],
+                    "relatedItems": [],
+                    "sizes": [],
+                    "formats": [],
+                    "version": None,
+                    "rightsList": [],
+                    "descriptions": [],
+                    "geoLocations": [],
+                    "fundingReferences": [],
+                    "container": {
+                        "type": "DataRepository",
+                        "identifier": "https://www.hydroshare.org",
+                        "identifierType": "URL",
+                        "title": "HydroShare Resources"
+                    },
+                    "contentUrl": [self.bag_url] if hasattr(self, 'bag_url') and self.bag_url else [],
+                    "schemaVersion": "http://datacite.org/schema/kernel-4",
+                    "state": "findable"
+                },
+                "relationships": {
+                    "client": {
+                        "data": {
+                            "type": "repositories",
+                            "id": "pdpo.kyfnwo"
+                        }
+                    }
+                }
+            }
+        }
+
+        pub_date = self.metadata.dates.filter(type='published').first()
+        payload["data"]["attributes"]["publicationYear"] = str(
+            pub_date.start_date.year if pub_date else self.updated.year)
+
+        hs_identifier = self.metadata.identifiers.filter(name='hydroShareIdentifier').first()
+        if hs_identifier:
+            payload["data"]["attributes"]["url"] = hs_identifier.url
         else:
-            # generating crossref xml for registering a new resource in crossref
-            pub_date = self.updated
+            raise ValidationError(f"No hydroShareIdentifier found for resource {self.short_id}")
 
-        create_date_node(date=pub_date, date_type="publication_date")
-        # create update_date sub element
-        create_date_node(date=self.updated, date_type="update_date")
-        # create dataset description sub element
-        c_abstract = clean_abstract(self.metadata.description.abstract)
-        etree.SubElement(dataset_node, 'description').text = c_abstract
-        # funder related elements
-        funders = self.metadata.funding_agencies.all()
-        if funders:
-            funding_references = etree.SubElement(dataset_node, '{%s}program' % fr, name="fundref")
-            for funder in funders:
-                funder_group_node = etree.SubElement(funding_references, '{%s}assertion' % fr, name="fundgroup")
-                funder_name_node = etree.SubElement(funder_group_node, '{%s}assertion' % fr, name="funder_name")
-                funder_name_node.text = funder.agency_name
-                # get funder_id from Crossref funders registry
-                funder_id = get_funder_id(funder.agency_name)
-                if not funder_id:
-                    logger.warning(f"Funder id was not found in Crossref funder registry "
-                                   f"for funder name: {funder.agency_name} for resource: {self.short_id}")
-                if funder_id or funder.agency_url:
-                    id_node = etree.SubElement(funder_name_node, '{%s}assertion' % fr, name="funder_identifier")
-                    if funder_id:
-                        id_node.text = funder_id
-                    else:
-                        id_node.text = funder.agency_url
-                if funder.award_number:
-                    award_node = etree.SubElement(funder_group_node, '{%s}assertion' % fr, name='award_number')
-                    award_node.text = funder.award_number
+        creators = self.metadata.creators.all()
+        first_creator = [cr for cr in creators if cr.order == 1]
+        other_creators = [cr for cr in creators if cr.order > 1]
+        for creator in [first_creator[0]] + other_creators if first_creator else creators:
+            if creator.name:
+                first_name, last_name = self.parse_creator_name(creator)
+                creator_data = {
+                    "name": creator.name,
+                    "nameType": "Personal",
+                    "givenName": first_name,
+                    "familyName": last_name,
+                    "affiliation": [{"name": creator.organization or "CUAHSI"}],
+                    "nameIdentifiers": []
+                }
+                if creator.hydroshare_user_id:
+                    creator_data["nameIdentifiers"].append({
+                        "nameIdentifier": f"https://hydroshare.org{creator.relative_uri}",
+                        "nameIdentifierScheme": "Other",
+                    })
+                if creator.identifiers.get('ORCID'):
+                    creator_data["nameIdentifiers"].append({
+                        "nameIdentifier": creator.identifiers['ORCID'],
+                        "nameIdentifierScheme": "ORCID",
+                        "schemeUri": "https://orcid.org"
+                    })
+                payload["data"]["attributes"]["creators"].append(creator_data)
+            else:
+                creator_data = {
+                    "name": creator.organization or "CUAHSI",
+                    "nameType": "Organizational",
+                    "nameIdentifiers": []
+                }
+                payload["data"]["attributes"]["creators"].append(creator_data)
 
-        rights = self.metadata.rights
-        if rights.url:
-            # create dataset license sub element
-            dataset_licenses_node = etree.SubElement(dataset_node, '{%s}program' % ai, name="AccessIndicators")
-            pub_date_str = pub_date.strftime("%Y-%m-%d")
-            license_node = etree.SubElement(dataset_licenses_node, '{%s}license_ref' % ai, applies_to="vor",
-                                            start_date=pub_date_str)
-            license_node.text = rights.url
+        payload["data"]["attributes"]["contributors"] = self.get_contributor_data(self)
 
-        # doi_data is required element for dataset
-        doi_data_node = etree.SubElement(dataset_node, 'doi_data')
-        res_doi = get_activated_doi(self.doi)
-        idx = res_doi.find('10.4211')
-        if idx >= 0:
-            res_doi = res_doi[idx:]
-        etree.SubElement(doi_data_node, 'doi').text = res_doi
-        res_url = self.metadata.identifiers.all().filter(name='hydroShareIdentifier')[0].url
-        etree.SubElement(doi_data_node, 'resource').text = res_url
+        for subject in self.metadata.subjects.all():
+            payload["data"]["attributes"]["subjects"].append({
+                "subject": subject.value,
+            })
 
-        return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(
-            ROOT, encoding='UTF-8', pretty_print=pretty_print).decode()
+        payload["data"]["attributes"]["dates"] = self.get_dates_for_doi()
+
+        if self.metadata.description and self.metadata.description.abstract:
+            payload["data"]["attributes"]["descriptions"] = [
+                {
+                    "description": self.metadata.description.abstract,
+                    "descriptionType": "Abstract",
+                    "lang": "en"
+                }
+            ]
+
+        if self.metadata.rights and self.metadata.rights.url:
+            rights_data = {
+                "rights": self.metadata.rights.statement,
+                "rightsUri": self.metadata.rights.url
+            }
+            if pub_date:
+                rights_data["rightsUriStartDate"] = pub_date.start_date.strftime("%Y-%m-%d")
+            payload["data"]["attributes"]["rightsList"] = [rights_data]
+
+        related_identifiers, related_items = self.get_related_items()
+        # payload["data"]["attributes"]["relatedIdentifiers"] = related_identifiers
+        payload["data"]["attributes"]["relatedItems"] = related_items
+
+        for coverage in self.metadata.coverages.all():
+            if coverage.type == 'box':
+                box_values = coverage.value
+                if all(k in box_values for k in ('westlimit', 'eastlimit', 'southlimit', 'northlimit')):
+                    payload["data"]["attributes"].setdefault("geoLocations", []).append({
+                        "geoLocationBox": {
+                            "westBoundLongitude": str(box_values['westlimit']),
+                            "eastBoundLongitude": str(box_values['eastlimit']),
+                            "southBoundLatitude": str(box_values['southlimit']),
+                            "northBoundLatitude": str(box_values['northlimit'])
+                        }
+                    })
+            elif coverage.type == 'point':
+                point_values = coverage.value
+                longitude = point_values.get('longitude', point_values.get('east'))
+                latitude = point_values.get('latitude', point_values.get('north'))
+
+                if longitude is not None and latitude is not None:
+                    geo_location = {
+                        "geoLocationPoint": {
+                            "pointLongitude": str(longitude),
+                            "pointLatitude": str(latitude)
+                        }
+                    }
+                    if point_values.get('name'):
+                        geo_location["geoLocationPlace"] = point_values['name']
+
+                    payload["data"]["attributes"].setdefault("geoLocations", []).append(geo_location)
+
+        payload["data"]["attributes"]["fundingReferences"] = self.get_funding_references(self)
+
+        for format_obj in self.metadata.formats.all():
+            payload["data"]["attributes"]["formats"].append(format_obj.value)
+
+        all_identifiers = self.metadata.identifiers.all()
+
+        for identifier in all_identifiers:
+            if identifier.name == 'doi':
+                payload["data"]["attributes"].setdefault("identifiers", []).append({
+                    "identifier": identifier.url,
+                    "identifierType": identifier.name
+                })
+            else:
+                payload["data"]["attributes"].setdefault("alternateIdentifiers", []).append({
+                    "alternateIdentifier": identifier.url,
+                    "alternateIdentifierType": identifier.name
+                })
+
+        # if self.metadata.citation and hasattr(self.metadata.citation, 'value'):
+        #     payload["data"]["attributes"]["identifiers"].append({
+        #         "alternateIdentifier": self.metadata.citation.value,
+        #         "alternateIdentifierType": "Citation"
+        #     })
+
+        if hasattr(self, 'size') and self.size:
+            payload["data"]["attributes"]["sizes"].append(f"{self.size} bytes")
+
+        if hasattr(self, 'version') and self.version:
+            payload["data"]["attributes"]["version"] = str(self.version)
+
+        return json.dumps(payload, indent=2)
 
     @property
     def size(self):
@@ -4421,32 +4807,6 @@ class BaseResource(Page, AbstractResource):
             dir_path = dir_path[len(self.file_path) + 1:]
         return dir_path
 
-    def update_crossref_deposit(self):
-        """
-        Update crossref deposit xml file for this published resource
-        Used when metadata (abstract or funding agency) for a published resource is updated
-        """
-        from hs_core.tasks import update_crossref_meta_deposit
-
-        if not self.raccess.published:
-            err_msg = "Crossref deposit can be updated only for a published resource. "
-            err_msg += f"Resource {self.short_id} is not a published resource."
-            raise ValidationError(err_msg)
-
-        if self.doi.endswith(self.short_id):
-            # doi has no crossref status
-            self.extra_data[CrossRefUpdate.UPDATE.value] = 'False'
-            update_crossref_meta_deposit.apply_async((self.short_id,))
-
-        # check for both 'pending' and 'update_pending' status in doi
-        if CrossRefSubmissionStatus.PENDING.value in self.doi:
-            # setting this flag will update the crossref deposit when the hourly celery task runs
-            self.extra_data[CrossRefUpdate.UPDATE.value] = 'True'
-
-        # if the resource crossref deposit is in a 'failure' or 'update_failure' state, then update of the
-        # crossref deposit will be attempted when the hourly celery task runs
-        self.save()
-
 
 old_get_content_model = Page.get_content_model
 
@@ -4504,7 +4864,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     @property
     def title(self):
         """Return the first title object from metadata."""
-        return self._title.all()[0]
+        return self._title.all().first()
 
     @property
     def description(self):
@@ -5004,9 +5364,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 if date_type and date_type not in ('modified', 'published'):
                     raise ValidationError("{} date can't be created for a published resource".format(date_type))
         element = model_type.model_class().create(**kwargs)
-        if resource.raccess.published:
-            if element_model_name in ('fundingagency',):
-                resource.update_crossref_deposit()
+
         return element
 
     def update_element(self, element_model_name, element_id, **kwargs):
@@ -5023,9 +5381,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 if date_type and date_type != 'modified':
                     raise ValidationError("{} date can't be updated for a published resource".format(date_type))
         model_type.model_class().update(element_id, **kwargs)
-        if resource.raccess.published:
-            if element_model_name in ('description', 'fundingagency',):
-                resource.update_crossref_deposit()
 
     def delete_element(self, element_model_name, element_id):
         """Delete Metadata element."""
@@ -5036,9 +5391,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
             if element_model_name not in ('subject', 'contributor', 'source', 'relation', 'fundingagency', 'format'):
                 raise ValidationError("{} can't be deleted for a published resource".format(element_model_name))
         model_type.model_class().remove(element_id)
-        if resource.raccess.published:
-            if element_model_name in ('fundingagency',):
-                resource.update_crossref_deposit()
 
     def _get_metadata_element_model_type(self, element_model_name):
         """Get type of metadata element based on model type."""

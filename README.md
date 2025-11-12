@@ -43,7 +43,7 @@ To get current solr revision fixes:
 
 cd hydroshare
 
-    b. docker exec -u hydro-service -ti hydroshare python manage.py solr_update
+    b. docker exec -ti hydroshare python manage.py solr_update
 
  
 It’s very important that please DO NOT change the directory name after cloned. Let it be “hydroshare”
