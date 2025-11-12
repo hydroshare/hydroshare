@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-coverage run manage.py test --verbosity=3 --nomigrations --with-fixture-bundling --with-xunit $1
-coverage xml
-
-exit 0;
- 
