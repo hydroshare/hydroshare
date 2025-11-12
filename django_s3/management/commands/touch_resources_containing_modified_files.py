@@ -1,4 +1,5 @@
 import asyncio
+import time
 from django.core.management.base import BaseCommand
 from asgiref.sync import sync_to_async
 from hs_core.tasks import set_resource_files_system_metadata
@@ -121,6 +122,7 @@ class Command(BaseCommand):
                     self.stderr.write(f"Error checking {resource_id}: {e}")
 
     def handle(self, *args, **options):
+        start_time = time.time()
         date_str = options['date']
         time_str = options['time']
         dry_run = options['dry_run']
@@ -160,6 +162,15 @@ class Command(BaseCommand):
             self.stderr.write(f"Error: {e}")
         finally:
             loop.close()
+
+        # Calculate and display execution time
+        end_time = time.time()
+        execution_time = end_time - start_time
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Command completed in {execution_time:.2f} seconds ({execution_time / 60:.2f} minutes)"
+            )
+        )
 
     # Wrap the synchronous function with sync_to_async
     @sync_to_async
