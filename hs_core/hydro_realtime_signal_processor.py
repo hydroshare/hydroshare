@@ -3,11 +3,11 @@ import logging
 from django.conf import settings
 from django.db import models
 from hs_core.models import Date, BaseResource
-from hs_core.pubsub_discovery_processor import pub_update
 from hs_core.signals import post_spam_whitelist_change
 from hs_access_control.models import ResourceAccess
 from haystack.exceptions import NotHandled
 from haystack.signals import BaseSignalProcessor
+from hs_core.hydroshare_atlas_discovery_collection import collect_file_to_catalog, delete_file_from_catalog
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +48,10 @@ class HydroRealtimeSignalProcessor(BaseSignalProcessor):
         except Exception as e:
             logger.exception("{} exception: {}".format(type(instance), str(e)))
 
+def file_path(resource: BaseResource):
+    bucket = resource.quota_holder.userprofile.bucket_name
+    return f"{bucket}/{resource.short_id}/.hsjsonld/dataset_metadata.json"
+
 
 def index_resource(signal_processor, instance: BaseResource):
     if hasattr(instance, 'raccess') and hasattr(instance, 'metadata'):
@@ -63,17 +67,25 @@ def index_resource(signal_processor, instance: BaseResource):
                 try:
                     index = signal_processor.connections[using].get_unified_index().get_index(newsender)
                     index.update_object(newbase, using=using)
-                    pub_update(newbase.short_id, False)
+                    filepath = file_path(newbase)
+                    collect_file_to_catalog(filepath)
                 except NotHandled:
                     logger.exception("Failure: changes to %s with short_id %s not added to Solr Index.",
                                      str(type(instance)), newbase.short_id)
+                except Exception as e:
+                    logger.exception("Exception indexing %s with short_id %s: %s",
+                                     str(type(instance)), newbase.short_id, str(e))
 
             # if object is private or becoming private, delete from index
             else:  # not to be shown in discover
                 try:
                     index = signal_processor.connections[using].get_unified_index().get_index(newsender)
                     index.remove_object(newbase, using=using)
-                    pub_update(newbase.short_id, True)
+                    filepath = file_path(newbase)
+                    delete_file_from_catalog(filepath)
                 except NotHandled:
                     logger.exception("Failure: delete of %s with short_id %s failed.",
                                      str(type(instance)), newbase.short_id)
+                except Exception as e:
+                    logger.exception("Exception indexing %s with short_id %s: %s",
+                                     str(type(instance)), newbase.short_id, str(e))
