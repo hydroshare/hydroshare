@@ -305,6 +305,10 @@ def page_permissions_page_processor(request, page):
     from hs_access_control.models.privilege import PrivilegeCodes
     from hs_core.hydroshare.utils import get_remaining_user_quota
 
+    # TODO: This context creation results in at least 12 queries. Would be many more if users and groups are large.
+    # This context is needed for the manage access dialog. It would be beter to fetch this context only when the
+    # user opens the manage access dialog for the first time.
+
     cm = page.get_content_model()
     can_change_resource_flags = False
     self_access_level = None
@@ -332,6 +336,7 @@ def page_permissions_page_processor(request, page):
     last_changed_by = cm.last_changed_by
 
     if request.user.is_authenticated:
+        # N+1 queries
         for owner in owners:
             owner.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, owner)
             owner.viewable_contributions = request.user.uaccess.can_view_resources_owned_by(owner)
