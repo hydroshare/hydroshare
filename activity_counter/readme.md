@@ -1,3 +1,11 @@
+# Retrieving lost downloads data from our metrics exports
+
+We had several months in 2025 between [3.0.0](https://github.com/hydroshare/hydroshare/releases/tag/3.0.0) Feb 5th and [3.11.1](https://github.com/hydroshare/hydroshare/releases/tag/3.11.1) on Nov 10th where we were failing to update the download counter in the AbstractResource class.
+
+This approach goes back to the metrics logs that are exported monthly from the hs_tracking table. We have to use the logs instead of the db because we truncate the db table to a rolling window of 60 days.
+
+Here's the approach that I took:
+
 1. Download tracking variable exports from GCP. More info here: [yesterdays-variables](https://develop.cuahsi.io/hydroshare/metrics/#yesterdays-variables)
 2. Put all of the relevant .csv files into this dir. For example:
     * gs://hydroshare-stats-pg-dumps/production/2025-11-13/hs_tracking_variable_2025-11-01_2025-11-13.csv (this is a partial export run mannually to capture the data in Nov 2025)
@@ -18,5 +26,6 @@
     - `kubectl cp output/2025-02-05_to_2025-11-10.csv $HS_POD:/tmp/2025-02-05_to_2025-11-10.csv`
     - Copy the management command if not deployed...
       * `kubectl cp ../hs_core/management/commands/update_download_counts.py $HS_POD:/hydroshare/hs_core/management/commands/update_download_counts.py`
-1. Ingest the new counts into Django:
+5. Dry run: Ingest the new counts into Django:
     - `kubectl exec $HS_POD -- python manage.py update_download_counts /tmp/2025-02-05_to_2025-11-10.csv --dry-run`
+6. If satisfied, ingest the counts for realz
