@@ -56,18 +56,21 @@ def get_relevant_files(directory, start_date, end_date):
 
 
 def estimate_total_chunks(file_path, chunk_size):
-    """Estimate total number of chunks in a file"""
+    """Estimate total number of chunks in a file using line count"""
     try:
-        # Get file size and estimate rows
-        file_size = os.path.getsize(file_path)
-        # Sample first few rows to get average row size
-        sample_df = pd.read_csv(file_path, nrows=1000)
-        sample_size = sample_df.memory_usage(deep=True).sum()
-        avg_row_size = sample_size / len(sample_df)
-        estimated_rows = file_size / avg_row_size
-        return max(1, int(estimated_rows / chunk_size))
-    except Exception as e:
-        print(f"Error estimating total chunks for {file_path}: {e}")
+        # Count lines in file (faster and more accurate than parsing CSV)
+        with open(file_path, 'rb') as f:
+            line_count = 0
+            # Read in large chunks to count lines quickly
+            chunk = f.read(8192)
+            while chunk:
+                line_count += chunk.count(b'\n')
+                chunk = f.read(8192)
+        
+        # Subtract 1 for header row, then divide by chunk_size
+        estimated_chunks = max(1, (line_count - 1) // chunk_size + 1)
+        return estimated_chunks
+    except:
         return None
 
 
@@ -122,23 +125,22 @@ def process_files(file_list, start_date, end_date, activity_name, chunk_size=500
                 file_rows_processed += chunk_rows
                 total_rows_processed += chunk_rows
 
-                # Improved progress message
+                # Improved progress message with percentage
                 if total_chunks_estimate:
-                    progress_msg = (
-                        f"  Processing chunk {chunk_counter} "
-                        f"(out of ~{total_chunks_estimate} chunks in this file) "
-                        f"with {chunk_rows} rows..."
-                    )
+                    percentage = min(100, int((chunk_counter / total_chunks_estimate) * 100))
+                    progress_msg = f"  Processing chunk {chunk_counter} (out of ~{total_chunks_estimate} chunks, {percentage}%) with {chunk_rows} rows..."
                 else:
                     progress_msg = f"  Processing chunk {chunk_counter} with {chunk_rows} rows..."
 
-                # Print progress every 10 chunks or for the first few and last few chunks
-                if (
-                    chunk_counter <= 3
-                    or chunk_counter % 10 == 0
-                    or (total_chunks_estimate and chunk_counter >= total_chunks_estimate - 3)
-                ):
+                # Print progress more intelligently
+                if (chunk_counter <= 5 or 
+                    chunk_counter % 20 == 0 or 
+                    (total_chunks_estimate and chunk_counter >= total_chunks_estimate - 5) or
+                    chunk_counter == 1):
                     print(progress_msg)
+                elif chunk_counter % 10 == 0 and total_chunks_estimate and chunk_counter <= total_chunks_estimate:
+                    # Show brief progress for every 10 chunks
+                    print(f"  ... chunk {chunk_counter}/{total_chunks_estimate} ({percentage}%)")
 
                 # Convert timestamp efficiently
                 chunk['timestamp'] = pd.to_datetime(chunk['timestamp'], format='mixed', utc=True)
@@ -167,6 +169,10 @@ def process_files(file_list, start_date, end_date, activity_name, chunk_size=500
             print(f"  Finished file: processed {chunk_counter} chunks, {file_rows_processed:,} total rows")
             print(f"  Matching rows in this file: {file_matching_rows:,}")
 
+            # If our estimate was way off, show the actual vs estimated
+            if total_chunks_estimate and abs(chunk_counter - total_chunks_estimate) > 10:
+                print(f"  Note: Actual chunks ({chunk_counter}) differed from estimate ({total_chunks_estimate})")
+            
         except Exception as e:
             print(f"Error processing file {file_path}: {e}")
             import traceback
