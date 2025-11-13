@@ -10,7 +10,8 @@ from hs_access_control.models import PrivilegeCodes
 
 from hs_core import hydroshare
 from hs_core.models import BaseResource
-from django_s3.views import CustomTusUpload
+from django_s3.views import CustomTusUpload, CustomTusFile
+from django_s3.storage import S3Storage
 import os
 
 
@@ -59,11 +60,9 @@ class CustomTusUploadTests(TestCase):
         )
         # create file
         self.n1 = "test.txt"
-
-        test_file = open(self.n1, 'w')
-        test_file.write("Test text file in test.txt")
+        with open(self.n1, 'w') as test_file:
+            test_file.write("Test text file in test.txt")
         self.file_size = os.path.getsize(self.n1)
-        test_file.close()
 
         # open files for read and upload
         self.myfile1 = open(self.n1, "rb")
@@ -84,6 +83,273 @@ class CustomTusUploadTests(TestCase):
         Group.objects.all().delete()
         self.myfile1.close()
         os.remove(self.myfile1.name)
+
+    def test_patch_marks_resource_modified_on_completion(self):
+        """Test that PATCH marks resource as modified when upload completes"""
+        post_response = self.initial_post()
+        self.assertEqual(post_response.status_code, 201)
+
+        # get the resource_id from the response
+        resource_id = post_response.headers.get("Location").split("/")[-1]
+
+        # Store original modified date and timestamps
+        original_modified_date = self.res.metadata.dates.filter(type='modified').first()
+        _ = self.res.last_updated
+        _ = self.res.last_changed_by
+
+        # Now PATCH to upload the complete file
+        self.myfile1.seek(0)
+        file_content = self.myfile1.read()
+        file_size = self.file_size
+
+        patch_request = self.factory.patch("/", data=file_content, content_type="application/offset+octet-stream")
+        patch_request.user = self.user
+        patch_request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        patch_request.META["HTTP_UPLOAD_OFFSET"] = "0"
+        patch_request.META["HTTP_CONTENT_LENGTH"] = str(file_size)
+        self.create_request_metadata(patch_request)
+        patch_view = CustomTusUpload()
+        patch_view.request = patch_request
+        patch_view.kwargs = {'resource_id': resource_id}
+
+        # Let's first check what's happening with the tus_file
+        tus_file = CustomTusFile(str(resource_id))
+        print("Initial tus_file state:")
+        print(f"  file_size: {tus_file.file_size}")
+        print(f"  offset: {tus_file.offset}")
+        print(f"  is_complete(): {tus_file.is_complete()}")
+
+        # Mock just to see if we reach the completion logic
+        with mock.patch.object(CustomTusFile, 'complete_upload') as mock_complete:
+
+            resp = patch_view.patch(patch_request, resource_id)
+            print(f"Response status: {resp.status_code}")
+            print(f"Upload-Offset header: {resp.headers.get('Upload-Offset')}")
+            print(f"complete_upload called: {mock_complete.called}")
+
+            self.assertEqual(resp.status_code, 204)
+
+            # Check the final offset
+            final_offset = int(resp.headers.get("Upload-Offset", -1))
+            print(f"Final offset: {final_offset}, File size: {file_size}")
+            self.assertEqual(final_offset, file_size)
+
+        # Refresh resource from database to check if it was modified
+        self.res = self.res.__class__.objects.get(short_id=self.res.short_id)
+        new_modified_date = self.res.metadata.dates.filter(type='modified').first()
+
+        if mock_complete.called:
+            print("Upload completed - resource should be modified")
+            # Verify resource was modified
+            self.assertIsNotNone(new_modified_date)
+            self.assertNotEqual(original_modified_date.start_date, new_modified_date.start_date)
+            self.assertEqual(self.res.last_changed_by, self.user)
+        else:
+            print("Upload did not complete - resource should not be modified")
+            # If upload didn't complete, resource should not be modified
+            self.assertEqual(original_modified_date.start_date, new_modified_date.start_date)
+
+    def test_partial_patch_does_not_mark_resource_modified(self):
+        """Test that partial PATCH (incomplete upload) doesn't mark resource as modified"""
+        post_response = self.initial_post()
+        self.assertEqual(post_response.status_code, 201)
+
+        # get the resource_id from the response
+        resource_id = post_response.headers.get("Location").split("/")[-1]
+
+        # Store original modified date and timestamps
+        original_modified_date = self.res.metadata.dates.filter(type='modified').first()
+        original_last_updated = self.res.last_updated
+        original_last_changed_by = self.res.last_changed_by
+
+        # PATCH with only part of the file (incomplete upload)
+        # Create a larger file to ensure partial upload
+        large_file_content = b'X' * 100  # 100 bytes of data
+        metadata = self.fake_metadata()
+        metadata['file_size'] = str(len(large_file_content))
+
+        # Create new POST request with larger file size
+        post_request = self.factory.post("/")
+        post_request.user = self.user
+        encoded_metadata = ",".join(
+            (
+                f"{key} {base64.b64encode(str(value).encode()).decode('utf-8')}"
+                if isinstance(value, str)
+                else f"{key} {value}"
+            )
+            for key, value in metadata.items()
+        )
+        post_request.META["HTTP_UPLOAD_METADATA"] = encoded_metadata
+        post_request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        post_request.META["HTTP_CONTENT_LENGTH"] = str(len(large_file_content))
+        post_view = CustomTusUpload()
+        post_view.request = post_request
+        post_response = post_view.post(post_request)
+        self.assertEqual(post_response.status_code, 201)
+
+        resource_id = post_response.headers.get("Location").split("/")[-1]
+
+        # Upload only part of the file (50 bytes out of 100)
+        partial_content = large_file_content[:50]
+        patch_request = self.factory.patch("/", data=partial_content, content_type="application/offset+octet-stream")
+        patch_request.user = self.user
+        patch_request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        patch_request.META["HTTP_UPLOAD_OFFSET"] = "0"
+        patch_request.META["HTTP_CONTENT_LENGTH"] = str(len(partial_content))
+        encoded_metadata = ",".join(
+            (
+                f"{key} {base64.b64encode(str(value).encode()).decode('utf-8')}"
+                if isinstance(value, str)
+                else f"{key} {value}"
+            )
+            for key, value in metadata.items()
+        )
+        patch_request.META["HTTP_UPLOAD_METADATA"] = encoded_metadata
+        patch_view = CustomTusUpload()
+        patch_view.request = patch_request
+        patch_view.kwargs = {'resource_id': resource_id}
+
+        resp = patch_view.patch(patch_request, resource_id)
+        # Should be 204 even for partial upload
+        self.assertEqual(resp.status_code, 204)
+
+        # Refresh resource from database
+        self.res = self.res.__class__.objects.get(short_id=self.res.short_id)
+
+        # Verify resource was NOT modified (dates should be unchanged)
+        new_modified_date = self.res.metadata.dates.filter(type='modified').first()
+        self.assertEqual(original_modified_date.start_date, new_modified_date.start_date)
+        self.assertEqual(original_last_updated, self.res.last_updated)
+        self.assertEqual(original_last_changed_by, self.res.last_changed_by)
+
+    def test_resource_modified_with_correct_user(self):
+        """Test that resource is marked as modified by the correct user"""
+        post_response = self.initial_post()
+        self.assertEqual(post_response.status_code, 201)
+
+        # get the resource_id from the response
+        resource_id = post_response.headers.get("Location").split("/")[-1]
+
+        # Create a different user who has edit permissions
+        other_user = hydroshare.create_account(
+            'otheruser@email.com',
+            username='otheruser' + uuid.uuid4().hex,
+            first_name='Other',
+            last_name='User',
+            superuser=False,
+            groups=[]
+        )
+        self.user.uaccess.share_resource_with_user(self.res, other_user, PrivilegeCodes.CHANGE)
+
+        # Store original state
+        original_last_changed_by = self.res.last_changed_by
+
+        # Now PATCH to upload the complete file as the other user
+        self.myfile1.seek(0)
+        file_content = self.myfile1.read()
+        patch_request = self.factory.patch("/", data=file_content, content_type="application/offset+octet-stream")
+        patch_request.user = other_user  # Different user making the upload
+        patch_request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        patch_request.META["HTTP_UPLOAD_OFFSET"] = "0"
+        patch_request.META["HTTP_CONTENT_LENGTH"] = str(len(file_content))
+        self.create_request_metadata(patch_request)
+        patch_view = CustomTusUpload()
+        patch_view.request = patch_request
+        patch_view.kwargs = {'resource_id': resource_id}
+
+        resp = patch_view.patch(patch_request, resource_id)
+        self.assertEqual(resp.status_code, 204)
+
+        # Refresh resource from database
+        self.res = self.res.__class__.objects.get(short_id=self.res.short_id)
+
+        # Verify resource was modified by the correct user
+        self.assertEqual(self.res.last_changed_by, other_user)
+        self.assertNotEqual(original_last_changed_by, self.res.last_changed_by)
+
+        # Also verify modified date was updated
+        new_modified_date = self.res.metadata.dates.filter(type='modified').first()
+        self.assertIsNotNone(new_modified_date)
+
+    def test_complete_upload_sequence_marks_resource_modified(self):
+        """Test that a complete upload sequence marks resource as modified only at completion"""
+        post_response = self.initial_post()
+        self.assertEqual(post_response.status_code, 201)
+
+        # get the resource_id from the response
+        resource_id = post_response.headers.get("Location").split("/")[-1]
+
+        # Store original state
+        original_modified_date = self.res.metadata.dates.filter(type='modified').first()
+        _ = self.res.last_updated
+
+        # Upload file in multiple chunks
+        self.myfile1.seek(0)
+        file_content = self.myfile1.read()
+        chunk_size = 10  # bytes per chunk
+
+        # Mock the S3 client to avoid size validation errors
+        # we do this because s3 has a minimum object size
+        with mock.patch.object(S3Storage, 'connection') as mock_connection:
+            # Mock the complete_multipart_upload to avoid size validation
+            mock_client = mock.MagicMock()
+            mock_connection.meta.client = mock_client
+            mock_client.complete_multipart_upload.return_value = {}
+
+        # Upload first chunk
+        first_chunk = file_content[:chunk_size]
+        patch_request = self.factory.patch("/", data=first_chunk, content_type="application/offset+octet-stream")
+        patch_request.user = self.user
+        patch_request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        patch_request.META["HTTP_UPLOAD_OFFSET"] = "0"
+        patch_request.META["HTTP_CONTENT_LENGTH"] = str(len(first_chunk))
+        self.create_request_metadata(patch_request)
+        patch_view = CustomTusUpload()
+        patch_view.request = patch_request
+        patch_view.kwargs = {'resource_id': resource_id}
+
+        # Also mock the async task for the first chunk
+        with mock.patch('django_s3.views.set_resource_files_system_metadata.apply_async') as mock_async:
+            resp = patch_view.patch(patch_request, resource_id)
+            self.assertEqual(resp.status_code, 204)
+
+            # Verify async task was NOT called after first chunk
+            mock_async.assert_not_called()
+
+        # Refresh resource and verify NOT modified after first chunk
+        self.res = self.res.__class__.objects.get(short_id=self.res.short_id)
+        after_first_chunk_modified_date = self.res.metadata.dates.filter(type='modified').first()
+        self.assertEqual(original_modified_date.start_date, after_first_chunk_modified_date.start_date)
+
+        # Upload remaining chunks to complete the file
+        remaining_content = file_content[chunk_size:]
+        patch_request = self.factory.patch("/", data=remaining_content, content_type="application/offset+octet-stream")
+        patch_request.user = self.user
+        patch_request.META["HTTP_TUS_RESUMABLE"] = "1.0.0"
+        patch_request.META["HTTP_UPLOAD_OFFSET"] = str(chunk_size)
+        patch_request.META["HTTP_CONTENT_LENGTH"] = str(len(remaining_content))
+        self.create_request_metadata(patch_request)
+        patch_view = CustomTusUpload()
+        patch_view.request = patch_request
+        patch_view.kwargs = {'resource_id': resource_id}
+
+        # Mock async task for final chunk
+        with mock.patch('django_s3.views.set_resource_files_system_metadata.apply_async') as mock_async:
+            resp = patch_view.patch(patch_request, resource_id)
+            self.assertEqual(resp.status_code, 204)
+
+            # Verify complete_multipart_upload was called
+            mock_client.complete_multipart_upload.assert_called_once()
+
+            # Verify async task WAS called after completion
+            mock_async.assert_called_once_with((self.res.short_id,))
+
+        # Refresh resource and verify FINALLY modified after completion
+        self.res = self.res.__class__.objects.get(short_id=self.res.short_id)
+        final_modified_date = self.res.metadata.dates.filter(type='modified').first()
+        self.assertNotEqual(original_modified_date.start_date, final_modified_date.start_date)
+        self.assertTrue(final_modified_date.start_date > original_modified_date.start_date)
+        self.assertEqual(self.res.last_changed_by, self.user)
 
     def test_post_returns_expected_metadata(self):
         view = CustomTusUpload()

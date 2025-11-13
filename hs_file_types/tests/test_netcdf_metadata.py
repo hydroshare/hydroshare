@@ -76,6 +76,13 @@ class NetCDFFileTypeTest(MockS3TestCaseMixin, TransactionTestCase,
         self.assertFalse(logical_file.metadata.is_update_file)
         self.assertEqual(len(logical_file.metadata.keywords), 1)
         self.assertEqual(logical_file.metadata.keywords[0], 'Snow water equivalent')
+        # check that the resource has the new keyword added as part of the netcdf aggregation creation
+        self.assertEqual(self.composite_resource.metadata.subjects.count(), 1)
+        self.assertEqual(self.composite_resource.metadata.subjects.first().value,
+                         'Snow water equivalent')
+        # check the keyword in cached metadata of the resource
+        self.composite_resource.refresh_from_db()
+        self.assertEqual(self.composite_resource.cached_metadata['subjects'], ['Snow water equivalent'])
         # check that there are no required missing metadata for the netcdf aggregation
         self.assertEqual(len(logical_file.metadata.get_required_missing_elements()), 0)
         self.assertFalse(self.composite_resource.dangling_aggregations_exist())

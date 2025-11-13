@@ -697,7 +697,6 @@ class Party(AbstractMetaDataElement):
             kwargs['identifiers'] = identifiers
 
         party = super(Party, cls).update(element_id, **kwargs)
-
         if party.hydroshare_user_id is not None:
             user = User.objects.get(id=party.hydroshare_user_id)
             party.is_active_user = user.is_active
@@ -735,7 +734,7 @@ class Party(AbstractMetaDataElement):
         return self.is_active_user
 
     @classmethod
-    def remove(cls, element_id):
+    def remove(cls, element_id, delete=True):
         """Define custom remove method for Party model."""
         party = cls.objects.get(id=element_id)
 
@@ -755,7 +754,14 @@ class Party(AbstractMetaDataElement):
                 if cr.order > party.order:
                     cr.order -= 1
                     cr.save(update_fields=["order"])
-        party.delete()
+        if delete:
+            party.delete()
+
+    def delete(self, using=None, keep_parents=False):
+        """Overriding the django model delete() method to update creator order attribute for
+        remaining creators."""
+        self.remove(element_id=self.id, delete=False)
+        super(Party, self).delete(using=using, keep_parents=keep_parents)
 
     @classmethod
     def validate_identifiers(cls, identifiers):
@@ -2062,7 +2068,6 @@ class Subject(AbstractMetaDataElement):
     def remove(cls, element_id):
         """Define custom remove method for Subject model."""
         sub = Subject.objects.get(id=element_id)
-
         if Subject.objects.filter(object_id=sub.object_id,
                                   content_type__pk=sub.content_type.id).count() == 1:
             raise ValidationError("The only subject element of the resource can't be deleted.")
@@ -2189,6 +2194,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
     # this field WILL NOT get recorded in bag and SHOULD NEVER be used for storing metadata
     extra_data = HStoreField(default=dict)
 
+    # cache metadata for performance optimization of my-resources page
+    cached_metadata = models.JSONField(default=dict)
+
     # for tracking number of times resource and its files have been downloaded
     download_count = models.PositiveIntegerField(default=0)
     bag_last_downloaded = models.DateTimeField(null=True, blank=True)
@@ -2205,6 +2213,14 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
     quota_holder = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                      related_name='quota_holder')
 
+    def save(self, *args, **kwargs):
+        """Refresh cached metadata before resource is saved to prevent stale cached metadata in memory getting
+        written to DB"""
+        # Only refresh cached_metadata from DB if object already exists
+        if not self._state.adding:
+            self.refresh_from_db(fields=['cached_metadata'])
+        super(AbstractResource, self).save(*args, **kwargs)
+
     def update_view_count(self):
         self.view_count += 1
         # using update query api to update instead of self.save() to avoid triggering solr realtime indexing
@@ -2215,6 +2231,138 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         # using update query api to update instead of self.save() to avoid triggering solr realtime indexing
         type(self).objects.filter(id=self.id).update(download_count=self.download_count)
 
+    def update_cached_metadata_field(self, field_name):
+        """
+        Update a specific field in the cached metadata or all fields if 'all' is specified
+
+        :param field_name: The field to update ('creator', 'subject', etc.). If 'all', update all fields.
+
+        NOTE: This method gets called from post_save and post_delete signal handler for
+        any core metadata elements. We need to update the 'modified' field in cached metadata
+        for any change to core metadata elements. The Date metadata element gets updated for the
+        modified date type by the system as needed. We are depending on that change to modified date
+        to update the 'modified' field in cached metadata.
+        """
+        self.refresh_from_db()
+        metadata = self.metadata
+        copied_metadata = copy.deepcopy(self.cached_metadata)
+
+        # These are the fields that need to be updated in cached metadata
+        field_updaters = {
+            'creator': self._update_creators_field,
+            'title': self._update_title_field,
+            'subject': self._update_subjects_field,
+            'date': self._update_date_field,
+            'status': self._update_status_field,
+            'description': self._update_abstract_field,
+        }
+
+        # Update all fields if 'all' is specified
+        if field_name == 'all':
+            for updater in field_updaters.values():
+                updater(copied_metadata, metadata)
+        else:
+            # Update the specified field
+            if field_name in field_updaters:
+                field_updaters[field_name](copied_metadata, metadata)
+
+        # Ensure all required fields are present
+        self._ensure_required_fields(copied_metadata, metadata)
+
+        # Update the modified date every time a metadata element is updated/deleted, or when 'all' is specified
+        modified_date = metadata.dates.filter(type='modified').first()
+        if field_name != 'all':
+            # this is the case of updating cached metadata as part of metadata save/delete signal handler
+            copied_metadata['modified'] = now().isoformat()
+            if modified_date:
+                # this update won't trigger the post_save signal for Date model since we are using update query api
+                type(modified_date).objects.filter(id=modified_date.id).update(start_date=copied_metadata['modified'])
+        else:
+            # this is the case of updating cached metadata as part of management command
+            if modified_date:
+                copied_metadata['modified'] = modified_date.start_date.isoformat()
+            else:
+                copied_metadata['modified'] = self.updated.isoformat()
+
+        type(self).objects.filter(id=self.id).update(cached_metadata=copied_metadata)
+
+    def _update_creators_field(self, copied_metadata, metadata):
+        """Update creators field in cached metadata"""
+        creators = metadata.creators.all()
+        copied_metadata['creators'] = [
+            {
+                'name': c.name,
+                'order': c.order,
+                'hs_user_id': c.hydroshare_user_id,
+                'is_active_user': c.is_active_user,
+                'relative_uri': c.relative_uri,
+                'organization': c.organization
+            }
+            for c in creators
+        ]
+
+    def _update_title_field(self, copied_metadata, metadata):
+        """Update title field in cached metadata"""
+        title = metadata.title.value if hasattr(metadata, 'title') and metadata.title else ""
+        copied_metadata['title'] = title
+
+    def _update_subjects_field(self, copied_metadata, metadata):
+        """Update subjects field in cached metadata"""
+        subjects = list(metadata.subjects.all())
+        copied_metadata['subjects'] = [s.value for s in subjects]
+
+    def _update_date_field(self, copied_metadata, metadata):
+        """Update date field in cached metadata"""
+        if 'created' not in copied_metadata:
+            created_date = metadata.dates.filter(type='created').first()
+            if created_date:
+                copied_metadata['created'] = created_date.start_date.isoformat()
+            else:
+                copied_metadata['created'] = self.created.isoformat()
+
+    def _update_status_field(self, copied_metadata, metadata):
+        """Update status field in cached metadata"""
+        if hasattr(self, 'raccess'):
+            copied_metadata['status'] = {
+                "public": self.raccess.public,
+                "discoverable": self.raccess.discoverable,
+                "published": self.raccess.published,
+                "shareable": self.raccess.shareable
+            }
+
+    def _update_abstract_field(self, copied_metadata, metadata):
+        """Update abstract field in cached metadata"""
+        abstract = metadata.description.abstract if hasattr(metadata, 'description') and metadata.description else ""
+        copied_metadata['abstract'] = abstract
+
+    def _ensure_required_fields(self, copied_metadata, metadata):
+        """Ensure all required fields are present in cached metadata"""
+
+        if 'title' not in copied_metadata or copied_metadata['title'] == '':
+            self._update_title_field(copied_metadata, metadata)
+
+        if 'creators' not in copied_metadata or len(copied_metadata['creators']) == 0:
+            self._update_creators_field(copied_metadata, metadata)
+
+        if 'created' not in copied_metadata or copied_metadata['created'] == '':
+            self._update_date_field(copied_metadata, metadata)
+
+        if 'subjects' not in copied_metadata or len(copied_metadata['subjects']) == 0:
+            self._update_subjects_field(copied_metadata, metadata)
+
+        if 'status' not in copied_metadata:
+            self._update_status_field(copied_metadata, metadata)
+
+        if 'abstract' not in copied_metadata:
+            self._update_abstract_field(copied_metadata, metadata)
+
+    def update_all_cached_metadata(self):
+        """
+        Update all fields in the cached metadata
+        This method is primarily for use in management commands to refresh cached metadata
+        """
+        self.update_cached_metadata_field(field_name='all')
+
     # definition of resource logic
     @property
     def supports_folders(self):
@@ -2224,9 +2372,15 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
     @property
     def last_updated(self):
         """Return the last updated date stored in metadata"""
-        for dt in self.metadata.dates.all():
-            if dt.type == 'modified':
-                return dt.start_date
+        # get the modified date from the cached metadata
+        modified_date = self.cached_metadata.get('modified', None)
+        if modified_date:
+            return parser.parse(modified_date)
+        else:
+            # get the modified date from the Date metadata element
+            for dt in self.metadata.dates.all():
+                if dt.type == 'modified':
+                    return dt.start_date
 
     @property
     def has_required_metadata(self):
@@ -4710,7 +4864,7 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
     @property
     def title(self):
         """Return the first title object from metadata."""
-        return self._title.all()[0]
+        return self._title.all().first()
 
     @property
     def description(self):
