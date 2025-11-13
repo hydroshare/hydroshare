@@ -2,7 +2,6 @@
 import csv
 import os
 from django.core.management.base import BaseCommand, CommandError
-from django.db import transaction
 from hs_core.models import BaseResource
 
 
@@ -21,17 +20,10 @@ class Command(BaseCommand):
             dest='dry_run',
             help='Run without actually saving changes to the database',
         )
-        parser.add_argument(
-            '--skip-duplicates',
-            action='store_true',
-            dest='skip_duplicates',
-            help='Skip duplicate resource IDs instead of raising an error',
-        )
 
     def handle(self, *args, **options):
         csv_file_path = options['csv_file']
         dry_run = options['dry_run']
-        skip_duplicates = options['skip_duplicates']
 
         # Validate CSV file exists
         if not os.path.exists(csv_file_path):
@@ -44,25 +36,9 @@ class Command(BaseCommand):
 
         # Pre-validate CSV for duplicates
         self.stdout.write("Validating CSV file for duplicates...")
-        duplicates = self.validate_csv_uniqueness(csv_file_path)
-
-        if duplicates and not skip_duplicates:
-            raise CommandError(
-                f"Found {len(duplicates)} duplicate resource ID(s): {', '.join(sorted(duplicates))}\n"
-                f"Use --skip-duplicates to skip duplicates instead of failing."
-            )
-        elif duplicates and skip_duplicates:
-            self.stdout.write(
-                self.style.WARNING(f"Found {len(duplicates)} duplicate resource ID(s) that will be skipped")
-            )
-
+        self.validate_csv_uniqueness(csv_file_path)
         success_count = 0
         error_count = 0
-        skipped_count = 0
-        duplicate_count = 0
-
-        # Track resource IDs to detect duplicates
-        seen_resource_ids = set()
 
         try:
             with open(csv_file_path, 'r') as file:
@@ -81,49 +57,10 @@ class Command(BaseCommand):
                     file.seek(0)
                     reader = csv.reader(file)
 
-                # Process each row
                 for row_number, row in enumerate(reader, 1):
-                    if len(row) < 2:
-                        self.stdout.write(
-                            self.style.WARNING(f"Row {row_number}: Skipped - insufficient columns")
-                        )
-                        skipped_count += 1
-                        continue
-
                     short_id = row[0].strip()
+                    download_count = int(row[1].strip())
 
-                    # Check for duplicate resource IDs
-                    if short_id in seen_resource_ids:
-                        if skip_duplicates:
-                            self.stdout.write(
-                                self.style.WARNING(f"Row {row_number}: Skipped duplicate resource ID - {short_id}")
-                            )
-                            duplicate_count += 1
-                            continue
-                        else:
-                            # This should not happen if pre-validation passed, but handle it anyway
-                            raise CommandError(
-                                f"Duplicate resource ID found: {short_id} at row {row_number}. "
-                                f"Use --skip-duplicates to skip duplicates instead of failing."
-                            )
-
-                    seen_resource_ids.add(short_id)
-
-                    try:
-                        download_count = int(row[1].strip())
-                        if download_count < 0:
-                            raise ValueError("Download count cannot be negative")
-                    except ValueError as e:
-                        self.stdout.write(
-                            self.style.WARNING(
-                                f"Row {row_number}: Skipped - invalid download count: "
-                                f"{row[1]} ({str(e)})"
-                            )
-                        )
-                        skipped_count += 1
-                        continue
-
-                    # Find the resource
                     try:
                         resource = BaseResource.objects.get(short_id=short_id)
 
@@ -138,10 +75,8 @@ class Command(BaseCommand):
                             )
                             success_count += 1
                         else:
-                            # Update the download count
-                            with transaction.atomic():
-                                resource.download_count += download_count
-                                resource.save()
+                            resource.download_count += download_count
+                            resource.save()
 
                             self.stdout.write(
                                 self.style.SUCCESS(
@@ -166,7 +101,6 @@ class Command(BaseCommand):
         except Exception as e:
             raise CommandError(f"Error reading CSV file: {str(e)}")
 
-        # Summary
         self.stdout.write("\n" + "=" * 50)
         self.stdout.write("UPDATE SUMMARY")
         self.stdout.write("=" * 50)
@@ -174,12 +108,8 @@ class Command(BaseCommand):
         if dry_run:
             self.stdout.write(f"Mode: {self.style.WARNING('DRY RUN')}")
 
-        self.stdout.write(f"Unique resource IDs in CSV: {len(seen_resource_ids)}")
-        self.stdout.write(f"Duplicate resource IDs found: {len(duplicates)}")
         self.stdout.write(f"Successfully processed: {self.style.SUCCESS(str(success_count))}")
         self.stdout.write(f"Errors: {self.style.ERROR(str(error_count))}")
-        self.stdout.write(f"Skipped (invalid data): {self.style.WARNING(str(skipped_count))}")
-        self.stdout.write(f"Skipped (duplicates): {self.style.WARNING(str(duplicate_count))}")
         self.stdout.write(f"Total rows processed: {row_number}")
 
         if dry_run:
@@ -216,14 +146,27 @@ class Command(BaseCommand):
                     file.seek(0)
                 reader = csv.reader(file)
 
-                for row_number, row in enumerate(reader, 1):
-                    if len(row) >= 1 and row[0].strip():  # Only process if we have at least one column with data
+                for _, row in enumerate(reader, 1):
+                    if len(row) <= 1:
+                        raise CommandError(
+                            "CSV file must have at least two columns: resource_id and download_count"
+                        )
+                    if row[0].strip():  # Only process if we have at least one column with data
                         resource_id = row[0].strip()
                         if resource_id in resource_ids:
                             duplicates.add(resource_id)
                         else:
                             resource_ids.add(resource_id)
+                        download_count = int(row[1].strip())
+                        if download_count < 0:
+                            raise CommandError(
+                                f"Invalid download count '{download_count}' for resource ID "
+                                f"'{resource_id}': Download count cannot be negative"
+                            )
         except Exception as e:
             raise CommandError(f"Error validating CSV file: {str(e)}")
 
-        return duplicates
+        if duplicates:
+            raise CommandError(
+                f"Found {len(duplicates)} duplicate resource ID(s): {', '.join(sorted(duplicates))}\n"
+            )
