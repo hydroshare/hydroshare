@@ -2426,7 +2426,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
                 spatial_coverage_dict['eastlimit'] = spatial_coverage.value['eastlimit']
                 spatial_coverage_dict['southlimit'] = spatial_coverage.value['southlimit']
                 spatial_coverage_dict['westlimit'] = spatial_coverage.value['westlimit']
-
+        else:
+            spatial_coverage_dict['exists'] = False
+            spatial_coverage_dict['default_units'] = metadata.spatial_coverage_default_units
+            spatial_coverage_dict['default_projection'] = metadata.spatial_coverage_default_projection
         copied_metadata['spatial_coverage'] = spatial_coverage_dict
 
     def _update_relation_field(self, copied_metadata, metadata):
