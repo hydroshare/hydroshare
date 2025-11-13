@@ -42,32 +42,23 @@ class Command(BaseCommand):
 
         try:
             with open(csv_file_path, 'r') as file:
-                # Try different delimiters
-                sniffer = csv.Sniffer()
-                sample = file.read(1024)
-                file.seek(0)
+                reader = csv.reader(file)
 
-                if sniffer.has_header(sample):
-                    dialect = sniffer.sniff(sample)
-                    reader = csv.reader(file, dialect)
-                    # Skip header row
-                    next(reader, None)
-                else:
-                    # Fallback to default CSV format
-                    file.seek(0)
-                    reader = csv.reader(file)
+                # Skip header row (we know our CSV has: last_resource_id,count)
+                header = next(reader, None)
+                self.stdout.write(f"CSV header: {header}")
 
-                for row_number, row in enumerate(reader, 1):
-                    short_id = row[0].strip()
+                for row_number, row in enumerate(reader, 2):  # Start at row 2 (after header)
+                    last_resource_id = row[0].strip()
                     download_count = int(row[1].strip())
 
                     try:
-                        resource = BaseResource.objects.get(short_id=short_id)
+                        resource = BaseResource.objects.get(short_id=last_resource_id)
 
                         if dry_run:
                             self.stdout.write(
                                 self.style.SUCCESS(
-                                    f"Row {row_number}: Would update {short_id} - "
+                                    f"Row {row_number}: Would update {last_resource_id} - "
                                     f"Current: {resource.download_count}, "
                                     f"Adding: {download_count}, "
                                     f"New: {resource.download_count + download_count}"
@@ -80,7 +71,7 @@ class Command(BaseCommand):
 
                             self.stdout.write(
                                 self.style.SUCCESS(
-                                    f"Row {row_number}: Updated {short_id} - "
+                                    f"Row {row_number}: Updated {last_resource_id} - "
                                     f"Added {download_count} downloads, "
                                     f"New total: {resource.download_count}"
                                 )
@@ -89,12 +80,12 @@ class Command(BaseCommand):
 
                     except BaseResource.DoesNotExist:
                         self.stdout.write(
-                            self.style.ERROR(f"Row {row_number}: Resource not found - {short_id}")
+                            self.style.ERROR(f"Row {row_number}: Resource not found - {last_resource_id}")
                         )
                         error_count += 1
                     except Exception as e:
                         self.stdout.write(
-                            self.style.ERROR(f"Row {row_number}: Error processing {short_id} - {str(e)}")
+                            self.style.ERROR(f"Row {row_number}: Error processing {last_resource_id} - {str(e)}")
                         )
                         error_count += 1
 
@@ -110,7 +101,7 @@ class Command(BaseCommand):
 
         self.stdout.write(f"Successfully processed: {self.style.SUCCESS(str(success_count))}")
         self.stdout.write(f"Errors: {self.style.ERROR(str(error_count))}")
-        self.stdout.write(f"Total rows processed: {row_number}")
+        self.stdout.write(f"Total rows processed: {success_count + error_count}")
 
         if dry_run:
             self.stdout.write(
@@ -131,26 +122,13 @@ class Command(BaseCommand):
 
         try:
             with open(csv_file_path, 'r') as file:
-                # Try to detect if there's a header
-                sniffer = csv.Sniffer()
-                sample = file.read(1024)
-                file.seek(0)
-
-                if sniffer.has_header(sample):
-                    dialect = sniffer.sniff(sample)
-                    reader = csv.reader(file, dialect)
-                    # Skip header row for validation
-                    next(reader, None)
-                else:
-                    # Fallback to default CSV format
-                    file.seek(0)
                 reader = csv.reader(file)
 
-                for _, row in enumerate(reader, 1):
-                    if len(row) <= 1:
-                        raise CommandError(
-                            "CSV file must have at least two columns: resource_id and download_count"
-                        )
+                # Skip header row (we know our CSV has: last_resource_id,count)
+                header = next(reader, None)
+                self.stdout.write(f"Validating CSV with header: {header}")
+
+                for _, row in enumerate(reader, 2):  # Start at row 2 (after header)
                     if row[0].strip():  # Only process if we have at least one column with data
                         resource_id = row[0].strip()
                         if resource_id in resource_ids:
