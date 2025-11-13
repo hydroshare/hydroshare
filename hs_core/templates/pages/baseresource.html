@@ -28,10 +28,10 @@
     "url": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
     {% endif %}
     "@type": "Dataset",
-    "additionalType": "{{ cm.metadata.type.url }}",
-    "name": "{{ title }}",
-    "description": "{{ cm.metadata.description | escapejs }}",
-    "keywords": {{ keywords|safe }},
+    "additionalType": "{{ cm.cached_metadata.type }}",
+    "name": "{{ cm.cached_metadata.title.value }}",
+    "description": "{{ cm.cached_metadata.abstract.value | escapejs }}",
+    "keywords": {{ cm.cached_metadata.subjects |safe }},
     {% if cm.raccess.published %}
     "creativeWorkStatus": "Published",
     {% elif cm.raccess.public %}
@@ -60,12 +60,12 @@
       "https://www.hydroshare.org/resource/{{ cm.short_id }}"
     ],
     {% endif %}
-    "creator": {{ creators | creator_json_ld_element | safe }},
+    "creator": {{ cm.cached_metadata.creators | creator_json_ld_element | safe }},
     {# There is discussion about adding more linked data fields for referenced items #}
     {# https://github.com/hydroshare/hydroshare/issues/4566#issuecomment-1124283370 #}
-    {% if geospatial_relations %}
+    {% if cm.cached_metadata.geospatial_relations %}
     "about": [
-    {% for geospatial_relation in geospatial_relations %}{% if geospatial_relation.value|is_url %}
+    {% for geospatial_relation in cm.cached_metadata.geospatial_relations %}{% if geospatial_relation.value|is_url %}
       {
         "@id": "{{ geospatial_relation.value | escapejs }}",
         {# We might eventually want to encode related features with more specificity than generic https://schema.org/Place #}
@@ -76,10 +76,11 @@
     {% endif %}{% endfor %}
     ],
     {% endif %}
-    {% if temporal_coverage %}
-    "temporalCoverage": "{{ temporal_coverage.start_date }}/{{ temporal_coverage.end_date }}",
+    {% if cm.cached_metadata.temporal_coverage %}
+    "temporalCoverage": "{{ cm.cached_metadata.temporal_coverage.start_date }}/{{ cm.cached_metadata.temporal_coverage.end_date }}",
     {% endif %}
-    {% if spatial_coverage.exists %}
+    {% with spatial_coverage=cm.cached_metadata.spatial_coverage %}
+    {% if spatial_coverage %}
     {# Could include specific properties https://schema.org/GeospatialGeometry for related features #}
     "spatialCoverage": {
         "@type": "Place",
@@ -98,6 +99,7 @@
         }
     },
     {% endif %}
+    {% endwith %}
     {% if cm.raccess.published %}
     "publisher": {
         "@id": "https://www.hydroshare.org"
@@ -114,28 +116,29 @@
 		"name": "HydroShare",
     	"url": "https://www.hydroshare.org/search/"
 	},
-	 {% if cm.metadata.rights.statement or cm.metadata.rights.url %}
+	 {% if cm.cached_metadata.rights.statement or cm.cached_metadata.rights.url %}
 	"license": {
 	    "@type": "CreativeWork",
-	    {% if cm.metadata.rights.statement and cm.metadata.rights.url %}
-        "text": "{{ cm.metadata.rights.statement | escapejs }}",
-        "url": "{{ cm.metadata.rights.url }}"
-        {% elif cm.metadata.rights.statement %}
-        "text": "{{ cm.metadata.rights.statement | escapejs }}",
+	    {% if cm.cached_metadata.rights.statement and cm.cached_metadata.rights.url %}
+        "text": "{{ cm.cached_metadata.rights.statement | escapejs }}",
+        "url": "{{ cm.cached_metadata.rights.url }}"
+        {% elif cm.cached_metadata.rights.statement %}
+        "text": "{{ cm.cached_metadata.rights.statement | escapejs }}",
         "name": "Customized license"
         {% else %}
-        "url": "{{ cm.metadata.rights.url }}"
+        "url": "{{ cm.cached_metadata.rights.url }}"
         {% endif %}
 	},
 	{% endif %}
     {% if cm.raccess.public %} "isAccessibleForFree": true, {% endif %}
-    {% if relations %}
+    {% if cm.cached_metadata.relations %}
     "citation": [
-    {% for relation in relations %}
+    {% for relation in cm.cached_metadata.relations %}
         "{{ relation.value | escapejs }}"{%if not forloop.last%},{%endif%}
     {% endfor %}
     ],
     {% endif %}
+    {% with fundingagencies=cm.cached_metadata.funding_agencies %}
     {% if fundingagencies %}
     "funding": [
     {% for agency in fundingagencies %}
@@ -152,6 +155,7 @@
         {% endfor %}
     ],
     {% endif %}
+    {% endwith %}
     "dateCreated": "{{ cm.created | date:"c" }}",
     "dateModified": "{{ cm.last_updated | date:"c"}}",
     {% if cm.raccess.published %}"datePublished": "{{ cm|published_date | date:"c"}}", {% endif %}
