@@ -2262,7 +2262,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             'fundingagency': self._update_fundingagency_field,
             'rights': self._update_rights_field,
             'language': self._update_language_field,
-            'identifier': self._update_identifier_field
+            'identifier': self._update_identifier_field,
+            'type': self._update_type_field,
+            'publisher': self._update_publisher_field
         }
 
         # Update all fields if 'all' is specified
@@ -2392,8 +2394,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         if temporal_coverage:
             temp_coverage = {
                 'id': temporal_coverage.id,
-                'start': temporal_coverage.value['start'],
-                'end': temporal_coverage.value['end'],
+                'start_date': temporal_coverage.value['start'],
+                'end_date': temporal_coverage.value['end'],
                 'name': temporal_coverage.value.get('name', '')
             }
         copied_metadata['temporal_coverage'] = temp_coverage
@@ -2467,11 +2469,12 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
     def _update_rights_field(self, copied_metadata, metadata):
         """Update rights field in cached metadata"""
         rights = metadata.rights
-        copied_metadata['rights'] = {
-            'id': rights.id,
-            'statement': rights.statement,
-            'url': rights.url if rights.url else None
-        }
+        if rights:
+            copied_metadata['rights'] = {
+                'id': rights.id,
+                'statement': rights.statement,
+                'url': rights.url if rights.url else None
+            }
 
     def _update_identifier_field(self, copied_metadata, metadata):
         """Update identifier field in cached metadata"""
@@ -2489,6 +2492,23 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         """Update language field in cached metadata"""
         language = metadata.language
         copied_metadata['language'] = language.code if language else None
+
+    def _update_type_field(self, copied_metadata, metadata):
+        """Update type field in cached metadata"""
+        _type = metadata.type
+        copied_metadata['type'] = _type.url if _type else None
+
+    def _update_publisher_field(self, copied_metadata, metadata):
+        """Update publisher field in cached metadata"""
+        publisher = metadata.publisher
+        if publisher:
+            copied_metadata['publisher'] = {
+                'id': publisher.id,
+                'name': publisher.name,
+                'url': publisher.url
+            }
+        else:
+            copied_metadata['publisher'] = {}
 
     def _ensure_required_fields(self, copied_metadata, metadata):
         """Ensure all required fields are present in cached metadata"""
@@ -2537,6 +2557,12 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
 
         if 'identifiers' not in copied_metadata or len(copied_metadata['identifiers']) == 0:
             self._update_identifier_field(copied_metadata, metadata)
+
+        if 'type' not in copied_metadata:
+            self._update_type_field(copied_metadata, metadata)
+
+        if 'publisher' not in copied_metadata or not copied_metadata['publisher']:
+            self._update_publisher_field(copied_metadata, metadata)
 
     def update_all_cached_metadata(self):
         """
