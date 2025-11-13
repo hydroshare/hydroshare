@@ -52,6 +52,8 @@ class TestBagitDownload(HSRESTTestCase):
         last_downloaded_date = res.bag_last_downloaded
         self.assertIsNone(last_downloaded_date)
 
+        self.assertEqual(res.download_count, 0)
+
         zip_download_url = f"/django_s3/rest_download/bags/{res.short_id}.zip?"
         params = {'url_download': False, 'zipped': False, 'aggregation': False}
         zip_download_url += urllib.parse.urlencode(params)
@@ -64,6 +66,8 @@ class TestBagitDownload(HSRESTTestCase):
         pre_last_downloaded_date = res.bag_last_downloaded
         self.assertIsNotNone(pre_last_downloaded_date)
 
+        self.assertEqual(res.download_count, 1)
+
         # download again
         response = self.client.get(zip_download_url, format="json")
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
@@ -72,3 +76,5 @@ class TestBagitDownload(HSRESTTestCase):
         post_last_downloaded_date = res.bag_last_downloaded
 
         self.assertGreater(post_last_downloaded_date, pre_last_downloaded_date)
+
+        self.assertEqual(res.download_count, 2)
