@@ -844,6 +844,7 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
         istorage.zipup(output_path, *set(files_to_zip), in_prefix=os.path.dirname(input_path))
     else:  # regular folder to zip
         istorage.zipup(output_path, input_path)
+    res.update_download_count()
     return istorage.signed_url(output_path)
 
 
@@ -891,6 +892,7 @@ def create_bag_by_s3(resource_id, create_zip=True):
                     # compute checksum to meet DataONE distribution requirement
                     chksum = istorage.checksum(bag_path)
                     res.bag_checksum = chksum
+                res.update_download_count()
                 return istorage.signed_url(bag_path)
             except SessionException as ex:
                 raise SessionException(-1, '', ex.stderr)
