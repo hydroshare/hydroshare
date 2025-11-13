@@ -253,10 +253,16 @@ def metadata_element_saved(sender, instance, **kwargs):
         if hasattr(instance, 'metadata') and instance.metadata is not None:
             if hasattr(instance.metadata, 'resource') and instance.metadata.resource is not None:
                 resource = instance.metadata.resource
+                meta_field_name = instance.__class__.__name__.lower()
                 try:
-                    resource.update_cached_metadata_field(instance.__class__.__name__.lower())
+                    resource.update_cached_metadata_field(meta_field_name)
                 except Exception as ex:
-                    logger.error(f"Error updating cached metadata for resource {resource.short_id}: {str(ex)}")
+                    # NOTE: The error may not be related to the field that is logged here as 
+                    # we update other fields that might be missing in the cache as part of caching the specified field
+                    err_msg = f"Error updating cached metadata:{meta_field_name} for resource " \
+                              f"{resource.short_id}: {str(ex)}"
+                    logger.error(err_msg)
+                    print(err_msg)
 
 
 @receiver(post_delete)
@@ -265,7 +271,13 @@ def metadata_element_deleted(sender, instance, **kwargs):
         if hasattr(instance, 'metadata') and instance.metadata is not None:
             if hasattr(instance.metadata, 'resource') and instance.metadata.resource is not None:
                 resource = instance.metadata.resource
+                meta_field_name = instance.__class__.__name__.lower()
                 try:
-                    resource.update_cached_metadata_field(instance.__class__.__name__.lower())
+                    resource.update_cached_metadata_field(meta_field_name)
                 except Exception as ex:
-                    logger.error(f"Error updating cached metadata for resource {resource.short_id}: {str(ex)}")
+                    # NOTE: The error may not be related to the field that is logged here as 
+                    # we update other fields that might be missing in the cache as part of caching the specified field
+                    err_msg = f"Error updating cached metadata:{meta_field_name} for resource " \
+                              f"{resource.short_id}: {str(ex)}"
+                    logger.error(err_msg)
+                    print(err_msg)
