@@ -105,15 +105,6 @@ def process_files(file_list, start_date, end_date, activity_name, chunk_size=500
             if total_chunks_estimate:
                 print(f"  Estimated total chunks: {total_chunks_estimate}")
 
-            # Get sample to understand data
-            print("  Sampling data structure...")
-            try:
-                sample_df = pd.read_csv(file_path, nrows=5, usecols=usecols)
-                print(f"  Sample 'name' values: {sample_df['name'].unique()}")
-                print(f"  Sample timestamps: {sample_df['timestamp'].head(2).tolist()}")
-            except Exception as e:
-                print(f"  Could not sample file: {e}")
-
             # Process file in chunks
             chunk_counter = 0
             file_rows_processed = 0
@@ -197,7 +188,12 @@ def main():
     parser = argparse.ArgumentParser(description='Count activities by resource from CSV files - Memory optimized')
     parser.add_argument('start_date', help='Start date (YYYY-MM-DD)')
     parser.add_argument('end_date', help='End date (YYYY-MM-DD)')
-    parser.add_argument('activity_name', help='Name of activity to count')
+    parser.add_argument(
+        'activity_name',
+        nargs='?',
+        default='download',
+        help='Name of activity to count (default: download)'
+    )
     parser.add_argument('--directory', default='.', help='Directory containing CSV files (default: current directory)')
     parser.add_argument(
         '--output', default='activity_counts.csv',
