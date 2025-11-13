@@ -61,16 +61,16 @@ def estimate_total_chunks(file_path, chunk_size):
         # Count lines in file (faster and more accurate than parsing CSV)
         with open(file_path, 'rb') as f:
             line_count = 0
-            # Read in large chunks to count lines quickly
             chunk = f.read(8192)
             while chunk:
                 line_count += chunk.count(b'\n')
                 chunk = f.read(8192)
-        
+
         # Subtract 1 for header row, then divide by chunk_size
         estimated_chunks = max(1, (line_count - 1) // chunk_size + 1)
         return estimated_chunks
-    except:
+    except Exception as e:
+        print(f"Error estimating chunks for file {file_path}: {e}")
         return None
 
 
@@ -125,24 +125,26 @@ def process_files(file_list, start_date, end_date, activity_name, chunk_size=500
                 file_rows_processed += chunk_rows
                 total_rows_processed += chunk_rows
 
-                # Improved progress message with percentage
                 if total_chunks_estimate:
                     percentage = min(100, int((chunk_counter / total_chunks_estimate) * 100))
-                    progress_msg = f"  Processing chunk {chunk_counter} (out of ~{total_chunks_estimate} chunks, {percentage}%) with {chunk_rows} rows..."
+                    progress_msg = (
+                        f"  Processing chunk {chunk_counter} "
+                        f"(out of ~{total_chunks_estimate} chunks, {percentage}%) "
+                        f"with {chunk_rows} rows..."
+                    )
                 else:
                     progress_msg = f"  Processing chunk {chunk_counter} with {chunk_rows} rows..."
 
-                # Print progress more intelligently
-                if (chunk_counter <= 5 or 
-                    chunk_counter % 20 == 0 or 
-                    (total_chunks_estimate and chunk_counter >= total_chunks_estimate - 5) or
-                    chunk_counter == 1):
+                if (
+                    chunk_counter <= 5
+                    or chunk_counter % 20 == 0
+                    or (total_chunks_estimate and chunk_counter >= total_chunks_estimate - 5)
+                    or chunk_counter == 1
+                ):
                     print(progress_msg)
                 elif chunk_counter % 10 == 0 and total_chunks_estimate and chunk_counter <= total_chunks_estimate:
-                    # Show brief progress for every 10 chunks
                     print(f"  ... chunk {chunk_counter}/{total_chunks_estimate} ({percentage}%)")
 
-                # Convert timestamp efficiently
                 chunk['timestamp'] = pd.to_datetime(chunk['timestamp'], format='mixed', utc=True)
 
                 # Filter by name and date range
@@ -172,7 +174,7 @@ def process_files(file_list, start_date, end_date, activity_name, chunk_size=500
             # If our estimate was way off, show the actual vs estimated
             if total_chunks_estimate and abs(chunk_counter - total_chunks_estimate) > 10:
                 print(f"  Note: Actual chunks ({chunk_counter}) differed from estimate ({total_chunks_estimate})")
-            
+
         except Exception as e:
             print(f"Error processing file {file_path}: {e}")
             import traceback
@@ -240,10 +242,9 @@ def main():
     results.to_csv(args.output, index=False)
     print(f"\nResults saved to {args.output}")
 
-    # Print summary to console
     print(f"\nSummary: {args.activity_name} activities by resource")
     print("=" * 60)
-    top_results = results.head(20)  # Show top 20 to avoid console spam
+    top_results = results.head(20)  # Show top 20 results
     for _, row in top_results.iterrows():
         print(f"{row['last_resource_id']} {args.activity_name} {row['count']} times")
 
