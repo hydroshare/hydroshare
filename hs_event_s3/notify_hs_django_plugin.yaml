@@ -1,5 +1,5 @@
 name: notify_hs_django_processor
 summary: Evaluates files and extracts metadata for json-ld files
-command: ["python", "hsevent/main.py"]
+command: ["python", "hsevent/processors/hs_django_s3_processor.py"]
 type: processor
 fields: []
