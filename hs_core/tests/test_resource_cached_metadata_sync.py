@@ -78,7 +78,6 @@ class TestDenormalizedMetadataSync(TestCase):
         self.assertEqual(len(hs_identifier), 1)
         self.assertEqual(hs_identifier[0]['name'], 'hydroShareIdentifier')
 
-
     def test_creator_post_save_updates_cached_metadata(self):
         """Test that creating/updating a Creator element triggers cached metadata update."""
 
@@ -270,7 +269,7 @@ class TestDenormalizedMetadataSync(TestCase):
         self.resource.refresh_from_db()
         res_creator = self.resource.metadata.creators.first()
         cached_creators = self.resource.cached_metadata.get('creators', [])
-        self.assertEqual(len(cached_creators), 1)        
+        self.assertEqual(len(cached_creators), 1)
         self.assertEqual(cached_creators[0]['id'], res_creator.id)
         modified_date1 = self.resource.cached_metadata['modified']
         modified_date1 = datetime.fromisoformat(modified_date1)
@@ -668,7 +667,6 @@ class TestDenormalizedMetadataSync(TestCase):
         modified_date3 = self.resource.cached_metadata['modified']
         modified_date3 = datetime.fromisoformat(modified_date3)
         self.assertGreater(modified_date3, modified_date2)
-
 
     def test_coverage_temporal_post_save_updates_cached_metadata(self):
         """Test that creating/updating temporal coverage triggers cached metadata update."""
@@ -1192,7 +1190,7 @@ class TestDenormalizedMetadataSync(TestCase):
 
     def test_identifier_post_save_updates_cached_metadata(self):
         """Test that creating an Identifier element triggers cached metadata update."""
-        
+
         # NOTE: The identifier metadata is created automatically by the system when a resource is created or published.
         # There is no UI for updating or deleting identifiers. So we are only testing the creation of identifiers.
 
@@ -1276,8 +1274,8 @@ class TestDenormalizedMetadataSync(TestCase):
         # Make the resource discoverable
         self.resource.raccess.discoverable = True
         self.resource.raccess.public = False
-        self.resource.raccess.save()        
-        
+        self.resource.raccess.save()
+
         self.resource.refresh_from_db()
         status = self.resource.cached_metadata.get('status', {})
         self.assertEqual(status, {
@@ -1461,18 +1459,26 @@ class TestDenormalizedMetadataSync(TestCase):
         self.assertEqual(new_resource.cached_metadata['title']['value'],
                          self.resource.cached_metadata['title']['value'])
         # Compare creators after removing id fields (since IDs will differ between resources)
-        original_creators = [{k: v for k, v in creator.items() if k != 'id'} 
-                            for creator in self.resource.cached_metadata['creators']]
-        new_creators = [{k: v for k, v in creator.items() if k != 'id'} 
-                       for creator in new_resource.cached_metadata['creators']]
+        original_creators = [
+            {k: v for k, v in creator.items() if k != 'id'}
+            for creator in self.resource.cached_metadata['creators']
+        ]
+        new_creators = [
+            {k: v for k, v in creator.items() if k != 'id'}
+            for creator in new_resource.cached_metadata['creators']
+        ]
         self.assertEqual(new_creators, original_creators)
         # check the number of creators in the new resource
         self.assertEqual(len(new_resource.metadata.creators.all()), 2)
         # Compare contributors after removing id fields (since IDs will differ between resources)
-        original_contributors = [{k: v for k, v in contributor.items() if k != 'id'} 
-                               for contributor in self.resource.cached_metadata['contributors']]
-        new_contributors = [{k: v for k, v in contributor.items() if k != 'id'} 
-                          for contributor in new_resource.cached_metadata['contributors']]
+        original_contributors = [
+            {k: v for k, v in contributor.items() if k != 'id'}
+            for contributor in self.resource.cached_metadata['contributors']
+        ]
+        new_contributors = [
+            {k: v for k, v in contributor.items() if k != 'id'}
+            for contributor in new_resource.cached_metadata['contributors']
+        ]
         self.assertEqual(new_contributors, original_contributors)
         # check the number of contributors in the new resource
         self.assertEqual(len(new_resource.metadata.contributors.all()), 1)
@@ -1502,32 +1508,45 @@ class TestDenormalizedMetadataSync(TestCase):
         self.assertEqual(new_s_coverage, orig_s_coverage)
 
         # compare the funding agencies in cached metadata for the new resource after removing the id field
-        orig_funding_agencies = [{k: v for k, v in agency.items() if k != 'id'} 
-                                for agency in self.resource.cached_metadata['funding_agencies']]
-        new_funding_agencies = [{k: v for k, v in agency.items() if k != 'id'} 
-                               for agency in new_resource.cached_metadata['funding_agencies']]
+        orig_funding_agencies = [
+            {k: v for k, v in agency.items() if k != 'id'}
+            for agency in self.resource.cached_metadata['funding_agencies']
+        ]
+        new_funding_agencies = [
+            {k: v for k, v in agency.items() if k != 'id'}
+            for agency in new_resource.cached_metadata['funding_agencies']
+        ]
         self.assertEqual(new_funding_agencies, orig_funding_agencies)
 
         # compare the relations in cached metadata for the new resource after removing the id field
-        orig_relations = [{k: v for k, v in relation.items() if k != 'id'} 
-                         for relation in self.resource.cached_metadata['relations']]
-        new_relations = [{k: v for k, v in relation.items() if k != 'id'} 
-                        for relation in new_resource.cached_metadata['relations']]
+        orig_relations = [
+            {k: v for k, v in relation.items() if k != 'id'}
+            for relation in self.resource.cached_metadata['relations']
+        ]
+        new_relations = [
+            {k: v for k, v in relation.items() if k != 'id'}
+            for relation in new_resource.cached_metadata['relations']
+        ]
         self.assertEqual(len(new_relations), 2)
         if action == 'copy':
             # before comparing remove the type=source relation from the new resource as that is a new relation added
             new_relations = [relation for relation in new_relations if relation['type'] != 'source']
             self.assertEqual(new_relations, orig_relations)
         else:
-            # before comparing remove the type=isVersionOf relation from the new resource as that is a new relation added
+            # before comparing remove the type=isVersionOf relation from the new resource
+            # as that is a new relation added
             new_relations = [relation for relation in new_relations if relation['type'] != 'isVersionOf']
             self.assertEqual(new_relations, orig_relations)
 
         # compare the geospatial relations in cached metadata for the new resource after removing the id field
-        orig_geospatial_relations = [{k: v for k, v in relation.items() if k != 'id'} 
-                                     for relation in self.resource.cached_metadata['geospatial_relations']]
-        new_geospatial_relations = [{k: v for k, v in relation.items() if k != 'id'} 
-                                    for relation in new_resource.cached_metadata['geospatial_relations']]
+        orig_geospatial_relations = [
+            {k: v for k, v in relation.items() if k != 'id'}
+            for relation in self.resource.cached_metadata['geospatial_relations']
+        ]
+        new_geospatial_relations = [
+            {k: v for k, v in relation.items() if k != 'id'}
+            for relation in new_resource.cached_metadata['geospatial_relations']
+        ]
         self.assertEqual(new_geospatial_relations, orig_geospatial_relations)
 
         # check that the new resource created date is after the original resource created date

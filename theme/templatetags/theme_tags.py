@@ -18,7 +18,7 @@ def get_site_conf():
     site_conf = cache.get(cache_key)
     if not site_conf:
         site_conf, _ = SiteConfiguration.objects.get_or_create(site_id=site_id)
-        cache.set(cache_key, site_conf, timeout=60*60*24)  # cache for 1 day
+        cache.set(cache_key, site_conf, timeout = 60*60*24)  # cache for 1 day
     return site_conf
 
 

@@ -2332,7 +2332,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
                 'email': c.email if c.email else None,
                 'address': c.address if c.address else None,
                 'phone': c.phone if c.phone else None,
-                'homepage': c.homepage if c.homepage else None,                
+                'homepage': c.homepage if c.homepage else None,
                 'hs_user_id': c.hydroshare_user_id,
                 'is_active_user': c.is_active_user,
                 'relative_uri': c.relative_uri,
@@ -3117,7 +3117,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         if len(citation_str_lst[-1]) > 2:
             citation_str_lst[-1] = citation_str_lst[-1][:-2]
         else:
-            logger.error(f"{CITATION_ERROR} No valid creator names found in cached_metadata for resource {self.short_id}")
+            err_msg = f"No valid creator names found in cached_metadata for resource {self.short_id}"
+            logger.error(f"{CITATION_ERROR} {err_msg}")
             return CITATION_ERROR
 
         # Get citation date from cached_metadata
@@ -3128,7 +3129,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             citation_date = self.cached_metadata['modified']
 
         if not citation_date:
-            logger.error(f"{CITATION_ERROR} No published or modified date found in cached_metadata for resource {self.short_id}")
+            err_msg = f"No published or modified date found in cached_metadata for resource {self.short_id}"
+            logger.error(f"{CITATION_ERROR} {err_msg}")
             return CITATION_ERROR
 
         # Parse the date and extract year
@@ -3164,7 +3166,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             if hs_identifier:
                 hs_identifier = hs_identifier[0]
             else:
-                logger.error(f"{CITATION_ERROR} No hydroShareIdentifier found in cached_metadata for resource {self.short_id}")
+                err_msg = f"No hydroShareIdentifier found in cached_metadata for resource {self.short_id}"
+                logger.error(f"{CITATION_ERROR} {err_msg}")
                 return CITATION_ERROR
 
         citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.get('url', '')))
@@ -5383,11 +5386,12 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 missing_required_elements.append('Keywords (at least 3)')
         else:
             # check for title, abstract, and keywords using cached_metadata
-            if not resource.cached_metadata.get('title', {}) or len(resource.cached_metadata['title']['value']) < 30:
+            cached_metadata = resource.cached_metadata
+            if not cached_metadata.get('title', {}) or len(cached_metadata['title']['value']) < 30:
                 missing_required_elements.append('The title must be at least 30 characters.')
-            if not resource.cached_metadata.get('abstract', {}) or len(resource.cached_metadata['abstract']['value']) < 150:
+            if not cached_metadata.get('abstract', {}) or len(cached_metadata['abstract']['value']) < 150:
                 missing_required_elements.append('The abstract must be at least 150 characters.')
-            if not resource.cached_metadata.get('subjects', []) or len(resource.cached_metadata['subjects']) < 3:
+            if not cached_metadata.get('subjects', []) or len(cached_metadata['subjects']) < 3:
                 missing_required_elements.append('You must include at least 3 keywords.')
 
         return missing_required_elements
