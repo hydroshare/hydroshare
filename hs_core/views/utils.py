@@ -312,14 +312,11 @@ def rights_allows_copy(res, user):
     if user.uaccess.owns_resource(res):
         return True
 
-    rights = res.metadata.rights
-    if (rights.statement == "This resource is shared under the Creative "
-                            "Commons Attribution-NoDerivs CC BY-ND."
-        or rights.statement == "This resource is shared under the Creative "
-                               "Commons Attribution-NoCommercial-NoDerivs "
-                               "CC BY-NC-ND."):
+    rights = res.cached_metadata['rights']
+    if (rights['statement'] == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND."
+            or rights['statement'] == "This resource is shared under the Creative Commons "
+                                      "Attribution-NoCommercial-NoDerivs CC BY-NC-ND."):
         return False
-
     return True
 
 
@@ -721,9 +718,15 @@ def show_relations_section(res_obj):
     :return: Bool
     """
 
-    all_relation_count = res_obj.metadata.relations.count()
-    has_part_count = res_obj.metadata.relations.filter(type=RelationTypes.hasPart).count()
-    has_inspecific_count = res_obj.metadata.relations.filter(type=RelationTypes.relation).count()
+    all_relation_count = 0
+    has_part_count = 0
+    has_inspecific_count = 0
+    if 'relations' in res_obj.cached_metadata:
+        relations = res_obj.cached_metadata['relations']
+        all_relation_count = len(relations)
+        has_part_count = len([rel for rel in relations if rel['type'] == RelationTypes.hasPart.value])
+        has_inspecific_count = len([rel for rel in relations if rel['type'] == RelationTypes.relation.value])
+
     if all_relation_count > (has_part_count + has_inspecific_count):
         return True
     return False
