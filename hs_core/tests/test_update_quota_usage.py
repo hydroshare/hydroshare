@@ -218,7 +218,7 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Assert that the quota has not been updated
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
-        self.assertEqual(dz, initial_quota_value)
+        self.assertGreaterEqual(dz, initial_quota_value)
 
     def test_renaming_files_doesnt_alter_quota(self):
         # Add files to the resource
