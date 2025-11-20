@@ -1036,6 +1036,7 @@
       const RESOURCE_MODE = "{% if resource_edit_mode %}Edit{% else %}View{% endif %}";
       const RESOURCE_PUBLISHED_OR_UNDER_REVIEW = "{{ cm.raccess.published_or_review_pending }}" === "True";
       const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
+      {# USERS_JSON now only contains owners for left header - full access data loaded on-demand #}
       const USERS_JSON = {{ users_json|safe }};
       const AUTHORS = [
           {% for author in creators %}
@@ -1069,18 +1070,18 @@
       ];
       const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";
 
-      {% if show_manage_access %}
-          const QUOTA_HOLDER_PK = {{ quota_holder.pk  }};
-          const GROUP_IMAGE_DEFAULT_URL = "{% static 'img/home-page/step4.png' %}";
-          const CAN_CHANGE_RESOURCE_FLAGS = "{{ can_change_resource_flags }}" === "True";
-          const CAN_BE_PUBLIC_OR_DISCOVERABLE = "{{ cm.can_be_public_or_discoverable }}" === "True";
-          const RESOURCE_ACCESS = {
-              isPublic: "{{ cm.raccess.public }}" === "True",
-              isDiscoverable: "{{ cm.raccess.discoverable }}" === "True",
-              isShareable: "{{ cm.raccess.shareable }}" === "True",
-              isPrivateLinkSharing : "{{ cm.raccess.allow_private_sharing }}" === "True",
-          };
-      {% endif %}
+      {# Manage access data is now loaded on demand to reduce initial page load queries #}
+      const MANAGE_ACCESS_DATA_URL = "{% url 'get_manage_access_data' cm.short_id %}";
+      const GROUP_IMAGE_DEFAULT_URL = "{% static 'img/home-page/step4.png' %}";
+      
+      {# RESOURCE_ACCESS needs to be available globally for hs_file_browser.js #}
+      const RESOURCE_ACCESS = {
+          isPublic: "{{ cm.raccess.public }}" === "True",
+          isDiscoverable: "{{ cm.raccess.discoverable }}" === "True",
+          isShareable: "{{ cm.raccess.shareable }}" === "True",
+          isPrivateLinkSharing : "{{ cm.raccess.allow_private_sharing }}" === "True",
+      };
+      
       var spatial_coverage_type = "{{ spatial_coverage.type }}";
 
     </script>

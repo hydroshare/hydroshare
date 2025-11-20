@@ -305,9 +305,8 @@ def page_permissions_page_processor(request, page):
     from hs_access_control.models.privilege import PrivilegeCodes
     from hs_core.hydroshare.utils import get_remaining_user_quota
 
-    # TODO: This context creation results in at least 12 queries. Would be many more if users and groups are large.
-    # This context is needed for the manage access dialog. It would be beter to fetch this context only when the
-    # user opens the manage access dialog for the first time.
+    # Optimized to only fetch minimal data for initial page load.
+    # Full manage access data is fetched on-demand when the manage access modal is opened.
 
     cm = page.get_content_model()
     can_change_resource_flags = False
@@ -325,67 +324,28 @@ def page_permissions_page_processor(request, page):
         elif user_privilege == PrivilegeCodes.VIEW:
             self_access_level = 'view'
 
+    # Only fetch owners for left header display - full access list loaded on-demand
     owners = cm.raccess.owners.all()
-    editors = cm.raccess.get_users_with_explicit_access(PrivilegeCodes.CHANGE,
-                                                        include_group_granted_access=False)
-    viewers = cm.raccess.get_users_with_explicit_access(PrivilegeCodes.VIEW,
-                                                        include_group_granted_access=False)
-    edit_groups = cm.raccess.edit_groups
-    view_groups = cm.raccess.view_groups.exclude(pk__in=edit_groups)
 
     last_changed_by = cm.last_changed_by
 
     if request.user.is_authenticated:
-        # N+1 queries
         for owner in owners:
             owner.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, owner)
             owner.viewable_contributions = request.user.uaccess.can_view_resources_owned_by(owner)
 
-        for viewer in viewers:
-            viewer.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, viewer)
-
-        for editor in editors:
-            editor.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, editor)
-
-        for view_grp in view_groups:
-            view_grp.can_undo = request.user.uaccess.can_undo_share_resource_with_group(cm,
-                                                                                        view_grp)
-
-        for edit_grp in edit_groups:
-            edit_grp.can_undo = request.user.uaccess.can_undo_share_resource_with_group(cm,
-                                                                                        edit_grp)
         if last_changed_by.is_active:
             last_changed_by.viewable_contributions = request.user.uaccess.can_view_resources_owned_by(last_changed_by)
 
     else:
         for owner in owners:
             owner.can_undo = False
-        for viewer in viewers:
-            viewer.can_undo = False
-        for editor in editors:
-            editor.can_undo = False
-        for view_grp in view_groups:
-            view_grp.can_undo = False
-        for edit_grp in edit_groups:
-            edit_grp.can_undo = False
     last_changed_by.can_undo = False
 
+    # Only include owners in initial page load JSON
     users_json = []
-
     for usr in owners:
         users_json.append(get_access_object(usr, "user", "owner"))
-
-    for usr in editors:
-        users_json.append(get_access_object(usr, "user", "edit"))
-
-    for usr in viewers:
-        users_json.append(get_access_object(usr, "user", "view"))
-
-    for usr in edit_groups:
-        users_json.append(get_access_object(usr, "group", "edit"))
-
-    for usr in view_groups:
-        users_json.append(get_access_object(usr, "group", "view"))
 
     if last_changed_by.is_active:
         lcb_access_level = cm.raccess.get_effective_user_privilege(last_changed_by)
