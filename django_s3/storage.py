@@ -162,12 +162,11 @@ class S3Storage(S3Storage):
                 raise QuotaException("Bucket quota exceeded. Please contact your system administrator.")
             raise e
 
-    def unzip(self, zip_file_path, unzipped_folder=""):
+    def unzip(self, zip_file_path, unzipped_folder):
         """
         run command to stream unzip files into a new folder
         :param zip_file_path: path of the zipped file to be unzipped
-        :param unzipped_folder: Optional defaults to the basename of zip_file_path when not
-        provided.  The folder to unzip to.
+        :param unzipped_folder: The folder to unzip to.
         :return: the folder files were unzipped to
         """
         zip_bucket, zip_name = bucket_and_name(zip_file_path)
@@ -185,7 +184,8 @@ class S3Storage(S3Storage):
 
         for file_name, _, unzipped_chunks in stream_unzip(zipped_chunks()):
             # Define the key (path) where you want to save the file in the S3 bucket
-            s3_key = f'{unzipped_path}/{file_name.decode("utf-8")}'
+            file_name = file_name.decode("utf-8").replace("'", "")
+            s3_key = f'{unzipped_path}{file_name}'
             buffer = BytesIO()
             for chunk in unzipped_chunks:
                 buffer.write(chunk)
