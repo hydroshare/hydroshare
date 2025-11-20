@@ -1,6 +1,7 @@
 from struct import Struct
 import zlib
 
+
 # sourced from https://github.com/coolaf/stream-unzip/blob/main/stream_unzip.py
 def stream_unzip(zipfile_chunks, chunk_size=65536):
     local_file_header_signature = b'\x50\x4b\x03\x04'
@@ -74,17 +75,18 @@ def stream_unzip(zipfile_chunks, chunk_size=65536):
     def get_extra_data(extra, desired_signature):
         extra_offset = 0
         while extra_offset != len(extra):
-            extra_signature = extra[extra_offset:extra_offset+2]
+            extra_signature = extra[extra_offset:extra_offset + 2]
             extra_offset += 2
-            extra_data_size, = Struct('<H').unpack(extra[extra_offset:extra_offset+2])
+            extra_data_size, = Struct('<H').unpack(extra[extra_offset:extra_offset + 2])
             extra_offset += 2
-            extra_data = extra[extra_offset:extra_offset+extra_data_size]
+            extra_data = extra[extra_offset:extra_offset +extra_data_size]
             extra_offset += extra_data_size
             if extra_signature == desired_signature:
                 return extra_data
 
     def yield_file():
-        version, flags, compression, mod_time, mod_date, crc_32_expected, compressed_size, uncompressed_size, file_name_len, extra_field_len = \
+        _, flags, compression, _, _, crc_32_expected, compressed_size, \
+        uncompressed_size, file_name_len, extra_field_len = \
             local_file_header_struct.unpack(get_num(local_file_header_struct.size))
 
         if compression not in [0, 8]:
