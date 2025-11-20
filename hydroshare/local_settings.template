@@ -49,7 +49,7 @@ IPYTHON_HOST = '127.0.0.1'
 # Celery settings
 # customizations: we need a special queue for broadcast signals to all docker daemons.
 # we also need a special queue for direct messages to all docker daemons.
-BROKER_URL = 'kafka://redpanda:9092'
+BROKER_URL = 'amqp://guest:guest@rabbitmq:5672//'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
