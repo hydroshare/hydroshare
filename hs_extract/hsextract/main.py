@@ -83,6 +83,24 @@ def workflow_metadata_extraction(file_object_path: str, file_updated: bool = Tru
     write_resource_jsonld_metadata(md)
 
 
+def refresh_resource_metadata(bucket: str, resource_id: str) -> None:
+    resource_content_path = f"{bucket}/{resource_id}/data/contents/"
+    resource_contents_files: list[str] = [file for file in find(resource_content_path)]
+    for resource_file in resource_contents_files:
+        md = determine_metadata_object(resource_file, True)
+        if md.content_type != ContentType.UNKNOWN:
+            content_type_metadata = md.extract_metadata()
+            if content_type_metadata:
+                write_metadata(md.content_type_md_path, content_type_metadata)
+            write_content_type_jsonld_metadata(md)
+            files_to_cleanup = md.clean_up_extracted_metadata()
+            for f in files_to_cleanup:
+                delete_metadata(f)
+    # TODO determine any metadata files that may need to be deleted
+    # if metadata files do not have corresponding data files
+    write_resource_jsonld_metadata(md)
+
+
 @redpanda_connect.processor
 def handle_minio_event(msg: redpanda_connect.Message) -> redpanda_connect.Message:
     print(f"Received message: {msg.payload}")
@@ -92,9 +110,12 @@ def handle_minio_event(msg: redpanda_connect.Message) -> redpanda_connect.Messag
     directory = key.split('/')[2]
     bucket = key.split('/')[0]
     resource_id = key.split('/')[1]
+    if directory == ".hsrefresh":
+        refresh_resource_metadata(bucket, resource_id)
+        return
     if directory == ".hsjsonld":
         return
-    elif directory == ".hsmetadata":
+    if directory == ".hsmetadata":
         print(f"Handling .hsmetadata event for file: {key}, updated: {file_updated}")
         if key == f"{bucket}/{resource_id}/.hsmetadata/user_metadata.json":
             md = BaseMetadataObject(key, file_updated)
