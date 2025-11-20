@@ -79,14 +79,13 @@ def stream_unzip(zipfile_chunks, chunk_size=65536):
             extra_offset += 2
             extra_data_size, = Struct('<H').unpack(extra[extra_offset:extra_offset + 2])
             extra_offset += 2
-            extra_data = extra[extra_offset:extra_offset +extra_data_size]
+            extra_data = extra[extra_offset:extra_offset + extra_data_size]
             extra_offset += extra_data_size
             if extra_signature == desired_signature:
                 return extra_data
 
     def yield_file():
-        _, flags, compression, _, _, crc_32_expected, compressed_size, \
-        uncompressed_size, file_name_len, extra_field_len = \
+        _, flags, compression, _, _, crc_32_expected, compressed_size, uncompressed_size, file_name_len, ef_len = \
             local_file_header_struct.unpack(get_num(local_file_header_struct.size))
 
         if compression not in [0, 8]:
@@ -108,7 +107,7 @@ def stream_unzip(zipfile_chunks, chunk_size=65536):
             raise ValueError('Unsupported flags {}'.format(flag_bits))
 
         file_name = get_num(file_name_len)
-        extra = get_num(extra_field_len)
+        extra = get_num(ef_len)
 
         is_zip64 = compressed_size == zip64_compressed_size and uncompressed_size == zip64_compressed_size
         if is_zip64:
