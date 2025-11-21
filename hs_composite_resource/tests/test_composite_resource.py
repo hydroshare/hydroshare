@@ -4250,10 +4250,12 @@ class CompositeResourceTest(
         # test that db queries for landing page have constant time complexity
 
         # expected number of queries for landing page when the resource has no resource file
-        _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 120
+        _VIEW_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 114
+        _EDIT_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 142
 
         # expected number of queries for landing page when the resource has resource file
-        _LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT = _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT + 12
+        _VIEW_LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT = _VIEW_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT + 11
+        _EDIT_LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT = _EDIT_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT + 11
 
         # user 1 login
         self.client.login(username='user1', password='mypassword1')
@@ -4270,16 +4272,29 @@ class CompositeResourceTest(
         self.assertEqual(BaseResource.objects.count(), 1)
         self.assertEqual(self.composite_resource.resource_type, "CompositeResource")
 
-        with self.assertNumQueries(_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT):
+        # test resource landing page view mode
+        with self.assertNumQueries(_VIEW_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT):
             response = self.client.get(f'/resource/{self.composite_resource.short_id}', follow=True)
             self.assertTrue(response.status_code == 200)
 
+        # test resource landing page edit mode
+        session = self.client.session
+        session["resource-mode"] = 'edit'
+        session.save()
+        with self.assertNumQueries(_EDIT_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT):
+            response = self.client.get(f'/resource/{self.composite_resource.short_id}', follow=True)
+            self.assertTrue(response.status_code == 200)
+
+        # clear the session
+        del session['resource-mode']
+        session.save()
         # create another resource
         self.create_composite_resource()
         # there should be two resources at this point
         self.assertEqual(BaseResource.objects.count(), 2)
 
-        with self.assertNumQueries(_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT):
+        # test resource landing page view mode
+        with self.assertNumQueries(_VIEW_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT):
             response = self.client.get(f'/resource/{self.composite_resource.short_id}', follow=True)
             self.assertTrue(response.status_code == 200)
 
@@ -4288,9 +4303,22 @@ class CompositeResourceTest(
         self.add_file_to_resource(file_to_add=self.generic_file)
         self.assertEqual(self.composite_resource.files.count(), 1)
 
-        with self.assertNumQueries(_LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT):
+        # test resource landing page view mode
+        with self.assertNumQueries(_VIEW_LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT):
             response = self.client.get(f'/resource/{self.composite_resource.short_id}', follow=True)
             self.assertTrue(response.status_code == 200)
+
+         # test resource landing page edit mode
+        session = self.client.session
+        session["resource-mode"] = 'edit'
+        session.save()
+        with self.assertNumQueries(_EDIT_LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT):
+            response = self.client.get(f'/resource/{self.composite_resource.short_id}', follow=True)
+            self.assertTrue(response.status_code == 200)
+
+        # clear the session
+        del session['resource-mode']
+        session.save()
 
         # add 3 more files to the resource
         self.add_file_to_resource(file_to_add=self.netcdf_file)
@@ -4298,7 +4326,16 @@ class CompositeResourceTest(
         self.add_file_to_resource(file_to_add=self.watershed_dbf_file)
         self.assertEqual(self.composite_resource.files.count(), 4)
 
-        with self.assertNumQueries(_LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT):
+        # test resource landing page view mode
+        with self.assertNumQueries(_VIEW_LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT):
+            response = self.client.get(f'/resource/{self.composite_resource.short_id}', follow=True)
+            self.assertTrue(response.status_code == 200)
+
+        # test resource landing page edit mode
+        session = self.client.session
+        session["resource-mode"] = 'edit'
+        session.save()
+        with self.assertNumQueries(_EDIT_LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT):
             response = self.client.get(f'/resource/{self.composite_resource.short_id}', follow=True)
             self.assertTrue(response.status_code == 200)
 
