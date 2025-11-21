@@ -58,6 +58,12 @@ services:
       - "6432:6432"
     depends_on:
       - postgis
+  rabbitmq:
+    image: rabbitmq:3.8.2
+    platform: linux/amd64
+    container_name: rabbitmq
+    volumes:
+      - "rabbitmq_data_vol:/var/lib/rabbitmq"
   solr:
     image: solr:6.6
     platform: linux/amd64
@@ -86,6 +92,7 @@ services:
       POSTGIS_DB: postgres
       POSTGIS_USER: postgres
       PGPASSWORD: postgres
+      RABBITMQ_PORT_5672_TCP_ADDR: rabbitmq
       SOLR_PORT_8983_TCP_ADDR: solr
       SOLR_HOST: solr
       TMP: /tmp
@@ -111,13 +118,13 @@ services:
     links:
       - postgis:postgis
       - solr:solr
-      - redpanda:redpanda
+      - rabbitmq:rabbitmq
       - minio:minio
     depends_on:
       - postgis
       - pgbouncer
       - solr
-      - redpanda
+      - rabbitmq
       - minio
       - redis
     stdin_open: true
@@ -138,6 +145,7 @@ services:
       POSTGIS_USER: postgres
       PGPASSWORD: postgres
       C_FORCE_ROOT: 1
+      RABBITMQ_PORT_5672_TCP_ADDR: rabbitmq
       SOLR_PORT_8983_TCP_ADDR: solr
       SOLR_HOST: solr
       POSTGIS_PORT_5432_TCP_ADDR: pgbouncer
@@ -153,12 +161,12 @@ services:
       - ".:/hydroshare"
     links:
       - pgbouncer:pgbouncer
-      - redpanda:redpanda
+      - rabbitmq:rabbitmq
     depends_on:
       - hydroshare
       - pgbouncer
       - solr
-      - redpanda
+      - rabbitmq
     stdin_open: true
     tty: true
     command: /bin/bash init-defaultworker
@@ -324,6 +332,7 @@ volumes:
   temp_vol:
   share_vol:
   redpanda_data_vol:
+  rabbitmq_data_vol:
   minio_data_vol:
   redis_data_vol:
   companion_vol:

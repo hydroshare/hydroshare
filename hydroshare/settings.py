@@ -957,7 +957,7 @@ MINIO_LIFECYCLE_POLICY = None
 DEFAULT_QUOTA_VALUE = 20
 DEFAULT_QUOTA_UNIT = "GB"
 
-BROKER_URL = 'kafka://redpanda:9092'
+BROKER_URL = 'amqp://guest:guest@rabbitmq:5672//'
 
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #
