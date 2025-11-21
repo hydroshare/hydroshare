@@ -578,15 +578,21 @@ let leftHeaderApp = new Vue({
         }
     },
     filters: {
-        nameWithoutCommas: function (name) {
+        nameWithoutCommas: function (name, profileUrl) {
             if (!name) return null;
             name = name.toString().trim();
+            isHydroShareUser = !!profileUrl;
+            console.log("name:", name, "isHydroShareUser:", isHydroShareUser);
 
             if (name.indexOf(',') >= 0) {
                 let  fullName = name.split(',');
                 if (fullName.length == 2) {
                     let firstNames = fullName[1].trim();
                     let lastNames = fullName[0].trim();
+                    if (isHydroShareUser){
+                        firstNames = fullName[0].trim();
+                        lastNames = fullName[1].trim();
+                    }
                     if (firstNames && lastNames)
                         return firstNames + " " + lastNames;
                     else if (firstNames)
