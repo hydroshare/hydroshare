@@ -4308,7 +4308,7 @@ class CompositeResourceTest(
             response = self.client.get(f'/resource/{self.composite_resource.short_id}', follow=True)
             self.assertTrue(response.status_code == 200)
 
-         # test resource landing page edit mode
+        # test resource landing page edit mode
         session = self.client.session
         session["resource-mode"] = 'edit'
         session.save()
