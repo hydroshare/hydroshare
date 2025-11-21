@@ -59,9 +59,7 @@ def get_readonly_page_context(page, user, request=None):
 
     content_model = page.get_content_model()
 
-    show_content_files = content_model.raccess.public or content_model.raccess.allow_private_sharing
-    if not show_content_files and user.is_authenticated:
-        show_content_files = user.uaccess.can_view_resource(content_model)
+    show_content_files = _should_show_content_files(content_model, user)
 
     can_view = content_model.can_view(request)
     if not can_view and not show_content_files:
@@ -69,9 +67,7 @@ def get_readonly_page_context(page, user, request=None):
 
     discoverable = content_model.raccess.discoverable
     validation_error = None
-    resource_is_mine = False
-    if user.is_authenticated:
-        resource_is_mine = content_model.rlabels.is_mine(user)
+    resource_is_mine = _is_resource_mine(content_model, user)
 
     metadata_status = _get_metadata_status(content_model)
 
@@ -108,13 +104,9 @@ def get_readonly_page_context(page, user, request=None):
 
     qholder = content_model.quota_holder
 
-    readme = content_model.get_readme_file_content()
-    if readme is None:
-        readme = ''
+    readme = _get_readme_content(content_model)
     has_web_ref = res_has_web_reference(content_model)
 
-    topics = Topic.objects.all().values_list('name', flat=True).order_by('name')
-    topics = list(topics)  # force QuerySet evaluation
     content_model.update_relation_meta()
 
     # Update view count and prepare temporal/spatial coverage
@@ -188,9 +180,7 @@ def get_editable_page_context(page, user, extended_metadata_layout=None, request
     """
     content_model = page.get_content_model()
 
-    show_content_files = content_model.raccess.public or content_model.raccess.allow_private_sharing
-    if not show_content_files and user.is_authenticated:
-        show_content_files = user.uaccess.can_view_resource(content_model)
+    show_content_files = _should_show_content_files(content_model, user)
 
     can_change = content_model.can_change(request)
 
@@ -199,9 +189,7 @@ def get_editable_page_context(page, user, extended_metadata_layout=None, request
         raise PermissionDenied()
 
     discoverable = content_model.raccess.discoverable
-    resource_is_mine = False
-    if user.is_authenticated:
-        resource_is_mine = content_model.rlabels.is_mine(user)
+    resource_is_mine = _is_resource_mine(content_model, user)
 
     metadata_status = _get_metadata_status(content_model)
 
@@ -220,13 +208,10 @@ def get_editable_page_context(page, user, extended_metadata_layout=None, request
 
     qholder = content_model.quota_holder
 
-    readme = content_model.get_readme_file_content()
-    if readme is None:
-        readme = ''
+    readme = _get_readme_content(content_model)
     has_web_ref = res_has_web_reference(content_model)
 
-    topics = Topic.objects.all().values_list('name', flat=True).order_by('name')
-    topics = list(topics)  # force QuerySet evaluation
+    topics = _get_topics_list()
     content_model.update_relation_meta()
 
     temporal_coverage = content_model.cached_metadata.get('temporal_coverage', {})
@@ -340,3 +325,50 @@ def _get_metadata_status(resource):
         metadata_status = METADATA_STATUS_INSUFFICIENT
 
     return metadata_status
+
+
+def _should_show_content_files(content_model, user):
+    """Determine whether content files should be shown to the user.
+
+    :param content_model: the resource content model
+    :param user: the user viewing the resource
+    :return: True if content files should be shown, False otherwise
+    """
+    show_content_files = content_model.raccess.public or content_model.raccess.allow_private_sharing
+    if not show_content_files and user.is_authenticated:
+        show_content_files = user.uaccess.can_view_resource(content_model)
+    return show_content_files
+
+
+def _get_readme_content(content_model):
+    """Get the readme file content for the resource.
+
+    :param content_model: the resource content model
+    :return: readme content as string, or empty string if not found
+    """
+    readme = content_model.get_readme_file_content()
+    if readme is None:
+        readme = ''
+    return readme
+
+
+def _get_topics_list():
+    """Get list of all topic names.
+
+    :return: list of topic names sorted alphabetically
+    """
+    topics = Topic.objects.all().values_list('name', flat=True).order_by('name')
+    return list(topics)  # force QuerySet evaluation
+
+
+def _is_resource_mine(content_model, user):
+    """Check if the resource has been marked as mine by the user for listing in "my resources".
+
+    :param content_model: the resource content model
+    :param user: the user to check if the resource is mine for
+    :return: True if the user has marked the resource as mine, False otherwise
+    """
+    resource_is_mine = False
+    if user.is_authenticated:
+        resource_is_mine = content_model.rlabels.is_mine(user)
+    return resource_is_mine
