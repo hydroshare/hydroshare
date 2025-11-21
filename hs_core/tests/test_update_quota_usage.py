@@ -70,8 +70,6 @@ class UpdateQuotaUsageTestCase(TestCase):
 
     def tearDown(self):
         super(UpdateQuotaUsageTestCase, self).tearDown()
-        User.objects.all().delete()
-        Group.objects.all().delete()
         BaseResource.objects.all().delete()
         Group.objects.all().delete()
         self.myfile1.close()
@@ -80,6 +78,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         os.remove(self.myfile2.name)
         self.myfile3.close()
         os.remove(self.myfile3.name)
+        User.objects.all().delete()
 
     def convert_gb_to_bytes(self, gb):
         return gb * 1024 * 1024 * 1024
