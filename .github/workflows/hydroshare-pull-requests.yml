@@ -12,9 +12,9 @@ jobs:
   hydroshare-pull-request-tests:
 
     runs-on: ubuntu-latest
-    env:
-      DATACITE_USERNAME: ${{ secrets.DATACITE_USERNAME }}
-      DATACITE_PASSWORD: ${{ secrets.DATACITE_PASSWORD }}
+    #env:
+    #  COVERAGE_TOTAL: 10
+
     steps:
     - uses: actions/checkout@v4
 
