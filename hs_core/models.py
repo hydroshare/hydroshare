@@ -3050,6 +3050,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         CITATION_ERROR = "Failed to generate citation."
 
         # Get creators from cached_metadata
+        self.refresh_from_db(fields=['cached_metadata'])
         cached_creators = self.cached_metadata.get('creators', [])
         if not cached_creators:
             logger.error(f"{CITATION_ERROR} No creators found in cached_metadata for resource {self.short_id}")
@@ -3071,7 +3072,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         # Add other creators
         other_creators = [c for c in cached_creators if c.get('order', 0) > 1]
         for author in other_creators:
-            author_name = author.get('name', '').strip()
+            author_name = author.get('name', '')
+            if author_name:
+                author_name = author_name.strip()
             if author.get('organization', '') and not author_name:
                 citation_str_lst.append(author['organization'] + ", ")
             elif author_name and len(author_name) != 0:
