@@ -748,7 +748,7 @@ else:
         },
         "handlers": {
             "djangolog": {
-                "level": "DEBUG",
+                "level": "INFO",
                 "class": "logging.handlers.RotatingFileHandler",
                 "filename": "/hydroshare/log/django.log",
                 "formatter": "verbose",
@@ -756,7 +756,7 @@ else:
                 "backupCount": 10,
             },
             "hydrosharelog": {
-                "level": "DEBUG",
+                "level": "INFO",
                 "class": "logging.handlers.RotatingFileHandler",
                 "filename": "/hydroshare/log/hydroshare.log",
                 "formatter": "verbose",
@@ -764,7 +764,7 @@ else:
                 "backupCount": 10,
             },
             "celerylog": {
-                "level": "DEBUG",
+                "level": "INFO",
                 "class": "logging.handlers.RotatingFileHandler",
                 "filename": "/hydroshare/log/celery.log",
                 "formatter": "verbose",
@@ -776,7 +776,7 @@ else:
             "django": {
                 "handlers": ["djangolog"],
                 "propagate": False,
-                "level": "DEBUG",
+                "level": "INFO",
             },
             # https://docs.djangoproject.com/en/1.11/topics/logging/#django-template
             "django.template": {
@@ -948,8 +948,7 @@ BULK_UPDATE_CREATE_BATCH_SIZE = 1000
 AWS_S3_ACCESS_KEY_ID = 'cuahsi'
 AWS_S3_SECRET_ACCESS_KEY = 'devpassword'
 AWS_S3_ENDPOINT_URL = 'http://minio:9000'
-# Only enable this if you are using minio in local development
-# AWS_S3_USE_LOCAL = True
+AWS_S3_ENDPOINT_URL_PUBLIC = 'http://localhost:9000'
 
 ACCESS_CONTROL_CHANGE_ENDPOINT = None
 PUBLISHER_USER_NAME = "published"

@@ -52,7 +52,6 @@ from hs_core.hydroshare.resource import (
     METADATA_STATUS_INSUFFICIENT,
     METADATA_STATUS_SUFFICIENT,
     update_quota_usage as update_quota_usage_utility,
-    update_doi_metadata_with_datacite
 )
 from hs_core.tasks import create_bag_by_s3, create_temp_zip
 from hs_core.hydroshare.utils import (
@@ -645,8 +644,6 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                 elif "errors" in response:
                     err_msg = err_msg.format(element_name, response["errors"])
 
-    update_doi_metadata_with_datacite(short_id=shortkey, element_name=element_name,
-                                      payload={element_name: request.POST.get("value", "")})
     if is_ajax(request):
         if is_add_success:
             res_public_status = "public" if res.raccess.public else "not public"
@@ -742,10 +739,8 @@ def update_metadata_element(
         element_id=element_id,
         request=request,
     )
-
     is_update_success = False
     err_msg = "Failed to update metadata element '{}'. {}."
-
     for receiver, response in handler_response:
         if "is_valid" in response:
             if response["is_valid"]:
@@ -785,7 +780,6 @@ def update_metadata_element(
             elif "errors" in response:
                 err_msg = err_msg.format(element_name, response["errors"])
 
-    update_doi_metadata_with_datacite(short_id=shortkey, element_name=element_name, payload=request.POST.dict())
     if is_ajax(request):
         if is_update_success:
             res_public_status = "public" if res.raccess.public else "not public"
@@ -905,8 +899,6 @@ def delete_metadata_element(
     res.update_public_and_discoverable()
     resource_modified(res, request.user, overwrite_bag=False)
     request.session["resource-mode"] = "edit"
-
-    update_doi_metadata_with_datacite(short_id=shortkey, element_name=element_name, payload={})
     return HttpResponseRedirect(request.headers["referer"])
 
 

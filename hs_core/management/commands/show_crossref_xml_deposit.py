@@ -5,11 +5,11 @@ from hs_core.hydroshare.utils import get_resource_by_shortkey
 
 
 class Command(BaseCommand):
-    help = "Print Datacite metadata deposit for a published resource"
+    help = "Print crossref metadata deposit for a published resource"
 
     def add_arguments(self, parser):
 
-        # ID of a published resource for which datacite metadata needs to be printed
+        # ID of a published resource for which crossref metadata needs to be printed
         parser.add_argument('resource_id', type=str, help=('Required. The existing id (short_id) of'
                                                            ' the published resource'))
 
@@ -25,5 +25,5 @@ class Command(BaseCommand):
         if not resource.raccess.published:
             raise CommandError("Resource is not a published resource")
 
-        datacite_deposit_json = resource.get_datacite_deposit_json()
-        print(datacite_deposit_json)
+        crossref_xml = resource.get_crossref_deposit_xml()
+        print(crossref_xml)

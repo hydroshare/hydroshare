@@ -1,2 +1,0 @@
-RUN celery -A hydroshare beat -s /log/celerybeat-schedule &
-CMD celery -A hydroshare worker -E -Q default

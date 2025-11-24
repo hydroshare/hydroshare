@@ -96,8 +96,6 @@ services:
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       VUE_APP_BUCKET_URL_PUBLIC_PATH: "/static/static"
       MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
-      DATACITE_USERNAME: ${DATACITE_USERNAME}
-      DATACITE_PASSWORD: ${DATACITE_PASSWORD}
     volumes:
       # hydroshare repository
       - ".:/hydroshare"
@@ -122,7 +120,7 @@ services:
       - redis
     stdin_open: true
     tty: true
-    command: /bin/bash init-hydroshare
+    command: python manage.py runserver 0.0.0.0:8000
   defaultworker:
     build:
       context: .
