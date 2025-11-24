@@ -1,33 +1,24 @@
 """Page processors for hs_core app."""
 
 import json
-
 from dateutil import parser
+
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.utils.html import mark_safe, escapejs
-from mezzanine.pages.page_processors import processor_for
 
 from hs_communities.models import Topic
 from hs_core import languages_iso
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     res_has_web_reference
-from hs_core.models import BaseResource, Relation
+from hs_core.models import Relation
 from hs_core.views.utils import show_relations_section, \
     rights_allows_copy
 from hs_odm2.models import ODM2Variable
 from .forms import ExtendedMetadataForm
 
 
-@processor_for(BaseResource)
-def landing_page(request, page):
-    """Return resource landing page context."""
-    edit_resource = check_resource_mode(request)
-
-    return get_page_context(page, request.user, resource_edit=edit_resource, request=request)
-
-
-def get_page_context(page, user, resource_edit=False, extended_metadata_layout=None, request=None):
+def get_page_context(page, user, resource_edit=False, extended_metadata_layout=None, request=None, content_model=None):
     """Route to appropriate page context function based on resource_edit mode.
 
     :param page: which page to get the template context for
@@ -35,20 +26,25 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     :param resource_edit: True if and only if the page should render in edit mode
     :param extended_metadata_layout: layout information used to build an ExtendedMetadataForm
     :param request: the Django request associated with the page load
+    :param content_model: the resource content model
     :return: the basic template context (a python dict) used to render a resource page
     """
+    if content_model is None:
+        content_model = page.get_content_model()
+
     if resource_edit:
-        return get_editable_page_context(page, user, extended_metadata_layout, request)
+        return get_editable_page_context(content_model, user, extended_metadata_layout, request)
     else:
-        return get_readonly_page_context(page, user, request)
+        return get_readonly_page_context(content_model, user, request)
 
 
-def get_readonly_page_context(page, user, request=None):
+def get_readonly_page_context(content_model, user, request=None):
     """Get template context for resource in READONLY mode.
 
-    :param page: which page to get the template context for
+    :param content_model: the resource content model
     :param user: the user who is viewing the page
     :param request: the Django request associated with the page load
+
     :return: the template context dict for readonly resource page
     """
     file_type_error = ''
@@ -56,8 +52,6 @@ def get_readonly_page_context(page, user, request=None):
         file_type_error = request.session.get("file_type_error", None)
         if file_type_error:
             del request.session["file_type_error"]
-
-    content_model = page.get_content_model()
 
     show_content_files = _should_show_content_files(content_model, user)
 
@@ -109,7 +103,7 @@ def get_readonly_page_context(page, user, request=None):
 
     content_model.update_relation_meta()
 
-    # Update view count and prepare temporal/spatial coverage
+    # Update resource view count
     content_model.update_view_count()
 
     languages_dict = dict(languages_iso.languages)
@@ -169,17 +163,16 @@ def get_readonly_page_context(page, user, request=None):
     return context
 
 
-def get_editable_page_context(page, user, extended_metadata_layout=None, request=None):
+def get_editable_page_context(content_model, user, extended_metadata_layout=None, request=None):
     """Get template context for resource in EDITABLE mode.
 
-    :param page: which page to get the template context for
+    :param content_model: the resource content model
     :param user: the user who is viewing the page
     :param extended_metadata_layout: layout information used to build an ExtendedMetadataForm
     :param request: the Django request associated with the page load
+
     :return: the template context dict for editable resource page
     """
-    content_model = page.get_content_model()
-
     show_content_files = _should_show_content_files(content_model, user)
 
     can_change = content_model.can_change(request)
