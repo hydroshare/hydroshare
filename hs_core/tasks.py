@@ -9,6 +9,7 @@ import time
 import traceback
 import zipfile
 from datetime import date, datetime, timedelta
+from xml.etree import ElementTree
 
 import requests
 from celery.exceptions import TaskError
@@ -29,13 +30,16 @@ from django_s3.exceptions import SessionException
 from django_s3.storage import S3Storage
 from hs_access_control.models import GroupMembershipRequest
 from hs_collection_resource.models import CollectionDeletedResource
-from hs_core.enums import (RelationTypes)
+from hs_core.enums import (CrossRefSubmissionStatus, CrossRefUpdate,
+                           RelationTypes)
 from hs_core.exceptions import ResourceCopyException, ResourceVersioningException
 from hs_core.hydroshare import (create_empty_resource, current_site_url,
                                 set_dirty_bag_flag, utils)
 from hs_core.hydroshare.hs_bagit import (create_bag_metadata_files,
                                          create_bagit_files_by_s3)
-from hs_core.hydroshare.resource import (get_resource_doi, update_quota_usage,)
+from hs_core.hydroshare.resource import (deposit_res_metadata_with_crossref,
+                                         get_activated_doi, get_crossref_url,
+                                         get_resource_doi, update_quota_usage,)
 from hs_core.models import BaseResource, ResourceFile, TaskNotification
 from hs_core.task_utils import get_or_create_task_notification
 from hs_file_types.models import (
@@ -117,6 +121,7 @@ def setup_periodic_tasks(sender, **kwargs):
         logger.debug("Periodic tasks are disabled in SETTINGS")
     else:
         # Hourly
+        sender.add_periodic_task(crontab(minute=45), manage_task_hourly.s(), options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=0), check_bucket_names.s(), options={'queue': 'periodic'})
 
         # Daily (times in UTC)
@@ -321,12 +326,12 @@ def repair_resource_before_publication(res_id):
                       recipient_list=[settings.DEFAULT_DEVELOPER_EMAIL])
 
     try:
-        res.get_datacite_deposit_json()
+        res.get_crossref_deposit_xml()
     except Exception:
         res_url = current_site_url() + res.get_absolute_url()
 
         email_msg = f'''
-        <p>We were unable to generate Datacite xml in the following resource that is under review for publication:
+        <p>We were unable to generate Crossref xml in the following resource that is under review for publication:
         <a href="{res_url}">{res_url}</a></p>
         <p>Error details:</p>
         <p>{traceback.format_exc()}</p>
@@ -370,6 +375,139 @@ def notify_owners_of_resource_repair(resource):
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
+def manage_task_hourly():
+    # The hourly running task do DOI activation check
+
+    # Check DOI activation on failed and pending resources and send email.
+    msg_lst = []
+    # retrieve all published resources with failed metadata deposition with CrossRef if any and
+    # retry metadata deposition - this should check both 'failure' and 'update_failure' flags
+    failed_resources = BaseResource.objects.filter(raccess__published=True,
+                                                   doi__endswith=CrossRefSubmissionStatus.FAILURE.value)
+    for res in failed_resources:
+        meta_published_date = res.metadata.dates.all().filter(type='published').first()
+        if meta_published_date:
+            pub_date = meta_published_date
+            pub_date = pub_date.start_date.strftime('%m/%d/%Y')
+            act_doi = get_activated_doi(res.doi)
+            response = deposit_res_metadata_with_crossref(res)
+            if response.status_code == status.HTTP_200_OK:
+                # retry of metadata deposition succeeds, change resource flag from failure
+                # to pending
+                if CrossRefSubmissionStatus.UPDATE_FAILURE.value in res.doi:
+                    res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.UPDATE_PENDING.value)
+                else:
+                    res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.PENDING.value)
+                res.save()
+            else:
+                # retry of metadata deposition failed again, notify admin
+                if CrossRefSubmissionStatus.UPDATE_FAILURE.value not in res.doi:
+                    # this is the case of retry of initial deposit (deposit when publishing the resource)
+                    msg = f"Metadata deposition with CrossRef for the published resource " \
+                          f"DOI {act_doi} failed again after retry with first metadata " \
+                          f"deposition requested since {pub_date}."
+                else:
+                    # this is the case of updating crossref metadata deposit as a result of resource metadata change
+                    # subsequent to the initial deposit
+                    msg = f"Metadata UPDATE deposition with CrossRef for the published resource " \
+                          f"DOI {act_doi} failed again after retry."
+
+                msg_lst.append(msg)
+                logger.debug(response.content)
+        else:
+            msg_lst.append("{res_id} does not have published date in its metadata.".format(
+                res_id=res.short_id))
+
+    # get all published resources with doi ending with 'pending' or 'update_pending'
+    pending_resources = BaseResource.objects.filter(raccess__published=True,
+                                                    doi__endswith=CrossRefSubmissionStatus.PENDING.value)
+    for res in pending_resources:
+        # save the doi status
+        is_metadata_update = CrossRefSubmissionStatus.UPDATE_PENDING.value in res.doi
+        meta_published_date = res.metadata.dates.all().filter(type='published').first()
+        if meta_published_date:
+            pub_date = meta_published_date
+            pub_date = pub_date.start_date.strftime('%m/%d/%Y')
+            act_doi = get_activated_doi(res.doi)
+            main_url = get_crossref_url()
+            # ref: https://www.crossref.org/documentation/register-maintain-records/verify-your-registration/submission-queue-and-log/  # noqa
+            req_str = '{MAIN_URL}servlet/submissionDownload?usr={USERNAME}&pwd=' \
+                      '{PASSWORD}&file_name={FILE_NAME}&type={TYPE}'
+            response = requests.get(req_str.format(MAIN_URL=main_url,
+                                                   USERNAME=settings.CROSSREF_LOGIN_ID,
+                                                   PASSWORD=settings.CROSSREF_LOGIN_PWD,
+                                                   FILE_NAME=f"{res.short_id}_deposit_metadata.xml",
+                                                   TYPE='result'),
+                                    verify=False)
+            root = ElementTree.fromstring(response.content)
+            rec_cnt_elem = root.find('.//record_count')
+            failure_cnt_elem = root.find('.//failure_count')
+            # ref: https://www.crossref.org/documentation/register-maintain-records/verify-your-registration/interpret-submission-logs/ # noqa
+            success = False
+            if rec_cnt_elem is not None and failure_cnt_elem is not None:
+                rec_cnt = int(rec_cnt_elem.text)
+                failure_cnt = int(failure_cnt_elem.text)
+                if rec_cnt > 0 and failure_cnt == 0:
+                    res.doi = act_doi
+                    res.save()
+                    success = True
+                    # create bag and compute checksum for published resource to meet DataONE requirement
+                    create_bag_by_s3(res.short_id)
+                elif failure_cnt > 0 :
+                    # set the doi status to failure
+                    if CrossRefSubmissionStatus.UPDATE_PENDING.value in res.doi:
+                        res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.UPDATE_FAILURE.value)
+                    else:
+                        res.doi = get_resource_doi(res.short_id, CrossRefSubmissionStatus.FAILURE.value)
+                    res.save()
+            if not success:
+                if CrossRefSubmissionStatus.UPDATE_PENDING.value not in res.doi:
+                    # this is the case of initial deposit when publishing the resource
+                    msg = f"Published resource DOI {act_doi} is not yet activated with request " \
+                          f"data deposited since {pub_date}."
+                else:
+                    # this is the case of updating crossref metadata deposit
+                    msg = (f"Request to update CrossRef deposit for published resource DOI {act_doi} "
+                           f"is still in a pending state.")
+
+                msg_lst.append(msg)
+                logger.debug(response.content)
+            else:
+                if is_metadata_update:
+                    logger.info("Crossref deposit successfully updated for resource {}".format(res.short_id))
+                else:
+                    notify_owners_of_publication_success(res)
+        else:
+            msg_lst.append("{res_id} does not have published date in its metadata.".format(
+                res_id=res.short_id))
+
+    # get all un-published resources with doi ending in 'pending or 'update_pending'
+    pending_unpublished_resources = BaseResource.objects.filter(raccess__published=False,
+                                                                doi__endswith=CrossRefSubmissionStatus.PENDING.value)
+    for res in pending_unpublished_resources:
+        msg_lst.append(f"{res.short_id} has pending in DOI but resource_access shows unpublished. "
+                       "This indicates an issue with the resource, please notify a developer")
+
+    if msg_lst and not settings.DISABLE_TASK_EMAILS:
+        email_msg = '\n'.join(msg_lst)
+        subject = 'Notification of pending DOI deposition/activation of published resources'
+        # send email for people monitoring and follow-up as needed
+        send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_DEVELOPER_EMAIL])
+
+    # update crossref deposit for published resource for which relevant metadata has been updated
+    # excludes published resources that have either 'pending' or 'update_pending' in doi
+    update_deposit_resources = BaseResource.objects \
+        .filter(raccess__published=True,
+                extra_data__contains={CrossRefUpdate.UPDATE.value: 'True'}) \
+        .exclude(doi__endswith=CrossRefSubmissionStatus.PENDING.value)
+
+    for res in update_deposit_resources:
+        _update_crossref_deposit(res)
+        res.extra_data[CrossRefUpdate.UPDATE.value] = 'False'
+        res.save()
+
+
+@celery_app.task(ignore_result=True, base=HydroshareTask)
 def update_from_geoconnex_task():
     loop = asyncio.get_event_loop()
     loop.run_until_complete(utils.update_geoconnex_texts())
@@ -402,17 +540,14 @@ def nightly_metadata_review_reminder():
                 send_mail(subject, email_msg, settings.DEFAULT_FROM_EMAIL, recipients)
 
 
-@celery_app.task(ignore_result=True, base=HydroshareTask)
-def notify_owners_of_publication_success(short_id):
+def notify_owners_of_publication_success(resource):
     """
     Sends email notification to resource owners on publication success
 
     :param resource: a resource that has been published
     :return:
     """
-    resource = utils.get_resource_by_shortkey(short_id)
     res_url = current_site_url() + resource.get_absolute_url()
-    doi = f"{settings.DATACITE_PREFIX}/{resource.short_id}"
 
     email_msg = f'''Dear Resource Owner,
     <p>The following resource that you submitted for publication:
@@ -420,9 +555,10 @@ def notify_owners_of_publication_success(short_id):
     {res_url}</a>
     has been reviewed and determined to meet HydroShare's minimum metadata standards and community guidelines.</p>
 
-    <p>The publication request was processed by <a href="https://www.Datacite.org/">Datacite.org</a>.
+    <p>The publication request was processed by <a href="https://www.crossref.org/">Crossref.org</a>.
     The Digital Object Identifier (DOI) for your resource is:
-    <a href="{get_resource_doi(resource.short_id)}">https://doi.org/{doi}</a></p>
+    <a href="{get_resource_doi(resource.short_id)}">https://doi.org/10.4211/hs.{resource.short_id}</a></p>
+
     <p>Thank you,</p>
     <p>The HydroShare Team</p>
     '''
@@ -432,89 +568,6 @@ def notify_owners_of_publication_success(short_id):
                   html_message=email_msg,
                   from_email=settings.DEFAULT_FROM_EMAIL,
                   recipient_list=[o.email for o in resource.raccess.owners.all()])
-
-
-@celery_app.task(ignore_result=True, base=HydroshareTask)
-def notify_developers_of_publication_failure(short_id, error=None, exc_info=None, extra_context=None):
-    """
-    Sends a failure notification email to developers/admins when a resource publication fails.
-
-    :param resource: the resource that failed to publish
-    :param error: optional short error message (str)
-    :param exc_info: optional exception (Exception) or a tuple as from sys.exc_info()
-    :param extra_context: optional dict with extra diagnostic info (e.g., {'task_id': '...', 'worker': '...'})
-    :return: None
-    """
-    if getattr(settings, "DISABLE_TASK_EMAILS", False):
-        return
-
-    resource = utils.get_resource_by_shortkey(short_id)
-    res_url = current_site_url() + resource.get_absolute_url()
-    doi = f"{settings.DATACITE_PREFIX}/{resource.short_id}"
-    owners = ", ".join([o.email for o in resource.raccess.owners.all()])
-
-    # Build a concise text/HTML body with diagnostics
-    when = timezone.now().strftime("%Y-%m-%d %H:%M:%S %Z")
-    error_text = str(error).strip() if error else "N/A"
-
-    tb_text = ""
-    if exc_info:
-        if isinstance(exc_info, BaseException):
-            tb_text = "".join(traceback.format_exception(type(exc_info), exc_info, exc_info.__traceback__))
-        elif isinstance(exc_info, tuple):
-            tb_text = "".join(traceback.format_exception(*exc_info))
-
-    extra_html = ""
-    if extra_context:
-        rows = "".join(
-            f"<tr><td style='padding:4px 8px;'><strong>{k}</strong></td><td style='padding:4px 8px;'>{v}</td></tr>"
-            for k, v in extra_context.items()
-        )
-        extra_html = f"""
-        <h4>Extra Context</h4>
-        <table border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-            {rows}
-        </table>
-        """
-
-    html_msg = f"""<p><strong>Publication Failure Detected</strong></p>
-    <p><strong>When:</strong> {when}</p>
-    <p><strong>Resource:</strong> <a href="{res_url}">{res_url}</a></p>
-    <p><strong>Resource ID:</strong> {resource.short_id}</p>
-    <p><strong>Title:</strong> {getattr(resource, 'title', '(unknown)')}</p>
-    <p><strong>Owners:</strong> {owners or '(none found)'}</p>
-    <p><strong>Intended DOI:</strong> <a href="{get_resource_doi(resource.short_id)}">https://doi.org/{doi}</a></p>
-    <p><strong>Error:</strong> {error_text}</p>
-    {"<pre style='white-space:pre-wrap;border:1px solid #ddd;padding:8px;'>" + tb_text + "</pre>" if tb_text else ""}
-    {extra_html}
-    <p>Please investigate and re-run as appropriate.</p>
-    """
-
-    text_msg = (
-        "Publication Failure Detected\n"
-        f"When: {when}\n"
-        f"Resource: {res_url}\n"
-        f"Resource ID: {resource.short_id}\n"
-        f"Title: {getattr(resource, 'title', '(unknown)')}\n"
-        f"Owners: {owners or '(none found)'}\n"
-        f"Intended DOI: https://doi.org/{doi}\n"
-        f"Error: {error_text}\n\n"
-        f"{tb_text if tb_text else ''}\n"
-        f"{'Extra Context: ' + str(extra_context) if extra_context else ''}\n"
-        "Please investigate and re-run as appropriate.\n"
-    )
-
-    subject = f"[HydroShare] Publication FAILED for resource {resource.short_id}"
-
-    recipients = getattr(settings, "DEFAULT_DEVELOPER_EMAIL", None)
-    if recipients:
-        send_mail(
-            subject=subject,
-            message=text_msg,
-            html_message=html_msg,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=recipients,
-        )
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
@@ -791,6 +844,7 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
         istorage.zipup(output_path, *set(files_to_zip), in_prefix=os.path.dirname(input_path))
     else:  # regular folder to zip
         istorage.zipup(output_path, input_path)
+    res.update_download_count()
     return istorage.signed_url(output_path)
 
 
@@ -838,6 +892,7 @@ def create_bag_by_s3(resource_id, create_zip=True):
                     # compute checksum to meet DataONE distribution requirement
                     chksum = istorage.checksum(bag_path)
                     res.bag_checksum = chksum
+                res.update_download_count()
                 return istorage.signed_url(bag_path)
             except SessionException as ex:
                 raise SessionException(-1, '', ex.stderr)
@@ -1232,3 +1287,29 @@ def task_notification_cleanup():
     """
     day_ago = datetime.today() - timedelta(days=1)
     TaskNotification.objects.filter(created__lte=day_ago).delete()
+
+
+@shared_task
+def update_crossref_meta_deposit(res_id):
+    """
+    Update the metadata deposit for a published resource with Crossref
+    """
+    resource = utils.get_resource_by_shortkey(res_id)
+    if not resource.raccess.published:
+        raise ValidationError("Resource {} is not a published resource".format(res_id))
+    _update_crossref_deposit(resource)
+
+
+def _update_crossref_deposit(resource):
+    logger.info(f"Updating Crossref metadata deposit for published resource: {resource.short_id}")
+    resource.doi = get_resource_doi(resource.short_id, CrossRefSubmissionStatus.UPDATE_PENDING.value)
+    resource.save()
+    response = deposit_res_metadata_with_crossref(resource)
+    if not response.status_code == status.HTTP_200_OK:
+        # resource metadata deposition failed from CrossRef - set failure flag to be retried in a
+        # crontab celery task
+        err_msg = (f"Received a {response.status_code} from Crossref while updating "
+                   f"metadata for published resource: {resource.short_id}")
+        logger.error(err_msg)
+        resource.doi = get_resource_doi(resource.short_id, CrossRefSubmissionStatus.UPDATE_FAILURE.value)
+        resource.save()

@@ -11,7 +11,7 @@ from mezzanine import template
 from hs_access_control.models.privilege import (PrivilegeCodes,
                                                 UserResourcePrivilege)
 from hs_core.authentication import build_oidc_url
-from hs_core.enums import DataciteSubmissionStatus
+from hs_core.enums import CrossRefSubmissionStatus
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.search_indexes import normalize_name
 
@@ -458,11 +458,11 @@ def show_publication_status(resource):
     doi = resource.doi
     if doi.endswith(resource.short_id):
         return False
-    if (doi.endswith(DataciteSubmissionStatus.PENDING.value)
-            and not doi.endswith(DataciteSubmissionStatus.UPDATE_PENDING.value)):
+    if (doi.endswith(CrossRefSubmissionStatus.PENDING.value)
+            and not doi.endswith(CrossRefSubmissionStatus.UPDATE_PENDING.value)):
         return True
-    if (doi.endswith(DataciteSubmissionStatus.FAILURE.value)
-            and not doi.endswith(DataciteSubmissionStatus.UPDATE_FAILURE.value)):
+    if (doi.endswith(CrossRefSubmissionStatus.FAILURE.value)
+            and not doi.endswith(CrossRefSubmissionStatus.UPDATE_FAILURE.value)):
         return True
 
     return False
