@@ -5028,7 +5028,7 @@ def new_get_content_model(self):
     content_model = self.content_model
     if content_model.endswith('resource'):
         rt = [rt for rt in get_resource_types() if rt._meta.model_name == content_model][0]
-        return rt.objects.get(id=self.id)
+        return rt.objects.filter(id=self.id).select_related('raccess', 'quota_holder', 'rlabels').first()
     return old_get_content_model(self)
 
 
