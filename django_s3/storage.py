@@ -185,7 +185,7 @@ class S3Storage(S3Storage):
         for file_name, _, unzipped_chunks in stream_unzip(zipped_chunks()):
             # Define the key (path) where you want to save the file in the S3 bucket
             file_name = file_name.decode("utf-8").replace("'", "")
-            s3_key = f'{unzipped_path}{file_name}'
+            s3_key = os.path.join(unzipped_path, file_name)
             buffer = BytesIO()
             for chunk in unzipped_chunks:
                 buffer.write(chunk)
