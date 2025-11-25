@@ -1,0 +1,2 @@
+ chown -R hydro-service:storage-hydro /hydroshare 2>/dev/null 
+ chmod -R g+rwx /tmp 2>/dev/null 

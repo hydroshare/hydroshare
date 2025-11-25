@@ -36,17 +36,16 @@ Add the issues included in the release and update this document as release tasks
 
 <!-- Update the checklist as items are completed -->
 ### Production Deployment
-- [ ] Retag if needed (for example if it was tagged as an "rc-")
-  * Add a tag in the [Cloud Artifact Registry](https://console.cloud.google.com/artifacts/docker/hydroshare-403701/us-central1/hydroshare/hydroshare?project=hydroshare-403701)![alt text](cloud_tag.png) or using `gcloud artifacts docker tags add us-central1-docker.pkg.dev/hydroshare-403701/hydroshare/hydroshare:old-tag us-central1-docker.pkg.dev/hydroshare-403701/hydroshare/hydroshare:new-tag`
-  * Also add a tag in the Hydroshare repository if it hasn't been added yet, for example: `git tag 3.9.0 <rc_commit_hash> && git push origin 3.9.0`
 - [ ] Make manual changes to the Production charts identified in Beta Deployment
 - [ ] Connect to the prod cluster
   - `gcloud container clusters get-credentials hydroshare-prod --region us-central1`
 - [ ] check for unreleased changes in helm charts
   - `helm diff upgrade hydroshare . --reset-values --values values.prod.yaml`
+- [ ] Retag if needed (for example if it was tagged as an "rc-")
+  * Add a tag in the [Cloud Artifact Registry](https://console.cloud.google.com/artifacts/docker/hydroshare-403701/us-central1/hydroshare/hydroshare?project=hydroshare-403701)![alt text](cloud_tag.png) or using `gcloud artifacts docker tags add us-central1-docker.pkg.dev/hydroshare-403701/hydroshare/hydroshare:old-tag new-tag`
+  * Also add a tag in the Hydroshare repository if it hasn't been added yet, for example: `git tag 3.9.0 <rc_commit_hash> && git push origin 3.9.0`
 - [ ] Deploy to Production
-  * Run collectstatic if it is not run as part of the deployment: `kubectl exec --stdin --tty hydroshare-0 -- python manage.py collectstatic `
-  * ☝️this will collect frontend JS and CSS files into the production bucket! It is normal to see lots of errors...
+  * Run collectstatic if it is not run as part of the deployment
   * Kill the innactive HS pod and let it come back up
 - [ ] Review the search and discovery pages
 - [ ] Create a new user and update profile

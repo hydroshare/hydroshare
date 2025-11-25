@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+cd /hydroshare
+usermod -u HS_SERVICE_UID hydro-service
+groupmod -g HS_SERVICE_GID storage-hydro
+celery worker -A hydroshare -E -Q docker_container_tasks,docker_broadcast_tasks

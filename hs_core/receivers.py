@@ -1,18 +1,16 @@
 """Signal receivers for the hs_core app."""
 from django.contrib.auth.models import User
-from django.db.models.signals import post_save, pre_delete, post_delete
+from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django_s3.storage import S3Storage
-from hs_access_control.models.resource import ResourceAccess
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update, \
     pre_delete_resource, post_add_geofeature_aggregation, post_add_generic_aggregation, \
     post_add_netcdf_aggregation, post_add_raster_aggregation, post_add_timeseries_aggregation, \
     post_add_reftimeseries_aggregation, post_remove_file_aggregation, post_raccess_change, \
     post_delete_file_from_resource, post_add_csv_aggregation
 from hs_core.tasks import update_web_services
-from hs_core.models import BaseResource, Creator, Contributor, Party, AbstractMetaDataElement
+from hs_core.models import BaseResource, Creator, Contributor, Party
 from django.conf import settings
-
 from .forms import SubjectsForm, AbstractValidationForm, CreatorValidationForm, \
     ContributorValidationForm, RelationValidationForm, RightsValidationForm, \
     LanguageValidationForm, ValidDateValidationForm, FundingAgencyValidationForm, \
@@ -230,42 +228,3 @@ def pre_delete_user_handler(sender, instance, **kwargs):
     if istorage.bucket_exists(user.username):
         # delete the bucket for the user
         istorage.delete_bucket(user.username)
-
-
-@receiver(post_save, sender=ResourceAccess)
-def resource_access_post_save_handler(sender, instance, **kwargs):
-    """Update status in cached metadata when resource sharing
-    status (public, discoverable, published, shareable) changes"""
-
-    resource = instance.resource
-    # when making a copy of a resource, the copy resource may not have raccess attribute when
-    # the post_save signal is sent for ResourceAccess
-    if resource is not None and hasattr(resource, 'raccess') and resource.raccess is not None:
-        try:
-            resource.update_cached_metadata_field('status')
-        except Exception as ex:
-            logger.error(f"Error updating status in cached metadata for resource {resource.short_id}: {str(ex)}")
-
-
-@receiver(post_save)
-def metadata_element_saved(sender, instance, **kwargs):
-    if isinstance(instance, AbstractMetaDataElement):
-        if hasattr(instance, 'metadata') and instance.metadata is not None:
-            if hasattr(instance.metadata, 'resource') and instance.metadata.resource is not None:
-                resource = instance.metadata.resource
-                try:
-                    resource.update_cached_metadata_field(instance.__class__.__name__.lower())
-                except Exception as ex:
-                    logger.error(f"Error updating cached metadata for resource {resource.short_id}: {str(ex)}")
-
-
-@receiver(post_delete)
-def metadata_element_deleted(sender, instance, **kwargs):
-    if isinstance(instance, AbstractMetaDataElement):
-        if hasattr(instance, 'metadata') and instance.metadata is not None:
-            if hasattr(instance.metadata, 'resource') and instance.metadata.resource is not None:
-                resource = instance.metadata.resource
-                try:
-                    resource.update_cached_metadata_field(instance.__class__.__name__.lower())
-                except Exception as ex:
-                    logger.error(f"Error updating cached metadata for resource {resource.short_id}: {str(ex)}")

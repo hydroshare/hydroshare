@@ -22,9 +22,7 @@
 
         <div id="grantors-list">
           {% for res in group_resources %}
-            <span data-grantor-id="{{ res.grantor_id }}"
-                data-grantor-name="{% if res.grantor_first_name %}{% if res.grantor_middle_name %}{{ res.grantor_first_name }} {{ res.grantor_middle_name }} {{ res.grantor_last_name }}{% else %}{{ res.grantor_first_name }} {{ res.grantor_last_name }}{% endif %}{% else %}{{ res.grantor_username }}{% endif %}">
-            </span>
+          <span data-grantor-id="{{ res.grantor.id }}" data-grantor-name="{{ res.grantor|best_name }}"></span>
           {% endfor %}
         </div>
       </div>

@@ -64,8 +64,7 @@
                                     <label for="award_number" class="control-label">Award Number</label>
                                     <div class="controls">
                                         <input class="form-control input-sm textinput textInput" maxlength="100"
-                                            name="award_number" type="text" v-model="currentlyEditing.award_number"
-                                            @keydown="blockInvalidAwardNumberChars" @paste="cleanPastedAwardNumber">
+                                            name="award_number" type="text" v-model="currentlyEditing.award_number" @keyup="checkAgencyName">
                                     </div>
                                 </div>
 

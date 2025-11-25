@@ -19,39 +19,37 @@
 {% endwith %}
 {#  Sharing Status icons #}
 <div class="access-icon-wrapper">
-    {% with metadata=resource.cached_metadata %}
-        {% if metadata.status.published %}
-            <img src="{% static 'img/published.png' %}"
-                data-toggle="tooltip" data-placement="right"
-                alt="Published Resource" title="Published"/>
-        {% elif metadata.status.public %}
-            <img src="{% static 'img/public.png' %}"
-                data-toggle="tooltip" data-placement="right"
-                alt="Public Resource" title="Public"/>
-        {% elif metadata.status.discoverable %}
-            <img src="{% static 'img/discoverable.png' %}"
-                data-toggle="tooltip" data-placement="right"
-                alt="Discoverable Resource" title="Discoverable"/>
-        {% else %}
-            <img src="{% static 'img/private.png' %}"
-                data-toggle="tooltip" data-placement="right"
-                alt="Private Resource" title="Private"/>
-        {% endif %}
+    {% if resource.raccess.published %}
+        <img src="{% static 'img/published.png' %}"
+             data-toggle="tooltip" data-placement="right"
+             alt="Published Resource" title="Published"/>
+    {% elif resource.raccess.public %}
+        <img src="{% static 'img/public.png' %}"
+             data-toggle="tooltip" data-placement="right"
+             alt="Public Resource" title="Public"/>
+    {% elif resource.raccess.discoverable %}
+        <img src="{% static 'img/discoverable.png' %}"
+             data-toggle="tooltip" data-placement="right"
+             alt="Discoverable Resource" title="Discoverable"/>
+    {% else %}
+        <img src="{% static 'img/private.png' %}"
+             data-toggle="tooltip" data-placement="right"
+             alt="Private Resource" title="Private"/>
+    {% endif %}
 
-        {% if metadata.status.published %}
-            {% if "pending" in cm.doi or "failure" in cm.doi %}
-                <img src="{% static 'img/pending.png' %}" alt="Pending Publication"
-                    data-toggle="tooltip" data-placement="right"
-                    title="Pending Publication. Note that the DOI will not be available until it has been registered and activated."/>
-            {% endif %}
-        {% else %}
-            {% if metadata.status.shareable %}
-                <img src="{% static 'img/shareable.png' %}" alt="Sharable Resource"
-                    data-toggle="tooltip" data-placement="right" title="Shareable"/>
-            {% else %}
-                <img src="{% static 'img/non-shareable.png' %}" alt="Non Sharable Resource"
-                    data-toggle="tooltip" data-placement="right" title="Not Shareable"/>
-            {% endif %}
+    {% if resource.raccess.published %}
+        {% if "pending" in cm.doi or "failure" in cm.doi %}
+            <img src="{% static 'img/pending.png' %}" alt="Pending Publication"
+                 data-toggle="tooltip" data-placement="right"
+                 title="Pending Publication. Note that the DOI will not be available until it has been registered and activated."/>
         {% endif %}
-    {% endwith %}
+    {% else %}
+        {% if resource.raccess.shareable %}
+            <img src="{% static 'img/shareable.png' %}" alt="Sharable Resource"
+                 data-toggle="tooltip" data-placement="right" title="Shareable"/>
+        {% else %}
+            <img src="{% static 'img/non-shareable.png' %}" alt="Non Sharable Resource"
+                 data-toggle="tooltip" data-placement="right" title="Not Shareable"/>
+        {% endif %}
+    {% endif %}
 </div>

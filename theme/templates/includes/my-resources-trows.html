@@ -45,26 +45,26 @@
     {% include "includes/res_type_col.html" with resource=res %}
   </td>
   {# Title #}
-  {% with metadata=res.cached_metadata %}
+  {% with metadata=res.metadata %}
   <td>
-    {% get_resource_url res.short_id as resource_url %}
-    <strong><a href="{{ resource_url }}">{{ metadata.title|escape }}</a>
+    <strong><a href="{{ res.absolute_url }}">{{ metadata.title|escape }}</a>
     </strong>
   </td>
-  {# First Author #} 
-  <td>{{ metadata.creators|resource_first_author }}</td>
+  {# First Author #}
+  <td>{{ res|resource_first_author }}</td>
 
   {# Date Created #}
-  <td>{{ metadata.created|to_date|date:"M d, Y" }} at {{ metadata.created|to_date|date:"h:i a" }}</td>
+  <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>
   {# Last Modified #}
-  <td>{{ metadata.modified|to_date|date:"M d, Y" }} at {{ metadata.modified|to_date|date:"h:i a" }}</td>
+  {% with updated=res.last_updated %}
+  <td>{{ updated|date:"M d, Y" }} at {{ updated|time }}</td>
   <td>
-    {% for kw in metadata.subjects %}
-    {% if forloop.counter0 > 0 %},{% endif %}{{ kw }}
+    {% for kw in metadata.subjects.all %}
+    {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
     {% endfor %}
   </td>
   <td>
-    {% for creator in metadata.creators %}
+    {% for creator in metadata.creators.all %}
     {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
     {% if creator.relative_uri and creator.is_active_user %}
     <a href="{{ creator.relative_uri }}">{{ creator.name }}</a>
@@ -73,9 +73,11 @@
     {% endif %}
     {% endfor %}
   </td>
-  <td>{% if request.user.is_authenticated %}{{ res.user_permission|privilege_code_to_name }}{% endif %}</td>
+   {# QUERY COUNT: this (res|get_user_privilege:user) generates 3 queries per resource)  #}
+  <td>{% if request.user.is_authenticated %}{{ res|get_user_privilege:user }}{% endif %}</td>
   <td class="col-labels">
-    {% for label in res.resource_labels %}
+    {# QUERY COUNT: this will generate 1 query only if the user has labels for the resource #}
+    {% for label in res|user_resource_labels:user %}
     {% if forloop.counter0 > 0 %},{% endif %}{{ label }}
     {% endfor %}
   </td>
@@ -84,21 +86,21 @@
     Favorite
     {% endif %}
   </td>
-  <td>{{ metadata.modified|to_date|date:"U" }}</td>
+  <td>{{ updated|date:"U" }}</td>
+  {% endwith %}
+  {% endwith %}
   <td>
-    {% if metadata.status.published %}
+    {% if res.raccess.published %}
     Published
-    {% elif metadata.status.public %}
+    {% elif res.raccess.public %}
     Public
-    {% elif metadata.status.discoverable %}
+    {% elif res.raccess.discoverable %}
     Discoverable
     {% else %}
     Private
     {% endif %}
   </td>
-  <td>{{ metadata.created|to_date|date:"U" }}</td>
-  {# NOTE: grantor_id is applicable to listing of resources for a group, not for my resource listing or community resources #}
-  <td>{{ res.grantor_id }}</td>
-  {% endwith %}
+  <td>{{ res.created|date:"U" }}</td>
+  <td>{{ res.grantor.id }}</td>
 </tr>
 {% endfor %}

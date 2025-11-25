@@ -115,17 +115,11 @@ class CommunityView(TemplateView):
 
             # generate community resources ids by group - this is used for filtering resource table by group
             community_resources_by_group = {}
-            for item in community_resources.values("group_id", "short_id"):
-                community_resources_by_group.setdefault(item["group_id"], []).append(item["short_id"])
+            for res in community_resources:
+                community_resources_by_group.setdefault(res.group_id, []).append(res.short_id)
 
             # Both authenticated and anonymous users can make use of the data below
-            # TODO: Why are we ordering by short_id?
-            community_resources = community_resources.order_by("short_id").distinct("short_id")
-            community_resources = community_resources.values(
-                'short_id', 'resource_type', 'created', 'cached_metadata'
-            )
-
-            context["community_resources"] = community_resources
+            context["community_resources"] = community_resources.order_by("short_id").distinct("short_id")
             data["community_resources_by_group"] = community_resources_by_group
             context["denied"] = denied
             context["message"] = message

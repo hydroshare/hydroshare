@@ -334,7 +334,6 @@ class TestPublishResource(MockS3TestCaseMixin, TestCase):
         self.assertTrue(res.metadata.dates.filter(type='published').exists())
 
         # last_updated date should be updated when the resource is published, even though the last_changed_by is not
-        res.refresh_from_db(fields=['cached_metadata'])
         self.assertGreater(res.last_updated, time_after_submit)
 
     def test_crossref_deposit_xml(self):

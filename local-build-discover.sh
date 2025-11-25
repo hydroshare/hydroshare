@@ -127,8 +127,8 @@ echo " Replacing env vars in static files for Discovery"
 echo '########################################################################################################################'
 echo
 
-echo "  -docker exec hydroshare ./discover-entrypoint.sh"
-docker exec hydroshare ./discover-entrypoint.sh
+echo "  -docker exec -u hydro-service hydroshare ./discover-entrypoint.sh"
+docker exec -u hydro-service hydroshare ./discover-entrypoint.sh
 
 echo
 echo '########################################################################################################################'
@@ -136,9 +136,9 @@ echo " Collecting Static files for Discovery"
 echo '########################################################################################################################'
 echo
 
-echo "  -docker exec hydroshare python manage.py collectstatic -v0 --noinput"
+echo "  -docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput"
 echo
-docker exec hydroshare python manage.py collectstatic -v0 --noinput
+docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput
 
 echo
 echo '########################################################################################################################'

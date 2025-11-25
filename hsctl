@@ -26,8 +26,8 @@ HS_DOCKER_IMAGES=(hydroshare_hydroshare hydroshare_defaultworker)
 OTHER_DOCKER_CONTAINERS=(postgis redpanda redis solr)
 
 ### Pre-flight Variables ###
-DEV_SERVER='runuser -p ./run-server'
-DEV_SSH_COMMAND='runuser -p /usr/sbin/sshd'
+DEV_SERVER='runuser -p -u hydro-service -g storage-hydro ./run-server'
+DEV_SSH_COMMAND='runuser -p -u hydro-service -g storage-hydro /usr/sbin/sshd'
 PROD_SERVER='./run-server'
 PROD_SSH_COMMAND='# REMOVED SSH COMPONENT'
 
@@ -171,36 +171,36 @@ loaddb_hs() {
     # Ensure all prior connections to the database are removed prior to dropping the database
     docker exec -u postgres -ti postgis psql -c "REVOKE CONNECT ON DATABASE postgres FROM public;"
     docker exec -u postgres -ti postgis psql -c "SELECT pid, pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();"
-    echo "  - docker exec hydroshare dropdb -U postgres -h postgis postgres"
-    docker exec hydroshare dropdb -U postgres -h postgis postgres
-    echo "  - docker exec hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'"
-    docker exec hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'
-    echo "  - docker exec hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION hstore;'"
-    docker exec hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION hstore;'
-    echo "  - docker exec hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template1"
-    docker exec hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template1
-    echo "  - docker exec hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'"
-    docker exec hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'
-    echo " - docker exec hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET idle_in_transaction_session_timeout TO 70000;'"
-    docker exec hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET idle_in_transaction_session_timeout TO 70000;'
-    echo "  - docker exec hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}"
-    docker exec hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}
+    echo "  - docker exec -u hydro-service hydroshare dropdb -U postgres -h postgis postgres"
+    docker exec -u hydro-service hydroshare dropdb -U postgres -h postgis postgres
+    echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'"
+    docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'
+    echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION hstore;'"
+    docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION hstore;'
+    echo "  - docker exec -u hydro-service hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template1"
+    docker exec -u hydro-service hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template1
+    echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'"
+    docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'
+    echo " - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET idle_in_transaction_session_timeout TO 70000;'"
+    docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET idle_in_transaction_session_timeout TO 70000;'
+    echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}"
+    docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}
 }
 
 migrate_hs() {
     echo "MIGRATE:"
-    echo "  - docker exec hydroshare python manage.py migrate sites --noinput"
-    docker exec hydroshare python manage.py migrate sites --noinput
-    echo "  - docker exec hydroshare python manage.py migrate --fake-initial --noinput"
-    docker exec hydroshare python manage.py migrate --fake-initial --noinput
-    echo "  - docker exec hydroshare python manage.py fix_permissions"
-    docker exec hydroshare python manage.py fix_permissions
+    echo "  - docker exec -u hydro-service hydroshare python manage.py migrate sites --noinput"
+    docker exec -u hydro-service hydroshare python manage.py migrate sites --noinput
+    echo "  - docker exec -u hydro-service hydroshare python manage.py migrate --fake-initial --noinput"
+    docker exec -u hydro-service hydroshare python manage.py migrate --fake-initial --noinput
+    echo "  - docker exec -u hydro-service hydroshare python manage.py fix_permissions"
+    docker exec -u hydro-service hydroshare python manage.py fix_permissions
 }
 
 manage_py_hs() {
     echo "MANAGEPY:"
-    echo "  - docker exec -ti hydroshare python manage.py ${@:2}"
-    docker exec -ti hydroshare python manage.py ${@:2}
+    echo "  - docker exec -u hydro-service -ti hydroshare python manage.py ${@:2}"
+    docker exec -u hydro-service -ti hydroshare python manage.py ${@:2}
 }
 
 solr_reload_hs() {
@@ -276,16 +276,18 @@ rebuild_hs() {
         loaddb_hs;
     fi
     dis_build
-    echo "  - docker exec hydroshare python manage.py collectstatic -v0 --noinput"
-    docker exec hydroshare python manage.py collectstatic -v0 --noinput
+    echo "  - docker exec hydroshare chown -R hydro-service:storage-hydro /hydroshare /tmp /shared_tmp"
+    docker exec hydroshare chown -R hydro-service:storage-hydro /hydroshare /tmp /shared_tmp
+    echo "  - docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput"
+    docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput
     # Ensure any autogenerated robots.txt file is removed so that django-robots can work
-    echo "  - docker exec hydroshare rm -f hydroshare/static/static/robots.txt"
-    docker exec hydroshare rm -f hydroshare/static/static/robots.txt
+    echo "  - docker exec -u hydro-service hydroshare rm -f hydroshare/static/static/robots.txt"
+    docker exec -u hydro-service hydroshare rm -f hydroshare/static/static/robots.txt
     migrate_hs
     sleep 3s
     # prevent web crawling on development systems (ie beta) -- this should not be run on production
-    echo "  - docker exec hydroshare python manage.py prevent_web_crawling"
-    docker exec hydroshare python manage.py prevent_web_crawling
+    echo "  - docker exec -u hydro-service hydroshare python manage.py prevent_web_crawling"
+    docker exec -u hydro-service hydroshare python manage.py prevent_web_crawling
     thumbnail_cleanup
     solr_schema_hs
     sleep 2s

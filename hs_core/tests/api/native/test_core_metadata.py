@@ -64,6 +64,7 @@ class TestCoreMetadata(MockS3TestCaseMixin, TestCase):
     # and not uninttest TestCase
     def tearDown(self):
         super(TestCoreMetadata, self).tearDown()
+        self.res.delete()
         User.objects.all().delete()
         Group.objects.all().delete()
         BaseResource.objects.all().delete()
