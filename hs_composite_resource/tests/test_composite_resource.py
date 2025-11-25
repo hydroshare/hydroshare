@@ -4250,7 +4250,7 @@ class CompositeResourceTest(
         # test that db queries for landing page have constant time complexity
 
         # expected number of queries for landing page when the resource has no resource file
-        _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 167
+        _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 147
 
         # expected number of queries for landing page when the resource has resource file
         _LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT = _LANDING_PAGE_NO_RES_FILE_QUERY_COUNT + 16
@@ -4311,7 +4311,7 @@ class CompositeResourceTest(
         # the number of queries does not depend on the number of resources
 
         # base query count - mostly mezzanine queries
-        base_query_count = 12
+        base_query_count = 9
 
         # number of queries to get the list of user's resources
         resource_list_query_count = 2
