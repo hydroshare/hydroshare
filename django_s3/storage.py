@@ -183,22 +183,19 @@ class S3Storage(S3Storage):
                 yield chunk
 
         for file_name, _, unzipped_chunks in stream_unzip(zipped_chunks()):
-            # Define the key (path) where you want to save the file in the S3 bucket
             file_name = file_name.decode("utf-8").replace("'", "")
             s3_key = os.path.join(unzipped_path, file_name)
-            buffer = BytesIO()
-            for chunk in unzipped_chunks:
-                buffer.write(chunk)
-            buffer.seek(0)
             try:
-                self.connection.Bucket(unzipped_bucket).upload_fileobj(buffer, s3_key)
+                with open(f's3://{unzipped_bucket}/{s3_key}', 'wb',
+                            transport_params={'client': self.connection.meta.client}) as out_file:
+                    for chunk in unzipped_chunks:
+                        out_file.write(chunk)
             except ClientError as e:
+                if "An error occurred (InvalidRequest) when calling the CompleteMultipartUpload operation:" in str(e):
+                    raise QuotaException("Bucket quota exceeded. Please contact your system administrator.")
                 if "XMinioAdminBucketQuotaExceeded" in str(e):
-                    raise QuotaException(
-                        "Bucket quota exceeded. Please contact your system administrator."
-                    )
+                    raise QuotaException("Bucket quota exceeded. Please contact your system administrator.")
                 raise e
-            buffer.close()
         return unzipped_folder
 
     def setAVU(self, name, attName, attVal):
