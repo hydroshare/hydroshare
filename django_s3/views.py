@@ -29,13 +29,13 @@ from rest_framework.decorators import api_view
 
 from hs_core.exceptions import QuotaException
 from hs_core.hydroshare.resource import check_resource_type
-from hs_core.hydroshare.utils import validate_user_quota, get_resource_by_shortkey
+from hs_core.hydroshare.utils import validate_user_quota, get_resource_by_shortkey, resource_modified
 from hs_core.signals import (pre_check_bag_flag, pre_download_file,
                              pre_download_resource)
 from hs_core.task_utils import (get_or_create_task_notification,
                                 get_resource_bag_task, get_task_notification,
                                 get_task_user_id)
-from hs_core.tasks import create_bag_by_s3, create_temp_zip
+from hs_core.tasks import create_bag_by_s3, create_temp_zip, set_resource_files_system_metadata
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, is_ajax
 from hs_file_types.enums import AggregationMetaFilePath
 
@@ -318,6 +318,7 @@ def download(request, path, use_async=True,
     # if reverse proxy is enabled, then this is because the resource is remote and federated
     # OR the user specifically requested a non-proxied download.
     filename = output_path.split('/')[-1]
+    res.update_download_count()
     signed_url = istorage.signed_url(s3_output_path, ResponseContentDisposition=f'attachment; filename="{filename}"')
     return HttpResponseRedirect(signed_url)
 
@@ -496,7 +497,6 @@ class CustomTusFile(TusFile):
 
 
 class CustomTusUpload(TusUpload):
-
     @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):
         # check that the user has permission to upload a file to the resource
@@ -601,6 +601,14 @@ class CustomTusUpload(TusUpload):
             # clean() handles deleting the cache entries
             # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/tusfile.py#L111
             tus_file.clean()
+
+            user = self.request.user
+            resource = get_resource_by_shortkey(tus_file.metadata.get('hs_res_id'))
+
+            resource_modified(resource, user, overwrite_bag=False)
+
+            # store file level system metadata in Django DB (async task)
+            set_resource_files_system_metadata.apply_async((resource.short_id,))
 
             # signal is not consumed at this point, but we keep it for future use
             # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/views.py#L112
