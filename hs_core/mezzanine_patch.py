@@ -24,8 +24,6 @@ def patched_site_get_current():
 
 def _cached_get_by_domain(domain):
     """Cache domain lookups (single-site application)."""
-    global _CACHED_SITE_BY_DOMAIN
-
     cache_key = domain
     if cache_key in _CACHED_SITE_BY_DOMAIN:
         # Cache hit - return cached instance
