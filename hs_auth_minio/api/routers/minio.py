@@ -25,8 +25,7 @@ VIEW_ACTIONS = os.environ.get(
     "s3:GetObject,s3:ListObjects,s3:ListObjectsV2,s3:ListBucket,s3:GetObjectRetention,s3:GetObjectLegalHold",
 ).split(",")
 EDIT_ACTIONS = os.environ.get(
-    "MINIO_EDIT_ACTIONS",
-    "s3:PutObject,s3:DeleteObject,s3:DeleteObjects,s3:UploadPart,s3:PutObjectLegalHold,CreateMultipartUpload",
+    "MINIO_EDIT_ACTIONS", "s3:PutObject,s3:DeleteObject,s3:DeleteObjects,s3:UploadPart,s3:PutObjectLegalHold"
 ).split(",")
 
 
