@@ -183,7 +183,7 @@ class S3Storage(S3Storage):
 
         for file_name, _, unzipped_chunks in stream_unzip(zipped_chunks()):
             file_name = file_name.decode("utf-8").replace("'", "")
-            s3_key = f's3://{unzipped_bucket}/{os.path.join(unzipped_path, file_name)}'
+            s3_key = f's3://{os.path.join(unzipped_bucket, unzipped_path, file_name)}'
             try:
                 with open(s3_key, 'wb', transport_params={'client': self.connection.meta.client}) as out_file:
                     for chunk in unzipped_chunks:
