@@ -139,11 +139,6 @@ HS_BAGIT_POSTFIX = 'zip'
 
 HS_BAGIT_README_FILE_WITH_PATH = 'docs/bagit/readme.txt'
 
-# crossref login credential for resource publication
-USE_CROSSREF_TEST = True
-CROSSREF_LOGIN_ID = ''
-CROSSREF_LOGIN_PWD = ''
-
 # Since Hyrax server on-demand update is only needed when private netCDF resources on www
 # are made public, in local development environments or VM deployments other than the www
 # production, this should not be run by setting RUN_HYRAX_UPDATE to False. RUN_HYRAX_UPDATE
