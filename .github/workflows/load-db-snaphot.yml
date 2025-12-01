@@ -8,21 +8,22 @@ on:
   workflow_dispatch:
     inputs:
       instance:
-        description: 'Cluster and namespace to load the snapshot into'
-        default: 'hydroshare-dev\dev-0'
+        description: 'Zone, cluster and namespace to load the snapshot into'
+        default: 'us-central1-a|hydroshare-dev|dev-0'
         required: true
         type: choice
         options:
-          - 'hydroshare-beta\default'
-          - 'hydroshare-dev\dev-0'
-          - 'hydroshare-dev\dev-1'
-          - 'hydroshare-dev\dev-2'
+          - 'us-central1-b|hydroshare-beta|default'
+          - 'us-central1-a|hydroshare-dev|dev-0'
+          - 'us-central1-a|hydroshare-dev|dev-1'
+          - 'us-central1-a|hydroshare-dev|dev-2'
 
       snapshot:
-        description: 'The snapshot to load, default is latest or use the date of the snapshot file e.g 20250819 you want as the current format for the name is e.g backup-production-jjjjmmdd.sql'
+        description: 'The snapshot to load, default is latest or use the date of the snapshot file e.g 20250819'
         default: 'latest'
         required: true
         type: string
+
 jobs:
   deploy:
     name: Run on ${{ inputs.instance }}
@@ -33,10 +34,10 @@ jobs:
       id: set-inputs
       run: |
         # Set default values for push event
-        echo "instance=hydroshare-beta\default" >> $GITHUB_OUTPUT
+        echo "instance=us-central1-b|hydroshare-beta|default" >> $GITHUB_OUTPUT
         echo "snapshot=latest" >> $GITHUB_OUTPUT
         
-    - name: Extract cluster and namespace from instance input
+    - name: Extract zone, cluster, and namespace from instance input
       id: extract-cluster-info
       run: |
         # Use inputs from workflow_dispatch or the ones we set for push
@@ -45,10 +46,17 @@ jobs:
         else
           INSTANCE="${{ inputs.instance }}"
         fi
-        CLUSTER=$(echo "$INSTANCE" | awk -F'\\' '{print $1}')
-        NAMESPACE=$(echo "$INSTANCE" | awk -F'\\' '{print $2}')
+        
+        # Extract zone, cluster, and namespace
+        ZONE=$(echo "$INSTANCE" | awk -F'|' '{print $1}')
+        CLUSTER=$(echo "$INSTANCE" | awk -F'|' '{print $2}')
+        NAMESPACE=$(echo "$INSTANCE" | awk -F'|' '{print $3}')
+        
+        echo "Extracted zone: $ZONE"
         echo "Extracted cluster: $CLUSTER"
         echo "Extracted namespace: $NAMESPACE"
+        
+        echo "zone=$ZONE" >> $GITHUB_OUTPUT
         echo "cluster=$CLUSTER" >> $GITHUB_OUTPUT
         echo "namespace=$NAMESPACE" >> $GITHUB_OUTPUT
 
@@ -63,13 +71,13 @@ jobs:
       uses: google-github-actions/get-gke-credentials@v2
       with:
         cluster_name: ${{ steps.extract-cluster-info.outputs.cluster }}
-        location: us-central1-a
+        location: ${{ steps.extract-cluster-info.outputs.zone }}
         project_id: hydroshare-403701
 
     - name: Set Kubernetes context
       run: |
-        echo "Setting context to cluster: ${{ steps.extract-cluster-info.outputs.cluster }} with namespace: ${{ steps.extract-cluster-info.outputs.namespace }}"
-        kubectl config use-context gke_hydroshare-403701_us-central1-a_${{ steps.extract-cluster-info.outputs.cluster }}
+        echo "Setting context to zone: ${{ steps.extract-cluster-info.outputs.zone }}, cluster: ${{ steps.extract-cluster-info.outputs.cluster }} with namespace: ${{ steps.extract-cluster-info.outputs.namespace }}"
+        kubectl config use-context gke_hydroshare-403701_${{ steps.extract-cluster-info.outputs.zone }}_${{ steps.extract-cluster-info.outputs.cluster }}
         kubectl config set-context --current --namespace=${{ steps.extract-cluster-info.outputs.namespace }}
 
     - name: Load django db into environment
@@ -85,8 +93,10 @@ jobs:
         CURRENT_CONTEXT=$(kubectl config current-context)
         echo "Current kubectl context: $CURRENT_CONTEXT"
         
+        ZONE="${{ steps.extract-cluster-info.outputs.zone }}"
         NAMESPACE="${{ steps.extract-cluster-info.outputs.namespace }}"
         CLUSTER="${{ steps.extract-cluster-info.outputs.cluster }}"
+        echo "Using zone: $ZONE"
         echo "Using cluster: $CLUSTER"
         echo "Using namespace: $NAMESPACE"
                      
