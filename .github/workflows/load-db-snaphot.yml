@@ -46,12 +46,13 @@ jobs:
       uses: google-github-actions/get-gke-credentials@v2
       with:
         cluster_name: ${{ steps.extract-cluster-info.outputs.cluster }}
-        location: us-central1
+        location: us-central1-a
+        project_id: hydroshare-403701
 
     - name: Set Kubernetes context
       run: |
         echo "Setting context to cluster: ${{ steps.extract-cluster-info.outputs.cluster }} with namespace: ${{ steps.extract-cluster-info.outputs.namespace }}"
-        kubectl config use-context gke_hydroshare-403701_us-central1_${{ steps.extract-cluster-info.outputs.cluster }}
+        kubectl config use-context gke_hydroshare-403701_us-central1-a_${{ steps.extract-cluster-info.outputs.cluster }}
         kubectl config set-context --current --namespace=${{ steps.extract-cluster-info.outputs.namespace }}
 
     - name: Load django db into environment
