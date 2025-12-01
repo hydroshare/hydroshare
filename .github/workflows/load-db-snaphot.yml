@@ -13,7 +13,7 @@ on:
         required: true
         type: choice
         options:
-          - 'us-central1-b|hydroshare-beta|default'
+          - 'us-central1|hydroshare-beta|default'
           - 'us-central1-a|hydroshare-dev|dev-0'
           - 'us-central1-a|hydroshare-dev|dev-1'
           - 'us-central1-a|hydroshare-dev|dev-2'
@@ -34,7 +34,7 @@ jobs:
       id: set-inputs
       run: |
         # Set default values for push event
-        echo "instance=us-central1-b|hydroshare-beta|default" >> $GITHUB_OUTPUT
+        echo "instance=us-central1|hydroshare-beta|default" >> $GITHUB_OUTPUT
         echo "snapshot=latest" >> $GITHUB_OUTPUT
         
     - name: Extract zone, cluster, and namespace from instance input
