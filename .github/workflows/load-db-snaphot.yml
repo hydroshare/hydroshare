@@ -19,7 +19,7 @@ on:
           - 'us-central1-a|hydroshare-dev|dev-2'
 
       snapshot:
-        description: 'The snapshot to load, default is latest or use the date of the snapshot file e.g 20250819'
+        description: 'The snapshot to load, default is latest or use the date of the snapshot file e.g 20250819 you want as the current format for the name is e.g backup-production-jjjjmmdd.sql'
         default: 'latest'
         required: true
         type: string
