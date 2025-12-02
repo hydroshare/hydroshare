@@ -1,12 +1,6 @@
 #!/usr/bin/env bash
 
 cd /hydroshare
-userdel hydro-service \
- && groupdel storage-hydro \
- && echo "storage-hydro:x:HS_SERVICE_GID:" >> /etc/group \
- && echo "hydro-service:x:HS_SERVICE_UID:HS_SERVICE_GID::/hydroshare:/bin/bash" >> /etc/passwd \
- && chown -R hydro-service:storage-hydro /hydroshare /tmp /shared_tmp /tmp \
- && chmod -R 3777 /tmp /shared_tmp /tmp 
 
 # we should be wary of setting concurrency on k8s
 # as it may not be the best way to scale celery workers
@@ -21,5 +15,5 @@ celery -A hydroshare beat  -s /hydroshare/celery/celerybeat-schedule &
 # note that these celery internal workers are distinct from k8 worker pods
 celery -A hydroshare worker -E -Q default -c 2 --prefetch-multiplier=1 -n default-worker@%h &
 celery -A hydroshare worker -E -Q periodic -c 2 --prefetch-multiplier=1 -n periodic-worker@%h &
-celery -A hydroshare flower --address=0.0.0.0 --broker=kafka://redpanda:9092
+celery -A hydroshare flower --address=0.0.0.0 --broker=amqp://guest:guest@rabbitmq:5672//
 

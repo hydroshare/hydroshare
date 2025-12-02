@@ -1,5 +1,5 @@
-
 from json import dumps
+from datetime import datetime
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -66,6 +66,18 @@ def get_user_privilege(resource, user):
 
 
 @register.filter
+def privilege_code_to_name(privilege_code):
+    if privilege_code == PrivilegeCodes.OWNER:
+        return 'Owned'
+    elif privilege_code == PrivilegeCodes.CHANGE:
+        return 'Editable'
+    elif privilege_code == PrivilegeCodes.VIEW:
+        return 'Viewable'
+    else:
+        return 'Discovered'
+
+
+@register.filter
 def app_on_open_with_list(content, arg):
     """
     Check whether a webapp resource is on current user's open-with list
@@ -102,6 +114,11 @@ def published_date(res_obj):
 
 @register.filter
 def resource_type(content):
+    if isinstance(content, dict) and 'resource_type' in content:
+        if content['resource_type'] in RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS:
+            return RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS[content['resource_type']]
+        else:
+            return content['resource_type']
     content_model = content.get_content_model()
     if content_model.resource_type in RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS:
         return RES_TYPE_TO_DISPLAY_TYPE_MAPPINGS[content_model.resource_type]
@@ -114,10 +131,30 @@ def resource_first_author(content):
         return ''
 
     first_creator = None
-    for creator in content.metadata.creators.all():
-        if creator.order == 1:
-            first_creator = creator
-            break
+
+    # Handle list of dictionaries (creator data)
+    if isinstance(content, list):
+        for creator_dict in content:
+            if creator_dict.get('order') == 1:
+                # Create a simple object-like structure from the dictionary
+                class CreatorFromDict:
+                    def __init__(self, data):
+                        self.name = data.get('name', '')
+                        self.organization = data.get('organization', '')
+                        self.relative_uri = data.get('relative_uri', '')
+                        self.is_active_user = data.get('is_active_user', False)
+
+                first_creator = CreatorFromDict(creator_dict)
+                break
+    else:
+        # Handle BaseResource object
+        for creator in content.metadata.creators.all():
+            if creator.order == 1:
+                first_creator = creator
+                break
+
+    if not first_creator:
+        return ''
 
     if first_creator.name:
         if first_creator.relative_uri and first_creator.is_active_user:
@@ -429,3 +466,33 @@ def show_publication_status(resource):
         return True
 
     return False
+
+
+@register.simple_tag
+def get_resource_url(short_id):
+    """
+    Returns the absolute URL for a resource given its short_id.
+    """
+    if not short_id:
+        return ""
+    return "/resource/{}/".format(short_id)
+
+
+@register.filter(name='to_date')
+def to_date(value):
+    """
+    Converts an ISO format date string into a datetime object.
+    """
+    if isinstance(value, str):
+        try:
+            # Handle ISO format with or without microseconds
+            if '.' in value:
+                return datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%f%z')
+            return datetime.strptime(value, '%Y-%m-%dT%H:%M:%S%z')
+        except (ValueError, TypeError):
+            try:
+                # Fallback for different ISO 8601 format
+                return datetime.fromisoformat(value.replace('Z', '+00:00'))
+            except (ValueError, TypeError):
+                return None
+    return value

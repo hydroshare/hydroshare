@@ -5,7 +5,6 @@ from django.core.mail import send_mail
 from django.http import HttpRequest
 from mezzanine.conf import settings
 
-from hs_core.views.utils import get_default_admin_user
 from .models.community import RequestCommunity
 from .models.invite import GroupCommunityRequest
 from .enums import CommunityRequestEvents, CommunityGroupEvents
@@ -105,6 +104,7 @@ class CommunityGroupEmailNotification:
                 <p>Thank you,</p>
                 <p>The HydroShare Team</p>
                 """
+        from hs_core.views.utils import get_default_admin_user
         admin_user = get_default_admin_user()
         send_mail(subject=subject, message=message, html_message=message, from_email=admin_user.email,
                   recipient_list=recipient_emails, fail_silently=True)
@@ -187,6 +187,7 @@ class CommunityRequestEmailNotification:
             <p>The HydroShare Team</p>
             """
 
+        from hs_core.views.utils import get_default_admin_user
         admin_user = get_default_admin_user()
         try:
             send_mail(subject=subject, message=message, html_message=message, from_email=admin_user.email,

@@ -748,7 +748,7 @@ else:
         },
         "handlers": {
             "djangolog": {
-                "level": "DEBUG",
+                "level": "INFO",
                 "class": "logging.handlers.RotatingFileHandler",
                 "filename": "/hydroshare/log/django.log",
                 "formatter": "verbose",
@@ -756,7 +756,7 @@ else:
                 "backupCount": 10,
             },
             "hydrosharelog": {
-                "level": "DEBUG",
+                "level": "INFO",
                 "class": "logging.handlers.RotatingFileHandler",
                 "filename": "/hydroshare/log/hydroshare.log",
                 "formatter": "verbose",
@@ -764,7 +764,7 @@ else:
                 "backupCount": 10,
             },
             "celerylog": {
-                "level": "DEBUG",
+                "level": "INFO",
                 "class": "logging.handlers.RotatingFileHandler",
                 "filename": "/hydroshare/log/celery.log",
                 "formatter": "verbose",
@@ -776,7 +776,7 @@ else:
             "django": {
                 "handlers": ["djangolog"],
                 "propagate": False,
-                "level": "DEBUG",
+                "level": "INFO",
             },
             # https://docs.djangoproject.com/en/1.11/topics/logging/#django-template
             "django.template": {
@@ -795,7 +795,7 @@ else:
                 "propagate": False,
             },
             # Catch-all logger for HydroShare apps
-            "": {"handlers": ["hydrosharelog"], "propagate": False, "level": "DEBUG"},
+            "": {"handlers": ["hydrosharelog"], "propagate": False, "level": "WARNING"},
         },
     }
 
@@ -956,7 +956,7 @@ MINIO_LIFECYCLE_POLICY = None
 DEFAULT_QUOTA_VALUE = 20
 DEFAULT_QUOTA_UNIT = "GB"
 
-BROKER_URL = 'kafka://redpanda:9092'
+BROKER_URL = 'amqp://guest:guest@rabbitmq:5672//'
 
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #
