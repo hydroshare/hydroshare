@@ -18,8 +18,6 @@ RUN apt install -y redpanda-rpk redpanda-connect jq
 
 RUN pip install redpanda-connect
 
-RUN pip install confluent-kafka
-
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8

@@ -49,7 +49,10 @@ IPYTHON_HOST = '127.0.0.1'
 # Celery settings
 # customizations: we need a special queue for broadcast signals to all docker daemons.
 # we also need a special queue for direct messages to all docker daemons.
-BROKER_URL = 'kafka://redpanda:9092'
+RABBITMQ_HOST = os.environ.get('RABBITMQ_PORT_5672_TCP_ADDR', 'localhost')
+RABBITMQ_PORT = '5672'
+BROKER_URL = 'amqp://guest:guest@{RABBITMQ_HOST}:{RABBITMQ_PORT}//'.format(RABBITMQ_HOST=RABBITMQ_HOST,
+                                                                           RABBITMQ_PORT=RABBITMQ_PORT)
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
@@ -135,11 +138,6 @@ HS_BAGIT_PATH = 'bags'
 HS_BAGIT_POSTFIX = 'zip'
 
 HS_BAGIT_README_FILE_WITH_PATH = 'docs/bagit/readme.txt'
-
-# crossref login credential for resource publication
-USE_CROSSREF_TEST = True
-CROSSREF_LOGIN_ID = ''
-CROSSREF_LOGIN_PWD = ''
 
 # Since Hyrax server on-demand update is only needed when private netCDF resources on www
 # are made public, in local development environments or VM deployments other than the www
@@ -227,3 +225,11 @@ DEFAULT_AUTHENTICATION_CLASSES = (
 # the user will be redirected to auth.cuahsi.io to choose if they want to logout of SSO
 # OIDC_OP_LOGOUT_URL_METHOD = 'hs_core.authentication.provider_logout'
 # OIDC_STORE_ID_TOKEN = True
+
+# Todo: Change for production deployment
+USE_DATACITE_TEST=os.environ.get("USE_DATACITE_TEST", True)
+DATACITE_PREFIX = os.environ.get("DATACITE_PREFIX", "10.83165")
+TEST_DATACITE_API_URL = os.environ.get("TEST_DATACITE_API_URL", "https://api.test.datacite.org/dois")
+DATACITE_API_URL = os.environ.get("DATACITE_API_URL", "https://api.datacite.org/dois")
+DATACITE_USERNAME = os.environ.get("DATACITE_USERNAME")
+DATACITE_PASSWORD = os.environ.get("DATACITE_PASSWORD")
