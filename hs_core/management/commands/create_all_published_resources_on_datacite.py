@@ -60,7 +60,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         datacite_url = f"{get_datacite_url()}/{settings.DATACITE_PREFIX}"
         start_time = time.time()
-        published_resources = BaseResource.filter(raccess__published=True)
+        published_resources = BaseResource.objects.filter(raccess__published=True)
 
         total = published_resources.count()
         print(f"📦 Total published resources to process: {total}")
