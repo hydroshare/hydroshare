@@ -4398,8 +4398,8 @@ class BaseResource(Page, AbstractResource):
                     "client": {
                         "data": {
                             "type": "repositories",
-                            "id": "pdpo.kyfnwo"
-                        }
+                            "id": f"{settings.DATACITE_USERNAME}"
+                            }
                     }
                 }
             }
