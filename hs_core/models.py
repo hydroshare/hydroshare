@@ -4343,7 +4343,7 @@ class BaseResource(Page, AbstractResource):
             logger.warning(f"No abstract found for resource {self.short_id}. Using empty string.")
             self.metadata.description = type('obj', (), {'abstract': ''})()
 
-        doi = f"{settings.DATACITE_PREFIX}/{self.short_id}"
+        doi = f"{settings.DATACITE_PREFIX}/hs.{self.short_id}"
         payload = {
             "data": {
                 "type": "dois",

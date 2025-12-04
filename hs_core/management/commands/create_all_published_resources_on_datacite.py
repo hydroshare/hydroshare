@@ -26,10 +26,9 @@ def deposit_res_metadata_with_datacite(res, datacite_url):
             "content-type": "application/json",
             "authorization": f"Basic {token}"
         }
-        doi_url = f"{datacite_url}/{res.short_id}"
 
-        response = requests.put(
-            url=doi_url,
+        response = requests.post(
+            url=get_datacite_url(),
             data=res.get_datacite_deposit_json(),
             headers=headers,
             timeout=10
@@ -60,7 +59,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         datacite_url = f"{get_datacite_url()}/{settings.DATACITE_PREFIX}"
         start_time = time.time()
-        published_resources = BaseResource.filter(raccess__published=True)
+        published_resources = BaseResource.objects.filter(raccess__published=True)
 
         total = published_resources.count()
         print(f"📦 Total published resources to process: {total}")
