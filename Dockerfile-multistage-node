@@ -25,8 +25,6 @@ RUN rm -rf static templates && \
 
 FROM hydroshare/hs_docker_base:a73451a
 
-COPY --from=node-build /hydroshare /hydroshare
-
 # Set the locale. TODO - remove once we have a better alternative worked out
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen
@@ -43,6 +41,8 @@ RUN curl -1sLf 'https://dl.redpanda.com/nzc4ZYQK3WRGd9sy/redpanda/cfg/setup/bash
 RUN apt install -y redpanda-rpk redpanda-connect jq
 
 RUN pip install redpanda-connect
+
+COPY --from=node-build /hydroshare /hydroshare
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
