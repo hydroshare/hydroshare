@@ -117,7 +117,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        datacite_url = f"{get_datacite_url()}/hs.{settings.DATACITE_PREFIX}"
+        datacite_url = f"{get_datacite_url()}/{settings.DATACITE_PREFIX}/hs."
         start_time = time.time()
         published_resources = BaseResource.objects.filter(raccess__published=True)
 
@@ -144,7 +144,9 @@ class Command(BaseCommand):
             print(f"{'=' * 80}")
             res_start_time = time.time()
 
-            result = deposit_res_metadata_with_datacite(res, datacite_url, test_mode=options['test'])
+            res_specific_datacite_url = f"{datacite_url}{res.short_id}"
+
+            result = deposit_res_metadata_with_datacite(res, res_specific_datacite_url, test_mode=options['test'])
             if result is None:
                 print(f"❌ Failed to deposit metadata for resource {res.short_id}.")
             else:
