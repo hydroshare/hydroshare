@@ -42,9 +42,9 @@ def deposit_res_metadata_with_datacite(res, datacite_url, test_mode=False):
                 print(f"🚧 TEST MODE: Updated suffix to '{new_suffix}'")
 
             # also ensure that the identifier uses the test prefix
-            original_doi = payload_dict["data"]["attributes"].get("identifier", "")
+            original_doi = payload_dict["data"]["attributes"]['identifiers'][0].get("identifier", "")
             new_identifier = original_doi.replace(settings.DATACITE_PREFIX, f"{settings.DATACITE_PREFIX}-test3")
-            payload_dict["data"]["attributes"]["identifier"] = new_identifier
+            payload_dict["data"]["attributes"]['identifiers'][0]["identifier"] = new_identifier
             print(f"🚧 TEST MODE: Updated identifier to '{new_identifier}'")
 
             # update the doi as well
