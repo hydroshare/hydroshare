@@ -1,0 +1,31 @@
+<VRTDataset rasterXSize="220" rasterYSize="230">
+  <SRS dataAxisToSRSAxisMapping="1,2">PROJCS["NAD83 / UTM zone 12N",GEOGCS["NAD83",DATUM["North_American_Datum_1983",SPHEROID["GRS 1980",6378137,298.257222101,AUTHORITY["EPSG","7019"]],AUTHORITY["EPSG","6269"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4269"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-111],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","26912"]]</SRS>
+  <GeoTransform>  4.4557401909127034e+05,  3.0000000000000000e+01,  0.0000000000000000e+00,  4.6554924469163064e+06,  0.0000000000000000e+00, -3.0000000000000000e+01</GeoTransform>
+  <VRTRasterBand dataType="Float32" band="1">
+    <Metadata>
+      <MDI key="STATISTICS_MAXIMUM">2880.0070800781</MDI>
+      <MDI key="STATISTICS_MEAN">2546.026616684</MDI>
+      <MDI key="STATISTICS_MINIMUM">2274.958984375</MDI>
+      <MDI key="STATISTICS_STDDEV">112.14174992525</MDI>
+      <MDI key="STATISTICS_VALID_PERCENT">99.55</MDI>
+    </Metadata>
+    <NoDataValue>-3.4028234663852886e+38</NoDataValue>
+    <ColorInterp>Gray</ColorInterp>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">logan1.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="110" RasterYSize="230" DataType="Float32" BlockXSize="110" BlockYSize="18" />
+      <SrcRect xOff="0" yOff="0" xSize="110" ySize="230" />
+      <DstRect xOff="0" yOff="0" xSize="110" ySize="230" />
+      <NODATA>-3.40282e+38</NODATA>
+    </ComplexSource>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">logan2.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="110" RasterYSize="230" DataType="Float32" BlockXSize="110" BlockYSize="18" />
+      <SrcRect xOff="0" yOff="0" xSize="110" ySize="230" />
+      <DstRect xOff="110" yOff="0" xSize="110" ySize="230" />
+      <NODATA>-3.40282e+38</NODATA>
+    </ComplexSource>
+  </VRTRasterBand>
+</VRTDataset>

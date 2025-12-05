@@ -206,7 +206,12 @@ services:
       - redpanda
     stdin_open: true
     tty: true
-    command: rpk connect run --rpc-plugins=/hydroshare/hs_event_s3/notify_hs_django_plugin.yaml /hydroshare/hs_event_s3/notify_hs_django_pipeline.yaml
+    command:
+      - rpk
+      - connect
+      - run
+      - --rpc-plugins=/hydroshare/hs_event_s3/notify_hs_django_plugin.yaml
+      - /hydroshare/hs_event_s3/notify_hs_django_pipeline.yaml
   redpanda:
     command:
       - redpanda
@@ -251,6 +256,29 @@ services:
       - 8080:8080
     depends_on:
       - redpanda
+  hs_extract:
+    build:
+      context: .
+      dockerfile: hs_extract/Dockerfile
+    platform: linux/amd64
+    environment:
+      AWS_S3_ENDPOINT_URL: "http://minio:9000"
+      AWS_ACCESS_KEY_ID: cuahsi
+      AWS_SECRET_ACCESS_KEY: devpassword
+      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
+    volumes:
+      - "./hs_extract:/app/hs_extract"
+      - "./hs_cloudnative_schemas:/app/hs_extract/hs_cloudnative_schemas"
+    links:
+      - pgbouncer:pgbouncer
+      - redpanda:redpanda
+    depends_on:
+      - hydroshare
+      - pgbouncer
+      - solr
+      - redpanda
+    stdin_open: true
+    tty: true
   companion:
   # https://github.com/transloadit/uppy/blob/main/packages/%40uppy/companion/KUBERNETES.md
     image:  docker.io/transloadit/companion:5.5.0
