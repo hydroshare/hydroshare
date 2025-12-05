@@ -6,7 +6,6 @@ import json
 from datetime import timedelta
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from django.core.exceptions import ValidationError
 
 from hs_core.models import BaseResource
 from hs_core.hydroshare.resource import get_datacite_url
@@ -37,7 +36,11 @@ def deposit_res_metadata_with_datacite(res, datacite_url, test_mode=False):
             # Also ensure suffix has "-test4" appended
             original_suffix = payload_dict["data"]["attributes"].get("suffix", "")
             if not original_suffix.endswith("-test4"):
-                new_suffix = f"{original_suffix}-test4" if not original_suffix.endswith("-test") else original_suffix.replace("-test", "-test4")
+                new_suffix = (
+                    f"{original_suffix}-test4"
+                    if not original_suffix.endswith("-test")
+                    else original_suffix.replace("-test", "-test4")
+                )
                 payload_dict["data"]["attributes"]["suffix"] = new_suffix
                 print(f"🚧 TEST MODE: Updated suffix to '{new_suffix}'")
 
@@ -52,7 +55,6 @@ def deposit_res_metadata_with_datacite(res, datacite_url, test_mode=False):
             new_doi_value = f"{original_doi_value}-test4"
             payload_dict["data"]["attributes"]["doi"] = new_doi_value
             print(f"🚧 TEST MODE: Updated doi to '{new_doi_value}'")
-
 
         # For debugging: print the JSON being sent
         print("JSON Payload being sent:")
@@ -135,9 +137,9 @@ class Command(BaseCommand):
                 logger.warning(f"Resource {res.short_id} has no metadata. Skipping.")
                 continue
 
-            print(f"\n{'='*80}")
+            print(f"\n{'=' * 80}")
             print(f"🔄 Processing resource {count + 1}/{limit}: {res.short_id}")
-            print(f"{'='*80}")
+            print(f"{'=' * 80}")
             res_start_time = time.time()
 
             result = deposit_res_metadata_with_datacite(res, datacite_url, test_mode=options['test'])

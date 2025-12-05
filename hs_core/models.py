@@ -4346,7 +4346,7 @@ class BaseResource(Page, AbstractResource):
         # Add "test" to the suffix if in test mode
         suffix = f"{self.short_id}-test" if test_mode else self.short_id
         doi = f"{settings.DATACITE_PREFIX}/hs.{suffix}"
-        
+
         payload = {
             "data": {
                 "type": "dois",
@@ -4378,6 +4378,7 @@ class BaseResource(Page, AbstractResource):
                         "bibtex": "misc",
                         "citeproc": "dataset"
                     },
+                    # "relatedIdentifiers": [],
                     "relatedItems": [],
                     "sizes": [],
                     "formats": [],
