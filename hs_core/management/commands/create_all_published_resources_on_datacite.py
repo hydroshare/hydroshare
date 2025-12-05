@@ -24,15 +24,41 @@ def deposit_res_metadata_with_datacite(res, datacite_url, test_mode=False):
         # Get the JSON payload and modify it for testing
         json_payload = res.get_datacite_deposit_json(test_mode=test_mode)
 
+        # Parse the JSON so we can modify it for test mode
+        payload_dict = json.loads(json_payload)
+
+        # For test mode, modify the payload
+        if test_mode:
+            # Remove the "event" attribute from attributes
+            if "event" in payload_dict["data"]["attributes"]:
+                del payload_dict["data"]["attributes"]["event"]
+                print("🚧 TEST MODE: Removed 'event' attribute from payload")
+
+            # Also ensure suffix has "-test2" appended
+            original_suffix = payload_dict["data"]["attributes"].get("suffix", "")
+            if not original_suffix.endswith("-test2"):
+                new_suffix = f"{original_suffix}-test2" if not original_suffix.endswith("-test") else original_suffix.replace("-test", "-test2")
+                payload_dict["data"]["attributes"]["suffix"] = new_suffix
+                print(f"🚧 TEST MODE: Updated suffix to '{new_suffix}'")
+
         # For debugging: print the JSON being sent
         print("JSON Payload being sent:")
-        print(json.dumps(json.loads(json_payload), indent=2))
+        print(json.dumps(payload_dict, indent=2))
 
         if test_mode:
             print(f"🚧 TEST MODE: Would deposit metadata for resource {res.short_id}")
             print(f"🚧 TEST MODE: Using URL: {get_datacite_url()}")
-            print("🚧 TEST MODE: Payload prepared with 'test' suffix")
-            return {"status": "test_mode", "resource_id": res.short_id}
+            print("🚧 TEST MODE: Payload prepared with 'test2' suffix and no 'event' attribute")
+
+            # Return test response without making actual API call
+            return {
+                "status": "test_mode",
+                "resource_id": res.short_id,
+                "payload": payload_dict
+            }
+
+        # Convert back to JSON string for the actual API call
+        json_payload = json.dumps(payload_dict)
 
         token = base64.b64encode(
             f"{settings.DATACITE_USERNAME}:{settings.DATACITE_PASSWORD}".encode()
