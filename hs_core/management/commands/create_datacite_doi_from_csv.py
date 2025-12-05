@@ -25,7 +25,6 @@ def deposit_res_metadata_with_datacite(res_doi, metadata):
             "authorization": f"Basic {token}"
         }
         doi_url = f"{datacite_url}/{settings.DATACITE_PREFIX}/hs.{res_doi}"
-        # TODO: update this to a POST
         response = requests.put(
             url=doi_url,
             json=metadata,
