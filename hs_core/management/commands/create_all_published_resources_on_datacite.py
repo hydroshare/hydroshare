@@ -86,6 +86,8 @@ def deposit_res_metadata_with_datacite(res, datacite_url, test_mode=False):
 
         if 400 <= response.status_code < 500:
             print(f"⚠️ Client error (4xx) for resource {res.short_id}: {response.text}")
+            print(response.text)
+            print(f"Attempted request to URL: {datacite_url}")
             return None
 
         print(f"Response status code: {response.status_code}")
