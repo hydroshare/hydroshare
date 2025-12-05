@@ -34,22 +34,22 @@ def deposit_res_metadata_with_datacite(res, datacite_url, test_mode=False):
                 del payload_dict["data"]["attributes"]["event"]
                 print("🚧 TEST MODE: Removed 'event' attribute from payload")
 
-            # Also ensure suffix has "-test3" appended
+            # Also ensure suffix has "-test4" appended
             original_suffix = payload_dict["data"]["attributes"].get("suffix", "")
-            if not original_suffix.endswith("-test3"):
-                new_suffix = f"{original_suffix}-test3" if not original_suffix.endswith("-test") else original_suffix.replace("-test", "-test3")
+            if not original_suffix.endswith("-test4"):
+                new_suffix = f"{original_suffix}-test4" if not original_suffix.endswith("-test") else original_suffix.replace("-test", "-test4")
                 payload_dict["data"]["attributes"]["suffix"] = new_suffix
                 print(f"🚧 TEST MODE: Updated suffix to '{new_suffix}'")
 
             # also ensure that the identifier uses the test prefix
             original_doi = payload_dict["data"]["attributes"]['identifiers'][0].get("identifier", "")
-            new_identifier = original_doi.replace(settings.DATACITE_PREFIX, f"{settings.DATACITE_PREFIX}-test3")
+            new_identifier = f"{original_doi}-test4"
             payload_dict["data"]["attributes"]['identifiers'][0]["identifier"] = new_identifier
             print(f"🚧 TEST MODE: Updated identifier to '{new_identifier}'")
 
             # update the doi as well
             original_doi_value = payload_dict["data"]["attributes"].get("doi", "")
-            new_doi_value = original_doi_value.replace(settings.DATACITE_PREFIX, f"{settings.DATACITE_PREFIX}-test3")
+            new_doi_value = f"{original_doi_value}-test4"
             payload_dict["data"]["attributes"]["doi"] = new_doi_value
             print(f"🚧 TEST MODE: Updated doi to '{new_doi_value}'")
 
