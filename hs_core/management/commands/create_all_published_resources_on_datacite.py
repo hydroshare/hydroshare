@@ -77,8 +77,8 @@ def deposit_res_metadata_with_datacite(res, datacite_url, test_mode=False):
             "authorization": f"Basic {token}"
         }
 
-        response = requests.post(
-            url=get_datacite_url(),
+        response = requests.put(
+            url=datacite_url,
             data=json_payload,
             headers=headers,
             timeout=10
