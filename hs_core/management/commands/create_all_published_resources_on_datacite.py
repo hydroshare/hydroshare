@@ -50,13 +50,6 @@ def deposit_res_metadata_with_datacite(res, datacite_url, test_mode=False):
             print(f"🚧 TEST MODE: Using URL: {get_datacite_url()}")
             print("🚧 TEST MODE: Payload prepared with 'test2' suffix and no 'event' attribute")
 
-            # Return test response without making actual API call
-            return {
-                "status": "test_mode",
-                "resource_id": res.short_id,
-                "payload": payload_dict
-            }
-
         # Convert back to JSON string for the actual API call
         json_payload = json.dumps(payload_dict)
 
