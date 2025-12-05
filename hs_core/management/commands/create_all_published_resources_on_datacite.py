@@ -57,7 +57,7 @@ class Command(BaseCommand):
     help = "Migrate all resources from Crossref to DataCite"
 
     def handle(self, *args, **options):
-        datacite_url = f"{get_datacite_url()}/{settings.DATACITE_PREFIX}"
+        datacite_url = f"{get_datacite_url()}/hs.{settings.DATACITE_PREFIX}"
         start_time = time.time()
         published_resources = BaseResource.objects.filter(raccess__published=True)
 
