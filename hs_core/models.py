@@ -4344,8 +4344,8 @@ class BaseResource(Page, AbstractResource):
             self.metadata.description = type('obj', (), {'abstract': ''})()
 
         # Add "test" to the suffix if in test mode
-        suffix = f"{self.short_id}-test" if test_mode else self.short_id
-        doi = f"{settings.DATACITE_PREFIX}/hs.{suffix}"
+        suffix = f"hs.{self.short_id}-test" if test_mode else f"hs.{self.short_id}"
+        doi = f"{settings.DATACITE_PREFIX}/{suffix}"
 
         payload = {
             "data": {
