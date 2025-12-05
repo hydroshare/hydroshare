@@ -4399,7 +4399,7 @@ class BaseResource(Page, AbstractResource):
                         "data": {
                             "type": "repositories",
                             "id": f"{settings.DATACITE_USERNAME}"
-                            }
+                        }
                     }
                 }
             }
