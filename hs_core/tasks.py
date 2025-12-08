@@ -10,7 +10,8 @@ import zipfile
 from datetime import date, datetime, timedelta
 
 import requests
-from celery.exceptions import TaskError, TimeLimitExceeded
+from billiard.exceptions import TimeLimitExceeded
+from celery.exceptions import TaskError
 from celery.result import states
 from celery.schedules import crontab
 from celery.signals import task_postrun
@@ -83,55 +84,49 @@ class FileOverrideException(Exception):
         super(FileOverrideException, self).__init__(self, error_message)
 
 
-class HydroshareRequest(Request):
-    '''A Celery custom request to log failures.
-    https://docs.celeryq.dev/en/v5.2.7/userguide/tasks.html#requests-and-custom-requests
-    '''
-    def on_failure(self, exc_info, send_failed_event=True, return_ok=False):
-        # https://docs.celeryq.dev/en/v5.5.2/userguide/tasks.html#on_failure
-        # Get the exception value from the ExceptionInfo object
-        exc_value = exc_info.exception
-
-        # Check for various time limit related scenarios
-        is_time_limit_related = (
-            isinstance(exc_value, TimeLimitExceeded)
-            or (isinstance(exc_value, SystemExit) and exc_value.code == -9)
-            or (isinstance(exc_value, Exception) and "SIGKILL" in str(exc_value))
-        )
-
-        if is_time_limit_related:
-            # Log as info instead of warning, no email
-            logger.info(
-                f"Task {self.task.name} was terminated due to time limit constraints. "
-                f"This is expected behavior for long-running tasks."
-            )
-        else:
-            # handle non timeout related failures
-            warning_message = f"Failure detected for task {self.task.name}. Exception: {exc_info}"
-            logger.warning(warning_message)
-            if not settings.DISABLE_TASK_EMAILS:
-                subject = 'Notification of failing Celery task'
-                send_mail(subject, warning_message, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_DEVELOPER_EMAIL])
-
-        # Process the failure
-        super(HydroshareRequest, self).on_failure(
-            exc_info,
-            send_failed_event,
-            return_ok
-        )
-
-
 class HydroshareTask(Task):
     '''Custom Celery Task configured for Hydroshare
-    https://docs.celeryq.dev/en/v4.4.7/userguide/tasks.html?#automatic-retry-for-known-exceptions
+    https://docs.celeryq.dev/en/v5.5.2/userguide/tasks.html#requests-and-custom-requests
     '''
-    Request = HydroshareRequest
-    autoretry_for = (Exception, KeyError)
     retry_kwargs = {'max_retries': 3}
     retry_backoff = True
     retry_backoff_max = 600
     retry_jitter = True
-    time_limit = getattr(settings, 'CELERY_TASK_TIME_LIMIT', 14400)  # default to 4 hours if not set
+    # TODO: revert
+    # time_limit = getattr(settings, 'CELERY_TASK_TIME_LIMIT', 14400)  # default to 4 hours if not set
+    time_limit = 1
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        """Handle task failure at the task level"""
+        exc_str = str(exc).lower()
+
+        # Check if this is a timeout-related failure
+        is_time_limit_related = (
+            isinstance(exc, TimeLimitExceeded) or
+            "time limit exceeded" in exc_str or
+            "soft time limit exceeded" in exc_str or
+            "sigkill" in exc_str or
+            "worker lost" in exc_str or
+            "task killed" in exc_str
+        )
+
+        if is_time_limit_related:
+            logger.info(
+                f"Task {self.name} (task_id: {task_id}) timed out. "
+                f"This is expected for long-running tasks. Exception: {exc}"
+            )
+            # Don't send email for timeouts
+            return
+        else:
+            # For non-timeout failures, log and send email
+            warning_message = f"Failure detected for task {self.name} (task_id: {task_id}). Exception: {exc}"
+            logger.warning(warning_message)
+            if not settings.DISABLE_TASK_EMAILS:
+                subject = f'Notification of failing Celery task: {self.name}'
+                send_mail(subject, warning_message, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_DEVELOPER_EMAIL])
+
+        # Call parent implementation
+        super().on_failure(exc, task_id, args, kwargs, einfo)
 
 
 @celery_app.on_after_finalize.connect
@@ -258,11 +253,15 @@ def nightly_hs_tracking_cleanup():
     Variable.objects.filter(timestamp__lt=time_threshold).delete()
 
 
-@celery_app.task(ignore_result=True, base=HydroshareTask, time_limit=NIGHTLY_RESOURCE_REPAIR_DURATION)
+@celery_app.task(ignore_result=True, base=HydroshareTask, time_limit=1)
 def nightly_repair_resource_files():
     """
     Run repair_resource on resources updated in the last day
     """
+    # TODO: revert
+    import time
+    time.sleep(10)
+    raise Exception("Testing time limit exceeded exception handling in nightly_repair_resource_files")
     from hs_core.management.utils import repair_resource
     from hs_core.views.utils import get_default_admin_user
     cuttoff_time = timezone.now() - timedelta(days=1)
