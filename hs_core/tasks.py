@@ -73,6 +73,9 @@ FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
 # by celery, despite our catch-all handler).
 logger = logging.getLogger('django')
 
+NIGHTLY_RESOURCE_REPAIR_DURATION = getattr(settings, 'NIGHTLY_RESOURCE_REPAIR_DURATION', 3600)
+NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION = getattr(settings, 'NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION', 14400)
+
 
 class FileOverrideException(Exception):
     def __init__(self, error_message):
@@ -84,6 +87,7 @@ class HydroshareRequest(Request):
     https://docs.celeryq.dev/en/v5.2.7/userguide/tasks.html#requests-and-custom-requests
     '''
     def on_failure(self, exc_info, send_failed_event=True, return_ok=False):
+        # https://docs.celeryq.dev/en/v5.5.2/userguide/tasks.html#on_failure
         # Get the exception value from the ExceptionInfo object
         exc_value = exc_info.exception
 
@@ -100,12 +104,6 @@ class HydroshareRequest(Request):
                 f"Task {self.task.name} was terminated due to time limit constraints. "
                 f"This is expected behavior for long-running tasks."
             )
-            # Process the failure but don't send events that might trigger emails
-            super(HydroshareRequest, self).on_failure(
-                exc_info,
-                send_failed_event=False,  # prevents email triggers
-                return_ok=False
-            )
         else:
             # handle non timeout related failures
             warning_message = f"Failure detected for task {self.task.name}. Exception: {exc_info}"
@@ -114,11 +112,12 @@ class HydroshareRequest(Request):
                 subject = 'Notification of failing Celery task'
                 send_mail(subject, warning_message, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_DEVELOPER_EMAIL])
 
-            super(HydroshareRequest, self).on_failure(
-                exc_info,
-                send_failed_event=True,
-                return_ok=False
-            )
+        # Process the failure
+        super(HydroshareRequest, self).on_failure(
+            exc_info,
+            send_failed_event,
+            return_ok
+        )
 
 
 class HydroshareTask(Task):
@@ -131,6 +130,7 @@ class HydroshareTask(Task):
     retry_backoff = True
     retry_backoff_max = 600
     retry_jitter = True
+    time_limit = getattr(settings, 'CELERY_TASK_TIME_LIMIT', 14400)  # default to 4 hours if not set
 
 
 @celery_app.on_after_finalize.connect
@@ -257,14 +257,13 @@ def nightly_hs_tracking_cleanup():
     Variable.objects.filter(timestamp__lt=time_threshold).delete()
 
 
-@celery_app.task(ignore_result=True, base=HydroshareTask, time_limit=settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
+@celery_app.task(ignore_result=True, base=HydroshareTask, time_limit=NIGHTLY_RESOURCE_REPAIR_DURATION)
 def nightly_repair_resource_files():
     """
     Run repair_resource on resources updated in the last day
     """
-    from hs_core.management.utils import check_time, repair_resource
+    from hs_core.management.utils import repair_resource
     from hs_core.views.utils import get_default_admin_user
-    start_time = time.time()
     cuttoff_time = timezone.now() - timedelta(days=1)
     admin_user = get_default_admin_user()
     recently_updated_resources = BaseResource.objects \
@@ -1154,12 +1153,11 @@ def set_resource_files_system_metadata(resource_id):
                                      batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
 
 
-@celery_app.task(ignore_result=True, base=HydroshareTask, time_limit=settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION)
+@celery_app.task(ignore_result=True, base=HydroshareTask, time_limit=NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION)
 def nightly_cache_file_system_metadata():
     """
     Generate and store file checksums and modified times for a subset of resources
     """
-    from hs_core.management.utils import check_time
 
     def set_res_files_system_metadata(resource):
         # exclude files with size 0 (file missing in S3)
@@ -1172,7 +1170,6 @@ def nightly_cache_file_system_metadata():
 
         ResourceFile.objects.bulk_update(res_files, ResourceFile.system_meta_fields(),
                                          batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
-    start_time = time.time()
     cuttoff_time = timezone.now() - timedelta(days=1)
     recently_updated_resources = BaseResource.objects \
         .filter(updated__gte=cuttoff_time)
