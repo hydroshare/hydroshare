@@ -5,7 +5,6 @@ import json
 import logging
 import os
 import sys
-import time
 import traceback
 import zipfile
 from datetime import date, datetime, timedelta
@@ -74,7 +73,9 @@ FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
 logger = logging.getLogger('django')
 
 NIGHTLY_RESOURCE_REPAIR_DURATION = getattr(settings, 'NIGHTLY_RESOURCE_REPAIR_DURATION', 3600)
-NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION = getattr(settings, 'NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION', 14400)
+NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION = getattr(
+    settings, 'NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION', 14400
+)
 
 
 class FileOverrideException(Exception):

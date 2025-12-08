@@ -13,7 +13,6 @@ If a file in S3 is not present in Django, it attempts to register that file in D
 import json
 import logging
 import os
-import time
 
 from django.apps import apps
 from django.conf import settings
