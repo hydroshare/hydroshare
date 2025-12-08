@@ -131,14 +131,6 @@ class HydroshareTask(Task):
     retry_backoff = True
     retry_backoff_max = 600
     retry_jitter = True
-    soft_time_limit = 7200  # 2 hours - allows for graceful shutdown
-    time_limit = 7260  # 2 hours + 1 minute - hard limit
-
-    # Set the time limit to be the greater of 2hrs or the specific task limits
-    time_limit = max(time_limit,
-                     settings.NIGHTLY_RESOURCE_REPAIR_DURATION,
-                     settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION
-                     )
 
 
 @celery_app.on_after_finalize.connect
@@ -265,7 +257,7 @@ def nightly_hs_tracking_cleanup():
     Variable.objects.filter(timestamp__lt=time_threshold).delete()
 
 
-@celery_app.task(ignore_result=True, base=HydroshareTask)
+@celery_app.task(ignore_result=True, base=HydroshareTask, time_limit=settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
 def nightly_repair_resource_files():
     """
     Run repair_resource on resources updated in the last day
@@ -284,38 +276,32 @@ def nightly_repair_resource_files():
     recently_updated_resources = recently_updated_resources.exclude(repaired__gte=cuttoff_time)
 
     repaired_resources = []
-    try:
-        for res in recently_updated_resources:
-            check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
-            is_corrupt = False
-            try:
-                _, missing_django, dangling_in_django = repair_resource(res, logger, user=admin_user)
-                is_corrupt = missing_django > 0 or dangling_in_django > 0
-            except ObjectDoesNotExist:
-                logger.info("nightly_repair_resource_files encountered dangling S3 files for a nonexistent resource")
-            if is_corrupt:
-                repaired_resources.append(res)
+    for res in recently_updated_resources:
+        is_corrupt = False
+        try:
+            _, missing_django, dangling_in_django = repair_resource(res, logger, user=admin_user)
+            is_corrupt = missing_django > 0 or dangling_in_django > 0
+        except ObjectDoesNotExist:
+            logger.info("nightly_repair_resource_files encountered dangling S3 files for a nonexistent resource")
+        if is_corrupt:
+            repaired_resources.append(res)
 
-        # spend any remaining time fixing resources that haven't been checked
-        # followed by those previously checked, prioritizing the oldest checked date
-        recently_updated_rids = [res.short_id for res in recently_updated_resources]
-        not_recently_updated = BaseResource.objects \
-            .exclude(short_id__in=recently_updated_rids) \
-            .exclude(raccess__published=True) \
-            .order_by(F('files_checked').asc(nulls_first=True))
-        for res in not_recently_updated:
-            check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
-            is_corrupt = False
-            try:
-                _, missing_django, dangling_in_django = repair_resource(res, logger, user=admin_user)
-                is_corrupt = missing_django > 0 or dangling_in_django > 0
-            except ObjectDoesNotExist:
-                logger.info("nightly_repair_resource_files encountered dangling S3 files for a nonexistent resource")
-            if is_corrupt:
-                repaired_resources.append(res)
-    except TimeoutError:
-        logger.info(f"nightly_repair_resource_files terminated after \
-                    {settings.NIGHTLY_RESOURCE_REPAIR_DURATION} seconds")
+    # spend any remaining time fixing resources that haven't been checked
+    # followed by those previously checked, prioritizing the oldest checked date
+    recently_updated_rids = [res.short_id for res in recently_updated_resources]
+    not_recently_updated = BaseResource.objects \
+        .exclude(short_id__in=recently_updated_rids) \
+        .exclude(raccess__published=True) \
+        .order_by(F('files_checked').asc(nulls_first=True))
+    for res in not_recently_updated:
+        is_corrupt = False
+        try:
+            _, missing_django, dangling_in_django = repair_resource(res, logger, user=admin_user)
+            is_corrupt = missing_django > 0 or dangling_in_django > 0
+        except ObjectDoesNotExist:
+            logger.info("nightly_repair_resource_files encountered dangling S3 files for a nonexistent resource")
+        if is_corrupt:
+            repaired_resources.append(res)
 
     if settings.NOTIFY_OWNERS_AFTER_RESOURCE_REPAIR:
         for res in repaired_resources:
@@ -1168,7 +1154,7 @@ def set_resource_files_system_metadata(resource_id):
                                      batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
 
 
-@celery_app.task(ignore_result=True, base=HydroshareTask)
+@celery_app.task(ignore_result=True, base=HydroshareTask, time_limit=settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION)
 def nightly_cache_file_system_metadata():
     """
     Generate and store file checksums and modified times for a subset of resources
@@ -1190,22 +1176,17 @@ def nightly_cache_file_system_metadata():
     cuttoff_time = timezone.now() - timedelta(days=1)
     recently_updated_resources = BaseResource.objects \
         .filter(updated__gte=cuttoff_time)
-    try:
-        for res in recently_updated_resources:
-            check_time(start_time, settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION)
-            set_res_files_system_metadata(res)
 
-        # spend any remaining time generating filesystem metadata starting with most recently edited resources
-        recently_updated_rids = [res.short_id for res in recently_updated_resources]
-        less_recently_updated = BaseResource.objects \
-            .exclude(short_id__in=recently_updated_rids) \
-            .order_by('-updated')
-        for res in less_recently_updated:
-            check_time(start_time, settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION)
-            set_res_files_system_metadata(res)
-    except TimeoutError:
-        logger.info(f"nightly_cache_file_system_metadata terminated after \
-                    {settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION} seconds")
+    for res in recently_updated_resources:
+        set_res_files_system_metadata(res)
+
+    # spend any remaining time generating filesystem metadata starting with most recently edited resources
+    recently_updated_rids = [res.short_id for res in recently_updated_resources]
+    less_recently_updated = BaseResource.objects \
+        .exclude(short_id__in=recently_updated_rids) \
+        .order_by('-updated')
+    for res in less_recently_updated:
+        set_res_files_system_metadata(res)
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)
