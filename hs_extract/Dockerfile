@@ -21,7 +21,7 @@ COPY hs_extract/requirements.txt .
 RUN pip install -r requirements.txt
 RUN rm requirements.txt
 
-COPY hs_extract/hsextract hs_extract/hsextract
+COPY hs_extract hs_extract
 COPY hs_cloudnative_schemas hs_extract/hs_cloudnative_schemas
 
 ENV PYTHONPATH "${PYTHONPATH}:/app/hs_extract/hsextract/:/app/hs_extract/hs_cloudnative_schemas/"
