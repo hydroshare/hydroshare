@@ -10,7 +10,9 @@ import zipfile
 from datetime import date, datetime, timedelta
 
 import requests
-from celery.exceptions import TaskError, TimeLimitExceeded
+from billiard.exceptions import TimeLimitExceeded
+from billiard.einfo import ExceptionWithTraceback
+from celery.exceptions import TaskError
 from celery.result import states
 from celery.schedules import crontab
 from celery.signals import task_postrun
@@ -88,22 +90,24 @@ class HydroshareRequest(Request):
     https://docs.celeryq.dev/en/v5.2.7/userguide/tasks.html#requests-and-custom-requests
     '''
     def on_failure(self, exc_info, send_failed_event=True, return_ok=False):
+        # https://docs.celeryq.dev/en/v5.5.2/reference/celery.worker.request.html#celery.worker.request.Request.on_failure
         # https://docs.celeryq.dev/en/v5.5.2/userguide/tasks.html#on_failure
         # Get the exception value from the ExceptionInfo object
-        exc_value = exc_info.exception
+        exc = exc_info.exception
+        if isinstance(exc, ExceptionWithTraceback):
+            exc = exc.exc
 
-        # Check for various time limit related scenarios
+        # Check for various time limit related scenarios with more comprehensive checks
         is_time_limit_related = (
-            isinstance(exc_value, TimeLimitExceeded)
-            or (isinstance(exc_value, SystemExit) and exc_value.code == -9)
-            or (isinstance(exc_value, Exception) and "SIGKILL" in str(exc_value))
+            isinstance(exc, TimeLimitExceeded)
+            or (isinstance(exc, SystemExit) and exc.code == -9)
         )
 
         if is_time_limit_related:
             # Log as info instead of warning, no email
             logger.info(
                 f"Task {self.task.name} was terminated due to time limit constraints. "
-                f"This is expected behavior for long-running tasks."
+                f"This is expected behavior for long-running tasks. Exception: {exc_info}"
             )
         else:
             # handle non timeout related failures
