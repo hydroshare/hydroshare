@@ -130,14 +130,14 @@ class HydroshareTask(Task):
     retry_backoff = True
     retry_backoff_max = 600
     retry_jitter = True
-    soft_time_limit = 7200  # 2 hours - allows for graceful shutdown
-    time_limit = 7260  # 2 hours + 1 minute - hard limit
+    soft_time_limit = 30  # 30 sec for testing
+    time_limit = 45  # 45 sec for testing
 
-    # Set the time limit to be the greater of 2hrs or the specific task limits
-    time_limit = max(time_limit,
-                     settings.NIGHTLY_RESOURCE_REPAIR_DURATION,
-                     settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION
-                     )
+    # # Set the time limit to be the greater of 2hrs or the specific task limits
+    # time_limit = max(time_limit,
+    #                  settings.NIGHTLY_RESOURCE_REPAIR_DURATION,
+    #                  settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION
+    #                  )
 
 
 @celery_app.on_after_finalize.connect
@@ -145,6 +145,9 @@ def setup_periodic_tasks(sender, **kwargs):
     if (hasattr(settings, 'DISABLE_PERIODIC_TASKS') and settings.DISABLE_PERIODIC_TASKS):
         logger.debug("Periodic tasks are disabled in SETTINGS")
     else:
+        # every min for testing
+        sender.add_periodic_task(crontab(minute='*'), nightly_repair_resource_files.s(),
+                                 options={'queue': 'periodic'})
         # Hourly
         sender.add_periodic_task(crontab(minute=0), check_bucket_names.s(), options={'queue': 'periodic'})
 
@@ -160,8 +163,8 @@ def setup_periodic_tasks(sender, **kwargs):
                                  options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=0, hour=5), check_geoserver_registrations.s(),
                                  options={'queue': 'periodic'})
-        sender.add_periodic_task(crontab(minute=30, hour=5), nightly_repair_resource_files.s(),
-                                 options={'queue': 'periodic'})
+        # sender.add_periodic_task(crontab(minute=30, hour=5), nightly_repair_resource_files.s(),
+        #                          options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=0, hour=6), nightly_cache_file_system_metadata.s(),
                                  options={'queue': 'periodic'})
         sender.add_periodic_task(crontab(minute=30, hour=6), nightly_periodic_task_check.s(),
