@@ -89,13 +89,16 @@ def refresh_resource_metadata(bucket: str, resource_id: str) -> None:
     for resource_file in resource_contents_files:
         md = determine_metadata_object(resource_file, True)
         if md.content_type != ContentType.UNKNOWN:
-            content_type_metadata = md.extract_metadata()
-            if content_type_metadata:
-                write_metadata(md.content_type_md_path, content_type_metadata)
-            write_content_type_jsonld_metadata(md)
-            files_to_cleanup = md.clean_up_extracted_metadata()
-            for f in files_to_cleanup:
-                delete_metadata(f)
+            try:
+                content_type_metadata = md.extract_metadata()
+                if content_type_metadata:
+                    write_metadata(md.content_type_md_path, content_type_metadata)
+                write_content_type_jsonld_metadata(md)
+                files_to_cleanup = md.clean_up_extracted_metadata()
+                for f in files_to_cleanup:
+                    delete_metadata(f)
+            except Exception as ex:
+                print(f"Error extracting metadata for file {resource_file}: {str(ex)}")
     # TODO determine any metadata files that may need to be deleted
     # if metadata files do not have corresponding data files
     write_resource_jsonld_metadata(md)
