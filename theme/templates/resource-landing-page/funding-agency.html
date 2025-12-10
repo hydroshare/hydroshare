@@ -36,11 +36,11 @@
                                             :minMatchingChars="MIN_SEARCH_LEN"
                                         >
                                         <template slot="append">
-                                            <div v-if="isPending && !crossreffApiDown">
+                                            <div v-if="isPending && !rorApiDown">
                                                 <i class="fa fa-spinner fa-pulse fa-2x fa-fw icon-blue"></i>
                                                 Searching known funders
                                             </div>
-                                            <div class="text-info small" v-if="crossreffApiDown">
+                                            <div class="text-info small" v-if="rorApiDown">
                                                 We are having trouble reaching the Open Funder Registry. To add funders from the registry, please try again later.
                                             </div>
                                         </template>
@@ -176,11 +176,11 @@
                 <div class="flex">
                     <i class="glyphicon glyphicon-info-sign" style="margin-right: 20px;"></i>
                     <em style="padding-right:20px;">
-                        This resource contains funders (listed below) that do not exist in the <a href="https://www.crossref.org/services/funder-registry" target="_blank">Open Funder Registry</a>:
+                        This resource contains funders (listed below) that do not exist in the <a href="https://ror.org/" target="_blank">Open Funder Registry</a>:
                         <ul>
                             <li v-for="funder in unmatchedFunders">${funder}</li>
                         </ul>
-                        We recommend updating the funders to conform to the <a href="https://www.crossref.org/services/funder-registry" target="_blank">Open Funder Registry</a> to ensure consistency and ease of reporting.
+                        We recommend updating the funders to conform to the <a href="https://ror.org/" target="_blank">Open Funder Registry</a> to ensure consistency and ease of reporting.
                     </em>
                 </div>
             </div>
