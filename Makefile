@@ -2,7 +2,7 @@
 PM2_PROJECT = hydroshare
 .PHONY: up-landing
 up-landing:
-	export VITE_APP_BASE=/resource/
+	export VITE_APP_BASE=/landing/
 	cd landing-page && npx pm2 start npm --name $(PM2_PROJECT) -- run serve
 
 .PHONY: down-landing
