@@ -412,7 +412,7 @@ def notify_owners_of_publication_success(short_id):
     """
     resource = utils.get_resource_by_shortkey(short_id)
     res_url = current_site_url() + resource.get_absolute_url()
-    doi = f"{settings.DATACITE_PREFIX}/{resource.short_id}"
+    doi = f"{settings.DATACITE_PREFIX}/hs.{resource.short_id}"
 
     email_msg = f'''Dear Resource Owner,
     <p>The following resource that you submitted for publication:
@@ -450,7 +450,7 @@ def notify_developers_of_publication_failure(short_id, error=None, exc_info=None
 
     resource = utils.get_resource_by_shortkey(short_id)
     res_url = current_site_url() + resource.get_absolute_url()
-    doi = f"{settings.DATACITE_PREFIX}/{resource.short_id}"
+    doi = f"{settings.DATACITE_PREFIX}/hs.{resource.short_id}"
     owners = ", ".join([o.email for o in resource.raccess.owners.all()])
 
     # Build a concise text/HTML body with diagnostics

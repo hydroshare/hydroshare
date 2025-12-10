@@ -435,8 +435,8 @@ class TestPublishResource(MockS3TestCaseMixin, TestCase):
 
         # DOI / prefix / suffix
         self.assertEqual(attrs.get("prefix"), f"{settings.DATACITE_PREFIX}")
-        self.assertEqual(attrs.get("suffix"), self.res.short_id)
-        self.assertEqual(attrs.get("doi"), f"{settings.DATACITE_PREFIX}/{self.res.short_id}")
+        self.assertEqual(attrs.get("suffix"), f"hs.{self.res.short_id}")
+        self.assertEqual(attrs.get("doi"), f"{settings.DATACITE_PREFIX}/hs.{self.res.short_id}")
 
         # URL from hydroShareIdentifier
         site_url = hydroshare.utils.current_site_url()
