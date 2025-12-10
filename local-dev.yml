@@ -427,17 +427,19 @@ services:
   #     dockerfile: Dockerfile
   #     args:
   #       - VITE_APP_BASE=/landing/
-  #       - VITE_APP_API_URL=POINT_ME_AT_API_URL
   #       - VITE_APP_NAME=hs-landing-page
-  #       - VITE_APP_ORIGIN=https://localhost
+  #       - VITE_APP_DEFAULT_S3_HOST=http://localhost:9000
+  #       - VITE_APP_DEFAULT_HYDROSHARE_HOST=http://localhost
+  #       - VITE_APP_S3_REGION=us-central-2
   #   container_name: landing-page
   #   hostname: landing-page
   #   platform: linux/amd64
   #   environment:
-  #     VITE_APP_NAME: "hs-landing-page"
-  #     VITE_APP_ORIGIN: "https://localhost"
   #     VITE_APP_BASE: "/landing/"
-  #     VITE_APP_API_URL: "POINT_ME_AT_API_URL"
+  #     VITE_APP_NAME: "hs-landing-page"
+  #     VITE_APP_DEFAULT_S3_HOST=http://localhost:9000
+  #     VITE_APP_DEFAULT_HYDROSHARE_HOST=http://localhost
+  #     VITE_APP_S3_REGION=us-central-2
   #   ports:
   #     - "5004:80"
 volumes:
