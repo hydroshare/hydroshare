@@ -170,14 +170,17 @@ Hydroshare is released under the BSD 3-Clause License. This means that [you can 
 Then...
 
 ### go checkout the resource
+* Login as `asdf` user
 * http://localhost/resource/d7b526e24f7e449098b428ae9363f514 (**it is important that you use http not https!! **)
-* You should see the resource landing page. It will give an error saying that the metadata couldn't be loaded from S3. That's expected when you're not logged in.
+* You should see the OLD style resource landing page. Edit the resource and add a file to it. This will create the missing bucket and cause the metadata to be extracted.
+* Now check out the NEW landing page: http://localhost/landing/d7b526e24f7e449098b428ae9363f514 (**it is important that you use http not https!! **) . 
+  * If it gives you an error saying that the metadata couldn't be loaded from S3, make sure that you're logged in.
+    * Click "Login" this will redirect you to: the [HS sign-in page](http://localhost/accounts/login/?next=http%3A%2F%2Flocalhost%2Fresource%2Fd7b526e24f7e449098b428ae9363f514)
+    * After login, it should redirect you back to the [landing page](http://localhost/landing/d7b526e24f7e449098b428ae9363f514)
   * If you see a 504 from nginx instead of the resource landing page, try `make down-landing` and then `make up-landing` to restart the pm2 process
   * Check `npx pm2 logs` to see if the vue/vite process is running as expected
-* Click "Login" this will redirect you to: the [HS sign-in page](http://localhost/accounts/login/?next=http%3A%2F%2Flocalhost%2Fresource%2Fd7b526e24f7e449098b428ae9363f514)
-* After login, it should redirect you back to the [landing page](http://localhost/resource/d7b526e24f7e449098b428ae9363f514)
-* If you get an error, check the "Settings" in the upper RH corneer
-Sometimes clicking the APPLY button will resolve the issue. This is a known bug that we need to resolve ![APPLY](apply_resource_landing_settings.png)
-* If you want to see the old version of the resource, you can do so at http://localhost:8000/resource/d7b526e24f7e449098b428ae9363f514
+  * Check `npx pm2 ls` and make sure that it lists the "hydroshare" service
+* If you get an error, check the "Settings" in the upper RH corner. Sometimes clicking the APPLY button will resolve the issue. This is a known bug that we need to resolve ![APPLY](apply_resource_landing_settings.png)
+* If you want to see the old version of the resource, you can do so at http://localhost/resource/d7b526e24f7e449098b428ae9363f514
 * You can view the minio console at http:localhost:9000 (user = cuahsi, password = devpassword)
 * If you experience issues, try a private browser window. Clear your local storage.
