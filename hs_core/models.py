@@ -2296,6 +2296,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         user_metadata_path = f"{self.short_id}/.hsmetadata/user_metadata.json"
         hs_json = self.metadata.get_json().model_dump_json(indent=2)
         hs_json = json.loads(hs_json)  # validate json
+        hs_json['sharing_status'] = self.raccess.sharing_status
         from hs_core.hydroshare_schemaorg_adapter import HydroshareMetadataAdapter
         hs_json = HydroshareMetadataAdapter.to_catalog_record(hs_json).dict()
         hs_json = json.dumps(hs_json, indent=2, default=str)

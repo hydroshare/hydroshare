@@ -14,13 +14,18 @@ mongo_connection_url = settings.ATLAS_CONNECTION_URL
 hydroshare_atlas_db = MongoClient(mongo_connection_url)["hydroshare"]
 
 datetime_format_regex = re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\+\d{2}:\d{2}$')
+temporal_coverage_datetime_format_regex = re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$')
 datetime_format = "%Y-%m-%d %H:%M:%S.%f%z"
+temporal_coverage_datetime_format = "%Y-%m-%d %H:%M:%S"
 
 
 def datetime_parser(dct):
     for k, v in dct.items():
-        if isinstance(v, str) and datetime_format_regex.match(v):
-            dct[k] = datetime.datetime.strptime(v, datetime_format)
+        if isinstance(v, str):
+            if datetime_format_regex.match(v):
+                dct[k] = datetime.datetime.strptime(v, datetime_format)
+            if temporal_coverage_datetime_format_regex.match(v):
+                dct[k] = datetime.datetime.strptime(v, temporal_coverage_datetime_format)
     return dct
 
 
@@ -46,20 +51,10 @@ def collect_file_to_catalog(filepath: str):
             content_types.append(json_dict.get('additionalType'))
         metadata_json['content_types'] = list(set(content_types))
 
-    typeahead_json = {}
-    typeahead_json['name'] = metadata_json['name']
-    typeahead_json['description'] = metadata_json['description']
-    typeahead_json['keywords'] = metadata_json['keywords']
-    typeahead_json['url'] = metadata_json['url']
-    typeahead_json['_s3_filepath'] = filepath
-
     hydroshare_atlas_db["discovery"].find_one_and_replace({"_s3_filepath": metadata_json["_s3_filepath"]},
-                                                          metadata_json, upsert=True)
-    hydroshare_atlas_db["typeahead"].find_one_and_replace({"_s3_filepath": metadata_json["_s3_filepath"]},
                                                           metadata_json, upsert=True)
 
 
 def delete_file_from_catalog(filepath: str):
     print("Deleting file from catalog:", filepath)
     hydroshare_atlas_db["discovery"].delete_one({"_s3_filepath": filepath})
-    hydroshare_atlas_db["typeahead"].delete_one({"_s3_filepath": filepath})
