@@ -296,29 +296,29 @@ services:
       - 8080:8080
     depends_on:
       - redpanda
-  hs_extract:
-    build:
-      context: .
-      dockerfile: hs_extract/Dockerfile
-    platform: linux/amd64
-    environment:
-      AWS_S3_ENDPOINT_URL: "http://minio:9000"
-      AWS_ACCESS_KEY_ID: cuahsi
-      AWS_SECRET_ACCESS_KEY: devpassword
-      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
-    volumes:
-      - "./hs_extract:/app/hs_extract"
-      - "./hs_cloudnative_schemas:/app/hs_extract/hs_cloudnative_schemas"
-    links:
-      - pgbouncer:pgbouncer
-      - redpanda:redpanda
-    depends_on:
-      - hydroshare
-      - pgbouncer
-      - solr
-      - redpanda
-    stdin_open: true
-    tty: true
+  # hs_extract:
+  #   build:
+  #     context: .
+  #     dockerfile: hs_extract/Dockerfile
+  #   platform: linux/amd64
+  #   environment:
+  #     AWS_S3_ENDPOINT_URL: "http://minio:9000"
+  #     AWS_ACCESS_KEY_ID: cuahsi
+  #     AWS_SECRET_ACCESS_KEY: devpassword
+  #     MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
+  #   volumes:
+  #     - "./hs_extract:/app/hs_extract"
+  #     - "./hs_cloudnative_schemas:/app/hs_extract/hs_cloudnative_schemas"
+  #   links:
+  #     - pgbouncer:pgbouncer
+  #     - redpanda:redpanda
+  #   depends_on:
+  #     - hydroshare
+  #     - pgbouncer
+  #     - solr
+  #     - redpanda
+  #   stdin_open: true
+  #   tty: true
   companion:
   # https://github.com/transloadit/uppy/blob/main/packages/%40uppy/companion/KUBERNETES.md
     build:
@@ -426,7 +426,7 @@ services:
   #     context: landing-page
   #     dockerfile: Dockerfile
   #     args:
-  #       - VITE_APP_BASE=/resource/
+  #       - VITE_APP_BASE=/landing/
   #       - VITE_APP_API_URL=POINT_ME_AT_API_URL
   #       - VITE_APP_NAME=hs-landing-page
   #       - VITE_APP_ORIGIN=https://localhost
@@ -436,10 +436,10 @@ services:
   #   environment:
   #     VITE_APP_NAME: "hs-landing-page"
   #     VITE_APP_ORIGIN: "https://localhost"
-  #     VITE_APP_BASE: "/resource/"
+  #     VITE_APP_BASE: "/landing/"
   #     VITE_APP_API_URL: "POINT_ME_AT_API_URL"
   #   ports:
-  #     - "5004:5004"
+  #     - "5004:80"
 volumes:
   postgis_data_vol:
   solr_data_vol:
