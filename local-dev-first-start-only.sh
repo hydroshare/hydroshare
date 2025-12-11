@@ -379,8 +379,22 @@ echo
 docker exec hydroshare python manage.py add_missing_bucket_names
 
 echo
+echo " waiting for hydroshare container to be ready..."
+echo " you can check your logs by running: `blue 'docker logs -f hydroshare'`"
+
+while [ 1 -eq 1 ]
+do
+  sleep 1
+  echo -n "."
+  LOG=`docker logs hydroshare 2>&1 | tail -20`
+  if [[ $LOG == *"Starting development server at http://0.0.0.0:8000/"* ]]; then
+    break
+  fi
+done
+
+echo
 echo '########################################################################################################################'
-echo -e " All done, run `green '\"docker-compose -f local-dev.yml restart\"'` to restart HydroShare"
+echo -e " All done! You can now access your local HydroShare instance at `green 'http://localhost'`"
 echo -e " You are running discovery-atlas using PM2 and the Vite dev server."
 echo -e " Run `green '\"make down-discover\"'` to cleanup the PM2 service when you're done."
 echo '########################################################################################################################'
