@@ -41,7 +41,7 @@ def deposit_res_metadata_with_datacite(res_doi, metadata, test_mode=False):
 
         # Send the POST request to deposit metadata
         datacite_url = get_datacite_url()
-        doi_url = f"{datacite_url}/{settings.DATACITE_PREFIX}/hs.{res_doi}"
+        doi_url = f"{datacite_url}/{res_doi}"
         response = requests.put(
             url=doi_url,
             json=metadata,
@@ -65,7 +65,7 @@ def deposit_res_metadata_with_datacite(res_doi, metadata, test_mode=False):
 
 class Command(BaseCommand):
     help = "Migrate resources from CSV to DataCite"
-    # COMMAND: python manage.py create_datacite_doi_from_csv --test --limit 1
+    # COMMAND: python manage.py create_datacite_doi_from_csv --test --limit 1 --file_name create_dois.csv
     def add_arguments(self, parser):
         parser.add_argument(
             '--test',
@@ -78,10 +78,16 @@ class Command(BaseCommand):
             default=None,
             help='Limit the number of resources to process (default: process all)',
         )
+        parser.add_argument(
+            '--file_name',
+            type=str,
+            default='create_dois.csv',
+            help='Path to the CSV file containing resource data',
+        )
 
     def handle(self, *args, **options):
         start_time = time.time()
-        csv_file_path = 'create_dois.csv'
+        csv_file_path = options['file_name']
         total = sum(1 for _ in open(csv_file_path)) - 1
         print(f"📦 Total resources to process: {total}")
 
@@ -102,14 +108,20 @@ class Command(BaseCommand):
                 res_doi = row['DOI'].split('/')[-1]
                 title = row['title'][2:-2]  # Remove extra quotes
                 authors = [author.strip() for author in row['author'].split(';') if author.strip()]
-
+                status = row['status'].lower()
+                url = row['resource']
+                final_doi=f"{settings.DATACITE_PREFIX}/hs.{res_doi}"
+                if status == 'deleted':
+                    print("🔒 Resource is deleted, using tombstone URL")
+                    url=row['tombstone_url']
+                    final_doi = f"{settings.DATACITE_PREFIX}/{res_doi}"
                 # Construct the metadata payload
                 metadata = {
                     "data": {
                         "type": "dois",
                         "attributes": {
-                            "url": row['resource'],
-                            "doi": f"{settings.DATACITE_PREFIX}/hs.{res_doi}",
+                            "url": url,
+                            "doi": final_doi,
                             "prefix": settings.DATACITE_PREFIX,
                             "event": "publish",
                             "titles": [{"title": title}],
@@ -164,7 +176,7 @@ class Command(BaseCommand):
                 print(f"🔄 Processing resource: DOI: {row['DOI']} Title: {title}")
                 res_start_time = time.time()
 
-                deposit_res_metadata_with_datacite(res_doi, metadata, test_mode=test_mode)
+                deposit_res_metadata_with_datacite(final_doi, metadata, test_mode=test_mode)
 
                 res_duration = timedelta(seconds=int(time.time() - res_start_time))
                 print(f"✅ Finished processing resource: DOI: {row['DOI']} Title: {title} | Time taken: {res_duration}")
