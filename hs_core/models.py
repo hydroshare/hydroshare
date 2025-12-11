@@ -2263,7 +2263,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
                 copied_metadata['modified'] = self.updated.isoformat()
 
         type(self).objects.filter(id=self.id).update(cached_metadata=copied_metadata)
-        self.cached_metadata = copied_metadata
 
     def _update_creators_field(self, copied_metadata, metadata):
         """Update creators field in cached metadata"""
