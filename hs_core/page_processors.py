@@ -204,7 +204,12 @@ def get_editable_page_context(content_model, user, extended_metadata_layout=None
     readme = _get_readme_content(content_model)
     has_web_ref = res_has_web_reference(content_model)
 
-    topics = _get_topics_list()
+    czo_user = any("CZO National" in x.name for x in user.uaccess.communities)
+    if czo_user:
+        topics = _get_topics_list()
+    else:
+        topics = []
+
     content_model.update_relation_meta()
 
     temporal_coverage = content_model.cached_metadata.get('temporal_coverage', {})
@@ -265,7 +270,7 @@ def get_editable_page_context(content_model, user, extended_metadata_layout=None
         'belongs_to_collections': belongs_to_collections,
         'maps_key': maps_key,
         'topics_json': mark_safe(escapejs(json.dumps(topics))),
-        'czo_user': any("CZO National" in x.name for x in user.uaccess.communities),
+        'czo_user': czo_user,
         'odm2_terms': list(ODM2Variable.all()),
     }
 
