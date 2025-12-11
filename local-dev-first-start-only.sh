@@ -167,6 +167,7 @@ git submodule update --init --recursive
 echo "Installing npm modules for landing page"
 cd landing-page
 npm install
+cd ..
 
 # Check to make sure that pm2 is installed
 echo "Checking for pm2 installation..."
