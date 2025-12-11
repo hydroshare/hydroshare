@@ -146,6 +146,10 @@ docker compose -f ${DOCKER_COMPOSER_YAML_FILE} down -v --rmi local --remove-orph
 echo '###############################################################################################################'
 echo " Preparing"                                                                                            
 echo '###############################################################################################################'
+
+echo "Pulling git submodules..."
+git submodule update --init --recursive
+
 echo "Creating init scripts"
 cp scripts/templates/init-defaultworker.template init-defaultworker
 sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g init-defaultworker
@@ -165,6 +169,12 @@ echo '##########################################################################
 echo " Starting system"
 echo '########################################################################################################################'
 echo
+
+echo " -make down-discover"
+make down-discover
+
+echo " - make up-discover"
+make up-discover
 
 echo "  - docker compose -f ${DOCKER_COMPOSER_YAML_FILE} up -d ${REBUILD_IMAGE}"
 docker compose -f $DOCKER_COMPOSER_YAML_FILE up -d $REBUILD_IMAGE
@@ -348,7 +358,9 @@ docker exec hydroshare python manage.py add_missing_bucket_names
 
 echo
 echo '########################################################################################################################'
-echo -e " All done, run `green '\"docker compose -f local-dev.yml restart\"'` to restart HydroShare"
+echo -e " All done, run `green '\"docker-compose -f local-dev.yml restart\"'` to restart HydroShare"
+echo -e " You are running discovery-atlas using PM2 and the Vite dev server."
+echo -e " Run `green '\"make down-discover\"'` to cleanup the PM2 service when you're done."
 echo '########################################################################################################################'
 echo
 
