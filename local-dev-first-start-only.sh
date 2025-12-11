@@ -164,6 +164,28 @@ mkdir -p log/nginx 2>/dev/null
 
 find . -name '*.hydro-bk' -exec rm -f {} \; 2>/dev/null
 
+echo "Installing npm modules for discovery-atlas"
+cd discovery-atlas
+npm install
+
+echo checking for .env file...
+if [ ! -f .env ]; then
+  echo creating .env file from template...
+  cp .env.template .env
+else
+  echo .env file already exists.
+fi
+cd ..
+
+# Check to make sure that pm2 is installed
+echo "Checking for pm2 installation..."
+PM2_INSTALLED=`npm list -g pm2 | grep pm2@ | wc -l`
+if [ "$PM2_INSTALLED" == "0" ]; then
+  echo "Installing pm2 globally"
+  npm install -g pm2
+fi
+echo "PM2 is installed"
+
 echo
 echo '########################################################################################################################'
 echo " Starting system"
