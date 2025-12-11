@@ -420,7 +420,7 @@ services:
   #     VITE_APP_API_URL: "https://localhost/api"
   #     VITE_APP_BASE: "/discover/"
   #   ports:
-  #     - "5004:5004"
+  #     - "5004:80"
 volumes:
   postgis_data_vol:
   solr_data_vol:
