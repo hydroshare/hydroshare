@@ -107,7 +107,11 @@ def is_url(content):
 @register.filter
 def published_date(res_obj):
     if res_obj.raccess.published:
-        return res_obj.metadata.dates.all().filter(type='published').first().start_date
+        if not res_obj.cached_metadata.get('published_date', None):
+            published_date = res_obj.cached_metadata['published_date']
+            return to_date(published_date)
+        else:
+            return res_obj.metadata.dates.all().filter(type='published').first().start_date
     else:
         return ''
 
@@ -358,38 +362,38 @@ def creator_json_ld_element(crs):
     for cr in crs:
         cr_dict = {}
         urls = []
-        if cr.email:
-            cr_dict["email"] = cr.email
-        if cr.address:
+        if cr['email']:
+            cr_dict["email"] = cr['email']
+        if cr['address']:
             cr_dict["address"] = {
                 "@type": "PostalAddress",
-                "streetAddress": cr.address
+                "streetAddress": cr['address']
             }
-        if cr.name:
+        if cr['name']:
             cr_dict["@type"] = "Person"
-            cr_dict["name"] = name_without_commas(cr.name)
-            if cr.organization:
+            cr_dict["name"] = name_without_commas(cr['name'])
+            if cr['organization']:
                 affl_dict = {
                     "@type": "Organization",
-                    "name": cr.organization
+                    "name": cr['organization']
                 }
                 cr_dict["affiliation"] = affl_dict
         else:
             cr_dict["@type"] = "Organization"
-            cr_dict["name"] = cr.organization
+            cr_dict["name"] = cr['organization']
 
-        if cr.relative_uri:
-            if cr.name:
+        if cr['relative_uri']:
+            if cr['name']:
                 # append www.hydroshare.org since schema.org script is only embedded in production
-                urls.append("https://www.hydroshare.org" + cr.relative_uri)
+                urls.append("https://www.hydroshare.org" + cr['relative_uri'])
             else:
                 # organization
-                urls.append(cr.relative_uri)
-        if cr.homepage:
-            urls.append(cr.homepage)
-        if cr.identifiers:
-            for k in cr.identifiers:
-                urls.append(cr.identifiers[k])
+                urls.append(cr['relative_uri'])
+        if cr['homepage']:
+            urls.append(cr['homepage'])
+        if cr['identifiers']:
+            for k in cr['identifiers']:
+                urls.append(cr['identifiers'][k])
         if len(urls) == 1:
             cr_dict['url'] = urls[0]
         elif len(urls) > 1:

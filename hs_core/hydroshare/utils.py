@@ -1,5 +1,6 @@
 import asyncio
 import copy
+from functools import lru_cache
 import logging
 import mimetypes
 import os
@@ -36,6 +37,7 @@ from theme.models import QuotaMessage
 logger = logging.getLogger(__name__)
 
 
+@lru_cache(maxsize=1)
 def get_resource_types():
     resource_types = []
     for model in apps.get_models():
@@ -45,6 +47,7 @@ def get_resource_types():
     return resource_types
 
 
+@lru_cache(maxsize=1)
 def get_content_types():
     content_types = []
     from hs_file_types.models.base import AbstractLogicalFile

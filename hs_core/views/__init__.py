@@ -2956,3 +2956,124 @@ def get_non_preferred_paths(request, shortkey):
 
     data = {"status": "SUCCESS", "non_preferred_paths": non_preferred_paths}
     return JsonResponse(data)
+
+
+def get_manage_access_data(request, shortkey):
+    """
+    API endpoint to fetch manage access modal data on demand.
+    This reduces the initial page load queries by deferring this data until needed.
+    """
+    from hs_core.models import get_access_object
+
+    try:
+        resource, _, user = authorize(
+            request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE
+        )
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {"status": "error", "message": f"No resource was found for id:{shortkey}"},
+            status=404
+        )
+    except PermissionDenied:
+        return JsonResponse(
+            {"status": "error", "message": "You don't have permission for this resource"},
+            status=403
+        )
+
+    can_change_resource_flags = False
+    self_access_level = None
+    if request.user.is_authenticated:
+        if request.user.uaccess.can_change_resource_flags(resource):
+            can_change_resource_flags = True
+
+        # this will get resource access privilege even for admin user
+        user_privilege = resource.raccess.get_effective_user_privilege(request.user)
+        if user_privilege == PrivilegeCodes.OWNER:
+            self_access_level = 'owner'
+        elif user_privilege == PrivilegeCodes.CHANGE:
+            self_access_level = 'edit'
+        elif user_privilege == PrivilegeCodes.VIEW:
+            self_access_level = 'view'
+
+    owners = resource.raccess.owners.all()
+    editors = resource.raccess.get_users_with_explicit_access(
+        PrivilegeCodes.CHANGE, include_group_granted_access=False
+    )
+    viewers = resource.raccess.get_users_with_explicit_access(
+        PrivilegeCodes.VIEW, include_group_granted_access=False
+    )
+    edit_groups = resource.raccess.edit_groups
+    view_groups = resource.raccess.view_groups.exclude(pk__in=edit_groups)
+
+    if request.user.is_authenticated:
+        # N+1 queries
+        for owner in owners:
+            owner.can_undo = request.user.uaccess.can_undo_share_resource_with_user(
+                resource, owner
+            )
+
+        for viewer in viewers:
+            viewer.can_undo = request.user.uaccess.can_undo_share_resource_with_user(
+                resource, viewer
+            )
+
+        for editor in editors:
+            editor.can_undo = request.user.uaccess.can_undo_share_resource_with_user(
+                resource, editor
+            )
+
+        for view_grp in view_groups:
+            view_grp.can_undo = request.user.uaccess.can_undo_share_resource_with_group(
+                resource, view_grp
+            )
+
+        for edit_grp in edit_groups:
+            edit_grp.can_undo = request.user.uaccess.can_undo_share_resource_with_group(
+                resource, edit_grp
+            )
+    else:
+        for owner in owners:
+            owner.can_undo = False
+        for viewer in viewers:
+            viewer.can_undo = False
+        for editor in editors:
+            editor.can_undo = False
+        for view_grp in view_groups:
+            view_grp.can_undo = False
+        for edit_grp in edit_groups:
+            edit_grp.can_undo = False
+
+    users_json = []
+
+    for usr in owners:
+        users_json.append(get_access_object(usr, "user", "owner"))
+
+    for usr in editors:
+        users_json.append(get_access_object(usr, "user", "edit"))
+
+    for usr in viewers:
+        users_json.append(get_access_object(usr, "user", "view"))
+
+    for usr in edit_groups:
+        users_json.append(get_access_object(usr, "group", "edit"))
+
+    for usr in view_groups:
+        users_json.append(get_access_object(usr, "group", "view"))
+
+    data = {
+        "status": "success",
+        "users_json": users_json,
+        "current_user_id": request.user.id if request.user.is_authenticated else None,
+        "self_access_level": self_access_level,
+        "quota_holder_pk": resource.quota_holder.pk,
+        "can_change_resource_flags": can_change_resource_flags,
+        "can_be_public_or_discoverable": resource.can_be_public_or_discoverable,
+        "resource_access": {
+            "isPublic": resource.raccess.public,
+            "isDiscoverable": resource.raccess.discoverable,
+            "isShareable": resource.raccess.shareable,
+            "isPrivateLinkSharing": resource.raccess.allow_private_sharing,
+        },
+    }
+
+    return JsonResponse(data)
