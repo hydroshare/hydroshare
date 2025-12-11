@@ -4251,7 +4251,7 @@ class CompositeResourceTest(
 
         # expected number of queries for landing page when the resource has no resource file
         _VIEW_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 109
-        _EDIT_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 137
+        _EDIT_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT = 136
 
         # expected number of queries for landing page when the resource has resource file
         _VIEW_LANDING_PAGE_WITH_RES_FILE_QUERY_COUNT = _VIEW_LANDING_PAGE_NO_RES_FILE_QUERY_COUNT + 11
