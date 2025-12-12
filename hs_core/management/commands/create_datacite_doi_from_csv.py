@@ -33,7 +33,7 @@ def deposit_res_metadata_with_datacite(res_doi, metadata, test_mode=False):
                 print("🚧 TEST MODE: Removed 'event' key from payload")
 
             # Append "test-<timestamp>" to the DOI
-            res_doi=res_doi + f"-test-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+            res_doi = res_doi + f"-test-{datetime.now().strftime('%Y%m%d%H%M%S')}"
             metadata["data"]["attributes"]["doi"] = res_doi
             print(f"🚧 TEST MODE: Updated DOI to '{metadata['data']['attributes']['doi']}'")
             print(f"🚧 TEST MODE: Would deposit metadata for resource {res_doi}")
