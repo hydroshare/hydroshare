@@ -1,7 +1,7 @@
 :80 {
-    redir /discover /discover/ 308
     # Handle the base path
-    handle /discover* {
+    # handle
+    handle_path {{ .VITE_APP_BASE }}* {
         root * /srv/discover-frontend
         try_files {path} /index.html
         file_server

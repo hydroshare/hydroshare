@@ -429,8 +429,6 @@ services:
   #     VITE_APP_BASE: "/discover/"
   #   ports:
   #     - "5004:80"
-  #   volumes:
-  #     - ./discovery-atlas/frontend/Caddyfile:/etc/caddy/Caddyfile
 volumes:
   postgis_data_vol:
   solr_data_vol:
