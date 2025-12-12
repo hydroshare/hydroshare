@@ -62,9 +62,7 @@ Command line:
 
 Following the screen instruction to continue.
 
-Run the following command on completion to launch Hydroshare: 
-
-    docker-compose -f local-dev.yml up 
+The [local-dev-first-start-only.sh](./local-dev-first-start-only.sh) will spin up all docker containers in the [local-dev.yml](./local-dev.yml). It does NOT spin up a container for the landing page (you can [uncomment here](https://github.com/hydroshare/hydroshare/blob/6106/landing-page-rebase/local-dev.yml#L429-L452) if you desire to run the landing page as a static build inside a local Docker container). Instead, the script uses [PM2](https://pm2.io/) to run the Vite dev server to take advantage of [HMR](https://vite.dev/guide/features#hot-module-replacement). More details in the [landing page readme](/landing-page/README.md).
 
 5. Sanity Checks
 
