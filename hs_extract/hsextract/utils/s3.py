@@ -64,10 +64,16 @@ def retrieve_file_manifest(resource_root_path: str):
     bucket, resource_path = resource_root_path.split('/', 1)
     print(f"Retrieving file manifest from S3 at {bucket}/{resource_path}")
     file_manifest = []
+    limit = 15
+    count = 0
     try:
         for page in paginator.paginate(Bucket=bucket, Prefix=resource_path):
             if 'Contents' in page:
                 for obj in page['Contents']:
+                    if count >= limit:
+                        print(f"File manifest limit of {limit} reached, stopping retrieval.")
+                        return file_manifest
+                    count += 1
                     key = obj['Key']
                     size = obj['Size']
                     size = f"{obj['Size'] / 1000.00} KB"

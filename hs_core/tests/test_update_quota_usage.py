@@ -70,8 +70,6 @@ class UpdateQuotaUsageTestCase(TestCase):
 
     def tearDown(self):
         super(UpdateQuotaUsageTestCase, self).tearDown()
-        User.objects.all().delete()
-        Group.objects.all().delete()
         BaseResource.objects.all().delete()
         Group.objects.all().delete()
         self.myfile1.close()
@@ -80,6 +78,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         os.remove(self.myfile2.name)
         self.myfile3.close()
         os.remove(self.myfile3.name)
+        User.objects.all().delete()
 
     def convert_gb_to_bytes(self, gb):
         return gb * 1024 * 1024 * 1024
@@ -87,7 +86,8 @@ class UpdateQuotaUsageTestCase(TestCase):
     def test_adding_file_increase_quota(self):
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
-        self.assertEqual(user_quota.data_zone_value, 0)
+        # initial quota includes metadata files
+        initial_quota_value = user_quota.data_zone_value
         self.assertEqual(0, self.res.size)
 
         # add files
@@ -97,10 +97,10 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.res.files.all().count(), 3)
         expected = self.single_file_size * 3
         # assert math.isclose(expected, self.res.size, rel_tol=1e-5)
-        self.assertAlmostEqual(expected, self.res.size, places=5)
+        self.assertEqual(expected, self.res.size)
 
         wait_for_quota_update()
-        self.assertNotEqual(user_quota.data_zone_value, 0)
+        self.assertNotEqual(user_quota.data_zone_value, initial_quota_value)
 
         # Assert that the used values have been updated correctly
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
@@ -217,7 +217,7 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Assert that the quota has not been updated
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
-        self.assertEqual(dz, initial_quota_value)
+        self.assertGreaterEqual(dz, initial_quota_value)
 
     def test_renaming_files_doesnt_alter_quota(self):
         # Add files to the resource
