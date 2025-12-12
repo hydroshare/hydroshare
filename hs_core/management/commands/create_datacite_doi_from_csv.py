@@ -66,6 +66,7 @@ def deposit_res_metadata_with_datacite(res_doi, metadata, test_mode=False):
 class Command(BaseCommand):
     help = "Migrate resources from CSV to DataCite"
     # COMMAND: python manage.py create_datacite_doi_from_csv --test --limit 1 --file_name create_dois.csv
+
     def add_arguments(self, parser):
         parser.add_argument(
             '--test',
@@ -110,10 +111,10 @@ class Command(BaseCommand):
                 authors = [author.strip() for author in row['author'].split(';') if author.strip()]
                 status = row['status'].lower()
                 url = row['resource']
-                final_doi=f"{settings.DATACITE_PREFIX}/hs.{res_doi}"
+                final_doi = f"{settings.DATACITE_PREFIX}/hs.{res_doi}"
                 if status == 'deleted':
-                    print("🔒 Resource is deleted, using tombstone URL")
-                    url=row['tombstone_url']
+                    print("Resource is deleted, using tombstone URL")
+                    url = row['tombstone_url']
                     final_doi = f"{settings.DATACITE_PREFIX}/{res_doi}"
                 # Construct the metadata payload
                 metadata = {
