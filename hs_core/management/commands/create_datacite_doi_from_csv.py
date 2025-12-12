@@ -111,7 +111,7 @@ class Command(BaseCommand):
                 authors = [author.strip() for author in row['author'].split(';') if author.strip()]
                 status = row['status'].lower()
                 url = row['resource']
-                final_doi = f"{settings.DATACITE_PREFIX}/hs.{res_doi}"
+                final_doi = f"{settings.DATACITE_PREFIX}/{res_doi}"
                 if status == 'deleted':
                     print("Resource is deleted, using tombstone URL")
                     url = row['tombstone_url']
