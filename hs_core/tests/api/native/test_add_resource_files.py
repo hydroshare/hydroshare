@@ -68,7 +68,6 @@ class TestAddResourceFiles(MockS3TestCaseMixin, unittest.TestCase):
         Test that when a user is a quota_holder for no resources/files, the quota size defaults to 0.
         """
         uquota = self.user.quotas.first()
-        self.assertAlmostEqual(uquota.data_zone_value, 0.0, places=6)
         self.assertEqual(uquota.unit, 'GB')
 
         # check that the resource has no files

@@ -62,21 +62,19 @@ Command line:
 
 Following the screen instruction to continue.
 
-Run the following command on completion to launch Hydroshare: 
-
-    docker-compose -f local-dev.yml up 
+The [local-dev-first-start-only.sh](./local-dev-first-start-only.sh) will spin up all docker containers in the [local-dev.yml](./local-dev.yml). It does NOT spin up a container for the landing page (you can [uncomment here](https://github.com/hydroshare/hydroshare/blob/6106/landing-page-rebase/local-dev.yml#L429-L452) if you desire to run the landing page as a static build inside a local Docker container). Instead, the script uses [PM2](https://pm2.io/) to run the Vite dev server to take advantage of [HMR](https://vite.dev/guide/features#hot-module-replacement). More details in the [landing page readme](/landing-page/README.md).
 
 5. Sanity Checks
 
     Some WARNINGs are normal. 
 
-    HydroShare is available in your browser at https://localhost
+    HydroShare is available in your browser at http://localhost
 
-    The default admin page is https://localhost/admin
+    The default admin page is http://localhost/admin
 
     The default admin account is admin:default
 
-    Swagger API docs https://localhost/hsapi/
+    Swagger API docs http://localhost/hsapi/
 
 6. Start & Stop & Log
 
@@ -162,3 +160,25 @@ Hydroshare is released under the BSD 3-Clause License. This means that [you can 
 
 ©2017 CUAHSI. This material is based upon work supported by the National Science Foundation (NSF) under awards [1148453](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1148453), [1148090](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1148090), [1664061](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1664061), [1664018](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1664018), [1664119](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1664119), [1338606](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1338606), and [1849458](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1849458). Any opinions, findings, conclusions, or recommendations expressed in this material are those of the authors and do not necessarily reflect the views of the NSF.
 
+## Create a dummy resource for landing page work
+
+* Pull the [6016/landing-page-metadata-extraction](https://github.com/hydroshare/hydroshare/tree/6016/landing-page-metadata-extraction) branch
+* run `./local-dev-first-start-only.sh`
+
+Then...
+
+### go checkout the resource
+* Login as `asdf` user
+* http://localhost/resource/d7b526e24f7e449098b428ae9363f514 (**it is important that you use http not https!! **)
+* You should see the OLD style resource landing page. Edit the resource and add a file to it. This will create the missing bucket and cause the metadata to be extracted.
+* Now check out the NEW landing page: http://localhost/landing/d7b526e24f7e449098b428ae9363f514 (**it is important that you use http not https!! **) . 
+  * If it gives you an error saying that the metadata couldn't be loaded from S3, make sure that you're logged in.
+    * Click "Login" this will redirect you to: the [HS sign-in page](http://localhost/accounts/login/?next=http%3A%2F%2Flocalhost%2Fresource%2Fd7b526e24f7e449098b428ae9363f514)
+    * After login, it should redirect you back to the [landing page](http://localhost/landing/d7b526e24f7e449098b428ae9363f514)
+  * If you see a 504 from nginx instead of the resource landing page, try `make down-landing` and then `make up-landing` to restart the pm2 process
+  * Check `npx pm2 logs` to see if the vue/vite process is running as expected
+  * Check `npx pm2 ls` and make sure that it lists the "hydroshare" service
+* If you get an error, check the "Settings" in the upper RH corner. Sometimes clicking the APPLY button will resolve the issue. This is a known bug that we need to resolve ![APPLY](apply_resource_landing_settings.png)
+* If you want to see the old version of the resource, you can do so at http://localhost/resource/d7b526e24f7e449098b428ae9363f514
+* You can view the minio console at http:localhost:9000 (user = cuahsi, password = devpassword)
+* If you experience issues, try a private browser window. Clear your local storage.
