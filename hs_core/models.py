@@ -4368,7 +4368,7 @@ class BaseResource(Page, AbstractResource):
 
         return dates
 
-    def get_datacite_deposit_json(self):
+    def get_datacite_deposit_json(self, test_mode=False):
         """
         Return JSON payload for creating a DOI with DataCite API.
         Conforms to DataCite REST API for DOI creation: https://support.datacite.org/reference/post_dois
@@ -4383,14 +4383,17 @@ class BaseResource(Page, AbstractResource):
             logger.warning(f"No abstract found for resource {self.short_id}. Using empty string.")
             self.metadata.description = type('obj', (), {'abstract': ''})()
 
-        doi = f"{settings.DATACITE_PREFIX}/{self.short_id}"
+        # Add "test" to the suffix if in test mode
+        suffix = f"hs.{self.short_id}-test" if test_mode else f"hs.{self.short_id}"
+        doi = f"{settings.DATACITE_PREFIX}/{suffix}"
+
         payload = {
             "data": {
                 "type": "dois",
                 "attributes": {
                     "doi": doi,
                     "prefix": f"{settings.DATACITE_PREFIX}",
-                    "suffix": self.short_id,
+                    "suffix": suffix,  # Use modified suffix
                     "event": "publish",
                     "url": None,
                     "creators": [],
@@ -4438,7 +4441,7 @@ class BaseResource(Page, AbstractResource):
                     "client": {
                         "data": {
                             "type": "repositories",
-                            "id": "pdpo.kyfnwo"
+                            "id": f"{settings.DATACITE_USERNAME}"
                         }
                     }
                 }

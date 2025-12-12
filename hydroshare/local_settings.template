@@ -49,7 +49,10 @@ IPYTHON_HOST = '127.0.0.1'
 # Celery settings
 # customizations: we need a special queue for broadcast signals to all docker daemons.
 # we also need a special queue for direct messages to all docker daemons.
-BROKER_URL = 'kafka://redpanda:9092'
+RABBITMQ_HOST = os.environ.get('RABBITMQ_PORT_5672_TCP_ADDR', 'localhost')
+RABBITMQ_PORT = '5672'
+BROKER_URL = 'amqp://guest:guest@{RABBITMQ_HOST}:{RABBITMQ_PORT}//'.format(RABBITMQ_HOST=RABBITMQ_HOST,
+                                                                           RABBITMQ_PORT=RABBITMQ_PORT)
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
@@ -223,8 +226,6 @@ DEFAULT_AUTHENTICATION_CLASSES = (
 # OIDC_OP_LOGOUT_URL_METHOD = 'hs_core.authentication.provider_logout'
 # OIDC_STORE_ID_TOKEN = True
 
-# Only enable this if you are using minio in local development
-AWS_S3_USE_LOCAL = True
 # Todo: Change for production deployment
 USE_DATACITE_TEST=os.environ.get("USE_DATACITE_TEST", True)
 DATACITE_PREFIX = os.environ.get("DATACITE_PREFIX", "10.83165")
