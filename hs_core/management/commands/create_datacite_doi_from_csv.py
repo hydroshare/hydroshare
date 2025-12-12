@@ -132,8 +132,8 @@ class Command(BaseCommand):
                                 "lang": "en"
                             }],
                             "dates": [
-                                {"dateType": "Issued", "date": row['published']},
-                                {"dateType": "Updated", "date": row['deposited']}
+                                {"dateType": "Issued", "date": row['deposited']},
+                                # {"dateType": "Updated", "date": row['deposited']}
                             ],
                             "publisher": {
                                 "name": "Consortium of Universities for the Advancement of Hydrologic Science, Inc",
@@ -142,7 +142,7 @@ class Command(BaseCommand):
                                 "publisherIdentifierScheme": "ROR",
                                 "schemeUri": "https://ror.org"
                             },
-                            "publicationYear": row['published'].split('-')[0],
+                            "publicationYear": row['deposited'].split('-')[0],
                             "language": "en",
                             "types": {
                                 "resourceTypeGeneral": "Dataset",
