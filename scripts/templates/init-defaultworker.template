@@ -15,5 +15,5 @@ celery -A hydroshare beat  -s /hydroshare/celery/celerybeat-schedule &
 # note that these celery internal workers are distinct from k8 worker pods
 celery -A hydroshare worker -E -Q default -c 2 --prefetch-multiplier=1 -n default-worker@%h &
 celery -A hydroshare worker -E -Q periodic -c 2 --prefetch-multiplier=1 -n periodic-worker@%h &
-celery -A hydroshare flower --address=0.0.0.0 --broker=kafka://redpanda:9092
+celery -A hydroshare flower --address=0.0.0.0 --broker=amqp://guest:guest@rabbitmq:5672//
 
