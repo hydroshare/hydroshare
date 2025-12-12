@@ -147,9 +147,6 @@ echo '##########################################################################
 echo " Preparing"                                                                                            
 echo '###############################################################################################################'
 
-echo "Pulling git submodules..."
-git submodule update --init --recursive
-
 echo "Creating init scripts"
 cp scripts/templates/init-defaultworker.template init-defaultworker
 sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g init-defaultworker

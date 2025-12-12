@@ -1,0 +1,25 @@
+:80 {
+    # Handle the base path
+    # handle
+    handle_path {{ .VITE_APP_BASE }}* {
+        root * /srv/discover-frontend
+        try_files {path} /index.html
+        file_server
+    }
+    
+    # Enable gzip
+    encode gzip
+    
+    # Security headers
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        X-XSS-Protection "1; mode=block"
+    }
+    
+    # Logging
+    log {
+        output stdout
+        format console
+    }
+}
