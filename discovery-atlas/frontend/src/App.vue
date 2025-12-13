@@ -212,31 +212,37 @@ class App extends Vue {
     onLoggedIn: () => {},
     onCancel: () => {},
   };
+
+  protected getOriginUrl() {
+    return window.location.origin;
+  }
+
   public paths: any[] = [
     {
-      attrs: { to: "/home" },
+      attrs: { href: `${this.getOriginUrl()}/home` },
       label: "Home",
       icon: "mdi-home",
     },
     {
-      attrs: { to: "/my-resources" },
+      attrs: { href: `${this.getOriginUrl()}/my-resources` },
       label: "My Resources",
       icon: "mdi-home",
     },
     {
-      attrs: { to: "/discover" },
+      attrs: { to: "/" },
       label: "Discover",
       icon: "mdi-home",
     },
     {
-      attrs: { to: "/apps" },
+      attrs: { href: `${this.getOriginUrl()}/apps` },
       label: "Apps",
       icon: "mdi-home",
     },
     {
-      attrs: { to: "/help" },
+      attrs: { href: "https://help.hydroshare.org" },
       label: "Help",
       icon: "mdi-home",
+      isExternal: true,
     },
   ];
 
