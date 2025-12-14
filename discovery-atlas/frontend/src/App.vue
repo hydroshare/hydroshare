@@ -219,12 +219,12 @@ class App extends Vue {
 
   public paths: any[] = [
     {
-      attrs: { href: `${this.getOriginUrl()}/home` },
+      attrs: { href: `${this.getOriginUrl()}/home/` },
       label: "Home",
       icon: "mdi-home",
     },
     {
-      attrs: { href: `${this.getOriginUrl()}/my-resources` },
+      attrs: { href: `${this.getOriginUrl()}/my-resources/` },
       label: "My Resources",
       icon: "mdi-home",
     },
@@ -234,12 +234,12 @@ class App extends Vue {
       icon: "mdi-home",
     },
     {
-      attrs: { href: `${this.getOriginUrl()}/apps` },
+      attrs: { href: `${this.getOriginUrl()}/apps/` },
       label: "Apps",
       icon: "mdi-home",
     },
     {
-      attrs: { href: "https://help.hydroshare.org" },
+      attrs: { href: "https://help.hydroshare.org/" },
       label: "Help",
       icon: "mdi-home",
       isExternal: true,
