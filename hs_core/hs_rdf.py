@@ -83,6 +83,23 @@ class RDF_MetaData_Mixin(object):
         g = self.get_rdf_graph()
         return g.serialize(format='hydro-xml').decode()
 
+    def get_json(self, pretty_print=True, include_format_elements=True):
+        """Generates ORI+RDF json for this metadata"""
+        from hsmodels.schemas import rdf_schemas, user_schemas, _parse
+        from hsmodels.schemas.rdf.resource import ResourceMap
+        g = self.get_rdf_graph()
+        for target_class, schema in rdf_schemas.items():
+            subject = g.value(predicate=RDF.type, object=target_class)
+            if subject:
+                if target_class == ResourceMap:
+                    return _parse(schema, g)
+                else:
+                    rdf_metadata = _parse(schema, g)
+                    if schema in user_schemas.keys():
+                        return user_schemas[schema](**rdf_metadata.model_dump(exclude_none=True))
+                    return rdf_metadata
+        raise Exception("Could not find schema")
+
 
 class RDF_Term_MixIn(object):
     """
