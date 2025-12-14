@@ -1,6 +1,6 @@
 {% extends 'pages/page.html' %}
 
-{% load ratings_tags pages_tags keyword_tags hydroshare_tags crispy_forms_tags %}
+{% load ratings_tags pages_tags hydroshare_tags crispy_forms_tags %}
 
 {% block extra_head %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/jquery.dataTables.min.css' %}">
@@ -198,8 +198,6 @@
 {% endblock %}
 
 {% block main %}
-    {% keywords_for page as kws %}
-    {% set_page_permissions page %}
     {% if page.perms.change and resource_edit_mode and not cm.raccess.published_or_review_pending %}
     {% csrf_token %}
     {% endif %}
