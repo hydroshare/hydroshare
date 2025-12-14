@@ -9,9 +9,9 @@
       app
     >
       <v-container class="d-flex align-end full-height pa-0 align-center">
-        <router-link :to="{ path: `/` }" class="logo">
+        <a :href="`${getOriginUrl()}/landingPage/`" class="logo">
           <img src="/img/hydroshare.png" alt="HydroShare" />
-        </router-link>
+        </a>
         <div class="spacer"></div>
         <div v-if="!$vuetify.display.mdAndDown" class="d-flex gap-1 ml-6">
           <v-btn
@@ -213,7 +213,7 @@ class App extends Vue {
     onCancel: () => {},
   };
 
-  protected getOriginUrl() {
+  public getOriginUrl() {
     return window.location.origin;
   }
 
