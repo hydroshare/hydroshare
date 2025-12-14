@@ -71,7 +71,8 @@
 
 {# ======= Missing fields notification =======#}
 {% if page.perms.change and not is_replaced_by %}
-    {% if missing_metadata_elements_for_discoverable or title|stringformat:"s" == "Untitled resource" or not cm.has_required_content_files %}
+    {% with has_required_content_files=cm.has_required_content_files %}
+    {% if missing_metadata_elements_for_discoverable or title|stringformat:"s" == "Untitled resource" or not has_required_content_files %}
         <div class="col-xs-12">
             <div id="missing-metadata-or-file" class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
@@ -95,7 +96,7 @@
                     {%  endif %}
                     </ul>
                 {%  endif %}
-                {%  if not cm.has_required_content_files %}
+                {%  if not has_required_content_files %}
                          <br>
                         <span>You must {% if missing_metadata_elements_for_discoverable %}also {% endif %}add content files to your resource before it can be published, public or discoverable.</span>
                 {% endif %}
@@ -122,6 +123,7 @@
             </div>
         </div>
     {% endif %}
+    {% endwith %}
 {% endif %}
 
 {# ======= Missing file level metadata notification =======#}
