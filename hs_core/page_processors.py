@@ -53,9 +53,8 @@ def get_readonly_page_context(content_model, user, request=None):
         if file_type_error:
             del request.session["file_type_error"]
 
-    show_content_files = _should_show_content_files(content_model, user)
-
     can_view = content_model.can_view(request)
+    show_content_files = _should_show_content_files(content_model, user, can_view=can_view)
     if not can_view and not show_content_files:
         raise PermissionDenied()
 
@@ -157,6 +156,7 @@ def get_readonly_page_context(content_model, user, request=None):
         'belongs_to_collections': belongs_to_collections,
         'show_web_reference_note': has_web_ref,
         'current_user': user,
+        'file_count': content_model.files.count(),
         'maps_key': maps_key
     }
 
@@ -173,7 +173,6 @@ def get_editable_page_context(content_model, user, extended_metadata_layout=None
 
     :return: the template context dict for editable resource page
     """
-    show_content_files = _should_show_content_files(content_model, user)
 
     can_change = content_model.can_change(request)
 
@@ -181,6 +180,7 @@ def get_editable_page_context(content_model, user, extended_metadata_layout=None
     if not can_change:
         raise PermissionDenied()
 
+    show_content_files = _should_show_content_files(content_model, user, can_view=True)
     discoverable = content_model.raccess.discoverable
     resource_is_mine = _is_resource_mine(content_model, user)
 
@@ -268,6 +268,7 @@ def get_editable_page_context(content_model, user, extended_metadata_layout=None
                                        if type_value not in Relation.NOT_USER_EDITABLE),
         'show_web_reference_note': has_web_ref,
         'belongs_to_collections': belongs_to_collections,
+        'file_count': content_model.files.count(),
         'maps_key': maps_key,
         'topics_json': mark_safe(escapejs(json.dumps(topics))),
         'czo_user': czo_user,
@@ -325,16 +326,19 @@ def _get_metadata_status(resource):
     return metadata_status
 
 
-def _should_show_content_files(content_model, user):
+def _should_show_content_files(content_model, user, can_view=None):
     """Determine whether content files should be shown to the user.
 
     :param content_model: the resource content model
     :param user: the user viewing the resource
+    :param can_view: whether the user can view the resource
     :return: True if content files should be shown, False otherwise
     """
     show_content_files = content_model.raccess.public or content_model.raccess.allow_private_sharing
     if not show_content_files and user.is_authenticated:
-        show_content_files = user.uaccess.can_view_resource(content_model)
+        if can_view is None:
+            can_view = user.uaccess.can_view_resource(content_model)
+        show_content_files = can_view
     return show_content_files
 
 

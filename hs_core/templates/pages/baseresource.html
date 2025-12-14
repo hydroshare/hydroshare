@@ -610,7 +610,7 @@
                          {% if cm.raccess.require_download_agreement %}
                              data-agreement="true"
                          {% endif %}
-                         data-initial-file-count="{{ cm.files.all.count }}"
+                         data-initial-file-count="{{ file_count }}"
                          class="file-browser">
 
                         <div class="file-browser-container">
@@ -1028,7 +1028,7 @@
       const SELF_ACCESS_LEVEL = "{{ self_access_level }}";
       const CAN_CHANGE = "{{ page.perms.change }}" === "True";
       const RES_TYPE = "{{ cm|resource_type }}";
-      const FILE_COUNT = {{ cm.files.all.count }};
+      const FILE_COUNT = {{ file_count }};
       const SUPPORTE_FILE_TYPES = "{{ cm.get_supported_upload_file_types }}";
       const ALLLOW_MULTIPLE_FILE_UPLOAD = "{{ cm.allow_multiple_file_upload }}";
       const RESOURCE_MODE = "{% if resource_edit_mode %}Edit{% else %}View{% endif %}";
