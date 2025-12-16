@@ -4472,7 +4472,7 @@ class BaseResource(Page, AbstractResource):
 
         if self.metadata.rights and self.metadata.rights.url:
             rights_data = {
-                "rights": self.metadata.rights.statement,
+                "rights": self.metadata.rights.statement[:2000],
                 "rightsUri": self.metadata.rights.url
             }
             if pub_date:
