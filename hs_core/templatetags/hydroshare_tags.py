@@ -211,11 +211,11 @@ def best_name(content):
         content = "Anonymous"
     elif content.first_name:
         if content.userprofile.middle_name:
-            content = "{fn} {mn} {ln}".format(fn=content.last_name,
+            content = "{fn} {mn} {ln}".format(fn=content.first_name,
                                               mn=content.userprofile.middle_name,
-                                              ln=content.first_name)
+                                              ln=content.last_name)
         else:
-            content = "{fn} {ln}".format(fn=content.last_name, ln=content.first_name)
+            content = "{fn} {ln}".format(fn=content.first_name, ln=content.last_name)
     else:
         content = content.username
 
