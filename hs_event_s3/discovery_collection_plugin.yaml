@@ -1,0 +1,5 @@
+name: discovery_collection_processor
+summary: Collects json-ld files to mongodb for discovery
+command: ["python", "hsevent/processors/discovery_collection_processor.py"]
+type: processor
+fields: []
