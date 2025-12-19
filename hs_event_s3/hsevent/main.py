@@ -3,6 +3,10 @@ import asyncio
 import json
 import django
 import threading
+import logging
+
+from django.core.exceptions import ObjectDoesNotExist
+from json import JSONDecodeError
 
 django.setup()
 # django imports can only happen after django is setup
@@ -11,6 +15,12 @@ from hs_core.hydroshare.resource import delete_resource_file
 from theme.models import UserProfile
 from hs_core.views.utils import link_s3_file_to_django
 from hs_file_types.utils import get_logical_file_type, set_logical_file_type
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s [hs_event_s3] %(message)s",
+)
 
 
 def link_s3_files_to_resource(resource, fullpath):
@@ -26,7 +36,7 @@ def link_s3_files_to_resource(resource, fullpath):
 
 
 def sync_resource(file_created, key, resource_id, username):
-    short_path = key.split(f'{resource_id}/data/contents/')[1]
+    short_path = key.split(f"{resource_id}/data/contents/")[1]
     if file_created:
         try:
             resource = BaseResource.objects.get(short_id=resource_id)
@@ -44,26 +54,84 @@ def sync_resource(file_created, key, resource_id, username):
         except Exception as e:
             print(f"Error deleting file for resource {resource_id}: {e}")
 
+def _run_with_error_capture(target, *args, **kwargs):
+    """Run a callable inside a thread and return an exception if it occurs."""
+    captured_exception = {}
+
+    def _runner():
+        try:
+            target(*args, **kwargs)
+        except Exception as exc:  # noqa: BLE001
+            captured_exception["exception"] = exc
+            logger.exception("Error while processing event: %s", exc)
+
+    fetch_thread = threading.Thread(target=_runner)
+    fetch_thread.start()
+    fetch_thread.join()
+
+    if "exception" in captured_exception:
+        raise captured_exception["exception"]
+
 
 @redpanda_connect.processor
 def handle_minio_event(msg: redpanda_connect.Message) -> redpanda_connect.Message:
-    print("Received message from Redpanda print")
-    json_payload = json.loads(msg.payload)
-    key = json_payload['Key']
-    file_created = json_payload['EventName'].startswith("s3:ObjectCreated")
-    bucket_name = key.split('/')[0]
-    resource_id = key.split('/')[1]
-    username = json_payload['Records'][0]['userIdentity']['principalId']
+    logger.info("Received message from Redpanda")
+    try:
+        payload_raw = msg.payload.decode() if isinstance(msg.payload, (bytes, bytearray)) else msg.payload
+        json_payload = json.loads(payload_raw)
+    except (JSONDecodeError, UnicodeDecodeError):
+        logger.exception("Failed to decode payload from Redpanda: %s", msg.payload)
+        # Surface the error to the pipeline catch block
+        raise
+
+    key = json_payload.get("Key")
+    event_name = json_payload.get("EventName", "")
+    bucket_name = key.split("/")[0] if key else ""
+    resource_id = key.split("/")[1] if key else ""
+    username = json_payload.get("Records", [{}])[0].get("userIdentity", {}).get("principalId")
+
+    if not key or not resource_id:
+        logger.error("Missing key or resource id in event payload: %s", json_payload)
+        raise ValueError("Incomplete event payload - key or resource id missing")
+
     if username == "cuahsi":
-        return
-    if not key.startswith(f'{bucket_name}/{resource_id}/data/contents/'):
+        logger.info("Ignoring system event for resource %s (cuahsi user)", resource_id)
+        return msg
+
+    contents_prefix = f"{bucket_name}/{resource_id}/data/contents/"
+    if not key.startswith(contents_prefix):
         # TODO: tests around this check, possibly tighten up
-        print(f"Ignoring event for key {key} not in contents directory")
-        return
-    print(f"Processing event for resource id: {resource_id}")
-    fetch_thread = threading.Thread(target=sync_resource, args=(file_created, key, resource_id, username))
-    fetch_thread.start()
-    fetch_thread.join()
+        logger.info("Ignoring event for key %s not in contents directory", key)
+        return msg
+
+    file_created = event_name.startswith("s3:ObjectCreated")
+    logger.info(
+        "Processing event for resource id: %s | created=%s | key=%s",
+        resource_id,
+        file_created,
+        key,
+    )
+
+    try:
+        _run_with_error_capture(sync_resource, file_created, key, resource_id, username)
+    except ObjectDoesNotExist as exc:
+        logger.exception(
+            "Object not found while processing event (resource_id=%s, key=%s): %s",
+            resource_id,
+            key,
+            exc,
+        )
+        raise
+    except Exception:
+        # Let pipeline catch/log handle the rest
+        logger.exception(
+            "Unhandled error while processing event (resource_id=%s, key=%s)",
+            resource_id,
+            key,
+        )
+        raise
+
+    return msg
 
 
 if __name__ == "__main__":
