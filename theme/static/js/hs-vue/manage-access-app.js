@@ -6,23 +6,23 @@ let manageAccessApp = new Vue({
     el: '#manage-access',
     delimiters: ['${', '}'],
     data: {
-        users: USERS_JSON.map(function(user) {
-            user.loading = false;
-            return user;
-        }),
-        currentUser: CURRENT_USER_ID,
+        users: [],
+        currentUser: null,
         targetUserId: null,
-        selfAccessLevel: SELF_ACCESS_LEVEL,
-        quotaHolder: USERS_JSON.find(function(user) {
-            return user.id === QUOTA_HOLDER_PK;
-        }),
+        selfAccessLevel: null,
+        quotaHolder: null,
         resType: RES_TYPE,
         resShortId: SHORT_ID,
-        canChangeResourceFlags: CAN_CHANGE_RESOURCE_FLAGS,
+        canChangeResourceFlags: false,
         groupImageDefaultUrl: GROUP_IMAGE_DEFAULT_URL,
         resourceMode: RESOURCE_MODE,
-        resAccess: RESOURCE_ACCESS,
-        canBePublicDiscoverable: CAN_BE_PUBLIC_OR_DISCOVERABLE,
+        resAccess: {
+            isPublic: RESOURCE_ACCESS.isPublic,
+            isDiscoverable: RESOURCE_ACCESS.isDiscoverable,
+            isShareable: RESOURCE_ACCESS.isShareable,
+            isPrivateLinkSharing: RESOURCE_ACCESS.isPrivateLinkSharing,
+        },
+        canBePublicDiscoverable: false,
         isInviteUsers: true,
         selectedAccess: 'view',
         accessStr: {
@@ -44,6 +44,8 @@ let manageAccessApp = new Vue({
             top: 0,
             left: 0,
         },
+        dataLoaded: false,
+        dataLoading: false,
     },
     watch: {
         resAccess: function (newAccess, oldAccess) {
@@ -488,11 +490,59 @@ let manageAccessApp = new Vue({
             const cardWidth = 350;
             this.cardPosition.left = el.position().left - (cardWidth / 2) + (el.width() / 2);
             this.cardPosition.top = el.position().top + 30;
+        },
+        loadManageAccessData: function () {
+            if (this.dataLoaded || this.dataLoading) {
+                return;
+            }
+
+            let vue = this;
+            vue.dataLoading = true;
+
+            $.get(MANAGE_ACCESS_DATA_URL, function (resp) {
+                if (resp.status === "success") {
+                    // Map users and add loading property
+                    vue.users = resp.users_json.map(function(user) {
+                        user.loading = false;
+                        return user;
+                    });
+
+                    vue.currentUser = resp.current_user_id;
+                    vue.selfAccessLevel = resp.self_access_level;
+                    vue.canChangeResourceFlags = resp.can_change_resource_flags;
+                    vue.canBePublicDiscoverable = resp.can_be_public_or_discoverable;
+                    vue.resAccess = resp.resource_access;
+
+                    // Find quota holder from users list
+                    vue.quotaHolder = vue.users.find(function(user) {
+                        return user.id === resp.quota_holder_pk;
+                    });
+
+                    vue.dataLoaded = true;
+                }
+                else {
+                    console.error("Failed to load manage access data:", resp);
+                }
+                vue.dataLoading = false;
+            }).fail(function(xhr, status, error) {
+                console.error("Error loading manage access data:", error);
+                vue.dataLoading = false;
+            });
         }
     },
 });
 
 $(document).ready(function() {
+    // Load manage access data when the button is clicked
+    $('#btn-manage-access').on('click', function(e) {
+        manageAccessApp.loadManageAccessData();
+    });
+
+    // Also handle when modal is shown via other triggers
+    $('#manage-access').on('show.bs.modal', function (e) {
+        manageAccessApp.loadManageAccessData();
+    });
+
     // initialize the select2 event listeners
     $('#id_user_resource_permission').on('select2:select', function (e) {
         let userId = e.params.data.id;

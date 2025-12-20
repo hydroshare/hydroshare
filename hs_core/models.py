@@ -305,6 +305,9 @@ def page_permissions_page_processor(request, page):
     from hs_access_control.models.privilege import PrivilegeCodes
     from hs_core.hydroshare.utils import get_remaining_user_quota
 
+    # Optimized to only fetch minimal data for initial page load.
+    # Full manage access data is fetched on-demand when the manage access modal is opened.
+
     cm = page.get_content_model()
     can_change_resource_flags = False
     self_access_level = None
@@ -321,13 +324,8 @@ def page_permissions_page_processor(request, page):
         elif user_privilege == PrivilegeCodes.VIEW:
             self_access_level = 'view'
 
+    # Only fetch owners for left header display - full access list loaded on-demand
     owners = cm.raccess.owners.all()
-    editors = cm.raccess.get_users_with_explicit_access(PrivilegeCodes.CHANGE,
-                                                        include_group_granted_access=False)
-    viewers = cm.raccess.get_users_with_explicit_access(PrivilegeCodes.VIEW,
-                                                        include_group_granted_access=False)
-    edit_groups = cm.raccess.edit_groups
-    view_groups = cm.raccess.view_groups.exclude(pk__in=edit_groups)
 
     last_changed_by = cm.last_changed_by
 
@@ -336,51 +334,18 @@ def page_permissions_page_processor(request, page):
             owner.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, owner)
             owner.viewable_contributions = request.user.uaccess.can_view_resources_owned_by(owner)
 
-        for viewer in viewers:
-            viewer.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, viewer)
-
-        for editor in editors:
-            editor.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, editor)
-
-        for view_grp in view_groups:
-            view_grp.can_undo = request.user.uaccess.can_undo_share_resource_with_group(cm,
-                                                                                        view_grp)
-
-        for edit_grp in edit_groups:
-            edit_grp.can_undo = request.user.uaccess.can_undo_share_resource_with_group(cm,
-                                                                                        edit_grp)
         if last_changed_by.is_active:
             last_changed_by.viewable_contributions = request.user.uaccess.can_view_resources_owned_by(last_changed_by)
 
     else:
         for owner in owners:
             owner.can_undo = False
-        for viewer in viewers:
-            viewer.can_undo = False
-        for editor in editors:
-            editor.can_undo = False
-        for view_grp in view_groups:
-            view_grp.can_undo = False
-        for edit_grp in edit_groups:
-            edit_grp.can_undo = False
     last_changed_by.can_undo = False
 
+    # Only include owners in initial page load JSON
     users_json = []
-
     for usr in owners:
         users_json.append(get_access_object(usr, "user", "owner"))
-
-    for usr in editors:
-        users_json.append(get_access_object(usr, "user", "edit"))
-
-    for usr in viewers:
-        users_json.append(get_access_object(usr, "user", "view"))
-
-    for usr in edit_groups:
-        users_json.append(get_access_object(usr, "group", "edit"))
-
-    for usr in view_groups:
-        users_json.append(get_access_object(usr, "group", "view"))
 
     if last_changed_by.is_active:
         lcb_access_level = cm.raccess.get_effective_user_privilege(last_changed_by)
@@ -2250,11 +2215,21 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         # These are the fields that need to be updated in cached metadata
         field_updaters = {
             'creator': self._update_creators_field,
+            'contributor': self._update_contributors_field,
+            'coverage': self._update_coverage_field,
             'title': self._update_title_field,
             'subject': self._update_subjects_field,
             'date': self._update_date_field,
             'status': self._update_status_field,
             'description': self._update_abstract_field,
+            'relation': self._update_relation_field,
+            'geospatialrelation': self._update_geospatialrelation_field,
+            'fundingagency': self._update_fundingagency_field,
+            'rights': self._update_rights_field,
+            'language': self._update_language_field,
+            'identifier': self._update_identifier_field,
+            'type': self._update_type_field,
+            'publisher': self._update_publisher_field
         }
 
         # Update all fields if 'all' is specified
@@ -2291,20 +2266,49 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         creators = metadata.creators.all()
         copied_metadata['creators'] = [
             {
-                'name': c.name,
+                'id': c.id,
+                'name': c.name if c.name else None,
+                'email': c.email if c.email else None,
+                'address': c.address if c.address else None,
+                'phone': c.phone if c.phone else None,
+                'homepage': c.homepage if c.homepage else None,
                 'order': c.order,
                 'hs_user_id': c.hydroshare_user_id,
                 'is_active_user': c.is_active_user,
                 'relative_uri': c.relative_uri,
-                'organization': c.organization
+                'organization': c.organization if c.organization else None,
+                'identifiers': c.identifiers
             }
             for c in creators
+        ]
+
+    def _update_contributors_field(self, copied_metadata, metadata):
+        """Update contributors field in cached metadata"""
+        contributors = metadata.contributors.all()
+        copied_metadata['contributors'] = [
+            {
+                'id': c.id,
+                'name': c.name if c.name else None,
+                'email': c.email if c.email else None,
+                'address': c.address if c.address else None,
+                'phone': c.phone if c.phone else None,
+                'homepage': c.homepage if c.homepage else None,
+                'hs_user_id': c.hydroshare_user_id,
+                'is_active_user': c.is_active_user,
+                'relative_uri': c.relative_uri,
+                'organization': c.organization if c.organization else None,
+                'identifiers': c.identifiers
+            }
+            for c in contributors
         ]
 
     def _update_title_field(self, copied_metadata, metadata):
         """Update title field in cached metadata"""
         title = metadata.title.value if hasattr(metadata, 'title') and metadata.title else ""
-        copied_metadata['title'] = title
+        if title:
+            copied_metadata['title'] = {'value': title, 'id': metadata.title.id}
+        else:
+            copied_metadata['title'] = {}
 
     def _update_subjects_field(self, copied_metadata, metadata):
         """Update subjects field in cached metadata"""
@@ -2320,6 +2324,11 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             else:
                 copied_metadata['created'] = self.created.isoformat()
 
+        if 'published_date' not in copied_metadata:
+            published_date = metadata.dates.filter(type='published').first()
+            if published_date:
+                copied_metadata['published_date'] = published_date.start_date.isoformat()
+
     def _update_status_field(self, copied_metadata, metadata):
         """Update status field in cached metadata"""
         if hasattr(self, 'raccess'):
@@ -2333,16 +2342,153 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
     def _update_abstract_field(self, copied_metadata, metadata):
         """Update abstract field in cached metadata"""
         abstract = metadata.description.abstract if hasattr(metadata, 'description') and metadata.description else ""
-        copied_metadata['abstract'] = abstract
+        if abstract:
+            copied_metadata['abstract'] = {'value': abstract, 'id': metadata.description.id}
+        else:
+            copied_metadata['abstract'] = {}
+
+    def _update_coverage_field(self, copied_metadata, metadata):
+        """Update coverage field in cached metadata"""
+        self._update_temporal_coverage_field(copied_metadata, metadata)
+        self._update_spatial_coverage_field(copied_metadata, metadata)
+
+    def _update_temporal_coverage_field(self, copied_metadata, metadata):
+        """Update temporal coverage field in cached metadata"""
+        temporal_coverage = metadata.temporal_coverage
+        temp_coverage = {}
+        if temporal_coverage:
+            temp_coverage = {
+                'id': temporal_coverage.id,
+                'start_date': temporal_coverage.value['start'],
+                'end_date': temporal_coverage.value['end'],
+                'name': temporal_coverage.value.get('name', '')
+            }
+        copied_metadata['temporal_coverage'] = temp_coverage
+
+    def _update_spatial_coverage_field(self, copied_metadata, metadata):
+        """Update spatial coverage field in cached metadata"""
+        spatial_coverage = metadata.spatial_coverage
+        spatial_coverage_dict = {}
+        if spatial_coverage:
+            spatial_coverage_dict['id'] = spatial_coverage.id
+            spatial_coverage_dict['exists'] = True
+            spatial_coverage_dict['name'] = spatial_coverage.value.get('name', None)
+            spatial_coverage_dict['type'] = spatial_coverage.type
+            spatial_coverage_dict['projection'] = spatial_coverage.value.get('projection', None)
+            spatial_coverage_dict['units'] = spatial_coverage.value['units']
+            spatial_coverage_dict['zunits'] = spatial_coverage.value.get('zunits', None)
+            if spatial_coverage.type == 'point':
+                spatial_coverage_dict['east'] = spatial_coverage.value['east']
+                spatial_coverage_dict['north'] = spatial_coverage.value['north']
+                spatial_coverage_dict['elevation'] = spatial_coverage.value.get('elevation', None)
+            else:
+                spatial_coverage_dict['northlimit'] = spatial_coverage.value['northlimit']
+                spatial_coverage_dict['eastlimit'] = spatial_coverage.value['eastlimit']
+                spatial_coverage_dict['southlimit'] = spatial_coverage.value['southlimit']
+                spatial_coverage_dict['westlimit'] = spatial_coverage.value['westlimit']
+        else:
+            spatial_coverage_dict['exists'] = False
+            spatial_coverage_dict['default_units'] = metadata.spatial_coverage_default_units
+            spatial_coverage_dict['default_projection'] = metadata.spatial_coverage_default_projection
+        copied_metadata['spatial_coverage'] = spatial_coverage_dict
+
+    def _update_relation_field(self, copied_metadata, metadata):
+        """Update relation field in cached metadata"""
+        relations = metadata.relations.all()
+        copied_metadata['relations'] = [
+            {
+                'id': r.id,
+                'type': r.type,
+                'value': r.value,
+                'type_description': r.type_description(),
+                'is_user_editable': r.type not in Relation.NOT_USER_EDITABLE
+            }
+            for r in relations
+        ]
+
+    def _update_geospatialrelation_field(self, copied_metadata, metadata):
+        """Update geospatialrelation field in cached metadata"""
+        geospatialrelations = metadata.geospatialrelations.all()
+        copied_metadata['geospatial_relations'] = [
+            {
+                'id': r.id,
+                'type': r.type,
+                'value': r.value,
+                'text': r.text,
+                'type_description': r.type_description()
+            }
+            for r in geospatialrelations
+        ]
+
+    def _update_fundingagency_field(self, copied_metadata, metadata):
+        """Update fundingagency field in cached metadata"""
+        funding_agencies = metadata.funding_agencies.all()
+        copied_metadata['funding_agencies'] = [
+            {
+                'id': r.id,
+                'agency_name': r.agency_name,
+                'award_title': r.award_title if r.award_title else None,
+                'award_number': r.award_number if r.award_number else None,
+                'agency_url': r.agency_url if r.agency_url else None
+            }
+            for r in funding_agencies
+        ]
+
+    def _update_rights_field(self, copied_metadata, metadata):
+        """Update rights field in cached metadata"""
+        rights = metadata.rights
+        if rights:
+            copied_metadata['rights'] = {
+                'id': rights.id,
+                'statement': rights.statement,
+                'url': rights.url if rights.url else None
+            }
+
+    def _update_identifier_field(self, copied_metadata, metadata):
+        """Update identifier field in cached metadata"""
+        identifiers = metadata.identifiers.all()
+        copied_metadata['identifiers'] = [
+            {
+                'id': i.id,
+                'name': i.name,
+                'url': i.url
+            }
+            for i in identifiers
+        ]
+
+    def _update_language_field(self, copied_metadata, metadata):
+        """Update language field in cached metadata"""
+        language = metadata.language
+        copied_metadata['language'] = language.code if language else None
+
+    def _update_type_field(self, copied_metadata, metadata):
+        """Update type field in cached metadata"""
+        _type = metadata.type
+        copied_metadata['type'] = _type.url if _type else None
+
+    def _update_publisher_field(self, copied_metadata, metadata):
+        """Update publisher field in cached metadata"""
+        publisher = metadata.publisher
+        if publisher:
+            copied_metadata['publisher'] = {
+                'id': publisher.id,
+                'name': publisher.name,
+                'url': publisher.url
+            }
+        else:
+            copied_metadata['publisher'] = {}
 
     def _ensure_required_fields(self, copied_metadata, metadata):
         """Ensure all required fields are present in cached metadata"""
 
-        if 'title' not in copied_metadata or copied_metadata['title'] == '':
+        if 'title' not in copied_metadata or not copied_metadata['title']:
             self._update_title_field(copied_metadata, metadata)
 
         if 'creators' not in copied_metadata or len(copied_metadata['creators']) == 0:
             self._update_creators_field(copied_metadata, metadata)
+
+        if 'contributors' not in copied_metadata or len(copied_metadata['contributors']) == 0:
+            self._update_contributors_field(copied_metadata, metadata)
 
         if 'created' not in copied_metadata or copied_metadata['created'] == '':
             self._update_date_field(copied_metadata, metadata)
@@ -2353,8 +2499,38 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         if 'status' not in copied_metadata:
             self._update_status_field(copied_metadata, metadata)
 
-        if 'abstract' not in copied_metadata:
+        if 'abstract' not in copied_metadata or not copied_metadata['abstract']:
             self._update_abstract_field(copied_metadata, metadata)
+
+        if 'temporal_coverage' not in copied_metadata:
+            self._update_temporal_coverage_field(copied_metadata, metadata)
+
+        if 'spatial_coverage' not in copied_metadata:
+            self._update_spatial_coverage_field(copied_metadata, metadata)
+
+        if 'relations' not in copied_metadata or len(copied_metadata['relations']) == 0:
+            self._update_relation_field(copied_metadata, metadata)
+
+        if 'geospatial_relations' not in copied_metadata or len(copied_metadata['geospatial_relations']) == 0:
+            self._update_geospatialrelation_field(copied_metadata, metadata)
+
+        if 'funding_agencies' not in copied_metadata or len(copied_metadata['funding_agencies']) == 0:
+            self._update_fundingagency_field(copied_metadata, metadata)
+
+        if 'rights' not in copied_metadata:
+            self._update_rights_field(copied_metadata, metadata)
+
+        if 'language' not in copied_metadata:
+            self._update_language_field(copied_metadata, metadata)
+
+        if 'identifiers' not in copied_metadata or len(copied_metadata['identifiers']) == 0:
+            self._update_identifier_field(copied_metadata, metadata)
+
+        if 'type' not in copied_metadata:
+            self._update_type_field(copied_metadata, metadata)
+
+        if 'publisher' not in copied_metadata or not copied_metadata['publisher']:
+            self._update_publisher_field(copied_metadata, metadata)
 
     def update_all_cached_metadata(self):
         """
@@ -2863,51 +3039,85 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         return str(self.metadata.citation.first())
 
     def get_citation(self, forceHydroshareURI=True):
-        """Get citation or citations from resource metadata."""
+        """Get citation or citations from resource metadata using cached_metadata."""
 
+        logger = logging.getLogger(__name__)
         citation_str_lst = []
-
         CITATION_ERROR = "Failed to generate citation."
 
-        creators = self.metadata.creators.all()
-        first_author = [cr for cr in creators if cr.order == 1][0]
-        if first_author.organization and not first_author.name:
-            citation_str_lst.append(first_author.organization + ", ")
+        # Get creators from cached_metadata
+        self.refresh_from_db(fields=['cached_metadata'])
+        cached_creators = self.cached_metadata.get('creators', [])
+        if not cached_creators:
+            logger.error(f"{CITATION_ERROR} No creators found in cached_metadata for resource {self.short_id}")
+            return CITATION_ERROR
+
+        # Find first creator (order == 1)
+        first_creator = next((c for c in cached_creators if c.get('order') == 1), None)
+        if not first_creator:
+            logger.error(f"{CITATION_ERROR} No first creator found in cached_metadata for resource {self.short_id}")
+            return CITATION_ERROR
+
+        # Format first creator name
+        creator_name = first_creator.get('name', '').strip()
+        if first_creator.get('organization', '') and not creator_name:
+            citation_str_lst.append(first_creator['organization'] + ", ")
         else:
-            citation_str_lst.append(self.parse_citation_name(first_author.name, first_author=True))
+            citation_str_lst.append(self.parse_citation_name(creator_name, first_author=True))
 
-        other_authors = [cr for cr in creators if cr.order > 1]
-        for author in other_authors:
-            if author.organization and not author.name:
-                citation_str_lst.append(author.organization + ", ")
-            elif author.name and len(author.name.strip()) != 0:
-                citation_str_lst.append(self.parse_citation_name(author.name))
+        # Add other creators
+        other_creators = [c for c in cached_creators if c.get('order', 0) > 1]
+        for author in other_creators:
+            author_name = author.get('name', '')
+            if author_name:
+                author_name = author_name.strip()
+            if author.get('organization', '') and not author_name:
+                citation_str_lst.append(author['organization'] + ", ")
+            elif author_name and len(author_name) != 0:
+                citation_str_lst.append(self.parse_citation_name(author_name))
 
-        # remove the last added comma and the space
+        # Remove the last added comma and space
         if len(citation_str_lst[-1]) > 2:
             citation_str_lst[-1] = citation_str_lst[-1][:-2]
         else:
+            err_msg = f"No valid creator names found in cached_metadata for resource {self.short_id}"
+            logger.error(f"{CITATION_ERROR} {err_msg}")
             return CITATION_ERROR
 
-        meta_dates = self.metadata.dates.all()
-        published_date = [dt for dt in meta_dates if dt.type == "published"]
+        # Get citation date from cached_metadata
         citation_date = None
-        if published_date:
-            citation_date = published_date[0]
-        else:
-            modified_date = [dt for dt in meta_dates if dt.type == "modified"]
-            if modified_date:
-                citation_date = modified_date[0]
+        if self.cached_metadata.get('published', ''):
+            citation_date = self.cached_metadata['published']
+        elif self.cached_metadata.get('modified'):
+            citation_date = self.cached_metadata['modified']
 
-        if citation_date is None:
+        if not citation_date:
+            err_msg = f"No published or modified date found in cached_metadata for resource {self.short_id}"
+            logger.error(f"{CITATION_ERROR} {err_msg}")
             return CITATION_ERROR
 
-        citation_str_lst.append(" ({year}). ".format(year=citation_date.start_date.year))
-        citation_str_lst.append(self.metadata.title.value)
+        # Parse the date and extract year
+        try:
+            citation_date_obj = parser.parse(citation_date)
+            citation_year = citation_date_obj.year
+        except (ValueError, TypeError):
+            logger.error(f"{CITATION_ERROR} Invalid date found in cached_metadata for resource {self.short_id}")
+            return CITATION_ERROR
 
+        citation_str_lst.append(" ({year}). ".format(year=citation_year))
+        title = self.cached_metadata.get('title', {})
+        if not title:
+            logger.error(f"{CITATION_ERROR} No title found in cached_metadata for resource {self.short_id}")
+            return CITATION_ERROR
+        if not title.get('value', ''):
+            logger.error(f"{CITATION_ERROR} No title value found in cached_metadata for resource {self.short_id}")
+            return CITATION_ERROR
+        citation_str_lst.append(title.get('value'))
+
+        # Check for DOI identifier
         isPendingActivation = False
-        identifiers = self.metadata.identifiers.all()
-        doi = [idn for idn in identifiers if idn.name == "doi"]
+        identifiers = self.cached_metadata.get('identifiers', [])
+        doi = [idn for idn in identifiers if idn.get('name') == "doi"]
 
         if doi and not forceHydroshareURI:
             hs_identifier = doi[0]
@@ -2915,13 +3125,15 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
                     or self.doi.find(DataciteSubmissionStatus.FAILURE.value) >= 0):
                 isPendingActivation = True
         else:
-            hs_identifier = [idn for idn in identifiers if idn.name == "hydroShareIdentifier"]
+            hs_identifier = [idn for idn in identifiers if idn.get('name') == "hydroShareIdentifier"]
             if hs_identifier:
                 hs_identifier = hs_identifier[0]
             else:
+                err_msg = f"No hydroShareIdentifier found in cached_metadata for resource {self.short_id}"
+                logger.error(f"{CITATION_ERROR} {err_msg}")
                 return CITATION_ERROR
 
-        citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
+        citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.get('url', '')))
 
         if isPendingActivation and not forceHydroshareURI:
             citation_str_lst.append(", DOI for this published resource is pending activation.")
@@ -4775,6 +4987,7 @@ class BaseResource(Page, AbstractResource):
         if any([replace_relation_updated, part_of_relation_updated, has_part_relation_updated]):
             self.setAVU("bag_modified", True)
             self.setAVU("metadata_dirty", True)
+            self.refresh_from_db(fields=['cached_metadata'])
 
     def get_non_preferred_path_names(self):
         """Returns a list of file/folder paths that do not meet hydroshare file/folder preferred naming convention"""
@@ -4820,7 +5033,7 @@ def new_get_content_model(self):
     content_model = self.content_model
     if content_model.endswith('resource'):
         rt = [rt for rt in get_resource_types() if rt._meta.model_name == content_model][0]
-        return rt.objects.get(id=self.id)
+        return rt.objects.filter(id=self.id).select_related('raccess', 'quota_holder', 'rlabels').first()
     return old_get_content_model(self)
 
 
@@ -5089,25 +5302,26 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         This method needs to be overriden by any subclass of this class
         if they implement additional metadata elements that are required
         """
-        if not self.title:
+        resource = self.resource
+        if not resource.cached_metadata.get('title', {}):
             return False
-        elif self.title.value.lower() == 'untitled resource':
-            return False
-
-        if not self.description:
-            return False
-        elif len(self.description.abstract.strip()) == 0:
+        elif resource.cached_metadata['title']['value'].lower() == 'untitled resource':
             return False
 
-        if self.creators.count() == 0:
+        if not resource.cached_metadata.get('abstract', {}):
+            return False
+        elif len(resource.cached_metadata['abstract']['value'].strip()) == 0:
             return False
 
-        if not self.rights:
-            return False
-        elif len(self.rights.statement.strip()) == 0:
+        if not resource.cached_metadata.get('creators', []):
             return False
 
-        if self.subjects.count() == 0:
+        if not resource.cached_metadata.get('rights', {}):
+            return False
+        elif len(resource.cached_metadata['rights']['statement'].strip()) == 0:
+            return False
+
+        if not resource.cached_metadata.get('subjects', []):
             return False
 
         return True
@@ -5123,25 +5337,30 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         if desired_state not in resource_states:
             raise ValidationError(f"Desired resource state is not in: {','.join(resource_states)}")
 
+        resource = self.resource
         missing_required_elements = []
         if desired_state != 'published':
-            if not self.title:
+            # check for title, abstract, rights, and keywords using cached_metadata
+            if not resource.cached_metadata.get('title', {}):
                 missing_required_elements.append('Title (at least 30 characters)')
-            elif self.title.value.lower() == 'untitled resource':
+            elif resource.cached_metadata['title']['value'].lower() == 'untitled resource':
                 missing_required_elements.append('Title (at least 30 characters)')
-            if not self.description:
+            if not resource.cached_metadata.get('abstract', {}):
                 missing_required_elements.append('Abstract (at least 150 characters)')
-            if not self.rights:
+            if not resource.cached_metadata.get('rights', {}):
                 missing_required_elements.append('Rights')
-            if self.subjects.count() == 0:
+            if not resource.cached_metadata.get('subjects', []):
                 missing_required_elements.append('Keywords (at least 3)')
         else:
-            if not self.title or len(self.title.value) < 30:
+            # check for title, abstract, and keywords using cached_metadata
+            cached_metadata = resource.cached_metadata
+            if not cached_metadata.get('title', {}) or len(cached_metadata['title']['value']) < 30:
                 missing_required_elements.append('The title must be at least 30 characters.')
-            if not self.description or len(self.description.abstract) < 150:
+            if not cached_metadata.get('abstract', {}) or len(cached_metadata['abstract']['value']) < 150:
                 missing_required_elements.append('The abstract must be at least 150 characters.')
-            if self.subjects.count() < 3:
+            if not cached_metadata.get('subjects', []) or len(cached_metadata['subjects']) < 3:
                 missing_required_elements.append('You must include at least 3 keywords.')
+
         return missing_required_elements
 
     def get_recommended_missing_elements(self):
@@ -5152,13 +5371,17 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
         """
 
         missing_recommended_elements = []
-        if not self.funding_agencies.count():
+        resource = self.resource
+        if not resource.cached_metadata.get('funding_agencies', []):
             missing_recommended_elements.append('Funding Agency')
-        if not self.resource.readme_file and self.resource.resource_type == "CompositeResource":
+
+        if not resource.readme_file and resource.resource_type == "CompositeResource":
             missing_recommended_elements.append('Readme file containing variables, '
                                                 'abbreviations/acronyms, and non-standard file formats')
-        if not self.coverages.count():
+        if not resource.cached_metadata.get('spatial_coverage', {}) and \
+                not resource.cached_metadata.get('temporal_coverage', {}):
             missing_recommended_elements.append('Coverage that describes locations that are related to the dataset')
+
         return missing_recommended_elements
 
     def delete_all_elements(self):
