@@ -54,7 +54,7 @@ class TestGetCitation(MockS3TestCaseMixin, TestCase):
         hs_url = hs_identifier.url
         hs_date = str(date.today().year)
         correct_citation = 'Creator_LastName, C., ' \
-                           'J. Smith ({}). A resource, HydroShare, {}'.format(hs_date, hs_url)
+                           'Smith, J. ({}). A resource, HydroShare, {}'.format(hs_date, hs_url)
         self.assertEqual(citation, correct_citation)
 
     def test_two_authors_comma(self):
@@ -66,7 +66,7 @@ class TestGetCitation(MockS3TestCaseMixin, TestCase):
         hs_url = hs_identifier.url
         hs_date = str(date.today().year)
         correct_citation = 'Creator_LastName, C., ' \
-                           'J. Smith ({}). A resource, HydroShare, {}'.format(hs_date, hs_url)
+                           'John, S. ({}). A resource, HydroShare, {}'.format(hs_date, hs_url)
         self.assertEqual(citation, correct_citation)
 
     def test_two_authors_multiple_first_and_last_names_comma(self):
@@ -79,7 +79,7 @@ class TestGetCitation(MockS3TestCaseMixin, TestCase):
         hs_url = hs_identifier.url
         hs_date = str(date.today().year)
         correct_citation = 'Creator_LastName, C., ' \
-                           'J. M. J. Smith William ' \
+                           'Jingle, S. J. M. ' \
                            '({}). A resource, HydroShare, {}'.format(hs_date, hs_url)
         self.assertEqual(citation, correct_citation)
 
@@ -93,7 +93,7 @@ class TestGetCitation(MockS3TestCaseMixin, TestCase):
         hs_url = hs_identifier.url
         hs_date = str(date.today().year)
         correct_citation = 'Creator_LastName, C., ' \
-                           'J. M. J. S. William ' \
+                           'William, J. M. J. S. ' \
                            '({}). A resource, HydroShare, {}'.format(hs_date, hs_url)
         self.assertEqual(citation, correct_citation)
 
@@ -109,24 +109,24 @@ class TestGetCitation(MockS3TestCaseMixin, TestCase):
         hs_url = hs_identifier.url
         hs_date = str(date.today().year)
         correct_citation = 'Creator_LastName, C., ' \
-                           'J. M. J. Smith William, ' \
+                           'Jingle, S. J. M., ' \
                            'U.S. Geological Survey ' \
                            '({}). A resource, HydroShare, {}'.format(hs_date, hs_url)
         self.assertEqual(citation, correct_citation)
 
     def test_parse_citation_name(self):
         name = "John Morley Smith"
-        parsed_name = self.res.parse_citation_name(name, first_author=True)
+        parsed_name = self.res.parse_citation_name(name)
         self.assertEqual(parsed_name, 'Smith, J. M., ')
 
         name = "John Morley Smith"
         parsed_name = self.res.parse_citation_name(name)
-        self.assertEqual(parsed_name, 'J. M. Smith, ')
+        self.assertEqual(parsed_name, 'Smith, J. M., ')
 
         name = "Smith Tanner, John Morley"
-        parsed_name = self.res.parse_citation_name(name, first_author=True)
+        parsed_name = self.res.parse_citation_name(name)
         self.assertEqual(parsed_name, 'Smith Tanner, J. M., ')
 
         name = "Smith Tanner, John Morley"
         parsed_name = self.res.parse_citation_name(name)
-        self.assertEqual(parsed_name, 'J. M. Smith Tanner, ')
+        self.assertEqual(parsed_name, 'Smith Tanner, J. M., ')

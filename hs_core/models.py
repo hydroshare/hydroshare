@@ -2991,42 +2991,43 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         """
         return None
 
-    def parse_citation_name(self, name, first_author=False):
+    def parse_citation_name(self, name, is_organization=False, is_non_hs_user=False):
         """Return properly formatted citation name from metadata."""
+        if is_organization:
+            return name + ", "
+
         CREATOR_NAME_ERROR = "Failed to generate citation - invalid creator name."
-        first_names = None
+
         if "," in name:
-            name_parts = name.split(",")
-            if len(name_parts) == 0:
-                return CREATOR_NAME_ERROR
-            elif len(name_parts) == 1:
-                last_names = name_parts[0]
-            elif len(name_parts) == 2:
-                first_names = name_parts[1]
-                first_names = first_names.split()
-                last_names = name_parts[0]
+            name_parts = name.split(",", 1)  # Split only on first comma
+            if len(name_parts) == 2:
+                last_names = name_parts[0].strip()
+                first_names = name_parts[1].strip().split()
+                if is_non_hs_user:
+                    potential_first = last_names
+                    potential_last_parts = first_names
+                    last_names = potential_last_parts[-1]
+                    first_names = [potential_first] + potential_last_parts[:-1]
             else:
                 return CREATOR_NAME_ERROR
         else:
             name_parts = name.split()
             if len(name_parts) == 0:
                 return CREATOR_NAME_ERROR
-            elif len(name_parts) > 1:
-                first_names = name_parts[:-1]
-                last_names = name_parts[-1]
-            else:
+            elif len(name_parts) == 1:
                 last_names = name_parts[0]
+                first_names = None
+            elif len(name_parts) == 2:
+                first_names = [name_parts[0]]
+                last_names = name_parts[1]
+            else:
+                last_names = name_parts[-1]
+                first_names = name_parts[:-1]
 
         if first_names:
-            initials_list = [i[0] for i in first_names]
-            initials = ". ".join(initials_list) + "."
-            if first_author:
-                author_name = "{last_name}, {initials}"
-            else:
-                author_name = "{initials} {last_name}"
-            author_name = author_name.format(last_name=last_names,
-                                             initials=initials
-                                             )
+            initials_list = [i[0] + "." for i in first_names if i]
+            initials = " ".join(initials_list)
+            author_name = "{last_name}, {initials}".format(last_name=last_names, initials=initials)
         else:
             author_name = "{last_name}".format(last_name=last_names)
 
@@ -3063,7 +3064,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         if first_creator.get('organization', '') and not creator_name:
             citation_str_lst.append(first_creator['organization'] + ", ")
         else:
-            citation_str_lst.append(self.parse_citation_name(creator_name, first_author=True))
+            is_non_hs_user = not first_creator.get('hs_user_id')
+            citation_str_lst.append(self.parse_citation_name(creator_name, is_non_hs_user=is_non_hs_user))
 
         # Add other creators
         other_creators = [c for c in cached_creators if c.get('order', 0) > 1]
@@ -3074,7 +3076,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             if author.get('organization', '') and not author_name:
                 citation_str_lst.append(author['organization'] + ", ")
             elif author_name and len(author_name) != 0:
-                citation_str_lst.append(self.parse_citation_name(author_name))
+                # Check if this is a non-HydroShare user who might have entered name incorrectly
+                is_non_hs_user = not author.get('hs_user_id')
+                citation_str_lst.append(self.parse_citation_name(author_name, is_non_hs_user=is_non_hs_user))
 
         # Remove the last added comma and space
         if len(citation_str_lst[-1]) > 2:
@@ -3109,10 +3113,11 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         if not title:
             logger.error(f"{CITATION_ERROR} No title found in cached_metadata for resource {self.short_id}")
             return CITATION_ERROR
-        if not title.get('value', ''):
+        title_value = title.get('value', '') if isinstance(title, dict) else str(title)
+        if not title_value:
             logger.error(f"{CITATION_ERROR} No title value found in cached_metadata for resource {self.short_id}")
             return CITATION_ERROR
-        citation_str_lst.append(title.get('value'))
+        citation_str_lst.append(title_value)
 
         # Check for DOI identifier
         isPendingActivation = False
