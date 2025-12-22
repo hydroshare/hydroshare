@@ -7,6 +7,14 @@ input:
     consumer_group: "hs_django"
 pipeline:
   processors:
-  - notify_hs_django_processor: {}
+    - try:
+        - notify_hs_django_processor: {}
+        - bloblang: |
+            root = if this == null { {} } else { this }
+    - catch:
+        - log:
+            level: ERROR
+            message: "notify_hs_django_processor failed: ${!error()}"
+        - mapping: "root = deleted()"
 output:
   stdout: {}
