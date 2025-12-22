@@ -91,15 +91,22 @@
                                         {# NAME #}
                                         <div v-if="authorType === authorTypes.OTHER_PERSON"
                                              class="control-group control-group--name">
-                                            <label for="creator-name"
-                                                   class="control-label requiredField">Name<span
+                                            <label class="control-label requiredField">Name<span
                                                 class="asteriskField">*</span>
                                             </label>
 
                                             <div class="controls">
-                                                <input v-model="author.name"
-                                                       id="creator-name"
-                                                       placeholder="e.g. 'Smith, John Arnold'"
+                                                <input v-model="author.first_name"
+                                                       id="creator-first-name"
+                                                       placeholder="First and middle name(s)"
+                                                       required="required"
+                                                       class="form-control input-sm textinput textInput"
+                                                       maxlength="100">
+                                            </div>
+                                            <div class="controls space-top-xs">
+                                                <input v-model="author.last_name"
+                                                       id="creator-last-name"
+                                                       placeholder="Last name"
                                                        required="required"
                                                        class="form-control input-sm textinput textInput"
                                                        maxlength="100">
