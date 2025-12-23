@@ -1,0 +1,1 @@
+This is an example readme.txt file that demonstrates how to put a physical file in a composite resource. This composite resource consistes of this one physical file and two logical files - a geographic raster file and a geographic feature file.
