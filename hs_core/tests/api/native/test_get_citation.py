@@ -115,14 +115,6 @@ class TestGetCitation(MockS3TestCaseMixin, TestCase):
         self.assertEqual(citation, correct_citation)
 
     def test_parse_citation_name(self):
-        name = "John Morley Smith"
-        parsed_name = self.res.parse_citation_name(name)
-        self.assertEqual(parsed_name, 'Smith, J. M., ')
-
-        name = "John Morley Smith"
-        parsed_name = self.res.parse_citation_name(name)
-        self.assertEqual(parsed_name, 'Smith, J. M., ')
-
         name = "Smith Tanner, John Morley"
         parsed_name = self.res.parse_citation_name(name)
         self.assertEqual(parsed_name, 'Smith Tanner, J. M., ')
@@ -130,3 +122,31 @@ class TestGetCitation(MockS3TestCaseMixin, TestCase):
         name = "Smith Tanner, John Morley"
         parsed_name = self.res.parse_citation_name(name)
         self.assertEqual(parsed_name, 'Smith Tanner, J. M., ')
+
+        name = "Smith, John Morley"
+        parsed_name = self.res.parse_citation_name(name, is_non_hs_user=True)
+        self.assertEqual(parsed_name, 'Morley, S. J., ')
+
+        name = "John Morley Smith"
+        parsed_name = self.res.parse_citation_name(name, is_non_hs_user=True)
+        self.assertEqual(parsed_name, 'Smith, J. M., ')
+
+        name = "Smith, John Morley Tanner"
+        parsed_name = self.res.parse_citation_name(name, is_non_hs_user=True)
+        self.assertEqual(parsed_name, 'Tanner, S. J. M., ')
+
+        name = "John Morley Tanner Smith"
+        parsed_name = self.res.parse_citation_name(name, is_non_hs_user=True)
+        self.assertEqual(parsed_name, 'Smith, J. M. T., ')
+
+        name = "Smith"
+        parsed_name = self.res.parse_citation_name(name, is_non_hs_user=True)
+        self.assertEqual(parsed_name, 'Smith, ')
+
+        name = ""
+        parsed_name = self.res.parse_citation_name(name, is_non_hs_user=True)
+        self.assertEqual(parsed_name, "Failed to generate citation - invalid creator name.")
+
+        name = "  John   Morley   Smith  "
+        parsed_name = self.res.parse_citation_name(name.strip(), is_non_hs_user=True)
+        self.assertEqual(parsed_name, 'Smith, J. M., ')

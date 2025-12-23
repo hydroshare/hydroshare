@@ -2991,10 +2991,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         """
         return None
 
-    def parse_citation_name(self, name, is_organization=False, is_non_hs_user=False):
+    def parse_citation_name(self, name, is_non_hs_user=False):
         """Return properly formatted citation name from metadata."""
-        if is_organization:
-            return name + ", "
 
         CREATOR_NAME_ERROR = "Failed to generate citation - invalid creator name."
 
