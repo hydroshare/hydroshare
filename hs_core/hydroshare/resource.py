@@ -534,6 +534,9 @@ def create_resource(
         if create_bag:
             hs_bagit.create_bag(resource)
 
+    istorage = resource.get_s3_storage()
+    istorage.create_folder(resource.short_id, "data/contents/")
+
     # set the resource to private
     resource.setAVU('isPublic', resource.raccess.public)
 
