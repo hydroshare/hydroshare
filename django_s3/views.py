@@ -4,6 +4,8 @@ import json
 import logging
 import os
 import uuid
+from dataclasses import dataclass
+from typing import Optional
 from uuid import uuid4
 
 from smart_open import open
@@ -42,6 +44,241 @@ from hs_file_types.enums import AggregationMetaFilePath
 logger = logging.getLogger(__name__)
 
 
+@dataclass
+class ZipResolution:
+    path: str
+    output_path: str
+    s3_path: str
+    s3_output_path: str
+    is_zip_request: bool
+    aggregation_name: Optional[str]
+    is_sf_request: bool
+    redirect_response: Optional[HttpResponseRedirect] = None
+
+
+def _parse_download_params(path):
+    """
+    Parse the download path to determine resource ID and download type.
+    """
+    split_path_strs = path.split('/')
+    while split_path_strs and split_path_strs[-1] == '':
+        split_path_strs.pop()
+
+    clean_path = '/'.join(split_path_strs)
+    is_bag_download = False
+    is_zip_download = False
+
+    if not split_path_strs:
+        return None, clean_path, False, False, []
+
+    if split_path_strs[0] == 'bags':
+        is_bag_download = True
+        # format is bags/{rid}.zip
+        res_id = os.path.splitext(split_path_strs[1])[0]
+    elif split_path_strs[0] == 'zips':
+        is_zip_download = True
+        # zips prefix means that we are following up on an asynchronous download request
+        # format is zips/{date}/{zip-uuid}/{public-path}.zip where {public-path} contains the rid
+        res_id = split_path_strs[3]
+    else:  # regular download request
+        res_id = split_path_strs[0]
+
+    return res_id, clean_path, is_bag_download, is_zip_download, split_path_strs
+
+
+def _resolve_zip_logic(request, res, path, is_aggregation_request, is_zip_request, split_path_strs):
+    """
+    Determine if the request involves zipping (folders or aggregations).
+    Returns a ZipResolution object.
+    """
+    istorage = res.get_s3_storage()
+    s3_path = res.get_s3_path(path, prepend_short_id=False)
+    output_path = path
+    s3_output_path = s3_path
+    aggregation_name = None
+    is_sf_request = False
+    redirect_response = None
+
+    # check for aggregations
+    if is_aggregation_request and res.resource_type == "CompositeResource":
+        prefix = res.file_path
+        if path.startswith(prefix):
+            # +1 to remove trailing slash
+            aggregation_name = path[len(prefix) + 1:]
+        aggregation = res.get_aggregation_by_aggregation_name(aggregation_name)
+        if not is_zip_request:
+            download_url = request.GET.get('url_download', 'false').lower()
+            if download_url == 'false':
+                # redirect to referenced url in the url file instead
+                if hasattr(aggregation, 'redirect_url'):
+                    redirect_response = HttpResponseRedirect(aggregation.redirect_url)
+                    return ZipResolution(path, output_path, s3_path, s3_output_path, is_zip_request,
+                                         aggregation_name, is_sf_request, redirect_response)
+        # point to the main file path
+        path = aggregation.get_main_file.storage_path
+        is_zip_request = True
+        daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
+        output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
+
+        s3_path = res.get_s3_path(path, prepend_short_id=False)
+        s3_output_path = res.get_s3_path(output_path, prepend_short_id=False)
+
+    store_path = '/'.join(split_path_strs[1:])  # data/contents/{path-to-something}
+    if res.is_folder(store_path):  # automatically zip folders
+        is_zip_request = True
+        daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
+        output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
+        s3_output_path = res.get_s3_path(output_path, prepend_short_id=False)
+
+        if not settings.DEBUG:
+            logger.debug("automatically zipping folder {} to {}".format(path, output_path))
+    elif istorage.exists(s3_path):
+        if not settings.DEBUG:
+            logger.debug("request for single file {}".format(path))
+        is_sf_request = True
+
+        if is_zip_request:
+            daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
+            output_path = "tmp/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
+            s3_output_path = res.get_s3_path(output_path, prepend_short_id=False)
+
+    return ZipResolution(path, output_path, s3_path, s3_output_path, is_zip_request,
+                         aggregation_name, is_sf_request, redirect_response)
+
+
+def _handle_zip_download(request, res_id, s3_path, s3_output_path, aggregation_name, is_sf_request,
+                         use_async, api_request, output_path):
+    """
+    Handle the creation and response for zip downloads.
+    """
+    download_path = '/django_s3/rest_download/' + output_path
+    if use_async:
+        user_id = get_task_user_id(request)
+        task = create_temp_zip.apply_async((res_id, s3_path, s3_output_path,
+                                            aggregation_name, is_sf_request))
+        task_id = task.task_id
+        if api_request:
+            return JsonResponse({
+                'zip_status': 'Not ready',
+                'task_id': task_id,
+                'download_path': download_path})
+        else:
+            # return status to the task notification App AJAX call
+            task_dict = get_or_create_task_notification(task_id, name='zip download', payload=download_path,
+                                                        username=user_id)
+            return JsonResponse(task_dict)
+
+    else:  # synchronous creation of download
+        ret_status = create_temp_zip(res_id, s3_path, s3_output_path,
+                                     aggregation_name=aggregation_name, sf_zip=is_sf_request)
+        if not ret_status:
+            content_msg = "Zip could not be created."
+            response = HttpResponse(status=500)
+            response.content = content_msg
+            return response
+    return None
+
+
+def _handle_bag_download(request, res, use_async, api_request, resource_cls, istorage):
+    """
+    Handle the creation and response for bag downloads.
+    """
+    res_id = res.short_id
+    now = datetime.datetime.now(tz.UTC)
+    res.bag_last_downloaded = now
+    res.save()
+
+    s3_output_path = res.bag_path
+    res.update_relation_meta()
+    bag_modified = res.getAVU('bag_modified')
+    # recreate the bag if it doesn't exist even if bag_modified is "false".
+    if not settings.DEBUG:
+        logger.debug("s3_output_path is {}".format(s3_output_path))
+    if bag_modified is None or not bag_modified:
+        if not istorage.exists(s3_output_path):
+            bag_modified = True
+
+    # send signal for pre_check_bag_flag
+    # this generates metadata other than that generated by create_bag_files.
+    pre_check_bag_flag.send(sender=resource_cls, resource=res)
+    if bag_modified is None or bag_modified:
+        if use_async:
+            # task parameter has to be passed in as a tuple or list, hence (res_id,) is needed
+            # Note that since we are using JSON for task parameter serialization, no complex
+            # object can be passed as parameters to a celery task
+
+            task_id = get_resource_bag_task(res_id)
+            user_id = get_task_user_id(request)
+            if not task_id:
+                # create the bag
+                task = create_bag_by_s3.apply_async((res_id, ))
+                task_id = task.task_id
+                if api_request:
+                    return JsonResponse({
+                        'bag_status': 'Not ready',
+                        'task_id': task_id,
+                        'download_path': "",
+                        # status and id are checked by by hs_core.tests.api.rest.test_create_resource.py
+                        'status': 'Not ready',
+                        'id': task_id})
+                else:
+                    task_dict = get_or_create_task_notification(task_id, name='bag download', payload="",
+                                                                username=user_id)
+                    return JsonResponse(task_dict)
+            else:
+                # bag creation has already started
+                if api_request:
+                    return JsonResponse({
+                        'bag_status': 'Not ready',
+                        'task_id': task_id,
+                        'download_path': ""})
+                else:
+                    task_dict = get_or_create_task_notification(task_id, name='bag download', payload="",
+                                                                username=user_id)
+                    return JsonResponse(task_dict)
+        else:
+            ret_status = create_bag_by_s3(res_id)
+            if not ret_status:
+                content_msg = "Bag cannot be created successfully. Check log for details."
+                response = HttpResponse(status=500)
+                response.content = content_msg
+                return response
+    elif is_ajax(request):
+        task_dict = {
+            'id': datetime.datetime.today().isoformat(),
+            'name': "bag download",
+            'status': "completed",
+            'payload': res.bag_url
+        }
+        return JsonResponse(task_dict)
+    return None
+
+
+def _refresh_metadata_files(res, path, istorage, s3_output_path):
+    """
+    Refresh metadata files if they are requested directly.
+    """
+    res_id = res.short_id
+    # if fetching main metadata files, then these need to be refreshed.
+    if path in [f"{res_id}/data/resourcemap.xml", f"{res_id}/data/resourcemetadata.xml",
+                f"{res_id}/manifest-md5.txt", f"{res_id}/tagmanifest-md5.txt", f"{res_id}/readme.txt",
+                f"{res_id}/bagit.txt"]:
+        res.update_relation_meta()
+        bag_modified = res.getAVU("bag_modified")
+        if bag_modified is None or bag_modified or not istorage.exists(s3_output_path):
+            res.setAVU("bag_modified", True)  # ensure bag_modified is set when s3_output_path does not exist
+            create_bag_by_s3(res_id, create_zip=False)
+    elif any([path.endswith(suffix) for suffix in AggregationMetaFilePath]):
+        # download aggregation meta xml/json schema file
+        try:
+            aggregation = res.get_aggregation_by_meta_file(path)
+        except ObjectDoesNotExist:
+            aggregation = None
+
+        if aggregation is not None and aggregation.metadata.is_dirty:
+            aggregation.create_aggregation_xml_documents()
+
+
 def download(request, path, use_async=True,
              *args, **kwargs):
     """ perform a download request, either asynchronously or synchronously
@@ -75,31 +312,14 @@ def download(request, path, use_async=True,
     if not settings.DEBUG:
         logger.debug("request path is {}".format(path))
 
-    split_path_strs = path.split('/')
-    while split_path_strs[-1] == '':
-        split_path_strs.pop()
-    path = '/'.join(split_path_strs)  # no trailing slash
+    res_id, path, is_bag_download, is_zip_download, split_path_strs = _parse_download_params(path)
+    if res_id is None:
+        return HttpResponseNotFound("Invalid download path")
 
     # initialize case variables
-    is_bag_download = False
-    is_zip_download = False
     is_zip_request = request.GET.get('zipped', "False").lower() == "true"
     is_aggregation_request = request.GET.get('aggregation', "False").lower() == "true"
     api_request = request.META.get('CSRF_COOKIE', None) is None
-    aggregation_name = None
-    is_sf_request = False
-
-    if split_path_strs[0] == 'bags':
-        is_bag_download = True
-        # format is bags/{rid}.zip
-        res_id = os.path.splitext(split_path_strs[1])[0]
-    elif split_path_strs[0] == 'zips':
-        is_zip_download = True
-        # zips prefix means that we are following up on an asynchronous download request
-        # format is zips/{date}/{zip-uuid}/{public-path}.zip where {public-path} contains the rid
-        res_id = split_path_strs[3]
-    else:  # regular download request
-        res_id = split_path_strs[0]
 
     if not settings.DEBUG:
         logger.debug("resource id is {}".format(res_id))
@@ -116,184 +336,48 @@ def download(request, path, use_async=True,
         return response
 
     istorage = res.get_s3_storage()
-
-    s3_path = res.get_s3_path(path, prepend_short_id=False)
-
-    # in many cases, path and output_path are the same.
-    output_path = path
-    s3_output_path = s3_path
-    # folder requests are automatically zipped
-    if not is_bag_download and not is_zip_download:  # path points into resource: should I zip it?
-        # check for aggregations
-        if is_aggregation_request and res.resource_type == "CompositeResource":
-            prefix = res.file_path
-            if path.startswith(prefix):
-                # +1 to remove trailing slash
-                aggregation_name = path[len(prefix) + 1:]
-            aggregation = res.get_aggregation_by_aggregation_name(aggregation_name)
-            if not is_zip_request:
-                download_url = request.GET.get('url_download', 'false').lower()
-                if download_url == 'false':
-                    # redirect to referenced url in the url file instead
-                    if hasattr(aggregation, 'redirect_url'):
-                        return HttpResponseRedirect(aggregation.redirect_url)
-            # point to the main file path
-            path = aggregation.get_main_file.storage_path
-            is_zip_request = True
-            daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
-            output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
-
-            s3_path = res.get_s3_path(path, prepend_short_id=False)
-            s3_output_path = res.get_s3_path(output_path, prepend_short_id=False)
-
-        store_path = '/'.join(split_path_strs[1:])  # data/contents/{path-to-something}
-        if res.is_folder(store_path):  # automatically zip folders
-            is_zip_request = True
-            daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
-            output_path = "zips/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
-            s3_output_path = res.get_s3_path(output_path, prepend_short_id=False)
-
-            if not settings.DEBUG:
-                logger.debug("automatically zipping folder {} to {}".format(path, output_path))
-        elif istorage.exists(s3_path):
-            if not settings.DEBUG:
-                logger.debug("request for single file {}".format(path))
-            is_sf_request = True
-
-            if is_zip_request:
-                daily_date = datetime.datetime.today().strftime('%Y-%m-%d')
-                output_path = "tmp/{}/{}/{}.zip".format(daily_date, uuid4().hex, path)
-                s3_output_path = res.get_s3_path(output_path, prepend_short_id=False)
-
-    # After this point, we have valid path, s3_path, output_path, and s3_output_path
-    # * is_zip_request: signals download should be zipped, folders are always zipped
-    # * aggregation: aggregation object if the path matches an aggregation
-    # * is_sf_request: path is a single-file
-    # flags for download:
-    # * is_bag_download: download a bag in format bags/{rid}.zip
-    # * is_zip_download: download a zipfile in format zips/{date}/{random guid}/{path}.zip
-    # if none of these are set, it's a normal download
-
     resource_cls = check_resource_type(res.resource_type)
 
-    if is_zip_request:
-        download_path = '/django_s3/rest_download/' + output_path
-        if use_async:
-            user_id = get_task_user_id(request)
-            task = create_temp_zip.apply_async((res_id, s3_path, s3_output_path,
-                                                aggregation_name, is_sf_request))
-            task_id = task.task_id
-            if api_request:
-                return JsonResponse({
-                    'zip_status': 'Not ready',
-                    'task_id': task.task_id,
-                    'download_path': '/django_s3/rest_download/' + output_path})
-            else:
-                # return status to the task notification App AJAX call
-                task_dict = get_or_create_task_notification(task_id, name='zip download', payload=download_path,
-                                                            username=user_id)
-                return JsonResponse(task_dict)
+    # Resolve paths and zipping logic
+    if not is_bag_download and not is_zip_download:
+        zip_resolve = _resolve_zip_logic(request, res, path, is_aggregation_request,
+                                         is_zip_request, split_path_strs)
+        if zip_resolve.redirect_response:
+            return zip_resolve.redirect_response
 
-        else:  # synchronous creation of download
-            ret_status = create_temp_zip(res_id, s3_path, s3_output_path,
-                                         aggregation_name=aggregation_name, sf_zip=is_sf_request)
-            if not ret_status:
-                content_msg = "Zip could not be created."
-                response = HttpResponse()
-                response.content = content_msg
-                return response
-            # At this point, output_path presumably exists and contains a zipfile
-            # to be streamed below
+        path = zip_resolve.path
+        output_path = zip_resolve.output_path
+        s3_path = zip_resolve.s3_path
+        s3_output_path = zip_resolve.s3_output_path
+        is_zip_request = zip_resolve.is_zip_request
+        aggregation_name = zip_resolve.aggregation_name
+        is_sf_request = zip_resolve.is_sf_request
+    else:
+        s3_path = res.get_s3_path(path, prepend_short_id=False)
+        output_path = path
+        s3_output_path = s3_path
+        aggregation_name = None
+        is_sf_request = False
+
+    # Handle different download types
+    if is_zip_request:
+        response = _handle_zip_download(request, res_id, s3_path, s3_output_path, aggregation_name,
+                                        is_sf_request, use_async, api_request, output_path)
+        if response:
+            return response
 
     elif is_bag_download:
-        now = datetime.datetime.now(tz.UTC)
-        res.bag_last_downloaded = now
-        res.save()
-        # Shorten request if it contains extra junk at the end
+        response = _handle_bag_download(request, res, use_async, api_request, resource_cls, istorage)
+        if response:
+            return response
+        # If _handle_bag_download returns None, it means we proceed to streaming the bag
         bag_file_name = res_id + '.zip'
         output_path = os.path.join('bags', bag_file_name)
         s3_output_path = res.bag_path
-        res.update_relation_meta()
-        bag_modified = res.getAVU('bag_modified')
-        # recreate the bag if it doesn't exist even if bag_modified is "false".
-        if not settings.DEBUG:
-            logger.debug("s3_output_path is {}".format(s3_output_path))
-        if bag_modified is None or not bag_modified:
-            if not istorage.exists(s3_output_path):
-                bag_modified = True
 
-        # send signal for pre_check_bag_flag
-        # this generates metadata other than that generated by create_bag_files.
-        pre_check_bag_flag.send(sender=resource_cls, resource=res)
-        if bag_modified is None or bag_modified:
-            if use_async:
-                # task parameter has to be passed in as a tuple or list, hence (res_id,) is needed
-                # Note that since we are using JSON for task parameter serialization, no complex
-                # object can be passed as parameters to a celery task
-
-                task_id = get_resource_bag_task(res_id)
-                user_id = get_task_user_id(request)
-                if not task_id:
-                    # create the bag
-                    task = create_bag_by_s3.apply_async((res_id, ))
-                    task_id = task.task_id
-                    if api_request:
-                        return JsonResponse({
-                            'bag_status': 'Not ready',
-                            'task_id': task_id,
-                            'download_path': "",
-                            # status and id are checked by by hs_core.tests.api.rest.test_create_resource.py
-                            'status': 'Not ready',
-                            'id': task_id})
-                    else:
-                        task_dict = get_or_create_task_notification(task_id, name='bag download', payload="",
-                                                                    username=user_id)
-                        return JsonResponse(task_dict)
-                else:
-                    # bag creation has already started
-                    if api_request:
-                        return JsonResponse({
-                            'bag_status': 'Not ready',
-                            'task_id': task_id,
-                            'download_path': ""})
-                    else:
-                        task_dict = get_or_create_task_notification(task_id, name='bag download', payload="",
-                                                                    username=user_id)
-                        return JsonResponse(task_dict)
-            else:
-                ret_status = create_bag_by_s3(res_id)
-                if not ret_status:
-                    content_msg = "Bag cannot be created successfully. Check log for details."
-                    response = HttpResponse()
-                    response.content = content_msg
-                    return response
-        elif is_ajax(request):
-            task_dict = {
-                'id': datetime.datetime.today().isoformat(),
-                'name': "bag download",
-                'status': "completed",
-                'payload': res.bag_url
-            }
-            return JsonResponse(task_dict)
     else:  # regular file download
-        # if fetching main metadata files, then these need to be refreshed.
-        if path in [f"{res_id}/data/resourcemap.xml", f"{res_id}/data/resourcemetadata.xml",
-                    f"{res_id}/manifest-md5.txt", f"{res_id}/tagmanifest-md5.txt", f"{res_id}/readme.txt",
-                    f"{res_id}/bagit.txt"]:
-            res.update_relation_meta()
-            bag_modified = res.getAVU("bag_modified")
-            if bag_modified is None or bag_modified or not istorage.exists(s3_output_path):
-                res.setAVU("bag_modified", True)  # ensure bag_modified is set when s3_output_path does not exist
-                create_bag_by_s3(res_id, create_zip=False)
-        elif any([path.endswith(suffix) for suffix in AggregationMetaFilePath]):
-            # download aggregation meta xml/json schema file
-            try:
-                aggregation = res.get_aggregation_by_meta_file(path)
-            except ObjectDoesNotExist:
-                aggregation = None
+        _refresh_metadata_files(res, path, istorage, s3_output_path)
 
-            if aggregation is not None and aggregation.metadata.is_dirty:
-                aggregation.create_aggregation_xml_documents()
     # If we get this far,
     # * path and s3_path point to true input
     # * output_path and s3_output_path point to true output.
