@@ -146,7 +146,7 @@ class DownloadViewTests(TestCase):
     @mock.patch('django_s3.views.create_temp_zip')
     @mock.patch('django_s3.views.get_task_user_id')
     @mock.patch('django_s3.views.get_or_create_task_notification')
-    def test_zip_download_async(self, mock_get_notification, mock_get_user_id, 
+    def test_zip_download_async(self, mock_get_notification, mock_get_user_id,
                                 mock_create_zip, mock_check_resource_type, mock_authorize):
         """Test asynchronous zipped file download."""
         mock_authorize.return_value = (self.res, True, self.user)
