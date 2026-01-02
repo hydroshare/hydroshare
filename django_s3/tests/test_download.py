@@ -5,6 +5,7 @@ from django_s3.views import download
 from django.contrib.auth.models import User
 import json
 
+
 class DownloadViewTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
@@ -76,7 +77,7 @@ class DownloadViewTests(TestCase):
         mock_authorize.return_value = (self.res, True, self.user)
         mock_check_resource_type.return_value = mock.MagicMock()
         mock_create_bag.return_value = True
-        self.res.getAVU.return_value = True # bag_modified = True
+        self.res.getAVU.return_value = True     # bag_modified = True
 
         request = self.factory.get('/django_s3/download/bags/test_res_id.zip')
         request.user = self.user
@@ -93,7 +94,7 @@ class DownloadViewTests(TestCase):
     @mock.patch('django_s3.views.get_resource_bag_task')
     @mock.patch('django_s3.views.get_task_user_id')
     @mock.patch('django_s3.views.get_or_create_task_notification')
-    def test_bag_download_async(self, mock_get_notification, mock_get_user_id, mock_get_task, 
+    def test_bag_download_async(self, mock_get_notification, mock_get_user_id, mock_get_task,
                                 mock_create_bag, mock_check_resource_type, mock_authorize):
         """Test asynchronous bag download when bag is modified."""
 
@@ -102,7 +103,7 @@ class DownloadViewTests(TestCase):
         mock_get_task.return_value = None
         mock_get_user_id.return_value = self.user.id
         mock_get_notification.return_value = {'status': 'progress'}
-        self.res.getAVU.return_value = True # bag_modified = True
+        self.res.getAVU.return_value = True     # bag_modified = True
 
         # Mock celery task
         mock_task = mock.MagicMock()
@@ -230,7 +231,7 @@ class DownloadViewTests(TestCase):
 
         mock_authorize.return_value = (self.res, True, self.user)
         mock_check_resource_type.return_value = mock.MagicMock()
-        self.res.getAVU.return_value = True # bag_modified = True
+        self.res.getAVU.return_value = True     # bag_modified = True
 
         metadata_path = f'{self.res.short_id}/data/resourcemetadata.xml'
         request = self.factory.get(f'/django_s3/download/{metadata_path}')
@@ -251,7 +252,7 @@ class DownloadViewTests(TestCase):
 
         mock_authorize.return_value = (self.res, True, self.user)
         mock_check_resource_type.return_value = mock.MagicMock()
-        self.res.getAVU.return_value = True # bag_modified = True
+        self.res.getAVU.return_value = True     # bag_modified = True
 
         metadata_path = f'{self.res.short_id}/data/resourcemap.xml'
         request = self.factory.get(f'/django_s3/download/{metadata_path}')
@@ -272,8 +273,8 @@ class DownloadViewTests(TestCase):
 
         mock_authorize.return_value = (self.res, True, self.user)
         mock_check_resource_type.return_value = mock.MagicMock()
-        self.res.getAVU.return_value = False # bag_modified = False
-        self.mock_istorage.exists.return_value = True # bag exists in S3
+        self.res.getAVU.return_value = False    # bag_modified = False
+        self.mock_istorage.exists.return_value = True    # bag exists in S3
 
         request = self.factory.get('/django_s3/download/bags/test_res_id.zip')
         request.user = self.user
@@ -289,13 +290,14 @@ class DownloadViewTests(TestCase):
     @mock.patch('django_s3.views.check_resource_type')
     @mock.patch('django_s3.views.create_bag_by_s3')
     @mock.patch('django_s3.views.is_ajax')
-    def test_bag_download_ajax_no_refresh(self, mock_is_ajax, mock_create_bag, mock_check_resource_type, mock_authorize):
+    def test_bag_download_ajax_no_refresh(self, mock_is_ajax, mock_create_bag, mock_check_resource_type,
+                                          mock_authorize):
         """Test AJAX bag download when bag is already up-to-date."""
 
         mock_authorize.return_value = (self.res, True, self.user)
         mock_check_resource_type.return_value = mock.MagicMock()
-        self.res.getAVU.return_value = False # bag_modified = False
-        self.mock_istorage.exists.return_value = True # bag exists in S3
+        self.res.getAVU.return_value = False    # bag_modified = False
+        self.mock_istorage.exists.return_value = True    # bag exists in S3
         mock_is_ajax.return_value = True
 
         request = self.factory.get('/django_s3/download/bags/test_res_id.zip')
@@ -360,7 +362,7 @@ class DownloadViewTests(TestCase):
 
         mock_authorize.return_value = (self.res, True, self.user)
         mock_check_resource_type.return_value = mock.MagicMock()
-        self.res.getAVU.return_value = True # bag_modified = True
+        self.res.getAVU.return_value = True     # bag_modified = True
         agg_meta_path = 'test_res_id/data/contents/agg_meta.xml'
         mock_aggregation = mock.MagicMock()
         mock_aggregation.metadata.is_dirty = True
@@ -382,7 +384,7 @@ class DownloadViewTests(TestCase):
 
         mock_authorize.return_value = (self.res, True, self.user)
         mock_check_resource_type.return_value = mock.MagicMock()
-        self.res.getAVU.return_value = True # bag_modified = True
+        self.res.getAVU.return_value = True     # bag_modified = True
         agg_meta_path = 'test_res_id/data/contents/agg_meta.xml'
         mock_aggregation = mock.MagicMock()
         mock_aggregation.metadata.is_dirty = False
