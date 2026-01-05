@@ -113,6 +113,8 @@ Vue.component('add-author-modal', {
             identifierDict: IDENTIFIERS,
             author: {
                 "name": null,
+                "first_name": null,
+                "last_name": null,
                 "email": null,
                 "organization": null,
                 "identifiers": [],
@@ -228,9 +230,12 @@ Vue.component('add-author-modal', {
             let author = $.extend(true, {}, this.author);
 
             vue.addAuthorError = null;
-            if (vue.authorType === vue.authorTypes.OTHER_PERSON && !author.name) {
-                vue.addAuthorError = "Name is required. Please input the name of the author to add.";
-                return;
+            if (vue.authorType === vue.authorTypes.OTHER_PERSON) {
+                author.name = vue.buildPersonName(author.first_name, author.last_name);
+                if (!author.name) {
+                    vue.addAuthorError = "First and last name are required. Please input the author name to add.";
+                    return;
+                }
             }
 
             let identifiers = {};
@@ -303,6 +308,8 @@ Vue.component('add-author-modal', {
                         // Reset form fields
                         vue.author = {
                             "name": null,
+                            "first_name": null,
+                            "last_name": null,
                             "email": null,
                             "organization": null,
                             "identifiers": [],
@@ -340,6 +347,16 @@ Vue.component('add-author-modal', {
             });
 
             return search.length > 0;
+        },
+        buildPersonName: function(firstName, lastName) {
+            const first = firstName ? firstName.trim() : "";
+            const last = lastName ? lastName.trim() : "";
+
+            if (!first || !last) {
+                return "";
+            }
+
+            return `${first} ${last}`;
         }
     },
 });
@@ -578,23 +595,25 @@ let leftHeaderApp = new Vue({
         }
     },
     filters: {
-        nameWithoutCommas: function (name) {
+        nameWithoutCommas: function (name, profileUrl) {
             if (!name) return null;
             name = name.toString().trim();
 
             if (name.indexOf(',') >= 0) {
-                let  fullName = name.split(',');
-                if (fullName.length == 2) {
-                    let firstNames = fullName[1].trim();
-                    let lastNames = fullName[0].trim();
-                    if (firstNames && lastNames)
+                const fullName = name.split(',');
+                if (fullName.length === 2) {
+                    const firstNames = fullName[1].trim();
+                    const lastNames = fullName[0].trim();
+                    if (firstNames && lastNames) {
                         return firstNames + " " + lastNames;
-                    else if (firstNames)
+                    }
+                    if (firstNames) {
                         return firstNames;
-                    else if (lastNames)
+                    }
+                    if (lastNames) {
                         return lastNames;
-                    else
-                        return null;
+                    }
+                    return null;
                 }
             }
             return name;    // default
