@@ -7,25 +7,19 @@ input:
     consumer_group: "hs_django"
 pipeline:
   processors:
-    - try:
-        - notify_hs_django_processor: {}
-        - bloblang: |
-            root = if this == null { {} } else { this }
-    - catch:
-        - log:
-            level: ERROR
-            message: "notify_hs_django_processor failed: ${!error()}"
-        - bloblang: |
-            root = {
-              "error": error(),
-              "ts": timestamp_unix(),
-              "input": this
-            }
+    - notify_hs_django_processor: {}
 output:
   switch:
     cases:
-      - check: "this.error != null"
+      - check: errored()
         output:
+          processors:
+            - bloblang: |
+                root = {
+                  "error": error(),
+                  "ts": timestamp_unix(),
+                  "input": content().string()
+                }
           kafka_franz:
             seed_brokers:
               - "redpanda:9092"
