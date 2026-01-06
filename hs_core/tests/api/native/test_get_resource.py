@@ -30,9 +30,9 @@ class TestGetResource(TestCase):
 
     def tearDown(self):
         super(TestGetResource, self).tearDown()
+        self.res.delete()
         User.objects.all().delete()
         Group.objects.all().delete()
-        self.res.delete()
         BaseResource.objects.all().delete()
 
     def test_get_resource(self):

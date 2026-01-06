@@ -14,9 +14,9 @@ class TestResolveDOIAPI(MockS3TestCaseMixin, TestCase):
 
     def tearDown(self):
         super(TestResolveDOIAPI, self).tearDown()
+        self.new_resource.delete()
         User.objects.all().delete()
         Group.objects.all().delete()
-        self.new_resource.delete()
         BaseResource.objects.all().delete()
 
     def test_resolve_doi(self):

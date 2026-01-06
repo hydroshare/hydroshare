@@ -84,10 +84,10 @@ class UnitTests(MockS3TestCaseMixin, TestCase):
 
     def tearDown(self):
         super(UnitTests, self).tearDown()
-        User.objects.all().delete()
-        Group.objects.all().delete()
         self.harps.delete()
         self.bikes.delete()
+        User.objects.all().delete()
+        Group.objects.all().delete()
         BaseResource.objects.all().delete()
 
     def test_user_resource_provenance_crosstalk(self):

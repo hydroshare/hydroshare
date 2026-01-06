@@ -52,9 +52,9 @@ class TestAddResourceFiles(MockS3TestCaseMixin, unittest.TestCase):
 
     def tearDown(self):
         super(TestAddResourceFiles, self).tearDown()
+        self.res.delete()
         User.objects.all().delete()
         Group.objects.all().delete()
-        self.res.delete()
         BaseResource.objects.all().delete()
         self.myfile1.close()
         os.remove(self.myfile1.name)

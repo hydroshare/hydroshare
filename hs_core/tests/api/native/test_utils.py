@@ -58,9 +58,9 @@ class TestUtils(MockS3TestCaseMixin, TestCase):
 
     def tearDown(self):
         super(TestUtils, self).tearDown()
+        self.res.delete()
         User.objects.all().delete()
         Group.objects.all().delete()
-        self.res.delete()
         BaseResource.objects.all().delete()
 
     def test_get_resource_types(self):
