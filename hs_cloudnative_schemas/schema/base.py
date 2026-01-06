@@ -294,6 +294,16 @@ class IsPartOf(CreativeWork):
     )
 
 
+class Relation(CreativeWork):
+    url: Optional[HttpUrl] = Field(
+        title="URL", description="The URL address to the data resource.", default=None
+    )
+    description: Optional[str] = Field(
+        description="Holds all relations other than 'hasPart' and 'isPartOf'.",
+        default=None,
+    )
+
+
 class MediaObjectPartOf(CreativeWork):
     url: Optional[HttpUrl] = Field(
         title="URL",
@@ -509,7 +519,6 @@ class GeoShape(SchemaBaseModel):
 
     @field_validator("box")
     def validate_box(cls, v, info):
-        return v
         # ignoring validation for now
         if not isinstance(v, str):
             raise TypeError("string required")
@@ -531,13 +540,13 @@ class GeoShape(SchemaBaseModel):
                 raise ValueError("Bounding box coordinate value is not a number")
             item = abs(item)
             if index % 2 == 0:
-                if item > 180:
+                if item >= 180:
                     raise ValueError(
-                        "Bounding box coordinate east/west must be between -180 and 180"
+                        f"Bounding box coordinate east/west must be between -180 and 180, got {item}"
                     )
-            elif item > 90:
+            elif item >= 90:
                 raise ValueError(
-                    "Bounding box coordinate north/south must be between -90 and 90"
+                    f"Bounding box coordinate north/south must be between -90 and 90, got {item}"
                 )
 
         return v

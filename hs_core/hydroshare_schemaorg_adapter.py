@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, List, Optional, Union, Literal
 
-from pydantic import BaseModel, EmailStr, HttpUrl, ConfigDict, model_validator
+from pydantic import BaseModel, HttpUrl, ConfigDict, model_validator
 
 from hs_cloudnative_schemas.schema import base as schema
 from hs_cloudnative_schemas.schema.dataset import ScientificDataset
@@ -9,7 +9,7 @@ from hs_cloudnative_schemas.schema.dataset import ScientificDataset
 
 class BasePerson(BaseModel):
     name: Optional[str] = None
-    email: Optional[EmailStr] = None
+    email: Optional[str] = None
     organization: Optional[str] = None
     homepage: Optional[HttpUrl] = None
     address: Optional[str] = None
@@ -131,7 +131,10 @@ class ContentFile(BaseModel):
         media_object.contentUrl = self.path
         media_object.encodingFormat = self.mime_type
         media_object.contentSize = f"{self.size / 1000.00} KB"
-        media_object.name = self.path.split("/")[-1]
+        if "/" in self.path:
+            media_object.name = self.path.split("/")[-1]
+        else:
+            media_object.name = self.path
         return media_object
 
 
@@ -146,9 +149,12 @@ class Relation(BaseModel):
         elif relation_type == "HasPart" and self.type.endswith("resource includes"):
             relation = schema.HasPart.construct()
         else:
-            return relation
+            relation = schema.Relation.construct()
 
-        description, url = self.value.rsplit(',', 1)
+        if ',' in self.value:
+            description, url = self.value.rsplit(',', 1)
+        else:
+            description, url = self.value, ""
         relation.description = description.strip()
         relation.url = url.strip()
         relation.name = self.value if self.value else "No name found and is required"
@@ -156,8 +162,8 @@ class Relation(BaseModel):
 
 
 class Rights(BaseModel):
-    statement: str
-    url: HttpUrl
+    statement: Optional[str] = None
+    url: Optional[HttpUrl] = None
 
     def to_dataset_license(self):
         _license = schema.CreativeWork.construct()
@@ -240,6 +246,9 @@ class _HydroshareResourceMetadata(BaseModel):
     def to_dataset_has_part(self):
         return self._to_dataset_part_relations("HasPart")
 
+    def to_dataset_relations(self):
+        return self._to_dataset_part_relations("Other")
+
     def _to_dataset_part_relations(self, relation_type: str):
         part_relations = []
         for relation in self.relations:
@@ -308,4 +317,5 @@ class _HydroshareResourceMetadata(BaseModel):
         dataset.license = self.to_dataset_license()
         dataset.citation = [self.citation]
         dataset.creativeWorkStatus = self.to_dataset_creative_work_status()
+        dataset.relations = self.to_dataset_relations()
         return dataset
