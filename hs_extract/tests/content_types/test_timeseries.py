@@ -20,6 +20,18 @@ TEST_FILES_DIR = Path(__file__).resolve().parents[2] / "test_files" / "timeserie
 CSV_FIXTURE = TEST_FILES_DIR / "ODM2_Multi_Site_One_Variable_Test.csv"
 SQLITE_FIXTURE = TEST_FILES_DIR / "ODM2_Multi_Site_One_Variable.sqlite"
 
+def _haspart_urls(has_part):
+    urls = set()
+    for part in has_part or []:
+        if isinstance(part, dict):
+            if part.get("url"):
+                urls.add(part["url"])
+            elif isinstance(part.get("identifier"), str):
+                urls.add(part["identifier"])
+            elif isinstance(part.get("identifier"), list) and part["identifier"]:
+                urls.add(part["identifier"][0])
+    return urls
+
 
 def test_resource_haspart_merges_user_and_extracted():
     resource_id = str(uuid.uuid4())
