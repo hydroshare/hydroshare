@@ -13,10 +13,6 @@ output:
     cases:
       - check: errored()
         output:
-          kafka_franz:
-            seed_brokers:
-              - "redpanda:9092"
-            topic: "error_notifications"
           processors:
             - bloblang: |
                 root = {
@@ -24,3 +20,9 @@ output:
                   "ts": timestamp_unix(),
                   "input": content().string()
                 }
+          kafka_franz:
+            seed_brokers:
+              - "redpanda:9092"
+            topic: "error_notifications"
+      - output:
+          drop: {}
