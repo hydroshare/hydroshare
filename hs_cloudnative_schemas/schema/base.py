@@ -91,7 +91,7 @@ class CreativeWork(SchemaBaseModel):
         description="Submission type can include various forms of content, such as datasets, "
         "software source code, digital documents, etc.",
     )
-    name: Optional[str] = Field(description="Submission's name or title", title="Name or title")
+    name: Optional[str] = Field(description="Submission's name or title", title="Name or title", default=None)
     description: Optional[str] = Field(
         description="The description of the creative work.", default=None
     )

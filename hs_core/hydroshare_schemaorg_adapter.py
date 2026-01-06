@@ -150,6 +150,7 @@ class Relation(BaseModel):
             relation = schema.HasPart.construct()
         else:
             relation = schema.Relation.construct()
+            relation.name = self.type
 
         if ',' in self.value:
             description, url = self.value.rsplit(',', 1)
@@ -157,7 +158,6 @@ class Relation(BaseModel):
             description, url = self.value, ""
         relation.description = description.strip()
         relation.url = url.strip()
-        relation.name = self.value if self.value else "No name found and is required"
         return relation
 
 
