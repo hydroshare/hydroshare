@@ -9,6 +9,24 @@ from hsextract.content_types import determine_metadata_object, BaseMetadataObjec
 from hsextract.utils.s3 import find, write_metadata, load_metadata, delete_metadata
 
 
+def _normalize_list(value) -> list:
+    if not value:
+        return []
+    if isinstance(value, list):
+        return value
+    return [value]
+
+
+def _normalize_has_part_list(parts) -> list[dict]:
+    if not parts:
+        return []
+    if isinstance(parts, list):
+        return [p for p in parts if isinstance(p, dict)]
+    if isinstance(parts, dict):
+        return [parts]
+    return []
+
+
 def write_resource_jsonld_metadata(md: BaseMetadataObject) -> bool:
     # read the system metadata file
     system_json = load_metadata(md.system_metadata_path)
@@ -29,10 +47,14 @@ def write_resource_jsonld_metadata(md: BaseMetadataObject) -> bool:
             url=f"{os.environ['AWS_S3_ENDPOINT_URL']}/{file}",
         )
         has_parts.append(has_part.model_dump(exclude_none=True))
-    # Combine system metadata, user metadata, hasPart, and associatedMedia
-    # TODO evaluate whether we need to merge list properties
+
+    # Combine system metadata, user metadata, hasPart, and associatedMedia (join arrays)
     combined_metadata = {**system_json, **user_json}
-    combined_metadata["hasPart"] = has_parts
+    combined_metadata["hasPart"] = (
+        has_parts
+        + _normalize_has_part_list(system_json.get("hasPart"))
+        + _normalize_has_part_list(user_json.get("hasPart"))
+    )
     combined_metadata["associatedMedia"] = md.resource_associated_media
 
     # Write the combined metadata to the resource metadata file
@@ -52,10 +74,13 @@ def write_content_type_jsonld_metadata(md: BaseMetadataObject) -> bool:
 
     content_type_associated_media = md.content_type_associated_media()
 
-    # Combine part metadata, user metadata, isPartOf, and associatedMedia
-    # TODO evaluate whether we need to merge list properties
+    # Combine part metadata, user metadata, isPartOf, and associatedMedia (join arrays)
     combined_metadata = {**content_type_metadata, **user_json}
-    combined_metadata["isPartOf"] = is_part_of
+    combined_metadata["hasPart"] = (
+        _normalize_has_part_list(content_type_metadata.get("hasPart"))
+        + _normalize_has_part_list(user_json.get("hasPart"))
+    )
+    combined_metadata["isPartOf"] = _normalize_list(content_type_metadata.get("isPartOf")) + is_part_of
     # TODO make associated media determination consistent with all content types
     combined_metadata["associatedMedia"] = combined_metadata.get("associatedMedia", []) + content_type_associated_media
 
