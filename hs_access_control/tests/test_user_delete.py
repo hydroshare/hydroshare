@@ -65,7 +65,6 @@ class T12UserDelete(MockS3TestCaseMixin, TestCase):
 
     def tearDown(self):
         super(T12UserDelete, self).tearDown()
-        self.scratching.delete()
         User.objects.all().delete()
         Group.objects.all().delete()
         BaseResource.objects.all().delete()

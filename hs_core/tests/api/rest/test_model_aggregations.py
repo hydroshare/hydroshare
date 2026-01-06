@@ -37,7 +37,6 @@ class TestModelAggregation(HSRESTTestCase):
 
     def tearDown(self):
         super(TestModelAggregation, self).tearDown()
-        self.res.delete()
 
     def test_list_template_schemas(self):
         """Test that we can get the filenames of all available metadata template schema for model program."""
