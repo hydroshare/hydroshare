@@ -1,7 +1,7 @@
 input:
   kafka_franz:
     seed_brokers:
-      - "redpanda:9092" # Or your Redpanda broker addresses
+      - "redpanda:9092"
     topics:
       - "resource_file"
     consumer_group: "hs_django"
@@ -13,20 +13,14 @@ output:
     cases:
       - check: errored()
         output:
-          try:
-            - output:
-                processors:
-                  - bloblang: |
-                      root = {
-                        "error": error(),
-                        "ts": timestamp_unix(),
-                        "input": content().string()
-                      }
-                kafka_franz:
-                  seed_brokers:
-                    - "redpanda:9092"
-                  topic: "error_notifications"
-            - output:
-                drop: {}
-      - output:
-          drop: {}
+          kafka_franz:
+            seed_brokers:
+              - "redpanda:9092"
+            topic: "error_notifications"
+          processors:
+            - bloblang: |
+                root = {
+                  "error": error(),
+                  "ts": timestamp_unix(),
+                  "input": content().string()
+                }
