@@ -34,6 +34,14 @@ def collect_file_to_catalog(filepath: str):
     resource_id, _ = object_key.split('/', 1)
     response = s3.get_object(Bucket=bucket_name, Key=object_key)
     metadata_json = json.loads(response['Body'].read(), object_hook=datetime_parser)
+
+    if "relations" in metadata_json:
+        for relation in metadata_json['relations']:
+            if "name" in relation:
+                if relation["name"] == "This resource has been replaced by a newer version":
+                    # skip adding replaced resources to the catalog
+                    return
+
     metadata_json['url'] = f"https://beta.hydroshare.org/landing/{resource_id}"
     metadata_json['identifier'][0] = f"https://beta.hydroshare.org/landing/{resource_id}"
     metadata_json['_s3_filepath'] = filepath
