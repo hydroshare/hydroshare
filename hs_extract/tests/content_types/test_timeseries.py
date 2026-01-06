@@ -5,6 +5,9 @@ import uuid
 from pathlib import Path
 from time import sleep
 
+from hsextract.content_types.models import BaseMetadataObject, FileMetadataObject
+from hsextract.main import write_content_type_jsonld_metadata, write_resource_jsonld_metadata
+
 import pytest
 from tests import read_s3_json, s3_client, write_s3_json
 
@@ -13,13 +16,9 @@ sys.modules.setdefault("rasterio", types.SimpleNamespace(open=lambda *_, **__: N
 sys.modules.setdefault("xarray", types.SimpleNamespace(Dataset=object))
 sys.modules.setdefault("geopandas", types.SimpleNamespace(read_file=lambda *_, **__: None))
 
-from hsextract.content_types.models import BaseMetadataObject, FileMetadataObject
-from hsextract.main import write_content_type_jsonld_metadata, write_resource_jsonld_metadata
-
 TEST_FILES_DIR = Path(__file__).resolve().parents[2] / "test_files" / "timeseries"
 CSV_FIXTURE = TEST_FILES_DIR / "ODM2_Multi_Site_One_Variable_Test.csv"
 SQLITE_FIXTURE = TEST_FILES_DIR / "ODM2_Multi_Site_One_Variable.sqlite"
-
 
 
 def test_resource_haspart_merges_user_and_extracted():
@@ -58,7 +57,6 @@ def test_resource_haspart_merges_user_and_extracted():
     assert "https://example.com/user-haspart-1" in has_part_urls
     assert "https://example.com/user-haspart-2" in has_part_urls
 
-
 def test_content_type_haspart_merges_user_and_extracted():
     resource_id = str(uuid.uuid4())
     file_name = "ODM2_Multi_Site_One_Variable_Test.csv"
@@ -89,7 +87,6 @@ def test_content_type_haspart_merges_user_and_extracted():
     assert content_part_url in has_part_urls
     assert user_part_url in has_part_urls
 
-
 def test_resource_haspart_user_only_when_no_extracted_parts():
     resource_id = str(uuid.uuid4())
     user_parts = [
@@ -119,7 +116,6 @@ def test_resource_haspart_user_only_when_no_extracted_parts():
     assert len(result_resource_metadata["hasPart"]) == 2
     assert "https://example.com/user-only-part-1" in has_part_urls
     assert "https://example.com/user-only-part-2" in has_part_urls
-
 
 def test_resource_timeseries_csv_extraction():
     if not CSV_FIXTURE.exists():
@@ -157,7 +153,6 @@ def test_resource_timeseries_csv_extraction():
     assert result_netcdf_metadata[
         "user_metadata"] == "this is timeseries user metadata"
 
-
 @pytest.mark.skip(reason="User metadata event update for content types is not currently implemented")
 def test_resource_timeseries_csv_usermetadata():
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
@@ -176,7 +171,6 @@ def test_resource_timeseries_csv_usermetadata():
     result_metadata_path = f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable_Test.csv.json"
     result_netcdf_metadata = read_s3_json(result_metadata_path)
     assert result_netcdf_metadata["user_metadata"] == "this is timeseries user metadata"
-
 
 def test_resource_timeseries_sqlite_extraction():
     if not SQLITE_FIXTURE.exists():
@@ -211,7 +205,6 @@ def test_resource_timeseries_sqlite_extraction():
     assert result_netcdf_metadata["isPartOf"][
         0].endswith("dataset_metadata.json")
     assert result_netcdf_metadata["user_metadata"] == "this is timeseries user metadata"
-
 
 @pytest.mark.skip(reason="User metadata event update for content types is not currently implemented")
 def test_resource_timeseries_sqlite_usermetadata():
