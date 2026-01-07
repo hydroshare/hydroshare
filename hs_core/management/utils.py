@@ -13,7 +13,6 @@ If a file in S3 is not present in Django, it attempts to register that file in D
 import json
 import logging
 import os
-import time
 
 from django.apps import apps
 from django.conf import settings
@@ -895,10 +894,3 @@ def get_swat_meta_schema():
     meta_schema_path = "hs_core/management/model_aggr_meta_schema/swat.json"
     with open(meta_schema_path) as f:
         return json.loads(f.read())
-
-
-def check_time(start_time, time_limit):
-    elapsed_time = time.time() - start_time
-    if elapsed_time >= time_limit:
-        raise TimeoutError
-    return time_limit - elapsed_time

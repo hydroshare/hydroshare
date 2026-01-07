@@ -490,3 +490,19 @@ class TestPublishResource(MockS3TestCaseMixin, TestCase):
         self.assertNotRegex(got, _CONTROL_CHARS, "Control characters must be sanitized from abstract")
         expected = _CONTROL_CHARS.sub('', 'This is a test abstract\x1F').strip()
         self.assertEqual(got, expected)
+
+    def test_datacite_deposit_json_rights_truncation(self):
+        """Datacite JSON generation test (clean abstract)"""
+        self.create_json_test_resource()
+
+        self.res.metadata.rights.statement = ' '.join(
+            ['This is a long rights statement to test rights 2000 character limit.'] * 100
+        )
+        self.res.metadata.rights.save()
+
+        raw = self.res.get_datacite_deposit_json()
+
+        # Rights truncated to 2000 chars
+        payload = json.loads(raw)
+        rights = payload["data"]["attributes"]['rightsList'][0]['rights']
+        self.assertLessEqual(len(rights), 2000, "rights should be truncated to 2000 characters")
