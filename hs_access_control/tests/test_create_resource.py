@@ -50,6 +50,8 @@ class T03CreateResource(MockS3TestCaseMixin, TestCase):
 
     def tearDown(self):
         super(T03CreateResource, self).tearDown()
+        if self.holes:
+            self.holes.delete()
         User.objects.all().delete()
         Group.objects.all().delete()
         BaseResource.objects.all().delete()

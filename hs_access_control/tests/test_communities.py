@@ -173,6 +173,12 @@ class TestCommunities(TestCase):
 
     def tearDown(self):
         super(TestCommunities, self).tearDown()
+        self.posts.delete()
+        self.holes.delete()
+        self.claus.delete()
+        self.perches.delete()
+        self.wings.delete()
+        self.squirrels.delete()
         User.objects.all().delete()
         Group.objects.all().delete()
         BaseResource.objects.all().delete()
