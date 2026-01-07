@@ -1,10 +1,11 @@
 from io import BytesIO
 import os
-from pathlib import Path
 import subprocess
 import tempfile
 import zipfile
 import logging
+
+from .stream_unzip import stream_unzip
 
 from django_s3.exceptions import SessionException
 from django.urls import reverse
@@ -163,38 +164,43 @@ class S3Storage(S3Storage):
                 raise QuotaException("Bucket quota exceeded. Please contact your system administrator.")
             raise e
 
-    def unzip(self, zip_file_path, unzipped_folder=""):
+    def unzip(self, zip_file_path, unzipped_folder):
         """
-        run command to unzip files into a new folder
+        run command to stream unzip files into a new folder
         :param zip_file_path: path of the zipped file to be unzipped
-        :param unzipped_folder: Optional defaults to the basename of zip_file_path when not
-        provided.  The folder to unzip to.
+        :param unzipped_folder: The folder to unzip to.
         :return: the folder files were unzipped to
         """
-
         zip_bucket, zip_name = bucket_and_name(zip_file_path)
         unzipped_bucket, unzipped_path = bucket_and_name(unzipped_folder)
 
-        bucket = self.connection.Bucket(zip_bucket)
-        filebytes = BytesIO()
-        bucket.download_fileobj(zip_name, filebytes)
-        with tempfile.TemporaryDirectory() as extracted_folder:
-            with zipfile.ZipFile(filebytes, "r") as zip_ref:
-                zip_ref.extractall(extracted_folder)
-            for path in Path(extracted_folder).rglob("*"):
-                if path.is_dir():
-                    continue
+        def zipped_chunks():
+            chunk_size = getattr(settings, "S3_STREAM_ZIP_CHUNKING_SIZE", 1024 * 1024 * 256)  # 256MB
+            zip_obj = self.connection.Object(zip_bucket, zip_name)
+            stream = zip_obj.get()['Body']
+            while True:
+                chunk = stream.read(chunk_size)
+                if not chunk:
+                    break
+                yield chunk
 
-                unzipped_file_path = os.path.relpath(path, extracted_folder)
-                file_unzipped_path = os.path.join(unzipped_path, unzipped_file_path)
-                try:
-                    self.connection.Bucket(unzipped_bucket).upload_file(path, file_unzipped_path)
-                except ClientError as e:
-                    if "XMinioAdminBucketQuotaExceeded" in str(e):
-                        raise QuotaException(
-                            "Bucket quota exceeded. Please contact your system administrator."
-                        )
-                    raise e
+        for file_name, _, unzipped_chunks in stream_unzip(zipped_chunks()):
+            # Define the key (path) where you want to save the file in the S3 bucket
+            file_name = file_name.decode("utf-8").replace("'", "")
+            s3_key = os.path.join(unzipped_path, file_name)
+            buffer = BytesIO()
+            for chunk in unzipped_chunks:
+                buffer.write(chunk)
+            buffer.seek(0)
+            try:
+                self.connection.Bucket(unzipped_bucket).upload_fileobj(buffer, s3_key)
+            except ClientError as e:
+                if "XMinioAdminBucketQuotaExceeded" in str(e):
+                    raise QuotaException(
+                        "Bucket quota exceeded. Please contact your system administrator."
+                    )
+                raise e
+            buffer.close()
         return unzipped_folder
 
     def setAVU(self, name, attName, attVal):

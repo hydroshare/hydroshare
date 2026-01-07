@@ -7,10 +7,11 @@ from django.utils import timezone
 from django.dispatch import receiver
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.db import models
 from django.forms import ModelForm
 from django.contrib.postgres.fields import ArrayField
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, post_save
 from django.template import RequestContext, Template, TemplateSyntaxError
 from django.utils.translation import gettext_lazy as _
 from django.utils.html import strip_tags
@@ -693,3 +694,13 @@ def update_user_quota_on_quota_request(sender, instance, **kwargs):
         logger.warning(
             f"QuotaRequest for {instance.pk} does not exist when trying to update it"
         )
+
+
+@receiver(post_save, sender=SiteConfiguration)
+def clear_site_configuration_cache(sender, instance, **kwargs):
+    """
+    Clear the cached SiteConfiguration when it is saved.
+    """
+    cache_key = f"site_conf_{instance.site_id}"
+    cache.delete(cache_key)
+    print(">> Cleared cached site conf")

@@ -268,6 +268,11 @@ urlpatterns = [
         views.get_non_preferred_paths,
         name="get_non_preferred_paths",
     ),
+    re_path(
+        r"^_internal/(?P<shortkey>[0-9a-f-]+)/manage-access-data/$",
+        views.get_manage_access_data,
+        name="get_manage_access_data",
+    ),
     path(
         "_internal/get_tasks_by_user/",
         views.get_tasks_by_user,

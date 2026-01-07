@@ -58,7 +58,7 @@ Click this button to add a relationship to another resource, external website, o
                             {{ relation.type_description }}
                         </td>
                         <td class="dataset-details">{{ relation.value|urlize }}</td>
-                        {% if relation.type not in relation.NOT_USER_EDITABLE %}
+                        {% if relation.is_user_editable %}
                             <td style="min-width: 120px;">
                                 <span data-toggle="modal" data-placement="auto" title="Edit"
                                    class="glyphicon glyphicon-pencil icon-blue icon-button table-icon"
@@ -98,10 +98,10 @@ Click this button to add a relationship to another resource, external website, o
                 <tr id="{{ res.short_id }}">
                     <td>
                         {% if res_permission|lower == "none" %}
-                            <strong>{{ res.metadata.title }}</strong>
+                            <strong>{{ res.cached_metadata.title.value }}</strong>
                         {% else %}
                             <strong><a href="{{ res.absolute_url }}"
-                                       target="_blank">{{ res.metadata.title }}</a></strong>
+                                       target="_blank">{{ res.cached_metadata.title.value }}</a></strong>
                         {% endif %}
                     </td>
                     <td>
