@@ -177,6 +177,8 @@ class HydroshareMetadataAdapter:
     def to_catalog_record(metadata: dict):
         """Converts hydroshare resource metadata to a catalog dataset record"""
         hs_metadata_model = _HydroshareResourceMetadata(**metadata)
+        if metadata["type"] == "CompositeResource":
+            return hs_metadata_model.to_catalog_dataset()
         return hs_metadata_model.to_catalog_dataset()
 
 
@@ -244,7 +246,7 @@ class _HydroshareResourceMetadata(BaseModel):
     def to_dataset_has_part(self):
         return self._to_dataset_part_relations("HasPart")
 
-    def to_dataset_citation(self):
+    def to_dataset_relations(self):
         return self._to_dataset_part_relations("Other")
 
     def _to_dataset_part_relations(self, relation_type: str):
@@ -313,6 +315,7 @@ class _HydroshareResourceMetadata(BaseModel):
         dataset.isPartOf = self.to_dataset_is_part_of()
         dataset.hasPart = self.to_dataset_has_part()
         dataset.license = self.to_dataset_license()
-        dataset.citation = [self.citation] + self.to_dataset_citation()
+        dataset.citation = [self.citation]
         dataset.creativeWorkStatus = self.to_dataset_creative_work_status()
+        dataset.relations = self.to_dataset_relations()
         return dataset
