@@ -38,10 +38,10 @@ class AggregationFilesToUpdateViewFunctionTest(MockS3TestCaseMixin, TransactionT
         self.factory = RequestFactory()
 
     def tearDown(self):
-        User.objects.all().delete()
-        Group.objects.all().delete()
-        self.composite_resource.delete()
         super(AggregationFilesToUpdateViewFunctionTest, self).tearDown()
+        self.composite_resource.delete()
+        Group.objects.all().delete()
+        User.objects.all().delete()
 
     def test_aggregation_files_to_update(self):
         """
