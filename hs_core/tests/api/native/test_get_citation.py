@@ -30,9 +30,9 @@ class TestGetCitation(MockS3TestCaseMixin, TestCase):
 
     def tearDown(self):
         super(TestGetCitation, self).tearDown()
-        self.res.delete()
         User.objects.all().delete()
         Group.objects.all().delete()
+        self.res.delete()
         BaseResource.objects.all().delete()
         Creator.objects.all().delete()
 

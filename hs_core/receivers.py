@@ -4,7 +4,6 @@ from django.db.models.signals import post_save, pre_delete, post_delete
 from django.dispatch import receiver
 from django_s3.storage import S3Storage
 from hs_access_control.models.resource import ResourceAccess
-from hs_core.hydroshare.resource import delete_resource
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update, \
     pre_delete_resource, post_add_geofeature_aggregation, post_add_generic_aggregation, \
     post_add_netcdf_aggregation, post_add_raster_aggregation, post_add_timeseries_aggregation, \
@@ -221,11 +220,12 @@ def pre_delete_user_handler(sender, instance, **kwargs):
         if hasattr(res, 'raccess') and res.raccess is not None:
             other_owners = res.raccess.owners.exclude(pk=user.pk)
         if other_owners:
-            res.set_quota_holder(sender, other_owners.first())
+            res.quota_holder = other_owners.first()
         else:
-            logger.error("Resource:{} has no owner after deleting user, deleting resource:{}".format(res.short_id,
-                                                                                                     user.username))
-            delete_resource(res.short_id, user.username)
+            logger.error("Resource:{} has no owner after deleting user:{}".format(res.short_id,
+                                                                                  user.username))
+            res.quota_holder = None
+        res.save()
     istorage = S3Storage()
     if istorage.bucket_exists(user.username):
         # delete the bucket for the user

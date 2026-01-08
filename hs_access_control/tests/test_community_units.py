@@ -79,9 +79,9 @@ class UnitTests(MockS3TestCaseMixin, TestCase):
 
     def tearDown(self):
         super(UnitTests, self).tearDown()
-        self.bikes.delete()
         User.objects.all().delete()
         Group.objects.all().delete()
+        self.bikes.delete()
         BaseResource.objects.all().delete()
         Community.objects.all().delete()
 
