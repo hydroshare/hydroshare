@@ -13,9 +13,9 @@ class TestGetResourceByShortkeyAPI(MockS3TestCaseMixin, TestCase):
 
     def tearDown(self):
         super(TestGetResourceByShortkeyAPI, self).tearDown()
+        self.resource.delete()
         Group.objects.all().delete()
         User.objects.all().delete()
-        self.resource.delete()
         BaseResource.objects.all().delete()
 
     def test_get_resource_by_shortkey(self):

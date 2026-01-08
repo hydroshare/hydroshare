@@ -16,9 +16,9 @@ class TestUpdateResourceFileAPI(MockS3TestCaseMixin, unittest.TestCase):
 
     def tearDown(self):
         super(TestUpdateResourceFileAPI, self).tearDown()
+        self.new_res.delete()
         User.objects.all().delete()
         Group.objects.all().delete()
-        self.new_res.delete()
         BaseResource.objects.all().delete()
         self.original_file.close()
         os.remove(self.original_file.name)

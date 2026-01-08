@@ -29,6 +29,7 @@ from .base import (
     Place,
     HasPart,
     IsPartOf,
+    Relation,
     MediaType,
     PropertyValue,
 )
@@ -174,6 +175,11 @@ class CoreMetadata(SchemaBaseModel):
         "part of - e.g., a related collection.",
         default=None,
     )
+    relation: Optional[List[Relation]] = Field(
+        title="Relation",
+        description="All other types of relations",
+        default=None,
+    ),
     additionalProperty: Optional[List[PropertyValue]] = Field(
         title="Additional properties",
         default=None,
