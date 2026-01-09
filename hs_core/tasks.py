@@ -5,12 +5,13 @@ import json
 import logging
 import os
 import sys
-import time
 import traceback
 import zipfile
 from datetime import date, datetime, timedelta
 
 import requests
+from billiard.exceptions import TimeLimitExceeded
+from billiard.einfo import ExceptionWithTraceback
 from celery.exceptions import TaskError
 from celery.result import states
 from celery.schedules import crontab
@@ -73,6 +74,11 @@ FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
 # by celery, despite our catch-all handler).
 logger = logging.getLogger('django')
 
+NIGHTLY_RESOURCE_REPAIR_DURATION = getattr(settings, 'NIGHTLY_RESOURCE_REPAIR_DURATION', 3600)
+NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION = getattr(
+    settings, 'NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION', 14400
+)
+
 
 class FileOverrideException(Exception):
     def __init__(self, error_message):
@@ -84,17 +90,39 @@ class HydroshareRequest(Request):
     https://docs.celeryq.dev/en/v5.2.7/userguide/tasks.html#requests-and-custom-requests
     '''
     def on_failure(self, exc_info, send_failed_event=True, return_ok=False):
+        # https://docs.celeryq.dev/en/v5.5.2/reference/celery.worker.request.html#celery.worker.request.Request.on_failure
+        # https://docs.celeryq.dev/en/v5.5.2/userguide/tasks.html#on_failure
+        # Get the exception value from the ExceptionInfo object
+        exc = exc_info.exception
+        if isinstance(exc, ExceptionWithTraceback):
+            exc = exc.exc
+
+        # Check for various time limit related scenarios with more comprehensive checks
+        is_time_limit_related = (
+            isinstance(exc, TimeLimitExceeded)
+            or (isinstance(exc, SystemExit) and exc.code == -9)
+        )
+
+        if is_time_limit_related:
+            # Log as info instead of warning, no email
+            logger.info(
+                f"Task {self.task.name} was terminated due to time limit constraints. "
+                f"This is expected behavior for long-running tasks. Exception: {exc_info}"
+            )
+        else:
+            # handle non timeout related failures
+            warning_message = f"Failure detected for task {self.task.name}. Exception: {exc_info}"
+            logger.warning(warning_message)
+            if not settings.DISABLE_TASK_EMAILS:
+                subject = 'Notification of failing Celery task'
+                send_mail(subject, warning_message, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_DEVELOPER_EMAIL])
+
+        # Process the failure
         super(HydroshareRequest, self).on_failure(
             exc_info,
-            # always mark failed
-            send_failed_event=True,
-            return_ok=False
+            send_failed_event,
+            return_ok
         )
-        warning_message = f"Failure detected for task {self.task.name}. Exception: {exc_info}"
-        logger.warning(warning_message)
-        if not settings.DISABLE_TASK_EMAILS:
-            subject = 'Notification of failing Celery task'
-            send_mail(subject, warning_message, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_DEVELOPER_EMAIL])
 
 
 class HydroshareTask(Task):
@@ -107,8 +135,7 @@ class HydroshareTask(Task):
     retry_backoff = True
     retry_backoff_max = 600
     retry_jitter = True
-    # soft_time_limit = 60 * 60 * 2  # 2 hours
-    time_limit = 60 * 60 * 2  # 2 hours
+    time_limit = getattr(settings, 'CELERY_TASK_TIME_LIMIT', 14400)  # default to 4 hours if not set
 
 
 @celery_app.on_after_finalize.connect
@@ -235,14 +262,13 @@ def nightly_hs_tracking_cleanup():
     Variable.objects.filter(timestamp__lt=time_threshold).delete()
 
 
-@celery_app.task(ignore_result=True, base=HydroshareTask)
+@celery_app.task(ignore_result=True, base=HydroshareTask, time_limit=NIGHTLY_RESOURCE_REPAIR_DURATION)
 def nightly_repair_resource_files():
     """
     Run repair_resource on resources updated in the last day
     """
-    from hs_core.management.utils import check_time, repair_resource
+    from hs_core.management.utils import repair_resource
     from hs_core.views.utils import get_default_admin_user
-    start_time = time.time()
     cuttoff_time = timezone.now() - timedelta(days=1)
     admin_user = get_default_admin_user()
     recently_updated_resources = BaseResource.objects \
@@ -254,38 +280,32 @@ def nightly_repair_resource_files():
     recently_updated_resources = recently_updated_resources.exclude(repaired__gte=cuttoff_time)
 
     repaired_resources = []
-    try:
-        for res in recently_updated_resources:
-            check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
-            is_corrupt = False
-            try:
-                _, missing_django, dangling_in_django = repair_resource(res, logger, user=admin_user)
-                is_corrupt = missing_django > 0 or dangling_in_django > 0
-            except ObjectDoesNotExist:
-                logger.info("nightly_repair_resource_files encountered dangling S3 files for a nonexistent resource")
-            if is_corrupt:
-                repaired_resources.append(res)
+    for res in recently_updated_resources:
+        is_corrupt = False
+        try:
+            _, missing_django, dangling_in_django = repair_resource(res, logger, user=admin_user)
+            is_corrupt = missing_django > 0 or dangling_in_django > 0
+        except ObjectDoesNotExist:
+            logger.info("nightly_repair_resource_files encountered dangling S3 files for a nonexistent resource")
+        if is_corrupt:
+            repaired_resources.append(res)
 
-        # spend any remaining time fixing resources that haven't been checked
-        # followed by those previously checked, prioritizing the oldest checked date
-        recently_updated_rids = [res.short_id for res in recently_updated_resources]
-        not_recently_updated = BaseResource.objects \
-            .exclude(short_id__in=recently_updated_rids) \
-            .exclude(raccess__published=True) \
-            .order_by(F('files_checked').asc(nulls_first=True))
-        for res in not_recently_updated:
-            check_time(start_time, settings.NIGHTLY_RESOURCE_REPAIR_DURATION)
-            is_corrupt = False
-            try:
-                _, missing_django, dangling_in_django = repair_resource(res, logger, user=admin_user)
-                is_corrupt = missing_django > 0 or dangling_in_django > 0
-            except ObjectDoesNotExist:
-                logger.info("nightly_repair_resource_files encountered dangling S3 files for a nonexistent resource")
-            if is_corrupt:
-                repaired_resources.append(res)
-    except TimeoutError:
-        logger.info(f"nightly_repair_resource_files terminated after \
-                    {settings.NIGHTLY_RESOURCE_REPAIR_DURATION} seconds")
+    # spend any remaining time fixing resources that haven't been checked
+    # followed by those previously checked, prioritizing the oldest checked date
+    recently_updated_rids = [res.short_id for res in recently_updated_resources]
+    not_recently_updated = BaseResource.objects \
+        .exclude(short_id__in=recently_updated_rids) \
+        .exclude(raccess__published=True) \
+        .order_by(F('files_checked').asc(nulls_first=True))
+    for res in not_recently_updated:
+        is_corrupt = False
+        try:
+            _, missing_django, dangling_in_django = repair_resource(res, logger, user=admin_user)
+            is_corrupt = missing_django > 0 or dangling_in_django > 0
+        except ObjectDoesNotExist:
+            logger.info("nightly_repair_resource_files encountered dangling S3 files for a nonexistent resource")
+        if is_corrupt:
+            repaired_resources.append(res)
 
     if settings.NOTIFY_OWNERS_AFTER_RESOURCE_REPAIR:
         for res in repaired_resources:
@@ -412,7 +432,7 @@ def notify_owners_of_publication_success(short_id):
     """
     resource = utils.get_resource_by_shortkey(short_id)
     res_url = current_site_url() + resource.get_absolute_url()
-    doi = f"{settings.DATACITE_PREFIX}/{resource.short_id}"
+    doi = f"{settings.DATACITE_PREFIX}/hs.{resource.short_id}"
 
     email_msg = f'''Dear Resource Owner,
     <p>The following resource that you submitted for publication:
@@ -450,7 +470,7 @@ def notify_developers_of_publication_failure(short_id, error=None, exc_info=None
 
     resource = utils.get_resource_by_shortkey(short_id)
     res_url = current_site_url() + resource.get_absolute_url()
-    doi = f"{settings.DATACITE_PREFIX}/{resource.short_id}"
+    doi = f"{settings.DATACITE_PREFIX}/hs.{resource.short_id}"
     owners = ", ".join([o.email for o in resource.raccess.owners.all()])
 
     # Build a concise text/HTML body with diagnostics
@@ -791,6 +811,7 @@ def create_temp_zip(resource_id, input_path, output_path, aggregation_name=None,
         istorage.zipup(output_path, *set(files_to_zip), in_prefix=os.path.dirname(input_path))
     else:  # regular folder to zip
         istorage.zipup(output_path, input_path)
+    res.update_download_count()
     return istorage.signed_url(output_path)
 
 
@@ -838,6 +859,7 @@ def create_bag_by_s3(resource_id, create_zip=True):
                     # compute checksum to meet DataONE distribution requirement
                     chksum = istorage.checksum(bag_path)
                     res.bag_checksum = chksum
+                res.update_download_count()
                 return istorage.signed_url(bag_path)
             except SessionException as ex:
                 raise SessionException(-1, '', ex.stderr)
@@ -1136,12 +1158,11 @@ def set_resource_files_system_metadata(resource_id):
                                      batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
 
 
-@celery_app.task(ignore_result=True, base=HydroshareTask)
+@celery_app.task(ignore_result=True, base=HydroshareTask, time_limit=NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION)
 def nightly_cache_file_system_metadata():
     """
     Generate and store file checksums and modified times for a subset of resources
     """
-    from hs_core.management.utils import check_time
 
     def set_res_files_system_metadata(resource):
         # exclude files with size 0 (file missing in S3)
@@ -1154,26 +1175,20 @@ def nightly_cache_file_system_metadata():
 
         ResourceFile.objects.bulk_update(res_files, ResourceFile.system_meta_fields(),
                                          batch_size=settings.BULK_UPDATE_CREATE_BATCH_SIZE)
-    start_time = time.time()
     cuttoff_time = timezone.now() - timedelta(days=1)
     recently_updated_resources = BaseResource.objects \
         .filter(updated__gte=cuttoff_time)
-    try:
-        for res in recently_updated_resources:
-            check_time(start_time, settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION)
-            set_res_files_system_metadata(res)
 
-        # spend any remaining time generating filesystem metadata starting with most recently edited resources
-        recently_updated_rids = [res.short_id for res in recently_updated_resources]
-        less_recently_updated = BaseResource.objects \
-            .exclude(short_id__in=recently_updated_rids) \
-            .order_by('-updated')
-        for res in less_recently_updated:
-            check_time(start_time, settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION)
-            set_res_files_system_metadata(res)
-    except TimeoutError:
-        logger.info(f"nightly_cache_file_system_metadata terminated after \
-                    {settings.NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION} seconds")
+    for res in recently_updated_resources:
+        set_res_files_system_metadata(res)
+
+    # spend any remaining time generating filesystem metadata starting with most recently edited resources
+    recently_updated_rids = [res.short_id for res in recently_updated_resources]
+    less_recently_updated = BaseResource.objects \
+        .exclude(short_id__in=recently_updated_rids) \
+        .order_by('-updated')
+    for res in less_recently_updated:
+        set_res_files_system_metadata(res)
 
 
 @celery_app.task(ignore_result=True, base=HydroshareTask)

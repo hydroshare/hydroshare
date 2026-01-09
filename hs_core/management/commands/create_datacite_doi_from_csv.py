@@ -24,7 +24,7 @@ def deposit_res_metadata_with_datacite(res_doi, metadata):
             "content-type": "application/json",
             "authorization": f"Basic {token}"
         }
-        doi_url = f"{datacite_url}/{settings.DATACITE_PREFIX}/{res_doi}"
+        doi_url = f"{datacite_url}/{settings.DATACITE_PREFIX}/hs.{res_doi}"
         response = requests.put(
             url=doi_url,
             json=metadata,
@@ -66,7 +66,7 @@ class Command(BaseCommand):
                         "type": "dois",
                         "attributes": {
                             "url": row['DOI'],
-                            "doi": f"{settings.DATACITE_PREFIX}/{res_doi}",
+                            "doi": f"{settings.DATACITE_PREFIX}/hs.{res_doi}",
                             "prefix": settings.DATACITE_PREFIX,
                             "event": "publish",
                             "titles": [{"title": title}],

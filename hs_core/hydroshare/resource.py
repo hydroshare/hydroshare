@@ -1061,7 +1061,7 @@ def update_res_metadata_with_datacite(res):
             "content-type": "application/json",
             "authorization": f"Basic {token}"
         }
-        doi_url = f"{get_datacite_url()}/{settings.DATACITE_PREFIX}/{res.short_id}"
+        doi_url = f"{get_datacite_url()}/{settings.DATACITE_PREFIX}/hs.{res.short_id}"
         response = requests.put(
             url=doi_url,
             data=res.get_datacite_deposit_json(),
@@ -1195,7 +1195,7 @@ def update_doi_metadata_with_datacite(short_id, element_name, payload):
         "authorization": f"Basic {token}"
     }
 
-    doi_url = f"{get_datacite_url()}/{settings.DATACITE_PREFIX}/{short_id}"
+    doi_url = f"{get_datacite_url()}/{settings.DATACITE_PREFIX}/hs.{short_id}"
 
     try:
         res.doi = get_resource_doi(short_id, DataciteSubmissionStatus.UPDATE_PENDING.value)
