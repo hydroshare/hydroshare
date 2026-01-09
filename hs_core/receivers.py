@@ -297,4 +297,3 @@ def metadata_element_deleted(sender, instance, **kwargs):
                 except Exception as ex:
                     logger.error(f"Error writing user metadata json file for resource {resource.short_id}: {str(ex)}")
 
-
