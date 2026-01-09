@@ -150,6 +150,13 @@ NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION = 60 * 60 * 4  # 4 hours
 # Should resource owners be notified of automated resource repair?
 NOTIFY_OWNERS_AFTER_RESOURCE_REPAIR = False
 
+# https://docs.celeryq.dev/en/v5.5.2/userguide/configuration.html#task-time-limit
+CELERY_TASK_TIME_LIMIT = max(
+    NIGHTLY_RESOURCE_REPAIR_DURATION,
+    NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION
+)
+
+
 # Whether a user's session cookie expires when the Web browser is closed.
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
@@ -550,6 +557,7 @@ TEMPLATES = [
 MIDDLEWARE = (
     # "mezzanine.core.middleware.UpdateCacheMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.gzip.GZipMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "corsheaders.middleware.CorsMiddleware",
@@ -956,7 +964,7 @@ MINIO_LIFECYCLE_POLICY = None
 DEFAULT_QUOTA_VALUE = 20
 DEFAULT_QUOTA_UNIT = "GB"
 
-BROKER_URL = 'kafka://redpanda:9092'
+BROKER_URL = 'amqp://guest:guest@rabbitmq:5672//'
 
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #

@@ -317,7 +317,7 @@
                                                             <strong>{{ profile_user|contact }}</strong>
                                                             <span class="text-muted"> shared </span>
                                                             {% get_resource_url res.short_id as resource_url %}
-                                                            <span><a href="{{ resource_url }}">{{ metadata.title }}</a></span>
+                                                            <span><a href="{{ resource_url }}">{{ metadata.title.value }}</a></span>
                                                         </div>
                                                         <h5><span class="text-muted">Type: </span>{{ res|resource_type }}</h5>
                                                         <h5><span class="text-muted">Date: </span>{{ res.created }}</h5>
@@ -326,7 +326,7 @@
                                                         {% if abstract %}
                                                             <div class="activity-description col-sm-12">
                                                                 <p class="description">
-                                                                    <strong>ABSTRACT: </strong>{{ abstract|linebreaks }}
+                                                                    <strong>ABSTRACT: </strong>{{ abstract.value|linebreaks }}
                                                                 </p>
                                                             </div>
                                                             <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>
@@ -724,7 +724,7 @@
                                             {% with metadata=res.cached_metadata %}
                                                 <div class="activity-info col-sm-12">
                                                     {% get_resource_url res.short_id as resource_url %}
-                                                    <span class="title"><a href="{{ resource_url }}">{{ metadata.title }}</a></span>
+                                                    <span class="title"><a href="{{ resource_url }}">{{ metadata.title.value }}</a></span>
                                                     <h5><span class="text-muted">Created: </span>{{ res.created }}</h5>
                                                     <h5><span class="text-muted">Authors: </span>
                                                         {% for creator in metadata.creators %}
@@ -741,7 +741,7 @@
                                                     {% if abstract %}
                                                         <div class="activity-description col-sm-12">
                                                             <p>
-                                                                <strong>ABSTRACT: </strong>{{ abstract|linebreaks }}
+                                                                <strong>ABSTRACT: </strong>{{ abstract.value|linebreaks }}
                                                             </p>
                                                         </div>
                                                         <div class="btn-show-more toggle-abstract btn btn-default btn-xs">Show More</div>

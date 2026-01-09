@@ -1,6 +1,6 @@
 {% extends 'pages/page.html' %}
 
-{% load ratings_tags pages_tags keyword_tags hydroshare_tags crispy_forms_tags %}
+{% load ratings_tags pages_tags hydroshare_tags crispy_forms_tags %}
 
 {% block extra_head %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/jquery.dataTables.min.css' %}">
@@ -28,10 +28,10 @@
     "url": "https://www.hydroshare.org/resource/{{ cm.short_id }}",
     {% endif %}
     "@type": "Dataset",
-    "additionalType": "{{ cm.metadata.type.url }}",
-    "name": "{{ title }}",
-    "description": "{{ cm.metadata.description | escapejs }}",
-    "keywords": {{ keywords|safe }},
+    "additionalType": "{{ cm.cached_metadata.type }}",
+    "name": "{{ cm.cached_metadata.title.value }}",
+    "description": "{{ cm.cached_metadata.abstract.value | escapejs }}",
+    "keywords": {{ cm.cached_metadata.subjects |safe }},
     {% if cm.raccess.published %}
     "creativeWorkStatus": "Published",
     {% elif cm.raccess.public %}
@@ -60,12 +60,12 @@
       "https://www.hydroshare.org/resource/{{ cm.short_id }}"
     ],
     {% endif %}
-    "creator": {{ creators | creator_json_ld_element | safe }},
+    "creator": {{ cm.cached_metadata.creators | creator_json_ld_element | safe }},
     {# There is discussion about adding more linked data fields for referenced items #}
     {# https://github.com/hydroshare/hydroshare/issues/4566#issuecomment-1124283370 #}
-    {% if geospatial_relations %}
+    {% if cm.cached_metadata.geospatial_relations %}
     "about": [
-    {% for geospatial_relation in geospatial_relations %}{% if geospatial_relation.value|is_url %}
+    {% for geospatial_relation in cm.cached_metadata.geospatial_relations %}{% if geospatial_relation.value|is_url %}
       {
         "@id": "{{ geospatial_relation.value | escapejs }}",
         {# We might eventually want to encode related features with more specificity than generic https://schema.org/Place #}
@@ -76,10 +76,11 @@
     {% endif %}{% endfor %}
     ],
     {% endif %}
-    {% if temporal_coverage %}
-    "temporalCoverage": "{{ temporal_coverage.start_date }}/{{ temporal_coverage.end_date }}",
+    {% if cm.cached_metadata.temporal_coverage %}
+    "temporalCoverage": "{{ cm.cached_metadata.temporal_coverage.start_date }}/{{ cm.cached_metadata.temporal_coverage.end_date }}",
     {% endif %}
-    {% if spatial_coverage.exists %}
+    {% with spatial_coverage=cm.cached_metadata.spatial_coverage %}
+    {% if spatial_coverage %}
     {# Could include specific properties https://schema.org/GeospatialGeometry for related features #}
     "spatialCoverage": {
         "@type": "Place",
@@ -98,6 +99,7 @@
         }
     },
     {% endif %}
+    {% endwith %}
     {% if cm.raccess.published %}
     "publisher": {
         "@id": "https://www.hydroshare.org"
@@ -114,28 +116,29 @@
 		"name": "HydroShare",
     	"url": "https://www.hydroshare.org/search/"
 	},
-	 {% if cm.metadata.rights.statement or cm.metadata.rights.url %}
+	 {% if cm.cached_metadata.rights.statement or cm.cached_metadata.rights.url %}
 	"license": {
 	    "@type": "CreativeWork",
-	    {% if cm.metadata.rights.statement and cm.metadata.rights.url %}
-        "text": "{{ cm.metadata.rights.statement | escapejs }}",
-        "url": "{{ cm.metadata.rights.url }}"
-        {% elif cm.metadata.rights.statement %}
-        "text": "{{ cm.metadata.rights.statement | escapejs }}",
+	    {% if cm.cached_metadata.rights.statement and cm.cached_metadata.rights.url %}
+        "text": "{{ cm.cached_metadata.rights.statement | escapejs }}",
+        "url": "{{ cm.cached_metadata.rights.url }}"
+        {% elif cm.cached_metadata.rights.statement %}
+        "text": "{{ cm.cached_metadata.rights.statement | escapejs }}",
         "name": "Customized license"
         {% else %}
-        "url": "{{ cm.metadata.rights.url }}"
+        "url": "{{ cm.cached_metadata.rights.url }}"
         {% endif %}
 	},
 	{% endif %}
     {% if cm.raccess.public %} "isAccessibleForFree": true, {% endif %}
-    {% if relations %}
+    {% if cm.cached_metadata.relations %}
     "citation": [
-    {% for relation in relations %}
+    {% for relation in cm.cached_metadata.relations %}
         "{{ relation.value | escapejs }}"{%if not forloop.last%},{%endif%}
     {% endfor %}
     ],
     {% endif %}
+    {% with fundingagencies=cm.cached_metadata.funding_agencies %}
     {% if fundingagencies %}
     "funding": [
     {% for agency in fundingagencies %}
@@ -152,6 +155,7 @@
         {% endfor %}
     ],
     {% endif %}
+    {% endwith %}
     "dateCreated": "{{ cm.created | date:"c" }}",
     "dateModified": "{{ cm.last_updated | date:"c"}}",
     {% if cm.raccess.published %}"datePublished": "{{ cm|published_date | date:"c"}}", {% endif %}
@@ -194,8 +198,6 @@
 {% endblock %}
 
 {% block main %}
-    {% keywords_for page as kws %}
-    {% set_page_permissions page %}
     {% if page.perms.change and resource_edit_mode and not cm.raccess.published_or_review_pending %}
     {% csrf_token %}
     {% endif %}
@@ -608,7 +610,7 @@
                          {% if cm.raccess.require_download_agreement %}
                              data-agreement="true"
                          {% endif %}
-                         data-initial-file-count="{{ cm.files.all.count }}"
+                         data-initial-file-count="{{ file_count }}"
                          class="file-browser">
 
                         <div class="file-browser-container">
@@ -1026,12 +1028,13 @@
       const SELF_ACCESS_LEVEL = "{{ self_access_level }}";
       const CAN_CHANGE = "{{ page.perms.change }}" === "True";
       const RES_TYPE = "{{ cm|resource_type }}";
-      const FILE_COUNT = {{ cm.files.all.count }};
+      const FILE_COUNT = {{ file_count }};
       const SUPPORTE_FILE_TYPES = "{{ cm.get_supported_upload_file_types }}";
       const ALLLOW_MULTIPLE_FILE_UPLOAD = "{{ cm.allow_multiple_file_upload }}";
       const RESOURCE_MODE = "{% if resource_edit_mode %}Edit{% else %}View{% endif %}";
       const RESOURCE_PUBLISHED_OR_UNDER_REVIEW = "{{ cm.raccess.published_or_review_pending }}" === "True";
       const CURRENT_USER_ID = {{ request.user.id|default:"null" }};
+      {# USERS_JSON now only contains owners for left header - full access data loaded on-demand #}
       const USERS_JSON = {{ users_json|safe }};
       const AUTHORS = [
           {% for author in creators %}
@@ -1065,18 +1068,18 @@
       ];
       const TRACKING_APPLAUNCH_URL = "{% url 'tracking-applaunch' %}";
 
-      {% if show_manage_access %}
-          const QUOTA_HOLDER_PK = {{ quota_holder.pk  }};
-          const GROUP_IMAGE_DEFAULT_URL = "{% static 'img/home-page/step4.png' %}";
-          const CAN_CHANGE_RESOURCE_FLAGS = "{{ can_change_resource_flags }}" === "True";
-          const CAN_BE_PUBLIC_OR_DISCOVERABLE = "{{ cm.can_be_public_or_discoverable }}" === "True";
-          const RESOURCE_ACCESS = {
-              isPublic: "{{ cm.raccess.public }}" === "True",
-              isDiscoverable: "{{ cm.raccess.discoverable }}" === "True",
-              isShareable: "{{ cm.raccess.shareable }}" === "True",
-              isPrivateLinkSharing : "{{ cm.raccess.allow_private_sharing }}" === "True",
-          };
-      {% endif %}
+      {# Manage access data is now loaded on demand to reduce initial page load queries #}
+      const MANAGE_ACCESS_DATA_URL = "{% url 'get_manage_access_data' cm.short_id %}";
+      const GROUP_IMAGE_DEFAULT_URL = "{% static 'img/home-page/step4.png' %}";
+      
+      {# RESOURCE_ACCESS needs to be available globally for hs_file_browser.js #}
+      const RESOURCE_ACCESS = {
+          isPublic: "{{ cm.raccess.public }}" === "True",
+          isDiscoverable: "{{ cm.raccess.discoverable }}" === "True",
+          isShareable: "{{ cm.raccess.shareable }}" === "True",
+          isPrivateLinkSharing : "{{ cm.raccess.allow_private_sharing }}" === "True",
+      };
+      
       var spatial_coverage_type = "{{ spatial_coverage.type }}";
 
     </script>
