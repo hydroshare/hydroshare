@@ -296,4 +296,3 @@ def metadata_element_deleted(sender, instance, **kwargs):
                     resource.write_django_metadata_json_files()
                 except Exception as ex:
                     logger.error(f"Error writing user metadata json file for resource {resource.short_id}: {str(ex)}")
-
