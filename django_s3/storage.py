@@ -449,7 +449,9 @@ class S3Storage(S3Storage):
 
     def delete_bucket(self, bucket_name):
         bucket = self.connection.Bucket(bucket_name)
-        bucket.objects.delete()
+        bucket.objects.all().delete()
+        bucket = self.connection.Bucket(bucket_name)
+        bucket.objects.all().delete()
         self.connection.meta.client.delete_bucket(Bucket=bucket_name)
 
     def new_quota_holder(self, resource_id, new_quota_holder_id):
