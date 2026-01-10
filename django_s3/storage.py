@@ -449,8 +449,8 @@ class S3Storage(S3Storage):
 
     def delete_bucket(self, bucket_name):
         # disalbe events before delting files to avoid new files being written during deletion
-        subprocess.run(["mc", "event", "rm", f"hydroshare/{bucket_name}",
-                            "arn:minio:sqs::RESOURCEFILE:kafka"], check=True)
+        subprocess.run(["mc", "event", "rm", f"hydroshare/{bucket_name}", "arn:minio:sqs::RESOURCEFILE:kafka"],
+                       check=True)
         bucket = self.connection.Bucket(bucket_name)
         bucket.objects.all().delete()
         self.connection.meta.client.delete_bucket(Bucket=bucket_name)
