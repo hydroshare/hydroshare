@@ -17,7 +17,6 @@ def _normalize_list(value) -> list:
     return [value]
 
 
-
 def write_resource_jsonld_metadata(md: BaseMetadataObject) -> bool:
     # read the system metadata file
     system_json = load_metadata(md.system_metadata_path)
