@@ -96,6 +96,7 @@
             <v-data-table-virtual
               :headers="headers.filter((header) => header.visible)"
               :items="results"
+              fixed-header
               class="elevation-2 text-body-1"
               hover
               :show-expand="true"
@@ -868,7 +869,7 @@ export default toNative(CdSearchResults);
 </script>
 
 <style lang="scss" scoped>
-:deep(.v-table .v-data-table__tr:nth-child(even) td) {
+:deep(.v-table tr.v-data-table__tr:nth-of-type(even) td) {
   background: #f7f7f7;
   &.isSorted {
     background: #eee !important;
