@@ -17,15 +17,6 @@ def _normalize_list(value) -> list:
     return [value]
 
 
-def _normalize_has_part_list(parts) -> list[dict]:
-    if not parts:
-        return []
-    if isinstance(parts, list):
-        return [p for p in parts if isinstance(p, dict)]
-    if isinstance(parts, dict):
-        return [parts]
-    return []
-
 
 def write_resource_jsonld_metadata(md: BaseMetadataObject) -> bool:
     # read the system metadata file
@@ -52,8 +43,8 @@ def write_resource_jsonld_metadata(md: BaseMetadataObject) -> bool:
     combined_metadata = {**system_json, **user_json}
     combined_metadata["hasPart"] = (
         has_parts
-        + _normalize_has_part_list(system_json.get("hasPart"))
-        + _normalize_has_part_list(user_json.get("hasPart"))
+        + _normalize_list(system_json.get("hasPart"))
+        + _normalize_list(user_json.get("hasPart"))
     )
     combined_metadata["associatedMedia"] = md.resource_associated_media
 
@@ -77,8 +68,8 @@ def write_content_type_jsonld_metadata(md: BaseMetadataObject) -> bool:
     # Combine part metadata, user metadata, isPartOf, and associatedMedia (join arrays)
     combined_metadata = {**content_type_metadata, **user_json}
     combined_metadata["hasPart"] = (
-        _normalize_has_part_list(content_type_metadata.get("hasPart"))
-        + _normalize_has_part_list(user_json.get("hasPart"))
+        _normalize_list(content_type_metadata.get("hasPart"))
+        + _normalize_list(user_json.get("hasPart"))
     )
     combined_metadata["isPartOf"] = _normalize_list(content_type_metadata.get("isPartOf")) + is_part_of
     # TODO make associated media determination consistent with all content types

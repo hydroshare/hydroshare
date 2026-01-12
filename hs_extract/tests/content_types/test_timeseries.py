@@ -15,7 +15,7 @@ sys.modules.setdefault("rasterio", types.SimpleNamespace(open=lambda *_, **__: N
 sys.modules.setdefault("xarray", types.SimpleNamespace(Dataset=object))
 sys.modules.setdefault("geopandas", types.SimpleNamespace(read_file=lambda *_, **__: None))
 
-TEST_FILES_DIR = Path(__file__).resolve().parents[2] / "test_files" / "timeseries"
+TEST_FILES_DIR = Path(__file__).resolve().parents[1] / "test_files" / "timeseries"
 CSV_FIXTURE = TEST_FILES_DIR / "ODM2_Multi_Site_One_Variable_Test.csv"
 SQLITE_FIXTURE = TEST_FILES_DIR / "ODM2_Multi_Site_One_Variable.sqlite"
 
@@ -121,7 +121,7 @@ def test_resource_haspart_user_only_when_no_extracted_parts():
 
 def test_resource_timeseries_csv_extraction():
     if not CSV_FIXTURE.exists():
-        pytest.skip("CSV fixture not available")
+        pytest.fail("CSV fixture not available")
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
     print(resource_id)
     write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/ODM2_Multi_Site_One_Variable_Test.csv.user_metadata.json", {
