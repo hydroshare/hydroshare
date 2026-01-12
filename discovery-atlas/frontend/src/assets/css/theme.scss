@@ -14,17 +14,17 @@ body {
   font-size: 1.4rem;
 }
 
-section {
-  padding: 4rem 0;
-}
+// section {
+//   padding: 4rem 0;
+// }
 
-.gap-1 {
-  gap: 1rem;
-}
+// .gap-1 {
+//   gap: 1rem;
+// }
 
-.gap-2 {
-  gap: 2rem;
-}
+// .gap-2 {
+//   gap: 2rem;
+// }
 
 #main-container {
   height: 100%;
@@ -112,16 +112,3 @@ p {
   max-width: 70rem;
 }
 
-.snip-2 {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-}
-
-.snip-3 {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  overflow: hidden;
-}

@@ -5,6 +5,7 @@ export type UserModule = (ctx: ViteSSGContext) => void;
 export interface IResult {
   id: string;
   creator: string[];
+  contributors: string[];
   dateCreated: string;
   datePublished: string;
   lastModified: string;
@@ -27,6 +28,7 @@ export interface IResult {
   spatialCoverage: any;
   contentType: string;
   sharingStatus: string;
+  temporalCoverage?: { startDate: string, endDate: string }
   _showMore?: boolean; // Used to toggle 'show more...' button
   _paginationToken: string;
 }

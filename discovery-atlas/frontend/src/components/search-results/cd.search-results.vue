@@ -11,267 +11,10 @@
     </div>
     <v-divider class="mt-2 mb-6"></v-divider>
     <div class="d-sm-block d-md-flex">
-      <v-container class="sidebar flex-shrink-0">
-        <div class="sidebar--content">
-          <div class="text-h6 mb-6">Filters</div>
-
-          <!-- SUBJECT/KEYWORDS -->
-          <cd-search
-            v-model="filter.subject.value"
-            :target-field="EnumHistoryTypes.SUBJECT"
-            :append-search-button="false"
-            :is-eager="true"
-            @blur="pushSearchRoute"
-            @keyup.enter="pushSearchRoute"
-            @hint-selected="pushSearchRoute()"
-            @clear="
-              filter.subject.value = '';
-              pushSearchRoute();
-            "
-            :inputAttrs="{
-              variant: 'outlined',
-              prependInnerIcon: filter.subject.icon,
-              label: filter.subject.title,
-            }"
-            class="mt-6"
-          >
-          </cd-search>
-
-          <!-- CREATOR/CONTRIBUTOR NAME -->
-          <cd-search
-            v-model="filter.creatorName.value"
-            :target-field="EnumHistoryTypes.CREATOR"
-            :append-search-button="false"
-            :is-eager="true"
-            @blur="pushSearchRoute"
-            @keyup.enter="pushSearchRoute"
-            @hint-selected="pushSearchRoute()"
-            @clear="
-              filter.creatorName.value = '';
-              pushSearchRoute();
-            "
-            :inputAttrs="{
-              variant: 'outlined',
-              prependInnerIcon: 'mdi-account-edit',
-              label: filter.creatorName.title,
-            }"
-            class="mt-6"
-          >
-          </cd-search>
-
-          <!-- FUNDER -->
-          <cd-search
-            v-model="filter.fundingFunderName.value"
-            :target-field="EnumHistoryTypes.FUNDER"
-            :append-search-button="false"
-            :is-eager="true"
-            @blur="pushSearchRoute"
-            @keyup.enter="pushSearchRoute"
-            @hint-selected="pushSearchRoute()"
-            @clear="
-              filter.fundingFunderName.value = '';
-              pushSearchRoute();
-            "
-            :inputAttrs="{
-              variant: 'outlined',
-              prependInnerIcon: filter.fundingFunderName.icon,
-              label: 'Funder',
-            }"
-            class="my-6"
-          >
-          </cd-search>
-
-          <v-expansion-panels multiple v-model="panels">
-            <!-- TEMPORAL COVERAGE -->
-            <v-expansion-panel tile key="2">
-              <v-expansion-panel-title class="py-0 px-4" color="grey-lighten-4">
-                <v-switch
-                  @click.stop=""
-                  v-model="filter.dataCoverage.isEnabled"
-                  @update:model-value="pushSearchRoute()"
-                  density="compact"
-                  hide-details
-                  color="primary"
-                ></v-switch>
-                <div class="ml-4 text-body-1 cursor-pointer">
-                  Temporal coverage
-                </div>
-              </v-expansion-panel-title>
-
-              <v-expansion-panel-text>
-                <cd-range-input
-                  v-model="filter.dataCoverage.value"
-                  v-model:isActive="filter.dataCoverage.isEnabled"
-                  @update:is-active="pushSearchRoute"
-                  @end="onFilterControlChange(filter.dataCoverage)"
-                  :min="filter.dataCoverage.min"
-                  :max="filter.dataCoverage.max"
-                  label="Temporal coverage"
-                />
-              </v-expansion-panel-text>
-            </v-expansion-panel>
-
-            <!-- CONTENT TYPE -->
-            <v-expansion-panel tile key="1">
-              <v-expansion-panel-title class="py-0 px-4" color="grey-lighten-3">
-                <v-switch
-                  @click.stop=""
-                  v-model="filter.contentType.isEnabled"
-                  @update:model-value="pushSearchRoute()"
-                  density="compact"
-                  hide-details
-                  color="primary"
-                ></v-switch>
-                <div class="ml-4 text-body-1 cursor-pointer">Content type</div>
-              </v-expansion-panel-title>
-
-              <v-progress-linear
-                v-if="isFetchingContentTypes"
-                color="primary"
-                indeterminate
-              ></v-progress-linear>
-
-              <v-expansion-panel-text>
-                <div
-                  v-for="(option, index) of filter.contentType.options"
-                  class="d-flex justify-space-between align-center"
-                >
-                  <v-checkbox
-                    v-model="filter.contentType.value"
-                    @update:model-value="
-                      onFilterControlChange(filter.contentType)
-                    "
-                    :label="option.label"
-                    :key="index"
-                    :value="option.value"
-                    hide-details
-                    density="compact"
-                    color="primary"
-                  ></v-checkbox>
-
-                  <v-img
-                    v-if="option.logo"
-                    :src="option.logo"
-                    v-tooltip="option.label"
-                    :alt="option.label"
-                    width="30"
-                    max-width="30"
-                  />
-                </div>
-              </v-expansion-panel-text>
-            </v-expansion-panel>
-
-            <!-- AVAILABILITY -->
-            <v-expansion-panel tile key="0">
-              <v-expansion-panel-title class="py-0 px-4" color="grey-lighten-3">
-                <v-switch
-                  @click.stop=""
-                  v-model="filter.availability.isEnabled"
-                  @update:model-value="pushSearchRoute()"
-                  density="compact"
-                  hide-details
-                  color="primary"
-                ></v-switch>
-                <div class="ml-4 text-body-1 cursor-pointer">Availiability</div>
-              </v-expansion-panel-title>
-
-              <v-expansion-panel-text>
-                <div
-                  v-for="(option, index) of filter.availability.options"
-                  class="d-flex justify-space-between align-center"
-                >
-                  <v-checkbox
-                    v-model="filter.availability.value"
-                    @update:model-value="
-                      onFilterControlChange(filter.availability)
-                    "
-                    color="primary"
-                    :label="option.label"
-                    :key="index"
-                    :value="option.value"
-                    hide-details
-                    density="compact"
-                  ></v-checkbox>
-                  <v-img
-                    :src="option.icon"
-                    class="img-access-icon flex-grow-0"
-                    width="25"
-                    v-tooltip="option.label"
-                    :alt="option.label"
-                  />
-                </div>
-              </v-expansion-panel-text>
-            </v-expansion-panel>
-
-            <!-- DATE CREATED -->
-            <v-expansion-panel tile key="3">
-              <v-expansion-panel-title class="py-0 px-4" color="grey-lighten-4">
-                <v-switch
-                  @click.stop=""
-                  v-model="filter.creationDate.isEnabled"
-                  @update:model-value="pushSearchRoute()"
-                  density="compact"
-                  hide-details
-                  color="primary"
-                ></v-switch>
-
-                <div class="ml-4 text-body-1 cursor-pointer">Date created</div>
-              </v-expansion-panel-title>
-
-              <v-expansion-panel-text key="4">
-                <cd-range-input
-                  v-model="filter.creationDate.value"
-                  v-model:isActive="filter.creationDate.isEnabled"
-                  @update:is-active="pushSearchRoute"
-                  @end="onFilterControlChange(filter.creationDate)"
-                  :min="filter.creationDate.min"
-                  :max="filter.creationDate.max"
-                  label="Date created"
-                />
-              </v-expansion-panel-text>
-            </v-expansion-panel>
-
-            <!-- PUBLICATION YEAR -->
-            <v-expansion-panel tile>
-              <v-expansion-panel-title class="py-0 px-4" color="grey-lighten-4">
-                <v-switch
-                  @click.stop=""
-                  v-model="filter.publicationYear.isEnabled"
-                  @update:model-value="pushSearchRoute()"
-                  density="compact"
-                  hide-details
-                  color="primary"
-                ></v-switch>
-
-                <div class="ml-4 text-body-1 cursor-pointer">
-                  Publication year
-                </div>
-              </v-expansion-panel-title>
-
-              <v-expansion-panel-text>
-                <cd-range-input
-                  v-model="filter.publicationYear.value"
-                  v-model:isActive="filter.publicationYear.isEnabled"
-                  @update:is-active="pushSearchRoute"
-                  @end="onFilterControlChange(filter.publicationYear)"
-                  :min="filter.publicationYear.min"
-                  :max="filter.publicationYear.max"
-                  label="Publication year"
-                />
-              </v-expansion-panel-text>
-            </v-expansion-panel>
-          </v-expansion-panels>
-
-          <v-btn
-            :disabled="!isSomeFilterActive"
-            @click="clearFilters"
-            class="mt-8"
-            variant="outlined"
-            block
-            >Clear Filters</v-btn
-          >
-        </div>
-      </v-container>
+      <cd-search-sidebar
+        @update:model-value="pushSearchRoute"
+        v-model="filter"
+      />
 
       <div class="results-content-wrapper">
         <v-container class="results-content">
@@ -291,6 +34,23 @@
                 placeholder: $t(`home.search.inputPlaceholder`),
               }"
             />
+
+            <v-select
+              @update:model-value="
+                sortTableBy[0] = $event;
+                $nextTick(pushSearchRoute);
+              "
+              class="flex-grow-0"
+              width="12rem"
+              label="Sort results by"
+              v-model="sortDropdownBy"
+              :items="sortOptions"
+              item-title="title"
+              return-object
+              variant="outlined"
+              density="compact"
+              hide-details
+            ></v-select>
           </div>
 
           <div v-if="isSomeFilterActive" class="d-flex gap-1 mb-4 flex-wrap">
@@ -338,14 +98,14 @@
               :items="results"
               class="elevation-2 text-body-1"
               hover
-              show-expand
+              :show-expand="true"
               density="compact"
               :loading="isSearching"
-              v-model:sort-by="sortBy"
-              @update:sort-by="onSortChange()"
+              v-model:sort-by="sortTableBy"
+              @update:sort-by="pushSearchRoute()"
               :cell-props="
                 (item) => ({
-                  class: { isSorted: item.column.key === sortBy[0]?.key },
+                  class: { isSorted: item.column.key === sortTableBy[0]?.key },
                 })
               "
             >
@@ -444,18 +204,32 @@
                       <v-card-text>
                         <div class="d-flex gap-2">
                           <div class="flex-grow-1">
-                            <p
-                              class="mb-2"
-                              v-html="
-                                highlight(
-                                  item,
-                                  'creator',
-                                  ' | ',
-                                  'creator.name',
-                                )
-                              "
-                            ></p>
+                            <div class="d-flex">
+                              <b>Creators</b>:
+                              <p
+                                class="mb-2 ml-1"
+                                v-html="
+                                  highlight(
+                                    item,
+                                    'creator',
+                                    ' | ',
+                                    'creator.name',
+                                  )
+                                "
+                              ></p>
+                            </div>
+                            <template v-if="item.contributors?.length">
+                              <!-- TODO: highlight -->
+                              <p class="mb-2">
+                                <b>Contributors</b>:
+                                <span v-for="contributor of item.contributors"
+                                  >{{ contributor }} |
+                                </span>
+                              </p>
+                            </template>
+
                             <div class="mb-2">
+                              <b>Keywords</b>:
                               <v-chip
                                 v-for="keyword of item.keywords"
                                 size="small"
@@ -466,28 +240,50 @@
                                 >{{ keyword }}</v-chip
                               >
                             </div>
-                            <p
-                              :class="{ 'snip-3': !item._showMore }"
-                              v-html="highlight(item, 'description')"
-                            ></p>
-                            <v-btn
-                              size="x-small"
-                              variant="text"
-                              color="primary"
-                              class="mb-2"
-                              @click="item._showMore = !item._showMore"
-                              >Show
-                              {{ item._showMore ? "less" : "more" }}...</v-btn
+
+                            <b>Abstract</b>:
+                            <v-banner
+                              :text="item.description"
+                              :lines="item._showMore ? undefined : 'three'"
+                              stacked
+                              class="pa-0 pb-4"
+                              :border="0"
+                              ref="el"
                             >
+                              <template v-slot:actions>
+                                <v-btn
+                                  @click="item._showMore = !item._showMore"
+                                  size="x-small"
+                                  >{{
+                                    item._showMore ? "Show less" : "Show more"
+                                  }}</v-btn
+                                >
+                              </template>
+
+                              <template #text
+                                ><div
+                                  v-html="highlight(item, 'description')"
+                                  class="text-body-2"
+                                ></div
+                              ></template>
+                            </v-banner>
+
                             <p class="mb-2" v-if="item.datePublished">
-                              <b>Date published</b>: {{ item.datePublished }}
+                              <b>Date published</b>:
+                              {{ formatDate(item.datePublished) }}
+                            </p>
+                            <p class="mb-2" v-if="item.temporalCoverage">
+                              <b>Temporal Coverage</b>:
+                              {{ formatDate(item.temporalCoverage.startDate) }}
+                              -
+                              {{ formatDate(item.temporalCoverage.endDate) }}
                             </p>
                             <p v-if="item.funding.length" class="mb-2">
                               <b>Funded by</b>: {{ item.funding.join(" | ") }}
                             </p>
-                            <p class="mb-2">
+                            <!-- <p class="mb-2">
                               <b>License</b>: {{ item.license }}
-                            </p>
+                            </p> -->
                           </div>
 
                           <div v-if="hasSpatialFeatures(item)">
@@ -512,25 +308,16 @@
                 }"
               >
                 <v-btn
-                  :append-icon="
+                  :icon="
                     isExpanded(internalItem)
                       ? 'mdi-chevron-up'
                       : 'mdi-chevron-down'
                   "
-                  :text="isExpanded(internalItem) ? 'Collapse' : 'Show more'"
-                  class="text-none"
-                  color="medium-emphasis"
-                  size="small"
-                  variant="text"
-                  border
-                  slim
+                  flat
+                  class="bg-transparent"
                   @click="toggleExpand(internalItem)"
                 ></v-btn>
               </template>
-
-              <!-- <div class="my-1" v-if="result.datePublished">
-                  Publication Date: {{ formatDate(result.datePublished) }}
-                </div> -->
             </v-data-table-virtual>
             <v-progress-linear
               v-if="isFetchingMore"
@@ -589,10 +376,28 @@ import {
 import CdRangeInput from "./cd.range-input.vue";
 import { useRoute, useRouter } from "vue-router";
 import { EnumFilterTypes, Filter } from "./filter";
+import { DataTableHeader } from "vuetify";
+import { Reactive } from "vue";
+import CdSearchSidebar from "./cd.search-sidebar.vue";
+
+interface SortOption {
+  key: string;
+  title?: string;
+  order?: boolean | "asc" | "desc";
+}
+
+const sortOptions: SortOption[] = [
+  { key: "relevance", title: "Relevance", order: "asc" },
+  { key: "views", title: "Most Viewed", order: "asc" },
+  { key: "dateCreated", title: "Date Created", order: "asc" },
+  { key: "lastModified", title: "Last Modified", order: "asc" },
+  { key: "creatorName", title: "First Author", order: "asc" },
+  { key: "name", title: "Title", order: "asc" },
+];
 
 @Component({
   name: "cd-search-results",
-  components: { CdSearch, CdSpatialCoverageMap, CdRangeInput },
+  components: { CdSearch, CdSpatialCoverageMap, CdRangeInput, CdSearchSidebar },
 })
 class CdSearchResults extends Vue {
   isIntersecting = false;
@@ -602,8 +407,9 @@ class CdSearchResults extends Vue {
   hasMore = true;
   isSearching = false;
   isFetchingMore = false;
-  sortBy: { key: string; order?: boolean | "asc" | "desc" }[] = [];
-  // public view: 'list' | 'map' = 'list'
+  sortTableBy: SortOption[] = []; // Used by the table
+  sortDropdownBy = sortOptions[0]; // Used by the dropdown
+
   filter: { [key: string]: Filter } = {
     availability: new Filter({
       name: "creativeWorkStatus",
@@ -739,7 +545,7 @@ class CdSearchResults extends Vue {
   contentTypeLabels = contentTypeLabels;
   enumFilterTypes = EnumFilterTypes;
 
-  headers = reactive([
+  headers: Reactive<DataTableHeader[]> = reactive([
     {
       title: "",
       key: "icons",
@@ -759,21 +565,25 @@ class CdSearchResults extends Vue {
       title: "First Author",
       key: "creatorName",
       visible: true,
-      minWidth: 200,
+      minWidth: 150,
+      maxWidth: 300,
+      width: "auto",
       sortRaw: () => 1,
     },
     {
       title: "Date Created",
       key: "dateCreated",
       visible: true,
-      minWidth: 200,
+      width: "auto",
+      nowrap: true,
       sortRaw: () => 1,
     },
     {
       title: "Last Modified",
       key: "lastModified",
       visible: true,
-      minWidth: 200,
+      width: "auto",
+      nowrap: true,
       sortRaw: () => 1,
     },
   ]);
@@ -782,6 +592,12 @@ class CdSearchResults extends Vue {
   route = useRoute();
   router = useRouter();
   EnumHistoryTypes = EnumHistoryTypes;
+
+  get sortOptions(): SortOption[] {
+    return this.searchQuery
+      ? sortOptions
+      : sortOptions.slice(1, sortOptions.length);
+  }
 
   public get registeredFilters() {
     return Object.values(this.filter);
@@ -826,10 +642,6 @@ class CdSearchResults extends Vue {
     return Search.$state.contentTypes;
   }
 
-  public get isFetchingContentTypes() {
-    return Search.$state.isFetchingContentTypes;
-  }
-
   /** Search query parameters */
   get queryParams(): ISearchParams {
     let params: ISearchParams = {
@@ -838,9 +650,9 @@ class CdSearchResults extends Vue {
       pageNumber: this.pageNumber,
     };
 
-    if (this.sortBy[0]) {
-      params.sortBy = this.sortBy[0].key;
-      params.order = this.sortBy[0].order as "asc" | "desc";
+    if (this.sortTableBy[0]) {
+      params.sortBy = this.sortTableBy[0].key;
+      params.order = this.sortTableBy[0].order as "asc" | "desc";
     }
 
     this.registeredFilters.forEach((f) => {
@@ -856,9 +668,9 @@ class CdSearchResults extends Vue {
       [EnumShortParams.QUERY]: this.searchQuery,
     };
 
-    if (this.sortBy[0]) {
-      params.sortBy = this.sortBy[0].key;
-      params.order = this.sortBy[0].order as string;
+    if (this.sortTableBy[0]) {
+      params.sortBy = this.sortTableBy[0].key;
+      params.order = this.sortTableBy[0].order as string;
     }
 
     this.registeredFilters.forEach((f) => {
@@ -1015,29 +827,20 @@ class CdSearchResults extends Vue {
     return content;
   }
 
-  public clearFilters() {
-    const wasSomeActive = this.isSomeFilterActive;
-    this.registeredFilters.forEach((f) => f.clear());
-
-    if (wasSomeActive) {
-      this.pushSearchRoute();
-    }
-  }
-
-  public onSortChange() {
-    this.pushSearchRoute();
-  }
-
   /** Load route query parameters into component values. */
   private _loadRouteParams() {
     this.searchQuery = this.$route.query[EnumShortParams.QUERY] as string;
     if (this.$route.query.sortBy) {
-      this.sortBy = [
+      this.sortTableBy = [
         {
           key: this.$route.query.sortBy as string,
           order: this.$route.query.order === "desc" ? "desc" : "asc",
         },
       ];
+      this.sortDropdownBy =
+        this.sortOptions.find(
+          (option) => option.key === this.sortTableBy[0].key,
+        ) || this.sortOptions[0];
     }
     this.registeredFilters.forEach((f) => f.loadFromRoute(this.$route.query));
   }
@@ -1050,12 +853,6 @@ export default toNative(CdSearchResults);
 </script>
 
 <style lang="scss" scoped>
-.v-expansion-panel--active,
-.v-expansion-panel--active:not(:first-child),
-.v-expansion-panel--active + .v-expansion-panel {
-  margin-top: 1px;
-}
-
 :deep(.v-table .v-data-table__tr:nth-child(even) td) {
   background: #f7f7f7;
   &.isSorted {
@@ -1073,10 +870,6 @@ export default toNative(CdSearchResults);
 :deep(.v-table tr.v-data-table__tr td) {
   padding-top: 1rem;
   padding-bottom: 1rem;
-}
-
-.sidebar {
-  width: 20rem;
 }
 
 .cd-search-results.is-small {

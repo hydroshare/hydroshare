@@ -17,7 +17,7 @@ export const sameRouteNavigationErrorHandler = (e) => {
 };
 
 export const MAX_YEAR = new Date().getFullYear();
-export const MIN_YEAR = 1900;
+export const MIN_YEAR = 2010;
 export const ENDPOINTS: { [key: string]: string } = {
   search: `${API_BASE}/discovery/search`,
   typeahead: `${API_BASE}/discovery/typeahead`,

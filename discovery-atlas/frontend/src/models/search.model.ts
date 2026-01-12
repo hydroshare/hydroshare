@@ -1,11 +1,7 @@
 import { Model } from "@vuex-orm/core";
 import { ENDPOINTS } from "@/constants";
 import { getQueryString } from "@/util";
-import {
-  IResult,
-  ISearchParams,
-  ITypeaheadParams,
-} from "@/types";
+import { IResult, ISearchParams, ITypeaheadParams } from "@/types";
 
 export interface ISearchState {
   results: IResult[];
@@ -16,7 +12,7 @@ export interface ISearchState {
 export default class Search extends Model {
   static entity = "search";
 
-  static abortController = new AbortController()
+  static abortController = new AbortController();
 
   static fields() {
     return {};
@@ -39,10 +35,11 @@ export default class Search extends Model {
    */
   public static async search(params: ISearchParams) {
     try {
-      this.abortController.abort("[Search]: Searching...")
-      this.abortController = new AbortController()
+      this.abortController.abort("[Search]: Searching...");
+      this.abortController = new AbortController();
       const response: Response = await fetch(
-        `${ENDPOINTS.search}?${getQueryString(params)}`, { signal: this.abortController.signal }
+        `${ENDPOINTS.search}?${getQueryString(params)}`,
+        { signal: this.abortController.signal },
       );
 
       if (!response.ok) {
@@ -58,9 +55,8 @@ export default class Search extends Model {
 
       // If the number of items in this page equals the page size, then there could be more items in the next page.
       return incoming.length === params.pageSize;
-    }
-    catch (e) {
-      console.log(e)
+    } catch (e) {
+      console.log(e);
     }
   }
 
@@ -77,7 +73,8 @@ export default class Search extends Model {
    * @returns a boolean indicating if the query has more pages that can be fetched
    */
   public static async fetchMore(params: ISearchParams): Promise<boolean> {
-    params.paginationToken = this.$state.results[this.$state.results.length - 1]._paginationToken
+    params.paginationToken =
+      this.$state.results[this.$state.results.length - 1]._paginationToken;
     const response: Response = await fetch(
       `${ENDPOINTS.search}?${getQueryString(params)}`,
     );
@@ -121,23 +118,29 @@ export default class Search extends Model {
     const contentTypes: string[] = await response.json();
     if (contentTypes) {
       this.commit((state) => {
-        state.contentTypes = contentTypes.filter(contentType => contentType !== "CompositeResource");
+        state.contentTypes = contentTypes.filter(
+          (contentType) => contentType !== "CompositeResource",
+        );
       });
     }
     this.commit((state) => {
-      state.isFetchingContentTypes = false
-    })
+      state.isFetchingContentTypes = false;
+    });
   }
 
   /** Transform raw result data from API into `IResult` shaped objects */
   private static _parseResult(rawResult: any): IResult {
     return {
       creator: rawResult.document[0].creator.map((c: any) => c.name) || [],
+      contributors: rawResult.document[0].contributor.map((c: any) => c.name) || [],
       dateCreated: rawResult.document[0].dateCreated || "",
       datePublished: rawResult.document[0].datePublished || "",
       lastModified: rawResult.document[0].dateModified || "",
       description: rawResult.document[0].description || "",
-      funding: rawResult.document[0].funding?.map((f: any) => f.name || f.funder.name) || [],
+      funding:
+        rawResult.document[0].funding?.map(
+          (f: any) => f.funder.name || f.name,
+        ) || [],
       highlights: rawResult.highlights || [],
       id: rawResult["_id"],
       keywords: Search._getKeywords(rawResult.document[0].keywords),
@@ -149,7 +152,8 @@ export default class Search extends Model {
       identifier: rawResult.document[0].identifier[0] || "",
       contentType: rawResult.document[0].additionalType || "",
       sharingStatus: rawResult.document[0].creativeWorkStatus?.name || "",
-      _paginationToken: rawResult.paginationToken
+      temporalCoverage: rawResult.document[0].temporalCoverage || undefined,
+      _paginationToken: rawResult.paginationToken,
     };
   }
 
