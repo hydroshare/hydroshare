@@ -656,7 +656,6 @@ class CdSearchResults extends Vue {
     };
 
     // If sorting by a table column, use that sort
-    // TODO
     if (
       (this.searchQuery || this.isSomeFilterActive) &&
       this.sortTableBy[0]?.key === "views"
@@ -838,10 +837,12 @@ class CdSearchResults extends Vue {
   /** Load route query parameters into component values. */
   private _loadRouteParams() {
     this.searchQuery = this.$route.query[EnumShortParams.QUERY] as string;
-
     this.registeredFilters.forEach((f) => f.loadFromRoute(this.$route.query));
 
-    if (this.$route.query.sortBy) {
+    if (
+      this.$route.query.sortBy &&
+      this.sortOptions.some((option) => option.key === this.$route.query.sortBy)
+    ) {
       this.sortTableBy = [
         {
           key: this.$route.query.sortBy as string,
