@@ -389,10 +389,10 @@ interface SortOption {
 const sortOptions: SortOption[] = [
   { key: "relevance", title: "Relevance", order: "asc" },
   { key: "views", title: "Most Viewed", order: "asc" },
+  { key: "name", title: "Title", order: "asc" },
+  { key: "creatorName", title: "First Author", order: "asc" },
   { key: "dateCreated", title: "Date Created", order: "asc" },
   { key: "lastModified", title: "Last Modified", order: "asc" },
-  { key: "creatorName", title: "First Author", order: "asc" },
-  { key: "name", title: "Title", order: "asc" },
 ];
 
 @Component({
@@ -455,7 +455,7 @@ class CdSearchResults extends Vue {
       icon: "mdi-calendar-range",
       urlLabel: EnumShortParams.DATA_COVERAGE,
       type: EnumFilterTypes.RANGE,
-      min: MIN_YEAR,
+      min: 1900,
       max: MAX_YEAR,
       getter: () => {
         return SearchResults.$state.dataCoverage;
@@ -467,7 +467,7 @@ class CdSearchResults extends Vue {
       },
       clear: () => {
         SearchResults.commit((state) => {
-          state.dataCoverage = INITIAL_RANGE;
+          state.dataCoverage = [1900, MAX_YEAR];
         });
       },
     }),
@@ -594,7 +594,7 @@ class CdSearchResults extends Vue {
   EnumHistoryTypes = EnumHistoryTypes;
 
   get sortOptions(): SortOption[] {
-    return this.searchQuery
+    return this.searchQuery || this.isSomeFilterActive
       ? sortOptions
       : sortOptions.slice(1, sortOptions.length);
   }
@@ -623,19 +623,6 @@ class CdSearchResults extends Vue {
 
   public get isSomeFilterActive() {
     return this.registeredFilters.some((f) => f.isActive());
-  }
-
-  @Watch("_contentTypes")
-  onContentTypesChanged() {
-    this.filter.contentType.options = this._contentTypes.map(
-      (contentType: string) => {
-        return {
-          value: contentType,
-          label: contentTypeLabels[contentType],
-          logo: contentTypeLogos[contentType],
-        };
-      },
-    );
   }
 
   private get _contentTypes() {
@@ -668,7 +655,15 @@ class CdSearchResults extends Vue {
       [EnumShortParams.QUERY]: this.searchQuery,
     };
 
-    if (this.sortTableBy[0]) {
+    // If sorting by a table column, use that sort
+    // TODO
+    if (
+      (this.searchQuery || this.isSomeFilterActive) &&
+      this.sortTableBy[0]?.key === "views"
+    ) {
+      params.sortBy = this.sortOptions[0].key;
+      params.order = "asc";
+    } else if (this.sortTableBy[0]) {
       params.sortBy = this.sortTableBy[0].key;
       params.order = this.sortTableBy[0].order as string;
     }
@@ -737,6 +732,19 @@ class CdSearchResults extends Vue {
         type: "error",
       });
     }
+  }
+
+  @Watch("_contentTypes")
+  onContentTypesChanged() {
+    this.filter.contentType.options = this._contentTypes.map(
+      (contentType: string) => {
+        return {
+          value: contentType,
+          label: contentTypeLabels[contentType],
+          logo: contentTypeLogos[contentType],
+        };
+      },
+    );
   }
 
   async _onSearch() {
@@ -830,6 +838,9 @@ class CdSearchResults extends Vue {
   /** Load route query parameters into component values. */
   private _loadRouteParams() {
     this.searchQuery = this.$route.query[EnumShortParams.QUERY] as string;
+
+    this.registeredFilters.forEach((f) => f.loadFromRoute(this.$route.query));
+
     if (this.$route.query.sortBy) {
       this.sortTableBy = [
         {
@@ -837,12 +848,15 @@ class CdSearchResults extends Vue {
           order: this.$route.query.order === "desc" ? "desc" : "asc",
         },
       ];
+
       this.sortDropdownBy =
         this.sortOptions.find(
           (option) => option.key === this.sortTableBy[0].key,
         ) || this.sortOptions[0];
+    } else {
+      this.sortTableBy = [this.sortOptions[0]];
+      this.sortDropdownBy = this.sortOptions[0];
     }
-    this.registeredFilters.forEach((f) => f.loadFromRoute(this.$route.query));
   }
 
   public hasSpatialFeatures(result: IResult): boolean {
@@ -882,12 +896,6 @@ export default toNative(CdSearchResults);
   flex: 1 1 auto;
 }
 
-// .results-content {
-//   min-width: 0; // https://stackoverflow.com/a/66689926/3288102
-//   max-width: 70rem;
-//   margin: unset;
-// }
-
 .results-container {
   * {
     word-break: break-word;
@@ -899,10 +907,6 @@ export default toNative(CdSearchResults);
       text-decoration: underline !important;
     }
   }
-}
-
-.grayed-out {
-  opacity: 0.55;
 }
 
 :deep(.v-select--chips .v-select__selections .v-chip--select:first-child) {

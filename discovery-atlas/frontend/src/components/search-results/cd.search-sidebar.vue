@@ -348,23 +348,7 @@ export default toNative(CdSearchSidebar);
   margin-top: 1px;
 }
 
-:deep(.v-table) {
-  .v-data-table__th--sorted,
-  .v-data-table__td.isSorted {
-    background: #f7f7f7 !important;
-  }
-}
-
-:deep(.v-table tr.v-data-table__tr td) {
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-}
-
 .sidebar {
   width: 20rem;
-}
-
-:deep(.v-select--chips .v-select__selections .v-chip--select:first-child) {
-  margin-top: 1rem;
 }
 </style>
