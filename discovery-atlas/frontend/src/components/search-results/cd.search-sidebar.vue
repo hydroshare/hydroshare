@@ -179,13 +179,22 @@
                 hide-details
                 density="compact"
               ></v-checkbox>
-              <v-img
-                :src="option.icon"
-                class="img-access-icon flex-grow-0"
-                width="25"
-                v-tooltip="option.label"
-                :alt="option.label"
-              />
+
+              <v-tooltip>
+                <template v-slot:activator="{ props }">
+                  <v-img
+                    :src="option.icon"
+                    v-bind="props"
+                    class="img-access-icon flex-grow-0"
+                    width="25"
+                    :alt="option.label"
+                  />
+                </template>
+                <div>
+                  <b>{{ option.label }}</b>
+                </div>
+                <p>{{ option.hint }}</p>
+              </v-tooltip>
             </div>
           </v-expansion-panel-text>
         </v-expansion-panel>

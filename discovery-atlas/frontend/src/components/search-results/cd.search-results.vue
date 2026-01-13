@@ -422,16 +422,19 @@ class CdSearchResults extends Vue {
         {
           value: "Discoverable",
           label: "Discoverable",
+          hint: "Metadata is public but data are protected.",
           icon: sharingStatusIcons.DISCOVERABLE,
         },
         {
           value: "Public",
           label: "Public",
+          hint: "Can be viewed and downloaded by anyone.",
           icon: sharingStatusIcons.PUBLIC,
         },
         {
           value: "Published",
           label: "Published",
+          hint: "Has a digital object identifier (DOI) and content files which cannot be changed.",
           icon: sharingStatusIcons.PUBLISHED,
         },
       ],
