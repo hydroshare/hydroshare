@@ -914,4 +914,8 @@ export default toNative(CdSearchResults);
 :deep(.v-select--chips .v-select__selections .v-chip--select:first-child) {
   margin-top: 1rem;
 }
+
+.sidebar {
+  width: 20rem;
+}
 </style>

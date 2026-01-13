@@ -6,7 +6,7 @@
       <!-- SUBJECT/KEYWORDS -->
       <cd-search
         v-model="modelValue.subject.value"
-        :target-field="EnumHistoryTypes.SUBJECT"
+        :target-field="enumHistoryTypes.SUBJECT"
         :append-search-button="false"
         :is-eager="true"
         @blur="$emit('update:model-value', modelValue)"
@@ -28,7 +28,7 @@
       <!-- CREATOR/CONTRIBUTOR NAME -->
       <cd-search
         v-model="modelValue.creatorName.value"
-        :target-field="EnumHistoryTypes.CREATOR"
+        :target-field="enumHistoryTypes.CREATOR"
         :append-search-button="false"
         :is-eager="true"
         @blur="$emit('update:model-value', modelValue)"
@@ -50,7 +50,7 @@
       <!-- FUNDER -->
       <cd-search
         v-model="modelValue.fundingFunderName.value"
-        :target-field="EnumHistoryTypes.FUNDER"
+        :target-field="enumHistoryTypes.FUNDER"
         :append-search-button="false"
         :is-eager="true"
         @blur="$emit('update:model-value', modelValue)"
@@ -266,40 +266,25 @@ import {
   sharingStatusIcons,
   contentTypeLabels,
 } from "@/constants";
-import { formatDate } from "@/util";
-import CdSpatialCoverageMap from "@/components/search-results/cd.spatial-coverage-map.vue";
 import CdSearch from "@/components/search/cd.search.vue";
 import SearchResults from "@/models/search-results.model";
 import Search from "@/models/search.model";
 import { EnumHistoryTypes } from "@/types";
 import CdRangeInput from "./cd.range-input.vue";
-import { useRoute, useRouter } from "vue-router";
-import { EnumFilterTypes, Filter } from "./filter";
+import { Filter } from "./filter";
 
 @Component({
-  name: "cd-search-results",
-  components: { CdSearch, CdSpatialCoverageMap, CdRangeInput },
+  name: "cd-search-sidebar",
+  components: { CdSearch, CdRangeInput },
   emits: ["update:model-value"],
 })
 class CdSearchSidebar extends Vue {
-  isIntersecting = false;
-  searchQuery = "";
-  pageNumber = 1;
-  pageSize = 20;
-  hasMore = true;
-  isSearching = false;
-  isFetchingMore = false;
-
   @Prop() modelValue!: { [key: string]: Filter };
+
   contentTypeLogos = contentTypeLogos;
   sharingStatusIcons = sharingStatusIcons;
   contentTypeLabels = contentTypeLabels;
-  enumFilterTypes = EnumFilterTypes;
-
-  formatDate = formatDate;
-  route = useRoute();
-  router = useRouter();
-  EnumHistoryTypes = EnumHistoryTypes;
+  enumHistoryTypes = EnumHistoryTypes;
 
   public get registeredFilters() {
     return Object.values(this.modelValue);
@@ -325,7 +310,6 @@ class CdSearchSidebar extends Vue {
 
   public onFilterControlChange(filter: Filter) {
     filter.isEnabled = true;
-
     this.$emit("update:model-value", this.modelValue);
   }
 
@@ -346,9 +330,5 @@ export default toNative(CdSearchSidebar);
 .v-expansion-panel--active:not(:first-child),
 .v-expansion-panel--active + .v-expansion-panel {
   margin-top: 1px;
-}
-
-.sidebar {
-  width: 20rem;
 }
 </style>
