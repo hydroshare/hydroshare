@@ -13,13 +13,6 @@ output:
     cases:
       - check: errored()
         output:
-          processors:
-            - bloblang: |
-                root = {
-                  "error": error(),
-                  "ts": timestamp_unix(),
-                  "input": content().string()
-                }
           kafka_franz:
             seed_brokers:
               - "redpanda:9092"
