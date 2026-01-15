@@ -1,6 +1,4 @@
-from io import BytesIO
 import os
-from pathlib import Path
 import subprocess
 import tempfile
 import zipfile
@@ -173,7 +171,7 @@ class S3Storage(S3Storage):
         zip_bucket, zip_name = bucket_and_name(zip_file_path)
         unzipped_bucket, unzipped_path = bucket_and_name(unzipped_folder)
         with zipfile.ZipFile(open(f's3://{zip_bucket}/{zip_name}', 'rb',
-                                  transport_params={'client':self.connection.meta.client})) as zip_ref:
+                                  transport_params={'client': self.connection.meta.client})) as zip_ref:
             for file_info in zip_ref.infolist():
                 if not file_info.is_dir():
                     file_name = file_info.filename
