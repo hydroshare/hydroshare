@@ -172,27 +172,21 @@ class S3Storage(S3Storage):
 
         zip_bucket, zip_name = bucket_and_name(zip_file_path)
         unzipped_bucket, unzipped_path = bucket_and_name(unzipped_folder)
-
-        bucket = self.connection.Bucket(zip_bucket)
-        filebytes = BytesIO()
-        bucket.download_fileobj(zip_name, filebytes)
-        with tempfile.TemporaryDirectory() as extracted_folder:
-            with zipfile.ZipFile(filebytes, "r") as zip_ref:
-                zip_ref.extractall(extracted_folder)
-            for path in Path(extracted_folder).rglob("*"):
-                if path.is_dir():
-                    continue
-
-                unzipped_file_path = os.path.relpath(path, extracted_folder)
-                file_unzipped_path = os.path.join(unzipped_path, unzipped_file_path)
-                try:
-                    self.connection.Bucket(unzipped_bucket).upload_file(path, file_unzipped_path)
-                except ClientError as e:
-                    if "XMinioAdminBucketQuotaExceeded" in str(e):
-                        raise QuotaException(
-                            "Bucket quota exceeded. Please contact your system administrator."
-                        )
-                    raise e
+        with zipfile.ZipFile(open(f's3://{zip_bucket}/{zip_name}', 'rb',
+                                  transport_params={'client':self.connection.meta.client})) as zip_ref:
+            for file_info in zip_ref.infolist():
+                if not file_info.is_dir():
+                    file_name = file_info.filename
+                    s3_key = os.path.join(unzipped_path, file_name)
+                    with zip_ref.open(file_name, 'r') as data:
+                        try:
+                            self.connection.meta.client.upload_fileobj(Fileobj=data, Bucket=unzipped_bucket, Key=s3_key)
+                        except ClientError as e:
+                            if "XMinioAdminBucketQuotaExceeded" in str(e):
+                                raise QuotaException(
+                                    "Bucket quota exceeded. Please contact your system administrator."
+                                )
+                            raise e
         return unzipped_folder
 
     def setAVU(self, name, attName, attVal):
