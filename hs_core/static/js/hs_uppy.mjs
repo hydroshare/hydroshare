@@ -370,6 +370,7 @@ else{
   .use(GoogleDrivePicker, {
     // https://uppy.io/docs/google-drive-picker/
     target: Dashboard,
+    companionUrl: COMPANION_URL,
     clientId: GOOGLE_PICKER_CLIENT_ID,
     apiKey: GOOGLE_PICKER_API_KEY,
     appId: GOOGLE_PICKER_APP_ID,
