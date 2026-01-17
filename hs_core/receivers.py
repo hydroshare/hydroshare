@@ -246,6 +246,11 @@ def resource_access_post_save_handler(sender, instance, **kwargs):
         except Exception as ex:
             logger.error(f"Error updating status in cached metadata for resource {resource.short_id}: {str(ex)}")
 
+        try:
+            resource.write_django_metadata_json_files()
+        except Exception as ex:
+            logger.error(f"Error writing user metadata json file for resource {resource.short_id}: {str(ex)}")
+
 
 @receiver(post_save)
 def metadata_element_saved(sender, instance, **kwargs):
@@ -264,6 +269,11 @@ def metadata_element_saved(sender, instance, **kwargs):
                     logger.error(err_msg)
                     print(err_msg)
 
+                try:
+                    resource.write_django_metadata_json_files()
+                except Exception as ex:
+                    logger.error(f"Error writing user metadata json file for resource {resource.short_id}: {str(ex)}")
+
 
 @receiver(post_delete)
 def metadata_element_deleted(sender, instance, **kwargs):
@@ -275,9 +285,14 @@ def metadata_element_deleted(sender, instance, **kwargs):
                 try:
                     resource.update_cached_metadata_field(meta_field_name)
                 except Exception as ex:
+                    logger.error(f"Error updating cached metadata for resource {resource.short_id}: {str(ex)}")
                     # NOTE: The error may not be related to the field that is logged here as
                     # we update other fields that might be missing in the cache as part of caching the specified field
                     err_msg = f"Error updating cached metadata:{meta_field_name} for resource " \
                               f"{resource.short_id}: {str(ex)}"
                     logger.error(err_msg)
                     print(err_msg)
+                try:
+                    resource.write_django_metadata_json_files()
+                except Exception as ex:
+                    logger.error(f"Error writing user metadata json file for resource {resource.short_id}: {str(ex)}")
