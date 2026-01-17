@@ -1,8 +1,8 @@
 {% if not resource_edit_mode %}
-    {% if abstract %}
+    {% if cm.cached_metadata.abstract %}
         <div class="col-xs-12 content-block">
             <h3>Abstract</h3>
-            <span class="abstract">{{ abstract|urlize|linebreaks }}</span>
+            <span class="abstract">{{ cm.cached_metadata.abstract.value|urlize|linebreaks }}</span>
         </div>
     {% endif %}
 {% else %}

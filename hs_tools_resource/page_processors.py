@@ -24,7 +24,7 @@ def landing_page(request, page):
         context = page_processors.get_page_context(page, request.user,
                                                    resource_edit=edit_resource,
                                                    extended_metadata_layout=None,
-                                                   request=request)
+                                                   request=request, content_model=content_model)
         if isinstance(context, HttpResponseRedirect):
             # sending user to login page
             return context
@@ -259,7 +259,7 @@ def landing_page(request, page):
         context = page_processors.get_page_context(page, request.user,
                                                    resource_edit=edit_resource,
                                                    extended_metadata_layout=ext_md_layout,
-                                                   request=request)
+                                                   request=request, content_model=content_model)
         context['url_base_form'] = url_base_form
         context['url_base_aggregation_form'] = url_base_aggregation_form
         context['url_base_file_form'] = url_base_file_form

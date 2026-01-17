@@ -22,7 +22,13 @@ $(document).ready(function () {
 
   const $radioPoint = $('input[type="radio"][value="point"]'); // id_type_2
   const $radioBox = $('input[type="radio"][value="box"]'); // id_type_1
+  
   // Set initial coverage fields state
+  // If neither radio button is checked (no spatial coverage data), default to point
+  if (!$radioBox.is(":checked") && !$radioPoint.is(":checked")) {
+    $radioPoint.prop("checked", true);
+  }
+  
   if ($radioBox.is(":checked")) {
     //box type coverage
     $("#div_id_north").hide();

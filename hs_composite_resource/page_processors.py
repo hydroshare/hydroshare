@@ -19,8 +19,9 @@ def landing_page(request, page):
     """
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)
-    context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource,
-                                               extended_metadata_layout=None, request=request)
+    context = page_processors.get_page_context(
+        page, request.user, resource_edit=edit_resource,
+        extended_metadata_layout=None, request=request, content_model=content_model)
 
     if isinstance(context, HttpResponseRedirect):
         # sending user to login page
