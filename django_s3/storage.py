@@ -145,12 +145,14 @@ class S3Storage(S3Storage):
                 with zipfile.ZipFile(out_file, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
                     for in_name in in_names:
                         in_bucket_name, in_path = bucket_and_name(in_name)
+                        resource_id = in_path.split('/')[0]
                         in_bucket = self.connection.Bucket(in_bucket_name)
                         filesCollection = in_bucket.objects.filter(Prefix=in_path).all()
                         if not in_prefix:
                             in_prefix = os.path.dirname(in_path) if self.isDir(in_name) else in_path
                         for file_key in filesCollection:
-                            if is_metadata_json_file(file_key.key):
+                            if file_key.key.startswith(f"{resource_id}/.hsmetadata/") or \
+                               file_key.key.startswith(f"{resource_id}/.hsjsonld/"):
                                 continue
                             relative_path = file_key.key[len(in_prefix):].strip("/")
                             with zip_archive.open(relative_path, 'w', force_zip64=True) as zip_archive_file:
@@ -446,8 +448,11 @@ class S3Storage(S3Storage):
                                 settings.MINIO_LIFECYCLE_POLICY, f"hydroshare/{bucket_name}"], check=True)
 
     def delete_bucket(self, bucket_name):
+        # disable events before deleting files to avoid new files being written during deletion
+        subprocess.run(["mc", "event", "rm", f"hydroshare/{bucket_name}", "arn:minio:sqs::RESOURCEFILE:kafka",
+                        "--event", "put,delete"], check=True)
         bucket = self.connection.Bucket(bucket_name)
-        bucket.objects.delete()
+        bucket.objects.all().delete()
         self.connection.meta.client.delete_bucket(Bucket=bucket_name)
 
     def new_quota_holder(self, resource_id, new_quota_holder_id):

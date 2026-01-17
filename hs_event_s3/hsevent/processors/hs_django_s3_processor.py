@@ -11,7 +11,10 @@ from hs_core.hydroshare.resource import delete_resource_file
 from theme.models import UserProfile
 from hs_core.views.utils import link_s3_file_to_django
 from hs_file_types.utils import get_logical_file_type, set_logical_file_type
+import boto3
 
+
+s3 = boto3.client('s3')
 
 def link_s3_files_to_resource(resource, fullpath):
     try:

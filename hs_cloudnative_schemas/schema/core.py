@@ -22,11 +22,14 @@ from .base import (
     Incomplete,
     Obsolete,
     Published,
+    Public,
+    Discoverable,
     Grant,
     TemporalCoverage,
     Place,
     HasPart,
     IsPartOf,
+    Relation,
     MediaType,
     PropertyValue,
 )
@@ -132,7 +135,7 @@ class CoreMetadata(SchemaBaseModel):
         description="The language of the content of the resource.",
         default=None,
     )
-    creativeWorkStatus: Optional[Union[Draft, Incomplete, Obsolete, Published]] = Field(
+    creativeWorkStatus: Optional[Union[Draft, Incomplete, Obsolete, Published, Public, Discoverable]] = Field(
         title="Resource status",
         description="The status of this resource in terms of its stage in a lifecycle. "
         "Example terms include Incomplete, Draft, Published, and Obsolete.",
@@ -172,6 +175,11 @@ class CoreMetadata(SchemaBaseModel):
         "part of - e.g., a related collection.",
         default=None,
     )
+    relation: Optional[List[Relation]] = Field(
+        title="Relation",
+        description="All other types of relations",
+        default=None,
+    ),
     additionalProperty: Optional[List[PropertyValue]] = Field(
         title="Additional properties",
         default=None,
