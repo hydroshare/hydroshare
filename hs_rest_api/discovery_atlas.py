@@ -207,7 +207,6 @@ class SearchQuery(BaseModel):
                 must.append({'compound': {'should': status_conditions}})
         return must
 
-
     @property
     def stages(self):
         highlightPaths = ['name', 'description', 'keywords', 'creator.name']
@@ -220,7 +219,7 @@ class SearchQuery(BaseModel):
             compound['should'] = [
                 # https://www.mongodb.com/docs/atlas/atlas-search/score/modify-score/#std-label-scoring-boost
                 {'autocomplete': {'query': self.term, 'path': 'name', 'fuzzy': {'maxEdits': 1},
-                                  'score':{"boost": {"value": 5}}}},
+                                  'score': {"boost": {"value": 5}}}},
                 {'autocomplete': {'query': self.term, 'path': 'description', 'fuzzy': {'maxEdits': 1},
                                   'score': {"boost": {"value": 3}}}},
                 {'autocomplete': {'query': self.term, 'path': 'keywords', 'fuzzy': {'maxEdits': 1},
@@ -248,9 +247,9 @@ class SearchQuery(BaseModel):
                                                         'score': {"boost": {"value": 4}}}})
 
         if self.keyword:
-            compound['should'].append( {'autocomplete': {'query': self.keyword, 'path': 'keywords',
-                                                         'fuzzy': {'maxEdits': 1},
-                                                         'score': {"boost": {"value": 3}}}})
+            compound['should'].append({'autocomplete': {'query': self.keyword, 'path': 'keywords',
+                                                        'fuzzy': {'maxEdits': 1},
+                                                        'score': {"boost": {"value": 3}}}})
 
         if self.fundingFunderName:
             compound['should'].append({'autocomplete': {'query': self.fundingFunderName, 'path': 'funding.funder.name',
@@ -353,7 +352,7 @@ async def search(request, term: Optional[str] = None,
     )
     stages = search_query.stages
     if not search_query.paginationToken:
-        stages.append({"$skip": (search_query.pageNumber - 1) * search_query.pageSize})   
+        stages.append({"$skip": (search_query.pageNumber - 1) * search_query.pageSize})
     stages.append({"$limit": search_query.pageSize})
     stages.append({
         "$lookup": {
@@ -367,7 +366,7 @@ async def search(request, term: Optional[str] = None,
 
 @router.get("/typeahead")
 async def typeahead(request, term: str, field: str = "term"):
-    search_paths = ['name', 'description', 'keywords', "creator.name"] # default
+    search_paths = ['name', 'description', 'keywords', "creator.name"]
 
     if field == "creator":
         search_paths = ["creator.name", "contributor.name"]
