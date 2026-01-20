@@ -10,6 +10,7 @@ from django.urls import reverse
 from hs_composite_resource.views import check_aggregation_files_to_sync
 from hs_core import hydroshare
 from hs_core.hydroshare import add_file_to_resource, create_resource
+from hs_core.models import BaseResource
 from hs_core.testing import MockS3TestCaseMixin
 from hs_file_types.models import NetCDFLogicalFile, TimeSeriesLogicalFile
 
@@ -38,10 +39,10 @@ class AggregationFilesToUpdateViewFunctionTest(MockS3TestCaseMixin, TransactionT
         self.factory = RequestFactory()
 
     def tearDown(self):
-        self.composite_resource.delete()
-        User.objects.all().delete()
-        Group.objects.all().delete()
         super(AggregationFilesToUpdateViewFunctionTest, self).tearDown()
+        BaseResource.objects.all().delete()
+        Group.objects.all().delete()
+        User.objects.all().delete()
 
     def test_aggregation_files_to_update(self):
         """

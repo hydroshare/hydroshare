@@ -967,7 +967,6 @@ DEFAULT_QUOTA_UNIT = "GB"
 BROKER_URL = 'rabbitmq://guest:guest@rabbitmq:5672//'
 ATLAS_CONNECTION_URL = "mongodb://user:pass@mongodb:27017/"
 
-
 ####################################
 # DO NOT PLACE SETTINGS BELOW HERE #
 ####################################

@@ -112,10 +112,10 @@ class TestPublishResource(MockS3TestCaseMixin, TestCase):
 
     def tearDown(self):
         super(TestPublishResource, self).tearDown()
-        self.res.delete()
-        self.complete_res.delete()
         User.objects.all().delete()
         Group.objects.all().delete()
+        self.res.delete()
+        self.complete_res.delete()
         BaseResource.objects.all().delete()
         shutil.rmtree(self.tmp_dir)
 

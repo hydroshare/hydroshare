@@ -54,10 +54,10 @@ class T09GroupPublic(MockS3TestCaseMixin, TestCase):
 
     def tearDown(self):
         super(T09GroupPublic, self).tearDown()
-        self.squirrels.delete()
-        self.holes.delete()
         User.objects.all().delete()
         Group.objects.all().delete()
+        self.squirrels.delete()
+        self.holes.delete()
         BaseResource.objects.all().delete()
 
     def test_public_resources(self):

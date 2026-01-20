@@ -48,8 +48,6 @@ RUN pip install confluent-kafka
 
 RUN pip install pymongo
 
-RUN pip install git+https://github.com/hydroshare/hsmodels.git@toolresource
-
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
