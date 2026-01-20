@@ -2,13 +2,13 @@
 import json
 
 from django.conf import settings
-from ninja import NinjaAPI, Query
+from rest_framework.decorators import api_view
 from datetime import datetime
 from typing import Optional
 from pymongo import MongoClient
 from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
-
-router = NinjaAPI()
+from drf_yasg.utils import swagger_auto_schema
+from django.http import JsonResponse
 
 mongo_connection_url = settings.ATLAS_CONNECTION_URL
 hydroshare_atlas_db = MongoClient(mongo_connection_url)["hydroshare"]
@@ -299,31 +299,48 @@ class SearchQuery(BaseModel):
         return stages
 
 
-@router.get("/search")
-async def search(request, term: Optional[str] = None,
-                 sortBy: Optional[str] = None,
-                 order: Optional[str] = None,
-                 contentType: list[str] = Query(default=[]),
-                 providerName: Optional[str] = None,
-                 creatorName: Optional[str] = None,
-                 keyword: Optional[str] = None,
-                 dataCoverageStart: Optional[int] = None,
-                 dataCoverageEnd: Optional[int] = None,
-                 publishedStart: Optional[int] = None,
-                 publishedEnd: Optional[int] = None,
-                 dateCreatedStart: Optional[int] = None,
-                 dateCreatedEnd: Optional[int] = None,
-                 dateModifiedStart: Optional[int] = None,
-                 dateModifiedEnd: Optional[int] = None,
-                 hasPartName: Optional[str] = None,
-                 isPartOfName: Optional[str] = None,
-                 associatedMediaName: Optional[str] = None,
-                 fundingGrantName: Optional[str] = None,
-                 fundingFunderName: Optional[str] = None,
-                 creativeWorkStatus: list[str] = Query(default=[]),
-                 pageNumber: int = 1,
-                 pageSize: int = 20,
-                 paginationToken: Optional[str] = None):
+# Convert ObjectId to string recursively
+def convert_objectid(obj):
+    if isinstance(obj, list):
+        return [convert_objectid(item) for item in obj]
+    elif isinstance(obj, dict):
+        return {k: convert_objectid(v) for k, v in obj.items()}
+    elif str(type(obj)) == "<class 'bson.objectid.ObjectId'>":
+        return str(obj)
+    else:
+            return obj
+
+
+@swagger_auto_schema(
+    method="get",
+    operation_description="Search HydroShare with Discovery Atlas",
+    responses={200: "Returns the list of resources with jsonld metadata"},
+)
+@api_view(["GET"])
+def search(request, term: Optional[str] = None,
+           sortBy: Optional[str] = None,
+           order: Optional[str] = None,
+           contentType: list[str] = [],
+           providerName: Optional[str] = None,
+           creatorName: Optional[str] = None,
+           keyword: Optional[str] = None,
+           dataCoverageStart: Optional[int] = None,
+           dataCoverageEnd: Optional[int] = None,
+           publishedStart: Optional[int] = None,
+           publishedEnd: Optional[int] = None,
+           dateCreatedStart: Optional[int] = None,
+           dateCreatedEnd: Optional[int] = None,
+           dateModifiedStart: Optional[int] = None,
+           dateModifiedEnd: Optional[int] = None,
+           hasPartName: Optional[str] = None,
+           isPartOfName: Optional[str] = None,
+           associatedMediaName: Optional[str] = None,
+           fundingGrantName: Optional[str] = None,
+           fundingFunderName: Optional[str] = None,
+           creativeWorkStatus: list[str] = [],
+           pageNumber: int = 1,
+           pageSize: int = 20,
+           paginationToken: Optional[str] = None):
     search_query = SearchQuery(
         term=term,
         sortBy=sortBy,
@@ -360,12 +377,18 @@ async def search(request, term: Optional[str] = None,
         }
     })
     result = hydroshare_atlas_db["discovery"].aggregate(stages).to_list(None)
-    json_str = json.dumps(result, default=str)
-    return json.loads(json_str)
+
+    result = convert_objectid(result)
+    return JsonResponse(result, safe=False)
 
 
-@router.get("/typeahead")
-async def typeahead(request, term: str, field: str = "term"):
+@swagger_auto_schema(
+    method="get",
+    operation_description="Typeahead endpoint for HydroShare with Discovery Atlas",
+    responses={200: "Returns the list of keyword matches"},
+)
+@api_view(["GET"])
+def typeahead(request, term: str, field: str = "term"):
     search_paths = ['name', 'description', 'keywords', "creator.name"]
 
     if field == "creator":
@@ -407,4 +430,5 @@ async def typeahead(request, term: str, field: str = "term"):
         }
     })
     result = hydroshare_atlas_db["discovery"].aggregate(stages).to_list(None)
-    return result
+    result = convert_objectid(result)
+    return JsonResponse(result, safe=False)

@@ -22,8 +22,6 @@ RUN pip install confluent-kafka
 
 RUN pip install pymongo
 
-RUN pip install django-ninja
-
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
