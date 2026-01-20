@@ -7,6 +7,9 @@ class DjangoS3AppConfig(AppConfig):
     def ready(self):
         from .storage import S3Storage
         istorage = S3Storage()
-        istorage.create_bucket('bags')
-        istorage.create_bucket('zips')
-        istorage.create_bucket('tmp')
+        if not istorage.bucket_exists('bags'):
+            istorage.connection.create_bucket(Bucket='bags')
+        if not istorage.bucket_exists('zips'):
+            istorage.connection.create_bucket(Bucket='zips')
+        if not istorage.bucket_exists('tmp'):
+            istorage.connection.create_bucket(Bucket='tmp')
