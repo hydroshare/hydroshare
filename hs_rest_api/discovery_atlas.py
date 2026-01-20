@@ -1,13 +1,11 @@
-from django.conf import settings
-from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
-
-from ninja import NinjaAPI, Query
 
 import json
+
+from django.conf import settings
+from ninja import NinjaAPI, Query
 from datetime import datetime
 from typing import Optional
 from pymongo import MongoClient
-
 from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
 
 router = NinjaAPI()
@@ -68,7 +66,8 @@ class SearchQuery(BaseModel):
             return [item.strip() for item in v if isinstance(item, str) and item.strip()]
         return []
 
-    @field_validator('dataCoverageStart', 'dataCoverageEnd', 'publishedStart', 'publishedEnd', 'dateCreatedStart', 'dateCreatedEnd', 'dateModifiedStart', 'dateModifiedEnd')
+    @field_validator('dataCoverageStart', 'dataCoverageEnd', 'publishedStart', 'publishedEnd', 'dateCreatedStart',
+                     'dateCreatedEnd', 'dateModifiedStart', 'dateModifiedEnd')
     def validate_year(cls, v, info: ValidationInfo):
         if v is None:
             return v
@@ -220,27 +219,43 @@ class SearchQuery(BaseModel):
         if self.term:
             compound['should'] = [
                 # https://www.mongodb.com/docs/atlas/atlas-search/score/modify-score/#std-label-scoring-boost
-                {'autocomplete': {'query': self.term, 'path': 'name', 'fuzzy': {'maxEdits': 1}, 'score': { "boost": { "value": 5 } }}},
-                {'autocomplete': {'query': self.term, 'path': 'description', 'fuzzy': {'maxEdits': 1}, 'score': { "boost": { "value": 3 } }}},
-                {'autocomplete': {'query': self.term, 'path': 'keywords', 'fuzzy': {'maxEdits': 1}, 'score': { "boost": { "value": 3 } }}},
-                {'autocomplete': {'query': self.term, 'path': 'creator.name', 'fuzzy': {'maxEdits': 1}, 'score': { "boost": { "value": 5 } }}},
-                {'autocomplete': {'query': self.term, 'path': 'first_creator.name', 'fuzzy': {'maxEdits': 1}, 'score': { "boost": { "value": 5 } }}},
-                {'autocomplete': {'query': self.term, 'path': 'contributor.name', 'fuzzy': {'maxEdits': 1}, 'score': { "boost": { "value": 5 } }}},
+                {'autocomplete': {'query': self.term, 'path': 'name', 'fuzzy': {'maxEdits': 1},
+                                  'score':{"boost": {"value": 5}}}},
+                {'autocomplete': {'query': self.term, 'path': 'description', 'fuzzy': {'maxEdits': 1},
+                                  'score': {"boost": {"value": 3}}}},
+                {'autocomplete': {'query': self.term, 'path': 'keywords', 'fuzzy': {'maxEdits': 1},
+                                  'score': {"boost": {"value": 3}}}},
+                {'autocomplete': {'query': self.term, 'path': 'creator.name', 'fuzzy': {'maxEdits': 1},
+                                  'score': {"boost": {"value": 5}}}},
+                {'autocomplete': {'query': self.term, 'path': 'first_creator.name', 'fuzzy': {'maxEdits': 1},
+                                  'score': {"boost": {"value": 5}}}},
+                {'autocomplete': {'query': self.term, 'path': 'contributor.name', 'fuzzy': {'maxEdits': 1},
+                                  'score': {"boost": {"value": 5}}}},
             ]
-        
+
         # Dedicated input filters boost the score further if matched.
 
         if self.creatorName:
             # Matching `creator.name` has a slightly higher score than matching `contributor.name`
-            compound['should'].append({'autocomplete': {'query': self.creatorName, 'path': 'creator.name', 'fuzzy': {'maxEdits': 1}, 'score': { "boost": { "value": 5 } }}})
-            compound['should'].append({'autocomplete': {'query': self.creatorName, 'path': 'first_creator.name', 'fuzzy': {'maxEdits': 1}, 'score': { "boost": { "value": 5 } }}})
-            compound['should'].append({'autocomplete': {'query': self.creatorName, 'path': 'contributor.name', 'fuzzy': {'maxEdits': 1}, 'score': { "boost": { "value": 4 } }}})
+            compound['should'].append({'autocomplete': {'query': self.creatorName, 'path': 'creator.name',
+                                                        'fuzzy': {'maxEdits': 1},
+                                                        'score': {"boost": {"value": 5}}}})
+            compound['should'].append({'autocomplete': {'query': self.creatorName, 'path': 'first_creator.name',
+                                                        'fuzzy': {'maxEdits': 1},
+                                                        'score': {"boost": {"value": 5}}}})
+            compound['should'].append({'autocomplete': {'query': self.creatorName, 'path': 'contributor.name',
+                                                        'fuzzy': {'maxEdits': 1},
+                                                        'score': {"boost": {"value": 4}}}})
 
         if self.keyword:
-            compound['should'].append( {'autocomplete': {'query': self.keyword, 'path': 'keywords', 'fuzzy': {'maxEdits': 1}, 'score': { "boost": { "value": 3 } }}})
+            compound['should'].append( {'autocomplete': {'query': self.keyword, 'path': 'keywords',
+                                                         'fuzzy': {'maxEdits': 1},
+                                                         'score': {"boost": {"value": 3}}}})
 
         if self.fundingFunderName:
-            compound['should'].append({'autocomplete': {'query': self.fundingFunderName, 'path': 'funding.funder.name', 'fuzzy': {'maxEdits': 1}, 'score': { "boost": { "value": 3 } }}})
+            compound['should'].append({'autocomplete': {'query': self.fundingFunderName, 'path': 'funding.funder.name',
+                                                        'fuzzy': {'maxEdits': 1},
+                                                        'score': {"boost": {"value": 3}}}})
 
         search_stage = {
             '$search': {
@@ -273,8 +288,8 @@ class SearchQuery(BaseModel):
             'score': {'$meta': 'searchScore'},
             'highlights': {'$meta': 'searchHighlights'}
         }}
-        
-        set_stage['$set']['paginationToken'] = { "$meta" : "searchSequenceToken" }
+
+        set_stage['$set']['paginationToken'] = {"$meta" : "searchSequenceToken"}
 
         stages.append(set_stage)
 
@@ -353,7 +368,7 @@ async def search(request, term: Optional[str] = None,
 @router.get("/typeahead")
 async def typeahead(request, term: str, field: str = "term"):
     search_paths = ['name', 'description', 'keywords', "creator.name"] # default
-    
+
     if field == "creator":
         search_paths = ["creator.name", "contributor.name"]
     elif field == "subject":
