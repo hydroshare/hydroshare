@@ -451,7 +451,6 @@ INSTALLED_APPS = (
     "security",
     "markdown",
     "hs_communities",
-    "hs_discover",
     "health_check",
     "health_check.db",
     "health_check.cache",
@@ -501,7 +500,8 @@ APPS_TO_NOT_RUN = (
     "corsheaders",
     "security",
     "django_comments",
-    "haystack" "test_without_migrations",
+    "haystack",
+    "test_without_migrations",
     "robots",
     "heartbeat",
     "filebrowser_safe"
