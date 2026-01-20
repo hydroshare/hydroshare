@@ -169,8 +169,6 @@ services:
       POSTGIS_USER: postgres
       PGPASSWORD: postgres
       C_FORCE_ROOT: 1
-      SOLR_PORT_8983_TCP_ADDR: solr
-      SOLR_HOST: solr
       POSTGIS_PORT_5432_TCP_ADDR: pgbouncer
       POSTGIS_DISABLE_SERVER_SIDE_CURSORS: "True"
       HS_PATH: ${PWD}
@@ -186,7 +184,6 @@ services:
     depends_on:
       - hydroshare
       - pgbouncer
-      - solr
       - redpanda
     stdin_open: true
     tty: true
