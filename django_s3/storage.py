@@ -434,8 +434,11 @@ class S3Storage(S3Storage):
                                 settings.MINIO_LIFECYCLE_POLICY, f"hydroshare/{bucket_name}"], check=True)
 
     def delete_bucket(self, bucket_name):
+        # disable events before deleting files to avoid new files being written during deletion
+        subprocess.run(["mc", "event", "rm", f"hydroshare/{bucket_name}", "arn:minio:sqs::RESOURCEFILE:kafka",
+                        "--event", "put,delete"], check=True)
         bucket = self.connection.Bucket(bucket_name)
-        bucket.objects.delete()
+        bucket.objects.all().delete()
         self.connection.meta.client.delete_bucket(Bucket=bucket_name)
 
     def new_quota_holder(self, resource_id, new_quota_holder_id):
