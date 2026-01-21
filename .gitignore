@@ -48,4 +48,4 @@ hs_resource_landing/templates/
 hs_resource_landing/static
 
 # Credentials
-*.json
+/*.json
