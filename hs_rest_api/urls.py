@@ -17,6 +17,7 @@ from .resources.quota_holder import get_quota_holder_bucket
 from .discovery import DiscoverSearchView
 from .views.resource_share import ShareResourceGroup, ShareResourceUser
 from .views.service_account_minio import MinIOResourceBucketAndPrefix, MinIOServiceAccounts, MinIOServiceAccountsDelete
+from .discovery_atlas import search as discovery_atlas_search, typeahead as discovery_atlas_typeahead
 
 hsapi_urlpatterns = [
     path('hsapi/', include('hs_rest_api.urls')),
@@ -254,4 +255,7 @@ urlpatterns = [
             name='model_instance_metadata_in_json'),
 
     re_path(r'^resource/(?P<resource_id>[0-9a-f]+)/quota_holder_bucket_name/$', get_quota_holder_bucket),
+
+    path('discovery-atlas/search', discovery_atlas_search, name='discover-hsapi-search'),
+    path('discovery-atlas/typeahead', discovery_atlas_typeahead, name='discover-hsapi-typeahead'),
 ]

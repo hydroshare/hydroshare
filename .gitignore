@@ -46,3 +46,6 @@ hs_discover/package-lock.json
 hs_discover/static
 hs_resource_landing/templates/
 hs_resource_landing/static
+
+# Credentials
+/*.json

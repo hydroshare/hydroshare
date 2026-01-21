@@ -328,6 +328,15 @@ docker exec hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=colle
 
 echo
 echo '########################################################################################################################'
+echo " Setting up Atlas search index"
+echo '########################################################################################################################'
+
+echo
+echo "  - docker exec mongodb bash -c 'mongosh \"$ATLAS_CONNECTION_URL\" hs_discover/search_indexes/createIndex.js'"
+docker exec mongodb bash -c 'mongosh "$ATLAS_CONNECTION_URL" hs_discover/search_indexes/createIndex.js'
+
+echo
+echo '########################################################################################################################'
 echo " Replacing env vars in static files for Discovery"
 echo '########################################################################################################################'
 echo
