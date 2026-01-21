@@ -1,6 +1,4 @@
 
-import json
-
 from django.conf import settings
 from rest_framework.decorators import api_view
 from datetime import datetime
@@ -308,7 +306,7 @@ def convert_objectid(obj):
     elif str(type(obj)) == "<class 'bson.objectid.ObjectId'>":
         return str(obj)
     else:
-            return obj
+        return obj
 
 
 @swagger_auto_schema(
