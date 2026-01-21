@@ -19,21 +19,10 @@ export const sameRouteNavigationErrorHandler = (e) => {
 export const MAX_YEAR = new Date().getFullYear();
 export const MIN_YEAR = 2010;
 export const ENDPOINTS: { [key: string]: string } = {
-  search: `${API_BASE}/discovery/search`,
-  typeahead: `${API_BASE}/discovery/typeahead`,
-  typeaheadCreator: `${API_BASE}/discovery/typeahead_creator`,
-  contentTypes: `${API_BASE}/discovery/content-types`,
-  // submit: `${API_BASE}/catalog/dataset`,
-  // register: `${API_BASE}/catalog/repository/hydroshare`,
-  // refresh: `${API_BASE}/catalog/repository/hydroshare`,
-  // deleteSubmission: `${API_BASE}/catalog/dataset`,
-  // submissions: `${API_BASE}/catalog/submission`,
-  // dataset: `${API_BASE}/catalog/dataset`,
-  // schemaUrl: `${API_BASE}/schemas/schema.json`,
-  // uiSchemaUrl: `${API_BASE}/schemas/ui-schema.json`,
-  // schemaDefaultsUrl: `${API_BASE}/schemas/schema-defaults.json`,
-  // api: `${API_BASE}`,
-  // logout: `${API_BASE}/logout`,
+  search: `${API_BASE}/search`,
+  typeahead: `${API_BASE}/typeahead`,
+  typeaheadCreator: `${API_BASE}/typeahead_creator`,
+  contentTypes: `${API_BASE}/content-types`,
 };
 export const INITIAL_RANGE: [number, number] = [MIN_YEAR, MAX_YEAR];
 
