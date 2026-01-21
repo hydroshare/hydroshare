@@ -10,7 +10,7 @@ export enum EnumFilterTypes {
   STRING = 'String'
 }
 
-export interface IFilterOption { value: any, label: string, icon?: string, logo?: string }
+export interface IFilterOption { value: any, label: string, hint?: string, icon?: string, logo?: string }
 
 export class Filter {
   /** Required if type is `EnumFilterTypes.RANGE`. Defaults to `MIN_YEAR` */

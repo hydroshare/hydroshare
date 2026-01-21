@@ -133,38 +133,25 @@
                     width="30"
                     max-width="30"
                   />
-                  <v-img
-                    v-if="item.sharingStatus === 'Public'"
-                    class="img-access-icon flex-grow-0"
-                    width="25"
-                    :src="sharingStatusIcons.PUBLIC"
-                    v-tooltip="'Public'"
-                    alt="Public"
-                  />
-                  <v-img
-                    v-else-if="item.sharingStatus === 'Private'"
-                    class="img-access-icon flex-grow-0"
-                    width="25"
-                    :src="sharingStatusIcons.PRIVATE"
-                    v-tooltip="'Private'"
-                    alt="Private"
-                  />
-                  <v-img
-                    v-else-if="item.sharingStatus === 'Discoverable'"
-                    class="img-access-icon flex-grow-0"
-                    width="25"
-                    :src="sharingStatusIcons.DISCOVERABLE"
-                    v-tooltip="'Discoverable'"
-                    alt="Discoverable"
-                  />
-                  <v-img
-                    v-else-if="item.sharingStatus === 'Published'"
-                    class="img-access-icon flex-grow-0"
-                    width="25"
-                    :src="sharingStatusIcons.PUBLISHED"
-                    v-tooltip="'Published'"
-                    alt="Published"
-                  />
+
+                  <template v-for="option of sharingStatusOptions">
+                    <v-tooltip v-if="item.sharingStatus === option.label">
+                      <template v-slot:activator="{ props }">
+                        <v-img
+                          :src="option.icon"
+                          v-bind="props"
+                          class="img-access-icon flex-grow-0"
+                          width="25"
+                          :alt="option.label"
+                        />
+                      </template>
+                      <div>
+                        <b>{{ option.label }}</b>
+                      </div>
+                      <p>{{ option.hint }}</p>
+                    </v-tooltip>
+                  </template>
+
                   <v-img
                     v-if="hasSpatialFeatures(item)"
                     class="img-access-icon flex-grow-0"
@@ -358,6 +345,7 @@ import {
   sharingStatusIcons,
   contentTypeLabels,
   INITIAL_RANGE,
+  sharingStatusOptions,
 } from "@/constants";
 import { sameRouteNavigationErrorHandler } from "@/constants";
 import { formatDate } from "@/util";
@@ -418,26 +406,7 @@ class CdSearchResults extends Vue {
       icon: "mdi-lock-outline",
       urlLabel: EnumShortParams.AVAILABILITY,
       type: EnumFilterTypes.SELECT_MULTIPLE,
-      options: [
-        {
-          value: "Discoverable",
-          label: "Discoverable",
-          hint: "Metadata is public but data are protected.",
-          icon: sharingStatusIcons.DISCOVERABLE,
-        },
-        {
-          value: "Public",
-          label: "Public",
-          hint: "Can be viewed and downloaded by anyone.",
-          icon: sharingStatusIcons.PUBLIC,
-        },
-        {
-          value: "Published",
-          label: "Published",
-          hint: "Has a digital object identifier (DOI) and content files which cannot be changed.",
-          icon: sharingStatusIcons.PUBLISHED,
-        },
-      ],
+      options: sharingStatusOptions,
     }),
     contentType: new Filter({
       name: "contentType",
@@ -546,6 +515,7 @@ class CdSearchResults extends Vue {
   };
   contentTypeLogos = contentTypeLogos;
   sharingStatusIcons = sharingStatusIcons;
+  sharingStatusOptions = sharingStatusOptions;
   contentTypeLabels = contentTypeLabels;
   enumFilterTypes = EnumFilterTypes;
 

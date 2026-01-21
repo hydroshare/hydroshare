@@ -64,6 +64,27 @@ export const sharingStatusIcons: { [key: string]: string } = {
   SPATIAL: new URL("/img/Globe-Green.png", import.meta.url).href,
 };
 
+export const sharingStatusOptions = [
+  {
+    value: "Discoverable",
+    label: "Discoverable",
+    hint: "Metadata is public but data are protected.",
+    icon: sharingStatusIcons.DISCOVERABLE,
+  },
+  {
+    value: "Public",
+    label: "Public",
+    hint: "Can be viewed and downloaded by anyone.",
+    icon: sharingStatusIcons.PUBLIC,
+  },
+  {
+    value: "Published",
+    label: "Published",
+    hint: "Has a digital object identifier (DOI) and content files which cannot be changed.",
+    icon: sharingStatusIcons.PUBLISHED,
+  },
+]
+
 export const contentTypeLabels: { [key: string]: string } = {
   CompositeResource: "Composite Resource",
   CollectionResource: "Collection",
