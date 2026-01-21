@@ -408,11 +408,13 @@ services:
     environment:
       - MONGODB_INITDB_ROOT_USERNAME=user
       - MONGODB_INITDB_ROOT_PASSWORD=pass
+      - ATLAS_CONNECTION_URL=mongodb://user:pass@localhost:27017/
     ports:
       - 27017:27017
     volumes:
       - mongodb_data_vol:/data/db
       - mongodb_config_vol:/data/configdb
+      - ./hs_discover/search_indexes:/hs_discover/search_indexes:ro
 volumes:
   postgis_data_vol:
   solr_data_vol:
