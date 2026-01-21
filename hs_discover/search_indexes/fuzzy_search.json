@@ -1,0 +1,139 @@
+{
+  "mappings": {
+    "dynamic": true,
+    "fields": {
+      "additionalType": {
+        "type": "string"
+      },
+      "content_types": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "autocomplete"
+        }
+      ],
+      "contributor": {
+        "fields": {
+          "name": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "autocomplete"
+            }
+          ]
+        },
+        "type": "document"
+      },
+      "creativeWorkStatus": {
+        "fields": {
+          "name": [
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "type": "document"
+      },
+      "creator": {
+        "fields": {
+          "name": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "autocomplete"
+            }
+          ]
+        },
+        "type": "document"
+      },
+      "dateCreated": {
+        "type": "date"
+      },
+      "dateModified": {
+        "type": "date"
+      },
+      "datePublished": {
+        "type": "date"
+      },
+      "description": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "autocomplete"
+        }
+      ],
+      "first_creator": {
+        "fields": {
+          "name": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "autocomplete"
+            }
+          ]
+        },
+        "type": "document"
+      },
+      "funding": {
+        "fields": {
+          "funder": {
+            "fields": {
+              "name": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "autocomplete"
+                }
+              ]
+            },
+            "type": "document"
+          }
+        },
+        "type": "document"
+      },
+      "keywords": [
+        {
+          "type": "autocomplete"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "name": [
+        {
+          "type": "autocomplete"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "temporalCoverage": {
+        "fields": {
+          "endDate": {
+            "type": "date"
+          },
+          "startDate": {
+            "type": "date"
+          }
+        },
+        "type": "document"
+      }
+    }
+  },
+  "storedSource": {
+    "include": [
+      "name",
+      "description",
+      "keywords",
+      "creator",
+      "contributor",
+      "funding"
+    ]
+  }
+}
