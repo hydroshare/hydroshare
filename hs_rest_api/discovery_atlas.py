@@ -360,55 +360,32 @@ def convert_objectid(obj):
     ]
 )
 @api_view(["GET"])
-def search(request, term: Optional[str] = None,
-           sortBy: Optional[str] = None,
-           order: Optional[str] = None,
-           contentType: list[str] = [],
-           providerName: Optional[str] = None,
-           creatorName: Optional[str] = None,
-           keyword: Optional[str] = None,
-           dataCoverageStart: Optional[int] = None,
-           dataCoverageEnd: Optional[int] = None,
-           publishedStart: Optional[int] = None,
-           publishedEnd: Optional[int] = None,
-           dateCreatedStart: Optional[int] = None,
-           dateCreatedEnd: Optional[int] = None,
-           dateModifiedStart: Optional[int] = None,
-           dateModifiedEnd: Optional[int] = None,
-           hasPartName: Optional[str] = None,
-           isPartOfName: Optional[str] = None,
-           associatedMediaName: Optional[str] = None,
-           fundingGrantName: Optional[str] = None,
-           fundingFunderName: Optional[str] = None,
-           creativeWorkStatus: list[str] = [],
-           pageNumber: int = 1,
-           pageSize: int = 20,
-           paginationToken: Optional[str] = None):
+def search(request):
     search_query = SearchQuery(
-        term=term,
-        sortBy=sortBy,
-        order=order,
-        contentType=contentType,
-        providerName=providerName,
-        creatorName=creatorName,
-        keyword=keyword,
-        dataCoverageStart=dataCoverageStart,
-        dataCoverageEnd=dataCoverageEnd,
-        publishedStart=publishedStart,
-        publishedEnd=publishedEnd,
-        dateCreatedStart=dateCreatedStart,
-        dateCreatedEnd=dateCreatedEnd,
-        dateModifiedStart=dateModifiedStart,
-        dateModifiedEnd=dateModifiedEnd,
-        hasPartName=hasPartName,
-        isPartOfName=isPartOfName,
-        associatedMediaName=associatedMediaName,
-        fundingGrantName=fundingGrantName,
-        fundingFunderName=fundingFunderName,
-        creativeWorkStatus=creativeWorkStatus,
-        pageNumber=pageNumber,
-        pageSize=pageSize,
-        paginationToken=paginationToken
+        term=request.GET.get('term', None),
+        sortBy=request.GET.get('sortBy', None),
+        order=request.GET.get('order', None),
+        contentType=request.GET.getlist('contentType'),
+        providerName=request.GET.get('providerName', None),
+        creatorName=request.GET.get('creatorName', None),
+        keyword=request.GET.get('keyword', None),
+        dataCoverageStart=request.GET.get('dataCoverageStart', None),
+        dataCoverageEnd=request.GET.get('dataCoverageEnd', None),
+        publishedStart=request.GET.get('publishedStart', None),
+        publishedEnd=request.GET.get('publishedEnd', None),
+        dateCreatedStart=request.GET.get('dateCreatedStart', None),
+        dateCreatedEnd=request.GET.get('dateCreatedEnd', None),
+        dateModifiedStart=request.GET.get('dateModifiedStart', None),
+        dateModifiedEnd=request.GET.get('dateModifiedEnd', None),
+        hasPartName=request.GET.get('hasPartName', None),
+        isPartOfName=request.GET.get('isPartOfName', None),
+        associatedMediaName=request.GET.get('associatedMediaName', None),
+        fundingGrantName=request.GET.get('fundingGrantName', None),
+        fundingFunderName=request.GET.get('fundingFunderName', None),
+        creativeWorkStatus=request.GET.getlist('creativeWorkStatus'),
+        pageNumber=int(request.GET.get('pageNumber', 1)),
+        pageSize=int(request.GET.get('pageSize', 20)),
+        paginationToken=request.GET.get('paginationToken', None)
     )
     stages = search_query.stages
     if not search_query.paginationToken:
@@ -435,7 +412,9 @@ def search(request, term: Optional[str] = None,
     ]
 )
 @api_view(["GET"])
-def typeahead(request, term: str, field: str = "term"):
+def typeahead(request):
+    term = request.GET.get('term', '').strip()
+    field = request.GET.get('field', 'term').strip()
     search_paths = ['name', 'description', 'keywords', "creator.name"]
 
     if field == "creator":
