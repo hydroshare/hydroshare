@@ -304,46 +304,49 @@ services:
       - 8080:8080
     depends_on:
       - redpanda
-  hs_extract:
-    build:
-      context: .
-      dockerfile: hs_extract/Dockerfile
-    platform: linux/amd64
-    environment:
-      AWS_S3_ENDPOINT_URL: "http://minio:9000"
-      AWS_ACCESS_KEY_ID: cuahsi
-      AWS_SECRET_ACCESS_KEY: devpassword
-      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
-    volumes:
-      - "./hs_extract:/app/hs_extract"
-      - "./hs_cloudnative_schemas:/app/hs_extract/hs_cloudnative_schemas"
-    links:
-      - pgbouncer:pgbouncer
-      - redpanda:redpanda
-    depends_on:
-      - hydroshare
-      - pgbouncer
-      - solr
-      - redpanda
-    stdin_open: true
-    tty: true
+  # hs_extract:
+  #   build:
+  #     context: .
+  #     dockerfile: hs_extract/Dockerfile
+  #   platform: linux/amd64
+  #   environment:
+  #     AWS_S3_ENDPOINT_URL: "http://minio:9000"
+  #     AWS_ACCESS_KEY_ID: cuahsi
+  #     AWS_SECRET_ACCESS_KEY: devpassword
+  #     MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
+  #   volumes:
+  #     - "./hs_extract:/app/hs_extract"
+  #     - "./hs_cloudnative_schemas:/app/hs_extract/hs_cloudnative_schemas"
+  #   links:
+  #     - pgbouncer:pgbouncer
+  #     - redpanda:redpanda
+  #   depends_on:
+  #     - hydroshare
+  #     - pgbouncer
+  #     - solr
+  #     - redpanda
+  #   stdin_open: true
+  #   tty: true
   companion:
   # https://github.com/transloadit/uppy/blob/main/packages/%40uppy/companion/KUBERNETES.md
-    image:  docker.io/transloadit/companion:5.5.0
+    build:
+      context: companion
+      dockerfile: Dockerfile
+    # image: docker.io/transloadit/companion:5.5.0
     platform: linux/amd64
     container_name: companion
     hostname: companion
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       COMPANION_PORT: '3020'
-      COMPANION_CLIENT_ORIGINS: 'https://localhost'
-      # when testing 3rd party services like google drive, you will access hydroshare at http://host.docker.internal:8000
-      # you will need to add a line in your /etc/hosts file to map host.docker.internal to localhost
-      COMPANION_UPLOAD_URLS: 'https://localhost/django_s3/tus/*'
+      COMPANION_CLIENT_ORIGINS: 'http://localhost,http://localhost:5004'
+      COMPANION_UPLOAD_URLS: '*localhost*'
       COMPANION_DATADIR: '/mnt/companion-data'
       COMPANION_DOMAIN: 'localhost'
       COMPANION_PATH: '/companion'
       COMPANION_ALLOW_LOCAL_URLS: 'true'
-      COMPANION_PROTOCOL: 'https'
+      COMPANION_PROTOCOL: 'http'
       COMPANION_REDIS_URL: 'redis://redis:6379'
       COMPANION_CHUNK_SIZE: '100000000'  # ~72MB
       # COMPANION_PREAUTH_SECRET: 'another secret'
@@ -354,6 +357,16 @@ services:
       COMPANION_GOOGLE_SECRET: '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'
       # https://uppy.io/docs/companion/#enablegooglepickerendpoint-companion_enable_google_picker_endpoint
       COMPANION_ENABLE_GOOGLE_PICKER_ENDPOINT: 'true'
+      COMPANION_AWS_FORCE_PATH_STYLE: 'true'
+      # the key and secret are now dynamically calculated in companion-custom-s3-client.js
+      # COMPANION_AWS_KEY: 'minioadmin'
+      # COMPANION_AWS_SECRET: 'minioadmin'
+      COMPANION_AWS_ENDPOINT: 'http://host.docker.internal:9000'
+      # https://uppy.io/docs/companion/#s3bucket-companion_aws_bucket
+      # COMPANION_AWS_BUCKET: asdf2
+      # The bucket is now dynamically calculated in companion-custom-config.js, using the upload metadata
+      # https://github.com/hydroshare/hydroshare/pull/5974#issuecomment-2963085209
+      COMPANION_AWS_REGION: 'us-central-1'
     ports:
       - "3020:3020"
     volumes:
@@ -413,6 +426,30 @@ services:
     volumes:
       - mongodb_data_vol:/data/db
       - mongodb_config_vol:/data/configdb
+  # Instead of running the landing page in docker compose, we run it using PM2
+  # This is done via "make up-landing"
+  # This has the benefit of HMR and other vite dev server features
+  # landing-page:
+  #   build:
+  #     context: landing-page
+  #     dockerfile: Dockerfile
+  #     args:
+  #       - VITE_APP_BASE=/landing/
+  #       - VITE_APP_NAME=hs-landing-page
+  #       - VITE_APP_DEFAULT_S3_HOST=http://localhost:9000
+  #       - VITE_APP_DEFAULT_HYDROSHARE_HOST=http://localhost
+  #       - VITE_APP_S3_REGION=us-central-2
+  #   container_name: landing-page
+  #   hostname: landing-page
+  #   platform: linux/amd64
+  #   environment:
+  #     VITE_APP_BASE: "/landing/"
+  #     VITE_APP_NAME: "hs-landing-page"
+  #     VITE_APP_DEFAULT_S3_HOST=http://localhost:9000
+  #     VITE_APP_DEFAULT_HYDROSHARE_HOST=http://localhost
+  #     VITE_APP_S3_REGION=us-central-2
+  #   ports:
+  #     - "5004:80"
 volumes:
   postgis_data_vol:
   solr_data_vol:

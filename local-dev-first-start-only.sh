@@ -160,6 +160,30 @@ mkdir -p log/nginx 2>/dev/null
 
 find . -name '*.hydro-bk' -exec rm -f {} \; 2>/dev/null
 
+# run a git submodule init and update to make sure landing-page is present
+echo "Initializing git submodules"
+git submodule update --init --recursive
+
+echo "Installing npm modules for landing page"
+cd landing-page
+npm install
+cd ..
+
+# Check to make sure that pm2 is installed
+echo "Checking for pm2 installation..."
+PM2_INSTALLED=`npm list -g pm2 | grep pm2@ | wc -l`
+if [ "$PM2_INSTALLED" == "0" ]; then
+  echo "Installing pm2 globally"
+  npm install -g pm2
+fi
+echo "PM2 is installed"
+
+echo " - make down-landing"
+make down-landing
+
+echo " - make up-landing"
+make up-landing
+
 echo
 echo '########################################################################################################################'
 echo " Starting system"
@@ -337,7 +361,7 @@ docker exec hydroshare python manage.py collectstatic -v0 --noinput
 
 
 echo
-echo "  - docker restart hydroshare defaultworker"
+echo "  - docker restart hydroshare defaultworker s3eventworker"
 echo
 docker restart hydroshare defaultworker hydroshare-hs_event_s3-1 hydroshare-discovery_collection_worker-1
 
@@ -348,7 +372,32 @@ docker exec hydroshare python manage.py add_missing_bucket_names
 
 echo
 echo '########################################################################################################################'
-echo -e " All done, run `green '\"docker compose -f local-dev.yml restart\"'` to restart HydroShare"
+echo " Create test S3 metadata"
+echo '########################################################################################################################'
+export BUCKET=asdf
+export DEFAULT_RESOURCE_ID=d7b526e24f7e449098b428ae9363f514
+docker exec -u hydro-service hydroshare mc alias set local-hydroshare http://host.docker.internal:9000 cuahsi devpassword
+docker exec -u hydro-service hydroshare python manage.py create_buckets $BUCKET
+docker exec -u hydro-service hydroshare mc cp landing-page/example_metadata/dataset_metadata.json local-hydroshare/$BUCKET/$DEFAULT_RESOURCE_ID/.hsjsonld/
+docker exec -u hydro-service hydroshare mc cp landing-page/example_metadata/user_metadata.json local-hydroshare/$BUCKET/$DEFAULT_RESOURCE_ID/.hsmetadata/
+
+echo
+echo " waiting for hydroshare container to be ready..."
+echo " you can check your logs by running: `blue 'docker logs -f hydroshare'`"
+
+while [ 1 -eq 1 ]
+do
+  sleep 1
+  echo -n "."
+  LOG=`docker logs hydroshare 2>&1 | tail -20`
+  if [[ $LOG == *"Starting development server at http://0.0.0.0:8000/"* ]]; then
+    break
+  fi
+done
+
+echo
+echo '########################################################################################################################'
+echo -e " All done! You can now access your local HydroShare instance at `green 'http://localhost'`"
 echo '########################################################################################################################'
 echo
 
