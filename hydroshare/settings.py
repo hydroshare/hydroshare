@@ -429,7 +429,7 @@ INSTALLED_APPS = (
     "crispy_forms",
     "crispy_bootstrap3",
     "mezzanine.accounts",
-    "haystack",
+    "haystack",  # TODO: remove haystack after redpanda is in the stack
     "rest_framework",
     "robots",
     "sorl.thumbnail",
@@ -451,7 +451,6 @@ INSTALLED_APPS = (
     "security",
     "markdown",
     "hs_communities",
-    "hs_discover",
     "health_check",
     "health_check.db",
     "health_check.cache",
@@ -501,7 +500,8 @@ APPS_TO_NOT_RUN = (
     "corsheaders",
     "security",
     "django_comments",
-    "haystack" "test_without_migrations",
+    "haystack",
+    "test_without_migrations",
     "robots",
     "heartbeat",
     "filebrowser_safe"
@@ -691,6 +691,7 @@ REST_FRAMEWORK = {
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.NamespaceVersioning",
 }
 
+# TODO remove these settings once redpanda is in the stack
 SOLR_HOST = os.environ.get("SOLR_PORT_8983_TCP_ADDR", "localhost")
 SOLR_PORT = "8983"
 HAYSTACK_CONNECTIONS = {

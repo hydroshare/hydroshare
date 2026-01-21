@@ -14,7 +14,6 @@ from rest_framework import permissions
 
 from .resources.quota_holder import get_quota_holder_bucket
 
-from .discovery import DiscoverSearchView
 from .views.resource_share import ShareResourceGroup, ShareResourceUser
 from .views.service_account_minio import MinIOResourceBucketAndPrefix, MinIOServiceAccounts, MinIOServiceAccountsDelete
 
@@ -219,8 +218,6 @@ urlpatterns = [
     re_path(r'^resource/(?P<pk>[0-9a-f-]+)/access/$',
             core_views.resource_access_api.ResourceAccessUpdateDelete.as_view(),
             name='get_update_delete_resource_access'),
-
-    path('resource/search', DiscoverSearchView.as_view({'get': 'list'}), name='discover-hsapi'),
 
     # Gets a list of metadata template schema file names for model program aggregation
     path('modelprogram/template/meta/schemas/', file_type_views.list_model_program_template_metadata_schemas,

@@ -41,8 +41,5 @@ django_cache
 
 # Frontend
 node_modules/
-hs_discover/templates/
-hs_discover/package-lock.json
-hs_discover/static
 hs_resource_landing/templates/
 hs_resource_landing/static
