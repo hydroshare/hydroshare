@@ -1,0 +1,39 @@
+name: Get the landing page of all published resources for an environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'ORIGIN to target tests (default: https://beta.hydroshare.org).'
+        required: false
+        default: 'https://beta.hydroshare.org'
+      num_parallel:
+        description: 'Number of parallel requests to make (default: 10).'
+        required: false
+        default: '10'
+
+jobs:
+  build:
+
+    strategy:
+      matrix:
+        python-version: [3.9]
+        platform: [ubuntu-latest]
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+    - name: Run Tests against target = ${{ github.event.inputs.target }}
+      run: |
+        curl -s "${{ github.event.inputs.target }}/sitemap/"" \
+        | grep -oE '<a[^>]+href="[^"]+"' \
+        | sed -n 's/.*href="\([^"]*\)".*/\1/p' \
+        | grep "/resource/" | xargs -I{} -P ${{ github.event.inputs.num_parallel }} bash -c '
+            url="${{ github.event.inputs.target }}{}"
+            SC=$(curl -s -o /dev/null -w "%{http_code}" "$url")
+            if [ "$SC" -ne 200 ]; then
+                echo "Error: $url returned status code $SC"
+                exit 1
+            fi
+        '
+
