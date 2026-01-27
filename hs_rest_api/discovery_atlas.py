@@ -279,6 +279,8 @@ class SearchQuery(BaseModel):
             search_stage["$search"]['sort'] = {"dateModified": order}
         elif self.sortBy == "creatorName":
             search_stage["$search"]['sort'] = {"first_creator.name": order}
+        elif self.sortBy == "viewCount":
+            search_stage["$search"]['sort'] = {"viewCount": order}
 
         stages.append(search_stage)
 
@@ -317,7 +319,7 @@ def convert_objectid(obj):
     manual_parameters=[
         openapi.Parameter('term', openapi.IN_QUERY, description="Search term", type=openapi.TYPE_STRING),
         openapi.Parameter('sortBy', openapi.IN_QUERY, description="Field to sort by", type=openapi.TYPE_STRING,
-                          enum=["name", "dateCreated", "lastModified", "creatorName"]),
+                          enum=["viewCount", "name", "dateCreated", "lastModified", "creatorName"]),
         openapi.Parameter('order', openapi.IN_QUERY, description="Sort order", type=openapi.TYPE_STRING,
                           enum=["asc", "desc"]),
         openapi.Parameter('contentType', openapi.IN_QUERY, description="Content type filter", type=openapi.TYPE_ARRAY,
