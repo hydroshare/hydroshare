@@ -3060,7 +3060,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
 
         # Format first creator name
         creator_name = first_creator.get('name', '')
-        creator_name = creator_name.strip() if creator_name else '' # No Nonetype
+        creator_name = creator_name.strip() if creator_name else ''  # No Nonetype
         if first_creator.get('organization', '') and not creator_name:
             citation_str_lst.append(first_creator['organization'] + ", ")
         else:
