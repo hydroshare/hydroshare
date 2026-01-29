@@ -1,0 +1,19 @@
+:80 {
+    handle_path /{{ .VITE_APP_BASE }}* {
+        root * /srv/discover-frontend
+        file_server
+    }
+    
+    # Security headers
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        X-XSS-Protection "1; mode=block"
+    }
+    
+    # Logging
+    log {
+        output stdout
+        format console
+    }
+}

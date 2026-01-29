@@ -1,0 +1,16 @@
+@import "montserrat/stylesheet.css";
+/* TODO: transition from montserrat to inter: use 1px lower size of inter */
+@import "inter/inter.css";
+
+html, body {
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.004);
+    text-rendering: optimizeLegibility !important;
+    -webkit-font-smoothing: antialiased !important;
+}
+
+@font-face {
+    font-family: 'friz_quadrata';
+    src: url('friz_quadrata_regular-webfont.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}

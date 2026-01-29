@@ -62,9 +62,7 @@ Command line:
 
 Following the screen instruction to continue.
 
-Run the following command on completion to launch Hydroshare: 
-
-    docker-compose -f local-dev.yml up 
+The [local-dev-first-start-only.sh](./local-dev-first-start-only.sh) will spin up all docker containers in the [local-dev.yml](./local-dev.yml). It does NOT spin up a container for Discover (you can [uncomment here](https://github.com/hydroshare/hydroshare/blob/5726/devincowan/discovery-ui-keep-solr/local-dev.yml#L416-L431) if you desire to run Discover as a static build inside a local Docker container). Instead, the script uses [PM2](https://pm2.io/) to run the Vite dev server to take advantage of [HMR](https://vite.dev/guide/features#hot-module-replacement). More details in the [discover readme](/discovery-atlas/README.md).
 
 5. Sanity Checks
 
@@ -114,7 +112,7 @@ When you activate a new branch, just bring the stack down and up again. Sometime
 ## Usage
 
 For all intents and purposes, Hydroshare is a large Python/Django application with some extra features and technologies added on:
-- SOLR for searching
+- SOLR for searching, running in parallel with Vue + Mongo Atlas
 - Redis for caching
 - RedPanda for concurrency and serialization
 - Minio for a S3 file system
