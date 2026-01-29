@@ -3099,7 +3099,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             return CITATION_ERROR
 
         # Format first creator name
-        creator_name = first_creator.get('name', '').strip()
+        creator_name = first_creator.get('name', '')
+        creator_name = creator_name.strip() if creator_name else ''  # No Nonetype
         if first_creator.get('organization', '') and not creator_name:
             citation_str_lst.append(first_creator['organization'] + ", ")
         else:
@@ -3109,8 +3110,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         other_creators = [c for c in cached_creators if c.get('order', 0) > 1]
         for author in other_creators:
             author_name = author.get('name', '')
-            if author_name:
-                author_name = author_name.strip()
+            author_name = author_name.strip() if author_name else ''  # No Nonetype
             if author.get('organization', '') and not author_name:
                 citation_str_lst.append(author['organization'] + ", ")
             elif author_name and len(author_name) != 0:
