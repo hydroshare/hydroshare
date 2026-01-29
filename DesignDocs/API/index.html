@@ -1,0 +1,1710 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../../testing/">
+      
+      
+        <link rel="next" href="../UserNameEmailRules/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>API - HydroShare Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#introduction" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="HydroShare Documentation" class="md-header__button md-logo" aria-label="HydroShare Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            HydroShare Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              API
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="HydroShare Documentation" class="md-nav__button md-logo" aria-label="HydroShare Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    HydroShare Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    About
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../access-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Access Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../devenv/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dev Environment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../devcommunication/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dev Communication
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Design Docs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Design Docs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../UserNameEmailRules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UserNameEmailRules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Documentation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Code Documentation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_8_1" id="__nav_8_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HS Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    HS Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hs_core/views/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Views
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hs_core/models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_8_2" id="__nav_8_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Composite Resource
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Composite Resource
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hs_composite_resource/views/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Views
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hs_composite_resource/models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<p><strong>HydroShare Web Service API Design</strong></p>
+<p>March 19, 2015</p>
+<p>Version 1.0</p>
+<p>Jeffery S. Horsburgh, Brian Miles, Dan Ames, Jefferson Heard</p>
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+<p><strong>Table of Contents</strong></p>
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#development-approach">Development Approach</a></li>
+<li><a href="#authentication-and-authorization">Authentication and Authorization</a></li>
+<li><a href="#web-service-interface-definitions">Web Service Interface Definitions</a></li>
+<li><a href="#resource-management-api">Resource Management API</a></li>
+<li><a href="#user-management-and-authorization-api">User Management and Authorization API</a></li>
+<li><a href="#resource-discovery-api">Resource Discovery API</a></li>
+<li><a href="#social-api">Social API</a></li>
+<li><a href="#dataone-member-node-api">DataONE Member Node API</a></li>
+<li><a href="#acknowledgements">Acknowledgements</a></li>
+</ul>
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+<h1 id="introduction">Introduction</h1>
+<p>HydroShare will expose web service Application Programmer Interfaces (APIs) that support interaction between client applications and the main HydroShare system and facilitate development of these client applications. HydroShare will also expose web services that conform to the DataONE web service end-point specifications defined in the DataONE architectural documentation (DataONE, 2013). However compliance with DataONE data format specifications will not be guaranteed in the initial version of the HydroShare API. Data format compliance would need to be added at a later date so that HydroShare can become a DataONE Member Node as described in the HydroShare Data Management Plan. As a design principle, the HydroShare web service APIs will expose the same functionality that can be accomplished through the HydroShare web user interface so that client applications can mimic that functionality.</p>
+<h1 id="development-approach">Development Approach</h1>
+<p>In general, HydroShare web services will be implemented using a Representational State Transfer (REST) based approach using HTTP as the transport protocol and XML and/or JSON for encoding messages. The current development approach is investigating use of the Tastypie (<a href="http://tastypieapi.org/">http://tastypieapi.org/</a>) web service API framework for the Django (<a href="https://www.djangoproject.com/">https://www.djangoproject.com/</a>) web framework.</p>
+<h1 id="authentication-and-authorization">Authentication and Authorization</h1>
+<p>Many of the HydroShare web service API functions require authorization. The HydroShare web service APIs will use the same access control scheme as the HydroShare web user interface. If a user is authorized to do something in the web interface, they will be authorized to do it via the web service APIs as well.</p>
+<h1 id="web-service-interface-definitions">Web Service Interface Definitions</h1>
+<p>The following sections describe the HydroShare web service APIs. The APIs will be versioned, and users will be able to specify the version number in the URL of their REST requests. In each section, a table lists the functions included in each API and then details of each function are given following the table. Note that API endpoints that rely on filtering are formatted according to TastyPie conventions. The formatting of such endpoints are subject to change to reflect the actual API implementation, which may not use TastyPie.</p>
+<h2 id="resource-management-api">Resource Management API</h2>
+<p>The HydroShare Resource Management API will enable client applications to create new resources, retrieve existing resources, get metadata for existing resources, update existing resources, publish resources, and delete resources. The table below lists the REST URLs that will be implemented as part of the HydroShare Resource Management API.</p>
+<p>Table 1. Summary of HydroShare Resource Management API methods.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Release</strong></th>
+<th><strong>REST Path</strong></th>
+<th><strong>Function</strong></th>
+<th><strong>Parameters</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>GET /resource/{pid}</td>
+<td>HydroShare.getResource()</td>
+<td>(pid) --&gt; OctetStream</td>
+</tr>
+<tr>
+<td>1</td>
+<td>GET /scimeta/{pid}</td>
+<td>HydroShare.getScienceMetadata()</td>
+<td>(pid) --&gt; ScienceMetadata</td>
+</tr>
+<tr>
+<td>1</td>
+<td>GET /sysmeta/{pid}</td>
+<td>HydroShare.getSystemMetadata()</td>
+<td>(pid) --&gt; SystemMetadata</td>
+</tr>
+<tr>
+<td>1</td>
+<td>GET /resourcemap/{pid}</td>
+<td>HydroShare.getResourceMap()</td>
+<td>(pid) --&gt; ResourceMap</td>
+</tr>
+<tr>
+<td>1</td>
+<td>GET /resource/{pid}/files/{filename}</td>
+<td>HydroShare.getResourceFile()</td>
+<td>(pid, filename) --&gt; file</td>
+</tr>
+<tr>
+<td>4</td>
+<td>GET /revisions/{pid}</td>
+<td>HydroShare.getRevisions()</td>
+<td>(pid) --&gt; ResourceList</td>
+</tr>
+<tr>
+<td>4</td>
+<td>GET /related/{pid}</td>
+<td>HydroShare.getRelated()</td>
+<td>(pid) --&gt; ResourceList</td>
+</tr>
+<tr>
+<td>1</td>
+<td>GET /checksum/{pid}</td>
+<td>HydroShare.getChecksum()</td>
+<td>(pid) --&gt; Checksum</td>
+</tr>
+<tr>
+<td>1</td>
+<td>POST /resource</td>
+<td>HydroShare.createResource()</td>
+<td>(Resource) --&gt; pid</td>
+</tr>
+<tr>
+<td>1</td>
+<td>PUT /resource/{pid}</td>
+<td>HydroShare.updateResource()</td>
+<td>(pid, Resource) --&gt; pid</td>
+</tr>
+<tr>
+<td>1</td>
+<td>PUT /resource/{pid}/ files/{file}</td>
+<td>HydroShare.addResourceFile()</td>
+<td>(pid, file) --&gt; pid</td>
+</tr>
+<tr>
+<td>1</td>
+<td>PUT /scimeta/{pid}</td>
+<td>HydroShare.updateScienceMetadata()</td>
+<td>(pid, ScienceMetadata) --&gt; pid</td>
+</tr>
+<tr>
+<td>1</td>
+<td>DELETE /resource/{pid}</td>
+<td>HydroShare.deleteResource()</td>
+<td>(pid) --&gt; pid</td>
+</tr>
+<tr>
+<td>1</td>
+<td>DELETE /resource/{pid}/files/{filename}</td>
+<td>HydroShare.deleteResourceFile()</td>
+<td>(pid, filename) --&gt; pid</td>
+</tr>
+<tr>
+<td>4</td>
+<td>PUT /publishResource/{pid}</td>
+<td>HydroShare.publishResource()</td>
+<td>(pid) --&gt; pid</td>
+</tr>
+<tr>
+<td>4</td>
+<td>GET /resolveDOI/{doi}</td>
+<td>HydroShare.resolveDOI()</td>
+<td>(doi) --&gt; pid</td>
+</tr>
+</tbody>
+</table>
+<h3 id="hydrosharegetresourcepid-octetstream">HydroShare.getResource<em><em>(</em>pid</em>)* --&gt; OctetStream</h3>
+<p>Retrieve a resource identified by the pid from HydroShare. The response must contain the bytes of the indicated resource, and the checksum of the bytes retrieved should match the checksum recorded in the system metadata for that resource. The bytes of the resource will be encoded as a zipped BagIt archive; this archive will contain resource contents as well as science metadata. If the resource does not exist in HydroShare, then Exceptions.NotFound must be raised. Resources can be any unit of content within HydroShare that has been assigned a pid.</p>
+<p><strong>REST URL</strong>: GET /resource/{pid}</p>
+<p><strong>Parameters</strong>: pid – Unique HydroShare identifier for the resource to be retrieved.</p>
+<p><strong>Returns</strong>: Bytes of the specified resource.</p>
+<p><strong>Return Type</strong>: OctetStream</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The resource identified by pid does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<p><strong>Notes</strong>: All resources and resource versions will have a unique internal HydroShare identifier (pid). A DOI will be assigned to all formally published versions of a resource. For this method, passing in a pid (which is a HydroShare internal identifer) would return a specific resource version corresponding to the pid. A DOI would have to be resolved using HydroShare.resolveDOI() to get the pid for the resource, which could then be used with this method. The obsoletion chain will be contained within the system metadata for resources and so it can be traversed by calling HydroShare.getSystemMetadata().</p>
+<h3 id="hydrosharegetsciencemetadatapid-sciencemetadata">HydroShare.getScienceMetadata<em><em>(</em>pid</em>)* --&gt; ScienceMetadata</h3>
+<p>Describes the resource identified by the pid by returning the associated science metadata object. If the resource does not exist, Exceptions.NotFound must be raised.</p>
+<p><strong>REST URL</strong>: GET /scimeta/{pid}</p>
+<p><strong>Parameters</strong>: pid – Unique HydroShare identifier for the resource whose science metadata is to be retrieved.</p>
+<p><strong>Returns</strong>: Science metadata XML document describing the resource.</p>
+<p><strong>Return Type</strong>: ScienceMetadata</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The resource identified by pid does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<h3 id="hydrosharegetsystemmetadatapid-systemmetadata">HydroShare.getSystemMetadata<em><em>(</em>pid</em>)* --&gt; SystemMetadata</h3>
+<p>Describes the resource identified by the pid by returning the associated system metadata object. If the resource does not exist, Exceptions.NotFound must be raised.</p>
+<p><strong>REST URL</strong>: GET /sysmeta/{pid}</p>
+<p><strong>Parameters</strong>: pid – Unique HydroShare identifier for the resource whose system metadata is to be retrieved.</p>
+<p><strong>Returns</strong>: System metadata XML document describing the resource.</p>
+<p><strong>Return Type</strong>: SystemMetadata</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The resource identified by pid does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<h3 id="hydrosharegetresourcemappid-resourcemap">HydroShare.getResourceMap<em><em>(</em>pid</em>)* --&gt; ResourceMap</h3>
+<p>Describes the resource identified by the pid by returning the associated resource map document. If the resource does not exist, Exceptions.NotFound must be raised.</p>
+<p><strong>REST URL</strong>: GET /resourcemap/{pid}</p>
+<p><strong>Parameters</strong>: pid – Unique HydroShare identifier for the resource whose resource map is to be retrieved.</p>
+<p><strong>Returns</strong>: Resource map XML document describing the resource.</p>
+<p><strong>Return Type</strong>: ResourceMap</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The resource identified by pid does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<h3 id="hydrosharegetresourcefilepid-filename-file">HydroShare.getResourceFile<em><em>(</em>pid</em>, <em>filename</em>)* --&gt; file</h3>
+<p>Called by clients to get an individual file within a HydroShare resource.</p>
+<p><strong>REST URL</strong>: GET /resource/{pid}/files/{filename}</p>
+<p><strong>Parameters</strong>: pid – Unique HydroShare identifier for the resource from which the file will be extracted.</p>
+<p>filename – The data bytes of the file that will be extracted from the resource identified by pid</p>
+<p><strong>Returns</strong>: The bytes of the file extracted from the resource, with MIME type corresponding to filename extension.</p>
+<p><strong>Return Type</strong>: pid</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The resource identified by pid does not exist or the file identified by filename does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<h3 id="hydrosharegetrevisionspid-list-of-pids">HydroShare.getRevisions<em><em>(</em>pid</em>)* --&gt; List of pids</h3>
+<p>Returns a list of pids for resources that are revisions of the resource identified by the specified pid.</p>
+<p><strong>REST URL</strong>: GET /revisions/{pid}</p>
+<p><strong>Parameters</strong>: pid – Unique HydroShare identifier for the resource whose revisions are to be retrieved.</p>
+<p><strong>Returns</strong>: List of pids for resources that are revisions of the specified resource.</p>
+<p><strong>Return Type</strong>: List of pids</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The Resource identified by pid does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<h3 id="hydrosharegetrelatedpid-list-of-pids">HydroShare.getRelated<em><em>(</em>pid</em>)* --&gt; List of pids</h3>
+<p>Returns a list of pids for resources that are related to the resource identified by the specified pid.</p>
+<p><strong>REST URL</strong>: GET /related/{pid}</p>
+<p><strong>Parameters</strong>: pid – Unique HydroShare identifier for the resource whose related resources are to be retrieved.</p>
+<p><strong>Returns</strong>: List of pids for resources that are related to the specified resource.</p>
+<p><strong>Return Type</strong>: List of pids</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The resource identified by pid does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<h3 id="hydrosharegetchecksumpid-checksum">HydroShare.getChecksum<em><em>(</em>pid</em>)* --&gt; Checksum</h3>
+<p>Returns a checksum for the specified resource using the MD5 algorithm. The result is used to determine if two instances referenced by a pid are identical.</p>
+<p><strong>REST URL</strong>: GET /checksum/{pid}</p>
+<p><strong>Parameters</strong>: pid – Unique HydroShare identifier for the resource for which the checksum is to be returned.</p>
+<p><strong>Returns</strong>: Checksum of the resource identified by pid.</p>
+<p><strong>Return Type</strong>: Checksum</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The resource specified by pid does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<h3 id="hydrosharecreateresourceresource-pid">HydroShare.createResource<em><em>(</em>resource</em>)* --&gt; pid</h3>
+<p>Called by a client to add a new resource to HydroShare. The caller must have authorization to write content to HydroShare. The pid for the resource is assigned by HydroShare upon inserting the resource.  The create method returns the newly-assigned pid.</p>
+<p><strong>REST URL</strong>: POST /resource</p>
+<p><strong>Parameters</strong>: resource – The data bytes of the resource, encoded as a zipped BagIt archive, to be added to HydroShare</p>
+<p><strong>Returns</strong>: The pid assigned to the newly created resource</p>
+<p><strong>Return Type</strong>: pid</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized to write to HydroShare</p>
+<p>Exceptions.InvalidContent – The content of the resource is incomplete</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<p><strong>Note</strong>: The calling user will automatically be set as the owner of the created resource.</p>
+<h3 id="hydroshareupdateresourcepid-resource-pid">HydroShare.updateResource<em><em>(</em>pid</em>, <em>resource</em>)* --&gt; pid</h3>
+<p>Called by clients to update a resource in HydroShare.</p>
+<p><strong>REST URL</strong>: PUT /resource/{pid}</p>
+<p><strong>Parameters</strong>: pid – Unique HydroShare identifier for the resource that is to be updated.</p>
+<p>resource – The data bytes of the resource, encoded as a zipped BagIt archive, that will update the existing resource identified by pid</p>
+<p><strong>Returns</strong>: The pid assigned to the updated resource</p>
+<p><strong>Return Type</strong>: pid</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.InvalidContent – The content of the resource is incomplete</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<p><strong>Notes</strong>: For mutable resources (resources that have not been formally published), the update overwrites existing data and metadata using the resource that is passed to this method. If a user wants to create a copy or modified version of a mutable resource this should be done using HydroShare.createResource().</p>
+<p>For immutable resources (formally published resources), this method creates a new resource that is a new version of the formally published resource. HydroShare will record the update by storing the SystemMetadata.obsoletes and SystemMetadata.obsoletedBy fields for the respective resources in their system metadata. HydroShare MUST check or set the values of SystemMetadata.obsoletes and SystemMetadata.obsoletedBy so that they accurately represent the relationship between the new and old objects. HydroShare MUST also set SystemMetadata.dateSysMetadataModified. The modified system metadata entries must then be available in HydroShare.listObjects() to ensure that any cataloging systems pick up the changes when filtering on SystmeMetadata.dateSysMetadataModified. A formally published resource can only be obsoleted by one newer version. Once a resource is obsoleted, no other resources can obsolete it.</p>
+<h3 id="hydroshareaddresourcefilepid-file-pid">HydroShare.addResourceFile<em><em>(</em>pid</em>, <em>file</em>)* --&gt; pid</h3>
+<p>Called by clients to update a resource in HydroShare by adding a single file.</p>
+<p><strong>REST URL</strong>: PUT /resource/{pid}/files/{file}</p>
+<p><strong>Parameters</strong>: pid – Unique HydroShare identifier for the resource that is to be updated.</p>
+<p>file – The data bytes of the file that will be added to the existing resource identified by pid</p>
+<p><strong>Returns</strong>: The pid assigned to the updated resource</p>
+<p><strong>Return Type</strong>: pid</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.InvalidContent – The content of the file is invalid</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<p><strong>Notes</strong>: For mutable resources (resources that have not been formally published), the update adds the file that is passed to this method to the resource. For immutable resources (formally published resources), this method creates a new resource that is a new version of the formally published resource. HydroShare will record the update by storing the SystemMetadata.obsoletes and SystemMetadata.obsoletedBy fields for the respective resources in their system metadata. HydroShare MUST check or set the values of SystemMetadata.obsoletes and SystemMetadata.obsoletedBy so that they accurately represent the relationship between the new and old objects. HydroShare MUST also set SystemMetadata.dateSysMetadataModified. The modified system metadata entries must then be available in HydroShare.listObjects() to ensure that any cataloging systems pick up the changes when filtering on SystmeMetadata.dateSysMetadataModified. A formally published resource can only be obsoleted by one newer version. Once a resource is obsoleted, no other resources can obsolete it.</p>
+<h3 id="hydroshareupdatesciencemetadatapid-sciencemetadata-pid">HydroShare.updateScienceMetadata<em><em>(</em>pid, ScienceMetadata</em>)* --&gt; pid</h3>
+<p>Called by clients to update the science metadata for a resource in HydroShare.</p>
+<p><strong>REST URL</strong>: PUT /scimeta/{pid}</p>
+<p><strong>Parameters</strong>: pid – Unique HydroShare identifier for the resource that is to be updated.</p>
+<p>ScienceMetadata – The data bytes of the XML ScienceMetadata that will update the existing Science Metadata for the resource identified by pid</p>
+<p><strong>Returns</strong>: The pid assigned to the resource whose Science Metadata was updated</p>
+<p><strong>Return Type</strong>: pid</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.InvalidContent – The content of the resource is incomplete</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<p><strong>Notes</strong>: For mutable resources (resources that have not been formally published), the update overwrites existing Science Metadata using the ScienceMetadata that is passed to this method. For immutable resources (formally published resources), this method creates a new resource that is a new version of the formally published resource. HydroShare will record the update by storing the SystemMetadata.obsoletes and SystemMetadata.obsoletedBy fields for the respective resources in their system metadata. HydroShare MUST check or set the values of SystemMetadata.obsoletes and SystemMetadata.obsoletedBy so that they accurately represent the relationship between the new and old objects. HydroShare MUST also set SystemMetadata.dateSysMetadataModified. The modified system metadata entries must then be available in HydroShare.listObjects() to ensure that any cataloging systems pick up the changes when filtering on SystmeMetadata.dateSysMetadataModified. A formally published resource can only be obsoleted by one newer version. Once a resource is obsoleted, no other resources can obsolete it.</p>
+<h3 id="hydrosharedeleteresourcepid-pid">HydroShare.deleteResource<em><em>(</em>pid</em>)* --&gt; pid</h3>
+<p>Deletes a resource managed by HydroShare. The caller must be an owner of the resource or an administrator to perform this function. The operation removes the resource from further interaction with HydroShare services and interfaces. The implementation may delete the resource bytes, and should do so since a delete operation may be in response to a problem with the resource (e.g., it contains malicious content, is inappropriate, or is subject to a legal request). If the resource does not exist, the Exceptions.NotFound exception is raised.</p>
+<p><strong>REST URL</strong>: DELETE /resource/{pid}</p>
+<p><strong>Parameters</strong>: pid – The unique HydroShare identifier of the resource to be deleted</p>
+<p><strong>Returns</strong>: The pid of the resource that was deleted</p>
+<p><strong>Return Type</strong>: pid</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The resource identified by pid does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<p><strong>Note</strong>: Only HydroShare administrators will be able to delete formally published resources.</p>
+<h3 id="hydrosharedeleteresourcefilepid-filename-pid">HydroShare.deleteResourceFile<em><em>(</em>pid, filename</em>)* --&gt; pid</h3>
+<p>Deletes an individual file from a HydroShare resource. If the file does not exist, the Exceptions.NotFound exception is raised.</p>
+<p><strong>REST URL</strong>: DELETE /resource/{pid}/files/{filename}</p>
+<p><strong>Parameters</strong>: pid – The unique HydroShare identifier for the resource from which the file will be deleted</p>
+<p>filename – Name of the file to be deleted from the resource</p>
+<p><strong>Returns</strong>: The pid of the resource from which the file was deleted</p>
+<p><strong>Return Type</strong>: pid</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The resource identified by pid does not exist or the file identified by file does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<p><strong>Note</strong>: For mutable resources (resources that have not been formally published), this method modifies the resource by deleting the file. For immutable resources (formally published resources), this method creates a new resource that is a new version of the formally published resource. HydroShare will record the update by storing the SystemMetadata.obsoletes and SystemMetadata.obsoletedBy fields for the respective resources in their system metadata. HydroShare MUST check or set the values of SystemMetadata.obsoletes and SystemMetadata.obsoletedBy so that they accurately represent the relationship between the new and old objects. HydroShare MUST also set SystemMetadata.dateSysMetadataModified. The modified system metadata entries must then be available in HydroShare.listObjects() to ensure that any cataloging systems pick up the changes when filtering on SystemMetadata.dateSysMetadataModified. A formally published resource can only be obsoleted by one newer version. Once a resource is obsoleted, no other resources can obsolete it.</p>
+<h3 id="hydrosharepublishresourcepid-pid">HydroShare.publishResource<em><em>(</em>pid</em>)* --&gt; pid</h3>
+<p>Formally publishes a resource in HydroShare. Triggers the creation of a DOI for the resource, and triggers the exposure of the resource to the HydroShare DataONE Member Node. The user must be an owner of a resource or an adminstrator to perform this action.</p>
+<p><strong>REST URL</strong>: PUT /publishResource/{pid}</p>
+<p><strong>Parameters</strong>: pid – Unique HydroShare identifier for the resource to be formally published.</p>
+<p><strong>Returns</strong>: The pid of the resource that was published</p>
+<p><strong>Return Type</strong>: pid</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The resource identified by pid does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<p><strong>Note</strong>: This is different than just giving public access to a resource via access control rules.</p>
+<h3 id="hydroshareresolvedoidoi-pid">HydroShare.resolveDOI<em><em>(</em>doi</em>)* --&gt; pid</h3>
+<p>Takes as input a DOI and returns the internal HydroShare identifier (pid) for a resource. This method will be used to get the HydroShare pid for a resource identified by a doi for further operations using the web service API.</p>
+<p><strong>REST URL</strong>: GET /resolveDOI/{doi}</p>
+<p><strong>Parameters</strong>: doi – A doi assigned to a resource in HydroShare.</p>
+<p><strong>Returns</strong>: The pid of the resource that was published</p>
+<p><strong>Return Type</strong>: pid</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The resource identified by pid does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<p><strong>Note</strong>: All HydroShare methods (except this one) will use HydroShare internal identifiers (pids). This method exists so that a program can resolve the pid for a DOI.</p>
+<h2 id="user-management-and-authorization-api">User Management and Authorization API</h2>
+<p>The User Management and Authorization API will enable client applications to set access rules and ownership for resources, create and update user accounts, create and update groups, get information about users or groups, and retrieve lists of resources associated with users and groups. The table below lists the REST URLs that will be implemented as part of the HydroShare User Management and Authorization API. The following assume that each Resource has a single owner. However other users can be given “Full” permissions with all of the privileges of ownership. A single owner is needed for the purpose of disk space quotas so that a Resource only counts against the quota of one user. In all other respects, a user with “Full” permissions over a resource and an owner as described below are the same.</p>
+<p>Table 2. HydroShare user management and authorization API URLs and methods.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Release</strong></th>
+<th><strong>REST Path</strong></th>
+<th><strong>Function</strong></th>
+<th><strong>Parameters</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>PUT /resource/owner/{pid}?user={userID}</td>
+<td>HydroShare.setResourceOwner()</td>
+<td>(pid, userID) --&gt; pid</td>
+</tr>
+<tr>
+<td>1</td>
+<td>PUT /resource/accessRules/{pid}/?principaltype=(user</td>
+<td>group)&amp;principleID={id}&amp;access=(edit</td>
+<td>view</td>
+</tr>
+<tr>
+<td>1</td>
+<td>POST /accounts</td>
+<td>HydroShare.createAccount()</td>
+<td>(user) --&gt; userID</td>
+</tr>
+<tr>
+<td>1</td>
+<td>PUT /accounts/{userID}</td>
+<td>HydroShare.updateAccount()</td>
+<td>(userID, user) --&gt; userID</td>
+</tr>
+<tr>
+<td>1</td>
+<td>GET /accounts/{userID}</td>
+<td>HydroShare.getUserInfo()</td>
+<td>(userID) --&gt; user</td>
+</tr>
+<tr>
+<td>1</td>
+<td>GET /accounts?query={query}[&amp;status={status}&amp;start={start}&amp;count={count}]</td>
+<td>HydroShare.listUsers()</td>
+<td>(query, status, start, count) --&gt; userList</td>
+</tr>
+<tr>
+<td>1</td>
+<td>GET /group/{groupID}</td>
+<td>HydroShare.getGroupInfo()</td>
+<td>(groupID) --&gt; group</td>
+</tr>
+<tr>
+<td>1</td>
+<td>GET /groups?query={query}[&amp;status={status}&amp;start={start}&amp;count={count}]</td>
+<td>HydroShare.listGroups()</td>
+<td>(query, status, start, count) --&gt; groupList</td>
+</tr>
+<tr>
+<td>1</td>
+<td>POST /groups</td>
+<td>HydroShare.createGroup()</td>
+<td>(group) --&gt; groupID</td>
+</tr>
+<tr>
+<td>1</td>
+<td>PUT /groups</td>
+<td>HydroShare.updateGroup()</td>
+<td>(groupID, group) --&gt; groupID</td>
+</tr>
+<tr>
+<td>1</td>
+<td>PUT /groups/{groupID}/owner/?user={userID}</td>
+<td>HydroShare.setGroupOwner()</td>
+<td>(groupID, userID) --&gt; groupID</td>
+</tr>
+<tr>
+<td>1</td>
+<td>DELETE /groups/{groupID}/owner/?user={userID}</td>
+<td>HydroShare.deleteGroupOwner()</td>
+<td>(groupID, userID) --&gt; groupID</td>
+</tr>
+<tr>
+<td>1</td>
+<td>GET /resourceList?groups__contains={groupID}</td>
+<td>HydroShare.getResourceList()</td>
+<td>(queryType, groupID) --&gt; resourceList</td>
+</tr>
+<tr>
+<td>1</td>
+<td>GET /resourceList?creator={userID}</td>
+<td>HydroShare.getResourceList()</td>
+<td>(queryType, userID) --&gt; resourceList</td>
+</tr>
+<tr>
+<td>1</td>
+<td>GET /resourceList?sharedWith={userID}</td>
+<td>HydroShare.getResourceList()</td>
+<td>(queryType, userID) --&gt; resourceList</td>
+</tr>
+<tr>
+<td>1</td>
+<td>GET /resourceList?creationDate__range={fromDate},{toDate}</td>
+<td>HydroShare.getResourceList()</td>
+<td>(queryType, fromDate, toDate) --&gt; resourceList</td>
+</tr>
+</tbody>
+</table>
+<h3 id="hydrosharesetresourceownerpid-userid-pid">HydroShare.setResourceOwner<em><em>(</em>pid, userID</em>)* --&gt; pid</h3>
+<p>Changes ownership of the specified resource to the user specified by a userID.</p>
+<p><strong>REST URL</strong>: PUT /resource/owner/{pid}?user={userID}</p>
+<p><strong>Parameters</strong>: pid – Unique HydroShare identifier for the resource to be modified</p>
+<p>userID – ID for the user to be set as an owner of the resource identified by pid</p>
+<p><strong>Returns</strong>: The pid of the resource that was modified</p>
+<p><strong>Return Type</strong>: pid</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The resource identified by pid does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<p><strong>Note</strong>: This can only be done by the resource owner or a HydroShare administrator.</p>
+<h3 id="hydrosharesetaccessrulespid-principaltype-principalid-access-allow-pid">HydroShare.setAccessRules<em><em>(</em>pid, principalType, principalID, access, allow</em>)* --&gt; pid</h3>
+<p>Set the access permissions for an object identified by pid. Triggers a change in the system metadata. Successful completion of this operation in indicated by a HTTP response of 200. Unsuccessful completion of this operation must be indicated by returning an appropriate exception such as NotAuthorized.</p>
+<p><strong>REST URL</strong>: PUT /resource/accessRules/{pid}/?principaltype=(user|group)&amp;principleID={id}&amp;access=(edit|view|donotdistribute)&amp;allow=(true|false)</p>
+<p><strong>Parameters</strong>: pid – Unique HydroShare identifier for the resource to be modified</p>
+<p>principalType – The type of principal (user or group)</p>
+<p>principalID – Identifier for the user or group to be granted access</p>
+<p>access – Permission to be assigned to the resource for the principal</p>
+<p>allow – True for granting the permission, False to revoke</p>
+<p><strong>Returns</strong>: The pid of the resource that was modified</p>
+<p><strong>Return Type</strong>: pid</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The resource identified by pid does not exist</p>
+<p>Exceptions.NotFound – The principal identified by principalID does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<p><strong>Note</strong>: “Do not distribute” is an attribute of the resource that is set by a user with “Full” permissions and only applies to users with “Edit” and “View” privileges. There is no “share” privilege in HydroShare. Share permission is implicit unless prohibited by the “Do not distribute” attribute. The only permissions in HydroShare are “View”, “Edit” and “Full”.</p>
+<h3 id="hydrosharecreateaccountuser-userid">HydroShare.createAccount<em><em>(</em>user</em>)* --&gt; userID</h3>
+<p>Create a new user within the HydroShare system.</p>
+<p><strong>REST URL</strong>: POST /accounts</p>
+<p><strong>Parameters</strong>: user – An object containing the attributes of the user to be created</p>
+<p><strong>Returns</strong>: The userID of the user that was created</p>
+<p><strong>Return Type</strong>: userID</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.InvalidContent – The content of the user object is invalid</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<p><strong>Note</strong>: This would be done via a JSON object (user) that is in the POST request. Should set a random password, and then send an email to make them verify the account. Unverified accounts can't login and are automatically deleted after a specified time (according to policy).</p>
+<h3 id="hydroshareupdateaccountuserid-user-userid">HydroShare.updateAccount<em><em>(</em>userID, user</em>)* --&gt; userID</h3>
+<p>Update an existing user within the HydroShare system. The user calling this method must have write access to the account details.</p>
+<p><strong>REST URL</strong>: PUT /accounts/{userID}</p>
+<p><strong>Parameters</strong>: userID – ID of the existing user to be modified</p>
+<p>user – An object containing the modified attributes of the user to be modified</p>
+<p><strong>Returns</strong>: The userID of the user that was modified</p>
+<p><strong>Return Type</strong>: userID</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The user identified by userID does not exist</p>
+<p>Exceptions.InvalidContent – The content of the user object is invalid</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<p><strong>Note</strong>: This would be done via a JSON object (user) that is in the PUT request.</p>
+<h3 id="hydrosharegetuserinfouserid-user">HydroShare.getUserInfo<em><em>(</em>userID</em>)* --&gt; user</h3>
+<p>Get the information about a user identified by userID. This would be their profile information, groups they belong to, etc.</p>
+<p><strong>REST URL</strong>: GET /accounts/{userID}</p>
+<p><strong>Parameters</strong>: userID – ID of the existing user to be modified</p>
+<p><strong>Returns</strong>: An object containing the details for the user</p>
+<p><strong>Return Type</strong>: user</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The user identified by userID does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<h3 id="hydrosharelistusersquery-status-start-count-userlist">HydroShare.listUsers<em><em>(</em>query, status, start, count</em>)* --&gt; userList</h3>
+<p>List the users that match search criteria.</p>
+<p><strong>REST URL</strong>: GET /accounts?query={query}[&amp;status={status}&amp;start={start}&amp;count={count}]</p>
+<p><strong>Parameters</strong>: query – a string specifying the query to perform</p>
+<p>status – (optional) parameter to filter users returned based on status</p>
+<p>start=0 – (optional) the zero-based index of the first value, relative to the first record of the resultset that matches the parameters</p>
+<p>count=100 – (optional) the maximum number of results that should be returned in the response</p>
+<p><strong>Returns</strong>: An object containing a list of userIDs that match the query. If none match, an empty list is returned.</p>
+<p><strong>Return Type</strong>: userList</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<h3 id="hydrosharegetgroupinfogroupid-group">HydroShare.getGroupInfo<em><em>(</em>groupID</em>)* --&gt; group</h3>
+<p>Get the information about a group identified by groupID. For a group this would be its description and membership list.</p>
+<p><strong>REST URL</strong>: GET /group/{groupID}</p>
+<p><strong>Parameters</strong>: groupID – ID of the existing user to be modified</p>
+<p><strong>Returns</strong>: An object containing the details for the group</p>
+<p><strong>Return Type</strong>: group</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The group identified by groupID does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<h3 id="hydrosharelistgroupsquery-status-start-count-grouplist">HydroShare.listGroups<em><em>(</em>query, status, start, count</em>)* --&gt; groupList</h3>
+<p>List the groups that match search criteria.</p>
+<p><strong>REST URL</strong>: GET /groups?query={query}[&amp;status={status}&amp;start={start}&amp;count={count}]</p>
+<p><strong>Parameters</strong>: query – a string specifying the query to perform</p>
+<p>status – (optional) parameter to filter groups returned based on status</p>
+<p>start=0 – (optional) the zero-based index of the first value, relative to the first record of the resultset that matches the parameters</p>
+<p>count=100 – (optional) the maximum number of results that should be returned in the response</p>
+<p><strong>Returns</strong>: An object containing a list of groupIDs that match the query. If none match, an empty list is returned.</p>
+<p><strong>Return Type</strong>: groupList</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<h3 id="hydrosharecreategroupgroup-groupid">HydroShare.createGroup<em><em>(</em>group</em>)* --&gt; groupID</h3>
+<p>Create a group within HydroShare. Groups are lists of users that allow all members of the group to be referenced by listing solely the name of the group. Group names must be unique within HydroShare. Groups can only be modified by users listed as group owners.</p>
+<p><strong>REST URL</strong>: POST /groups</p>
+<p><strong>Parameters</strong>: group – An object containing the attributes of the group to be created</p>
+<p><strong>Returns</strong>: The groupID of the group that was created</p>
+<p><strong>Return Type</strong>: groupID</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.InvalidContent – The content of the group object is invalid</p>
+<p>Exceptions.GroupNameNotUnique – The name of the group already exists in HydroShare</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<p><strong>Note</strong>: This would be done via a JSON object (group) that is in the POST request. May want to add an email verification step to avoid automated creation of fake groups. The creating user would automatically be set as the owner of the created group.</p>
+<h3 id="hydroshareupdategroupgroupid-group-groupid">HydroShare.updateGroup<em><em>(</em>groupID, group</em>)* --&gt; groupID</h3>
+<p>Modify details of group identified by groupID or add or remove members to/from the group. Group members can be modified only by an owner of the group, otherwise a NotAuthorized exception is thrown. Group members are provided as a list of users that replace the group membership.</p>
+<p><strong>REST URL</strong>: PUT /groups/{groupID}</p>
+<p><strong>Parameters</strong>: groupID – groupID of the existing group to be modified</p>
+<p>group – An object containing the modified attributes of the group to be modified and the modified list of userIDs in the group membership</p>
+<p><strong>Returns</strong>: The groupID of the group that was modified</p>
+<p><strong>Return Type</strong>: groupID</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The group identified by groupID does not exist</p>
+<p>Exceptions.InvalidContent – The content of the group object is invalid</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<p><strong>Note</strong>: This would be done via a JSON object (group) that is in the PUT request.</p>
+<h3 id="hydrosharesetgroupownergroupid-userid-groupid">HydroShare.setGroupOwner<em><em>(</em>groupID, userID</em>)* --&gt; groupID</h3>
+<p>Adds ownership of the group identified by groupID to the user specified by userID. This can only be done by a group owner or HydroShare administrator.</p>
+<p><strong>REST URL</strong>: PUT /groups/{groupID}/owner/?user={userID}</p>
+<p><strong>Parameters</strong>: groupID – groupID of the existing group to be modified</p>
+<p>userID – userID of the existing user to be set as the owner of the group</p>
+<p><strong>Returns</strong>: The groupID of the group that was modified</p>
+<p><strong>Return Type</strong>: groupID</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The group identified by groupID does not exist</p>
+<p>Exceptions.NotFound – The user identified by userID does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<h3 id="hydrosharedeletegroupownergroupid-userid-groupid">HydroShare.deleteGroupOwner<em><em>(</em>groupID, userID</em>)* --&gt; groupID</h3>
+<p>Removes a group owner identified by a userID from a group specified by groupID. This can only be done by a group owner or HydroShare administrator.</p>
+<p><strong>REST URL</strong>: DELETE /groups/{groupID}/owner/?user={userID}</p>
+<p><strong>Parameters</strong>: groupID – groupID of the existing group to be modified</p>
+<p>userID – userID of the existing user to be removed as the owner of the group</p>
+<p><strong>Returns</strong>: The groupID of the group that was modified</p>
+<p><strong>Return Type</strong>: groupID</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The group identified by groupID does not exist</p>
+<p>Exceptions.NotFound – The user identified by userID does not exist</p>
+<p>Exceptions.InvalidRequest – The request would result in removal of the last remaining owner of the group</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<p><strong>Note</strong>: A group must have at least one owner.</p>
+<h3 id="hydrosharegetresourcelistquerytype-groupid-resourcelist">HydroShare.getResourceList<em><em>(</em>queryType, groupID</em>)* --&gt; resourceList</h3>
+<p>Return a list of pids for Resources that have been shared with a group identified by groupID.</p>
+<p><strong>REST URL</strong>: GET /resourceList?groups__contains={groupID}</p>
+<p><strong>Parameters</strong>: queryType – string specifying the type of query being performed</p>
+<p>groupID – groupID of the group whose list of shared resources is to be returned</p>
+<p><strong>Returns</strong>: A list of pids for resources that have been shared with the group identified by groupID. If no resources have been shared with a group, an empty list is returned.</p>
+<p><strong>Return Type</strong>: resourceList</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The group identified by groupID does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<p><strong>Note</strong>: See http://django-tastypie.readthedocs.org/en/latest/resources.html#basic-filtering for implementation details and example. We may want to modify this method to return more than just the pids for resources so that some metadata for the list of resources returned could be displayed without having to call HydroShare.getScienceMetadata() and HydroShare.GetSystemMetadata() for every resource in the returned list.</p>
+<h3 id="hydrosharegetresourcelistquerytype-userid-resourcelist">HydroShare.getResourceList<em><em>(</em>queryType, userID</em>)* --&gt; resourceList</h3>
+<p>Return a list of pids for Resources that a user identified by userID has created.</p>
+<p><strong>REST URL</strong>: GET /resourceList?creator={userID}</p>
+<p><strong>Parameters</strong>: queryType – string specifying the type of query being performed</p>
+<p>userID – userID of the user whose list of created resources is to be returned</p>
+<p><strong>Returns</strong>: A list of pids for resources that have been created by the user. If no resources have been created by the user, an empty list is returned.</p>
+<p><strong>Return Type</strong>: resourceList</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The user identified by userID does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<p><strong>Note</strong>: See http://django-tastypie.readthedocs.org/en/latest/resources.html#basic-filtering for implementation details and example. We may want to modify this method to return more than just the pids for resources so that some metadata for the list of resources returned could be displayed without having to call HydroShare.getScienceMetadata() and HydroShare.GetSystemMetadata() for every resource in the returned list.</p>
+<h3 id="hydrosharegetresourcelistquerytype-userid-resourcelist_1">HydroShare.getResourceList<em><em>(</em>queryType, userID</em>)* --&gt; resourceList</h3>
+<p>Return a list of pids for Resources that have been shared with a user identified by userID.</p>
+<p><strong>REST URL</strong>: GET /resourceList?sharedWith={userID}</p>
+<p><strong>Parameters</strong>: queryType – string specifying the type of query being performed</p>
+<p>userID – userID of the user whose list of shared resources is to be returned</p>
+<p><strong>Returns</strong>: A list of pids for resources that have been shared with the user. If no resources have been shared with the user, an empty list is returned.</p>
+<p><strong>Return Type</strong>: resourceList</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The user identified by userID does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<p><strong>Note</strong>: See http://django-tastypie.readthedocs.org/en/latest/resources.html#basic-filtering for implementation details and example. We may want to modify this method to return more than just the pids for resources so that some metadata for the list of resources returned could be displayed without having to call HydroShare.getScienceMetadata() and HydroShare.GetSystemMetadata() for every resource in the returned list.</p>
+<h3 id="hydrosharegetresourcelistquerytype-fromdate-todate-resourcelist">HydroShare.getResourceList<em><em>(</em>queryType, fromDate, toDate</em>)* --&gt; resourceList</h3>
+<p>Return a list of pids for Resources whose creation date lies within the specified range.</p>
+<p><strong>REST URL</strong>: GET /resourceList?creationDate__range={fromDate},{toDate}</p>
+<p><strong>Parameters</strong>: queryType – string specifying the type of query being performed</p>
+<p>fromDate – the beginning date for the date range</p>
+<p>toDate – the ending date for the date range</p>
+<p><strong>Returns</strong>: A list of pids for resources that were created within the given date range. If no resources were created within the given date range, an empty list is returned.</p>
+<p><strong>Return Type</strong>: resourceList</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.InvalidDateRange – The date range provided by the user is invalid</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<p><strong>Note</strong>: See http://django-tastypie.readthedocs.org/en/latest/resources.html#basic-filtering for implementation details and example. We may want to modify this method to return more than just the pids for resources so that some metadata for the list of resources returned could be displayed without having to call HydroShare.getScienceMetadata() and HydroShare.GetSystemMetadata() for every resource in the returned list.</p>
+<h2 id="resource-discovery-api">Resource Discovery API</h2>
+<p>The table below lists the REST URLs that will be implemented as part of the HydroShare Resource Discovery API.</p>
+<p>Table 3. HydroShare resource discovery API URLs and methods.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Release</strong></th>
+<th><strong>REST Path</strong></th>
+<th><strong>Function</strong></th>
+<th><strong>Parameters</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2</td>
+<td>GET /resourceList [?fromDate={fromDate}&amp;toDate={toDate} &amp;resourceType={resourceType} &amp;start={start}&amp;count={count}]</td>
+<td>HydroShare.listResources()</td>
+<td>(fromDate, toDate, resourceType, start, count) --&gt; resourceList</td>
+</tr>
+<tr>
+<td>2</td>
+<td>GET /resourceTypes</td>
+<td>HydroShare.listResourceTypes()</td>
+<td>() --&gt; resourceTypeList</td>
+</tr>
+<tr>
+<td>2</td>
+<td>GET /formats</td>
+<td>HydroShare.listFormats()</td>
+<td>() --&gt; resourceFormatList</td>
+</tr>
+<tr>
+<td>2</td>
+<td>GET /search/{queryType}/{query}</td>
+<td>HydroShare.search()</td>
+<td>(queryType, query) --&gt; resourceList</td>
+</tr>
+<tr>
+<td>2</td>
+<td>GET /search</td>
+<td>HydroShare.listSearchEngines()</td>
+<td>() --&gt; searchEngineList</td>
+</tr>
+</tbody>
+</table>
+<h3 id="hydrosharelistresourcesfromdate-todate-resourcetype-start-count-resourcelist">HydroShare.listResources<em><em>(</em>fromDate, toDate, resourceType, start, count</em>)* --&gt; resourceList</h3>
+<p>Return a list of pids for Resources whose creation date lies within the specified range, and optionally are of a particular resource type. This method is required to support cataloging of resources contained within HydroShare.</p>
+<p><strong>REST URL</strong>: GET /resourceList [?fromDate={fromDate}&amp;toDate={toDate} &amp;resourceType={resourceType} &amp;start={start}&amp;count={count}]</p>
+<p><strong>Parameters</strong>: fromDate – (optional) the beginning date for the date range</p>
+<p>toDate – (optional) the ending date for the date range</p>
+<p>resourceType – (optional) a type of resource for which to return results</p>
+<p>start=0 – (optional) the zero-based index of the first value, relative to the first record of the resultset that matches the parameters</p>
+<p>count=100 – (optional) the maximum number of results that should be returned in the response</p>
+<p><strong>Returns</strong>: A list of pids for resources that meet the given criteria. If no resources meet the criteria, an empty list is returned.</p>
+<p><strong>Return Type</strong>: resourceList</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<p><strong>Note</strong>: This method is primarily to support outside services that would want to harvest the HydroShare metadata catalog.</p>
+<h3 id="hydrosharelistresourcetypes-resourcetypelist">HydroShare.listResourceTypes*<em>()</em> --&gt; resourceTypeList</h3>
+<p>Returns a list of all resource types registered in the HydroShare resource type vocabulary</p>
+<p><strong>REST URL</strong>: GET /resourceTypes</p>
+<p><strong>Parameters</strong>: None</p>
+<p><strong>Returns</strong>: A list of resourceTypes supported by HydroShare</p>
+<p><strong>Return Type</strong>: resourceTypeList</p>
+<p><strong>Raises</strong>: Exception.ServiceFailure – The service is unable to process the request</p>
+<h3 id="hydrosharelistformats-resourceformatlist">HydroShare.listFormats*<em>()</em> --&gt; resourceFormatList</h3>
+<p>Returns a list of all resource formats registered in the HydroShare resource format vocabulary</p>
+<p><strong>REST URL</strong>: GET /formats</p>
+<p><strong>Parameters</strong>: None</p>
+<p><strong>Returns</strong>: A list of resource formats supported by HydroShare</p>
+<p><strong>Return Type</strong>: resourceFormatList</p>
+<p><strong>Raises</strong>: Exception.ServiceFailure – The service is unable to process the request</p>
+<h3 id="hydrosharesearchquerytype-query-resourcelist">HydroShare.search<strong>(</strong>queryType, query*<em>)</em> --&gt; resourceList</h3>
+<p>Search the HydroShare metadata catalog and return a list of pids for resources that match the search criteria. Search may be implemented using more than one type of search engine. The queryType parameter indicates which search engine should be targeted. The value and form of query is determined by the search engine.</p>
+<p><strong>REST URL</strong>: GET /search/{queryType}/{query}</p>
+<p><strong>Parameters</strong>: queryType – the search engine to be used for the search</p>
+<p>query – a string containing the query to be executed on the search engine</p>
+<p><strong>Returns</strong>: A list of pids for resources that match the criteria in the query. If no resources match the query criteria, an empty list is returned.</p>
+<p><strong>Return Type</strong>: resourceList</p>
+<p><strong>Raises</strong>: Exception.InvalidQueryType – the query type is invalid</p>
+<p>Exception.InvalidQuery – the query string is invalid</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<p><strong>Note</strong>: We may want to modify this method to return more than just the pids for resources so that some metadata for the list of resources returned could be displayed without having to call HydroShare.getScienceMetadata() and HydroShare.GetSystemMetadata() for every resource in the returned list. <strong><em>Also, this method is still pending selection of the underlying metadata catalog and search engine(s).</em></strong></p>
+<h2 id="social-api">Social API</h2>
+<p>The table below lists the REST URLs that will be implemented as part of the HydroShare Social API.</p>
+<p>Table 4. HydroShare social API URLs and methods.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Release</strong></th>
+<th><strong>REST Path</strong></th>
+<th><strong>Function</strong></th>
+<th><strong>Parameters</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>POST /resource/endorse/{pid}/{userID}</td>
+<td>HydroShare.endorseResource()</td>
+<td>(pid, userID) --&gt; pid</td>
+</tr>
+<tr>
+<td>4</td>
+<td>POST /followUser/{userID}/{followerID}</td>
+<td>HydroShare.followUser()</td>
+<td>(userID, followerID) --&gt; userID</td>
+</tr>
+<tr>
+<td>4</td>
+<td>DELETE /followUser/{userID}/{followerID}</td>
+<td>HydroShare.deleteFollowUser()</td>
+<td>(userID, followerID) --&gt; userID</td>
+</tr>
+<tr>
+<td>4</td>
+<td>POST /followResource/{pid}/{followerID}</td>
+<td>HydroShare.followResource()</td>
+<td>(pid, followerID) --&gt; pid</td>
+</tr>
+<tr>
+<td>4</td>
+<td>DELETE /followResource/{pid}/{followerID}</td>
+<td>HydroShare.deleteFollowResource()</td>
+<td>(pid, followerID) --&gt; pid</td>
+</tr>
+<tr>
+<td>4</td>
+<td>POST /followGroup/{groupID}/{followerID}</td>
+<td>HydroShare.followGroup()</td>
+<td>(groupID, followerID) --&gt; groupID</td>
+</tr>
+<tr>
+<td>4</td>
+<td>DELETE /followGroup/{groupID}/{followerID}</td>
+<td>HydroShare.deleteFollowGroup()</td>
+<td>(groupID, followerID) --&gt; groupID</td>
+</tr>
+<tr>
+<td>1</td>
+<td>POST /resource/annotation/{pid}/{userID}</td>
+<td>HydroShare.annotateResource()</td>
+<td>(pid, annotation, userID) --&gt; annotationID</td>
+</tr>
+<tr>
+<td>1</td>
+<td>GET /resource/annotations/{pid}</td>
+<td>HydroShare.getAnnotations()</td>
+<td>(pid) --&gt; annotationList</td>
+</tr>
+<tr>
+<td>1</td>
+<td>POST /resource/annotation/endorse/{annotationID}/{userID}</td>
+<td>HydroShare.endorseAnnotation()</td>
+<td>(annotationID, userID) --&gt; annotationID</td>
+</tr>
+</tbody>
+</table>
+<h3 id="hydroshareendorseresourcepid-userid-pid">HydroShare.endorseResource<em><em>(</em>pid, userID</em>)* --&gt; pid</h3>
+<p>Create an endorsement or (+1) for a resource in HydroShare identified by pid for the user identified by userID</p>
+<p><strong>REST URL</strong>: POST /resource/endorse/{pid}/{userID}</p>
+<p><strong>Parameters</strong>: pid – Unique HydroShare identifier for the resource being endorsed</p>
+<p>userID – userID of the user that is endorsing the resource identified by pid</p>
+<p><strong>Returns</strong>: The pid of the resource that was endorsed</p>
+<p><strong>Return Type</strong>: pid</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The resource identified by pid does not exist</p>
+<p>Exceptions.NotFound – The user identified by userID does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<h3 id="hydrosharefollowuseruserid-followerid-userid">HydroShare.followUser<em><em>(</em>userID, followerID</em>)* --&gt; userID</h3>
+<p>Start following a HydroShare user identified by userID.</p>
+<p><strong>REST URL</strong>: POST /followUser/{userID}/{followerID}</p>
+<p><strong>Parameters</strong>: userID – userID of the HydroShare user to be followed</p>
+<p>followerID – userID of the HydroShare user requesting to follow the user identified by userID</p>
+<p><strong>Returns</strong>: The userID of the HydroShare user being followed</p>
+<p><strong>Return Type</strong>: userID</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The user identified by userID does not exist</p>
+<p>Exceptions.NotFound – The user identified by followerID does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<h3 id="hydrosharedeletefollowuseruserid-followerid-userid">HydroShare.deleteFollowUser<em><em>(</em>userID, followerID</em>)* --&gt; userID</h3>
+<p>Stop following a HydroShare user identified by userID.</p>
+<p><strong>REST URL</strong>: DELETE /followUser/{userID}/{followerID}</p>
+<p><strong>Parameters</strong>: userID – userID of the HydroShare user being followed</p>
+<p>followerID – userID of the HydroShare user following the user identified by userID</p>
+<p><strong>Returns</strong>: The userID of the HydroShare user being followed</p>
+<p><strong>Return Type</strong>: userID</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The user identified by userID does not exist</p>
+<p>Exceptions.NotFound – The user identified by followerID does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<h3 id="hydrosharefollowresourcepid-followerid-pid">HydroShare.followResource<em><em>(</em>pid, followerID</em>)* --&gt; pid</h3>
+<p>Start following a HydroShare resource identified by pid.</p>
+<p><strong>REST URL</strong>: POST /followResource/{pid}/{followerID}</p>
+<p><strong>Parameters</strong>: pid – Unique HydroShare identifier for the resource to be followed</p>
+<p>followerID – userID of the HydroShare user requesting to follow the resource identified by pid</p>
+<p><strong>Returns</strong>: The pid of the HydroShare resource being followed</p>
+<p><strong>Return Type</strong>: pid</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The resource identified by pid does not exist</p>
+<p>Exceptions.NotFound – The user identified by followerID does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<h3 id="hydrosharedeletefollowresourcepid-followerid-pid">HydroShare.deleteFollowResource<em><em>(</em>pid, followerID</em>)* --&gt; pid</h3>
+<p>Stop following a HydroShare resource identified by pid.</p>
+<p><strong>REST URL</strong>: DELETE /followResource/{pid}/{followerID}</p>
+<p><strong>Parameters</strong>: pid – Unique HydroShare identifier for the resource being followed</p>
+<p>followerID – userID of the HydroShare user following the resource identified by pid</p>
+<p><strong>Returns</strong>: The pid of the HydroShare resource being followed</p>
+<p><strong>Return Type</strong>: pid</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The resource identified by pid does not exist</p>
+<p>Exceptions.NotFound – The user identified by followerID does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<h3 id="hydrosharefollowgroupgroupid-followerid-groupid">HydroShare.followGroup<em><em>(</em>groupID, followerID</em>)* --&gt; groupID</h3>
+<p>Start following a HydroShare group identified by groupID.</p>
+<p><strong>REST URL</strong>: POST /followGroup/{groupID}/{followerID}</p>
+<p><strong>Parameters</strong>: groupID – Unique HydroShare identifier for the group to be followed</p>
+<p>followerID – userID of the HydroShare user requesting to follow the group identified by groupID</p>
+<p><strong>Returns</strong>: The groupID of the HydroShare group being followed</p>
+<p><strong>Return Type</strong>: groupID</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The group identified by groupID does not exist</p>
+<p>Exceptions.NotFound – The user identified by followerID does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<h3 id="hydrosharedeletefollowgroupgroupid-followerid-groupid">HydroShare.deleteFollowGroup<em><em>(</em>groupID, followerID</em>)* --&gt; groupID</h3>
+<p>Stop following a HydroShare group identified by groupID.</p>
+<p><strong>REST URL</strong>: DELETE /followGroup/{groupID}/{followerID}</p>
+<p><strong>Parameters</strong>: groupID – Unique HydroShare identifier for the group being followed</p>
+<p>followerID – userID of the HydroShare user following the group identified by groupID</p>
+<p><strong>Returns</strong>: The groupID of the HydroShare group being followed</p>
+<p><strong>Return Type</strong>: groupID</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The group identified by groupID does not exist</p>
+<p>Exceptions.NotFound – The user identified by followerID does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<h3 id="hydroshareannotateresourcepid-annotation-userid-previousannotationid-annotationid">HydroShare.annotateResource<em><em>(</em>pid, annotation, userID, previousAnnotationID</em>)* --&gt; annotationID</h3>
+<p>Create a comment about a resource in HydroShare identified by pid.</p>
+<p><strong>REST URL</strong>: POST /resource/annotation/{pid}/{userID}</p>
+<p><strong>Parameters</strong>: pid – Unique HydroShare identifier for the resource being annotated
+annotation – an object containing the annotation to be applied to the resource identified by pid
+userID – userID of the HydroShare user creating the annotation
+previousAnnotationID - (optional) AnnotationID of the previous comment on this resource that this comment follows on from. If omitted the comment is a new comment on a resource.</p>
+<p><strong>Returns</strong>: The annotationID of the annotation that is created</p>
+<p><strong>Return Type</strong>: annotationID</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The resource identified by pid does not exist</p>
+<p>Exceptions.InvalidContent – The content of the annotation object is invalid</p>
+<p>Exceptions.NotFound – The user identified by userID does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<p>Exceptions.NotFound - The previousAnnotationID is not an annotation of the resource identified by pid</p>
+<h3 id="hydrosharegetannotationspid-annotationlist">HydroShare.getAnnotations<em><em>(</em>pid</em>)* --&gt; annotationList</h3>
+<p>Get the list of annotations for a resource identified by pid.</p>
+<p><strong>REST URL</strong>: GET /resource/annotations/{pid}</p>
+<p><strong>Parameters</strong>: pid – Unique HydroShare identifier for the resource whose annotations are to be retrieved</p>
+<p><strong>Returns</strong>: An object containing a list of annotations that have been added to a HydroShare resource identified by pid.</p>
+<p><strong>Return Type</strong>: annotationList</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The resource identified by pid does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<h3 id="hydroshareendorseannotationannotationid-userid-annotationid">HydroShare.endorseAnnotation<em><em>(</em>annotationID, userID</em>)* --&gt; annotationID</h3>
+<p>Create an endorsement or (+1) by a user identified by userID for an annotation identified by annotationID.</p>
+<p><strong>REST URL</strong>: POST /resource/annotation/endorse/{annotationID}/{userID}</p>
+<p><strong>Parameters</strong>: annotationID – Unique HydroShare identifier for the annotation to be endorsed</p>
+<p>userID – userID of the HydroShare user creating the annotation endorsement</p>
+<p><strong>Returns</strong>: The annotationID of the annotation that is endorsed</p>
+<p><strong>Return Type</strong>: annotationID</p>
+<p><strong>Raises</strong>: Exceptions.NotAuthorized – The user is not authorized</p>
+<p>Exceptions.NotFound – The annotation identified by annotationID does not exist</p>
+<p>Exceptions.NotFound – The user identified by userID does not exist</p>
+<p>Exception.ServiceFailure – The service is unable to process the request</p>
+<h2 id="dataone-member-node-api">DataONE Member Node API</h2>
+<p>The HydroShare Data Management Plan states that HydroShare will implement the DataONE Member Node APIs and become a DataONE Member Node. Most of the methods in the previous sections have equivalent methods in the DataONE Member Node APIs. HydroShare will have to implement that additional methods described in the DataONE API documentation to become a fully compliant DataONE Member Node (see <a href="http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html">http://mule1.dataone.org/ArchitectureDocs-current/apis/MN_APIs.html#</a>).</p>
+<h1 id="acknowledgements">Acknowledgements</h1>
+<p>This work was supported by the National Science Foundation under collaborative grants OCI-1148453 and OCI-1148090 for the development of HydroShare (<a href="http://www.hydroshare.org">http://www.hydroshare.org</a>). Any opinions, findings and conclusions or recommendations expressed in this material are those of the authors and do not necessarily reflect the views of the National Science Foundation.</p>
+<p>DataONE (2013). DataONE APIs. <a href="http://mule1.dataone.org/ArchitectureDocs-current/apis/index.html">http://mule1.dataone.org/ArchitectureDocs-current/apis/index.html</a>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
