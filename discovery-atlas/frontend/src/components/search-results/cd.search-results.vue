@@ -432,8 +432,88 @@ class CdSearchResults extends Vue {
       // TODO
       options: [
         {
-          value: "",
-          label: "",
+          value: "App Connector",
+          label: "App Connector",
+          logo: "",
+        },
+        {
+          value: "CollectionResource",
+          label: "Collection",
+          logo: "",
+        },
+        {
+          value: "CSV Data",
+          label: "CSV Data",
+          logo: "",
+        },
+        {
+          value: "Document",
+          label: "Document",
+          logo: "",
+        },
+        {
+          value: "Generic Data",
+          label: "Generic Data",
+          logo: "",
+        },
+        {
+          value: "GeographicFeature",
+          label: "Geographic Feature (ESRI Shapefiles)",
+          logo: "",
+        },
+        {
+          value: "GeographicRaster",
+          label: "Geographic Raster",
+          logo: "",
+        },
+        {
+          value: "Image",
+          label: "Image",
+          logo: "",
+        },
+        {
+          value: "Jupyter Notebook",
+          label: "Jupyter Notebook",
+          logo: "",
+        },
+        {
+          value: "Model Instance",
+          label: "Model Instance",
+          logo: "",
+        },
+        {
+          value: "Model Program",
+          label: "Model Program",
+          logo: "",
+        },
+        {
+          value: "MultiDimensional",
+          label: "Multidimensional (NetCDF)",
+          logo: "",
+        },
+        {
+          value: "Presentation",
+          label: "Presentation",
+          logo: "",
+        },
+        {
+          value: "Reference to Time Series",
+          label: "Reference to Time Series",
+          logo: "",
+        },
+        {
+          value: "Resource",
+          label: "Resource",
+          logo: "",
+        },
+        {
+          value: "Spreadsheet",
+          label: "Spreadsheet",
+          logo: "",
+        },
+        {
+          value: "Time Series",
+          label: "Time Series",
           logo: "",
         },
       ],
