@@ -192,6 +192,7 @@
                       <v-card-text>
                         <div class="d-flex gap-2">
                           <div class="flex-grow-1">
+                            <!-- CREATORS -->
                             <div class="d-flex">
                               <b>Creators</b>:
                               <p
@@ -206,6 +207,8 @@
                                 "
                               ></p>
                             </div>
+
+                            <!-- CONTRIBUTORS -->
                             <template v-if="item.contributors?.length">
                               <!-- TODO: highlight -->
                               <p class="mb-2">
@@ -216,6 +219,7 @@
                               </p>
                             </template>
 
+                            <!-- KEYWORDS -->
                             <div class="mb-2">
                               <b>Keywords</b>:
                               <v-chip
@@ -229,6 +233,7 @@
                               >
                             </div>
 
+                            <!-- ABSTRACT -->
                             <b>Abstract</b>:
                             <v-banner
                               :text="item.description"
@@ -256,18 +261,28 @@
                               ></template>
                             </v-banner>
 
+                            <!-- DATE PUBLISHED -->
                             <p class="mb-2" v-if="item.datePublished">
                               <b>Date published</b>:
                               {{ formatDate(item.datePublished) }}
                             </p>
+
+                            <!-- TEMPORAL COVERAGE -->
                             <p class="mb-2" v-if="item.temporalCoverage">
                               <b>Temporal Coverage</b>:
                               {{ formatDate(item.temporalCoverage.startDate) }}
                               -
                               {{ formatDate(item.temporalCoverage.endDate) }}
                             </p>
+
+                            <!-- FUNDER BY -->
                             <p v-if="item.funding.length" class="mb-2">
                               <b>Funded by</b>: {{ item.funding.join(" | ") }}
+                            </p>
+
+                            <!-- NUMBER OF VIEWS -->
+                            <p v-if="item.views">
+                              <b>Views</b>: {{ item.views }}
                             </p>
                             <!-- <p class="mb-2">
                               <b>License</b>: {{ item.license }}
@@ -337,7 +352,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch, toNative } from "vue-facing-decorator";
+import { Component, Vue, toNative } from "vue-facing-decorator";
 import {
   MIN_YEAR,
   MAX_YEAR,
@@ -377,7 +392,7 @@ interface SortOption {
 
 const sortOptions: SortOption[] = [
   { key: "relevance", title: "Relevance", order: "asc" },
-  { key: "views", title: "Most Viewed", order: "asc" },
+  { key: "viewCount", title: "Most Viewed", order: "desc" },
   { key: "name", title: "Title", order: "asc" },
   { key: "creatorName", title: "First Author", order: "asc" },
   { key: "dateCreated", title: "Date Created", order: "asc" },
@@ -414,13 +429,14 @@ class CdSearchResults extends Vue {
       icon: "mdi-card-multiple-outline",
       urlLabel: EnumShortParams.CONTENT_TYPE,
       type: EnumFilterTypes.SELECT_MULTIPLE,
-      options: this._contentTypes.map((contentType: string) => {
-        return {
-          value: contentType,
-          label: contentTypeLabels[contentType],
-          logo: contentTypeLogos[contentType],
-        };
-      }),
+      // TODO
+      options: [
+        {
+          value: "",
+          label: "",
+          logo: "",
+        },
+      ],
     }),
     dataCoverage: new Filter({
       name: "dataCoverage",
@@ -566,12 +582,7 @@ class CdSearchResults extends Vue {
   route = useRoute();
   router = useRouter();
   EnumHistoryTypes = EnumHistoryTypes;
-
-  get sortOptions(): SortOption[] {
-    return this.searchQuery || this.isSomeFilterActive
-      ? sortOptions
-      : sortOptions.slice(1, sortOptions.length);
-  }
+  sortOptions = sortOptions;
 
   public get registeredFilters() {
     return Object.values(this.filter);
@@ -597,10 +608,6 @@ class CdSearchResults extends Vue {
 
   public get isSomeFilterActive() {
     return this.registeredFilters.some((f) => f.isActive());
-  }
-
-  private get _contentTypes() {
-    return Search.$state.contentTypes;
   }
 
   /** Search query parameters */
@@ -630,13 +637,7 @@ class CdSearchResults extends Vue {
     };
 
     // If sorting by a table column, use that sort
-    if (
-      (this.searchQuery || this.isSomeFilterActive) &&
-      this.sortTableBy[0]?.key === "views"
-    ) {
-      params.sortBy = this.sortOptions[0].key;
-      params.order = "asc";
-    } else if (this.sortTableBy[0]) {
+    if (this.sortTableBy[0]) {
       params.sortBy = this.sortTableBy[0].key;
       params.order = this.sortTableBy[0].order as string;
     }
@@ -705,19 +706,6 @@ class CdSearchResults extends Vue {
         type: "error",
       });
     }
-  }
-
-  @Watch("_contentTypes")
-  onContentTypesChanged() {
-    this.filter.contentType.options = this._contentTypes.map(
-      (contentType: string) => {
-        return {
-          value: contentType,
-          label: contentTypeLabels[contentType],
-          logo: contentTypeLogos[contentType],
-        };
-      },
-    );
   }
 
   async _onSearch() {

@@ -6,7 +6,6 @@ import { IResult, ISearchParams, ITypeaheadParams } from "@/types";
 export interface ISearchState {
   results: IResult[];
   contentTypes: string[];
-  isFetchingContentTypes: boolean;
 }
 
 export default class Search extends Model {
@@ -26,7 +25,6 @@ export default class Search extends Model {
     return {
       results: [],
       contentTypes: [],
-      isFetchingContentTypes: true,
     };
   }
 
@@ -107,27 +105,6 @@ export default class Search extends Model {
     return data;
   }
 
-  /** Fetches the list of content types and updates the state */
-  public static async fetchContentTypes(): Promise<void> {
-    const response: Response = await fetch(ENDPOINTS.contentTypes);
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch content types");
-    }
-
-    const contentTypes: string[] = await response.json();
-    if (contentTypes) {
-      this.commit((state) => {
-        state.contentTypes = contentTypes.filter(
-          (contentType) => contentType !== "CompositeResource",
-        );
-      });
-    }
-    this.commit((state) => {
-      state.isFetchingContentTypes = false;
-    });
-  }
-
   /** Transform raw result data from API into `IResult` shaped objects */
   private static _parseResult(rawResult: any): IResult {
     return {
@@ -153,6 +130,7 @@ export default class Search extends Model {
       contentType: rawResult.document[0].additionalType || "",
       sharingStatus: rawResult.document[0].creativeWorkStatus?.name || "",
       temporalCoverage: rawResult.document[0].temporalCoverage || undefined,
+      views: rawResult.document[0].viewCount,
       _paginationToken: rawResult.paginationToken,
     };
   }

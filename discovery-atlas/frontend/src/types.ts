@@ -28,6 +28,7 @@ export interface IResult {
   spatialCoverage: any;
   contentType: string;
   sharingStatus: string;
+  views: number;
   temporalCoverage?: { startDate: string, endDate: string }
   _showMore?: boolean; // Used to toggle 'show more...' button
   _paginationToken: string;

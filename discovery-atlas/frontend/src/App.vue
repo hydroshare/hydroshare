@@ -279,12 +279,6 @@ class App extends Vue {
         };
       },
     );
-
-    try {
-      Search.fetchContentTypes();
-    } catch (e) {
-      console.error("Failed to fetch content types", e);
-    }
   }
 
   beforeDestroy() {
