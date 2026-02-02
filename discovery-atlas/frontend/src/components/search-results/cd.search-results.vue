@@ -194,7 +194,7 @@
                           <div class="flex-grow-1">
                             <!-- CREATORS -->
                             <div class="d-flex">
-                              <b>Creators</b>:
+                              <b class="flex-shrink-0">Creators</b>:
                               <p
                                 class="mb-2 ml-1"
                                 v-html="
@@ -210,10 +210,20 @@
 
                             <!-- CONTRIBUTORS -->
                             <template v-if="item.contributors?.length">
-                              <p class="d-flex">
-                                <b>Contributors</b>:
-                                <p class="mb-2 ml-1" v-html="highlight(item, 'contributors', ' | ', 'contributor.name')"></p>
-                              </p>
+                              <div class="d-flex">
+                                <b class="flex-shrink-0">Contributors</b>:
+                                <p
+                                  class="mb-2 ml-1"
+                                  v-html="
+                                    highlight(
+                                      item,
+                                      'contributors',
+                                      ' | ',
+                                      'contributor.name',
+                                    )
+                                  "
+                                ></p>
+                              </div>
                             </template>
 
                             <!-- KEYWORDS -->
