@@ -6,6 +6,7 @@ import boto3
 from pymongo import MongoClient
 from django.conf import settings
 from urllib.parse import urlparse
+from hs_core.hydroshare import utils as hs_utils
 
 
 s3 = boto3.client('s3')
@@ -42,8 +43,9 @@ def collect_file_to_catalog(filepath: str):
                     # skip adding replaced resources to the catalog
                     return
 
-    metadata_json['url'] = f"https://beta.hydroshare.org/landing/{resource_id}"
-    metadata_json['identifier'][0] = f"https://beta.hydroshare.org/landing/{resource_id}"
+    base_url = hs_utils.current_site_url()
+    metadata_json['url'] = f"{base_url}/resource/{resource_id}"
+    metadata_json['identifier'][0] = f"{base_url}/resource/{resource_id}"
     metadata_json['_s3_filepath'] = filepath
     metadata_json['first_creator'] = (
         metadata_json['creator'][0]
