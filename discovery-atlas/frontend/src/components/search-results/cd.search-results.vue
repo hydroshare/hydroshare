@@ -210,12 +210,9 @@
 
                             <!-- CONTRIBUTORS -->
                             <template v-if="item.contributors?.length">
-                              <!-- TODO: highlight -->
-                              <p class="mb-2">
+                              <p class="d-flex">
                                 <b>Contributors</b>:
-                                <span v-for="contributor of item.contributors"
-                                  >{{ contributor }} |
-                                </span>
+                                <p class="mb-2 ml-1" v-html="highlight(item, 'contributors', ' | ', 'contributor.name')"></p>
                               </p>
                             </template>
 

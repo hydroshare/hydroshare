@@ -208,7 +208,7 @@ class SearchQuery(BaseModel):
 
     @property
     def stages(self):
-        highlightPaths = ['name', 'description', 'keywords', 'creator.name']
+        highlightPaths = ['name', 'description', 'keywords', 'creator.name', 'contributor.name']
         stages = []
         compound = {'filter': self._filters, 'must': self._must, 'should': []}
 
