@@ -1,7 +1,6 @@
 """
-Unit tests for Discovery Atlas search and typeahead API endpoints (issue #6196).
+Unit tests for Discovery Atlas search and typeahead API endpoints.
 Mocks MongoDB so tests run without a local Atlas container.
-Covers the many available query parameters for full coverage.
 """
 import json
 from unittest.mock import MagicMock, patch
