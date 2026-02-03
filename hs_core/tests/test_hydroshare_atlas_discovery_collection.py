@@ -106,6 +106,28 @@ class HydroshareAtlasDiscoveryCollectionTests(TestCase):
         stored = mock_collection.replaced["doc"]
         self.assertIn(version_label, [rel.get("name") for rel in stored.get("relations", [])])
 
+    def test_skips_resource_replaced_by_newer_version(self):
+        bucket = "test-bucket"
+        resource_id = "res-123"
+        dataset_key = f"{resource_id}/.hsjsonld/dataset_metadata.json"
+        filepath = f"{bucket}/{dataset_key}"
+
+        metadata = {
+            "identifier": [f"https://example.org/resource/{resource_id}"],
+            "url": f"https://example.org/resource/{resource_id}",
+            "creator": [{"name": "Alice"}],
+            "relations": [{"name": "This resource has been replaced by a newer version", "description": "obsolete"}],
+        }
+
+        mock_s3 = _MockS3({dataset_key: metadata})
+        mock_collection = _MockCollection()
+
+        with mock.patch.object(collector, "s3", mock_s3), \
+                mock.patch.object(collector, "hydroshare_atlas_db", _MockDB(mock_collection)):
+            collector.collect_file_to_catalog(filepath)
+
+        self.assertIsNone(mock_collection.replaced, "replaced-by-newer-version resources must not be written to the catalog")
+
     def test_content_types_from_haspart_includes_missing_additional_type(self):
         bucket = "test-bucket"
         resource_id = "res-abc"
