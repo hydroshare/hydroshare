@@ -24,7 +24,6 @@ class MinIOServiceAccounts(APIView):
         user = get_user(request)
 
         token, _ = Token.objects.get_or_create(user=user)
-        print(token.key)
         response_json = {"access_key": user.username, "secret_key": token.key}
         return Response(response_json, status=201)
 
