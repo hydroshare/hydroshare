@@ -3,8 +3,9 @@ from django.conf import settings
 from rest_framework.decorators import api_view
 from datetime import datetime
 from typing import Optional
+from bson.objectid import ObjectId
 from pymongo import MongoClient
-from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
+from pydantic import BaseModel, ValidationError, ValidationInfo, field_validator, model_validator
 from drf_yasg.utils import swagger_auto_schema
 from django.http import JsonResponse
 from drf_yasg import openapi
@@ -304,10 +305,19 @@ def convert_objectid(obj):
         return [convert_objectid(item) for item in obj]
     elif isinstance(obj, dict):
         return {k: convert_objectid(v) for k, v in obj.items()}
-    elif str(type(obj)) == "<class 'bson.objectid.ObjectId'>":
+    elif isinstance(obj, ObjectId):
         return str(obj)
     else:
         return obj
+
+
+def _get_int(value, default=None):
+    if value is None or value == '':
+        return default
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return default
 
 
 @swagger_auto_schema(
@@ -360,56 +370,69 @@ def convert_objectid(obj):
     ]
 )
 @api_view(["GET"])
-def search(request, term: Optional[str] = None,
-           sortBy: Optional[str] = None,
-           order: Optional[str] = None,
-           contentType: list[str] = [],
-           providerName: Optional[str] = None,
-           creatorName: Optional[str] = None,
-           keyword: Optional[str] = None,
-           dataCoverageStart: Optional[int] = None,
-           dataCoverageEnd: Optional[int] = None,
-           publishedStart: Optional[int] = None,
-           publishedEnd: Optional[int] = None,
-           dateCreatedStart: Optional[int] = None,
-           dateCreatedEnd: Optional[int] = None,
-           dateModifiedStart: Optional[int] = None,
-           dateModifiedEnd: Optional[int] = None,
-           hasPartName: Optional[str] = None,
-           isPartOfName: Optional[str] = None,
-           associatedMediaName: Optional[str] = None,
-           fundingGrantName: Optional[str] = None,
-           fundingFunderName: Optional[str] = None,
-           creativeWorkStatus: list[str] = [],
-           pageNumber: int = 1,
-           pageSize: int = 20,
-           paginationToken: Optional[str] = None):
-    search_query = SearchQuery(
-        term=term,
-        sortBy=sortBy,
-        order=order,
-        contentType=contentType,
-        providerName=providerName,
-        creatorName=creatorName,
-        keyword=keyword,
-        dataCoverageStart=dataCoverageStart,
-        dataCoverageEnd=dataCoverageEnd,
-        publishedStart=publishedStart,
-        publishedEnd=publishedEnd,
-        dateCreatedStart=dateCreatedStart,
-        dateCreatedEnd=dateCreatedEnd,
-        dateModifiedStart=dateModifiedStart,
-        dateModifiedEnd=dateModifiedEnd,
-        hasPartName=hasPartName,
-        isPartOfName=isPartOfName,
-        associatedMediaName=associatedMediaName,
-        fundingGrantName=fundingGrantName,
-        fundingFunderName=fundingFunderName,
-        creativeWorkStatus=creativeWorkStatus,
-        pageNumber=pageNumber,
-        pageSize=pageSize,
-        paginationToken=paginationToken
-    )
+def search(request):
+    get = request.GET
+    term = get.get('term')
+    sortBy = get.get('sortBy')
+    order = get.get('order')
+    contentType = get.getlist('contentType')
+    providerName = get.get('providerName') or None
+    creatorName = get.get('creatorName') or None
+    keyword = get.get('keyword') or None
+    dataCoverageStart = _get_int(get.get('dataCoverageStart'), None)
+    dataCoverageEnd = _get_int(get.get('dataCoverageEnd'), None)
+    publishedStart = _get_int(get.get('publishedStart'), None)
+    publishedEnd = _get_int(get.get('publishedEnd'), None)
+    dateCreatedStart = _get_int(get.get('dateCreatedStart'), None)
+    dateCreatedEnd = _get_int(get.get('dateCreatedEnd'), None)
+    dateModifiedStart = _get_int(get.get('dateModifiedStart'), None)
+    dateModifiedEnd = _get_int(get.get('dateModifiedEnd'), None)
+    hasPartName = get.get('hasPartName') or None
+    isPartOfName = get.get('isPartOfName') or None
+    associatedMediaName = get.get('associatedMediaName') or None
+    fundingGrantName = get.get('fundingGrantName') or None
+    fundingFunderName = get.get('fundingFunderName') or None
+    creativeWorkStatus = get.getlist('creativeWorkStatus')
+    _pn = _get_int(get.get('pageNumber'), None)
+    pageNumber = _pn if _pn is not None else 1
+    _ps = _get_int(get.get('pageSize'), None)
+    pageSize = _ps if _ps is not None else 20
+    paginationToken = get.get('paginationToken') or None
+
+    try:
+        search_query = SearchQuery(
+            term=term,
+            sortBy=sortBy,
+            order=order,
+            contentType=contentType,
+            providerName=providerName,
+            creatorName=creatorName,
+            keyword=keyword,
+            dataCoverageStart=dataCoverageStart,
+            dataCoverageEnd=dataCoverageEnd,
+            publishedStart=publishedStart,
+            publishedEnd=publishedEnd,
+            dateCreatedStart=dateCreatedStart,
+            dateCreatedEnd=dateCreatedEnd,
+            dateModifiedStart=dateModifiedStart,
+            dateModifiedEnd=dateModifiedEnd,
+            hasPartName=hasPartName,
+            isPartOfName=isPartOfName,
+            associatedMediaName=associatedMediaName,
+            fundingGrantName=fundingGrantName,
+            fundingFunderName=fundingFunderName,
+            creativeWorkStatus=creativeWorkStatus,
+            pageNumber=pageNumber,
+            pageSize=pageSize,
+            paginationToken=paginationToken
+        )
+    except ValidationError as e:
+        details = [
+            {'loc': list(err.get('loc', ())), 'msg': str(err.get('msg', '')), 'type': err.get('type')}
+            for err in e.errors()
+        ]
+        return JsonResponse({'error': 'Validation error', 'details': details}, status=400)
+
     stages = search_query.stages
     if not search_query.paginationToken:
         stages.append({"$skip": (search_query.pageNumber - 1) * search_query.pageSize})
@@ -435,7 +458,11 @@ def search(request, term: Optional[str] = None,
     ]
 )
 @api_view(["GET"])
-def typeahead(request, term: str, field: str = "term"):
+def typeahead(request, term: str = None, field: str = "term"):
+    term = term or request.GET.get('term')
+    field = request.GET.get('field', field)
+    if not term:
+        return JsonResponse({'error': 'term is required'}, status=400)
     search_paths = ['name', 'description', 'keywords', "creator.name"]
 
     if field == "creator":
@@ -466,7 +493,7 @@ def typeahead(request, term: str, field: str = "term"):
                 'contributor': 1,
                 'funding': 1,
                 'highlights': {'$meta': 'searchHighlights'},
-                '_id': 0,
+                '_id': 1,
             }
         },
     ]
