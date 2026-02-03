@@ -126,7 +126,10 @@ class HydroshareAtlasDiscoveryCollectionTests(TestCase):
                 mock.patch.object(collector, "hydroshare_atlas_db", _MockDB(mock_collection)):
             collector.collect_file_to_catalog(filepath)
 
-        self.assertIsNone(mock_collection.replaced, "replaced-by-newer-version resources must not be written to the catalog")
+        self.assertIsNone(
+            mock_collection.replaced,
+            "replaced-by-newer-version resources must not be written to the catalog",
+        )
 
     def test_content_types_from_haspart_includes_missing_additional_type(self):
         bucket = "test-bucket"
