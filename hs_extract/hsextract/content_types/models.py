@@ -52,8 +52,9 @@ class BaseMetadataObject:
     @property
     def resource_associated_media(self):
         if not self._resource_associated_media:
+            # file manifest is disabled, it is not needed for discovery at this time
             self._resource_associated_media = retrieve_file_manifest(
-                self.resource_contents_path)
+                self.resource_contents_path, enabled=False)
         return self._resource_associated_media
 
     @classmethod
