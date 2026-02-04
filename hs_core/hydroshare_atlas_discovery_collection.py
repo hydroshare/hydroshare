@@ -51,16 +51,17 @@ def collect_file_to_catalog(filepath: str):
         else None
     )
 
-    content_types = []
-    if "hasPart" in metadata_json:
-        for part in metadata_json['hasPart']:
-            part_key = '/'.join(urlparse(part['url']).path.split('/')[2:])
-            s3_response = s3.get_object(Bucket=bucket_name, Key=part_key)
-            s3_object_body = s3_response.get('Body')
-            content = s3_object_body.read()
-            json_dict = json.loads(content)
-            content_types.append(json_dict.get('additionalType'))
-        metadata_json['content_types'] = list(set(content_types))
+    # DISABLED FOR NOW: reading content types for discovery from db exported to user metadata
+    # content_types = []
+    # if "hasPart" in metadata_json:
+    #     for part in metadata_json['hasPart']:
+    #         part_key = '/'.join(urlparse(part['url']).path.split('/')[2:])
+    #         s3_response = s3.get_object(Bucket=bucket_name, Key=part_key)
+    #         s3_object_body = s3_response.get('Body')
+    #         content = s3_object_body.read()
+    #         json_dict = json.loads(content)
+    #         content_types.append(json_dict.get('additionalType'))
+    #     metadata_json['content_types'] = list(set(content_types))
 
     hydroshare_atlas_db["discovery"].find_one_and_replace({"_s3_filepath": metadata_json["_s3_filepath"]},
                                                           metadata_json, upsert=True)
