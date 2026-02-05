@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import unittest
 from urllib.parse import urlparse
 import uuid
@@ -10,7 +11,6 @@ from django.test import SimpleTestCase
 from pymongo import MongoClient
 
 from hs_core import hydroshare_atlas_discovery_collection as collector
-from hs_core.hydroshare import utils as hs_utils
 from hs_core.enums import RelationTypes
 from hs_core.models import Relation
 
@@ -296,7 +296,10 @@ class HydroshareAtlasDiscoveryCollectionIntegrationTests(SimpleTestCase):
             "creativeWorkStatus": {
                 "type": "DefinedTerm",
                 "name": "Discoverable",
-                "description": "The resource is discoverable and can be found through search engines or other discovery mechanisms",
+                "description": (
+                    "The resource is discoverable and can be found through search engines "
+                    "or other discovery mechanisms"
+                ),
             },
             "dateModified": "2026-02-02 05:18:25.686481+00:00",
             "funding": [],
@@ -314,7 +317,10 @@ class HydroshareAtlasDiscoveryCollectionIntegrationTests(SimpleTestCase):
             "hasPart": [{"type": "CreativeWork", "name": None, "description": None, "url": url} for url in has_parts],
             "isPartOf": [],
             "relation": [
-                "annotation=NoneType required=False default=None title='Relation' description='All other types of relations'"
+                (
+                    "annotation=NoneType required=False default=None title='Relation' "
+                    "description='All other types of relations'"
+                )
             ],
             "additionalProperty": None,
             "associatedMedia": [],
