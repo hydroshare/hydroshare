@@ -96,7 +96,8 @@ def workflow_metadata_extraction(file_object_path: str, file_size: int, file_upd
             # TODO: not all file deletes for content types will need metadata deleted but rather updated
             delete_metadata(md.content_type_md_path)
             delete_metadata(md.content_type_md_jsonld_path)
-    write_resource_jsonld_metadata(md)
+    # Disable resource jsonld write for regular and content type files
+    # write_resource_jsonld_metadata(md)
 
 
 def refresh_resource_metadata(bucket: str, resource_id: str) -> None:
