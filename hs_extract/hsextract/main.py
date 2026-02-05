@@ -25,18 +25,18 @@ def write_resource_jsonld_metadata(md: BaseMetadataObject) -> bool:
     user_json = load_metadata(md.user_metadata_path)
 
     # generate content type hasPart relationships
-    content_type_metadata_paths: list[str] = [file for file in find(md.resource_md_jsonld_path)
-                                              if file != f"{md.resource_md_jsonld_path}/dataset_metadata.json"]
+    # content_type_metadata_paths: list[str] = [file for file in find(md.resource_md_jsonld_path)
+    #                                           if file != f"{md.resource_md_jsonld_path}/dataset_metadata.json"]
     has_parts = []
-    for file in content_type_metadata_paths:
-        content_type_metadata = load_metadata(file)
-
-        has_part = HasPart(  # TODO: probably need content type here as well for driving the landing page
-            name=content_type_metadata.get("name", None),
-            description=content_type_metadata.get("description", None),
-            url=f"{os.environ['AWS_S3_ENDPOINT_URL']}/{file}",
-        )
-        has_parts.append(has_part.model_dump(exclude_none=True))
+    # for file in content_type_metadata_paths:
+    #     content_type_metadata = load_metadata(file)
+    #
+    #     has_part = HasPart(  # TODO: probably need content type here as well for driving the landing page
+    #         name=content_type_metadata.get("name", None),
+    #         description=content_type_metadata.get("description", None),
+    #         url=f"{os.environ['AWS_S3_ENDPOINT_URL']}/{file}",
+    #     )
+    #     has_parts.append(has_part.model_dump(exclude_none=True))
 
     # Combine system metadata, user metadata, hasPart, and associatedMedia (join arrays)
     combined_metadata = {**system_json, **user_json}
