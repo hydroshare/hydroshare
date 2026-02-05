@@ -131,23 +131,27 @@ class AtlasIntegrationBase(HSRESTTestCase):
             raise RuntimeError("Seed documents not found in collection after insert")
 
         for _ in range(60):
-            try:
-                res = list(cls.collection.aggregate([
-                    {
-                        "$search": {
-                            "index": "fuzzy_search",
-                            "query": {"text": {"path": ["name", "keywords"], "query": cls.seed_token}},
-                            "returnStoredSource": True,
-                        }
-                    },
-                    {"$limit": 10},
-                ]))
-                names = {doc.get("name") for doc in res}
-                if targets.issubset(names):
-                    return
-            except Exception:
-                pass
+            res = list(cls.collection.aggregate([
+                {
+                    "$search": {
+                        "index": "fuzzy_search",
+                        "text": {
+                            "query": cls.seed_token,
+                            "path": ["name", "keywords"],
+                        },
+                        "returnStoredSource": True,
+                    }
+                },
+                {"$limit": 10},
+            ]))
+            names = {doc.get("name") for doc in res}
+            if targets.issubset(names):
+                return
             time.sleep(1)
+        raise RuntimeError(
+            f"Seed docs not searchable in Atlas within 60s for token={cls.seed_token}. "
+            "Index 'fuzzy_search' may be missing or indexing is delayed."
+        )
 
 
 class TestDiscoveryAtlasSearchIntegration(AtlasIntegrationBase):
@@ -260,7 +264,7 @@ class TestDiscoveryAtlasSearchValidation(HSRESTTestCase):
         data = json.loads(response.content.decode())
         self.assertEqual(data.get("error"), "Validation error")
         msgs = [d.get("msg") for d in data.get("details", [])]
-        self.assertTrue(any("pageNumber must be greater than 0" in msg for msg in msgs))
+        self.assertIn("Value error, pageNumber must be greater than 0", msgs)
 
     def test_search_invalid_page_size_returns_400(self):
         response = self.client.get(reverse("discover-hsapi-search") + "?pageSize=-1")
@@ -268,7 +272,7 @@ class TestDiscoveryAtlasSearchValidation(HSRESTTestCase):
         data = json.loads(response.content.decode())
         self.assertEqual(data.get("error"), "Validation error")
         msgs = [d.get("msg") for d in data.get("details", [])]
-        self.assertTrue(any("pageSize must be greater than 0" in msg for msg in msgs))
+        self.assertIn("Value error, pageSize must be greater than 0", msgs)
 
     def test_search_invalid_date_range_returns_400(self):
         response = self.client.get(
@@ -279,7 +283,7 @@ class TestDiscoveryAtlasSearchValidation(HSRESTTestCase):
         data = json.loads(response.content.decode())
         self.assertEqual(data.get("error"), "Validation error")
         msgs = [d.get("msg") for d in data.get("details", [])]
-        self.assertTrue(any("dateCreatedEnd must be greater or equal to dateCreatedStart" in msg for msg in msgs))
+        self.assertIn("Value error, dateCreatedEnd must be greater or equal to dateCreatedStart", msgs)
 
     def test_search_invalid_published_range_returns_400(self):
         response = self.client.get(
@@ -290,7 +294,7 @@ class TestDiscoveryAtlasSearchValidation(HSRESTTestCase):
         data = json.loads(response.content.decode())
         self.assertEqual(data.get("error"), "Validation error")
         msgs = [d.get("msg") for d in data.get("details", [])]
-        self.assertTrue(any("publishedEnd must be greater or equal to publishedStart" in msg for msg in msgs))
+        self.assertIn("Value error, publishedEnd must be greater or equal to publishedStart", msgs)
 
     def test_search_invalid_modified_range_returns_400(self):
         response = self.client.get(
@@ -301,7 +305,7 @@ class TestDiscoveryAtlasSearchValidation(HSRESTTestCase):
         data = json.loads(response.content.decode())
         self.assertEqual(data.get("error"), "Validation error")
         msgs = [d.get("msg") for d in data.get("details", [])]
-        self.assertTrue(any("dateModifiedEnd must be greater or equal to dateModifiedStart" in msg for msg in msgs))
+        self.assertIn("Value error, dateModifiedEnd must be greater or equal to dateModifiedStart", msgs)
 
     def test_search_invalid_data_coverage_range_returns_400(self):
         response = self.client.get(
@@ -312,7 +316,7 @@ class TestDiscoveryAtlasSearchValidation(HSRESTTestCase):
         data = json.loads(response.content.decode())
         self.assertEqual(data.get("error"), "Validation error")
         msgs = [d.get("msg") for d in data.get("details", [])]
-        self.assertTrue(any("dataCoverageEnd must be greater or equal to dataCoverageStart" in msg for msg in msgs))
+        self.assertIn("Value error, dataCoverageEnd must be greater or equal to dataCoverageStart", msgs)
 
     def test_search_invalid_year_returns_400(self):
         response = self.client.get(reverse("discover-hsapi-search") + "?dateCreatedStart=0")
@@ -320,7 +324,7 @@ class TestDiscoveryAtlasSearchValidation(HSRESTTestCase):
         data = json.loads(response.content.decode())
         self.assertEqual(data.get("error"), "Validation error")
         msgs = [d.get("msg") for d in data.get("details", [])]
-        self.assertTrue(any("dateCreatedStart is not a valid year" in msg for msg in msgs))
+        self.assertIn("Value error, dateCreatedStart is not a valid year", msgs)
 
 
 class TestDiscoveryAtlasTypeaheadIntegration(AtlasIntegrationBase):
