@@ -2,7 +2,6 @@ import json
 import logging
 import os
 import time
-import unittest
 
 import boto3
 from django.conf import settings
@@ -53,40 +52,27 @@ class TestAtlasDiscoveryE2E(TransactionTestCase):
         cls._orig_s3 = collector.s3
         cls._orig_db = collector.hydroshare_atlas_db
 
-        allow_skip = os.environ.get("ALLOW_ATLAS_INTEGRATION_SKIP", "").strip() == "1"
         s3_endpoint = getattr(settings, "AWS_S3_ENDPOINT_URL", None) or os.getenv("AWS_ENDPOINT_URL")
         access_key = getattr(settings, "AWS_S3_ACCESS_KEY_ID", None) or os.getenv("AWS_ACCESS_KEY_ID")
         secret_key = getattr(settings, "AWS_S3_SECRET_ACCESS_KEY", None) or os.getenv("AWS_SECRET_ACCESS_KEY")
 
-        if not s3_endpoint and allow_skip:
-            raise unittest.SkipTest("AWS_S3_ENDPOINT_URL not configured; ALLOW_ATLAS_INTEGRATION_SKIP=1")
         if not s3_endpoint:
             raise AssertionError(
                 "AWS_S3_ENDPOINT_URL/AWS_ENDPOINT_URL is not configured; required for E2E discovery tests"
             )
 
-        try:
-            cls.s3_client = boto3.client(
-                "s3",
-                endpoint_url=s3_endpoint,
-                aws_access_key_id=access_key,
-                aws_secret_access_key=secret_key,
-            )
-        except Exception as exc:
-            if allow_skip:
-                raise unittest.SkipTest(f"Cannot create S3 client: {exc}")
-            raise
+        cls.s3_client = boto3.client(
+            "s3",
+            endpoint_url=s3_endpoint,
+            aws_access_key_id=access_key,
+            aws_secret_access_key=secret_key,
+        )
 
-        try:
-            cls.mongo_client = MongoClient(
-                settings.ATLAS_CONNECTION_URL, serverSelectionTimeoutMS=3000
-            )
-            cls.mongo_client.admin.command("ping")
-            cls.discovery_collection = cls.mongo_client["hydroshare"]["discovery"]
-        except Exception as exc:
-            if allow_skip:
-                raise unittest.SkipTest(f"Cannot connect to MongoDB: {exc}")
-            raise
+        cls.mongo_client = MongoClient(
+            settings.ATLAS_CONNECTION_URL, serverSelectionTimeoutMS=3000
+        )
+        cls.mongo_client.admin.command("ping")
+        cls.discovery_collection = cls.mongo_client["hydroshare"]["discovery"]
 
         collector.s3 = boto3.client(
             "s3",
@@ -211,17 +197,7 @@ class TestAtlasDiscoveryE2E(TransactionTestCase):
         self.assertIn("GeographicRaster", doc.get("content_types", []))
 
     def test_access_toggle_removes_from_discovery(self):
-        """Discoverable -> doc appears; not discoverable -> doc removed. Skips when Haystack delete path unavailable."""
-        if getattr(settings, "DISABLE_HAYSTACK", False):
-            raise unittest.SkipTest("Haystack disabled; delete path not executed")
-        connections = getattr(settings, "HAYSTACK_CONNECTIONS", None) or {}
-        if not connections:
-            raise unittest.SkipTest("No Haystack connections; delete path not executed")
-        try:
-            from haystack.routers import DefaultRouter
-        except ImportError:
-            raise unittest.SkipTest("Haystack routers unavailable; delete path not executed")
-
+        """Discoverable -> doc appears; not discoverable -> doc removed."""
         with open("hs_core/tests/data/test.txt", "rb") as f:
             res = hydroshare.create_resource(
                 "CompositeResource",
@@ -232,9 +208,6 @@ class TestAtlasDiscoveryE2E(TransactionTestCase):
                 metadata=[{"description": {"abstract": "Toggle test"}}],
             )
         self.resources_to_delete.append(res.short_id)
-
-        if not DefaultRouter().for_write(instance=res):
-            raise unittest.SkipTest("No Haystack backends; delete path not executed")
 
         self._stage_hsjsonld(res, has_part_parts=[{"additionalType": "Document"}])
         res.set_discoverable(True, user=self.user)
