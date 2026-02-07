@@ -102,6 +102,10 @@ class AtlasIntegrationBase(HSRESTTestCase):
             keywords = list(doc.get("keywords") or [])
             keywords.append(cls.test_tag)
             doc["keywords"] = keywords
+            if doc.get("name") in (FIXTURE_NAME_HYDROTOPS, FIXTURE_NAME_MODFLOW):
+                creators = list(doc.get("creator") or [])
+                creators.append({"type": "Person", "name": cls.test_tag})
+                doc["creator"] = creators
         cls.collection.delete_many({"atlas_test_tag": cls.test_tag})
         cls.collection.insert_many(documents)
 
@@ -130,10 +134,10 @@ class AtlasIntegrationBase(HSRESTTestCase):
 
 class TestDiscoveryAtlasSearchIntegration(AtlasIntegrationBase):
     def test_search_returns_results_for_fixture_term(self):
-        term = f"{FIXTURE_TERM_HYDROTOPS} {self.test_tag}"
+        term = FIXTURE_TERM_HYDROTOPS
         response = self.client.get(
             reverse("discover-hsapi-search"),
-            data={"term": term, "sortBy": "name", "order": "asc", "pageSize": 10},
+            data={"term": term, "keyword": self.test_tag, "sortBy": "name", "order": "asc", "pageSize": 50},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
@@ -141,10 +145,10 @@ class TestDiscoveryAtlasSearchIntegration(AtlasIntegrationBase):
         self.assertIn(FIXTURE_NAME_HYDROTOPS, names)
 
     def test_search_returns_results_for_second_fixture_term(self):
-        term = f"{FIXTURE_TERM_MODFLOW} {self.test_tag}"
+        term = FIXTURE_TERM_MODFLOW
         response = self.client.get(
             reverse("discover-hsapi-search"),
-            data={"term": term, "sortBy": "name", "order": "asc", "pageSize": 10},
+            data={"term": term, "keyword": self.test_tag, "sortBy": "name", "order": "asc", "pageSize": 50},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
@@ -152,22 +156,39 @@ class TestDiscoveryAtlasSearchIntegration(AtlasIntegrationBase):
         self.assertIn(FIXTURE_NAME_MODFLOW, names)
 
     def test_search_sort_and_pagination(self):
-        term = f"{FIXTURE_TERM_HYDROTOPS} {self.test_tag}"
-        response = self.client.get(
+        term = FIXTURE_TERM_HYDROTOPS
+        all_resp = self.client.get(
             reverse("discover-hsapi-search"),
-            data={"term": term, "sortBy": "name", "order": "asc", "pageSize": 5, "pageNumber": 1},
+            data={"term": term, "keyword": self.test_tag, "sortBy": "name", "order": "asc", "pageSize": 50},
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = json.loads(response.content.decode())
-        self.assertIsInstance(data, list)
-        self.assertLessEqual(len(data), 5)
-        names = [item.get("name") for item in data if item.get("name")]
-        self.assertIn(FIXTURE_NAME_HYDROTOPS, names, "Expected fixture doc in sorted results")
+        self.assertEqual(all_resp.status_code, status.HTTP_200_OK)
+        all_data = json.loads(all_resp.content.decode())
+        all_names = [item.get("name") for item in all_data if item.get("name")]
+        expected_page1 = all_names[:5]
+        expected_page2 = all_names[5:10]
+
+        page1 = self.client.get(
+            reverse("discover-hsapi-search"),
+            data={"term": term, "keyword": self.test_tag, "sortBy": "name", "order": "asc", "pageSize": 5, "pageNumber": 1},
+        )
+        page2 = self.client.get(
+            reverse("discover-hsapi-search"),
+            data={"term": term, "keyword": self.test_tag, "sortBy": "name", "order": "asc", "pageSize": 5, "pageNumber": 2},
+        )
+        self.assertEqual(page1.status_code, status.HTTP_200_OK)
+        self.assertEqual(page2.status_code, status.HTTP_200_OK)
+        data1 = json.loads(page1.content.decode())
+        data2 = json.loads(page2.content.decode())
+        names1 = [item.get("name") for item in data1 if item.get("name")]
+        names2 = [item.get("name") for item in data2 if item.get("name")]
+        self.assertEqual(names1, expected_page1)
+        self.assertEqual(names2, expected_page2)
+        self.assertTrue(set(names1).isdisjoint(set(names2)), "Pagination should not repeat items across pages")
 
     def test_search_content_type_filter(self):
         response = self.client.get(
             reverse("discover-hsapi-search"),
-            data={"term": f"{FIXTURE_TERM_HYDROTOPS} {self.test_tag}", "contentType": "CompositeResource"},
+            data={"term": f"{FIXTURE_TERM_HYDROTOPS} {self.test_tag}", "keyword": self.test_tag, "contentType": "CompositeResource"},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
@@ -190,6 +211,7 @@ class TestDiscoveryAtlasSearchIntegration(AtlasIntegrationBase):
             reverse("discover-hsapi-search"),
             data={
                 "term": f"{FIXTURE_TERM_HYDROTOPS} {self.test_tag}",
+                "keyword": self.test_tag,
                 "creatorName": FIXTURE_CREATOR_TOPKAPI,
             },
         )
@@ -210,7 +232,7 @@ class TestDiscoveryAtlasSearchIntegration(AtlasIntegrationBase):
         response = self.client.get(
             reverse("discover-hsapi-search"),
             data={
-                "term": f"{FIXTURE_TERM_HYDROTOPS} {self.test_tag}",
+                "term": self.test_tag,
                 "keyword": FIXTURE_KEYWORD_HYDROLOGIC,
             },
         )
@@ -231,6 +253,7 @@ class TestDiscoveryAtlasSearchIntegration(AtlasIntegrationBase):
             reverse("discover-hsapi-search"),
             data={
                 "term": f"{FIXTURE_TERM_HYDROTOPS} {self.test_tag}",
+                "keyword": self.test_tag,
                 "providerName": FIXTURE_PROVIDER,
             },
         )
@@ -251,6 +274,7 @@ class TestDiscoveryAtlasSearchIntegration(AtlasIntegrationBase):
             reverse("discover-hsapi-search"),
             data={
                 "term": f"{FIXTURE_TERM_HYDROTOPS} {self.test_tag}",
+                "keyword": self.test_tag,
                 "dateCreatedStart": FIXTURE_YEAR_CREATED,
                 "dateCreatedEnd": FIXTURE_YEAR_CREATED,
             },
@@ -362,7 +386,7 @@ class TestDiscoveryAtlasTypeaheadIntegration(AtlasIntegrationBase):
     def test_typeahead_creator_field(self):
         response = self.client.get(
             reverse("discover-hsapi-typeahead"),
-            data={"term": f"topkapi {self.test_tag}", "field": "creator"},
+            data={"term": self.test_tag, "field": "creator"},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
@@ -372,7 +396,7 @@ class TestDiscoveryAtlasTypeaheadIntegration(AtlasIntegrationBase):
     def test_typeahead_creator_field_valocchi(self):
         response = self.client.get(
             reverse("discover-hsapi-typeahead"),
-            data={"term": f"Valocchi {self.test_tag}", "field": "creator"},
+            data={"term": self.test_tag, "field": "creator"},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
