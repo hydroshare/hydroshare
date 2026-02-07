@@ -1,0 +1,3911 @@
+[
+  {
+    "_id": {
+      "$oid": "69374df6fc32d6a624865626"
+    },
+    "context": "https://hydroshare.org/schema",
+    "type": "ScientificDataset",
+    "additionalType": "CompositeResource",
+    "name": "This is terrain files prepared using HydroTops for  sanmarcosterrain",
+    "description": "This is terrain files prepared using HydroTops",
+    "url": "https://beta.hydroshare.org/landing/b6e1de01676447049ba09119e5aa9999",
+    "identifier": [
+      "https://beta.hydroshare.org/landing/b6e1de01676447049ba09119e5aa9999"
+    ],
+    "creator": [
+      {
+        "type": "Person",
+        "email": "dahal.prasanna@gmail.com",
+        "identifier": null,
+        "affiliation": null,
+        "name": "topkapi app"
+      }
+    ],
+    "dateCreated": {
+      "$date": "2017-11-13T05:10:37.189Z"
+    },
+    "keywords": [
+      "Hydrologic modeling",
+      "USU",
+      "HydroTops"
+    ],
+    "license": {
+      "type": "CreativeWork",
+      "name": "This resource is shared under the Creative Commons Attribution CC BY.",
+      "description": null,
+      "url": "http://creativecommons.org/licenses/by/4.0/"
+    },
+    "provider": {
+      "type": "Organization",
+      "url": "https://www.hydroshare.org/",
+      "address": null,
+      "name": "HydroShare"
+    },
+    "contributor": [],
+    "publisher": null,
+    "datePublished": null,
+    "subjectOf": null,
+    "version": null,
+    "inLanguage": "eng",
+    "creativeWorkStatus": {
+      "type": "DefinedTerm",
+      "name": "Public",
+      "description": "The resource is publicly accessible and can be viewed or downloaded by anyone"
+    },
+    "dateModified": {
+      "$date": "2017-11-13T05:11:21.155Z"
+    },
+    "funding": [],
+    "temporalCoverage": null,
+    "spatialCoverage": null,
+    "hasPart": [
+      {
+        "type": "CreativeWork",
+        "url": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/.hsjsonld/DEM84.tif.json"
+      },
+      {
+        "type": "CreativeWork",
+        "url": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/.hsjsonld/DEM84_prj100.tif.json"
+      },
+      {
+        "type": "CreativeWork",
+        "url": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/.hsjsonld/OutletProj.shp.json"
+      },
+      {
+        "type": "CreativeWork",
+        "url": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/.hsjsonld/ad8.tif.json"
+      },
+      {
+        "type": "CreativeWork",
+        "url": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/.hsjsonld/corrected_outlet.shp.json"
+      },
+      {
+        "type": "CreativeWork",
+        "url": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/.hsjsonld/fel.tif.json"
+      },
+      {
+        "type": "CreativeWork",
+        "url": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/.hsjsonld/mannings_n.tif.json"
+      },
+      {
+        "type": "CreativeWork",
+        "url": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/.hsjsonld/mask.tif.json"
+      },
+      {
+        "type": "CreativeWork",
+        "url": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/.hsjsonld/mask_wgs.tif.json"
+      },
+      {
+        "type": "CreativeWork",
+        "url": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/.hsjsonld/nlcdProj.tif.json"
+      },
+      {
+        "type": "CreativeWork",
+        "url": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/.hsjsonld/p.tif.json"
+      },
+      {
+        "type": "CreativeWork",
+        "url": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/.hsjsonld/sd8.tif.json"
+      },
+      {
+        "type": "CreativeWork",
+        "url": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/.hsjsonld/slope.tif.json"
+      },
+      {
+        "type": "CreativeWork",
+        "url": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/.hsjsonld/src.tif.json"
+      },
+      {
+        "type": "CreativeWork",
+        "url": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/.hsjsonld/watershed.shp.json"
+      }
+    ],
+    "isPartOf": [],
+    "relation": [
+      "annotation=NoneType required=False default=None title='Relation' description='All other types of relations'"
+    ],
+    "additionalProperty": null,
+    "associatedMedia": [
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/data/contents/DEM84.tif",
+        "encodingFormat": "image/tiff",
+        "contentSize": "66.199 KB",
+        "name": "DEM84.tif",
+        "sha256": "b9a9ae7ad97c2e2592ccc6e33c586d4f"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/data/contents/DEM84_prj100.tif",
+        "encodingFormat": "image/tiff",
+        "contentSize": "142.429 KB",
+        "name": "DEM84_prj100.tif",
+        "sha256": "0a9cb9c21ef3806062ccfe3ef4b7894d"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/data/contents/OutletProj.dbf",
+        "encodingFormat": "application/x-dbase",
+        "contentSize": "0.098 KB",
+        "name": "OutletProj.dbf",
+        "sha256": "0e1fec2fcd831841509e9c331fb7f3b9"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/data/contents/OutletProj.prj",
+        "encodingFormat": "text/plain",
+        "contentSize": "0.457 KB",
+        "name": "OutletProj.prj",
+        "sha256": "7b1417266111698a829b79e9ccc43ff2"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/data/contents/OutletProj.shp",
+        "encodingFormat": "application/x-esri-shapefile",
+        "contentSize": "0.128 KB",
+        "name": "OutletProj.shp",
+        "sha256": "87bb7dbd3c75d7bc8f238303ed77beb7"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/data/contents/OutletProj.shx",
+        "encodingFormat": "application/x-esri-shx",
+        "contentSize": "0.108 KB",
+        "name": "OutletProj.shx",
+        "sha256": "ed2fcbde3721ecd048437e60feb5ffc1"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/data/contents/ad8.tif",
+        "encodingFormat": "image/tiff",
+        "contentSize": "282.743 KB",
+        "name": "ad8.tif",
+        "sha256": "63aa2adcbe4ceb299345aabc477e13e3"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/data/contents/corrected_outlet.dbf",
+        "encodingFormat": "application/x-dbase",
+        "contentSize": "0.116 KB",
+        "name": "corrected_outlet.dbf",
+        "sha256": "43f724ded22806e797e82471f46e295c"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/data/contents/corrected_outlet.prj",
+        "encodingFormat": "text/plain",
+        "contentSize": "0.481 KB",
+        "name": "corrected_outlet.prj",
+        "sha256": "cfc29da03ba50f0b72afa693eb1ea8e6"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/data/contents/corrected_outlet.shp",
+        "encodingFormat": "application/x-esri-shapefile",
+        "contentSize": "0.128 KB",
+        "name": "corrected_outlet.shp",
+        "sha256": "9bdd916d7ae74f4fde8c95970731490d"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/data/contents/corrected_outlet.shx",
+        "encodingFormat": "application/x-esri-shx",
+        "contentSize": "0.108 KB",
+        "name": "corrected_outlet.shx",
+        "sha256": "75f8b6b53db40b6c1cf9790e9cbc4712"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/data/contents/fel.tif",
+        "encodingFormat": "image/tiff",
+        "contentSize": "282.743 KB",
+        "name": "fel.tif",
+        "sha256": "da030aed1c7e2ed7e3bd7b587e6cbd1a"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/data/contents/inputs_qpVMmhF.txt",
+        "encodingFormat": "text/plain",
+        "contentSize": "0.526 KB",
+        "name": "inputs_qpVMmhF.txt",
+        "sha256": "80b3c20e120499c01372cc122a26e59b"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/data/contents/mannings_n.tif",
+        "encodingFormat": "image/tiff",
+        "contentSize": "283.688 KB",
+        "name": "mannings_n.tif",
+        "sha256": "c15c1205b1e87779c71e2947df650346"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/topkapiapp/b6e1de01676447049ba09119e5aa9999/data/contents/mask.tif",
+        "encodingFormat": "image/tiff",
+        "contentSize": "283.688 KB",
+        "name": "mask.tif",
+        "sha256": "0374b5da387ccf9affc4ee63ee420932"
+      }
+    ],
+    "citation": [
+      "app, t. (2017). This is terrain files prepared using HydroTops for  sanmarcosterrain, HydroShare, http://www.hydroshare.org/resource/b6e1de01676447049ba09119e5aa9999"
+    ],
+    "coordinates": null,
+    "includedInDataCatalog": null,
+    "sourceOrganization": null,
+    "sharing_status": null,
+    "view_count": 2920,
+    "additional_metadata": {},
+    "relations": [],
+    "_s3_filepath": "topkapiapp/b6e1de01676447049ba09119e5aa9999/.hsjsonld/dataset_metadata.json",
+    "first_creator": {
+      "type": "Person",
+      "email": "dahal.prasanna@gmail.com",
+      "identifier": null,
+      "affiliation": null,
+      "name": "topkapi app"
+    },
+    "content_types": [
+      "GeographicRaster",
+      "GeographicFeature"
+    ]
+  },
+  {
+    "_id": {
+      "$oid": "6938958efc32d6a624865628"
+    },
+    "context": "https://hydroshare.org/schema",
+    "type": "ScientificDataset",
+    "additionalType": "CompositeResource",
+    "name": "Interactive MODFLOW simulation to study impact of pumping on streamflow",
+    "description": "This resource contains web links and related publications.  A simple numerical model of groundwater flow (using MODFLOW) is set up as a web application.  Users can interact with the model through a web browser and can study how groundwater pumping affects streamflow and wetlands.  Further information is at: Hu, Y., Valocchi, A.J., Lindgren, S.A., Ramos, E.A. and Byrd, R.A. (2015), Groundwater Modeling with MODFLOW as a Web Application. Groundwater, 53: 834-835. doi:10.1111/gwat.12372 \r\n\r\nThe model can be used in high-school earth science curricula and by the general public.  Teacher lesson plans are available through NAGT -National Association of Geoscience Teachers. See: https://nagt.org/nagt/teaching_resources/teachingmaterials/159251.html",
+    "url": "https://beta.hydroshare.org/landing/072baaf12e41426c9d26478ccdb2e4d4",
+    "identifier": [
+      "https://beta.hydroshare.org/landing/072baaf12e41426c9d26478ccdb2e4d4"
+    ],
+    "creator": [
+      {
+        "type": "Person",
+        "email": "valocchi@illinois.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "University of Illinois at Urbana-Champaign"
+        },
+        "name": "Valocchi, Albert"
+      }
+    ],
+    "dateCreated": {
+      "$date": "2020-06-06T02:50:52.846Z"
+    },
+    "keywords": [
+      "Education",
+      "streamflow depletion",
+      "MODFLOW",
+      "groundwater"
+    ],
+    "license": {
+      "type": "CreativeWork",
+      "name": "This resource is shared under the Creative Commons Attribution CC BY.",
+      "description": null,
+      "url": "http://creativecommons.org/licenses/by/4.0/"
+    },
+    "provider": {
+      "type": "Organization",
+      "url": "https://www.hydroshare.org/",
+      "address": null,
+      "name": "HydroShare"
+    },
+    "contributor": [],
+    "publisher": null,
+    "datePublished": null,
+    "subjectOf": null,
+    "version": null,
+    "inLanguage": "eng",
+    "creativeWorkStatus": {
+      "type": "DefinedTerm",
+      "name": "Public",
+      "description": "The resource is publicly accessible and can be viewed or downloaded by anyone"
+    },
+    "dateModified": {
+      "$date": "2020-07-27T19:02:42.125Z"
+    },
+    "funding": [
+      {
+        "type": "Grant",
+        "description": null,
+        "identifier": "0943627",
+        "funder": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "National Science Foundation"
+        },
+        "name": "National Science Foundation"
+      }
+    ],
+    "temporalCoverage": null,
+    "spatialCoverage": null,
+    "hasPart": [],
+    "isPartOf": [
+      {
+        "type": "CreativeWork",
+        "name": "The content of this resource is derived from",
+        "description": "Yao Hu, Albert J. Valocchi, Samantha A. Lindgren,  Evan A. Ramos,  Rebecca A. Byrd. Groundwater Modeling with MODFLOW as a Web Application, Groundwater, 2015",
+        "url": "https://doi.org/10.1111/gwat.12372"
+      },
+      {
+        "type": "CreativeWork",
+        "name": null,
+        "description": "Ward, A., S. Herzog, J. Bales, R. Barnes, M. Ross, A. Jefferson, N. Basu, L. Yoder, T. Covino, E. Habib, J. Maertens (2020). Educational Resources for Hydrology & Water Resources, HydroShare",
+        "url": "http://www.hydroshare.org/resource/ad177996d0f44ac590fa3c621361a271"
+      },
+      {
+        "type": "CreativeWork",
+        "name": null,
+        "description": "Ward, A., S. Herzog, J. Bales, R. Barnes, M. Ross, L. Yoder, N. Basu, A. Jefferson, E. Habib, T. Covino, J. Maertens (2021). Educational Resources for Hydrology & Water Resources, HydroShare",
+        "url": "http://www.hydroshare.org/resource/148b1ce4e308427ebf58379d48a17b91"
+      }
+    ],
+    "relation": [
+      "annotation=NoneType required=False default=None title='Relation' description='All other types of relations'"
+    ],
+    "additionalProperty": null,
+    "associatedMedia": [
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/valocchi/072baaf12e41426c9d26478ccdb2e4d4/data/contents/2015_Hu_et_al-Groundwater_ModflowWebApp.pdf",
+        "encodingFormat": "application/pdf",
+        "contentSize": "605.565 KB",
+        "name": "2015_Hu_et_al-Groundwater_ModflowWebApp.pdf",
+        "sha256": "151091e2435e95004a355397864907e7"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/valocchi/072baaf12e41426c9d26478ccdb2e4d4/data/contents/interactive_modflow_model.url",
+        "encodingFormat": ".url",
+        "contentSize": "0.06 KB",
+        "name": "interactive_modflow_model.url",
+        "sha256": "4725247e3fee7e3c9f635639d3e7197f"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/valocchi/072baaf12e41426c9d26478ccdb2e4d4/data/contents/interactive_modflow_model_meta.xml",
+        "encodingFormat": "application/xml",
+        "contentSize": "1.218 KB",
+        "name": "interactive_modflow_model_meta.xml",
+        "sha256": "015104b8f9a327975091c1ea5f05bea6"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/valocchi/072baaf12e41426c9d26478ccdb2e4d4/data/contents/interactive_modflow_model_resmap.xml",
+        "encodingFormat": "application/xml",
+        "contentSize": "4.037 KB",
+        "name": "interactive_modflow_model_resmap.xml",
+        "sha256": "7a829629a1b7131eadafc640d9fec148"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/valocchi/072baaf12e41426c9d26478ccdb2e4d4/data/contents/nagt_-_how_many_people_can_the_aquifer_support.url",
+        "encodingFormat": ".url",
+        "contentSize": "0.094 KB",
+        "name": "nagt_-_how_many_people_can_the_aquifer_support.url",
+        "sha256": "6386d27d5ff53fd19d943722a5f551a1"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/valocchi/072baaf12e41426c9d26478ccdb2e4d4/data/contents/nagt_-_how_many_people_can_the_aquifer_support_meta.xml",
+        "encodingFormat": "application/xml",
+        "contentSize": "1.26 KB",
+        "name": "nagt_-_how_many_people_can_the_aquifer_support_meta.xml",
+        "sha256": "f6ac26043a90ba6fba93b90385921b5b"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/valocchi/072baaf12e41426c9d26478ccdb2e4d4/data/contents/nagt_-_how_many_people_can_the_aquifer_support_resmap.xml",
+        "encodingFormat": "application/xml",
+        "contentSize": "4.31 KB",
+        "name": "nagt_-_how_many_people_can_the_aquifer_support_resmap.xml",
+        "sha256": "8d37cf1eef597c6fa26471242cc0e04c"
+      }
+    ],
+    "citation": [
+      "Valocchi, A. (2020). Interactive MODFLOW simulation to study impact of pumping on streamflow, HydroShare, http://www.hydroshare.org/resource/072baaf12e41426c9d26478ccdb2e4d4"
+    ],
+    "coordinates": null,
+    "includedInDataCatalog": null,
+    "sourceOrganization": null,
+    "sharing_status": null,
+    "view_count": 3349,
+    "additional_metadata": {},
+    "relations": [
+      {
+        "type": "CreativeWork",
+        "name": "The content of this resource is derived from",
+        "description": "Yao Hu, Albert J. Valocchi, Samantha A. Lindgren,  Evan A. Ramos,  Rebecca A. Byrd. Groundwater Modeling with MODFLOW as a Web Application, Groundwater, 2015",
+        "url": "https://doi.org/10.1111/gwat.12372"
+      },
+      {
+        "type": "CreativeWork",
+        "name": "The content of this resource is part of",
+        "description": "Ward, A., S. Herzog, J. Bales, R. Barnes, M. Ross, A. Jefferson, N. Basu, L. Yoder, T. Covino, E. Habib, J. Maertens (2020). Educational Resources for Hydrology & Water Resources, HydroShare",
+        "url": "http://www.hydroshare.org/resource/ad177996d0f44ac590fa3c621361a271"
+      },
+      {
+        "type": "CreativeWork",
+        "name": "The content of this resource is part of",
+        "description": "Ward, A., S. Herzog, J. Bales, R. Barnes, M. Ross, L. Yoder, N. Basu, A. Jefferson, E. Habib, T. Covino, J. Maertens (2021). Educational Resources for Hydrology & Water Resources, HydroShare",
+        "url": "http://www.hydroshare.org/resource/148b1ce4e308427ebf58379d48a17b91"
+      }
+    ],
+    "_s3_filepath": "valocchi/072baaf12e41426c9d26478ccdb2e4d4/.hsjsonld/dataset_metadata.json",
+    "first_creator": {
+      "type": "Person",
+      "email": "valocchi@illinois.edu",
+      "identifier": null,
+      "affiliation": {
+        "type": "Organization",
+        "url": null,
+        "address": null,
+        "name": "University of Illinois at Urbana-Champaign"
+      },
+      "name": "Valocchi, Albert"
+    },
+    "content_types": []
+  },
+  {
+    "_id": {
+      "$oid": "69389757fc32d6a62486562a"
+    },
+    "context": "https://hydroshare.org/schema",
+    "type": "ScientificDataset",
+    "additionalType": "CompositeResource",
+    "name": "Wasatch Environmental Observatory Red Butte Network: Raw Data Above Red Butte Reservoir Climate Site (RB_ARBR_C)",
+    "description": "This dataset contains raw data for all of the variables measured for the climate monitoring site in Red Butte Canyon at Above Red Butte Reservoir (RB_ARBR_C). Each file contains a calendar year of data. The file for the current year is updated on a daily basis. The data values were collected by a variety of sensors at 15 minute intervals. The file header contains detailed metadata for the site and the variable and method associated with each column. This site is currently operated as part of the Wasatch Environmental Observatory. Prior to 2018 this site was operated as part of the iUTAH GAMUT Network.",
+    "url": "https://beta.hydroshare.org/landing/916041be57be47a1b19c63f328fb086c",
+    "identifier": [
+      "https://beta.hydroshare.org/landing/916041be57be47a1b19c63f328fb086c"
+    ],
+    "creator": [
+      {
+        "type": "Organization",
+        "url": null,
+        "address": null,
+        "name": "University of Utah  -- Wasatch Environmental Observatory"
+      }
+    ],
+    "dateCreated": {
+      "$date": "2016-07-19T23:50:46.990Z"
+    },
+    "keywords": [
+      "University of Utah",
+      "Above Red Butte Reservoir",
+      "Red Butte Canyon",
+      "RB_ARBR_C",
+      "iUTAH",
+      "Climate Station",
+      "Red Butte Reservoir",
+      "WEO",
+      "Red Butte",
+      "Weather Station",
+      "Above Red Butte Reservoir Climate",
+      "ARBR_C",
+      "GAMUT",
+      "Raw Data"
+    ],
+    "license": {
+      "type": "CreativeWork",
+      "name": "This resource is shared under the Creative Commons Attribution CC BY.",
+      "description": null,
+      "url": "http://creativecommons.org/licenses/by/4.0/"
+    },
+    "provider": {
+      "type": "Organization",
+      "url": "https://www.hydroshare.org/",
+      "address": null,
+      "name": "HydroShare"
+    },
+    "contributor": [
+      {
+        "type": "Person",
+        "email": "dave.eiriksson@utah.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "University of Utah"
+        },
+        "name": "Dave Eiriksson"
+      },
+      {
+        "type": "Person",
+        "email": "logan.jamison@utah.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "University of Utah"
+        },
+        "name": "Jamison, Logan"
+      },
+      {
+        "type": "Person",
+        "email": "paul.brooks@utah.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "University of Utah"
+        },
+        "name": "Paul Brooks"
+      }
+    ],
+    "publisher": null,
+    "datePublished": null,
+    "subjectOf": null,
+    "version": null,
+    "inLanguage": "eng",
+    "creativeWorkStatus": {
+      "type": "DefinedTerm",
+      "name": "Public",
+      "description": "The resource is publicly accessible and can be viewed or downloaded by anyone"
+    },
+    "dateModified": {
+      "$date": "2023-06-01T15:23:39.132Z"
+    },
+    "funding": [
+      {
+        "type": "Grant",
+        "description": null,
+        "identifier": null,
+        "funder": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Salt Lake City Public Utilities"
+        },
+        "name": "Salt Lake City Public Utilities"
+      },
+      {
+        "type": "Grant",
+        "description": null,
+        "identifier": "1208732",
+        "funder": {
+          "type": "Organization",
+          "url": "http://www.nsf.gov/",
+          "address": null,
+          "name": "National Science Foundation"
+        },
+        "name": "iUTAH-innovative Urban Transitions and Aridregion  Hydro-sustainability"
+      }
+    ],
+    "temporalCoverage": {
+      "endDate": {
+        "$date": "2016-07-20T00:00:00.000Z"
+      },
+      "startDate": {
+        "$date": "2013-06-19T00:00:00.000Z"
+      }
+    },
+    "spatialCoverage": {
+      "type": "Place",
+      "name": "Red Butte Creek Watershed",
+      "geo": {
+        "type": "GeoCoordinates",
+        "latitude": 40.780567,
+        "longitude": -111.807222
+      },
+      "additionalProperty": null,
+      "srs": null
+    },
+    "hasPart": [],
+    "isPartOf": [
+      {
+        "type": "CreativeWork",
+        "name": null,
+        "description": "Data Manager, i., iUTAH GAMUT Working Group (2021). IUTAH GAMUT Environmental Observatory Collected Datasets, HydroShare",
+        "url": "http://www.hydroshare.org/resource/02b155615b794671bfc4c48870b3ce6f"
+      }
+    ],
+    "additionalProperty": null,
+    "associatedMedia": [
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/iutahdata/916041be57be47a1b19c63f328fb086c/data/contents/RB_ARBR_C_SourceID_1_QC_0_Year_2013.csv",
+        "encodingFormat": "text/csv",
+        "contentSize": "7514.338 KB",
+        "name": "RB_ARBR_C_SourceID_1_QC_0_Year_2013.csv",
+        "sha256": "075671687f89a4ae264318111ad4179d"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/iutahdata/916041be57be47a1b19c63f328fb086c/data/contents/RB_ARBR_C_SourceID_1_QC_0_Year_2014.csv",
+        "encodingFormat": "text/csv",
+        "contentSize": "17186.383 KB",
+        "name": "RB_ARBR_C_SourceID_1_QC_0_Year_2014.csv",
+        "sha256": "5662772803c775d154285fde24c7bc4a-2"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/iutahdata/916041be57be47a1b19c63f328fb086c/data/contents/RB_ARBR_C_SourceID_1_QC_0_Year_2015.csv",
+        "encodingFormat": "text/csv",
+        "contentSize": "16665.296 KB",
+        "name": "RB_ARBR_C_SourceID_1_QC_0_Year_2015.csv",
+        "sha256": "3cd2cdd4a99f3394b15bbb98fb01c738"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/iutahdata/916041be57be47a1b19c63f328fb086c/data/contents/RB_ARBR_C_SourceID_1_QC_0_Year_2016.csv",
+        "encodingFormat": "text/csv",
+        "contentSize": "16811.892 KB",
+        "name": "RB_ARBR_C_SourceID_1_QC_0_Year_2016.csv",
+        "sha256": "f365d94859bb3d8dd4c39524fbb75508-2"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/iutahdata/916041be57be47a1b19c63f328fb086c/data/contents/RB_ARBR_C_SourceID_1_QC_0_Year_2017.csv",
+        "encodingFormat": "text/csv",
+        "contentSize": "17891.446 KB",
+        "name": "RB_ARBR_C_SourceID_1_QC_0_Year_2017.csv",
+        "sha256": "787580a838dac6839b197b007e1a8712-2"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/iutahdata/916041be57be47a1b19c63f328fb086c/data/contents/RB_ARBR_C_SourceID_1_QC_0_Year_2018.csv",
+        "encodingFormat": "text/csv",
+        "contentSize": "16783.226 KB",
+        "name": "RB_ARBR_C_SourceID_1_QC_0_Year_2018.csv",
+        "sha256": "63e9de26a385056331d9a05ee0d44af5-2"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/iutahdata/916041be57be47a1b19c63f328fb086c/data/contents/RB_ARBR_C_SourceID_1_QC_0_Year_2019.csv",
+        "encodingFormat": "text/csv",
+        "contentSize": "16777.618 KB",
+        "name": "RB_ARBR_C_SourceID_1_QC_0_Year_2019.csv",
+        "sha256": "e931397c21dc7a90fb8a19fda1085b27-2"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/iutahdata/916041be57be47a1b19c63f328fb086c/data/contents/RB_ARBR_C_SourceID_1_QC_0_Year_2020.csv",
+        "encodingFormat": "text/csv",
+        "contentSize": "16829.451 KB",
+        "name": "RB_ARBR_C_SourceID_1_QC_0_Year_2020.csv",
+        "sha256": "fa907560c970ae7967b13f7ce4f4a850-2"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/iutahdata/916041be57be47a1b19c63f328fb086c/data/contents/RB_ARBR_C_SourceID_1_QC_0_Year_2021.csv",
+        "encodingFormat": "text/csv",
+        "contentSize": "16810.565 KB",
+        "name": "RB_ARBR_C_SourceID_1_QC_0_Year_2021.csv",
+        "sha256": "d23bd8d07dfea2951d2b629c00963602-2"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/iutahdata/916041be57be47a1b19c63f328fb086c/data/contents/RB_ARBR_C_SourceID_1_QC_0_Year_2022.csv",
+        "encodingFormat": "text/csv",
+        "contentSize": "15845.833 KB",
+        "name": "RB_ARBR_C_SourceID_1_QC_0_Year_2022.csv",
+        "sha256": "09986025395fe6f7680b6fc8205755aa"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/iutahdata/916041be57be47a1b19c63f328fb086c/data/contents/RB_ARBR_C_SourceID_1_QC_0_Year_2023.csv",
+        "encodingFormat": "text/csv",
+        "contentSize": "179.866 KB",
+        "name": "RB_ARBR_C_SourceID_1_QC_0_Year_2023.csv",
+        "sha256": "acde609207642bade89d68d8010c55c4"
+      }
+    ],
+    "citation": [
+      "University of Utah  -- Wasatch Environmental Observatory (2023). Wasatch Environmental Observatory Red Butte Network: Raw Data Above Red Butte Reservoir Climate Site (RB_ARBR_C), HydroShare, http://www.hydroshare.org/resource/916041be57be47a1b19c63f328fb086c",
+      {
+        "type": "CreativeWork",
+        "name": "The content of this resource is part of",
+        "description": "Data Manager, i., iUTAH GAMUT Working Group (2021). IUTAH GAMUT Environmental Observatory Collected Datasets, HydroShare",
+        "url": "http://www.hydroshare.org/resource/02b155615b794671bfc4c48870b3ce6f"
+      }
+    ],
+    "coordinates": null,
+    "includedInDataCatalog": null,
+    "sourceOrganization": null,
+    "sharing_status": null,
+    "additional_metadata": {
+      "Data Collection Method": "Measurements were made by a variety of instruments (specified by the method information in the file header) at 15 minute intervals. Measurements were recorded by a Campbell Scientific datalogger.",
+      "Data Processing Method": "Post processing has not been performed on these values. They are raw and provisional.",
+      "Observed Variables": "AirTemp_Avg - Temperature, AirTemp_ST110_Avg - Temperature, AirTemp_ST110_Max - Temperature, AirTemp_ST110_Min - Temperature, b_SI111 - Intercept, BattVolt - Battery voltage, BP_Avg - Barometric pressure, DeltaTemp - Temperature, DewPt_Avg - Temperature dew point, Door_Tot - Indicator, Evapotrans_ETo - Evapotranspiration potential, Evapotrans_ETr - Evapotranspiration potential, GeonorHeater_Manual_Tot - Counter, GeonorHeater_Tot - Counter, Heater_on - Indicator, InletTemp_avg - Temperature sensor, JuddDepth_1 - Snow depth, JuddDepth_2 - Snow depth, JuddDepth_3 - Snow depth, JuddDepth_Avg - Snow depth, JuddOffset - Offset, JuddTemp_Avg - Temperature, LWIn_Cor_NR01_Avg - Radiation incoming longwave, LWIn_UnCor_NR01_Avg - Radiation incoming longwave, LWOut_Cor_NR01_Avg - Radiation outgoing longwave, LWOut_UnCor_NR01_Avg - Radiation outgoing longwave, m_SI111 - Slope, n - Counter, NetRad_NR01_Avg - Radiation net, Panel_Temp - Temperature datalogger, PARIn_Avg - Radiation incoming PAR, PAROut_Avg - Radiation outgoing PAR, Permittivity_5cm_Avg - Permittivity, Permittivity_10cm_Avg - Permittivity, Permittivity_20cm_Avg - Permittivity, Permittivity_50cm_Avg - Permittivity, Permittivity_100cm_Avg - Permittivity, Precip_Freq_Avg - Precipitation, Precip_HrDiff - Precipitation, Precip_offset - Offset, Precip_Tot_Avg - Precipitation, RH - Relative Humidity, RH_enc - Relative Humidity, SoilCond_5cm_Avg - Bulk electrical conductivity, SoilCond_10cm_Avg - Bulk electrical conductivity, SoilCond_20cm_Avg - Bulk electrical conductivity, SoilCond_50cm_Avg - Bulk electrical conductivity, SoilCond_100cm_Avg - Bulk electrical conductivity, SoilTemp_5cm_Avg - Temperature, SoilTemp_10cm_Avg - Temperature, SoilTemp_20cm_Avg - Temperature, SoilTemp_50cm_Avg - Temperature, SoilTemp_100cm_Avg - Temperature, SWIn_NR01_Avg - Radiation incoming shortwave, SWOut_NR01_Avg - Radiation outgoing shortwave, SWIn_SP230_Avg - Radiation incoming shortwave, Tachometer_TS100 - Frequency of rotation, TargTemp_SI111_Avg - Temperature, TargV_SI111_Avg - Voltage, Temp_NR01_Avg - Temperature, Temp_SI111_Avg - Temperature, VaporPress_Avg - Vapor pressure, VWC_5cm_Avg - Volumetric water content, VWC_10cm_Avg - Volumetric water content, VWC_20cm_Avg - Volumetric water content, VWC_50cm_Avg - Volumetric water content, VWC_100cm_Avg - Volumetric water content, WindDir_Avg - Wind direction, WindDir_Std - Wind direction, WindSp_Avg - Wind speed, WindSp_Max - Wind speed, AirTemp_Min - Temperature, AirTemp_Max - Temperature, JuddAvgCounter - counter",
+      "Variable Description": "Various climate and soil variables"
+    },
+    "_s3_filepath": "iutahdata/916041be57be47a1b19c63f328fb086c/.hsjsonld/dataset_metadata.json",
+    "first_creator": {
+      "type": "Organization",
+      "url": null,
+      "address": null,
+      "name": "University of Utah  -- Wasatch Environmental Observatory"
+    },
+    "content_types": []
+  },
+  {
+    "_id": {
+      "$oid": "69389759fc32d6a62486562c"
+    },
+    "context": "https://hydroshare.org/schema",
+    "type": "ScientificDataset",
+    "additionalType": "CompositeResource",
+    "name": "Logan River Observatory: Spring Creek Storm Drain (LR_SC_SD) Raw Data",
+    "description": "This dataset contains raw data for all of the variables measured for the storm drain site near Spring Creek Storm Drain (LR_SC_SD). Each file contains a calendar year of data. The file for the current year is updated on a daily basis. The data values were collected by a variety of sensors at 15 minute intervals. The file header contains detailed metadata for the site and the variable and method of each column. This site is currently operated as part of the Logan River Observatory. Prior to 2018 this site was operated as part of the iUTAH GAMUT Network.",
+    "url": "https://beta.hydroshare.org/landing/fd7e56d92c06427583cd83eddf4adf42",
+    "identifier": [
+      "https://beta.hydroshare.org/landing/fd7e56d92c06427583cd83eddf4adf42"
+    ],
+    "creator": [
+      {
+        "type": "Organization",
+        "url": null,
+        "address": null,
+        "name": "Logan River Observatory"
+      }
+    ],
+    "dateCreated": {
+      "$date": "2016-07-22T01:18:04.676Z"
+    },
+    "keywords": [
+      "storm water",
+      "iUTAH",
+      "water temperature",
+      "GAMUT",
+      "Logan River",
+      "flow",
+      "Logan River Observatory",
+      "storm drain",
+      "LRO"
+    ],
+    "license": {
+      "type": "CreativeWork",
+      "name": "This resource is shared under the Creative Commons Attribution CC BY.",
+      "description": null,
+      "url": "http://creativecommons.org/licenses/by/4.0/"
+    },
+    "provider": {
+      "type": "Organization",
+      "url": "https://www.hydroshare.org/",
+      "address": null,
+      "name": "HydroShare"
+    },
+    "contributor": [
+      {
+        "type": "Person",
+        "email": "jeff.horsburgh@usu.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Utah State University"
+        },
+        "name": "Jeffery S. Horsburgh"
+      },
+      {
+        "type": "Person",
+        "email": "amber.jones@usu.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Utah State University"
+        },
+        "name": "Amber Spackman Jones"
+      },
+      {
+        "type": "Person",
+        "email": "bethany.neilson@usu.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Utah State University"
+        },
+        "name": "Neilson, Bethany"
+      },
+      {
+        "type": "Person",
+        "email": "strongpatrick@gmail.com",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Utah State University"
+        },
+        "name": "strong, patrick"
+      }
+    ],
+    "publisher": null,
+    "datePublished": null,
+    "subjectOf": null,
+    "version": null,
+    "inLanguage": "eng",
+    "creativeWorkStatus": {
+      "type": "DefinedTerm",
+      "name": "Public",
+      "description": "The resource is publicly accessible and can be viewed or downloaded by anyone"
+    },
+    "dateModified": {
+      "$date": "2025-11-30T11:08:56.360Z"
+    },
+    "funding": [
+      {
+        "type": "Grant",
+        "description": null,
+        "identifier": null,
+        "funder": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Cache Water District"
+        },
+        "name": "Cache Water District"
+      },
+      {
+        "type": "Grant",
+        "description": null,
+        "identifier": "1208732",
+        "funder": {
+          "type": "Organization",
+          "url": "http://www.nsf.gov/",
+          "address": null,
+          "name": "National Science Foundation"
+        },
+        "name": "iUTAH-innovative Urban Transitions and Aridregion  Hydro-sustainability"
+      },
+      {
+        "type": "Grant",
+        "description": null,
+        "identifier": null,
+        "funder": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "State of Utah/Division of Water Resources"
+        },
+        "name": "State of Utah/Division of Water Resources"
+      },
+      {
+        "type": "Grant",
+        "description": null,
+        "identifier": null,
+        "funder": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Logan City"
+        },
+        "name": "Logan City"
+      },
+      {
+        "type": "Grant",
+        "description": null,
+        "identifier": null,
+        "funder": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Utah State University"
+        },
+        "name": "Utah State University"
+      }
+    ],
+    "temporalCoverage": null,
+    "spatialCoverage": {
+      "type": "Place",
+      "name": "Logan River Watershed",
+      "geo": {
+        "type": "GeoCoordinates",
+        "latitude": 41.710961,
+        "longitude": -111.833736
+      },
+      "additionalProperty": null,
+      "srs": null
+    },
+    "hasPart": [],
+    "isPartOf": [
+      {
+        "type": "CreativeWork",
+        "name": null,
+        "description": "Logan River Observatory (2021). Logan River Observatory Datasets, HydroShare",
+        "url": "http://www.hydroshare.org/resource/def147fa06de4c67810586d45337b413"
+      },
+      {
+        "type": "CreativeWork",
+        "name": null,
+        "description": "Data Manager, i., iUTAH GAMUT Working Group (2021). IUTAH GAMUT Environmental Observatory Collected Datasets, HydroShare",
+        "url": "http://www.hydroshare.org/resource/02b155615b794671bfc4c48870b3ce6f"
+      }
+    ],
+    "additionalProperty": null,
+    "associatedMedia": [
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/loganriver/fd7e56d92c06427583cd83eddf4adf42/data/contents/LR_SC_SD_SourceID_1_QC_0_Year_2015.csv",
+        "encodingFormat": "text/csv",
+        "contentSize": "3094.794 KB",
+        "name": "LR_SC_SD_SourceID_1_QC_0_Year_2015.csv",
+        "sha256": "c8d9efe3072ea98107c69fec90d59f41"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/loganriver/fd7e56d92c06427583cd83eddf4adf42/data/contents/LR_SC_SD_SourceID_1_QC_0_Year_2015_meta.xml",
+        "encodingFormat": "application/xml",
+        "contentSize": "7.232 KB",
+        "name": "LR_SC_SD_SourceID_1_QC_0_Year_2015_meta.xml",
+        "sha256": "5e01bcf88591eabc921fa2996a255df9"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/loganriver/fd7e56d92c06427583cd83eddf4adf42/data/contents/LR_SC_SD_SourceID_1_QC_0_Year_2015_resmap.xml",
+        "encodingFormat": "application/xml",
+        "contentSize": "4.099 KB",
+        "name": "LR_SC_SD_SourceID_1_QC_0_Year_2015_resmap.xml",
+        "sha256": "1ce2d112aec61354ebc3b215f38587a8"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/loganriver/fd7e56d92c06427583cd83eddf4adf42/data/contents/LR_SC_SD_SourceID_1_QC_0_Year_2016.csv",
+        "encodingFormat": "text/csv",
+        "contentSize": "5908.891 KB",
+        "name": "LR_SC_SD_SourceID_1_QC_0_Year_2016.csv",
+        "sha256": "59fcb1658928cfad517f27ee1842d4e4"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/loganriver/fd7e56d92c06427583cd83eddf4adf42/data/contents/LR_SC_SD_SourceID_1_QC_0_Year_2016_meta.xml",
+        "encodingFormat": "application/xml",
+        "contentSize": "9.029 KB",
+        "name": "LR_SC_SD_SourceID_1_QC_0_Year_2016_meta.xml",
+        "sha256": "15cbbb0d97aa37dd10e64192a83bf55d"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/loganriver/fd7e56d92c06427583cd83eddf4adf42/data/contents/LR_SC_SD_SourceID_1_QC_0_Year_2016_resmap.xml",
+        "encodingFormat": "application/xml",
+        "contentSize": "4.099 KB",
+        "name": "LR_SC_SD_SourceID_1_QC_0_Year_2016_resmap.xml",
+        "sha256": "9edba9e282b829a0cbd22fb5f5b7f346"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/loganriver/fd7e56d92c06427583cd83eddf4adf42/data/contents/LR_SC_SD_SourceID_1_QC_0_Year_2017.csv",
+        "encodingFormat": "text/csv",
+        "contentSize": "24630.292 KB",
+        "name": "LR_SC_SD_SourceID_1_QC_0_Year_2017.csv",
+        "sha256": "3c27b18508296901eaf24ef164b3134e-2"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/loganriver/fd7e56d92c06427583cd83eddf4adf42/data/contents/LR_SC_SD_SourceID_1_QC_0_Year_2017_meta.xml",
+        "encodingFormat": "application/xml",
+        "contentSize": "9.03 KB",
+        "name": "LR_SC_SD_SourceID_1_QC_0_Year_2017_meta.xml",
+        "sha256": "e1b38baab98b04b3355b6ee94298d5b3"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/loganriver/fd7e56d92c06427583cd83eddf4adf42/data/contents/LR_SC_SD_SourceID_1_QC_0_Year_2017_resmap.xml",
+        "encodingFormat": "application/xml",
+        "contentSize": "4.099 KB",
+        "name": "LR_SC_SD_SourceID_1_QC_0_Year_2017_resmap.xml",
+        "sha256": "d4e7a6de1e98d92859d51f9444d4a149"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/loganriver/fd7e56d92c06427583cd83eddf4adf42/data/contents/LR_SC_SD_SourceID_1_QC_0_Year_2018.csv",
+        "encodingFormat": "text/csv",
+        "contentSize": "2784.849 KB",
+        "name": "LR_SC_SD_SourceID_1_QC_0_Year_2018.csv",
+        "sha256": "ee3961f3b9150510960c71e3f92eb9cf"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/loganriver/fd7e56d92c06427583cd83eddf4adf42/data/contents/LR_SC_SD_SourceID_1_QC_0_Year_2018_meta.xml",
+        "encodingFormat": "application/xml",
+        "contentSize": "7.232 KB",
+        "name": "LR_SC_SD_SourceID_1_QC_0_Year_2018_meta.xml",
+        "sha256": "c2cdc045f24b6ca1ef2f1d6cee2bcbf4"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/loganriver/fd7e56d92c06427583cd83eddf4adf42/data/contents/LR_SC_SD_SourceID_1_QC_0_Year_2018_resmap.xml",
+        "encodingFormat": "application/xml",
+        "contentSize": "4.099 KB",
+        "name": "LR_SC_SD_SourceID_1_QC_0_Year_2018_resmap.xml",
+        "sha256": "8c637e56ed36858a664ba9d66b65db50"
+      }
+    ],
+    "citation": [
+      "Logan River Observatory (2025). Logan River Observatory: Spring Creek Storm Drain (LR_SC_SD) Raw Data, HydroShare, http://www.hydroshare.org/resource/fd7e56d92c06427583cd83eddf4adf42",
+      {
+        "type": "CreativeWork",
+        "name": "The content of this resource is part of",
+        "description": "Logan River Observatory (2021). Logan River Observatory Datasets, HydroShare",
+        "url": "http://www.hydroshare.org/resource/def147fa06de4c67810586d45337b413"
+      },
+      {
+        "type": "CreativeWork",
+        "name": "The content of this resource is part of",
+        "description": "Data Manager, i., iUTAH GAMUT Working Group (2021). IUTAH GAMUT Environmental Observatory Collected Datasets, HydroShare",
+        "url": "http://www.hydroshare.org/resource/02b155615b794671bfc4c48870b3ce6f"
+      }
+    ],
+    "coordinates": null,
+    "includedInDataCatalog": null,
+    "sourceOrganization": null,
+    "sharing_status": null,
+    "additional_metadata": {
+      "Data Collection Method": "Measurements were made by a variety of instruments (specified by the method information in the file header) at 15 minute intervals. Measurements were recorded by a Campbell Scientific datalogger.",
+      "Variable Description": "Various storm water variables",
+      "Data Processing Method": "Post processing has not been performed on these values. They are raw and provisional.",
+      "Observed Variables": "BattVolt - Battery Voltage, Flow - Discharge, FlowStat - Indicator, Level - Water depth, Level_LowThreshold - Threshold, LevelStat - Indicator, Panel_Temp - Temperature, datalogger, RH_enc - Relative Humidity, Velocity - Velocity, VelocityStat - Indicator, Volume - Volume, VolumeStat - Indicator, WaterTemp_ISCO - Temperature"
+    },
+    "_s3_filepath": "loganriver/fd7e56d92c06427583cd83eddf4adf42/.hsjsonld/dataset_metadata.json",
+    "first_creator": {
+      "type": "Organization",
+      "url": null,
+      "address": null,
+      "name": "Logan River Observatory"
+    },
+    "content_types": []
+  },
+  {
+    "_id": {
+      "$oid": "69389759fc32d6a62486562e"
+    },
+    "context": "https://hydroshare.org/schema",
+    "type": "ScientificDataset",
+    "additionalType": "CompositeResource",
+    "name": "Watershed DEM analysis and flood routing",
+    "description": "In this tutorial we illustrate reading watershed DEM into Landlab, conducting several basic watershed analysis necessary for most hydrologic model applications,  and flood routing using the de Almedia (2012) algorithm on the watershed processed. ",
+    "url": "https://beta.hydroshare.org/landing/466d5b3de8a543808d96ded08d861dc5",
+    "identifier": [
+      "https://beta.hydroshare.org/landing/466d5b3de8a543808d96ded08d861dc5"
+    ],
+    "creator": [
+      {
+        "type": "Person",
+        "email": "jadams15@tulane.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Tulane University"
+        },
+        "name": "Jordan Adams"
+      },
+      {
+        "type": "Person",
+        "email": "nicgaspar@gmail.com",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Tulane University"
+        },
+        "name": "Nicole Gasparini"
+      },
+      {
+        "type": "Person",
+        "email": "erkani@uw.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "University of Washington"
+        },
+        "name": "Erkan Istanbulluoglu"
+      },
+      {
+        "type": "Person",
+        "email": "saisiddu@uw.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "University of Washington"
+        },
+        "name": "Sai Nudurupati"
+      }
+    ],
+    "dateCreated": {
+      "$date": "2016-07-22T08:27:25.881Z"
+    },
+    "keywords": [
+      "Landlab",
+      "flood routing"
+    ],
+    "license": {
+      "type": "CreativeWork",
+      "name": "This resource is shared under the Creative Commons Attribution CC BY.",
+      "description": null,
+      "url": "http://creativecommons.org/licenses/by/4.0/"
+    },
+    "provider": {
+      "type": "Organization",
+      "url": "https://www.hydroshare.org/",
+      "address": null,
+      "name": "HydroShare"
+    },
+    "contributor": [],
+    "publisher": null,
+    "datePublished": null,
+    "subjectOf": null,
+    "version": null,
+    "inLanguage": "eng",
+    "creativeWorkStatus": {
+      "type": "DefinedTerm",
+      "name": "Public",
+      "description": "The resource is publicly accessible and can be viewed or downloaded by anyone"
+    },
+    "dateModified": {
+      "$date": "2016-07-22T21:14:13.758Z"
+    },
+    "funding": [
+      {
+        "type": "Grant",
+        "description": null,
+        "identifier": "1450412",
+        "funder": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "NSF "
+        },
+        "name": " \tCollaborative Research: SI2-SSI: Landlab: A Flexible, Open-Source Modeling Framework for Earth-Surface Dynamics"
+      }
+    ],
+    "temporalCoverage": null,
+    "spatialCoverage": null,
+    "hasPart": [],
+    "isPartOf": [
+      {
+        "type": "CreativeWork",
+        "name": null,
+        "description": "Istanbulluoglu, E., S. S. Nudurupati, C. Bandaragoda, R. Strauch (2024). Landlab CUAHSI Colloqium 2016 Workshop, HydroShare",
+        "url": "http://www.hydroshare.org/resource/e0568ef7089b46049fa463dbb524ad2b"
+      }
+    ],
+    "relation": [
+      "annotation=NoneType required=False default=None title='Relation' description='All other types of relations'"
+    ],
+    "additionalProperty": null,
+    "associatedMedia": [
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/erkani/466d5b3de8a543808d96ded08d861dc5/data/contents/Watershed_DEM_analysis_and_flood_routing.ipynb",
+        "encodingFormat": ".ipynb",
+        "contentSize": "13.533 KB",
+        "name": "Watershed_DEM_analysis_and_flood_routing.ipynb",
+        "sha256": "ca8fe30af658a62e26c031d1c4e1be52"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/erkani/466d5b3de8a543808d96ded08d861dc5/data/contents/west_bijou_gully_PF.asc",
+        "encodingFormat": "text/plain",
+        "contentSize": "95.734 KB",
+        "name": "west_bijou_gully_PF.asc",
+        "sha256": "424433bce1b0ce157688fd6a3d4b9518"
+      }
+    ],
+    "citation": [
+      "Adams, J., N. Gasparini, E. Istanbulluoglu, S. Nudurupati (2016). Watershed DEM analysis and flood routing, HydroShare, http://www.hydroshare.org/resource/466d5b3de8a543808d96ded08d861dc5"
+    ],
+    "coordinates": null,
+    "includedInDataCatalog": null,
+    "sourceOrganization": null,
+    "sharing_status": null,
+    "view_count": 3891,
+    "additional_metadata": {},
+    "relations": [
+      {
+        "type": "CreativeWork",
+        "name": "The content of this resource is part of",
+        "description": "Istanbulluoglu, E., S. S. Nudurupati, C. Bandaragoda, R. Strauch (2024). Landlab CUAHSI Colloqium 2016 Workshop, HydroShare",
+        "url": "http://www.hydroshare.org/resource/e0568ef7089b46049fa463dbb524ad2b"
+      }
+    ],
+    "_s3_filepath": "erkani/466d5b3de8a543808d96ded08d861dc5/.hsjsonld/dataset_metadata.json",
+    "first_creator": {
+      "type": "Person",
+      "email": "jadams15@tulane.edu",
+      "identifier": null,
+      "affiliation": {
+        "type": "Organization",
+        "url": null,
+        "address": null,
+        "name": "Tulane University"
+      },
+      "name": "Jordan Adams"
+    },
+    "content_types": []
+  },
+  {
+    "_id": {
+      "$oid": "6938975afc32d6a624865630"
+    },
+    "context": "https://hydroshare.org/schema",
+    "type": "ScientificDataset",
+    "additionalType": "CompositeResource",
+    "name": "Future WRMA's Land Use Dataset",
+    "description": "This dataset contains the urban growth simulation results of future land use in 2040 of the Wasatch Range Metropolitan Area (WRMA) .In this study, we defined the WRMA as a broad, ten-county region that surrounds the Wasatch Mountain Range east of the Great Salt Lake and Salt Lake City in Utah. This region encompasses four Wasatch Front counties west of the mountain range (Weber County, Davis County, Salt Lake County, and Utah County), three Wasatch Back counties east of the mountain range (Morgan County, Summit County, and Wasatch County), and three counties neighboring the Wasatch Front (Cache County, Box Elder County, and Tooele County). \r\n\r\nSLEUTH-3r urban growth simulation model is used to generate this dataset. Detailed SLEUTH model protocol can be found at: http://www.ncgia.ucsb.edu/projects/gig/index.html. The data used to run the SLEUTH-3r model include National Land Cover Database 2001, 2006, and 2011, US Census TIGER/Line shapefile for 2000 and 2011, United States Geological Survey  7.5 min elevation model, and Utah Landownership map from Utah Automated Geographic Reference Center. \r\n\r\nThree alternative scenarios were developed to explore how conserving Utah\u2019s agriculturale land and maintaining healthy watersheds would affect the patterns and trajectories of urban development:\r\n1) The first scenario is a \u201cBusiness as Usual\u201d scenario. In this scenario, federal, state, and local parks, conservation easement areas, and surface water bodies, were completely excluded (value = 100) from development, and all the remaining lands are were naively assumed as developable (value = 0). This is the same excluded layer that was also used during model calibration. Under this scenario, we hypothesized that future urban grow will occur following the historical growth behaviors and trajectories and no changes in land designation or policies to restrict future growth will be implemented.\r\n2) The second scenario is an \u201cAgricultural Conservation\u201d scenario. Within the developable areas that we identified earlier, we then identified places that are classified by the United States Department of Agriculture (USDA) as prime farmland, unique farmland, farmland of statewide importance, farmland of local importance, prime farmland if irrigated, and prime farmland if irrigated and drained. Each of these classes were assigned with an exclusion value from urban development of 100, 80, 70, 60, 50, and 40 respectively. These exclusion values reflect the relative importance of each farmland classification and preservation priorities. By doing so, the model discourages but does not totally eliminate growth from occurring on agricultural lands, which reflects a general policy position to conserve agricultural landscapes while respecting landowners\u2019 rights to sell private property.\r\n3) A \u201cHealthy Watershed\u201d scenario aims to direct urban growth away from areas prone to flooding and areas critical for maintaining healthy watersheds. First, we made a 200-meter buffer around existing surface water bodies and wetlands and assigned these areas an exclusion value of 100 to keep growth from occurring there. In addition, we assigned areas that have frequent, occasional, rare and no-recorded flooding events with exclusion values of 100, 70, 40 and 0 accordingly. We also incorporated the critical watershed restoration areas identified by the Watershed Restoration Initiative of Utah Division of Wildlife Resources (https://wri.utah.gov/wri/) into this scenario. These watershed restoration areas are priority places for improving water quality and yield, reducing catastrophic wildfires, restoring the structure and function of watersheds following wildfire, and increasing habitat for wildlife populations and forage for sustainable agriculture. However, there are not yet legal provisions for protecting them from urbanization, so we assigned these areas a value of 70 to explore the potential urban expansion outcomes if growth were encouraged elsewhere.\r\n\r\n Future land use projections of 2040 are in GIF format, which can be reprojected and georeferenced in ArcGIS or QGIS, or be read directly as a picture.",
+    "url": "https://beta.hydroshare.org/landing/71e9164eb57a4e32b58ad6bbe831b3f6",
+    "identifier": [
+      "https://beta.hydroshare.org/landing/71e9164eb57a4e32b58ad6bbe831b3f6"
+    ],
+    "creator": [
+      {
+        "type": "Person",
+        "email": "jane.enjieli@gmail.com",
+        "identifier": null,
+        "affiliation": null,
+        "name": "Enjie Li"
+      }
+    ],
+    "dateCreated": {
+      "$date": "2016-07-22T22:41:17.924Z"
+    },
+    "keywords": [
+      "NLCD",
+      "urban",
+      "future land use projection",
+      "land use",
+      "iUTAH",
+      "SLEUTH",
+      "future",
+      "urban growth simulation",
+      "WRMA"
+    ],
+    "license": {
+      "type": "CreativeWork",
+      "name": "This resource is shared under the Creative Commons Attribution CC BY.",
+      "description": null,
+      "url": "http://creativecommons.org/licenses/by/4.0/"
+    },
+    "provider": {
+      "type": "Organization",
+      "url": "https://www.hydroshare.org/",
+      "address": null,
+      "name": "HydroShare"
+    },
+    "contributor": [
+      {
+        "type": "Person",
+        "email": "shujuan.li@usu.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Utah State University"
+        },
+        "name": "Shujuan Li"
+      },
+      {
+        "type": "Person",
+        "email": "joanna.endter-wada@usu.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Dept. of Environmental & Society, Utah State University"
+        },
+        "name": "Joanna Endter-Wada"
+      }
+    ],
+    "publisher": null,
+    "datePublished": null,
+    "subjectOf": null,
+    "version": null,
+    "inLanguage": "eng",
+    "creativeWorkStatus": {
+      "type": "DefinedTerm",
+      "name": "Public",
+      "description": "The resource is publicly accessible and can be viewed or downloaded by anyone"
+    },
+    "dateModified": {
+      "$date": "2017-01-05T01:50:36.491Z"
+    },
+    "funding": [
+      {
+        "type": "Grant",
+        "description": null,
+        "identifier": "1208732",
+        "funder": {
+          "type": "Organization",
+          "url": "http://www.nsf.gov/",
+          "address": null,
+          "name": "National Science Foundation"
+        },
+        "name": "iUTAH-innovative Urban Transitions and Aridregion  Hydro-sustainability"
+      }
+    ],
+    "temporalCoverage": {
+      "endDate": {
+        "$date": "2040-12-31T00:00:00.000Z"
+      },
+      "startDate": {
+        "$date": "2014-01-01T00:00:00.000Z"
+      }
+    },
+    "spatialCoverage": {
+      "type": "Place",
+      "name": "WRMA-Wasatch Range Metropolitan Area",
+      "geo": {
+        "type": "GeoShape",
+        "box": "42.22038 -111.32996 39.93501 -112.47253"
+      },
+      "additionalProperty": null,
+      "srs": null
+    },
+    "hasPart": [],
+    "isPartOf": [],
+    "relation": [
+      "annotation=NoneType required=False default=None title='Relation' description='All other types of relations'"
+    ],
+    "additionalProperty": null,
+    "associatedMedia": [
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/iutahdata/71e9164eb57a4e32b58ad6bbe831b3f6/data/contents/WRMA_agriculture_conservation_sceanrio_2040.gif",
+        "encodingFormat": "image/gif",
+        "contentSize": "4494.997 KB",
+        "name": "WRMA_agriculture_conservation_sceanrio_2040.gif",
+        "sha256": "97f06937583d64dd24ec0a4f0419d024"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/iutahdata/71e9164eb57a4e32b58ad6bbe831b3f6/data/contents/WRMA_business_as_usual_scenario_2040.gif",
+        "encodingFormat": "image/gif",
+        "contentSize": "4446.857 KB",
+        "name": "WRMA_business_as_usual_scenario_2040.gif",
+        "sha256": "8f3c87b1f7c8697b5a9d062ac6f0df57"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/iutahdata/71e9164eb57a4e32b58ad6bbe831b3f6/data/contents/WRMA_healthy_watershed_scenario_2040.gif",
+        "encodingFormat": "image/gif",
+        "contentSize": "4491.026 KB",
+        "name": "WRMA_healthy_watershed_scenario_2040.gif",
+        "sha256": "62d6f8c5afb212c9bd2731759c9ae187"
+      }
+    ],
+    "citation": [
+      "Li, E. (2017). Future WRMA's Land Use Dataset, HydroShare, http://www.hydroshare.org/resource/71e9164eb57a4e32b58ad6bbe831b3f6"
+    ],
+    "coordinates": null,
+    "includedInDataCatalog": null,
+    "sourceOrganization": null,
+    "sharing_status": null,
+    "view_count": 4927,
+    "additional_metadata": {
+      "Variable Description": "land use",
+      "Data Collection Method": "Data used for SLEUTH urban growth model include: NLCD of year 1992, 2001, 2006, and 2011, slope, hillshade, landownership, water, and conservation easement areas, and roads. Besides NLCD, all these data are available through: http://gis.utah.gov.",
+      "Data Processing Method": "The model employed in the study is SLEUTH. Detailed information about the implementation of SLEUTH can be found at: http://www.ncgia.ucsb.edu/projects/gig/index.html."
+    },
+    "relations": [],
+    "_s3_filepath": "iutahdata/71e9164eb57a4e32b58ad6bbe831b3f6/.hsjsonld/dataset_metadata.json",
+    "first_creator": {
+      "type": "Person",
+      "email": "jane.enjieli@gmail.com",
+      "identifier": null,
+      "affiliation": null,
+      "name": "Enjie Li"
+    },
+    "content_types": []
+  },
+  {
+    "_id": {
+      "$oid": "6938975afc32d6a624865632"
+    },
+    "context": "https://hydroshare.org/schema",
+    "type": "ScientificDataset",
+    "additionalType": "CompositeResource",
+    "name": "Important categorical land use changes from 2001-2011",
+    "description": "This dataset documents the important categorical land use changes from 2001 to 2011 for the basins in the Wasatch Range Metropolitan Area (WRMA). Four cross-tabulation matrixes are provided, to summarize the changes of categorical land uses at Bear River Basin, Weber River Basin, Utah Lake Basin and Jordan River Basin.\r\n\r\nThese matrixes are useful to compare two maps of land use from different times, and to understand the categorical land use transitions over the time. By breaking down the whole WRMA into four sub-regions, these matrixes also help to compare the different patterns and processes of land use change among the four river basins.\r\n\r\nWe used year 2001 and 2011 National Land Use and Land Cover Dataset (NLCD) to produce these matrixes. Land use categories used in this dataset include: Water, Development/Open Space, Development/Low Density, Development/ Medium Density, Development /High Density, Barren, Forest, Scrubland, Grassland, Pasture, Cultivated Crops, and Wetland.",
+    "url": "https://beta.hydroshare.org/landing/a1055003e38b4710a766c6a1de39acee",
+    "identifier": [
+      "https://beta.hydroshare.org/landing/a1055003e38b4710a766c6a1de39acee"
+    ],
+    "creator": [
+      {
+        "type": "Person",
+        "email": "jane.enjieli@gmail.com",
+        "identifier": null,
+        "affiliation": null,
+        "name": "Enjie Li"
+      }
+    ],
+    "dateCreated": {
+      "$date": "2016-07-25T17:01:23.439Z"
+    },
+    "keywords": [
+      "Utah Lake",
+      "land use",
+      "Weber River",
+      "Bear River",
+      "land use change",
+      "history",
+      "Jordan River",
+      "iUTAH",
+      "WRMA"
+    ],
+    "license": {
+      "type": "CreativeWork",
+      "name": "This resource is shared under the Creative Commons Attribution CC BY.",
+      "description": null,
+      "url": "http://creativecommons.org/licenses/by/4.0/"
+    },
+    "provider": {
+      "type": "Organization",
+      "url": "https://www.hydroshare.org/",
+      "address": null,
+      "name": "HydroShare"
+    },
+    "contributor": [
+      {
+        "type": "Person",
+        "email": "shujuan.li@usu.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Utah State University"
+        },
+        "name": "Shujuan Li"
+      },
+      {
+        "type": "Person",
+        "email": "joanna.endter-wada@usu.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Dept. of Environmental & Society, Utah State University"
+        },
+        "name": "Joanna Endter-Wada"
+      }
+    ],
+    "publisher": null,
+    "datePublished": null,
+    "subjectOf": null,
+    "version": null,
+    "inLanguage": "eng",
+    "creativeWorkStatus": {
+      "type": "DefinedTerm",
+      "name": "Public",
+      "description": "The resource is publicly accessible and can be viewed or downloaded by anyone"
+    },
+    "dateModified": {
+      "$date": "2016-12-30T23:14:56.974Z"
+    },
+    "funding": [
+      {
+        "type": "Grant",
+        "description": null,
+        "identifier": "1208732",
+        "funder": {
+          "type": "Organization",
+          "url": "http://www.nsf.gov/",
+          "address": null,
+          "name": "National Science Foundation"
+        },
+        "name": "iUTAH-innovative Urban Transitions and Aridregion Hydro-sustainability"
+      }
+    ],
+    "temporalCoverage": {
+      "endDate": {
+        "$date": "2011-12-31T00:00:00.000Z"
+      },
+      "startDate": {
+        "$date": "2001-01-01T00:00:00.000Z"
+      }
+    },
+    "spatialCoverage": {
+      "type": "Place",
+      "name": "WRMA-Wasatch Range Metropolitan Area",
+      "geo": {
+        "type": "GeoShape",
+        "box": "42.22038 -111.32996 39.93501 -112.47253"
+      },
+      "additionalProperty": null,
+      "srs": null
+    },
+    "hasPart": [],
+    "isPartOf": [],
+    "relation": [
+      "annotation=NoneType required=False default=None title='Relation' description='All other types of relations'"
+    ],
+    "additionalProperty": null,
+    "associatedMedia": [
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/iutahdata/a1055003e38b4710a766c6a1de39acee/data/contents/important-categorical-land-use-changes-2001-2011.pdf",
+        "encodingFormat": "application/pdf",
+        "contentSize": "154.974 KB",
+        "name": "important-categorical-land-use-changes-2001-2011.pdf",
+        "sha256": "fabb92d99dbf7f64b345b30b194a6eb9"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/iutahdata/a1055003e38b4710a766c6a1de39acee/data/contents/important-categorical-land-use-changes-2001-2011.xlsx",
+        "encodingFormat": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "contentSize": "36.161 KB",
+        "name": "important-categorical-land-use-changes-2001-2011.xlsx",
+        "sha256": "0abdbfa84308f9c42046f4488d29b7e1"
+      }
+    ],
+    "citation": [
+      "Li, E. (2016). Important categorical land use changes from 2001-2011, HydroShare, http://www.hydroshare.org/resource/a1055003e38b4710a766c6a1de39acee"
+    ],
+    "coordinates": null,
+    "includedInDataCatalog": null,
+    "sourceOrganization": null,
+    "sharing_status": null,
+    "view_count": 3704,
+    "additional_metadata": {
+      "Variable Description": "categorical land use statistics",
+      "Data Collection Method": "We used year 2001 and 2011 National Land Use and Land Cover Dataset (NLCD) to produce these matrixes. We consolidated the land use categories of both datasets into: Water, Development/Open Space, Development/Low Density, Development/ Medium Density, Development /High Density, Barren, Forest, Scrubland, Grassland, Pasture, Cultivated Crops, and Wetland. Then we overlaid two datasets to calculate the categorical land use changes from 2001-2011."
+    },
+    "relations": [],
+    "_s3_filepath": "iutahdata/a1055003e38b4710a766c6a1de39acee/.hsjsonld/dataset_metadata.json",
+    "first_creator": {
+      "type": "Person",
+      "email": "jane.enjieli@gmail.com",
+      "identifier": null,
+      "affiliation": null,
+      "name": "Enjie Li"
+    },
+    "content_types": []
+  },
+  {
+    "_id": {
+      "$oid": "6938975afc32d6a624865634"
+    },
+    "context": "https://hydroshare.org/schema",
+    "type": "ScientificDataset",
+    "additionalType": "CompositeResource",
+    "name": "Discharge Rating Curve at Logan River near Main Street Bridge Basic Aquatic Site (LR_MainStreet_BA)",
+    "description": "This dataset contains a stage-discharge relationship developed for the Network aquatic site on Logan River near Main Street Bridge Basic Aquatic Site (LR_MainStreet_BA). Discharge measurements were collected by a SonTek FlowTracker. Measured stage and discharge and the curve are contained in the Rating Curve file. Information on the site conditions and any issues with discharge measurements are documented in the README file. Files associated with each measurement (e.g., output by the FlowTracker instrument) are contained in the .zip directory. This rating curve was used to generate discharge data through 9/30/2020. New versions of these files may be loaded when new flow measurements are taken. Resulting discharge data is published in the Logan River Observatory operational databases and may be accessed via http://lrodata.usu.edu/tsa/ and https://www.hydroshare.org/resource/98788289144a48e4b5151ab87a1f8ad5/. Current rating curve input can be found in Current_LRO_Rating_Curves_Q12024.xlsx in the Content section below.",
+    "url": "https://beta.hydroshare.org/landing/7ff1ae6051784b1d8dfd3ea6de16c387",
+    "identifier": [
+      "https://beta.hydroshare.org/landing/7ff1ae6051784b1d8dfd3ea6de16c387"
+    ],
+    "creator": [
+      {
+        "type": "Organization",
+        "url": null,
+        "address": null,
+        "name": "Logan River Observatory"
+      }
+    ],
+    "dateCreated": {
+      "$date": "2016-07-25T22:38:27.718Z"
+    },
+    "keywords": [
+      "Discharge",
+      "Flow",
+      "FlowTracker",
+      "Logan River",
+      "GAMUT",
+      "iUTAH",
+      "Rating Curve",
+      "Stage-Discharge",
+      "Logan River Observatory",
+      "LRO"
+    ],
+    "license": {
+      "type": "CreativeWork",
+      "name": "This resource is shared under the Creative Commons Attribution CC BY.",
+      "description": null,
+      "url": "http://creativecommons.org/licenses/by/4.0/"
+    },
+    "provider": {
+      "type": "Organization",
+      "url": "https://www.hydroshare.org/",
+      "address": null,
+      "name": "HydroShare"
+    },
+    "contributor": [
+      {
+        "type": "Person",
+        "email": "bethany.neilson@usu.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Utah State University"
+        },
+        "name": "Neilson, Bethany"
+      },
+      {
+        "type": "Person",
+        "email": "strongpatrick@gmail.com",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Utah State University"
+        },
+        "name": "strong, patrick"
+      }
+    ],
+    "publisher": null,
+    "datePublished": null,
+    "subjectOf": null,
+    "version": null,
+    "inLanguage": "eng",
+    "creativeWorkStatus": {
+      "type": "DefinedTerm",
+      "name": "Public",
+      "description": "The resource is publicly accessible and can be viewed or downloaded by anyone"
+    },
+    "dateModified": {
+      "$date": "2024-04-03T22:03:52.845Z"
+    },
+    "funding": [
+      {
+        "type": "Grant",
+        "description": null,
+        "identifier": null,
+        "funder": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Utah State University"
+        },
+        "name": "Utah State University"
+      },
+      {
+        "type": "Grant",
+        "description": null,
+        "identifier": null,
+        "funder": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Cache Water District"
+        },
+        "name": "Cache Water District"
+      },
+      {
+        "type": "Grant",
+        "description": null,
+        "identifier": null,
+        "funder": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Logan City"
+        },
+        "name": "Logan City"
+      },
+      {
+        "type": "Grant",
+        "description": null,
+        "identifier": null,
+        "funder": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "State of Utah/Division of Water Resources"
+        },
+        "name": "State of Utah/Division of Water Resources"
+      },
+      {
+        "type": "Grant",
+        "description": null,
+        "identifier": "1208732",
+        "funder": {
+          "type": "Organization",
+          "url": "http://www.nsf.gov/",
+          "address": null,
+          "name": "National Science Foundation"
+        },
+        "name": "iUTAH-innovative Urban Transitions and Aridregion  Hydro-sustainability"
+      }
+    ],
+    "temporalCoverage": null,
+    "spatialCoverage": {
+      "type": "Place",
+      "name": "Logan River Watershed",
+      "geo": {
+        "type": "GeoCoordinates",
+        "latitude": 41.721091,
+        "longitude": -111.835096
+      },
+      "additionalProperty": null,
+      "srs": null
+    },
+    "hasPart": [],
+    "isPartOf": [
+      {
+        "type": "CreativeWork",
+        "name": null,
+        "description": "Data Manager, i., iUTAH GAMUT Working Group (2021). IUTAH GAMUT Environmental Observatory Collected Datasets, HydroShare",
+        "url": "http://www.hydroshare.org/resource/02b155615b794671bfc4c48870b3ce6f"
+      },
+      {
+        "type": "CreativeWork",
+        "name": null,
+        "description": "Strong, P. (2025). Logan River Observatory Rating Curves, HydroShare",
+        "url": "http://www.hydroshare.org/resource/a1f6b0b4ebcb415a87faf794dbcfa9ab"
+      }
+    ],
+    "additionalProperty": null,
+    "associatedMedia": [
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/loganriver/7ff1ae6051784b1d8dfd3ea6de16c387/data/contents/Current_LRO_Rating_Curves_Q12024.xlsx",
+        "encodingFormat": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "contentSize": "1471.497 KB",
+        "name": "Current_LRO_Rating_Curves_Q12024.xlsx",
+        "sha256": "548e4e6c884529ceb1a067a57f09d06c"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/loganriver/7ff1ae6051784b1d8dfd3ea6de16c387/data/contents/GAMUT_RatingCurve_MS_Readme_V4.pdf",
+        "encodingFormat": "application/pdf",
+        "contentSize": "3329.048 KB",
+        "name": "GAMUT_RatingCurve_MS_Readme_V4.pdf",
+        "sha256": "e0d7b6921deb92a30e369772a3aacfeb"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/loganriver/7ff1ae6051784b1d8dfd3ea6de16c387/data/contents/LRO_2020Refit_FlowMeasurements2020Q3.xlsx",
+        "encodingFormat": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "contentSize": "39.231 KB",
+        "name": "LRO_2020Refit_FlowMeasurements2020Q3.xlsx",
+        "sha256": "0b7d1bb5091d974fc9a4492a9bfe5c7b"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/loganriver/7ff1ae6051784b1d8dfd3ea6de16c387/data/contents/LRO_RatingCurve_PiecewiseToSQL_Hydroshare2020Q3.py",
+        "encodingFormat": "text/x-python",
+        "contentSize": "8.567 KB",
+        "name": "LRO_RatingCurve_PiecewiseToSQL_Hydroshare2020Q3.py",
+        "sha256": "4b1f9968b7a1e4eb1aa1f360391b6f7f"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/loganriver/7ff1ae6051784b1d8dfd3ea6de16c387/data/contents/LR_MainStreet_Deprecated_20180723.zip",
+        "encodingFormat": "application/zip",
+        "contentSize": "6031.36 KB",
+        "name": "LR_MainStreet_Deprecated_20180723.zip",
+        "sha256": "9d72254a6a7f6aa4204489df01f2d77d"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/loganriver/7ff1ae6051784b1d8dfd3ea6de16c387/data/contents/flowtracker-variable-definitions.pdf",
+        "encodingFormat": "application/pdf",
+        "contentSize": "45.182 KB",
+        "name": "flowtracker-variable-definitions.pdf",
+        "sha256": "671b340ff67384d7b2179a1de18fd539"
+      }
+    ],
+    "citation": [
+      "Logan River Observatory (2024). Discharge Rating Curve at Logan River near Main Street Bridge Basic Aquatic Site (LR_MainStreet_BA), HydroShare, http://www.hydroshare.org/resource/7ff1ae6051784b1d8dfd3ea6de16c387",
+      {
+        "type": "CreativeWork",
+        "name": "The content of this resource is part of",
+        "description": "Data Manager, i., iUTAH GAMUT Working Group (2021). IUTAH GAMUT Environmental Observatory Collected Datasets, HydroShare",
+        "url": "http://www.hydroshare.org/resource/02b155615b794671bfc4c48870b3ce6f"
+      },
+      {
+        "type": "CreativeWork",
+        "name": "The content of this resource is part of",
+        "description": "Strong, P. (2025). Logan River Observatory Rating Curves, HydroShare",
+        "url": "http://www.hydroshare.org/resource/a1f6b0b4ebcb415a87faf794dbcfa9ab"
+      }
+    ],
+    "coordinates": null,
+    "includedInDataCatalog": null,
+    "sourceOrganization": null,
+    "sharing_status": null,
+    "additional_metadata": {
+      "Data Collection Method": "Water discharge measured using a SonTek FlowTracker. The Stream gauging method used is the Velocity Area Mid-Section Method. Stage is observed from pressure transducer observations and readings of a static stage plate.",
+      "Variable Description": "Water Discharge related variables",
+      "Observed Variables": "discharge - discharge, ISO_%error - uncertainty ISO method, Stats_%error - uncertainty Statistical method, stageplate_start - Gage height, stageplate_end - Gage height, stageplate_avg - Gage height, Water Surface - Elevation, Gauging Method - Method, Instrument - Instrument, Field Technician - Technician, Transect Location - Location, File Name - summary file, Notes - field notes"
+    },
+    "_s3_filepath": "loganriver/7ff1ae6051784b1d8dfd3ea6de16c387/.hsjsonld/dataset_metadata.json",
+    "first_creator": {
+      "type": "Organization",
+      "url": null,
+      "address": null,
+      "name": "Logan River Observatory"
+    },
+    "content_types": []
+  },
+  {
+    "_id": {
+      "$oid": "6938975cfc32d6a624865636"
+    },
+    "context": "https://hydroshare.org/schema",
+    "type": "ScientificDataset",
+    "additionalType": "CompositeResource",
+    "name": "Green Infrastructure Projects on the University of Utah Campus",
+    "description": "This dataset consists of .kml and .kmz files identifying locations of green infrastructure projects implemented on the University of Utah campus. The locations are current as of 2013 and may be updated.",
+    "url": "https://beta.hydroshare.org/landing/914768f58670438eb1b7b38b9e3e888a",
+    "identifier": [
+      "https://beta.hydroshare.org/landing/914768f58670438eb1b7b38b9e3e888a"
+    ],
+    "creator": [
+      {
+        "type": "Person",
+        "email": "youcan.feng@gmail.com",
+        "identifier": null,
+        "affiliation": null,
+        "name": "Youcan Feng"
+      }
+    ],
+    "dateCreated": {
+      "$date": "2016-07-27T01:41:13.184Z"
+    },
+    "keywords": [
+      "stormwater",
+      "urban",
+      "green infrastructure",
+      "Red Butte Creek",
+      "engineering",
+      "University of Utah",
+      "iUTAH",
+      "location"
+    ],
+    "license": {
+      "type": "CreativeWork",
+      "name": "This resource is shared under the Creative Commons Attribution CC BY.",
+      "description": null,
+      "url": "http://creativecommons.org/licenses/by/4.0/"
+    },
+    "provider": {
+      "type": "Organization",
+      "url": "https://www.hydroshare.org/",
+      "address": null,
+      "name": "HydroShare"
+    },
+    "contributor": [
+      {
+        "type": "Person",
+        "email": "u0655790@utah.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "University of Utah, Urban Water Research Group"
+        },
+        "name": "Thomas Walsh"
+      }
+    ],
+    "publisher": null,
+    "datePublished": null,
+    "subjectOf": null,
+    "version": null,
+    "inLanguage": "eng",
+    "creativeWorkStatus": {
+      "type": "DefinedTerm",
+      "name": "Public",
+      "description": "The resource is publicly accessible and can be viewed or downloaded by anyone"
+    },
+    "dateModified": {
+      "$date": "2017-09-13T21:20:00.245Z"
+    },
+    "funding": [
+      {
+        "type": "Grant",
+        "description": null,
+        "identifier": "1208732",
+        "funder": {
+          "type": "Organization",
+          "url": "http://www.nsf.gov/",
+          "address": null,
+          "name": "National Science Foundation"
+        },
+        "name": "iUTAH-innovative Urban Transitions and Aridregion  Hydro-sustainability"
+      }
+    ],
+    "temporalCoverage": null,
+    "spatialCoverage": {
+      "type": "Place",
+      "name": "University of Utah campus/Red Butte Creek Watershed",
+      "geo": {
+        "type": "GeoShape",
+        "box": "40.77189687358631 -111.8303918838501 40.758310295122065 -111.85227870941162"
+      },
+      "additionalProperty": null,
+      "srs": null
+    },
+    "hasPart": [],
+    "isPartOf": [],
+    "relation": [
+      "annotation=NoneType required=False default=None title='Relation' description='All other types of relations'"
+    ],
+    "additionalProperty": null,
+    "associatedMedia": [
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/iutahdata/914768f58670438eb1b7b38b9e3e888a/data/contents/gi-on-u-campus.kml",
+        "encodingFormat": "application/vnd.google-earth.kml+xml",
+        "contentSize": "18.503 KB",
+        "name": "gi-on-u-campus.kml",
+        "sha256": "55e3c364f9efe5ffbd305e8813d5ef77"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/iutahdata/914768f58670438eb1b7b38b9e3e888a/data/contents/gi-on-u-campus.kmz",
+        "encodingFormat": "application/vnd.google-earth.kmz",
+        "contentSize": "3.549 KB",
+        "name": "gi-on-u-campus.kmz",
+        "sha256": "e273bdceb0fe933095c0dae0e93a571f"
+      }
+    ],
+    "citation": [
+      "Feng, Y. (2017). Green Infrastructure Projects on the University of Utah Campus, HydroShare, http://www.hydroshare.org/resource/914768f58670438eb1b7b38b9e3e888a"
+    ],
+    "coordinates": null,
+    "includedInDataCatalog": null,
+    "sourceOrganization": null,
+    "sharing_status": null,
+    "view_count": 3551,
+    "additional_metadata": {
+      "Observed Variables": "Location"
+    },
+    "relations": [],
+    "_s3_filepath": "iutahdata/914768f58670438eb1b7b38b9e3e888a/.hsjsonld/dataset_metadata.json",
+    "first_creator": {
+      "type": "Person",
+      "email": "youcan.feng@gmail.com",
+      "identifier": null,
+      "affiliation": null,
+      "name": "Youcan Feng"
+    },
+    "content_types": []
+  },
+  {
+    "_id": {
+      "$oid": "6938975cfc32d6a624865638"
+    },
+    "context": "https://hydroshare.org/schema",
+    "type": "ScientificDataset",
+    "additionalType": "CompositeResource",
+    "name": "LNWB Ch03 Data Processes - data management plan",
+    "description": "Overview:\r\nThe Lower Nooksack Water Budget Project involved assembling a wide range of existing data related to WRIA 1 and specifically the Lower Nooksack Subbasin, updating existing data sets and generating new data sets. This Data Management Plan provides an overview of the data sets, formats and collaboration environment that was used to develop the project. Use of a plan during development of the technical work products provided a forum for the data development and management to be conducted with transparent methods and processes. At project completion, the Data Management Plan provides an accessible archive of the data resources used and supporting information on the data storage, intended access, sharing and re-use guidelines. \r\n\r\nOne goal of the Lower Nooksack Water Budget project is to make this \u201cusable technical information\u201d as accessible as possible across technical, policy and general public users. The project data, analyses and documents will be made available through the WRIA 1 Watershed Management Project website http://wria1project.org. This information is intended for use by the WRIA 1 Joint Board and partners working to achieve the adopted goals and priorities of the WRIA 1 Watershed Management Plan. \r\n\r\nModel outputs for the Lower Nooksack Water Budget are summarized by sub-watersheds (drainages) and point locations (nodes). In general, due to changes in land use over time and changes to available streamflow and climate data, the water budget for any watershed needs to be updated periodically. Further detailed information about data sources is provided in review packets developed for specific technical components including climate, streamflow and groundwater level, soils and land cover, and water use.\r\n\r\nPurpose:\r\nThis project involves assembling a wide range of existing data related to the WRIA 1 and specifically the Lower Nooksack Subbasin, updating existing data sets and generating new data sets. Data will be used as input to various hydrologic, climatic and geomorphic components of the Topnet-Water Management (WM) model, but will also be available to support other modeling efforts in WRIA 1. Much of the data used as input to the Topnet model is publicly available and maintained by others, (i.e., USGS DEMs and streamflow data, SSURGO soils data, University of Washington gridded meteorological data). Pre-processing is performed to convert these existing data into a format that can be used as input to the Topnet model. Post-processing of Topnet model ASCII-text file outputs is subsequently combined with spatial data to generate GIS data that can be used to create maps and illustrations of the spatial distribution of water information. Other products generated during this project will include documentation of methods, input by WRIA 1 Joint Board Staff Team during review and comment periods, communication tools developed for public engagement and public comment on the project.\r\n\r\nIn order to maintain an organized system of developing and distributing data, Lower Nooksack Water Budget project collaborators should be familiar with standards for data management described in this document, and the following issues related to generating and distributing data:\r\n1. Standards for metadata and data formats\r\n2. Plans for short-term storage and data management (i.e., file formats, local storage and back up procedures and security)\r\n3. Legal and ethical issues (i.e., intellectual property, confidentiality of study participants)\r\n4. Access policies and provisions (i.e., how the data will be made available to others, any restrictions needed)\r\n5. Provisions for long-term archiving and preservation (i.e., establishment of a new data archive or utilization of an existing archive)\r\n6. Assigned data management responsibilities (i.e., persons responsible for ensuring data Management, monitoring compliance with the Data Management Plan)\r\n\r\nThis resource is a subset of the LNWB Ch03 Data Processes Collection Resource.",
+    "url": "https://beta.hydroshare.org/landing/7ccd68835ff14c1d856c704591c77a8a",
+    "identifier": [
+      "https://beta.hydroshare.org/landing/7ccd68835ff14c1d856c704591c77a8a"
+    ],
+    "creator": [
+      {
+        "type": "Person",
+        "email": "cband@uw.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "University of Washington"
+        },
+        "name": "Christina Bandaragoda"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Washington State University"
+        },
+        "name": "Bracken Capen"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "HydroLogic Services Co."
+        },
+        "name": "Joanne Greenberg"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Dumas & Associates"
+        },
+        "name": "Mary Dumas"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Whatcom County Public Works"
+        },
+        "name": "Peter Gill"
+      }
+    ],
+    "dateCreated": {
+      "$date": "2016-08-01T22:39:21.652Z"
+    },
+    "keywords": [
+      "Data Dictionary",
+      "TOPNET WM Model",
+      "Database Schema"
+    ],
+    "license": {
+      "type": "CreativeWork",
+      "name": "This resource is shared under the Creative Commons Attribution CC BY.",
+      "description": null,
+      "url": "http://creativecommons.org/licenses/by/4.0/"
+    },
+    "provider": {
+      "type": "Organization",
+      "url": "https://www.hydroshare.org/",
+      "address": null,
+      "name": "HydroShare"
+    },
+    "contributor": [
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Lummi Nation"
+        },
+        "name": "Jeremy Freimund"
+      }
+    ],
+    "publisher": null,
+    "datePublished": null,
+    "subjectOf": null,
+    "version": null,
+    "inLanguage": "eng",
+    "creativeWorkStatus": {
+      "type": "DefinedTerm",
+      "name": "Public",
+      "description": "The resource is publicly accessible and can be viewed or downloaded by anyone"
+    },
+    "dateModified": {
+      "$date": "2016-08-19T17:16:52.513Z"
+    },
+    "funding": [
+      {
+        "type": "Grant",
+        "description": null,
+        "identifier": "Whatcom County Contract 201111021",
+        "funder": {
+          "type": "Organization",
+          "url": "http://wria1project.whatcomcounty.org/Home/Water-Budget/97.aspx",
+          "address": null,
+          "name": "WRIA 1 Joint Board "
+        },
+        "name": "Lower Nooksack Water Budget "
+      }
+    ],
+    "temporalCoverage": null,
+    "spatialCoverage": null,
+    "hasPart": [],
+    "isPartOf": [
+      {
+        "type": "CreativeWork",
+        "name": null,
+        "description": "Bandaragoda, C., J. Greenberg, P. Gill, B. Capen, M. Dumas (2016). LNWB Ch03 Data Processes, HydroShare",
+        "url": "http://www.hydroshare.org/resource/a166f8e121b7496397ae05367d48a1f3"
+      }
+    ],
+    "relation": [
+      "annotation=NoneType required=False default=None title='Relation' description='All other types of relations'"
+    ],
+    "additionalProperty": null,
+    "associatedMedia": [
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/jphuong/7ccd68835ff14c1d856c704591c77a8a/data/contents/copper_WRIA1sts_0007465_.sql",
+        "encodingFormat": "application/sql",
+        "contentSize": "4674.509 KB",
+        "name": "copper_WRIA1sts_0007465_.sql",
+        "sha256": "eb3b19190e62bac2fe8f1265e5f89d01"
+      }
+    ],
+    "citation": [
+      "Bandaragoda, C., B. Capen, J. Greenberg, M. Dumas, P. Gill (2016). LNWB Ch03 Data Processes - data management plan, HydroShare, http://www.hydroshare.org/resource/7ccd68835ff14c1d856c704591c77a8a"
+    ],
+    "coordinates": null,
+    "includedInDataCatalog": null,
+    "sourceOrganization": null,
+    "sharing_status": null,
+    "view_count": 3536,
+    "additional_metadata": {},
+    "relations": [
+      {
+        "type": "CreativeWork",
+        "name": "The content of this resource is part of",
+        "description": "Bandaragoda, C., J. Greenberg, P. Gill, B. Capen, M. Dumas (2016). LNWB Ch03 Data Processes, HydroShare",
+        "url": "http://www.hydroshare.org/resource/a166f8e121b7496397ae05367d48a1f3"
+      }
+    ],
+    "_s3_filepath": "jphuong/7ccd68835ff14c1d856c704591c77a8a/.hsjsonld/dataset_metadata.json",
+    "first_creator": {
+      "type": "Person",
+      "email": "cband@uw.edu",
+      "identifier": null,
+      "affiliation": {
+        "type": "Organization",
+        "url": null,
+        "address": null,
+        "name": "University of Washington"
+      },
+      "name": "Christina Bandaragoda"
+    },
+    "content_types": []
+  },
+  {
+    "_id": {
+      "$oid": "6938975dfc32d6a62486563a"
+    },
+    "context": "https://hydroshare.org/schema",
+    "type": "ScientificDataset",
+    "additionalType": "CompositeResource",
+    "name": "LNWB Ch05 Land Cover - data processing",
+    "description": "Matlab code to convert raster, lookup tables, and shapefile data to area averaged parameter values.\r\n\r\nThis resource is a subset of the LNWB Ch05 Land Cover Collection Resource.",
+    "url": "https://beta.hydroshare.org/landing/173b983c535a47e2a39924aea869688c",
+    "identifier": [
+      "https://beta.hydroshare.org/landing/173b983c535a47e2a39924aea869688c"
+    ],
+    "creator": [
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Whatcom County Public Works"
+        },
+        "name": "Peter Gill"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "HydroLogic Services Co."
+        },
+        "name": "Joanne Greenberg"
+      },
+      {
+        "type": "Person",
+        "email": "cband@uw.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "University of Washington"
+        },
+        "name": "Christina Bandaragoda"
+      }
+    ],
+    "dateCreated": {
+      "$date": "2016-08-02T00:27:08.191Z"
+    },
+    "keywords": [
+      "calculating basin parameter values"
+    ],
+    "license": {
+      "type": "CreativeWork",
+      "name": "This resource is shared under the Creative Commons Attribution CC BY.",
+      "description": null,
+      "url": "http://creativecommons.org/licenses/by/4.0/"
+    },
+    "provider": {
+      "type": "Organization",
+      "url": "https://www.hydroshare.org/",
+      "address": null,
+      "name": "HydroShare"
+    },
+    "contributor": [
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Washington State University"
+        },
+        "name": "Bracken Capen"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Dumas & Associates"
+        },
+        "name": "Mary Dumas"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Hydrology Futures"
+        },
+        "name": "Mariza Costa-Cabral"
+      }
+    ],
+    "publisher": null,
+    "datePublished": null,
+    "subjectOf": null,
+    "version": null,
+    "inLanguage": "eng",
+    "creativeWorkStatus": {
+      "type": "DefinedTerm",
+      "name": "Public",
+      "description": "The resource is publicly accessible and can be viewed or downloaded by anyone"
+    },
+    "dateModified": {
+      "$date": "2016-08-19T17:14:27.864Z"
+    },
+    "funding": [
+      {
+        "type": "Grant",
+        "description": null,
+        "identifier": "Whatcom County Contract 201111021",
+        "funder": {
+          "type": "Organization",
+          "url": "http://wria1project.whatcomcounty.org/Home/Water-Budget/97.aspx",
+          "address": null,
+          "name": "WRIA 1 Joint Board "
+        },
+        "name": "Lower Nooksack Water Budget "
+      }
+    ],
+    "temporalCoverage": null,
+    "spatialCoverage": null,
+    "hasPart": [],
+    "isPartOf": [
+      {
+        "type": "CreativeWork",
+        "name": null,
+        "description": "Gill, P., J. Greenberg, C. Bandaragoda (2016). LNWB Ch05 Land Cover, HydroShare",
+        "url": "http://www.hydroshare.org/resource/479ae9daeec34b48885f7645ea0966b4"
+      }
+    ],
+    "relation": [
+      "annotation=NoneType required=False default=None title='Relation' description='All other types of relations'"
+    ],
+    "additionalProperty": null,
+    "associatedMedia": [
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/jphuong/173b983c535a47e2a39924aea869688c/data/contents/write_basinpars_existing2012.m",
+        "encodingFormat": "application/vnd.wolfram.mathematica.package",
+        "contentSize": "6.673 KB",
+        "name": "write_basinpars_existing2012.m",
+        "sha256": "e7413ba850207fbb00a1e0c043ba1313"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/jphuong/173b983c535a47e2a39924aea869688c/data/contents/write_basinpars_historic2012.m",
+        "encodingFormat": "application/vnd.wolfram.mathematica.package",
+        "contentSize": "6.673 KB",
+        "name": "write_basinpars_historic2012.m",
+        "sha256": "e7413ba850207fbb00a1e0c043ba1313"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/jphuong/173b983c535a47e2a39924aea869688c/data/contents/write_basinpars_soilkc2012.m",
+        "encodingFormat": "application/vnd.wolfram.mathematica.package",
+        "contentSize": "6.673 KB",
+        "name": "write_basinpars_soilkc2012.m",
+        "sha256": "e7413ba850207fbb00a1e0c043ba1313"
+      }
+    ],
+    "citation": [
+      "Gill, P., J. Greenberg, C. Bandaragoda (2016). LNWB Ch05 Land Cover - data processing, HydroShare, http://www.hydroshare.org/resource/173b983c535a47e2a39924aea869688c"
+    ],
+    "coordinates": null,
+    "includedInDataCatalog": null,
+    "sourceOrganization": null,
+    "sharing_status": null,
+    "view_count": 3822,
+    "additional_metadata": {},
+    "relations": [
+      {
+        "type": "CreativeWork",
+        "name": "The content of this resource is part of",
+        "description": "Gill, P., J. Greenberg, C. Bandaragoda (2016). LNWB Ch05 Land Cover, HydroShare",
+        "url": "http://www.hydroshare.org/resource/479ae9daeec34b48885f7645ea0966b4"
+      }
+    ],
+    "_s3_filepath": "jphuong/173b983c535a47e2a39924aea869688c/.hsjsonld/dataset_metadata.json",
+    "first_creator": {
+      "type": "Person",
+      "email": null,
+      "identifier": null,
+      "affiliation": {
+        "type": "Organization",
+        "url": null,
+        "address": null,
+        "name": "Whatcom County Public Works"
+      },
+      "name": "Peter Gill"
+    },
+    "content_types": []
+  },
+  {
+    "_id": {
+      "$oid": "6938975ffc32d6a62486563c"
+    },
+    "context": "https://hydroshare.org/schema",
+    "type": "ScientificDataset",
+    "additionalType": "CompositeResource",
+    "name": "LNWB Ch10 Stream Flow - flow geodatabase",
+    "description": "Geodatabase of streamflow data.\r\n\r\nThis resource is a subset of the LNWB Ch10 Stream Flow Collection Resource.",
+    "url": "https://beta.hydroshare.org/landing/ba69c0a28b5640e6ac18fe33a00c4011",
+    "identifier": [
+      "https://beta.hydroshare.org/landing/ba69c0a28b5640e6ac18fe33a00c4011"
+    ],
+    "creator": [
+      {
+        "type": "Person",
+        "email": "cband@uw.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "University of Washington"
+        },
+        "name": "Christina Bandaragoda"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Washington State Department of Ecology"
+        },
+        "name": "Llyn Doremus"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "HydroLogic Services Co."
+        },
+        "name": "Joanne Greenberg"
+      }
+    ],
+    "dateCreated": {
+      "$date": "2016-08-08T06:10:24.997Z"
+    },
+    "keywords": [
+      "streamflow database"
+    ],
+    "license": {
+      "type": "CreativeWork",
+      "name": "This resource is shared under the Creative Commons Attribution CC BY.",
+      "description": null,
+      "url": "http://creativecommons.org/licenses/by/4.0/"
+    },
+    "provider": {
+      "type": "Organization",
+      "url": "https://www.hydroshare.org/",
+      "address": null,
+      "name": "HydroShare"
+    },
+    "contributor": [
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Hydrology Futures"
+        },
+        "name": "Bracken Capen"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Hydrology Futures"
+        },
+        "name": "Mariza Costa-Cabral"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Dumas & Associates"
+        },
+        "name": "Mary Dumas"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Whatcom County Public Works"
+        },
+        "name": "Peter Gill"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Lummi Nation"
+        },
+        "name": "Jeremy Freimund"
+      }
+    ],
+    "publisher": null,
+    "datePublished": null,
+    "subjectOf": null,
+    "version": null,
+    "inLanguage": "eng",
+    "creativeWorkStatus": {
+      "type": "DefinedTerm",
+      "name": "Public",
+      "description": "The resource is publicly accessible and can be viewed or downloaded by anyone"
+    },
+    "dateModified": {
+      "$date": "2016-08-18T18:51:59.488Z"
+    },
+    "funding": [
+      {
+        "type": "Grant",
+        "description": null,
+        "identifier": "Whatcom County Contract 201111021",
+        "funder": {
+          "type": "Organization",
+          "url": "http://wria1project.whatcomcounty.org/Home/Water-Budget/97.aspx",
+          "address": null,
+          "name": "WRIA 1 Joint Board "
+        },
+        "name": "Lower Nooksack Water Budget "
+      }
+    ],
+    "temporalCoverage": null,
+    "spatialCoverage": null,
+    "hasPart": [],
+    "isPartOf": [
+      {
+        "type": "CreativeWork",
+        "name": null,
+        "description": "Bandaragoda, C., L. Doremus, J. Greenberg (2024). LNWB Ch10 Stream Flow, HydroShare",
+        "url": "http://www.hydroshare.org/resource/d5c5b4038e47488c86dc62db73f0a08d"
+      }
+    ],
+    "relation": [
+      "annotation=NoneType required=False default=None title='Relation' description='All other types of relations'"
+    ],
+    "additionalProperty": null,
+    "associatedMedia": [
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/jphuong/ba69c0a28b5640e6ac18fe33a00c4011/data/contents/WRIA1StreamflowLocations.gdb.zip",
+        "encodingFormat": "application/zip",
+        "contentSize": "1756.311 KB",
+        "name": "WRIA1StreamflowLocations.gdb.zip",
+        "sha256": "f6980ef51b603ea8ce1d24f4bd903fd3"
+      }
+    ],
+    "citation": [
+      "Bandaragoda, C., L. Doremus, J. Greenberg (2016). LNWB Ch10 Stream Flow - flow geodatabase, HydroShare, http://www.hydroshare.org/resource/ba69c0a28b5640e6ac18fe33a00c4011"
+    ],
+    "coordinates": null,
+    "includedInDataCatalog": null,
+    "sourceOrganization": null,
+    "sharing_status": null,
+    "view_count": 3399,
+    "additional_metadata": {},
+    "relations": [
+      {
+        "type": "CreativeWork",
+        "name": "The content of this resource is part of",
+        "description": "Bandaragoda, C., L. Doremus, J. Greenberg (2024). LNWB Ch10 Stream Flow, HydroShare",
+        "url": "http://www.hydroshare.org/resource/d5c5b4038e47488c86dc62db73f0a08d"
+      }
+    ],
+    "_s3_filepath": "jphuong/ba69c0a28b5640e6ac18fe33a00c4011/.hsjsonld/dataset_metadata.json",
+    "first_creator": {
+      "type": "Person",
+      "email": "cband@uw.edu",
+      "identifier": null,
+      "affiliation": {
+        "type": "Organization",
+        "url": null,
+        "address": null,
+        "name": "University of Washington"
+      },
+      "name": "Christina Bandaragoda"
+    },
+    "content_types": []
+  },
+  {
+    "_id": {
+      "$oid": "6938975ffc32d6a62486563e"
+    },
+    "context": "https://hydroshare.org/schema",
+    "type": "ScientificDataset",
+    "additionalType": "CompositeResource",
+    "name": "LNWB Ch10 Stream Flow - flow data",
+    "description": "Access Database of streamflow records.\r\n\r\nThis resource is a subset of the LNWB Ch10 Stream Flow Collection Resource.",
+    "url": "https://beta.hydroshare.org/landing/972094e5e7344f088820df9e9cc153a1",
+    "identifier": [
+      "https://beta.hydroshare.org/landing/972094e5e7344f088820df9e9cc153a1"
+    ],
+    "creator": [
+      {
+        "type": "Person",
+        "email": "cband@uw.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "University of Washington"
+        },
+        "name": "Christina Bandaragoda"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Washington State Department of Ecology"
+        },
+        "name": "Llyn Doremus"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "HydroLogic Services Co."
+        },
+        "name": "Joanne Greenberg"
+      }
+    ],
+    "dateCreated": {
+      "$date": "2016-08-08T06:18:09.945Z"
+    },
+    "keywords": [
+      "stream flow data"
+    ],
+    "license": {
+      "type": "CreativeWork",
+      "name": "This resource is shared under the Creative Commons Attribution CC BY.",
+      "description": null,
+      "url": "http://creativecommons.org/licenses/by/4.0/"
+    },
+    "provider": {
+      "type": "Organization",
+      "url": "https://www.hydroshare.org/",
+      "address": null,
+      "name": "HydroShare"
+    },
+    "contributor": [
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Washington State University"
+        },
+        "name": "Bracken Capen"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Whatcom County Public Works"
+        },
+        "name": "Peter Gill"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Hydrology Futures"
+        },
+        "name": "Mariza Costa-Cabral"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Dumas & Associates"
+        },
+        "name": "Mary Dumas"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Lummi Nation"
+        },
+        "name": "Jeremy Freimund"
+      }
+    ],
+    "publisher": null,
+    "datePublished": null,
+    "subjectOf": null,
+    "version": null,
+    "inLanguage": "eng",
+    "creativeWorkStatus": {
+      "type": "DefinedTerm",
+      "name": "Public",
+      "description": "The resource is publicly accessible and can be viewed or downloaded by anyone"
+    },
+    "dateModified": {
+      "$date": "2016-08-18T18:51:40.383Z"
+    },
+    "funding": [
+      {
+        "type": "Grant",
+        "description": null,
+        "identifier": "Whatcom County Contract 201111021",
+        "funder": {
+          "type": "Organization",
+          "url": "http://wria1project.whatcomcounty.org/Home/Water-Budget/97.aspx",
+          "address": null,
+          "name": "WRIA 1 Joint Board "
+        },
+        "name": "Lower Nooksack Water Budget"
+      }
+    ],
+    "temporalCoverage": null,
+    "spatialCoverage": null,
+    "hasPart": [],
+    "isPartOf": [
+      {
+        "type": "CreativeWork",
+        "name": null,
+        "description": "Bandaragoda, C., L. Doremus, J. Greenberg (2024). LNWB Ch10 Stream Flow, HydroShare",
+        "url": "http://www.hydroshare.org/resource/d5c5b4038e47488c86dc62db73f0a08d"
+      }
+    ],
+    "relation": [
+      "annotation=NoneType required=False default=None title='Relation' description='All other types of relations'"
+    ],
+    "additionalProperty": null,
+    "associatedMedia": [
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/jphuong/972094e5e7344f088820df9e9cc153a1/data/contents/WRIA1_StreamflowGageData062512.mdb",
+        "encodingFormat": "application/msaccess",
+        "contentSize": "90406.912 KB",
+        "name": "WRIA1_StreamflowGageData062512.mdb",
+        "sha256": "0a83366d320ed3690f038800f1d5551e-6"
+      }
+    ],
+    "citation": [
+      "Bandaragoda, C., L. Doremus, J. Greenberg (2016). LNWB Ch10 Stream Flow - flow data, HydroShare, http://www.hydroshare.org/resource/972094e5e7344f088820df9e9cc153a1"
+    ],
+    "coordinates": null,
+    "includedInDataCatalog": null,
+    "sourceOrganization": null,
+    "sharing_status": null,
+    "view_count": 3377,
+    "additional_metadata": {},
+    "relations": [
+      {
+        "type": "CreativeWork",
+        "name": "The content of this resource is part of",
+        "description": "Bandaragoda, C., L. Doremus, J. Greenberg (2024). LNWB Ch10 Stream Flow, HydroShare",
+        "url": "http://www.hydroshare.org/resource/d5c5b4038e47488c86dc62db73f0a08d"
+      }
+    ],
+    "_s3_filepath": "jphuong/972094e5e7344f088820df9e9cc153a1/.hsjsonld/dataset_metadata.json",
+    "first_creator": {
+      "type": "Person",
+      "email": "cband@uw.edu",
+      "identifier": null,
+      "affiliation": {
+        "type": "Organization",
+        "url": null,
+        "address": null,
+        "name": "University of Washington"
+      },
+      "name": "Christina Bandaragoda"
+    },
+    "content_types": []
+  },
+  {
+    "_id": {
+      "$oid": "6938975ffc32d6a624865640"
+    },
+    "context": "https://hydroshare.org/schema",
+    "type": "ScientificDataset",
+    "additionalType": "CollectionResource",
+    "name": "LNWB Ch03 Data Processes",
+    "description": "Overview:\r\nThe Lower Nooksack Water Budget Project involved assembling a wide range of existing data related to WRIA 1 and specifically the Lower Nooksack Subbasin, updating existing data sets and generating new data sets. This Data Management Plan provides an overview of the data sets, formats and collaboration environment that was used to develop the project. Use of a plan during development of the technical work products provided a forum for the data development and management to be conducted with transparent methods and processes. At project completion, the Data Management Plan provides an accessible archive of the data resources used and supporting information on the data storage, intended access, sharing and re-use guidelines. \r\n\r\nOne goal of the Lower Nooksack Water Budget project is to make this \u201cusable technical information\u201d as accessible as possible across technical, policy and general public users. The project data, analyses and documents will be made available through the WRIA 1 Watershed Management Project website http://wria1project.org. This information is intended for use by the WRIA 1 Joint Board and partners working to achieve the adopted goals and priorities of the WRIA 1 Watershed Management Plan. \r\n\r\nModel outputs for the Lower Nooksack Water Budget are summarized by sub-watersheds (drainages) and point locations (nodes). In general, due to changes in land use over time and changes to available streamflow and climate data, the water budget for any watershed needs to be updated periodically. Further detailed information about data sources is provided in review packets developed for specific technical components including climate, streamflow and groundwater level, soils and land cover, and water use.\r\n\r\nPurpose:\r\nThis project involves assembling a wide range of existing data related to the WRIA 1 and specifically the Lower Nooksack Subbasin, updating existing data sets and generating new data sets. Data will be used as input to various hydrologic, climatic and geomorphic components of the Topnet-Water Management (WM) model, but will also be available to support other modeling efforts in WRIA 1. Much of the data used as input to the Topnet model is publicly available and maintained by others, (i.e., USGS DEMs and streamflow data, SSURGO soils data, University of Washington gridded meteorological data). Pre-processing is performed to convert these existing data into a format that can be used as input to the Topnet model. Post-processing of Topnet model ASCII-text file outputs is subsequently combined with spatial data to generate GIS data that can be used to create maps and illustrations of the spatial distribution of water information. Other products generated during this project will include documentation of methods, input by WRIA 1 Joint Board Staff Team during review and comment periods, communication tools developed for public engagement and public comment on the project.\r\n\r\nIn order to maintain an organized system of developing and distributing data, Lower Nooksack Water Budget project collaborators should be familiar with standards for data management described in this document, and the following issues related to generating and distributing data:\r\n1. Standards for metadata and data formats\r\n2. Plans for short-term storage and data management (i.e., file formats, local storage and back up procedures and security)\r\n3. Legal and ethical issues (i.e., intellectual property, confidentiality of study participants)\r\n4. Access policies and provisions (i.e., how the data will be made available to others, any restrictions needed)\r\n5. Provisions for long-term archiving and preservation (i.e., establishment of a new data archive or utilization of an existing archive)\r\n6. Assigned data management responsibilities (i.e., persons responsible for ensuring data Management, monitoring compliance with the Data Management Plan)\r\n\r\nThis resource is a subset of the Lower Nooksack Water Budget (LNWB) Collection Resource.",
+    "url": "https://beta.hydroshare.org/landing/a166f8e121b7496397ae05367d48a1f3",
+    "identifier": [
+      "https://beta.hydroshare.org/landing/a166f8e121b7496397ae05367d48a1f3"
+    ],
+    "creator": [
+      {
+        "type": "Person",
+        "email": "cband@uw.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "University of Washington"
+        },
+        "name": "Christina Bandaragoda"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "HydroLogic Services Co."
+        },
+        "name": "Joanne Greenberg"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Whatcom County Public Works"
+        },
+        "name": "Peter Gill"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Washington State University"
+        },
+        "name": "Bracken Capen"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Dumas & Associates"
+        },
+        "name": "Mary Dumas"
+      }
+    ],
+    "dateCreated": {
+      "$date": "2016-08-10T04:08:07.161Z"
+    },
+    "keywords": [
+      "TOPNET WM Model",
+      "Data Dictionary",
+      "Database Schema"
+    ],
+    "license": {
+      "type": "CreativeWork",
+      "name": "This resource is shared under the Creative Commons Attribution CC BY.",
+      "description": null,
+      "url": "http://creativecommons.org/licenses/by/4.0/"
+    },
+    "provider": {
+      "type": "Organization",
+      "url": "https://www.hydroshare.org/",
+      "address": null,
+      "name": "HydroShare"
+    },
+    "contributor": [
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Lummi Nation"
+        },
+        "name": "Jeremy Freimund"
+      }
+    ],
+    "publisher": null,
+    "datePublished": null,
+    "subjectOf": null,
+    "version": null,
+    "inLanguage": "eng",
+    "creativeWorkStatus": {
+      "type": "DefinedTerm",
+      "name": "Public",
+      "description": "The resource is publicly accessible and can be viewed or downloaded by anyone"
+    },
+    "dateModified": {
+      "$date": "2016-10-05T14:53:34.313Z"
+    },
+    "funding": [
+      {
+        "type": "Grant",
+        "description": null,
+        "identifier": "Whatcom County Contract 201111021",
+        "funder": {
+          "type": "Organization",
+          "url": "http://wria1project.whatcomcounty.org/Home/Water-Budget/97.aspx",
+          "address": null,
+          "name": "WRIA 1 Joint Board "
+        },
+        "name": "Lower Nooksack Water Budget "
+      }
+    ],
+    "temporalCoverage": null,
+    "spatialCoverage": null,
+    "hasPart": [],
+    "isPartOf": [
+      {
+        "type": "CreativeWork",
+        "name": null,
+        "description": "Bandaragoda, C., J. Greenberg, M. Dumas, P. Gill (2024). Lower Nooksack Water Budget (LNWB), HydroShare",
+        "url": "http://www.hydroshare.org/resource/d15b9934f34e4c57913b3cb53966d5c7"
+      },
+      {
+        "type": "CreativeWork",
+        "name": null,
+        "description": "Bandaragoda, C., J. Greenberg, M. Dumas, P. Gill (2018). Lower Nooksack Water Budget (LNWB), HydroShare",
+        "url": "http://www.hydroshare.org/resource/b7ab55848be04b67889c3a9582a58baf"
+      },
+      {
+        "type": "CreativeWork",
+        "name": "This resource includes",
+        "description": "Bandaragoda, C., B. Capen, J. Greenberg, M. Dumas, P. Gill (2016). LNWB Ch03 Data Processes - data management plan, HydroShare",
+        "url": "http://www.hydroshare.org/resource/7ccd68835ff14c1d856c704591c77a8a"
+      }
+    ],
+    "relation": [
+      "annotation=NoneType required=False default=None title='Relation' description='All other types of relations'"
+    ],
+    "additionalProperty": null,
+    "associatedMedia": [
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/jphuong/a166f8e121b7496397ae05367d48a1f3/data/contents/collection_list_a166f8e121b7496397ae05367d48a1f3.csv",
+        "encodingFormat": "text/csv",
+        "contentSize": "0.26 KB",
+        "name": "collection_list_a166f8e121b7496397ae05367d48a1f3.csv",
+        "sha256": "018507240889cf487a564d26e5603c99"
+      }
+    ],
+    "citation": [
+      "Bandaragoda, C., J. Greenberg, P. Gill, B. Capen, M. Dumas (2016). LNWB Ch03 Data Processes, HydroShare, http://www.hydroshare.org/resource/a166f8e121b7496397ae05367d48a1f3"
+    ],
+    "coordinates": null,
+    "includedInDataCatalog": null,
+    "sourceOrganization": null,
+    "sharing_status": null,
+    "view_count": 3857,
+    "additional_metadata": {},
+    "relations": [
+      {
+        "type": "CreativeWork",
+        "name": "The content of this resource is part of",
+        "description": "Bandaragoda, C., J. Greenberg, M. Dumas, P. Gill (2024). Lower Nooksack Water Budget (LNWB), HydroShare",
+        "url": "http://www.hydroshare.org/resource/d15b9934f34e4c57913b3cb53966d5c7"
+      },
+      {
+        "type": "CreativeWork",
+        "name": "The content of this resource is part of",
+        "description": "Bandaragoda, C., J. Greenberg, M. Dumas, P. Gill (2018). Lower Nooksack Water Budget (LNWB), HydroShare",
+        "url": "http://www.hydroshare.org/resource/b7ab55848be04b67889c3a9582a58baf"
+      },
+      {
+        "type": "CreativeWork",
+        "name": "This resource includes",
+        "description": "Bandaragoda, C., B. Capen, J. Greenberg, M. Dumas, P. Gill (2016). LNWB Ch03 Data Processes - data management plan, HydroShare",
+        "url": "http://www.hydroshare.org/resource/7ccd68835ff14c1d856c704591c77a8a"
+      }
+    ],
+    "_s3_filepath": "jphuong/a166f8e121b7496397ae05367d48a1f3/.hsjsonld/dataset_metadata.json",
+    "first_creator": {
+      "type": "Person",
+      "email": "cband@uw.edu",
+      "identifier": null,
+      "affiliation": {
+        "type": "Organization",
+        "url": null,
+        "address": null,
+        "name": "University of Washington"
+      },
+      "name": "Christina Bandaragoda"
+    },
+    "content_types": []
+  },
+  {
+    "_id": {
+      "$oid": "69389760fc32d6a624865642"
+    },
+    "context": "https://hydroshare.org/schema",
+    "type": "ScientificDataset",
+    "additionalType": "CompositeResource",
+    "name": "LNWB Ch09 Artificial Drainage - watershed and hydric minus tile shape files",
+    "description": "Compressed GIS files used in PhaseIIITask4 to create ditch and tile drain layers.\r\n\r\nSpatial data files specifying the areas with ditch and tile drainage were developed in 2004 by the USDA, Natural Resources Conservation Service (NRCS; Resource Conservationist, John Gillies, and Agricultural Engineer, Dean Renner). Drainage coefficients from NRCS technical guides are shown in Table 2. The drained areas were estimated using a geographic information system (GIS) to identify hydric soils on agricultural land use areas, based on the assumption that if a hydric soil was cleared and in agricultural use, then there was a drainage system in place to manage water using sub-surface (tile) and surface (open ditch) practices. For the Lower Nooksack Water Budget these are areas used to determine the tile drained and ditch drained fraction of each drainage model element as well as to assign drainage coefficients.\r\n\r\nThis resource is a subset of the LNWB Ch09 Artificial Drainage Collection Resource.",
+    "url": "https://beta.hydroshare.org/landing/e503a8232c0246f2a645640d49329454",
+    "identifier": [
+      "https://beta.hydroshare.org/landing/e503a8232c0246f2a645640d49329454"
+    ],
+    "creator": [
+      {
+        "type": "Person",
+        "email": "cband@uw.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "University of Washington"
+        },
+        "name": "Christina Bandaragoda"
+      },
+      {
+        "type": "Person",
+        "email": "dtarb@usu.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Utah State University"
+        },
+        "name": "David Tarboton"
+      },
+      {
+        "type": "Person",
+        "email": "joannegreenberg@comcast.net",
+        "identifier": null,
+        "affiliation": null,
+        "name": "Joanne Greenberg"
+      }
+    ],
+    "dateCreated": {
+      "$date": "2016-08-14T16:57:48.510Z"
+    },
+    "keywords": [
+      "Artificial drainage shape files",
+      "hydric",
+      "watershed"
+    ],
+    "license": {
+      "type": "CreativeWork",
+      "name": "This resource is shared under the Creative Commons Attribution CC BY.",
+      "description": null,
+      "url": "http://creativecommons.org/licenses/by/4.0/"
+    },
+    "provider": {
+      "type": "Organization",
+      "url": "https://www.hydroshare.org/",
+      "address": null,
+      "name": "HydroShare"
+    },
+    "contributor": [
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "USDA, Natural Resources Conservation Service"
+        },
+        "name": "Dean Renner"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Whatcom County Public Works"
+        },
+        "name": "Peter Gill"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Dumas & Associates"
+        },
+        "name": "Mary Dumas"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "USDA, Natural Resources Conservation Service"
+        },
+        "name": "John Gillies"
+      },
+      {
+        "type": "Person",
+        "email": null,
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Lummi Nation"
+        },
+        "name": "Jeremy Freimund"
+      }
+    ],
+    "publisher": null,
+    "datePublished": null,
+    "subjectOf": null,
+    "version": null,
+    "inLanguage": "eng",
+    "creativeWorkStatus": {
+      "type": "DefinedTerm",
+      "name": "Public",
+      "description": "The resource is publicly accessible and can be viewed or downloaded by anyone"
+    },
+    "dateModified": {
+      "$date": "2016-08-19T17:09:58.807Z"
+    },
+    "funding": [
+      {
+        "type": "Grant",
+        "description": null,
+        "identifier": "Whatcom County Contract 201111021",
+        "funder": {
+          "type": "Organization",
+          "url": "http://wria1project.whatcomcounty.org/Home/Water-Budget/97.aspx",
+          "address": null,
+          "name": "WRIA 1 Joint Board "
+        },
+        "name": "Lower Nooksack Water Budget"
+      }
+    ],
+    "temporalCoverage": null,
+    "spatialCoverage": {
+      "type": "Place",
+      "name": null,
+      "geo": {
+        "type": "GeoShape",
+        "box": "49.00056567926346 -121.95841623803733 48.673118432967414 -122.63151989943763"
+      },
+      "additionalProperty": null,
+      "srs": null
+    },
+    "hasPart": [
+      {
+        "type": "CreativeWork",
+        "url": "http://minio-api.default.svc.cluster.local:9000/jphuong/e503a8232c0246f2a645640d49329454/.hsjsonld/IntersectAgParcelsWatershedsAndHydricMinusTiled.shp.json"
+      }
+    ],
+    "isPartOf": [
+      {
+        "type": "CreativeWork",
+        "name": null,
+        "description": "Bandaragoda, C., D. Tarboton, J. Greenberg (2023). LNWB Ch09 Artificial Drainage, HydroShare",
+        "url": "http://www.hydroshare.org/resource/286e23da15f146c18adf2400f17e4a4c"
+      }
+    ],
+    "relation": [
+      "annotation=NoneType required=False default=None title='Relation' description='All other types of relations'"
+    ],
+    "additionalProperty": null,
+    "associatedMedia": [
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/jphuong/e503a8232c0246f2a645640d49329454/data/contents/IntersectAgParcelsWatershedsAndHydricMinusTiled.dbf",
+        "encodingFormat": "application/x-dbase",
+        "contentSize": "2117.029 KB",
+        "name": "IntersectAgParcelsWatershedsAndHydricMinusTiled.dbf",
+        "sha256": "4d0dc092ce6fb74e8291f989b0831681"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/jphuong/e503a8232c0246f2a645640d49329454/data/contents/IntersectAgParcelsWatershedsAndHydricMinusTiled.prj",
+        "encodingFormat": "text/plain",
+        "contentSize": "0.554 KB",
+        "name": "IntersectAgParcelsWatershedsAndHydricMinusTiled.prj",
+        "sha256": "1578c1144851855a50dd1f969458f131"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/jphuong/e503a8232c0246f2a645640d49329454/data/contents/IntersectAgParcelsWatershedsAndHydricMinusTiled.shp",
+        "encodingFormat": "application/x-esri-shapefile",
+        "contentSize": "2747.748 KB",
+        "name": "IntersectAgParcelsWatershedsAndHydricMinusTiled.shp",
+        "sha256": "f212f834b24317dd8ece78db93e37105"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/jphuong/e503a8232c0246f2a645640d49329454/data/contents/IntersectAgParcelsWatershedsAndHydricMinusTiled.shx",
+        "encodingFormat": "application/x-esri-shx",
+        "contentSize": "43.404 KB",
+        "name": "IntersectAgParcelsWatershedsAndHydricMinusTiled.shx",
+        "sha256": "8673ab76d0bbf0013dc17a448adb11ae"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/jphuong/e503a8232c0246f2a645640d49329454/data/contents/IntersectAgParcelsWatershedsAndHydricMinusTiled_meta.xml",
+        "encodingFormat": "application/xml",
+        "contentSize": "9.886 KB",
+        "name": "IntersectAgParcelsWatershedsAndHydricMinusTiled_meta.xml",
+        "sha256": "a1eb46f42ae452841dd283f634c51b2e"
+      },
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/jphuong/e503a8232c0246f2a645640d49329454/data/contents/IntersectAgParcelsWatershedsAndHydricMinusTiled_resmap.xml",
+        "encodingFormat": "application/xml",
+        "contentSize": "6.192 KB",
+        "name": "IntersectAgParcelsWatershedsAndHydricMinusTiled_resmap.xml",
+        "sha256": "c0f908b1beaa2371a1e93df239c8893b"
+      }
+    ],
+    "citation": [
+      "Bandaragoda, C., D. Tarboton, J. Greenberg (2016). LNWB Ch09 Artificial Drainage - watershed and hydric minus tile shape files, HydroShare, http://www.hydroshare.org/resource/e503a8232c0246f2a645640d49329454"
+    ],
+    "coordinates": null,
+    "includedInDataCatalog": null,
+    "sourceOrganization": null,
+    "sharing_status": null,
+    "view_count": 3773,
+    "additional_metadata": {},
+    "relations": [
+      {
+        "type": "CreativeWork",
+        "name": "The content of this resource is part of",
+        "description": "Bandaragoda, C., D. Tarboton, J. Greenberg (2023). LNWB Ch09 Artificial Drainage, HydroShare",
+        "url": "http://www.hydroshare.org/resource/286e23da15f146c18adf2400f17e4a4c"
+      }
+    ],
+    "_s3_filepath": "jphuong/e503a8232c0246f2a645640d49329454/.hsjsonld/dataset_metadata.json",
+    "first_creator": {
+      "type": "Person",
+      "email": "cband@uw.edu",
+      "identifier": null,
+      "affiliation": {
+        "type": "Organization",
+        "url": null,
+        "address": null,
+        "name": "University of Washington"
+      },
+      "name": "Christina Bandaragoda"
+    },
+    "content_types": [
+      "GeographicFeature"
+    ]
+  },
+  {
+    "_id": {
+      "$oid": "69389761fc32d6a624865644"
+    },
+    "context": "https://hydroshare.org/schema",
+    "type": "ScientificDataset",
+    "additionalType": "CompositeResource",
+    "name": "Algae Growth in Utah Lake Time-lapse",
+    "description": "This video shows the growth of toxic algae in Utah Lake.  Video courtesy of Utah Water Ski Club. Retrieved from YouTube user, \"The Salt Lake Tribune\" on August 15, 2016. Original video here: https://www.youtube.com/watch?v=jMzfRcqEE7Y. \r\n\r\nThis video is referenced by the HydroLearn Learning Module about HydroShare. You can find the free HydroLearn module here: https://edx.hydrolearn.org/courses/course-v1:BYU+HS101+2021/about",
+    "url": "https://beta.hydroshare.org/landing/4c8ecb05a72647339df0df6e9a87718f",
+    "identifier": [
+      "https://beta.hydroshare.org/landing/4c8ecb05a72647339df0df6e9a87718f"
+    ],
+    "creator": [
+      {
+        "type": "Person",
+        "email": "dan.ames@byu.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Brigham Young University"
+        },
+        "name": "Dan Ames"
+      }
+    ],
+    "dateCreated": {
+      "$date": "2016-08-17T03:45:54.569Z"
+    },
+    "keywords": [
+      "Utah Lake",
+      "Time-lapse",
+      "Algae"
+    ],
+    "license": {
+      "type": "CreativeWork",
+      "name": "This resource is shared under the Creative Commons Attribution CC BY.",
+      "description": null,
+      "url": "http://creativecommons.org/licenses/by/4.0/"
+    },
+    "provider": {
+      "type": "Organization",
+      "url": "https://www.hydroshare.org/",
+      "address": null,
+      "name": "HydroShare"
+    },
+    "contributor": [],
+    "publisher": null,
+    "datePublished": null,
+    "subjectOf": null,
+    "version": null,
+    "inLanguage": "eng",
+    "creativeWorkStatus": {
+      "type": "DefinedTerm",
+      "name": "Public",
+      "description": "The resource is publicly accessible and can be viewed or downloaded by anyone"
+    },
+    "dateModified": {
+      "$date": "2023-03-06T18:56:14.110Z"
+    },
+    "funding": [],
+    "temporalCoverage": null,
+    "spatialCoverage": {
+      "type": "Place",
+      "name": null,
+      "geo": {
+        "type": "GeoCoordinates",
+        "latitude": 40.18097176388719,
+        "longitude": -111.68975830078125
+      },
+      "additionalProperty": null,
+      "srs": null
+    },
+    "hasPart": [],
+    "isPartOf": [
+      {
+        "type": "CreativeWork",
+        "name": "This resource is described by",
+        "description": "https://edx.hydrolearn.org/courses/course-v1:BYU+HS101+2021/about",
+        "url": ""
+      }
+    ],
+    "relation": [
+      "annotation=NoneType required=False default=None title='Relation' description='All other types of relations'"
+    ],
+    "additionalProperty": null,
+    "associatedMedia": [
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/danames/4c8ecb05a72647339df0df6e9a87718f/data/contents/Time-lapse video of algae growth in Utah Lake.mp4",
+        "encodingFormat": "video/mp4",
+        "contentSize": "5808.049 KB",
+        "name": "Time-lapse video of algae growth in Utah Lake.mp4",
+        "sha256": "5e08652ed22297cfec8bf9a77ed11668"
+      }
+    ],
+    "citation": [
+      "Ames, D. (2023). Algae Growth in Utah Lake Time-lapse, HydroShare, http://www.hydroshare.org/resource/4c8ecb05a72647339df0df6e9a87718f"
+    ],
+    "coordinates": null,
+    "includedInDataCatalog": null,
+    "sourceOrganization": null,
+    "sharing_status": null,
+    "view_count": 3945,
+    "additional_metadata": {},
+    "relations": [
+      {
+        "type": "CreativeWork",
+        "name": "This resource is described by",
+        "description": "https://edx.hydrolearn.org/courses/course-v1:BYU+HS101+2021/about",
+        "url": ""
+      }
+    ],
+    "_s3_filepath": "danames/4c8ecb05a72647339df0df6e9a87718f/.hsjsonld/dataset_metadata.json",
+    "first_creator": {
+      "type": "Person",
+      "email": "dan.ames@byu.edu",
+      "identifier": null,
+      "affiliation": {
+        "type": "Organization",
+        "url": null,
+        "address": null,
+        "name": "Brigham Young University"
+      },
+      "name": "Dan Ames"
+    },
+    "content_types": []
+  },
+  {
+    "_id": {
+      "$oid": "69389761fc32d6a624865646"
+    },
+    "context": "https://hydroshare.org/schema",
+    "type": "ScientificDataset",
+    "additionalType": "CompositeResource",
+    "name": "iUTAH Research Data Policy",
+    "description": "iUTAH (innovative Urban Transitions and Aridregion Hydrosustainability) is a collaborative research and training program in Utah. As part of project requirements, iUTAH developed a data policy that seeks to maximize the impact and broad use of datasets collected within iUTAH facilities and by iUTAH research teams. This policy document focuses on assisting iUTAH investigators in creating and sharing high-quality data. The policy defines the data types generated as part of iUTAH and clarifies timelines for associated data publication. It specifies the requirements for submittal of a data collection plan, the creation of metadata, and the publication of datasets. It clarifies requirements for cases involving human subjects as well as raw data and analytical products. The Policy includes guidelines for data and metadata standards, storage and archival, curation, and  data use and citation. Agreements for data publishers and data use are also included as appendices.",
+    "url": "https://beta.hydroshare.org/landing/03714a41e4594bb78b9d3f5c50ec8dec",
+    "identifier": [
+      "https://beta.hydroshare.org/landing/03714a41e4594bb78b9d3f5c50ec8dec"
+    ],
+    "creator": [
+      {
+        "type": "Person",
+        "email": "jeff.horsburgh@usu.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Utah State University"
+        },
+        "name": "Jeffery S. Horsburgh"
+      },
+      {
+        "type": "Person",
+        "email": "amber.jones@usu.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Utah State University"
+        },
+        "name": "Amber Jones"
+      }
+    ],
+    "dateCreated": {
+      "$date": "2016-08-25T21:30:31.387Z"
+    },
+    "keywords": [
+      "iUTAH",
+      "Data Management",
+      "Metadata",
+      "Policy",
+      "Data publication"
+    ],
+    "license": {
+      "type": "CreativeWork",
+      "description": null,
+      "url": "http://creativecommons.org/licenses/by/4.0/",
+      "name": "This resource is shared under the Creative Commons Attribution CC BY."
+    },
+    "provider": {
+      "type": "Organization",
+      "url": "https://www.hydroshare.org/",
+      "address": null,
+      "name": "HydroShare"
+    },
+    "contributor": [
+      {
+        "type": "Person",
+        "email": "doug.jackson-smith@usu.edu",
+        "identifier": null,
+        "affiliation": null,
+        "name": "Douglas Jackson-Smith"
+      },
+      {
+        "type": "Person",
+        "email": "andreas.leidolf@usu.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Utah State University"
+        },
+        "name": "Andreas Leidolf"
+      },
+      {
+        "type": "Person",
+        "email": "courtney.flint@usu.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "Utah State University"
+        },
+        "name": "Courtney Flint"
+      },
+      {
+        "type": "Person",
+        "email": "jim.ehleringer@utah.edu",
+        "identifier": null,
+        "affiliation": {
+          "type": "Organization",
+          "url": null,
+          "address": null,
+          "name": "University of Utah"
+        },
+        "name": "Jim Ehleringer"
+      }
+    ],
+    "publisher": {
+      "name": "Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)",
+      "url": "https://www.cuahsi.org/"
+    },
+    "datePublished": {
+      "$date": "2016-09-22T22:05:52.987Z"
+    },
+    "subjectOf": null,
+    "version": null,
+    "inLanguage": "eng",
+    "creativeWorkStatus": {
+      "type": "DefinedTerm",
+      "name": "Published",
+      "description": "The resource has been permanently published and should be considered final and complete"
+    },
+    "dateModified": {
+      "$date": "2017-01-26T00:00:20.672Z"
+    },
+    "funding": [],
+    "temporalCoverage": null,
+    "spatialCoverage": null,
+    "hasPart": [],
+    "isPartOf": [],
+    "additionalProperty": null,
+    "associatedMedia": [
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/published/03714a41e4594bb78b9d3f5c50ec8dec/data/contents/iUTAH_Data_Policy_V1.7_8-18-2016.pdf",
+        "encodingFormat": "application/pdf",
+        "contentSize": "372.331 KB",
+        "name": "iUTAH_Data_Policy_V1.7_8-18-2016.pdf",
+        "sha256": "e600844ad994468338c4f4ea164727a7"
+      }
+    ],
+    "citation": [
+      "Horsburgh, J. S., A. Jones (2016). iUTAH Research Data Policy, HydroShare, https://doi.org/10.4211/hs.03714a41e4594bb78b9d3f5c50ec8dec"
+    ],
+    "coordinates": null,
+    "includedInDataCatalog": null,
+    "sourceOrganization": null,
+    "sharing_status": null,
+    "additional_metadata": {},
+    "_s3_filepath": "published/03714a41e4594bb78b9d3f5c50ec8dec/.hsjsonld/dataset_metadata.json",
+    "first_creator": {
+      "type": "Person",
+      "email": "jeff.horsburgh@usu.edu",
+      "identifier": null,
+      "affiliation": {
+        "type": "Organization",
+        "url": null,
+        "address": null,
+        "name": "Utah State University"
+      },
+      "name": "Jeffery S. Horsburgh"
+    },
+    "content_types": []
+  },
+  {
+    "_id": {
+      "$oid": "69389761fc32d6a624865648"
+    },
+    "context": "https://hydroshare.org/schema",
+    "type": "ScientificDataset",
+    "additionalType": "CompositeResource",
+    "name": "Texas Rating Curve SQLite Version",
+    "description": "Rating curves created with NHDPlus-HAND for NHDPlus reaches in Texas\uff08SQLite version\uff09",
+    "url": "https://beta.hydroshare.org/landing/f7e301c882a1411587b690155fc7c468",
+    "identifier": [
+      "https://beta.hydroshare.org/landing/f7e301c882a1411587b690155fc7c468"
+    ],
+    "creator": [
+      {
+        "type": "Person",
+        "email": "zhengxing@utexas.edu",
+        "identifier": null,
+        "affiliation": null,
+        "name": "Xing Zheng"
+      }
+    ],
+    "dateCreated": {
+      "$date": "2016-08-29T03:22:55.702Z"
+    },
+    "keywords": [
+      "NFIE",
+      "Rating Curve",
+      "HAND"
+    ],
+    "license": {
+      "type": "CreativeWork",
+      "name": "This resource is shared under the Creative Commons Attribution CC BY.",
+      "description": null,
+      "url": "http://creativecommons.org/licenses/by/4.0/"
+    },
+    "provider": {
+      "type": "Organization",
+      "url": "https://www.hydroshare.org/",
+      "address": null,
+      "name": "HydroShare"
+    },
+    "contributor": [],
+    "publisher": null,
+    "datePublished": null,
+    "subjectOf": null,
+    "version": null,
+    "inLanguage": "eng",
+    "creativeWorkStatus": {
+      "type": "DefinedTerm",
+      "name": "Public",
+      "description": "The resource is publicly accessible and can be viewed or downloaded by anyone"
+    },
+    "dateModified": {
+      "$date": "2016-08-29T03:24:35.682Z"
+    },
+    "funding": [],
+    "temporalCoverage": null,
+    "spatialCoverage": null,
+    "hasPart": [],
+    "isPartOf": [],
+    "relation": [
+      "annotation=NoneType required=False default=None title='Relation' description='All other types of relations'"
+    ],
+    "additionalProperty": null,
+    "associatedMedia": [
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/xingzheng/f7e301c882a1411587b690155fc7c468/data/contents/TexasRatingCurve.sqlite",
+        "encodingFormat": "application/vnd.sqlite3",
+        "contentSize": "135057.408 KB",
+        "name": "TexasRatingCurve.sqlite",
+        "sha256": "e38e6e18977a2f4e5e34c43c638ffa66-9"
+      }
+    ],
+    "citation": [
+      "Zheng, X. (2016). Texas Rating Curve SQLite Version, HydroShare, http://www.hydroshare.org/resource/f7e301c882a1411587b690155fc7c468"
+    ],
+    "coordinates": null,
+    "includedInDataCatalog": null,
+    "sourceOrganization": null,
+    "sharing_status": null,
+    "view_count": 3622,
+    "additional_metadata": {},
+    "relations": [],
+    "_s3_filepath": "xingzheng/f7e301c882a1411587b690155fc7c468/.hsjsonld/dataset_metadata.json",
+    "first_creator": {
+      "type": "Person",
+      "email": "zhengxing@utexas.edu",
+      "identifier": null,
+      "affiliation": null,
+      "name": "Xing Zheng"
+    },
+    "content_types": []
+  },
+  {
+    "_id": {
+      "$oid": "69389761fc32d6a62486564a"
+    },
+    "context": "https://hydroshare.org/schema",
+    "type": "ScientificDataset",
+    "additionalType": "CompositeResource",
+    "name": "TauDEM test data, reference results",
+    "description": "This folder holds data for testing .\r\nRun the script testall.bat in the input folder then compare the answers to results in ReferenceResult.",
+    "url": "https://beta.hydroshare.org/landing/f416437ddf1d4a27bbd6104cf9b54043",
+    "identifier": [
+      "https://beta.hydroshare.org/landing/f416437ddf1d4a27bbd6104cf9b54043"
+    ],
+    "creator": [
+      {
+        "type": "Person",
+        "email": "nazmus.s.sazib@aggiemail.usu.edu",
+        "identifier": null,
+        "affiliation": null,
+        "name": "Nazmus Sazib"
+      }
+    ],
+    "dateCreated": {
+      "$date": "2016-09-07T15:51:22.145Z"
+    },
+    "keywords": [
+      "TauDEM"
+    ],
+    "license": {
+      "type": "CreativeWork",
+      "name": "This resource is shared under the Creative Commons Attribution CC BY.",
+      "description": null,
+      "url": "http://creativecommons.org/licenses/by/4.0/"
+    },
+    "provider": {
+      "type": "Organization",
+      "url": "https://www.hydroshare.org/",
+      "address": null,
+      "name": "HydroShare"
+    },
+    "contributor": [],
+    "publisher": null,
+    "datePublished": null,
+    "subjectOf": null,
+    "version": null,
+    "inLanguage": "eng",
+    "creativeWorkStatus": {
+      "type": "DefinedTerm",
+      "name": "Public",
+      "description": "The resource is publicly accessible and can be viewed or downloaded by anyone"
+    },
+    "dateModified": {
+      "$date": "2016-09-07T15:53:15.894Z"
+    },
+    "funding": [],
+    "temporalCoverage": null,
+    "spatialCoverage": null,
+    "hasPart": [],
+    "isPartOf": [],
+    "relation": [
+      "annotation=NoneType required=False default=None title='Relation' description='All other types of relations'"
+    ],
+    "additionalProperty": null,
+    "associatedMedia": [
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/nazmus/f416437ddf1d4a27bbd6104cf9b54043/data/contents/TestSuite.zip",
+        "encodingFormat": "application/zip",
+        "contentSize": "834198.684 KB",
+        "name": "TestSuite.zip",
+        "sha256": "8b43191cb77aefa109837d45277e8723-50"
+      }
+    ],
+    "citation": [
+      "Sazib, N. (2016). TauDEM test data, reference results, HydroShare, http://www.hydroshare.org/resource/f416437ddf1d4a27bbd6104cf9b54043"
+    ],
+    "coordinates": null,
+    "includedInDataCatalog": null,
+    "sourceOrganization": null,
+    "sharing_status": null,
+    "view_count": 3587,
+    "additional_metadata": {},
+    "relations": [],
+    "_s3_filepath": "nazmus/f416437ddf1d4a27bbd6104cf9b54043/.hsjsonld/dataset_metadata.json",
+    "first_creator": {
+      "type": "Person",
+      "email": "nazmus.s.sazib@aggiemail.usu.edu",
+      "identifier": null,
+      "affiliation": null,
+      "name": "Nazmus Sazib"
+    },
+    "content_types": []
+  },
+  {
+    "_id": {
+      "$oid": "69389762fc32d6a62486564c"
+    },
+    "context": "https://hydroshare.org/schema",
+    "type": "ScientificDataset",
+    "additionalType": "CompositeResource",
+    "name": "Texas Rating Curve NetCDF Version",
+    "description": "Rating curves created with NHDPlus-HAND for NHDPlus reaches in Texas (NetCDF format)",
+    "url": "https://beta.hydroshare.org/landing/4beb4072816943d8bc6d092bc493bc06",
+    "identifier": [
+      "https://beta.hydroshare.org/landing/4beb4072816943d8bc6d092bc493bc06"
+    ],
+    "creator": [
+      {
+        "type": "Person",
+        "email": "zhengxing@utexas.edu",
+        "identifier": null,
+        "affiliation": null,
+        "name": "Xing Zheng"
+      }
+    ],
+    "dateCreated": {
+      "$date": "2016-09-21T21:25:27.440Z"
+    },
+    "keywords": [
+      "Rating Curve",
+      "NFIE",
+      "HAND"
+    ],
+    "license": {
+      "type": "CreativeWork",
+      "name": "This resource is shared under the Creative Commons Attribution CC BY.",
+      "description": null,
+      "url": "http://creativecommons.org/licenses/by/4.0/"
+    },
+    "provider": {
+      "type": "Organization",
+      "url": "https://www.hydroshare.org/",
+      "address": null,
+      "name": "HydroShare"
+    },
+    "contributor": [],
+    "publisher": null,
+    "datePublished": null,
+    "subjectOf": null,
+    "version": null,
+    "inLanguage": "eng",
+    "creativeWorkStatus": {
+      "type": "DefinedTerm",
+      "name": "Public",
+      "description": "The resource is publicly accessible and can be viewed or downloaded by anyone"
+    },
+    "dateModified": {
+      "$date": "2016-09-21T21:27:22.553Z"
+    },
+    "funding": [],
+    "temporalCoverage": null,
+    "spatialCoverage": null,
+    "hasPart": [],
+    "isPartOf": [
+      {
+        "type": "CreativeWork",
+        "name": "This resource updates and replaces a previous version",
+        "description": "Zheng, X. (2016). Texas Rating Curve NetCDF Version, HydroShare",
+        "url": "http://www.hydroshare.org/resource/99928fc87f8e49a9b6522e306186f305"
+      }
+    ],
+    "relation": [
+      "annotation=NoneType required=False default=None title='Relation' description='All other types of relations'"
+    ],
+    "additionalProperty": null,
+    "associatedMedia": [
+      {
+        "type": "MediaObject",
+        "contentUrl": "http://minio-api.default.svc.cluster.local:9000/xingzheng/4beb4072816943d8bc6d092bc493bc06/data/contents/TexasRatingCurve.nc",
+        "encodingFormat": "application/x-netcdf",
+        "contentSize": "20094.188 KB",
+        "name": "TexasRatingCurve.nc",
+        "sha256": "0d9d9fbb0225c111e969761e6947335e-2"
+      }
+    ],
+    "citation": [
+      "Zheng, X. (2016). Texas Rating Curve NetCDF Version, HydroShare, http://www.hydroshare.org/resource/4beb4072816943d8bc6d092bc493bc06"
+    ],
+    "coordinates": null,
+    "includedInDataCatalog": null,
+    "sourceOrganization": null,
+    "sharing_status": null,
+    "view_count": 3549,
+    "additional_metadata": {},
+    "relations": [
+      {
+        "type": "CreativeWork",
+        "name": "This resource updates and replaces a previous version",
+        "description": "Zheng, X. (2016). Texas Rating Curve NetCDF Version, HydroShare",
+        "url": "http://www.hydroshare.org/resource/99928fc87f8e49a9b6522e306186f305"
+      }
+    ],
+    "_s3_filepath": "xingzheng/4beb4072816943d8bc6d092bc493bc06/.hsjsonld/dataset_metadata.json",
+    "first_creator": {
+      "type": "Person",
+      "email": "zhengxing@utexas.edu",
+      "identifier": null,
+      "affiliation": null,
+      "name": "Xing Zheng"
+    },
+    "content_types": []
+  }
+]
