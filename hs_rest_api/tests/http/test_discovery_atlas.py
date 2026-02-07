@@ -1,5 +1,8 @@
 """
 Discovery Atlas search and typeahead API tests.
+Currently loading a curated fixture (discovery_atlas_20.json) into Atlas
+instead of staging via resource models (create resource → make public → pipeline).
+
 """
 import json
 import os
@@ -76,31 +79,32 @@ class AtlasIntegrationBase(HSRESTTestCase):
         for doc in documents:
             doc["_id"] = ObjectId()
             doc["atlas_test_tag"] = cls.test_tag
+            keywords = list(doc.get("keywords") or [])
+            keywords.append(cls.test_tag)
+            doc["keywords"] = keywords
         cls.collection.delete_many({"atlas_test_tag": cls.test_tag})
         cls.collection.insert_many(documents)
 
     @classmethod
     def _wait_for_fixture_indexing(cls):
+        query = cls.test_tag
         for _ in range(60):
             res = list(cls.collection.aggregate([
                 {
                     "$search": {
                         "index": "fuzzy_search",
-                        "text": {
-                            "query": FIXTURE_TERM_HYDROTOPS,
-                            "path": ["name", "keywords"],
-                        },
+                        "text": {"query": query, "path": ["keywords"]},
                         "returnStoredSource": True,
                     }
                 },
-                {"$limit": 5},
+                {"$limit": 10},
             ]))
             names = {doc.get("name") for doc in res}
             if FIXTURE_NAME_HYDROTOPS in names:
                 return
             time.sleep(1)
         raise RuntimeError(
-            f"Fixture not searchable in Atlas within 60s (searched for {FIXTURE_TERM_HYDROTOPS})"
+            f"Fixture not searchable in Atlas within 60s (searched for tag {query!r})"
         )
 
 
@@ -134,9 +138,10 @@ class TestDiscoveryAtlasSearchIntegration(AtlasIntegrationBase):
         data = json.loads(response.content.decode())
         self.assertIsInstance(data, list)
         self.assertLessEqual(len(data), 5)
-        names = [item.get("name", "") for item in data]
+        names = [item.get("name") for item in data if item.get("name")]
+        self.assertIn(FIXTURE_NAME_HYDROTOPS, names, "Expected fixture doc in sorted results")
         if len(names) >= 2:
-            self.assertEqual(names, sorted(names), "Results should be sorted by name ascending")
+            self.assertEqual(names, sorted(names), "Results with names should be sorted by name ascending")
 
     def test_search_content_type_filter(self):
         response = self.client.get(
