@@ -169,11 +169,25 @@ class TestDiscoveryAtlasSearchIntegration(AtlasIntegrationBase):
 
         page1 = self.client.get(
             reverse("discover-hsapi-search"),
-            data={"term": term, "keyword": self.test_tag, "sortBy": "name", "order": "asc", "pageSize": 5, "pageNumber": 1},
+            data={
+                "term": term,
+                "keyword": self.test_tag,
+                "sortBy": "name",
+                "order": "asc",
+                "pageSize": 5,
+                "pageNumber": 1,
+            },
         )
         page2 = self.client.get(
             reverse("discover-hsapi-search"),
-            data={"term": term, "keyword": self.test_tag, "sortBy": "name", "order": "asc", "pageSize": 5, "pageNumber": 2},
+            data={
+                "term": term,
+                "keyword": self.test_tag,
+                "sortBy": "name",
+                "order": "asc",
+                "pageSize": 5,
+                "pageNumber": 2,
+            },
         )
         self.assertEqual(page1.status_code, status.HTTP_200_OK)
         self.assertEqual(page2.status_code, status.HTTP_200_OK)
@@ -188,7 +202,11 @@ class TestDiscoveryAtlasSearchIntegration(AtlasIntegrationBase):
     def test_search_content_type_filter(self):
         response = self.client.get(
             reverse("discover-hsapi-search"),
-            data={"term": f"{FIXTURE_TERM_HYDROTOPS} {self.test_tag}", "keyword": self.test_tag, "contentType": "CompositeResource"},
+            data={
+                "term": f"{FIXTURE_TERM_HYDROTOPS} {self.test_tag}",
+                "keyword": self.test_tag,
+                "contentType": "CompositeResource",
+            },
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
