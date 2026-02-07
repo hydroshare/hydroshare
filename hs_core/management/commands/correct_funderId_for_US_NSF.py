@@ -94,7 +94,6 @@ class Command(BaseCommand):
                         logger.info(f'Successfully updated {doi_id}')
                         self.stdout.write(self.style.SUCCESS(f'✅ Updated {doi_id}'))
                         success_count += 1
-                        break  # TODO: Remove the break to run through all DOIs needing update
                     except requests.exceptions.RequestException as e:
                         error_msg = f'Failed to update {doi_id}: {str(e)}'
                         logger.error(error_msg)
