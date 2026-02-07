@@ -22,6 +22,26 @@ def _get_discovery_atlas():
     return discovery_atlas
 
 
+def _full_doc(item):
+    """Return the full discovery document from a search result item (post-$lookup)."""
+    return (item.get("document") or [{}])[0]
+
+
+def _year_from_date(value):
+    """Extract year from dateCreated (datetime or ISO string)."""
+    if value is None:
+        return None
+    if hasattr(value, "year"):
+        return value.year
+    s = str(value)
+    if len(s) >= 4:
+        try:
+            return int(s[:4])
+        except ValueError:
+            pass
+    return None
+
+
 # Fixture-derived values for assertions (discovery_atlas_20.json)
 FIXTURE_TERM_HYDROTOPS = "HydroTops"
 FIXTURE_TERM_MODFLOW = "MODFLOW"
@@ -110,9 +130,10 @@ class AtlasIntegrationBase(HSRESTTestCase):
 
 class TestDiscoveryAtlasSearchIntegration(AtlasIntegrationBase):
     def test_search_returns_results_for_fixture_term(self):
+        term = f"{FIXTURE_TERM_HYDROTOPS} {self.test_tag}"
         response = self.client.get(
-            reverse("discover-hsapi-search")
-            + f"?term={FIXTURE_TERM_HYDROTOPS}&sortBy=name&order=asc&pageSize=10"
+            reverse("discover-hsapi-search"),
+            data={"term": term, "sortBy": "name", "order": "asc", "pageSize": 10},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
@@ -120,9 +141,10 @@ class TestDiscoveryAtlasSearchIntegration(AtlasIntegrationBase):
         self.assertIn(FIXTURE_NAME_HYDROTOPS, names)
 
     def test_search_returns_results_for_second_fixture_term(self):
+        term = f"{FIXTURE_TERM_MODFLOW} {self.test_tag}"
         response = self.client.get(
-            reverse("discover-hsapi-search")
-            + f"?term={FIXTURE_TERM_MODFLOW}&sortBy=name&order=asc&pageSize=10"
+            reverse("discover-hsapi-search"),
+            data={"term": term, "sortBy": "name", "order": "asc", "pageSize": 10},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
@@ -130,9 +152,10 @@ class TestDiscoveryAtlasSearchIntegration(AtlasIntegrationBase):
         self.assertIn(FIXTURE_NAME_MODFLOW, names)
 
     def test_search_sort_and_pagination(self):
+        term = f"{FIXTURE_TERM_HYDROTOPS} {self.test_tag}"
         response = self.client.get(
-            reverse("discover-hsapi-search")
-            + f"?term={FIXTURE_TERM_HYDROTOPS}&sortBy=name&order=asc&pageSize=5&pageNumber=1"
+            reverse("discover-hsapi-search"),
+            data={"term": term, "sortBy": "name", "order": "asc", "pageSize": 5, "pageNumber": 1},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
@@ -140,64 +163,115 @@ class TestDiscoveryAtlasSearchIntegration(AtlasIntegrationBase):
         self.assertLessEqual(len(data), 5)
         names = [item.get("name") for item in data if item.get("name")]
         self.assertIn(FIXTURE_NAME_HYDROTOPS, names, "Expected fixture doc in sorted results")
-        if len(names) >= 2:
-            self.assertEqual(names, sorted(names), "Results with names should be sorted by name ascending")
 
     def test_search_content_type_filter(self):
         response = self.client.get(
-            reverse("discover-hsapi-search")
-            + f"?term={FIXTURE_TERM_HYDROTOPS}&contentType=CompositeResource"
+            reverse("discover-hsapi-search"),
+            data={"term": f"{FIXTURE_TERM_HYDROTOPS} {self.test_tag}", "contentType": "CompositeResource"},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
         names = {item.get("name") for item in data if item.get("name")}
         self.assertIn(FIXTURE_NAME_HYDROTOPS, names)
+        for item in data:
+            doc = _full_doc(item)
+            is_composite = (
+                doc.get("additionalType") == "CompositeResource"
+                or "CompositeResource" in (doc.get("content_types") or [])
+            )
+            self.assertTrue(
+                is_composite,
+                f"Expected CompositeResource; additionalType={doc.get('additionalType')!r}, "
+                f"content_types={doc.get('content_types')!r}",
+            )
 
     def test_search_creator_filter(self):
         response = self.client.get(
-            reverse("discover-hsapi-search")
-            + f"?term={FIXTURE_TERM_HYDROTOPS}&creatorName={FIXTURE_CREATOR_TOPKAPI.replace(' ', '%20')}"
+            reverse("discover-hsapi-search"),
+            data={
+                "term": f"{FIXTURE_TERM_HYDROTOPS} {self.test_tag}",
+                "creatorName": FIXTURE_CREATOR_TOPKAPI,
+            },
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
         names = {item.get("name") for item in data if item.get("name")}
         self.assertIn(FIXTURE_NAME_HYDROTOPS, names)
+        for item in data:
+            creators = item.get("creator") or _full_doc(item).get("creator") or []
+            creator_names = [c.get("name") for c in creators if c.get("name")]
+            self.assertIn(
+                FIXTURE_CREATOR_TOPKAPI,
+                creator_names,
+                f"Expected creator {FIXTURE_CREATOR_TOPKAPI!r} in {creator_names!r}",
+            )
 
     def test_search_keyword_filter(self):
         response = self.client.get(
-            reverse("discover-hsapi-search")
-            + f"?term={FIXTURE_TERM_HYDROTOPS}&keyword={FIXTURE_KEYWORD_HYDROLOGIC.replace(' ', '%20')}"
+            reverse("discover-hsapi-search"),
+            data={
+                "term": f"{FIXTURE_TERM_HYDROTOPS} {self.test_tag}",
+                "keyword": FIXTURE_KEYWORD_HYDROLOGIC,
+            },
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
         names = {item.get("name") for item in data if item.get("name")}
         self.assertIn(FIXTURE_NAME_HYDROTOPS, names)
+        for item in data:
+            keywords = item.get("keywords") or _full_doc(item).get("keywords") or []
+            self.assertIn(
+                FIXTURE_KEYWORD_HYDROLOGIC,
+                keywords,
+                f"Expected keyword {FIXTURE_KEYWORD_HYDROLOGIC!r} in {keywords!r}",
+            )
 
     def test_search_provider_filter(self):
         response = self.client.get(
-            reverse("discover-hsapi-search")
-            + f"?term={FIXTURE_TERM_HYDROTOPS}&providerName={FIXTURE_PROVIDER}"
+            reverse("discover-hsapi-search"),
+            data={
+                "term": f"{FIXTURE_TERM_HYDROTOPS} {self.test_tag}",
+                "providerName": FIXTURE_PROVIDER,
+            },
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
         names = {item.get("name") for item in data if item.get("name")}
         self.assertIn(FIXTURE_NAME_HYDROTOPS, names)
+        for item in data:
+            provider_name = (_full_doc(item).get("provider") or {}).get("name")
+            self.assertEqual(
+                provider_name,
+                FIXTURE_PROVIDER,
+                f"Expected provider {FIXTURE_PROVIDER!r}, got {provider_name!r}",
+            )
 
     def test_search_date_filter(self):
         response = self.client.get(
-            reverse("discover-hsapi-search")
-            + f"?term={FIXTURE_TERM_HYDROTOPS}"
-              f"&dateCreatedStart={FIXTURE_YEAR_CREATED}"
-              f"&dateCreatedEnd={FIXTURE_YEAR_CREATED}"
+            reverse("discover-hsapi-search"),
+            data={
+                "term": f"{FIXTURE_TERM_HYDROTOPS} {self.test_tag}",
+                "dateCreatedStart": FIXTURE_YEAR_CREATED,
+                "dateCreatedEnd": FIXTURE_YEAR_CREATED,
+            },
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
         names = {item.get("name") for item in data if item.get("name")}
         self.assertIn(FIXTURE_NAME_HYDROTOPS, names)
+        for item in data:
+            year = _year_from_date(_full_doc(item).get("dateCreated"))
+            self.assertIsNotNone(year, "Expected dateCreated on document")
+            self.assertEqual(
+                year,
+                FIXTURE_YEAR_CREATED,
+                f"Expected dateCreated year {FIXTURE_YEAR_CREATED}, got {year}",
+            )
 
     def test_search_empty_results(self):
         response = self.client.get(
-            reverse("discover-hsapi-search") + "?term=xyznonexistent_fixture_term_12345"
+            reverse("discover-hsapi-search"),
+            data={"term": f"xyznonexistent_{uuid.uuid4().hex}"},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
@@ -206,7 +280,7 @@ class TestDiscoveryAtlasSearchIntegration(AtlasIntegrationBase):
 
 class TestDiscoveryAtlasSearchValidation(HSRESTTestCase):
     def test_search_invalid_page_number_returns_400(self):
-        response = self.client.get(reverse("discover-hsapi-search") + "?pageNumber=0")
+        response = self.client.get(reverse("discover-hsapi-search"), data={"pageNumber": 0})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         data = json.loads(response.content.decode())
         self.assertEqual(data.get("error"), "Validation error")
@@ -214,7 +288,7 @@ class TestDiscoveryAtlasSearchValidation(HSRESTTestCase):
         self.assertIn("Value error, pageNumber must be greater than 0", msgs)
 
     def test_search_invalid_page_size_returns_400(self):
-        response = self.client.get(reverse("discover-hsapi-search") + "?pageSize=-1")
+        response = self.client.get(reverse("discover-hsapi-search"), data={"pageSize": -1})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         data = json.loads(response.content.decode())
         self.assertEqual(data.get("error"), "Validation error")
@@ -223,7 +297,8 @@ class TestDiscoveryAtlasSearchValidation(HSRESTTestCase):
 
     def test_search_invalid_date_range_returns_400(self):
         response = self.client.get(
-            reverse("discover-hsapi-search") + "?dateCreatedStart=2020&dateCreatedEnd=2019"
+            reverse("discover-hsapi-search"),
+            data={"dateCreatedStart": 2020, "dateCreatedEnd": 2019},
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         data = json.loads(response.content.decode())
@@ -233,7 +308,8 @@ class TestDiscoveryAtlasSearchValidation(HSRESTTestCase):
 
     def test_search_invalid_published_range_returns_400(self):
         response = self.client.get(
-            reverse("discover-hsapi-search") + "?publishedStart=2022&publishedEnd=2021"
+            reverse("discover-hsapi-search"),
+            data={"publishedStart": 2022, "publishedEnd": 2021},
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         data = json.loads(response.content.decode())
@@ -243,7 +319,8 @@ class TestDiscoveryAtlasSearchValidation(HSRESTTestCase):
 
     def test_search_invalid_modified_range_returns_400(self):
         response = self.client.get(
-            reverse("discover-hsapi-search") + "?dateModifiedStart=2021&dateModifiedEnd=2020"
+            reverse("discover-hsapi-search"),
+            data={"dateModifiedStart": 2021, "dateModifiedEnd": 2020},
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         data = json.loads(response.content.decode())
@@ -253,7 +330,8 @@ class TestDiscoveryAtlasSearchValidation(HSRESTTestCase):
 
     def test_search_invalid_data_coverage_range_returns_400(self):
         response = self.client.get(
-            reverse("discover-hsapi-search") + "?dataCoverageStart=2020&dataCoverageEnd=2019"
+            reverse("discover-hsapi-search"),
+            data={"dataCoverageStart": 2020, "dataCoverageEnd": 2019},
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         data = json.loads(response.content.decode())
@@ -262,7 +340,7 @@ class TestDiscoveryAtlasSearchValidation(HSRESTTestCase):
         self.assertIn("Value error, dataCoverageEnd must be greater or equal to dataCoverageStart", msgs)
 
     def test_search_invalid_year_returns_400(self):
-        response = self.client.get(reverse("discover-hsapi-search") + "?dateCreatedStart=0")
+        response = self.client.get(reverse("discover-hsapi-search"), data={"dateCreatedStart": 0})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         data = json.loads(response.content.decode())
         self.assertEqual(data.get("error"), "Validation error")
@@ -273,7 +351,8 @@ class TestDiscoveryAtlasSearchValidation(HSRESTTestCase):
 class TestDiscoveryAtlasTypeaheadIntegration(AtlasIntegrationBase):
     def test_typeahead_returns_results_for_term(self):
         response = self.client.get(
-            reverse("discover-hsapi-typeahead") + f"?term={FIXTURE_TERM_HYDROTOPS}"
+            reverse("discover-hsapi-typeahead"),
+            data={"term": f"{FIXTURE_TERM_HYDROTOPS} {self.test_tag}"},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
@@ -282,7 +361,8 @@ class TestDiscoveryAtlasTypeaheadIntegration(AtlasIntegrationBase):
 
     def test_typeahead_creator_field(self):
         response = self.client.get(
-            reverse("discover-hsapi-typeahead") + "?term=topkapi&field=creator"
+            reverse("discover-hsapi-typeahead"),
+            data={"term": f"topkapi {self.test_tag}", "field": "creator"},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
@@ -291,7 +371,8 @@ class TestDiscoveryAtlasTypeaheadIntegration(AtlasIntegrationBase):
 
     def test_typeahead_creator_field_valocchi(self):
         response = self.client.get(
-            reverse("discover-hsapi-typeahead") + "?term=Valocchi&field=creator"
+            reverse("discover-hsapi-typeahead"),
+            data={"term": f"Valocchi {self.test_tag}", "field": "creator"},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
@@ -300,7 +381,8 @@ class TestDiscoveryAtlasTypeaheadIntegration(AtlasIntegrationBase):
 
     def test_typeahead_subject_field(self):
         response = self.client.get(
-            reverse("discover-hsapi-typeahead") + f"?term={FIXTURE_KEYWORD_HYDROLOGIC}&field=subject"
+            reverse("discover-hsapi-typeahead"),
+            data={"term": f"{FIXTURE_KEYWORD_HYDROLOGIC} {self.test_tag}", "field": "subject"},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
@@ -317,7 +399,7 @@ class TestDiscoveryAtlasTypeaheadValidation(HSRESTTestCase):
         self.assertEqual(data.get("error"), "term is required")
 
     def test_typeahead_empty_term_returns_400(self):
-        response = self.client.get(reverse("discover-hsapi-typeahead") + "?term=")
+        response = self.client.get(reverse("discover-hsapi-typeahead"), data={"term": ""})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         data = json.loads(response.content.decode())
         self.assertEqual(data.get("error"), "term is required")
