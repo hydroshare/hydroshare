@@ -210,6 +210,7 @@ class TestDiscoveryAtlasSearchIntegration(AtlasIntegrationBase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
+        self.assertGreater(len(data), 0, "Expected at least one result for content-type filter")
         names = {item.get("name") for item in data if item.get("name")}
         self.assertIn(FIXTURE_NAME_HYDROTOPS, names)
         for item in data:
@@ -235,10 +236,12 @@ class TestDiscoveryAtlasSearchIntegration(AtlasIntegrationBase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
+        self.assertGreater(len(data), 0, "Expected at least one result for creator filter")
         names = {item.get("name") for item in data if item.get("name")}
         self.assertIn(FIXTURE_NAME_HYDROTOPS, names)
         for item in data:
-            creators = item.get("creator") or _full_doc(item).get("creator") or []
+            creators = item.get("creator") or _full_doc(item).get("creator")
+            self.assertIsNotNone(creators, f"Expected creator on document: {item.get('name')!r}")
             creator_names = [c.get("name") for c in creators if c.get("name")]
             self.assertIn(
                 FIXTURE_CREATOR_TOPKAPI,
@@ -256,10 +259,12 @@ class TestDiscoveryAtlasSearchIntegration(AtlasIntegrationBase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
+        self.assertGreater(len(data), 0, "Expected at least one result for keyword filter")
         names = {item.get("name") for item in data if item.get("name")}
         self.assertIn(FIXTURE_NAME_HYDROTOPS, names)
         for item in data:
-            keywords = item.get("keywords") or _full_doc(item).get("keywords") or []
+            keywords = item.get("keywords") or _full_doc(item).get("keywords")
+            self.assertIsNotNone(keywords, f"Expected keywords on document: {item.get('name')!r}")
             self.assertIn(
                 FIXTURE_KEYWORD_HYDROLOGIC,
                 keywords,
@@ -277,10 +282,14 @@ class TestDiscoveryAtlasSearchIntegration(AtlasIntegrationBase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
+        self.assertGreater(len(data), 0, "Expected at least one result for provider filter")
         names = {item.get("name") for item in data if item.get("name")}
         self.assertIn(FIXTURE_NAME_HYDROTOPS, names)
         for item in data:
-            provider_name = (_full_doc(item).get("provider") or {}).get("name")
+            doc = _full_doc(item)
+            provider = doc.get("provider")
+            self.assertIsNotNone(provider, f"Expected provider on document: {doc.get('name')!r}")
+            provider_name = provider.get("name")
             self.assertEqual(
                 provider_name,
                 FIXTURE_PROVIDER,
@@ -299,11 +308,15 @@ class TestDiscoveryAtlasSearchIntegration(AtlasIntegrationBase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content.decode())
+        self.assertGreater(len(data), 0, "Expected at least one result for date filter")
         names = {item.get("name") for item in data if item.get("name")}
         self.assertIn(FIXTURE_NAME_HYDROTOPS, names)
         for item in data:
-            year = _year_from_date(_full_doc(item).get("dateCreated"))
-            self.assertIsNotNone(year, "Expected dateCreated on document")
+            doc = _full_doc(item)
+            date_created = doc.get("dateCreated")
+            self.assertIsNotNone(date_created, f"Expected dateCreated on document: {doc.get('name')!r}")
+            year = _year_from_date(date_created)
+            self.assertIsNotNone(year, f"Expected dateCreated year; got {date_created!r}")
             self.assertEqual(
                 year,
                 FIXTURE_YEAR_CREATED,
