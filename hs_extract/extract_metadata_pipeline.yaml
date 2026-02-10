@@ -6,6 +6,7 @@ input:
       - "resource_file"
     consumer_group: "metadata_extractor"
 pipeline:
+  threads: 4
   processors:
   - extract_metadata_processor: {}
 output:

@@ -3105,7 +3105,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             return CITATION_ERROR
 
         # Format first creator name
-        creator_name = first_creator.get('name', '').strip()
+        creator_name = first_creator.get('name', '')
+        creator_name = creator_name.strip() if creator_name else ''
         if first_creator.get('organization', '') and not creator_name:
             citation_str_lst.append(first_creator['organization'] + ", ")
         else:
