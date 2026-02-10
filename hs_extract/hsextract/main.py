@@ -25,18 +25,18 @@ def write_resource_jsonld_metadata(md: BaseMetadataObject) -> bool:
     user_json = load_metadata(md.user_metadata_path)
 
     # generate content type hasPart relationships
-    content_type_metadata_paths: list[str] = [file for file in find(md.resource_md_jsonld_path)
-                                              if file != f"{md.resource_md_jsonld_path}/dataset_metadata.json"]
+    # content_type_metadata_paths: list[str] = [file for file in find(md.resource_md_jsonld_path)
+    #                                           if file != f"{md.resource_md_jsonld_path}/dataset_metadata.json"]
     has_parts = []
-    for file in content_type_metadata_paths:
-        content_type_metadata = load_metadata(file)
-
-        has_part = HasPart(  # TODO: probably need content type here as well for driving the landing page
-            name=content_type_metadata.get("name", None),
-            description=content_type_metadata.get("description", None),
-            url=f"{os.environ['AWS_S3_ENDPOINT_URL']}/{file}",
-        )
-        has_parts.append(has_part.model_dump(exclude_none=True))
+    # for file in content_type_metadata_paths:
+    #     content_type_metadata = load_metadata(file)
+    #
+    #     has_part = HasPart(  # TODO: probably need content type here as well for driving the landing page
+    #         name=content_type_metadata.get("name", None),
+    #         description=content_type_metadata.get("description", None),
+    #         url=f"{os.environ['AWS_S3_ENDPOINT_URL']}/{file}",
+    #     )
+    #     has_parts.append(has_part.model_dump(exclude_none=True))
 
     # Combine system metadata, user metadata, hasPart, and associatedMedia (join arrays)
     combined_metadata = {**system_json, **user_json}
@@ -79,23 +79,25 @@ def write_content_type_jsonld_metadata(md: BaseMetadataObject) -> bool:
 
 
 # if a file is not updated, it is deleted
-def workflow_metadata_extraction(file_object_path: str, file_updated: bool = True) -> None:
+def workflow_metadata_extraction(file_object_path: str, file_size: int, file_updated: bool = True) -> None:
     md = determine_metadata_object(file_object_path, file_updated)
     # fileset and single file do not have anything to extract
     if md.content_type != ContentType.UNKNOWN:
         if file_updated:
-            content_type_metadata = md.extract_metadata()
-            if content_type_metadata:
-                write_metadata(md.content_type_md_path, content_type_metadata)
-            write_content_type_jsonld_metadata(md)
-            files_to_cleanup = md.clean_up_extracted_metadata()
-            for f in files_to_cleanup:
-                delete_metadata(f)
+            if file_size < int(os.environ.get("METADATA_EXTRACTION_FILE_SIZE_LIMIT", 4*1024*1024*1024)):
+                content_type_metadata = md.extract_metadata()
+                if content_type_metadata:
+                    write_metadata(md.content_type_md_path, content_type_metadata)
+                write_content_type_jsonld_metadata(md)
+                files_to_cleanup = md.clean_up_extracted_metadata()
+                for f in files_to_cleanup:
+                    delete_metadata(f)
         else:
             # TODO: not all file deletes for content types will need metadata deleted but rather updated
             delete_metadata(md.content_type_md_path)
             delete_metadata(md.content_type_md_jsonld_path)
-    write_resource_jsonld_metadata(md)
+    # Disable resource jsonld write for regular and content type files
+    # write_resource_jsonld_metadata(md)
 
 
 def refresh_resource_metadata(bucket: str, resource_id: str) -> None:
@@ -125,6 +127,7 @@ def handle_minio_event(msg: redpanda_connect.Message) -> redpanda_connect.Messag
     json_payload = json.loads(msg.payload)
     key = json_payload['Key']
     file_updated = json_payload['EventName'].startswith("s3:ObjectCreated")
+    file_size = json_payload['Records'][0]['s3']['object']['size']
     directory = key.split('/')[2]
     bucket = key.split('/')[0]
     resource_id = key.split('/')[1]
@@ -147,7 +150,7 @@ def handle_minio_event(msg: redpanda_connect.Message) -> redpanda_connect.Messag
             print(f"No event for all other files in .hsmetadata: {key}")
         return
     else:
-        workflow_metadata_extraction(key, file_updated)
+        workflow_metadata_extraction(key, file_size, file_updated)
 
 
 if __name__ == "__main__":

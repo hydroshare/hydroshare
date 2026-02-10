@@ -2273,6 +2273,11 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         hs_json = json.loads(hs_json)  # validate json
         hs_json['sharing_status'] = self.raccess.sharing_status
         hs_json['viewCount'] = self.view_count
+        # TODO find a better way to call the composite resource aggregation types property
+        if self.resource_type == 'CompositeResource':
+            from hs_composite_resource.models import CompositeResource
+            res = CompositeResource.objects.get(id=self.id)
+            hs_json['content_types'] = res.aggregation_types
         from hs_core.hydroshare_schemaorg_adapter import HydroshareMetadataAdapter
         hs_json = HydroshareMetadataAdapter.to_catalog_record(hs_json).dict()
         hs_json = json.dumps(hs_json, indent=2, default=str)
@@ -3100,7 +3105,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             return CITATION_ERROR
 
         # Format first creator name
-        creator_name = first_creator.get('name', '').strip()
+        creator_name = first_creator.get('name', '')
+        creator_name = creator_name.strip() if creator_name else ''
         if first_creator.get('organization', '') and not creator_name:
             citation_str_lst.append(first_creator['organization'] + ", ")
         else:

@@ -56,24 +56,19 @@ def load_metadata(metadata_path):
     return metadata_json
 
 
-def retrieve_file_manifest(resource_root_path: str):
+def retrieve_file_manifest(resource_root_path: str, enabled: bool = False):
     """
     list files from the S3 bucket.
     """
+    if not enabled:
+        return []
     paginator = s3_client.get_paginator('list_objects_v2')
     bucket, resource_path = resource_root_path.split('/', 1)
-    print(f"Retrieving file manifest from S3 at {bucket}/{resource_path}")
     file_manifest = []
-    limit = 15
-    count = 0
     try:
         for page in paginator.paginate(Bucket=bucket, Prefix=resource_path):
             if 'Contents' in page:
                 for obj in page['Contents']:
-                    if count >= limit:
-                        print(f"File manifest limit of {limit} reached, stopping retrieval.")
-                        return file_manifest
-                    count += 1
                     key = obj['Key']
                     size = obj['Size']
                     size = f"{obj['Size'] / 1000.00} KB"
@@ -96,7 +91,6 @@ def retrieve_file_manifest(resource_root_path: str):
                         media_object.model_dump(exclude_none=True))
     except Exception as e:
         print(f"Error retrieving file manifest from {resource_root_path}: {e}")
-    print(f"Retrieved file manifest: {file_manifest} from {resource_root_path}")
     return file_manifest
 
 
@@ -104,10 +98,8 @@ def find(path: str) -> list[str]:
     paginator = s3_client.get_paginator('list_objects_v2')
     bucket, resource_path = path.split('/', 1)
     keys = []
-    print(f"Finding files in S3 at {bucket}/{resource_path}")
     try:
         for page in paginator.paginate(Bucket=bucket, Prefix=resource_path):
-            print(f"Found files in S3 at {bucket}/{resource_path}")
             if 'Contents' in page:
                 print(f"Processing page with {len(page['Contents'])} items")
                 for obj in page['Contents']:
