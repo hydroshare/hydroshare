@@ -28,7 +28,7 @@ def discovery_collection_event(msg: redpanda_connect.Message) -> redpanda_connec
     file_created = json_payload['EventName'].startswith("s3:ObjectCreated")
     bucket_name = key.split('/')[0]
     resource_id = key.split('/')[1]
-    if key.startswith(f'{bucket_name}/{resource_id}/.hsjsonld/'):
+    if key == f'{bucket_name}/{resource_id}/.hsjsonld/dataset_metadata.json':
         fetch_thread = threading.Thread(target=sync_discoverable_collection, args=(key, resource_id, file_created))
         fetch_thread.start()
         fetch_thread.join()

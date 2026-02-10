@@ -58,6 +58,9 @@
       "datePublished": {
         "type": "date"
       },
+      "viewCount": {
+        "type": "number"
+      },
       "description": [
         {
           "type": "string"

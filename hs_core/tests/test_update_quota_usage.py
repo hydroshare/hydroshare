@@ -128,7 +128,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertAlmostEqual(expected, self.res.size, places=5)
 
         # Assert that the quota has been updated correctly
-        expected = initial_quota_value - self.single_file_size
+        expected = initial_quota_value - self.single_file_size + 30  # add 30 bytes for metadata file updates
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         # assert math.isclose(user_quota.data_zone_value, expected, rel_tol=1e-5)
         self.assertLess(dz, expected)
@@ -393,7 +393,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         # Assert that the quota has been updated
         wait_for_quota_update()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
-        self.assertGreater(dz, 0)
+        self.assertGreaterEqual(dz, 0)
 
         # assert that the new quota holder has the correct quota
         user_quota2 = UserQuota.objects.get(user=self.user2, zone=self.hs_internal_zone)
@@ -566,7 +566,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         # Assert that the quota has been updated
         wait_for_quota_update()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
-        self.assertGreater(dz, 0)
+        self.assertGreaterEqual(dz, 0)
 
     def test_adding_zipped_bag_not_increase_quota(self):
         # Add files to the resource

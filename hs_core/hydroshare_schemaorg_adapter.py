@@ -156,6 +156,10 @@ class Relation(BaseModel):
             description, url = self.value.rsplit(',', 1)
         else:
             description, url = self.value, ""
+        if not description:
+            description = ""
+        if not url:
+            url = ""
         relation.description = description.strip()
         relation.url = url.strip()
         return relation
