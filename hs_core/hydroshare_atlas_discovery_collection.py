@@ -5,7 +5,6 @@ import json
 import boto3
 from pymongo import MongoClient
 from django.conf import settings
-from urllib.parse import urlparse
 
 
 s3 = boto3.client('s3')

@@ -3,7 +3,6 @@ import json
 import os
 import redpanda_connect
 import asyncio
-from hs_cloudnative_schemas.schema.base import HasPart
 from hsextract.content_types.models import ContentType
 from hsextract.content_types import determine_metadata_object, BaseMetadataObject
 from hsextract.utils.s3 import find, write_metadata, load_metadata, delete_metadata
@@ -84,7 +83,7 @@ def workflow_metadata_extraction(file_object_path: str, file_size: int, file_upd
     # fileset and single file do not have anything to extract
     if md.content_type != ContentType.UNKNOWN:
         if file_updated:
-            if file_size < int(os.environ.get("METADATA_EXTRACTION_FILE_SIZE_LIMIT", 4*1024*1024*1024)):
+            if file_size < int(os.environ.get("METADATA_EXTRACTION_FILE_SIZE_LIMIT", 4 * 1024 * 1024 * 1024)):
                 content_type_metadata = md.extract_metadata()
                 if content_type_metadata:
                     write_metadata(md.content_type_md_path, content_type_metadata)
