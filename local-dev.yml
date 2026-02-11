@@ -415,6 +415,22 @@ services:
       - mongodb_data_vol:/data/db
       - mongodb_config_vol:/data/configdb
       - ./hs_discover/search_indexes:/hs_discover/search_indexes:ro
+  # for local dev, we run discover using pm2 and a vite dev server
+  # this allows for better developer experience with features like HMR
+  # the discovery-atlas service is run using "make up-discover"
+  # discovery-atlas:
+  #   build:
+  #     context: discovery-atlas/frontend
+  #     dockerfile: Dockerfile
+  #   container_name: discovery-atlas
+  #   hostname: discovery-atlas
+  #   platform: linux/amd64
+  #   environment:
+  #     VITE_APP_NAME: "Discover"
+  #     VITE_APP_API_URL: "https://localhost/api"
+  #     VITE_APP_BASE: "/discover/"
+  #   ports:
+  #     - "5004:80"
 volumes:
   postgis_data_vol:
   solr_data_vol:

@@ -146,6 +146,7 @@ docker compose -f ${DOCKER_COMPOSER_YAML_FILE} down -v --rmi local --remove-orph
 echo '###############################################################################################################'
 echo " Preparing"                                                                                            
 echo '###############################################################################################################'
+
 echo "Creating init scripts"
 cp scripts/templates/init-defaultworker.template init-defaultworker
 sed -i $SED_EXT s/HS_SERVICE_UID/$HS_SERVICE_UID/g init-defaultworker
@@ -160,11 +161,31 @@ mkdir -p log/nginx 2>/dev/null
 
 find . -name '*.hydro-bk' -exec rm -f {} \; 2>/dev/null
 
+echo "Installing npm modules for discovery-atlas"
+cd discovery-atlas/frontend
+npm install
+cd ../..
+
+# Check to make sure that pm2 is installed
+echo "Checking for pm2 installation..."
+PM2_INSTALLED=`npm list -g pm2 | grep pm2@ | wc -l`
+if [ "$PM2_INSTALLED" == "0" ]; then
+  echo "Installing pm2 globally"
+  npm install -g pm2
+fi
+echo "PM2 is installed"
+
 echo
 echo '########################################################################################################################'
 echo " Starting system"
 echo '########################################################################################################################'
 echo
+
+echo " -make down-discover"
+make down-discover
+
+echo " - make up-discover"
+make up-discover
 
 echo "  - docker compose -f ${DOCKER_COMPOSER_YAML_FILE} up -d ${REBUILD_IMAGE}"
 docker compose -f $DOCKER_COMPOSER_YAML_FILE up -d $REBUILD_IMAGE
@@ -356,8 +377,24 @@ echo
 docker exec hydroshare python manage.py add_missing_bucket_names
 
 echo
+echo " waiting for hydroshare container to be ready..."
+echo " you can check your logs by running: `blue 'docker logs -f hydroshare'`"
+
+while [ 1 -eq 1 ]
+do
+  sleep 1
+  echo -n "."
+  LOG=`docker logs hydroshare 2>&1 | tail -20`
+  if [[ $LOG == *"Starting development server at http://0.0.0.0:8000/"* ]]; then
+    break
+  fi
+done
+
+echo
 echo '########################################################################################################################'
-echo -e " All done, run `green '\"docker compose -f local-dev.yml restart\"'` to restart HydroShare"
+echo -e " All done! You can now access your local HydroShare instance at `green 'http://localhost'`"
+echo -e " You are running discovery-atlas using PM2 and the Vite dev server."
+echo -e " Run `green '\"make down-discover\"'` to cleanup the PM2 service when you're done."
 echo '########################################################################################################################'
 echo
 

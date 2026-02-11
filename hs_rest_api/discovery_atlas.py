@@ -209,7 +209,7 @@ class SearchQuery(BaseModel):
 
     @property
     def stages(self):
-        highlightPaths = ['name', 'description', 'keywords', 'creator.name']
+        highlightPaths = ['name', 'description', 'keywords', 'creator.name', 'contributor.name']
         stages = []
         compound = {'filter': self._filters, 'must': self._must, 'should': []}
 
@@ -280,6 +280,8 @@ class SearchQuery(BaseModel):
             search_stage["$search"]['sort'] = {"dateModified": order}
         elif self.sortBy == "creatorName":
             search_stage["$search"]['sort'] = {"first_creator.name": order}
+        elif self.sortBy == "viewCount":
+            search_stage["$search"]['sort'] = {"viewCount": order}
 
         stages.append(search_stage)
 
@@ -327,7 +329,7 @@ def _get_int(value, default=None):
     manual_parameters=[
         openapi.Parameter('term', openapi.IN_QUERY, description="Search term", type=openapi.TYPE_STRING),
         openapi.Parameter('sortBy', openapi.IN_QUERY, description="Field to sort by", type=openapi.TYPE_STRING,
-                          enum=["name", "dateCreated", "lastModified", "creatorName"]),
+                          enum=["viewCount", "name", "dateCreated", "lastModified", "creatorName"]),
         openapi.Parameter('order', openapi.IN_QUERY, description="Sort order", type=openapi.TYPE_STRING,
                           enum=["asc", "desc"]),
         openapi.Parameter('contentType', openapi.IN_QUERY, description="Content type filter", type=openapi.TYPE_ARRAY,
@@ -371,68 +373,32 @@ def _get_int(value, default=None):
 )
 @api_view(["GET"])
 def search(request):
-    get = request.GET
-    term = get.get('term')
-    sortBy = get.get('sortBy')
-    order = get.get('order')
-    contentType = get.getlist('contentType')
-    providerName = get.get('providerName') or None
-    creatorName = get.get('creatorName') or None
-    keyword = get.get('keyword') or None
-    dataCoverageStart = _get_int(get.get('dataCoverageStart'), None)
-    dataCoverageEnd = _get_int(get.get('dataCoverageEnd'), None)
-    publishedStart = _get_int(get.get('publishedStart'), None)
-    publishedEnd = _get_int(get.get('publishedEnd'), None)
-    dateCreatedStart = _get_int(get.get('dateCreatedStart'), None)
-    dateCreatedEnd = _get_int(get.get('dateCreatedEnd'), None)
-    dateModifiedStart = _get_int(get.get('dateModifiedStart'), None)
-    dateModifiedEnd = _get_int(get.get('dateModifiedEnd'), None)
-    hasPartName = get.get('hasPartName') or None
-    isPartOfName = get.get('isPartOfName') or None
-    associatedMediaName = get.get('associatedMediaName') or None
-    fundingGrantName = get.get('fundingGrantName') or None
-    fundingFunderName = get.get('fundingFunderName') or None
-    creativeWorkStatus = get.getlist('creativeWorkStatus')
-    _pn = _get_int(get.get('pageNumber'), None)
-    pageNumber = _pn if _pn is not None else 1
-    _ps = _get_int(get.get('pageSize'), None)
-    pageSize = _ps if _ps is not None else 20
-    paginationToken = get.get('paginationToken') or None
-
-    try:
-        search_query = SearchQuery(
-            term=term,
-            sortBy=sortBy,
-            order=order,
-            contentType=contentType,
-            providerName=providerName,
-            creatorName=creatorName,
-            keyword=keyword,
-            dataCoverageStart=dataCoverageStart,
-            dataCoverageEnd=dataCoverageEnd,
-            publishedStart=publishedStart,
-            publishedEnd=publishedEnd,
-            dateCreatedStart=dateCreatedStart,
-            dateCreatedEnd=dateCreatedEnd,
-            dateModifiedStart=dateModifiedStart,
-            dateModifiedEnd=dateModifiedEnd,
-            hasPartName=hasPartName,
-            isPartOfName=isPartOfName,
-            associatedMediaName=associatedMediaName,
-            fundingGrantName=fundingGrantName,
-            fundingFunderName=fundingFunderName,
-            creativeWorkStatus=creativeWorkStatus,
-            pageNumber=pageNumber,
-            pageSize=pageSize,
-            paginationToken=paginationToken
-        )
-    except ValidationError as e:
-        details = [
-            {'loc': list(err.get('loc', ())), 'msg': str(err.get('msg', '')), 'type': err.get('type')}
-            for err in e.errors()
-        ]
-        return JsonResponse({'error': 'Validation error', 'details': details}, status=400)
-
+    search_query = SearchQuery(
+        term=request.GET.get('term', None),
+        sortBy=request.GET.get('sortBy', None),
+        order=request.GET.get('order', None),
+        contentType=request.GET.getlist('contentType'),
+        providerName=request.GET.get('providerName', None),
+        creatorName=request.GET.get('creatorName', None),
+        keyword=request.GET.get('keyword', None),
+        dataCoverageStart=request.GET.get('dataCoverageStart', None),
+        dataCoverageEnd=request.GET.get('dataCoverageEnd', None),
+        publishedStart=request.GET.get('publishedStart', None),
+        publishedEnd=request.GET.get('publishedEnd', None),
+        dateCreatedStart=request.GET.get('dateCreatedStart', None),
+        dateCreatedEnd=request.GET.get('dateCreatedEnd', None),
+        dateModifiedStart=request.GET.get('dateModifiedStart', None),
+        dateModifiedEnd=request.GET.get('dateModifiedEnd', None),
+        hasPartName=request.GET.get('hasPartName', None),
+        isPartOfName=request.GET.get('isPartOfName', None),
+        associatedMediaName=request.GET.get('associatedMediaName', None),
+        fundingGrantName=request.GET.get('fundingGrantName', None),
+        fundingFunderName=request.GET.get('fundingFunderName', None),
+        creativeWorkStatus=request.GET.getlist('creativeWorkStatus'),
+        pageNumber=int(request.GET.get('pageNumber', 1)),
+        pageSize=int(request.GET.get('pageSize', 20)),
+        paginationToken=request.GET.get('paginationToken', None)
+    )
     stages = search_query.stages
     if not search_query.paginationToken:
         stages.append({"$skip": (search_query.pageNumber - 1) * search_query.pageSize})
@@ -458,11 +424,9 @@ def search(request):
     ]
 )
 @api_view(["GET"])
-def typeahead(request, term: str = None, field: str = "term"):
-    term = term or request.GET.get('term')
-    field = request.GET.get('field', field)
-    if not term:
-        return JsonResponse({'error': 'term is required'}, status=400)
+def typeahead(request):
+    term = request.GET.get('term', '').strip()
+    field = request.GET.get('field', 'term').strip()
     search_paths = ['name', 'description', 'keywords', "creator.name"]
 
     if field == "creator":

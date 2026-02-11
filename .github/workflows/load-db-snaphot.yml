@@ -124,6 +124,8 @@ jobs:
         # Scale down statefulsets to 0 replicas
         kubectl scale $(kubectl get statefulset -o name | grep defaultworker) --replicas=0
         kubectl scale $(kubectl get statefulset -o name | grep hydroshare) --replicas=0
+        kubectl scale --replicas=0 deployment/discovery-collection-worker
+        kubectl scale --replicas=0 deployment/s3-events-django
         
         kubectl delete pod $POSTGIS_POD 
         # Wait for the old pod to terminate before refreshing pod name
@@ -173,6 +175,8 @@ jobs:
         # normal application functionality.
         kubectl scale $(kubectl get statefulset -o name | grep defaultworker) --replicas=$DEFAULTWORKER_REPLICAS
         kubectl scale $(kubectl get statefulset -o name | grep hydroshare) --replicas=$HYDROSHARE_REPLICAS
+        kubectl scale --replicas=1 deployment/discovery-collection-worker
+        kubectl scale --replicas=1 deployment/s3-events-django
         
         
         # Restart the container in the postgis pod
