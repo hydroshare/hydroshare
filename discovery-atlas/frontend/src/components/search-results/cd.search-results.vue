@@ -439,7 +439,7 @@ class CdSearchResults extends Vue {
       // TODO
       options: [
         {
-          value: "App Connector",
+          value: "ToolResource",
           label: "App Connector",
           logo: "",
         },
@@ -449,77 +449,57 @@ class CdSearchResults extends Vue {
           logo: "",
         },
         {
-          value: "CSV Data",
-          label: "CSV Data",
+          value: "CSV Content",
+          label: "CSV Data"
           logo: "",
         },
         {
-          value: "Document",
-          label: "Document",
+          value: "Single File Content",
+          label: "Single File Generic Data",
           logo: "",
         },
         {
-          value: "Generic Data",
-          label: "Generic Data",
+          value: "File Set Content",
+          label: "File Set Generic Data",
           logo: "",
         },
         {
-          value: "GeographicFeature",
+          value: "Geographic Feature Content",
           label: "Geographic Feature (ESRI Shapefiles)",
           logo: "",
         },
         {
-          value: "GeographicRaster",
+          value: "Geographic Raster Content",
           label: "Geographic Raster",
           logo: "",
         },
         {
-          value: "Image",
-          label: "Image",
-          logo: "",
-        },
-        {
-          value: "Jupyter Notebook",
-          label: "Jupyter Notebook",
-          logo: "",
-        },
-        {
-          value: "Model Instance",
+          value: "Model Instance Content",
           label: "Model Instance",
           logo: "",
         },
         {
-          value: "Model Program",
+          value: "Model Program Content",
           label: "Model Program",
           logo: "",
         },
         {
-          value: "MultiDimensional",
+          value: "Multidimensional Content",
           label: "Multidimensional (NetCDF)",
           logo: "",
         },
         {
-          value: "Presentation",
-          label: "Presentation",
-          logo: "",
-        },
-        {
-          value: "Reference to Time Series",
+          value: "Referenced Time Series Content",
           label: "Reference to Time Series",
           logo: "",
         },
         {
-          value: "Resource",
+          value: "CompositeResource",
           label: "Resource",
           logo: "",
         },
         {
-          value: "Spreadsheet",
-          label: "Spreadsheet",
-          logo: "",
-        },
-        {
-          value: "Time Series",
+          value: "Time Series Content",
           label: "Time Series",
           logo: "",
         },
