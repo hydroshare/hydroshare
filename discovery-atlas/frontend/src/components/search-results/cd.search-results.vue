@@ -450,7 +450,7 @@ class CdSearchResults extends Vue {
         },
         {
           value: "CSV Content",
-          label: "CSV Data"
+          label: "CSV Data",
           logo: "",
         },
         {
