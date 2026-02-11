@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional
 from bson.objectid import ObjectId
 from pymongo import MongoClient
-from pydantic import BaseModel, ValidationError, ValidationInfo, field_validator, model_validator
+from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
 from drf_yasg.utils import swagger_auto_schema
 from django.http import JsonResponse
 from drf_yasg import openapi
