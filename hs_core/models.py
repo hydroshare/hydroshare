@@ -2274,10 +2274,11 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         hs_json['sharing_status'] = self.raccess.sharing_status
         hs_json['viewCount'] = self.view_count
         # TODO find a better way to call the composite resource aggregation types property
+        hs_json['content_types'] = [self.resource_type]
         if self.resource_type == 'CompositeResource':
             from hs_composite_resource.models import CompositeResource
             res = CompositeResource.objects.get(id=self.id)
-            hs_json['content_types'] = res.aggregation_types
+            hs_json['content_types'] = list(set(res.aggregation_type_names).union({self.resource_type}))
         from hs_core.hydroshare_schemaorg_adapter import HydroshareMetadataAdapter
         hs_json = HydroshareMetadataAdapter.to_catalog_record(hs_json).dict()
         hs_json = json.dumps(hs_json, indent=2, default=str)

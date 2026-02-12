@@ -439,7 +439,7 @@ class CdSearchResults extends Vue {
       // TODO
       options: [
         {
-          value: "App Connector",
+          value: "ToolResource",
           label: "App Connector",
           logo: "",
         },
@@ -449,77 +449,57 @@ class CdSearchResults extends Vue {
           logo: "",
         },
         {
-          value: "CSV Data",
+          value: "CSVLogicalFile",
           label: "CSV Data",
           logo: "",
         },
         {
-          value: "Document",
-          label: "Document",
+          value: "FileSetLogicalFile",
+          label: "File Set Generic Data",
           logo: "",
         },
         {
-          value: "Generic Data",
-          label: "Generic Data",
-          logo: "",
-        },
-        {
-          value: "GeographicFeature",
+          value: "GeoFeatureLogicalFile",
           label: "Geographic Feature (ESRI Shapefiles)",
           logo: "",
         },
         {
-          value: "GeographicRaster",
+          value: "GeoRasterLogicalFile",
           label: "Geographic Raster",
           logo: "",
         },
         {
-          value: "Image",
-          label: "Image",
-          logo: "",
-        },
-        {
-          value: "Jupyter Notebook",
-          label: "Jupyter Notebook",
-          logo: "",
-        },
-        {
-          value: "Model Instance",
+          value: "ModelInstanceLogicalFile",
           label: "Model Instance",
           logo: "",
         },
         {
-          value: "Model Program",
+          value: "ModelProgramLogicalFile",
           label: "Model Program",
           logo: "",
         },
         {
-          value: "MultiDimensional",
+          value: "NetCDFLogicalFile",
           label: "Multidimensional (NetCDF)",
           logo: "",
         },
         {
-          value: "Presentation",
-          label: "Presentation",
-          logo: "",
-        },
-        {
-          value: "Reference to Time Series",
+          value: "RefTimeseriesLogicalFile",
           label: "Reference to Time Series",
           logo: "",
         },
         {
-          value: "Resource",
+          value: "CompositeResource",
           label: "Resource",
           logo: "",
         },
         {
-          value: "Spreadsheet",
-          label: "Spreadsheet",
+          value: "GenericLogicalFile",
+          label: "Single File Generic Data",
           logo: "",
         },
         {
-          value: "Time Series",
+          value: "TimeSeriesLogicalFile",
           label: "Time Series",
           logo: "",
         },
