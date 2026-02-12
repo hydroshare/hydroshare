@@ -431,6 +431,7 @@ INSTALLED_APPS = (
     "mezzanine.accounts",
     "haystack",
     "rest_framework",
+    'rest_framework.authtoken',
     "robots",
     "sorl.thumbnail",
     "hs_core",
