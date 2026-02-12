@@ -1,6 +1,6 @@
 {
   "mappings": {
-    "dynamic": false,
+    "dynamic": true,
     "fields": {
       "additionalType": {
         "type": "string"
