@@ -46,6 +46,11 @@ def collect_file_to_catalog(filepath: str):
         if 'creator' in metadata_json and metadata_json['creator']
         else None
     )
+    if metadata_json['first_creator']:
+        if 'name' in metadata_json['first_creator']:
+            if metadata_json['first_creator']['name']:
+                # encountered some names with leading whitespace which causes sorting issues
+                metadata_json['first_creator']['name'] = metadata_json['first_creator']['name'].strip()
 
     # DISABLED FOR NOW: reading content types for discovery from db exported to user metadata
     # content_types = []
