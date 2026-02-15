@@ -473,7 +473,7 @@ def data_store_folder_unzip(request, **kwargs):
 
     if is_ajax(request):
         job_id = unzip_task(user.pk, res_id, zip_with_rel_path, remove_original_zip, overwrite,
-                             auto_aggregate, ingest_metadata, unzip_to_folder)
+                            auto_aggregate, ingest_metadata, unzip_to_folder)
         if not job_id:
             return JsonResponse({"error": "Failed to enqueue unpack job"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         task_dict = get_or_create_task_notification(job_id, name='file unzip', username=request.user.username,

@@ -5800,6 +5800,7 @@ class JobStatus(models.Model):
     def __str__(self):
         return f"{self.job_id} [{self.state}]"
 
+
 class TaskNotification(models.Model):
     TASK_STATUS_CHOICES = (
         ('progress', 'Progress'),

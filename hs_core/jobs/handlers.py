@@ -194,4 +194,3 @@ def handle_unpack_zip(job: Dict, producer) -> str:
     except Exception:
         logger.exception("Failed to update TaskNotification for completed job")
     return payload
-

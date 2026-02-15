@@ -85,4 +85,3 @@ def build_job_request(
 
 
 producer = ProducerWrapper()
-

@@ -8,17 +8,16 @@ import time
 from typing import Any, Dict, Optional
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "hydroshare.settings")
-import django  # noqa: E402
+import django  # noqa
 
-django.setup()  # noqa: E402
+django.setup()
 
-from django.utils import timezone
-from confluent_kafka import Consumer, KafkaError  # type: ignore
+from django.utils import timezone  # noqa
+from confluent_kafka import Consumer, KafkaError  # noqa
 
-from hs_core.jobs.producer import producer
-from hs_core.models import JobStatus
-from hs_core.hydroshare import utils as hs_utils
-from hs_core.task_utils import get_or_create_task_notification
+from hs_core.jobs.producer import producer  # noqa
+from hs_core.models import JobStatus  # noqa
+from hs_core.task_utils import get_or_create_task_notification  # noqa
 
 logger = logging.getLogger("job_consumer")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -95,7 +94,13 @@ class JobConsumer:
 
         if not js:
             try:
-                js = JobStatus(job_id=job_id, job_type=job_type, requested_by=job.get("requested_by", ""), requested_at=timezone.now(), state="requested")
+                js = JobStatus(
+                    job_id=job_id,
+                    job_type=job_type,
+                    requested_by=job.get("requested_by", ""),
+                    requested_at=timezone.now(),
+                    state="requested",
+                )
                 js.save()
             except Exception:
                 logger.exception("Failed to create JobStatus for %s", job_id)
@@ -104,7 +109,16 @@ class JobConsumer:
             js.state = "processing"
             js.updated_at = timezone.now()
             js.save()
-            producer.publish("jobs.status", {"v": 1, "job_id": job_id, "state": "processing", "message": "starting", "updated_at": js.updated_at.isoformat() + "Z"})
+            producer.publish(
+                "jobs.status",
+                {
+                    "v": 1,
+                    "job_id": job_id,
+                    "state": "processing",
+                    "message": "starting",
+                    "updated_at": js.updated_at.isoformat() + "Z",
+                },
+            )
         except Exception:
             logger.exception("Failed to set processing for %s", job_id)
 
