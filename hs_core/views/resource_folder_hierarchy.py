@@ -472,11 +472,12 @@ def data_store_folder_unzip(request, **kwargs):
     unzip_to_folder = request.POST.get('unzip_to_folder', 'false').lower() == 'true'
 
     if is_ajax(request):
-        task = unzip_task.apply_async((user.pk, res_id, zip_with_rel_path, remove_original_zip, overwrite,
-                                       auto_aggregate, ingest_metadata, unzip_to_folder))
-        task_id = task.task_id
-        task_dict = get_or_create_task_notification(task_id, name='file unzip', username=request.user.username,
-                                                    payload=resource.get_absolute_url())
+        job_id = unzip_task(user.pk, res_id, zip_with_rel_path, remove_original_zip, overwrite,
+                             auto_aggregate, ingest_metadata, unzip_to_folder)
+        if not job_id:
+            return JsonResponse({"error": "Failed to enqueue unpack job"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        task_dict = get_or_create_task_notification(job_id, name='file unzip', username=request.user.username,
+                                                    payload=f'/resource/{res_id}')
         return JsonResponse(task_dict)
     else:
         try:

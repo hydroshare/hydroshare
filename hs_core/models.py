@@ -5771,6 +5771,35 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 self.create_element(element_model_name=element_name, **element[element_name])
 
 
+# JobStatus model to track long-running event-driven jobs (e.g., unpack_zip).
+class JobStatus(models.Model):
+    JOB_STATE_CHOICES = (
+        ('requested', 'Requested'),
+        ('processing', 'Processing'),
+        ('retrying', 'Retrying'),
+        ('succeeded', 'Succeeded'),
+        ('failed', 'Failed'),
+        ('cancelled', 'Cancelled'),
+    )
+    job_id = models.CharField(max_length=100, primary_key=True)
+    job_type = models.CharField(max_length=100, blank=True, db_index=True)
+    # Optional link to a resource when applicable
+    resource = models.ForeignKey('BaseResource', null=True, blank=True, on_delete=models.SET_NULL)
+    requested_by = models.CharField(max_length=150, blank=True)
+    requested_at = models.DateTimeField(null=True, blank=True)
+    state = models.CharField(max_length=20, choices=JOB_STATE_CHOICES, default='requested')
+    progress = models.IntegerField(null=True, blank=True)
+    result_ref = models.CharField(max_length=1000, blank=True, null=True)
+    error = models.TextField(blank=True, null=True)
+    last_message = models.TextField(blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'hs_core_jobstatus'
+
+    def __str__(self):
+        return f"{self.job_id} [{self.state}]"
+
 class TaskNotification(models.Model):
     TASK_STATUS_CHOICES = (
         ('progress', 'Progress'),

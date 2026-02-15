@@ -55,6 +55,8 @@ from hs_odm2.models import ODM2Variable
 from hydroshare.hydrocelery import app as celery_app
 from theme.models import QuotaMessage, User, UserQuota
 from theme.utils import get_user_profiles_missing_bucket_name
+from hs_core.jobs.producer import producer, build_job_request, DEFAULT_TOPIC
+from hs_core.models import JobStatus
 
 FILE_TYPE_MAP = {"GenericLogicalFile": GenericLogicalFile,
                  "FileSetLogicalFile": FileSetLogicalFile,
@@ -1103,13 +1105,73 @@ def get_non_preferred_paths(resource_id):
     return non_preferred_paths
 
 
-@shared_task
 def unzip_task(user_pk, res_id, zip_with_rel_path, bool_remove_original, overwrite=False, auto_aggregate=False,
                ingest_metadata=False, unzip_to_folder=False):
-    from hs_core.views.utils import unzip_file
-    user = User.objects.get(pk=user_pk)
-    unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite, auto_aggregate, ingest_metadata,
-               unzip_to_folder)
+    """Enqueue an unzip job: create JobStatus, publish to jobs.requests, return job_id for polling."""
+    user = None
+    resource = None
+    try:
+        user = User.objects.get(pk=user_pk)
+        resource = utils.get_resource_by_shortkey(res_id)
+    except Exception as ex:
+        logger.error("Unable to locate user or resource for unzip_task: %s", ex)
+
+    job_msg = build_job_request(
+        job_type="unpack_zip",
+        resource_id=resource.short_id,
+        requested_by=getattr(user, "username", "system"),
+        input_data={
+            "zip_with_rel_path": zip_with_rel_path,
+            "remove_original": bool_remove_original,
+            "overwrite": overwrite,
+            "auto_aggregate": auto_aggregate,
+            "ingest_metadata": ingest_metadata,
+            "unzip_to_folder": unzip_to_folder,
+        },
+    )
+
+    published = False
+    try:
+        # create JobStatus row
+        try:
+            js = JobStatus(
+                job_id=job_msg["job_id"],
+                job_type=job_msg.get("job_type", ""),
+                resource=resource,
+                requested_by=job_msg.get("requested_by", ""),
+                requested_at=timezone.now(),
+                state="requested",
+            )
+            js.save()
+            # publish initial status event
+            status_msg = {
+                "v": 1,
+                "job_id": job_msg["job_id"],
+                "state": "requested",
+                "updated_at": js.requested_at.isoformat() + "Z",
+            }
+            producer.publish("jobs.status", status_msg)
+        except Exception as ex:
+            logger.warning("Failed to create JobStatus or publish initial status for unzip: %s", ex)
+
+        producer.publish(DEFAULT_TOPIC, job_msg)
+        published = True
+    except Exception as e:
+        logger.error("Failed to publish unzip job to %s for resource %s: %s", DEFAULT_TOPIC, res_id, e)
+        published = False
+
+    try:
+        resource.file_unpack_status = 'Pending'
+        resource.file_unpack_message = job_msg.get("job_id")
+        resource.save()
+    except Exception:
+        logger.exception("Failed to update resource file_unpack_status for resource %s", res_id)
+
+    if not published:
+        logger.error(f"Failed to enqueue unzip job for resource {res_id}")
+        return None
+
+    return job_msg.get("job_id")
 
 
 @shared_task
