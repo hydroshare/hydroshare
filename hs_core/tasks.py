@@ -1104,15 +1104,6 @@ def get_non_preferred_paths(resource_id):
 
 
 @shared_task
-def unzip_task(user_pk, res_id, zip_with_rel_path, bool_remove_original, overwrite=False, auto_aggregate=False,
-               ingest_metadata=False, unzip_to_folder=False):
-    from hs_core.views.utils import unzip_file
-    user = User.objects.get(pk=user_pk)
-    unzip_file(user, res_id, zip_with_rel_path, bool_remove_original, overwrite, auto_aggregate, ingest_metadata,
-               unzip_to_folder)
-
-
-@shared_task
 def move_aggregation_task(res_id, file_type_id, file_type, tgt_path):
     from hs_core.views.utils import rename_s3_file_or_folder_in_django
     res = utils.get_resource_by_shortkey(res_id)
@@ -1141,7 +1132,9 @@ def move_aggregation_task(res_id, file_type_id, file_type, tgt_path):
     return res.get_absolute_url()
 
 
-@celery_app.task(ignore_result=True, base=HydroshareTask, time_limit=NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION)
+@celery_app.task(
+    ignore_result=True, base=HydroshareTask, time_limit=NIGHTLY_GENERATE_FILESYSTEM_METADATA_DURATION
+)
 def nightly_cache_file_system_metadata():
     """
     Generate and store file checksums and modified times for a subset of resources

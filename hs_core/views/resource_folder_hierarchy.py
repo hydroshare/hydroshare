@@ -19,7 +19,7 @@ from hs_core.hydroshare.utils import (QuotaException, get_file_mime_type,
                                       resolve_request)
 from hs_core.models import ResourceFile
 from hs_core.task_utils import get_or_create_task_notification
-from hs_core.tasks import FileOverrideException, unzip_task
+from hs_core.tasks import FileOverrideException
 from hs_core.views import utils as view_utils
 from hs_core.views.utils import (ACTION_TO_AUTHORIZE,
                                  add_reference_url_to_resource, authorize,
@@ -472,13 +472,36 @@ def data_store_folder_unzip(request, **kwargs):
     unzip_to_folder = request.POST.get('unzip_to_folder', 'false').lower() == 'true'
 
     if is_ajax(request):
-        task = unzip_task.apply_async((user.pk, res_id, zip_with_rel_path, remove_original_zip, overwrite,
-                                       auto_aggregate, ingest_metadata, unzip_to_folder))
-        task_id = task.task_id
-        task_dict = get_or_create_task_notification(task_id, name='file unzip', username=request.user.username,
-                                                    payload=resource.get_absolute_url())
+        import threading
+        from uuid import uuid4
+
+        job_id = str(uuid4())
+        task_dict = get_or_create_task_notification(
+            job_id,
+            name='file unzip',
+            username=request.user.username,
+            payload=resource.get_absolute_url()
+        )
+
+        def extract_async():
+            try:
+                unzip_file(user, res_id, zip_with_rel_path, remove_original_zip, overwrite,
+                           auto_aggregate, ingest_metadata, unzip_to_folder)
+                get_or_create_task_notification(
+                    job_id, status='completed', payload=resource.get_absolute_url()
+                )
+            except Exception as ex:
+                get_or_create_task_notification(
+                    job_id, status='failed', payload=str(ex)
+                )
+
+        thread = threading.Thread(target=extract_async)
+        thread.daemon = True
+        thread.start()
+
         return JsonResponse(task_dict)
     else:
+        # Synchronous unzip (non-AJAX requests)
         try:
             unzip_file(user, res_id, zip_with_rel_path, remove_original_zip, overwrite, auto_aggregate,
                        ingest_metadata, unzip_to_folder)
