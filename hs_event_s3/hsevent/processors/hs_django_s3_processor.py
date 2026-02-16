@@ -19,6 +19,7 @@ s3 = boto3.client('s3')
 def link_s3_files_to_resource(resource, fullpath):
     try:
         res_file = link_s3_file_to_django(resource, fullpath)
+        res_file.set_system_metadata(resource=resource, save=True)
         # Create required logical files as necessary
         if resource.resource_type == "CompositeResource":
             file_type = get_logical_file_type(res=resource, file_id=res_file.pk, fail_feedback=False)

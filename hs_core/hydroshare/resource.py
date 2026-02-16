@@ -662,8 +662,6 @@ def add_resource_files(pk, *files, **kwargs):
     This does **not** handle mutability; changes to immutable resources should be denied elsewhere.
 
     """
-    from hs_core.tasks import set_resource_files_system_metadata
-
     resource = kwargs.pop("resource", None)
     if resource is None:
         resource = utils.get_resource_by_shortkey(pk)
@@ -735,7 +733,8 @@ def add_resource_files(pk, *files, **kwargs):
         utils.resource_modified(resource, user, overwrite_bag=False)
 
         # store file level system metadata in Django DB (async task)
-        set_resource_files_system_metadata.apply_async((resource.short_id,))
+        # moved to new s3_event, so no longer needed here
+        # set_resource_files_system_metadata.apply_async((resource.short_id,))
 
     return uploaded_res_files
 

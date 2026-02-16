@@ -35,7 +35,7 @@ from hs_core.signals import (pre_check_bag_flag, pre_download_file,
 from hs_core.task_utils import (get_or_create_task_notification,
                                 get_resource_bag_task, get_task_notification,
                                 get_task_user_id)
-from hs_core.tasks import create_bag_by_s3, create_temp_zip, set_resource_files_system_metadata
+from hs_core.tasks import create_bag_by_s3, create_temp_zip
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, is_ajax
 from hs_file_types.enums import AggregationMetaFilePath
 
@@ -608,7 +608,8 @@ class CustomTusUpload(TusUpload):
             resource_modified(resource, user, overwrite_bag=False)
 
             # store file level system metadata in Django DB (async task)
-            set_resource_files_system_metadata.apply_async((resource.short_id,))
+            # Migrated to s3_event new architecture, so this is no longer needed here
+            # set_resource_files_system_metadata.apply_async((resource.short_id,))
 
             # signal is not consumed at this point, but we keep it for future use
             # https://github.com/alican/django-tus/blob/2aac2e7c0e6bac79a1cb07721947a48d9cc40ec8/django_tus/views.py#L112
