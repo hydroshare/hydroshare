@@ -374,7 +374,9 @@ function showCompletedMessage(json_response) {
                     }
                     $("#missing-metadata-or-file:not(.persistent)").fadeOut();
                     $("#missing-metadata-file-type:not(.persistent)").fadeOut();
-                } else {
+                } else if (!sufficient) {
+                    // Only call onMetadataInsufficient if metadata is actually insufficient
+                    // Don't call it just because user can't change resource flags
                     manageAccessApp.onMetadataInsufficient();
                 }
             }
