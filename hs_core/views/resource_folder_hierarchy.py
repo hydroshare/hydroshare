@@ -72,7 +72,12 @@ def data_store_structure(request):
     directory_in_s3 = resource.get_s3_path(store_path)
 
     try:
-        store = istorage.listdir(directory_in_s3)
+        # Check if directory exists first - it may not exist if all files were deleted
+        if not istorage.exists(directory_in_s3):
+            # Return empty structure - this is valid when all files are deleted
+            store = ([], [], [])  # (directories, files, sizes)
+        else:
+            store = istorage.listdir(directory_in_s3)
     except SessionException as ex:
         logger.error("session exception querying store_path {} for {}".format(store_path, res_id))
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
