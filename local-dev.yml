@@ -213,6 +213,7 @@ services:
       - connect
       - run
       - --rpc-plugins=/hydroshare/hs_event_s3/notify_hs_django_plugin.yaml
+      - --rpc-plugins=/hydroshare/hs_event_s3/notify_hs_django_jobs_plugin.yaml
       - /hydroshare/hs_event_s3/notify_hs_django_pipeline.yaml
   discovery_collection_worker:
     build:

@@ -4,9 +4,11 @@ input:
       - "redpanda:9092"
     topics:
       - "resource_file"
+      - "jobs.requests"
     consumer_group: "hs_django"
 pipeline:
   processors:
+    - notify_hs_django_jobs_processor: {}
     - notify_hs_django_processor: {}
 output:
   switch:

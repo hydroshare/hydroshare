@@ -1,0 +1,5 @@
+name: notify_hs_django_jobs_processor
+summary: Processor for handling job.request messages and updating JobStatus
+command: ["python", "hsevent/processors/hs_django_jobs_processor.py"]
+type: processor
+fields: []

@@ -74,18 +74,6 @@ def handle_unpack_zip(job, producer):
         js.error = err
         js.updated_at = timezone.now()
         js.save()
-        try:
-            producer.publish(
-                "jobs.status", {"v": 1, "job_id": job_id, "state": "failed", "error": err}
-            )
-        except Exception:
-            logger.exception("Failed to publish failed status for %s", job_id)
-        try:
-            get_or_create_task_notification(
-                task_id=job_id, status="failed", name="file unzip", payload=payload
-            )
-        except Exception:
-            logger.exception("Failed to update TaskNotification for failed job")
         return payload
 
     total = None
@@ -155,23 +143,12 @@ def handle_unpack_zip(job, producer):
     if "exc" in exc_holder:
         exc = exc_holder["exc"]
         logger.exception("unpack failed for job %s: %s", job_id, exc)
+        err_msg = f"{type(exc).__name__}: {exc}"
         js.state = "failed"
-        js.error = str(exc)
+        js.error = err_msg
         js.updated_at = timezone.now()
         js.save()
-        try:
-            producer.publish(
-                "jobs.status", {"v": 1, "job_id": job_id, "state": "failed", "error": str(exc)}
-            )
-        except Exception:
-            logger.exception("Failed to publish failed status for %s", job_id)
-        try:
-            get_or_create_task_notification(
-                task_id=job_id, status="failed", name="file unzip", payload=payload
-            )
-        except Exception:
-            logger.exception("Failed to update TaskNotification for failed job")
-        return str(exc)
+        return err_msg
 
     js.state = "succeeded"
     js.result_ref = ""
