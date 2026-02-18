@@ -5771,7 +5771,6 @@ class CoreMetaData(models.Model, RDF_MetaData_Mixin):
                 self.create_element(element_model_name=element_name, **element[element_name])
 
 
-# JobStatus model to track long-running event-driven jobs (e.g., unpack_zip).
 class JobStatus(models.Model):
     JOB_STATE_CHOICES = (
         ('requested', 'Requested'),
@@ -5783,7 +5782,6 @@ class JobStatus(models.Model):
     )
     job_id = models.CharField(max_length=100, primary_key=True)
     job_type = models.CharField(max_length=100, blank=True, db_index=True)
-    # Optional link to a resource when applicable
     resource = models.ForeignKey('BaseResource', null=True, blank=True, on_delete=models.SET_NULL)
     requested_by = models.CharField(max_length=150, blank=True)
     requested_at = models.DateTimeField(null=True, blank=True)

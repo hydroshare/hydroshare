@@ -3,7 +3,7 @@ import uuid
 import logging
 import time
 from datetime import datetime
-from typing import Any, Dict, Optional
+
 from django.conf import settings
 
 try:
@@ -21,9 +21,7 @@ PUBLISH_BACKOFF = float(getattr(settings, "KAFKA_PUBLISH_BACKOFF", 1.0))
 
 
 class ProducerWrapper:
-    """Kafka producer with retries and logging."""
-
-    def __init__(self, bootstrap: str = DEFAULT_BOOTSTRAP):
+    def __init__(self, bootstrap=DEFAULT_BOOTSTRAP):
         self._producer = None
         if Producer is None:
             logger.warning("confluent_kafka.Producer not available in this environment")
@@ -35,15 +33,14 @@ class ProducerWrapper:
             logger.error("Failed to initialize Kafka Producer: %s", exc)
             self._producer = None
 
-    def is_available(self) -> bool:
+    def is_available(self):
         return self._producer is not None
 
-    def publish(self, topic: str, message: Dict[str, Any]) -> None:
-        """Publish message to topic with retries."""
+    def publish(self, topic, message):
         if not self.is_available():
             raise RuntimeError("Kafka Producer not available")
         payload = json.dumps(message).encode("utf-8")
-        last_exc: Optional[Exception] = None
+        last_exc = None
         for attempt in range(1, PUBLISH_RETRIES + 1):
             try:
                 self._producer.produce(topic, payload)
@@ -59,17 +56,16 @@ class ProducerWrapper:
 
 
 def build_job_request(
-    job_type: str,
-    resource_id: Optional[str] = None,
-    requested_by: str = "system",
-    input_data: Optional[Dict[str, Any]] = None,
-    job_id: Optional[str] = None,
-    correlation_id: Optional[str] = None,
-) -> Dict[str, Any]:
-    """Build a job request dict for jobs.requests."""
+    job_type,
+    resource_id=None,
+    requested_by="system",
+    input_data=None,
+    job_id=None,
+    correlation_id=None,
+):
     if job_id is None:
         job_id = str(uuid.uuid4())
-    msg: Dict[str, Any] = {
+    msg = {
         "v": 1,
         "job_id": job_id,
         "job_type": job_type,

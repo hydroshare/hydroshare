@@ -1,4 +1,3 @@
-from typing import Dict
 import logging
 import threading
 import zipfile
@@ -16,8 +15,7 @@ from hs_core.task_utils import get_or_create_task_notification
 logger = logging.getLogger("job_handlers")
 
 
-def handle_unpack_zip(job: Dict, producer) -> str:
-    """Run unzip for an unpack_zip job; update JobStatus and TaskNotification; publish status events."""
+def handle_unpack_zip(job, producer):
     job_id = job.get("job_id")
     inp = job.get("input", {}) or {}
     zip_with_rel_path = inp.get("zip_with_rel_path")
