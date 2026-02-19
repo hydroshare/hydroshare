@@ -864,7 +864,7 @@ function get_folder_struct_ajax_submit(res_id, store_path) {
                 $("#missing-metadata-or-file:not(.persistent)").fadeOut();
                 // Update the Vue.js manage-access component
                 if (typeof manageAccessApp !== 'undefined' && manageAccessApp.canChangeResourceFlags) {
-                    manageAccessApp.$data.canBePublicDiscoverable = true;
+                    manageAccessApp.$data.canBePublicDiscoverable = !!can_be_public;
                 }
             } else {
                 // Resource cannot be public/discoverable (e.g., no files or insufficient metadata)
