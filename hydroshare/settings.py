@@ -452,6 +452,7 @@ INSTALLED_APPS = (
     "markdown",
     "hs_communities",
     "hs_discover",
+    "discovery_atlas",
     "health_check",
     "health_check.db",
     "health_check.cache",

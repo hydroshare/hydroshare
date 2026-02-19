@@ -106,6 +106,35 @@ echo "Removing node container"
 docker container rm nodejs
 cd $HS_PATH
 
+clear
+
+echo '####################################################################################################'
+echo "Starting Node Build for new discovery atlas .... "
+echo '####################################################################################################'
+
+### Create Directory structure outside to maintain correct permissions
+cd discovery_atlas
+
+# Start Docker container and Run build
+docker run -i -v $HS_PATH:/hydroshare --name=nodejsatlas node:24.3.0 /bin/bash << eof
+
+cd hydroshare
+cd discovery_atlas
+npm install
+npm run build
+mkdir -p static
+cp -rp templates/discovery_atlas/* static/
+echo "----------------static--------------------"
+ls -l static
+echo "--------------------------------------"
+eof
+
+echo "Node Build completed ..."
+echo
+echo "Removing node container"
+docker container rm nodejs
+cd $HS_PATH
+
 }
 
 
@@ -139,7 +168,7 @@ done
 
 DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
 
-NODE_CONTAINER_RUNNING=`docker ps -a | grep nodejs`
+NODE_CONTAINER_RUNNING=`docker ps -a | grep -E 'nodejs|nodejsatlas'`
 
 docker compose -f ${DOCKER_COMPOSER_YAML_FILE} down -v --rmi local --remove-orphans
 
@@ -160,11 +189,6 @@ mkdir -p log/nginx 2>/dev/null
 #chmod -R 777 log 2>/dev/null
 
 find . -name '*.hydro-bk' -exec rm -f {} \; 2>/dev/null
-
-echo "Installing npm modules for discovery-atlas"
-cd discovery-atlas/frontend
-npm install
-cd ../..
 
 # Check to make sure that pm2 is installed
 echo "Checking for pm2 installation..."
@@ -393,7 +417,7 @@ done
 echo
 echo '########################################################################################################################'
 echo -e " All done! You can now access your local HydroShare instance at `green 'http://localhost'`"
-echo -e " You are running discovery-atlas using PM2 and the Vite dev server."
+echo -e " You are running discovery_atlas using PM2 and the Vite dev server."
 echo -e " Run `green '\"make down-discover\"'` to cleanup the PM2 service when you're done."
 echo '########################################################################################################################'
 echo

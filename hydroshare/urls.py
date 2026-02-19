@@ -12,6 +12,7 @@ from hs_core import autocomplete_light_registry as alr
 from hs_core import views as hs_core_views
 from hs_core.views.oauth2_view import GroupAuthorizationView
 from hs_discover.views import SearchAPI, SearchView
+from discovery_atlas.views import SearchView as DiscoverView
 from hs_rest_api2.urls import hsapi2_urlpatterns
 from hs_rest_api.urls import hsapi_urlpatterns
 from hs_sitemap.views import sitemap
@@ -120,6 +121,7 @@ urlpatterns += i18n_patterns(
     # path("autocomplete/", include("autocomplete_light.urls")),
     path("discoverapi/", SearchAPI.as_view(), name="DiscoverAPI"),
     path("search/", SearchView.as_view(), name="Discover"),
+    path("discover/", DiscoverView.as_view(), name="Discover New"),
     path(
         "topics/",
         hs_communities.views.communities.TopicsView.as_view(),
