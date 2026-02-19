@@ -348,6 +348,7 @@ function showCompletedMessage(json_response) {
             }
             if (showMetaStatus) {
                 let sufficient = json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1;
+
                 if (sufficient && manageAccessApp.canChangeResourceFlags) {
                     manageAccessApp.$data.canBePublicDiscoverable = true;
                     let resourceType = RES_TYPE;
@@ -374,7 +375,9 @@ function showCompletedMessage(json_response) {
                     }
                     $("#missing-metadata-or-file:not(.persistent)").fadeOut();
                     $("#missing-metadata-file-type:not(.persistent)").fadeOut();
-                } else {
+                } else if (!sufficient) {
+                    // Only call onMetadataInsufficient if metadata is actually insufficient
+                    // Don't call it just because user can't change resource flags
                     manageAccessApp.onMetadataInsufficient();
                 }
             }
@@ -859,6 +862,15 @@ function get_folder_struct_ajax_submit(res_id, store_path) {
 
             if (can_be_public) {
                 $("#missing-metadata-or-file:not(.persistent)").fadeOut();
+                // Update the Vue.js manage-access component
+                if (typeof manageAccessApp !== 'undefined' && manageAccessApp.canChangeResourceFlags) {
+                    manageAccessApp.$data.canBePublicDiscoverable = !!can_be_public;
+                }
+            } else {
+                // Resource cannot be public/discoverable (e.g., no files or insufficient metadata)
+                if (typeof manageAccessApp !== 'undefined') {
+                    manageAccessApp.onMetadataInsufficient();
+                }
             }
 
             onSort();
