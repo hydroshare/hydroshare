@@ -123,9 +123,9 @@ cd discovery_atlas
 npm install
 npm run build
 mkdir -p static
-cp -rp templates/discovery_atlas/* static/
+cp -rp dist/* static/discovery_atlas/
 echo "----------------static--------------------"
-ls -l static
+ls -l static/discovery_atlas
 echo "--------------------------------------"
 eof
 

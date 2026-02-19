@@ -128,7 +128,7 @@ export default defineConfig(({ mode }) => {
     },
 
     build: {
-      outDir: "./templates/discovery_atlas",
+      outDir: "./dist",
       rollupOptions: {
         output: {
           // Assets will use relative paths like assets/file.js
