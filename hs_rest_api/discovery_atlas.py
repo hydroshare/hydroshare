@@ -271,8 +271,8 @@ class SearchQuery(BaseModel):
         order = 1 if self.order == "asc" else -1
 
         # These sorts can occur inside the $search stage
-        if not self.term:
-            # override search to most recently modified if no search term provided
+        if not self.term and not self.has_filters:
+            # override search to most recently modified if no search criteria is provided
             search_stage["$search"]['sort'] = {"dateModified": -1}
         elif self.sortBy == "name":
             search_stage["$search"]['sort'] = {"name": order}
@@ -301,6 +301,29 @@ class SearchQuery(BaseModel):
             stages.append({'$match': {'score': {'$gt': settings.SEARCH_RELEVANCE_SCORE_THRESHOLD}}})
 
         return stages
+
+    @property
+    def has_filters(self):
+        return any([
+            self.contentType,
+            self.providerName,
+            self.creatorName,
+            self.keyword,
+            self.dataCoverageStart,
+            self.dataCoverageEnd,
+            self.publishedStart,
+            self.publishedEnd,
+            self.dateCreatedStart,
+            self.dateCreatedEnd,
+            self.dateModifiedStart,
+            self.dateModifiedEnd,
+            self.hasPartName,
+            self.isPartOfName,
+            self.associatedMediaName,
+            self.fundingGrantName,
+            self.fundingFunderName,
+            self.creativeWorkStatus
+        ])
 
 
 # Convert ObjectId to string recursively
