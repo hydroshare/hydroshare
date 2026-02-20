@@ -171,8 +171,6 @@ done
 
 DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
 
-NODE_CONTAINER_RUNNING=`docker ps -a | grep nodejs`
-
 docker compose -f ${DOCKER_COMPOSER_YAML_FILE} down -v --rmi local --remove-orphans
 
 echo '###############################################################################################################'
@@ -381,7 +379,8 @@ echo '##########################################################################
 echo "Waiting for nodejs container to be removed..."
 while [ 1 -eq 1 ]
 do
-  if [ "$NODE_CONTAINER_RUNNING" == "" ]; then
+  OUTPUT=$(docker ps -a | grep nodejs 2>&1)
+  if [ "$OUTPUT" == "" ]; then
     break
   fi
   echo -n "."
