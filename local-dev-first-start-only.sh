@@ -114,6 +114,9 @@ echo '##########################################################################
 
 ### Create Directory structure outside to maintain correct permissions
 cd discovery_atlas
+rm -rf static templates
+mkdir static templates
+mkdir templates/discovery_atlas
 
 # Start Docker container and Run build
 docker run -i -v $HS_PATH:/hydroshare --name=nodejsatlas node:24.3.0 /bin/bash << eof
@@ -123,7 +126,10 @@ cd discovery_atlas
 npm install
 npm run build
 mkdir -p static
+mkdir -p static/discovery_atlas
 cp -rp dist/* static/discovery_atlas/
+rm static/discovery_atlas/assets/virtual_pwa-register*.js
+cp -rp dist/* templates/discovery_atlas/
 echo "----------------static--------------------"
 ls -l static/discovery_atlas
 echo "--------------------------------------"
@@ -133,6 +139,7 @@ echo "Node Build completed ..."
 echo
 echo "Removing node container"
 docker container rm nodejs
+docker container rm nodejsatlas
 cd $HS_PATH
 
 }
@@ -168,7 +175,7 @@ done
 
 DOCKER_COMPOSER_YAML_FILE='local-dev.yml'
 
-NODE_CONTAINER_RUNNING=`docker ps -a | grep -E 'nodejs|nodejsatlas'`
+NODE_CONTAINER_RUNNING=`docker ps -a | grep nodejs`
 
 docker compose -f ${DOCKER_COMPOSER_YAML_FILE} down -v --rmi local --remove-orphans
 
@@ -417,8 +424,6 @@ done
 echo
 echo '########################################################################################################################'
 echo -e " All done! You can now access your local HydroShare instance at `green 'http://localhost'`"
-echo -e " You are running discovery_atlas using PM2 and the Vite dev server."
-echo -e " Run `green '\"make down-discover\"'` to cleanup the PM2 service when you're done."
 echo '########################################################################################################################'
 echo
 
