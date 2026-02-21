@@ -206,12 +206,6 @@ echo " Starting system"
 echo '########################################################################################################################'
 echo
 
-echo " -make down-discover"
-make down-discover
-
-echo " - make up-discover"
-make up-discover
-
 echo "  - docker compose -f ${DOCKER_COMPOSER_YAML_FILE} up -d ${REBUILD_IMAGE}"
 docker compose -f $DOCKER_COMPOSER_YAML_FILE up -d $REBUILD_IMAGE
 
