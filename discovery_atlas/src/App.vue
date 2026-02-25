@@ -98,9 +98,9 @@
       </v-container>
     </v-main>
 
-    <v-footer class="mt-8 bg-grey-lighten-4">
+    <!-- <v-footer class="mt-8 bg-grey-lighten-4">
       <router-view name="footer" />
-    </v-footer>
+    </v-footer> -->
 
     <!-- NOTE: v-navigation-drawer is a single component for the entire app. Properties of other v-navigation-drawer instances will affect this one. -->
 
