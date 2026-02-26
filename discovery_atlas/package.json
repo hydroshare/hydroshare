@@ -4,10 +4,12 @@
   "private": true,
   "scripts": {
     "serve": "vite --mode=development",
-    "build": "vite build",
+    "build": "npm run clean:hydroshare-static && clean:static && vite build",
     "lint": "eslint .",
-    "build-prod": "vite build --mode=production",
     "serve-prod": "vite --mode production",
+    "clean:static": "rimraf static/discovery_atlas",
+    "clean:hydroshare-static": "rimraf ../hydroshare/static/static/discovery_atlas/",
+    "build-prod": "npm run clean:hydroshare-static && npm run clean:static && vite build --mode=production",
     "deploy": "node scripts/gh-pages-deploy.js",
     "up": "taze major -I"
   },
@@ -50,6 +52,7 @@
     "eslint": "^9.39.2",
     "eslint-plugin-format": "^1.3.1",
     "lint-staged": "^16.2.7",
+    "rimraf": "^6.1.3",
     "sass": "^1.97.2",
     "shiki": "^3.21.0",
     "taze": "^19.9.2",

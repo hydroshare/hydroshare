@@ -5,7 +5,6 @@ import generateSitemap from "vite-ssg-sitemap";
 import Components from "unplugin-vue-components/vite";
 import AutoImport from "unplugin-auto-import/vite";
 import VueMacros from "unplugin-vue-macros/vite";
-import { VitePWA } from "vite-plugin-pwa";
 import vuetify from "vite-plugin-vuetify";
 
 export default defineConfig(({ mode }) => {
@@ -65,39 +64,6 @@ export default defineConfig(({ mode }) => {
         dts: "src/components.d.ts",
       }),
 
-      // https://github.com/antfu/vite-plugin-pwa
-      VitePWA({
-        registerType: "autoUpdate",
-        includeAssets: ["favicon.svg", "safari-pinned-tab.svg"],
-        manifest: {
-          name: "Vitesse",
-          short_name: "Vitesse",
-          theme_color: "#ffffff",
-          icons: [
-            {
-              src: "/pwa-192x192.png",
-              sizes: "192x192",
-              type: "image/png",
-            },
-            {
-              src: "/pwa-512x512.png",
-              sizes: "512x512",
-              type: "image/png",
-            },
-            {
-              src: "/pwa-512x512.png",
-              sizes: "512x512",
-              type: "image/png",
-              purpose: "any maskable",
-            },
-          ],
-        },
-        workbox: {
-          maximumFileSizeToCacheInBytes: 4000000,
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
-        }
-      }),
-
       // https://github.com/feat-agency/vite-plugin-webfont-dl
       // WebfontDownload(),
 
@@ -128,7 +94,7 @@ export default defineConfig(({ mode }) => {
     },
 
     build: {
-      outDir: "./dist",
+      outDir: "./static/discovery_atlas",
       rollupOptions: {
         output: {
           // Assets will use relative paths like assets/file.js

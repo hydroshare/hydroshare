@@ -14,8 +14,7 @@
     "resolveJsonModule": true,
     "types": [
       "vitest",
-      "vite/client",
-      "vite-plugin-pwa/client"
+      "vite/client"
     ],
     "allowJs": true,
     "strict": true,
