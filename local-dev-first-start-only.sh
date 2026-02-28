@@ -121,11 +121,6 @@ cd hydroshare
 cd discovery_atlas
 npm install
 npm run build
-mkdir -p static
-mkdir -p static/discovery_atlas
-cp -rp dist/* static/discovery_atlas/
-rm static/discovery_atlas/assets/virtual_pwa-register*.js
-cp -rp dist/* templates/discovery_atlas/
 echo "----------------static--------------------"
 ls -l static/discovery_atlas
 echo "--------------------------------------"
