@@ -121,6 +121,7 @@ cd hydroshare
 cd discovery_atlas
 npm install
 npm run build
+cp -rp static/discovery_atlas/* templates/discovery_atlas/
 echo "----------------static--------------------"
 ls -l static/discovery_atlas
 echo "--------------------------------------"
