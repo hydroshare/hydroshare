@@ -6,7 +6,7 @@
     "serve": "vite --mode=development",
     "lint": "eslint .",
     "serve-prod": "vite --mode production",
-    "clean:static": "rimraf static/discovery_atlas",
+    "clean:static": "rimraf static/discovery_atlas && rimraf templates/discovery_atlas",
     "clean:hydroshare-static": "rimraf ../hydroshare/static/static/discovery_atlas/",
     "build": "npm run clean:hydroshare-static && npm run clean:static && vite build",
     "build-prod": "npm run clean:hydroshare-static && npm run clean:static && vite build --mode=production",
