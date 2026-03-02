@@ -25,8 +25,15 @@
     const url = new URL(window.location.href);
     url.search = ''
     Object.entries(event.data.childParams).forEach(([key, value], index) => {
-        if (value) {
+        if (value != undefined) {
+          if (typeof value === 'object' && value.length) {
+            value.forEach((val) => {
+              url.searchParams.append(key, val)
+            })
+          }
+          else {
             url.searchParams.set(key, value)
+          }
         }
     })
 

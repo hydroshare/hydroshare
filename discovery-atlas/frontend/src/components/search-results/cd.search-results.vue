@@ -727,9 +727,23 @@ class CdSearchResults extends Vue {
       const params = {}
       rawParams.forEach(p => {
         const tuple = p.split('=')
-        params[tuple[0]] = tuple[1]
+        const key = tuple[0]
+        const val = tuple[1]
+        if (val != undefined) {
+          if (params[key]) {
+            if (typeof params[key] === 'object') {
+              params[key] = [...params[key], val]
+            }
+            else {
+              params[key] = [params[key], val]
+            }
+          }
+          else {
+            params[key] = val
+          }
+        }
       })
-      
+
       this.router
           .push({ name: "search", query: params })
           .catch(sameRouteNavigationErrorHandler);
@@ -752,7 +766,7 @@ class CdSearchResults extends Vue {
         }
       }
     })
-    
+
     window.parent.postMessage({ childParams: paramsCopy }, "http://localhost");
 
     this._onSearch();
