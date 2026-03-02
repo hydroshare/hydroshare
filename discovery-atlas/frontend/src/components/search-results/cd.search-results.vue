@@ -390,6 +390,7 @@ import { EnumFilterTypes, Filter } from "./filter";
 import { DataTableHeader } from "vuetify";
 import { Reactive } from "vue";
 import CdSearchSidebar from "./cd.search-sidebar.vue";
+import { APP_ORIGIN } from "@/constants";
 
 interface SortOption {
   key: string;
@@ -717,7 +718,7 @@ class CdSearchResults extends Vue {
 
   // Handles received route parameters from HydroShare page
   handleMessage(event) {
-    const parentOrigin = "http://localhost";
+    const parentOrigin = APP_ORIGIN;
     if (event.origin !== parentOrigin) {
       return;
     }
@@ -767,7 +768,7 @@ class CdSearchResults extends Vue {
       }
     })
 
-    window.parent.postMessage({ childParams: paramsCopy }, "http://localhost");
+    window.parent.postMessage({ childParams: paramsCopy }, APP_ORIGIN);
 
     this._onSearch();
   }

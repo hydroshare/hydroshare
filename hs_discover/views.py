@@ -29,7 +29,9 @@ class SearchView(TemplateView):
 class AtlasSearchView(TemplateView):
 
     def get(self, request, *args, **kwargs):
-        return render(request, 'hs_discover/atlas.html')
+        target_origin = request.scheme + "://" + request.get_host()
+        context = {"targetOrigin": target_origin, "iframeSrc": target_origin + "/discover/"}
+        return render(request, 'hs_discover/atlas.html', context)
 
 
 class SearchAPI(APIView):
