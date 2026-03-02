@@ -715,8 +715,33 @@ class CdSearchResults extends Vue {
     return params as EnumDictionary<EnumShortParams, any>;
   }
 
+  // Handles received route parameters from HydroShare page
+  handleMessage(event) {
+    const parentOrigin = "http://localhost";
+    if (event.origin !== parentOrigin) {
+      return;
+    }
+
+    if (event.data.parentSearch) {
+      const rawParams = event.data.parentSearch.substr(1, event.data.parentSearch.length).split('&')
+      const params = {}
+      rawParams.forEach(p => {
+        const tuple = p.split('=')
+        params[tuple[0]] = tuple[1]
+      })
+      
+      this.router
+          .push({ name: "search", query: params })
+          .catch(sameRouteNavigationErrorHandler);
+    }
+  }
+
   created() {
+    window.addEventListener("message", this.handleMessage, false);
     this._loadRouteParams();
+
+    window.parent.postMessage({ childParams: this.routeParams }, "http://localhost");
+
     this._onSearch();
   }
 
@@ -755,6 +780,8 @@ class CdSearchResults extends Vue {
 
     try {
       this.logHistory();
+
+      
 
       // This will reload the component because the router-view in the App component has `:key="route.fullPath"`
       this.router

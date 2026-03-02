@@ -29,7 +29,11 @@ import { CzNotifications } from "@cznethub/cznet-vue-core";
   name: "app",
   components: { CzNotifications },
 })
-class App extends Vue {}
+class App extends Vue {
+  created() {
+    
+  }
+}
 export default toNative(App);
 </script>
 
