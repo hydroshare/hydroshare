@@ -406,6 +406,11 @@ def creator_json_ld_element(crs):
 
 
 @register.filter
+def json_dumps(value):
+    return dumps(value)
+
+
+@register.filter
 def is_debug(page):
     return settings.DEBUG
 
