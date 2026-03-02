@@ -740,7 +740,20 @@ class CdSearchResults extends Vue {
     window.addEventListener("message", this.handleMessage, false);
     this._loadRouteParams();
 
-    window.parent.postMessage({ childParams: this.routeParams }, "http://localhost");
+    // Some properties of this.routeParams are proxy objects. We need to deconstruct them so that `postMessage` can copy them.
+    const paramsCopy = { }
+    Object.entries(this.routeParams).forEach(([key, value]) => {
+      if (value != undefined) {
+        if (typeof value === 'object') {
+          paramsCopy[key] = JSON.parse(JSON.stringify(value))
+        }
+        else {
+          paramsCopy[key] = value
+        }
+      }
+    })
+    
+    window.parent.postMessage({ childParams: paramsCopy }, "http://localhost");
 
     this._onSearch();
   }
