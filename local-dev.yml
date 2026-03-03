@@ -427,8 +427,9 @@ services:
   #   platform: linux/amd64
   #   environment:
   #     VITE_APP_NAME: "Discover"
-  #     VITE_APP_API_URL: "https://localhost/api"
+  #     VITE_APP_API_URL: "http://localhost/api"
   #     VITE_APP_BASE: "/discover/"
+  #     VITE_APP_ORIGIN: "http://localhost"
   #   ports:
   #     - "5004:80"
 volumes:
