@@ -1,7 +1,7 @@
 <template>
-  <v-container
+  <div
     class="cd-search-results text-body-1"
-    :class="{ 'is-small': $vuetify.display.smAndDown }"
+    :class="{ 'is-small': $vuetify.display.mdAndDown }"
   >
     <div class="d-flex align-baseline">
       <div class="text-h5 font-weight-bold mr-2">Discover</div>
@@ -10,19 +10,23 @@
       </div>
     </div>
     <v-divider class="mt-2 mb-6"></v-divider>
-    <div class="d-sm-block d-md-flex">
+    <div class="d-md-block d-lg-flex">
       <cd-search-sidebar
         @update:model-value="pushSearchRoute"
         v-model="filter"
+        class="mr-0 mr-md-8"
       />
 
+      <v-divider v-if="$vuetify.display.mdAndDown" class="my-8"></v-divider>
+
       <div class="results-content-wrapper">
-        <v-container class="results-content">
-          <div class="d-flex align-center gap-1 mb-6">
+        <div class="results-content">
+          <div class="d-flex flex-lg-row flex-column align-center gap-1 mb-6">
             <cd-search
               v-model="searchQuery"
               :target-field="EnumHistoryTypes.TERM"
               :auto-focus="true"
+              class="w-100 w-lg-auto"
               @update:model-value="pushSearchRoute"
               @clear="
                 searchQuery = '';
@@ -40,7 +44,7 @@
                 sortTableBy[0] = $event;
                 $nextTick(pushSearchRoute);
               "
-              class="flex-grow-0"
+              class="flex-grow-0 w-100 w-lg-auto"
               width="12rem"
               label="Sort results by"
               v-model="sortDropdownBy"
@@ -352,10 +356,10 @@
           >
             End of results.
           </div>
-        </v-container>
+        </div>
       </div>
     </div>
-  </v-container>
+  </div>
 </template>
 
 <script lang="ts">

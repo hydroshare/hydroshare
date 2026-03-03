@@ -1,5 +1,5 @@
 <template>
-  <v-container class="sidebar flex-shrink-0">
+  <div class="sidebar flex-shrink-0">
     <div class="sidebar--content">
       <div class="text-h6 mb-6">Filters</div>
 
@@ -265,7 +265,7 @@
         >Clear Filters</v-btn
       >
     </div>
-  </v-container>
+  </div>
 </template>
 
 <script lang="ts">
