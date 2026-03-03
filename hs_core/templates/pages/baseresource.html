@@ -31,7 +31,7 @@
     "additionalType": "{{ cm.cached_metadata.type }}",
     "name": "{{ cm.cached_metadata.title.value }}",
     "description": "{{ cm.cached_metadata.abstract.value | escapejs }}",
-    "keywords": {{ cm.cached_metadata.subjects |safe }},
+    "keywords": {{ cm.cached_metadata.subjects|json_dumps|safe }},
     {% if cm.raccess.published %}
     "creativeWorkStatus": "Published",
     {% elif cm.raccess.public %}
@@ -80,7 +80,7 @@
     "temporalCoverage": "{{ cm.cached_metadata.temporal_coverage.start_date }}/{{ cm.cached_metadata.temporal_coverage.end_date }}",
     {% endif %}
     {% with spatial_coverage=cm.cached_metadata.spatial_coverage %}
-    {% if spatial_coverage %}
+    {% if spatial_coverage and spatial_coverage.exists %}
     {# Could include specific properties https://schema.org/GeospatialGeometry for related features #}
     "spatialCoverage": {
         "@type": "Place",
@@ -144,12 +144,12 @@
     {% for agency in fundingagencies %}
         {
             "@type": "Grant",
-            "identifier": "{{ agency.award_number }}",
-            "name": "{{ agency.award_title | escapejs }}",
+            "identifier": {{ agency.award_number|default_if_none:""|json_dumps|safe }},
+            "name": {{ agency.award_title|default_if_none:""|json_dumps|safe }},
             "funder": {
                 "@type": "Organization",
-                "name": "{{ agency.agency_name | escapejs }}",
-                "identifier": "{{ agency.agency_url }}"
+                "name": {{ agency.agency_name|json_dumps|safe }},
+                "identifier": {{ agency.agency_url|default_if_none:""|json_dumps|safe }}
             }
         }{%if not forloop.last%},{%endif%}
         {% endfor %}
@@ -1018,10 +1018,10 @@
         {% for agency in fundingagencies %}
             {
                 "agency_id": "{{ agency.id }}",
-                "award_number": "{{ agency.award_number }}",
-                "award_title": "{{ agency.award_title | escapejs }}",
+                "award_number": "{{ agency.award_number|default_if_none:""|escapejs }}",
+                "award_title": "{{ agency.award_title|default_if_none:""|escapejs }}",
                 "agency_name": "{{ agency.agency_name | escapejs }}",
-                "agency_url": "{{ agency.agency_url }}"
+                "agency_url": "{{ agency.agency_url|default_if_none:""|escapejs }}"
             },
         {% endfor %}
       ];
