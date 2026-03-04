@@ -14,7 +14,6 @@ from hs_core.hydroshare import resource, get_resource_by_shortkey
 from hs_core.tests.api.utils import MyTemporaryUploadedFile
 from hs_core.models import BaseResource
 from hs_core.testing import MockS3TestCaseMixin
-from hs_core.tests.utils.test_utils import wait_for_quota_update
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import QuotaException, resource_pre_create_actions
 from hs_composite_resource.models import CompositeResource
@@ -445,7 +444,6 @@ class TestCreateResource(MockS3TestCaseMixin, TestCase):
         # create resource should not raise quota exception now that enforce_quota flag
         # is set to False
         uquota.save_allocated_value(20, "GB")
-        wait_for_quota_update()
         try:
             resource_pre_create_actions(resource_type='CompositeResource',
                                         resource_title='My Test Resource',

@@ -7,7 +7,6 @@ from theme.models import UserQuota
 from hs_access_control.models import PrivilegeCodes
 from hs_composite_resource.models import CompositeResource
 from hs_core import hydroshare
-from hs_core.tests.utils.test_utils import wait_for_quota_update
 from hs_core.models import BaseResource
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, zip_folder, \
     unzip_file, remove_folder, get_default_admin_user
@@ -99,7 +98,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         # assert math.isclose(expected, self.res.size, rel_tol=1e-5)
         self.assertEqual(expected, self.res.size)
 
-        wait_for_quota_update()
         self.assertNotEqual(user_quota.data_zone_value, initial_quota_value)
 
         # Assert that the used values have been updated correctly
@@ -115,12 +113,10 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.res.files.all().count(), 3)
         self.assertEqual(self.single_file_size * 3, self.res.size)
 
-        wait_for_quota_update()
         initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
 
         # Delete a file from the resource
         hydroshare.resource.delete_resource_file(self.res.short_id, self.n1, self.user)
-        wait_for_quota_update()
         # Assert that the file has been deleted
         self.assertEqual(self.res.files.all().count(), 2)
         expected = 2 * self.single_file_size
@@ -143,7 +139,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
 
-        wait_for_quota_update()
         create_folder(self.res.short_id, 'data/contents/sub_test_dir')
         move_or_rename_file_or_folder(self.user, self.res.short_id,
                                       'data/contents/' + self.n1,
@@ -151,7 +146,6 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Zip the files in the resource
         zip_folder(self.user, self.res.short_id, 'data/contents/sub_test_dir', 'sub_test_dir.zip', False)
-        wait_for_quota_update()
 
         # Assert that the resource has added a single zip file
         self.assertEqual(self.res.files.all().count(), 4)
@@ -177,13 +171,11 @@ class UpdateQuotaUsageTestCase(TestCase):
         folder_path = "data/contents/test"
         remove_folder(self.user, self.res.short_id, folder_path)
 
-        wait_for_quota_update()
         data_zone_value = user_quota.data_zone_value
         initial_quota_value = self.convert_gb_to_bytes(data_zone_value)
 
         # Unzip the files in the resource
         unzip_file(self.user, self.res.short_id, 'data/contents/test.zip', bool_remove_original=False)
-        wait_for_quota_update()
 
         # Assert that the resource has the original files + 1
         self.assertEqual(self.res.files.all().count(), 4)
@@ -203,7 +195,6 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
-        wait_for_quota_update()
         initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
 
         # Move a file in the resource
@@ -228,7 +219,6 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
-        wait_for_quota_update()
         initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
 
         # Rename a file in the resource
@@ -252,7 +242,6 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
-        wait_for_quota_update()
         initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
 
         # Create a folder in the resource
@@ -274,7 +263,6 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
-        wait_for_quota_update()
         initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
 
         # Create a folder in the resource
@@ -307,7 +295,6 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
-        wait_for_quota_update()
         initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
 
         # Create a folder in the resource
@@ -341,7 +328,6 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
-        wait_for_quota_update()
         initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
 
         # Create a folder in the resource
@@ -375,7 +361,6 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
-        wait_for_quota_update()
         data_zone_value = user_quota.data_zone_value
         initial_quota_value = self.convert_gb_to_bytes(data_zone_value)
         self.assertGreater(initial_quota_value, 3 * self.single_file_size)
@@ -391,7 +376,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.res.quota_holder, self.user2)
 
         # Assert that the quota has been updated
-        wait_for_quota_update()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertGreaterEqual(dz, 0)
 
@@ -409,7 +393,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.res.files.all().count(), 3)
         self.assertEqual(self.single_file_size * 3, self.res.size)
 
-        wait_for_quota_update()
         data_zone_value = user_quota.data_zone_value
         initial_quota_value = self.convert_gb_to_bytes(data_zone_value)
 
@@ -432,7 +415,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(BaseResource.objects.filter(quota_holder=self.user).count(), 0)
 
         # Assert that the quota has been updated
-        wait_for_quota_update()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertGreater(dz, 0)
 
@@ -445,7 +427,6 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
-        wait_for_quota_update()
         data_zone_value = user_quota.data_zone_value
         initial_quota_value = self.convert_gb_to_bytes(data_zone_value)
         self.assertGreater(initial_quota_value, 3 * self.single_file_size)
@@ -472,7 +453,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.res.quota_holder, self.user)
 
         # Assert that the quota has been updated
-        wait_for_quota_update()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertGreaterEqual(dz, initial_quota_value * 2)
 
@@ -487,7 +467,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.single_file_size * 3, self.res.size)
 
         # Retrieve the UserQuota object for the user
-        wait_for_quota_update()
         data_zone_value = user_quota.data_zone_value
         initial_quota_value = self.convert_gb_to_bytes(data_zone_value)
         self.assertGreater(initial_quota_value, 3 * self.single_file_size)
@@ -520,7 +499,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.res.quota_holder, self.user)
 
         # Assert that the quota has been updated
-        wait_for_quota_update()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertGreaterEqual(dz, initial_quota_value * 2)
 
@@ -542,7 +520,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         self.assertEqual(self.single_file_size * 3, self.res.size)
 
         # Retrieve the UserQuota object for the user
-        wait_for_quota_update()
         data_zone_value = user_quota.data_zone_value
         initial_quota_value = self.convert_gb_to_bytes(data_zone_value)
         self.assertGreater(initial_quota_value, 3 * self.single_file_size)
@@ -564,7 +541,6 @@ class UpdateQuotaUsageTestCase(TestCase):
         )
 
         # Assert that the quota has been updated
-        wait_for_quota_update()
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertGreaterEqual(dz, 0)
 
@@ -577,7 +553,6 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
-        wait_for_quota_update()
         initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
         self.assertGreater(initial_quota_value, 3 * self.single_file_size)
 

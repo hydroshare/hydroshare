@@ -50,8 +50,3 @@ def debug_on(*exceptions):
 
 def set_quota_usage_over_hard_limit(uquota):
     uquota.save_allocated_value(1, "B")
-    sleep(30)
-
-
-def wait_for_quota_update():
-    sleep(30)

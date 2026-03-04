@@ -34,7 +34,7 @@ class TestCreateResourceVersion(HSRESTTestCase):
         Test case to verify the behavior of creating a resource version when the user is over their quota.
         """
         uquota = self.user.quotas.first()
-        from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit, wait_for_quota_update
+        from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit
         set_quota_usage_over_hard_limit(uquota)
 
         version_url = "/hsapi/resource/%s/version/" % self.pid
@@ -43,7 +43,6 @@ class TestCreateResourceVersion(HSRESTTestCase):
 
         # increase quota to allow version creation
         uquota.save_allocated_value(20, "GB")
-        wait_for_quota_update()
         response = self.client.post(version_url, {}, format='json')
         self.resources_to_delete.append(response.content.decode())
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
