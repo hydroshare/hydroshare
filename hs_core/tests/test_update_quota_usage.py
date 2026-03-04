@@ -102,7 +102,7 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Assert that the used values have been updated correctly
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
-        self.assertGreater(dz, expected)
+        self.assertEqual(dz, expected)
 
     def test_deleting_file_decrease_quota(self):
         # Retrieve the UserQuota object for the user
@@ -157,7 +157,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         size_of_zip = 213
         expected = self.single_file_size * 3 + size_of_zip
-        self.assertGreater(dz, expected)
+        self.assertEqual(dz, expected)
 
     def test_unzipping_files_increase_quota(self):
         # Retrieve the UserQuota object for the user
@@ -184,7 +184,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
         expected = initial_quota_value + 3 * self.single_file_size
         # assert math.isclose(user_quota.data_zone_value, expected, rel_tol=1e-5)
-        self.assertGreater(dz, expected)
+        self.assertEqual(dz, expected)
 
     def test_moving_files_doesnt_alter_quota(self):
         # Add files to the resource
@@ -208,7 +208,7 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Assert that the quota has not been updated
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
-        self.assertGreaterEqual(dz, initial_quota_value)
+        self.assertEqual(dz, initial_quota_value)
 
     def test_renaming_files_doesnt_alter_quota(self):
         # Add files to the resource
@@ -363,7 +363,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
         data_zone_value = user_quota.data_zone_value
         initial_quota_value = self.convert_gb_to_bytes(data_zone_value)
-        self.assertGreater(initial_quota_value, 3 * self.single_file_size)
+        self.assertEqual(initial_quota_value, 3 * self.single_file_size)
 
         # change the quota holder
         # first add user2 as owner
@@ -377,12 +377,12 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Assert that the quota has been updated
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
-        self.assertGreaterEqual(dz, 0)
+        self.assertEqual(dz, 0)
 
         # assert that the new quota holder has the correct quota
         user_quota2 = UserQuota.objects.get(user=self.user2, zone=self.hs_internal_zone)
         dz2 = self.convert_gb_to_bytes(user_quota2.data_zone_value)
-        self.assertGreaterEqual(dz2, initial_quota_value)
+        self.assertEqual(dz2, initial_quota_value)
 
     def test_delete_resource_reduces_quota(self):
         # Retrieve the UserQuota object for the user
@@ -397,7 +397,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         initial_quota_value = self.convert_gb_to_bytes(data_zone_value)
 
         # assert that the initial quota value is correct
-        self.assertGreater(initial_quota_value, self.single_file_size * 3)
+        self.assertEqual(initial_quota_value, self.single_file_size * 3)
 
         # Delete the resource
         self.assertTrue(BaseResource.objects.filter(short_id=self.res.short_id).exists())
@@ -416,7 +416,7 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Assert that the quota has been updated
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
-        self.assertGreater(dz, 0)
+        self.assertEqual(dz, 0)
 
     def test_copying_resource_doubles_quota(self):
         # Add files to the resource
@@ -429,7 +429,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
         data_zone_value = user_quota.data_zone_value
         initial_quota_value = self.convert_gb_to_bytes(data_zone_value)
-        self.assertGreater(initial_quota_value, 3 * self.single_file_size)
+        self.assertEqual(initial_quota_value, 3 * self.single_file_size)
 
         new_res = hydroshare.create_empty_resource(self.res.short_id,
                                                    self.user,
@@ -454,7 +454,7 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Assert that the quota has been updated
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
-        self.assertGreaterEqual(dz, initial_quota_value * 2)
+        self.assertEqual(dz, initial_quota_value * 2)
 
     def test_version_resource_doubles_quota(self):
         # Retrieve the UserQuota object for the user
@@ -469,7 +469,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         # Retrieve the UserQuota object for the user
         data_zone_value = user_quota.data_zone_value
         initial_quota_value = self.convert_gb_to_bytes(data_zone_value)
-        self.assertGreater(initial_quota_value, 3 * self.single_file_size)
+        self.assertEqual(initial_quota_value, 3 * self.single_file_size)
 
         # Version the resource
         new_composite_resource = hydroshare.create_empty_resource(
@@ -500,7 +500,7 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Assert that the quota has been updated
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
-        self.assertGreaterEqual(dz, initial_quota_value * 2)
+        self.assertEqual(dz, initial_quota_value * 2)
 
     def test_publish_resource_decreases_quota(self):
         hydroshare.create_account(
@@ -522,7 +522,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         # Retrieve the UserQuota object for the user
         data_zone_value = user_quota.data_zone_value
         initial_quota_value = self.convert_gb_to_bytes(data_zone_value)
-        self.assertGreater(initial_quota_value, 3 * self.single_file_size)
+        self.assertEqual(initial_quota_value, 3 * self.single_file_size)
 
         # there should not be published date type metadata element
         self.assertFalse(self.res.metadata.dates.filter(type='published').exists())
@@ -542,7 +542,7 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Assert that the quota has been updated
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
-        self.assertGreaterEqual(dz, 0)
+        self.assertEqual(dz, 0)
 
     def test_adding_zipped_bag_not_increase_quota(self):
         # Add files to the resource
@@ -554,7 +554,7 @@ class UpdateQuotaUsageTestCase(TestCase):
         # Retrieve the UserQuota object for the user
         user_quota = UserQuota.objects.get(user=self.user, zone=self.hs_internal_zone)
         initial_quota_value = self.convert_gb_to_bytes(user_quota.data_zone_value)
-        self.assertGreater(initial_quota_value, 3 * self.single_file_size)
+        self.assertEqual(initial_quota_value, 3 * self.single_file_size)
 
         # create the zipped bag
         status = create_bag_by_s3(self.res.short_id)
@@ -565,4 +565,4 @@ class UpdateQuotaUsageTestCase(TestCase):
 
         # Assert that the quota has not been updated
         dz = self.convert_gb_to_bytes(user_quota.data_zone_value)
-        self.assertGreaterEqual(dz, initial_quota_value)
+        self.assertEqual(dz, initial_quota_value)

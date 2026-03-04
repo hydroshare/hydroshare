@@ -1,5 +1,5 @@
 import uuid
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, PropertyMock
 from django.test import TestCase
 from hs_core.exceptions import QuotaException
 from hs_core.hydroshare.utils import validate_user_quota
@@ -37,14 +37,14 @@ class ValidateUserQuotaTestCase(TestCase):
             zone=self.hs_internal_zone
         )
 
-        # Set up individual test mocks
-        self.mock_subprocess_patcher = patch('theme.models.subprocess.run')
-        self.mock_subprocess = self.mock_subprocess_patcher.start()
+        # Set up individual test mocks for property
+        self.mock_data_zone_value_patcher = patch('theme.models.UserQuota.data_zone_value', new_callable=PropertyMock)
+        self.mock_data_zone_value = self.mock_data_zone_value_patcher.start()
 
     def tearDown(self):
         # Stop all patches
-        self.mock_subprocess_patcher.stop()
-        self.mock_subprocess.reset_mock()
+        self.mock_data_zone_value_patcher.stop()
+        self.mock_data_zone_value.reset_mock()
 
         # Clean up database
         User.objects.all().delete()
@@ -53,27 +53,6 @@ class ValidateUserQuotaTestCase(TestCase):
         UserQuota.objects.all().delete()
         QuotaMessage.objects.all().delete()
         super().tearDown()
-
-    def _mock_minio_info(self, allocated_size, unit):
-        """Mock the quota info response from MinIO"""
-        mock_result = MagicMock()
-        # size_with_unit_str = result.stdout.split("Total size: ")[1].split("\n")[0]
-        mock_result.stdout = f"Total size: {allocated_size} {unit}"
-        mock_result.stderr = ""
-        mock_result.returncode = 0
-        return mock_result
-
-    def _setup_mock_side_effect(self, allocated_size, allocated_unit, used_size, used_unit):
-        """Setup mock side effect function for subprocess calls"""
-        def side_effect_func(*args, **kwargs):
-            cmd = ' '.join(args[0])
-            if 'quota' in cmd:
-                return self._mock_minio_info(allocated_size, allocated_unit)
-            elif 'stat' in cmd:
-                return self._mock_minio_info(used_size, used_unit)
-            return MagicMock()
-
-        self.mock_subprocess.side_effect = side_effect_func
 
     def test_validate_user_quota_none_user(self):
         """Test that no exception is raised when user is None"""
@@ -96,7 +75,8 @@ class ValidateUserQuotaTestCase(TestCase):
     def test_validate_user_quota_within_quota(self):
         """Test that no exception is raised when user is within quota"""
         # Setup mock responses
-        self._setup_mock_side_effect(100, "MB", 50, "MB")
+        self.mock_data_zone_value.return_value = 50
+        self.user_quota.save_allocated_value(100, "MB")
 
         # Adding 25MB should be within quota (50 + 25 = 75 < 100)
         try:
@@ -108,7 +88,8 @@ class ValidateUserQuotaTestCase(TestCase):
     def test_validate_user_quota_exactly_at_quota(self):
         """Test that exception is raised when user exactly reaches quota limit"""
         # Setup mock responses
-        self._setup_mock_side_effect(100, "MB", 50, "MB")
+        self.mock_data_zone_value.return_value = 50
+        self.user_quota.save_allocated_value(100, "MB")
 
         # Adding exactly 50MB should exceed quota (50 + 50 = 100 >= 100)
         with self.assertRaises(QuotaException) as context:
@@ -120,7 +101,8 @@ class ValidateUserQuotaTestCase(TestCase):
     def test_validate_user_quota_over_quota(self):
         """Test that exception is raised when user exceeds quota"""
         # Setup mock responses
-        self._setup_mock_side_effect(100, "MB", 80, "MB")
+        self.mock_data_zone_value.return_value = 80
+        self.user_quota.save_allocated_value(100, "MB")
 
         # Adding 30MB should exceed quota (80 + 30 = 110 > 100)
         with self.assertRaises(QuotaException) as context:
@@ -147,7 +129,8 @@ class ValidateUserQuotaTestCase(TestCase):
         QuotaMessage.objects.all().delete()
 
         # Setup mock responses
-        self._setup_mock_side_effect(10, "MB", 5, "MB")
+        self.mock_data_zone_value.return_value = 5
+        self.user_quota.save_allocated_value(10, "MB")
 
         # Should still raise QuotaException even without QuotaMessage
         with self.assertRaises(QuotaException):
@@ -156,7 +139,8 @@ class ValidateUserQuotaTestCase(TestCase):
     def test_validate_user_quota_with_username_string(self):
         """Test that function works with username string instead of User object"""
         # Setup mock responses
-        self._setup_mock_side_effect(100, "MB", 90, "MB")
+        self.mock_data_zone_value.return_value = 90
+        self.user_quota.save_allocated_value(100, "MB")
 
         # Should raise exception when passing username string
         with self.assertRaises(QuotaException):
@@ -165,7 +149,8 @@ class ValidateUserQuotaTestCase(TestCase):
     def test_validate_user_quota_zero_size(self):
         """Test that zero size doesn't affect quota validation"""
         # Setup mock responses
-        self._setup_mock_side_effect(100, "MB", 99, "MB")
+        self.mock_data_zone_value.return_value = 99
+        self.user_quota.save_allocated_value(100, "MB")
 
         # Adding zero size should not raise exception
         try:
@@ -177,7 +162,8 @@ class ValidateUserQuotaTestCase(TestCase):
     def test_validate_user_quota_negative_size(self):
         """Test that negative size doesn't affect quota validation"""
         # Setup mock responses
-        self._setup_mock_side_effect(100, "MB", 50, "MB")
+        self.mock_data_zone_value.return_value = 50
+        self.user_quota.save_allocated_value(100, "MB")
 
         # Adding negative size should not raise exception (treated as zero)
         try:

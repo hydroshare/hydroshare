@@ -256,6 +256,7 @@ class UserQuota(models.Model):
         Save the allocated value to the database and update the quota on MinIO.
         """
         self.allocated_value = allocated_value
+        self.unit = unit
         self.save()
 
     @property
