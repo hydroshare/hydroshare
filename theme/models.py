@@ -239,6 +239,8 @@ class UserQuota(models.Model):
         related_query_name="quotas",
     )
 
+    allocated_value = models.FloatField(default=20)
+    unit = models.CharField(max_length=10, default="GB")
     zone = models.CharField(max_length=100, default="hydroshare")
 
     class Meta:
