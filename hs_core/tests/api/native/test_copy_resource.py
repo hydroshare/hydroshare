@@ -356,15 +356,11 @@ class TestCopyResource(TransactionTestCase):
         uquota.save_allocated_value(1, "B")
 
         with self.assertRaises(QuotaException):
-            hydroshare.create_empty_resource(self.res.short_id,
-                                             self.owner,
-                                             action='copy')
+            hydroshare.create_empty_resource(self.res.short_id, self.owner, action='copy')
         uquota.save_allocated_value(20, "GB")
 
         # QuotaException should NOT be raised now that quota is not enforced
-        hydroshare.create_empty_resource(self.res.short_id,
-                                             self.owner,
-                                             action='copy')
+        hydroshare.create_empty_resource(self.res.short_id, self.owner, action='copy')
 
 
 def _get_relation_meta_derived_from(resource):
