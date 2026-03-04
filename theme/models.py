@@ -1,7 +1,6 @@
 import datetime
 import logging
 import re
-import subprocess
 
 from django.utils import timezone
 from django.dispatch import receiver
@@ -19,7 +18,6 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import MinValueValidator, MaxValueValidator, MinLengthValidator, MaxLengthValidator
 from django.contrib.postgres.fields import HStoreField
-from django_s3.storage import S3Storage
 
 from mezzanine.core.fields import FileField, RichTextField
 from mezzanine.core.models import Orderable, SiteRelated
