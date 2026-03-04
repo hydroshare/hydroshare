@@ -153,9 +153,7 @@ class TestPublicZipEndpoint(HSRESTTestCase):
         resource.add_resource_files(self.res.short_id, self.myfile1, self.myfile2, self.myfile3, folder='test')
 
         uquota = self.user.quotas.first()
-        # make user's quota over hard limit 125%
-        from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit
-        set_quota_usage_over_hard_limit(uquota)
+        uquota.save_allocated_value(1, "B")
         uquota.save()
 
         # zip should raise quota exception now that the quota holder is over hard limit

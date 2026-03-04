@@ -73,8 +73,7 @@ class TestChangeQuotaHolder(MockS3TestCaseMixin, TestCase):
         uquota = self.user1.quotas.first()
         # make user1's quota over hard limit 125%
 
-        from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit
-        set_quota_usage_over_hard_limit(uquota)
+        uquota.save_allocated_value(1, "B")
 
         # QuotaException should be raised when attempting to change quota holder to user1 when
         # quota is enforced

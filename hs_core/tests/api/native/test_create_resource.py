@@ -427,9 +427,7 @@ class TestCreateResource(MockS3TestCaseMixin, TestCase):
                                        files=(payload2,))
 
         uquota = self.user.quotas.first()
-        # make user's quota over hard limit 125%
-        from hs_core.tests.utils.test_utils import set_quota_usage_over_hard_limit
-        set_quota_usage_over_hard_limit(uquota)
+        uquota.save_allocated_value(1, "B")
         # create_resource should raise quota exception now that the creator user is over hard
         # limit and enforce quota flag is set to True
         file_one_payload = MyTemporaryUploadedFile(open(self.raster_file_path, 'rb'), name="raster2.tif",

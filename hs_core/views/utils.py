@@ -1260,9 +1260,9 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original,
                                     istorage.delete(override_tgt_path)
                     else:
                         istorage.delete(override_tgt_path)
-            if not bool_remove_original:
-                size = validate_resource_file_size(res_files)
-                validate_user_quota(resource.quota_holder, size)
+
+            size = validate_resource_file_size(res_files)
+            validate_user_quota(resource.quota_holder, size)
 
             # now move each file to the destination
             for file in res_files:

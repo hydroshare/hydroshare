@@ -45,7 +45,3 @@ def debug_on(*exceptions):
                 pdb.post_mortem(info[2])
         return wrapper
     return decorator
-
-
-def set_quota_usage_over_hard_limit(uquota):
-    uquota.save_allocated_value(1, "B")
