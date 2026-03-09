@@ -58,7 +58,8 @@ def get_common_download_fields(**kwargs):
     # MakeDataCount also requires the following metadata about the resource:
     res_metadata = {
         'title': kwargs['resource'].title,
-        'creators': " ;".join(str(name) for name in kwargs['resource'].metadata.creators.only('name').all()),
+        'creators': " ;".join(str(name if name else str(organization)) for name, organization in
+                              kwargs['resource'].metadata.creators.only('name', 'organization').all()),
         'is_replaced_by': kwargs['resource'].get_relation_version_res_url(RelationTypes.isReplacedBy) or None,
         'is_version_of': kwargs['resource'].get_relation_version_res_url(RelationTypes.isVersionOf) or None,
         'resource_url': current_site_url() + kwargs['resource'].absolute_url
