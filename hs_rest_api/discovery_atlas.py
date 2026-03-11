@@ -302,6 +302,29 @@ class SearchQuery(BaseModel):
 
         return stages
 
+    @property
+    def has_filters(self):
+        return any([
+            self.contentType,
+            self.providerName,
+            self.creatorName,
+            self.keyword,
+            self.dataCoverageStart,
+            self.dataCoverageEnd,
+            self.publishedStart,
+            self.publishedEnd,
+            self.dateCreatedStart,
+            self.dateCreatedEnd,
+            self.dateModifiedStart,
+            self.dateModifiedEnd,
+            self.hasPartName,
+            self.isPartOfName,
+            self.associatedMediaName,
+            self.fundingGrantName,
+            self.fundingFunderName,
+            self.creativeWorkStatus
+        ])
+
 
 # Convert ObjectId to string recursively
 def convert_objectid(obj):
