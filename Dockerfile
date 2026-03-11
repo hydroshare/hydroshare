@@ -18,6 +18,13 @@ RUN apt install -y redpanda-rpk redpanda-connect jq
 
 RUN pip install redpanda-connect
 
+RUN pip install confluent-kafka
+
+RUN pip install pymongo
+
+# installs specific commit until hsmodels gets a full release
+RUN pip install --upgrade git+https://github.com/hydroshare/hsmodels.git@22b7d610814a28065511ff03ba044ad66cc1bc98
+
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8

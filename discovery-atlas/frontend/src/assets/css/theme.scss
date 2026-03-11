@@ -1,0 +1,44 @@
+// :root {
+
+// }
+@use "@fortawesome/fontawesome-free/css/all.min.css";
+@use "@cznethub/cznet-vue-core/styles";
+@use "leaflet/dist/leaflet.css";
+
+html {
+  font-size: 16px;
+}
+
+body {
+  font-size: 14px;
+  font-size: 1.4rem;
+}
+
+@media (min-width: 768px) {
+  #main-container {
+    width: 750px;
+  }
+}
+
+@media (min-width: 992px) {
+  #main-container {
+    width: 970px;
+  }
+}
+
+@media (min-width: 1200px) {
+  #main-container {
+    width: 1170px;
+  }
+}
+
+@media (min-width: 1440px) {
+  #main-container {
+    width: 1440px;
+    max-width: 1440px;
+  }
+}
+
+p {
+  max-width: 70rem;
+}

@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -o pipefail
 
-flake8 | tee pylint.out
+flake8 --config setup.cfg | tee pylint.out
