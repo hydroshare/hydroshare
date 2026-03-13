@@ -19,7 +19,7 @@
     "@vuex-orm/core": "^0.36.4",
     "axios": "^1.13.2",
     "deepmerge": "^4.3.1",
-    "dompurify": "^3.3.1",
+    "dompurify": "^3.3.2",
     "leaflet": "^1.9.4",
     "leaflet.fullscreen": "^5.3.0",
     "lodash.isequal": "^4.5.0",
