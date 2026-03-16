@@ -905,7 +905,7 @@ class CdSearchResults extends Vue {
 
   /** Load route query parameters into component values. */
   private _loadRouteParams() {
-    this.searchQuery = this.$route.query[EnumShortParams.QUERY] as string || "";
+    this.searchQuery = this.$route.query[EnumShortParams.QUERY] as string;
     this.registeredFilters.forEach((f) => f.loadFromRoute(this.$route.query));
 
     if (
