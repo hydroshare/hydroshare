@@ -702,7 +702,9 @@ class CdSearchResults extends Vue {
     return params;
   }
 
-  /** Route query parameters with short keys. These are parameters needed to replicate a search. */
+  /** Route query parameters with short keys. These are parameters needed to replicate a search.
+   * Paremeter values are encoded using encodeURIComponent
+  */
   public get routeParams(): EnumDictionary<EnumShortParams, any> {
     let params: { [key: string]: string } = {
       [EnumShortParams.QUERY]: this.searchQuery,
@@ -721,46 +723,29 @@ class CdSearchResults extends Vue {
   }
 
   // Handles received route parameters from HydroShare page
-  handleMessage(event) {
+  handleMessage(event: MessageEvent) {
     const parentOrigin = APP_ORIGIN;
     if (event.origin !== parentOrigin) {
       return;
     }
 
     if (event.data.parentSearch) {
-      const rawParams = event.data.parentSearch.substr(1, event.data.parentSearch.length).split('&')
-      const params = {}
-      rawParams.forEach(p => {
-        const tuple = p.split('=')
-        const key = tuple[0]
-        const val = tuple[1]
-        if (val != undefined) {
-          if (params[key]) {
-            if (typeof params[key] === 'object') {
-              params[key] = [...params[key], val]
-            }
-            else {
-              params[key] = [params[key], val]
-            }
-          }
-          else {
-            params[key] = val
-          }
-        }
-      })
-
-      this.router
-          .push({ name: "search", query: params })
-          .catch(sameRouteNavigationErrorHandler);
+      this.$router.push(window.location.href + event.data.parentSearch)
+      .catch(sameRouteNavigationErrorHandler);
     }
   }
 
   created() {
     window.addEventListener("message", this.handleMessage, false);
     this._loadRouteParams();
+    this.sendRouteParams();
+    this._onSearch();
+  }
 
-    // Some properties of this.routeParams are proxy objects. We need to deconstruct them so that `postMessage` can copy them.
-    const paramsCopy = { }
+  sendRouteParams() {
+    // Some properties of routeParams are proxy objects. We need to deconstruct them so that `postMessage` can copy them.
+    const paramsCopy: {[key:string]: string} = { }
+
     Object.entries(this.routeParams).forEach(([key, value]) => {
       if (value != undefined) {
         if (typeof value === 'object') {
@@ -773,8 +758,6 @@ class CdSearchResults extends Vue {
     })
 
     window.parent.postMessage({ childParams: paramsCopy }, APP_ORIGIN);
-
-    this._onSearch();
   }
 
   public onIntersect(_isIntersecting: boolean, entries: any[], _observer: any) {
@@ -812,8 +795,6 @@ class CdSearchResults extends Vue {
 
     try {
       this.logHistory();
-
-      
 
       // This will reload the component because the router-view in the App component has `:key="route.fullPath"`
       this.router
@@ -924,7 +905,7 @@ class CdSearchResults extends Vue {
 
   /** Load route query parameters into component values. */
   private _loadRouteParams() {
-    this.searchQuery = this.$route.query[EnumShortParams.QUERY] as string;
+    this.searchQuery = this.$route.query[EnumShortParams.QUERY] as string || "";
     this.registeredFilters.forEach((f) => f.loadFromRoute(this.$route.query));
 
     if (
