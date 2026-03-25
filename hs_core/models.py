@@ -2264,6 +2264,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
 
     def write_django_metadata_json_files(self):
         self.write_user_metadata_json_file()
+        self.write_system_metadata_json_file()
 
     def write_user_metadata_json_file(self):
         """Write user metadata JSON file to resource .hsmetadata directory in S3"""
