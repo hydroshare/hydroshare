@@ -3,7 +3,7 @@ from enum import Enum
 
 from hs_cloudnative_schemas.schema.base import MediaObject
 
-from hsextract.utils.s3 import retrieve_file_manifest
+from hsextract.utils.s3 import iter_file_manifest, retrieve_file_manifest
 from string import Template
 
 
@@ -40,8 +40,7 @@ class BaseMetadataObject:
         self.system_metadata_path = os.path.join(self.resource_md_path, "system_metadata.json")
         self.user_metadata_path = os.path.join(self.resource_md_path, "user_metadata.json")
         self.resource_metadata_jsonld_path = os.path.join(self.resource_md_jsonld_path, "dataset_metadata.json")
-
-        self._resource_associated_media = None
+        self.resource_associated_media_jsonld_path = os.path.join(self.resource_md_jsonld_path, "file_manifest.json")
 
         self.content_type_md_jsonld_path = None
         self.content_type_md_path = None
@@ -49,13 +48,20 @@ class BaseMetadataObject:
         self.content_type_main_file_path = None
         self.content_type_md_user_path = None
 
+    def iter_resource_associated_media(self):
+        return iter_file_manifest(self.resource_contents_path, enabled=True)
+
     @property
     def resource_associated_media(self):
-        if not self._resource_associated_media:
-            # file manifest is disabled, it is not needed for discovery at this time
-            self._resource_associated_media = retrieve_file_manifest(
-                self.resource_contents_path, enabled=False)
-        return self._resource_associated_media
+        return retrieve_file_manifest(self.resource_contents_path, enabled=True)
+
+    @staticmethod
+    def media_object_path(media_object: dict) -> str:
+        endpoint_url = os.environ.get('AWS_S3_ENDPOINT_URL', '').rstrip('/')
+        content_url = media_object["contentUrl"]
+        if endpoint_url and content_url.startswith(endpoint_url):
+            return content_url[len(endpoint_url):].lstrip('/')
+        return content_url.lstrip('/')
 
     @classmethod
     def _bucket_name(cls, file_object_path: str) -> str:
