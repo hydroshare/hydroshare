@@ -198,7 +198,7 @@
                           <div class="flex-grow-1">
                             <!-- CREATORS -->
                             <div class="d-flex">
-                              <b class="flex-shrink-0">Creators</b>:
+                              <b class="flex-shrink-0">Author(s)</b>:
                               <p
                                 class="mb-2 ml-1"
                                 v-html="
