@@ -252,10 +252,11 @@
                               stacked
                               class="pa-0 pb-4"
                               :border="0"
-                              ref="el"
+                              :ref="(el) => setBannerRef(el, item)"
                             >
                               <template v-slot:actions>
                                 <v-btn
+                                  v-if="item._isClamped || item._showMore"
                                   @click="item._showMore = !item._showMore"
                                   size="x-small"
                                   >{{
@@ -676,6 +677,18 @@ class CdSearchResults extends Vue {
 
   public get results(): IResult[] {
     return Search.$state.results;
+  }
+
+  public setBannerRef(el: any, item: IResult) {
+    if (el && !item._showMore) {
+      this.$nextTick(() => {
+        const bannerEl = el.$el || el;
+        const textEl = bannerEl.querySelector(".v-banner-text");
+        if (textEl) {
+          item._isClamped = textEl.scrollHeight > textEl.clientHeight;
+        }
+      });
+    }
   }
 
   public get isSomeFilterActive() {
