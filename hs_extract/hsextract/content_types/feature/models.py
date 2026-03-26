@@ -40,14 +40,14 @@ class FeatureMetadataObject(FileMetadataObject):
     def content_type_associated_media(self) -> list[dict]:
         media_objects = []
         file_object_name, _ = os.path.splitext(self.file_object_path)
-        for m in self.resource_associated_media:
-            file_path = m["contentUrl"].split(os.environ.get('AWS_S3_ENDPOINT_URL', ''))[1].strip("/")
+        for media_object in self.iter_resource_associated_media():
+            file_path = self.media_object_path(media_object)
             sub_file_name, extension = os.path.splitext(file_path.lower())
             if extension == ".xml":
                 sub_file_name, sub_extension = os.path.splitext(sub_file_name.lower())
                 extension = sub_extension + extension
             if sub_file_name == file_object_name and extension in self._extensions():
-                media_objects.append(m)
+                media_objects.append(media_object)
         return media_objects
 
     def extract_metadata(self):

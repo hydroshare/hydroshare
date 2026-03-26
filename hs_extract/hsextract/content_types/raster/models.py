@@ -8,6 +8,7 @@ class RasterMetadataObject(FileMetadataObject):
 
     def __init__(self, file_object_path: str, file_updated: bool):
         super().__init__(file_object_path, file_updated)
+        self._content_type_associated_media = None
         vrt_path = self._determine_vrt_path()
         if vrt_path:
             self.file_object_path = vrt_path
@@ -29,8 +30,8 @@ class RasterMetadataObject(FileMetadataObject):
         if self.file_object_path.endswith(".tif") or self.file_object_path.endswith(".tiff"):
             vrt_paths = []
             directory = os.path.dirname(self.file_object_path)
-            for media in self.resource_associated_media:
-                vrt_path = media["contentUrl"].split(os.environ['AWS_S3_ENDPOINT_URL'])[1].strip("/")
+            for media_object in self.iter_resource_associated_media():
+                vrt_path = self.media_object_path(media_object)
                 if os.path.dirname(vrt_path) == directory and vrt_path.endswith(".vrt"):
                     vrt_paths.append(vrt_path)
             for vrt_path in vrt_paths:
@@ -40,24 +41,28 @@ class RasterMetadataObject(FileMetadataObject):
         return None
 
     def content_type_associated_media(self) -> list[dict]:
+        if self._content_type_associated_media is not None:
+            return self._content_type_associated_media
+
         media_objects = []
-        content_type_files = [self.file_object_path]
+        content_type_files = {self.file_object_path}
         if self.file_object_path.endswith(".vrt"):
             tif_files = list_tif_files_s3(self.file_object_path)
             for f in tif_files:
-                content_type_files.append(self.file_object_path.replace(os.path.basename(self.file_object_path), f))
-        for media in self.resource_associated_media:
-            file_path = media["contentUrl"].split(os.environ['AWS_S3_ENDPOINT_URL'])[1].strip("/")
+                content_type_files.add(self.file_object_path.replace(os.path.basename(self.file_object_path), f))
+        for media_object in self.iter_resource_associated_media():
+            file_path = self.media_object_path(media_object)
             if file_path in content_type_files:
-                media_objects.append(media)
-        return media_objects
+                media_objects.append(media_object)
+        self._content_type_associated_media = media_objects
+        return self._content_type_associated_media
 
     def extract_metadata(self):
         file_to_extract = self.file_object_path
         content_type_media = self.content_type_associated_media()
         vrt_file = [f for f in content_type_media if f["contentUrl"].endswith(".vrt")]
         if vrt_file:
-            file_to_extract = vrt_file[0]["contentUrl"].split(os.environ['AWS_S3_ENDPOINT_URL'])[1].strip("/")
+            file_to_extract = self.media_object_path(vrt_file[0])
 
         metadata = encode_raster_metadata(file_to_extract)
         metadata = metadata.model_dump(exclude_none=True)
@@ -67,7 +72,7 @@ class RasterMetadataObject(FileMetadataObject):
         if not self.file_object_path.endswith(".vrt"):
             return []
         content_type_media = self.content_type_associated_media()
-        tif_files = [f["contentUrl"].split(os.environ['AWS_S3_ENDPOINT_URL'])[1].strip("/")
+        tif_files = [self.media_object_path(f)
                      for f in content_type_media
                      if f["contentUrl"].endswith(".tif") or f["contentUrl"].endswith(".tiff")]
         cleanup_files = []

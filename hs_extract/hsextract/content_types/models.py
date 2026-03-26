@@ -41,6 +41,7 @@ class BaseMetadataObject:
         self.user_metadata_path = os.path.join(self.resource_md_path, "user_metadata.json")
         self.resource_metadata_jsonld_path = os.path.join(self.resource_md_jsonld_path, "dataset_metadata.json")
         self.resource_associated_media_jsonld_path = os.path.join(self.resource_md_jsonld_path, "file_manifest.json")
+        self.resource_has_parts_jsonld_path = os.path.join(self.resource_md_jsonld_path, "has_parts.json")
 
         self.content_type_md_jsonld_path = None
         self.content_type_md_path = None
