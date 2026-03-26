@@ -5,7 +5,10 @@ from tempfile import SpooledTemporaryFile
 from typing import Iterator
 
 import boto3
-from hs_cloudnative_schemas.schema.base import MediaObject
+from hs_cloudnative_schemas.schema.base import HasPart, MediaObject
+
+JSON_SPOOL_MAX_SIZE_ENV_VAR = "HS_EXTRACT_JSON_SPOOL_MAX_SIZE"
+DEFAULT_JSON_SPOOL_MAX_SIZE = 5 * 1024 * 1024
 
 s3_config = {
     "endpoint_url": os.environ.get("AWS_S3_ENDPOINT_URL", "https://s3.beta.hydroshare.org"),
@@ -58,6 +61,47 @@ def _build_manifest_reference(manifest_path: str, size_bytes: int) -> dict:
     return manifest_object.model_dump(exclude_none=True)
 
 
+def _build_has_part_reference(parts_path: str) -> dict:
+    """Build a HasPart payload that points to the has_parts.json file."""
+    bucket, key = _split_s3_path(parts_path)
+    has_part = HasPart(
+        url=f"{os.environ['AWS_S3_ENDPOINT_URL']}/{bucket}/{key}",
+    )
+    return has_part.model_dump(exclude_none=True)
+
+
+def _get_json_spool_max_size() -> int:
+    """Resolve the spool size for streamed JSON sidecars."""
+    spool_max_size = os.environ.get(JSON_SPOOL_MAX_SIZE_ENV_VAR)
+    return int(spool_max_size) if spool_max_size is not None else DEFAULT_JSON_SPOOL_MAX_SIZE
+
+
+def _write_json_array(output_path: str, items: Iterator[dict]) -> int:
+    """Stream a JSON array to S3 and return the uploaded size in bytes."""
+    bucket_name, key = _split_s3_path(output_path)
+    spool_max_size = _get_json_spool_max_size()
+
+    with SpooledTemporaryFile(mode='w+b', max_size=spool_max_size) as stream:
+        stream.write(b"[\n")
+        first_item = True
+        for item in items:
+            if not first_item:
+                stream.write(b",\n")
+            stream.write(b"  ")
+            stream.write(json.dumps(item, default=str).encode('utf-8'))
+            first_item = False
+        stream.write(b"\n]\n")
+        size_bytes = stream.tell()
+        stream.seek(0)
+        s3_client.upload_fileobj(
+            stream,
+            bucket_name,
+            key,
+            ExtraArgs={'ContentType': 'application/json'}
+        )
+        return size_bytes
+
+
 def iter_file_manifest(resource_root_path: str, enabled: bool = False) -> Iterator[dict]:
     """Yield file manifest entries lazily for the given resource path."""
     if not enabled:
@@ -78,31 +122,24 @@ def iter_file_manifest(resource_root_path: str, enabled: bool = False) -> Iterat
 
 def write_file_manifest(resource_root_path: str, manifest_path: str, enabled: bool = False) -> dict | None:
     """Write file_manifest.json to S3 and return a MediaObject pointing to that manifest."""
-    bucket_name, key = _split_s3_path(manifest_path)
-    spool_max_size = int(os.environ.get("FILE_MANIFEST_SPOOL_MAX_SIZE", 5 * 1024 * 1024))
-
     try:
-        with SpooledTemporaryFile(mode='w+b', max_size=spool_max_size) as stream:
-            stream.write(b"[\n")
-            first_item = True
-            for media_object in iter_file_manifest(resource_root_path, enabled=enabled):
-                if not first_item:
-                    stream.write(b",\n")
-                stream.write(b"  ")
-                stream.write(json.dumps(media_object, default=str).encode('utf-8'))
-                first_item = False
-            stream.write(b"\n]\n")
-            manifest_size_bytes = stream.tell()
-            stream.seek(0)
-            s3_client.upload_fileobj(
-                stream,
-                bucket_name,
-                key,
-                ExtraArgs={'ContentType': 'application/json'}
-            )
-            return _build_manifest_reference(manifest_path, manifest_size_bytes)
+        manifest_size_bytes = _write_json_array(
+            manifest_path,
+            iter_file_manifest(resource_root_path, enabled=enabled),
+        )
+        return _build_manifest_reference(manifest_path, manifest_size_bytes)
     except Exception as e:
         print(f"Error writing file manifest to {manifest_path}: {str(e)}")
+        raise
+
+
+def write_has_part_file(parts_path: str, has_parts: Iterator[dict]) -> dict:
+    """Write has_parts.json to S3 and return a HasPart pointing to that file."""
+    try:
+        _write_json_array(parts_path, has_parts)
+        return _build_has_part_reference(parts_path)
+    except Exception as e:
+        print(f"Error writing hasPart file to {parts_path}: {str(e)}")
         raise
 
 
@@ -158,20 +195,25 @@ def retrieve_file_manifest(resource_root_path: str, enabled: bool = False):
     return file_manifest
 
 
-def find(path: str) -> list[str]:
+def iter_find(path: str) -> Iterator[str]:
+    """Yield matching S3 keys lazily for the given bucket/prefix path."""
     paginator = s3_client.get_paginator('list_objects_v2')
     bucket, resource_path = _split_s3_path(path)
-    keys = []
     try:
         for page in paginator.paginate(Bucket=bucket, Prefix=resource_path):
-            if 'Contents' in page:
-                print(f"Processing page with {len(page['Contents'])} items")
-                for obj in page['Contents']:
-                    key = obj['Key']
-                    key = f"{bucket}/{key}"
-                    keys.append(key)
+            if 'Contents' not in page:
+                continue
+            print(f"Processing page with {len(page['Contents'])} items")
+            for obj in page['Contents']:
+                yield f"{bucket}/{obj['Key']}"
     except Exception as e:
         print(f"path not found {path}: {str(e)}")
+
+
+def find(path: str) -> list[str]:
+    keys = []
+    for key in iter_find(path):
+        keys.append(key)
     print(f"Found files: {keys}")
     return keys
 
