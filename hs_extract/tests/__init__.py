@@ -45,3 +45,17 @@ def write_s3_json(path: str, metadata_json: dict):
         Body=json.dumps(metadata_json, indent=2).encode('utf-8'),
         ContentType='application/json'
     )
+
+
+def assert_manifest_reference(resource_metadata: dict, resource_id: str):
+    associated_media = resource_metadata["associatedMedia"]
+    assert len(associated_media) == 1
+    assert associated_media[0]["name"] == "file_manifest.json"
+    assert associated_media[0]["encodingFormat"] == "application/json"
+    assert associated_media[0]["contentUrl"].endswith(f"{resource_id}/.hsjsonld/file_manifest.json")
+
+
+def assert_has_part_reference(resource_metadata: dict, resource_id: str):
+    has_part = resource_metadata["hasPart"]
+    assert len(has_part) == 1
+    assert has_part[0]["url"].endswith(f"{resource_id}/.hsjsonld/has_parts.json")

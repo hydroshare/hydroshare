@@ -2,7 +2,7 @@ import uuid
 import pytest
 
 from time import sleep
-from tests import s3_client, read_s3_json, write_s3_json
+from tests import assert_has_part_reference, assert_manifest_reference, s3_client, read_s3_json, write_s3_json
 
 
 def test_resource_netcdf_extraction():
@@ -24,12 +24,12 @@ def test_resource_netcdf_extraction():
     result_resource_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json")
 
-    assert len(result_resource_metadata["associatedMedia"]) == 1
-    assert result_resource_metadata["associatedMedia"][
-        0]["name"] == "netcdf_valid.nc"
-    assert len(result_resource_metadata["hasPart"]) == 1
-    assert result_resource_metadata["hasPart"][
-        0]["url"].endswith("netcdf_valid.nc.json")
+    assert_manifest_reference(result_resource_metadata, resource_id)
+    assert_has_part_reference(result_resource_metadata, resource_id)
+    result_has_parts = read_s3_json(
+        f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
+    assert len(result_has_parts) == 1
+    assert result_has_parts[0]["url"].endswith("netcdf_valid.nc.json")
 
     result_netcdf_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/netcdf_valid.nc.json")
@@ -38,7 +38,7 @@ def test_resource_netcdf_extraction():
         0]["name"] == "netcdf_valid.nc"
     assert len(result_netcdf_metadata["isPartOf"]) == 1
     assert result_netcdf_metadata["isPartOf"][
-        0].endswith("dataset_metadata.json")
+        0]["url"].endswith("dataset_metadata.json")
     assert result_netcdf_metadata[
         "user_metadata"] == "this is netcdf user metadata"
 

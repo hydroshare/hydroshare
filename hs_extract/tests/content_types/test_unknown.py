@@ -2,7 +2,7 @@ from hsextract.main import ContentType, BaseMetadataObject
 import uuid
 
 from time import sleep
-from tests import read_s3_json, write_s3_json
+from tests import assert_manifest_reference, read_s3_json, write_s3_json
 
 
 def test_metadataobject():
@@ -40,8 +40,7 @@ def test_resource_extraction():
     assert result_resource_metadata[
         "system_metadata"] == "this is system metadata"
     assert result_resource_metadata["user_metadata"] == "this is user metadata"
-    assert len(result_resource_metadata["associatedMedia"]) == 1
-    assert result_resource_metadata["associatedMedia"][0]["name"] == "file.txt"
+    assert_manifest_reference(result_resource_metadata, resource_id)
 
 
 def test_resource_extraction_system_metadata():
@@ -69,8 +68,7 @@ def test_resource_extraction_system_metadata():
     assert result_resource_metadata[
         "system_metadata"] == "this is system metadata added last"
     assert result_resource_metadata["user_metadata"] == "this is user metadata"
-    assert len(result_resource_metadata["associatedMedia"]) == 1
-    assert result_resource_metadata["associatedMedia"][0]["name"] == "file.txt"
+    assert_manifest_reference(result_resource_metadata, resource_id)
 
 
 def test_resource_extraction_user_metadata():
@@ -100,5 +98,4 @@ def test_resource_extraction_user_metadata():
     assert result_resource_metadata[
         "system_metadata"] == "this is system metadata"
     assert result_resource_metadata["user_metadata"] == "this is user metadata added last"
-    assert len(result_resource_metadata["associatedMedia"]) == 1
-    assert result_resource_metadata["associatedMedia"][0]["name"] == "file.txt"
+    assert_manifest_reference(result_resource_metadata, resource_id)

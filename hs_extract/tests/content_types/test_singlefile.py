@@ -2,7 +2,7 @@ import uuid
 import pytest
 
 from time import sleep
-from tests import s3_client, read_s3_json, write_s3_json
+from tests import assert_has_part_reference, assert_manifest_reference, s3_client, read_s3_json, write_s3_json
 
 
 def test_singlefile():
@@ -21,12 +21,12 @@ def test_singlefile():
     result_resource_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json")
 
-    assert len(result_resource_metadata["associatedMedia"]) == 1
-    assert result_resource_metadata["associatedMedia"][
-        0]["name"] == "testfile.txt"
-    assert len(result_resource_metadata["hasPart"]) == 1
-    assert result_resource_metadata["hasPart"][
-        0]["url"].endswith("singlefile_aggregation/testfile.txt.json")
+    assert_manifest_reference(result_resource_metadata, resource_id)
+    assert_has_part_reference(result_resource_metadata, resource_id)
+    result_has_parts = read_s3_json(
+        f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
+    assert len(result_has_parts) == 1
+    assert result_has_parts[0]["url"].endswith("singlefile_aggregation/testfile.txt.json")
 
     result_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/singlefile_aggregation/testfile.txt.json")
@@ -35,7 +35,7 @@ def test_singlefile():
         0]["name"] == "testfile.txt"
     assert len(result_metadata["isPartOf"]) == 1
     assert result_metadata["isPartOf"][
-        0].endswith("dataset_metadata.json")
+        0]["url"].endswith("dataset_metadata.json")
     assert result_metadata[
         "user_metadata"] == "this is singlefile user metadata"
 
@@ -49,12 +49,16 @@ def test_singlefile_usermetadata():
 
     sleep(1)
     result_resource_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json")
-    assert len(result_resource_metadata["hasPart"]) == 0
+    assert_has_part_reference(result_resource_metadata, resource_id)
+    result_has_parts = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
+    assert result_has_parts == []
 
     write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/singlefile_aggregation/testfile.txt.user_metadata.json", {
                   "user_metadata": "this is singlefile user metadata"})
     sleep(1)
     result_resource_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json")
-    assert len(result_resource_metadata["hasPart"]) == 1
+    assert_has_part_reference(result_resource_metadata, resource_id)
+    result_has_parts = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
+    assert len(result_has_parts) == 1
     result_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/singlefile_aggregation/testfile.txt.json")
     assert result_metadata["user_metadata"] == "this is singlefile user metadata"

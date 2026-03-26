@@ -8,7 +8,7 @@ import pytest
 
 from hsextract.content_types.models import BaseMetadataObject, FileMetadataObject
 from hsextract.main import write_content_type_jsonld_metadata, write_resource_jsonld_metadata
-from tests import read_s3_json, s3_client, write_s3_json
+from tests import assert_has_part_reference, assert_manifest_reference, read_s3_json, s3_client, write_s3_json
 
 # Stub heavy deps so test collection doesn’t require rasterio/xarray/geopandas.
 sys.modules.setdefault("rasterio", types.SimpleNamespace(open=lambda *_, **__: None))
@@ -48,10 +48,14 @@ def test_resource_haspart_merges_user_and_extracted():
     result_resource_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json"
     )
-    has_part_urls = [part["url"] for part in result_resource_metadata["hasPart"]]
+    assert_has_part_reference(result_resource_metadata, resource_id)
+    result_has_parts = read_s3_json(
+        f"test-bucket/{resource_id}/.hsjsonld/has_parts.json"
+    )
+    has_part_urls = [part["url"] for part in result_has_parts]
 
     # extracted + 3 user entries (one duplicate of extracted) = 4 entries (joined)
-    assert len(result_resource_metadata["hasPart"]) == 4
+    assert len(result_has_parts) == 4
     assert has_part_urls.count(extracted_part_url) == 2
     assert "https://example.com/user-haspart-1" in has_part_urls
     assert "https://example.com/user-haspart-2" in has_part_urls
@@ -112,9 +116,13 @@ def test_resource_haspart_user_only_when_no_extracted_parts():
         if result_resource_metadata.get("hasPart"):
             break
         sleep(0.2)
-    has_part_urls = {part["url"] for part in result_resource_metadata["hasPart"]}
+    assert_has_part_reference(result_resource_metadata, resource_id)
+    result_has_parts = read_s3_json(
+        f"test-bucket/{resource_id}/.hsjsonld/has_parts.json"
+    )
+    has_part_urls = {part["url"] for part in result_has_parts}
 
-    assert len(result_resource_metadata["hasPart"]) == 2
+    assert len(result_has_parts) == 2
     assert "https://example.com/user-only-part-1" in has_part_urls
     assert "https://example.com/user-only-part-2" in has_part_urls
 
@@ -137,12 +145,12 @@ def test_resource_timeseries_csv_extraction():
     result_resource_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json")
 
-    assert len(result_resource_metadata["associatedMedia"]) == 1
-    assert result_resource_metadata["associatedMedia"][
-        0]["name"] == "ODM2_Multi_Site_One_Variable_Test.csv"
-    assert len(result_resource_metadata["hasPart"]) == 1
-    assert result_resource_metadata["hasPart"][
-        0]["url"].endswith("ODM2_Multi_Site_One_Variable_Test.csv.json")
+    assert_manifest_reference(result_resource_metadata, resource_id)
+    assert_has_part_reference(result_resource_metadata, resource_id)
+    result_has_parts = read_s3_json(
+        f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
+    assert len(result_has_parts) == 1
+    assert result_has_parts[0]["url"].endswith("ODM2_Multi_Site_One_Variable_Test.csv.json")
 
     result_netcdf_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable_Test.csv.json")
@@ -151,7 +159,7 @@ def test_resource_timeseries_csv_extraction():
         0]["name"] == "ODM2_Multi_Site_One_Variable_Test.csv"
     assert len(result_netcdf_metadata["isPartOf"]) == 1
     assert result_netcdf_metadata["isPartOf"][
-        0].endswith("dataset_metadata.json")
+        0]["url"].endswith("dataset_metadata.json")
     assert result_netcdf_metadata[
         "user_metadata"] == "this is timeseries user metadata"
 
@@ -193,12 +201,12 @@ def test_resource_timeseries_sqlite_extraction():
     result_resource_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json")
 
-    assert len(result_resource_metadata["associatedMedia"]) == 1
-    assert result_resource_metadata["associatedMedia"][
-        0]["name"] == "ODM2_Multi_Site_One_Variable.sqlite"
-    assert len(result_resource_metadata["hasPart"]) == 1
-    assert result_resource_metadata["hasPart"][
-        0]["url"].endswith("ODM2_Multi_Site_One_Variable.sqlite.json")
+    assert_manifest_reference(result_resource_metadata, resource_id)
+    assert_has_part_reference(result_resource_metadata, resource_id)
+    result_has_parts = read_s3_json(
+        f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
+    assert len(result_has_parts) == 1
+    assert result_has_parts[0]["url"].endswith("ODM2_Multi_Site_One_Variable.sqlite.json")
 
     result_netcdf_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable.sqlite.json")
@@ -207,7 +215,7 @@ def test_resource_timeseries_sqlite_extraction():
         0]["name"] == "ODM2_Multi_Site_One_Variable.sqlite"
     assert len(result_netcdf_metadata["isPartOf"]) == 1
     assert result_netcdf_metadata["isPartOf"][
-        0].endswith("dataset_metadata.json")
+        0]["url"].endswith("dataset_metadata.json")
     assert result_netcdf_metadata["user_metadata"] == "this is timeseries user metadata"
 
 

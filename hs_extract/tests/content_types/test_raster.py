@@ -2,7 +2,7 @@ import uuid
 import pytest
 
 from time import sleep
-from tests import s3_client, read_s3_json, write_s3_json
+from tests import assert_has_part_reference, assert_manifest_reference, s3_client, read_s3_json, write_s3_json
 
 
 def test_raster():
@@ -21,12 +21,12 @@ def test_raster():
     result_resource_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json")
 
-    assert len(result_resource_metadata["associatedMedia"]) == 1
-    assert result_resource_metadata["associatedMedia"][
-        0]["name"] == "logan1.tif"
-    assert len(result_resource_metadata["hasPart"]) == 1
-    assert result_resource_metadata["hasPart"][
-        0]["url"].endswith("raster_aggregation/logan1.tif.json")
+    assert_manifest_reference(result_resource_metadata, resource_id)
+    assert_has_part_reference(result_resource_metadata, resource_id)
+    result_has_parts = read_s3_json(
+        f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
+    assert len(result_has_parts) == 1
+    assert result_has_parts[0]["url"].endswith("raster_aggregation/logan1.tif.json")
 
     result_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/raster_aggregation/logan1.tif.json")
@@ -35,7 +35,7 @@ def test_raster():
         0]["name"] == "logan1.tif"
     assert len(result_metadata["isPartOf"]) == 1
     assert result_metadata["isPartOf"][
-        0].endswith("dataset_metadata.json")
+        0]["url"].endswith("dataset_metadata.json")
     assert result_metadata[
         "user_metadata"] == "this is raster user metadata"
 
@@ -82,17 +82,19 @@ def test_raster_vrt():
     result_resource_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json")
 
-    assert len(result_resource_metadata["associatedMedia"]) == 3
-    assert result_resource_metadata["associatedMedia"][0]["name"] in ["logan.vrt", "logan1.tif", "logan2.tif"]
-    assert len(result_resource_metadata["hasPart"]) == 1
-    assert result_resource_metadata["hasPart"][0]["url"].endswith("raster_aggregation/logan.vrt.json")
+    assert_manifest_reference(result_resource_metadata, resource_id)
+    assert_has_part_reference(result_resource_metadata, resource_id)
+    result_has_parts = read_s3_json(
+        f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
+    assert len(result_has_parts) == 1
+    assert result_has_parts[0]["url"].endswith("raster_aggregation/logan.vrt.json")
 
     result_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/raster_aggregation/logan.vrt.json")
     assert len(result_metadata["associatedMedia"]) == 3
     assert result_metadata["associatedMedia"][0]["name"] in ["logan.vrt", "logan1.tif", "logan2.tif"]
     assert len(result_metadata["isPartOf"]) == 1
-    assert result_metadata["isPartOf"][0].endswith("dataset_metadata.json")
+    assert result_metadata["isPartOf"][0]["url"].endswith("dataset_metadata.json")
     assert result_metadata["user_metadata"] == "this is raster user metadata"
 
 

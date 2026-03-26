@@ -2,7 +2,7 @@ from time import sleep
 import pytest
 
 import uuid
-from tests import s3_client, read_s3_json, write_s3_json
+from tests import assert_has_part_reference, assert_manifest_reference, s3_client, read_s3_json, write_s3_json
 
 
 def test_fileset():
@@ -21,10 +21,12 @@ def test_fileset():
     result_resource_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json")
 
-    assert len(result_resource_metadata["associatedMedia"]) == 1
-    assert result_resource_metadata["associatedMedia"][0]["name"] == "testfile.txt"
-    assert len(result_resource_metadata["hasPart"]) == 1
-    assert result_resource_metadata["hasPart"][0]["url"].endswith("folder_aggregation/dataset_metadata.json")
+    assert_manifest_reference(result_resource_metadata, resource_id)
+    assert_has_part_reference(result_resource_metadata, resource_id)
+    result_has_parts = read_s3_json(
+        f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
+    assert len(result_has_parts) == 1
+    assert result_has_parts[0]["url"].endswith("folder_aggregation/dataset_metadata.json")
 
     result_netcdf_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/folder_aggregation/dataset_metadata.json")
@@ -46,7 +48,9 @@ def test_fileset_user_metadata():
     sleep(1)
     # read in the resulting resource metadata file
     result_resource_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json")
-    assert len(result_resource_metadata["hasPart"]) == 0
+    assert_has_part_reference(result_resource_metadata, resource_id)
+    result_has_parts = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
+    assert result_has_parts == []
 
     write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/folder_aggregation/user_metadata.json", {
                   "user_metadata": "this is fileset user metadata"})
