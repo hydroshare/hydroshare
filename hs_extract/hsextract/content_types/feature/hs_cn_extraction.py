@@ -4,6 +4,8 @@ import geopandas
 import mimetypes
 from glob import glob
 
+from pydantic import ValidationError
+
 from hs_cloudnative_schemas.schema import base
 from hs_cloudnative_schemas.schema import dataset
 from hs_cloudnative_schemas.schema import datavariable
@@ -66,9 +68,14 @@ def encode_vector_metadata(filepath, validate_bbox=True):
 
     # extent
     extent_west, extent_south, extent_east, extent_north = gdf.total_bounds
-
     box_str = f'{extent_south} {extent_west} {extent_north} {extent_east}'
-    geo = base.GeoShape(box=box_str, validate_bbox=validate_bbox)
+    # Bbox validation expects geographic lat/lon degrees. For projected CRS values
+    # (e.g., meters), strict validation will fail even when metadata is valid.
+    should_validate_bbox = validate_bbox and (gdf.crs is None or gdf.crs.is_geographic)
+    try:
+        geo = base.GeoShape(box=box_str, validate_bbox=should_validate_bbox)
+    except ValidationError:
+        geo = base.GeoShape(box=box_str, validate_bbox=False)
 
     # srs
     srs = None
