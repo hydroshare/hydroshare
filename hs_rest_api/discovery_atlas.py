@@ -255,6 +255,9 @@ class SearchQuery(BaseModel):
                                                         'fuzzy': {'maxEdits': 1},
                                                         'score': {"boost": {"value": settings.SEARCH_BOOST_FUNDING_FUNDER_NAME_FILTER}}}})
 
+        compound['should'].append({'range': {'path': 'datePublished', 'gte': datetime.min,
+                                             'score': {'boost': {'value': settings.SEARCH_BOOST_DATE_PUBLISHED}}}})
+        
         search_stage = {
             '$search': {
                 'index': 'fuzzy_search',
