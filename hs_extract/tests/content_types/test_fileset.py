@@ -33,7 +33,7 @@ def test_fileset():
     assert len(result_netcdf_metadata["associatedMedia"]) == 1
     assert result_netcdf_metadata["associatedMedia"][0]["name"] == "testfile.txt"
     assert len(result_netcdf_metadata["isPartOf"]) == 1
-    assert result_netcdf_metadata["isPartOf"][0].endswith("dataset_metadata.json")
+    assert result_netcdf_metadata["isPartOf"][0]['url'].endswith("dataset_metadata.json")
     assert result_netcdf_metadata["user_metadata"] == "this is fileset user metadata"
 
 
