@@ -7,7 +7,7 @@ import asyncio
 from hs_cloudnative_schemas.schema.base import IsPartOf, HasPart
 from hsextract.content_types.models import ContentType, JsonldMetadataObject
 from hsextract.content_types import determine_metadata_object, BaseMetadataObject
-from hs_extract.hsextract.event_batch_processing import ManifestRebuildCoordinator, ManifestRebuildRequest
+from hsextract.event_batch_processing import ManifestRebuildCoordinator, ManifestRebuildRequest
 from hsextract.utils.s3 import (
     begin_manifest_rebuild,
     build_manifest_reference,
@@ -21,9 +21,6 @@ from hsextract.utils.s3 import (
     write_has_part_file,
     write_metadata,
 )
-
-
-_manifest_rebuild_coordinator = None
 
 
 def _normalize_list(value) -> list:
@@ -180,16 +177,6 @@ def rebuild_file_manifest_for_resource(request: ManifestRebuildRequest) -> None:
         fail_manifest_rebuild(request.status_path, str(ex))
         print(f"Error rebuilding file manifest for resource {request.resource_id}: {str(ex)}")
         print(traceback.format_exc())
-
-
-def get_manifest_rebuild_coordinator() -> ManifestRebuildCoordinator:
-    """Return the singleton manifest rebuild coordinator."""
-    global _manifest_rebuild_coordinator
-    if _manifest_rebuild_coordinator is None:
-        _manifest_rebuild_coordinator = ManifestRebuildCoordinator(
-            rebuild_callback=rebuild_file_manifest_for_resource,
-        )
-    return _manifest_rebuild_coordinator
 
 
 def enqueue_manifest_rebuild(md: JsonldMetadataObject) -> bool:
