@@ -1,5 +1,6 @@
 import os
 from enum import Enum
+from typing import Iterator
 
 from hs_cloudnative_schemas.schema.base import MediaObject
 
@@ -42,6 +43,10 @@ class BaseMetadataObject:
         self.resource_metadata_jsonld_path = os.path.join(self.resource_md_jsonld_path, "dataset_metadata.json")
         self.resource_associated_media_jsonld_path = os.path.join(self.resource_md_jsonld_path, "file_manifest.json")
         self.resource_has_parts_jsonld_path = os.path.join(self.resource_md_jsonld_path, "has_parts.json")
+        self.resource_metadata_status_jsonld_path = os.path.join(
+            self.resource_md_jsonld_path,
+            "resource_metadata_status.json",
+        )
 
         self.content_type_md_jsonld_path = None
         self.content_type_md_path = None
@@ -49,7 +54,7 @@ class BaseMetadataObject:
         self.content_type_main_file_path = None
         self.content_type_md_user_path = None
 
-    def iter_resource_associated_media(self):
+    def iter_resource_associated_media(self) -> Iterator[dict]:
         return iter_file_manifest(self.resource_contents_path, enabled=True)
 
     @property
@@ -116,6 +121,27 @@ class BaseMetadataObject:
     def clean_up_extracted_metadata(self) -> list:
         # used to cleanup no longer relevant metadata files (e.g. tif files referenced by vrt)
         return []
+
+
+class JsonldMetadataObject:
+    """Metadata object for resource-level .hsjsonld sidecar paths.
+    """
+
+    def __init__(self, bucket_name: str, resource_id: str):
+        self.bucket_name = bucket_name
+        self.resource_id = resource_id
+
+        self.resource_contents_path = Template(resource_contents_path_template).safe_substitute(
+            bucket_name=bucket_name, resource_id=resource_id
+        )
+        self.resource_md_jsonld_path = Template(resource_md_jsonld_path_template).safe_substitute(
+            bucket_name=bucket_name, resource_id=resource_id
+        )
+        self.resource_metadata_jsonld_path = os.path.join(self.resource_md_jsonld_path, "dataset_metadata.json")
+        self.resource_associated_media_jsonld_path = os.path.join(self.resource_md_jsonld_path, "file_manifest.json")
+        self.resource_metadata_status_jsonld_path = os.path.join(
+            self.resource_md_jsonld_path, "resource_metadata_status.json"
+        )
 
 
 class FileMetadataObject(BaseMetadataObject):
