@@ -1,19 +1,29 @@
 import logging
 import json
 import os
+import traceback
 import redpanda_connect
 import asyncio
 from hs_cloudnative_schemas.schema.base import IsPartOf, HasPart
-from hsextract.content_types.models import ContentType
+from hsextract.content_types.models import ContentType, JsonldMetadataObject
 from hsextract.content_types import determine_metadata_object, BaseMetadataObject
+from hs_extract.hsextract.event_batch_processing import ManifestRebuildCoordinator, ManifestRebuildRequest
 from hsextract.utils.s3 import (
+    begin_manifest_rebuild,
+    build_manifest_reference,
+    complete_manifest_rebuild,
     delete_metadata,
+    fail_manifest_rebuild,
     iter_find,
     load_metadata,
+    mark_manifest_dirty,
     write_file_manifest,
     write_has_part_file,
     write_metadata,
 )
+
+
+_manifest_rebuild_coordinator = None
 
 
 def _normalize_list(value) -> list:
@@ -29,6 +39,7 @@ def _iter_resource_has_parts(md: BaseMetadataObject, user_json: dict):
         md.resource_metadata_jsonld_path,
         md.resource_associated_media_jsonld_path,
         md.resource_has_parts_jsonld_path,
+        md.resource_metadata_status_jsonld_path,
     }
     for file in iter_find(md.resource_md_jsonld_path):
         if file in jsonld_files_to_exclude:
@@ -48,7 +59,25 @@ def _iter_resource_has_parts(md: BaseMetadataObject, user_json: dict):
         yield has_part
 
 
-def write_resource_jsonld_metadata(md: BaseMetadataObject) -> bool:
+def _manifest_reference_list(manifest_path: str) -> list[dict]:
+    """Return the stable dataset_metadata reference for file_manifest.json."""
+    return [build_manifest_reference(manifest_path)]
+
+
+def _has_expected_manifest_reference(associated_media: list, manifest_path: str) -> bool:
+    """Return whether associatedMedia already points at the expected manifest sidecar."""
+    expected_reference = _manifest_reference_list(manifest_path)[0]
+    if len(associated_media) != 1:
+        return False
+    candidate = associated_media[0]
+    return (
+        candidate.get("contentUrl") == expected_reference["contentUrl"]
+        and candidate.get("name") == expected_reference["name"]
+    )
+
+
+def write_resource_jsonld_metadata(md: BaseMetadataObject, include_manifest: bool = True) -> bool:
+    """Write resource-level JSON-LD metadata and optionally refresh file_manifest.json."""
     # read the system metadata file
     system_json = load_metadata(md.system_metadata_path)
 
@@ -76,6 +105,9 @@ def write_resource_jsonld_metadata(md: BaseMetadataObject) -> bool:
 
     # Write the combined metadata to the resource metadata file
     write_metadata(md.resource_metadata_jsonld_path, combined_metadata)
+    if include_manifest:
+        complete_manifest_rebuild(md.resource_metadata_status_jsonld_path)
+    return True
 
 
 def write_content_type_jsonld_metadata(md: BaseMetadataObject) -> bool:
@@ -124,6 +156,58 @@ def write_content_type_jsonld_metadata(md: BaseMetadataObject) -> bool:
     write_metadata(md.content_type_md_jsonld_path, combined_metadata)
 
 
+def mark_resource_manifest_dirty(md: BaseMetadataObject) -> dict:
+    """Mark the resource-level file manifest as dirty after content changes."""
+    return mark_manifest_dirty(md.resource_metadata_status_jsonld_path)
+
+
+def rebuild_file_manifest_for_resource(request: ManifestRebuildRequest) -> None:
+    """Rebuild file_manifest.json for a resource and finalize status bookkeeping."""
+    try:
+        write_file_manifest(
+            request.resource_contents_path,
+            request.manifest_path,
+            enabled=True,
+        )
+        # loading .hsjsonld/dataset_metadata.json
+        resource_metadata = load_metadata(request.metadata_path)
+        associated_media = _normalize_list(resource_metadata.get("associatedMedia"))
+        if not _has_expected_manifest_reference(associated_media, request.manifest_path):
+            resource_metadata["associatedMedia"] = _manifest_reference_list(request.manifest_path)
+            write_metadata(request.metadata_path, resource_metadata)
+        complete_manifest_rebuild(request.status_path)
+    except Exception as ex:
+        fail_manifest_rebuild(request.status_path, str(ex))
+        print(f"Error rebuilding file manifest for resource {request.resource_id}: {str(ex)}")
+        print(traceback.format_exc())
+
+
+def get_manifest_rebuild_coordinator() -> ManifestRebuildCoordinator:
+    """Return the singleton manifest rebuild coordinator."""
+    global _manifest_rebuild_coordinator
+    if _manifest_rebuild_coordinator is None:
+        _manifest_rebuild_coordinator = ManifestRebuildCoordinator(
+            rebuild_callback=rebuild_file_manifest_for_resource,
+        )
+    return _manifest_rebuild_coordinator
+
+
+def enqueue_manifest_rebuild(md: JsonldMetadataObject) -> bool:
+    """Claim rebuild ownership for a resource manifest and enqueue the rebuild if successful."""
+    _, claimed = begin_manifest_rebuild(md.resource_metadata_status_jsonld_path)
+    if not claimed:
+        return False
+    request = ManifestRebuildRequest(
+        resource_id=md.resource_id,
+        resource_contents_path=md.resource_contents_path,
+        manifest_path=md.resource_associated_media_jsonld_path,
+        status_path=md.resource_metadata_status_jsonld_path,
+        metadata_path=md.resource_metadata_jsonld_path,
+    )
+    get_manifest_rebuild_coordinator().enqueue(request)
+    return True
+
+
 # if a file is not updated, it is deleted
 def workflow_metadata_extraction(file_object_path: str, file_size: int, file_updated: bool = True) -> None:
     md = determine_metadata_object(file_object_path, file_updated)
@@ -144,12 +228,14 @@ def workflow_metadata_extraction(file_object_path: str, file_size: int, file_upd
             delete_metadata(md.content_type_md_jsonld_path)
 
     try:
-        write_resource_jsonld_metadata(md)
+        write_resource_jsonld_metadata(md, include_manifest=False)
+        mark_resource_manifest_dirty(md)
     except Exception as ex:
         print(f"Error writing resource jsonld metadata: {str(ex)}")
 
 
 def refresh_resource_metadata(bucket: str, resource_id: str) -> None:
+    """Fully refresh resource metadata and associated sidecars for a resource."""
     resource_content_path = f"{bucket}/{resource_id}/data/contents/"
     md = None
     for resource_file in iter_find(resource_content_path):
@@ -171,12 +257,44 @@ def refresh_resource_metadata(bucket: str, resource_id: str) -> None:
         write_resource_jsonld_metadata(md)
 
 
+def _is_manifest_get_event(event_name: str, key: str, bucket: str, resource_id: str) -> bool:
+    """Return whether the event is a GET for the resource-level file_manifest.json sidecar."""
+    return (
+        event_name == "s3:ObjectAccessed:Get"
+        and key == f"{bucket}/{resource_id}/.hsjsonld/file_manifest.json"
+    )
+
+
+def handle_resource_jsonld_event(key: str, bucket: str, resource_id: str, event_name: str, file_updated: bool) -> None:
+    """Handle resource-level .hsjsonld events related to deferred manifest rebuilding."""
+    if _is_manifest_get_event(event_name, key, bucket, resource_id):
+        md = JsonldMetadataObject(bucket, resource_id)
+        enqueue_manifest_rebuild(md)
+
+
+def handle_root_resource_metadata_event(key: str, bucket: str, resource_id: str, file_updated: bool) -> None:
+    """Handle resource-level .hsmetadata events without regenerating file_manifest.json."""
+    print(f"Handling .hsmetadata event for file: {key}, updated: {file_updated}")
+    if key == f"{bucket}/{resource_id}/.hsmetadata/user_metadata.json":
+        md = BaseMetadataObject(key, file_updated)
+        write_resource_jsonld_metadata(md, include_manifest=False)
+    elif key == f"{bucket}/{resource_id}/.hsmetadata/system_metadata.json":
+        md = BaseMetadataObject(key, file_updated)
+        write_resource_jsonld_metadata(md, include_manifest=False)
+    elif key.endswith("user_metadata.json"):
+        print(f"User metadata event for content types in .hsmetadata not currently implemented: {key}")
+    else:
+        print(f"No event for all other files in .hsmetadata: {key}")
+
+
 @redpanda_connect.processor
 def handle_minio_event(msg: redpanda_connect.Message) -> redpanda_connect.Message:
+    """Handle MinIO events for metadata extraction and deferred manifest rebuilds."""
     print(f"Received message: {msg.payload}")
     json_payload = json.loads(msg.payload)
     key = json_payload['Key']
-    file_updated = json_payload['EventName'].startswith("s3:ObjectCreated")
+    event_name = json_payload.get('EventName', '')
+    file_updated = event_name.startswith("s3:ObjectCreated")
     file_size = json_payload['Records'][0]['s3']['object']['size']
     directory = key.split('/')[2]
     bucket = key.split('/')[0]
@@ -185,6 +303,7 @@ def handle_minio_event(msg: redpanda_connect.Message) -> redpanda_connect.Messag
         refresh_resource_metadata(bucket, resource_id)
         return
     if directory == ".hsjsonld":
+        handle_resource_jsonld_event(key, bucket, resource_id, event_name, file_updated)
         return
     if directory == ".hsmetadata":
         print(f"Handling .hsmetadata event for file: {key}, updated: {file_updated}")
