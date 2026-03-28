@@ -1,8 +1,16 @@
 import time
+import pytest
 
 from hsextract import main as main_module
 from hsextract.content_types.models import JsonldMetadataObject
-from hs_extract.hsextract.event_batch_processing import ManifestRebuildCoordinator, ManifestRebuildRequest
+from hsextract.event_batch_processing import ManifestRebuildCoordinator, ManifestRebuildRequest
+
+
+@pytest.fixture(autouse=True)
+def _reset_manifest_coordinator_singleton():
+    ManifestRebuildCoordinator.reset_instance_for_testing()
+    yield
+    ManifestRebuildCoordinator.reset_instance_for_testing()
 
 
 def test_manifest_rebuild_coordinator_coalesces_duplicate_requests():
@@ -65,7 +73,7 @@ def test_enqueue_manifest_rebuild_claims_and_queues_once(monkeypatch):
             calls["request"] = request
 
     monkeypatch.setattr(main_module, "begin_manifest_rebuild", lambda path: ({}, True))
-    monkeypatch.setattr(main_module, "get_manifest_rebuild_coordinator", lambda: _DummyCoordinator())
+    monkeypatch.setattr(ManifestRebuildCoordinator, "get_instance", lambda rebuild_callback: _DummyCoordinator())
 
     md = JsonldMetadataObject("test-bucket", "resource")
 
@@ -85,7 +93,7 @@ def test_enqueue_manifest_rebuild_does_not_queue_without_claim(monkeypatch):
             calls["enqueue_count"] += 1
 
     monkeypatch.setattr(main_module, "begin_manifest_rebuild", lambda path: ({}, False))
-    monkeypatch.setattr(main_module, "get_manifest_rebuild_coordinator", lambda: _DummyCoordinator())
+    monkeypatch.setattr(ManifestRebuildCoordinator, "get_instance", lambda rebuild_callback: _DummyCoordinator())
 
     md = JsonldMetadataObject("test-bucket", "resource")
 
@@ -241,3 +249,42 @@ def test_handle_root_metadata_event_skips_manifest_rebuild(monkeypatch):
             "file_object_path": "test-bucket/resource/.hsmetadata/system_metadata.json",
         },
     ]
+
+
+def test_manifest_rebuild_singleton_rejects_callback_mismatch():
+    callback_a = lambda request: None
+    callback_b = lambda request: None
+
+    first = ManifestRebuildCoordinator.get_instance(callback_a)
+    assert first is not None
+
+    with pytest.raises(ValueError, match="different rebuild_callback"):
+        ManifestRebuildCoordinator.get_instance(callback_b)
+
+
+def test_manifest_rebuild_singleton_restart_after_stop(monkeypatch):
+    completed_requests = []
+    monkeypatch.setenv("HS_EXTRACT_MANIFEST_DEBOUNCE_DELAY_SECONDS", "0.05")
+    monkeypatch.setenv("HS_EXTRACT_MANIFEST_MAX_WAIT_SECONDS", "0.1")
+
+    def _rebuild_callback(request):
+        completed_requests.append(request)
+
+    coordinator = ManifestRebuildCoordinator.get_instance(_rebuild_callback)
+    request = ManifestRebuildRequest(
+        resource_id="resource-id",
+        resource_contents_path="test-bucket/resource/data/contents",
+        manifest_path="test-bucket/resource/.hsjsonld/file_manifest.json",
+        status_path="test-bucket/resource/.hsjsonld/resource_metadata_status.json",
+        metadata_path="test-bucket/resource/.hsjsonld/dataset_metadata.json",
+    )
+
+    coordinator.enqueue(request)
+    time.sleep(0.2)
+    coordinator.stop()
+
+    coordinator.enqueue(request)
+    time.sleep(0.2)
+    coordinator.stop()
+
+    assert len(completed_requests) >= 2
