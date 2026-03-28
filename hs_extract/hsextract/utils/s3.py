@@ -3,12 +3,15 @@ import mimetypes
 import os
 from tempfile import SpooledTemporaryFile
 from typing import Iterator
+import time
 
 import boto3
 from hs_cloudnative_schemas.schema.base import HasPart, MediaObject
 
 JSON_SPOOL_MAX_SIZE_ENV_VAR = "HS_EXTRACT_JSON_SPOOL_MAX_SIZE"
 DEFAULT_JSON_SPOOL_MAX_SIZE = 5 * 1024 * 1024
+MANIFEST_REBUILD_LOCK_TTL_ENV_VAR = "HS_EXTRACT_MANIFEST_REBUILD_LOCK_TTL_SECONDS"
+DEFAULT_MANIFEST_REBUILD_LOCK_TTL_SECONDS = 300
 
 s3_config = {
     "endpoint_url": os.environ.get("AWS_S3_ENDPOINT_URL", "https://s3.beta.hydroshare.org"),
@@ -52,12 +55,15 @@ def _build_media_object(bucket: str, key: str, size_bytes: int, checksum: str) -
 def _build_manifest_reference(manifest_path: str, size_bytes: int) -> dict:
     """Build a MediaObject payload that points to the manifest file itself."""
     bucket, key = _split_s3_path(manifest_path)
-    manifest_object = MediaObject(
-        contentUrl=f"{os.environ['AWS_S3_ENDPOINT_URL']}/{bucket}/{key}",
-        name=os.path.basename(key),
-        contentSize=f"{size_bytes / 1000.00} KB",
-        encodingFormat="application/json"
-    )
+    manifest_object_kwargs = {
+        "contentUrl": f"{os.environ['AWS_S3_ENDPOINT_URL']}/{bucket}/{key}",
+        "name": os.path.basename(key),
+        "encodingFormat": "application/json",
+        "contentSize": "0.0 KB",
+    }
+    if size_bytes is not None:
+        manifest_object_kwargs["contentSize"] = f"{size_bytes / 1000.00} KB"
+    manifest_object = MediaObject(**manifest_object_kwargs)
     return manifest_object.model_dump(exclude_none=True)
 
 
@@ -74,6 +80,128 @@ def _get_json_spool_max_size() -> int:
     """Resolve the spool size for streamed JSON sidecars."""
     spool_max_size = os.environ.get(JSON_SPOOL_MAX_SIZE_ENV_VAR)
     return int(spool_max_size) if spool_max_size is not None else DEFAULT_JSON_SPOOL_MAX_SIZE
+
+
+def _get_manifest_rebuild_lock_ttl_seconds() -> int:
+    """Resolve the manifest rebuild lock TTL in seconds."""
+    raw_value = os.environ.get(MANIFEST_REBUILD_LOCK_TTL_ENV_VAR)
+    if raw_value is None:
+        return DEFAULT_MANIFEST_REBUILD_LOCK_TTL_SECONDS
+    return int(raw_value)
+
+
+def _normalize_manifest_status_section(status: dict) -> dict:
+    """Return a normalized file_manifest status section."""
+    manifest_status = status.get("file_manifest", {}) if status else {}
+    normalized = {
+        "isDirty": False,
+        "isRebuilding": False,
+        "generation": 0,
+        "lastRequestedAt": None,
+        "lastRebuiltAt": None,
+        "lockExpiresAt": None,
+        "lastError": None,
+    }
+    normalized.update({
+        key: manifest_status.get(key, default_value)
+        for key, default_value in normalized.items()
+    })
+    return normalized
+
+
+def _normalize_resource_metadata_status(status: dict | None) -> dict:
+    """Normalize the full resource metadata status payload."""
+    status = status or {}
+    return {
+        "file_manifest": _normalize_manifest_status_section(status),
+    }
+
+
+def _manifest_lock_is_live(manifest_status: dict, now: float) -> bool:
+    """Return whether the manifest rebuild lock is still active."""
+    lock_expires_at = manifest_status.get("lockExpiresAt")
+    return lock_expires_at is not None and lock_expires_at > now
+
+
+def default_resource_metadata_status() -> dict:
+    """Return the default resource metadata status payload."""
+    return _normalize_resource_metadata_status({})
+
+
+def build_manifest_reference(manifest_path: str, size_bytes: int | None = None) -> dict:
+    """Build a stable manifest reference for dataset metadata."""
+    return _build_manifest_reference(manifest_path, size_bytes)
+
+
+def load_resource_metadata_status(path: str) -> dict:
+    """Load and normalize resource metadata status from S3."""
+    return _normalize_resource_metadata_status(load_metadata(path))
+
+
+def write_resource_metadata_status(path: str, status: dict) -> dict:
+    """Persist normalized resource metadata status to S3 and return it."""
+    normalized_status = _normalize_resource_metadata_status(status)
+    write_metadata(path, normalized_status)
+    return normalized_status
+
+
+def mark_manifest_dirty(path: str, now: float | None = None) -> dict:
+    """Mark the file manifest as dirty without clearing active rebuild ownership."""
+    del now
+    status = load_resource_metadata_status(path)
+    manifest_status = status["file_manifest"]
+    manifest_status["isDirty"] = True
+    manifest_status["generation"] += 1
+    manifest_status["lastError"] = None
+    return write_resource_metadata_status(path, status)
+
+
+def begin_manifest_rebuild(
+    path: str,
+    now: float | None = None,
+    lock_ttl_seconds: int | None = None,
+) -> tuple[dict, bool]:
+    """Attempt to claim manifest rebuild ownership and return the updated status plus claim result."""
+    current_time = time.time() if now is None else now
+    ttl_seconds = lock_ttl_seconds or _get_manifest_rebuild_lock_ttl_seconds()
+    status = load_resource_metadata_status(path)
+    manifest_status = status["file_manifest"]
+    if not manifest_status["isDirty"]:
+        return status, False
+    if manifest_status["isRebuilding"] and _manifest_lock_is_live(manifest_status, current_time):
+        return status, False
+
+    manifest_status["isRebuilding"] = True
+    manifest_status["lastRequestedAt"] = current_time
+    manifest_status["lockExpiresAt"] = current_time + ttl_seconds
+    manifest_status["lastError"] = None
+    return write_resource_metadata_status(path, status), True
+
+
+def complete_manifest_rebuild(path: str, now: float | None = None) -> dict:
+    """Mark the manifest rebuild as complete and clear the dirty flag."""
+    current_time = time.time() if now is None else now
+    status = load_resource_metadata_status(path)
+    manifest_status = status["file_manifest"]
+    manifest_status["isDirty"] = False
+    manifest_status["isRebuilding"] = False
+    manifest_status["lastRebuiltAt"] = current_time
+    manifest_status["lockExpiresAt"] = None
+    manifest_status["lastError"] = None
+    return write_resource_metadata_status(path, status)
+
+
+def fail_manifest_rebuild(path: str, error: str, now: float | None = None) -> dict:
+    """Record a manifest rebuild failure while keeping the manifest dirty for retry."""
+    current_time = time.time() if now is None else now
+    status = load_resource_metadata_status(path)
+    manifest_status = status["file_manifest"]
+    manifest_status["isDirty"] = True
+    manifest_status["isRebuilding"] = False
+    manifest_status["lastRequestedAt"] = current_time
+    manifest_status["lockExpiresAt"] = None
+    manifest_status["lastError"] = error
+    return write_resource_metadata_status(path, status)
 
 
 def _write_json_array(output_path: str, items: Iterator[dict]) -> int:
