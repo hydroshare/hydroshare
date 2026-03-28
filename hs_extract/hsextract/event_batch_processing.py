@@ -3,10 +3,11 @@ import queue
 import threading
 import time
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, ClassVar
 
 DEFAULT_DEBOUNCE_DELAY_SECONDS = 30.0
 DEFAULT_MAX_WAIT_SECONDS = 300.0
+_STOP_SENTINEL = object()
 
 
 @dataclass(frozen=True)
@@ -32,6 +33,33 @@ class _PendingManifestRebuild:
 class ManifestRebuildCoordinator:
     """Coalesce manifest rebuild requests on a single worker thread."""
 
+    _instance: ClassVar['ManifestRebuildCoordinator | None'] = None
+    _instance_lock: ClassVar[threading.Lock] = threading.Lock()
+
+    @classmethod
+    def get_instance(
+        cls, rebuild_callback: Callable[['ManifestRebuildRequest'], None]
+    ) -> 'ManifestRebuildCoordinator':
+        """Return (or create) the process-wide singleton coordinator."""
+        with cls._instance_lock:
+            if cls._instance is None:
+                cls._instance = cls(rebuild_callback=rebuild_callback)
+            elif cls._instance._rebuild_callback is not rebuild_callback:
+                raise ValueError(
+                    "ManifestRebuildCoordinator singleton is already initialized "
+                    "with a different rebuild_callback."
+                )
+            return cls._instance
+
+    @classmethod
+    def reset_instance_for_testing(cls) -> None:
+        """Reset the singleton instance for tests."""
+        with cls._instance_lock:
+            instance = cls._instance
+            cls._instance = None
+        if instance is not None:
+            instance.stop()
+
     def __init__(
         self,
         rebuild_callback: Callable[[ManifestRebuildRequest], None],
@@ -50,7 +78,7 @@ class ManifestRebuildCoordinator:
             if max_wait_seconds is not None
             else float(os.environ.get("HS_EXTRACT_MANIFEST_MAX_WAIT_SECONDS", DEFAULT_MAX_WAIT_SECONDS))
         )
-        self._event_queue: queue.Queue[ManifestRebuildRequest] = queue.Queue()
+        self._event_queue: queue.Queue[object] = queue.Queue()
         self._pending_by_resource: dict[str, _PendingManifestRebuild] = {}
         self._startup_lock = threading.Lock()
         self._stop_event = threading.Event()
@@ -61,6 +89,7 @@ class ManifestRebuildCoordinator:
         with self._startup_lock:
             if self._worker_thread and self._worker_thread.is_alive():
                 return
+            self._stop_event.clear()
             self._worker_thread = threading.Thread(
                 target=self._worker_loop,
                 name="manifest-rebuild-coordinator",
@@ -71,17 +100,10 @@ class ManifestRebuildCoordinator:
     def stop(self) -> None:
         """Stop the worker thread and wait briefly for it to exit."""
         self._stop_event.set()
-        self._event_queue.put(
-            ManifestRebuildRequest(
-                resource_id="__stop__",
-                resource_contents_path="",
-                manifest_path="",
-                status_path="",
-                metadata_path="",
-            )
-        )
-        if self._worker_thread is not None:
+        if self._worker_thread is not None and self._worker_thread.is_alive():
+            self._event_queue.put(_STOP_SENTINEL)
             self._worker_thread.join(timeout=1)
+        self._worker_thread = None
 
     def enqueue(self, request: ManifestRebuildRequest) -> None:
         """Queue a resource for rebuild and ensure the worker is running."""
@@ -132,7 +154,7 @@ class ManifestRebuildCoordinator:
             timeout = self._next_timeout_seconds(now)
             try:
                 request = self._event_queue.get(timeout=timeout)
-                if request.resource_id == "__stop__":
+                if request is _STOP_SENTINEL:
                     continue
                 self._merge_request(request, time.time())
             except queue.Empty:
