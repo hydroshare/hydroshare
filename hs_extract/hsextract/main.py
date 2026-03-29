@@ -191,7 +191,7 @@ def enqueue_manifest_rebuild(md: JsonldMetadataObject) -> bool:
         status_path=md.resource_metadata_status_jsonld_path,
         metadata_path=md.resource_metadata_jsonld_path,
     )
-    get_manifest_rebuild_coordinator().enqueue(request)
+    ManifestRebuildCoordinator.get_instance(rebuild_file_manifest_for_resource).enqueue(request)
     return True
 
 
