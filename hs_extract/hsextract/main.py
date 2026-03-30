@@ -24,7 +24,7 @@ def _normalize_list(value) -> list:
     return [value]
 
 
-def _iter_resource_has_parts(md: BaseMetadataObject, system_json: dict, user_json: dict):
+def _iter_resource_has_parts(md: BaseMetadataObject, user_json: dict):
     jsonld_files_to_exclude = {
         md.resource_metadata_jsonld_path,
         md.resource_associated_media_jsonld_path,
@@ -40,9 +40,6 @@ def _iter_resource_has_parts(md: BaseMetadataObject, system_json: dict, user_jso
             url=f"{os.environ['AWS_S3_ENDPOINT_URL']}/{file}",
         )
         yield has_part.model_dump(exclude_none=True)
-
-    for has_part in _normalize_list(system_json.get("hasPart")):
-        yield has_part
 
     for has_part in _normalize_list(user_json.get("hasPart")):
         yield has_part
@@ -60,7 +57,7 @@ def write_resource_jsonld_metadata(md: BaseMetadataObject) -> bool:
 
     has_part_reference = write_has_part_file(
         md.resource_has_parts_jsonld_path,
-        _iter_resource_has_parts(md, system_json, user_json),
+        _iter_resource_has_parts(md, user_json),
     )
     combined_metadata["hasPart"] = [has_part_reference] if has_part_reference else []
 
