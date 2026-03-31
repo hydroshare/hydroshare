@@ -40,7 +40,7 @@ def collect_file_to_catalog(filepath: str):
                     # skip adding replaced resources to the catalog
                     return
 
-    metadata_json['_s3_filepath'] = filepath
+    metadata_json['_s3_filepath'] = object_key
     metadata_json['first_creator'] = (
         metadata_json['creator'][0]
         if 'creator' in metadata_json and metadata_json['creator']
@@ -65,4 +65,5 @@ def collect_file_to_catalog(filepath: str):
 
 def delete_file_from_catalog(filepath: str):
     print("Deleting file from catalog:", filepath)
-    hydroshare_atlas_db["discovery"].delete_one({"_s3_filepath": filepath})
+    _, object_key = filepath.split('/', 1)
+    hydroshare_atlas_db["discovery"].delete_one({"_s3_filepath": object_key})
