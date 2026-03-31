@@ -235,30 +235,35 @@ class SearchQuery(BaseModel):
 
         if self.creatorName:
             # Matching `creator.name` has a slightly higher score than matching `contributor.name`
-            compound['should'].append({'autocomplete': {'query': self.creatorName, 'path': 'creator.name',
-                                                        'fuzzy': {'maxEdits': 1},
-                                                        'score': {"boost": {"value":
-                                                            settings.SEARCH_BOOST_CREATOR_NAME_FILTER}}}})
-            compound['should'].append({'autocomplete': {'query': self.creatorName, 'path': 'first_creator.name',
-                                                        'fuzzy': {'maxEdits': 1},
-                                                        'score': {"boost": {"value":
-                                                            settings.SEARCH_BOOST_FIRST_CREATOR_NAME_FILTER}}}})
-            compound['should'].append({'autocomplete': {'query': self.creatorName, 'path': 'contributor.name',
-                                                        'fuzzy': {'maxEdits': 1},
-                                                        'score': {"boost": {"value":
-                                                            settings.SEARCH_BOOST_CONTRIBUTOR_NAME_FILTER}}}})
+            compound['should'].append({'autocomplete':
+                                       {'query': self.creatorName, 'path': 'creator.name',
+                                        'fuzzy': {'maxEdits': 1},
+                                           'score': {"boost": {"value":
+                                                               settings.SEARCH_BOOST_CREATOR_NAME_FILTER}}}})
+            compound['should'].append({'autocomplete':
+                                       {'query': self.creatorName, 'path': 'first_creator.name',
+                                        'fuzzy': {'maxEdits': 1},
+                                           'score': {"boost": {"value":
+                                                               settings.SEARCH_BOOST_FIRST_CREATOR_NAME_FILTER}}}})
+            compound['should'].append({'autocomplete':
+                                       {'query': self.creatorName, 'path': 'contributor.name',
+                                        'fuzzy': {'maxEdits': 1},
+                                           'score': {"boost": {"value":
+                                                               settings.SEARCH_BOOST_CONTRIBUTOR_NAME_FILTER}}}})
 
         if self.keyword:
-            compound['should'].append({'autocomplete': {'query': self.keyword, 'path': 'keywords',
-                                                        'fuzzy': {'maxEdits': 1},
-                                                        'score': {"boost": {"value":
-                                                            settings.SEARCH_BOOST_KEYWORD_FILTER}}}})
+            compound['should'].append({'autocomplete':
+                                       {'query': self.keyword, 'path': 'keywords',
+                                        'fuzzy': {'maxEdits': 1},
+                                           'score': {"boost": {"value":
+                                                               settings.SEARCH_BOOST_KEYWORD_FILTER}}}})
 
         if self.fundingFunderName:
-            compound['should'].append({'autocomplete': {'query': self.fundingFunderName, 'path': 'funding.funder.name',
-                                                        'fuzzy': {'maxEdits': 1},
-                                                        'score': {"boost": {"value":
-                                                            settings.SEARCH_BOOST_FUNDING_FUNDER_NAME_FILTER}}}})
+            compound['should'].append({'autocomplete':
+                                       {'query': self.fundingFunderName, 'path': 'funding.funder.name',
+                                        'fuzzy': {'maxEdits': 1},
+                                           'score': {"boost": {"value":
+                                                               settings.SEARCH_BOOST_FUNDING_FUNDER_NAME_FILTER}}}})
 
         compound['should'].append({'range': {'path': 'datePublished', 'gte': datetime.min,
                                              'score': {'boost': {'value': settings.SEARCH_BOOST_DATE_PUBLISHED}}}})
