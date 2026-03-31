@@ -22,6 +22,7 @@ from hsextract.utils.s3 import (
     write_metadata,
 )
 
+# TODO: batch processing for resource 'hasPart' metadata to generate has_parts.json
 
 def _normalize_list(value) -> list:
     if not value:
