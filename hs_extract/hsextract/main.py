@@ -55,15 +55,18 @@ def write_resource_jsonld_metadata(md: BaseMetadataObject) -> bool:
     # Combine system metadata and user metadata
     combined_metadata = {**system_json, **user_json}
 
+    # TODO: If we can assume that the user is not allowed to edit the hasPart relationship in the user metadata,
+    # then we can optimize the generation of the has_parts.json so that we only re-generate this file on
+    # specific s3 object notification.
     has_part_reference = write_has_part_file(
         md.resource_has_parts_jsonld_path,
         _iter_resource_has_parts(md, user_json),
     )
     combined_metadata["hasPart"] = [has_part_reference] if has_part_reference else []
 
+    # file_manifest.json is re-generated only on s3 object notification for a data file
     manifest_reference = write_file_manifest(
-        md.resource_contents_path,
-        md.resource_associated_media_jsonld_path,
+        md,
         enabled=True
     )
     combined_metadata["associatedMedia"] = [manifest_reference] if manifest_reference else []

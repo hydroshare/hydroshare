@@ -49,6 +49,10 @@ class BaseMetadataObject:
         self.content_type_main_file_path = None
         self.content_type_md_user_path = None
 
+    @property
+    def is_content_file(self) -> bool:
+        return self.file_object_path.startswith(self.resource_contents_path)
+
     def iter_resource_associated_media(self):
         return iter_file_manifest(self.resource_contents_path, enabled=True)
 

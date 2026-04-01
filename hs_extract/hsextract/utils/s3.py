@@ -2,10 +2,20 @@ import json
 import mimetypes
 import os
 from tempfile import SpooledTemporaryFile
-from typing import Iterator
+from typing import Iterator, Protocol
 
 import boto3
 from hs_cloudnative_schemas.schema.base import HasPart, MediaObject
+
+
+class SupportsFileManifest(Protocol):
+    @property
+    def is_content_file(self) -> bool:
+        ...
+
+    resource_contents_path: str
+    resource_associated_media_jsonld_path: str
+
 
 JSON_SPOOL_MAX_SIZE_ENV_VAR = "HS_EXTRACT_JSON_SPOOL_MAX_SIZE"
 DEFAULT_JSON_SPOOL_MAX_SIZE = 5 * 1024 * 1024
@@ -49,16 +59,24 @@ def _build_media_object(bucket: str, key: str, size_bytes: int, checksum: str) -
     return media_object.model_dump(exclude_none=True)
 
 
-def _build_manifest_reference(manifest_path: str, size_bytes: int) -> dict:
+def _build_manifest_reference(manifest_path: str, size_bytes: int, from_manifest_file: bool = False) -> dict:
     """Build a MediaObject payload that points to the manifest file itself."""
     bucket, key = _split_s3_path(manifest_path)
-    manifest_object = MediaObject(
-        contentUrl=f"{os.environ['AWS_S3_ENDPOINT_URL']}/{bucket}/{key}",
-        name=os.path.basename(key),
-        contentSize=f"{size_bytes / 1000.00} KB",
-        encodingFormat="application/json"
-    )
-    return manifest_object.model_dump(exclude_none=True)
+    if not from_manifest_file:
+        manifest_object = MediaObject(
+            contentUrl=f"{os.environ['AWS_S3_ENDPOINT_URL']}/{bucket}/{key}",
+            name=os.path.basename(key),
+            contentSize=f"{size_bytes / 1000.00} KB",
+            encodingFormat="application/json"
+        )
+        return manifest_object.model_dump(exclude_none=True)
+    else:
+        # Use the existing manifest file to build the reference media object
+        response = s3_client.head_object(Bucket=bucket, Key=key)
+        size_bytes = response['ContentLength']
+        checksum = response.get('ETag', 'N/A').strip('"')
+        manifest_object = _build_media_object(bucket, key, size_bytes, checksum)
+        return manifest_object
 
 
 def _build_has_part_reference(parts_path: str) -> dict:
@@ -120,17 +138,30 @@ def iter_file_manifest(resource_root_path: str, enabled: bool = False) -> Iterat
         raise
 
 
-def write_file_manifest(resource_root_path: str, manifest_path: str, enabled: bool = False) -> dict | None:
-    """Write file_manifest.json to S3 and return a MediaObject pointing to that manifest."""
-    try:
-        manifest_size_bytes = _write_json_array(
-            manifest_path,
-            iter_file_manifest(resource_root_path, enabled=enabled),
-        )
-        return _build_manifest_reference(manifest_path, manifest_size_bytes)
-    except Exception as e:
-        print(f"Error writing file manifest to {manifest_path}: {str(e)}")
-        raise
+def write_file_manifest(
+    md: SupportsFileManifest,
+    enabled: bool = False,
+) -> dict | None:
+    """Write file_manifest.json to S3 and return a MediaObject pointing to that manifest."""    
+    manifest_size_bytes = 0
+    manifest_path = md.resource_associated_media_jsonld_path
+    resource_root_path = md.resource_contents_path
+    if md.is_content_file or not exists(manifest_path):
+        try:
+            manifest_size_bytes = _write_json_array(
+                manifest_path,
+                iter_file_manifest(resource_root_path, enabled=enabled),
+            )
+            return _build_manifest_reference(manifest_path, manifest_size_bytes)
+        except Exception as e:
+            print(f"Error writing file manifest to {manifest_path}: {str(e)}")
+            raise
+    else:
+        try:
+            return _build_manifest_reference(manifest_path, manifest_size_bytes, from_manifest_file=True)
+        except Exception as e:
+            print(f"Error building manifest reference for {manifest_path}: {str(e)}")
+            raise
 
 
 def write_has_part_file(parts_path: str, has_parts: Iterator[dict]) -> dict:
