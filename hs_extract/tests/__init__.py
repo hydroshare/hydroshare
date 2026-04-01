@@ -47,12 +47,22 @@ def write_s3_json(path: str, metadata_json: dict):
     )
 
 
-def assert_manifest_reference(resource_metadata: dict, resource_id: str):
+def s3_path_exists(path: str):
+    bucket, key = path.split("/", 1)
+    try:
+        s3_client.head_object(Bucket=bucket, Key=key)
+        return True
+    except Exception:
+        return False
+
+
+def assert_manifest_reference(resource_metadata: dict, resource_id: str, expected_content_files: list = []):
     associated_media = resource_metadata["associatedMedia"]
     assert len(associated_media) == 1
     assert associated_media[0]["name"] == "file_manifest.json"
     assert associated_media[0]["encodingFormat"] == "application/json"
     assert associated_media[0]["contentUrl"].endswith(f"{resource_id}/.hsjsonld/file_manifest.json")
+    # TODO: check the content of the manifest file as well to ensure it contains expected_content_files
 
 
 def assert_has_part_reference(resource_metadata: dict, resource_id: str):

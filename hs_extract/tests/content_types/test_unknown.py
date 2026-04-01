@@ -2,7 +2,13 @@ from hsextract.main import ContentType, BaseMetadataObject
 import uuid
 
 from time import sleep
-from tests import assert_manifest_reference, read_s3_json, write_s3_json
+from tests import (
+    assert_manifest_reference,
+    read_s3_json,
+    write_s3_json,
+    assert_has_part_reference,
+    s3_path_exists,
+)
 
 
 def test_metadataobject():
@@ -43,6 +49,39 @@ def test_resource_extraction():
     assert_manifest_reference(result_resource_metadata, resource_id)
 
 
+def test_resource_extraction_without_data_files_writes_empty_sidecars():
+    resource_id = str(uuid.uuid4())
+    write_s3_json(
+        f"test-bucket/{resource_id}/.hsmetadata/system_metadata.json",
+        {"system_metadata": "this is system metadata"},
+    )
+    write_s3_json(
+        f"test-bucket/{resource_id}/.hsmetadata/user_metadata.json",
+        {"user_metadata": "this is user metadata"},
+    )
+
+    sleep(1)
+
+    result_resource_metadata = read_s3_json(
+        f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json"
+    )
+
+    assert result_resource_metadata["system_metadata"] == "this is system metadata"
+    assert result_resource_metadata["user_metadata"] == "this is user metadata"
+    file_manifest_path = f"test-bucket/{resource_id}/.hsjsonld/file_manifest.json"
+    has_parts_path = f"test-bucket/{resource_id}/.hsjsonld/has_parts.json"
+    assert s3_path_exists(file_manifest_path) is True
+    assert s3_path_exists(has_parts_path) is True
+    assert_manifest_reference(result_resource_metadata, resource_id)
+    assert_has_part_reference(result_resource_metadata, resource_id)
+
+    result_file_manifest = read_s3_json(file_manifest_path)
+    result_has_parts = read_s3_json(has_parts_path)
+
+    assert result_file_manifest == []
+    assert result_has_parts == []
+
+
 def test_resource_extraction_system_metadata():
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
     print(resource_id)
@@ -68,7 +107,8 @@ def test_resource_extraction_system_metadata():
     assert result_resource_metadata[
         "system_metadata"] == "this is system metadata added last"
     assert result_resource_metadata["user_metadata"] == "this is user metadata"
-    assert_manifest_reference(result_resource_metadata, resource_id)
+    expected_content_files = ['file.txt']
+    assert_manifest_reference(result_resource_metadata, resource_id, expected_content_files)
 
 
 def test_resource_extraction_user_metadata():
@@ -98,4 +138,5 @@ def test_resource_extraction_user_metadata():
     assert result_resource_metadata[
         "system_metadata"] == "this is system metadata"
     assert result_resource_metadata["user_metadata"] == "this is user metadata added last"
-    assert_manifest_reference(result_resource_metadata, resource_id)
+    expected_content_files = ['file.txt']
+    assert_manifest_reference(result_resource_metadata, resource_id, expected_content_files)
