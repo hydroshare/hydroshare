@@ -142,7 +142,7 @@ def write_file_manifest(
     md: SupportsFileManifest,
     enabled: bool = False,
 ) -> dict | None:
-    """Write file_manifest.json to S3 and return a MediaObject pointing to that manifest."""    
+    """Write file_manifest.json to S3 and return a MediaObject pointing to that manifest."""
     manifest_size_bytes = 0
     manifest_path = md.resource_associated_media_jsonld_path
     resource_root_path = md.resource_contents_path
