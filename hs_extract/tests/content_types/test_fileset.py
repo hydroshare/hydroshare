@@ -21,20 +21,20 @@ def test_fileset():
     result_resource_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json")
 
-    assert_manifest_reference(result_resource_metadata, resource_id)
-    assert_has_part_reference(result_resource_metadata, resource_id)
+    assert_manifest_reference(result_resource_metadata, resource_id, "test-bucket", expected_media_obj_count=1)
+    assert_has_part_reference(result_resource_metadata, resource_id, "test-bucket", expected_has_part_count=1)
     result_has_parts = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
     assert len(result_has_parts) == 1
     assert result_has_parts[0]["url"].endswith("folder_aggregation/dataset_metadata.json")
 
-    result_netcdf_metadata = read_s3_json(
+    result_fileset_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/folder_aggregation/dataset_metadata.json")
-    assert len(result_netcdf_metadata["associatedMedia"]) == 1
-    assert result_netcdf_metadata["associatedMedia"][0]["name"] == "testfile.txt"
-    assert len(result_netcdf_metadata["isPartOf"]) == 1
-    assert result_netcdf_metadata["isPartOf"][0]['url'].endswith("dataset_metadata.json")
-    assert result_netcdf_metadata["user_metadata"] == "this is fileset user metadata"
+    assert len(result_fileset_metadata["associatedMedia"]) == 1
+    assert result_fileset_metadata["associatedMedia"][0]["name"] == "testfile.txt"
+    assert len(result_fileset_metadata["isPartOf"]) == 1
+    assert result_fileset_metadata["isPartOf"][0]['url'].endswith("dataset_metadata.json")
+    assert result_fileset_metadata["user_metadata"] == "this is fileset user metadata"
 
 
 @pytest.mark.skip(reason="User metadata event update for content types is not currently implemented")
@@ -48,7 +48,7 @@ def test_fileset_user_metadata():
     sleep(1)
     # read in the resulting resource metadata file
     result_resource_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json")
-    assert_has_part_reference(result_resource_metadata, resource_id)
+    assert_has_part_reference(result_resource_metadata, resource_id, "test-bucket", expected_has_part_count=0)
     result_has_parts = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
     assert result_has_parts == []
 
@@ -56,5 +56,5 @@ def test_fileset_user_metadata():
                   "user_metadata": "this is fileset user metadata"})
     sleep(1)
     result_metadata_path = f"test-bucket/{resource_id}/.hsjsonld/folder_aggregation/dataset_metadata.json"
-    result_netcdf_metadata = read_s3_json(result_metadata_path)
-    assert result_netcdf_metadata["user_metadata"] == "this is fileset user metadata"
+    result_fileset_metadata = read_s3_json(result_metadata_path)
+    assert result_fileset_metadata["user_metadata"] == "this is fileset user metadata"

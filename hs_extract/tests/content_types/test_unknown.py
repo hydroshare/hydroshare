@@ -46,7 +46,17 @@ def test_resource_extraction():
     assert result_resource_metadata[
         "system_metadata"] == "this is system metadata"
     assert result_resource_metadata["user_metadata"] == "this is user metadata"
-    assert_manifest_reference(result_resource_metadata, resource_id)
+    assert_manifest_reference(result_resource_metadata, resource_id, "test-bucket", expected_media_obj_count=1)
+    assert_has_part_reference(result_resource_metadata, resource_id, "test-bucket", expected_has_part_count=0)
+
+    write_s3_json(f"test-bucket/{resource_id}/data/contents/file-1.txt",
+                  {"file_metadata": "this is file-1 metadata"})
+    sleep(1)
+    # read in the resulting resource metadata file
+    result_resource_metadata = read_s3_json(
+        f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json")
+    assert_manifest_reference(result_resource_metadata, resource_id, "test-bucket", expected_media_obj_count=2)
+    assert_has_part_reference(result_resource_metadata, resource_id, "test-bucket", expected_has_part_count=0)
 
 
 def test_resource_extraction_without_data_files_writes_empty_sidecars():
@@ -72,8 +82,8 @@ def test_resource_extraction_without_data_files_writes_empty_sidecars():
     has_parts_path = f"test-bucket/{resource_id}/.hsjsonld/has_parts.json"
     assert s3_path_exists(file_manifest_path) is True
     assert s3_path_exists(has_parts_path) is True
-    assert_manifest_reference(result_resource_metadata, resource_id)
-    assert_has_part_reference(result_resource_metadata, resource_id)
+    assert_manifest_reference(result_resource_metadata, resource_id, "test-bucket", expected_media_obj_count=0)
+    assert_has_part_reference(result_resource_metadata, resource_id, "test-bucket", expected_has_part_count=0)
 
     result_file_manifest = read_s3_json(file_manifest_path)
     result_has_parts = read_s3_json(has_parts_path)
@@ -107,8 +117,8 @@ def test_resource_extraction_system_metadata():
     assert result_resource_metadata[
         "system_metadata"] == "this is system metadata added last"
     assert result_resource_metadata["user_metadata"] == "this is user metadata"
-    expected_content_files = ['file.txt']
-    assert_manifest_reference(result_resource_metadata, resource_id, expected_content_files)
+    assert_manifest_reference(result_resource_metadata, resource_id, "test-bucket", expected_media_obj_count=1)
+    assert_has_part_reference(result_resource_metadata, resource_id, "test-bucket", expected_has_part_count=0)
 
 
 def test_resource_extraction_user_metadata():
@@ -138,5 +148,5 @@ def test_resource_extraction_user_metadata():
     assert result_resource_metadata[
         "system_metadata"] == "this is system metadata"
     assert result_resource_metadata["user_metadata"] == "this is user metadata added last"
-    expected_content_files = ['file.txt']
-    assert_manifest_reference(result_resource_metadata, resource_id, expected_content_files)
+    assert_manifest_reference(result_resource_metadata, resource_id, "test-bucket", expected_media_obj_count=1)
+    assert_has_part_reference(result_resource_metadata, resource_id, "test-bucket", expected_has_part_count=0)

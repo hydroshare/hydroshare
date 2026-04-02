@@ -24,8 +24,8 @@ def test_resource_netcdf_extraction():
     result_resource_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json")
 
-    assert_manifest_reference(result_resource_metadata, resource_id)
-    assert_has_part_reference(result_resource_metadata, resource_id)
+    assert_manifest_reference(result_resource_metadata, resource_id, "test-bucket", expected_media_obj_count=1)
+    assert_has_part_reference(result_resource_metadata, resource_id, "test-bucket", expected_has_part_count=1)
     result_has_parts = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
     assert len(result_has_parts) == 1

@@ -48,7 +48,8 @@ def test_resource_haspart_merges_user_and_extracted():
     result_resource_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json"
     )
-    assert_has_part_reference(result_resource_metadata, resource_id)
+    assert_manifest_reference(result_resource_metadata, resource_id, "test-bucket", expected_media_obj_count=0)
+    assert_has_part_reference(result_resource_metadata, resource_id, "test-bucket", expected_has_part_count=4)
     result_has_parts = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/has_parts.json"
     )
@@ -116,7 +117,7 @@ def test_resource_haspart_user_only_when_no_extracted_parts():
         if result_resource_metadata.get("hasPart"):
             break
         sleep(0.2)
-    assert_has_part_reference(result_resource_metadata, resource_id)
+    assert_has_part_reference(result_resource_metadata, resource_id, "test-bucket", expected_has_part_count=2)
     result_has_parts = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/has_parts.json"
     )
@@ -145,22 +146,22 @@ def test_resource_timeseries_csv_extraction():
     result_resource_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json")
 
-    assert_manifest_reference(result_resource_metadata, resource_id)
-    assert_has_part_reference(result_resource_metadata, resource_id)
+    assert_manifest_reference(result_resource_metadata, resource_id, "test-bucket", expected_media_obj_count=1)
+    assert_has_part_reference(result_resource_metadata, resource_id, "test-bucket", expected_has_part_count=1)
     result_has_parts = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
     assert len(result_has_parts) == 1
     assert result_has_parts[0]["url"].endswith("ODM2_Multi_Site_One_Variable_Test.csv.json")
 
-    result_netcdf_metadata = read_s3_json(
+    result_timeseries_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable_Test.csv.json")
-    assert len(result_netcdf_metadata["associatedMedia"]) == 1
-    assert result_netcdf_metadata["associatedMedia"][
+    assert len(result_timeseries_metadata["associatedMedia"]) == 1
+    assert result_timeseries_metadata["associatedMedia"][
         0]["name"] == "ODM2_Multi_Site_One_Variable_Test.csv"
-    assert len(result_netcdf_metadata["isPartOf"]) == 1
-    assert result_netcdf_metadata["isPartOf"][
+    assert len(result_timeseries_metadata["isPartOf"]) == 1
+    assert result_timeseries_metadata["isPartOf"][
         0]["url"].endswith("dataset_metadata.json")
-    assert result_netcdf_metadata[
+    assert result_timeseries_metadata[
         "user_metadata"] == "this is timeseries user metadata"
 
 
@@ -172,16 +173,16 @@ def test_resource_timeseries_csv_usermetadata():
         s3_client.upload_fileobj(f, "test-bucket", f"{resource_id}/data/contents/ODM2_Multi_Site_One_Variable_Test.csv")
 
     result_metadata_path = f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable_Test.csv.json"
-    result_netcdf_metadata = read_s3_json(result_metadata_path)
-    assert "user_metadata" not in result_netcdf_metadata
+    result_timeseries_metadata = read_s3_json(result_metadata_path)
+    assert "user_metadata" not in result_timeseries_metadata
     sleep(1)
 
     write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/ODM2_Multi_Site_One_Variable_Test.csv.user_metadata.json", {
                   "user_metadata": "this is timeseries user metadata"})
     sleep(1)
     result_metadata_path = f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable_Test.csv.json"
-    result_netcdf_metadata = read_s3_json(result_metadata_path)
-    assert result_netcdf_metadata["user_metadata"] == "this is timeseries user metadata"
+    result_timeseries_metadata = read_s3_json(result_metadata_path)
+    assert result_timeseries_metadata["user_metadata"] == "this is timeseries user metadata"
 
 
 def test_resource_timeseries_sqlite_extraction():
@@ -201,22 +202,22 @@ def test_resource_timeseries_sqlite_extraction():
     result_resource_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json")
 
-    assert_manifest_reference(result_resource_metadata, resource_id)
-    assert_has_part_reference(result_resource_metadata, resource_id)
+    assert_manifest_reference(result_resource_metadata, resource_id, "test-bucket", expected_media_obj_count=1)
+    assert_has_part_reference(result_resource_metadata, resource_id, "test-bucket", expected_has_part_count=1)
     result_has_parts = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
     assert len(result_has_parts) == 1
     assert result_has_parts[0]["url"].endswith("ODM2_Multi_Site_One_Variable.sqlite.json")
 
-    result_netcdf_metadata = read_s3_json(
+    result_timeseries_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable.sqlite.json")
-    assert len(result_netcdf_metadata["associatedMedia"]) == 1
-    assert result_netcdf_metadata["associatedMedia"][
+    assert len(result_timeseries_metadata["associatedMedia"]) == 1
+    assert result_timeseries_metadata["associatedMedia"][
         0]["name"] == "ODM2_Multi_Site_One_Variable.sqlite"
-    assert len(result_netcdf_metadata["isPartOf"]) == 1
-    assert result_netcdf_metadata["isPartOf"][
+    assert len(result_timeseries_metadata["isPartOf"]) == 1
+    assert result_timeseries_metadata["isPartOf"][
         0]["url"].endswith("dataset_metadata.json")
-    assert result_netcdf_metadata["user_metadata"] == "this is timeseries user metadata"
+    assert result_timeseries_metadata["user_metadata"] == "this is timeseries user metadata"
 
 
 @pytest.mark.skip(reason="User metadata event update for content types is not currently implemented")
@@ -227,13 +228,13 @@ def test_resource_timeseries_sqlite_usermetadata():
             f, "test-bucket", f"{resource_id}/data/contents/ODM2_Multi_Site_One_Variable.sqlite")
     sleep(1)
 
-    result_netcdf_metadata = read_s3_json(
+    result_timeseries_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable.sqlite.json")
-    assert "user_metadata" not in result_netcdf_metadata
+    assert "user_metadata" not in result_timeseries_metadata
 
     write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/ODM2_Multi_Site_One_Variable.sqlite.user_metadata.json", {
                   "user_metadata": "this is timeseries user metadata"})
     sleep(1)
-    result_netcdf_metadata = read_s3_json(
+    result_timeseries_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable.sqlite.json")
-    assert result_netcdf_metadata["user_metadata"] == "this is timeseries user metadata"
+    assert result_timeseries_metadata["user_metadata"] == "this is timeseries user metadata"
