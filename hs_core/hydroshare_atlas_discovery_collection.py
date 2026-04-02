@@ -10,7 +10,7 @@ from django.conf import settings
 s3 = boto3.client('s3')
 
 mongo_connection_url = settings.ATLAS_CONNECTION_URL
-hydroshare_atlas_db = MongoClient(mongo_connection_url)["hydroshare"]
+hydroshare_atlas_db = MongoClient(mongo_connection_url)[settings.ATLAS_DB_NAME]
 
 datetime_format_regex = re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\+\d{2}:\d{2}$')
 temporal_coverage_datetime_format_regex = re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$')
@@ -69,6 +69,5 @@ def collect_file_to_catalog(filepath: str):
 
 
 def delete_file_from_catalog(filepath: str):
-    print("Deleting file from catalog:", filepath)
     _, object_key = filepath.split('/', 1)
     hydroshare_atlas_db["discovery"].delete_one({"_s3_filepath": object_key})
