@@ -1,20 +1,25 @@
+from __future__ import annotations
 import json
 import mimetypes
 import os
 from tempfile import SpooledTemporaryFile
-from typing import Iterator, Protocol
+from typing import Iterator, Protocol, TYPE_CHECKING
 
 import boto3
 from hs_cloudnative_schemas.schema.base import HasPart, MediaObject
-
+if TYPE_CHECKING:
+    from hsextract.content_types.models import ContentType
 
 class SupportsFileManifest(Protocol):
     @property
     def is_content_file(self) -> bool:
         ...
 
+    content_type: ContentType
     resource_contents_path: str
     resource_associated_media_jsonld_path: str
+    content_type_contents_path: str
+    content_type_associated_media_jsonld_path: str
 
 
 JSON_SPOOL_MAX_SIZE_ENV_VAR = "HS_EXTRACT_JSON_SPOOL_MAX_SIZE"
@@ -141,16 +146,23 @@ def iter_file_manifest(resource_root_path: str, enabled: bool = False) -> Iterat
 def write_file_manifest(
     md: SupportsFileManifest,
     enabled: bool = False,
+    fileset_manifest: bool = False
 ) -> dict | None:
     """Write file_manifest.json to S3 and return a MediaObject pointing to that manifest."""
     manifest_size_bytes = 0
-    manifest_path = md.resource_associated_media_jsonld_path
-    resource_root_path = md.resource_contents_path
+    if not fileset_manifest:
+        # generating manifest for resource level associated media
+        manifest_path = md.resource_associated_media_jsonld_path
+        data_path_prefix = md.resource_contents_path
+    else:
+        # generating manifest for fileset level associated media
+        manifest_path = md.content_type_associated_media_jsonld_path
+        data_path_prefix = md.content_type_contents_path
     if md.is_content_file or not exists(manifest_path):
         try:
             manifest_size_bytes = _write_json_array(
                 manifest_path,
-                iter_file_manifest(resource_root_path, enabled=enabled),
+                iter_file_manifest(data_path_prefix, enabled=enabled),
             )
             return _build_manifest_reference(manifest_path, manifest_size_bytes)
         except Exception as e:

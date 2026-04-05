@@ -66,7 +66,7 @@ def test_content_type_haspart_merges_user_and_extracted():
     resource_id = str(uuid.uuid4())
     file_name = "ODM2_Multi_Site_One_Variable_Test.csv"
     object_path = f"test-bucket/{resource_id}/data/contents/{file_name}"
-    md = FileMetadataObject(object_path, True)
+    md = FileMetadataObject(object_path, file_updated=True, file_user_meta=False)
 
     content_part_url = "https://example.com/content-type-part"
     user_part_url = "https://example.com/user-part"
@@ -165,13 +165,12 @@ def test_resource_timeseries_csv_extraction():
         "user_metadata"] == "this is timeseries user metadata"
 
 
-@pytest.mark.skip(reason="User metadata event update for content types is not currently implemented")
 def test_resource_timeseries_csv_usermetadata():
-    resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
-    sleep(1)
+    resource_id = str(uuid.uuid4())  # Generate a random hex resource ID    
     with open("tests/test_files/timeseries/ODM2_Multi_Site_One_Variable_Test.csv", "rb") as f:
         s3_client.upload_fileobj(f, "test-bucket", f"{resource_id}/data/contents/ODM2_Multi_Site_One_Variable_Test.csv")
 
+    sleep(1)
     result_metadata_path = f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable_Test.csv.json"
     result_timeseries_metadata = read_s3_json(result_metadata_path)
     assert "user_metadata" not in result_timeseries_metadata
@@ -220,7 +219,6 @@ def test_resource_timeseries_sqlite_extraction():
     assert result_timeseries_metadata["user_metadata"] == "this is timeseries user metadata"
 
 
-@pytest.mark.skip(reason="User metadata event update for content types is not currently implemented")
 def test_resource_timeseries_sqlite_usermetadata():
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
     with open("tests/test_files/timeseries/ODM2_Multi_Site_One_Variable.sqlite", "rb") as f:

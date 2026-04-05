@@ -1,21 +1,27 @@
 import os
 from hsextract.content_types.models import ContentType, FileMetadataObject
 from hsextract.content_types.raster.hs_cn_extraction import list_tif_files_s3, encode_raster_metadata
+from hsextract.utils.s3 import exists
 
 
 class RasterMetadataObject(FileMetadataObject):
     content_type = ContentType.RASTER
 
-    def __init__(self, file_object_path: str, file_updated: bool):
-        super().__init__(file_object_path, file_updated)
+    def __init__(self, file_object_path: str, file_updated: bool, file_user_meta: bool = False):
+        super().__init__(file_object_path, file_updated, file_user_meta)
         self._content_type_associated_media = None
         vrt_path = self._determine_vrt_path()
         if vrt_path:
             self.file_object_path = vrt_path
-        relative_path = os.path.relpath(self.file_object_path, self.resource_contents_path)
+        if file_user_meta and self.file_object_path.endswith(".user_metadata.json"):
+            relative_path = os.path.relpath(self.file_object_path, self.resource_md_path)
+            relative_path = relative_path[:-len(".user_metadata.json")]
+        else:
+            relative_path = os.path.relpath(self.file_object_path, self.resource_contents_path)
+        file_parent_directory = os.path.dirname(relative_path)
         self.content_type_md_jsonld_path = os.path.join(self.resource_md_jsonld_path, relative_path + ".json")
         self.content_type_md_path = os.path.join(self.resource_md_path, relative_path + ".json")
-        self.content_type_contents_path = None
+        self.content_type_contents_path = os.path.join(self.resource_contents_path, file_parent_directory)
         self.content_type_main_file_path = os.path.join(self.resource_contents_path, relative_path)
         self.content_type_md_user_path = os.path.join(self.resource_md_path, relative_path + ".user_metadata.json")
 
@@ -83,3 +89,21 @@ class RasterMetadataObject(FileMetadataObject):
             cleanup_files.append(content_type_md_jsonld_path)
             cleanup_files.append(content_type_md_path)
         return cleanup_files
+    
+    @classmethod
+    def is_content_type(cls, file_object_path: str) -> bool:
+        _, extension = os.path.splitext(file_object_path.lower())
+        if extension in cls._extensions():
+            # case of data file
+            return True
+        elif file_object_path.endswith(".vrt.user_metadata.json") \
+            or file_object_path.endswith(".tif.user_metadata.json") \
+            or file_object_path.endswith(".tiff.user_metadata.json"):
+            # case of user metadata file
+            relative_path = os.path.relpath(file_object_path, cls._resource_md_path(file_object_path))
+            feature_file_user_path = os.path.join(cls._resource_md_path(file_object_path),
+                                                  relative_path)
+            if exists(feature_file_user_path):
+                return True
+            return False
+        return False

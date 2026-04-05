@@ -1,9 +1,7 @@
 import uuid
-import pytest
 
 from time import sleep
 from tests import assert_has_part_reference, assert_manifest_reference, s3_client, read_s3_json, write_s3_json
-
 
 def test_feature():
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
@@ -65,10 +63,11 @@ def test_feature():
         "user_metadata"] == "this is feature user metadata"
 
 
-@pytest.mark.skip(reason="User metadata event update for content types is not currently implemented")
 def test_feature_user_metadata():
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
     print(resource_id)
+    # write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/feature_aggregation/watersheds.shp.user_metadata.json", {
+    #               "user_metadata": "this is feature user metadata"})
     with open("tests/test_files/watersheds/watersheds.shp", "rb") as f:
         s3_client.upload_fileobj(f, "test-bucket", f"{resource_id}/data/contents/feature_aggregation/watersheds.shp")
     with open("tests/test_files/watersheds/watersheds.shx", "rb") as f:

@@ -1,5 +1,4 @@
 import uuid
-import pytest
 
 from time import sleep
 from tests import assert_has_part_reference, assert_manifest_reference, s3_client, read_s3_json, write_s3_json
@@ -40,7 +39,6 @@ def test_singlefile():
         "user_metadata"] == "this is singlefile user metadata"
 
 
-@pytest.mark.skip(reason="User metadata event update for content types is not currently implemented")
 def test_singlefile_usermetadata():
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
     print(resource_id)
@@ -60,5 +58,10 @@ def test_singlefile_usermetadata():
     assert_has_part_reference(result_resource_metadata, resource_id, "test-bucket", expected_has_part_count=1)
     result_has_parts = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
     assert len(result_has_parts) == 1
-    result_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/singlefile_aggregation/testfile.txt.json")
-    assert result_metadata["user_metadata"] == "this is singlefile user metadata"
+    assert result_has_parts[0]["url"].endswith("singlefile_aggregation/testfile.txt.json")
+    singlefile_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/singlefile_aggregation/testfile.txt.json")
+    assert singlefile_metadata["user_metadata"] == "this is singlefile user metadata"
+    assert len(singlefile_metadata["associatedMedia"]) == 1
+    assert singlefile_metadata["associatedMedia"][0]["name"] == "testfile.txt"
+    assert len(singlefile_metadata["isPartOf"]) == 1
+    assert singlefile_metadata["isPartOf"][0]["url"].endswith("dataset_metadata.json")

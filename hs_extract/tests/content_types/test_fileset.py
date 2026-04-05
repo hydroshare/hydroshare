@@ -1,8 +1,14 @@
 from time import sleep
-import pytest
 
 import uuid
-from tests import assert_has_part_reference, assert_manifest_reference, s3_client, read_s3_json, write_s3_json
+from tests import (
+    assert_has_part_reference,
+    assert_manifest_reference,
+    assert_manifest_reference_fileset,
+    s3_client,
+    read_s3_json,
+    write_s3_json
+)
 
 
 def test_fileset():
@@ -31,13 +37,14 @@ def test_fileset():
     result_fileset_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/folder_aggregation/dataset_metadata.json")
     assert len(result_fileset_metadata["associatedMedia"]) == 1
-    assert result_fileset_metadata["associatedMedia"][0]["name"] == "testfile.txt"
+    assert result_fileset_metadata["associatedMedia"][0]["name"] == "file_manifest.json"
+    assert_manifest_reference_fileset(result_fileset_metadata, resource_id, "folder_aggregation",
+                                      "test-bucket", expected_media_obj_count=1)
     assert len(result_fileset_metadata["isPartOf"]) == 1
     assert result_fileset_metadata["isPartOf"][0]['url'].endswith("dataset_metadata.json")
     assert result_fileset_metadata["user_metadata"] == "this is fileset user metadata"
 
 
-@pytest.mark.skip(reason="User metadata event update for content types is not currently implemented")
 def test_fileset_user_metadata():
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
     print(resource_id)

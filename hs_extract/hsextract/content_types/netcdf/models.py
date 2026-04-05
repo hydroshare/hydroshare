@@ -1,5 +1,8 @@
+import os
+
 from hsextract.content_types.models import ContentType, FileMetadataObject
 from hsextract.content_types.netcdf.hs_cn_extraction import encode_netcdf
+from hsextract.utils.s3 import exists
 
 
 class NetCDFMetadataObject(FileMetadataObject):
@@ -13,10 +16,26 @@ class NetCDFMetadataObject(FileMetadataObject):
         return [
             media_object
             for media_object in self.iter_resource_associated_media()
-            if self.media_object_path(media_object) == self.file_object_path
+            if self.media_object_path(media_object).startswith(self.content_type_contents_path)
         ]
 
     def extract_metadata(self):
         metadata = encode_netcdf(self.file_object_path)
         metadata = metadata.model_dump(exclude_none=True)
         return metadata
+
+    @classmethod
+    def is_content_type(cls, file_object_path: str) -> bool:
+        _, extension = os.path.splitext(file_object_path.lower())
+        if extension in cls._extensions():
+            # case of data file
+            return True
+        elif file_object_path.endswith(".nc.user_metadata.json"):
+            # case of user metadata file
+            relative_path = os.path.relpath(file_object_path, cls._resource_md_path(file_object_path))
+            feature_file_user_path = os.path.join(cls._resource_md_path(file_object_path),
+                                                  relative_path)
+            if exists(feature_file_user_path):
+                return True
+            return False
+        return False

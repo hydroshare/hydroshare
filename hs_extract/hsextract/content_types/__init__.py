@@ -17,8 +17,9 @@ metadata_classes = [
 ]
 
 
-def determine_metadata_object(file_object_path: str, file_updated: bool) -> BaseMetadataObject:
+def determine_metadata_object(file_object_path: str, file_updated: bool,
+                              file_user_meta: bool = False) -> BaseMetadataObject:
     for metadata_class in metadata_classes:
         if metadata_class.is_content_type(file_object_path):
-            return metadata_class(file_object_path, file_updated)
+            return metadata_class(file_object_path, file_updated, file_user_meta)
     return BaseMetadataObject(file_object_path, file_updated)

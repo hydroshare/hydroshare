@@ -33,6 +33,9 @@ def _iter_resource_has_parts(md: BaseMetadataObject, user_json: dict):
     for file in iter_find(md.resource_md_jsonld_path):
         if file in jsonld_files_to_exclude:
             continue
+        if file.endswith("file_manifest.json"):
+            # fileset manifest file - so skip
+            continue
         content_type_metadata = load_metadata(file)
         has_part = HasPart(
             name=content_type_metadata.get("name", None),
@@ -86,8 +89,6 @@ def write_content_type_jsonld_metadata(md: BaseMetadataObject) -> bool:
     # generate content type isPartOf relationships
     is_part_of = [f"{os.environ['AWS_S3_ENDPOINT_URL']}/{md.resource_md_jsonld_path}/dataset_metadata.json"]
 
-    content_type_associated_media = md.content_type_associated_media()
-
     # Combine part metadata, user metadata, isPartOf, and associatedMedia (join arrays)
     combined_metadata = {**content_type_metadata, **user_json}
     combined_metadata["hasPart"] = (
@@ -103,7 +104,21 @@ def write_content_type_jsonld_metadata(md: BaseMetadataObject) -> bool:
         ).model_dump(exclude_none=True))
     combined_metadata["isPartOf"] = is_part_of_models
     # TODO make associated media determination consistent with all content types
-    combined_metadata["associatedMedia"] = combined_metadata.get("associatedMedia", []) + content_type_associated_media
+    if md.content_type != ContentType.FILE_SET:
+        content_type_associated_media = md.content_type_associated_media()
+        combined_metadata["associatedMedia"] = (
+            combined_metadata.get("associatedMedia", [])
+            + content_type_associated_media
+        )
+    else:
+        # For fileset, a reference to file_manifest.json is used. This is similar to the resource level file manifest.
+        # file_manifest.json is re-generated only on s3 object notification for a data file
+        manifest_reference = write_file_manifest(
+            md,
+            enabled=True,
+            fileset_manifest=True
+        )
+        combined_metadata["associatedMedia"] = [manifest_reference] if manifest_reference else []
 
     # Write the combined metadata to the content type metadata file
     write_metadata(md.content_type_md_jsonld_path, combined_metadata)
@@ -180,7 +195,10 @@ def handle_minio_event(msg: redpanda_connect.Message) -> redpanda_connect.Messag
             md = BaseMetadataObject(key, file_updated)
             write_resource_jsonld_metadata(md)
         elif key.endswith("user_metadata.json"):
-            print(f"User metadata event for content types in .hsmetadata not currently implemented: {key}")
+            md = determine_metadata_object(key, file_updated, file_user_meta=True)
+            if md.content_type != ContentType.UNKNOWN:
+                write_content_type_jsonld_metadata(md)
+                write_resource_jsonld_metadata(md)
         else:
             print(f"No event for all other files in .hsmetadata: {key}")
         return

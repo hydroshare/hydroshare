@@ -25,7 +25,7 @@ def replace_extension(filepath, new_ext):
 
 def encode_vector_metadata(filepath, validate_bbox=True):
 
-    # get all file names that match the patter of the input filepath
+    # get all file names that match the pattern of the input filepath
     search_path = f"{'.'.join(filepath.split('.')[:-1])}.*"
     associated_files = glob(search_path)
 

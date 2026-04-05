@@ -123,24 +123,34 @@ class BaseMetadataObject:
 
 
 class FileMetadataObject(BaseMetadataObject):
-    def __init__(self, file_object_path: str, file_updated: bool):
+    def __init__(self, file_object_path: str, file_updated: bool, file_user_meta: bool):
         super().__init__(file_object_path, file_updated)
-        relative_path = os.path.relpath(self.file_object_path, self.resource_contents_path)
+        if file_user_meta and file_object_path.endswith(".user_metadata.json"):
+            relative_path = os.path.relpath(self.file_object_path, self.resource_md_path)
+            relative_path = relative_path[:-len(".user_metadata.json")]
+        else:
+            relative_path = os.path.relpath(self.file_object_path, self.resource_contents_path)
+        file_parent_directory = os.path.dirname(relative_path)
         self.content_type_md_jsonld_path = os.path.join(self.resource_md_jsonld_path, relative_path + ".json")
         self.content_type_md_path = os.path.join(self.resource_md_path, relative_path + ".json")
-        self.content_type_contents_path = None
+        self.content_type_contents_path = os.path.join(self.resource_contents_path, file_parent_directory)
         self.content_type_main_file_path = os.path.join(self.resource_contents_path, relative_path)
         self.content_type_md_user_path = os.path.join(self.resource_md_path, relative_path + ".user_metadata.json")
 
 
 class FolderMetadataObject(BaseMetadataObject):
-    def __init__(self, file_object_path: str, file_updated: bool):
+    def __init__(self, file_object_path: str, file_updated: bool, file_user_meta: bool = False):
         super().__init__(file_object_path, file_updated)
+        if file_user_meta and self.file_object_path.endswith("user_metadata.json"):
+            relative_path = os.path.relpath(self.file_object_path, self.resource_md_path)
+        else:
+            relative_path = os.path.relpath(self.file_object_path, self.resource_contents_path)
 
-        parent_directory = os.path.dirname(self.file_object_path)
-        relative_path = os.path.relpath(parent_directory, self.resource_contents_path)
+        relative_path = os.path.dirname(relative_path)
         self.content_type_md_jsonld_path = os.path.join(self.resource_md_jsonld_path, relative_path,
                                                         "dataset_metadata.json")
+        self.content_type_associated_media_jsonld_path = os.path.join(self.resource_md_jsonld_path, relative_path,
+                                                                      "file_manifest.json")
         self.content_type_md_path = os.path.join(self.resource_md_path, relative_path, "user_metadata.json")
         self.content_type_contents_path = os.path.join(self.resource_contents_path, relative_path)
         self.content_type_main_file_path = os.path.join(self.resource_contents_path, relative_path)
