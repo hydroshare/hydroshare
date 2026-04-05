@@ -55,17 +55,26 @@ class FeatureMetadataObject(FileMetadataObject):
         return False
 
     def content_type_associated_media(self) -> list[dict]:
+        if self._content_type_associated_media is not None:
+            return self._content_type_associated_media
+
+        data_file_name = self.get_file_name()
+        if data_file_name.endswith(".shp.xml"):
+            data_file_name = data_file_name[:-4]
+        file_name, _ = os.path.splitext(data_file_name)
+        expected_associated_files = {file_name + ext for ext in self._extensions()}
+        expected_associated_file_paths = (
+            {os.path.join(self.content_type_contents_path, f) for f in expected_associated_files}
+        )
         media_objects = []
-        file_object_name, _ = os.path.splitext(self.file_object_path)
         for media_object in self.iter_resource_associated_media():
             file_path = self.media_object_path(media_object)
-            sub_file_name, extension = os.path.splitext(file_path.lower())
-            if extension == ".xml":
-                sub_file_name, sub_extension = os.path.splitext(sub_file_name.lower())
-                extension = sub_extension + extension
-            if sub_file_name == file_object_name and extension in self._extensions():
+            if file_path in expected_associated_file_paths:
                 media_objects.append(media_object)
-        return media_objects
+                if len(media_objects) == len(expected_associated_file_paths):
+                    break
+        self._content_type_associated_media = media_objects
+        return self._content_type_associated_media
 
     def extract_metadata(self):
         metadata = encode_vector_metadata(self.file_object_path)

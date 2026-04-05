@@ -15,13 +15,6 @@ class TimeSeriesMetadataObject(FileMetadataObject):
         # a MetadataObject for that content type.
         return [".csv", ".sqlite"]
 
-    def content_type_associated_media(self):
-        return [
-            media_object
-            for media_object in self.iter_resource_associated_media()
-            if self.media_object_path(media_object).startswith(self.content_type_contents_path)
-        ]
-
     def extract_metadata(self):
         if self.file_object_path.endswith(".csv"):
             metadata = extract_metadata_csv(self.file_object_path)

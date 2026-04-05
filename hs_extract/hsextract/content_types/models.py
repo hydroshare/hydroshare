@@ -48,6 +48,7 @@ class BaseMetadataObject:
         self.content_type_contents_path = None
         self.content_type_main_file_path = None
         self.content_type_md_user_path = None
+        self._content_type_associated_media = None
 
     @property
     def is_content_file(self) -> bool:
@@ -137,6 +138,27 @@ class FileMetadataObject(BaseMetadataObject):
         self.content_type_main_file_path = os.path.join(self.resource_contents_path, relative_path)
         self.content_type_md_user_path = os.path.join(self.resource_md_path, relative_path + ".user_metadata.json")
 
+    def get_file_name(self) -> str:
+        if self.file_object_path.endswith(".user_metadata.json"):
+            relative_path = os.path.relpath(self.file_object_path, self.resource_md_path)
+            relative_path = relative_path[:-len(".user_metadata.json")]
+            return os.path.basename(relative_path)
+        else:
+            return os.path.basename(self.file_object_path)
+
+    def content_type_associated_media(self):
+        if self._content_type_associated_media is not None:
+            return self._content_type_associated_media
+        data_file_path = os.path.join(self.content_type_contents_path, self.get_file_name())
+        self._content_type_associated_media = next(
+            (
+                [media_object]
+                for media_object in self.iter_resource_associated_media()
+                if self.media_object_path(media_object) == data_file_path
+            ),
+            [],
+        )
+        return self._content_type_associated_media
 
 class FolderMetadataObject(BaseMetadataObject):
     def __init__(self, file_object_path: str, file_updated: bool, file_user_meta: bool = False):

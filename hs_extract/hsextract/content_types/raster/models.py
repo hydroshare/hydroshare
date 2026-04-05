@@ -51,15 +51,18 @@ class RasterMetadataObject(FileMetadataObject):
             return self._content_type_associated_media
 
         media_objects = []
-        content_type_files = {self.file_object_path}
-        if self.file_object_path.endswith(".vrt"):
-            tif_files = list_tif_files_s3(self.file_object_path)
+        file_path = os.path.join(self.content_type_contents_path, self.get_file_name())
+        content_type_files = {file_path}
+        if file_path.endswith(".vrt"):
+            tif_files = list_tif_files_s3(file_path)
             for f in tif_files:
-                content_type_files.add(self.file_object_path.replace(os.path.basename(self.file_object_path), f))
+                content_type_files.add(file_path.replace(os.path.basename(file_path), f))
         for media_object in self.iter_resource_associated_media():
             file_path = self.media_object_path(media_object)
             if file_path in content_type_files:
                 media_objects.append(media_object)
+                if len(media_objects) == len(content_type_files):
+                    break
         self._content_type_associated_media = media_objects
         return self._content_type_associated_media
 

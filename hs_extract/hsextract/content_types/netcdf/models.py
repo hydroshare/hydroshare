@@ -12,13 +12,6 @@ class NetCDFMetadataObject(FileMetadataObject):
     def _extensions(cls) -> list[str]:
         return [".nc"]
 
-    def content_type_associated_media(self):
-        return [
-            media_object
-            for media_object in self.iter_resource_associated_media()
-            if self.media_object_path(media_object).startswith(self.content_type_contents_path)
-        ]
-
     def extract_metadata(self):
         metadata = encode_netcdf(self.file_object_path)
         metadata = metadata.model_dump(exclude_none=True)
@@ -33,9 +26,9 @@ class NetCDFMetadataObject(FileMetadataObject):
         elif file_object_path.endswith(".nc.user_metadata.json"):
             # case of user metadata file
             relative_path = os.path.relpath(file_object_path, cls._resource_md_path(file_object_path))
-            feature_file_user_path = os.path.join(cls._resource_md_path(file_object_path),
-                                                  relative_path)
-            if exists(feature_file_user_path):
+            netcdf_file_user_path = os.path.join(cls._resource_md_path(file_object_path),
+                                                 relative_path)
+            if exists(netcdf_file_user_path):
                 return True
             return False
         return False

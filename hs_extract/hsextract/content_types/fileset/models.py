@@ -7,11 +7,14 @@ class FileSetMetadataObject(FolderMetadataObject):
     content_type = ContentType.FILE_SET
 
     def content_type_associated_media(self):
-        return [
+        if self._content_type_associated_media is not None:
+            return self._content_type_associated_media
+        self._content_type_associated_media = [
             media_object
             for media_object in self.iter_resource_associated_media()
             if self.media_object_path(media_object).startswith(self.content_type_contents_path)
         ]
+        return self._content_type_associated_media
 
     def extract_metadata(self):
         return {}
