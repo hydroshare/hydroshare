@@ -125,13 +125,17 @@ def _write_json_array(output_path: str, items: Iterator[dict]) -> int:
         return size_bytes
 
 
-def iter_file_manifest(resource_root_path: str, enabled: bool = False) -> Iterator[dict]:
+def iter_file_manifest(resource_root_path: str, folder_path: str | None = None, enabled: bool = False) -> Iterator[dict]:
     """Yield file manifest entries lazily for the given resource path."""
     if not enabled:
         return
     bucket, _ = _split_s3_path(resource_root_path)
+    if folder_path is None:
+        search_path = resource_root_path
+    else:
+        search_path = f"{resource_root_path}/{folder_path.rstrip('/')}/"
     try:
-        for obj in _iter_s3_objects(resource_root_path):
+        for obj in _iter_s3_objects(search_path):
             yield _build_media_object(
                 bucket=bucket,
                 key=obj['Key'],

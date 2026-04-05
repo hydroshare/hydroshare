@@ -59,6 +59,7 @@ class FeatureMetadataObject(FileMetadataObject):
             return self._content_type_associated_media
 
         data_file_name = self.get_file_name()
+        folder_path = self.get_folder_path()
         if data_file_name.endswith(".shp.xml"):
             data_file_name = data_file_name[:-4]
         file_name, _ = os.path.splitext(data_file_name)
@@ -67,7 +68,7 @@ class FeatureMetadataObject(FileMetadataObject):
             {os.path.join(self.content_type_contents_path, f) for f in expected_associated_files}
         )
         media_objects = []
-        for media_object in self.iter_resource_associated_media():
+        for media_object in self.iter_resource_associated_media(folder_path=folder_path):
             file_path = self.media_object_path(media_object)
             if file_path in expected_associated_file_paths:
                 media_objects.append(media_object)

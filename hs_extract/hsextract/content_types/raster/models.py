@@ -52,12 +52,13 @@ class RasterMetadataObject(FileMetadataObject):
 
         media_objects = []
         file_path = os.path.join(self.content_type_contents_path, self.get_file_name())
+        folder_path = self.get_folder_path()
         content_type_files = {file_path}
         if file_path.endswith(".vrt"):
             tif_files = list_tif_files_s3(file_path)
             for f in tif_files:
                 content_type_files.add(file_path.replace(os.path.basename(file_path), f))
-        for media_object in self.iter_resource_associated_media():
+        for media_object in self.iter_resource_associated_media(folder_path=folder_path):
             file_path = self.media_object_path(media_object)
             if file_path in content_type_files:
                 media_objects.append(media_object)
@@ -104,9 +105,9 @@ class RasterMetadataObject(FileMetadataObject):
             or file_object_path.endswith(".tiff.user_metadata.json"):
             # case of user metadata file
             relative_path = os.path.relpath(file_object_path, cls._resource_md_path(file_object_path))
-            feature_file_user_path = os.path.join(cls._resource_md_path(file_object_path),
-                                                  relative_path)
-            if exists(feature_file_user_path):
+            raster_file_user_path = os.path.join(cls._resource_md_path(file_object_path),
+                                                 relative_path)
+            if exists(raster_file_user_path):
                 return True
             return False
         return False

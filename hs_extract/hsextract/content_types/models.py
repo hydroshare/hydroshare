@@ -54,8 +54,8 @@ class BaseMetadataObject:
     def is_content_file(self) -> bool:
         return self.file_object_path.startswith(self.resource_contents_path)
 
-    def iter_resource_associated_media(self):
-        return iter_file_manifest(self.resource_contents_path, enabled=True)
+    def iter_resource_associated_media(self, folder_path: str | None = None):
+        return iter_file_manifest(self.resource_contents_path, folder_path=folder_path, enabled=True)
 
     @property
     def resource_associated_media(self):
@@ -146,19 +146,30 @@ class FileMetadataObject(BaseMetadataObject):
         else:
             return os.path.basename(self.file_object_path)
 
+    def get_folder_path(self) -> str | None:
+        relative_path = os.path.relpath(self.content_type_contents_path, self.resource_contents_path)
+        if relative_path == ".":
+            relative_path = None
+        return relative_path
+
     def content_type_associated_media(self):
         if self._content_type_associated_media is not None:
             return self._content_type_associated_media
         data_file_path = os.path.join(self.content_type_contents_path, self.get_file_name())
+        folder_path = self.get_folder_path()
         self._content_type_associated_media = next(
             (
                 [media_object]
-                for media_object in self.iter_resource_associated_media()
+                for media_object in self.iter_resource_associated_media(folder_path=folder_path)
                 if self.media_object_path(media_object) == data_file_path
             ),
             [],
         )
         return self._content_type_associated_media
+
+    @classmethod
+    def is_content_type(cls, file_object_path: str) -> bool:
+        return False
 
 class FolderMetadataObject(BaseMetadataObject):
     def __init__(self, file_object_path: str, file_updated: bool, file_user_meta: bool = False):
