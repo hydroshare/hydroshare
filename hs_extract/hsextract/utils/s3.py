@@ -127,8 +127,10 @@ def _write_json_array(output_path: str, items: Iterator[dict]) -> int:
 
 
 def iter_file_manifest(
-        resource_root_path: str, folder_path: str | None = None, enabled: bool = False
-    ) -> Iterator[dict]:
+    resource_root_path: str,
+    folder_path: str | None = None,
+    enabled: bool = False
+) -> Iterator[dict]:
     """Yield file manifest entries lazily for the given resource path."""
     if not enabled:
         return
