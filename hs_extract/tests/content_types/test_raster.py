@@ -1,18 +1,21 @@
 import uuid
+import pytest
 
 from time import sleep
 from tests import assert_has_part_reference, assert_manifest_reference, s3_client, read_s3_json, write_s3_json
 
 
-def test_raster():
+@pytest.mark.parametrize("use_folder", [True, False])
+def test_raster(use_folder):
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
+    folder_prefix = "raster_aggregation/" if use_folder else ""
     print(resource_id)
-    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/raster_aggregation/logan1.tif.user_metadata.json", {
+    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}logan1.tif.user_metadata.json", {
                   "user_metadata": "this is raster user metadata"})
     sleep(1)
     with open("tests/test_files/rasters/single/logan1.tif", "rb") as f:
         s3_client.upload_fileobj(
-            f, "test-bucket", f"{resource_id}/data/contents/raster_aggregation/logan1.tif")
+            f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}logan1.tif")
 
     # Wait for metadata to be consistent
     sleep(2)
@@ -25,10 +28,10 @@ def test_raster():
     result_has_parts = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
     assert len(result_has_parts) == 1
-    assert result_has_parts[0]["url"].endswith("raster_aggregation/logan1.tif.json")
+    assert result_has_parts[0]["url"].endswith(f"{folder_prefix}logan1.tif.json")
 
     result_metadata = read_s3_json(
-        f"test-bucket/{resource_id}/.hsjsonld/raster_aggregation/logan1.tif.json")
+        f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}logan1.tif.json")
     assert len(result_metadata["associatedMedia"]) == 1
     assert result_metadata["associatedMedia"][
         0]["name"] == "logan1.tif"
@@ -39,40 +42,44 @@ def test_raster():
         "user_metadata"] == "this is raster user metadata"
 
 
-def test_raster_usermetadata():
+@pytest.mark.parametrize("use_folder", [True, False])
+def test_raster_usermetadata(use_folder):
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
+    folder_prefix = "raster_aggregation/" if use_folder else ""
     print(resource_id)
     with open("tests/test_files/rasters/single/logan1.tif", "rb") as f:
         s3_client.upload_fileobj(
-            f, "test-bucket", f"{resource_id}/data/contents/raster_aggregation/logan1.tif")
+            f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}logan1.tif")
 
     # Wait for metadata to be consistent
     sleep(1)
-    result_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/raster_aggregation/logan1.tif.json")
+    result_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}logan1.tif.json")
     assert "user_metadata" not in result_metadata
 
-    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/raster_aggregation/logan1.tif.user_metadata.json", {
+    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}logan1.tif.user_metadata.json", {
                   "user_metadata": "this is raster user metadata"})
     sleep(1)
-    result_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/raster_aggregation/logan1.tif.json")
+    result_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}logan1.tif.json")
     assert result_metadata["user_metadata"] == "this is raster user metadata"
 
 
-def test_raster_vrt():
+@pytest.mark.parametrize("use_folder", [True, False])
+def test_raster_vrt(use_folder):
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
+    folder_prefix = "raster_aggregation/" if use_folder else ""
     print(resource_id)
-    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/raster_aggregation/logan.vrt.user_metadata.json", {
+    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}logan.vrt.user_metadata.json", {
                   "user_metadata": "this is raster user metadata"})
     sleep(1)
     with open("tests/test_files/rasters/logan.vrt", "rb") as f:
         s3_client.upload_fileobj(
-            f, "test-bucket", f"{resource_id}/data/contents/raster_aggregation/logan.vrt")
+            f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}logan.vrt")
     with open("tests/test_files/rasters/logan1.tif", "rb") as f:
         s3_client.upload_fileobj(
-            f, "test-bucket", f"{resource_id}/data/contents/raster_aggregation/logan1.tif")
+            f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}logan1.tif")
     with open("tests/test_files/rasters/logan2.tif", "rb") as f:
         s3_client.upload_fileobj(
-            f, "test-bucket", f"{resource_id}/data/contents/raster_aggregation/logan2.tif")
+            f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}logan2.tif")
 
     # Wait for metadata to be consistent
     sleep(2)
@@ -85,10 +92,10 @@ def test_raster_vrt():
     result_has_parts = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
     assert len(result_has_parts) == 1
-    assert result_has_parts[0]["url"].endswith("raster_aggregation/logan.vrt.json")
+    assert result_has_parts[0]["url"].endswith(f"{folder_prefix}logan.vrt.json")
 
     result_metadata = read_s3_json(
-        f"test-bucket/{resource_id}/.hsjsonld/raster_aggregation/logan.vrt.json")
+        f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}logan.vrt.json")
     assert len(result_metadata["associatedMedia"]) == 3
     assert result_metadata["associatedMedia"][0]["name"] in ["logan.vrt", "logan1.tif", "logan2.tif"]
     assert len(result_metadata["isPartOf"]) == 1
@@ -96,24 +103,26 @@ def test_raster_vrt():
     assert result_metadata["user_metadata"] == "this is raster user metadata"
 
 
-def test_raster_vrt_usermetadata():
+@pytest.mark.parametrize("use_folder", [True, False])
+def test_raster_vrt_usermetadata(use_folder):
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
+    folder_prefix = "raster_aggregation/" if use_folder else ""
     print(resource_id)
     with open("tests/test_files/rasters/logan.vrt", "rb") as f:
-        s3_client.upload_fileobj(f, "test-bucket", f"{resource_id}/data/contents/raster_aggregation/logan.vrt")
+        s3_client.upload_fileobj(f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}logan.vrt")
     with open("tests/test_files/rasters/logan1.tif", "rb") as f:
-        s3_client.upload_fileobj(f, "test-bucket", f"{resource_id}/data/contents/raster_aggregation/logan1.tif")
+        s3_client.upload_fileobj(f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}logan1.tif")
     with open("tests/test_files/rasters/logan2.tif", "rb") as f:
-        s3_client.upload_fileobj(f, "test-bucket", f"{resource_id}/data/contents/raster_aggregation/logan2.tif")
+        s3_client.upload_fileobj(f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}logan2.tif")
 
     # Wait for metadata to be consistent
     sleep(2)
-    result_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/raster_aggregation/logan.vrt.json")
+    result_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}logan.vrt.json")
     assert "user_metadata" not in result_metadata
 
-    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/raster_aggregation/logan.vrt.user_metadata.json", {
+    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}logan.vrt.user_metadata.json", {
                   "user_metadata": "this is raster user metadata"})
     sleep(1)
 
-    result_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/raster_aggregation/logan.vrt.json")
+    result_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}logan.vrt.json")
     assert result_metadata["user_metadata"] == "this is raster user metadata"

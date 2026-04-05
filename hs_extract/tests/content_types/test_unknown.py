@@ -1,5 +1,6 @@
 from hsextract.main import ContentType, BaseMetadataObject
 import uuid
+import pytest
 
 from time import sleep
 from tests import (
@@ -11,9 +12,11 @@ from tests import (
 )
 
 
-def test_metadataobject():
-    md = BaseMetadataObject("test-bucket/resourceid/data/contents/file.txt", True)
-    assert md.file_object_path == "test-bucket/resourceid/data/contents/file.txt"
+@pytest.mark.parametrize("use_folder", [True, False])
+def test_metadataobject(use_folder):
+    folder_prefix = "test-folder/" if use_folder else ""
+    md = BaseMetadataObject(f"test-bucket/resourceid/data/contents/{folder_prefix}file.txt", True)
+    assert md.file_object_path == f"test-bucket/resourceid/data/contents/{folder_prefix}file.txt"
     assert md.file_updated is True
     assert md.resource_contents_path == "test-bucket/resourceid/data/contents"
     assert md.resource_md_path == "test-bucket/resourceid/.hsmetadata"
@@ -25,8 +28,10 @@ def test_metadataobject():
     assert md.resource_metadata_jsonld_path == "test-bucket/resourceid/.hsjsonld/dataset_metadata.json"
 
 
-def test_resource_extraction():
+@pytest.mark.parametrize("use_folder", [True, False])
+def test_resource_extraction(use_folder):
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
+    folder_prefix = "test-folder/" if use_folder else ""
     print(resource_id)
     # Stage system metadata to test
     write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/system_metadata.json", {
@@ -34,7 +39,7 @@ def test_resource_extraction():
     write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/user_metadata.json", {
                   "user_metadata": "this is user metadata"})
 
-    write_s3_json(f"test-bucket/{resource_id}/data/contents/file.txt",
+    write_s3_json(f"test-bucket/{resource_id}/data/contents/{folder_prefix}file.txt",
                   {"file_metadata": "this is file metadata"})
 
     # Wait for metadata to be consistent
@@ -49,7 +54,7 @@ def test_resource_extraction():
     assert_manifest_reference(result_resource_metadata, resource_id, "test-bucket", expected_media_obj_count=1)
     assert_has_part_reference(result_resource_metadata, resource_id, "test-bucket", expected_has_part_count=0)
 
-    write_s3_json(f"test-bucket/{resource_id}/data/contents/file-1.txt",
+    write_s3_json(f"test-bucket/{resource_id}/data/contents/{folder_prefix}file-1.txt",
                   {"file_metadata": "this is file-1 metadata"})
     sleep(1)
     # read in the resulting resource metadata file
@@ -92,15 +97,17 @@ def test_resource_extraction_without_data_files_writes_empty_sidecars():
     assert result_has_parts == []
 
 
-def test_resource_extraction_system_metadata():
+@pytest.mark.parametrize("use_folder", [True, False])
+def test_resource_extraction_system_metadata(use_folder):
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
+    folder_prefix = "test-folder/" if use_folder else ""
     print(resource_id)
     write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/system_metadata.json", {
                   "system_metadata": "this is system metadata"})
     write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/user_metadata.json", {
                   "user_metadata": "this is user metadata"})
 
-    write_s3_json(f"test-bucket/{resource_id}/data/contents/file.txt",
+    write_s3_json(f"test-bucket/{resource_id}/data/contents/{folder_prefix}file.txt",
                   {"file_metadata": "this is file metadata"})
     sleep(1)
     result_resource_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json")
@@ -121,15 +128,17 @@ def test_resource_extraction_system_metadata():
     assert_has_part_reference(result_resource_metadata, resource_id, "test-bucket", expected_has_part_count=0)
 
 
-def test_resource_extraction_user_metadata():
+@pytest.mark.parametrize("use_folder", [True, False])
+def test_resource_extraction_user_metadata(use_folder):
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
+    folder_prefix = "test-folder/" if use_folder else ""
     print(resource_id)
     write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/system_metadata.json", {
                   "system_metadata": "this is system metadata"})
     write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/user_metadata.json", {
                   "user_metadata": "this is user metadata"})
 
-    write_s3_json(f"test-bucket/{resource_id}/data/contents/file.txt",
+    write_s3_json(f"test-bucket/{resource_id}/data/contents/{folder_prefix}file.txt",
                   {"file_metadata": "this is file metadata"})
     sleep(1)
 

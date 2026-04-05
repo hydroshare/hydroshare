@@ -1,12 +1,15 @@
 import uuid
+import pytest
 
 from time import sleep
 from tests import assert_has_part_reference, assert_manifest_reference, s3_client, read_s3_json, write_s3_json
 
 
-def test_resource_netcdf_extraction():
+@pytest.mark.parametrize("use_folder", [True, False])
+def test_resource_netcdf_extraction(use_folder):
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
-    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/netcdf_valid.nc.user_metadata.json", {
+    folder_prefix = "netcdf_aggr/" if use_folder else ""
+    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}netcdf_valid.nc.user_metadata.json", {
                   "user_metadata": "this is netcdf user metadata"})
     write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/system_metadata.json", {
                   "system_metadata": "this is system metadata"})
@@ -15,7 +18,7 @@ def test_resource_netcdf_extraction():
 
     with open("tests/test_files/netcdf/netcdf_valid.nc", "rb") as f:
         s3_client.upload_fileobj(
-            f, "test-bucket", f"{resource_id}/data/contents/netcdf_valid.nc")
+            f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}netcdf_valid.nc")
 
     # Wait for metadata to be consistent
     sleep(1)
@@ -28,10 +31,10 @@ def test_resource_netcdf_extraction():
     result_has_parts = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
     assert len(result_has_parts) == 1
-    assert result_has_parts[0]["url"].endswith("netcdf_valid.nc.json")
+    assert result_has_parts[0]["url"].endswith(f"{folder_prefix}netcdf_valid.nc.json")
 
     result_netcdf_metadata = read_s3_json(
-        f"test-bucket/{resource_id}/.hsjsonld/netcdf_valid.nc.json")
+        f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}netcdf_valid.nc.json")
     assert len(result_netcdf_metadata["associatedMedia"]) == 1
     assert result_netcdf_metadata["associatedMedia"][
         0]["name"] == "netcdf_valid.nc"
@@ -42,12 +45,14 @@ def test_resource_netcdf_extraction():
         "user_metadata"] == "this is netcdf user metadata"
 
 
-def test_resource_netcdf_user_metadata():
+@pytest.mark.parametrize("use_folder", [True, False])
+def test_resource_netcdf_user_metadata(use_folder):
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
+    folder_prefix = "netcdf_aggr/" if use_folder else ""
 
     with open("tests/test_files/netcdf/netcdf_valid.nc", "rb") as f:
         s3_client.upload_fileobj(
-            f, "test-bucket", f"{resource_id}/data/contents/netcdf_valid.nc")
+            f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}netcdf_valid.nc")
 
     # Wait for metadata to be consistent
     sleep(1)
@@ -57,13 +62,13 @@ def test_resource_netcdf_user_metadata():
     assert_manifest_reference(resource_metadata, resource_id, "test-bucket", expected_media_obj_count=1)
     assert_has_part_reference(resource_metadata, resource_id, "test-bucket", expected_has_part_count=1)
     
-    result_netcdf_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/netcdf_valid.nc.json")
+    result_netcdf_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}netcdf_valid.nc.json")
     assert "user_metadata" not in result_netcdf_metadata
 
-    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/netcdf_valid.nc.user_metadata.json",
+    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}netcdf_valid.nc.user_metadata.json",
                   {"user_metadata": "this is netcdf user metadata"})
     sleep(1)
-    result_netcdf_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/netcdf_valid.nc.json")
+    result_netcdf_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}netcdf_valid.nc.json")
     assert result_netcdf_metadata["user_metadata"] == "this is netcdf user metadata"
     # check associated media is still correct
     assert len(result_netcdf_metadata["associatedMedia"]) == 1

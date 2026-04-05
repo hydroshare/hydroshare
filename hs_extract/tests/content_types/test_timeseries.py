@@ -128,17 +128,19 @@ def test_resource_haspart_user_only_when_no_extracted_parts():
     assert "https://example.com/user-only-part-2" in has_part_urls
 
 
-def test_resource_timeseries_csv_extraction():
+@pytest.mark.parametrize("use_folder", [True, False])
+def test_resource_timeseries_csv_extraction(use_folder):
     if not CSV_FIXTURE.exists():
         pytest.fail("CSV fixture not available")
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
+    folder_prefix = "timeseries_aggregation/" if use_folder else ""
     print(resource_id)
-    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/ODM2_Multi_Site_One_Variable_Test.csv.user_metadata.json", {
+    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}ODM2_Multi_Site_One_Variable_Test.csv.user_metadata.json", {
                   "user_metadata": "this is timeseries user metadata"})
     sleep(1)
     with open(CSV_FIXTURE, "rb") as f:
         s3_client.upload_fileobj(
-            f, "test-bucket", f"{resource_id}/data/contents/ODM2_Multi_Site_One_Variable_Test.csv")
+            f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}ODM2_Multi_Site_One_Variable_Test.csv")
 
     # Wait for metadata to be consistent
     sleep(1)
@@ -151,10 +153,10 @@ def test_resource_timeseries_csv_extraction():
     result_has_parts = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
     assert len(result_has_parts) == 1
-    assert result_has_parts[0]["url"].endswith("ODM2_Multi_Site_One_Variable_Test.csv.json")
+    assert result_has_parts[0]["url"].endswith(f"{folder_prefix}ODM2_Multi_Site_One_Variable_Test.csv.json")
 
     result_timeseries_metadata = read_s3_json(
-        f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable_Test.csv.json")
+        f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}ODM2_Multi_Site_One_Variable_Test.csv.json")
     assert len(result_timeseries_metadata["associatedMedia"]) == 1
     assert result_timeseries_metadata["associatedMedia"][
         0]["name"] == "ODM2_Multi_Site_One_Variable_Test.csv"
@@ -165,35 +167,39 @@ def test_resource_timeseries_csv_extraction():
         "user_metadata"] == "this is timeseries user metadata"
 
 
-def test_resource_timeseries_csv_usermetadata():
+@pytest.mark.parametrize("use_folder", [True, False])
+def test_resource_timeseries_csv_usermetadata(use_folder):
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID    
+    folder_prefix = "timeseries_aggregation/" if use_folder else ""
     with open("tests/test_files/timeseries/ODM2_Multi_Site_One_Variable_Test.csv", "rb") as f:
-        s3_client.upload_fileobj(f, "test-bucket", f"{resource_id}/data/contents/ODM2_Multi_Site_One_Variable_Test.csv")
+        s3_client.upload_fileobj(f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}ODM2_Multi_Site_One_Variable_Test.csv")
 
     sleep(1)
-    result_metadata_path = f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable_Test.csv.json"
+    result_metadata_path = f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}ODM2_Multi_Site_One_Variable_Test.csv.json"
     result_timeseries_metadata = read_s3_json(result_metadata_path)
     assert "user_metadata" not in result_timeseries_metadata
     sleep(1)
 
-    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/ODM2_Multi_Site_One_Variable_Test.csv.user_metadata.json", {
+    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}ODM2_Multi_Site_One_Variable_Test.csv.user_metadata.json", {
                   "user_metadata": "this is timeseries user metadata"})
     sleep(1)
-    result_metadata_path = f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable_Test.csv.json"
+    result_metadata_path = f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}ODM2_Multi_Site_One_Variable_Test.csv.json"
     result_timeseries_metadata = read_s3_json(result_metadata_path)
     assert result_timeseries_metadata["user_metadata"] == "this is timeseries user metadata"
 
 
-def test_resource_timeseries_sqlite_extraction():
+@pytest.mark.parametrize("use_folder", [True, False])
+def test_resource_timeseries_sqlite_extraction(use_folder):
     if not SQLITE_FIXTURE.exists():
         pytest.skip("SQLite fixture not available")
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
-    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/ODM2_Multi_Site_One_Variable.sqlite.user_metadata.json", {
+    folder_prefix = "timeseries_aggregation/" if use_folder else ""
+    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}ODM2_Multi_Site_One_Variable.sqlite.user_metadata.json", {
                   "user_metadata": "this is timeseries user metadata"})
     sleep(1)
     with open(SQLITE_FIXTURE, "rb") as f:
         s3_client.upload_fileobj(
-            f, "test-bucket", f"{resource_id}/data/contents/ODM2_Multi_Site_One_Variable.sqlite")
+            f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}ODM2_Multi_Site_One_Variable.sqlite")
 
     # Wait for metadata to be consistent
     sleep(1)
@@ -206,10 +212,10 @@ def test_resource_timeseries_sqlite_extraction():
     result_has_parts = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
     assert len(result_has_parts) == 1
-    assert result_has_parts[0]["url"].endswith("ODM2_Multi_Site_One_Variable.sqlite.json")
+    assert result_has_parts[0]["url"].endswith(f"{folder_prefix}ODM2_Multi_Site_One_Variable.sqlite.json")
 
     result_timeseries_metadata = read_s3_json(
-        f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable.sqlite.json")
+        f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}ODM2_Multi_Site_One_Variable.sqlite.json")
     assert len(result_timeseries_metadata["associatedMedia"]) == 1
     assert result_timeseries_metadata["associatedMedia"][
         0]["name"] == "ODM2_Multi_Site_One_Variable.sqlite"
@@ -219,20 +225,22 @@ def test_resource_timeseries_sqlite_extraction():
     assert result_timeseries_metadata["user_metadata"] == "this is timeseries user metadata"
 
 
-def test_resource_timeseries_sqlite_usermetadata():
+@pytest.mark.parametrize("use_folder", [True, False])
+def test_resource_timeseries_sqlite_usermetadata(use_folder):
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
+    folder_prefix = "timeseries_aggregation/" if use_folder else ""
     with open("tests/test_files/timeseries/ODM2_Multi_Site_One_Variable.sqlite", "rb") as f:
         s3_client.upload_fileobj(
-            f, "test-bucket", f"{resource_id}/data/contents/ODM2_Multi_Site_One_Variable.sqlite")
+            f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}ODM2_Multi_Site_One_Variable.sqlite")
     sleep(1)
 
     result_timeseries_metadata = read_s3_json(
-        f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable.sqlite.json")
+        f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}ODM2_Multi_Site_One_Variable.sqlite.json")
     assert "user_metadata" not in result_timeseries_metadata
 
-    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/ODM2_Multi_Site_One_Variable.sqlite.user_metadata.json", {
+    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}ODM2_Multi_Site_One_Variable.sqlite.user_metadata.json", {
                   "user_metadata": "this is timeseries user metadata"})
     sleep(1)
     result_timeseries_metadata = read_s3_json(
-        f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable.sqlite.json")
+        f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}ODM2_Multi_Site_One_Variable.sqlite.json")
     assert result_timeseries_metadata["user_metadata"] == "this is timeseries user metadata"
