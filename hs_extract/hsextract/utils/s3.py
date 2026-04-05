@@ -10,6 +10,7 @@ from hs_cloudnative_schemas.schema.base import HasPart, MediaObject
 if TYPE_CHECKING:
     from hsextract.content_types.models import ContentType
 
+
 class SupportsFileManifest(Protocol):
     @property
     def is_content_file(self) -> bool:
@@ -125,7 +126,9 @@ def _write_json_array(output_path: str, items: Iterator[dict]) -> int:
         return size_bytes
 
 
-def iter_file_manifest(resource_root_path: str, folder_path: str | None = None, enabled: bool = False) -> Iterator[dict]:
+def iter_file_manifest(
+        resource_root_path: str, folder_path: str | None = None, enabled: bool = False
+        ) -> Iterator[dict]:
     """Yield file manifest entries lazily for the given resource path."""
     if not enabled:
         return

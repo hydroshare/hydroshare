@@ -28,8 +28,10 @@ class TimeSeriesMetadataObject(FileMetadataObject):
         if extension in cls._extensions():
             # case of data file
             return True
-        elif file_object_path.endswith(".csv.user_metadata.json") \
-            or file_object_path.endswith(".sqlite.user_metadata.json"):
+        elif (
+            file_object_path.endswith(".csv.user_metadata.json")
+            or file_object_path.endswith(".sqlite.user_metadata.json")
+        ):
             # case of user metadata file
             relative_path = os.path.relpath(file_object_path, cls._resource_md_path(file_object_path))
             timeseries_file_user_path = os.path.join(cls._resource_md_path(file_object_path),

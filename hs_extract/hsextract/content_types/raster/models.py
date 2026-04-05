@@ -93,16 +93,18 @@ class RasterMetadataObject(FileMetadataObject):
             cleanup_files.append(content_type_md_jsonld_path)
             cleanup_files.append(content_type_md_path)
         return cleanup_files
-    
+
     @classmethod
     def is_content_type(cls, file_object_path: str) -> bool:
         _, extension = os.path.splitext(file_object_path.lower())
         if extension in cls._extensions():
             # case of data file
             return True
-        elif file_object_path.endswith(".vrt.user_metadata.json") \
-            or file_object_path.endswith(".tif.user_metadata.json") \
-            or file_object_path.endswith(".tiff.user_metadata.json"):
+        elif (
+            file_object_path.endswith(".vrt.user_metadata.json")
+            or file_object_path.endswith(".tif.user_metadata.json")
+            or file_object_path.endswith(".tiff.user_metadata.json")
+        ):
             # case of user metadata file
             relative_path = os.path.relpath(file_object_path, cls._resource_md_path(file_object_path))
             raster_file_user_path = os.path.join(cls._resource_md_path(file_object_path),

@@ -61,7 +61,7 @@ def test_resource_netcdf_user_metadata(use_folder):
     # check has part and manifest reference is correct before user metadata update
     assert_manifest_reference(resource_metadata, resource_id, "test-bucket", expected_media_obj_count=1)
     assert_has_part_reference(resource_metadata, resource_id, "test-bucket", expected_has_part_count=1)
-    
+
     result_netcdf_metadata = read_s3_json(f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}netcdf_valid.nc.json")
     assert "user_metadata" not in result_netcdf_metadata
 

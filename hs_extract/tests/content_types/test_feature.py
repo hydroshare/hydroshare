@@ -4,6 +4,7 @@ import pytest
 from time import sleep
 from tests import assert_has_part_reference, assert_manifest_reference, s3_client, read_s3_json, write_s3_json
 
+
 @pytest.mark.parametrize("use_folder", [True, False])
 def test_feature(use_folder):
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID

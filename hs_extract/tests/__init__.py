@@ -79,6 +79,7 @@ def assert_manifest_reference_fileset(fileset_metadata: dict, resource_id: str, 
     file_manifest = read_s3_json(hsjsonld_path)
     assert len(file_manifest) == expected_media_obj_count
 
+
 def assert_has_part_reference(resource_metadata: dict, resource_id: str, bucket: str,
                               expected_has_part_count: int = 0):
     has_part = resource_metadata["hasPart"]

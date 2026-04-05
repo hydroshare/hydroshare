@@ -171,6 +171,7 @@ class FileMetadataObject(BaseMetadataObject):
     def is_content_type(cls, file_object_path: str) -> bool:
         return False
 
+
 class FolderMetadataObject(BaseMetadataObject):
     def __init__(self, file_object_path: str, file_updated: bool, file_user_meta: bool = False):
         super().__init__(file_object_path, file_updated)
