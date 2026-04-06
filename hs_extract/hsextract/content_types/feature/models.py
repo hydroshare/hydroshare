@@ -22,7 +22,7 @@ class FeatureMetadataObject(FileMetadataObject):
                     self.file_object_path = sub_file_name + ".shp"
                 else:
                     self.file_object_path = file_name + ".shp"
-                relative_path = os.path.relpath(self.file_object_path, self.resource_contents_path)
+            relative_path = os.path.relpath(self.file_object_path, self.resource_contents_path)
         file_parent_directory = os.path.dirname(relative_path)
         self.content_type_md_jsonld_path = os.path.join(self.resource_md_jsonld_path, relative_path + ".json")
         self.content_type_md_path = os.path.join(self.resource_md_path, relative_path + ".json")

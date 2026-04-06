@@ -124,7 +124,7 @@ class BaseMetadataObject:
 
 
 class FileMetadataObject(BaseMetadataObject):
-    def __init__(self, file_object_path: str, file_updated: bool, file_user_meta: bool):
+    def __init__(self, file_object_path: str, file_updated: bool, file_user_meta: bool = False):
         super().__init__(file_object_path, file_updated)
         if file_user_meta and file_object_path.endswith(".user_metadata.json"):
             relative_path = os.path.relpath(self.file_object_path, self.resource_md_path)
