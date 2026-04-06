@@ -51,6 +51,24 @@ def test_metadataobject(use_nested_folder, user_meta_file):
     assert md.content_type_main_file_path == f"test-bucket/resourceid/data/contents/{folder_path}"
 
 
+@pytest.mark.parametrize("metadata_exists", [True, False])
+@pytest.mark.parametrize("user_meta_file", [True, False])
+@pytest.mark.parametrize("use_nested_folder", [True, False])
+def test_fileset_is_content_type(use_nested_folder, user_meta_file, metadata_exists):
+    resource_id = str(uuid.uuid4())
+    folder_path = "folder_aggregation/test_folder" if use_nested_folder else "folder_aggregation"
+    content_path = f"test-bucket/{resource_id}/data/contents/{folder_path}/testfile.txt"
+    user_metadata_path = f"test-bucket/{resource_id}/.hsmetadata/{folder_path}/user_metadata.json"
+
+    if metadata_exists:
+        write_s3_json(user_metadata_path, {"user_metadata": "this is fileset user metadata"})
+        sleep(1)
+
+    file_object_path = user_metadata_path if user_meta_file else content_path
+
+    assert FileSetMetadataObject.is_content_type(file_object_path) is metadata_exists
+
+
 @pytest.mark.parametrize("use_nested_folder", [True, False])
 def test_fileset(use_nested_folder):
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID

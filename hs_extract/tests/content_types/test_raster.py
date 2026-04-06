@@ -50,6 +50,27 @@ def test_metadataobject(use_folder, use_vrt, user_meta_file):
     assert md._content_type_associated_media is None
 
 
+@pytest.mark.parametrize("metadata_exists", [True, False])
+@pytest.mark.parametrize("user_meta_file", [True, False])
+@pytest.mark.parametrize("use_folder", [True, False])
+@pytest.mark.parametrize("use_vrt", [True, False])
+def test_raster_is_content_type(use_folder, use_vrt, user_meta_file, metadata_exists):
+    resource_id = str(uuid.uuid4())
+    folder_prefix = "raster_aggregation/" if use_folder else ""
+    base_file_name = "logan.vrt" if use_vrt else "logan1.tif"
+    content_path = f"test-bucket/{resource_id}/data/contents/{folder_prefix}{base_file_name}"
+    user_metadata_path = f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{base_file_name}.user_metadata.json"
+
+    if metadata_exists:
+        write_s3_json(user_metadata_path, {"user_metadata": "this is raster user metadata"})
+        sleep(1)
+
+    file_object_path = user_metadata_path if user_meta_file else content_path
+    expected = metadata_exists if user_meta_file else True
+
+    assert RasterMetadataObject.is_content_type(file_object_path) is expected
+
+
 @pytest.mark.parametrize("use_folder", [True, False])
 def test_raster(use_folder):
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
