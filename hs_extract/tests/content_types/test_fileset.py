@@ -11,6 +11,31 @@ from tests import (
     read_s3_json,
     write_s3_json
 )
+from hsextract.content_types.models import ContentType
+from hsextract.content_types.fileset.models import FileSetMetadataObject
+
+
+@pytest.mark.parametrize("use_nested_folder", [True, False])
+def test_metadataobject(use_nested_folder):
+    folder_path = "folder_aggregation/test_folder" if use_nested_folder else "folder_aggregation"
+    file_name = "testfile.txt"
+    md = FileSetMetadataObject(f"test-bucket/resourceid/data/contents/{folder_path}/{file_name}", True)
+    assert md.file_object_path == f"test-bucket/resourceid/data/contents/{folder_path}/{file_name}"
+    assert md.file_updated is True
+    assert md.resource_contents_path == "test-bucket/resourceid/data/contents"
+    assert md.resource_md_path == "test-bucket/resourceid/.hsmetadata"
+    assert md.resource_md_jsonld_path == "test-bucket/resourceid/.hsjsonld"
+    assert md.content_type == ContentType.FILE_SET
+    assert md.system_metadata_path == "test-bucket/resourceid/.hsmetadata/system_metadata.json"
+    assert md.user_metadata_path == "test-bucket/resourceid/.hsmetadata/user_metadata.json"
+    assert md.resource_metadata_jsonld_path == "test-bucket/resourceid/.hsjsonld/dataset_metadata.json"
+    
+    assert md.content_type_md_jsonld_path == f"test-bucket/resourceid/.hsjsonld/{folder_path}/dataset_metadata.json"
+    manifest_file_path = f"{folder_path}/file_manifest.json"
+    assert md.content_type_associated_media_jsonld_path == f"test-bucket/resourceid/.hsjsonld/{manifest_file_path}"
+    assert md.content_type_md_path == f"test-bucket/resourceid/.hsmetadata/{folder_path}/user_metadata.json"
+    assert md.content_type_contents_path == f"test-bucket/resourceid/data/contents/{folder_path}"
+    assert md.content_type_main_file_path == f"test-bucket/resourceid/data/contents/{folder_path}"
 
 
 @pytest.mark.parametrize("use_nested_folder", [True, False])

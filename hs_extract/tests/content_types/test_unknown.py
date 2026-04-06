@@ -21,11 +21,20 @@ def test_metadataobject(use_folder):
     assert md.resource_contents_path == "test-bucket/resourceid/data/contents"
     assert md.resource_md_path == "test-bucket/resourceid/.hsmetadata"
     assert md.resource_md_jsonld_path == "test-bucket/resourceid/.hsjsonld"
-    assert md.content_type_md_jsonld_path is None
     assert md.content_type == ContentType.UNKNOWN
     assert md.system_metadata_path == "test-bucket/resourceid/.hsmetadata/system_metadata.json"
     assert md.user_metadata_path == "test-bucket/resourceid/.hsmetadata/user_metadata.json"
     assert md.resource_metadata_jsonld_path == "test-bucket/resourceid/.hsjsonld/dataset_metadata.json"
+    assert md.resource_associated_media_jsonld_path == "test-bucket/resourceid/.hsjsonld/file_manifest.json"
+    assert md.resource_has_parts_jsonld_path == "test-bucket/resourceid/.hsjsonld/has_parts.json"
+
+    assert md.content_type_md_jsonld_path is None
+    assert md.content_type_md_path is None
+    assert md.content_type_contents_path is None
+    assert md.content_type_main_file_path is None
+    assert md.content_type_md_user_path is None
+    assert md._content_type_associated_media is None
+
 
 
 @pytest.mark.parametrize("use_folder", [True, False])
