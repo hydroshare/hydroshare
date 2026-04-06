@@ -42,7 +42,7 @@ def test_metadataobject(use_nested_folder, user_meta_file):
     assert md.system_metadata_path == "test-bucket/resourceid/.hsmetadata/system_metadata.json"
     assert md.user_metadata_path == "test-bucket/resourceid/.hsmetadata/user_metadata.json"
     assert md.resource_metadata_jsonld_path == "test-bucket/resourceid/.hsjsonld/dataset_metadata.json"
-    
+
     assert md.content_type_md_jsonld_path == f"test-bucket/resourceid/.hsjsonld/{folder_path}/dataset_metadata.json"
     manifest_file_path = f"{folder_path}/file_manifest.json"
     assert md.content_type_associated_media_jsonld_path == f"test-bucket/resourceid/.hsjsonld/{manifest_file_path}"

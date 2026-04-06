@@ -36,7 +36,6 @@ def test_metadataobject(use_folder):
     assert md._content_type_associated_media is None
 
 
-
 @pytest.mark.parametrize("use_folder", [True, False])
 def test_resource_extraction(use_folder):
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
