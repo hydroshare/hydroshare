@@ -15,12 +15,25 @@ from hsextract.content_types.models import ContentType
 from hsextract.content_types.fileset.models import FileSetMetadataObject
 
 
+@pytest.mark.parametrize("user_meta_file", [True, False])
 @pytest.mark.parametrize("use_nested_folder", [True, False])
-def test_metadataobject(use_nested_folder):
+def test_metadataobject(use_nested_folder, user_meta_file):
     folder_path = "folder_aggregation/test_folder" if use_nested_folder else "folder_aggregation"
-    file_name = "testfile.txt"
-    md = FileSetMetadataObject(f"test-bucket/resourceid/data/contents/{folder_path}/{file_name}", True)
-    assert md.file_object_path == f"test-bucket/resourceid/data/contents/{folder_path}/{file_name}"
+    if not user_meta_file:
+        file_name = "testfile.txt"
+    else:
+        file_name = "user_metadata.json"
+
+    if not user_meta_file:
+        md = FileSetMetadataObject(
+            f"test-bucket/resourceid/data/contents/{folder_path}/{file_name}", True, file_user_meta=user_meta_file
+        )
+        assert md.file_object_path == f"test-bucket/resourceid/data/contents/{folder_path}/{file_name}"
+    else:
+        md = FileSetMetadataObject(
+            f"test-bucket/resourceid/.hsmetadata/{folder_path}/{file_name}", True, file_user_meta=user_meta_file
+        )
+        assert md.file_object_path == f"test-bucket/resourceid/.hsmetadata/{folder_path}/{file_name}"
     assert md.file_updated is True
     assert md.resource_contents_path == "test-bucket/resourceid/data/contents"
     assert md.resource_md_path == "test-bucket/resourceid/.hsmetadata"

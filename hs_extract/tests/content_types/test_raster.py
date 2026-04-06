@@ -7,13 +7,29 @@ from hsextract.content_types.models import ContentType
 from hsextract.content_types.raster.models import RasterMetadataObject
 
 
+@pytest.mark.parametrize("user_meta_file", [True, False])
 @pytest.mark.parametrize("use_folder", [True, False])
 @pytest.mark.parametrize("use_vrt", [True, False])
-def test_metadataobject(use_folder, use_vrt):
+def test_metadataobject(use_folder, use_vrt, user_meta_file):
     folder_prefix = "test-folder/" if use_folder else ""
-    file_name = "logan.vrt" if use_vrt else "logan1.tif"
-    md = RasterMetadataObject(f"test-bucket/resourceid/data/contents/{folder_prefix}{file_name}", True)
-    assert md.file_object_path == f"test-bucket/resourceid/data/contents/{folder_prefix}{file_name}"
+    base_file_name = "logan.vrt" if use_vrt else "logan1.tif"
+    if not user_meta_file:
+        file_name = base_file_name
+        user_meta_file_name = f"{file_name}.user_metadata.json"
+    else:
+        file_name = f"{base_file_name}.user_metadata.json"
+        user_meta_file_name = file_name
+
+    if not user_meta_file:
+        md = RasterMetadataObject(
+            f"test-bucket/resourceid/data/contents/{folder_prefix}{file_name}", True, file_user_meta=user_meta_file
+        )
+        assert md.file_object_path == f"test-bucket/resourceid/data/contents/{folder_prefix}{file_name}"
+    else:
+        md = RasterMetadataObject(
+            f"test-bucket/resourceid/.hsmetadata/{folder_prefix}{file_name}", True, file_user_meta=user_meta_file
+        )
+        assert md.file_object_path == f"test-bucket/resourceid/.hsmetadata/{folder_prefix}{file_name}"
     assert md.file_updated is True
     assert md.resource_contents_path == "test-bucket/resourceid/data/contents"
     assert md.resource_md_path == "test-bucket/resourceid/.hsmetadata"
@@ -25,11 +41,11 @@ def test_metadataobject(use_folder, use_vrt):
     assert md.resource_associated_media_jsonld_path == "test-bucket/resourceid/.hsjsonld/file_manifest.json"
     assert md.resource_has_parts_jsonld_path == "test-bucket/resourceid/.hsjsonld/has_parts.json"
 
+    file_name = base_file_name
     assert md.content_type_md_jsonld_path == f"test-bucket/resourceid/.hsjsonld/{folder_prefix}{file_name}.json"
     assert md.content_type_md_path == f"test-bucket/resourceid/.hsmetadata/{folder_prefix}{file_name}.json"
     assert md.content_type_contents_path == f"test-bucket/resourceid/data/contents/{folder_prefix.rstrip('/')}"
     assert md.content_type_main_file_path == f"test-bucket/resourceid/data/contents/{folder_prefix}{file_name}"
-    user_meta_file_name = f"{file_name}.user_metadata.json"
     assert md.content_type_md_user_path == f"test-bucket/resourceid/.hsmetadata/{folder_prefix}{user_meta_file_name}"
     assert md._content_type_associated_media is None
 
