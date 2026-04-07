@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from drf_yasg import openapi
 
 mongo_connection_url = settings.ATLAS_CONNECTION_URL
-hydroshare_atlas_db = MongoClient(mongo_connection_url)["hydroshare"]
+hydroshare_atlas_db = MongoClient(mongo_connection_url)[settings.ATLAS_DB_NAME]
 
 
 class SearchQuery(BaseModel):

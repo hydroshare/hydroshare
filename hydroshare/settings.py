@@ -966,6 +966,7 @@ DEFAULT_QUOTA_UNIT = "GB"
 
 BROKER_URL = 'rabbitmq://guest:guest@rabbitmq:5672//'
 ATLAS_CONNECTION_URL = "mongodb://user:pass@mongodb:27017/"
+ATLAS_DB_NAME = "hydroshare"
 SEARCH_RELEVANCE_SCORE_THRESHOLD = 0.3
 SEARCH_BOOST_NAME = 5
 SEARCH_BOOST_DESCRIPTION = 3
