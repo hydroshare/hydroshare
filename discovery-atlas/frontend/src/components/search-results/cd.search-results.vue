@@ -3,11 +3,17 @@
     class="cd-search-results text-body-1"
     :class="{ 'is-small': $vuetify.display.mdAndDown }"
   >
-    <div class="d-flex align-baseline">
+    <div class="d-flex align-baseline flex-wrap">
       <div class="text-h5 font-weight-bold mr-2">Discover</div>
-      <div class="text-medium-emphasis text-body-1 font-italic">
+      <div class="text-medium-emphasis text-body-1 font-italic mr-auto">
         Public resources shared with the community
       </div>
+      <a
+        href="https://help.hydroshare.org/discovering-resources/discovering-data-and-models-from-hydroshare-users/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-body-2 w-100 w-sm-auto mt-1 mt-sm-0"
+      >Learn more about discovering data</a>
     </div>
     <v-divider class="mt-2 mb-6"></v-divider>
     <div class="d-md-block d-lg-flex">
