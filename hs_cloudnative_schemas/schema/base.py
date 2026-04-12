@@ -54,16 +54,35 @@ def identifier_schema_extra(schema: dict[str, Any]) -> None:
     remove_none_default(schema)
 
 def modify_json_schema(schema: dict[str, Any]) -> None:
+    if schema.get("format") == "uri":
+        schema.pop("format")
+        schema["pattern"] = (
+            "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?"
+            "[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?"
+            "(\\/.*)?$"
+        )
+        schema["errorMessage"] = {"pattern": 'must match format "url"'}
+
     for prop in schema.get("properties", {}).values():
-        if "format" in prop and prop["format"] == "uri":
-            # Replace "format" with a regex pattern for URL matching
-            prop.pop("format")
-            prop["pattern"] = (
-                "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?"
-                "[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?"
-                "(\\/.*)?$"
-            )
-            prop["errorMessage"] = {"pattern": 'must match format "url"'}
+        if isinstance(prop, dict):
+            modify_json_schema(prop)
+
+    for definition in schema.get("$defs", {}).values():
+        if isinstance(definition, dict):
+            modify_json_schema(definition)
+
+    items = schema.get("items")
+    if isinstance(items, dict):
+        modify_json_schema(items)
+    elif isinstance(items, list):
+        for item in items:
+            if isinstance(item, dict):
+                modify_json_schema(item)
+
+    for key in ("anyOf", "oneOf", "allOf"):
+        for item in schema.get(key, []):
+            if isinstance(item, dict):
+                modify_json_schema(item)
 
 
 class SchemaBaseModel(BaseModel):
@@ -777,13 +796,13 @@ class DataDownload(MediaObject):
         default="DataDownload",
         description="All or part of a Dataset in downloadable form.",
     )
-    measurementMethod: Annotated[Optional[Union[DefinedTerm, HttpUrl, str]], WithJsonSchema({"type": "string", "format": "uri"})] = Field(
+    measurementMethod: Optional[Union[DefinedTerm, HttpUrl, str]] = Field(
         title="Measurement method",
         description="A subproperty of measurementTechnique that can be used for specifying specific methods, in particular via MeasurementMethodEnum.",
         default=None,
         json_schema_extra=remove_none_default,
     )
-    measurementTechnique: Annotated[Optional[Union[DefinedTerm, HttpUrl, str]], WithJsonSchema({"type": "string", "format": "uri"})] = Field(
+    measurementTechnique: Optional[Union[DefinedTerm, HttpUrl, str]] = Field(
         title="Measurement technique",
         description="A technique, method or technology used in an Observation, StatisticalVariable or Dataset (or DataDownload, DataCatalog), corresponding to the method used for measuring the corresponding variable(s) (for datasets, described using variableMeasured; for Observation, a StatisticalVariable). Often but not necessarily each variableMeasured will have an explicit representation as (or mapping to) an property such as those defined in Schema.org, or other RDF vocabularies and 'knowledge graphs'. In that case the subproperty of variableMeasured called measuredProperty is applicable.",
         default=None,
