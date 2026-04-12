@@ -17,7 +17,7 @@
     "@vueuse/core": "^14.2.1",
     "@vueuse/head": "^2.0.0",
     "@vuex-orm/core": "^0.36.4",
-    "axios": "^1.13.6",
+    "axios": "^1.15.0",
     "deepmerge": "^4.3.1",
     "dompurify": "^3.3.3",
     "leaflet": "^1.9.4",
