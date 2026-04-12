@@ -1,8 +1,7 @@
 import re
 from datetime import datetime
 from enum import Enum
-from typing import Any, List, Optional, Union, Literal
-
+from typing import Any, List, Optional, Union, Literal, Annotated
 
 from pydantic import (
     BaseModel,
@@ -15,31 +14,79 @@ from pydantic import (
     model_validator,
     GetJsonSchemaHandler,
     ValidationInfo,
+    WithJsonSchema,
 )
-
-
 from pydantic.json_schema import JsonSchemaValue
+
 
 orcid_pattern = "\\b\\d{4}-\\d{4}-\\d{4}-\\d{3}[0-9X]\\b"
 orcid_pattern_placeholder = "e.g. '0000-0001-2345-6789'"
 orcid_pattern_error = "must match the ORCID pattern. e.g. '0000-0001-2345-6789'"
 
 
+def remove_none_default(schema: dict[str, Any]) -> None:
+    if schema.get("default") is None:
+        schema.pop("default", None)
+
+def end_date_schema_extra(schema: dict[str, Any]) -> None:
+    schema.update(
+        {
+            "formatMinimum": {"$data": "1/startDate"},
+            "errorMessage": {
+                "formatMinimum": "must be greater than or equal to Start date"
+            },
+        }
+    )
+    remove_none_default(schema)
+
+def read_only_schema_extra(schema: dict[str, Any]) -> None:
+    schema.update({"readOnly": True})
+    remove_none_default(schema)
+
+def identifier_schema_extra(schema: dict[str, Any]) -> None:
+    schema.update(
+        {
+            "pattern": orcid_pattern,
+            "options": {"placeholder": orcid_pattern_placeholder},
+            "errorMessage": {"pattern": orcid_pattern_error},
+        }
+    )
+    remove_none_default(schema)
+
 def modify_json_schema(schema: dict[str, Any]) -> None:
+    if schema.get("format") == "uri":
+        schema.pop("format")
+        schema["pattern"] = (
+            "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?"
+            "[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?"
+            "(\\/.*)?$"
+        )
+        schema["errorMessage"] = {"pattern": 'must match format "url"'}
+
     for prop in schema.get("properties", {}).values():
-        if "format" in prop and prop["format"] == "uri":
-            # Replace "format" with a regex pattern for URL matching
-            prop.pop("format")
-            prop["pattern"] = (
-                "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?"
-                "[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?"
-                "(\\/.*)?$"
-            )
-            prop["errorMessage"] = {"pattern": 'must match format "url"'}
+        if isinstance(prop, dict):
+            modify_json_schema(prop)
+
+    for definition in schema.get("$defs", {}).values():
+        if isinstance(definition, dict):
+            modify_json_schema(definition)
+
+    items = schema.get("items")
+    if isinstance(items, dict):
+        modify_json_schema(items)
+    elif isinstance(items, list):
+        for item in items:
+            if isinstance(item, dict):
+                modify_json_schema(item)
+
+    for key in ("anyOf", "oneOf", "allOf"):
+        for item in schema.get(key, []):
+            if isinstance(item, dict):
+                modify_json_schema(item)
 
 
 class SchemaBaseModel(BaseModel):
-    model_config = ConfigDict(json_schema_extra=modify_json_schema, extra="allow")
+    model_config = ConfigDict(json_schema_extra=modify_json_schema, extra="allow", json_encoders={HttpUrl: str})
 
 
 class DefinedTerm(SchemaBaseModel):
@@ -52,7 +99,7 @@ class Published(DefinedTerm):
     name: str = Field(default="Published")
     description: str = Field(
         default="The resource has been permanently published and should be considered final and complete",
-        readOnly=True,
+        json_schema_extra={"readOnly": True},
         description="The description of the item being defined.",
     )
 
@@ -61,7 +108,7 @@ class Public(DefinedTerm):
     name: str = Field(default="Public")
     description: str = Field(
         default="The resource is publicly accessible and can be viewed or downloaded by anyone",
-        readOnly=True,
+        json_schema_extra={"readOnly": True},
         description="The description of the item being defined.",
     )
 
@@ -70,7 +117,7 @@ class Private(DefinedTerm):
     name: str = Field(default="Private")
     description: str = Field(
         default="The resource is private and can only be accessed by authorized users",
-        readOnly=True,
+        json_schema_extra={"readOnly": True},
         description="The description of the item being defined.",
     )
 
@@ -79,7 +126,7 @@ class Discoverable(DefinedTerm):
     name: str = Field(default="Discoverable")
     description: str = Field(
         default="The resource is discoverable and can be found through search engines or other discovery mechanisms",
-        readOnly=True,
+        json_schema_extra={"readOnly": True},
         description="The description of the item being defined.",
     )
 
@@ -91,18 +138,30 @@ class CreativeWork(SchemaBaseModel):
         description="Submission type can include various forms of content, such as datasets, "
         "software source code, digital documents, etc.",
     )
-    name: Optional[str] = Field(description="Submission's name or title", title="Name or title", default=None)
+    name: Optional[str] = Field(
+        description="Submission's name or title",
+        title="Name or title",
+        default=None,
+        json_schema_extra=remove_none_default,
+    )
     description: Optional[str] = Field(
-        description="The description of the creative work.", default=None
+        description="The description of the creative work.",
+        default=None,
+        json_schema_extra=remove_none_default,
     )
     url: Optional[HttpUrl] = Field(
         title="URL",
         description="A URL to the creative work.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
 
 
 class Person(SchemaBaseModel):
+    model_config = ConfigDict(
+        **SchemaBaseModel.model_config,
+        populate_by_name=True, # Ensures aliases work during model initialization
+    )
     type: Literal["Person"] = Field(
         alias="@type", description="A person.", default="Person"  # type: ignore
     )
@@ -110,18 +169,21 @@ class Person(SchemaBaseModel):
         description="A string containing the full name of the person. Personal name format: Family Name, Given Name."
     )
     email: Optional[EmailStr] = Field(
-        description="A string containing an email address for the person.", default=None
+        description="A string containing an email address for the person.",
+        default=None,
+        json_schema_extra=remove_none_default,
     )
     identifier: Optional[List[str]] = Field(
         description="Unique identifiers for the person. Where identifiers can be encoded as URLs, enter URLs here.",
-        default=None,
+        default=[],
     )
-    model_config = {
-        "populate_by_name": True,  # Ensures aliases work during model initialization
-    }
 
 
 class Organization(SchemaBaseModel):
+    model_config = ConfigDict(
+        **SchemaBaseModel.model_config,
+        populate_by_name=True, # Ensures aliases work during model initialization
+    )
     type: Literal["Organization"] = Field(
         alias="@type",  # type: ignore
         default="Organization",
@@ -131,14 +193,13 @@ class Organization(SchemaBaseModel):
         title="URL",
         description="A URL to the homepage for the organization.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
     address: Optional[str] = Field(
         description="Full address for the organization - e.g., “8200 Old Main Hill, Logan, UT 84322-8200”.",
         default=None,
+        json_schema_extra=remove_none_default,
     )  # Should address be a string or another constrained type?
-    model_config = {
-        "populate_by_name": True,  # Ensures aliases work during model initialization
-    }
 
 
 class Affiliation(Organization):
@@ -150,60 +211,54 @@ class Affiliation(Organization):
 class Provider(Person):
     identifier: Optional[str] = Field(
         description="ORCID identifier for the person.",
-        json_schema_extra={
-            "pattern": orcid_pattern,
-            "options": {"placeholder": orcid_pattern_placeholder},
-            "errorMessage": {"pattern": orcid_pattern_error},
-        },
         default=None,
+        json_schema_extra=identifier_schema_extra,
     )
     email: Optional[EmailStr] = Field(
         description="A string containing an email address for the provider.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
     affiliation: Optional[Affiliation] = Field(
         description="The affiliation of the creator with the organization.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
 
 
 class Creator(Person):
     identifier: Optional[str] = Field(
         description="ORCID identifier for creator.",
-        json_schema_extra={
-            "pattern": orcid_pattern,
-            "options": {"placeholder": orcid_pattern_placeholder},
-            "errorMessage": {"pattern": orcid_pattern_error},
-        },
         default=None,
+        json_schema_extra=identifier_schema_extra,
     )
     email: Optional[EmailStr] = Field(
         description="A string containing an email address for the creator.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
     affiliation: Optional[Affiliation] = Field(
         description="The affiliation of the creator with the organization.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
 
 
 class Contributor(Person):
     identifier: Optional[str] = Field(
         description="ORCID identifier for contributor.",
-        json_schema_extra={
-            "pattern": orcid_pattern,
-            "options": {"placeholder": orcid_pattern_placeholder},
-            "errorMessage": {"pattern": orcid_pattern_error},
-        },
         default=None,
+        json_schema_extra=identifier_schema_extra,
     )
     email: Optional[EmailStr] = Field(
-        description="A string containing an email address for the creator.",
+        description="A string containing an email address for the contributor.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
     affiliation: Optional[Affiliation] = Field(
         description="The affiliation of the creator with the organization.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
 
 
@@ -212,8 +267,9 @@ class FunderOrganization(Organization):
     def __get_pydantic_json_schema__(
         cls, schema: JsonSchemaValue, handler: GetJsonSchemaHandler
     ) -> JsonSchemaValue:
-        schema.update(schema, title="Funding Organization")
-        return schema
+        json_schema = handler(schema)
+        json_schema["title"] = "Funding Organization"
+        return json_schema
 
     name: str = Field(description="Name of the organization.")
 
@@ -224,6 +280,7 @@ class PublisherOrganization(Organization):
         title="URL",
         description="A URL to the homepage for the publisher organization or repository.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
 
 
@@ -264,43 +321,46 @@ class Obsolete(DefinedTerm):
     )
 
 
-class Published(DefinedTerm):
-    name: str = Field(default="Published")
-    description: str = Field(
-        default="The resource has been permanently published and should be considered final and complete",
-        description="The description of the item being defined.",
-        json_schema_extra={"readOnly": True},
-    )
-
-
 class HasPart(CreativeWork):
     url: Optional[HttpUrl] = Field(
-        title="URL", description="The URL address to the data resource.", default=None
+        title="URL",
+        description="The URL address to the data resource.",
+        default=None,
+        json_schema_extra=remove_none_default,
     )
     description: Optional[str] = Field(
         description="Information about a related resource that is part of this resource.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
 
 
 class IsPartOf(CreativeWork):
     url: Optional[HttpUrl] = Field(
-        title="URL", description="The URL address to the data resource.", default=None
+        title="URL",
+        description="The URL address to the data resource.",
+        default=None,
+        json_schema_extra=remove_none_default,
     )
     description: Optional[str] = Field(
         description="Information about a related resource that this resource is a "
         "part of - e.g., a related collection.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
 
 
 class Relation(CreativeWork):
     url: Optional[HttpUrl] = Field(
-        title="URL", description="The URL address to the data resource.", default=None
+        title="URL",
+        description="The URL address to the data resource.",
+        default=None,
+        json_schema_extra=remove_none_default,
     )
     description: Optional[str] = Field(
         description="Holds all relations other than 'hasPart' and 'isPartOf'.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
 
 
@@ -309,9 +369,12 @@ class MediaObjectPartOf(CreativeWork):
         title="URL",
         description="The URL address to the related metadata document.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
     description: Optional[str] = Field(
-        description="Information about a related metadata document.", default=None
+        description="Information about a related metadata document.",
+        default=None,
+        json_schema_extra=remove_none_default,
     )
 
 
@@ -322,11 +385,13 @@ class SubjectOf(CreativeWork):
         "It is important to note that this type of metadata solely pertains to the record itself and "
         "may not necessarily be an integral component of the record, unlike the HasPart metadata.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
     description: Optional[str] = Field(
         description="Information about a related resource that is about or describes this "
         "resource - e.g., a related metadata document describing the resource.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
 
 
@@ -335,8 +400,9 @@ class LanguageEnum(str, Enum):
     def __get_pydantic_json_schema__(
         cls, schema: JsonSchemaValue, handler: GetJsonSchemaHandler
     ) -> JsonSchemaValue:
-        schema.update(type="string", title="Language", description="")
-        return schema
+        json_schema = handler(schema)
+        json_schema.update(type="string", title="Language", description="")
+        return json_schema
 
     eng = "eng"
     esp = "esp"
@@ -347,10 +413,11 @@ class InLanguageStr(str):
     def __get_pydantic_json_schema__(
         cls, schema: JsonSchemaValue, handler: GetJsonSchemaHandler
     ) -> JsonSchemaValue:
-        schema.update(
+        json_schema = handler(schema)
+        json_schema.update(
             type="string", title="Other", description="Please specify another language."
         )
-        return schema
+        return json_schema
 
 
 # TODO: should we allow a list of identifiers? Does this align with SchemaOrg?
@@ -361,10 +428,11 @@ class IdentifierStr(str):
     def __get_pydantic_json_schema__(
         cls, schema: JsonSchemaValue, handler: GetJsonSchemaHandler
     ) -> JsonSchemaValue:
-        schema.update(
+        json_schema = handler(schema)
+        json_schema.update(
             {"type": "array", "items": {"type": "string", "title": "Identifier"}}
         )
-        return schema
+        return json_schema
 
     @classmethod
     def __get_validators__(cls):
@@ -402,11 +470,14 @@ class SpatialReference(SchemaBaseModel):
         title="Code",
         description="Code of the spatial reference system.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
     wktString: Optional[str] = Field(
         title="SRS WKT String",
         description="The string representation of the spatial reference system in Well-Known-Text format.",
         default=None,
+        json_schema_extra=remove_none_default,
+
     )
 
     @field_validator("srsType")
@@ -433,15 +504,18 @@ class Grant(SchemaBaseModel):
     description: Optional[str] = Field(
         description="A text string describing the grant or financial assistance.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
     identifier: Optional[str] = Field(
         title="Funding identifier",
         description="Grant award number or other identifier.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
     funder: Optional[FunderOrganization] = Field(
         description="The organization that provided the funding or sponsorship.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
 
 
@@ -462,13 +536,8 @@ class TemporalCoverage(SchemaBaseModel):
         description="A date/time object containing the instant corresponding to the termination of the time "
         "interval (ISO8601 formatted date - YYYY-MM-DDTHH:MM). If the ending date is left off, "
         "that means the temporal coverage is ongoing.",
-        json_schema_extra={
-            "formatMinimum": {"$data": "1/startDate"},
-            "errorMessage": {
-                "formatMinimum": "must be greater than or equal to Start date"
-            },
-        },
         default=None,
+        json_schema_extra=end_date_schema_extra,
     )
 
 
@@ -553,6 +622,12 @@ class GeoShape(SchemaBaseModel):
 
 
 class PropertyValue(SchemaBaseModel):
+    model_config = ConfigDict(
+        **SchemaBaseModel.model_config,
+        populate_by_name=True, # Ensures aliases work during model initialization
+        title="PropertyValue",
+    )
+
     type: Literal["PropertyValue"] = Field(
         alias="@type",  # type: ignore
         default="PropertyValue",
@@ -567,35 +642,41 @@ class PropertyValue(SchemaBaseModel):
     )
 
     propertyID: Optional[str] = Field(
-        title="Property ID", description="The ID of the property.", default=None
+        title="Property ID",
+        description="The ID of the property.",
+        default=None,
+        json_schema_extra=remove_none_default,
+
     )
     unitCode: Optional[str] = Field(
         title="Measurement unit",
         description="The unit of measurement for the value.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
     description: Optional[str] = Field(
-        description="A description of the property.", default=None
+        description="A description of the property.",
+        default=None,
+        json_schema_extra=remove_none_default
     )
     minValue: Optional[float] = Field(
         title="Minimum value",
         description="The minimum allowed value for the property.",
         default=None,
+        json_schema_extra=remove_none_default
     )
     maxValue: Optional[float] = Field(
         title="Maximum value",
         description="The maximum allowed value for the property.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
     measurementTechnique: Optional[str] = Field(
         title="Measurement technique",
         description="A technique or technology used in a measurement.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
-    model_config = {
-        "populate_by_name": True,  # Ensures aliases work during model initialization
-        "title": "PropertyValue",
-    }
 
 
 class Place(SchemaBaseModel):
@@ -604,22 +685,29 @@ class Place(SchemaBaseModel):
         default="Place",
         description="Represents the focus area of the record's content.",
     )
-    name: Optional[str] = Field(description="Name of the place.", default=None)
+    name: Optional[str] = Field(
+        description="Name of the place.",
+        default=None,
+        json_schema_extra=remove_none_default
+    )
     geo: Optional[Union[GeoCoordinates, GeoShape]] = Field(
         description="Specifies the geographic coordinates of the place in the form of a point location, line, "
         "or area coverage extent.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
 
     additionalProperty: Optional[List[PropertyValue]] = Field(
         title="Additional properties",
         default=None,
         description="Additional properties of the place.",
+        json_schema_extra=remove_none_default,
     )
 
     srs: Optional[SpatialReference] = Field(
         description="The spatial reference system associated with the Place's geographic representation",
         default=None,
+        json_schema_extra=remove_none_default,
     )
 
     @model_validator(mode="after")
@@ -637,7 +725,7 @@ class MediaObject(SchemaBaseModel):
         default="MediaObject",
         description="An item that encodes the record.",
     )
-    contentUrl: Union[str, AnyUrl] = Field(
+    contentUrl: Annotated[Union[str, AnyUrl], WithJsonSchema({"type": "string", "format": "uri"})] = Field(
         title="Content URL",
         description="The direct URL link to access or download the actual content of the media object.",
     )
@@ -645,6 +733,7 @@ class MediaObject(SchemaBaseModel):
         title="Encoding format",
         description="Represents the specific file format in which the media is encoded.",
         default=None,
+        json_schema_extra=remove_none_default,
     )  # TODO enum for encoding formats
     contentSize: str = Field(
         title="Content size",
@@ -656,11 +745,13 @@ class MediaObject(SchemaBaseModel):
         title="SHA-256",
         description="The SHA-256 hash of the media object.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
     isPartOf: Optional[List[MediaObjectPartOf]] = Field(
         title="Is part of",
         description="Link to or citation for a related metadata document that this media object is a part of",
         default=None,
+        json_schema_extra=remove_none_default,
     )
 
     @field_validator("contentSize")
@@ -709,11 +800,13 @@ class DataDownload(MediaObject):
         title="Measurement method",
         description="A subproperty of measurementTechnique that can be used for specifying specific methods, in particular via MeasurementMethodEnum.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
     measurementTechnique: Optional[Union[DefinedTerm, HttpUrl, str]] = Field(
         title="Measurement technique",
         description="A technique, method or technology used in an Observation, StatisticalVariable or Dataset (or DataDownload, DataCatalog), corresponding to the method used for measuring the corresponding variable(s) (for datasets, described using variableMeasured; for Observation, a StatisticalVariable). Often but not necessarily each variableMeasured will have an explicit representation as (or mapping to) an property such as those defined in Schema.org, or other RDF vocabularies and 'knowledge graphs'. In that case the subproperty of variableMeasured called measuredProperty is applicable.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
 
 

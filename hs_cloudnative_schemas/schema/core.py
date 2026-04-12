@@ -5,6 +5,7 @@ from typing import List, Optional, Union
 from pydantic import (
     Field,
     HttpUrl,
+    ConfigDict,
 )
 
 from .base import (
@@ -32,6 +33,8 @@ from .base import (
     Relation,
     MediaType,
     PropertyValue,
+    read_only_schema_extra,
+    remove_none_default,
 )
 
 
@@ -40,6 +43,10 @@ class CoreMetadata(SchemaBaseModel):
     ###################
     # REQUIRED FIELDS #
     ###################
+    model_config = ConfigDict(
+        **SchemaBaseModel.model_config,
+        arbitrary_types_allowed=True,
+    )
     context: HttpUrl = Field(
         alias="@context",  # type: ignore
         default=HttpUrl(
@@ -105,7 +112,7 @@ class CoreMetadata(SchemaBaseModel):
     ###################
     contributor: Optional[List[Union[Contributor, Organization]]] = Field(
         description="Person or Organization that contributed to the resource.",
-        default=None
+        default=[],
     )
     publisher: Optional[PublisherOrganization] = Field(
         title="Publisher",
@@ -113,48 +120,56 @@ class CoreMetadata(SchemaBaseModel):
         " or organization that published the resource - e.g., CUAHSI HydroShare."
         " This may be the same as Provider.",
         default=None,
+        json_schema_extra=remove_none_default,
+
     )
     datePublished: Optional[datetime] = Field(
         title="Date published",
         description="Date of first publication for the resource.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
     subjectOf: Optional[List[SubjectOf]] = Field(
         title="Subject of",
         description="Link to or citation for a related resource that is about or describes this resource"
         " - e.g., a journal paper that describes this resource or a related metadata document "
         "describing the resource.",
-        default=None,
+        default=[],
     )
     version: Optional[str] = Field(
         description="A text string indicating the version of the resource.",
         default=None,
+        json_schema_extra=remove_none_default,
     )  # TODO find something better than float for number
     inLanguage: Optional[Union[LanguageEnum, InLanguageStr]] = Field(
         title="Language",
         description="The language of the content of the resource.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
     creativeWorkStatus: Optional[Union[Draft, Incomplete, Obsolete, Published, Public, Discoverable]] = Field(
         title="Resource status",
         description="The status of this resource in terms of its stage in a lifecycle. "
         "Example terms include Incomplete, Draft, Published, and Obsolete.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
     dateModified: Optional[datetime] = Field(
         title="Date modified",
         description="The date on which the resource was most recently modified or updated.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
     funding: Optional[List[Grant]] = Field(
         description="A Grant or monetary assistance that directly or indirectly provided funding or sponsorship "
         "for creation of the resource.",
-        default=None,
+        default=[],
     )
     temporalCoverage: Optional[TemporalCoverage] = Field(
         title="Temporal coverage",
         description="The time period that applies to all of the content within the resource.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
     spatialCoverage: Optional[Place] = Field(
         description="The spatialCoverage of a CreativeWork indicates the place(s) which are the focus of the content. "
@@ -163,26 +178,27 @@ class CoreMetadata(SchemaBaseModel):
         "describes: a dataset of New York weather would have spatialCoverage which was the "
         "place: the state of New York.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
     hasPart: Optional[List[HasPart]] = Field(
         title="Has part",
         description="Link to or citation for a related resource that is part of this resource.",
-        default=None,
+        default=[],
     )
     isPartOf: Optional[List[IsPartOf]] = Field(
         title="Is part of",
         description="Link to or citation for a related resource that this resource is a "
         "part of - e.g., a related collection.",
-        default=None,
+        default=[],
     )
     relation: Optional[List[Relation]] = Field(
         title="Relation",
         description="All other types of relations",
-        default=None,
-    ),
+        default=[],
+    )
     additionalProperty: Optional[List[PropertyValue]] = Field(
         title="Additional properties",
-        default=None,
+        default=[],
         description="Additional properties of the place.",
     )
 
@@ -191,15 +207,125 @@ class CoreMetadata(SchemaBaseModel):
         title="Resource content",
         description="A media object that encodes this CreativeWork. This property is a synonym for encoding.",
         default=None,
+        json_schema_extra=remove_none_default,
     )
     citation: Optional[List[str]] = Field(
         title="Citation",
         description="A bibliographic citation for the resource.",
-        default=None,
+        default=[],
     )
-    model_config = {
-        "arbitrary_types_allowed": True,
-        "json_encoders": {
-            HttpUrl: str,  # Convert HttpUrl to a string during serialization
-        },
-    }
+
+
+class CoreMetadataEdit(CoreMetadata):
+    """
+    A variant of the CoreMetadata class that marks all fields as read-only except for the ones that are editable.
+    This is used for the resource edit page.
+    """
+    context: HttpUrl = Field(
+        alias="@context",  # type: ignore
+        default=HttpUrl(
+            "https://hydroshare.org/schema"
+        ),  # TODO: This is a placeholder for now.
+        description="Specifies the vocabulary employed for understanding the structured data markup.",
+        json_schema_extra={"readOnly": True},
+    )
+    type: str = Field(
+        alias="@type",  # type: ignore
+        default="CreativeWork",
+        description="A creative work that may include various forms of content, such as datasets,"
+        " software source code, digital documents, etc.",
+        json_schema_extra={"readOnly": True},
+    )
+    additionalType: Optional[str] = Field(
+        title="Additional type",
+        description="An additional type for the resource. This can be used to further specify the type of the"
+                    " resource (e.g., Composite Resource).",
+        default=None,
+        json_schema_extra=read_only_schema_extra,
+    )
+    url: HttpUrl = Field(
+        title="URL",
+        description="A URL for the landing page that describes the resource and where the content "
+        "of the resource can be accessed. If there is no landing page,"
+        " provide the URL of the content.",
+        json_schema_extra={"readOnly": True},
+    )
+    identifier: List[str] = Field(
+        title="Identifiers",
+        description="Any kind of identifier for the resource. Identifiers may be DOIs or unique strings "
+        "assigned by a repository. Multiple identifiers can be entered. Where identifiers can be "
+        "encoded as URLs, enter URLs here.",
+        json_schema_extra={"readOnly": True},
+    )
+    dateCreated: datetime = Field(
+        title="Date created",
+        description="The date on which the resource was created.",
+        json_schema_extra={"readOnly": True},
+    )
+    provider: Union[Organization, Provider] = Field(
+        description="The repository, service provider, organization, person, or service performer that provides"
+        " access to the resource.",
+        json_schema_extra={"readOnly": True},
+    )
+    publisher: Optional[PublisherOrganization] = Field(
+        title="Publisher",
+        description="Where the resource is permanently published, indicated the repository, service provider,"
+        " or organization that published the resource - e.g., CUAHSI HydroShare."
+        " This may be the same as Provider.",
+        default=None,
+        json_schema_extra=read_only_schema_extra,
+    )
+    datePublished: Optional[datetime] = Field(
+        title="Date published",
+        description="Date of first publication for the resource.",
+        default=None,
+        json_schema_extra=read_only_schema_extra,
+    )
+    version: Optional[str] = Field(
+        description="A text string indicating the version of the resource.",
+        default=None,
+        json_schema_extra=read_only_schema_extra,
+    )
+    inLanguage: Optional[Union[LanguageEnum, InLanguageStr]] = Field(
+        title="Language",
+        description="The language of the content of the resource.",
+        default=None,
+        json_schema_extra=read_only_schema_extra,
+    )
+    creativeWorkStatus: Optional[Union[Draft, Incomplete, Obsolete, Published, Public, Discoverable]] = Field(
+        title="Resource status",
+        description="The status of this resource in terms of its stage in a lifecycle. "
+        "Example terms include Incomplete, Draft, Published, and Obsolete.",
+        default=None,
+        json_schema_extra=read_only_schema_extra,
+    )
+    dateModified: datetime = Field(
+        title="Date modified",
+        description="The date on which the resource was most recently modified or updated.",
+        json_schema_extra={"readOnly": True},
+    )
+    hasPart: Optional[List[HasPart]] = Field(
+        title="Has part",
+        description="Link to or citation for a related resource that is part of this resource.",
+        default=[],
+        json_schema_extra={"readOnly": True},
+    )
+    isPartOf: Optional[List[IsPartOf]] = Field(
+        title="Is part of",
+        description="Link to or citation for a related resource that this resource is a "
+        "part of - e.g., a related collection.",
+        default=[],
+        json_schema_extra={"readOnly": True},
+    )
+    associatedMedia: Optional[Union[MediaType, List[MediaType]]] = Field(
+        title="Resource content",
+        description="A media object that encodes this CreativeWork. This property is a synonym for encoding.",
+        default=None,
+        json_schema_extra=read_only_schema_extra,
+    )
+    citation: Optional[List[str]] = Field(
+        title="Citation",
+        description="A bibliographic citation for the resource.",
+        default=[],
+        json_schema_extra={"readOnly": True},
+    )
