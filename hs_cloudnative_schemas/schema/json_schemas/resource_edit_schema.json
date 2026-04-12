@@ -14,17 +14,9 @@
           "type": "string"
         },
         "address": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Full address for the organization - e.g., \u201c8200 Old Main Hill, Logan, UT 84322-8200\u201d.",
-          "title": "Address"
+          "title": "Address",
+          "type": "string"
         },
         "name": {
           "description": "Name of the organization the creator is affiliated with.",
@@ -32,20 +24,15 @@
           "type": "string"
         },
         "url": {
-          "anyOf": [
-            {
-              "format": "uri",
-              "maxLength": 2083,
-              "minLength": 1,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "A URL to the homepage for the organization.",
-          "title": "URL"
+          "errorMessage": {
+            "pattern": "must match format \"url\""
+          },
+          "maxLength": 2083,
+          "minLength": 1,
+          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+          "title": "URL",
+          "type": "string"
         }
       },
       "required": [
@@ -68,41 +55,20 @@
           "type": "string"
         },
         "affiliation": {
-          "anyOf": [
+          "allOf": [
             {
               "$ref": "#/definitions/Affiliation"
-            },
-            {
-              "type": "null"
             }
           ],
-          "default": null,
           "description": "The affiliation of the creator with the organization."
         },
         "email": {
-          "anyOf": [
-            {
-              "format": "email",
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "A string containing an email address for the creator.",
-          "title": "Email"
+          "description": "A string containing an email address for the contributor.",
+          "format": "email",
+          "title": "Email",
+          "type": "string"
         },
         "identifier": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "ORCID identifier for contributor.",
           "errorMessage": {
             "pattern": "must match the ORCID pattern. e.g. '0000-0001-2345-6789'"
@@ -111,7 +77,8 @@
             "placeholder": "e.g. '0000-0001-2345-6789'"
           },
           "pattern": "\\b\\d{4}-\\d{4}-\\d{4}-\\d{3}[0-9X]\\b",
-          "title": "Identifier"
+          "title": "Identifier",
+          "type": "string"
         },
         "name": {
           "description": "A string containing the full name of the person. Personal name format: Family Name, Given Name.",
@@ -139,46 +106,25 @@
           "type": "string"
         },
         "description": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "The description of the creative work.",
-          "title": "Description"
+          "title": "Description",
+          "type": "string"
         },
         "name": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Submission's name or title",
-          "title": "Name or title"
+          "title": "Name or title",
+          "type": "string"
         },
         "url": {
-          "anyOf": [
-            {
-              "format": "uri",
-              "maxLength": 2083,
-              "minLength": 1,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "A URL to the creative work.",
-          "title": "URL"
+          "errorMessage": {
+            "pattern": "must match format \"url\""
+          },
+          "maxLength": 2083,
+          "minLength": 1,
+          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+          "title": "URL",
+          "type": "string"
         }
       },
       "title": "CreativeWork",
@@ -198,41 +144,20 @@
           "type": "string"
         },
         "affiliation": {
-          "anyOf": [
+          "allOf": [
             {
               "$ref": "#/definitions/Affiliation"
-            },
-            {
-              "type": "null"
             }
           ],
-          "default": null,
           "description": "The affiliation of the creator with the organization."
         },
         "email": {
-          "anyOf": [
-            {
-              "format": "email",
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "A string containing an email address for the creator.",
-          "title": "Email"
+          "format": "email",
+          "title": "Email",
+          "type": "string"
         },
         "identifier": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "ORCID identifier for creator.",
           "errorMessage": {
             "pattern": "must match the ORCID pattern. e.g. '0000-0001-2345-6789'"
@@ -241,7 +166,8 @@
             "placeholder": "e.g. '0000-0001-2345-6789'"
           },
           "pattern": "\\b\\d{4}-\\d{4}-\\d{4}-\\d{3}[0-9X]\\b",
-          "title": "Identifier"
+          "title": "Identifier",
+          "type": "string"
         },
         "name": {
           "description": "A string containing the full name of the person. Personal name format: Family Name, Given Name.",
@@ -274,47 +200,26 @@
           "type": "string"
         },
         "contentUrl": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "format": "uri",
-              "minLength": 1,
-              "type": "string"
-            }
-          ],
           "description": "The direct URL link to access or download the actual content of the media object.",
-          "title": "Content URL"
+          "errorMessage": {
+            "pattern": "must match format \"url\""
+          },
+          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+          "title": "Content URL",
+          "type": "string"
         },
         "encodingFormat": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Represents the specific file format in which the media is encoded.",
-          "title": "Encoding format"
+          "title": "Encoding format",
+          "type": "string"
         },
         "isPartOf": {
-          "anyOf": [
-            {
-              "items": {
-                "$ref": "#/definitions/MediaObjectPartOf"
-              },
-              "type": "array"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Link to or citation for a related metadata document that this media object is a part of",
-          "title": "Is part of"
+          "items": {
+            "$ref": "#/definitions/MediaObjectPartOf"
+          },
+          "title": "Is part of",
+          "type": "array"
         },
         "measurementMethod": {
           "anyOf": [
@@ -322,19 +227,18 @@
               "$ref": "#/definitions/DefinedTerm"
             },
             {
-              "format": "uri",
+              "errorMessage": {
+                "pattern": "must match format \"url\""
+              },
               "maxLength": 2083,
               "minLength": 1,
+              "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
               "type": "string"
             },
             {
               "type": "string"
-            },
-            {
-              "type": "null"
             }
           ],
-          "default": null,
           "description": "A subproperty of measurementTechnique that can be used for specifying specific methods, in particular via MeasurementMethodEnum.",
           "title": "Measurement method"
         },
@@ -344,19 +248,18 @@
               "$ref": "#/definitions/DefinedTerm"
             },
             {
-              "format": "uri",
+              "errorMessage": {
+                "pattern": "must match format \"url\""
+              },
               "maxLength": 2083,
               "minLength": 1,
+              "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
               "type": "string"
             },
             {
               "type": "string"
-            },
-            {
-              "type": "null"
             }
           ],
-          "default": null,
           "description": "A technique, method or technology used in an Observation, StatisticalVariable or Dataset (or DataDownload, DataCatalog), corresponding to the method used for measuring the corresponding variable(s) (for datasets, described using variableMeasured; for Observation, a StatisticalVariable). Often but not necessarily each variableMeasured will have an explicit representation as (or mapping to) an property such as those defined in Schema.org, or other RDF vocabularies and 'knowledge graphs'. In that case the subproperty of variableMeasured called measuredProperty is applicable.",
           "title": "Measurement technique"
         },
@@ -366,17 +269,9 @@
           "type": "string"
         },
         "sha256": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "The SHA-256 hash of the media object.",
-          "title": "SHA-256"
+          "title": "SHA-256",
+          "type": "string"
         }
       },
       "required": [
@@ -470,112 +365,44 @@
       "type": "object"
     },
     "FunderOrganization": {
-      "cls": "<class 'hs_cloudnative_schemas.schema.base.FunderOrganization'>",
-      "config": {
-        "extra_fields_behavior": "allow",
-        "populate_by_name": true,
-        "title": "FunderOrganization"
-      },
-      "custom_init": false,
-      "metadata": {
-        "pydantic_js_annotation_functions": [],
-        "pydantic_js_functions": [
-          "functools.partial(<function modify_model_json_schema at 0x7ffffd6c6c00>, cls=<class 'hs_cloudnative_schemas.schema.base.FunderOrganization'>, title=None)",
-          "<bound method FunderOrganization.__get_pydantic_json_schema__ of <class 'hs_cloudnative_schemas.schema.base.FunderOrganization'>>"
-        ]
-      },
-      "ref": "hs_cloudnative_schemas.schema.base.FunderOrganization:93824998516096",
-      "root_model": false,
-      "schema": {
-        "computed_fields": [],
-        "fields": {
-          "address": {
-            "metadata": {
-              "pydantic_js_annotation_functions": [
-                "<function get_json_schema_update_func.<locals>.json_schema_update_func at 0x7ffffd57dd00>"
-              ],
-              "pydantic_js_functions": []
-            },
-            "schema": {
-              "default": null,
-              "schema": {
-                "schema": {
-                  "type": "str"
-                },
-                "type": "nullable"
-              },
-              "type": "default"
-            },
-            "type": "model-field"
-          },
-          "name": {
-            "metadata": {
-              "pydantic_js_annotation_functions": [
-                "<function get_json_schema_update_func.<locals>.json_schema_update_func at 0x7ffffd57e7a0>"
-              ],
-              "pydantic_js_functions": []
-            },
-            "schema": {
-              "type": "str"
-            },
-            "type": "model-field"
-          },
-          "type": {
-            "metadata": {
-              "pydantic_js_annotation_functions": [
-                "<function get_json_schema_update_func.<locals>.json_schema_update_func at 0x7ffffd57e700>"
-              ],
-              "pydantic_js_functions": []
-            },
-            "schema": {
-              "default": "Organization",
-              "schema": {
-                "expected": [
-                  "Organization"
-                ],
-                "type": "literal"
-              },
-              "type": "default"
-            },
-            "serialization_alias": "@type",
-            "type": "model-field",
-            "validation_alias": "@type"
-          },
-          "url": {
-            "metadata": {
-              "pydantic_js_annotation_functions": [
-                "<function get_json_schema_update_func.<locals>.json_schema_update_func at 0x7ffffd57e660>"
-              ],
-              "pydantic_js_functions": []
-            },
-            "schema": {
-              "default": null,
-              "schema": {
-                "schema": {
-                  "allowed_schemes": [
-                    "http",
-                    "https"
-                  ],
-                  "max_length": 2083,
-                  "metadata": {
-                    "pydantic_js_annotation_functions": [
-                      "<bound method SchemaTransformer.__get_pydantic_json_schema__ of SchemaTransformer(get_core_schema=<function url_prepare_pydantic_annotations.<locals>.<lambda> at 0x7ffffd57e5c0>, get_json_schema=<function url_prepare_pydantic_annotations.<locals>.<lambda> at 0x7ffffd57e520>)>"
-                    ]
-                  },
-                  "type": "url"
-                },
-                "type": "nullable"
-              },
-              "type": "default"
-            },
-            "type": "model-field"
-          }
+      "additionalProperties": true,
+      "properties": {
+        "@type": {
+          "const": "Organization",
+          "default": "Organization",
+          "enum": [
+            "Organization"
+          ],
+          "title": "@Type",
+          "type": "string"
         },
-        "model_name": "FunderOrganization",
-        "type": "model-fields"
+        "address": {
+          "description": "Full address for the organization - e.g., \u201c8200 Old Main Hill, Logan, UT 84322-8200\u201d.",
+          "title": "Address",
+          "type": "string"
+        },
+        "name": {
+          "description": "Name of the organization.",
+          "title": "Name",
+          "type": "string"
+        },
+        "url": {
+          "description": "A URL to the homepage for the organization.",
+          "errorMessage": {
+            "pattern": "must match format \"url\""
+          },
+          "maxLength": 2083,
+          "minLength": 1,
+          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+          "title": "URL",
+          "type": "string"
+        }
       },
+      "required": [
+        "name"
+      ],
       "title": "Funding Organization",
-      "type": "model"
+      "type": "object"
     },
     "GeoCoordinates": {
       "additionalProperties": true,
@@ -653,42 +480,22 @@
           "type": "string"
         },
         "description": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "A text string describing the grant or financial assistance.",
-          "title": "Description"
+          "title": "Description",
+          "type": "string"
         },
         "funder": {
-          "anyOf": [
+          "allOf": [
             {
               "$ref": "#/definitions/FunderOrganization"
-            },
-            {
-              "type": "null"
             }
           ],
-          "default": null,
           "description": "The organization that provided the funding or sponsorship."
         },
         "identifier": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Grant award number or other identifier.",
-          "title": "Funding identifier"
+          "title": "Funding identifier",
+          "type": "string"
         },
         "name": {
           "description": "A text string indicating the name or title of the grant or financial assistance.",
@@ -716,46 +523,25 @@
           "type": "string"
         },
         "description": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Information about a related resource that is part of this resource.",
-          "title": "Description"
+          "title": "Description",
+          "type": "string"
         },
         "name": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Submission's name or title",
-          "title": "Name or title"
+          "title": "Name or title",
+          "type": "string"
         },
         "url": {
-          "anyOf": [
-            {
-              "format": "uri",
-              "maxLength": 2083,
-              "minLength": 1,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "The URL address to the data resource.",
-          "title": "URL"
+          "errorMessage": {
+            "pattern": "must match format \"url\""
+          },
+          "maxLength": 2083,
+          "minLength": 1,
+          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+          "title": "URL",
+          "type": "string"
         }
       },
       "title": "HasPart",
@@ -803,66 +589,36 @@
           "type": "string"
         },
         "description": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Information about a related resource that this resource is a part of - e.g., a related collection.",
-          "title": "Description"
+          "title": "Description",
+          "type": "string"
         },
         "name": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Submission's name or title",
-          "title": "Name or title"
+          "title": "Name or title",
+          "type": "string"
         },
         "url": {
-          "anyOf": [
-            {
-              "format": "uri",
-              "maxLength": 2083,
-              "minLength": 1,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "The URL address to the data resource.",
-          "title": "URL"
+          "errorMessage": {
+            "pattern": "must match format \"url\""
+          },
+          "maxLength": 2083,
+          "minLength": 1,
+          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+          "title": "URL",
+          "type": "string"
         }
       },
       "title": "IsPartOf",
       "type": "object"
     },
     "LanguageEnum": {
-      "cls": "<enum 'LanguageEnum'>",
       "description": "",
-      "members": [
+      "enum": [
         "eng",
         "esp"
       ],
-      "metadata": {
-        "pydantic_js_functions": [
-          "<function get_enum_core_schema.<locals>.get_json_schema at 0x7ffffd453100>",
-          "<bound method LanguageEnum.__get_pydantic_json_schema__ of <enum 'LanguageEnum'>>"
-        ]
-      },
-      "ref": "hs_cloudnative_schemas.schema.base.LanguageEnum:93824998786896",
-      "sub_type": "str",
       "title": "Language",
       "type": "string"
     },
@@ -885,47 +641,26 @@
           "type": "string"
         },
         "contentUrl": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "format": "uri",
-              "minLength": 1,
-              "type": "string"
-            }
-          ],
           "description": "The direct URL link to access or download the actual content of the media object.",
-          "title": "Content URL"
+          "errorMessage": {
+            "pattern": "must match format \"url\""
+          },
+          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+          "title": "Content URL",
+          "type": "string"
         },
         "encodingFormat": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Represents the specific file format in which the media is encoded.",
-          "title": "Encoding format"
+          "title": "Encoding format",
+          "type": "string"
         },
         "isPartOf": {
-          "anyOf": [
-            {
-              "items": {
-                "$ref": "#/definitions/MediaObjectPartOf"
-              },
-              "type": "array"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Link to or citation for a related metadata document that this media object is a part of",
-          "title": "Is part of"
+          "items": {
+            "$ref": "#/definitions/MediaObjectPartOf"
+          },
+          "title": "Is part of",
+          "type": "array"
         },
         "name": {
           "description": "The name of the media object (file).",
@@ -933,17 +668,9 @@
           "type": "string"
         },
         "sha256": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "The SHA-256 hash of the media object.",
-          "title": "SHA-256"
+          "title": "SHA-256",
+          "type": "string"
         }
       },
       "required": [
@@ -968,46 +695,25 @@
           "type": "string"
         },
         "description": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Information about a related metadata document.",
-          "title": "Description"
+          "title": "Description",
+          "type": "string"
         },
         "name": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Submission's name or title",
-          "title": "Name or title"
+          "title": "Name or title",
+          "type": "string"
         },
         "url": {
-          "anyOf": [
-            {
-              "format": "uri",
-              "maxLength": 2083,
-              "minLength": 1,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "The URL address to the related metadata document.",
-          "title": "URL"
+          "errorMessage": {
+            "pattern": "must match format \"url\""
+          },
+          "maxLength": 2083,
+          "minLength": 1,
+          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+          "title": "URL",
+          "type": "string"
         }
       },
       "title": "MediaObjectPartOf",
@@ -1054,17 +760,9 @@
           "type": "string"
         },
         "address": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Full address for the organization - e.g., \u201c8200 Old Main Hill, Logan, UT 84322-8200\u201d.",
-          "title": "Address"
+          "title": "Address",
+          "type": "string"
         },
         "name": {
           "description": "Name of the provider organization or repository.",
@@ -1072,20 +770,15 @@
           "type": "string"
         },
         "url": {
-          "anyOf": [
-            {
-              "format": "uri",
-              "maxLength": 2083,
-              "minLength": 1,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "A URL to the homepage for the organization.",
-          "title": "URL"
+          "errorMessage": {
+            "pattern": "must match format \"url\""
+          },
+          "maxLength": 2083,
+          "minLength": 1,
+          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+          "title": "URL",
+          "type": "string"
         }
       },
       "required": [
@@ -1108,20 +801,12 @@
           "type": "string"
         },
         "additionalProperty": {
-          "anyOf": [
-            {
-              "items": {
-                "$ref": "#/definitions/PropertyValue"
-              },
-              "type": "array"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Additional properties of the place.",
-          "title": "Additional properties"
+          "items": {
+            "$ref": "#/definitions/PropertyValue"
+          },
+          "title": "Additional properties",
+          "type": "array"
         },
         "geo": {
           "anyOf": [
@@ -1130,38 +815,22 @@
             },
             {
               "$ref": "#/definitions/GeoShape"
-            },
-            {
-              "type": "null"
             }
           ],
-          "default": null,
           "description": "Specifies the geographic coordinates of the place in the form of a point location, line, or area coverage extent.",
           "title": "Geo"
         },
         "name": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Name of the place.",
-          "title": "Name"
+          "title": "Name",
+          "type": "string"
         },
         "srs": {
-          "anyOf": [
+          "allOf": [
             {
               "$ref": "#/definitions/SpatialReference"
-            },
-            {
-              "type": "null"
             }
           ],
-          "default": null,
           "description": "The spatial reference system associated with the Place's geographic representation"
         }
       },
@@ -1182,56 +851,24 @@
           "type": "string"
         },
         "description": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "A description of the property.",
-          "title": "Description"
+          "title": "Description",
+          "type": "string"
         },
         "maxValue": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "The maximum allowed value for the property.",
-          "title": "Maximum value"
+          "title": "Maximum value",
+          "type": "number"
         },
         "measurementTechnique": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "A technique or technology used in a measurement.",
-          "title": "Measurement technique"
+          "title": "Measurement technique",
+          "type": "string"
         },
         "minValue": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "The minimum allowed value for the property.",
-          "title": "Minimum value"
+          "title": "Minimum value",
+          "type": "number"
         },
         "name": {
           "description": "The name of the property.",
@@ -1239,30 +876,14 @@
           "type": "string"
         },
         "propertyID": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "The ID of the property.",
-          "title": "Property ID"
+          "title": "Property ID",
+          "type": "string"
         },
         "unitCode": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "The unit of measurement for the value.",
-          "title": "Measurement unit"
+          "title": "Measurement unit",
+          "type": "string"
         },
         "value": {
           "anyOf": [
@@ -1301,41 +922,20 @@
           "type": "string"
         },
         "affiliation": {
-          "anyOf": [
+          "allOf": [
             {
               "$ref": "#/definitions/Affiliation"
-            },
-            {
-              "type": "null"
             }
           ],
-          "default": null,
           "description": "The affiliation of the creator with the organization."
         },
         "email": {
-          "anyOf": [
-            {
-              "format": "email",
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "A string containing an email address for the provider.",
-          "title": "Email"
+          "format": "email",
+          "title": "Email",
+          "type": "string"
         },
         "identifier": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "ORCID identifier for the person.",
           "errorMessage": {
             "pattern": "must match the ORCID pattern. e.g. '0000-0001-2345-6789'"
@@ -1344,7 +944,8 @@
             "placeholder": "e.g. '0000-0001-2345-6789'"
           },
           "pattern": "\\b\\d{4}-\\d{4}-\\d{4}-\\d{3}[0-9X]\\b",
-          "title": "Identifier"
+          "title": "Identifier",
+          "type": "string"
         },
         "name": {
           "description": "A string containing the full name of the person. Personal name format: Family Name, Given Name.",
@@ -1386,11 +987,7 @@
       "additionalProperties": true,
       "properties": {
         "@type": {
-          "const": "DefinedTerm",
           "default": "DefinedTerm",
-          "enum": [
-            "DefinedTerm"
-          ],
           "title": "@Type",
           "type": "string"
         },
@@ -1423,17 +1020,9 @@
           "type": "string"
         },
         "address": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Full address for the organization - e.g., \u201c8200 Old Main Hill, Logan, UT 84322-8200\u201d.",
-          "title": "Address"
+          "title": "Address",
+          "type": "string"
         },
         "name": {
           "description": "Name of the publishing organization.",
@@ -1441,20 +1030,15 @@
           "type": "string"
         },
         "url": {
-          "anyOf": [
-            {
-              "format": "uri",
-              "maxLength": 2083,
-              "minLength": 1,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "A URL to the homepage for the publisher organization or repository.",
-          "title": "URL"
+          "errorMessage": {
+            "pattern": "must match format \"url\""
+          },
+          "maxLength": 2083,
+          "minLength": 1,
+          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+          "title": "URL",
+          "type": "string"
         }
       },
       "required": [
@@ -1477,46 +1061,25 @@
           "type": "string"
         },
         "description": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Holds all relations other than 'hasPart' and 'isPartOf'.",
-          "title": "Description"
+          "title": "Description",
+          "type": "string"
         },
         "name": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Submission's name or title",
-          "title": "Name or title"
+          "title": "Name or title",
+          "type": "string"
         },
         "url": {
-          "anyOf": [
-            {
-              "format": "uri",
-              "maxLength": 2083,
-              "minLength": 1,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "The URL address to the data resource.",
-          "title": "URL"
+          "errorMessage": {
+            "pattern": "must match format \"url\""
+          },
+          "maxLength": 2083,
+          "minLength": 1,
+          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+          "title": "URL",
+          "type": "string"
         }
       },
       "title": "Relation",
@@ -1536,17 +1099,9 @@
           "type": "string"
         },
         "code": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Code of the spatial reference system.",
-          "title": "Code"
+          "title": "Code",
+          "type": "string"
         },
         "name": {
           "description": "Name of the spatial reference system.",
@@ -1559,17 +1114,9 @@
           "type": "string"
         },
         "wktString": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "The string representation of the spatial reference system in Well-Known-Text format.",
-          "title": "SRS WKT String"
+          "title": "SRS WKT String",
+          "type": "string"
         }
       },
       "required": [
@@ -1593,46 +1140,25 @@
           "type": "string"
         },
         "description": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Information about a related resource that is about or describes this resource - e.g., a related metadata document describing the resource.",
-          "title": "Description"
+          "title": "Description",
+          "type": "string"
         },
         "name": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Submission's name or title",
-          "title": "Name or title"
+          "title": "Name or title",
+          "type": "string"
         },
         "url": {
-          "anyOf": [
-            {
-              "format": "uri",
-              "maxLength": 2083,
-              "minLength": 1,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "The URL address that serves as a reference to access additional details related to the record. It is important to note that this type of metadata solely pertains to the record itself and may not necessarily be an integral component of the record, unlike the HasPart metadata.",
-          "title": "URL"
+          "errorMessage": {
+            "pattern": "must match format \"url\""
+          },
+          "maxLength": 2083,
+          "minLength": 1,
+          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+          "title": "URL",
+          "type": "string"
         }
       },
       "title": "SubjectOf",
@@ -1642,24 +1168,16 @@
       "additionalProperties": true,
       "properties": {
         "endDate": {
-          "anyOf": [
-            {
-              "format": "date-time",
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "A date/time object containing the instant corresponding to the termination of the time interval (ISO8601 formatted date - YYYY-MM-DDTHH:MM). If the ending date is left off, that means the temporal coverage is ongoing.",
           "errorMessage": {
             "formatMinimum": "must be greater than or equal to Start date"
           },
+          "format": "date-time",
           "formatMinimum": {
             "$data": "1/startDate"
           },
-          "title": "End date"
+          "title": "End date",
+          "type": "string"
         },
         "startDate": {
           "description": "A date/time object containing the instant corresponding to the commencement of the time interval (ISO8601 formatted date - YYYY-MM-DDTHH:MM).",
@@ -1699,47 +1217,26 @@
           "type": "string"
         },
         "contentUrl": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "format": "uri",
-              "minLength": 1,
-              "type": "string"
-            }
-          ],
           "description": "The direct URL link to access or download the actual content of the media object.",
-          "title": "Content URL"
+          "errorMessage": {
+            "pattern": "must match format \"url\""
+          },
+          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+          "title": "Content URL",
+          "type": "string"
         },
         "encodingFormat": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Represents the specific file format in which the media is encoded.",
-          "title": "Encoding format"
+          "title": "Encoding format",
+          "type": "string"
         },
         "isPartOf": {
-          "anyOf": [
-            {
-              "items": {
-                "$ref": "#/definitions/MediaObjectPartOf"
-              },
-              "type": "array"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "Link to or citation for a related metadata document that this media object is a part of",
-          "title": "Is part of"
+          "items": {
+            "$ref": "#/definitions/MediaObjectPartOf"
+          },
+          "title": "Is part of",
+          "type": "array"
         },
         "name": {
           "description": "The name of the media object (file).",
@@ -1747,17 +1244,9 @@
           "type": "string"
         },
         "sha256": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
           "description": "The SHA-256 hash of the media object.",
-          "title": "SHA-256"
+          "title": "SHA-256",
+          "type": "string"
         }
       },
       "required": [
@@ -1792,33 +1281,19 @@
       "type": "string"
     },
     "additionalProperty": {
-      "anyOf": [
-        {
-          "items": {
-            "$ref": "#/definitions/PropertyValue"
-          },
-          "type": "array"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
+      "default": [],
       "description": "Additional properties of the place.",
-      "title": "Additional properties"
+      "items": {
+        "$ref": "#/definitions/PropertyValue"
+      },
+      "title": "Additional properties",
+      "type": "array"
     },
     "additionalType": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
       "description": "An additional type for the resource. This can be used to further specify the type of the resource (e.g., Composite Resource).",
       "readOnly": true,
-      "title": "Additional type"
+      "title": "Additional type",
+      "type": "string"
     },
     "associatedMedia": {
       "anyOf": [
@@ -1846,55 +1321,37 @@
             ]
           },
           "type": "array"
-        },
-        {
-          "type": "null"
         }
       ],
-      "default": null,
       "description": "A media object that encodes this CreativeWork. This property is a synonym for encoding.",
       "readOnly": true,
       "title": "Resource content"
     },
     "citation": {
-      "anyOf": [
-        {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
+      "default": [],
       "description": "A bibliographic citation for the resource.",
+      "items": {
+        "type": "string"
+      },
       "readOnly": true,
-      "title": "Citation"
+      "title": "Citation",
+      "type": "array"
     },
     "contributor": {
-      "anyOf": [
-        {
-          "items": {
-            "anyOf": [
-              {
-                "$ref": "#/definitions/Contributor"
-              },
-              {
-                "$ref": "#/definitions/Organization"
-              }
-            ]
-          },
-          "type": "array"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
+      "default": [],
       "description": "Person or Organization that contributed to the resource.",
-      "title": "Contributor"
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Contributor"
+          },
+          {
+            "$ref": "#/definitions/Organization"
+          }
+        ]
+      },
+      "title": "Contributor",
+      "type": "array"
     },
     "creativeWorkStatus": {
       "anyOf": [
@@ -1915,12 +1372,8 @@
         },
         {
           "$ref": "#/definitions/Discoverable"
-        },
-        {
-          "type": "null"
         }
       ],
-      "default": null,
       "description": "The status of this resource in terms of its stage in a lifecycle. Example terms include Incomplete, Draft, Published, and Obsolete.",
       "readOnly": true,
       "title": "Resource status"
@@ -1948,34 +1401,18 @@
       "type": "string"
     },
     "dateModified": {
-      "anyOf": [
-        {
-          "format": "date-time",
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
       "description": "The date on which the resource was most recently modified or updated.",
+      "format": "date-time",
       "readOnly": true,
-      "title": "Date modified"
+      "title": "Date modified",
+      "type": "string"
     },
     "datePublished": {
-      "anyOf": [
-        {
-          "format": "date-time",
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
       "description": "Date of first publication for the resource.",
+      "format": "date-time",
       "readOnly": true,
-      "title": "Date published"
+      "title": "Date published",
+      "type": "string"
     },
     "description": {
       "description": "A text string containing a description/abstract for the resource.",
@@ -1983,37 +1420,23 @@
       "type": "string"
     },
     "funding": {
-      "anyOf": [
-        {
-          "items": {
-            "$ref": "#/definitions/Grant"
-          },
-          "type": "array"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
+      "default": [],
       "description": "A Grant or monetary assistance that directly or indirectly provided funding or sponsorship for creation of the resource.",
-      "title": "Funding"
+      "items": {
+        "$ref": "#/definitions/Grant"
+      },
+      "title": "Funding",
+      "type": "array"
     },
     "hasPart": {
-      "anyOf": [
-        {
-          "items": {
-            "$ref": "#/definitions/HasPart"
-          },
-          "type": "array"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
+      "default": [],
       "description": "Link to or citation for a related resource that is part of this resource.",
+      "items": {
+        "$ref": "#/definitions/HasPart"
+      },
       "readOnly": true,
-      "title": "Has part"
+      "title": "Has part",
+      "type": "array"
     },
     "identifier": {
       "description": "Any kind of identifier for the resource. Identifiers may be DOIs or unique strings assigned by a repository. Multiple identifiers can be entered. Where identifiers can be encoded as URLs, enter URLs here.",
@@ -2025,46 +1448,23 @@
       "type": "array"
     },
     "inLanguage": {
-      "anyOf": [
+      "allOf": [
         {
           "$ref": "#/definitions/LanguageEnum"
-        },
-        {
-          "cls": "<class 'hs_cloudnative_schemas.schema.base.InLanguageStr'>",
-          "description": "Please specify another language.",
-          "metadata": {
-            "pydantic_js_functions": [
-              "<bound method InLanguageStr.__get_pydantic_json_schema__ of <class 'hs_cloudnative_schemas.schema.base.InLanguageStr'>>"
-            ]
-          },
-          "title": "Other",
-          "type": "string"
-        },
-        {
-          "type": "null"
         }
       ],
-      "default": null,
       "description": "The language of the content of the resource.",
-      "readOnly": true,
-      "title": "Language"
+      "readOnly": true
     },
     "isPartOf": {
-      "anyOf": [
-        {
-          "items": {
-            "$ref": "#/definitions/IsPartOf"
-          },
-          "type": "array"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
+      "default": [],
       "description": "Link to or citation for a related resource that this resource is a part of - e.g., a related collection.",
+      "items": {
+        "$ref": "#/definitions/IsPartOf"
+      },
       "readOnly": true,
-      "title": "Is part of"
+      "title": "Is part of",
+      "type": "array"
     },
     "keywords": {
       "description": "Keywords or tags used to describe the dataset, delimited by commas.",
@@ -2081,9 +1481,12 @@
           "$ref": "#/definitions/CreativeWork"
         },
         {
-          "format": "uri",
+          "errorMessage": {
+            "pattern": "must match format \"url\""
+          },
           "maxLength": 2083,
           "minLength": 1,
+          "pattern": "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
           "type": "string"
         }
       ],
@@ -2109,71 +1512,47 @@
       "title": "Provider"
     },
     "publisher": {
-      "anyOf": [
+      "allOf": [
         {
           "$ref": "#/definitions/PublisherOrganization"
-        },
-        {
-          "type": "null"
         }
       ],
-      "default": null,
       "description": "Where the resource is permanently published, indicated the repository, service provider, or organization that published the resource - e.g., CUAHSI HydroShare. This may be the same as Provider.",
       "readOnly": true,
       "title": "Publisher"
     },
     "relation": {
-      "anyOf": [
-        {
-          "items": {
-            "$ref": "#/definitions/Relation"
-          },
-          "type": "array"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "title": "Relation"
+      "default": [],
+      "description": "All other types of relations",
+      "items": {
+        "$ref": "#/definitions/Relation"
+      },
+      "title": "Relation",
+      "type": "array"
     },
     "spatialCoverage": {
-      "anyOf": [
+      "allOf": [
         {
           "$ref": "#/definitions/Place"
-        },
-        {
-          "type": "null"
         }
       ],
-      "default": null,
       "description": "The spatialCoverage of a CreativeWork indicates the place(s) which are the focus of the content. It is a sub property of contentLocation intended primarily for more technical and detailed materials. For example with a Dataset, it indicates areas that the dataset describes: a dataset of New York weather would have spatialCoverage which was the place: the state of New York."
     },
     "subjectOf": {
-      "anyOf": [
-        {
-          "items": {
-            "$ref": "#/definitions/SubjectOf"
-          },
-          "type": "array"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
+      "default": [],
       "description": "Link to or citation for a related resource that is about or describes this resource - e.g., a journal paper that describes this resource or a related metadata document describing the resource.",
-      "title": "Subject of"
+      "items": {
+        "$ref": "#/definitions/SubjectOf"
+      },
+      "title": "Subject of",
+      "type": "array"
     },
     "temporalCoverage": {
-      "anyOf": [
+      "allOf": [
         {
           "$ref": "#/definitions/TemporalCoverage"
-        },
-        {
-          "type": "null"
         }
       ],
-      "default": null,
       "description": "The time period that applies to all of the content within the resource.",
       "title": "Temporal coverage"
     },
@@ -2190,22 +1569,13 @@
       "type": "string"
     },
     "version": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
       "description": "A text string indicating the version of the resource.",
       "readOnly": true,
-      "title": "Version"
+      "title": "Version",
+      "type": "string"
     }
   },
   "required": [
-    "additionalType",
     "name",
     "description",
     "url",
@@ -2214,7 +1584,8 @@
     "dateCreated",
     "keywords",
     "license",
-    "provider"
+    "provider",
+    "dateModified"
   ],
   "title": "CoreMetadataEdit",
   "type": "object"
