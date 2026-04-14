@@ -372,11 +372,6 @@ echo
 docker restart hydroshare defaultworker hydroshare-hs_event_s3-1 hydroshare-discovery_collection_worker-1
 
 echo
-echo "  - docker exec hydroshare python manage.py add_missing_bucket_names"
-echo
-docker exec hydroshare python manage.py add_missing_bucket_names
-
-echo
 echo " waiting for hydroshare container to be ready..."
 echo " you can check your logs by running: `blue 'docker logs -f hydroshare'`"
 
