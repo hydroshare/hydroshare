@@ -1,5 +1,4 @@
 import os
-import subprocess
 import tempfile
 import zipfile
 import logging
