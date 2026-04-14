@@ -226,10 +226,6 @@ def pre_delete_user_handler(sender, instance, **kwargs):
                                                                                   user.username))
             res.quota_holder = None
         res.save()
-    istorage = S3Storage()
-    if istorage.bucket_exists(user.username):
-        # delete the bucket for the user
-        istorage.delete_bucket(user.username)
 
 
 @receiver(post_save, sender=ResourceAccess)

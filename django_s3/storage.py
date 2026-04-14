@@ -422,24 +422,6 @@ class S3Storage(S3Storage):
             # TODO check if something went wrong vs not found
             return False
 
-    def create_bucket(self, bucket_name):
-        if not self.bucket_exists(bucket_name):
-            self.connection.create_bucket(Bucket=bucket_name)
-            # TODO: to run tests locally, comment out these lines
-            subprocess.run(["mc", "event", "add", f"hydroshare/{bucket_name}",
-                            "arn:minio:sqs::RESOURCEFILE:kafka", "--event", "put,delete"], check=True)
-            if settings.MINIO_LIFECYCLE_POLICY:
-                subprocess.run(["mc", "ilm", "rule", "add" "--transition-days", "0", "--transition-tier",
-                                settings.MINIO_LIFECYCLE_POLICY, f"hydroshare/{bucket_name}"], check=True)
-
-    def delete_bucket(self, bucket_name):
-        # disable events before deleting files to avoid new files being written during deletion
-        subprocess.run(["mc", "event", "rm", f"hydroshare/{bucket_name}", "arn:minio:sqs::RESOURCEFILE:kafka",
-                        "--event", "put,delete"], check=True)
-        bucket = self.connection.Bucket(bucket_name)
-        bucket.objects.all().delete()
-        self.connection.meta.client.delete_bucket(Bucket=bucket_name)
-
     def new_quota_holder(self, resource_id, new_quota_holder_id):
         """
         Create a new bucket for the resource

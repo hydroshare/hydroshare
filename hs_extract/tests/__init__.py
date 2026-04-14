@@ -10,12 +10,7 @@ s3_config = {
     "aws_secret_access_key": os.environ.get("AWS_SECRET_ACCESS_KEY", "devpassword")
 }
 s3_client = boto3.client('s3', **s3_config)
-# Create a bucket for testing purposes
-try:
-    s3_client.create_bucket(Bucket="test-bucket")
-except s3_client.exceptions.BucketAlreadyOwnedByYou:
-    pass
-    # Set up S3 event notifications for put and delete events using mc
+
 try:
     subprocess.run([
         "mc", "event", "add", "hydroshare/test-bucket",
