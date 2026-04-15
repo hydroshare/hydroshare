@@ -14,7 +14,6 @@ from hs_core.exceptions import QuotaException
 from . import models as m
 from .utils import (
     bucket_and_name,
-    normalized_bucket_name,
     is_metadata_xml_file,
     is_metadata_json_file,
     is_schema_json_file,
