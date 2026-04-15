@@ -484,6 +484,21 @@ SWAGGER_SETTINGS = {
     "DEFAULT_GENERATOR_CLASS": "hs_rest_api2.serializers.NestedSchemaGenerator"
 }
 
+RESOURCE_S3_ZONES_CONFIG = {
+    "hydroshare": {
+        "bucket_name": "hydroshare",
+        "endpoint_url": "http://minio:9000",
+        "aws_access_key_id": "cuahsi",
+        "aws_secret_access_key": "devpassword"
+    },
+    "ciroh": {
+        "bucket_name": "ciroh",
+        "endpoint_url": "http://minio:9000",
+        "aws_access_key_id": "cuahsi",
+        "aws_secret_access_key": "devpassword"
+    }
+}
+
 OAUTH2_PROVIDER_APPLICATION_MODEL = "oauth2_provider.Application"
 # https://django-oauth-toolkit.readthedocs.io/en/3.0.1/settings.html#refresh-token-expire-seconds
 REFRESH_TOKEN_EXPIRE_SECONDS = 60 * 60 * 24 * 30  # 30 days

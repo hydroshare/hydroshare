@@ -13,7 +13,7 @@ from smart_open import open
 from hs_core.exceptions import QuotaException
 from . import models as m
 from .utils import (
-    bucket_and_name,
+    bucket_and_zone,
     is_metadata_xml_file,
     is_metadata_json_file,
     is_schema_json_file,
@@ -106,15 +106,15 @@ class S3Storage(S3Storage):
         :param in_prefix: the prefix of the input files to be zipped
         :return: None
         """
-        def chunk_request(zip_archive_file, bucket, key):
+        def chunk_request(zip_archive_file, bucket, key, zone):
             chunk_size = getattr(settings, "S3_STREAM_ZIP_CHUNKING_SIZE", 1024 * 1024 * 256)  # 256MB
-            object_attrs = self.connection.meta.client.get_object_attributes(Bucket=bucket, Key=key,
-                                                                             ObjectAttributes=["ObjectSize"])
+            object_attrs = self.connection(zone).meta.client.get_object_attributes(Bucket=bucket, Key=key,
+                                                                                   ObjectAttributes=["ObjectSize"])
             object_size = object_attrs.get("ObjectSize")
             if object_size is None:
                 # could not get object size, read the entire file
                 logger.warning(f"Could not get object size for {key}")
-                file = self.connection.meta.client.get_object(Bucket=bucket, Key=key)
+                file = self.connection(zone).meta.client.get_object(Bucket=bucket, Key=key)
                 zip_archive_file.write(file.get("Body").read())
             else:
                 chunk_start = 0
@@ -123,7 +123,7 @@ class S3Storage(S3Storage):
                 while chunk_start < object_size:
                     # Read specific byte range from file as a chunk. We do this because AWS server times out and sends
                     # empty chunks when streaming the entire file.
-                    if body := self.connection.meta.client.get_object(
+                    if body := self.connection(zone).meta.client.get_object(
                         Bucket=bucket, Key=key, Range=f"bytes={chunk_start}-{chunk_end}"
                     ).get("Body"):
                         chunk = body.read()
@@ -132,26 +132,26 @@ class S3Storage(S3Storage):
                         chunk_end += chunk_size
                         chunk_end = min(chunk_end, object_size)
 
-        out_bucket, out_path = bucket_and_name(out_name)
+        out_bucket, out_zone = bucket_and_zone(out_name)
 
         try:
-            with open(f's3://{out_bucket}/{out_path}', 'wb',
-                      transport_params={'client': self.connection.meta.client}) as out_file:
+            with open(f's3://{out_bucket}/{out_name}', 'wb',
+                      transport_params={'client': self.connection(out_zone).meta.client}) as out_file:
                 with zipfile.ZipFile(out_file, 'w', zipfile.ZIP_DEFLATED) as zip_archive:
                     for in_name in in_names:
-                        in_bucket_name, in_path = bucket_and_name(in_name)
-                        resource_id = in_path.split('/')[0]
-                        in_bucket = self.connection.Bucket(in_bucket_name)
-                        filesCollection = in_bucket.objects.filter(Prefix=in_path).all()
+                        in_bucket_name, in_zone = bucket_and_zone(in_name)
+                        resource_id = in_name.split('/')[0]
+                        in_bucket = self.connection(in_zone).Bucket(in_bucket_name)
+                        filesCollection = in_bucket.objects.filter(Prefix=in_name).all()
                         if not in_prefix:
-                            in_prefix = os.path.dirname(in_path) if self.isDir(in_name) else in_path
+                            in_prefix = os.path.dirname(in_name) if self.isDir(in_name) else in_name
                         for file_key in filesCollection:
                             if file_key.key.startswith(f"{resource_id}/.hsmetadata/") or \
                                file_key.key.startswith(f"{resource_id}/.hsjsonld/"):
                                 continue
                             relative_path = file_key.key[len(in_prefix):].strip("/")
                             with zip_archive.open(relative_path, 'w', force_zip64=True) as zip_archive_file:
-                                chunk_request(zip_archive_file, in_bucket_name, file_key.key)
+                                chunk_request(zip_archive_file, in_bucket_name, file_key.key, in_zone)
         except ClientError as e:
             if "An error occurred (InvalidRequest) when calling the CompleteMultipartUpload operation:" in str(e):
                 raise QuotaException("Bucket quota exceeded. Please contact your system administrator.")
@@ -168,17 +168,17 @@ class S3Storage(S3Storage):
         :return: the folder files were unzipped to
         """
 
-        zip_bucket, zip_name = bucket_and_name(zip_file_path)
-        unzipped_bucket, unzipped_path = bucket_and_name(unzipped_folder)
-        with zipfile.ZipFile(open(f's3://{zip_bucket}/{zip_name}', 'rb',
-                                  transport_params={'client': self.connection.meta.client})) as zip_ref:
+        zip_bucket, zip_zone = bucket_and_zone(zip_file_path)
+        unzipped_bucket, unzipped_zone = bucket_and_zone(unzipped_folder)
+        with zipfile.ZipFile(open(f's3://{zip_bucket}/{zip_file_path}', 'rb',
+                                  transport_params={'client': self.connection(zip_zone).meta.client})) as zip_ref:
             for file_info in zip_ref.infolist():
                 if not file_info.is_dir():
                     file_name = file_info.filename
-                    s3_key = os.path.join(unzipped_path, file_name)
+                    s3_key = os.path.join(unzipped_folder, file_name)
                     with zip_ref.open(file_name, 'r') as data:
                         try:
-                            self.connection.meta.client.upload_fileobj(Fileobj=data, Bucket=unzipped_bucket, Key=s3_key)
+                            self.connection(unzipped_zone).meta.client.upload_fileobj(Fileobj=data, Bucket=unzipped_bucket, Key=s3_key)
                         except ClientError as e:
                             if "XMinioAdminBucketQuotaExceeded" in str(e):
                                 raise QuotaException(
@@ -231,15 +231,15 @@ class S3Storage(S3Storage):
     def exists(self, name):
         if super().exists(name):
             return True
-        bucket_name, key = bucket_and_name(name)
-        bucket = self.connection.Bucket(bucket_name)
-        for f in bucket.objects.filter(Prefix=key):
-            if f.key == key:
+        bucket_name, zone = bucket_and_zone(name)
+        bucket = self.connection(zone).Bucket(bucket_name)
+        for f in bucket.objects.filter(Prefix=name):
+            if f.key == name:
                 return True
-            elif f.key.startswith(key.strip("/") + "/"):
+            elif f.key.startswith(name.strip("/") + "/"):
                 return True
 
-        resource_id_and_relative_path = key.split("/data/contents/")
+        resource_id_and_relative_path = name.split("/data/contents/")
         resource_id = resource_id_and_relative_path[0]
         empty_dirs = self._empty_folders(resource_id)
         if name in empty_dirs:
@@ -261,10 +261,10 @@ class S3Storage(S3Storage):
                 folders.remove(folder)
         self.setAVU(res_id, "empty_folders", folder_delimiter.join(folders))
         if not AVU_only:
-            src_bucket, src_name = bucket_and_name(path)
-            src_name = src_name.strip("/") + "/"
-            for file in self.connection.Bucket(src_bucket).objects.filter(Prefix=src_name):
-                self.connection.Object(src_bucket, file.key).delete()
+            src_bucket, src_zone = bucket_and_zone(path)
+            src_name = path.strip("/") + "/"
+            for file in self.connection(src_zone).Bucket(src_bucket).objects.filter(Prefix=src_name):
+                self.connection(src_zone).Object(src_bucket, file.key).delete()
 
     def copyFiles(self, src_path, dest_path, delete_src=False):
         """
@@ -277,49 +277,27 @@ class S3Storage(S3Storage):
         dest_path: the object or prefix name to be copied to
         delete_src: delete the source file after copying when set to True. Default is False
         """
-        src_bucket, src_name = bucket_and_name(src_path)
-        dst_bucket, dest_name = bucket_and_name(dest_path)
-        bucket = self.connection.Bucket(src_bucket)
+        src_bucket, src_zone = bucket_and_zone(src_path)
+        bucket = self.connection(src_zone).Bucket(src_bucket)
 
         if self.isFile(src_path):
-            try:
-                self.connection.meta.client.copy_object(
-                    Bucket=dst_bucket,
-                    Key=dest_name,
-                    CopySource={"Bucket": src_bucket, "Key": src_name},
-                )
-            except ClientError as e:
-                if "XMinioAdminBucketQuotaExceeded" in str(e):
-                    raise QuotaException(
-                        "Bucket quota exceeded. Please contact your system administrator."
-                    )
-                raise e
+            self._streaming_copy(src_path, dest_path)
+
             if delete_src:
-                self.connection.Object(src_bucket, src_name).delete()
+                self.connection(src_zone).Object(src_bucket, src_path).delete()
         else:
             # copy files
-            for file in bucket.objects.filter(Prefix=src_name):
+            for file in bucket.objects.filter(Prefix=src_path):
                 src_file_path = file.key
-                dst_file_path = file.key.replace(src_name, dest_name)
-                try:
-                    self.connection.meta.client.copy_object(
-                        Bucket=dst_bucket,
-                        Key=dst_file_path,
-                        CopySource={"Bucket": src_bucket, "Key": src_file_path},
-                    )
-                except ClientError as e:
-                    if "XMinioAdminBucketQuotaExceeded" in str(e):
-                        raise QuotaException(
-                            "Bucket quota exceeded. Please contact your system administrator."
-                        )
-                    raise e
+                dst_file_path = file.key.replace(src_path, dest_path)
+                self._streaming_copy(src_file_path, dst_file_path)
                 if delete_src:
-                    self.connection.Object(src_bucket, src_file_path).delete()
+                    self.connection(src_zone).Object(src_bucket, src_file_path).delete()
 
             # update empty_folders AVU
-            res_id = "/".join(dest_name.split("/")[:1])
-            for empty_folder in self._empty_folders(res_id, filter=src_name):
-                new_folder = empty_folder.replace(src_name, dest_name)
+            res_id = "/".join(dest_path.split("/")[:1])
+            for empty_folder in self._empty_folders(res_id, filter=src_path):
+                new_folder = empty_folder.replace(src_path, dest_path)
                 self.remove_folder(res_id, empty_folder, AVU_only=True)
                 self.create_folder(res_id, new_folder)
 
@@ -338,11 +316,11 @@ class S3Storage(S3Storage):
         save md5 manifest file for the resource
         :param resource_id: the resource id
         """
-        bucket_name, path_name = bucket_and_name(resource_id)
-        bucket = self.connection.Bucket(bucket_name)
+        bucket_name, zone = bucket_and_zone(resource_id)
+        bucket = self.connection(zone).Bucket(bucket_name)
         checksums = []
         strip_length = len(resource_id + "/")
-        for file in bucket.objects.filter(Prefix=os.path.join(path_name, "data")):
+        for file in bucket.objects.filter(Prefix=os.path.join(resource_id, "data")):
             checksums.append({file.key[strip_length:]: file.e_tag.strip('"')})
         with tempfile.NamedTemporaryFile() as f:
             for checksum in checksums:
@@ -357,9 +335,9 @@ class S3Storage(S3Storage):
         src_local_file: the temporary file name in local disk to be uploaded from.
         dest_s3_bucket_path: the data object path in S3 to be uploaded to
         """
-        dst_bucket, dst_name = bucket_and_name(dest_s3_bucket_path)
+        dst_bucket, dst_zone = bucket_and_zone(dest_s3_bucket_path)
         try:
-            self.connection.Bucket(dst_bucket).upload_file(src_local_file, dst_name)
+            self.connection(dst_zone).Bucket(dst_bucket).upload_file(src_local_file, dest_s3_bucket_path)
         except ClientError as e:
             if "XMinioAdminBucketQuotaExceeded" in str(e):
                 raise QuotaException(
@@ -374,8 +352,8 @@ class S3Storage(S3Storage):
         data object from current working directory
         :return: checksum of the file object
         """
-        bucket, name = bucket_and_name(s3_bucket_name)
-        s3_object = self.connection.Object(bucket, name)
+        bucket, zone = bucket_and_zone(s3_bucket_name)
+        s3_object = self.connection(zone).Object(bucket, s3_bucket_name)
         return s3_object.e_tag.strip('"')
 
     def download_file(self, s3_bucket_name, local_file_path):
@@ -385,8 +363,8 @@ class S3Storage(S3Storage):
         current working directory
         :param local_file_path: the local file path to download the file to
         """
-        bucket, name = bucket_and_name(s3_bucket_name)
-        self.connection.Bucket(bucket).download_file(name, local_file_path)
+        bucket, zone = bucket_and_zone(s3_bucket_name)
+        self.connection(zone).Bucket(bucket).download_file(s3_bucket_name, local_file_path)
 
     def signed_url(self, name, **kwargs):
         super_url = super().url(name.strip("/"), kwargs)
@@ -412,17 +390,31 @@ class S3Storage(S3Storage):
         return True
 
     def isFile(self, path):
-        src_bucket, src_name = bucket_and_name(path)
+        src_bucket, src_zone = bucket_and_zone(path)
         try:
-            self.connection.Object(src_bucket, src_name).load()
+            self.connection(src_zone).Object(src_bucket, path).load()
             return True
         except Exception:
             # TODO check if something went wrong vs not found
             return False
 
-    def bucket_exists(self, bucket_name):
+    def _streaming_copy(self, src_path, dest_path, chunk_size=1024*1024*8):
+        """
+        Stream a file from src_path (src_zone) to dest_path (dest_zone) without loading into memory.
+        This is useful for copying between different S3 endpoints or zones where copy_object is not supported.
+        """
+        src_bucket, src_zone = bucket_and_zone(src_path)
+        dst_bucket, dest_zone = bucket_and_zone(dest_path)
+
+        src_obj = self.connection(src_zone).Object(src_bucket, src_path)
+        dst_bucket_obj = self.connection(dest_zone).Bucket(dst_bucket)
+
         try:
-            self.connection.meta.client.head_bucket(Bucket=bucket_name)
-            return True
-        except Exception:
-            return False
+            with src_obj.get()['Body'] as body:
+                dst_bucket_obj.upload_fileobj(body, dest_path)
+        except ClientError as e:
+            if "XMinioAdminBucketQuotaExceeded" in str(e):
+                raise QuotaException(
+                    "Bucket quota exceeded. Please contact your system administrator."
+                )
+            raise e

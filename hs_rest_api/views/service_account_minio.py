@@ -1,5 +1,5 @@
 import logging
-from django_s3.utils import bucket_and_name
+from django_s3.utils import bucket_and_zone
 from rest_framework.views import APIView
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
@@ -45,5 +45,6 @@ class MinIOResourceBucketAndPrefix(APIView):
     def get(self, request, pk):
         res, _, user = authorize(request, pk,
                                  needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-        bucket, prefix = bucket_and_name(res.file_path + "/")
-        return Response({"bucket": bucket, "prefix": prefix}, status=status.HTTP_200_OK)
+        path = res.file_path + "/"
+        bucket, zone = bucket_and_zone(path)
+        return Response({"bucket": bucket, "prefix": path, "zone": zone}, status=status.HTTP_200_OK)

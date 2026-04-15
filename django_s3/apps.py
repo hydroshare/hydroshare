@@ -9,5 +9,7 @@ class DjangoS3AppConfig(AppConfig):
         istorage = S3Storage()
         # TODO, this is only for local development.
         # The bucket should already exist and this will likely be moved to the setup script.
-        if not istorage.bucket_exists('hydroshare'):
-            istorage.connection.create_bucket(Bucket='hydroshare')
+        try:
+            istorage.connection("hydroshare").meta.client.head_bucket(Bucket='hydroshare')
+        except Exception:
+            istorage.connection("hydroshare").create_bucket(Bucket='hydroshare')
