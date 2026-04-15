@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from drf_yasg import openapi
 
 mongo_connection_url = settings.ATLAS_CONNECTION_URL
-hydroshare_atlas_db = MongoClient(mongo_connection_url)["hydroshare"]
+hydroshare_atlas_db = MongoClient(mongo_connection_url)[settings.ATLAS_DB_NAME]
 
 
 class SearchQuery(BaseModel):
@@ -218,42 +218,55 @@ class SearchQuery(BaseModel):
             compound['should'] = [
                 # https://www.mongodb.com/docs/atlas/atlas-search/score/modify-score/#std-label-scoring-boost
                 {'autocomplete': {'query': self.term, 'path': 'name', 'fuzzy': {'maxEdits': 1},
-                                  'score': {"boost": {"value": 5}}}},
+                                  'score': {"boost": {"value": settings.SEARCH_BOOST_NAME}}}},
                 {'autocomplete': {'query': self.term, 'path': 'description', 'fuzzy': {'maxEdits': 1},
-                                  'score': {"boost": {"value": 3}}}},
+                                  'score': {"boost": {"value": settings.SEARCH_BOOST_DESCRIPTION}}}},
                 {'autocomplete': {'query': self.term, 'path': 'keywords', 'fuzzy': {'maxEdits': 1},
-                                  'score': {"boost": {"value": 3}}}},
+                                  'score': {"boost": {"value": settings.SEARCH_BOOST_KEYWORDS}}}},
                 {'autocomplete': {'query': self.term, 'path': 'creator.name', 'fuzzy': {'maxEdits': 1},
-                                  'score': {"boost": {"value": 5}}}},
+                                  'score': {"boost": {"value": settings.SEARCH_BOOST_CREATOR_NAME}}}},
                 {'autocomplete': {'query': self.term, 'path': 'first_creator.name', 'fuzzy': {'maxEdits': 1},
-                                  'score': {"boost": {"value": 5}}}},
+                                  'score': {"boost": {"value": settings.SEARCH_BOOST_FIRST_CREATOR_NAME}}}},
                 {'autocomplete': {'query': self.term, 'path': 'contributor.name', 'fuzzy': {'maxEdits': 1},
-                                  'score': {"boost": {"value": 5}}}},
+                                  'score': {"boost": {"value": settings.SEARCH_BOOST_CONTRIBUTOR_NAME}}}},
             ]
 
         # Dedicated input filters boost the score further if matched.
 
         if self.creatorName:
             # Matching `creator.name` has a slightly higher score than matching `contributor.name`
-            compound['should'].append({'autocomplete': {'query': self.creatorName, 'path': 'creator.name',
-                                                        'fuzzy': {'maxEdits': 1},
-                                                        'score': {"boost": {"value": 5}}}})
-            compound['should'].append({'autocomplete': {'query': self.creatorName, 'path': 'first_creator.name',
-                                                        'fuzzy': {'maxEdits': 1},
-                                                        'score': {"boost": {"value": 5}}}})
-            compound['should'].append({'autocomplete': {'query': self.creatorName, 'path': 'contributor.name',
-                                                        'fuzzy': {'maxEdits': 1},
-                                                        'score': {"boost": {"value": 4}}}})
+            compound['should'].append({'autocomplete':
+                                       {'query': self.creatorName, 'path': 'creator.name',
+                                        'fuzzy': {'maxEdits': 1},
+                                           'score': {"boost": {"value":
+                                                               settings.SEARCH_BOOST_CREATOR_NAME_FILTER}}}})
+            compound['should'].append({'autocomplete':
+                                       {'query': self.creatorName, 'path': 'first_creator.name',
+                                        'fuzzy': {'maxEdits': 1},
+                                           'score': {"boost": {"value":
+                                                               settings.SEARCH_BOOST_FIRST_CREATOR_NAME_FILTER}}}})
+            compound['should'].append({'autocomplete':
+                                       {'query': self.creatorName, 'path': 'contributor.name',
+                                        'fuzzy': {'maxEdits': 1},
+                                           'score': {"boost": {"value":
+                                                               settings.SEARCH_BOOST_CONTRIBUTOR_NAME_FILTER}}}})
 
         if self.keyword:
-            compound['should'].append({'autocomplete': {'query': self.keyword, 'path': 'keywords',
-                                                        'fuzzy': {'maxEdits': 1},
-                                                        'score': {"boost": {"value": 3}}}})
+            compound['should'].append({'autocomplete':
+                                       {'query': self.keyword, 'path': 'keywords',
+                                        'fuzzy': {'maxEdits': 1},
+                                           'score': {"boost": {"value":
+                                                               settings.SEARCH_BOOST_KEYWORD_FILTER}}}})
 
         if self.fundingFunderName:
-            compound['should'].append({'autocomplete': {'query': self.fundingFunderName, 'path': 'funding.funder.name',
-                                                        'fuzzy': {'maxEdits': 1},
-                                                        'score': {"boost": {"value": 3}}}})
+            compound['should'].append({'autocomplete':
+                                       {'query': self.fundingFunderName, 'path': 'funding.funder.name',
+                                        'fuzzy': {'maxEdits': 1},
+                                           'score': {"boost": {"value":
+                                                               settings.SEARCH_BOOST_FUNDING_FUNDER_NAME_FILTER}}}})
+
+        compound['should'].append({'range': {'path': 'datePublished', 'gte': datetime.min,
+                                             'score': {'boost': {'value': settings.SEARCH_BOOST_DATE_PUBLISHED}}}})
 
         search_stage = {
             '$search': {
