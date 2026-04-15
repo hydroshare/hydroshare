@@ -178,7 +178,9 @@ class S3Storage(S3Storage):
                     s3_key = os.path.join(unzipped_folder, file_name)
                     with zip_ref.open(file_name, 'r') as data:
                         try:
-                            self.connection(unzipped_zone).meta.client.upload_fileobj(Fileobj=data, Bucket=unzipped_bucket, Key=s3_key)
+                            self.connection(unzipped_zone).meta.client.upload_fileobj(Fileobj=data,
+                                                                                      Bucket=unzipped_bucket,
+                                                                                      Key=s3_key)
                         except ClientError as e:
                             if "XMinioAdminBucketQuotaExceeded" in str(e):
                                 raise QuotaException(
@@ -398,7 +400,7 @@ class S3Storage(S3Storage):
             # TODO check if something went wrong vs not found
             return False
 
-    def _streaming_copy(self, src_path, dest_path, chunk_size=1024*1024*8):
+    def _streaming_copy(self, src_path, dest_path):
         """
         Stream a file from src_path (src_zone) to dest_path (dest_zone) without loading into memory.
         This is useful for copying between different S3 endpoints or zones where copy_object is not supported.
