@@ -2856,9 +2856,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         # QuotaException will be raised if new_holder does not have enough quota to hold this
         # new resource, in which case, set_quota_holder to the new user fails
         validate_user_quota(new_holder, self.size)
-        # if the resource is new, it does not have a quota holder yet
-        if self.quota_holder:
-            self.get_s3_storage().new_quota_holder(self.short_id, new_holder.username)
 
         self.quota_holder = new_holder
         self.save()

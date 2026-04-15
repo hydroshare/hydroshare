@@ -421,37 +421,6 @@ class S3Storage(S3Storage):
             # TODO check if something went wrong vs not found
             return False
 
-    def new_quota_holder(self, resource_id, new_quota_holder_id):
-        """
-        Create a new bucket for the resource
-        :param resource_id: the resource id
-        """
-        src_bucket, src_name = bucket_and_name(resource_id)
-        dst_bucket = normalized_bucket_name(new_quota_holder_id)
-        dest_name = src_name
-
-        bucket = self.connection.Bucket(src_bucket)
-        files_to_delete = []
-        for file in bucket.objects.filter(Prefix=src_name):
-            src_file_path = file.key
-            dst_file_path = file.key.replace(src_name, dest_name)
-            try:
-                self.connection.meta.client.copy_object(
-                    Bucket=dst_bucket,
-                    Key=dst_file_path,
-                    CopySource={"Bucket": src_bucket, "Key": src_file_path},
-                )
-            except ClientError as e:
-                if "XMinioAdminBucketQuotaExceeded" in str(e):
-                    raise QuotaException(
-                        "Bucket quota exceeded. Please contact your system administrator."
-                    )
-                raise e
-            files_to_delete.append(src_file_path)
-
-        for src_file_path in files_to_delete:
-            self.connection.Object(src_bucket, src_file_path).delete()
-
     def bucket_exists(self, bucket_name):
         try:
             self.connection.meta.client.head_bucket(Bucket=bucket_name)
