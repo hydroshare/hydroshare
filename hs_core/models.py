@@ -3577,7 +3577,7 @@ class ResourceFile(ResourceFileS3Mixin):
                 if __debug__:
                     assert (isinstance(source, str))
                 # source is a path to an S3 file to be copied here.
-                root, newfile = os.path.split(source)  # take file from source path
+                _, newfile = os.path.split(source)  # take file from source path
                 # newfile is where it should be copied to.
                 target = get_resource_file_path(resource, newfile, folder=folder)
                 if not istorage.exists(source):
@@ -3603,12 +3603,13 @@ class ResourceFile(ResourceFileS3Mixin):
             raise ValidationError("ResourceFile.create: file {} already exists"
                                   .format(kwargs['resource_file']))
 
-        kwargs['_size'] = istorage.size(kwargs['resource_file'])
         # Actually create the file record
         # when file is a File, the file is copied to storage in this step
         # otherwise, the copy must precede this step.
 
-        return ResourceFile.objects.create(**kwargs)
+        resource_file = ResourceFile.objects.create(**kwargs)
+        resource_file.size
+        return resource_file
 
     # TODO: automagically handle orphaned logical files
     def delete(self, delete_logical_file=False):
