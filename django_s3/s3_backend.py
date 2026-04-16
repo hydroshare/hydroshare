@@ -8,12 +8,12 @@ from urllib.parse import urlencode
 
 from hs_core.exceptions import QuotaException
 from .utils import bucket_and_zone
+from .settings import get_zone_config
 
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.deconstruct import deconstructible
 from django.utils.encoding import filepath_to_uri
 from django.utils.timezone import make_naive
-from django.conf import settings
 
 from storages.backends import s3
 from storages.utils import ReadBytesWrapper
@@ -71,9 +71,9 @@ class S3Storage(s3.S3Storage):
         from another source such as environment variables,we want the profile
         name to take precedence.
         """
-        zone_config = settings.RESOURCE_S3_ZONES_CONFIG.get(zone, {})
-        access_key = zone_config.get("aws_access_key_id", None)
-        secret_key = zone_config.get("aws_secret_access_key", None)
+        zone_config = get_zone_config(zone)
+        access_key = zone_config.aws_access_key_id
+        secret_key = zone_config.aws_secret_access_key
         session = boto3.Session(
             aws_access_key_id=access_key,
             aws_secret_access_key=secret_key
@@ -84,13 +84,12 @@ class S3Storage(s3.S3Storage):
         connection = getattr(self._connections, "connection", {})
         if zone not in connection:
             session = self._create_session(zone)
-            zone_config = settings.RESOURCE_S3_ZONES_CONFIG.get(zone, {})
-            endpoint_url = zone_config.get("endpoint_url", None)
+            zone_config = get_zone_config(zone)
             connection[zone] = session.resource(
                 "s3",
                 region_name=self.region_name,
                 use_ssl=self.use_ssl,
-                endpoint_url=endpoint_url,
+                endpoint_url=zone_config.aws_s3_endpoint_url,
                 config=self.client_config,
                 verify=self.verify,
             )

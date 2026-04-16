@@ -484,18 +484,21 @@ SWAGGER_SETTINGS = {
     "DEFAULT_GENERATOR_CLASS": "hs_rest_api2.serializers.NestedSchemaGenerator"
 }
 
+RESOURCE_S3_DEFAULT_ZONE = "hydroshare"
 RESOURCE_S3_ZONES_CONFIG = {
     "hydroshare": {
         "bucket_name": "hydroshare",
-        "endpoint_url": "http://minio:9000",
+        "aws_s3_endpoint_url": "http://minio:9000",
         "aws_access_key_id": "cuahsi",
-        "aws_secret_access_key": "devpassword"
+        "aws_secret_access_key": "devpassword",
+        "aws_s3_endpoint_url_public": "http://localhost:9000"
     },
     "ciroh": {
         "bucket_name": "ciroh",
-        "endpoint_url": "http://minio:9000",
+        "aws_s3_endpoint_url": "http://minio:9000",
         "aws_access_key_id": "cuahsi",
-        "aws_secret_access_key": "devpassword"
+        "aws_secret_access_key": "devpassword",
+        "aws_s3_endpoint_url_public": "http://localhost:9000"
     }
 }
 
@@ -967,12 +970,6 @@ MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
 )
 
 BULK_UPDATE_CREATE_BATCH_SIZE = 1000
-
-
-AWS_S3_ACCESS_KEY_ID = 'cuahsi'
-AWS_S3_SECRET_ACCESS_KEY = 'devpassword'
-AWS_S3_ENDPOINT_URL = 'http://minio:9000'
-AWS_S3_ENDPOINT_URL_PUBLIC = 'http://localhost:9000'
 
 ACCESS_CONTROL_CHANGE_ENDPOINT = None
 PUBLISHER_USER_NAME = "published"

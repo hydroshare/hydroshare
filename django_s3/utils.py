@@ -1,11 +1,12 @@
 import os
 from django.db import connection
-from django.conf import settings
+from .settings import get_default_zone_config, get_zone_config, get_default_zone_name
 
 
 def bucket_and_zone(path):
     if path.startswith("bags/") or path.startswith("tmp/") or path.startswith("zips/"):
-        return "hydroshare", "hydroshare"
+        zone_config = get_default_zone_config()
+        return zone_config.bucket_name, get_default_zone_name()
     res_id = path.split("/")[0] if "/" in path else path
     resource_query = 'SELECT quota_holder_id \
                         FROM hs_core_genericresource \
@@ -23,26 +24,9 @@ def bucket_and_zone(path):
         row = cursor.fetchone()
         zone = row[0]
 
-    settings_zone_config = settings.RESOURCE_S3_ZONES_CONFIG.get(zone)
-    bucket_name = settings_zone_config.get("bucket_name")
+    zone_config = get_zone_config(zone)
+    bucket_name = zone_config.bucket_name
     return bucket_name, zone
-
-
-def normalized_bucket_name(username):
-    with connection.cursor() as cursor:
-        user_id_from_username_query = 'SELECT id \
-                                        FROM auth_user \
-                                        WHERE username = %s'
-        cursor.execute(user_id_from_username_query, [username])
-        row = cursor.fetchone()
-        if row is None:
-            raise Exception(f"User with username {username} not found")
-        owner_id = row[0]
-        owner_username_query = 'SELECT zone FROM theme_userquota WHERE user_id = %s'
-        cursor.execute(owner_username_query, [owner_id])
-        row = cursor.fetchone()
-        bucket_name = row[0]
-        return bucket_name
 
 
 def is_metadata_xml_file(file_path):

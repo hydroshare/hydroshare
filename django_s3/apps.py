@@ -1,4 +1,5 @@
 from django.apps import AppConfig
+from .settings import get_resource_s3_zones_config
 
 
 class DjangoS3AppConfig(AppConfig):
@@ -7,9 +8,10 @@ class DjangoS3AppConfig(AppConfig):
     def ready(self):
         from .storage import S3Storage
         istorage = S3Storage()
-        # TODO, this is only for local development.
-        # The bucket should already exist and this will likely be moved to the setup script.
-        try:
-            istorage.connection("hydroshare").meta.client.head_bucket(Bucket='hydroshare')
-        except Exception:
-            istorage.connection("hydroshare").create_bucket(Bucket='hydroshare')
+        settings_config = get_resource_s3_zones_config()
+        for zone_name, zone_config in settings_config.resource_s3_zones_config.items():
+            bucket_name = zone_config.bucket_name
+            try:
+                istorage.connection(zone_name).meta.client.head_bucket(Bucket=bucket_name)
+            except Exception:
+                istorage.connection(zone_name).create_bucket(Bucket=bucket_name)

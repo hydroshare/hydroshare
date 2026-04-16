@@ -8,6 +8,7 @@ from django.urls import reverse
 from urllib.parse import urlencode
 from django.conf import settings
 
+from django_s3.settings import get_zone_config
 from smart_open import open
 
 from hs_core.exceptions import QuotaException
@@ -370,10 +371,12 @@ class S3Storage(S3Storage):
 
     def signed_url(self, name, **kwargs):
         super_url = super().url(name.strip("/"), kwargs)
+        _, zone = bucket_and_zone(name)
+        zone_config = get_zone_config(zone)
         if settings.TESTING:
             # keep the internal URL during testing so the tests can download files
             return super_url
-        return super_url.replace(settings.AWS_S3_ENDPOINT_URL, settings.AWS_S3_ENDPOINT_URL_PUBLIC)
+        return super_url.replace(zone_config.aws_s3_endpoint_url, zone_config.aws_s3_endpoint_url_public)
 
     def url(self, name, url_download=False, zipped=False, aggregation=False):
         reverse_url = reverse("rest_download", kwargs={"path": name})
