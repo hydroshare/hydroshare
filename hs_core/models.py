@@ -2937,6 +2937,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
             fl.delete(delete_logical_file=True)
         self.metadata.delete()
         hs_bagit.delete_files_and_bag(self)
+
+        # clean up metadata files
+        istorage = self.get_s3_storage()
+        istorage.delete(self.short_id, recursive=True)
         super(AbstractResource, self).delete()
 
     @property
