@@ -240,6 +240,7 @@ class UserQuota(models.Model):
     allocated_value = models.FloatField(default=20)
     unit = models.CharField(max_length=10, default="GB")
     zone = models.CharField(max_length=100, default="hydroshare")
+    exceeded = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = _("User quota")
@@ -264,7 +265,10 @@ class UserQuota(models.Model):
         from hs_core.hydroshare.resource import get_data_zone_usage
         from hs_core.hydroshare.utils import convert_file_size_to_unit
         dz = get_data_zone_usage(self.user.username)
-        return convert_file_size_to_unit(dz, self.unit)
+        data_zone_value = convert_file_size_to_unit(dz, self.unit)
+        self.exceeded = data_zone_value > self.allocated_value
+        self.save()
+        return data_zone_value
 
     @property
     def used_percent(self):
@@ -291,7 +295,8 @@ class UserQuota(models.Model):
         """
         from hs_core.hydroshare.utils import convert_file_size_to_unit
 
-        return self.used_value + convert_file_size_to_unit(size, self.unit)
+        total_value = self.used_value + convert_file_size_to_unit(size, self.unit)
+        return total_value
 
     def get_quota_data(self):
         """

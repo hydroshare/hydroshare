@@ -3603,6 +3603,7 @@ class ResourceFile(ResourceFileS3Mixin):
             raise ValidationError("ResourceFile.create: file {} already exists"
                                   .format(kwargs['resource_file']))
 
+        kwargs['_size'] = istorage.size(kwargs['resource_file'])
         # Actually create the file record
         # when file is a File, the file is copied to storage in this step
         # otherwise, the copy must precede this step.
