@@ -11,6 +11,7 @@ from hs_core.hydroshare.resource import delete_resource_file
 from theme.models import UserProfile
 from hs_core.views.utils import link_s3_file_to_django
 from hs_file_types.utils import get_logical_file_type, set_logical_file_type
+from theme.models import UserQuota
 import boto3
 
 
@@ -46,6 +47,8 @@ def sync_resource(file_created, key, resource_id, username):
             print(f"Deleted file {key} for resource {resource_id}")
         except Exception as e:
             print(f"Error deleting file for resource {resource_id}: {e}")
+    # ensure exceeded flag is updated after file addition/deletion
+    UserQuota.objects.get(user=resource.quota_holder).data_zone_value
 
 
 @redpanda_connect.processor

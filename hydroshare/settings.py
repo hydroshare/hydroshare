@@ -484,6 +484,24 @@ SWAGGER_SETTINGS = {
     "DEFAULT_GENERATOR_CLASS": "hs_rest_api2.serializers.NestedSchemaGenerator"
 }
 
+RESOURCE_S3_DEFAULT_ZONE = "hydroshare"
+RESOURCE_S3_ZONES_CONFIG = {
+    "hydroshare": {
+        "bucket_name": "hydroshare",
+        "aws_s3_endpoint_url": "http://minio:9000",
+        "aws_access_key_id": "cuahsi",
+        "aws_secret_access_key": "devpassword",
+        "aws_s3_endpoint_url_public": "http://localhost:9000"
+    },
+    "ciroh": {
+        "bucket_name": "ciroh",
+        "aws_s3_endpoint_url": "http://minio:9000",
+        "aws_access_key_id": "cuahsi",
+        "aws_secret_access_key": "devpassword",
+        "aws_s3_endpoint_url_public": "http://localhost:9000"
+    }
+}
+
 OAUTH2_PROVIDER_APPLICATION_MODEL = "oauth2_provider.Application"
 # https://django-oauth-toolkit.readthedocs.io/en/3.0.1/settings.html#refresh-token-expire-seconds
 REFRESH_TOKEN_EXPIRE_SECONDS = 60 * 60 * 24 * 30  # 30 days
@@ -952,12 +970,6 @@ MODEL_PROGRAM_META_SCHEMA_TEMPLATE_PATH = (
 )
 
 BULK_UPDATE_CREATE_BATCH_SIZE = 1000
-
-
-AWS_S3_ACCESS_KEY_ID = 'cuahsi'
-AWS_S3_SECRET_ACCESS_KEY = 'devpassword'
-AWS_S3_ENDPOINT_URL = 'http://minio:9000'
-AWS_S3_ENDPOINT_URL_PUBLIC = 'http://localhost:9000'
 
 ACCESS_CONTROL_CHANGE_ENDPOINT = None
 PUBLISHER_USER_NAME = "published"

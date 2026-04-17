@@ -40,9 +40,14 @@ class UserQuotaForm(forms.ModelForm):
 
     def save(self, *args, **kwargs):
         instance = super(UserQuotaForm, self).save(commit=False)
-        zone = self.cleaned_data['zone']
-        instance.user.quotas.get(zone=zone).save_allocated_value(self.cleaned_data['allocated_value'],
-                                                                 self.cleaned_data['unit'])
+        # TODO move resources to the new zone if the zone is changed
+        # For now, block changing zone if there are resources in the current zone
+        data_zone_value = instance.data_zone_value
+        if "zone" in self.changed_data and (data_zone_value > 0 or instance.user.baseresources.count() > 0):
+            raise forms.ValidationError("Cannot change zone when there are resources in the current zone. "
+                                        "Please contact support to move your resources to the new zone.")
+        instance.user.quotas.first().save_allocated_value(self.cleaned_data['allocated_value'],
+                                                          self.cleaned_data['unit'])
         return instance
 
 

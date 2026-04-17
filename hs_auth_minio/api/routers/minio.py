@@ -15,18 +15,29 @@ from api.cache import (
     # user_has_edit_access_cache,
     # user_has_view_access_cache,
 )
-from api.database import is_superuser_and_id, resource_discoverability, user_has_edit_access, user_has_view_access
+from api.database import (
+    is_superuser_and_id,
+    resource_discoverability,
+    user_has_edit_access,
+    user_has_view_access,
+    quota_is_exceeded
+)
+
 
 router = APIRouter()
 logger = logging.getLogger("micro-auth")
 
 VIEW_ACTIONS = os.environ.get(
-    "MINIO_VIEW_ACTIONS",
+    "S#_VIEW_ACTIONS",
     "s3:GetObject,s3:ListObjects,s3:ListObjectsV2,s3:ListBucket,s3:GetObjectRetention,s3:GetObjectLegalHold",
 ).split(",")
-EDIT_ACTIONS = os.environ.get(
-    "MINIO_EDIT_ACTIONS", "s3:PutObject,s3:DeleteObject,s3:DeleteObjects,s3:UploadPart,s3:PutObjectLegalHold"
+WRITE_ACTIONS = os.environ.get(
+    "S3_WRITE_ACTIONS", "s3:PutObject,s3:UploadPart,s3:PutObjectLegalHold"
 ).split(",")
+DELETE_ACTIONS = os.environ.get(
+    "S3_DELETE_ACTIONS", "s3:DeleteObject,s3:DeleteObjects"
+).split(",")
+EDIT_ACTIONS = WRITE_ACTIONS + DELETE_ACTIONS
 
 
 class AllowBaseModel(BaseModel, extra='allow'):
@@ -167,6 +178,8 @@ def _check_user_authorization(user_id, resource_id, action, is_contents_path):
     if enable_edit_actions and action in EDIT_ACTIONS:
         if not is_contents_path:
             # if the prefix request is not in the contents path, do not allow edit
+            return False
+        if action in WRITE_ACTIONS and quota_is_exceeded(resource_id):
             return False
         try:
             edit_access = user_has_edit_access(user_id, resource_id)

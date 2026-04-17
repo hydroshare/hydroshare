@@ -2935,8 +2935,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         for fl in self.files.all():
             # COUCH: delete of file objects now cascades.
             fl.delete(delete_logical_file=True)
+
         self.metadata.delete()
         hs_bagit.delete_files_and_bag(self)
+
         super(AbstractResource, self).delete()
 
     @property
@@ -3573,7 +3575,7 @@ class ResourceFile(ResourceFileS3Mixin):
                 if __debug__:
                     assert (isinstance(source, str))
                 # source is a path to an S3 file to be copied here.
-                root, newfile = os.path.split(source)  # take file from source path
+                _, newfile = os.path.split(source)  # take file from source path
                 # newfile is where it should be copied to.
                 target = get_resource_file_path(resource, newfile, folder=folder)
                 if not istorage.exists(source):

@@ -1,12 +1,14 @@
 import os
 import posixpath
 import logging
+import boto3
 from datetime import datetime
 from datetime import timedelta
 from urllib.parse import urlencode
 
 from hs_core.exceptions import QuotaException
-from .utils import bucket_and_name
+from .utils import bucket_and_zone
+from .settings import get_zone_config
 
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.deconstruct import deconstructible
@@ -35,11 +37,11 @@ class S3File(s3.S3File):
         if "r" in mode and "w" in mode:
             raise ValueError("Can't combine 'r' and 'w' in mode.")
         self._storage = storage
-        bucket, name = bucket_and_name(name)
+        bucket, zone = bucket_and_zone(name)
         # self.name = name[len(self._storage.location) :].lstrip("/")
         self.name = name
         self._mode = mode
-        self.obj = storage.bucket(bucket).Object(name)
+        self.obj = storage.bucket(bucket, zone).Object(name)
         if "w" not in mode:
             # Force early RAII-style exception if object does not exist
             params = s3._filter_download_params(
@@ -63,11 +65,42 @@ class S3Storage(s3.S3Storage):
     Extends storages.backends.s3.S3torage to support files across buckets
     """
 
-    def bucket(self, name):
+    def _create_session(self, zone):
+        """
+        If a user specifies a profile name and this class obtains access keys
+        from another source such as environment variables,we want the profile
+        name to take precedence.
+        """
+        zone_config = get_zone_config(zone)
+        access_key = zone_config.aws_access_key_id
+        secret_key = zone_config.aws_secret_access_key
+        session = boto3.Session(
+            aws_access_key_id=access_key,
+            aws_secret_access_key=secret_key
+        )
+        return session
+
+    def connection(self, zone):
+        connection = getattr(self._connections, "connection", {})
+        if zone not in connection:
+            session = self._create_session(zone)
+            zone_config = get_zone_config(zone)
+            connection[zone] = session.resource(
+                "s3",
+                region_name=self.region_name,
+                use_ssl=self.use_ssl,
+                endpoint_url=zone_config.aws_s3_endpoint_url,
+                config=self.client_config,
+                verify=self.verify,
+            )
+        self._connections.connection = connection
+        return connection[zone]
+
+    def bucket(self, name, zone):
         """
         Get a bucket by name.
         """
-        return self.connection.Bucket(name)
+        return self.connection(zone).Bucket(name)
 
     def _normalize_name(self, name):
         """
@@ -88,7 +121,7 @@ class S3Storage(s3.S3Storage):
         return f
 
     def _save(self, name, content):
-        bucket, name = bucket_and_name(name)
+        bucket, zone = bucket_and_zone(name)
         cleaned_name = clean_name(name)
         name = self._normalize_name(cleaned_name)
         params = self._get_write_parameters(name, content)
@@ -108,7 +141,7 @@ class S3Storage(s3.S3Storage):
             content = self._compress_content(content)
             params["ContentEncoding"] = "gzip"
 
-        obj = self.bucket(bucket).Object(name)
+        obj = self.bucket(bucket, zone).Object(name)
 
         # Workaround file being closed errantly see: https://github.com/boto/s3transfer/issues/80
         original_close = content.close
@@ -127,9 +160,9 @@ class S3Storage(s3.S3Storage):
 
     def delete(self, name):
         try:
-            bucket, name = bucket_and_name(name)
-            name = self._normalize_name(clean_name(name))
-            self.bucket(bucket).Object(name).delete()
+            bucket, zone = bucket_and_zone(name)
+            bucket_obj = self.bucket(bucket, zone)
+            bucket_obj.Object(name).delete()
         except ClientError as err:
             if err.response["ResponseMetadata"]["HTTPStatusCode"] == 404:
                 # Not an error to delete something that does not exist
@@ -138,11 +171,18 @@ class S3Storage(s3.S3Storage):
             # Some other error was encountered. Re-raise it
             raise
 
+    def delete_resource_in_zone(self, resource_id, zone):
+        bucket_name = get_zone_config(zone).bucket_name
+        prefix = f"{resource_id}/"
+        bucket_obj = self.bucket(bucket_name, zone)
+        for file_object in bucket_obj.objects.filter(Prefix=prefix):
+            file_object.delete()
+
     def exists(self, name):
-        bucket, name = bucket_and_name(name)
+        bucket, zone = bucket_and_zone(name)
         name = self._normalize_name(clean_name(name))
         try:
-            self.connection.meta.client.head_object(Bucket=bucket, Key=name)
+            self.connection(zone).meta.client.head_object(Bucket=bucket, Key=name)
             return True
         except ClientError as err:
             if err.response["ResponseMetadata"]["HTTPStatusCode"] == 404:
@@ -155,13 +195,13 @@ class S3Storage(s3.S3Storage):
         """
         Check if a directory is empty. This is a workaround folders with files marked for deletion but not deleted yet
         """
-        bucket, name = bucket_and_name(name)
+        bucket, zone = bucket_and_zone(name)
         name = self._normalize_name(clean_name(name))
         path = self._normalize_name(name)
         if path and not path.endswith("/"):
             path += "/"
 
-        paginator = self.connection.meta.client.get_paginator("list_objects")
+        paginator = self.connection(zone).meta.client.get_paginator("list_objects")
         pages = paginator.paginate(Bucket=bucket, Prefix=path, Delimiter="/")
         for page in pages:
             if page.get("Contents"):
@@ -177,7 +217,7 @@ class S3Storage(s3.S3Storage):
 
     def listdir(self, name):
         original_name = name.strip()
-        bucket, name = bucket_and_name(original_name)
+        bucket, zone = bucket_and_zone(original_name)
         path = self._normalize_name(clean_name(name))
         # The path needs to end with a slash, but if the root is empty, leave it.
         if path and not path.endswith("/"):
@@ -186,7 +226,7 @@ class S3Storage(s3.S3Storage):
         directories = []
         files = []
         file_sizes = []
-        paginator = self.connection.meta.client.get_paginator("list_objects")
+        paginator = self.connection(zone).meta.client.get_paginator("list_objects")
         pages = paginator.paginate(Bucket=bucket, Delimiter="/", Prefix=path)
         for page in pages:
             directories += [
@@ -208,16 +248,16 @@ class S3Storage(s3.S3Storage):
         return directories, files, file_sizes
 
     def size(self, name):
-        bucket, name = bucket_and_name(name)
+        bucket, zone = bucket_and_zone(name)
         name = self._normalize_name(clean_name(name))
         try:
-            size_attempt = self.bucket(bucket).Object(name).content_length
+            size_attempt = self.bucket(bucket, zone).Object(name).content_length
             if not size_attempt:
                 # the content_length is empty for .tar.gz files
                 # so we need to calculate the size manually
                 logger = logging.getLogger(__name__)
                 logger.error(f"s3 content_length is empty for {name}")
-                size_attempt = len(self.bucket(bucket).Object(name).get()["Body"].read())
+                size_attempt = len(self.bucket(bucket, zone).Object(name).get()["Body"].read())
             return size_attempt
         except ClientError as err:
             if err.response["ResponseMetadata"]["HTTPStatusCode"] == 404:
@@ -229,9 +269,9 @@ class S3Storage(s3.S3Storage):
         Returns an (aware) datetime object containing the last modified time if
         USE_TZ is True, otherwise returns a naive datetime in the local timezone.
         """
-        bucket, name = bucket_and_name(name)
+        bucket, zone = bucket_and_zone(name)
         name = self._normalize_name(clean_name(name))
-        entry = self.bucket(bucket).Object(name)
+        entry = self.bucket(bucket, zone).Object(name)
         if setting("USE_TZ"):
             # boto3 returns TZ aware timestamps
             return entry.last_modified
@@ -241,7 +281,7 @@ class S3Storage(s3.S3Storage):
     def url(self, name, parameters=None, expire=None, http_method=None):
         # Preserve the trailing slash after normalizing the path.
 
-        bucket, name = bucket_and_name(name)
+        bucket, zone = bucket_and_zone(name)
         name = self._normalize_name(clean_name(name))
         params = parameters.copy() if parameters else {}
         if expire is None:
@@ -267,7 +307,7 @@ class S3Storage(s3.S3Storage):
         params["Key"] = name
 
         connection = (
-            self.connection if self.querystring_auth else self.unsigned_connection
+            self.connection(zone) if self.querystring_auth else self.unsigned_connection
         )
         url = connection.meta.client.generate_presigned_url(
             "get_object", Params=params, ExpiresIn=expire, HttpMethod=http_method

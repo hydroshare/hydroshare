@@ -6,6 +6,24 @@ DATABASE_URL = os.environ.get("HS_DATABASE_URL")
 engine = create_engine(DATABASE_URL)
 
 
+def quota_is_exceeded(resource_id: int):
+    query = """SELECT (SELECT U0.exceeded
+                       FROM theme_userquota U0
+                       WHERE U0.user_id = (hs_core_genericresource.user_id) LIMIT 1) AS exceeded
+               FROM hs_core_genericresource
+               INNER JOIN pages_page
+               ON (hs_core_genericresource.page_ptr_id = pages_page.id)
+               WHERE hs_core_genericresource.short_id = :resource_id"""
+
+    with engine.connect() as con:
+        rs = con.execute(statement=text(query),
+                         parameters=dict(resource_id=resource_id))
+        row = rs.fetchone()
+        if row:
+            return row[0]
+    return True
+
+
 def is_superuser_and_id(username: str):
     # return is_superuser and user_id as tuple
     query = """SELECT auth_user.is_superuser, theme_userprofile.user_id
