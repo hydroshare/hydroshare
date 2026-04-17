@@ -47,7 +47,6 @@ from spam_patterns.worst_patterns_re import patterns
 from django_s3.storage import S3Storage
 from hs_core.enums import (DataciteSubmissionStatus, RelationTypes)
 from hs_core.s3 import ResourceFileS3Mixin, ResourceS3Mixin
-from theme.models import UserQuota
 
 from .hs_rdf import (HSTERMS, RDFS1, RDF_MetaData_Mixin, RDF_Term_MixIn,
                      rdf_terms)
