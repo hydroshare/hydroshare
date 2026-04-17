@@ -3605,9 +3605,7 @@ class ResourceFile(ResourceFileS3Mixin):
         # when file is a File, the file is copied to storage in this step
         # otherwise, the copy must precede this step.
 
-        resource_file = ResourceFile.objects.create(**kwargs)
-        resource_file.size
-        return resource_file
+        return ResourceFile.objects.create(**kwargs)
 
     # TODO: automagically handle orphaned logical files
     def delete(self, delete_logical_file=False):
