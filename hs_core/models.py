@@ -47,6 +47,7 @@ from spam_patterns.worst_patterns_re import patterns
 from django_s3.storage import S3Storage
 from hs_core.enums import (DataciteSubmissionStatus, RelationTypes)
 from hs_core.s3 import ResourceFileS3Mixin, ResourceS3Mixin
+from theme.models import UserQuota
 
 from .hs_rdf import (HSTERMS, RDFS1, RDF_MetaData_Mixin, RDF_Term_MixIn,
                      rdf_terms)
@@ -2935,12 +2936,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceS3Mixin):
         for fl in self.files.all():
             # COUCH: delete of file objects now cascades.
             fl.delete(delete_logical_file=True)
+
         self.metadata.delete()
         hs_bagit.delete_files_and_bag(self)
 
-        # clean up metadata files
-        istorage = self.get_s3_storage()
-        istorage.delete(self.short_id, recursive=True)
         super(AbstractResource, self).delete()
 
     @property

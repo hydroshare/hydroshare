@@ -158,15 +158,11 @@ class S3Storage(s3.S3Storage):
             content.close = original_close
         return cleaned_name
 
-    def delete(self, name, recursive=False):
+    def delete(self, name):
         try:
             bucket, zone = bucket_and_zone(name)
             bucket_obj = self.bucket(bucket, zone)
-            if recursive:
-                for file_object in bucket_obj.objects.filter(Prefix=name):
-                    file_object.delete()
-            else:
-                bucket_obj.Object(name).delete()
+            bucket_obj.Object(name).delete()
         except ClientError as err:
             if err.response["ResponseMetadata"]["HTTPStatusCode"] == 404:
                 # Not an error to delete something that does not exist
@@ -174,6 +170,13 @@ class S3Storage(s3.S3Storage):
 
             # Some other error was encountered. Re-raise it
             raise
+
+    def delete_resource_in_zone(self, resource_id, zone):
+        bucket_name = get_zone_config(zone).bucket_name
+        prefix = f"{resource_id}/"
+        bucket_obj = self.bucket(bucket_name, zone)
+        for file_object in bucket_obj.objects.filter(Prefix=prefix):
+            file_object.delete()
 
     def exists(self, name):
         bucket, zone = bucket_and_zone(name)

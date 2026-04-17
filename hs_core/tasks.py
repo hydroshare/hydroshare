@@ -1015,7 +1015,13 @@ def delete_resource_task(resource_id, request_username=None):
         collection_res.metadata.relations.filter(type='hasPart', value__endswith=res.short_id).delete()
         set_dirty_bag_flag(collection_res)
 
+    zone = UserQuota.objects.get(user=res.quota_holder).zone
+    istorage = res.get_s3_storage()
+
     res.delete()
+
+    # removes any dangling metadata files at the resource prefix
+    istorage.delete_resource_in_zone(res.short_id, zone)
     if request_username:
         # if the deleted resource is part of any collection resource, then for each of those collection
         # create a CollectionDeletedResource object which can then be used to list collection deleted
