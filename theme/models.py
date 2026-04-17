@@ -279,30 +279,25 @@ class UserQuota(models.Model):
     @property
     def used_percent(self):
         try:
-            return self.used_value * 100.0 / self.allocated_value
+            return self.data_zone_value * 100.0 / self.allocated_value
         except ZeroDivisionError:
             return float('inf')
 
     @property
     def remaining(self):
-        delta = self.allocated_value - self.used_value
+        delta = self.allocated_value - self.data_zone_value
         return delta if delta > 0 else 0
-
-    @property
-    def used_value(self):
-        """Get the used value for the user in the specified zone"""
-        return self.data_zone_value
 
     def add_to_used_value(self, size):
         """
-        return summation of used_value and pass in size in bytes. The returned value
+        return summation of data_zone_value and pass in size in bytes. The returned value
         is in unit specified by self.unit
         :param size: pass in size in bytes unit
-        :return: summation of self.used_value and pass in size, converted to the same self.unit
+        :return: summation of self.data_zone_value and pass in size, converted to the same self.unit
         """
         from hs_core.hydroshare.utils import convert_file_size_to_unit
 
-        total_value = self.used_value + convert_file_size_to_unit(size, self.unit)
+        total_value = self.data_zone_value + convert_file_size_to_unit(size, self.unit)
         return total_value
 
     def get_quota_data(self):
@@ -319,7 +314,7 @@ class UserQuota(models.Model):
         soft_limit = qmsg.soft_limit_percent
         allocated = self.allocated_value
         unit = self.unit
-        used = self.used_value
+        used = self.data_zone_value
         dzp = used * 100.0 / allocated
         percent = used * 100.0 / allocated
         remaining = allocated - used

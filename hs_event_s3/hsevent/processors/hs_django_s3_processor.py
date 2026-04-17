@@ -48,7 +48,7 @@ def sync_resource(file_created, key, resource_id, username):
         except Exception as e:
             print(f"Error deleting file for resource {resource_id}: {e}")
     # ensure exceeded flag is updated after file addition/deletion
-    UserQuota.objects.get(user=resource.quota_holder).used_value
+    UserQuota.objects.get(user=resource.quota_holder).data_zone_value
 
 
 @redpanda_connect.processor
