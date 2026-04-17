@@ -38,7 +38,7 @@ class ValidateUserQuotaTestCase(TestCase):
         )
 
         # Set up individual test mocks for property
-        self.mock_data_zone_value_patcher = patch('theme.models.UserQuota.data_zone_value', new_callable=PropertyMock)
+        self.mock_data_zone_value_patcher = patch('theme.models.UserQuota._data_zone_value', new_callable=PropertyMock)
         self.mock_data_zone_value = self.mock_data_zone_value_patcher.start()
 
     def tearDown(self):
@@ -81,7 +81,7 @@ class ValidateUserQuotaTestCase(TestCase):
         # Adding 25MB should be within quota (50 + 25 = 75 < 100)
         try:
             validate_user_quota(self.user, 25 * 1024 * 1024)  # 25MB in bytes
-            self.assertTrue(True)  # If we reach here, test passes
+            self.assertFalse(self.user_quota.exceeded)
         except Exception as e:
             self.fail(f"validate_user_quota raised unexpected exception: {e}")
 
@@ -97,6 +97,7 @@ class ValidateUserQuotaTestCase(TestCase):
 
         exception_message = str(context.exception)
         self.assertIn("Quota exceeded", exception_message)
+        self.assertFalse(self.user_quota.exceeded)
 
     def test_validate_user_quota_over_quota(self):
         """Test that exception is raised when user exceeds quota"""
@@ -110,6 +111,7 @@ class ValidateUserQuotaTestCase(TestCase):
 
         exception_message = str(context.exception)
         self.assertIn("Quota exceeded", exception_message)
+        self.assertFalse(self.user_quota.exceeded)
 
     def test_validate_user_quota_no_quota_object(self):
         """Test that no exception is raised when user has no quota object"""
@@ -135,6 +137,7 @@ class ValidateUserQuotaTestCase(TestCase):
         # Should still raise QuotaException even without QuotaMessage
         with self.assertRaises(QuotaException):
             validate_user_quota(self.user, 20 * 1024 * 1024)  # 20MB in bytes
+        self.assertFalse(self.user_quota.exceeded)
 
     def test_validate_user_quota_with_username_string(self):
         """Test that function works with username string instead of User object"""
@@ -145,6 +148,7 @@ class ValidateUserQuotaTestCase(TestCase):
         # Should raise exception when passing username string
         with self.assertRaises(QuotaException):
             validate_user_quota(self.user.username, 20 * 1024 * 1024)  # 20MB in bytes
+        self.assertFalse(self.user_quota.exceeded)
 
     def test_validate_user_quota_zero_size(self):
         """Test that zero size doesn't affect quota validation"""
@@ -155,7 +159,7 @@ class ValidateUserQuotaTestCase(TestCase):
         # Adding zero size should not raise exception
         try:
             validate_user_quota(self.user, 0)
-            self.assertTrue(True)  # If we reach here, test passes
+            self.assertFalse(self.user_quota.exceeded)
         except Exception as e:
             self.fail(f"validate_user_quota raised unexpected exception for zero size: {e}")
 
@@ -168,6 +172,24 @@ class ValidateUserQuotaTestCase(TestCase):
         # Adding negative size should not raise exception (treated as zero)
         try:
             validate_user_quota(self.user, -1000)
-            self.assertTrue(True)  # If we reach here, test passes
+            self.assertFalse(self.user_quota.exceeded)
         except Exception as e:
             self.fail(f"validate_user_quota raised unexpected exception for negative size: {e}")
+
+    def test_user_quota_exceeded(self):
+        """Test that quota is correctly marked as exceeded"""
+        # Setup mock responses
+        self.mock_data_zone_value.return_value = 100
+        self.user_quota.save_allocated_value(50, "MB")
+
+        self.user_quota.data_zone_value
+        self.assertTrue(self.user_quota.exceeded)
+
+    def test_user_quota_not_exceeded(self):
+        """Test that quota is correctly marked as not exceeded"""
+        # Setup mock responses
+        self.mock_data_zone_value.return_value = 50
+        self.user_quota.save_allocated_value(100, "MB")
+
+        self.user_quota.data_zone_value
+        self.assertFalse(self.user_quota.exceeded)

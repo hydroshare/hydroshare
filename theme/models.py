@@ -261,11 +261,17 @@ class UserQuota(models.Model):
         self.save()
 
     @property
-    def data_zone_value(self):
+    def _data_zone_value(self):
+        """Allows easy mocking of the data zone value for testing purposes"""
         from hs_core.hydroshare.resource import get_data_zone_usage
         from hs_core.hydroshare.utils import convert_file_size_to_unit
         dz = get_data_zone_usage(self.user.username)
-        data_zone_value = convert_file_size_to_unit(dz, self.unit)
+        return convert_file_size_to_unit(dz, self.unit)
+
+    @property
+    def data_zone_value(self):
+        """Get the data zone value and update the exceeded status"""
+        data_zone_value = self._data_zone_value
         self.exceeded = data_zone_value > self.allocated_value
         self.save()
         return data_zone_value
@@ -284,6 +290,7 @@ class UserQuota(models.Model):
 
     @property
     def used_value(self):
+        """Get the used value for the user in the specified zone"""
         return self.data_zone_value
 
     def add_to_used_value(self, size):
