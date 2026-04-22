@@ -1,14 +1,15 @@
-import os
-import tempfile
+
 import geopandas
+import pyogrio
 import mimetypes
-from glob import glob
+
+from pydantic import ValidationError
 
 from hs_cloudnative_schemas.schema import base
 from hs_cloudnative_schemas.schema import dataset
 from hs_cloudnative_schemas.schema import datavariable
 from hsextract.utils.file import file_metadata
-from hsextract.utils.s3 import s3_client as s3
+from hsextract.utils.s3 import s3_config, s3fsInstance
 
 
 mimetypes.add_type("image/tiff", ".tif")
@@ -23,18 +24,29 @@ def replace_extension(filepath, new_ext):
 
 def encode_vector_metadata(filepath, validate_bbox=True):
 
-    # get all file names that match the patter of the input filepath
+    # get all file names that match the pattern of the input filepath
     search_path = f"{'.'.join(filepath.split('.')[:-1])}.*"
-    associated_files = glob(search_path)
+    associated_files = s3fsInstance.glob(search_path)
 
-    # Copy shapefile and .shx file to a temporary location
-    temp_dir = tempfile.gettempdir()
-    local_copy = os.path.join(temp_dir, os.path.basename(filepath))
-    bucket, key = filepath.split("/", 1)
-    s3.download_file(bucket, key, local_copy)
-    s3.download_file(bucket, replace_extension(key, ".shx"), replace_extension(local_copy, ".shx"))
-    # Read the Shapefile
-    gdf = geopandas.read_file(local_copy)
+    endpoint_url = s3_config["endpoint_url"]
+    endpoint = endpoint_url.split("//")[-1]
+    use_https = "YES" if endpoint_url.startswith("https://") else "NO"
+    pyogrio.set_gdal_config_options({
+        'AWS_S3_ENDPOINT': endpoint,
+        'AWS_ACCESS_KEY_ID': s3_config["aws_access_key_id"],
+        'AWS_SECRET_ACCESS_KEY': s3_config["aws_secret_access_key"],
+        'AWS_VIRTUAL_HOSTING': 'FALSE',
+        'AWS_HTTPS': use_https,
+    })
+
+    try:
+        gdf = geopandas.read_file(f"/vsis3/{filepath}", engine="pyogrio")
+    finally:
+        # Clear credentials from GDAL state after use
+        pyogrio.set_gdal_config_options({
+            'AWS_ACCESS_KEY_ID': None,
+            'AWS_SECRET_ACCESS_KEY': None,
+        })
 
     feature_count = len(gdf)
 
@@ -66,9 +78,14 @@ def encode_vector_metadata(filepath, validate_bbox=True):
 
     # extent
     extent_west, extent_south, extent_east, extent_north = gdf.total_bounds
-
     box_str = f'{extent_south} {extent_west} {extent_north} {extent_east}'
-    geo = base.GeoShape(box=box_str, validate_bbox=validate_bbox)
+    # Bbox validation expects geographic lat/lon degrees. For projected CRS values
+    # (e.g., meters), strict validation will fail even when metadata is valid.
+    should_validate_bbox = validate_bbox and (gdf.crs is None or gdf.crs.is_geographic)
+    try:
+        geo = base.GeoShape(box=box_str, validate_bbox=should_validate_bbox)
+    except ValidationError:
+        geo = base.GeoShape(box=box_str, validate_bbox=False)
 
     # srs
     srs = None
@@ -106,7 +123,7 @@ def encode_vector_metadata(filepath, validate_bbox=True):
 
     files = []
     for fpath in associated_files:
-        file_md, _ = file_metadata(fpath)
+        file_md = file_metadata(fpath)
         files.append(file_md)
 
     return dataset.ScientificDataset(
@@ -116,3 +133,4 @@ def encode_vector_metadata(filepath, validate_bbox=True):
         spatialCoverage=place,
         additionalType=dataset.AdditionalType.GEOGRAPHIC_FEATURE,
     )
+

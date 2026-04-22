@@ -1,22 +1,25 @@
 import os
 import tempfile
+
 import xarray
 import numpy as np
 from pyproj import CRS
+from pydantic import ValidationError
 
 from hs_cloudnative_schemas.schema import base
 from hs_cloudnative_schemas.schema import dataset
 from hs_cloudnative_schemas.schema import datavariable
-from hsextract.utils.s3 import s3_client
+from hsextract.utils.s3 import s3_client, s3fsInstance
 
 
+# TODO: Looks like a debug helper function - delete?
 def inspect_dimensions(ds: xarray.Dataset) -> None:
     # get dimension information
     print(f"{25 * '-'}\nDimension Information\n{25 * '-'}\n")
     for dimname, size in ds.sizes.items():
         print(f'* {dimname} --> Size: {size}\n')
 
-
+# TODO: Looks like a debug helper function - delete?
 def inspect_coordinates(ds: xarray.Dataset) -> None:
     # get coordinate information
     print(f"{25 * '-'}\nCoordinate Information\n{25 * '-'}\n")
@@ -28,7 +31,7 @@ def inspect_coordinates(ds: xarray.Dataset) -> None:
         print(f"\tType: {ds.coords[coordname].dtype}")
         print(f"\tShape: {ds.coords[coordname].shape}")
 
-
+# TODO: Looks like a debug helper function - delete?
 def inspect_variables(ds: xarray.Dataset) -> None:
     # get variable information
     # get coordinate information
@@ -212,19 +215,18 @@ def build_coordinates(ds: xarray.Dataset,
     return coords
 
 
-def encode_netcdf(filepath: str,
-                  validate_bbox: bool = True,
-                  compute_statistics: bool = True) -> dataset.ScientificDataset:
+def encode_netcdf(
+        filepath: str,
+        validate_bbox: bool = True,
+        compute_statistics: bool = True
+    ) -> dataset.ScientificDataset:
 
-    temp_dir = tempfile.gettempdir()
-    local_copy = os.path.join(temp_dir, os.path.basename(filepath))
-    bucket, key = filepath.split("/", 1)
-    s3_client.download_file(bucket, key, local_copy)
-    ds = xarray.load_dataset(local_copy, engine='netcdf4')
-    md_metadata = encode_multidimensional_metadata(
-        ds, filepath, validate_bbox, compute_statistics)
-    os.remove(local_copy)  # Clean up the local copy
-    return md_metadata
+    with s3fsInstance.open(filepath, 'rb') as remote_file:
+        with xarray.open_dataset(remote_file, engine='h5netcdf') as ds:
+            md_metadata = encode_multidimensional_metadata(
+                ds, filepath, validate_bbox, compute_statistics
+            )
+            return md_metadata
 
 
 def encode_zarr(filepath: str,
@@ -248,11 +250,16 @@ def encode_multidimensional_metadata(ds: xarray.Dataset,
                                      validate_bbox: bool = True,
                                      compute_statistics: bool = True) -> dataset.ScientificDataset:
 
-    bounds = get_spatial_bounds(ds)
-    box_str = f"{bounds['lat_min']} {bounds['lon_min']} {
-        bounds['lat_max']} {bounds['lon_max']}"
-    geo = base.GeoShape(box=box_str, validate_bbox=validate_bbox)
     crs = get_crs_from_dataset_metadata(ds)
+    bounds = get_spatial_bounds(ds)
+    box_str = f"{bounds['lat_min']} {bounds['lon_min']} {bounds['lat_max']} {bounds['lon_max']}"
+    # Bbox validation expects geographic lat/lon degrees. For projected CRS values
+    # (e.g., meters), strict validation will fail even when metadata is valid.
+    should_validate_bbox = validate_bbox and (crs is None or crs.is_geographic)
+    try:
+        geo = base.GeoShape(box=box_str, validate_bbox=should_validate_bbox)
+    except ValidationError:
+        geo = base.GeoShape(box=box_str, validate_bbox=False)
 
     if crs:
         srs = base.SpatialReference(

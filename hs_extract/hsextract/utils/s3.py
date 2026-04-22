@@ -3,6 +3,7 @@ import mimetypes
 import os
 
 import boto3
+import s3fs
 from hs_cloudnative_schemas.schema.base import MediaObject
 
 s3_config = {
@@ -11,6 +12,12 @@ s3_config = {
     "aws_secret_access_key": os.environ.get("AWS_SECRET_ACCESS_KEY", "YOUR_SECRET_KEY")
 }
 s3_client = boto3.client('s3', **s3_config)
+
+s3fsInstance = s3fs.S3FileSystem(
+    key=s3_config["aws_access_key_id"],
+    secret=s3_config["aws_secret_access_key"],
+    client_kwargs={"endpoint_url": s3_config["endpoint_url"]},
+)
 
 
 def write_metadata(metadata_path: str, metadata_json: dict) -> None:
