@@ -67,7 +67,7 @@ class RasterMetadataObject(FileMetadataObject):
             return None
         metadata = metadata.model_dump(exclude_none=True)
         return metadata
-    
+
     def clean_up_extracted_metadata(self) -> list[str]:
         if not self.file_object_path.endswith(".vrt"):
             return []

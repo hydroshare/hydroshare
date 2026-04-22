@@ -133,4 +133,3 @@ def encode_vector_metadata(filepath, validate_bbox=True):
         spatialCoverage=place,
         additionalType=dataset.AdditionalType.GEOGRAPHIC_FEATURE,
     )
-

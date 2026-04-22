@@ -27,7 +27,7 @@ class TimeSeriesMetadataObject(FileMetadataObject):
                 err_msg = f"Failed to extract metadata from SQLite file {self.file_object_path}: {str(e)}"
                 print(err_msg)
                 return None
-        # TODO: we don't have a schema for timeseries metadata yet, so we are just 
+        # TODO: we don't have a schema for timeseries metadata yet, so we are just
         # returning the extracted metadata as a dict.
         # Once we have a schema, we can validate and transform the extracted metadata and return as dict
         return metadata

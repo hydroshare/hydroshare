@@ -19,6 +19,7 @@ def inspect_dimensions(ds: xarray.Dataset) -> None:
     for dimname, size in ds.sizes.items():
         print(f'* {dimname} --> Size: {size}\n')
 
+
 # TODO: Looks like a debug helper function - delete?
 def inspect_coordinates(ds: xarray.Dataset) -> None:
     # get coordinate information
@@ -30,6 +31,7 @@ def inspect_coordinates(ds: xarray.Dataset) -> None:
               ds.coords[coordname].attrs.get('long_name', 'None')}")
         print(f"\tType: {ds.coords[coordname].dtype}")
         print(f"\tShape: {ds.coords[coordname].shape}")
+
 
 # TODO: Looks like a debug helper function - delete?
 def inspect_variables(ds: xarray.Dataset) -> None:
@@ -216,10 +218,10 @@ def build_coordinates(ds: xarray.Dataset,
 
 
 def encode_netcdf(
-        filepath: str,
-        validate_bbox: bool = True,
-        compute_statistics: bool = True
-    ) -> dataset.ScientificDataset:
+    filepath: str,
+    validate_bbox: bool = True,
+    compute_statistics: bool = True,
+) -> dataset.ScientificDataset:
 
     with s3fsInstance.open(filepath, 'rb') as remote_file:
         with xarray.open_dataset(remote_file, engine='h5netcdf') as ds:
