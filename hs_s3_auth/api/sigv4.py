@@ -3,7 +3,7 @@ import hmac
 import logging
 from urllib.parse import quote
 
-logger = logging.getLogger("micro-auth")
+logger = logging.getLogger("hs-s3-auth")
 
 
 def verify_signature_v4(

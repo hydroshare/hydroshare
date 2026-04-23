@@ -73,7 +73,7 @@ def verify_signature_sync(
     payload_hash: str,
     auth_info: dict,
 ) -> dict:
-    """Delegate SigV4 verification to micro-auth.
+    """Delegate SigV4 verification to hs-s3-auth.
 
     Returns the parsed response body: {"allow": bool, "reason": str?, "user_id": int?}.
     On transport failure, returns {"allow": False, "reason": "auth_service_error"}.

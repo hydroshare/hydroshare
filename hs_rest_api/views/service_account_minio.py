@@ -11,7 +11,7 @@ from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 
 logger = logging.getLogger(__name__)
 
-micro_auth_service_url = getattr(settings, 'MICRO_AUTH_SERVICE_URL', 'http://micro-auth/sa/auth/minio/sa/')
+hs_s3_auth_service_url = getattr(settings, 'HS_S3_AUTH_SERVICE_URL', 'http://hs-s3-auth/sa/auth/minio/sa/')
 
 
 class MinIOServiceAccounts(APIView):

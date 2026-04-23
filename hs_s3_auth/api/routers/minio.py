@@ -27,7 +27,7 @@ from api.sigv4 import verify_signature_v4
 
 
 router = APIRouter()
-logger = logging.getLogger("micro-auth")
+logger = logging.getLogger("hs-s3-auth")
 
 VIEW_ACTIONS = os.environ.get(
     "S#_VIEW_ACTIONS",

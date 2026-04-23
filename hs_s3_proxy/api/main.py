@@ -25,7 +25,7 @@ logger = logging.getLogger("hs_s3_proxy")
 # When set, the proxy serves exactly this one backend bucket. Client-facing S3
 # URLs address it directly (S3-native), and keys underneath follow the layout
 # {user_bucket}/{resource_id}/{rest}. The {user_bucket}/ prefix is peeled off
-# before calling micro-auth, which expects {resource_id}/... as the prefix.
+# before calling hs-s3-auth, which expects {resource_id}/... as the prefix.
 BACKEND_BUCKET = os.environ.get("S3_BACKEND_BUCKET")
 
 app = FastAPI(title="HydroShare S3 Proxy")
@@ -62,7 +62,7 @@ XML_NO_SUCH_BUCKET = (
 
 def _validate_token(method: str, path: str, headers: dict,
                     query_params: dict, body: bytes, auth_info: dict):
-    """Delegate SigV4 verification to micro-auth.
+    """Delegate SigV4 verification to hs-s3-auth.
 
     Returns (user_id, None) on success, or (None, reason) on failure.
     """
@@ -129,7 +129,7 @@ async def proxy_s3_request(request: Request, full_path: str):
 
     if BACKEND_BUCKET and bucket == BACKEND_BUCKET:
         # Key is {user_bucket}/{resource_id}/{rest}. Peel the user_bucket off for
-        # authz — micro-auth expects bucket={user_bucket}, prefix={resource_id}/...
+        # authz — hs-s3-auth expects bucket={user_bucket}, prefix={resource_id}/...
         authz_bucket, _, authz_prefix = (object_path or "").partition("/")
     else:
         authz_bucket = bucket or ""

@@ -9,7 +9,7 @@ from fastapi.openapi.utils import get_openapi
 from api.routers.access_control_changed import router as access_control_changed_router
 from api.routers.minio import router as minio_router
 
-logger = logging.getLogger("micro-auth")
+logger = logging.getLogger("hs-s3-auth")
 
 app = FastAPI()
 
