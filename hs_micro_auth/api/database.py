@@ -45,8 +45,7 @@ def is_superuser_and_id(username: str):
     query = """SELECT auth_user.is_superuser, theme_userprofile.user_id
     FROM auth_user
     INNER JOIN theme_userprofile
-    ON auth_user.id = theme_userprofile.user_id
-    WHERE theme_userprofile._bucket_name = :username"""
+    ON auth_user.username = :username"""
 
     with engine.connect() as con:
         rs = con.execute(statement=text(query),

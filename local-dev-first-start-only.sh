@@ -326,6 +326,17 @@ echo '  - docker exec hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&
 echo
 docker exec hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
 
+echo "docker exec hydroshare mc mb hydroshare/hydroshare"
+docker exec hydroshare mc mb hydroshare/hydroshare
+
+echo "docker exec hydroshare mc mb ciroh/ciroh"
+docker exec hydroshare mc mb ciroh/ciroh
+
+echo "docker exec hydroshare mc event add hydroshare/hydroshare arn:minio:sqs::RESOURCEFILE:kafka --event put,delete"
+docker exec hydroshare mc event add hydroshare/hydroshare arn:minio:sqs::RESOURCEFILE:kafka --event put,delete
+echo "docker exec hydroshare mc event add ciroh/ciroh arn:minio:sqs::RESOURCEFILE:kafka --event put,delete "
+docker exec hydroshare mc event add ciroh/ciroh arn:minio:sqs::RESOURCEFILE:kafka --event put,delete
+
 echo
 echo '########################################################################################################################'
 echo " Setting up Atlas search index"

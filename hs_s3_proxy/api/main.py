@@ -97,6 +97,7 @@ async def proxy_s3_request(request: Request, full_path: str):
 
     path = f"/{full_path}"
     bucket, object_path = parse_s3_path(path)
+    object_path = query_params.get("prefix", object_path)
     logger.info(f"Received {method} request for bucket={bucket}, object={object_path}")
 
     if BACKEND_BUCKET and bucket and bucket != BACKEND_BUCKET:

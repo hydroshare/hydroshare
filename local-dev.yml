@@ -17,7 +17,6 @@ services:
       MINIO_ROOT_PASSWORD: devpassword
       MINIO_BROWSER_REDIRECT: "false"
       MINIO_SCANNER_SPEED: "fastest"
-      MINIO_POLICY_PLUGIN_URL: "http://micro-auth/minio/authorization/"
       MINIO_NOTIFY_KAFKA_ENABLE_RESOURCEFILE: "on"
       MINIO_NOTIFY_KAFKA_BROKERS_RESOURCEFILE: "redpanda:9092"
       MINIO_NOTIFY_KAFKA_TOPIC_RESOURCEFILE: "resource_file"
@@ -396,18 +395,40 @@ services:
       dockerfile: Dockerfile
     environment:
       HS_DATABASE_URL: "postgresql://postgres:postgres@postgis:5432/postgres"
-      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
-      MC_HOST_ciroh: "http://cuahsi:devpassword@minio:9000"
       REDIS_HOST: redis
       REDIS_PORT: "6379"
       ENABLE_EDIT_ACTIONS: "true"
     ports:
-      - 8001:8001
+      - 8001:80
     links:
       - postgis:postgis
     restart: on-failure
     depends_on:
       - postgis
+  hs-s3-proxy:
+    image: hydroshare/hs-s3-proxy:latest
+    platform: linux/amd64
+    container_name: hs-s3-proxy
+    build:
+      context: ./hs_s3_proxy
+      dockerfile: Dockerfile
+    environment:
+      AUTH_SERVICE_URL: "http://micro-auth"
+      AUTH_SERVICE_TIMEOUT: "5"
+      S3_BACKEND_URL: "http://minio:9000"
+      S3_BACKEND_ACCESS_KEY: "cuahsi"
+      S3_BACKEND_SECRET_KEY: "devpassword"
+      S3_BACKEND_REGION: "auto"
+      S3_PROXY_TIMEOUT: "300"
+    ports:
+      - 9002:9000
+    links:
+      - micro-auth:micro-auth
+      - minio:minio
+    restart: on-failure
+    depends_on:
+      - micro-auth
+      - minio
   mongodb:
     image: mongodb/mongodb-atlas-local
     container_name: mongodb

@@ -31,7 +31,8 @@ logger = logging.getLogger("micro-auth")
 
 VIEW_ACTIONS = os.environ.get(
     "S#_VIEW_ACTIONS",
-    "s3:GetObject,s3:ListObjects,s3:ListObjectsV2,s3:ListBucket,s3:GetObjectRetention,s3:GetObjectLegalHold",
+    "s3:GetObject,s3:ListObjects,s3:ListObjectsV2,s3:ListBucket,s3:GetObjectRetention,s3:GetObjectLegalHold,\
+        s3:HeadObject",
 ).split(",")
 WRITE_ACTIONS = os.environ.get(
     "S3_WRITE_ACTIONS", "s3:PutObject,s3:UploadPart,s3:PutObjectLegalHold"
@@ -168,11 +169,11 @@ def _check_user_authorization(user_id, resource_id, action, is_contents_path):
             view_access = user_has_view_access(user_id, resource_id)
             backfill_view_access(user_id, resource_id, view_access)
 
-        if action in ["s3:GetObject", "s3:GetObjectRetention", "s3:GetObjectLegalHold"]:
-            return public or allow_private_sharing or view_access
         # view and discoverable actions
         if action in ["s3:ListObjects", "s3:ListObjectsV2", "s3:ListBucket"]:
             return public or allow_private_sharing or discoverable or view_access
+
+        return public or allow_private_sharing or view_access
 
     # Check if edit actions are enabled via environment variable
     enable_edit_actions = os.environ.get(
