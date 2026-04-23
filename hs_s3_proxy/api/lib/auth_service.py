@@ -96,7 +96,7 @@ def verify_signature_sync(
             return {"allow": False, "reason": "auth_service_error"}
         return response.json()
     except httpx.TimeoutException:
-        logger.error(f"Auth service timeout during signature verification")
+        logger.error("Auth service timeout during signature verification")
         return {"allow": False, "reason": "auth_service_error"}
     except httpx.RequestError as e:
         logger.error(f"Auth service request error: {e}")

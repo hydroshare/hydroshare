@@ -120,5 +120,3 @@ def parse_s3_path(path: str) -> Tuple[Optional[str], Optional[str]]:
     object_key = parts[1] if len(parts) > 1 else None
 
     return bucket, object_key
-
-
