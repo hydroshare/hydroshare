@@ -122,8 +122,7 @@ class S3ProxyClient:
             or (k.lower().startswith('x-amz-')
                 and k.lower() not in {
                     'x-amz-date', 'x-amz-content-sha256', 'x-amz-security-token',
-                }
-            )
+                })
         }
 
     def _filter_response_headers(self, headers: dict) -> dict:
