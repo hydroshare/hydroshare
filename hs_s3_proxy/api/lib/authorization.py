@@ -2,7 +2,7 @@ import logging
 
 from api.lib.auth_service import check_authorization_sync
 
-logger = logging.getLogger("hs_auth_proxy")
+logger = logging.getLogger("hs_s3_proxy")
 
 
 def check_s3_authorization(username: str, action: str, bucket: str, object_path: str) -> bool:

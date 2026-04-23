@@ -15,7 +15,14 @@ from api.cache import (
     # user_has_edit_access_cache,
     # user_has_view_access_cache,
 )
-from api.database import is_superuser_and_id, resource_discoverability, user_has_edit_access, user_has_view_access
+from api.database import (
+    get_user_token_and_id,
+    is_superuser_and_id,
+    resource_discoverability,
+    user_has_edit_access,
+    user_has_view_access,
+)
+from api.sigv4 import verify_signature_v4
 
 router = APIRouter()
 logger = logging.getLogger("micro-auth")
@@ -177,3 +184,42 @@ def _check_user_authorization(user_id, resource_id, action, is_contents_path):
         return edit_access
 
     return False
+
+
+class SignatureVerifyRequest(BaseModel):
+    method: str
+    path: str
+    headers: dict
+    query_params: dict
+    payload_hash: str
+    auth_info: dict
+
+
+@router.post("/verify-signature/")
+async def verify_signature(request: SignatureVerifyRequest):
+    username = request.auth_info.get("access_key")
+    if not username:
+        return {"allow": False, "reason": "missing_access_key"}
+
+    row = get_user_token_and_id(username)
+    if row is None:
+        logger.warning(f"No token found for username: {username}")
+        return {"allow": False, "reason": "user_not_found"}
+
+    token_key, user_id = row
+
+    valid = verify_signature_v4(
+        method=request.method,
+        path=request.path,
+        headers=request.headers,
+        query_params=request.query_params,
+        payload_hash=request.payload_hash,
+        secret_key=token_key,
+        auth_info=request.auth_info,
+    )
+
+    if not valid:
+        logger.warning(f"Invalid signature for username: {username}")
+        return {"allow": False, "reason": "invalid_signature"}
+
+    return {"allow": True, "user_id": int(user_id)}
