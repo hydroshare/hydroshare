@@ -8,7 +8,6 @@ from fastapi.openapi.utils import get_openapi
 
 from api.routers.access_control_changed import router as access_control_changed_router
 from api.routers.minio import router as minio_router
-from api.routers.service_accounts import router as service_accounts_router
 
 logger = logging.getLogger("micro-auth")
 
@@ -24,8 +23,6 @@ app.add_middleware(
 
 
 app.include_router(minio_router, tags=["HS S3 Authorization"], prefix="/minio")
-app.include_router(service_accounts_router, tags=[
-                   "Service Account Management"], prefix="/sa")
 app.include_router(access_control_changed_router, tags=[
                    "Access Control Webhook"], prefix="/access")
 
