@@ -3,7 +3,7 @@ from enum import Enum
 
 from hs_cloudnative_schemas.schema.base import MediaObject
 
-from hsextract.utils.s3 import iter_file_manifest, retrieve_file_manifest
+from hsextract.utils.s3 import iter_file_manifest
 from string import Template
 
 
@@ -56,10 +56,6 @@ class BaseMetadataObject:
 
     def iter_resource_associated_media(self, folder_path: str | None = None):
         return iter_file_manifest(self.resource_contents_path, folder_path=folder_path, enabled=True)
-
-    @property
-    def resource_associated_media(self):
-        return retrieve_file_manifest(self.resource_contents_path, enabled=True)
 
     @staticmethod
     def media_object_path(media_object: dict) -> str:

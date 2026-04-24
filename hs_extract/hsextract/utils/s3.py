@@ -237,16 +237,6 @@ def load_metadata(metadata_path):
     return metadata_json
 
 
-def retrieve_file_manifest(resource_root_path: str, enabled: bool = False):
-    """
-    list files from the S3 bucket.
-    """
-    file_manifest = []
-    for media_object in iter_file_manifest(resource_root_path, enabled=enabled):
-        file_manifest.append(media_object)
-    return file_manifest
-
-
 def iter_find(path: str) -> Iterator[str]:
     """Yield matching S3 keys lazily for the given bucket/prefix path."""
     paginator = s3_client.get_paginator('list_objects_v2')
