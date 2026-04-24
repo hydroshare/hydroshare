@@ -431,6 +431,7 @@ INSTALLED_APPS = (
     "mezzanine.accounts",
     "haystack",
     "rest_framework",
+    'rest_framework.authtoken',
     "robots",
     "sorl.thumbnail",
     "hs_core",
@@ -960,7 +961,6 @@ AWS_S3_ENDPOINT_URL_PUBLIC = 'http://localhost:9000'
 
 ACCESS_CONTROL_CHANGE_ENDPOINT = None
 PUBLISHER_USER_NAME = "published"
-MINIO_LIFECYCLE_POLICY = None
 DEFAULT_QUOTA_VALUE = 20
 DEFAULT_QUOTA_UNIT = "GB"
 
