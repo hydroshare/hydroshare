@@ -3,32 +3,26 @@ import pytest
 
 from time import sleep
 from tests import assert_has_part_reference, assert_manifest_reference, s3_client, read_s3_json, write_s3_json
-from hsextract.content_types.models import ContentType
+from hsextract.content_types.models import ContentType, BaseMetadataObject
 from hsextract.content_types.feature.models import FeatureMetadataObject
+from hsextract.content_types import determine_metadata_object_from_user_metadata
 
 
-@pytest.mark.parametrize("user_meta_file", [True, False])
+@pytest.mark.parametrize("shp_xml", [True, False])
 @pytest.mark.parametrize("use_folder", [True, False])
-def test_metadataobject(use_folder, user_meta_file):
+def test_metadataobject(use_folder, shp_xml):
     folder_prefix = "test-folder/" if use_folder else ""
     res_bucket_path = "test-bucket/resourceid"
-    if not user_meta_file:
-        file_name = "watersheds.shp"
-        user_meta_file_name = f"{file_name}.user_metadata.json"
-    else:
-        file_name = "watersheds.shp.user_metadata.json"
-        user_meta_file_name = file_name
+    file_name = "watersheds.shp"
+    user_meta_file_name = f"{file_name}.user_metadata.json"
+    if shp_xml:
+        file_name = "watersheds.shp.xml"
 
-    if not user_meta_file:
-        md = FeatureMetadataObject(
-            f"{res_bucket_path}/data/contents/{folder_prefix}{file_name}", True, file_user_meta=user_meta_file
+    md = FeatureMetadataObject(
+            f"{res_bucket_path}/data/contents/{folder_prefix}{file_name}", True
         )
-        assert md.file_object_path == f"{res_bucket_path}/data/contents/{folder_prefix}{file_name}"
-    else:
-        md = FeatureMetadataObject(
-            f"{res_bucket_path}/.hsmetadata/{folder_prefix}{file_name}", True, file_user_meta=user_meta_file
-        )
-        assert md.file_object_path == f"{res_bucket_path}/.hsmetadata/{folder_prefix}{file_name}"
+    file_name = "watersheds.shp"
+    assert md.file_object_path == f"{res_bucket_path}/data/contents/{folder_prefix}{file_name}"
     assert md.file_updated is True
     assert md.resource_contents_path == f"{res_bucket_path}/data/contents"
     assert md.resource_md_path == f"{res_bucket_path}/.hsmetadata"
@@ -39,8 +33,6 @@ def test_metadataobject(use_folder, user_meta_file):
     assert md.resource_metadata_jsonld_path == f"{res_bucket_path}/.hsjsonld/dataset_metadata.json"
     assert md.resource_associated_media_jsonld_path == f"{res_bucket_path}/.hsjsonld/file_manifest.json"
     assert md.resource_has_parts_jsonld_path == f"{res_bucket_path}/.hsjsonld/has_parts.json"
-
-    file_name = "watersheds.shp"
     assert md.content_type_md_jsonld_path == f"{res_bucket_path}/.hsjsonld/{folder_prefix}{file_name}.json"
     assert md.content_type_md_path == f"{res_bucket_path}/.hsmetadata/{folder_prefix}{file_name}.json"
     assert md.content_type_contents_path == f"{res_bucket_path}/data/contents/{folder_prefix.rstrip('/')}"
@@ -49,23 +41,81 @@ def test_metadataobject(use_folder, user_meta_file):
     assert md._content_type_associated_media is None
 
 
-@pytest.mark.parametrize("metadata_exists", [True, False])
-@pytest.mark.parametrize("user_meta_file", [True, False])
 @pytest.mark.parametrize("use_folder", [True, False])
-def test_feature_is_content_type(use_folder, user_meta_file, metadata_exists):
+def test_metadataobject_from_user_metadata(use_folder):
+    resource_id = str(uuid.uuid4())
+    folder_prefix = "test-folder/" if use_folder else ""
+    file_name = "watersheds.shp"
+    user_meta_file_name = f"{file_name}.user_metadata.json"
+    # upload the corresponding content file
+    with open("tests/test_files/watersheds/watersheds.shp", "rb") as f:
+        s3_client.upload_fileobj(
+            f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}{file_name}")
+    # Wait for metadata to be consistent
+    sleep(1)
+    md = determine_metadata_object_from_user_metadata(
+            f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}", True
+        )
+    assert isinstance(md, FeatureMetadataObject)
+    assert md.file_object_path == f"test-bucket/{resource_id}/data/contents/{folder_prefix}{file_name}"
+    assert md.file_updated is True
+    assert md.resource_contents_path == f"test-bucket/{resource_id}/data/contents"
+    assert md.resource_md_path == f"test-bucket/{resource_id}/.hsmetadata"
+    assert md.resource_md_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld"
+    assert md.content_type == ContentType.FEATURE
+    assert md.system_metadata_path == f"test-bucket/{resource_id}/.hsmetadata/system_metadata.json"
+    assert md.user_metadata_path == f"test-bucket/{resource_id}/.hsmetadata/user_metadata.json"
+    assert md.resource_metadata_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json"
+    assert md.resource_associated_media_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld/file_manifest.json"
+    assert md.resource_has_parts_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld/has_parts.json"
+    assert md.content_type_md_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}{file_name}.json"
+    assert md.content_type_md_path == f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{file_name}.json"
+    assert md.content_type_contents_path == f"test-bucket/{resource_id}/data/contents/{folder_prefix.rstrip('/')}"
+    assert md.content_type_main_file_path == f"test-bucket/{resource_id}/data/contents/{folder_prefix}{file_name}"
+    assert md.content_type_md_user_path == f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}"
+    assert md._content_type_associated_media is None
+
+
+@pytest.mark.parametrize("use_folder", [True, False])
+def test_metadataobject_from_user_metadata_missing_content(use_folder):
+    resource_id = str(uuid.uuid4())
+    folder_prefix = "test-folder/" if use_folder else ""
+    file_name = "watersheds.shp"
+    user_meta_file_name = f"{file_name}.user_metadata.json"
+    md = determine_metadata_object_from_user_metadata(
+            f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}", True
+        )
+    assert isinstance(md, BaseMetadataObject)
+    assert not isinstance(md, FeatureMetadataObject)
+    assert md.file_object_path == f"test-bucket/{resource_id}/data/contents/{folder_prefix}{file_name}"
+    assert md.file_updated is True
+    assert md.resource_contents_path == f"test-bucket/{resource_id}/data/contents"
+    assert md.resource_md_path == f"test-bucket/{resource_id}/.hsmetadata"
+    assert md.resource_md_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld"
+    assert md.content_type == ContentType.UNKNOWN
+    assert md.system_metadata_path == f"test-bucket/{resource_id}/.hsmetadata/system_metadata.json"
+    assert md.user_metadata_path == f"test-bucket/{resource_id}/.hsmetadata/user_metadata.json"
+    assert md.resource_metadata_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json"
+    assert md.resource_associated_media_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld/file_manifest.json"
+    assert md.resource_has_parts_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld/has_parts.json"
+    assert md.content_type_md_jsonld_path is None
+    assert md.content_type_md_path is None
+    assert md.content_type_contents_path is None
+    assert md.content_type_main_file_path is None
+    assert md.content_type_md_user_path is None
+    assert md._content_type_associated_media is None
+
+
+@pytest.mark.parametrize("shp_xml", [True, False])
+@pytest.mark.parametrize("use_folder", [True, False])
+def test_feature_is_content_type(use_folder, shp_xml):
     resource_id = str(uuid.uuid4())
     folder_prefix = "feature_aggregation/" if use_folder else ""
-    content_path = f"test-bucket/{resource_id}/data/contents/{folder_prefix}watersheds.shp"
-    user_metadata_path = f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}watersheds.shp.user_metadata.json"
-
-    if metadata_exists:
-        write_s3_json(user_metadata_path, {"user_metadata": "this is feature user metadata"})
-        sleep(1)
-
-    file_object_path = user_metadata_path if user_meta_file else content_path
-    expected = metadata_exists if user_meta_file else True
-
-    assert FeatureMetadataObject.is_content_type(file_object_path) is expected
+    file_name = "watersheds.shp"
+    if shp_xml:
+        file_name = "watersheds.shp.xml"
+    content_path = f"test-bucket/{resource_id}/data/contents/{folder_prefix}{file_name}"
+    assert FeatureMetadataObject.is_content_type(content_path) is True
 
 
 @pytest.mark.parametrize("use_folder", [True, False])
