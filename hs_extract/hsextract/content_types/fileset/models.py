@@ -23,12 +23,8 @@ class FileSetMetadataObject(FolderMetadataObject):
     def is_content_type(cls, file_object_path: str) -> bool:
         resource_user_metadata_path = cls._resource_user_metadata_path(file_object_path)
         base_md_path = cls._resource_md_path(file_object_path)
-        if file_object_path.endswith("user_metadata.json"):
-            relative_path = os.path.relpath(file_object_path, base_md_path)
-        else:
-            relative_path = os.path.relpath(file_object_path, cls._resource_contents_path(file_object_path))
-        parent_directory = os.path.dirname(relative_path)
-
+        relative_path = os.path.relpath(file_object_path, cls._resource_contents_path(file_object_path))
+        parent_directory = relative_path
         while parent_directory:
             fileset_user_path = os.path.join(base_md_path, parent_directory, "user_metadata.json")
             if fileset_user_path == resource_user_metadata_path:

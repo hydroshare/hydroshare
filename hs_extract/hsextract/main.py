@@ -5,7 +5,11 @@ import redpanda_connect
 import asyncio
 from hs_cloudnative_schemas.schema.base import IsPartOf, HasPart
 from hsextract.content_types.models import ContentType
-from hsextract.content_types import determine_metadata_object, BaseMetadataObject
+from hsextract.content_types import (
+    determine_metadata_object,
+    BaseMetadataObject,
+    determine_metadata_object_from_user_metadata,
+)
 from hsextract.utils.s3 import (
     delete_metadata,
     iter_find,
@@ -195,7 +199,7 @@ def handle_minio_event(msg: redpanda_connect.Message) -> redpanda_connect.Messag
             md = BaseMetadataObject(key, file_updated)
             write_resource_jsonld_metadata(md)
         elif key.endswith("user_metadata.json"):
-            md = determine_metadata_object(key, file_updated, file_user_meta=True)
+            md = determine_metadata_object_from_user_metadata(key, file_updated)
             if md.content_type != ContentType.UNKNOWN:
                 write_content_type_jsonld_metadata(md)
                 write_resource_jsonld_metadata(md)

@@ -12,13 +12,9 @@ class SingleFileMetadataObject(FileMetadataObject):
 
     @classmethod
     def is_content_type(cls, file_object_path: str) -> bool:
-        if not file_object_path.endswith(".user_metadata.json"):
-            relative_path = os.path.relpath(file_object_path, cls._resource_contents_path(file_object_path))
-            relative_path += ".user_metadata.json"
-        else:
-            relative_path = os.path.relpath(file_object_path, cls._resource_md_path(file_object_path))
-
-        single_file_user_path = os.path.join(cls._resource_md_path(file_object_path), relative_path)
+        relative_path = os.path.relpath(file_object_path, cls._resource_contents_path(file_object_path))
+        single_file_user_path = os.path.join(cls._resource_md_path(file_object_path),
+                                             relative_path + ".user_metadata.json")
         if exists(single_file_user_path):
             return True
         return False
