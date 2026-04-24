@@ -21,8 +21,8 @@ def test_metadataobject(use_nested_folder):
     folder_path = "folder_aggregation/test_folder" if use_nested_folder else "folder_aggregation"
     file_name = "testfile.txt"
     md = FileSetMetadataObject(
-            f"test-bucket/resourceid/data/contents/{folder_path}/{file_name}", True
-        )
+        f"test-bucket/resourceid/data/contents/{folder_path}/{file_name}", True
+    )
 
     assert md.file_object_path == f"test-bucket/resourceid/data/contents/{folder_path}"
     assert md.file_updated is True
@@ -53,8 +53,8 @@ def test_metadataobject_from_user_metadata(use_nested_folder):
     # Wait for metadata to be consistent
     sleep(1)
     md = determine_metadata_object_from_user_metadata(
-            f"test-bucket/{resource_id}/.hsmetadata/{folder_path}/{user_meta_file_name}", True
-        )
+        f"test-bucket/{resource_id}/.hsmetadata/{folder_path}/{user_meta_file_name}", True
+    )
 
     assert isinstance(md, FileSetMetadataObject)
     assert md.file_object_path == f"test-bucket/{resource_id}/data/contents/{folder_path}"
@@ -83,7 +83,7 @@ def test_fileset_is_content_type(use_nested_folder, user_meta_file):
     user_metadata_path = f"test-bucket/{resource_id}/.hsmetadata/{folder_path}/user_metadata.json"
     with open("tests/test_files/folder_aggregation/testfile.txt", "rb") as f:
         s3_client.upload_fileobj(f, "test-bucket", f"{resource_id}/data/contents/{folder_path}/testfile.txt")
-    
+
     if user_meta_file:
         write_s3_json(user_metadata_path, {"user_metadata": "this is fileset user metadata"})
     sleep(1)

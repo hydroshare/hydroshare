@@ -15,8 +15,8 @@ def test_metadataobject(use_folder, use_vrt):
     file_name = "logan.vrt" if use_vrt else "logan1.tif"
     user_meta_file_name = f"{file_name}.user_metadata.json"
     md = RasterMetadataObject(
-            f"test-bucket/resourceid/data/contents/{folder_prefix}{file_name}", True
-        )
+        f"test-bucket/resourceid/data/contents/{folder_prefix}{file_name}", True
+    )
     assert md.file_object_path == f"test-bucket/resourceid/data/contents/{folder_prefix}{file_name}"
     assert md.file_updated is True
     assert md.resource_contents_path == "test-bucket/resourceid/data/contents"
@@ -80,8 +80,8 @@ def test_metadataobject_from_user_metadata_missing_content(use_folder):
     file_name = "logan1.tif"
     user_meta_file_name = f"{file_name}.user_metadata.json"
     md = determine_metadata_object_from_user_metadata(
-            f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}", True
-        )
+        f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}", True
+    )
     assert isinstance(md, BaseMetadataObject)
     assert not isinstance(md, RasterMetadataObject)
     assert md.file_object_path == f"test-bucket/{resource_id}/data/contents/{folder_prefix}{file_name}"

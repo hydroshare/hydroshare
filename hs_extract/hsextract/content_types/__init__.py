@@ -30,6 +30,7 @@ ReturnMetaObjectType = Union[
     BaseMetadataObject
 ]
 
+
 def determine_metadata_object(file_object_path: str, file_updated: bool) -> ReturnMetaObjectType:
     for metadata_class in metadata_classes:
         if metadata_class.is_content_type(file_object_path):

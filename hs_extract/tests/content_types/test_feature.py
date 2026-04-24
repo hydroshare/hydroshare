@@ -19,8 +19,8 @@ def test_metadataobject(use_folder, shp_xml):
         file_name = "watersheds.shp.xml"
 
     md = FeatureMetadataObject(
-            f"{res_bucket_path}/data/contents/{folder_prefix}{file_name}", True
-        )
+        f"{res_bucket_path}/data/contents/{folder_prefix}{file_name}", True
+    )
     file_name = "watersheds.shp"
     assert md.file_object_path == f"{res_bucket_path}/data/contents/{folder_prefix}{file_name}"
     assert md.file_updated is True
@@ -54,8 +54,8 @@ def test_metadataobject_from_user_metadata(use_folder):
     # Wait for metadata to be consistent
     sleep(1)
     md = determine_metadata_object_from_user_metadata(
-            f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}", True
-        )
+        f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}", True
+    )
     assert isinstance(md, FeatureMetadataObject)
     assert md.file_object_path == f"test-bucket/{resource_id}/data/contents/{folder_prefix}{file_name}"
     assert md.file_updated is True
@@ -83,8 +83,8 @@ def test_metadataobject_from_user_metadata_missing_content(use_folder):
     file_name = "watersheds.shp"
     user_meta_file_name = f"{file_name}.user_metadata.json"
     md = determine_metadata_object_from_user_metadata(
-            f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}", True
-        )
+        f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}", True
+    )
     assert isinstance(md, BaseMetadataObject)
     assert not isinstance(md, FeatureMetadataObject)
     assert md.file_object_path == f"test-bucket/{resource_id}/data/contents/{folder_prefix}{file_name}"

@@ -15,8 +15,8 @@ def test_metadataobject(use_folder):
     user_meta_file_name = f"{file_name}.user_metadata.json"
 
     md = NetCDFMetadataObject(
-            f"test-bucket/resourceid/data/contents/{folder_prefix}{file_name}", True
-        )
+        f"test-bucket/resourceid/data/contents/{folder_prefix}{file_name}", True
+    )
     assert md.file_object_path == f"test-bucket/resourceid/data/contents/{folder_prefix}{file_name}"
     assert md.file_updated is True
     assert md.resource_contents_path == "test-bucket/resourceid/data/contents"
@@ -49,8 +49,8 @@ def test_metadataobject_from_user_metadata(use_folder):
     # Wait for metadata to be consistent
     sleep(1)
     md = determine_metadata_object_from_user_metadata(
-            f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}", True
-        )
+        f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}", True
+    )
     assert isinstance(md, NetCDFMetadataObject)
     assert md.file_object_path == f"test-bucket/{resource_id}/data/contents/{folder_prefix}{file_name}"
     assert md.file_updated is True
@@ -82,8 +82,8 @@ def test_metadataobject_from_user_metadata_missing_content(use_folder):
     user_meta_file_name = f"{file_name}.user_metadata.json"
     # do not upload the netcdf file to s3
     md = determine_metadata_object_from_user_metadata(
-            f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}", True
-        )
+        f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}", True
+    )
     assert isinstance(md, BaseMetadataObject)
     assert not isinstance(md, NetCDFMetadataObject)
     assert md.file_object_path == f"test-bucket/{resource_id}/data/contents/{folder_prefix}{file_name}"

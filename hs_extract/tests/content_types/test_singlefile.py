@@ -14,8 +14,8 @@ def test_metadataobject(use_folder):
     file_name = "testfile.txt"
     user_meta_file_name = f"{file_name}.user_metadata.json"
     md = SingleFileMetadataObject(
-            f"test-bucket/resourceid/data/contents/{folder_prefix}{file_name}", True
-        )
+        f"test-bucket/resourceid/data/contents/{folder_prefix}{file_name}", True
+    )
     assert md.file_object_path == f"test-bucket/resourceid/data/contents/{folder_prefix}{file_name}"
     assert md.file_updated is True
     assert md.resource_contents_path == "test-bucket/resourceid/data/contents"
