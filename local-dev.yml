@@ -102,7 +102,6 @@ services:
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       VUE_APP_BUCKET_URL_PUBLIC_PATH: "/static/static"
       MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
-      MC_HOST_ciroh: "http://cuahsi:devpassword@minio:9000"
       DATACITE_USERNAME: ${DATACITE_USERNAME}
       DATACITE_PASSWORD: ${DATACITE_PASSWORD}
       ATLAS_CONNECTION_URL: "mongodb://user:pass@mongodb:27017/"
@@ -159,7 +158,6 @@ services:
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       COLUMNS: 80
       MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
-      MC_HOST_ciroh: "http://cuahsi:devpassword@minio:9000"
     ports:
       - "5555:5555"
     volumes:
@@ -197,7 +195,6 @@ services:
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       COLUMNS: 80
       MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
-      MC_HOST_ciroh: "http://cuahsi:devpassword@minio:9000"
     volumes:
       - ".:/hydroshare"
     links:
@@ -238,7 +235,6 @@ services:
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       COLUMNS: 80
       MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
-      MC_HOST_ciroh: "http://cuahsi:devpassword@minio:9000"
       AWS_ENDPOINT_URL: "http://minio:9000"
       AWS_ACCESS_KEY_ID: cuahsi
       AWS_SECRET_ACCESS_KEY: devpassword
@@ -317,7 +313,6 @@ services:
       AWS_ACCESS_KEY_ID: cuahsi
       AWS_SECRET_ACCESS_KEY: devpassword
       MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
-      MC_HOST_ciroh: "http://cuahsi:devpassword@minio:9000"
     volumes:
       - "./hs_extract:/app/hs_extract"
       - "./hs_cloudnative_schemas:/app/hs_extract/hs_cloudnative_schemas"
