@@ -5,6 +5,12 @@ FROM hydroshare/hs_docker_base:a73451a
 RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen
 
+RUN curl -fsSL https://dl.min.io/client/mc/release/linux-amd64/mc \
+    --create-dirs \
+    -o $HOME/minio-binaries/mc
+RUN mv $HOME/minio-binaries/mc /usr/local/bin/mc
+RUN chmod +x /usr/local/bin/mc
+
 RUN apt-get update
 RUN apt-get -y upgrade
 RUN curl -1sLf 'https://dl.redpanda.com/nzc4ZYQK3WRGd9sy/redpanda/cfg/setup/bash.deb.sh' | bash
@@ -18,14 +24,6 @@ RUN pip install pymongo
 
 # installs specific commit until hsmodels gets a full release
 RUN pip install --upgrade git+https://github.com/hydroshare/hsmodels.git@22b7d610814a28065511ff03ba044ad66cc1bc98
-
-RUN curl -fsSL https://dl.min.io/client/mc/release/linux-amd64/mc \
-    --create-dirs \
-    -o $HOME/minio-binaries/mc && \
-    mv $HOME/minio-binaries/mc /usr/local/bin/mc && \
-    chmod +x /usr/local/bin/mc && \
-    file /usr/local/bin/mc && \
-    mc --version
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
