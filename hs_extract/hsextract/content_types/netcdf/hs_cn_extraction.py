@@ -247,8 +247,7 @@ def encode_multidimensional_metadata(ds: xarray.Dataset,
                                      compute_statistics: bool = True) -> dataset.ScientificDataset:
 
     bounds = get_spatial_bounds(ds)
-    box_str = f"{bounds['lat_min']} {bounds['lon_min']} {
-        bounds['lat_max']} {bounds['lon_max']}"
+    box_str = f"{bounds['lat_min']} {bounds['lon_min']} {bounds['lat_max']} {bounds['lon_max']}"
     geo = base.GeoShape(box=box_str, validate_bbox=validate_bbox)
     crs = get_crs_from_dataset_metadata(ds)
 
