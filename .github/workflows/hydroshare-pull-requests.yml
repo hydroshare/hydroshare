@@ -11,7 +11,7 @@ on:
 jobs:
   hydroshare-pull-request-tests:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       DATACITE_USERNAME: ${{ secrets.DATACITE_USERNAME }}
       DATACITE_PASSWORD: ${{ secrets.DATACITE_PASSWORD }}
