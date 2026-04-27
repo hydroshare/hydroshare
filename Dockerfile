@@ -19,11 +19,13 @@ RUN pip install pymongo
 # installs specific commit until hsmodels gets a full release
 RUN pip install --upgrade git+https://github.com/hydroshare/hsmodels.git@22b7d610814a28065511ff03ba044ad66cc1bc98
 
-RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc \
+RUN curl -fsSL https://dl.min.io/client/mc/release/linux-amd64/mc \
     --create-dirs \
     -o $HOME/minio-binaries/mc && \
     mv $HOME/minio-binaries/mc /usr/local/bin/mc && \
-    chmod +x /usr/local/bin/mc
+    chmod +x /usr/local/bin/mc && \
+    file /usr/local/bin/mc && \
+    mc --version
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
