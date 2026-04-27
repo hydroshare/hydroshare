@@ -21,9 +21,9 @@ RUN pip install --upgrade git+https://github.com/hydroshare/hsmodels.git@22b7d61
 
 RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc \
     --create-dirs \
-    -o $HOME/minio-binaries/mc
-RUN mv $HOME/minio-binaries/mc /usr/local/bin/mc
-RUN chmod +x /usr/local/bin/mc
+    -o $HOME/minio-binaries/mc && \
+    mv $HOME/minio-binaries/mc /usr/local/bin/mc && \
+    chmod +x /usr/local/bin/mc
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
