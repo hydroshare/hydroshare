@@ -23,8 +23,7 @@ def inspect_coordinates(ds: xarray.Dataset) -> None:
     for coordname in ds.coords.keys():
         print(f"* {coordname}")
         print(f"\tUnit: {ds.coords[coordname].attrs.get('units', 'unknown')}")
-        print(f"\tDescription: {
-              ds.coords[coordname].attrs.get('long_name', 'None')}")
+        print(f"\tDescription: {ds.coords[coordname].attrs.get('long_name', 'None')}")
         print(f"\tType: {ds.coords[coordname].dtype}")
         print(f"\tShape: {ds.coords[coordname].shape}")
 
