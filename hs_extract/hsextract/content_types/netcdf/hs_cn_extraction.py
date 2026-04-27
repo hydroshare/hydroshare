@@ -38,8 +38,7 @@ def inspect_variables(ds: xarray.Dataset) -> None:
 
         print(f"* {varname}")
         print(f"\tUnit: {ds.variables[varname].attrs.get('units', 'unknown')}")
-        print(f"\tDescription: {ds.variables[
-              varname].attrs.get('long_name', 'none')}")
+        print(f"\tDescription: {ds.variables[varname].attrs.get('long_name', 'none')}")
         print(f"\tType: {ds.variables[varname].dtype}")
         print(f"\tCoordinates: ({', '.join(ds[varname].coords.keys())})")
         print(f"\tShape: {ds.variables[varname].shape}")
