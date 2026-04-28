@@ -22,6 +22,7 @@ Add the issues included in the release and update this document as release tasks
   * hydroshare/local_settings.py
 - [ ] Determine whether maintenance page will be needed (db migrations etc)
 - [ ] Add any management commands necessary for the deploy to the notes section
+- [ ] Determine the images included in the release and run scripts/build-images.sh
 - [ ] Deployed to Beta
   - [ ] Run collectstatic if it is not run as part of the deployment
   - [ ] Kill the innactive HS pod and let it come back up
@@ -29,16 +30,12 @@ Add the issues included in the release and update this document as release tasks
 - [ ] Create a new user and update profile
 - [ ] Create a new resource, check sharing/permission settings, delete new resource
 - [ ] Developers test around issues
-- [ ] Hsclient tests pass when targeting beta
-  - [Replace with your passing HSclient run](https://github.com/hydroshare/hsclient/actions/runs/17570029473)
 - [ ] QA testing around issues
 - [ ] Stakeholders approval
 
 <!-- Update the checklist as items are completed -->
 ### Production Deployment
-- [ ] Retag if needed (for example if it was tagged as an "rc-")
-  * Add a tag in the [Cloud Artifact Registry](https://console.cloud.google.com/artifacts/docker/hydroshare-403701/us-central1/hydroshare/hydroshare?project=hydroshare-403701)![alt text](cloud_tag.png) or using `gcloud artifacts docker tags add us-central1-docker.pkg.dev/hydroshare-403701/hydroshare/hydroshare:old-tag us-central1-docker.pkg.dev/hydroshare-403701/hydroshare/hydroshare:new-tag`
-  * Also add a tag in the Hydroshare repository if it hasn't been added yet, for example: `git tag 3.9.0 <rc_commit_hash> && git push origin 3.9.0`
+- [ ] add a tag in the Hydroshare repository if it hasn't been added yet, for example: `git tag 3.9.0 <rc_commit_hash> && git push origin 3.9.0`
 - [ ] Make manual changes to the Production charts identified in Beta Deployment
 - [ ] Connect to the prod cluster
   - `gcloud container clusters get-credentials hydroshare-prod --region us-central1`
