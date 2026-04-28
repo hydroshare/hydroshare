@@ -16,20 +16,23 @@ from api.cache import (
     # user_has_view_access_cache,
 )
 from api.database import (
+    get_user_token_and_id,
     is_superuser_and_id,
     resource_discoverability,
     user_has_edit_access,
     user_has_view_access,
     quota_is_exceeded
 )
+from api.sigv4 import verify_signature_v4
 
 
 router = APIRouter()
-logger = logging.getLogger("micro-auth")
+logger = logging.getLogger("hs-s3-auth")
 
 VIEW_ACTIONS = os.environ.get(
     "S#_VIEW_ACTIONS",
-    "s3:GetObject,s3:ListObjects,s3:ListObjectsV2,s3:ListBucket,s3:GetObjectRetention,s3:GetObjectLegalHold",
+    "s3:GetObject,s3:ListObjects,s3:ListObjectsV2,s3:ListBucket,s3:GetObjectRetention,s3:GetObjectLegalHold,\
+        s3:HeadObject",
 ).split(",")
 WRITE_ACTIONS = os.environ.get(
     "S3_WRITE_ACTIONS", "s3:PutObject,s3:UploadPart,s3:PutObjectLegalHold"
@@ -166,11 +169,11 @@ def _check_user_authorization(user_id, resource_id, action, is_contents_path):
             view_access = user_has_view_access(user_id, resource_id)
             backfill_view_access(user_id, resource_id, view_access)
 
-        if action in ["s3:GetObject", "s3:GetObjectRetention", "s3:GetObjectLegalHold"]:
-            return public or allow_private_sharing or view_access
         # view and discoverable actions
         if action in ["s3:ListObjects", "s3:ListObjectsV2", "s3:ListBucket"]:
             return public or allow_private_sharing or discoverable or view_access
+
+        return public or allow_private_sharing or view_access
 
     # Check if edit actions are enabled via environment variable
     enable_edit_actions = os.environ.get(
@@ -190,3 +193,42 @@ def _check_user_authorization(user_id, resource_id, action, is_contents_path):
         return edit_access
 
     return False
+
+
+class SignatureVerifyRequest(BaseModel):
+    method: str
+    path: str
+    headers: dict
+    query_params: dict
+    payload_hash: str
+    auth_info: dict
+
+
+@router.post("/verify-signature/")
+async def verify_signature(request: SignatureVerifyRequest):
+    username = request.auth_info.get("access_key")
+    if not username:
+        return {"allow": False, "reason": "missing_access_key"}
+
+    row = get_user_token_and_id(username)
+    if row is None:
+        logger.warning(f"No token found for username: {username}")
+        return {"allow": False, "reason": "user_not_found"}
+
+    token_key, user_id = row
+
+    valid = verify_signature_v4(
+        method=request.method,
+        path=request.path,
+        headers=request.headers,
+        query_params=request.query_params,
+        payload_hash=request.payload_hash,
+        secret_key=token_key,
+        auth_info=request.auth_info,
+    )
+
+    if not valid:
+        logger.warning(f"Invalid signature for username: {username}")
+        return {"allow": False, "reason": "invalid_signature"}
+
+    return {"allow": True, "user_id": int(user_id)}

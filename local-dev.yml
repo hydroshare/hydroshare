@@ -17,13 +17,12 @@ services:
       MINIO_ROOT_PASSWORD: devpassword
       MINIO_BROWSER_REDIRECT: "false"
       MINIO_SCANNER_SPEED: "fastest"
-      MINIO_POLICY_PLUGIN_URL: "http://micro-auth/minio/authorization/"
       MINIO_NOTIFY_KAFKA_ENABLE_RESOURCEFILE: "on"
       MINIO_NOTIFY_KAFKA_BROKERS_RESOURCEFILE: "redpanda:9092"
       MINIO_NOTIFY_KAFKA_TOPIC_RESOURCEFILE: "resource_file"
     command: server --console-address ":9001" /data
     depends_on:
-      - micro-auth
+      - hs-s3-auth
   postgis:
     image: postgis/postgis:15-3.3
     platform: linux/amd64
@@ -103,7 +102,6 @@ services:
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       VUE_APP_BUCKET_URL_PUBLIC_PATH: "/static/static"
       MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
-      MC_HOST_ciroh: "http://cuahsi:devpassword@minio:9000"
       DATACITE_USERNAME: ${DATACITE_USERNAME}
       DATACITE_PASSWORD: ${DATACITE_PASSWORD}
       ATLAS_CONNECTION_URL: "mongodb://user:pass@mongodb:27017/"
@@ -160,7 +158,6 @@ services:
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       COLUMNS: 80
       MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
-      MC_HOST_ciroh: "http://cuahsi:devpassword@minio:9000"
     ports:
       - "5555:5555"
     volumes:
@@ -198,7 +195,6 @@ services:
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       COLUMNS: 80
       MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
-      MC_HOST_ciroh: "http://cuahsi:devpassword@minio:9000"
     volumes:
       - ".:/hydroshare"
     links:
@@ -239,7 +235,6 @@ services:
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       COLUMNS: 80
       MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
-      MC_HOST_ciroh: "http://cuahsi:devpassword@minio:9000"
       AWS_ENDPOINT_URL: "http://minio:9000"
       AWS_ACCESS_KEY_ID: cuahsi
       AWS_SECRET_ACCESS_KEY: devpassword
@@ -287,27 +282,28 @@ services:
       - 18082:18082
       - 19092:19092
       - 19644:9644
-  redpanda-console:
-    container_name: redpanda-console
-    image: docker.redpanda.com/redpandadata/console:v3.2.2
-    entrypoint: /bin/sh
-    command: -c 'echo "$$CONSOLE_CONFIG_FILE" > /tmp/config.yml; /app/console'
-    environment:
-      CONFIG_FILEPATH: /tmp/config.yml
-      CONSOLE_CONFIG_FILE: |
-        kafka:
-          brokers: ["redpanda:9092"]
-        schemaRegistry:
-          enabled: true
-          urls: ["http://redpanda:8081"]
-        redpanda:
-          adminApi:
-            enabled: true
-            urls: ["http://redpanda:9644"]
-    ports:
-      - 8080:8080
-    depends_on:
-      - redpanda
+  # Enable as needed in local development for kafka topics and redpanda console access.
+  # redpanda-console:
+  #   container_name: redpanda-console
+  #   image: docker.redpanda.com/redpandadata/console:v3.2.2
+  #   entrypoint: /bin/sh
+  #   command: -c 'echo "$$CONSOLE_CONFIG_FILE" > /tmp/config.yml; /app/console'
+  #   environment:
+  #     CONFIG_FILEPATH: /tmp/config.yml
+  #     CONSOLE_CONFIG_FILE: |
+  #       kafka:
+  #         brokers: ["redpanda:9092"]
+  #       schemaRegistry:
+  #         enabled: true
+  #         urls: ["http://redpanda:8081"]
+  #       redpanda:
+  #         adminApi:
+  #           enabled: true
+  #           urls: ["http://redpanda:9644"]
+  #   ports:
+  #     - 8080:8080
+  #   depends_on:
+  #     - redpanda
   hs_extract:
     build:
       context: .
@@ -318,7 +314,6 @@ services:
       AWS_ACCESS_KEY_ID: cuahsi
       AWS_SECRET_ACCESS_KEY: devpassword
       MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
-      MC_HOST_ciroh: "http://cuahsi:devpassword@minio:9000"
     volumes:
       - "./hs_extract:/app/hs_extract"
       - "./hs_cloudnative_schemas:/app/hs_extract/hs_cloudnative_schemas"
@@ -387,27 +382,49 @@ services:
     depends_on:
       - hydroshare
       - companion
-  micro-auth:
-    image: hydroshare/micro-auth:latest
+  hs-s3-auth:
+    image: hydroshare/hs-s3-auth:latest
     platform: linux/amd64
-    container_name: micro-auth
+    container_name: hs-s3-auth
     build:
-      context: ./hs_auth_minio
+      context: ./hs_s3_auth
       dockerfile: Dockerfile
     environment:
       HS_DATABASE_URL: "postgresql://postgres:postgres@postgis:5432/postgres"
-      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
-      MC_HOST_ciroh: "http://cuahsi:devpassword@minio:9000"
       REDIS_HOST: redis
       REDIS_PORT: "6379"
       ENABLE_EDIT_ACTIONS: "true"
     ports:
-      - 8001:8001
+      - 8001:80
     links:
       - postgis:postgis
     restart: on-failure
     depends_on:
       - postgis
+  hs-s3-proxy:
+    image: hydroshare/hs-s3-proxy:latest
+    platform: linux/amd64
+    container_name: hs-s3-proxy
+    build:
+      context: ./hs_s3_proxy
+      dockerfile: Dockerfile
+    environment:
+      AUTH_SERVICE_URL: "http://hs-s3-auth"
+      AUTH_SERVICE_TIMEOUT: "5"
+      S3_BACKEND_URL: "http://minio:9000"
+      S3_BACKEND_ACCESS_KEY: "cuahsi"
+      S3_BACKEND_SECRET_KEY: "devpassword"
+      S3_BACKEND_REGION: "auto"
+      S3_PROXY_TIMEOUT: "300"
+    ports:
+      - 9002:9000
+    links:
+      - hs-s3-auth:hs-s3-auth
+      - minio:minio
+    restart: on-failure
+    depends_on:
+      - hs-s3-auth
+      - minio
   mongodb:
     image: mongodb/mongodb-atlas-local
     container_name: mongodb

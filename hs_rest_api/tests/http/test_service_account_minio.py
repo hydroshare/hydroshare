@@ -6,7 +6,7 @@ from unittest import skip
 
 class TestServiceAccountMinIO(HSRESTTestCase):
 
-    @skip("Skipping, micro-auth needs to be configured to use the test database")
+    @skip("Skipping, hs-s3-auth needs to be configured to use the test database")
     def test_add_list_remove_service_account(self):
         # create
         service_account_url = reverse('minio_service_accounts')

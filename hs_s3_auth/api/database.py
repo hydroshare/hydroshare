@@ -24,13 +24,28 @@ def quota_is_exceeded(resource_id: int):
     return True
 
 
+def get_user_token_and_id(username: str):
+    # return (token_key, user_id) or None
+    query = """SELECT authtoken_token.key, authtoken_token.user_id
+    FROM authtoken_token
+    INNER JOIN auth_user ON authtoken_token.user_id = auth_user.id
+    WHERE auth_user.username = :username"""
+
+    with engine.connect() as con:
+        rs = con.execute(statement=text(query),
+                         parameters=dict(username=username))
+        row = rs.fetchone()
+        if row:
+            return row
+    return None
+
+
 def is_superuser_and_id(username: str):
     # return is_superuser and user_id as tuple
     query = """SELECT auth_user.is_superuser, theme_userprofile.user_id
     FROM auth_user
     INNER JOIN theme_userprofile
-    ON auth_user.id = theme_userprofile.user_id
-    WHERE theme_userprofile._bucket_name = :username"""
+    ON auth_user.username = :username"""
 
     with engine.connect() as con:
         rs = con.execute(statement=text(query),

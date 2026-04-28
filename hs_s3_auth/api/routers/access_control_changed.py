@@ -7,7 +7,7 @@ from pydantic import BaseModel
 import api.cache as cache
 
 router = APIRouter()
-logger = logging.getLogger("micro-auth")
+logger = logging.getLogger("hs-s3-auth")
 
 
 class UserAccess(BaseModel):
