@@ -6,9 +6,11 @@ from pathlib import Path
 from time import sleep
 import pytest
 
-from hsextract.content_types.models import BaseMetadataObject, FileMetadataObject
+from hsextract.content_types.models import BaseMetadataObject, FileMetadataObject, ContentType
+from hsextract.content_types.timeseries.models import TimeSeriesMetadataObject
+from hsextract.content_types import determine_metadata_object_from_user_metadata
 from hsextract.main import write_content_type_jsonld_metadata, write_resource_jsonld_metadata
-from tests import read_s3_json, s3_client, write_s3_json
+from tests import assert_has_part_reference, assert_manifest_reference, read_s3_json, s3_client, write_s3_json
 
 # Stub heavy deps so test collection doesn’t require rasterio/xarray/geopandas.
 sys.modules.setdefault("rasterio", types.SimpleNamespace(open=lambda *_, **__: None))
@@ -48,10 +50,15 @@ def test_resource_haspart_merges_user_and_extracted():
     result_resource_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json"
     )
-    has_part_urls = [part["url"] for part in result_resource_metadata["hasPart"]]
+    assert_manifest_reference(result_resource_metadata, resource_id, "test-bucket", expected_media_obj_count=0)
+    assert_has_part_reference(result_resource_metadata, resource_id, "test-bucket", expected_has_part_count=4)
+    result_has_parts = read_s3_json(
+        f"test-bucket/{resource_id}/.hsjsonld/has_parts.json"
+    )
+    has_part_urls = [part["url"] for part in result_has_parts]
 
     # extracted + 3 user entries (one duplicate of extracted) = 4 entries (joined)
-    assert len(result_resource_metadata["hasPart"]) == 4
+    assert len(result_has_parts) == 4
     assert has_part_urls.count(extracted_part_url) == 2
     assert "https://example.com/user-haspart-1" in has_part_urls
     assert "https://example.com/user-haspart-2" in has_part_urls
@@ -61,7 +68,7 @@ def test_content_type_haspart_merges_user_and_extracted():
     resource_id = str(uuid.uuid4())
     file_name = "ODM2_Multi_Site_One_Variable_Test.csv"
     object_path = f"test-bucket/{resource_id}/data/contents/{file_name}"
-    md = FileMetadataObject(object_path, True)
+    md = FileMetadataObject(object_path, file_updated=True)
 
     content_part_url = "https://example.com/content-type-part"
     user_part_url = "https://example.com/user-part"
@@ -112,24 +119,140 @@ def test_resource_haspart_user_only_when_no_extracted_parts():
         if result_resource_metadata.get("hasPart"):
             break
         sleep(0.2)
-    has_part_urls = {part["url"] for part in result_resource_metadata["hasPart"]}
+    assert_has_part_reference(result_resource_metadata, resource_id, "test-bucket", expected_has_part_count=2)
+    result_has_parts = read_s3_json(
+        f"test-bucket/{resource_id}/.hsjsonld/has_parts.json"
+    )
+    has_part_urls = {part["url"] for part in result_has_parts}
 
-    assert len(result_resource_metadata["hasPart"]) == 2
+    assert len(result_has_parts) == 2
     assert "https://example.com/user-only-part-1" in has_part_urls
     assert "https://example.com/user-only-part-2" in has_part_urls
 
 
-def test_resource_timeseries_csv_extraction():
+@pytest.mark.parametrize("use_folder", [True, False])
+@pytest.mark.parametrize("use_sqlite", [True, False])
+def test_metadataobject(use_folder, use_sqlite):
+    folder_prefix = "test-folder/" if use_folder else ""
+    file_name = "ODM2_Multi_Site_One_Variable.sqlite" if use_sqlite else "ODM2_Multi_Site_One_Variable_Test.csv"
+    user_meta_file_name = f"{file_name}.user_metadata.json"
+
+    md = TimeSeriesMetadataObject(
+        f"test-bucket/resourceid/data/contents/{folder_prefix}{file_name}", True
+    )
+    assert md.file_object_path == f"test-bucket/resourceid/data/contents/{folder_prefix}{file_name}"
+    assert md.file_updated is True
+    assert md.resource_contents_path == "test-bucket/resourceid/data/contents"
+    assert md.resource_md_path == "test-bucket/resourceid/.hsmetadata"
+    assert md.resource_md_jsonld_path == "test-bucket/resourceid/.hsjsonld"
+    assert md.content_type == ContentType.TIMESERIES
+    assert md.system_metadata_path == "test-bucket/resourceid/.hsmetadata/system_metadata.json"
+    assert md.user_metadata_path == "test-bucket/resourceid/.hsmetadata/user_metadata.json"
+    assert md.resource_metadata_jsonld_path == "test-bucket/resourceid/.hsjsonld/dataset_metadata.json"
+    assert md.resource_associated_media_jsonld_path == "test-bucket/resourceid/.hsjsonld/file_manifest.json"
+    assert md.resource_has_parts_jsonld_path == "test-bucket/resourceid/.hsjsonld/has_parts.json"
+    assert md.content_type_md_jsonld_path == f"test-bucket/resourceid/.hsjsonld/{folder_prefix}{file_name}.json"
+    assert md.content_type_md_path == f"test-bucket/resourceid/.hsmetadata/{folder_prefix}{file_name}.json"
+    assert md.content_type_contents_path == f"test-bucket/resourceid/data/contents/{folder_prefix.rstrip('/')}"
+    assert md.content_type_main_file_path == f"test-bucket/resourceid/data/contents/{folder_prefix}{file_name}"
+    assert md.content_type_md_user_path == f"test-bucket/resourceid/.hsmetadata/{folder_prefix}{user_meta_file_name}"
+    assert md._content_type_associated_media is None
+
+
+@pytest.mark.parametrize("use_sqlite", [True, False])
+@pytest.mark.parametrize("use_folder", [True, False])
+def test_metadataobject_from_user_metadata(use_folder, use_sqlite):
+    resource_id = str(uuid.uuid4())
+    folder_prefix = "test-folder/" if use_folder else ""
+    file_name = "ODM2_Multi_Site_One_Variable.sqlite" if use_sqlite else "ODM2_Multi_Site_One_Variable_Test.csv"
+    user_meta_file_name = f"{file_name}.user_metadata.json"
+    user_metadata_path = f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}"
+
+    if use_sqlite:
+        with open(SQLITE_FIXTURE, "rb") as f:
+            s3_client.upload_fileobj(
+                f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}{file_name}")
+    else:
+        with open(CSV_FIXTURE, "rb") as f:
+            s3_client.upload_fileobj(
+                f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}{file_name}")
+    sleep(1)
+
+    md = determine_metadata_object_from_user_metadata(user_metadata_path, file_updated=True)
+    assert isinstance(md, TimeSeriesMetadataObject)
+    assert md.file_object_path == f"test-bucket/{resource_id}/data/contents/{folder_prefix}{file_name}"
+    assert md.file_updated is True
+    assert md.resource_contents_path == f"test-bucket/{resource_id}/data/contents"
+    assert md.resource_md_path == f"test-bucket/{resource_id}/.hsmetadata"
+    assert md.resource_md_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld"
+    assert md.content_type == ContentType.TIMESERIES
+    assert md.system_metadata_path == f"test-bucket/{resource_id}/.hsmetadata/system_metadata.json"
+    assert md.user_metadata_path == f"test-bucket/{resource_id}/.hsmetadata/user_metadata.json"
+    assert md.resource_metadata_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json"
+    assert md.resource_associated_media_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld/file_manifest.json"
+    assert md.resource_has_parts_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld/has_parts.json"
+    assert md.content_type_md_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}{file_name}.json"
+    assert md.content_type_md_path == f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{file_name}.json"
+    assert md.content_type_contents_path == f"test-bucket/{resource_id}/data/contents/{folder_prefix.rstrip('/')}"
+    assert md.content_type_main_file_path == f"test-bucket/{resource_id}/data/contents/{folder_prefix}{file_name}"
+    assert md.content_type_md_user_path == f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}"
+    assert md._content_type_associated_media is None
+
+
+@pytest.mark.parametrize("use_folder", [True, False])
+def test_metadataobject_from_user_metadata_missing_content(use_folder):
+    resource_id = str(uuid.uuid4())
+    folder_prefix = "test-folder/" if use_folder else ""
+    file_name = "ODM2_Multi_Site_One_Variable.sqlite"
+    user_meta_file_name = f"{file_name}.user_metadata.json"
+    md = determine_metadata_object_from_user_metadata(
+        f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}", True
+    )
+    assert isinstance(md, BaseMetadataObject)
+    assert not isinstance(md, TimeSeriesMetadataObject)
+    assert md.file_object_path == f"test-bucket/{resource_id}/data/contents/{folder_prefix}{file_name}"
+    assert md.file_updated is True
+    assert md.resource_contents_path == f"test-bucket/{resource_id}/data/contents"
+    assert md.resource_md_path == f"test-bucket/{resource_id}/.hsmetadata"
+    assert md.resource_md_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld"
+    assert md.content_type == ContentType.UNKNOWN
+    assert md.system_metadata_path == f"test-bucket/{resource_id}/.hsmetadata/system_metadata.json"
+    assert md.user_metadata_path == f"test-bucket/{resource_id}/.hsmetadata/user_metadata.json"
+    assert md.resource_metadata_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json"
+    assert md.resource_associated_media_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld/file_manifest.json"
+    assert md.resource_has_parts_jsonld_path == f"test-bucket/{resource_id}/.hsjsonld/has_parts.json"
+    assert md.content_type_md_jsonld_path is None
+    assert md.content_type_md_path is None
+    assert md.content_type_contents_path is None
+    assert md.content_type_main_file_path is None
+    assert md.content_type_md_user_path is None
+    assert md._content_type_associated_media is None
+
+
+@pytest.mark.parametrize("use_folder", [True, False])
+@pytest.mark.parametrize("use_sqlite", [True, False])
+def test_timeseries_is_content_type(use_folder, use_sqlite):
+    resource_id = str(uuid.uuid4())
+    folder_prefix = "timeseries_aggregation/" if use_folder else ""
+    base_file_name = "ODM2_Multi_Site_One_Variable.sqlite" if use_sqlite else "ODM2_Multi_Site_One_Variable_Test.csv"
+    content_path = f"test-bucket/{resource_id}/data/contents/{folder_prefix}{base_file_name}"
+    assert TimeSeriesMetadataObject.is_content_type(content_path) is True
+
+
+@pytest.mark.parametrize("use_folder", [True, False])
+def test_resource_timeseries_csv_extraction(use_folder):
     if not CSV_FIXTURE.exists():
         pytest.fail("CSV fixture not available")
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
+    folder_prefix = "timeseries_aggregation/" if use_folder else ""
     print(resource_id)
-    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/ODM2_Multi_Site_One_Variable_Test.csv.user_metadata.json", {
+    user_meta_file_name = "ODM2_Multi_Site_One_Variable_Test.csv.user_metadata.json"
+    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{user_meta_file_name}", {
                   "user_metadata": "this is timeseries user metadata"})
     sleep(1)
     with open(CSV_FIXTURE, "rb") as f:
         s3_client.upload_fileobj(
-            f, "test-bucket", f"{resource_id}/data/contents/ODM2_Multi_Site_One_Variable_Test.csv")
+            f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}ODM2_Multi_Site_One_Variable_Test.csv")
 
     # Wait for metadata to be consistent
     sleep(1)
@@ -137,55 +260,60 @@ def test_resource_timeseries_csv_extraction():
     result_resource_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json")
 
-    assert len(result_resource_metadata["associatedMedia"]) == 1
-    assert result_resource_metadata["associatedMedia"][
-        0]["name"] == "ODM2_Multi_Site_One_Variable_Test.csv"
-    assert len(result_resource_metadata["hasPart"]) == 1
-    assert result_resource_metadata["hasPart"][
-        0]["url"].endswith("ODM2_Multi_Site_One_Variable_Test.csv.json")
+    assert_manifest_reference(result_resource_metadata, resource_id, "test-bucket", expected_media_obj_count=1)
+    assert_has_part_reference(result_resource_metadata, resource_id, "test-bucket", expected_has_part_count=1)
+    result_has_parts = read_s3_json(
+        f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
+    assert len(result_has_parts) == 1
+    assert result_has_parts[0]["url"].endswith(f"{folder_prefix}ODM2_Multi_Site_One_Variable_Test.csv.json")
 
-    result_netcdf_metadata = read_s3_json(
-        f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable_Test.csv.json")
-    assert len(result_netcdf_metadata["associatedMedia"]) == 1
-    assert result_netcdf_metadata["associatedMedia"][
+    result_timeseries_metadata = read_s3_json(
+        f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}ODM2_Multi_Site_One_Variable_Test.csv.json")
+    assert len(result_timeseries_metadata["associatedMedia"]) == 1
+    assert result_timeseries_metadata["associatedMedia"][
         0]["name"] == "ODM2_Multi_Site_One_Variable_Test.csv"
-    assert len(result_netcdf_metadata["isPartOf"]) == 1
-    assert result_netcdf_metadata["isPartOf"][
-        0].endswith("dataset_metadata.json")
-    assert result_netcdf_metadata[
+    assert len(result_timeseries_metadata["isPartOf"]) == 1
+    assert result_timeseries_metadata["isPartOf"][
+        0]["url"].endswith("dataset_metadata.json")
+    assert result_timeseries_metadata[
         "user_metadata"] == "this is timeseries user metadata"
 
 
-@pytest.mark.skip(reason="User metadata event update for content types is not currently implemented")
-def test_resource_timeseries_csv_usermetadata():
+@pytest.mark.parametrize("use_folder", [True, False])
+def test_resource_timeseries_csv_usermetadata(use_folder):
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
-    sleep(1)
-    with open("tests/test_files/timeseries/ODM2_Multi_Site_One_Variable_Test.csv", "rb") as f:
-        s3_client.upload_fileobj(f, "test-bucket", f"{resource_id}/data/contents/ODM2_Multi_Site_One_Variable_Test.csv")
+    csv_file_name = "ODM2_Multi_Site_One_Variable_Test.csv"
+    folder_prefix = "timeseries_aggregation/" if use_folder else ""
+    with open(f"tests/test_files/timeseries/{csv_file_name}", "rb") as f:
+        s3_client.upload_fileobj(f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}{csv_file_name}")
 
-    result_metadata_path = f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable_Test.csv.json"
-    result_netcdf_metadata = read_s3_json(result_metadata_path)
-    assert "user_metadata" not in result_netcdf_metadata
+    sleep(1)
+    result_metadata_path = f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}{csv_file_name}.json"
+    result_timeseries_metadata = read_s3_json(result_metadata_path)
+    assert "user_metadata" not in result_timeseries_metadata
     sleep(1)
 
-    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/ODM2_Multi_Site_One_Variable_Test.csv.user_metadata.json", {
+    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{csv_file_name}.user_metadata.json", {
                   "user_metadata": "this is timeseries user metadata"})
     sleep(1)
-    result_metadata_path = f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable_Test.csv.json"
-    result_netcdf_metadata = read_s3_json(result_metadata_path)
-    assert result_netcdf_metadata["user_metadata"] == "this is timeseries user metadata"
+    result_metadata_path = f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}{csv_file_name}.json"
+    result_timeseries_metadata = read_s3_json(result_metadata_path)
+    assert result_timeseries_metadata["user_metadata"] == "this is timeseries user metadata"
 
 
-def test_resource_timeseries_sqlite_extraction():
+@pytest.mark.parametrize("use_folder", [True, False])
+def test_resource_timeseries_sqlite_extraction(use_folder):
     if not SQLITE_FIXTURE.exists():
         pytest.skip("SQLite fixture not available")
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
-    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/ODM2_Multi_Site_One_Variable.sqlite.user_metadata.json", {
+    folder_prefix = "timeseries_aggregation/" if use_folder else ""
+    sqlite_file_name = "ODM2_Multi_Site_One_Variable.sqlite"
+    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{sqlite_file_name}.user_metadata.json", {
                   "user_metadata": "this is timeseries user metadata"})
     sleep(1)
     with open(SQLITE_FIXTURE, "rb") as f:
         s3_client.upload_fileobj(
-            f, "test-bucket", f"{resource_id}/data/contents/ODM2_Multi_Site_One_Variable.sqlite")
+            f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}{sqlite_file_name}")
 
     # Wait for metadata to be consistent
     sleep(1)
@@ -193,39 +321,41 @@ def test_resource_timeseries_sqlite_extraction():
     result_resource_metadata = read_s3_json(
         f"test-bucket/{resource_id}/.hsjsonld/dataset_metadata.json")
 
-    assert len(result_resource_metadata["associatedMedia"]) == 1
-    assert result_resource_metadata["associatedMedia"][
-        0]["name"] == "ODM2_Multi_Site_One_Variable.sqlite"
-    assert len(result_resource_metadata["hasPart"]) == 1
-    assert result_resource_metadata["hasPart"][
-        0]["url"].endswith("ODM2_Multi_Site_One_Variable.sqlite.json")
+    assert_manifest_reference(result_resource_metadata, resource_id, "test-bucket", expected_media_obj_count=1)
+    assert_has_part_reference(result_resource_metadata, resource_id, "test-bucket", expected_has_part_count=1)
+    result_has_parts = read_s3_json(
+        f"test-bucket/{resource_id}/.hsjsonld/has_parts.json")
+    assert len(result_has_parts) == 1
+    assert result_has_parts[0]["url"].endswith(f"{folder_prefix}{sqlite_file_name}.json")
 
-    result_netcdf_metadata = read_s3_json(
-        f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable.sqlite.json")
-    assert len(result_netcdf_metadata["associatedMedia"]) == 1
-    assert result_netcdf_metadata["associatedMedia"][
-        0]["name"] == "ODM2_Multi_Site_One_Variable.sqlite"
-    assert len(result_netcdf_metadata["isPartOf"]) == 1
-    assert result_netcdf_metadata["isPartOf"][
-        0].endswith("dataset_metadata.json")
-    assert result_netcdf_metadata["user_metadata"] == "this is timeseries user metadata"
+    result_timeseries_metadata = read_s3_json(
+        f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}{sqlite_file_name}.json")
+    assert len(result_timeseries_metadata["associatedMedia"]) == 1
+    assert result_timeseries_metadata["associatedMedia"][
+        0]["name"] == sqlite_file_name
+    assert len(result_timeseries_metadata["isPartOf"]) == 1
+    assert result_timeseries_metadata["isPartOf"][
+        0]["url"].endswith("dataset_metadata.json")
+    assert result_timeseries_metadata["user_metadata"] == "this is timeseries user metadata"
 
 
-@pytest.mark.skip(reason="User metadata event update for content types is not currently implemented")
-def test_resource_timeseries_sqlite_usermetadata():
+@pytest.mark.parametrize("use_folder", [True, False])
+def test_resource_timeseries_sqlite_usermetadata(use_folder):
     resource_id = str(uuid.uuid4())  # Generate a random hex resource ID
-    with open("tests/test_files/timeseries/ODM2_Multi_Site_One_Variable.sqlite", "rb") as f:
+    folder_prefix = "timeseries_aggregation/" if use_folder else ""
+    sqlite_file_name = "ODM2_Multi_Site_One_Variable.sqlite"
+    with open(f"tests/test_files/timeseries/{sqlite_file_name}", "rb") as f:
         s3_client.upload_fileobj(
-            f, "test-bucket", f"{resource_id}/data/contents/ODM2_Multi_Site_One_Variable.sqlite")
+            f, "test-bucket", f"{resource_id}/data/contents/{folder_prefix}{sqlite_file_name}")
     sleep(1)
 
-    result_netcdf_metadata = read_s3_json(
-        f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable.sqlite.json")
-    assert "user_metadata" not in result_netcdf_metadata
+    result_timeseries_metadata = read_s3_json(
+        f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}{sqlite_file_name}.json")
+    assert "user_metadata" not in result_timeseries_metadata
 
-    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/ODM2_Multi_Site_One_Variable.sqlite.user_metadata.json", {
+    write_s3_json(f"test-bucket/{resource_id}/.hsmetadata/{folder_prefix}{sqlite_file_name}.user_metadata.json", {
                   "user_metadata": "this is timeseries user metadata"})
     sleep(1)
-    result_netcdf_metadata = read_s3_json(
-        f"test-bucket/{resource_id}/.hsjsonld/ODM2_Multi_Site_One_Variable.sqlite.json")
-    assert result_netcdf_metadata["user_metadata"] == "this is timeseries user metadata"
+    result_timeseries_metadata = read_s3_json(
+        f"test-bucket/{resource_id}/.hsjsonld/{folder_prefix}{sqlite_file_name}.json")
+    assert result_timeseries_metadata["user_metadata"] == "this is timeseries user metadata"
