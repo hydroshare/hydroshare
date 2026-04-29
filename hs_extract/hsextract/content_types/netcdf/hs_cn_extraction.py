@@ -3,6 +3,7 @@ import tempfile
 import xarray
 import numpy as np
 from pyproj import CRS
+from pydantic import ValidationError
 
 from hs_cloudnative_schemas.schema import base
 from hs_cloudnative_schemas.schema import dataset
@@ -248,11 +249,17 @@ def encode_multidimensional_metadata(ds: xarray.Dataset,
                                      validate_bbox: bool = True,
                                      compute_statistics: bool = True) -> dataset.ScientificDataset:
 
-    bounds = get_spatial_bounds(ds)
-    box_str = f"{bounds['lat_min']} {bounds['lon_min']} {
-        bounds['lat_max']} {bounds['lon_max']}"
-    geo = base.GeoShape(box=box_str, validate_bbox=validate_bbox)
     crs = get_crs_from_dataset_metadata(ds)
+    bounds = get_spatial_bounds(ds)
+    box_str = f"{bounds['lat_min']} {bounds['lon_min']} {bounds['lat_max']} {bounds['lon_max']}"
+
+    # Bbox validation expects geographic lat/lon degrees. For projected CRS values
+    # (e.g., meters), strict validation will fail even when metadata is valid.
+    should_validate_bbox = validate_bbox and (crs is None or crs.is_geographic)
+    try:
+        geo = base.GeoShape(box=box_str, validate_bbox=should_validate_bbox)
+    except ValidationError:
+        geo = base.GeoShape(box=box_str, validate_bbox=False)
 
     if crs:
         srs = base.SpatialReference(

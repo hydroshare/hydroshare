@@ -3,9 +3,21 @@ import json
 import os
 import redpanda_connect
 import asyncio
+from hs_cloudnative_schemas.schema.base import IsPartOf, HasPart
 from hsextract.content_types.models import ContentType
-from hsextract.content_types import determine_metadata_object, BaseMetadataObject
-from hsextract.utils.s3 import find, write_metadata, load_metadata, delete_metadata
+from hsextract.content_types import (
+    determine_metadata_object,
+    BaseMetadataObject,
+    determine_metadata_object_from_user_metadata,
+)
+from hsextract.utils.s3 import (
+    delete_metadata,
+    iter_find,
+    load_metadata,
+    write_file_manifest,
+    write_has_part_file,
+    write_metadata,
+)
 
 
 def _normalize_list(value) -> list:
@@ -16,6 +28,30 @@ def _normalize_list(value) -> list:
     return [value]
 
 
+def _iter_resource_has_parts(md: BaseMetadataObject, user_json: dict):
+    jsonld_files_to_exclude = {
+        md.resource_metadata_jsonld_path,
+        md.resource_associated_media_jsonld_path,
+        md.resource_has_parts_jsonld_path,
+    }
+    for file in iter_find(md.resource_md_jsonld_path):
+        if file in jsonld_files_to_exclude:
+            continue
+        if file.endswith("file_manifest.json"):
+            # fileset manifest file - so skip
+            continue
+        content_type_metadata = load_metadata(file)
+        has_part = HasPart(
+            name=content_type_metadata.get("name", None),
+            description=content_type_metadata.get("description", None),
+            url=f"{os.environ['AWS_S3_ENDPOINT_URL']}/{file}",
+        )
+        yield has_part.model_dump(exclude_none=True)
+
+    for has_part in _normalize_list(user_json.get("hasPart")):
+        yield has_part
+
+
 def write_resource_jsonld_metadata(md: BaseMetadataObject) -> bool:
     # read the system metadata file
     system_json = load_metadata(md.system_metadata_path)
@@ -23,28 +59,24 @@ def write_resource_jsonld_metadata(md: BaseMetadataObject) -> bool:
     # read the user resource metadata file
     user_json = load_metadata(md.user_metadata_path)
 
-    # generate content type hasPart relationships
-    # content_type_metadata_paths: list[str] = [file for file in find(md.resource_md_jsonld_path)
-    #                                           if file != f"{md.resource_md_jsonld_path}/dataset_metadata.json"]
-    has_parts = []
-    # for file in content_type_metadata_paths:
-    #     content_type_metadata = load_metadata(file)
-    #
-    #     has_part = HasPart(  # TODO: probably need content type here as well for driving the landing page
-    #         name=content_type_metadata.get("name", None),
-    #         description=content_type_metadata.get("description", None),
-    #         url=f"{os.environ['AWS_S3_ENDPOINT_URL']}/{file}",
-    #     )
-    #     has_parts.append(has_part.model_dump(exclude_none=True))
-
-    # Combine system metadata, user metadata, hasPart, and associatedMedia (join arrays)
+    # Combine system metadata and user metadata
     combined_metadata = {**system_json, **user_json}
-    combined_metadata["hasPart"] = (
-        has_parts
-        + _normalize_list(system_json.get("hasPart"))
-        + _normalize_list(user_json.get("hasPart"))
+
+    # TODO: If we can assume that the user is not allowed to edit the hasPart relationship in the user metadata,
+    # then we can optimize the generation of the has_parts.json so that we only re-generate this file on
+    # specific s3 object notification.
+    has_part_reference = write_has_part_file(
+        md.resource_has_parts_jsonld_path,
+        _iter_resource_has_parts(md, user_json),
     )
-    combined_metadata["associatedMedia"] = md.resource_associated_media
+    combined_metadata["hasPart"] = [has_part_reference] if has_part_reference else []
+
+    # file_manifest.json is re-generated only on s3 object notification for a data file
+    manifest_reference = write_file_manifest(
+        md,
+        enabled=True
+    )
+    combined_metadata["associatedMedia"] = [manifest_reference] if manifest_reference else []
 
     # Write the combined metadata to the resource metadata file
     write_metadata(md.resource_metadata_jsonld_path, combined_metadata)
@@ -61,8 +93,6 @@ def write_content_type_jsonld_metadata(md: BaseMetadataObject) -> bool:
     # generate content type isPartOf relationships
     is_part_of = [f"{os.environ['AWS_S3_ENDPOINT_URL']}/{md.resource_md_jsonld_path}/dataset_metadata.json"]
 
-    content_type_associated_media = md.content_type_associated_media()
-
     # Combine part metadata, user metadata, isPartOf, and associatedMedia (join arrays)
     combined_metadata = {**content_type_metadata, **user_json}
     combined_metadata["hasPart"] = (
@@ -70,8 +100,29 @@ def write_content_type_jsonld_metadata(md: BaseMetadataObject) -> bool:
         + _normalize_list(user_json.get("hasPart"))
     )
     combined_metadata["isPartOf"] = _normalize_list(content_type_metadata.get("isPartOf")) + is_part_of
+    # create IsPartOf relationship for content type metadata
+    is_part_of_models = []
+    for jsonld_file_url in combined_metadata.get("isPartOf", []):
+        is_part_of_models.append(IsPartOf(
+            url=jsonld_file_url
+        ).model_dump(exclude_none=True))
+    combined_metadata["isPartOf"] = is_part_of_models
     # TODO make associated media determination consistent with all content types
-    combined_metadata["associatedMedia"] = combined_metadata.get("associatedMedia", []) + content_type_associated_media
+    if md.content_type != ContentType.FILE_SET:
+        content_type_associated_media = md.content_type_associated_media()
+        combined_metadata["associatedMedia"] = (
+            combined_metadata.get("associatedMedia", [])
+            + content_type_associated_media
+        )
+    else:
+        # For fileset, a reference to file_manifest.json is used. This is similar to the resource level file manifest.
+        # file_manifest.json is re-generated only on s3 object notification for a data file
+        manifest_reference = write_file_manifest(
+            md,
+            enabled=True,
+            fileset_manifest=True
+        )
+        combined_metadata["associatedMedia"] = [manifest_reference] if manifest_reference else []
 
     # Write the combined metadata to the content type metadata file
     write_metadata(md.content_type_md_jsonld_path, combined_metadata)
@@ -95,14 +146,17 @@ def workflow_metadata_extraction(file_object_path: str, file_size: int, file_upd
             # TODO: not all file deletes for content types will need metadata deleted but rather updated
             delete_metadata(md.content_type_md_path)
             delete_metadata(md.content_type_md_jsonld_path)
-    # Disable resource jsonld write for regular and content type files
-    # write_resource_jsonld_metadata(md)
+
+    try:
+        write_resource_jsonld_metadata(md)
+    except Exception as ex:
+        print(f"Error writing resource jsonld metadata: {str(ex)}")
 
 
 def refresh_resource_metadata(bucket: str, resource_id: str) -> None:
     resource_content_path = f"{bucket}/{resource_id}/data/contents/"
-    resource_contents_files: list[str] = [file for file in find(resource_content_path)]
-    for resource_file in resource_contents_files:
+    md = None
+    for resource_file in iter_find(resource_content_path):
         md = determine_metadata_object(resource_file, True)
         if md.content_type != ContentType.UNKNOWN:
             try:
@@ -117,7 +171,8 @@ def refresh_resource_metadata(bucket: str, resource_id: str) -> None:
                 print(f"Error extracting metadata for file {resource_file}: {str(ex)}")
     # TODO determine any metadata files that may need to be deleted
     # if metadata files do not have corresponding data files
-    write_resource_jsonld_metadata(md)
+    if md:
+        write_resource_jsonld_metadata(md)
 
 
 @redpanda_connect.processor
@@ -144,7 +199,10 @@ def handle_minio_event(msg: redpanda_connect.Message) -> redpanda_connect.Messag
             md = BaseMetadataObject(key, file_updated)
             write_resource_jsonld_metadata(md)
         elif key.endswith("user_metadata.json"):
-            print(f"User metadata event for content types in .hsmetadata not currently implemented: {key}")
+            md = determine_metadata_object_from_user_metadata(key, file_updated)
+            if md.content_type != ContentType.UNKNOWN:
+                write_content_type_jsonld_metadata(md)
+                write_resource_jsonld_metadata(md)
         else:
             print(f"No event for all other files in .hsmetadata: {key}")
         return
