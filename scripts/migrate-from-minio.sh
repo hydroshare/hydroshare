@@ -15,14 +15,16 @@ command -v mc >/dev/null 2>&1 || {
 mc ls "${SRC_ALIAS}" | awk '{print $5}' | sed 's:/$::' | while IFS= read -r bucket; do
     [[ -n "${bucket}" ]] || continue
     case "${bucket}" in
-        zips|tmp|bags) continue ;;
+        zips|tmp|bags)
+            echo "Skipping ${SRC_ALIAS}/${bucket}"
+            ;;
         published)
             echo "Mirroring ${SRC_ALIAS}/${bucket} -> ${DST_ALIAS}/${DST_PUBLISHED_BUCKET}"
             mc mirror "${SRC_ALIAS}/${bucket}" "${DST_ALIAS}/${DST_PUBLISHED_BUCKET}"
-            continue
+            ;;
+        *)
+            echo "Mirroring ${SRC_ALIAS}/${bucket} -> ${DST_ALIAS}/${DST_BUCKET}"
+            mc mirror "${SRC_ALIAS}/${bucket}" "${DST_ALIAS}/${DST_BUCKET}"
             ;;
     esac
-
-    echo "Mirroring ${SRC_ALIAS}/${bucket} -> ${DST_ALIAS}/${DST_BUCKET}"
-    mc mirror "${SRC_ALIAS}/${bucket}" "${DST_ALIAS}/${DST_BUCKET}"
 done
