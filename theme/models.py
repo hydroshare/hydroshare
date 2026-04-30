@@ -1,7 +1,6 @@
 import datetime
 import logging
 import re
-import subprocess
 
 from django.utils import timezone
 from django.dispatch import receiver
@@ -19,7 +18,6 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import MinValueValidator, MaxValueValidator, MinLengthValidator, MaxLengthValidator
 from django.contrib.postgres.fields import HStoreField
-from django_s3.storage import S3Storage
 
 from mezzanine.core.fields import FileField, RichTextField
 from mezzanine.core.models import Orderable, SiteRelated
@@ -239,34 +237,14 @@ class UserQuota(models.Model):
         related_query_name="quotas",
     )
 
+    allocated_value = models.FloatField(default=20)
+    unit = models.CharField(max_length=10, default="GB")
     zone = models.CharField(max_length=100, default="hydroshare")
 
     class Meta:
         verbose_name = _("User quota")
         verbose_name_plural = _("User quotas")
         unique_together = ("user", "zone")
-
-    def _allocated_value_size_and_unit(self):
-        try:
-            result = subprocess.run(
-                ["mc", "quota", "info", f"{self.zone}/{self.user.userprofile.bucket_name}"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                check=True,
-                text=True,
-            )
-        except (subprocess.CalledProcessError, ValueError, IndexError):
-            return settings.DEFAULT_QUOTA_VALUE, settings.DEFAULT_QUOTA_UNIT
-        result_split = result.stdout.split(" ")
-        unit = result_split[-1].strip()
-        unit = unit.replace("i", "")
-        size = result_split[-2]
-        return float(size), unit
-
-    @property
-    def allocated_value(self):
-        size, _ = self._allocated_value_size_and_unit()
-        return size
 
     def _convert_unit(self, unit):
         if len(unit) == 2:
@@ -277,45 +255,16 @@ class UserQuota(models.Model):
         """
         Save the allocated value to the database and update the quota on MinIO.
         """
-        try:
-            subprocess.run(
-                ["mc", "quota", "set", f"{self.zone}/{self.user.userprofile.bucket_name}",
-                 "--size", f"{allocated_value}{self._convert_unit(unit)}"],
-                check=True,
-            )
-        except subprocess.CalledProcessError as e:
-            raise ValidationError(f"Error setting quota: {e}")
-
-    def _size_and_unit(self):
-        try:
-            result = subprocess.run(
-                ["mc", "stat", f"{self.zone}/{self.user.userprofile.bucket_name}"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                check=True,
-                text=True,
-            )
-        except (subprocess.CalledProcessError, ValueError, IndexError):
-            # return a default value of 0 and default unit
-            return float(0), settings.DEFAULT_QUOTA_UNIT
-        size_with_unit_str = result.stdout.split("Total size: ")[1].split("\n")[0]
-        size_and_unit = size_with_unit_str.split(" ")
-        size = size_and_unit[0]
-        unit = size_and_unit[1]
-        unit = unit.replace("i", "")
-        return float(size), unit
+        self.allocated_value = allocated_value
+        self.unit = unit
+        self.save()
 
     @property
     def data_zone_value(self):
-        size, used_unit = self._size_and_unit()
-        allocated_unit = self.unit
+        from hs_core.hydroshare.resource import get_data_zone_usage
         from hs_core.hydroshare.utils import convert_file_size_to_unit
-        return convert_file_size_to_unit(size, allocated_unit, used_unit)
-
-    @property
-    def unit(self):
-        _, unit = self._allocated_value_size_and_unit()
-        return unit
+        dz = get_data_zone_usage(self.user.username)
+        return convert_file_size_to_unit(dz, self.unit)
 
     @property
     def used_percent(self):
@@ -682,10 +631,6 @@ def update_user_quota_on_quota_request(sender, instance, **kwargs):
         if qr.quota.unit != "GB":
             from hs_core.hydroshare.utils import convert_file_size_to_unit
             new_storage_amount = convert_file_size_to_unit(qr.storage, qr.quota.unit, "GB")
-        istorage = S3Storage()
-        # If a user hasn't created a resource yet, the bucket won't exist
-        if not istorage.bucket_exists(qr.quota.user.userprofile.bucket_name):
-            istorage.create_bucket(qr.quota.user.userprofile.bucket_name)
         qr.quota.save_allocated_value(qr.quota.allocated_value + new_storage_amount, qr.quota.unit)
 
         qr.quota.save()
