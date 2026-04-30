@@ -12,6 +12,16 @@ command -v mc >/dev/null 2>&1 || {
     exit 1
 }
 
+mirror_bucket() {
+    local src="$1"
+    local dst="$2"
+
+    echo "Mirroring ${src} -> ${dst}"
+    if ! mc mirror "${src}" "${dst}"; then
+        echo "ERROR: Failed to mirror ${src} -> ${dst}" >&2
+    fi
+}
+
 mc ls "${SRC_ALIAS}" | awk '{print $5}' | sed 's:/$::' | while IFS= read -r bucket; do
     [[ -n "${bucket}" ]] || continue
     case "${bucket}" in
@@ -19,12 +29,10 @@ mc ls "${SRC_ALIAS}" | awk '{print $5}' | sed 's:/$::' | while IFS= read -r buck
             echo "Skipping ${SRC_ALIAS}/${bucket}"
             ;;
         published)
-            echo "Mirroring ${SRC_ALIAS}/${bucket} -> ${DST_ALIAS}/${DST_PUBLISHED_BUCKET}"
-            mc mirror "${SRC_ALIAS}/${bucket}" "${DST_ALIAS}/${DST_PUBLISHED_BUCKET}"
+            mirror_bucket "${SRC_ALIAS}/${bucket}" "${DST_ALIAS}/${DST_PUBLISHED_BUCKET}"
             ;;
         *)
-            echo "Mirroring ${SRC_ALIAS}/${bucket} -> ${DST_ALIAS}/${DST_BUCKET}"
-            mc mirror "${SRC_ALIAS}/${bucket}" "${DST_ALIAS}/${DST_BUCKET}"
+            mirror_bucket "${SRC_ALIAS}/${bucket}" "${DST_ALIAS}/${DST_BUCKET}"
             ;;
     esac
 done
