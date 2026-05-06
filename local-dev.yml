@@ -98,7 +98,7 @@ services:
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       VUE_APP_BUCKET_URL_PUBLIC_PATH: "/static/static"
-      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
+      MC_HOST_hydroshare: "http://cuahsi:devpassword@hs-s3-proxy:9001"
       DATACITE_USERNAME: ${DATACITE_USERNAME}
       DATACITE_PASSWORD: ${DATACITE_PASSWORD}
       ATLAS_CONNECTION_URL: "mongodb://user:pass@mongodb:27017/"
@@ -117,6 +117,7 @@ services:
       - solr:solr
       - rabbitmq:rabbitmq
       - minio:minio
+      - hs-s3-proxy:hs-s3-proxy
     depends_on:
       - postgis
       - pgbouncer
@@ -124,6 +125,7 @@ services:
       - rabbitmq
       - minio
       - redis
+      - hs-s3-proxy
     stdin_open: true
     tty: true
     command: python manage.py runserver 0.0.0.0:8000
@@ -151,7 +153,7 @@ services:
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       COLUMNS: 80
-      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
+      MC_HOST_hydroshare: "http://cuahsi:devpassword@hs-s3-proxy:9001"
     ports:
       - "5555:5555"
     volumes:
@@ -159,11 +161,13 @@ services:
     links:
       - pgbouncer:pgbouncer
       - rabbitmq:rabbitmq
+      - hs-s3-proxy:hs-s3-proxy
     depends_on:
       - hydroshare
       - pgbouncer
       - solr
       - rabbitmq
+      - hs-s3-proxy
     stdin_open: true
     tty: true
     command: /bin/bash init-defaultworker
@@ -188,7 +192,7 @@ services:
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       COLUMNS: 80
-      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
+      MC_HOST_hydroshare: "http://cuahsi:devpassword@hs-s3-proxy:9001"
       REDIS_HOST: redis
       REDIS_PORT: "6379"
       CELERY_BROKER_URL: "redis://redis:6379/0"
@@ -227,7 +231,7 @@ services:
       PYTHONPATH: /hydroshare
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       COLUMNS: 80
-      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
+      MC_HOST_hydroshare: "http://cuahsi:devpassword@hs-s3-proxy:9001"
       ATLAS_CONNECTION_URL: "mongodb://user:pass@mongodb:27017/"
       REDIS_HOST: redis
       REDIS_PORT: "6379"
@@ -256,7 +260,7 @@ services:
     platform: linux/amd64
     command: ["celery", "-A", "hs_extract.celery_app", "worker", "-Q", "extract", "--loglevel=info"]
     environment:
-      MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
+      MC_HOST_hydroshare: "http://cuahsi:devpassword@hs-s3-proxy:9001"
       REDIS_HOST: redis
       REDIS_PORT: "6379"
       CELERY_BROKER_URL: "redis://redis:6379/0"
@@ -365,6 +369,7 @@ services:
       S3_PROXY_TIMEOUT: "300"
     ports:
       - 9002:9000
+      - 9003:9001
     links:
       - hs-s3-auth:hs-s3-auth
       - minio:minio
