@@ -15,6 +15,7 @@ def post_s3_event(
     object_path: str,
     username: str,
     user_id: int,
+    file_size: int = 0,
 ) -> bool:
     """Notify hs-s3-auth of a completed S3 write or delete event.
 
@@ -29,6 +30,7 @@ def post_s3_event(
         "object_path": object_path or "",
         "username": username,
         "user_id": user_id,
+        "file_size": file_size,
     }
 
     try:

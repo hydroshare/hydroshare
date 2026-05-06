@@ -195,24 +195,23 @@ services:
       DJANGO_SETTINGS_MODULE: hydroshare.settings
       COLUMNS: 80
       MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
     volumes:
       - ".:/hydroshare"
     links:
       - pgbouncer:pgbouncer
-      - redpanda:redpanda
+      - redis:redis
     depends_on:
       - hydroshare
       - pgbouncer
       - solr
-      - redpanda
+      - redis
     stdin_open: true
     tty: true
-    command:
-      - rpk
-      - connect
-      - run
-      - --rpc-plugins=/hydroshare/hs_event_s3/notify_hs_django_plugin.yaml
-      - /hydroshare/hs_event_s3/notify_hs_django_pipeline.yaml
+    command: celery -A hs_event_s3.celery_app worker -Q s3_events --loglevel=info
   discovery_collection_worker:
     build:
       context: .
@@ -239,26 +238,26 @@ services:
       AWS_ACCESS_KEY_ID: cuahsi
       AWS_SECRET_ACCESS_KEY: devpassword
       ATLAS_CONNECTION_URL: "mongodb://user:pass@mongodb:27017/"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
     volumes:
       - ".:/hydroshare"
     links:
       - pgbouncer:pgbouncer
-      - redpanda:redpanda
       - minio:minio
       - mongodb:mongodb
+      - redis:redis
     depends_on:
       - hydroshare
       - pgbouncer
       - solr
-      - redpanda
+      - redis
+      - mongodb
     stdin_open: true
     tty: true
-    command:
-      - rpk
-      - connect
-      - run
-      - --rpc-plugins=/hydroshare/hs_event_s3/discovery_collection_plugin.yaml
-      - /hydroshare/hs_event_s3/discovery_collection_pipeline.yaml
+    command: celery -A hs_event_s3.celery_app worker -Q s3_events --loglevel=info
   redpanda:
     command:
       - redpanda
@@ -309,22 +308,26 @@ services:
       context: .
       dockerfile: hs_extract/Dockerfile
     platform: linux/amd64
+    command: ["celery", "-A", "hs_extract.celery_app", "worker", "-Q", "extract", "--loglevel=info"]
     environment:
       AWS_S3_ENDPOINT_URL: "http://minio:9000"
       AWS_ACCESS_KEY_ID: cuahsi
       AWS_SECRET_ACCESS_KEY: devpassword
       MC_HOST_hydroshare: "http://cuahsi:devpassword@minio:9000"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+      PYTHONPATH: "/app/hs_extract/hsextract/:/app/hs_extract/hs_cloudnative_schemas/:/app:/app/hs_extract"
     volumes:
       - "./hs_extract:/app/hs_extract"
       - "./hs_cloudnative_schemas:/app/hs_extract/hs_cloudnative_schemas"
     links:
-      - pgbouncer:pgbouncer
-      - redpanda:redpanda
+      - minio:minio
+      - redis:redis
     depends_on:
-      - hydroshare
-      - pgbouncer
-      - solr
-      - redpanda
+      - redis
+      - minio
     stdin_open: true
     tty: true
   companion:
@@ -412,6 +415,7 @@ services:
       AUTH_SERVICE_URL: "http://hs-s3-auth"
       AUTH_SERVICE_TIMEOUT: "5"
       S3_BACKEND_URL: "http://minio:9000"
+      S3_BACKEND_BUCKET: "resource"
       S3_BACKEND_ACCESS_KEY: "cuahsi"
       S3_BACKEND_SECRET_KEY: "devpassword"
       S3_BACKEND_REGION: "auto"

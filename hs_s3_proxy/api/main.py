@@ -198,9 +198,14 @@ async def proxy_s3_request(request: Request, full_path: str):
         return Response(content=XML_INTERNAL_ERROR, status_code=500, media_type="application/xml")
 
     if action in ["s3:PutObject", "s3:CompleteMultipartUpload"] and response.status_code in [200, 204]:
+        raw_size = headers.get("x-amz-decoded-content-length") or headers.get("content-length") or "0"
+        try:
+            file_size = int(raw_size)
+        except (ValueError, TypeError):
+            file_size = 0
         post_s3_event(
             action=action, bucket=authz_bucket, object_path=authz_prefix,
-            username=username, user_id=user_id,
+            username=username, user_id=user_id, file_size=file_size,
         )
     if action in ["s3:DeleteObjects"] and response.status_code in [200, 204]:
         post_s3_event(

@@ -16,6 +16,7 @@ class S3Event(BaseModel):
     object_path: str
     username: str
     user_id: Optional[int] = None
+    file_size: int = 0
 
 
 @router.post("/event/", status_code=204)
@@ -41,3 +42,29 @@ async def receive_s3_event(event: S3Event):
         },
         queue="s3_events",
     )
+
+    # Dispatch discovery catalog sync when the jsonld metadata file changes
+    if event.object_path.endswith("/.hsjsonld/dataset_metadata.json"):
+        celery_app.send_task(
+            "hs_event_s3.tasks.sync_discovery_collection",
+            kwargs={
+                "action": event.action,
+                "bucket": event.bucket,
+                "object_path": event.object_path,
+            },
+            queue="s3_events",
+        )
+
+    # Dispatch metadata extraction for data file events
+    _path_lower = event.object_path.lower()
+    if not _path_lower.endswith(".hsjsonld/dataset_metadata.json"):
+        celery_app.send_task(
+            "hs_extract.tasks.extract_metadata",
+            kwargs={
+                "action": event.action,
+                "bucket": event.bucket,
+                "object_path": event.object_path,
+                "file_size": event.file_size,
+            },
+            queue="extract",
+        )

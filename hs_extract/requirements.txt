@@ -18,6 +18,7 @@ pydantic[email]
 boto3
 typing-extensions
 xarray==2025.6.0
+celery[redis]>=5.3,<6.0
 zarr
 rasterio
 pytest
