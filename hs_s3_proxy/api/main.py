@@ -9,7 +9,7 @@ import uvicorn
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.lib.auth_service import verify_signature_sync
+from api.lib.auth_service import verify_csrf_token_sync, verify_signature_sync
 from api.lib.authorization import check_s3_authorization
 from api.lib.event_service import post_s3_event
 from api.lib.s3_auth import (
@@ -132,27 +132,39 @@ async def proxy_s3_request(request: Request, full_path: str):
     auth_header = headers.get('authorization', '')
     auth_info = parse_authorization_header(auth_header)
 
-    if not auth_info:
+    # --- SigV4 path ---
+    if auth_info:
+        username = auth_info['access_key']
+        user_id, error = _validate_token(
+            method, path, headers, query_params, body, auth_info
+        )
+        if user_id is None:
+            if error == "invalid_signature":
+                return Response(content=XML_SIGNATURE_MISMATCH, status_code=403, media_type="application/xml")
+            if error == "auth_service_error":
+                return Response(content=XML_INTERNAL_ERROR, status_code=500, media_type="application/xml")
+            return Response(content=XML_ACCESS_DENIED, status_code=403, media_type="application/xml")
+
+    # --- CSRF cookie path ---
+    else:
         csrf_token = request.cookies.get("csrftoken")
-        if csrf_token:
-            logger.info("No valid AWS auth header, but found CSRF token.")
+        session_id = request.cookies.get("sessionid")
+        if not session_id:
+            logger.warning("No valid authorization header or session cookie found")
+            return Response(content=XML_ACCESS_DENIED, status_code=403, media_type="application/xml")
 
-    if not auth_info:
-        logger.warning("No valid authorization header found")
-        return Response(content=XML_ACCESS_DENIED, status_code=403, media_type="application/xml")
+        logger.info("No SigV4 auth header; attempting CSRF/session authentication.")
+        csrf_result = verify_csrf_token_sync(session_id=session_id, csrf_token=csrf_token)
+        if not csrf_result.get("allow"):
+            reason = csrf_result.get("reason", "unknown")
+            if reason == "auth_service_error":
+                return Response(content=XML_INTERNAL_ERROR, status_code=500, media_type="application/xml")
+            logger.warning(f"CSRF token authentication failed: {reason}")
+            return Response(content=XML_ACCESS_DENIED, status_code=403, media_type="application/xml")
 
-    username = auth_info['access_key']
-
-    user_id, error = _validate_token(
-        method, path, headers, query_params, body, auth_info
-    )
-
-    if user_id is None:
-        if error == "invalid_signature":
-            return Response(content=XML_SIGNATURE_MISMATCH, status_code=403, media_type="application/xml")
-        if error == "auth_service_error":
-            return Response(content=XML_INTERNAL_ERROR, status_code=500, media_type="application/xml")
-        return Response(content=XML_ACCESS_DENIED, status_code=403, media_type="application/xml")
+        user_id = csrf_result.get("user_id")
+        username = csrf_result.get("username", "")
+        logger.info(f"CSRF authentication succeeded for user: {username}")
 
     action = get_s3_action_from_request(method, path, query_params)
     logger.info(f"S3 Action: {action} for user: {username}")

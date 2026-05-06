@@ -16,6 +16,7 @@ from api.cache import (
     # user_has_view_access_cache,
 )
 from api.database import (
+    get_user_by_session_id,
     get_user_token_and_id,
     is_superuser_and_id,
     resource_discoverability,
@@ -28,6 +29,31 @@ from api.sigv4 import verify_signature_v4
 
 router = APIRouter()
 logger = logging.getLogger("hs-s3-auth")
+
+
+class CsrfVerifyRequest(BaseModel):
+    session_id: str
+    csrf_token: Optional[str] = None
+
+
+@router.post("/verify-csrf/")
+async def verify_csrf(request: CsrfVerifyRequest):
+    """Authenticate a browser request using the Django session cookie.
+
+    The caller must supply ``session_id`` (the value of the ``sessionid``
+    cookie).  The optional ``csrf_token`` (``csrftoken`` cookie) is accepted
+    but not separately verified here — Django's own middleware handles CSRF
+    protection on the origin server; this endpoint only resolves the session
+    to an authenticated user.
+    """
+    result = get_user_by_session_id(request.session_id)
+    if not result:
+        logger.warning("CSRF/session verification failed: session not found or expired")
+        return {"allow": False, "reason": "invalid_session"}
+
+    user_id, username = result
+    logger.info(f"CSRF/session authentication succeeded for user: {username} (id={user_id})")
+    return {"allow": True, "user_id": user_id, "username": username}
 
 
 def _parse_action_list(env_var: str, default: str) -> List[str]:
