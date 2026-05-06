@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api.lib.auth_service import verify_signature_sync
 from api.lib.authorization import check_s3_authorization
+from api.lib.event_service import post_s3_event
 from api.lib.s3_auth import (
     get_s3_action_from_request,
     parse_authorization_header,
@@ -108,6 +109,11 @@ async def proxy_s3_request(request: Request, full_path: str):
     auth_info = parse_authorization_header(auth_header)
 
     if not auth_info:
+        csrf_token = request.cookies.get("csrftoken")
+        if csrf_token:
+            logger.info("No valid AWS auth header, but found CSRF token.")
+
+    if not auth_info:
         logger.warning("No valid authorization header found")
         return Response(content=XML_ACCESS_DENIED, status_code=403, media_type="application/xml")
 
@@ -151,13 +157,26 @@ async def proxy_s3_request(request: Request, full_path: str):
     logger.info(f"Access granted for user {username} to {action} on {authz_bucket}/{authz_prefix}")
 
     try:
-        return await s3_proxy.proxy_request(
+        response = await s3_proxy.proxy_request(
             method=method, path=path, headers=headers,
             query_params=query_params, body=body if body else None
         )
     except Exception as e:
         logger.error(f"Error proxying request: {e}", exc_info=True)
         return Response(content=XML_INTERNAL_ERROR, status_code=500, media_type="application/xml")
+
+    if action in ["s3:PutObject", "s3:CompleteMultipartUpload"] and response.status_code in [200, 204]:
+        post_s3_event(
+            action=action, bucket=authz_bucket, object_path=authz_prefix,
+            username=username, user_id=user_id,
+        )
+    if action in ["s3:DeleteObjects"] and response.status_code in [200, 204]:
+        post_s3_event(
+            action=action, bucket=authz_bucket, object_path=authz_prefix,
+            username=username, user_id=user_id,
+        )
+        logger.info(f"Successfully proxied {action} for user {username} on {authz_bucket}/{authz_prefix}")
+    return response
 
 
 class Server(uvicorn.Server):
