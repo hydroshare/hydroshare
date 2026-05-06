@@ -2,6 +2,8 @@ import asyncio
 import hashlib
 import logging
 import os
+import re
+import xml.etree.ElementTree as ET
 
 import uvicorn
 from fastapi import FastAPI, Request, Response
@@ -24,10 +26,12 @@ logging.basicConfig(
 logger = logging.getLogger("hs_s3_proxy")
 
 # When set, the proxy serves exactly this one backend bucket. Client-facing S3
-# URLs address it directly (S3-native), and keys underneath follow the layout
-# {user_bucket}/{resource_id}/{rest}. The {user_bucket}/ prefix is peeled off
-# before calling hs-s3-auth, which expects {resource_id}/... as the prefix.
+# URLs address it directly (S3-native). Keys may follow either
+# {resource_id}/{rest} or {user_bucket}/{resource_id}/{rest}. In the latter
+# case, the {user_bucket}/ prefix is peeled off before calling hs-s3-auth,
+# which expects {resource_id}/... as the prefix.
 BACKEND_BUCKET = os.environ.get("S3_BACKEND_BUCKET")
+RESOURCE_ID_RE = re.compile(r"^[0-9a-f]{32}$")
 
 app = FastAPI(title="HydroShare S3 Proxy")
 
@@ -67,7 +71,9 @@ def _validate_token(method: str, path: str, headers: dict,
 
     Returns (user_id, None) on success, or (None, reason) on failure.
     """
-    payload_hash = hashlib.sha256(body if body else b'').hexdigest()
+    payload_hash = headers.get('x-amz-content-sha256') or headers.get('X-Amz-Content-Sha256')
+    if not payload_hash:
+        payload_hash = hashlib.sha256(body if body else b'').hexdigest()
     result = verify_signature_sync(
         method=method, path=path, headers=headers,
         query_params=query_params, payload_hash=payload_hash,
@@ -76,6 +82,24 @@ def _validate_token(method: str, path: str, headers: dict,
     if result.get("allow"):
         return result.get("user_id"), None
     return None, result.get("reason")
+
+
+def _parse_delete_object_keys(body: bytes) -> list[str]:
+    if not body:
+        return []
+
+    try:
+        root = ET.fromstring(body)
+    except ET.ParseError:
+        logger.warning("Failed to parse DeleteObjects request body")
+        return []
+
+    keys = []
+    for obj in root.findall("{*}Object"):
+        key = obj.findtext("{*}Key")
+        if key:
+            keys.append(key)
+    return keys
 
 
 @app.get("/health")
@@ -133,18 +157,26 @@ async def proxy_s3_request(request: Request, full_path: str):
     action = get_s3_action_from_request(method, path, query_params)
     logger.info(f"S3 Action: {action} for user: {username}")
 
+    authz_bucket = bucket or ""
+    authz_prefix = object_path or ""
     if BACKEND_BUCKET and bucket == BACKEND_BUCKET:
-        # Key is {user_bucket}/{resource_id}/{rest}. Peel the user_bucket off for
-        # authz — hs-s3-auth expects bucket={user_bucket}, prefix={resource_id}/...
-        authz_bucket, _, authz_prefix = (object_path or "").partition("/")
-    else:
-        authz_bucket = bucket or ""
-        authz_prefix = object_path or ""
+        path_parts = (object_path or "").split("/", 2)
+        if len(path_parts) >= 2 and RESOURCE_ID_RE.fullmatch(path_parts[1]):
+            # Key is {user_bucket}/{resource_id}/{rest}. Peel the user_bucket off for
+            # authz — hs-s3-auth expects bucket={user_bucket}, prefix={resource_id}/...
+            authz_bucket = path_parts[0]
+            authz_prefix = "/".join(path_parts[1:])
+
+    authz_prefixes = None
+    if action == "s3:DeleteObjects":
+        authz_prefixes = _parse_delete_object_keys(body)
+        if len(authz_prefixes) == 1:
+            authz_prefix = authz_prefixes[0]
 
     try:
         authorized = check_s3_authorization(
             username=username, action=action,
-            bucket=authz_bucket, object_path=authz_prefix,
+            bucket=authz_bucket, object_path=authz_prefix, prefixes=authz_prefixes,
         )
     except Exception as e:
         logger.error(f"Error checking authorization: {e}", exc_info=True)

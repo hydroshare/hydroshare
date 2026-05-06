@@ -4,6 +4,8 @@ from typing import Optional
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from api.celery_app import celery_app
+
 router = APIRouter()
 logger = logging.getLogger("hs-s3-auth")
 
@@ -20,11 +22,22 @@ class S3Event(BaseModel):
 async def receive_s3_event(event: S3Event):
     """Receive notification of a completed S3 write or delete from hs-s3-proxy.
 
-    This endpoint is the integration point for downstream side-effects such as
-    updating resource metadata, invalidating caches, or triggering bag jobs.
+    Dispatches directly to the hs_event_s3 Celery worker for Django-side
+    processing (metadata updates, cache invalidation, bag/zip jobs, etc.).
     """
     logger.info(
         f"S3 event received: action={event.action}, "
         f"bucket={event.bucket}, object={event.object_path}, "
         f"user={event.username} (id={event.user_id})"
+    )
+    celery_app.send_task(
+        "hs_event_s3.tasks.process_s3_event",
+        kwargs={
+            "action": event.action,
+            "bucket": event.bucket,
+            "object_path": event.object_path,
+            "username": event.username,
+            "user_id": event.user_id,
+        },
+        queue="s3_events",
     )

@@ -29,17 +29,22 @@ from api.sigv4 import verify_signature_v4
 router = APIRouter()
 logger = logging.getLogger("hs-s3-auth")
 
-VIEW_ACTIONS = os.environ.get(
-    "S#_VIEW_ACTIONS",
+
+def _parse_action_list(env_var: str, default: str) -> List[str]:
+    return [action.strip() for action in os.environ.get(env_var, default).split(",") if action.strip()]
+
+
+VIEW_ACTIONS = _parse_action_list(
+    "S3_VIEW_ACTIONS",
     "s3:GetObject,s3:ListObjects,s3:ListObjectsV2,s3:ListBucket,s3:GetObjectRetention,s3:GetObjectLegalHold,\
         s3:HeadObject",
-).split(",")
-WRITE_ACTIONS = os.environ.get(
+)
+WRITE_ACTIONS = _parse_action_list(
     "S3_WRITE_ACTIONS", "s3:PutObject,s3:UploadPart,s3:PutObjectLegalHold"
-).split(",")
-DELETE_ACTIONS = os.environ.get(
+)
+DELETE_ACTIONS = _parse_action_list(
     "S3_DELETE_ACTIONS", "s3:DeleteObject,s3:DeleteObjects"
-).split(",")
+)
 EDIT_ACTIONS = WRITE_ACTIONS + DELETE_ACTIONS
 
 

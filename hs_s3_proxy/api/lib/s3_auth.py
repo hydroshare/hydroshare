@@ -12,7 +12,7 @@ def parse_authorization_header(auth_header: str) -> Optional[dict]:
         return None
 
     match = re.match(
-        r'AWS4-HMAC-SHA256 Credential=([^,]+), SignedHeaders=([^,]+), Signature=(.+)',
+        r'AWS4-HMAC-SHA256\s+Credential=([^,]+),\s*SignedHeaders=([^,]+),\s*Signature=(.+)',
         auth_header
     )
 
