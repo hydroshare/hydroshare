@@ -22,7 +22,6 @@ celery[redis]>=5.3,<6.0
 zarr
 rasterio
 pytest
-redpanda-connect
 setuptools
 h5netcdf==1.6.4
 netCDF4==1.7.2

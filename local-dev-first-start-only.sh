@@ -335,15 +335,6 @@ docker exec hydroshare mc mb hydroshare/published
 echo "docker exec hydroshare mc mb hydroshare/ciroh"
 docker exec hydroshare mc mb hydroshare/ciroh
 
-echo "docker exec hydroshare mc event add hydroshare/resource arn:minio:sqs::RESOURCEFILE:kafka --event put,delete"
-docker exec hydroshare mc event add hydroshare/resource arn:minio:sqs::RESOURCEFILE:kafka --event put,delete
-
-echo "docker exec hydroshare mc event add hydroshare/published arn:minio:sqs::RESOURCEFILE:kafka --event put,delete "
-docker exec hydroshare mc event add hydroshare/published arn:minio:sqs::RESOURCEFILE:kafka --event put,delete
-
-echo "docker exec hydroshare mc event add hydroshare/ciroh arn:minio:sqs::RESOURCEFILE:kafka --event put,delete "
-docker exec hydroshare mc event add hydroshare/ciroh arn:minio:sqs::RESOURCEFILE:kafka --event put,delete
-
 echo
 echo '########################################################################################################################'
 echo " Setting up Atlas search index"

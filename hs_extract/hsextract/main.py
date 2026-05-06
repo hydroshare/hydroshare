@@ -1,14 +1,9 @@
-import logging
-import json
 import os
-import redpanda_connect
-import asyncio
 from hs_cloudnative_schemas.schema.base import IsPartOf, HasPart
 from hsextract.content_types.models import ContentType
 from hsextract.content_types import (
     determine_metadata_object,
-    BaseMetadataObject,
-    determine_metadata_object_from_user_metadata,
+    BaseMetadataObject
 )
 from hsextract.utils.s3 import (
     delete_metadata,
@@ -173,43 +168,3 @@ def refresh_resource_metadata(bucket: str, resource_id: str) -> None:
     # if metadata files do not have corresponding data files
     if md:
         write_resource_jsonld_metadata(md)
-
-
-@redpanda_connect.processor
-def handle_minio_event(msg: redpanda_connect.Message) -> redpanda_connect.Message:
-    print(f"Received message: {msg.payload}")
-    json_payload = json.loads(msg.payload)
-    key = json_payload['Key']
-    file_updated = json_payload['EventName'].startswith("s3:ObjectCreated")
-    file_size = json_payload['Records'][0]['s3']['object']['size']
-    directory = key.split('/')[2]
-    bucket = key.split('/')[0]
-    resource_id = key.split('/')[1]
-    if directory == ".hsrefresh":
-        refresh_resource_metadata(bucket, resource_id)
-        return
-    if directory == ".hsjsonld":
-        return
-    if directory == ".hsmetadata":
-        print(f"Handling .hsmetadata event for file: {key}, updated: {file_updated}")
-        if key == f"{bucket}/{resource_id}/.hsmetadata/user_metadata.json":
-            md = BaseMetadataObject(key, file_updated)
-            write_resource_jsonld_metadata(md)
-        elif key == f"{bucket}/{resource_id}/.hsmetadata/system_metadata.json":
-            md = BaseMetadataObject(key, file_updated)
-            write_resource_jsonld_metadata(md)
-        elif key.endswith("user_metadata.json"):
-            md = determine_metadata_object_from_user_metadata(key, file_updated)
-            if md.content_type != ContentType.UNKNOWN:
-                write_content_type_jsonld_metadata(md)
-                write_resource_jsonld_metadata(md)
-        else:
-            print(f"No event for all other files in .hsmetadata: {key}")
-        return
-    else:
-        workflow_metadata_extraction(key, file_size, file_updated)
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    asyncio.run(redpanda_connect.processor_main(handle_minio_event))
