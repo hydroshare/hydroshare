@@ -261,6 +261,9 @@ services:
     command: ["celery", "-A", "hs_extract.celery_app", "worker", "-Q", "extract", "--loglevel=info"]
     environment:
       MC_HOST_hydroshare: "http://cuahsi:devpassword@hs-s3-proxy:9001"
+      AWS_S3_ENDPOINT_URL: "http://hs-s3-proxy:9001"
+      AWS_ACCESS_KEY_ID: "cuahsi"
+      AWS_SECRET_ACCESS_KEY: "devpassword"
       REDIS_HOST: redis
       REDIS_PORT: "6379"
       CELERY_BROKER_URL: "redis://redis:6379/0"
@@ -272,9 +275,11 @@ services:
     links:
       - minio:minio
       - redis:redis
+      - hs-s3-proxy:hs-s3-proxy
     depends_on:
       - redis
       - minio
+      - hs-s3-proxy
     stdin_open: true
     tty: true
   companion:

@@ -7,7 +7,21 @@ from pymongo import MongoClient
 from django.conf import settings
 
 
-s3 = boto3.client('s3')
+def _make_s3_client():
+    zone_config = settings.RESOURCE_S3_ZONES_CONFIG.get(
+        settings.RESOURCE_S3_DEFAULT_ZONE, {}
+    )
+    kwargs = {}
+    if zone_config.get("aws_s3_endpoint_url"):
+        kwargs["endpoint_url"] = zone_config["aws_s3_endpoint_url"]
+    if zone_config.get("aws_access_key_id"):
+        kwargs["aws_access_key_id"] = zone_config["aws_access_key_id"]
+    if zone_config.get("aws_secret_access_key"):
+        kwargs["aws_secret_access_key"] = zone_config["aws_secret_access_key"]
+    return boto3.client('s3', **kwargs)
+
+
+s3 = _make_s3_client()
 
 mongo_connection_url = settings.ATLAS_CONNECTION_URL
 hydroshare_atlas_db = MongoClient(mongo_connection_url)[settings.ATLAS_DB_NAME]
